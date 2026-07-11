@@ -1,0 +1,114 @@
+.app-shell {
+  min-height: 100vh;
+}
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar);
+  padding: 22px 16px;
+  overflow-y: auto;
+  color: var(--white);
+  background: linear-gradient(180deg, var(--maroon-950), var(--maroon-800) 55%, var(--oxblood));
+  box-shadow: var(--shadow);
+}
+.brand {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 8px 20px;
+}
+.brand-mark {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 0.34);
+  border-radius: 50%;
+  color: var(--gold-300);
+  font: 700 0.72rem/1 var(--font-display);
+  text-align: center;
+}
+.brand strong {
+  display: block;
+  font: 700 1rem/1.15 var(--font-display);
+}
+.brand small {
+  color: #ead8cc;
+}
+.desktop-nav {
+  display: grid;
+  gap: 6px;
+}
+.desktop-nav button {
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 11px;
+  color: #f8e8df;
+  background: transparent;
+  text-align: left;
+}
+.desktop-nav button:hover,
+.desktop-nav button[aria-current='page'] {
+  color: var(--white);
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: inset 3px 0 var(--gold-500);
+}
+.desktop-nav small {
+  display: block;
+  color: #d8bfc1;
+  font-size: 0.78rem;
+}
+.workspace {
+  min-height: 100vh;
+  margin-left: var(--sidebar);
+}
+.topbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px clamp(16px, 3vw, 36px);
+  border-bottom: 1px solid var(--line);
+  background: rgb(255 253 247 / 0.94);
+  backdrop-filter: blur(12px);
+}
+.content {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+  padding: 24px clamp(14px, 3vw, 38px) 80px;
+}
+.view-grid {
+  display: grid;
+  gap: 18px;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.7fr);
+  gap: 18px;
+  align-items: start;
+}
+.mobile-topbar,
+.bottom-nav {
+  display: none;
+}

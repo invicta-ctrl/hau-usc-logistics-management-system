@@ -1,0 +1,91 @@
+export const STATUS = Object.freeze({
+  FOR_REVIEW: 'FOR_REVIEW',
+  ACCEPTED: 'ACCEPTED',
+  REJECTED: 'REJECTED',
+  CANCELLED: 'CANCELLED',
+  FOR_CANVASSING: 'FOR_CANVASSING',
+  WAITING_FOR_BUDGET: 'WAITING_FOR_BUDGET',
+  TO_BE_PROCURED: 'TO_BE_PROCURED',
+  PROCURED: 'PROCURED',
+  PARTIALLY_RECEIVED: 'PARTIALLY_RECEIVED',
+  READY_TO_RELEASE: 'READY_TO_RELEASE',
+  PARTIALLY_RELEASED: 'PARTIALLY_RELEASED',
+  PARTIALLY_FULFILLED: 'PARTIALLY_FULFILLED',
+  COMPLETED: 'COMPLETED',
+  RESTOCKED: 'RESTOCKED',
+  READY_TO_CLAIM: 'READY_TO_CLAIM',
+  ON_LOAN: 'ON_LOAN',
+  RETURNED: 'RETURNED',
+  OVERDUE: 'OVERDUE',
+  ACTIVE: 'ACTIVE',
+  CLEARED: 'CLEARED',
+  ARCHIVED: 'ARCHIVED',
+});
+
+export const ROLES = Object.freeze({
+  REQUESTER: 'REQUESTER',
+  DOL_STAFF: 'DOL_STAFF',
+  COMMITTEE_HEAD: 'COMMITTEE_HEAD',
+  DIRECTOR: 'DIRECTOR',
+  ADMINISTRATOR: 'ADMINISTRATOR',
+});
+
+export const CATEGORIES = Object.freeze([
+  'OFFICE_SUPPLIES',
+  'PANTRY_FOOD',
+  'EQUIPMENT',
+  'PRINTING_SIGNAGE',
+  'EVENT_MATERIALS',
+  'CLEANING_SUPPLIES',
+  'OTHER_CONTROLLED',
+]);
+
+export const UNITS = Object.freeze([
+  'piece',
+  'box',
+  'pack',
+  'ream',
+  'roll',
+  'sheet',
+  'bottle',
+  'meter',
+  'kilogram',
+  'liter',
+]);
+
+export const LEDGER_TYPES = Object.freeze({
+  OPENING_BALANCE: 'OPENING_BALANCE',
+  RECEIPT: 'RECEIPT',
+  ISSUE: 'ISSUE',
+  LOAN_OUT: 'LOAN_OUT',
+  LOAN_RETURN: 'LOAN_RETURN',
+  ADJUSTMENT_IN: 'ADJUSTMENT_IN',
+  ADJUSTMENT_OUT: 'ADJUSTMENT_OUT',
+  TRANSFER_OUT_EVENT: 'TRANSFER_OUT_EVENT',
+  TRANSFER_IN_INVENTORY: 'TRANSFER_IN_INVENTORY',
+  EMERGENCY_ISSUE: 'EMERGENCY_ISSUE',
+});
+
+export const STATUS_LABELS = Object.freeze({
+  FOR_REVIEW: 'For Review',
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+  CANCELLED: 'Cancelled',
+  FOR_CANVASSING: 'For Canvassing',
+  WAITING_FOR_BUDGET: 'Waiting for Budget',
+  TO_BE_PROCURED: 'To Be Procured',
+  PROCURED: 'Procured',
+  PARTIALLY_RECEIVED: 'Partially Received',
+  READY_TO_RELEASE: 'Ready to Release',
+  PARTIALLY_RELEASED: 'Partially Released',
+  PARTIALLY_FULFILLED: 'Partially Fulfilled',
+  COMPLETED: 'Completed',
+  RESTOCKED: 'Restocked',
+  READY_TO_CLAIM: 'Ready to Claim',
+  ON_LOAN: 'On Loan',
+  RETURNED: 'Returned',
+  OVERDUE: 'Overdue',
+  ACTIVE: 'Active',
+  CLEARED: 'Cleared',
+  ARCHIVED: 'Archived',
+});

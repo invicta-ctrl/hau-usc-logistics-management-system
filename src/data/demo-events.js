@@ -1,0 +1,52 @@
+export const demoEvents = Object.freeze([
+  {
+    id: 'EVT-YDD-OPEN',
+    seriesId: 'SER-YDD-2026',
+    code: 'YDDOPEN',
+    name: 'Youth Development Days - Opening',
+    startDate: '2026-07-20',
+    endDate: '2026-07-20',
+    venue: 'University Theatre',
+    committee: 'Materials Committee',
+    status: 'UPCOMING',
+  },
+  {
+    id: 'EVT-YDD-POTTERY',
+    seriesId: 'SER-YDD-2026',
+    code: 'YDDPOT',
+    name: 'Pottery Making Workshop',
+    startDate: '2026-07-25',
+    endDate: '2026-07-25',
+    venue: 'Peter G. Nepomuceno Center',
+    committee: 'Inventory Committee',
+    status: 'UPCOMING',
+  },
+  {
+    id: 'EVT-ANGEL-FAIR',
+    seriesId: 'SER-ANGELITE-2026',
+    code: 'ANGFAIR',
+    name: 'Angelite Welcome Fair',
+    startDate: '2026-08-08',
+    endDate: '2026-08-09',
+    venue: 'University Plaza',
+    committee: 'Food Committee',
+    status: 'UPCOMING',
+  },
+  {
+    id: 'EVT-LEADERSHIP',
+    seriesId: 'SER-LEAD-2026',
+    code: 'LEADCAMP',
+    name: 'Student Leaders Camp',
+    startDate: '2026-06-14',
+    endDate: '2026-06-15',
+    venue: 'San Francisco Gym',
+    committee: 'Materials Committee',
+    status: 'COMPLETED',
+  },
+]);
+
+export const eventSeries = Object.freeze([
+  { id: 'SER-YDD-2026', name: 'Youth Development Days 2026', approved: true },
+  { id: 'SER-ANGELITE-2026', name: 'Angelite Welcome 2026', approved: true },
+  { id: 'SER-LEAD-2026', name: 'Student Leadership Program 2026', approved: true },
+]);

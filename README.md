@@ -1,56 +1,65 @@
 # HAU-USC Logistics Management System
 
-Front-end prototype for the Holy Angel University University Student Council Department of Logistics.
+Maintainable front-end prototype for the Holy Angel University - University Student Council Department of Logistics. It preserves the maroon, oxblood, gold, cream, paper, and white institutional identity while modeling requests, reservations, inventory, lending, receiving, releases, transfers, canvass references, tasks, and reports.
 
-## Project status
+> **Preview warning:** `previewMode = true` and `backendMode = 'mock'`. All records are fictional demonstration data stored locally in the browser. The application performs no Google Sheets, Google Drive, email, Chat, or production API writes.
 
-This repository currently contains **Revision 02**, a fully runnable front-end prototype. It uses realistic mock data and keeps `previewMode = true`; it does not write to Google Sheets or Google Drive.
+## Start here
 
-The current single-file implementation is retained as the visual and functional baseline before the planned multi-file/full-stack migration.
-
-## Run locally
-
-No installation or build step is required yet.
-
-1. Download or clone the repository.
-2. Open `index.html` in a modern browser.
-3. Use the included preview data to explore the logistics workflows.
-
-## Current modules
-
-- Dynamic overview and event readiness
-- Logistics Request Center and office restocking
-- Predictive inventory item matching
-- Inventory and controlled stock ledger
-- Release Desk
-- Office Lending Hub
-- Restocking and item registration
-- Scalable canvass reference library
-- Request-only portal mode
-- Responsive desktop, tablet, and mobile layouts
-
-## Repository structure
-
-```text
-.
-├── index.html
-├── assets/
-│   ├── images/
-│   └── logos/
-└── docs/
-    ├── frontend-preview-log.md
-    ├── roadmap-import.txt
-    └── roadmap-node-content.md
+```bash
+npm install
+npm run dev
 ```
 
-Place approved DOL and USC branding files in `assets/logos/`. General interface imagery belongs in `assets/images/`.
+Open the Vite URL shown in the terminal. Use `?mode=request` or `#request-only` for the sanitized requester portal demonstration.
 
-## Architecture direction
+## Commands
 
-The mock service/state layer is intended to be replaced later by a Google Apps Script or other backend without rebuilding the interface. Google Sheets should serve as a reporting/export destination rather than the primary application database.
+```bash
+npm run dev          # local Vite development server
+npm run test         # Vitest unit and integration tests
+npm run test:e2e     # focused Playwright and responsive smoke tests
+npm run lint         # ESLint
+npm run format       # Prettier write
+npm run build        # self-contained prototype build
+npm run check        # lint, Vitest, and build
+```
 
-Planned next steps include splitting the current HTML into maintainable modules, adding automated checks, formalizing shared data contracts, and implementing authenticated backend integrations.
+The final standalone artifact is [`dist/index.html`](dist/index.html). CSS and JavaScript are inlined by `vite-plugin-singlefile`, so it can be opened independently and later adapted for Apps Script HTML Service.
 
-## Important
+## Architecture at a glance
 
-This is a prototype. Do not use it for live inventory transactions, procurement approvals, or official records until authentication, authorization, validation, audit logging, backups, and production persistence are implemented.
+```text
+src/
+├── app/          bootstrap, router, store, migrations, selectors, errors, configuration
+├── domain/       pure rules for IDs, dates, transitions, inventory, receipts, releases, lending
+├── services/     mock transaction adapter plus Apps Script and REST boundaries
+├── features/     active-view modules for each operational workspace
+├── components/   reusable accessible navigation, modal, drawer, table, cards, filters
+├── data/         fixed demonstration events, seed state, and data dictionary
+├── styles/       custom HAU-USC design system
+└── assets/       optional DOL/USC logos and icons
+```
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DOMAIN_RULES.md`](docs/DOMAIN_RULES.md), and [`PROJECT_STATUS.md`](PROJECT_STATUS.md) before making changes.
+
+## Logo and image placement
+
+Preferred optional files:
+
+- `src/assets/logos/dol-logo.png`
+- `src/assets/logos/usc-logo.png`
+
+The application uses labeled placeholders when logos are absent. Never place private borrower photos, student records, supplier TINs, or real evidence in source control.
+
+## Backend boundary
+
+Views call the service contract only. `mock-service.js` is active. `apps-script-service.js` and `rest-service.js` document callable mappings but remain inactive. The production server must own identity, authorization, locks, balances, transitions, IDs, idempotency, evidence validation, and audit rows.
+
+## Guidance for the next agent
+
+1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/DOMAIN_RULES.md`, and `docs/ARCHITECTURE.md`.
+2. Run `npm install && npm run check` before changing code.
+3. Work one feature/domain slice at a time; do not regenerate the application for a small change.
+4. Change `src/`, tests, and documentation. Never hand-edit `dist/index.html`.
+5. Rebuild and update `PROJECT_STATUS.md` and `CHANGELOG.md` before handing off.

@@ -1,0 +1,71 @@
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.span-2 {
+  grid-column: 1 / -1;
+}
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--oxblood);
+  font-weight: 760;
+}
+input,
+select,
+textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 11px;
+  border: 1px solid #bfaea8;
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--white);
+}
+textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+[aria-invalid='true'] {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px rgb(165 29 45 / 0.12);
+}
+.field-error {
+  color: var(--danger);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+.toolbar,
+.filter-bar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(140px, auto));
+  gap: 9px;
+  margin-bottom: 14px;
+}
+.combobox {
+  position: relative;
+}
+.listbox {
+  position: absolute;
+  z-index: 8;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 5px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.listbox [role='option'] {
+  padding: 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.listbox [role='option'][aria-selected='true'],
+.listbox [role='option']:hover {
+  background: var(--cream-100);
+}

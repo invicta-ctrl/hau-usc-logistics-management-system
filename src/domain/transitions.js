@@ -1,0 +1,46 @@
+import { AppError } from '../app/errors.js';
+import { STATUS as S } from './constants.js';
+
+export const TRANSITIONS = Object.freeze({
+  request: {
+    [S.FOR_REVIEW]: [S.ACCEPTED, S.REJECTED, S.CANCELLED],
+    [S.ACCEPTED]: [S.PARTIALLY_FULFILLED, S.COMPLETED, S.CANCELLED],
+    [S.PARTIALLY_FULFILLED]: [S.COMPLETED, S.CANCELLED],
+  },
+  requestLine: {
+    [S.FOR_REVIEW]: [S.FOR_CANVASSING, S.READY_TO_RELEASE, S.REJECTED, S.CANCELLED],
+    [S.FOR_CANVASSING]: [S.WAITING_FOR_BUDGET, S.CANCELLED],
+    [S.READY_TO_RELEASE]: [S.PARTIALLY_RELEASED, S.COMPLETED, S.CANCELLED],
+    [S.PARTIALLY_RELEASED]: [S.COMPLETED, S.CANCELLED],
+  },
+  procurement: {
+    [S.FOR_CANVASSING]: [S.WAITING_FOR_BUDGET, S.CANCELLED],
+    [S.WAITING_FOR_BUDGET]: [S.TO_BE_PROCURED, S.CANCELLED],
+    [S.TO_BE_PROCURED]: [S.PROCURED, S.CANCELLED],
+    [S.PROCURED]: [S.PARTIALLY_RECEIVED, S.READY_TO_RELEASE],
+    [S.PARTIALLY_RECEIVED]: [S.READY_TO_RELEASE],
+    [S.READY_TO_RELEASE]: [S.PARTIALLY_RELEASED, S.COMPLETED],
+    [S.PARTIALLY_RELEASED]: [S.COMPLETED],
+  },
+  restock: {
+    [S.FOR_REVIEW]: [S.FOR_CANVASSING, S.REJECTED, S.CANCELLED],
+    [S.FOR_CANVASSING]: [S.WAITING_FOR_BUDGET, S.CANCELLED],
+    [S.WAITING_FOR_BUDGET]: [S.TO_BE_PROCURED, S.CANCELLED],
+    [S.TO_BE_PROCURED]: [S.PARTIALLY_RECEIVED, S.RESTOCKED],
+    [S.PARTIALLY_RECEIVED]: [S.RESTOCKED],
+  },
+  lending: {
+    [S.FOR_REVIEW]: [S.READY_TO_CLAIM, S.REJECTED, S.CANCELLED],
+    [S.READY_TO_CLAIM]: [S.ON_LOAN, S.COMPLETED, S.CANCELLED],
+    [S.ON_LOAN]: [S.RETURNED],
+    [S.OVERDUE]: [S.RETURNED],
+  },
+});
+
+export function canTransition(entity, from, to) {
+  return Boolean(TRANSITIONS[entity]?.[from]?.includes(to));
+}
+export function assertTransition(entity, from, to) {
+  if (!canTransition(entity, from, to))
+    throw new AppError('INVALID_TRANSITION', `${entity} cannot move from ${from} to ${to}.`);
+}

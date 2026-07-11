@@ -1,20 +1,9 @@
-# Operating system files
-.DS_Store
-Thumbs.db
-
-# Editors
-.vscode/
-.idea/
-
-# Dependencies and builds
 node_modules/
-dist/
 coverage/
-
-# Local configuration and secrets
+playwright-report/
+test-results/
+.DS_Store
 .env
 .env.*
 !.env.example
-
-# Logs
 *.log

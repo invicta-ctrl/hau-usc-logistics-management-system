@@ -1,0 +1,47 @@
+.hidden {
+  display: none !important;
+}
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.stack {
+  display: grid;
+  gap: 12px;
+}
+.stack-lg {
+  display: grid;
+  gap: 20px;
+}
+.right {
+  margin-left: auto;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.danger-text {
+  color: var(--danger);
+}
+.success-text {
+  color: var(--success);
+}
+.text-sm {
+  font-size: 0.86rem;
+}
+.section-gap {
+  margin-top: 18px;
+}
+.collapsible > summary {
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--maroon-800);
+  font-weight: 850;
+  cursor: pointer;
+}
