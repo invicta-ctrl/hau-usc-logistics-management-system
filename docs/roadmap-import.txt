@@ -1,0 +1,149 @@
+# HAU-USC Logistics Management System — Operational Product Roadmap to v1.0
+## START HERE
+### Product Mission
+- Give the Department of Logistics one accountable workspace for requests, canvassing, procurement, food, materials, inventory, pantry, lending, releases, event readiness, reporting, and audit history.
+- Make the simple path obvious to DOL staff while keeping technical controls available to maintainers.
+- Keep Google Apps Script and Google Sheets as the current platform and cross-device operational record. Any database migration remains a future decision, not part of the current build.
+### Scope and Boundaries
+- Primary users — Department of Logistics
+- Secondary users — authorized HAU-USC departments
+- Internal Office Lending Hub remains DOL-controlled through v1.0
+- General HAU student lending, public access, Microsoft/Entra authentication, and institution-wide deployment are post-v1.0 decisions
+- Financial and borrower information is restricted to authorized users and audited
+
+### Current implementation decision — July 11, 2026
+- The capability audit is classified **FIX LATER**; the current work is a visual and workflow preview, not a production merge.
+- Requesters do not enter a budget or estimated price. DOL reviews the need, canvasses supplier prices, and prepares any later DOF budget-approval request before procurement.
+- The request center has two distinct paths: **Event Logistics** and **Office Restock**.
+- **Inventory Management System** is the main catalog/availability view. **Event Deliverables**, **Restocking**, **Register Product**, and **Canvassing** are separate workflows linked by request, event, product, supplier, and ledger references.
+- Event Deliverables requires the requesting department to check received lines and submit a receipt confirmation with name, role, time, and remarks.
+- Reorder Level is not a user-facing requirement. Availability and review status are used instead.
+- Current visual revision: `Index_Frontend_Visual_Preview_Revision_02_2026-07-11.html`; acceptance is still pending.
+### July 4 Operating Rules
+- DOL has Food, Inventory, and Materials committees; heads summarize factual committee information to the Director.
+- Venue, materials, and food requests use different lead times measured in business weeks.
+- Sunday and exam week are excluded from business-week calculations.
+- All items entering or leaving the office are requested and accounted for; emergency paper-strike forms are the exception.
+- Borrowing requires a completed request and School ID; event releases require authorized staff and handoff confirmation.
+- Materials use DOL canvassing before purchase; the supplier list is maintained for council reference.
+- RFB, PCV, AS, receipts/invoices, and cash disbursement records form the financial paper trail.
+### Pilot Release — YDD 2026
+- Use Siglinang: Youth Development Days 2026 as the first operational readiness pilot.
+- Track venue/equipment, procurement/materials/food, awards, sponsors, assignments, deadlines, and completion evidence.
+- Event dates — August 10 and August 12, 2026
+- Pilot gate — every task has an owner, deadline, status, dependency, and evidence before the event.
+### Roadmap Operating Guide
+- Open a phase node for purpose, deliverables, owner, dependencies, evidence, and next action.
+- Use GitHub issues for implementation tasks and roadmap nodes for outcome-level progress.
+- Keep one active delivery phase; use BLOCKED when a decision or approval is missing.
+- Mark a phase DONE only after its release gate passes and evidence is linked.
+- Use the YDD pilot as the first real-world validation of request, task, inventory, and reporting workflows.
+### Status Legend
+- CURRENT — actively being implemented
+- NEXT — prepared after the current gate
+- PLANNED — approved direction but not active
+- BLOCKED — waiting for approval, data, access, or dependency
+- DONE — release gate passed with evidence
+## DELIVERY ROADMAP
+### v0.1 — Safeguard, Process Model, and YDD Pilot — CURRENT
+- OUTCOME — A recoverable prototype and approved operating model that can support the YDD pilot without losing records or overloading DOL staff.
+- PRODUCT & OPERATIONS — Baseline screens, committee ownership, request types, lead-time rules, YDD task tracker, and plain-language workflow map
+- SECURITY & DATA — Backup current source and Sheets, catalogue sensitive data, identify every write, and document access gaps
+- ENGINEERING & OPS — Private repository, baseline tag, smoke tests, restore procedure, risk register, and pilot support checklist
+- RELEASE GATE — Prototype restores successfully; YDD responsibilities and deadlines are visible; core requests and stock actions have an accountable owner.
+### v0.2 — Modular Prototype and Workflow Shell — NEXT
+- OUTCOME — The current prototype is maintainable and supports consistent request, inventory, lending, release, admin, and event-task screens.
+- PRODUCT & UX — Role-based navigation, reusable forms/tables/statuses, predictive product search, mobile layout, help controls, and clear empty/error states
+- SECURITY & DATA — Preserve current contracts while centralizing validation and routing every server call through a data-service interface
+- ENGINEERING & OPS — Separate feature modules, shared components, Apps Script adapter, linting, focused tests, and staging smoke tests
+- RELEASE GATE — Existing prototype behavior remains intact and no major feature is trapped in one oversized HTML file.
+### v0.3 — Verified Access and Simplified Administration — PLANNED
+- OUTCOME — Verified DOL and USC accounts receive only the screens and records allowed by role and department scope.
+- PRODUCT & UX — Branded sign-in, access-denied page, role-specific navigation, safe user management, and plain-language permission explanations
+- SECURITY & DATA — Exact active-account matching, deny-by-default access, backend authorization, audited role changes, deactivation instead of deletion
+- ENGINEERING & OPS — Permission matrix, negative tests, admin actions with preview/consequence/confirmation, and access-change audit logs
+- RELEASE GATE — Unknown, inactive, and out-of-scope accounts cannot read or write protected records, including through direct calls.
+### v0.4 — Unified Logistics Request Desk — PLANNED
+- OUTCOME — Project heads can submit and track event logistics or office-restock requests while DOL can review, revise, approve, reject, partially fulfill, complete, and cancel them.
+- PRODUCT & UX — One request center with separate Event Logistics and Office Restock paths, no requester budget field, attachments/specifications, status timeline, requester view, DOL review queue, and business-week deadline warnings
+- SECURITY & DATA — Authenticated department identity, historical status records, idempotent submission, separate request and fulfillment records, and exam-week exclusions
+- ENGINEERING & OPS — Venue rules, materials rules, food rules, DOL canvass handoff, later approval routing, RFB linkage, notifications/alerts, and test fixtures for lead-time edge cases
+- RELEASE GATE — A request can be traced from project head through DOL review, canvass, later finance approval when applicable, fulfillment, and closure without relying on chat or memory.
+### v0.5 — Inventory Management, Pantry, Lending, and Release Ledger — PLANNED
+- OUTCOME — Every office stock movement, loan, return, event release, pantry addition, adjustment, and emergency issue is accountable and persistent across devices.
+- PRODUCT & UX — Inventory Management System, separate Event Deliverables, Restocking, Register Product, Office Lending Hub, pantry view, price list, borrower details, School ID confirmation, recipient receipt confirmation, partial return, damage/loss, and overdue handling
+- SECURITY & DATA — Append-only transactions, generated or manually assigned product IDs, server availability checks, concurrency protection, audit reasons, and restricted borrower records
+- ENGINEERING & OPS — Jotform integration or equivalent intake, green USC/pink non-USC paper-strike fallback, opening-stock registration, reconciliation tools, and ledger reports
+- RELEASE GATE — Current stock equals the ledger; loans and returns remain visible across users and devices; every item entering or leaving the office has a record or documented emergency exception.
+### v0.6 — Canvassing, Procurement, Food, and Finance Traceability — PLANNED
+- OUTCOME — DOL can build supplier and price references before any later budget request or procurement action.
+- PRODUCT & UX — Canvassing tab, supplier list, item/price history, location, receipt/invoice availability, USC original-receipt information, food supplier catalogue, bulk/retail/catering guidance, and later RFB document checklist
+- SECURITY & DATA — Restrict financial and supplier records, preserve immutable document history, distinguish personal-use charges from USC-event requests, and audit approvals
+- ENGINEERING & OPS — PCV for ₱300 and below, AS for ₱301 and above, receipt/invoice validation, TIN/name capture, cash-disbursement linkage, and additional-RFB handling after DOL canvass and DOF approval are included
+- RELEASE GATE — A sampled purchase can be followed from request to canvass, supplier, approval, payment document, receipt/invoice, and inventory or event consumption.
+### v0.7 — Future Data Migration and Read-Only Sheets Reporting — PLANNED
+- OUTCOME — Only after separate approval, a canonical relational model is reproducible, validated against current Apps Script/Sheets data, and ready for a migration decision.
+- PRODUCT & UX — Familiar Sheets reports for current stock, low stock, pending requests, open/overdue loans, monthly movement, department usage, audit summary, and export health
+- SECURITY & DATA — Stable IDs, normalized references, constraints, retention rules, Row Level Security, import mapping, reconciliation, and one operational writer
+- ENGINEERING & OPS — Local/staging migrations, seed data, import validators, shadow comparisons, scheduled exports, freshness timestamps, and failure recovery; none of these replace the current platform yet
+- RELEASE GATE — Migration is separately approved, database recreation succeeds from migrations, every current record maps to the canonical model, and report edits cannot change operational data.
+### v0.8 — Cutover, Monitoring, Backup, and Event Readiness — PLANNED
+- OUTCOME — Production writes move safely to PostgreSQL while DOL can understand system health and maintain event readiness without developer intervention.
+- PRODUCT & UX — Simplified admin health view, event readiness dashboard, deadline/low-stock/overdue alerts, task assignments, and accessible incident guidance
+- SECURITY & DATA — Freeze Sheet writes at cutover, reconcile final data, audit privileged changes, protect backups, and document restoration authority
+- ENGINEERING & OPS — Production cutover, rollback plan, backups, restore drill, logs, scheduled-job monitoring, authentication alerts, and export-failure alerts
+- RELEASE GATE — New operational writes exist only in PostgreSQL; a restore drill passes; critical failures reach the correct owner; YDD-style event readiness can be repeated.
+### v0.9 — User Acceptance, Training, and Handover — PLANNED
+- OUTCOME — DOL and authorized USC users can operate the complete system, while a new maintainer can deploy, monitor, restore, and support it.
+- PRODUCT & UX — Scenario-based UAT, mobile/keyboard/touch review, training guide, quick-reference instructions, and nontechnical admin walkthrough
+- SECURITY & DATA — UAT includes unauthorized access, privacy, duplicate submission, stock integrity, approval, audit, and retention scenarios
+- ENGINEERING & OPS — Release candidate, defect triage, runbooks, support path, ownership transfer, deployment rehearsal, and rollback rehearsal
+- RELEASE GATE — DOL completes core workflows without developer intervention and all critical UAT defects are closed or formally accepted.
+### v1.0 — Stable Internal DOL/USC Release — PLANNED
+- OUTCOME — A secure, maintainable, documented internal logistics system with accountable workflows, operational database, familiar reports, monitoring, backup, and handover.
+- PRODUCT & UX — Approved DOL and USC workflows are usable on supported devices and understandable to nontechnical staff.
+- SECURITY & DATA — Access, inventory, financial, borrower, audit, retention, and privacy controls pass review.
+- ENGINEERING & OPS — Deployment, monitoring, backup/restore, documentation, support ownership, and change-control process are operational.
+- RELEASE GATE — Production acceptance is signed by the DOL owner and technical maintainer.
+## CROSS-CUTTING STANDARDS
+### Security and Privacy Standard
+- Deny access by default; enforce permissions in backend and database policies.
+- Never trust hidden buttons as security; test direct calls and out-of-scope records.
+- Restrict borrower, financial, supplier, and audit data by role and scope.
+- Audit privileged changes, stock changes, approvals, and access changes.
+### Data Integrity Standard
+- Inventory is an append-only ledger; balances are calculated, not edited as truth.
+- Requests, approvals, fulfillment, loans, returns, and financial documents retain history.
+- Use stable internal IDs and human-readable display IDs.
+- Reconcile every import, migration, cutover, and report export.
+### User Experience Standard
+- Put plain-language labels first and technical detail behind accessible help controls.
+- Make essential instructions visible outside tooltips.
+- Use text plus color for status; support keyboard, touch, mobile, loading, error, success, and empty states.
+- Explain consequences before destructive, approval, stock, or access-changing actions.
+### Development and Change Standard
+- One GitHub issue or vertical slice per Codex task.
+- Inspect and plan before implementation; avoid one-shot rewrites.
+- Every change includes tests, diff review, limitations, rollback notes, and updated status.
+- Stop when the approved acceptance criteria pass.
+## MANAGEMENT AND MONITORING
+### Simplified Admin Portal
+- Manage users, roles, department scopes, departments, reference values, workflow rules, alerts, audit history, and reports.
+- Use previews, confirmations, consequences, and recovery guidance.
+- Never expose a raw database editor to nontechnical administrators.
+### Technical Maintainer Toolkit
+- GitHub — source, issues, pull requests, milestones, release history
+- Supabase — database, authentication, policies, migrations, logs, backups
+- Hosting — previews, staging, production, environment settings, rollback
+- CI — linting, types, tests, builds, security, and migration checks
+- Runbooks — deployment, incident response, restoration, export recovery, and handover
+### Google Sheets Reporting
+- Read-only reports show source system, last refreshed time, row counts, and export status.
+- Reports cover inventory, low stock, requests, loans, overdue items, movement, department usage, audits, procurement, and event readiness.
+## POST-v1.0 — REQUIRES OUTSIDE APPROVAL
+### Future Campus Features
+- General HAU student lending
+- Public or institution-wide access
+- Microsoft/Entra authentication
+- QR/barcode workflows
+- New privacy, approval, security, support, and service-level review
