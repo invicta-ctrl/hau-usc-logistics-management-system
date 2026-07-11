@@ -1,0 +1,41 @@
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="procurement" class="view">
+        <article class="panel"><div class="panel-head"><div><h2>Procurement & Deliverables</h2><p>One operating area for event deliverables, canvassing, and automatic receiving registration.</p></div><span class="pill">Merged workflow</span></div><div id="procurementTabs" class="tabs"><button class="tab active" data-proc-tab="deliverables">Event Deliverables Queue</button><button class="tab" data-proc-tab="canvass">Canvass Library</button><button class="tab" data-proc-tab="receiving">Receiving & Auto-Registration</button></div></article>
+        <div id="proc-deliverables" class="subtab-panel active section-gap">
+          <article class="panel"><div class="panel-head"><div><h2>Event Deliverables Queue</h2><p>Review, match, canvas, procure, receive, and route items to the Release Desk.</p></div><span id="deliverableCount" class="pill">—</span></div><div class="toolbar"><input id="deliverableSearch" placeholder="Search event, item, request, department, or ID"><select id="deliverableSeriesFilter"><option value="ALL">All event series</option></select><select id="deliverableEventFilter"><option value="ALL">All sub-events</option></select><select id="deliverableStatusFilter"></select><select id="deliverableCommitteeFilter"><option value="ALL">All committees</option></select><input id="deliverableDateFilter" type="date" aria-label="Filter deliverables by date needed"><button id="clearDeliverableFilters" class="secondary" type="button">Clear</button></div><div id="deliverablesTable"></div></article>
+        </div>
+        <div id="proc-canvass" class="subtab-panel section-gap">
+          <div class="grid-2">
+            <article class="panel"><div class="panel-head"><div><h2>Add Canvass Reference</h2><p>Reusable supplier and quote data with receipt compliance and evidence.</p></div><span class="pill">CAN ID</span></div><form id="canvassForm"><div class="form-grid">
+              <label>Linked deliverable / restock line<select id="canvassLinkedLine" name="linkedLineId"><option value="">Unlinked library reference</option></select></label>
+              <label>Supplier name<input name="supplierName" required></label>
+              <label>Location<input name="location"></label>
+              <label>Item / specification<input name="itemSpec" required></label>
+              <label>Price (₱)<input name="price" type="number" min="0" step="0.01" required></label>
+              <label>Unit<select id="canvassUnit" name="unit"></select></label>
+              <label>Checked date<input name="checkedAt" type="date" required></label>
+              <label>Receipt / invoice status<select name="receiptStatus"><option value="NOT_CHECKED">Not checked</option><option value="ORIGINAL_RECEIPT">Original receipt available</option><option value="SALES_INVOICE">Sales invoice available</option><option value="UNAVAILABLE">Unavailable / follow up</option></select></label>
+              <label>Supplier TIN<input name="supplierTin"></label>
+              <label>Reliability / compliance<select name="reliability"><option value="UNRATED">Unrated</option><option value="RELIABLE">Reliable</option><option value="CONDITIONAL">Conditional</option><option value="FOLLOW_UP">Follow up required</option></select></label>
+              <label class="span-2">Evidence / source URL<input type="url" name="sourceUrl" placeholder="Optional shop page, Drive link, or online quote"></label>
+              <label class="span-2">Notes<textarea name="notes"></textarea></label>
+            </div><div id="canvassUploader"></div><button class="primary" type="submit">Save Canvass Reference</button></form></article>
+            <article class="panel"><div class="panel-head"><div><h2>Quote Comparison</h2><p>Compare linked supplier quotes and select a preferred option.</p></div><span id="quoteCompareCount" class="pill">0 quotes</span></div><label>Line to compare<select id="quoteCompareLine"></select></label><div id="quoteComparison" class="line-list" style="margin-top:12px"></div></article>
+          </div>
+          <article class="panel section-gap"><div class="panel-head"><div><h2>Canvass Library</h2><p>Scalable search, filters, sorting, pagination, price history, and safe archiving.</p></div><span id="canvassCount" class="pill">—</span></div><div class="toolbar"><input id="canvassSearch" placeholder="Search item, supplier, location, TIN, note, or CAN ID"><select id="canvassReceiptFilter"><option value="ALL">All receipt statuses</option><option value="ORIGINAL_RECEIPT">Original receipt</option><option value="SALES_INVOICE">Sales invoice</option><option value="UNAVAILABLE">Unavailable</option><option value="NOT_CHECKED">Not checked</option></select><select id="canvassSupplierFilter"><option value="ALL">All suppliers</option></select><select id="canvassSort"><option value="CHECKED_DESC">Newest checked</option><option value="PRICE_ASC">Lowest price</option><option value="PRICE_DESC">Highest price</option><option value="SUPPLIER_ASC">Supplier A–Z</option></select><button id="clearCanvassFilters" class="secondary" type="button">Clear</button></div><div id="canvassLibrary"></div><div id="canvassPagination" class="pagination"></div></article>
+        </div>
+        <div id="proc-receiving" class="subtab-panel section-gap">
+          <div class="grid-2"><article class="panel"><div class="panel-head"><div><h2>Receive Requested Event Item</h2><p>Known request and quote data are prefilled; receiving automatically assigns an event-item ID.</p></div><span class="pill">EIT auto-ID</span></div><form id="deliverableReceiveForm"><div class="form-grid">
+            <label class="span-2">Procured deliverable<select id="receiveDeliverable" name="deliverableId" required></select></label>
+            <label>Quantity received<input name="quantity" type="number" min="0.01" step="0.01" required></label>
+            <label>Unit<input id="receiveUnit" name="unit" readonly></label>
+            <label>Actual supplier<select id="receiveSupplier" name="supplierId"><option value="">Select supplier</option></select></label>
+            <label>Actual unit price (₱)<input name="unitPrice" type="number" min="0" step="0.01"></label>
+            <label>Receipt status<select name="receiptStatus"><option value="ORIGINAL_RECEIPT">Original receipt available</option><option value="SALES_INVOICE">Sales invoice available</option><option value="UNAVAILABLE">Unavailable / follow up</option></select></label>
+            <label>Batch / expiry<input name="batchExpiry" placeholder="Optional"></label>
+            <label>Condition<select name="condition"><option>Good</option><option>With minor issue</option><option>For verification</option></select></label>
+            <label class="span-2">Receiving notes<textarea name="notes"></textarea></label>
+          </div><div id="deliverableUploader"></div><button class="primary" type="submit">Receive & Auto-Register</button></form></article>
+          <article class="panel"><div class="panel-head"><div><h2>Received Event Items</h2><p>Event-specific IDs stay linked to their request, event, and supplier provenance.</p></div><span id="eventItemCount" class="pill">—</span></div><div id="receivedEventItems" class="line-list"></div></article></div>
+        </div>
+      </section>

@@ -2,7 +2,16 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist/**', 'legacy/**', 'node_modules/**', 'playwright-report/**', 'test-results/**'] },
+  {
+    ignores: [
+      'dist/**',
+      'legacy/**',
+      'node_modules/**',
+      'playwright-report/**',
+      'test-results/**',
+      'src/visual/runtime.js',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['src/**/*.js'],
@@ -10,7 +19,7 @@ export default [
     rules: { 'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }] },
   },
   {
-    files: ['tests/**/*.js', '*.config.js'],
+    files: ['tests/**/*.js', '*.config.js', 'scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

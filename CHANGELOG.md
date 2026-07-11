@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.3.1 - 2026-07-12
+
+### Restored
+
+- Reinstated the exact archived Final prototype markup, palette, typography, spacing, navigation, panels, forms, tables, and responsive rules as the active visual layer.
+- Restored the original preview interaction runtime so navigation and operational controls execute when the artifact is opened in a real browser.
+
+### Added
+
+- Reproducible extraction into shell fragments, seven view HTML modules, and eight ordered CSS modules.
+- Visual-equivalence tests for markup, CSS cascade, and interaction hooks.
+- Standalone artifact verification and classic inline-script output for direct `dist/index.html` use.
+
+### Documented
+
+- The compatibility-runtime boundary and the recommended view-by-view migration into the hardened modular service contract.
+
 ## 0.3.0 - 2026-07-11
 
 ### Added

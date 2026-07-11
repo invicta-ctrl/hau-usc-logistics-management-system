@@ -9,4 +9,6 @@
 - Generated catalog/quote rows prove pagination but are fictional.
 - Formal accessibility, privacy, records-retention, institutional SSO, concurrency, offline, and disaster-recovery testing remain future work.
 - Playwright browser binaries were unavailable in the implementation environment; responsive/focus assertions are provided but require execution on a machine or CI runner with Chromium installed.
-- `dist/index.html` should be served over HTTP for normal development. Direct `file://` behavior can vary by browser security policy even though assets are inlined.
+- The restored visual compatibility runtime is still generated as one large controller and has not yet been migrated view-by-view to the hardened modular service contract.
+- Legacy browser confirmations and broad rerender behavior remain inside that compatibility runtime; do not copy those patterns into new controllers.
+- GitHub's file viewer does not execute HTML. Download `dist/index.html`, use GitHub Pages, or run `npm run dev`/`npm run preview` to interact with the site.

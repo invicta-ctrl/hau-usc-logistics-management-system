@@ -1,0 +1,52 @@
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="request" class="view">
+        <form id="requestForm" novalidate>
+          <article class="panel"><div class="panel-head"><div><h2>What does your department need?</h2><p>Requests are reviewed before stock, procurement, or release is confirmed.</p></div><span class="pill">Request-only safe</span></div>
+            <div class="request-types">
+              <label class="request-type"><input type="radio" name="requestType" value="EVENT_LOGISTICS" checked><strong>Event Logistics</strong><span>For an approved or proposed event/sub-event, including materials, equipment, food, venue, or services.</span></label>
+              <label class="request-type"><input type="radio" name="requestType" value="CATALOG_RESTOCK"><strong>Catalog Restock</strong><span>For replenishing an existing Office Inventory or Pantry catalog item.</span></label>
+            </div>
+          </article>
+          <div class="grid-2 section-gap">
+            <article class="panel stack">
+              <div><div class="section-kicker">01 · Requester</div><div class="form-grid">
+                <label>Full name<input name="requesterName" autocomplete="name" placeholder="Requestor or project lead" required></label>
+                <label>Email address<input type="email" name="requesterEmail" autocomplete="email" placeholder="you@example.com" required></label>
+                <label>Department / office<input name="department" placeholder="Example: Department of Events Management" required></label>
+                <label>Priority<select name="priority"><option value="ROUTINE">Routine</option><option value="TIME_SENSITIVE">Time-sensitive</option><option value="URGENT">Urgent / exception review</option></select></label>
+              </div></div>
+              <div id="eventRequestFields"><div class="section-kicker">02 · Event context</div><div class="form-grid">
+                <label>Event Series<select id="requestEventSeries" name="eventSeriesId"></select></label>
+                <label>Approved Event / Sub-event<select id="requestEvent" name="eventId"></select></label>
+                <label>Request stage<select id="requestStage" name="requestStage"><option value="INITIAL">Initial request</option><option value="ADDITIONAL">Additional request</option></select></label>
+                <label id="originalRequestWrap" class="hidden">Original Request ID<select id="originalRequestId" name="parentRequestId"></select></label>
+                <label class="span-2">Event / activity title<input id="requestEventName" name="eventName" placeholder="Official event or project title"></label>
+                <div class="span-2 date-range" role="group" aria-label="Event Date Range"><label>Start date<input id="requestStartDate" type="date" name="startDate"></label><span class="range-sep">to</span><label>End date<input id="requestEndDate" type="date" name="endDate"></label></div>
+                <label>Event time<input id="requestEventTime" name="eventTime" placeholder="Example: 9:00 AM – 5:00 PM"></label>
+                <label>Estimated participants<input type="number" name="participants" min="0" step="1" placeholder="0"></label>
+                <label class="span-2">Venue / use location<input name="venue" placeholder="Where the requested resources will be used"></label>
+              </div></div>
+              <div id="catalogRequestFields" class="hidden"><div class="section-kicker">02 · Catalog context</div><div class="form-grid"><label>Catalog Type<select id="catalogType" name="catalogType"><option value="OFFICE_INVENTORY">Office Inventory</option><option value="PANTRY">Pantry</option></select></label><label>Date needed<input id="catalogNeededAt" type="date" name="catalogNeededAt"></label></div></div>
+              <div><div class="section-kicker">03 · Purpose</div><label>Purpose / justification<textarea name="purpose" placeholder="What is this for, who will use it, and why is it needed?" required></textarea></label></div>
+              <div><div class="section-kicker">04 · Add requested items</div><div class="line-composer">
+                <div class="composer-grid">
+                  <label class="wide">Item / Particular<div class="autocomplete"><input id="requestItemInput" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="requestAutocomplete" placeholder="Search item name, Product ID, alias, category, or stock area"><div id="requestAutocomplete" class="autocomplete-panel" role="listbox"></div></div></label>
+                  <label>Quantity<input id="requestQty" type="number" min="0.01" step="0.01" value="1"></label>
+                  <label>Unit<select id="requestUnit"></select></label>
+                  <label>Fulfillment<select id="requestFulfillment" disabled><option>System decides from inventory</option></select></label>
+                  <label>Date needed<input id="requestNeededAt" type="date"></label>
+                  <label id="requestReturnWrap" class="hidden">Return due<input id="requestReturnDue" type="date"></label>
+                  <label>Lead-time class<select id="requestLeadTime"></select></label>
+                  <label>Suggested supplier<input id="requestSupplier" placeholder="Optional"></label>
+                  <label id="newItemCategoryWrap" class="hidden">New-item category<select id="newItemCategory"></select></label>
+                  <label id="newItemSpecWrap" class="wide hidden">New-item specification<textarea id="newItemSpec" placeholder="Brand, dimensions, material, color, compatibility, or other identifying details"></textarea></label>
+                </div>
+                <div id="requestDecision" class="decision" aria-live="polite"></div>
+                <div class="button-row" style="margin-top:12px"><button id="addRequestLine" class="secondary" type="button">+ Add Request</button><button id="cancelLineEdit" class="ghost hidden" type="button">Cancel edit</button></div>
+              </div></div>
+              <div id="requestLines" class="line-list"><div class="empty">No requested items yet.</div></div>
+            </article>
+            <aside class="panel stack" style="align-self:start;position:sticky;top:20px"><div class="panel-head"><div><h2>Review before sending</h2><p>Line decisions explain what can be issued from stock and what still needs procurement.</p></div><span id="draftLineCount" class="pill">0 lines</span></div><div id="requestSummary" class="mode-note">Add at least one request line.</div><label><span><input id="requestConsent" type="checkbox" style="width:auto;min-height:auto;margin-right:6px" required>I confirm that these details are accurate and may be used for USC logistics processing.</span></label><button class="primary" type="submit">Submit for DOL Review</button><p class="hint">Submission creates a FOR REVIEW record. Physical stock is not reduced until a controlled release is confirmed.</p></aside>
+          </div>
+        </form>
+      </section>

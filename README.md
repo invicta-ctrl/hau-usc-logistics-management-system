@@ -11,21 +11,29 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL shown in the terminal. Use `?mode=request` or `#request-only` for the sanitized requester portal demonstration.
+Open the Vite URL shown in the terminal. Use `?request=1` for the request-only presentation from the restored prototype.
 
 ## Commands
 
 ```bash
 npm run dev          # local Vite development server
+npm run extract:visual # regenerate visual modules from the archived baseline
 npm run test         # Vitest unit and integration tests
 npm run test:e2e     # focused Playwright and responsive smoke tests
 npm run lint         # ESLint
 npm run format       # Prettier write
 npm run build        # self-contained prototype build
-npm run check        # lint, Vitest, and build
+npm run verify:dist  # verify standalone controls and asset inlining
+npm run check        # lint, Vitest, build, and standalone verification
 ```
 
-The final standalone artifact is [`dist/index.html`](dist/index.html). CSS and JavaScript are inlined by `vite-plugin-singlefile`, so it can be opened independently and later adapted for Apps Script HTML Service.
+The final standalone artifact is [`dist/index.html`](dist/index.html). CSS and JavaScript are inlined by `vite-plugin-singlefile`; the final script is emitted as a classic inline script so the downloaded file runs from `file://` as well as a web server. GitHub's source-file preview does not execute the application—download the file or serve the repository.
+
+## Authoritative visual baseline
+
+`legacy/HAU-USC_Logistics-Prototype.original.html` is the visual source of truth. `npm run extract:visual` reproducibly separates it into the shell fragments, one HTML module per operational view under `src/visual/views/`, ordered CSS modules under `src/styles/visual/`, and the original working preview interactions in `src/visual/runtime.js`.
+
+Do not restyle generated modules by hand. Change the archived baseline only for an intentional, reviewed visual-baseline revision, then rerun the extractor and equivalence tests.
 
 ## Architecture at a glance
 
@@ -37,7 +45,9 @@ src/
 ├── features/     active-view modules for each operational workspace
 ├── components/   reusable accessible navigation, modal, drawer, table, cards, filters
 ├── data/         fixed demonstration events, seed state, and data dictionary
-├── styles/       custom HAU-USC design system
+├── visual/       extracted shell, operational view templates, and compatibility runtime
+├── styles/visual ordered CSS modules from the authoritative prototype
+├── styles/       modular design-system work retained for controller migration
 └── assets/       optional DOL/USC logos and icons
 ```
 
@@ -54,12 +64,12 @@ The application uses labeled placeholders when logos are absent. Never place pri
 
 ## Backend boundary
 
-Views call the service contract only. `mock-service.js` is active. `apps-script-service.js` and `rest-service.js` document callable mappings but remain inactive. The production server must own identity, authorization, locks, balances, transitions, IDs, idempotency, evidence validation, and audit rows.
+The restored visual preview currently runs its extracted local-only compatibility service. The hardened modular contract in `src/services/mock-service.js`, along with the Apps Script and REST boundaries, remains the target service layer and is covered by the integrity suite. The next controller-migration slice must connect the restored templates to that contract without changing the visual baseline. The production server must own identity, authorization, locks, balances, transitions, IDs, idempotency, evidence validation, and audit rows.
 
 ## Guidance for the next agent
 
 1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/DOMAIN_RULES.md`, and `docs/ARCHITECTURE.md`.
 2. Run `npm install && npm run check` before changing code.
 3. Work one feature/domain slice at a time; do not regenerate the application for a small change.
-4. Change `src/`, tests, and documentation. Never hand-edit `dist/index.html`.
+4. Preserve the extracted visual baseline; change controllers/services independently. Never hand-edit generated visual fragments or `dist/index.html`.
 5. Rebuild and update `PROJECT_STATUS.md` and `CHANGELOG.md` before handing off.

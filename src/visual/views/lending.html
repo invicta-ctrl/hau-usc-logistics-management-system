@@ -1,0 +1,20 @@
+<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->
+<section id="lending" class="view">
+        <div class="grid-2">
+          <article class="panel"><div class="panel-head"><div><h2>New Lending / Consumable Ticket</h2><p>Create a review ticket first. Approval and physical handoff are separate steps.</p></div><span class="pill">Library-style flow</span></div>
+            <form id="lendingForm"><div class="form-grid">
+              <label>Student ID Number<input name="studentIdNumber" required placeholder="Required; validation is configurable"></label>
+              <label>Borrower name<input name="borrowerName" required placeholder="Full name"></label>
+              <label>Borrower type<select name="borrowerType"><option value="USC_STAFF">USC Officer/Staff</option><option value="ANGELITE">Angelite/Non-USC</option></select></label>
+              <label>Department / organization<input name="department" required></label>
+              <label>Contact detail<input name="contact" placeholder="Optional but recommended"></label>
+              <label>Item<select id="lendingItem" name="itemId" required></select></label>
+              <label>Quantity<input name="quantity" type="number" min="1" step="1" value="1" required></label>
+              <label id="lendingDueWrap">Due date<input name="dueAt" type="datetime-local"></label>
+              <label class="span-2">Purpose<textarea name="purpose" required placeholder="How will the item be used?"></textarea></label>
+            </div><div id="lendingAvailability" class="mode-note"></div><button class="primary" type="submit">Create For Review Ticket</button></form>
+          </article>
+          <article class="panel"><div class="panel-head"><div><h2>Circulation Summary</h2><p>Overdue is derived from the current time on every render.</p></div><span id="loanSummaryCount" class="pill">—</span></div><div id="loanMetrics" class="grid-2"></div><div class="mode-note" style="margin-top:12px">Production note: a daily Apps Script trigger should recalculate and notify overdue loans.</div></article>
+        </div>
+        <article class="panel section-gap"><div class="panel-head"><div><h2>Borrowing Tickets</h2><p>Approve, hand off, return, or review complete borrower history.</p></div></div><div id="lendingTabs" class="tabs"></div><div class="toolbar compact"><input id="lendingSearch" placeholder="Search borrower, Student ID, item, or department"><select id="lendingItemFilter"><option value="ALL">All items</option></select><select id="lendingBorrowerFilter"><option value="ALL">All borrower types</option><option value="USC_STAFF">USC Officer/Staff</option><option value="ANGELITE">Angelite/Non-USC</option></select><button id="clearLendingFilters" class="secondary" type="button">Clear</button></div><div id="lendingTickets" class="loan-board"></div></article>
+      </section>

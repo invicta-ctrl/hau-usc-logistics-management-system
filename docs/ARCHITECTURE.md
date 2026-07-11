@@ -28,6 +28,12 @@ router -> active feature renderer -> service contract -> selected adapter
 
 `src/app/bootstrap.js` owns composition, not domain rules. `src/services/mock-service.js` owns preview transactions. Pure validation and derivation live under `src/domain/` so Vitest can exercise them without a browser.
 
+## Visual compatibility layer
+
+The archived Final prototype is the visual authority. `scripts/extract-visual-baseline.mjs` splits its body into shell and per-view HTML modules and splits its stylesheet into ordered visual modules without changing selector order or declarations. `scripts/authoritative-visual-plugin.mjs` assembles those fragments during Vite's HTML transform. Vitest reconstructs the source and proves markup, CSS cascade, and interaction hooks remain equivalent.
+
+The active preview controller is presently `src/visual/runtime.js`, extracted from the same baseline so its buttons and forms remain operational. The newer domain, store, selector, feature, and service modules remain in place and tested, but their controller is temporarily inactive. Migration should proceed one view at a time: retain the extracted template and CSS, move handlers to feature controllers, and route commands through `MockService`. Do not replace the visual layer again.
+
 ## Rendering
 
 The renderer registry is the imported `modules` map in `bootstrap.js`. `renderActive()` replaces only `#view-root` and mounts the current feature. Store notifications carry dirty views; hidden modules are not rebuilt after unrelated operations.
@@ -40,4 +46,4 @@ List features use precomputed inventory search text, result limits, and paginati
 
 ## Build
 
-Vite uses `src/` as its root. `vite-plugin-singlefile` inlines generated CSS and JavaScript into `dist/index.html`. Optional runtime images should be inlined or adapted to Apps Script templates before deployment.
+Vite uses `src/` as its root. The visual plugin assembles ordered HTML fragments, and `vite-plugin-singlefile` inlines generated CSS and JavaScript into `dist/index.html`. A final build hook converts the import-free inline bundle to a classic script for standalone `file://` use. `npm run verify:dist` rejects external assets, missing operational roots, or a remaining module script.
