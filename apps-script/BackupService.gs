@@ -1,9 +1,14 @@
 function createLaunchBackup_(user, correlationId, label) {
-  var folder = archiveFolder_(), source = DriveApp.getFileById(HAU_CONFIG.SPREADSHEET_ID);
+  var runtime = resolveRuntimeConfig_();
+  var folder = archiveFolder_();
+  var source = DriveApp.getFileById(runtime.spreadsheetId);
   var name = 'HAU-USC Logistics ' + (label || 'Launch') + ' Backup ' + Utilities.formatDate(new Date(), HAU_CONFIG.TIMEZONE, 'yyyy-MM-dd HHmmss');
   var copy = source.makeCopy(name, folder);
-  audit_('CREATE_LAUNCH_BACKUP', 'SPREADSHEET', copy.getId(), user, correlationId, { notes: name });
-  return { backupFileId: copy.getId(), backupUrl: copy.getUrl(), name: name };
+  audit_('CREATE_LAUNCH_BACKUP', 'SPREADSHEET', copy.getId(), user, correlationId, {
+    notes: name,
+    after: { environment: runtime.environment, sourceSpreadsheetId: runtime.spreadsheetId }
+  });
+  return { environment: runtime.environment, sourceSpreadsheetId: runtime.spreadsheetId, backupFileId: copy.getId(), backupUrl: copy.getUrl(), name: name };
 }
 
 function createLaunchBackup() {
