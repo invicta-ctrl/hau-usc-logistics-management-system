@@ -2,7 +2,7 @@
 
 Version 0.4.0 is the launch-readiness branch for the Holy Angel University – University Student Council Department of Logistics. It preserves the approved maroon, burgundy, gold, cream, paper, and white prototype while adding a production Google Apps Script boundary for the prepared Google Sheet and future Drive evidence folders.
 
-> **Safety status:** local Vite builds default to `backendMode = 'mock'`. `apps-script/Index.html` is generated with `backendMode = 'apps-script'` for staging. No production deployment or spreadsheet mutation is performed by repository commands. The application must remain in staging until the launch runbook passes.
+> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. No production deployment or spreadsheet mutation is performed by repository commands. The application must remain in staging until the launch runbook passes.
 
 ## Start locally
 
@@ -25,13 +25,16 @@ npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
 
-`npm run build` creates three self-contained files:
+`npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 
 - `dist/index.html` – canonical standalone production build.
 - `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
-- `apps-script/Index.html` – Apps Script HTML Service bundle with the staging adapter enabled.
+- `apps-script/Index.html` – small Apps Script template shell.
+- `apps-script/AppBody.html` – generated approved body markup.
+- `apps-script/AppStyles.html` – generated complete application style element.
+- `apps-script/AppScript.html` – generated complete application script element with staging runtime configuration.
 
-Do not edit generated HTML directly. Change source and rebuild.
+The Apps Script body, CSS, and JavaScript are produced from separate Vite outputs. The generator does not parse minified JavaScript out of `dist/index.html`, and it escapes raw-text closing sequences before embedding code in HTML. Do not edit generated HTML directly. Change source or the generator, then rebuild.
 
 ## Approved visual baseline
 
@@ -51,8 +54,9 @@ Feature code calls service adapters; it never reads Google Sheets or `google.scr
 
 ```text
 src/            approved browser UI, modules, domain rules, and adapters
-apps-script/    V8 Apps Script backend, repositories, workflows, setup, migration, backup
-tests/          Vitest domain/backend tests and Playwright responsive checks
+apps-script/    V8 Apps Script backend, generated web package, setup, migration, backup
+scripts/        visual extraction, standalone build, Apps Script package generation/checks
+tests/          Vitest domain/package tests and Playwright browser checks
 docs/           architecture, schema, security, deployment, migration, and launch runbooks
 legacy/         preserved approved prototype
 dist/           generated standalone artifact
@@ -68,6 +72,10 @@ Apps Script does not contain a hardcoded operational or backup spreadsheet ID. E
 - `HAU_BACKUP_SPREADSHEET_ID`
 
 The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placeholders, requires separate operational and backup spreadsheets, and fails closed before opening a Sheet when configuration is invalid. Drive folder IDs remain controlled configuration values. See `docs/APPS_SCRIPT_SETUP.md`.
+
+## Staging HTML diagnostic
+
+The repository includes an isolated `DiagnosticShell.html`. After a reviewed staging push and deployment, `?diagnostic=1` is available only when `HAU_ENVIRONMENT=STAGING`. It proves template evaluation, body rendering, style application, inline JavaScript, and one harmless `google.script.run` round trip without reading or writing operational data. The admin-only `htmlTemplateDiagnostics()` function reports bounded lengths, prefixes, and suffixes; it never logs the complete generated application.
 
 ## First steps for a maintainer
 
