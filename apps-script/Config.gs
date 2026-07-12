@@ -99,7 +99,16 @@ var HAU_HEADERS = Object.freeze({
   '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes']
 });
 
-function getDatabase_() { return SpreadsheetApp.openById(resolveRuntimeConfig_().spreadsheetId); }
+var HAU_DATABASE_CACHE_ = null;
+var HAU_DATABASE_CACHE_ID_ = '';
+function getDatabase_() {
+  var spreadsheetId = resolveRuntimeConfig_().spreadsheetId;
+  if (!HAU_DATABASE_CACHE_ || HAU_DATABASE_CACHE_ID_ !== spreadsheetId) {
+    HAU_DATABASE_CACHE_ = SpreadsheetApp.openById(spreadsheetId);
+    HAU_DATABASE_CACHE_ID_ = spreadsheetId;
+  }
+  return HAU_DATABASE_CACHE_;
+}
 function nowIso_() { return Utilities.formatDate(new Date(), HAU_CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX"); }
 function configMap_() {
   var rows = readObjects_(HAU_SHEETS.CONFIG), map = {};
