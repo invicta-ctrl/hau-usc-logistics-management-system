@@ -1,4 +1,4 @@
-import { backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';
+import { appEnvironment, backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';
   'use strict';
   /* =========================================================
      1. Constants and enums
@@ -292,7 +292,7 @@ import { backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runt
     const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
     try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}
     normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}
-    if(backendMode!=='mock'){const badge=document.querySelector('.preview-badge');if(badge)badge.textContent='● Apps Script · staging';const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class="live-dot"></span>Apps Script staging</strong>Server authorization, Sheets repositories, and audit logging are active.';}
+    if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label=`● Apps Script · ${safeEnvironment}`;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML=`<strong><span class="live-dot"></span>Apps Script ${safeEnvironment}</strong>Server authorization, Sheets repositories, and audit logging are active.`;}
     populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');
   }
 
@@ -311,7 +311,7 @@ import { backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runt
   function bindGlobalEvents(){
     byId('primaryNav').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)showView(b.dataset.view)});
     document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)showView(b.dataset.go)});
-    byId('resetDemo').addEventListener('click',resetDemoData);
+    if(backendMode==='mock')byId('resetDemo').addEventListener('click',resetDemoData);
     byId('drawerBackdrop').addEventListener('click',e=>{if(e.target===byId('drawerBackdrop'))closeDrawer()});
     byId('modalBackdrop').addEventListener('click',e=>{if(e.target===byId('modalBackdrop'))closeModal()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeModal();hideRequestSuggestions();}});

@@ -23,10 +23,12 @@ if (!scriptMatch) {
 
 const markup = body.slice(0, scriptMatch.index);
 function bridgeRuntime(runtime) {
-  return runtime
+  const normalizedRuntime = runtime.replace(/\r\n?/g, '\n');
+
+  return normalizedRuntime
     .replace(
       "'use strict';",
-      "import { backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';\n  'use strict';",
+      "import { appEnvironment, backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';\n  'use strict';",
     )
     .replace(
       "function persist(){ state.updatedAt=isoNow(); try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){toast('Preview changes could not be saved locally. Storage may be full.',true);} }",
@@ -83,11 +85,43 @@ function bridgeRuntime(runtime) {
     )
     .replace(
       "function init(){\n    state=loadState();normalizeStateRecords();\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
-      "function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>({...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))}));['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}\n  async function init(){\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';\n    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}\n    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    if(backendMode!=='mock'){const badge=document.querySelector('.preview-badge');if(badge)badge.textContent='● Apps Script · staging';const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class=\"live-dot\"></span>Apps Script staging</strong>Server authorization, Sheets repositories, and audit logging are active.';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
+      "function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>({...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))}));['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}\n  async function init(){\n    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';\n    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}\n    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label=`● Apps Script · ${safeEnvironment}`;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML=`<strong><span class=\"live-dot\"></span>Apps Script ${safeEnvironment}</strong>Server authorization, Sheets repositories, and audit logging are active.`;}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
+    )
+    .replace(
+      "}}const atp=availableToPromise(item.id);",
+      "}}if(state.catalogAvailabilityProtected||item.availabilityProtected)return{type:'review',message:'Exact stock balances are protected. DOL review will verify availability and apply the full, partial, or procurement route before any reservation.',parts:[{quantity:requested,itemId:item.id,fulfillmentSource:'PENDING_REVIEW',proposedStatus:'FOR_REVIEW'}]};const atp=availableToPromise(item.id);",
+    )
+    .replace(
+      "d.type==='partial'?'Split: Stock + Canvassing':'For Canvassing'",
+      "d.type==='partial'?'Split: Stock + Canvassing':d.type==='review'?'Pending DOL Stock Review':'For Canvassing'",
+    )
+    .replace(
+      "l.fulfillmentSource==='ISSUE_FROM_STOCK'?'Issue from Stock':'For Canvassing'",
+      "l.fulfillmentSource==='ISSUE_FROM_STOCK'?'Issue from Stock':l.fulfillmentSource==='PENDING_REVIEW'?'Pending DOL Stock Review':'For Canvassing'",
+    )
+    .replace(
+      "||'<div class=\"empty\">No requested items yet. Selecting a catalog item will show its live available-to-promise quantity.</div>';const stock=",
+      "||`<div class=\"empty\">No requested items yet. ${state.catalogAvailabilityProtected?'Exact stock balances remain internal and routing is confirmed during DOL review.':'Selecting a catalog item will show its live available-to-promise quantity.'}</div>`;const stock=",
+    )
+    .replace(
+      "const stock=ui.requestDraftLines.filter(l=>l.fulfillmentSource==='ISSUE_FROM_STOCK').length,proc=ui.requestDraftLines.length-stock;",
+      "const stock=ui.requestDraftLines.filter(l=>l.fulfillmentSource==='ISSUE_FROM_STOCK').length,pending=ui.requestDraftLines.filter(l=>l.fulfillmentSource==='PENDING_REVIEW').length,proc=ui.requestDraftLines.length-stock-pending;",
+    )
+    .replace(
+      "${stock} stock-routed \u00B7 ${proc} canvassing/procurement-routed. Submission",
+      "${stock} stock-routed \u00B7 ${proc} canvassing/procurement-routed${pending?` \u00B7 ${pending} pending DOL routing`:''}. Submission",
+    )
+    .replace(
+      "openDrawer('Request submitted',`<div class=\"mode-note\"><strong>${esc(rec.id)}</strong><br>${esc(rec.displayName)}<br>Status: ${esc(statusLabel(rec.status))}</div><p class=\"small muted\" style=\"margin-top:14px\">The request is saved in local preview state. No stock was reduced and no Google Sheet was changed.</p>`)",
+      "const storageNote=backendMode==='mock'?'The request is saved in local preview state. No stock was reduced and no Google Sheet was changed.':'The request was recorded for DOL review. Submission did not reduce physical stock.';openDrawer('Request submitted',`<div class=\"mode-note\"><strong>${esc(rec.id)}</strong><br>${esc(rec.displayName)}<br>Status: ${esc(statusLabel(rec.status))}</div><p class=\"small muted\" style=\"margin-top:14px\">${storageNote}</p>`)",
     )
     .replace(
       "normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}",
       "normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}",
+    )
+    .replace(
+      "byId('resetDemo').addEventListener('click',resetDemoData);",
+      "if(backendMode==='mock')byId('resetDemo').addEventListener('click',resetDemoData);",
     );
 }
 const viewIds = [

@@ -1,8 +1,8 @@
 function doGet(e) {
+  var runtime = resolveRuntimeConfig_();
   var diagnostic = Boolean(e && e.parameter && e.parameter.diagnostic === '1');
   var templateName = 'Index';
   if (diagnostic) {
-    var runtime = resolveRuntimeConfig_();
     if (runtime.environment !== 'STAGING') {
       throw new Error('The HTML diagnostic shell is available only in STAGING.');
     }
@@ -10,6 +10,7 @@ function doGet(e) {
   }
   var template = HtmlService.createTemplateFromFile(templateName);
   template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
+  template.appEnvironment = runtime.environment;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')

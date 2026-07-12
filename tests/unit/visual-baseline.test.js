@@ -67,7 +67,34 @@ describe('authoritative visual extraction', () => {
   it('keeps the original interaction hooks and adds the production adapter bridge', async () => {
     const runtime = await read('src/visual/runtime.js');
     expect(runtime).toContain("createLegacyRuntimeAdapter(mockServices)");
-    expect(runtime).toContain("backendMode==='mock'?loadState():await services.loadBootstrapData");
+    expect(runtime).toContain(
+      "import { appEnvironment, backendMode, createLegacyRuntimeAdapter }",
+    );
+    expect(runtime).toContain(
+      "backendMode==='mock'?loadState():await services.loadBootstrapData",
+    );
+    expect(runtime).toContain(
+      "Reset Demo Data is available only in local preview mode.",
+    );
+    expect(runtime).toContain(
+      "reset.hidden=true;reset.disabled=true;reset.tabIndex=-1",
+    );
+    expect(runtime).toContain(
+      "if(backendMode==='mock')byId('resetDemo').addEventListener('click',resetDemoData)",
+    );
+    expect(runtime).toContain(
+      'state.catalogAvailabilityProtected||item.availabilityProtected',
+    );
+    expect(runtime).toContain(
+      "fulfillmentSource:'PENDING_REVIEW'",
+    );
+    expect(runtime).toContain(
+      'Pending DOL Stock Review',
+    );
+    expect(runtime).toContain(
+      'The request was recorded for DOL review. Submission did not reduce physical stock.',
+    );
+
     for (const hook of [
       'bindGlobalEvents()',
       'bindRequestEvents()',

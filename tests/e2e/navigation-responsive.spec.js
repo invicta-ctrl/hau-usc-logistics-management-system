@@ -3,6 +3,12 @@ import { test, expect } from '@playwright/test';
 test('navigates every approved module without page-level overflow', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await expect(
+    page.locator('.app-header .preview-badge'),
+  ).toHaveText('● Preview mode · local data');
+  await expect(page.locator('#resetDemo')).toBeVisible();
+  await expect(page.locator('#resetDemo')).toBeEnabled();
+
   for (const view of ['request', 'lending', 'release', 'restocking', 'procurement', 'inventory', 'overview']) {
     await page.locator(`#primaryNav [data-view="${view}"]`).click();
     await expect(page.locator(`section#${view}`)).toHaveClass(/active/);

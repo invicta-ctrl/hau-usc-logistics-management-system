@@ -41,6 +41,11 @@
 - Preserved the existing staging `webapp` manifest settings while force-pushing the reviewed 29-file package, then updated the existing deployment ID to immutable Version 8.
 - Propagated the server-trusted Apps Script request-only flag through `body[data-request-only]` so the sandboxed browser does not depend on the outer `/exec` query string.
 - Added internal/request-only package assembly tests that assert one bootstrap call with the correct `requestOnly` payload and verify the request-only shell hides internal navigation.
+- Apps Script runtime controls now use the trusted server-rendered environment instead of assuming staging.
+- Generated body markup now carries both `data-request-only` and `data-app-environment`.
+- Apps Script pages display `Apps Script · staging` or `Apps Script · production` according to the resolved Script Property environment.
+- `Reset Demo Data` remains available in local mock mode but is hidden, disabled, removed from keyboard focus, and left without a click handler in Apps Script mode.
+- The visual extractor now normalizes CRLF input before applying compatibility-runtime bridges, preventing Windows extraction from silently dropping the request-only privacy and accessibility repairs.
 
 ### Verified
 
@@ -56,6 +61,9 @@
 - Version 8 `?diagnostic=1` passed body, style, inline-script, and harmless server-call checks.
 - Version 8 internal `/exec` rendered the Apps Script staging workspace, cleared the loading overlay, and exposed no raw JavaScript.
 - No operational Sheet/Drive workflow, migration application, trigger change, production action, or PR merge was performed during staging recovery.
+- `npm run check` passed: ESLint, 10 Vitest files / 69 tests, Vite build, Apps Script static validation, deterministic package checks, and standalone artifact verification.
+- `npm run test:e2e` passed with 29 tests and 25 intentional viewport-specific skips.
+- Both standalone HTML artifacts verified at 210,112 bytes each.
 
 ### Known issues
 

@@ -9,7 +9,7 @@
     <title>HAU-USC Logistics Prototype</title>
     <?!= include_('AppStyles'); ?>
   </head>
-  <body data-request-only="<?= requestOnly ? 'true' : 'false' ?>">
+  <body data-request-only="<?= requestOnly ? 'true' : 'false' ?>" data-app-environment="<?= appEnvironment ?>">
     <?!= include_('AppBody'); ?>
     <?!= include_('AppScript'); ?>
   </body>

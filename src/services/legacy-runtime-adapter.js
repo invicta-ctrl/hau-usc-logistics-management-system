@@ -3,6 +3,7 @@ import { AppsScriptAdapter, fileToEvidencePayload } from './apps-script-adapter.
 import { HttpApiAdapter } from './http-api-adapter.js';
 
 export const backendMode = config.backendMode;
+export const appEnvironment = config.appEnvironment;
 const clientRequestId = (prefix) => `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
 export function createLegacyRuntimeAdapter(mockServices) {

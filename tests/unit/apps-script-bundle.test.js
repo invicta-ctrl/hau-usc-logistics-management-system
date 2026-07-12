@@ -171,7 +171,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(4);
+    expect(diagnostics.index.markers['<?'].count).toBe(5);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),
@@ -207,4 +207,53 @@ describe('Apps Script separate-output packaging', () => {
       }),
     ).toThrow(/one inlined JavaScript entry chunk/);
   });
+
+  it('renders the trusted Apps Script environment into the assembled body', () => {
+    const files = fixtureFiles();
+
+    expect(files.index).toContain(
+      'data-app-environment="<?= appEnvironment ?>"',
+    );
+
+    const staging = analyzeAssembledDocument(
+      assembleAppsScriptTemplate(files, {
+        appEnvironment: 'STAGING',
+      }),
+    );
+
+    const production = analyzeAssembledDocument(
+      assembleAppsScriptTemplate(files, {
+        appEnvironment: 'PRODUCTION',
+      }),
+    );
+
+    const stagingBody = staging.tokens.find(
+      (token) =>
+        token.type === 'tag' &&
+        !token.closing &&
+        token.name === 'body',
+    );
+
+    const productionBody = production.tokens.find(
+      (token) =>
+        token.type === 'tag' &&
+        !token.closing &&
+        token.name === 'body',
+    );
+
+    expect(
+      stagingBody.attributes.get('data-app-environment'),
+    ).toBe('STAGING');
+
+    expect(
+      productionBody.attributes.get('data-app-environment'),
+    ).toBe('PRODUCTION');
+
+    expect(() =>
+      assembleAppsScriptTemplate(files, {
+        appEnvironment: 'DEVELOPMENT',
+      }),
+    ).toThrow(/STAGING or PRODUCTION/);
+  });
+
 });
