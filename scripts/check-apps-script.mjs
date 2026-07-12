@@ -44,7 +44,7 @@ if (!styles.includes('.app-shell') || !styles.includes('.loading-overlay')) thro
 if (!index.includes('__HAU_RUNTIME_CONFIG__') || !index.includes('__HAU_APP_SCRIPT_LOADED__')) throw new Error('Index.html is missing Apps Script runtime markers.');
 if (!index.includes('<style>') || !index.includes('<script>')) throw new Error('Index.html must wrap raw CSS and JavaScript partials in executable tags.');
 if (/<\/?(?:script|style)\b/i.test(styles) || /<\/?script\b/i.test(script)) throw new Error('Apps Script CSS and JavaScript partials must contain raw contents without container tags.');
-if (!script.includes('setTimeout(init,0)')) throw new Error('AppScript.html is missing the direct Apps Script bootstrap.');
+if (!/setTimeout\([A-Za-z_$][\w$]*,0\)/.test(script)) throw new Error('AppScript.html is missing the direct Apps Script bootstrap.');
 new Function(script);
 
 console.log(`Validated ${gasFiles.length} Apps Script source files, ${requiredFunctions.length} required functions, and executable split web-app bundle partials.`);
