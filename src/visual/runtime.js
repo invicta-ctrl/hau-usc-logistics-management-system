@@ -291,7 +291,7 @@ import { backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runt
   async function init(){
     const requestOnly=new URLSearchParams(location.search).get('request')==='1';
     try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}
-    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}
+    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}
     if(backendMode!=='mock'){const badge=document.querySelector('.preview-badge');if(badge)badge.textContent='● Apps Script · staging';const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class="live-dot"></span>Apps Script staging</strong>Server authorization, Sheets repositories, and audit logging are active.';}
     populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');
   }
