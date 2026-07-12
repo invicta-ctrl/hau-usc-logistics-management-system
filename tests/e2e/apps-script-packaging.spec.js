@@ -21,7 +21,8 @@ test('assembled Apps Script document executes one bootstrap without visible Java
   expect(analysis.styleCount).toBe(1);
   expect(analysis.suspiciousVisibleJavaScriptTokenCount).toBe(0);
 
-  await page.addInitScript((bootstrap) => {
+  await page.goto('about:blank');
+  await page.evaluate((bootstrap) => {
     globalThis.__appsScriptApiCalls = [];
     let successHandler = () => {};
     let failureHandler = () => {};
@@ -46,10 +47,7 @@ test('assembled Apps Script document executes one bootstrap without visible Java
     globalThis.google = { script: { run: runner } };
   }, emptyBootstrap);
 
-  await page.route('https://apps-script.test/**', async (route) => {
-    await route.fulfill({ status: 200, contentType: 'text/html', body: assembled });
-  });
-  await page.goto('https://apps-script.test/');
+  await page.setContent(assembled, { waitUntil: 'load' });
   await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls)).toEqual([
