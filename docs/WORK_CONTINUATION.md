@@ -1,6 +1,59 @@
 # Work Continuation
 
-## Latest verified checkpoint — Version 8 request-only privacy failure; repository repair pending deployment
+## Latest checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
+
+- Date: `2026-07-13` (`Asia/Manila`)
+- Repository: `invicta-ctrl/hau-usc-logistics-management-system`
+- Branch: `feat/apps-script-backend-and-launch-readiness`
+- Starting commit: `d8b7e784ceb4207162507e95b3ceef0fb3845873`
+- Runtime-truthfulness commit: `7156c256414b797f4b0f19431b399009f31feebd`
+- Pull request: draft PR #2, open, mergeable, and unmerged
+- Current staging deployment: immutable version 9 on the existing deployment ID
+- Production state: untouched
+
+### Live Version 9 acceptance
+
+- The staging diagnostic passed body rendering, style application, inline-script execution, and the harmless server-call check.
+- Authorized internal `/exec` rendered the full workspace and cleared the loading overlay.
+- Request-only `/exec?request=1` rendered only the requester portal.
+- Request-only mode exposed no internal navigation, exact inventory balances, ledger, release desk, supplier internals, users, or administrative controls.
+- No operational Google Sheet or Drive workflow was performed.
+
+### Runtime-truthfulness repair
+
+- `doGet(e)` resolves the trusted Script Property environment and passes it to the evaluated template.
+- Generated body markup contains `data-request-only` and `data-app-environment`.
+- Browser runtime configuration consumes the server-rendered environment.
+- Visible Apps Script labels distinguish staging from production.
+- Local mock mode retains `Preview mode · local data` and `Reset Demo Data`.
+- Apps Script mode hides and disables Reset Demo Data, removes it from keyboard focus, and does not attach its click handler.
+- The server-side/mock reset guard remains in place.
+- CRLF normalization prevents Windows visual extraction from dropping existing runtime bridges.
+- Request-only privacy behavior remains unchanged.
+
+### Verification
+
+- Focused tests: 2 files / 14 tests passed.
+- `npm run check`: passed with 10 Vitest files / 69 tests, Vite build, Apps Script static validation, deterministic package checks, and artifact verification.
+- Standalone artifacts: 210,112 bytes each.
+- `npm run test:e2e`: 29 passed, 25 intentionally skipped, 0 failed.
+- GitHub Apps Script static check run 52: passed.
+- GitHub CI run 52: passed.
+
+### External actions
+
+- No `clasp push` was run.
+- No Version 10 was created.
+- No deployment was updated.
+- No Sheet or Drive operational write occurred.
+- Production was not touched.
+- PR #2 was not merged.
+
+### Next action
+
+The repository review and CI gate are complete. The next bounded milestone is one explicitly authorized Version 10 staging deployment of commit `7156c256414b797f4b0f19431b399009f31feebd`, preserving the current deployment ID and performing no operational Sheet or Drive writes. After deployment, retest the diagnostic route, authorized internal route, request-only privacy boundary, accurate Apps Script environment label, and absence of the local-only reset control.
+
+## Previous verified checkpoint — Version 8 request-only privacy failure; repository repair pending deployment
 
 - Date: `2026-07-12` (`Asia/Manila`)
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
@@ -131,7 +184,7 @@ Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR 
 
 ## External-write boundary
 
-The authorized version-8 recovery push/deployment is complete. The request-only repair is repository-only. This checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
+The authorized Version 8 recovery push/deployment is complete. The request-only repair was later accepted live in Version 9. This historical checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
 
 ## Fresh-chat recovery prompt
 
