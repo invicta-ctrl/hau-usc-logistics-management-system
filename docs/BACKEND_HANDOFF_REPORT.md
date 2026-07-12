@@ -9,7 +9,7 @@
 
 ## Verified locally
 
-`npm run check` passes: ESLint, 51 Vitest tests, Vite single-file build, 23-file Apps Script static validation, and artifact verification. Playwright was invoked but could not launch because Chromium is absent; CI installs it.
+`npm run check` passes: ESLint, 51 Vitest tests, Vite single-file build, 23-file Apps Script static validation, and artifact verification. Local Chromium is absent; GitHub CI installed it and completed the responsive suite with 25 passes and 5 intentional viewport-specific skips.
 
 ## Not executed externally
 

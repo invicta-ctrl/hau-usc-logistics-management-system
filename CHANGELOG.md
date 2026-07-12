@@ -20,7 +20,7 @@
 
 - Live production/backup comparison was read-only and found the four legacy tabs unchanged.
 - Local lint, Vitest, Vite single-file build, Apps Script static validation, and artifact verification passed.
-- Playwright remains pending because Chromium is unavailable locally; CI installs it.
+- GitHub CI completed the Playwright matrix at six viewport widths with 25 passes and 5 intentional skips.
 
 ## 0.3.2 - 2026-07-12
 

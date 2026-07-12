@@ -37,7 +37,8 @@ See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 - `npm run build`: passed; single-file output approximately 207 kB (52.7 kB gzip).
 - `npm run check:apps-script`: passed for 23 `.gs` files and 16 required entry points.
 - `npm run verify:dist`: passed; standalone and shareable artifacts match.
-- `npm run test:e2e`: invoked but assertions did not run because Playwright Chromium is not installed in this environment. CI installs Chromium and reruns all 30 responsive checks.
+- `npm run test:e2e`: local assertions could not run because Chromium is not installed in this environment. GitHub CI installed Chromium and completed the 30-case matrix: 25 passed and 5 intentional viewport-specific skips.
+- GitHub Actions: `CI` and `Apps Script static check` both passed for commit `9fc9148`.
 - `clasp status` / `clasp push --dry-run`: not run because `clasp` and a staging Script ID are not configured.
 
 ## Launch blockers and limitations
