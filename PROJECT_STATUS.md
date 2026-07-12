@@ -6,9 +6,10 @@
 - Date: 2026-07-12
 - Branch: `feat/apps-script-backend-and-launch-readiness`
 - Local/demo backend: `mock`
-- Apps Script bundle mode: `apps-script` / `STAGING`
+- Apps Script bundle mode: `apps-script` / explicit Script Property environment
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
+- Full live demo readiness estimate: **approximately 75%**
 
 ## Completed in this branch
 
@@ -17,13 +18,18 @@
 - Added Apps Script repositories, setup, schema checks, authorization, collision-safe IDs, locks, idempotency, structured errors, audit/status history, append-only inventory, reservations, request routing, lending, release, restocking, procurement, canvass, evidence, migration, reconciliation, and backup functions.
 - Added privacy-safe evidence labels and filenames, MIME/extension/size checks, digest deduplication, configured folder routing, and quarantine recovery.
 - Added staging/production setup documentation, CI, static Apps Script checks, backend-focused unit tests, and generated `apps-script/Index.html`.
-- Request-only Apps Script payloads now hide exact inventory balances and legacy trace fields; authoritative stock routing occurs during locked DOL review.
-- Evidence upload entry points now require receive, release, or admin permission according to evidence type.
-- Visual-baseline tests now remove only the exact generated-file notice across LF and CRLF checkouts while preserving strict visual markup comparison.
+- Request-only Apps Script payloads hide exact inventory balances and legacy trace fields; authoritative stock routing occurs during locked DOL review.
+- Evidence upload entry points require receive, release, or admin permission according to evidence type.
+- Visual-baseline tests support LF and CRLF checkouts while preserving strict visual markup comparison.
+- Removed hardcoded operational and backup spreadsheet IDs from Apps Script runtime code.
+- Added required Script Properties: `HAU_ENVIRONMENT`, `HAU_SPREADSHEET_ID`, and `HAU_BACKUP_SPREADSHEET_ID`.
+- Runtime configuration accepts only `STAGING` or `PRODUCTION`, rejects missing/placeholder/malformed values, requires separate operational and backup IDs, and has no production fallback.
+- Setup, migration/reconciliation access, launch backup creation, and admin health checks now route through the resolved environment target.
+- Admin health checks report the active environment and target IDs so operators can verify the destination before writes.
 
 ## Live schema validation (read-only, 2026-07-12)
 
-- Production spreadsheet title and ID matched the supplied target; timezone is `Asia/Manila`.
+- Production spreadsheet title and timezone matched the supplied target during the earlier read-only validation.
 - All four original legacy tabs and all 20 prepared backend tabs were present.
 - The four legacy tabs matched the supplied backup value-for-value at validation time.
 - `01_ITEM_MASTER` contained 397 records (`ITM-0001`–`ITM-0397`): 394 `ACTIVE`, 3 `VERIFY`, 2 zero-quantity, and no missing units.
@@ -34,29 +40,24 @@ See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 
 ## Verification status
 
-- `npm install`: passed.
-- `npm run lint`: passed.
-- Focused visual-baseline test: 1 file / 4 tests passed on Windows with `core.autocrlf=true`.
-- `npm test`: 9 files / 55 tests passed on the 2026-07-12 Windows continuation checkpoint.
-- `npm run check`: passed, including lint, 55 Vitest tests, build, Apps Script static validation, and artifact verification.
-- `npm run build`: passed; single-file output 210.17 kB (53.32 kB gzip).
-- `npm run check:apps-script`: passed for 23 `.gs` files and 16 required entry points.
-- `npm run verify:dist`: passed after removing build-only line-ending churn; committed standalone and shareable artifacts match at 209,953 bytes each with no generated-artifact diff.
-- `npm run test:e2e`: local assertions could not run because Chromium is not installed in this environment. GitHub CI installed Chromium and completed the 30-case matrix: 25 passed and 5 intentional viewport-specific skips.
-- GitHub Actions: `CI` and `Apps Script static check` both passed for commit `9fc9148`.
-- `clasp status` / `clasp push --dry-run`: not run because `clasp` and a staging Script ID are not configured.
+- Previous Windows checkpoint: focused visual-baseline test passed, and 9 files / 55 tests passed.
+- GitHub `npm run check` passed after the staging-isolation implementation, including ESLint, Vitest, Vite build, Apps Script static validation, and artifact verification.
+- GitHub Apps Script static check passed after the staging-isolation implementation.
+- Remote Playwright browser smoke is run by GitHub CI; the latest result must be confirmed at the final handoff head.
+- `clasp status` / `clasp push --dry-run`: not run because a staging Script ID and authenticated local clasp configuration are not yet available.
 
 ## Launch blockers and limitations
 
+- A disposable staging spreadsheet and separate staging baseline/backup spreadsheet must be created.
+- A staging Apps Script project must be created and its three required Script Properties assigned.
 - All required Drive folder IDs must be assigned and validated.
 - The users/access table must be reviewed and seeded with institutional accounts.
-- A staging Apps Script project and `.clasp.json` must be configured locally (never committed).
-- Live schema setup, migration dry-run, backup, and reconciliation functions have not been executed against production by this branch.
-- No Apps Script web app has been deployed; no production smoke tests have run.
-- Local Playwright cannot launch because Chromium is absent. The prior remote branch head passed the GitHub browser-smoke job; the continuation commit must pass CI after publication.
-- The approved compatibility runtime remains generated and relatively large; several secondary edit/archive actions are still preview-only and should be migrated one slice at a time.
-- Google Sheets is appropriate for the controlled v1 pilot, not high-volume or strongly transactional scale. See the future database plan.
+- An untracked `.clasp.json` must be configured locally and authenticated.
+- Live staging schema setup, migration dry-run, backup, reconciliation, and health check have not been executed.
+- No Apps Script web app has been deployed and no real Sheet/Drive workflow smoke test has run.
+- The approved compatibility runtime remains generated and relatively large; several secondary edit/archive actions remain preview-only.
+- Google Sheets is appropriate for the controlled v1 pilot, not high-volume or strongly transactional scale.
 
 ## Next recommended full-stack task
 
-Create the staging Apps Script project, set the seven Drive folder configuration values, run `setupDatabase()`, `validateDatabaseSchema()`, `validateDriveConfiguration()`, `runMigrationDryRun()`, and `healthCheck()` under an administrator account, then capture the returned reports without applying migration or deploying production.
+Create the disposable staging Google resources, configure the three required Script Properties, push the reviewed Apps Script bundle to the staging project, and stop after `setupDatabase()`, schema validation, Drive validation, migration dry-run, reconciliation, launch backup, and admin `healthCheck()` confirm the exact staging target. Do not apply migration or deploy production.
