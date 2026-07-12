@@ -1,5 +1,8 @@
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+function doGet(e) {
+  var template = HtmlService.createTemplateFromFile('Index');
+  template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
+  return template
+    .evaluate()
     .setTitle('HAU-USC Logistics Management System')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
 }
