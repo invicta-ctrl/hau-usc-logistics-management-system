@@ -42,10 +42,21 @@ if (!scripts.includes('DOMContentLoaded')) {
   throw new Error('Apps Script bundle is missing the application bootstrap script.');
 }
 
+// Apps Script can evaluate included script partials after DOMContentLoaded has already fired.
+// Replace the preview-only listener with a readyState-aware bootstrap so init always runs once.
+const bootstrapPattern = /document\.addEventListener\((['"])DOMContentLoaded\1,\s*init\);/;
+if (!bootstrapPattern.test(scripts)) {
+  throw new Error('Could not locate the application DOMContentLoaded bootstrap for Apps Script hardening.');
+}
+const appsScriptScripts = scripts.replace(
+  bootstrapPattern,
+  'document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:!0}):setTimeout(init,0);',
+);
+
 const index = `<!doctype html>\n${htmlOpen}\n  ${headOpen[0]}\n    ${headShell}\n    <?!= include_('AppStyles'); ?>\n  </head>\n  ${bodyOpen[0]}\n    <?!= include_('AppBody'); ?>\n    <?!= include_('AppScript'); ?>\n  </body>\n</html>\n`;
 const appStyles = `${styles.trim()}\n`;
 const appBody = `${body}\n`;
-const appScript = `${runtimeConfiguration}\n${scripts.trim()}\n`;
+const appScript = `${runtimeConfiguration}\n${appsScriptScripts.trim()}\n`;
 
 await mkdir(resolve('apps-script'), { recursive: true });
 await Promise.all([
