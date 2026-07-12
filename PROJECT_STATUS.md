@@ -3,16 +3,16 @@
 ## Current version
 
 - Version: `0.4.0`
-- Date: `2026-07-12`
+- Date: `2026-07-13`
 - Branch: `feat/apps-script-backend-and-launch-readiness`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #2, open, mergeable, unmerged
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: immutable version 8 on the existing deployment ID
+- Current staging deployment: immutable version 9 on the existing deployment ID
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Full live demo readiness estimate: **approximately 85%**; the live Version 8 request-only route exposes the internal workspace and must be repaired before broader access
+- Live readiness: rendering and request-only privacy acceptance passed on Version 9; runtime-truthfulness commit `7156c256414b797f4b0f19431b399009f31feebd` is pushed and both GitHub CI workflows passed. The repair remains undeployed pending explicit authorization for a bounded Version 10 staging update.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
@@ -45,7 +45,7 @@ The following staging operations were completed before the packaging repair and 
 - Timestamped launch backup created.
 - Daily overdue-lending and scheduled-backup triggers created and verified.
 - Initial staging web app versions created during the incident investigation.
-- Version 8 now serves the parser-safe package on the existing staging deployment. The isolated HTML diagnostic and authorized internal `/exec` bootstrap both render successfully.
+- Version 9 now serves the parser-safe request-only repair on the existing staging deployment. The isolated diagnostic, authorized internal `/exec`, and request-only `/exec?request=1` routes passed read-only acceptance.
 
 No production migration was applied and no production resource was modified.
 
@@ -60,6 +60,23 @@ No production migration was applied and no production resource was modified.
 See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 
 ## Verification status
+
+### Latest runtime-truthfulness verification
+
+- Focused Vitest verification: 2 files / 14 tests passed.
+- `npm run check`: passed with exit code 0.
+- ESLint passed.
+- Vitest passed: 10 files / 69 tests.
+- Vite build passed with 17 modules transformed.
+- Apps Script static validation passed.
+- Deterministic generated-package checks passed.
+- Standalone artifact verification passed at 210,112 bytes each.
+- `npm run test:e2e`: 29 passed, 25 intentionally skipped, 0 failed.
+- Staging and production template assembly tests passed for both internal and request-only modes.
+- GitHub Apps Script static check run 52: **passed**.
+- GitHub CI run 52: **passed**.
+- Runtime-truthfulness commit: `7156c256414b797f4b0f19431b399009f31feebd`.
+- No Apps Script push or deployment was performed for this repository repair.
 
 At packaging-repair code checkpoint `74f2f0f...`:
 
@@ -93,22 +110,25 @@ The previous package design was structurally unsafe because it extracted executa
 
 The fixed real bundle contains one intended application script element, one intended application style element, no unexpected template delimiters, and no raw JavaScript body text. Version 8 confirms recovery in Apps Script HTML Service. The exact omitted Version 6 server exception remains unavailable, but the live Version 7 failure is confirmed to have used stale pre-repair remote files after a skipped clasp push.
 
-The internal staging page still shows the legacy visible label `Preview mode · local data` and the `Reset Demo Data` button even though the sidebar correctly reports `Apps Script staging`. This is a UI-truthfulness defect, not a mock fallback: the non-mock reset handler refuses to modify demo state. It must be corrected before workflow acceptance.
+Live Version 9 acceptance confirms:
 
-Live Version 8 `?request=1` failed the privacy acceptance test: it rendered the full internal workspace. Apps Script correctly set `template.requestOnly` from the outer request, but the generated template never emitted that value. The compatibility runtime instead inspected `location.search` inside Google's sandbox iframe, where the outer `/exec?request=1` query is unavailable, and called `api_getBootstrapData({ requestOnly: false })`.
+- `?diagnostic=1` rendered the body and styles, executed inline JavaScript, and completed the harmless server call;
+- authorized internal `/exec` rendered the complete workspace and cleared the loading overlay;
+- `/exec?request=1` rendered only the requester portal;
+- request-only mode exposed no internal sidebar, exact inventory balances, ledger, release desk, supplier internals, users, or administrative controls;
+- no operational Sheet or Drive workflow was performed;
+- production was untouched and PR #2 was not merged.
 
-The repository repair now renders the server value as `body[data-request-only]`, makes the browser honor that trusted value before any local query-string fallback, and covers both internal and request-only assembly in unit/static/Chromium tests. This repair is not yet deployed to staging.
+The runtime-truthfulness repair is included in this repository update. It resolves the trusted Script Property environment, renders it into `body[data-app-environment]`, shows accurate staging or production labels, and removes the local-only reset control from Apps Script interaction. It passed local checks and remains undeployed to Apps Script; Version 10 has not been created.
 
 ## Remaining launch blockers and limitations
 
 - Review and seed the final institutional access rows in `14_USERS_ACCESS` before broader staging acceptance.
-- Review, deploy, and retest the request-only propagation repair before broadening staging access.
-- Correct the misleading preview badge and hide the local-only reset control in Apps Script mode.
-- Confirm live bootstrap invocation count from bounded execution evidence if exact-once proof is required.
-- Complete one controlled Sheet/Drive end-to-end workflow and verify audit/history/error/evidence records.
+- Obtain explicit authorization before preparing any bounded Version 10 staging deployment.
+- Complete one controlled Sheet/Drive end-to-end workflow and verify audit, history, error, and evidence records.
 - Obtain DOL owner approval before production promotion or merging PR #2.
 - The compatibility runtime remains relatively large; Google Sheets remains suitable for a controlled v1 pilot, not high-volume transactional scale.
 
 ## Next recommended task
 
-Review the request-only propagation repair and CI, then explicitly authorize one staging push/version if accepted. Retest `?request=1` before the separate UI-truthfulness correction. Do not run operational workflows or repeat setup, Drive provisioning, migration, reconciliation, backup, or triggers.
+Obtain explicit authorization for one bounded Version 10 staging deployment of commit `7156c256414b797f4b0f19431b399009f31feebd`. The deployment must preserve the existing deployment ID, avoid all operational Sheet/Drive writes, and be followed only by diagnostic, internal-rendering, request-only privacy, and runtime-label acceptance checks. Do not touch production or merge PR #2.
