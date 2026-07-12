@@ -15,7 +15,9 @@ Every sensitive server action resolves the active Google identity and checks `14
 
 ## Public/request-only boundary
 
-The request-only bootstrap returns event choices and sanitized catalog suggestions, including only the aggregate availability needed for a provisional full/partial/none decision. It excludes users, authorization flags, physical/on-hand history, ledger rows, reservations, suppliers/TINs, borrower records, evidence internals, audits, errors, and admin functions. Server entry points still reject staff commands invoked manually.
+The request-only bootstrap returns event choices and sanitized catalog suggestions without exact on-hand, reserved, available-to-promise, verification-note, or legacy-source values. The requester UI labels stock routing as pending DOL review; the locked review command performs the authoritative full/partial/none decision. Request-only data excludes users, authorization flags, ledger rows, reservations, suppliers/TINs, borrower records, evidence internals, audits, errors, and admin functions. Server entry points still reject staff commands invoked manually.
+
+Evidence uploads are also permission-gated server-side before file bytes are decoded or Drive is accessed: receiving evidence requires `Can_Receive`, release/lending evidence requires `Can_Release`, and other supporting documents require `Can_Admin`.
 
 ## Secrets and personal data
 

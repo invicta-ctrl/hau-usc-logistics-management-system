@@ -1,5 +1,5 @@
 function api_getBootstrapData(command) { return guardApi_('getBootstrapData', command || {}, function() { return getBootstrapData_(command || {}); }); }
-function api_searchCatalog(command) { return guardApi_('searchCatalog', command || {}, function() { return { items: searchCatalog_(command || {}) }; }); }
+function api_searchCatalog(command) { return guardApi_('searchCatalog', command || {}, function() { var user=resolveRequesterUser_(),includeSensitive=canPermission_(user,'Can_Review');return { items: searchCatalog_(command || {},includeSensitive), availabilityProtected:!includeSensitive }; }); }
 function api_submitRequest(command) { return guardApi_('submitRequest', command, function(c) { return submitRequest_(command, c); }); }
 function api_reviewRequest(command) { return guardApi_('reviewRequest', command, function(c) { return reviewRequest_(command, c); }); }
 function api_reserveStock(command) { return guardApi_('reserveStock', command, function(c) { return reserveStockCommand_(command, c); }); }

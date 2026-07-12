@@ -43,6 +43,17 @@ describe('Apps Script evidence rules', () => {
   });
   it('rejects MIME and extension mismatches', () => expect(() => ctx.validateEvidencePayload_({ evidenceType: 'CANVASS_QUOTE', mimeType: 'application/pdf', originalFileName: 'quote.html', relatedEntityId: 'CAN-1' })).toThrow(/extension/i));
   it('fails safely when a required folder ID is missing', () => { ctx.configMap_ = () => ({ DRIVE_RECEIPTS_FOLDER_ID: 'TO_BE_ASSIGNED' }); expect(() => ctx.folderForEvidence_('RESTOCK_RECEIPT')).toThrow(/configuration is missing/i); });
+  it('requires receive, release, or admin permission before evidence upload', () => {
+    expect(ctx.evidencePermissionForType_('RESTOCK_RECEIPT')).toBe('Can_Receive');
+    expect(ctx.evidencePermissionForType_('LENDING_RETURN_PHOTO')).toBe('Can_Release');
+    expect(ctx.evidencePermissionForType_('OTHER_SUPPORTING_DOCUMENT')).toBe('Can_Admin');
+    ctx.requirePermission_ = (permission) => {
+      if (permission !== 'Can_Receive') throw new Error('FORBIDDEN');
+      return { User_ID: 'USR-1' };
+    };
+    expect(ctx.authorizeEvidenceUpload_('RESTOCK_RECEIPT').User_ID).toBe('USR-1');
+    expect(() => ctx.authorizeEvidenceUpload_('RELEASE_CONFIRMATION_PHOTO')).toThrow(/FORBIDDEN/);
+  });
 });
 
 describe('Apps Script authorization and migration discovery', () => {
@@ -55,6 +66,26 @@ describe('Apps Script authorization and migration discovery', () => {
   });
   it('blocks inactive users even when a permission flag is present', () => {
     expect(auth.canPermission_({ Role: 'DOL_STAFF', Active: false, Can_Release: true }, 'Can_Release')).toBe(false);
+  });
+  it('removes quantities, reservations, and legacy trace fields from requester catalog records', () => {
+    const inventory = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs']);
+    const item = inventory.requesterItemDto_({
+      Item_ID: 'ITM-0001', Item_Name: 'Paper', Aliases: 'copy|a4', Category: 'OFFICE_SUPPLIES',
+      Stock_Area: 'Inventory', Handling: 'Consumable', Unit: 'ream', Status: 'ACTIVE',
+      Opening_Qty: 125, Reserved_Qty: 30, Available_To_Promise: 95,
+      Legacy_Source_Sheet: 'MAIN INVENTORY', Legacy_Source_Row: 9, Legacy_Source_Block: 'A-C',
+    });
+    expect(item).toMatchObject({ id: 'ITM-0001', name: 'Paper', unit: 'ream', availabilityProtected: true });
+    for (const field of ['openingOnHand', 'onHand', 'reserved', 'availableToPromise', 'legacy', 'verificationNote']) {
+      expect(Object.prototype.hasOwnProperty.call(item, field)).toBe(false);
+    }
+  });
+  it('removes internal committee and department data from requester event choices', () => {
+    const inventory = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs']);
+    const event = inventory.requesterEventDto_({ Event_ID: 'EVT-1', Event_Series_ID: 'SER-1', Event_Name: 'Demo', Owner_Committee: 'Internal', Department: 'Private' });
+    expect(event.id).toBe('EVT-1');
+    expect(Object.prototype.hasOwnProperty.call(event, 'owner')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(event, 'department')).toBe(false);
   });
   it('preserves source row/block and flags date-serial quantities', () => {
     const values = [['PANTRY'], ['ITEM', 'QTY.', 'UNIT'], ['All Purpose Flour', 46026, 'kilo'], ['Salt', 2, 'kilo']];

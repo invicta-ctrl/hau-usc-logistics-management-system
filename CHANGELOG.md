@@ -15,11 +15,13 @@
 - Request acceptance now preflights all stock decisions before applying reservations and line transitions.
 - Restock and deliverable receipts accumulate by line and reject over-receipt before operational writes.
 - Lending partial returns account for lost/damaged quantities without falsely restoring stock.
+- Requester catalog/bootstrap payloads no longer expose exact stock balances, reservations, verification notes, or legacy trace fields; the UI defers authoritative stock routing to DOL review.
+- Evidence uploads now require a server-side receive, release, or admin permission before file processing.
 
 ### Verified
 
 - Live production/backup comparison was read-only and found the four legacy tabs unchanged.
-- Local lint, Vitest, Vite single-file build, Apps Script static validation, and artifact verification passed.
+- Local lint, 54 Vitest tests, Vite single-file build, Apps Script static validation, and artifact verification passed.
 - GitHub CI completed the Playwright matrix at six viewport widths with 25 passes and 5 intentional skips.
 
 ## 0.3.2 - 2026-07-12

@@ -17,6 +17,8 @@
 - Added Apps Script repositories, setup, schema checks, authorization, collision-safe IDs, locks, idempotency, structured errors, audit/status history, append-only inventory, reservations, request routing, lending, release, restocking, procurement, canvass, evidence, migration, reconciliation, and backup functions.
 - Added privacy-safe evidence labels and filenames, MIME/extension/size checks, digest deduplication, configured folder routing, and quarantine recovery.
 - Added staging/production setup documentation, CI, static Apps Script checks, backend-focused unit tests, and generated `apps-script/Index.html`.
+- Request-only Apps Script payloads now hide exact inventory balances and legacy trace fields; authoritative stock routing occurs during locked DOL review.
+- Evidence upload entry points now require receive, release, or admin permission according to evidence type.
 
 ## Live schema validation (read-only, 2026-07-12)
 
@@ -33,8 +35,8 @@ See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 
 - `npm install`: passed.
 - `npm run lint`: passed.
-- `npm test`: 8 files / 47 tests passed on the first backend integration pass; rerun before publication after final docs.
-- `npm run build`: passed; single-file output approximately 207 kB (52.7 kB gzip).
+- `npm test`: 9 files / 54 tests passed on the 2026-07-12 continuation checkpoint.
+- `npm run build`: passed; single-file output approximately 210 kB (53.3 kB gzip).
 - `npm run check:apps-script`: passed for 23 `.gs` files and 16 required entry points.
 - `npm run verify:dist`: passed; standalone and shareable artifacts match.
 - `npm run test:e2e`: local assertions could not run because Chromium is not installed in this environment. GitHub CI installed Chromium and completed the 30-case matrix: 25 passed and 5 intentional viewport-specific skips.
@@ -48,7 +50,7 @@ See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 - A staging Apps Script project and `.clasp.json` must be configured locally (never committed).
 - Live schema setup, migration dry-run, backup, and reconciliation functions have not been executed against production by this branch.
 - No Apps Script web app has been deployed; no production smoke tests have run.
-- Playwright must pass in CI or a workstation with browsers.
+- Local Playwright cannot launch because Chromium is absent. The prior remote branch head passed the GitHub browser-smoke job; the continuation commit must pass CI after publication.
 - The approved compatibility runtime remains generated and relatively large; several secondary edit/archive actions are still preview-only and should be migrated one slice at a time.
 - Google Sheets is appropriate for the controlled v1 pilot, not high-volume or strongly transactional scale. See the future database plan.
 
