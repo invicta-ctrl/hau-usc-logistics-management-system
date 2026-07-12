@@ -11,6 +11,12 @@ function requireMatch(value, pattern, label) {
   return match;
 }
 
+function stripContainerTag(block, tagName) {
+  return block
+    .replace(new RegExp(`^<${tagName}\\b[^>]*>`, 'i'), '')
+    .replace(new RegExp(`</${tagName}>\\s*$`, 'i'), '');
+}
+
 const htmlOpen = requireMatch(source, /<html\b[^>]*>/i, 'the html element')[0];
 const headOpen = requireMatch(source, /<head\b[^>]*>/i, 'the head element');
 const headCloseIndex = source.search(/<\/head>/i);
@@ -25,12 +31,14 @@ const headInner = source.slice(headOpen.index + headOpen[0].length, headCloseInd
 const bodyInner = source.slice(bodyOpen.index + bodyOpen[0].length, bodyCloseIndex);
 const stylePattern = /<style\b[^>]*>[\s\S]*?<\/style>/gi;
 const scriptPattern = /<script\b[^>]*>[\s\S]*?<\/script>/gi;
-const styles = [...headInner.matchAll(stylePattern), ...bodyInner.matchAll(stylePattern)]
-  .map((match) => match[0])
-  .join('\n');
-const scripts = [...headInner.matchAll(scriptPattern), ...bodyInner.matchAll(scriptPattern)]
-  .map((match) => match[0])
-  .join('\n');
+const styleBlocks = [...headInner.matchAll(stylePattern), ...bodyInner.matchAll(stylePattern)].map(
+  (match) => match[0],
+);
+const scriptBlocks = [...headInner.matchAll(scriptPattern), ...bodyInner.matchAll(scriptPattern)].map(
+  (match) => match[0],
+);
+const styles = styleBlocks.map((block) => stripContainerTag(block, 'style')).join('\n');
+const scripts = scriptBlocks.map((block) => stripContainerTag(block, 'script')).join('\n;\n');
 const headShell = headInner.replace(stylePattern, '').replace(scriptPattern, '').trim();
 const body = bodyInner.replace(stylePattern, '').replace(scriptPattern, '').trim();
 
@@ -42,21 +50,18 @@ if (!scripts.includes('DOMContentLoaded')) {
   throw new Error('Apps Script bundle is missing the application bootstrap script.');
 }
 
-// Apps Script can evaluate included script partials after DOMContentLoaded has already fired.
-// Replace the preview-only listener with a readyState-aware bootstrap so init always runs once.
+// The Apps Script bundle is inserted after the body markup, so initialize directly instead
+// of relying on DOMContentLoaded timing inside the HTML Service iframe.
 const bootstrapPattern = /document\.addEventListener\((['"])DOMContentLoaded\1,\s*init\);/;
 if (!bootstrapPattern.test(scripts)) {
   throw new Error('Could not locate the application DOMContentLoaded bootstrap for Apps Script hardening.');
 }
-const appsScriptScripts = scripts.replace(
-  bootstrapPattern,
-  'document.readyState==="loading"?document.addEventListener("DOMContentLoaded",init,{once:!0}):setTimeout(init,0);',
-);
+const appsScriptScripts = scripts.replace(bootstrapPattern, 'setTimeout(init,0);');
 
-const index = `<!doctype html>\n${htmlOpen}\n  ${headOpen[0]}\n    ${headShell}\n    <?!= include_('AppStyles'); ?>\n  </head>\n  ${bodyOpen[0]}\n    <?!= include_('AppBody'); ?>\n    <?!= include_('AppScript'); ?>\n  </body>\n</html>\n`;
+const index = `<!doctype html>\n${htmlOpen}\n  ${headOpen[0]}\n    ${headShell}\n    ${runtimeConfiguration}\n    <style>\n<?!= include_('AppStyles'); ?>\n    </style>\n  </head>\n  ${bodyOpen[0]}\n    <?!= include_('AppBody'); ?>\n    <script>\n      globalThis.__HAU_APP_SCRIPT_LOADED__ = true;\n<?!= include_('AppScript'); ?>\n    </script>\n  </body>\n</html>\n`;
 const appStyles = `${styles.trim()}\n`;
 const appBody = `${body}\n`;
-const appScript = `${runtimeConfiguration}\n${appsScriptScripts.trim()}\n`;
+const appScript = `${appsScriptScripts.trim()}\n`;
 
 await mkdir(resolve('apps-script'), { recursive: true });
 await Promise.all([
