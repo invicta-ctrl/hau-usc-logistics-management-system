@@ -1,5 +1,64 @@
 # Work Continuation
 
+## Manager-verified demo deployment checkpoint
+
+- Timestamp: `2026-07-12 16:48 PHT` (`Asia/Manila`)
+- Branch: `feat/apps-script-backend-and-launch-readiness`
+- Verified remote head: `743450a8cdf9bfa01e68b2ddf548e13af9b3504c`
+- Pull request: draft PR #2, open, mergeable, and unmerged.
+- GitHub checks at the verified head: `CI` passed and `Apps Script static check` passed, including the remote browser-smoke suite.
+- Latest milestone review: approved. The LF/CRLF visual-baseline compatibility change is test-only and did not change authoritative or generated visual artifacts.
+
+### Current demo-readiness estimate
+
+- Full live demo deployment: approximately **70% complete**.
+- Application and repository code: approximately **85% complete** for the intended controlled demo.
+- Live Google Workspace integration and deployment: approximately **25% complete** because Apps Script, Drive, access rows, and end-to-end staging workflows have not yet been configured or exercised.
+- These are management estimates, not automated measurements. Completion changes only after verified staging evidence.
+
+### Next bounded milestone
+
+Implement **staging isolation** before any Google write:
+
+1. Resolve environment, operational spreadsheet ID, and backup spreadsheet ID from required Apps Script Script Properties.
+2. Support explicit `STAGING` and `PRODUCTION` values.
+3. Fail closed when required properties are missing, placeholders, or invalid.
+4. Never silently fall back to the currently hardcoded production spreadsheet IDs.
+5. Make setup, migration, reconciliation, backup, and health-check operations use the resolved environment configuration.
+6. Make `healthCheck()` report the active environment and target spreadsheet ID for operator verification.
+7. Add regression tests, run `npm run check`, update status documentation, commit, push, and verify CI.
+
+No Google Sheets, Drive, Apps Script deployment, migration, or production write is authorized during this repository-only milestone. ChatGPT web may implement this directly; Codex is only needed if a local terminal-only operation becomes unavoidable.
+
+### Steps after staging isolation passes
+
+1. Create a disposable demo copy of the Google Sheet.
+2. Create a dedicated Drive root folder for the demo.
+3. Create a standalone staging Apps Script project.
+4. Configure an untracked `.clasp.json` and authenticate `clasp` locally.
+5. Build, inspect `clasp push --dry-run`, then push to staging.
+6. Run `setupDatabase()`, schema validation, Drive setup/validation, reviewed access seeding, migration dry-run, reconciliation, launch backup, and `healthCheck()`.
+7. Deploy the staging web app.
+8. Demonstrate one end-to-end request, review, reservation/procurement, evidence upload, receiving, and release flow.
+9. Verify Sheet rows, Drive files, ledger, status history, audit log, idempotent retry, and request-only privacy.
+
+### New-chat recovery instructions
+
+A fresh project chat should begin by reading, in order:
+
+1. `AGENTS.md`
+2. `README.md`
+3. `PROJECT_STATUS.md`
+4. `docs/WORK_CONTINUATION.md`
+5. `docs/ROADMAP_TO_V1.md`
+6. `docs/ARCHITECTURE.md`
+7. `docs/DOMAIN_RULES.md`
+8. `docs/SECURITY_AND_ACCESS.md`
+9. `docs/APPS_SCRIPT_SETUP.md`
+10. `docs/LAUNCH_RUNBOOK.md`
+
+Then verify the active branch, remote head, PR #2, and CI before editing. The expected starting point for the next milestone is commit `743450a8cdf9bfa01e68b2ddf548e13af9b3504c`, unless GitHub shows a newer reviewed head.
+
 ## Windows visual-baseline compatibility checkpoint
 
 - Timestamp: `2026-07-12 16:32 PHT` (`Asia/Manila`)
