@@ -37,6 +37,8 @@
 - Raw-text closing sequences are escaped before JavaScript or CSS is embedded in Apps Script HTML.
 - Visible-JavaScript detection no longer misclassifies ordinary UI text such as `Lead-time class`.
 - Apps Script browser packaging verification is network-independent and executes from an assembled in-memory document.
+- Corrected the controlled staging deployment after clasp 3.3.0 skipped a manifest-confirmation push, leaving Version 7 on stale raw script/style partials and causing `Exception: Malformed HTML content`.
+- Preserved the existing staging `webapp` manifest settings while force-pushing the reviewed 29-file package, then updated the existing deployment ID to immutable Version 8.
 
 ### Verified
 
@@ -48,7 +50,15 @@
 - Packaging-repair code checkpoint `74f2f0f...` passed GitHub CI and Apps Script static validation.
 - The repaired checkpoint passed 10 Vitest files / 67 tests, 23 Apps Script source files / 18 required functions, deterministic package parity, standalone artifact verification, and the six-viewport browser-smoke matrix.
 - Generated Apps Script package sizes were 512 bytes (`Index.html`), 28,967 bytes (`AppBody.html`), 26,850 bytes (`AppStyles.html`), and 153,161 bytes (`AppScript.html`).
-- No Google Workspace write, `clasp push`, deployment version, migration application, trigger change, production action, or PR merge was performed during the packaging repair.
+- A post-push remote pull matched all 29 reviewed staging files and confirmed one application script and one application style element.
+- Version 8 `?diagnostic=1` passed body, style, inline-script, and harmless server-call checks.
+- Version 8 internal `/exec` rendered the Apps Script staging workspace, cleared the loading overlay, and exposed no raw JavaScript.
+- No operational Sheet/Drive workflow, migration application, trigger change, production action, or PR merge was performed during staging recovery.
+
+### Known issues
+
+- The internal Apps Script staging UI still displays the legacy `Preview mode · local data` badge and `Reset Demo Data` control. The adapter is live and the reset handler is blocked outside mock mode, but the visible wording must be corrected before workflow acceptance.
+- Live `?request=1` privacy verification and a bounded end-to-end staging workflow remain pending.
 
 ## 0.3.2 - 2026-07-12
 

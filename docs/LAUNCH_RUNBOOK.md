@@ -10,6 +10,20 @@
 6. Deploy staging web app. Test internal and `?request=1` entry points with separate authorized/unauthorized accounts.
 7. Run the complete staging acceptance matrix and verify audit/history/error/evidence records.
 
+### Clasp 3.3 manifest safeguard
+
+Clasp 3.3.0 does not support `clasp push --dry-run`. Use `clasp status` for the bounded file list and retain generated hashes/sizes from `npm run check:apps-script`.
+
+Do not interpret `Skipping push` as proof that Apps Script is current. When `appsscript.json` differs, clasp 3.3 attempts an overwrite confirmation; in a non-interactive session it can decline and skip every file. Before creating a version:
+
+1. pull a read-only remote snapshot into a separate temporary checkout;
+2. compare the complete remote/local file set without exposing the Script ID;
+3. preserve reviewed remote `webapp` access settings exactly;
+4. use `clasp push --force` only with explicit staging authorization and only after the manifest comparison is approved;
+5. pull again and require exact file parity before versioning or updating the existing deployment.
+
+Never create a new immutable version merely because a push command exited successfully; first verify that remote source actually changed to the reviewed package.
+
 ## Production promotion
 
 Obtain DOL owner sign-off, freeze config/mappings, create a fresh backup, push the reviewed commit to the production Apps Script project, create an immutable deployment version, restrict audience, run smoke tests, and record deployment owner/version/commit/time/result. Keep the previous deployment version available for application rollback.

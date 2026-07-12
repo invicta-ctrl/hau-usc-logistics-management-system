@@ -1,16 +1,18 @@
 # Work Continuation
 
-## Latest verified checkpoint — packaging repair complete, controlled staging verification pending
+## Latest verified checkpoint — Version 8 rendering recovered; request-only and workflow acceptance pending
 
 - Date: `2026-07-12` (`Asia/Manila`)
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
 - Branch: `feat/apps-script-backend-and-launch-readiness`
 - Pull request: draft PR #2, open, mergeable, unmerged
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
+- Documentation checkpoint before this update: `09acfd63c854c3d1844f39a7bee080be5542ad7d`
+- Current staging deployment: immutable version 8 on the existing deployment ID
 - GitHub Apps Script static check run 47: passed
 - GitHub CI run 47: passed
 - Production state: untouched
-- External actions during repair: none
+- External actions during controlled recovery: one effective 29-file staging push, immutable versions 7 and 8, and two updates of the existing staging deployment; no new deployment ID
 
 Always verify the current remote head and CI. Documentation commits after the code checkpoint do not change the repaired application behavior.
 
@@ -61,6 +63,26 @@ At code checkpoint `74f2f0f...`:
 
 No Playwright result is claimed from a local downloaded Playwright browser; the full matrix result above is from GitHub CI.
 
+## Controlled staging deployment outcome
+
+The initial approved `clasp push` command did not update Google Apps Script. With clasp 3.3.0, `push --dry-run` is unsupported and a non-interactive push prints `Skipping push` when `appsscript.json` changed and the manifest-overwrite prompt cannot be answered. Version 7 was consequently created from the old remote package.
+
+Version 7 `/exec` reproduced `Exception: Malformed HTML content` and exposed minified application source in the error. A bounded `clasp pull` confirmed that the remote project still contained the pre-repair structure:
+
+- `Index.html` wrapped raw includes inside outer script/style elements;
+- remote `AppScript.html` and `AppStyles.html` contained raw source with zero wrappers;
+- the local reviewed package contained complete script/style elements.
+
+The existing remote `webapp` manifest block was preserved exactly. One authorized `clasp push --force` then pushed 29 files. A fresh remote pull matched all 29 local files and confirmed one script and one style wrapper. Immutable version 8 was created and the same staging deployment ID was updated to version 8.
+
+Verified live version-8 results:
+
+- `?diagnostic=1`: body rendered, style applied, inline script executed, harmless server call completed;
+- authorized internal `/exec`: page rendered, loading overlay cleared, no raw JavaScript or malformed-HTML error, Apps Script staging adapter reached bootstrap;
+- no Sheet/Drive workflow, setup, migration, backup, trigger, production, or PR-merge action occurred.
+
+Remaining verified defect: the visible internal header still says `Preview mode · local data` and shows `Reset Demo Data`. This is stale UI wording, not a mock fallback; the sidebar changes to `Apps Script staging` only after non-mock bootstrap and the reset handler refuses to act outside mock mode.
+
 ## Staging work already completed — do not repeat
 
 - Dedicated staging Apps Script project creation
@@ -76,38 +98,19 @@ No Playwright result is claimed from a local downloaded Playwright browser; the 
 
 Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR #2 yet.
 
-## Next bounded milestone — one controlled staging deployment
+## Next bounded milestone — request-only privacy and UI truthfulness
 
-1. Confirm no other agent is writing.
-2. In the local Git checkout, fetch and fast-forward to the current verified branch head.
-3. Confirm the tree is clean and run:
-
-```powershell
-npm ci
-npm run check
-clasp status
-clasp push --dry-run
-```
-
-4. Verify the displayed Script ID/file list is the existing approved staging project. Stop if it is not.
-5. Optionally run admin-only `htmlTemplateDiagnostics()` and retain only its bounded metadata.
-6. Run `clasp push` once.
-7. Create one new version of the existing staging web app deployment.
-8. Test `?diagnostic=1` first. Confirm body, style, inline script, and harmless server ping all pass.
-9. Test the full `/exec` internal entry point and `?request=1` with the appropriate accounts.
-10. Confirm:
-   - `doGet` completes;
-   - raw JavaScript is not visible;
-   - the loading overlay clears;
-   - `api_getBootstrapData` executes exactly once;
-   - unauthorized internal bootstrap remains denied;
-   - request-only data remains sanitized.
-11. Run only one bounded end-to-end staging workflow after rendering is confirmed. Stop on any inventory, authorization, evidence, privacy, or audit failure.
+1. Test the existing version-8 `?request=1` entry point with the appropriate account and no operational writes.
+2. Confirm there is no internal navigation and no exact inventory, user, ledger, reservation, supplier, borrower, evidence-internal, audit, error, health, or configuration data.
+3. Implement a small browser-only correction so Apps Script mode replaces every visible preview badge and hides the local-only reset control.
+4. Add focused browser coverage for those labels/controls without changing the approved visual layout or backend behavior.
+5. Run the focused packaging/browser tests, `npm run check`, and the full browser matrix once at milestone end.
+6. Do not run an operational workflow until request-only privacy and the UI correction are reviewed.
 
 ## External-write boundary
 
-This checkpoint authorizes no automatic Google Workspace action. `clasp push`, deployment version creation, access seeding, staging workflow writes, production work, migration application, and PR merge still require explicit user approval at the implementation turn.
+The authorized version-8 recovery push/deployment is complete. This checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
 
 ## Fresh-chat recovery prompt
 
-> Continue the HAU-USC Logistics staging deployment after the parser-safe packaging repair. Verify repository `invicta-ctrl/hau-usc-logistics-management-system`, branch `feat/apps-script-backend-and-launch-readiness`, draft PR #2, and the latest GitHub CI. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`. The staging database, Drive folders, migration dry-run, reconciliation, launch backup, triggers, and earlier deployments are already complete; do not repeat them. The next task is one controlled push/version to the existing staging Apps Script project, testing `?diagnostic=1` before the full web app. Do not touch production or merge PR #2.
+> Continue after the verified Version 8 staging rendering recovery. Verify repository `invicta-ctrl/hau-usc-logistics-management-system`, branch `feat/apps-script-backend-and-launch-readiness`, draft PR #2, and the latest GitHub CI. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`. Do not repeat setup, Drive provisioning, migration, reconciliation, backup, triggers, or deployment. First verify `?request=1` privacy without writes, then correct the misleading preview badge/reset control in Apps Script mode. Do not touch production or merge PR #2.

@@ -2,12 +2,14 @@
 
 ## Current status
 
-**Local packaging repair complete; controlled staging verification pending.**
+**Version 8 staging HTML recovery verified; request-only and workflow acceptance pending.**
 
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
 - Branch: `feat/apps-script-backend-and-launch-readiness`
 - Pull request: draft PR #2
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
+- Documentation checkpoint before live recovery: `09acfd63c854c3d1844f39a7bee080be5542ad7d`
+- Current staging deployment: immutable version 8 on the existing deployment ID
 - GitHub Apps Script static check run 47: passed
 - GitHub CI run 47: passed
 - Production resources: untouched
@@ -64,6 +66,18 @@ After additional generator changes:
 
 The original server exception remains unavailable because Apps Script omitted the oversized entry.
 
+### Stage 4 — Version 7 repeated the old failure because clasp skipped the push
+
+The approved non-force `clasp push` printed `Skipping push`. Clasp 3.3.0 had detected a changed `appsscript.json`, attempted to request manifest-overwrite confirmation, and declined automatically in the non-interactive session. Version 7 was created from unchanged remote source and `/exec` returned `Exception: Malformed HTML content` with minified JavaScript in the error page.
+
+A bounded remote pull confirmed Version 7 still used the pre-repair structure: outer script/style wrappers in `Index.html` and raw wrapper-free source in the included `AppScript.html` and `AppStyles.html` files.
+
+### Stage 5 — Corrective push and Version 8 recovered rendering
+
+The existing remote `webapp` manifest settings were preserved exactly. One authorized `clasp push --force` pushed all 29 reviewed files. A fresh remote pull matched all 29 local files and confirmed exactly one application script and one application style element.
+
+Immutable version 8 was created and the same staging deployment ID was updated. `?diagnostic=1` passed all four checks, and authorized internal `/exec` rendered normally with no raw JavaScript, no malformed-HTML error, and a cleared loading overlay.
+
 ## Confirmed local failure mechanism
 
 The former generator used regular expressions to extract script/style elements from the already-minified standalone HTML and then force-printed raw partial contents inside outer script/style elements in an Apps Script template.
@@ -118,7 +132,14 @@ At code checkpoint `74f2f0f...`:
   - `AppStyles.html`: 26,850 bytes
   - `AppScript.html`: 153,161 bytes
 
-No `clasp push`, deployment version, Sheet/Drive write, migration application, trigger change, or production action occurred during the repair.
+The controlled recovery created versions 7 and 8 and updated the same existing staging deployment ID. One effective 29-file staging push occurred. No operational Sheet/Drive workflow, migration application, trigger change, production action, or PR merge occurred.
+
+## Verified remaining work
+
+- Test version-8 `?request=1` and verify the complete request-only privacy boundary.
+- Correct the misleading visible `Preview mode · local data` badge and hide `Reset Demo Data` in Apps Script mode. The current sidebar proves non-mock bootstrap succeeded and the reset handler refuses to act outside mock mode, but the wording is inaccurate.
+- Confirm exact-once live bootstrap from bounded execution evidence if required.
+- Run one bounded end-to-end staging workflow only after privacy and UI review.
 
 ## Safety boundary
 
@@ -133,19 +154,13 @@ Do not rerun the following merely to validate rendering:
 
 Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR #2 yet.
 
-## Controlled staging verification plan
+## Remaining staging verification plan
 
-After explicit approval:
-
-1. Fast-forward the clean local checkout to the reviewed branch head.
-2. Run `npm ci`, `npm run check`, `clasp status`, and `clasp push --dry-run`.
-3. Confirm the existing staging Script ID and exact file list.
-4. Push once and create one new version of the existing staging deployment.
-5. Test `?diagnostic=1` first.
-6. Test the full internal entry point and `?request=1`.
-7. Confirm no raw source is visible, the loading overlay clears, and `api_getBootstrapData` executes exactly once.
-8. Only then run one bounded end-to-end staging workflow and verify audit/history/error/evidence records.
-9. Stop immediately on any rendering, authorization, inventory, evidence, privacy, or audit failure.
+1. Test `?request=1` without writes and verify the complete sanitized boundary.
+2. Correct and test the misleading preview/reset UI in Apps Script mode.
+3. Review the resulting repository commit and CI before any further Apps Script version.
+4. Only then run one explicitly authorized bounded end-to-end staging workflow and verify audit/history/error/evidence records.
+5. Stop immediately on any authorization, inventory, evidence, privacy, or audit failure.
 
 ## Evidence retained outside Git
 
