@@ -10,6 +10,9 @@
 - Apps Script staging bundle, manifest, clasp example, CI workflows, schema validation record, deployment/security/backup/migration/launch runbooks, and PostgreSQL/Supabase mapping.
 - Repository-level ChatGPT web/Codex collaboration protocol, start-of-task Git handshake, one-writer rule, manager task packet, and Codex handoff packet.
 - Regression coverage for missing runtime properties, explicit staging and production selection, and no hardcoded spreadsheet fallback.
+- Parser-safe Apps Script packaging library, deterministic assembled-document validation, generated-file diagnostics/parity checks, and a staging-only diagnostic shell.
+- Unit and Chromium regressions for literal `</script>` sequences, multiple script/style outputs, minified bootstrap identifiers, visible-source leakage, and mocked `api_getBootstrapData` execution.
+- Failure-only CI diagnostic artifacts for concise verification and browser logs.
 
 ### Changed
 
@@ -22,6 +25,8 @@
 - Apps Script now resolves environment, operational spreadsheet ID, and backup spreadsheet ID only from required Script Properties.
 - Setup, Drive configuration rows, migration/reconciliation access, launch backups, schema reports, and health checks now use the explicitly resolved environment target.
 - Admin health checks report the active environment and target spreadsheet IDs for operator verification.
+- Apps Script body, CSS, and JavaScript are now generated from separate Vite outputs instead of being extracted from the minified standalone HTML.
+- Apps Script generated style/script partials now contain their complete executable elements, avoiding contextual force-printing inside outer container tags.
 
 ### Fixed
 
@@ -29,6 +34,9 @@
 - Removed hardcoded operational and backup spreadsheet IDs from runtime code, preventing staging from silently falling back to production.
 - Initial setup can bootstrap the administrator when `14_USERS_ACCESS` has not yet been created or seeded.
 - Health-check configuration details are now restricted to administrators.
+- Raw-text closing sequences are escaped before JavaScript or CSS is embedded in Apps Script HTML.
+- Visible-JavaScript detection no longer misclassifies ordinary UI text such as `Lead-time class`.
+- Apps Script browser packaging verification is network-independent and executes from an assembled in-memory document.
 
 ### Verified
 
@@ -36,7 +44,11 @@
 - On Windows with `core.autocrlf=true`, the focused visual-baseline suite passed 4 tests and the full Vitest suite passed 55 tests across 9 files before staging isolation.
 - GitHub `npm run check` passed after staging-isolation implementation, including lint, Vitest, build, Apps Script static validation, and artifact verification.
 - GitHub Apps Script static validation passed after staging-isolation implementation.
-- GitHub CI completed the Playwright matrix at six viewport widths with 25 passes and 5 intentional skips on the prior approved head; the latest browser-smoke result is verified separately in the continuation record when complete.
+- GitHub CI completed the earlier Playwright matrix at six viewport widths before the packaging incident.
+- Packaging-repair code checkpoint `74f2f0f...` passed GitHub CI and Apps Script static validation.
+- The repaired checkpoint passed 10 Vitest files / 67 tests, 23 Apps Script source files / 18 required functions, deterministic package parity, standalone artifact verification, and the six-viewport browser-smoke matrix.
+- Generated Apps Script package sizes were 512 bytes (`Index.html`), 28,967 bytes (`AppBody.html`), 26,850 bytes (`AppStyles.html`), and 153,161 bytes (`AppScript.html`).
+- No Google Workspace write, `clasp push`, deployment version, migration application, trigger change, production action, or PR merge was performed during the packaging repair.
 
 ## 0.3.2 - 2026-07-12
 
