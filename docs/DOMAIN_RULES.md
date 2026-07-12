@@ -2,8 +2,8 @@
 
 ## Inventory and ledger
 
-- Catalog records contain metadata only.
-- Every opening balance, receipt, issue, loan, return, adjustment, emergency issue, and transfer is an immutable ledger movement.
+- Catalog records contain metadata and the preserved launch opening quantity. All later quantity changes are ledger movements.
+- Every receipt, issue, loan, return, adjustment, emergency issue, and transfer is an immutable ledger movement.
 - Every movement stores unique ID, type, direction, quantity, item/event-item, related entity, idempotency key, actor, timestamp, note, and audit correlation ID.
 - Raw negative balances remain visible. Allocation views may clamp to zero, but audit values are never hidden.
 - New allocations are blocked when available-to-promise is insufficient or negative.

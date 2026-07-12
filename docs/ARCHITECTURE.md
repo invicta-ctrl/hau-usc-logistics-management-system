@@ -1,49 +1,35 @@
 # Architecture
 
-## Principles
+## Runtime boundaries
 
-1. Ledger transactions are quantity truth.
-2. Views call the service contract and never mutate authoritative collections.
-3. The mock service performs clone-validate-commit transactions; failures discard the draft.
-4. Idempotency records make retries safe.
-5. Parent request status derives from child lines.
-6. Only the active feature renderer runs after a targeted change; shared counters update separately.
-7. Request-only mode receives a sanitized selector result, not the internal state object.
-
-## Runtime flow
+The approved HTML/CSS baseline is extracted into `src/visual/` and `src/styles/visual/`. Feature handlers call `createLegacyRuntimeAdapter()`; local builds receive the in-browser mock service, while `apps-script/Index.html` receives `AppsScriptAdapter`. Only that adapter knows `google.script.run`.
 
 ```text
-router -> active feature renderer -> service contract -> selected adapter
-                                     |                  |
-                                     |                  +-- mock (active)
-                                     |                  +-- Apps Script stub
-                                     |                  +-- REST stub
-                                     v
-                              transactional store
-                                     |
-                              revision selectors
-                                     |
-                         active feature + dirty shared UI
+Approved visual modules
+        ↓
+Browser service contract
+   ↙          ↓          ↘
+Mock       Apps Script   Future HTTP API
+              ↓
+Authorization → validation → lock/idempotency → workflow service
+              ↓
+Sheet repositories + Drive evidence + audit/status/error logs
 ```
 
-`src/app/bootstrap.js` owns composition, not domain rules. `src/services/mock-service.js` owns preview transactions. Pure validation and derivation live under `src/domain/` so Vitest can exercise them without a browser.
+Apps Script files are intentionally separated by concern: configuration and validation, generic Sheet repository, identity and permissions, ID/audit/error infrastructure, workflow services, Drive/evidence, migration/backup, and setup/router entry points.
 
-## Visual compatibility layer
+## Authority model
 
-The archived Final prototype is the visual authority. `scripts/extract-visual-baseline.mjs` splits its body into shell and per-view HTML modules and splits its stylesheet into ordered visual modules without changing selector order or declarations. `scripts/authoritative-visual-plugin.mjs` assembles those fragments during Vite's HTML transform. Vitest reconstructs the source and proves markup, CSS cascade, and interaction hooks remain equivalent.
+- Posted ledger rows and active reservations determine inventory availability.
+- Operational Sheets are server-owned tables; manual spreadsheet editing is monitoring/reconciliation only.
+- Original legacy tabs and exact imported values are immutable migration evidence.
+- Drive stores evidence bytes; `12_EVIDENCE` stores searchable metadata and links.
+- Request-only clients receive catalog suggestions and their operation result, not ledgers, supplier TINs, users, borrower history, or audit data.
 
-The active preview controller is presently `src/visual/runtime.js`, extracted from the same baseline so its buttons and forms remain operational. The newer domain, store, selector, feature, and service modules remain in place and tested, but their controller is temporarily inactive. Migration should proceed one view at a time: retain the extracted template and CSS, move handlers to feature controllers, and route commands through `MockService`. Do not replace the visual layer again.
+## Build outputs
 
-## Rendering
+Vite generates a single-file standalone build. A build script copies it to the reviewer artifact and injects staging runtime configuration into `apps-script/Index.html`. The future static-host build remains independent of Apps Script globals.
 
-The renderer registry is the imported `modules` map in `bootstrap.js`. `renderActive()` replaces only `#view-root` and mounts the current feature. Store notifications carry dirty views; hidden modules are not rebuilt after unrelated operations.
+## Transaction model
 
-List features use precomputed inventory search text, result limits, and pagination. Inventory indexes are cached against `state.revisions.inventory` and expose `Map<itemId, onHand>`, `Map<itemId, activeReserved>`, `Map<eventItemId, balance>`, request-line groupings, event deliverable groupings, and normalized search strings.
-
-## Persistence and recovery
-
-`store.js` isolates browser persistence. Schema migrations convert legacy `openingOnHand` quantities into `OPENING_BALANCE` ledger entries and add operational collections without resetting valid state. Corrupt/unsupported state restores safe demo data and exposes a visible warning/export path.
-
-## Build
-
-Vite uses `src/` as its root. The visual plugin assembles ordered HTML fragments, and `vite-plugin-singlefile` inlines generated CSS and JavaScript into `dist/index.html`. A final build hook converts the import-free inline bundle to a classic script for standalone `file://` use. `npm run verify:dist` rejects external assets, missing operational roots, or a remaining module script.
+Apps Script uses `LockService.getScriptLock()` for state-changing commands. Each command checks an idempotency key, validates current state, allocates server IDs, appends records, writes history/audit, and stores the result for safe replay. Paired transfer ledger rows are appended in one range write. Google Sheets is not a general ACID database; the launch runbook requires controlled concurrency and reconciliation monitoring.

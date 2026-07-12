@@ -1,18 +1,17 @@
 # Coding Agent Instructions
 
-Read `README.md`, `PROJECT_STATUS.md`, `docs/ARCHITECTURE.md`, and `docs/DOMAIN_RULES.md` before editing.
+Read `README.md`, `PROJECT_STATUS.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md` before editing.
 
-- After this initial refactor, take one issue or feature slice at a time.
-- Do not regenerate the entire application for a small change.
-- `legacy/HAU-USC_Logistics-Prototype.original.html` is the authoritative visual baseline. Refresh generated `src/visual/` and `src/styles/visual/` files with `npm run extract:visual`, not piecemeal restyling.
-- Keep visual compatibility work separate from controller/service migration so a domain fix cannot accidentally redesign the interface.
-- Preserve ledger, reservation, receipt, release, lending, transfer, idempotency, and parent-status invariants.
-- New or migrated controllers never mutate authoritative collections directly; use the selected service adapter.
-- Keep `previewMode = true` and `backendMode = 'mock'` unless an explicitly reviewed backend task changes them.
-- Never expose secrets, institutional credentials, student records, supplier TINs, private contacts, or restricted evidence.
-- UI visibility is not authorization. Do not weaken requester payload or server-bound permission contracts.
-- Do not add browser `confirm()`. The extracted compatibility runtime still contains legacy confirmations; replace them with the accessible application modal as each controller is migrated.
-- Do not edit `dist/index.html` directly. Edit `src/`, then run `npm run build`.
-- Run relevant tests for every change. Before handoff, run `npm run check`; run Playwright when browsers are available.
-- Update `PROJECT_STATUS.md` and `CHANGELOG.md` with verified facts only.
-- Keep feature modules reasonably sized and use event delegation/targeted rendering for operational lists.
+- Work one issue or vertical slice at a time after this launch-readiness refactor.
+- Preserve `legacy/HAU-USC_Logistics-Prototype.original.html` as the approved visual baseline. Regenerate visual modules with `npm run extract:visual`; do not casually redesign them.
+- Do not hand-edit `dist/index.html`, `HAU-USC_Logistics-Prototype-Shareable.html`, or `apps-script/Index.html`.
+- Browser code calls a service adapter. Only `src/services/apps-script-adapter.js` may use `google.script.run`.
+- Apps Script writes require authorization, an idempotency key, a lock where state may race, server-side IDs, status history, and audit logging.
+- Never edit or delete posted ledger entries. Use a documented reversal or adjustment.
+- Never transact `VERIFY` items. Preserve legacy source sheet, row, block, exact name, quantity, and unit.
+- Never write to the pre-rework backup spreadsheet.
+- Drive folder configuration must fail closed. Never fall back to the script owner’s My Drive root.
+- UI hiding is not authorization. Keep request-only bootstrap sanitized.
+- Do not commit `.clasp.json`, secrets, institutional credentials, personal student records, private contacts, supplier TINs, or evidence files.
+- Run `npm run check`; run Playwright where Chromium is installed. Run `clasp status` and `clasp push --dry-run` only after configuring a staging script.
+- Update `PROJECT_STATUS.md` and `CHANGELOG.md` before handoff. State unrun checks and unresolved values honestly.

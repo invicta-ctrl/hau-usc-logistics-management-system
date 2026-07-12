@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.4.0 - 2026-07-12
+
+### Added
+
+- Production-oriented Google Apps Script backend with Sheet repositories, authorization, locking, idempotency, structured errors, append-only inventory, workflow services, evidence uploads, migration, reconciliation, setup, backup, and triggers.
+- Strict Apps Script and future HTTP browser adapters while preserving mock development.
+- Privacy-safe evidence labels/filenames, digest duplicate detection, configured Drive routing, and quarantine recovery.
+- Apps Script staging bundle, manifest, clasp example, CI workflows, schema validation record, deployment/security/backup/migration/launch runbooks, and PostgreSQL/Supabase mapping.
+
+### Changed
+
+- Wired approved visual actions to server adapters for request review, quote selection, receiving, release, lending, and event-item transfer.
+- Request acceptance now preflights all stock decisions before applying reservations and line transitions.
+- Restock and deliverable receipts accumulate by line and reject over-receipt before operational writes.
+- Lending partial returns account for lost/damaged quantities without falsely restoring stock.
+
+### Verified
+
+- Live production/backup comparison was read-only and found the four legacy tabs unchanged.
+- Local lint, Vitest, Vite single-file build, Apps Script static validation, and artifact verification passed.
+- Playwright remains pending because Chromium is unavailable locally; CI installs it.
+
 ## 0.3.2 - 2026-07-12
 
 ### Prepared

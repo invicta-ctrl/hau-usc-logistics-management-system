@@ -2,45 +2,55 @@
 
 ## Current version
 
-- Version: `0.3.2`
+- Version: `0.4.0`
 - Date: 2026-07-12
-- Mode: preview only
-- Backend: mock browser adapter
-- Build artifact: `dist/index.html`
+- Branch: `feat/apps-script-backend-and-launch-readiness`
+- Local/demo backend: `mock`
+- Apps Script bundle mode: `apps-script` / `STAGING`
+- Standalone artifact: `dist/index.html`
+- Production deployment: **not performed**
 
-## Remediation status
+## Completed in this branch
 
-- Phase 0 - Preserve baseline: **implemented**. The authoritative original prototype is retained under `legacy/`; the audit is retained under `docs/reference/` in the GitHub deliverable.
-- Phase 1 - P0 integrity fixes: **implemented and covered by Vitest**. Unique paired IDs, cumulative receipts, idempotent handoff/return, service-level transfer limits, awaited rollback-safe reservations, and line-level restock receiving pass the reproduced probes.
-- Visual restoration: **implemented**. Active markup and CSS are mechanically extracted from the archived Final prototype. Seven view modules and eight ordered CSS modules reconstruct the original source in equivalence tests.
-- Final demo baseline: **approved and prepared**. `HAU-USC_Logistics-Prototype-Shareable.html` is the selected reviewer-facing artifact, and `docs/FINAL_DEMO_BASELINE.md` contains the rehearsal order and acceptance checklist.
-- Phase 2 - UX and accessibility: **partially integrated**. The restored baseline brings back the recognizable interface and working preview controls, but some newer navigation, focus-management, and application-confirmation improvements still need reconnection without altering the baseline.
-- Phase 3 - Modular source: **implemented for domain/services and visual extraction; controller migration remains**. Vite modules, service adapters, tests, documentation, per-view HTML, ordered CSS, and a self-contained build are present. The restored compatibility runtime is still a large generated file.
-- Phases 4-7: not started; see `docs/ROADMAP_TO_V1.md`.
+- Preserved the approved prototype and generated visual modules.
+- Added strict browser adapters for mock, Apps Script, and future authenticated HTTP implementations.
+- Added Apps Script repositories, setup, schema checks, authorization, collision-safe IDs, locks, idempotency, structured errors, audit/status history, append-only inventory, reservations, request routing, lending, release, restocking, procurement, canvass, evidence, migration, reconciliation, and backup functions.
+- Added privacy-safe evidence labels and filenames, MIME/extension/size checks, digest deduplication, configured folder routing, and quarantine recovery.
+- Added staging/production setup documentation, CI, static Apps Script checks, backend-focused unit tests, and generated `apps-script/Index.html`.
 
-## Test status
+## Live schema validation (read-only, 2026-07-12)
 
-- ESLint: passes (warnings treated as cleanup items only if noted in the latest check output).
-- Vitest: unit and integration suite passes.
-- Visual equivalence: passes for original markup, CSS cascade, and runtime interaction hooks.
-- Vite single-file build and `verify:dist`: pass; the artifact has no external asset dependency or module-script requirement.
-- Playwright: 30 responsive checks are defined across 320, 390, 768, 1024, 1366, and 1440 px. They were invoked, but Chromium could not be installed in this environment because the browser download returned an empty/truncated archive. The failures are environment launch failures, not executed assertions; the suite must be rerun where Playwright browsers are available.
+- Production spreadsheet title and ID matched the supplied target; timezone is `Asia/Manila`.
+- All four original legacy tabs and all 20 prepared backend tabs were present.
+- The four legacy tabs matched the supplied backup value-for-value at validation time.
+- `01_ITEM_MASTER` contained 397 records (`ITM-0001`–`ITM-0397`): 394 `ACTIVE`, 3 `VERIFY`, 2 zero-quantity, and no missing units.
+- Known date-serial anomalies remain flagged `VERIFY`; no quantity was corrected.
+- Drive root/receipts/canvass/release/deliverable IDs remain `TO_BE_ASSIGNED`; lending/archive keys were absent at inspection time. `setupDatabase()` adds missing keys without wiping rows.
 
-## Current limitations
+See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 
-- Browser storage is preview-only and unsuitable for shared or sensitive records.
-- The active restored controller uses the archived local-only compatibility runtime. The hardened modular `MockService` remains covered by the P0 audit probes, but the restored view handlers have not yet all been migrated to it.
-- The compatibility runtime still contains legacy browser confirmations and broad `renderAll()` updates. These are isolated as known migration work, not approved production patterns.
-- The role switcher demonstrates visible permissions but is not security.
-- No institutional identity, LockService, Sheets, Drive, email, Chat, REST, or database connection exists.
-- Evidence stores safe metadata only; selected file bytes are never persisted.
-- The prototype implements the critical transaction scenarios, but production pilot acceptance requires real assistive-technology, concurrency, privacy, records-retention, backup, and incident-response testing.
-- Some secondary create/edit/archive workflows are represented as preview structures rather than full production forms.
+## Verification status
 
-## Recommended next demo task
+- `npm install`: passed.
+- `npm run lint`: passed.
+- `npm test`: 8 files / 47 tests passed on the first backend integration pass; rerun before publication after final docs.
+- `npm run build`: passed; single-file output approximately 207 kB (52.7 kB gzip).
+- `npm run check:apps-script`: passed for 23 `.gs` files and 16 required entry points.
+- `npm run verify:dist`: passed; standalone and shareable artifacts match.
+- `npm run test:e2e`: invoked but assertions did not run because Playwright Chromium is not installed in this environment. CI installs Chromium and reruns all 30 responsive checks.
+- `clasp status` / `clasp push --dry-run`: not run because `clasp` and a staging Script ID are not configured.
 
-Complete the desktop and mobile rehearsal using `docs/FINAL_DEMO_BASELINE.md`, then record any presentation-only adjustments as small controller or copy changes while preserving the approved visual modules.
+## Launch blockers and limitations
 
-## Recommended next full-stack task
+- All required Drive folder IDs must be assigned and validated.
+- The users/access table must be reviewed and seeded with institutional accounts.
+- A staging Apps Script project and `.clasp.json` must be configured locally (never committed).
+- Live schema setup, migration dry-run, backup, and reconciliation functions have not been executed against production by this branch.
+- No Apps Script web app has been deployed; no production smoke tests have run.
+- Playwright must pass in CI or a workstation with browsers.
+- The approved compatibility runtime remains generated and relatively large; several secondary edit/archive actions are still preview-only and should be migrated one slice at a time.
+- Google Sheets is appropriate for the controlled v1 pilot, not high-volume or strongly transactional scale. See the future database plan.
 
-Migrate the Request Center controller from `src/visual/runtime.js` to the hardened `MockService` while keeping `src/visual/views/request.html` and the ordered visual CSS unchanged. This reconnects idempotent submission/acceptance and rollback-safe reservations before beginning the Apps Script `api_acceptRequest(command)` vertical slice.
+## Next recommended full-stack task
+
+Create the staging Apps Script project, set the seven Drive folder configuration values, run `setupDatabase()`, `validateDatabaseSchema()`, `validateDriveConfiguration()`, `runMigrationDryRun()`, and `healthCheck()` under an administrator account, then capture the returned reports without applying migration or deploying production.
