@@ -19,10 +19,15 @@
 - Requester catalog/bootstrap payloads no longer expose exact stock balances, reservations, verification notes, or legacy trace fields; the UI defers authoritative stock routing to DOL review.
 - Evidence uploads now require a server-side receive, release, or admin permission before file processing.
 
+### Fixed
+
+- Visual-baseline generated-notice removal now supports LF, CRLF, and no trailing newline while retaining strict comparison of all visual markup and unrelated comments.
+
 ### Verified
 
 - Live production/backup comparison was read-only and found the four legacy tabs unchanged.
-- Local lint, 54 Vitest tests, Vite single-file build, Apps Script static validation, and artifact verification passed.
+- On Windows with `core.autocrlf=true`, the focused visual-baseline suite passed 4 tests and the full Vitest suite passed 55 tests across 9 files.
+- Local lint, Vite single-file build, Apps Script static validation, and standalone artifact verification passed.
 - GitHub CI completed the Playwright matrix at six viewport widths with 25 passes and 5 intentional skips.
 
 ## 0.3.2 - 2026-07-12

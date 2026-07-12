@@ -1,6 +1,47 @@
 # Work Continuation
 
-## Checkpoint
+## Windows visual-baseline compatibility checkpoint
+
+- Timestamp: `2026-07-12 16:32 PHT` (`Asia/Manila`)
+- Branch: `feat/apps-script-backend-and-launch-readiness`
+- Starting commit: `50b8c32dd04d489f05f80e40dbc9b01d771010ac`
+- Local and upstream were synchronized at `0` ahead / `0` behind before implementation.
+- Scope: test-only LF/CRLF compatibility plus status documentation; no approved visual source, extracted fragment, style module, backend, dependency, or production-system change.
+
+### Completed
+
+- Replaced LF-only generated-notice removal with exact prefix matching that consumes at most one optional LF or CRLF ending.
+- Added explicit LF, CRLF, no-newline, and unrelated-comment regression assertions.
+- Preserved strict comparison of all actual visual markup.
+
+### Verified Windows results
+
+- Environment: Windows PowerShell with Git `core.autocrlf=true`.
+- Focused command: `npx vitest run tests/unit/visual-baseline.test.js` passed, 1 file / 4 tests.
+- `npm test` passed, 9 files / 55 tests.
+- `npm run check` passed: ESLint, 9 files / 55 tests, Vite build, 23 Apps Script files / 16 required functions, and artifact verification.
+- Build output: `dist/index.html` 210.17 kB, 53.32 kB gzip; both standalone artifacts verified at 209,952 bytes during the full check.
+- The Windows build introduced generated-file line-ending churn only; those unintended generated changes were removed, and `npm run verify:dist` then passed against the unchanged committed artifacts at 209,953 bytes each.
+- Final generated-artifact diff: none.
+- `npm run test:e2e`: not run because the configured Playwright Chromium executable was absent; no browser was installed as part of this milestone.
+
+### Files changed
+
+- `tests/unit/visual-baseline.test.js`
+- `CHANGELOG.md`
+- `PROJECT_STATUS.md`
+- `docs/WORK_CONTINUATION.md`
+
+### External actions
+
+- `git fetch origin --prune` and the authorized feature-branch push are the only external repository actions for this checkpoint.
+- No Google Sheets, Google Drive, Apps Script, staging, production, deployment, or pull-request merge action was performed.
+
+### Recommended next action
+
+Have ChatGPT web verify the pushed commit diff and GitHub CI for draft PR #2 before assigning another milestone.
+
+## Previous launch-readiness checkpoint
 
 - Timestamp: `2026-07-12 15:00 PHT` (`Asia/Manila`)
 - Branch: `feat/apps-script-backend-and-launch-readiness`

@@ -5,11 +5,12 @@ import { describe, expect, it } from 'vitest';
 const root = resolve(import.meta.dirname, '../..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 const compact = (value) => value.replace(/\s+/g, ' ').trim();
-const withoutGeneratedNotice = (value) =>
-  value.replace(
-    '<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->\n',
-    '',
-  );
+const generatedNotice =
+  '<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->';
+const withoutGeneratedNotice = (value) => {
+  if (!value.startsWith(generatedNotice)) return value;
+  return value.slice(generatedNotice.length).replace(/^\r?\n/, '');
+};
 
 const viewIds = [
   'overview',
@@ -32,6 +33,16 @@ const cssModules = [
 ];
 
 describe('authoritative visual extraction', () => {
+  it('removes only the exact generated notice with LF or CRLF endings', () => {
+    const markup = '<section id="visual-baseline"></section>';
+    expect(withoutGeneratedNotice(`${generatedNotice}\n${markup}`)).toBe(markup);
+    expect(withoutGeneratedNotice(`${generatedNotice}\r\n${markup}`)).toBe(markup);
+    expect(withoutGeneratedNotice(`${generatedNotice}${markup}`)).toBe(markup);
+    expect(withoutGeneratedNotice(`<!-- unrelated -->\n${markup}`)).toBe(
+      `<!-- unrelated -->\n${markup}`,
+    );
+  });
+
   it('preserves the original body markup across shell and view modules', async () => {
     const source = await read('legacy/HAU-USC_Logistics-Prototype.original.html');
     const originalBody = source.match(/<body>([\s\S]*?)<\/body>/i)[1];

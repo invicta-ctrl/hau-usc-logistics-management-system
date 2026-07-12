@@ -19,6 +19,7 @@
 - Added staging/production setup documentation, CI, static Apps Script checks, backend-focused unit tests, and generated `apps-script/Index.html`.
 - Request-only Apps Script payloads now hide exact inventory balances and legacy trace fields; authoritative stock routing occurs during locked DOL review.
 - Evidence upload entry points now require receive, release, or admin permission according to evidence type.
+- Visual-baseline tests now remove only the exact generated-file notice across LF and CRLF checkouts while preserving strict visual markup comparison.
 
 ## Live schema validation (read-only, 2026-07-12)
 
@@ -35,10 +36,12 @@ See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
 
 - `npm install`: passed.
 - `npm run lint`: passed.
-- `npm test`: 9 files / 54 tests passed on the 2026-07-12 continuation checkpoint.
-- `npm run build`: passed; single-file output approximately 210 kB (53.3 kB gzip).
+- Focused visual-baseline test: 1 file / 4 tests passed on Windows with `core.autocrlf=true`.
+- `npm test`: 9 files / 55 tests passed on the 2026-07-12 Windows continuation checkpoint.
+- `npm run check`: passed, including lint, 55 Vitest tests, build, Apps Script static validation, and artifact verification.
+- `npm run build`: passed; single-file output 210.17 kB (53.32 kB gzip).
 - `npm run check:apps-script`: passed for 23 `.gs` files and 16 required entry points.
-- `npm run verify:dist`: passed; standalone and shareable artifacts match.
+- `npm run verify:dist`: passed after removing build-only line-ending churn; committed standalone and shareable artifacts match at 209,953 bytes each with no generated-artifact diff.
 - `npm run test:e2e`: local assertions could not run because Chromium is not installed in this environment. GitHub CI installed Chromium and completed the 30-case matrix: 25 passed and 5 intentional viewport-specific skips.
 - GitHub Actions: `CI` and `Apps Script static check` both passed for commit `9fc9148`.
 - `clasp status` / `clasp push --dry-run`: not run because `clasp` and a staging Script ID are not configured.
