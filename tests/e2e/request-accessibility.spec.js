@@ -16,7 +16,7 @@ test('creates a request with keyboard autocomplete', async ({ page }, testInfo) 
   await page.locator('[name="requesterName"]').fill('Demo Requester');
   await page.locator('[name="requesterEmail"]').fill('demo@example.com');
   await page.locator('#requestForm [name="department"]').fill('Demo Department');
-  await page.locator('[name="purpose"]').fill('Automated preview workflow check');
+  await page.locator('#requestForm [name="purpose"]').fill('Automated preview workflow check');
   await page.locator('#requestConsent').check();
   await page.getByRole('button', { name: 'Submit for DOL Review' }).click();
   await expect(page.locator('#drawerBackdrop')).toHaveClass(/show/);
