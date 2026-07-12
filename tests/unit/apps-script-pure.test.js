@@ -28,6 +28,53 @@ function gasContext(files) {
   return context;
 }
 
+function setRuntimeProperties(context, values) {
+  const properties = context.PropertiesService.getScriptProperties();
+  for (const [key, value] of Object.entries(values)) properties.setProperty(key, value);
+}
+
+describe('Apps Script runtime configuration isolation', () => {
+  it('fails closed when required Script Properties are missing', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs']);
+    expect(() => ctx.resolveRuntimeConfig_()).toThrow(/HAU_ENVIRONMENT/);
+  });
+
+  it('resolves an explicit staging target', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs']);
+    setRuntimeProperties(ctx, {
+      HAU_ENVIRONMENT: 'staging',
+      HAU_SPREADSHEET_ID: 'staging-sheet-id-1234567890',
+      HAU_BACKUP_SPREADSHEET_ID: 'staging-backup-id-1234567890',
+    });
+    const runtime = ctx.resolveRuntimeConfig_();
+    expect(runtime.environment).toBe('STAGING');
+    expect(runtime.spreadsheetId).toBe('staging-sheet-id-1234567890');
+    expect(runtime.backupSpreadsheetId).toBe('staging-backup-id-1234567890');
+  });
+
+  it('resolves an explicit production target', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs']);
+    setRuntimeProperties(ctx, {
+      HAU_ENVIRONMENT: 'PRODUCTION',
+      HAU_SPREADSHEET_ID: 'production-sheet-id-1234567890',
+      HAU_BACKUP_SPREADSHEET_ID: 'production-backup-id-1234567890',
+    });
+    expect(ctx.resolveRuntimeConfig_().environment).toBe('PRODUCTION');
+  });
+
+  it('has no hardcoded spreadsheet fallback and rejects placeholders', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs']);
+    expect(ctx.HAU_CONFIG.SPREADSHEET_ID).toBeUndefined();
+    expect(ctx.HAU_CONFIG.BACKUP_SPREADSHEET_ID).toBeUndefined();
+    setRuntimeProperties(ctx, {
+      HAU_ENVIRONMENT: 'STAGING',
+      HAU_SPREADSHEET_ID: 'TO_BE_ASSIGNED',
+      HAU_BACKUP_SPREADSHEET_ID: 'REPLACE_WITH_BACKUP_SPREADSHEET_ID',
+    });
+    expect(() => ctx.resolveRuntimeConfig_()).toThrow(/missing or unresolved/i);
+  });
+});
+
 describe('Apps Script evidence rules', () => {
   const ctx = gasContext(['Config.gs', 'Validation.gs', 'DriveService.gs', 'EvidenceService.gs']);
   it('generates a normalized privacy-safe filename', () => {
