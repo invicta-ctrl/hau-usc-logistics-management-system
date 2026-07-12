@@ -2,18 +2,18 @@
 
 ## Checkpoint
 
-- Timestamp: `2026-07-12 13:28 PHT` (`Asia/Manila`)
+- Timestamp: `2026-07-12 13:30 PHT` (`Asia/Manila`)
 - Branch: `feat/apps-script-backend-and-launch-readiness`
-- Latest verified remote commit before this checkpoint: `e5140993f442cbd8ab0c6645e674049342a5fa05`
-- Branch pushed: **yes**, through the commit above
+- Latest locally verified implementation commit: `825730c28cccb88bfad5a8f3252671307bbe1505`
+- Branch pushed: **yes**, through the implementation commit above
 - Pull request: **draft PR #2**
 - Pull request URL: https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/2
 - Local workspace caveat: `worktree/` is an exported source tree without `.git`; local staged/unstaged status and local Git history cannot be inspected. Remote history and publication are verified through the connected GitHub repository.
 
 ## Verified current state
 
-- Remote feature branch is 12 commits ahead and 0 behind `main`; PR #2 is open, draft, mergeable, and unmerged.
-- Remote CI and Apps Script static-check runs for `e5140993` completed successfully, including the Playwright browser job.
+- Before this checkpoint the remote feature branch was 12 commits ahead and 0 behind `main`; PR #2 remains open, draft, mergeable, and unmerged.
+- Commit `825730c2` was pushed successfully and is the verified head of PR #2. Its GitHub workflows were queued/in progress when this document was updated; the prior head `e5140993` passed both workflows, including Playwright.
 - `npm install`, `npm run lint`, `npm test`, `npm run build`, `npm run check:apps-script`, and `npm run verify:dist` pass locally.
 - Current Vitest result: 9 files, 54 tests passed.
 - Current build: self-contained `dist/index.html` and shareable artifact, 209,742 bytes each.
