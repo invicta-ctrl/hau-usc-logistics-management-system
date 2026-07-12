@@ -69,8 +69,12 @@ The code never writes to the backup. Drive folder IDs are configuration values a
 
 ## First steps for a maintainer
 
-1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, and `docs/LAUNCH_RUNBOOK.md`.
+1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, and `docs/LAUNCH_RUNBOOK.md`.
 2. Run `npm install && npm run check`.
 3. Work on the feature branch; do not edit the default branch directly.
 4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
-5. Update tests, `PROJECT_STATUS.md`, and `CHANGELOG.md` with verified facts.
+5. Update tests, `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` with verified facts.
+
+## AI collaboration
+
+ChatGPT web and Codex do not rely on shared chat memory. They coordinate through the active GitHub branch, pull request, `AGENTS.md`, and the continuation record. Use the one-writer manager/implementer protocol in `docs/AI_COLLABORATION.md` before starting a coding milestone.

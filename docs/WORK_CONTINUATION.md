@@ -2,14 +2,15 @@
 
 ## Checkpoint
 
-- Timestamp: `2026-07-12 13:32 PHT` (`Asia/Manila`)
+- Timestamp: `2026-07-12 15:00 PHT` (`Asia/Manila`)
 - Branch: `feat/apps-script-backend-and-launch-readiness`
 - Latest locally and CI-verified implementation commit: `825730c28cccb88bfad5a8f3252671307bbe1505`
 - Latest CI-verified documentation checkpoint: `a52e071fbda753af7bda4879994dc7577a511138`
-- Branch pushed: **yes**, through the implementation commit above
+- Current CI-verified repository head before the collaboration update: `4cf94f36fecf69728bd2525002dbf3457ac80d9b`
+- Branch pushed: **yes**, through the head above
 - Pull request: **draft PR #2**
 - Pull request URL: https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/2
-- Local workspace caveat: `worktree/` is an exported source tree without `.git`; local staged/unstaged status and local Git history cannot be inspected. Remote history and publication are verified through the connected GitHub repository.
+- Recommended Codex checkout: `D:\Documents\DOL Website GitHub`. The user must verify its branch, upstream, commit, and working tree locally; the path alone is not proof that it is current.
 
 ## Verified current state
 
@@ -32,6 +33,7 @@
 - Added server-side permission mapping for all evidence types before file processing or Drive access.
 - Added regression tests for requester record sanitization, requester event sanitization, and evidence permission routing.
 - Updated generated standalone and Apps Script HTML artifacts through `npm run build`.
+- Added a shared ChatGPT web/Codex repository workflow with mandatory Git synchronization, manager/implementer roles, one-writer control, and standard task/handoff packets.
 
 ## Files changed in this checkpoint
 
@@ -70,12 +72,12 @@
 
 ## Next recommended action
 
-Publish this security checkpoint to the existing feature branch, verify both GitHub workflows, then configure a staging Apps Script project. In staging only, run `setupDatabase()`, `validateDatabaseSchema()`, `validateDriveConfiguration()`, `runMigrationDryRun()`, `runReconciliation()`, and `healthCheck()`; do not apply migration or deploy production.
+Open `D:\Documents\DOL Website GitHub` in a new Codex Local task. Have Codex perform only the `AGENTS.md` handshake, confirm it matches the CI-verified GitHub head, read the shared context documents, and run `npm install` plus `npm run check`. Do not begin staging or backend mutations until ChatGPT web reviews that handoff.
 
 ## Exact local continuation commands
 
 ```bash
-cd /workspace/scratch/3c09ace11fd7/worktree
+cd "D:\Documents\DOL Website GitHub"
 npm install
 npm run check
 npm run test:e2e

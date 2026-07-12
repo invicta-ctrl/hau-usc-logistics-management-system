@@ -1,6 +1,24 @@
 # Coding Agent Instructions
 
-Read `README.md`, `PROJECT_STATUS.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md` before editing.
+These instructions apply to ChatGPT web, Codex local tasks, Codex worktrees, and human maintainers. The GitHub repository is the shared source of truth; chat history and local folders are supporting context only.
+
+Before editing, read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
+
+## Required start-of-task handshake
+
+1. Report the repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
+2. Run `git fetch origin --prune` when network access is available.
+3. Compare local and upstream with `git rev-list --left-right --count HEAD...@{upstream}`.
+4. If the working tree is clean and only behind, use `git pull --ff-only`. If it is dirty, divergent, on the wrong branch, or lacks an upstream, stop and report the condition; never reset or discard work automatically.
+5. Confirm the expected starting commit from the manager task or `docs/WORK_CONTINUATION.md` before changing files.
+6. For read-only review or planning tasks, do not create commits or mutate external systems.
+
+## Manager and implementer roles
+
+- ChatGPT web is the default manager/reviewer: verify the remote branch, PR, commits, and CI; define one bounded milestone; review pushed evidence before approving the next milestone.
+- Codex is the default implementer: verify the local checkout, implement the accepted milestone, run checks, update continuation records, commit, and push the feature branch.
+- Only one agent may write at a time. ChatGPT web must not change the branch while Codex is implementing; Codex must not begin a new milestone until the manager has reviewed the pushed commit.
+- Agents share context through committed repository files and GitHub, not assumed cross-chat memory. Follow `docs/AI_COLLABORATION.md`.
 
 - Work one issue or vertical slice at a time after this launch-readiness refactor.
 - Preserve `legacy/HAU-USC_Logistics-Prototype.original.html` as the approved visual baseline. Regenerate visual modules with `npm run extract:visual`; do not casually redesign them.
@@ -14,4 +32,5 @@ Read `README.md`, `PROJECT_STATUS.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULE
 - UI hiding is not authorization. Keep request-only bootstrap sanitized.
 - Do not commit `.clasp.json`, secrets, institutional credentials, personal student records, private contacts, supplier TINs, or evidence files.
 - Run `npm run check`; run Playwright where Chromium is installed. Run `clasp status` and `clasp push --dry-run` only after configuring a staging script.
-- Update `PROJECT_STATUS.md` and `CHANGELOG.md` before handoff. State unrun checks and unresolved values honestly.
+- Update `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` before handoff. State unrun checks and unresolved values honestly.
+- Commit in a small logical unit, push the feature branch when authorized, and report the exact commit SHA and PR/CI state. Never claim a push, test, deployment, or external write without verification.

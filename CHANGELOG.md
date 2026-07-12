@@ -8,6 +8,7 @@
 - Strict Apps Script and future HTTP browser adapters while preserving mock development.
 - Privacy-safe evidence labels/filenames, digest duplicate detection, configured Drive routing, and quarantine recovery.
 - Apps Script staging bundle, manifest, clasp example, CI workflows, schema validation record, deployment/security/backup/migration/launch runbooks, and PostgreSQL/Supabase mapping.
+- Repository-level ChatGPT web/Codex collaboration protocol, start-of-task Git handshake, one-writer rule, manager task packet, and Codex handoff packet.
 
 ### Changed
 
