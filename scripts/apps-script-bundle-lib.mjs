@@ -454,7 +454,7 @@ export function analyzeAssembledDocument(document) {
     .map((token) => token.raw)
     .join(' ');
   const suspiciousVisibleText = visibleBodyText.match(
-    /(?:globalThis\.|api_getBootstrapData|\b(?:const|let|var|function|class)\s+[A-Za-z_$]|=>)/g,
+    /(?:globalThis\.|api_getBootstrapData|document\.addEventListener|=>|\b(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=|\bfunction\s+[A-Za-z_$][\w$]*\s*\(|\bclass\s+[A-Za-z_$][\w$]*\s*(?:extends\s+[A-Za-z_$][\w$]*\s*)?\{)/g,
   );
   return {
     scriptCount: tagCounts(tokens, 'script'),
