@@ -6,4 +6,7 @@ test-results/
 .env
 .env.*
 !.env.example
+.clasp.json
+.clasprc.json
+.claspignore
 *.log

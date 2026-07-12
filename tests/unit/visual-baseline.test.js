@@ -53,11 +53,10 @@ describe('authoritative visual extraction', () => {
     expect(compact(modules.join(''))).toBe(compact(originalCss));
   });
 
-  it('keeps the original runtime and interaction hooks attached', async () => {
-    const source = await read('legacy/HAU-USC_Logistics-Prototype.original.html');
-    const originalRuntime = source.match(/<script>([\s\S]*?)<\/script>\s*<\/body>/i)[1];
+  it('keeps the original interaction hooks and adds the production adapter bridge', async () => {
     const runtime = await read('src/visual/runtime.js');
-    expect(runtime.trim()).toBe(originalRuntime.trim());
+    expect(runtime).toContain("createLegacyRuntimeAdapter(mockServices)");
+    expect(runtime).toContain("backendMode==='mock'?loadState():await services.loadBootstrapData");
     for (const hook of [
       'bindGlobalEvents()',
       'bindRequestEvents()',
