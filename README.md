@@ -61,15 +61,17 @@ dist/           generated standalone artifact
 
 ## Google Workspace target
 
-- Production database: `HAU-USC Logistics Management System - Database`
-- Spreadsheet ID: `1D28OX2dTx0rfus4hDd9VcyDZtxo26CFLGFk22URFAjw`
-- Read-only rollback reference: `17nyUqDACyc4ZpWL_mZ1S-QAmIGECKtbXFci9rWtqTBg`
+Apps Script does not contain a hardcoded operational or backup spreadsheet ID. Each deployment must set these Script Properties explicitly:
 
-The code never writes to the backup. Drive folder IDs are configuration values and are intentionally unresolved. See `docs/APPS_SCRIPT_SETUP.md`.
+- `HAU_ENVIRONMENT`
+- `HAU_SPREADSHEET_ID`
+- `HAU_BACKUP_SPREADSHEET_ID`
+
+The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placeholders, requires separate operational and backup spreadsheets, and fails closed before opening a Sheet when configuration is invalid. Drive folder IDs remain controlled configuration values. See `docs/APPS_SCRIPT_SETUP.md`.
 
 ## First steps for a maintainer
 
-1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, and `docs/LAUNCH_RUNBOOK.md`.
+1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
 2. Run `npm install && npm run check`.
 3. Work on the feature branch; do not edit the default branch directly.
 4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
