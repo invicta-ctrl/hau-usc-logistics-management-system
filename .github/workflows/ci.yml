@@ -18,7 +18,27 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - name: Run repository checks
+        shell: bash
+        run: |
+          mkdir -p .ci-logs
+          set +e
+          npm run check > .ci-logs/verify.log 2>&1
+          status=$?
+          cat .ci-logs/verify.log
+          exit "$status"
+      - name: Package failure diagnostics
+        if: failure()
+        run: tar --exclude=.git --exclude=node_modules --exclude=ci-debug.tgz -czf ci-debug.tgz .
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-failure-${{ github.run_id }}
+          path: |
+            .ci-logs/verify.log
+            ci-debug.tgz
+          retention-days: 3
 
   browser-smoke:
     runs-on: ubuntu-latest
@@ -30,4 +50,23 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - name: Run browser smoke
+        shell: bash
+        run: |
+          mkdir -p .ci-logs
+          set +e
+          npm run test:e2e > .ci-logs/browser-smoke.log 2>&1
+          status=$?
+          cat .ci-logs/browser-smoke.log
+          exit "$status"
+      - name: Upload browser failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ github.run_id }}
+          path: |
+            .ci-logs/browser-smoke.log
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 3
