@@ -10,6 +10,7 @@ const INCLUDE_MARKERS = Object.freeze({
   appBody: "<?!= include_('AppBody'); ?>",
   appScript: "<?!= include_('AppScript'); ?>",
 });
+const REQUEST_ONLY_VALUE_MARKER = "<?= requestOnly ? 'true' : 'false' ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
 const ATTR_NAME_CHAR = /[^\s=/>]/;
@@ -336,6 +337,17 @@ function countOccurrences(source, needle) {
   return count;
 }
 
+function addRequestOnlyAttribute(bodyOpen) {
+  if (/\sdata-request-only\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-request-only.');
+  }
+  const closingIndex = bodyOpen.lastIndexOf('>');
+  if (closingIndex <= 0 || bodyOpen[closingIndex - 1] === '/') {
+    throw new Error('Expanded source body opening tag is invalid.');
+  }
+  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
+}
+
 export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSources }) {
   const shell = splitExpandedSourceHtml(expandedHtml);
   const scripts = normalizeSources(scriptSources, 'JavaScript');
@@ -350,7 +362,8 @@ export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSource
   const appBody = `${shell.body}\n`;
   const appStyles = `<style id="hau-app-styles">\n${safeStyle}\n</style>\n`;
   const appScript = `<script id="hau-app-script">\n${APPS_SCRIPT_RUNTIME_SOURCE}\nglobalThis.__HAU_APP_SCRIPT_LOADED__=true;\n${safeScript}\n</script>\n`;
-  const index = `${shell.doctype}\n${shell.htmlOpen}\n  ${shell.headOpen}\n${shell.head ? `${indentBlock(shell.head, 4)}\n` : ''}    ${INCLUDE_MARKERS.appStyles}\n  </head>\n  ${shell.bodyOpen}\n    ${INCLUDE_MARKERS.appBody}\n    ${INCLUDE_MARKERS.appScript}\n  </body>\n</html>\n`;
+  const bodyOpen = addRequestOnlyAttribute(shell.bodyOpen);
+  const index = `${shell.doctype}\n${shell.htmlOpen}\n  ${shell.headOpen}\n${shell.head ? `${indentBlock(shell.head, 4)}\n` : ''}    ${INCLUDE_MARKERS.appStyles}\n  </head>\n  ${bodyOpen}\n    ${INCLUDE_MARKERS.appBody}\n    ${INCLUDE_MARKERS.appScript}\n  </body>\n</html>\n`;
 
   for (const [name, marker] of Object.entries(INCLUDE_MARKERS)) {
     if (countOccurrences(index, marker) !== 1) {
@@ -419,12 +432,13 @@ export async function createAppsScriptBundleFromProject() {
   return createAppsScriptFiles({ expandedHtml, ...assets });
 }
 
-export function assembleAppsScriptTemplate(files) {
+export function assembleAppsScriptTemplate(files, { requestOnly = false } = {}) {
   let assembled = files.index;
   const replacements = [
     [INCLUDE_MARKERS.appStyles, files.appStyles],
     [INCLUDE_MARKERS.appBody, files.appBody],
     [INCLUDE_MARKERS.appScript, files.appScript],
+    [REQUEST_ONLY_VALUE_MARKER, requestOnly ? 'true' : 'false'],
   ];
   for (const [marker, value] of replacements) {
     if (countOccurrences(assembled, marker) !== 1) {

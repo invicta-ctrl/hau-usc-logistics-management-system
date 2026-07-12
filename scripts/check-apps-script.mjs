@@ -49,6 +49,9 @@ const files = { index, appBody, appStyles, appScript };
 const templateIncludes = ["include_('AppBody')", "include_('AppStyles')", "include_('AppScript')"];
 const missingIncludes = templateIncludes.filter((marker) => !index.includes(marker));
 if (missingIncludes.length) throw new Error(`Apps Script template is missing: ${missingIncludes.join(', ')}`);
+if (!index.includes("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"")) {
+  throw new Error('Apps Script template does not expose the server request-only flag.');
+}
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"')) throw new Error('AppBody.html is missing required interface markup.');
 if (!appStyles.includes('.app-shell') || !appStyles.includes('.loading-overlay')) throw new Error('AppStyles.html is missing required interface styles.');
@@ -72,6 +75,13 @@ if (assembledAnalysis.bodyCount !== 1 || assembledAnalysis.styleCount !== 1 || a
   throw new Error(`Assembled Apps Script document has invalid executable element counts: ${JSON.stringify({ body: assembledAnalysis.bodyCount, style: assembledAnalysis.styleCount, script: assembledAnalysis.scriptCount })}`);
 }
 if (assembledAnalysis.suspiciousVisibleJavaScriptTokenCount !== 0) throw new Error('Assembled Apps Script document exposes JavaScript as visible body text.');
+const requestOnlyAssembled = assembleAppsScriptTemplate(files, { requestOnly: true });
+const requestOnlyBody = tokenizeHtml(requestOnlyAssembled).find(
+  (token) => token.type === 'tag' && !token.closing && token.name === 'body',
+);
+if (requestOnlyBody?.attributes.get('data-request-only') !== 'true') {
+  throw new Error('Assembled Apps Script request-only document lost the server request flag.');
+}
 if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script')) throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');
 
 const regenerated = await createAppsScriptBundleFromProject();

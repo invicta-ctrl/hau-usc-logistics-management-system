@@ -39,6 +39,8 @@
 - Apps Script browser packaging verification is network-independent and executes from an assembled in-memory document.
 - Corrected the controlled staging deployment after clasp 3.3.0 skipped a manifest-confirmation push, leaving Version 7 on stale raw script/style partials and causing `Exception: Malformed HTML content`.
 - Preserved the existing staging `webapp` manifest settings while force-pushing the reviewed 29-file package, then updated the existing deployment ID to immutable Version 8.
+- Propagated the server-trusted Apps Script request-only flag through `body[data-request-only]` so the sandboxed browser does not depend on the outer `/exec` query string.
+- Added internal/request-only package assembly tests that assert one bootstrap call with the correct `requestOnly` payload and verify the request-only shell hides internal navigation.
 
 ### Verified
 
@@ -58,7 +60,9 @@
 ### Known issues
 
 - The internal Apps Script staging UI still displays the legacy `Preview mode · local data` badge and `Reset Demo Data` control. The adapter is live and the reset handler is blocked outside mock mode, but the visible wording must be corrected before workflow acceptance.
-- Live `?request=1` privacy verification and a bounded end-to-end staging workflow remain pending.
+- Live Version 8 `?request=1` currently renders the internal workspace because the deployed runtime loses the outer query string inside the Apps Script iframe. The repository repair is verified locally but not yet deployed.
+- Repository verification for the request-only repair passed `npm run check` (68 unit tests) and the full Playwright matrix (27 passed, 15 intentionally skipped across 42 cases).
+- A bounded end-to-end staging workflow remains pending.
 
 ## 0.3.2 - 2026-07-12
 

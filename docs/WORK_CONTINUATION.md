@@ -1,6 +1,6 @@
 # Work Continuation
 
-## Latest verified checkpoint — Version 8 rendering recovered; request-only and workflow acceptance pending
+## Latest verified checkpoint — Version 8 request-only privacy failure; repository repair pending deployment
 
 - Date: `2026-07-12` (`Asia/Manila`)
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
@@ -83,6 +83,28 @@ Verified live version-8 results:
 
 Remaining verified defect: the visible internal header still says `Preview mode · local data` and shows `Reset Demo Data`. This is stale UI wording, not a mock fallback; the sidebar changes to `Apps Script staging` only after non-mock bootstrap and the reset handler refuses to act outside mock mode.
 
+## Request-only privacy incident and repository repair
+
+Live Version 8 `/exec?request=1` rendered the full internal workspace. Stop all staging workflow testing and do not broaden access.
+
+Confirmed cause:
+
+- `doGet(e)` correctly assigned `template.requestOnly` from `e.parameter.request`;
+- the generated `Index.html` did not consume that template variable;
+- the compatibility runtime read `location.search` inside the Google sandbox iframe;
+- the iframe did not retain the outer `/exec?request=1` query, so the browser called `api_getBootstrapData({ requestOnly: false })`.
+
+The repository repair:
+
+- injects `data-request-only="<?= requestOnly ? 'true' : 'false' ?>"` into the generated body opening tag;
+- resolves the marker during deterministic test assembly;
+- makes the compatibility runtime trust `document.body.dataset.requestOnly` while preserving the local direct-query fallback;
+- validates internal `false` and request-only `true` paths in unit, static, and real Chromium packaging tests.
+
+The repair is committed only after focused/full checks pass. It has not been pushed to Apps Script or deployed; live Version 8 remains unsuitable for request-only access.
+
+Local verification passed `npm run check` (68 unit tests) and `npm run test:e2e` (27 passed, 15 intentionally skipped across 42 browser cases).
+
 ## Staging work already completed — do not repeat
 
 - Dedicated staging Apps Script project creation
@@ -98,19 +120,19 @@ Remaining verified defect: the visible internal header still says `Preview mode 
 
 Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR #2 yet.
 
-## Next bounded milestone — request-only privacy and UI truthfulness
+## Next bounded milestone — review and deploy request-only privacy repair
 
-1. Test the existing version-8 `?request=1` entry point with the appropriate account and no operational writes.
-2. Confirm there is no internal navigation and no exact inventory, user, ledger, reservation, supplier, borrower, evidence-internal, audit, error, health, or configuration data.
-3. Implement a small browser-only correction so Apps Script mode replaces every visible preview badge and hides the local-only reset control.
-4. Add focused browser coverage for those labels/controls without changing the approved visual layout or backend behavior.
-5. Run the focused packaging/browser tests, `npm run check`, and the full browser matrix once at milestone end.
-6. Do not run an operational workflow until request-only privacy and the UI correction are reviewed.
+1. Review the request-only code/test diff and pushed CI evidence.
+2. With new explicit authorization, preserve the remote web-app manifest, push the reviewed package, verify a remote pull, create one immutable version, and update the existing deployment ID.
+3. Retest `?diagnostic=1`, authorized internal `/exec`, and `?request=1` without operational writes.
+4. Confirm request-only mode has no internal navigation and no exact inventory, user, ledger, reservation, supplier, borrower, evidence-internal, audit, error, health, or configuration data.
+5. Only after privacy passes, implement the separate preview badge/reset-control UI correction.
+6. Do not run an operational workflow until both privacy and UI truthfulness are reviewed.
 
 ## External-write boundary
 
-The authorized version-8 recovery push/deployment is complete. This checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
+The authorized version-8 recovery push/deployment is complete. The request-only repair is repository-only. This checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
 
 ## Fresh-chat recovery prompt
 
-> Continue after the verified Version 8 staging rendering recovery. Verify repository `invicta-ctrl/hau-usc-logistics-management-system`, branch `feat/apps-script-backend-and-launch-readiness`, draft PR #2, and the latest GitHub CI. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`. Do not repeat setup, Drive provisioning, migration, reconciliation, backup, triggers, or deployment. First verify `?request=1` privacy without writes, then correct the misleading preview badge/reset control in Apps Script mode. Do not touch production or merge PR #2.
+> Continue after the confirmed Version 8 request-only privacy failure. Verify repository `invicta-ctrl/hau-usc-logistics-management-system`, branch `feat/apps-script-backend-and-launch-readiness`, draft PR #2, and the latest GitHub CI. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`. The repository repair injects the server request flag into `body[data-request-only]`; review its tests and CI. Do not deploy without new explicit authorization, do not run workflows, and do not repeat setup, Drive, migration, reconciliation, backup, or triggers.

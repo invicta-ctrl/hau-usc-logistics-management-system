@@ -140,6 +140,17 @@ describe('Apps Script separate-output packaging', () => {
     expect(safe.suspiciousVisibleJavaScriptTokenCount).toBe(0);
   });
 
+  it('renders the server-trusted request-only flag into the assembled body', () => {
+    const files = fixtureFiles();
+    expect(files.index).toContain("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"");
+    const internal = analyzeAssembledDocument(assembleAppsScriptTemplate(files));
+    const requestOnly = analyzeAssembledDocument(assembleAppsScriptTemplate(files, { requestOnly: true }));
+    const internalBody = internal.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
+    const requestOnlyBody = requestOnly.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
+    expect(internalBody.attributes.get('data-request-only')).toBe('false');
+    expect(requestOnlyBody.attributes.get('data-request-only')).toBe('true');
+  });
+
   it('runs one minified-identifier bootstrap and reaches the mocked Apps Script API once', () => {
     const script = extractRawTextElementContent(
       fixtureFiles().appScript,
@@ -160,7 +171,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(3);
+    expect(diagnostics.index.markers['<?'].count).toBe(4);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),

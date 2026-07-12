@@ -2,7 +2,7 @@
 
 ## Current status
 
-**Version 8 staging HTML recovery verified; request-only and workflow acceptance pending.**
+**Version 8 internal rendering recovered; request-only privacy failure confirmed and repository repair pending deployment.**
 
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
 - Branch: `feat/apps-script-backend-and-launch-readiness`
@@ -78,6 +78,14 @@ The existing remote `webapp` manifest settings were preserved exactly. One autho
 
 Immutable version 8 was created and the same staging deployment ID was updated. `?diagnostic=1` passed all four checks, and authorized internal `/exec` rendered normally with no raw JavaScript, no malformed-HTML error, and a cleared loading overlay.
 
+### Stage 6 — Version 8 request-only route exposed the internal workspace
+
+Opening `/exec?request=1` rendered the full internal sidebar, overview metrics, and staff workspaces. This failed the request-only privacy acceptance test. No operational action was performed.
+
+The server correctly set `template.requestOnly` from `e.parameter.request`, but the generated template did not emit the value. Browser code read `location.search` inside the Apps Script sandbox iframe, which did not contain the outer `/exec?request=1` query. The bootstrap call therefore used `requestOnly: false`.
+
+The repository repair injects the server boolean into `body[data-request-only]`, makes the compatibility runtime consume it, and adds internal/request-only unit, static, and Chromium packaging coverage. The live deployment remains Version 8 and does not contain this repair.
+
 ## Confirmed local failure mechanism
 
 The former generator used regular expressions to extract script/style elements from the already-minified standalone HTML and then force-printed raw partial contents inside outer script/style elements in an Apps Script template.
@@ -136,7 +144,7 @@ The controlled recovery created versions 7 and 8 and updated the same existing s
 
 ## Verified remaining work
 
-- Test version-8 `?request=1` and verify the complete request-only privacy boundary.
+- Review and deploy the repository request-only propagation repair, then retest the complete privacy boundary.
 - Correct the misleading visible `Preview mode · local data` badge and hide `Reset Demo Data` in Apps Script mode. The current sidebar proves non-mock bootstrap succeeded and the reset handler refuses to act outside mock mode, but the wording is inaccurate.
 - Confirm exact-once live bootstrap from bounded execution evidence if required.
 - Run one bounded end-to-end staging workflow only after privacy and UI review.
@@ -156,11 +164,12 @@ Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR 
 
 ## Remaining staging verification plan
 
-1. Test `?request=1` without writes and verify the complete sanitized boundary.
-2. Correct and test the misleading preview/reset UI in Apps Script mode.
-3. Review the resulting repository commit and CI before any further Apps Script version.
-4. Only then run one explicitly authorized bounded end-to-end staging workflow and verify audit/history/error/evidence records.
-5. Stop immediately on any authorization, inventory, evidence, privacy, or audit failure.
+1. Review the request-only repair commit and CI.
+2. With explicit approval, push it to staging, verify remote parity, and update the existing deployment to one new immutable version.
+3. Retest the diagnostic, internal, and request-only entry points without writes.
+4. Correct and test the separate misleading preview/reset UI only after privacy passes.
+5. Only then run one explicitly authorized bounded end-to-end staging workflow and verify audit/history/error/evidence records.
+6. Stop immediately on any authorization, inventory, evidence, privacy, or audit failure.
 
 ## Evidence retained outside Git
 

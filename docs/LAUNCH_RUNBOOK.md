@@ -24,6 +24,10 @@ Do not interpret `Skipping push` as proof that Apps Script is current. When `app
 
 Never create a new immutable version merely because a push command exited successfully; first verify that remote source actually changed to the reviewed package.
 
+### Apps Script request-flag boundary
+
+Do not derive access mode solely from `location.search` in client JavaScript. Apps Script serves the application inside a sandbox iframe whose URL may not retain the outer `/exec` query. Parse access flags in `doGet(e)`, inject the server result into evaluated HTML, and make the browser send that trusted value to bootstrap. Test both the internal and request-only template evaluations in a browser before deployment.
+
 ## Production promotion
 
 Obtain DOL owner sign-off, freeze config/mappings, create a fresh backup, push the reviewed commit to the production Apps Script project, create an immutable deployment version, restrict audience, run smoke tests, and record deployment owner/version/commit/time/result. Keep the previous deployment version available for application rollback.

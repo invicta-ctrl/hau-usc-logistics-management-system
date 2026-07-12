@@ -12,7 +12,7 @@
 - Current staging deployment: immutable version 8 on the existing deployment ID
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Full live demo readiness estimate: **approximately 90%**; request-only privacy verification, one UI-truthfulness correction, and a bounded end-to-end smoke remain
+- Full live demo readiness estimate: **approximately 85%**; the live Version 8 request-only route exposes the internal workspace and must be repaired before broader access
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
@@ -95,10 +95,14 @@ The fixed real bundle contains one intended application script element, one inte
 
 The internal staging page still shows the legacy visible label `Preview mode · local data` and the `Reset Demo Data` button even though the sidebar correctly reports `Apps Script staging`. This is a UI-truthfulness defect, not a mock fallback: the non-mock reset handler refuses to modify demo state. It must be corrected before workflow acceptance.
 
+Live Version 8 `?request=1` failed the privacy acceptance test: it rendered the full internal workspace. Apps Script correctly set `template.requestOnly` from the outer request, but the generated template never emitted that value. The compatibility runtime instead inspected `location.search` inside Google's sandbox iframe, where the outer `/exec?request=1` query is unavailable, and called `api_getBootstrapData({ requestOnly: false })`.
+
+The repository repair now renders the server value as `body[data-request-only]`, makes the browser honor that trusted value before any local query-string fallback, and covers both internal and request-only assembly in unit/static/Chromium tests. This repair is not yet deployed to staging.
+
 ## Remaining launch blockers and limitations
 
 - Review and seed the final institutional access rows in `14_USERS_ACCESS` before broader staging acceptance.
-- Verify `?request=1` with the appropriate account and confirm the sanitized request-only boundary.
+- Review, deploy, and retest the request-only propagation repair before broadening staging access.
 - Correct the misleading preview badge and hide the local-only reset control in Apps Script mode.
 - Confirm live bootstrap invocation count from bounded execution evidence if exact-once proof is required.
 - Complete one controlled Sheet/Drive end-to-end workflow and verify audit/history/error/evidence records.
@@ -107,4 +111,4 @@ The internal staging page still shows the legacy visible label `Preview mode · 
 
 ## Next recommended task
 
-Verify the version-8 request-only entry point without operational writes, then implement the bounded UI-truthfulness correction. Do not rerun setup, Drive provisioning, migration dry-run, reconciliation, backup, or trigger creation.
+Review the request-only propagation repair and CI, then explicitly authorize one staging push/version if accepted. Retest `?request=1` before the separate UI-truthfulness correction. Do not run operational workflows or repeat setup, Drive provisioning, migration, reconciliation, backup, or triggers.

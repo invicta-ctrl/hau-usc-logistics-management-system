@@ -12,10 +12,11 @@ const emptyBootstrap = {
   roadmapMilestones: [], statusHistory: [], auditLog: [], transferMappings: [], users: [],
 };
 
-test('assembled Apps Script document executes one bootstrap without visible JavaScript', async ({ page }, testInfo) => {
+for (const requestOnly of [false, true]) {
+test(`assembled Apps Script document executes one ${requestOnly ? 'request-only' : 'internal'} bootstrap without visible JavaScript`, async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One real browser parse is sufficient for packaging verification.');
   const files = await createAppsScriptBundleFromProject();
-  const assembled = assembleAppsScriptTemplate(files);
+  const assembled = assembleAppsScriptTemplate(files, { requestOnly });
   const analysis = analyzeAssembledDocument(assembled);
   expect(analysis.scriptCount).toBe(1);
   expect(analysis.styleCount).toBe(1);
@@ -51,9 +52,16 @@ test('assembled Apps Script document executes one bootstrap without visible Java
   await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls)).toEqual([
-    { method: 'api_getBootstrapData', payload: { requestOnly: false } },
+    { method: 'api_getBootstrapData', payload: { requestOnly } },
   ]);
+  await expect(page.locator('body')).toHaveAttribute('data-request-only', String(requestOnly));
+  if (requestOnly) {
+    await expect(page.locator('body')).toHaveClass(/request-mode/);
+    await expect(page.locator('#primaryNav')).toBeHidden();
+    await expect(page.locator('.portal-header')).toBeVisible();
+  }
   const visibleText = await page.locator('body').innerText();
   expect(visibleText).not.toContain('api_getBootstrapData');
   expect(visibleText).not.toContain('__HAU_RUNTIME_CONFIG__');
 });
+}

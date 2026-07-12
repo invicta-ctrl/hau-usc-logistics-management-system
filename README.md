@@ -77,7 +77,7 @@ The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placehold
 
 The repository includes an isolated `DiagnosticShell.html`. After a reviewed staging push and deployment, `?diagnostic=1` is available only when `HAU_ENVIRONMENT=STAGING`. It proves template evaluation, body rendering, style application, inline JavaScript, and one harmless `google.script.run` round trip without reading or writing operational data. The admin-only `htmlTemplateDiagnostics()` function reports bounded lengths, prefixes, and suffixes; it never logs the complete generated application.
 
-Controlled staging Version 8 passed all four diagnostic checks and the authorized internal `/exec` entry point rendered without raw JavaScript or a loading-overlay stall. Request-only privacy verification and a small correction to the legacy visible preview/reset labels remain pending. No production deployment or operational workflow write has been performed as part of this recovery.
+Controlled staging Version 8 passed all four diagnostic checks and the authorized internal `/exec` entry point rendered without raw JavaScript or a loading-overlay stall. Its live `?request=1` privacy test failed because the outer query was lost inside the Apps Script sandbox iframe. The repository now injects the server-trusted request-only value into the generated body and tests both bootstrap modes, but that repair is not yet deployed. No production deployment or operational workflow write has been performed as part of this recovery.
 
 ## First steps for a maintainer
 
