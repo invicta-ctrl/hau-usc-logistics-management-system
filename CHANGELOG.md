@@ -12,6 +12,7 @@
 - Reproducible extraction into shell fragments, seven view HTML modules, and eight ordered CSS modules.
 - Visual-equivalence tests for markup, CSS cascade, and interaction hooks.
 - Standalone artifact verification and classic inline-script output for direct `dist/index.html` use.
+- Root-level `HAU-USC_Logistics-Prototype-Shareable.html`, regenerated from and hash-verified against the deployment bundle.
 
 ### Documented
 

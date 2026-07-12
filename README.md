@@ -27,7 +27,7 @@ npm run verify:dist  # verify standalone controls and asset inlining
 npm run check        # lint, Vitest, build, and standalone verification
 ```
 
-The final standalone artifact is [`dist/index.html`](dist/index.html). CSS and JavaScript are inlined by `vite-plugin-singlefile`; the final script is emitted as a classic inline script so the downloaded file runs from `file://` as well as a web server. GitHub's source-file preview does not execute the application—download the file or serve the repository.
+The deployment artifact is [`dist/index.html`](dist/index.html). A separately named copy for sending to reviewers is generated at [`HAU-USC_Logistics-Prototype-Shareable.html`](HAU-USC_Logistics-Prototype-Shareable.html). Both contain the same inlined CSS and JavaScript and use a classic inline script, so the downloaded file runs from `file://` as well as a web server. GitHub's source-file preview does not execute the application—download the file or serve the repository.
 
 ## Authoritative visual baseline
 

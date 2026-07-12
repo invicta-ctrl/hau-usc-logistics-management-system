@@ -6,7 +6,8 @@
   "scripts": {
     "extract:visual": "node scripts/extract-visual-baseline.mjs",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/create-shareable.mjs",
+    "build:share": "node scripts/create-shareable.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "preview": "vite preview",
     "test": "vitest run",
