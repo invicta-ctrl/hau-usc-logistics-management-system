@@ -50,13 +50,15 @@ if (!scripts.includes('DOMContentLoaded')) {
   throw new Error('Apps Script bundle is missing the application bootstrap script.');
 }
 
-// The Apps Script bundle is inserted after the body markup, so initialize directly instead
-// of relying on DOMContentLoaded timing inside the HTML Service iframe.
-const bootstrapPattern = /document\.addEventListener\((['"])DOMContentLoaded\1,\s*init\);/;
-if (!bootstrapPattern.test(scripts)) {
+// Vite can rename init during minification. Capture whichever identifier is registered for
+// DOMContentLoaded, then invoke that function directly because this script sits after the body.
+const bootstrapPattern = /document\.addEventListener\((['"])DOMContentLoaded\1,\s*([A-Za-z_$][\w$]*)\);/;
+const bootstrapMatch = scripts.match(bootstrapPattern);
+if (!bootstrapMatch) {
   throw new Error('Could not locate the application DOMContentLoaded bootstrap for Apps Script hardening.');
 }
-const appsScriptScripts = scripts.replace(bootstrapPattern, 'setTimeout(init,0);');
+const initIdentifier = bootstrapMatch[2];
+const appsScriptScripts = scripts.replace(bootstrapPattern, `setTimeout(${initIdentifier},0);`);
 
 const index = `<!doctype html>\n${htmlOpen}\n  ${headOpen[0]}\n    ${headShell}\n    ${runtimeConfiguration}\n    <style>\n<?!= include_('AppStyles'); ?>\n    </style>\n  </head>\n  ${bodyOpen[0]}\n    <?!= include_('AppBody'); ?>\n    <script>\n      globalThis.__HAU_APP_SCRIPT_LOADED__ = true;\n<?!= include_('AppScript'); ?>\n    </script>\n  </body>\n</html>\n`;
 const appStyles = `${styles.trim()}\n`;
