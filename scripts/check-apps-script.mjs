@@ -41,6 +41,10 @@ if (missingIncludes.length) throw new Error(`Apps Script template is missing: ${
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!body.includes('id="loading"') || !body.includes('id="primaryNav"')) throw new Error('AppBody.html is missing required interface markup.');
 if (!styles.includes('.app-shell') || !styles.includes('.loading-overlay')) throw new Error('AppStyles.html is missing required interface styles.');
-if (!script.includes('__HAU_RUNTIME_CONFIG__') || !script.includes('DOMContentLoaded')) throw new Error('AppScript.html is missing runtime configuration or bootstrap code.');
+if (!index.includes('__HAU_RUNTIME_CONFIG__') || !index.includes('__HAU_APP_SCRIPT_LOADED__')) throw new Error('Index.html is missing Apps Script runtime markers.');
+if (!index.includes('<style>') || !index.includes('<script>')) throw new Error('Index.html must wrap raw CSS and JavaScript partials in executable tags.');
+if (/<\/?(?:script|style)\b/i.test(styles) || /<\/?script\b/i.test(script)) throw new Error('Apps Script CSS and JavaScript partials must contain raw contents without container tags.');
+if (!script.includes('setTimeout(init,0)')) throw new Error('AppScript.html is missing the direct Apps Script bootstrap.');
+new Function(script);
 
-console.log(`Validated ${gasFiles.length} Apps Script source files, ${requiredFunctions.length} required functions, and split web-app bundle partials.`);
+console.log(`Validated ${gasFiles.length} Apps Script source files, ${requiredFunctions.length} required functions, and executable split web-app bundle partials.`);
