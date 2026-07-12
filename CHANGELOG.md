@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.2 - 2026-07-12
+
+### Prepared
+
+- Locked the shareable Final prototype as the approved visual direction for the upcoming demo.
+- Added `docs/FINAL_DEMO_BASELINE.md` with launch instructions, guided demo order, safety boundary, and presentation acceptance checklist.
+- Documented the earlier Revision 02 file as historical reference rather than the active visual baseline.
+
 ## 0.3.1 - 2026-07-12
 
 ### Restored

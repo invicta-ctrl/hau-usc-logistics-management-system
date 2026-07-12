@@ -53,6 +53,8 @@ src/
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DOMAIN_RULES.md`](docs/DOMAIN_RULES.md), and [`PROJECT_STATUS.md`](PROJECT_STATUS.md) before making changes.
 
+The approved final-demo direction and rehearsal checklist are in [`docs/FINAL_DEMO_BASELINE.md`](docs/FINAL_DEMO_BASELINE.md).
+
 ## Logo and image placement
 
 Preferred optional files:

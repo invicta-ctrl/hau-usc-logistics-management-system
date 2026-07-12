@@ -2,7 +2,7 @@
 
 ## Current version
 
-- Version: `0.3.1`
+- Version: `0.3.2`
 - Date: 2026-07-12
 - Mode: preview only
 - Backend: mock browser adapter
@@ -13,6 +13,7 @@
 - Phase 0 - Preserve baseline: **implemented**. The authoritative original prototype is retained under `legacy/`; the audit is retained under `docs/reference/` in the GitHub deliverable.
 - Phase 1 - P0 integrity fixes: **implemented and covered by Vitest**. Unique paired IDs, cumulative receipts, idempotent handoff/return, service-level transfer limits, awaited rollback-safe reservations, and line-level restock receiving pass the reproduced probes.
 - Visual restoration: **implemented**. Active markup and CSS are mechanically extracted from the archived Final prototype. Seven view modules and eight ordered CSS modules reconstruct the original source in equivalence tests.
+- Final demo baseline: **approved and prepared**. `HAU-USC_Logistics-Prototype-Shareable.html` is the selected reviewer-facing artifact, and `docs/FINAL_DEMO_BASELINE.md` contains the rehearsal order and acceptance checklist.
 - Phase 2 - UX and accessibility: **partially integrated**. The restored baseline brings back the recognizable interface and working preview controls, but some newer navigation, focus-management, and application-confirmation improvements still need reconnection without altering the baseline.
 - Phase 3 - Modular source: **implemented for domain/services and visual extraction; controller migration remains**. Vite modules, service adapters, tests, documentation, per-view HTML, ordered CSS, and a self-contained build are present. The restored compatibility runtime is still a large generated file.
 - Phases 4-7: not started; see `docs/ROADMAP_TO_V1.md`.
@@ -35,6 +36,10 @@
 - Evidence stores safe metadata only; selected file bytes are never persisted.
 - The prototype implements the critical transaction scenarios, but production pilot acceptance requires real assistive-technology, concurrency, privacy, records-retention, backup, and incident-response testing.
 - Some secondary create/edit/archive workflows are represented as preview structures rather than full production forms.
+
+## Recommended next demo task
+
+Complete the desktop and mobile rehearsal using `docs/FINAL_DEMO_BASELINE.md`, then record any presentation-only adjustments as small controller or copy changes while preserving the approved visual modules.
 
 ## Recommended next full-stack task
 
