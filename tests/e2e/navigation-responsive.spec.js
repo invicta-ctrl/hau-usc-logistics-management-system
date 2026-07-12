@@ -1,44 +1,23 @@
 import { test, expect } from '@playwright/test';
 
-test('navigates primary modules and has no page-level horizontal overflow', async ({ page }, testInfo) => {
+test('navigates every approved module without page-level overflow', async ({ page }) => {
   await page.goto('/');
-  const width = testInfo.project.use.viewport.width;
-  if (width < 768) {
-    await expect(page.locator('.bottom-nav')).toBeVisible();
-    await page.getByRole('button', { name: 'Inventory', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Catalog and balances' })).toBeVisible();
-    await page.getByRole('button', { name: 'More', exact: true }).click();
-    await expect(page.getByRole('dialog', { name: 'More logistics modules' })).toBeVisible();
-    await page.getByRole('button', { name: /Office Lending Hub/ }).click();
-    await expect(page.getByRole('heading', { name: 'Borrowing and consumable tickets' })).toBeVisible();
-  } else {
-    for (const name of [
-      'Request Center',
-      'Release Desk',
-      'Inventory Management',
-      'Office Lending Hub',
-      'Restocking',
-      'Procurement & Deliverables',
-      'Reports & Admin',
-    ]) {
-      await page
-        .getByRole('button', { name: new RegExp(name) })
-        .first()
-        .click();
-      await expect(page.locator('#view-root')).not.toBeEmpty();
-    }
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  for (const view of ['request', 'lending', 'release', 'restocking', 'procurement', 'inventory', 'overview']) {
+    await page.locator(`#primaryNav [data-view="${view}"]`).click();
+    await expect(page.locator(`section#${view}`)).toHaveClass(/active/);
   }
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test('request-only portal cannot reveal internal modules or state', async ({ page }) => {
-  await page.goto('/?mode=request');
-  await expect(page.getByText('Preview-only requester portal')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'New logistics request' })).toBeVisible();
-  await expect(page.getByText('Inventory Management')).toHaveCount(0);
-  await expect(page.getByText('Supplier TIN')).toHaveCount(0);
-  await expect(page.getByText('Audit Log')).toHaveCount(0);
+test('request-only portal uses sanitized state and hides internal workspaces', async ({ page }) => {
+  await page.goto('/?request=1');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await expect(page.locator('body')).toHaveClass(/request-mode/);
+  await expect(page.locator('.portal-header')).toBeVisible();
+  await expect(page.locator('#request')).toHaveClass(/active/);
+  await expect(page.locator('.sidebar')).toBeHidden();
+  await expect(page.locator('#inventoryTable')).toBeEmpty();
+  await expect(page.locator('#releaseTickets')).toBeEmpty();
 });

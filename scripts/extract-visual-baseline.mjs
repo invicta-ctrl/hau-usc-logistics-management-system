@@ -62,8 +62,28 @@ function bridgeRuntime(runtime) {
       '  const services=createLegacyRuntimeAdapter(mockServices);\n  async function mockUpload(file,meta)',
     )
     .replace(
+      "  function renderAll(){\n    renderOverview();renderRequestSelectors();renderRequestDraft();renderLending();renderReleaseDesk();renderRestocking();renderProcurement();renderInventory();\n  }",
+      "  function renderAll(){\n    if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}renderOverview();renderRequestSelectors();renderRequestDraft();renderLending();renderReleaseDesk();renderRestocking();renderProcurement();renderInventory();\n  }",
+    )
+    .replace(
+      "  function openDrawer(title,body){const d=byId('drawer');d.innerHTML=`<div class=\"drawer-head\"",
+      "  let layerReturnFocus=null;\n  function openDrawer(title,body){layerReturnFocus=document.activeElement;const d=byId('drawer');d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','drawerTitle');d.innerHTML=`<div class=\"drawer-head\"",
+    )
+    .replace(
+      "  function closeDrawer(){byId('drawerBackdrop').classList.remove('show')}",
+      "  function closeDrawer(){const wasOpen=byId('drawerBackdrop').classList.contains('show');byId('drawerBackdrop').classList.remove('show');if(wasOpen){layerReturnFocus?.focus();layerReturnFocus=null;}}",
+    )
+    .replace(
+      "  function openModal(title,body,onReady){const m=byId('modal');m.innerHTML=`<div class=\"modal-head\"",
+      "  function openModal(title,body,onReady){layerReturnFocus=document.activeElement;const m=byId('modal');m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','modalTitle');m.innerHTML=`<div class=\"modal-head\"",
+    )
+    .replace(
+      "if(onReady)onReady(m);setTimeout(()=>m.querySelector('input,select,button')?.focus(),20)}\n  function closeModal(){byId('modalBackdrop').classList.remove('show')}",
+      "if(onReady)onReady(m);m.onkeydown=e=>{if(e.key!=='Tab')return;const focusable=[...m.querySelectorAll('button,input,select,textarea,[href],[tabindex]:not([tabindex=\"-1\"])')].filter(x=>!x.disabled);if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};setTimeout(()=>m.querySelector('input,select,button')?.focus(),20)}\n  function closeModal(){const wasOpen=byId('modalBackdrop').classList.contains('show');byId('modalBackdrop').classList.remove('show');if(wasOpen){layerReturnFocus?.focus();layerReturnFocus=null;}}",
+    )
+    .replace(
       "function init(){\n    state=loadState();normalizeStateRecords();\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
-      "async function init(){\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';\n    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}\n    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    if(backendMode!=='mock'){const badge=document.querySelector('.preview-badge');if(badge)badge.textContent='● Apps Script · staging';const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class=\"live-dot\"></span>Apps Script staging</strong>Server authorization, Sheets repositories, and audit logging are active.';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
+      "function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>({...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))}));['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}\n  async function init(){\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';\n    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}\n    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    if(backendMode!=='mock'){const badge=document.querySelector('.preview-badge');if(badge)badge.textContent='● Apps Script · staging';const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class=\"live-dot\"></span>Apps Script staging</strong>Server authorization, Sheets repositories, and audit logging are active.';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
     );
 }
 const viewIds = [
