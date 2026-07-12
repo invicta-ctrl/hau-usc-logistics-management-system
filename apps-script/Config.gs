@@ -1,8 +1,14 @@
+var HAU_RUNTIME_PROPERTIES = Object.freeze({
+  ENVIRONMENT: 'HAU_ENVIRONMENT',
+  SPREADSHEET_ID: 'HAU_SPREADSHEET_ID',
+  BACKUP_SPREADSHEET_ID: 'HAU_BACKUP_SPREADSHEET_ID'
+});
+
+var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
+
 var HAU_CONFIG = Object.freeze({
   APP_VERSION: '0.4.0',
   SCHEMA_VERSION: '1.0.0',
-  SPREADSHEET_ID: '1D28OX2dTx0rfus4hDd9VcyDZtxo26CFLGFk22URFAjw',
-  BACKUP_SPREADSHEET_ID: '17nyUqDACyc4ZpWL_mZ1S-QAmIGECKtbXFci9rWtqTBg',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -18,6 +24,49 @@ var HAU_CONFIG = Object.freeze({
     'DRIVE_ARCHIVE_FOLDER_ID'
   ]
 });
+
+function isPlaceholderRuntimeValue_(value) {
+  return /^(TO_BE_ASSIGNED|REPLACE_WITH.*|YOUR_.*|CHANGE_?ME|<.*>)$/i.test(String(value || '').trim());
+}
+
+function requireRuntimeProperty_(properties, key) {
+  var value = String(properties.getProperty(key) || '').trim();
+  if (!value || isPlaceholderRuntimeValue_(value)) {
+    throw appError_('SETUP_REQUIRED', 'Required Apps Script property is missing or unresolved: ' + key, false, { key: key });
+  }
+  return value;
+}
+
+function requireGoogleResourceId_(properties, key) {
+  var value = requireRuntimeProperty_(properties, key);
+  if (!/^[A-Za-z0-9_-]{20,}$/.test(value)) {
+    throw appError_('CONFIGURATION_INVALID', 'Apps Script property must contain a Google resource ID: ' + key, false, { key: key });
+  }
+  return value;
+}
+
+function resolveRuntimeConfig_() {
+  var properties = PropertiesService.getScriptProperties();
+  var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
+  if (HAU_ALLOWED_ENVIRONMENTS.indexOf(environment) < 0) {
+    throw appError_('CONFIGURATION_INVALID', 'HAU_ENVIRONMENT must be STAGING or PRODUCTION.', false, {
+      key: HAU_RUNTIME_PROPERTIES.ENVIRONMENT,
+      allowed: HAU_ALLOWED_ENVIRONMENTS.slice()
+    });
+  }
+  var spreadsheetId = requireGoogleResourceId_(properties, HAU_RUNTIME_PROPERTIES.SPREADSHEET_ID);
+  var backupSpreadsheetId = requireGoogleResourceId_(properties, HAU_RUNTIME_PROPERTIES.BACKUP_SPREADSHEET_ID);
+  if (spreadsheetId === backupSpreadsheetId) {
+    throw appError_('CONFIGURATION_INVALID', 'Operational and backup spreadsheet IDs must be different.', false, {
+      keys: [HAU_RUNTIME_PROPERTIES.SPREADSHEET_ID, HAU_RUNTIME_PROPERTIES.BACKUP_SPREADSHEET_ID]
+    });
+  }
+  return {
+    environment: environment,
+    spreadsheetId: spreadsheetId,
+    backupSpreadsheetId: backupSpreadsheetId
+  };
+}
 
 var HAU_SHEETS = Object.freeze({
   README: '00_README', ITEMS: '01_ITEM_MASTER', LEDGER: '02_LEDGER', REQUESTS: '03_REQUESTS',
@@ -50,7 +99,7 @@ var HAU_HEADERS = Object.freeze({
   '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes']
 });
 
-function getDatabase_() { return SpreadsheetApp.openById(HAU_CONFIG.SPREADSHEET_ID); }
+function getDatabase_() { return SpreadsheetApp.openById(resolveRuntimeConfig_().spreadsheetId); }
 function nowIso_() { return Utilities.formatDate(new Date(), HAU_CONFIG.TIMEZONE, "yyyy-MM-dd'T'HH:mm:ssXXX"); }
 function configMap_() {
   var rows = readObjects_(HAU_SHEETS.CONFIG), map = {};
@@ -62,4 +111,3 @@ function getConfigValue_(key, required) {
   if (required && (!value || value === 'TO_BE_ASSIGNED')) throw appError_('SETUP_REQUIRED', 'Required configuration is missing: ' + key, false, { key: key });
   return value;
 }
-
