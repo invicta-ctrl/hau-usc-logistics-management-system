@@ -1,9 +1,18 @@
 function doGet(e) {
-  var template = HtmlService.createTemplateFromFile('Index');
+  var diagnostic = Boolean(e && e.parameter && e.parameter.diagnostic === '1');
+  var templateName = 'Index';
+  if (diagnostic) {
+    var runtime = resolveRuntimeConfig_();
+    if (runtime.environment !== 'STAGING') {
+      throw new Error('The HTML diagnostic shell is available only in STAGING.');
+    }
+    templateName = 'DiagnosticShell';
+  }
+  var template = HtmlService.createTemplateFromFile(templateName);
   template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
   return template
     .evaluate()
-    .setTitle('HAU-USC Logistics Management System')
+    .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
 }
 
@@ -16,4 +25,42 @@ function api_healthCheck() {
     requirePermission_('Can_Admin');
     return healthCheck_(correlationId);
   });
+}
+
+function api_htmlDiagnosticPing() {
+  return {
+    ok: true,
+    diagnostic: 'HTML_SERVICE',
+    timestamp: new Date().toISOString()
+  };
+}
+
+function htmlTemplateDiagnostics() {
+  requirePermission_('Can_Admin');
+  var template = HtmlService.createTemplateFromFile('Index');
+  var raw = template.getRawContent();
+  var generated = template.getCode();
+  var generatedWithComments = template.getCodeWithComments();
+  var report = {
+    correlationId: 'HTML-' + Utilities.getUuid().slice(0, 8).toUpperCase(),
+    rawTemplateLength: raw.length,
+    generatedCodeLength: generated.length,
+    generatedCodeWithCommentsLength: generatedWithComments.length,
+    rawTemplatePrefix: boundedTemplateSnippet_(raw, true),
+    rawTemplateSuffix: boundedTemplateSnippet_(raw, false),
+    generatedPrefix: boundedTemplateSnippet_(generated, true),
+    generatedSuffix: boundedTemplateSnippet_(generated, false)
+  };
+  console.log(JSON.stringify(report));
+  return report;
+}
+
+function boundedTemplateSnippet_(value, fromStart) {
+  var text = String(value || '');
+  var limit = 160;
+  var snippet = fromStart ? text.slice(0, limit) : text.slice(Math.max(0, text.length - limit));
+  return snippet
+    .replace(/[A-Za-z0-9_-]{24,}/g, '[REDACTED_TOKEN]')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
