@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>HAU-USC Logistics · Staging HTML Diagnostic</title>
+    <style>
+      body { font: 16px/1.5 system-ui, sans-serif; margin: 2rem; }
+      main { max-width: 46rem; margin: auto; }
+      .ok { color: #166534; }
+      .error { color: #991b1b; }
+      code { background: #f3f4f6; padding: .15rem .35rem; border-radius: .25rem; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Staging HTML diagnostic</h1>
+      <ol>
+        <li id="bodyStatus" class="ok">Body partial rendered.</li>
+        <li id="styleStatus">Style partial applied.</li>
+        <li id="scriptStatus">Inline script pending.</li>
+        <li id="serverStatus">Harmless server call pending.</li>
+      </ol>
+      <p>This page contains no operational data and performs no Sheet or Drive writes.</p>
+    </main>
+    <script>
+      (function () {
+        document.documentElement.setAttribute('data-inline-script', 'ok');
+        document.getElementById('scriptStatus').className = 'ok';
+        document.getElementById('scriptStatus').textContent = 'Inline script executed.';
+        var styled = getComputedStyle(document.getElementById('bodyStatus')).color;
+        document.getElementById('styleStatus').className = styled ? 'ok' : 'error';
+        document.getElementById('styleStatus').textContent = styled ? 'Style partial applied.' : 'Style check failed.';
+        google.script.run
+          .withSuccessHandler(function (result) {
+            var node = document.getElementById('serverStatus');
+            node.className = result && result.ok ? 'ok' : 'error';
+            node.textContent = result && result.ok ? 'Harmless server call completed.' : 'Unexpected server response.';
+          })
+          .withFailureHandler(function () {
+            var node = document.getElementById('serverStatus');
+            node.className = 'error';
+            node.textContent = 'Harmless server call failed.';
+          })
+          .api_htmlDiagnosticPing({});
+      })();
+    </script>
+  </body>
+</html>
