@@ -24,4 +24,27 @@ describe('AppsScriptAdapter', () => {
     globalThis.google = { script: { run: runnerFor({ ok: false, code: 'INSUFFICIENT_STOCK', message: 'Only 3 pieces are available to promise.', retryable: false, correlationId: 'COR-2' }) } };
     await expect(new AppsScriptAdapter().reserveStock({ clientRequestId: 'client-2' })).rejects.toMatchObject({ code: 'INSUFFICIENT_STOCK', correlationId: 'COR-2', retryable: false });
   });
+
+  it('keeps a timeout terminal when a late success callback arrives', async () => {
+    let success;
+    let failure;
+    let proxy;
+    const runner = {
+      withSuccessHandler(handler) { success = handler; return proxy; },
+      withFailureHandler(handler) { failure = handler; return proxy; },
+    };
+    proxy = new Proxy(runner, {
+      get(target, property) {
+        if (property in target) return target[property];
+        return () => {};
+      },
+    });
+    globalThis.google = { script: { run: proxy } };
+
+    const pending = new AppsScriptAdapter({ timeoutMs: 5 }).getBootstrapData({ requestOnly: false });
+    await expect(pending).rejects.toMatchObject({ code: 'BACKEND_TIMEOUT', retryable: true });
+    success({ ok: true, data: { version: '0.5.0' } });
+    failure(new Error('late failure is ignored by the settled promise'));
+    await expect(pending).rejects.toMatchObject({ code: 'BACKEND_TIMEOUT' });
+  });
 });

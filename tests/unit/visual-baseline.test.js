@@ -31,6 +31,16 @@ const cssModules = [
   'overlays',
   'responsive',
 ];
+const cssMarkers = [
+  ':root{',
+  '.app-shell{',
+  '.panel,.card{',
+  '.hero{',
+  'form{display:grid',
+  '.table-wrap{',
+  '.drawer-backdrop,.modal-backdrop{',
+  '@media(max-width:1180px)',
+];
 
 describe('authoritative visual extraction', () => {
   it('removes only the exact generated notice with LF or CRLF endings', () => {
@@ -61,7 +71,21 @@ describe('authoritative visual extraction', () => {
     const modules = await Promise.all(
       cssModules.map((name) => read(`src/styles/visual/${name}.css`)),
     );
-    expect(compact(modules.join(''))).toBe(compact(originalCss));
+    const originalSegments = cssMarkers.map((marker, index) => {
+      const start = originalCss.indexOf(marker);
+      const end = cssMarkers[index + 1] ? originalCss.indexOf(cssMarkers[index + 1]) : originalCss.length;
+      return compact(originalCss.slice(start, end));
+    });
+    modules.forEach((module, index) => {
+      const actual = compact(module);
+      if (cssModules[index] === 'overlays') {
+        expect(actual.startsWith(originalSegments[index])).toBe(true);
+        expect(actual.slice(originalSegments[index].length)).toContain('.loading-panel');
+        expect(actual.slice(originalSegments[index].length)).toContain('.loading-retry');
+      } else {
+        expect(actual).toBe(originalSegments[index]);
+      }
+    });
   });
 
   it('keeps the original interaction hooks and adds the production adapter bridge', async () => {
@@ -72,7 +96,7 @@ describe('authoritative visual extraction', () => {
     );
     expect(runtime).toContain("import { createRuntimeExtensions }");
     expect(runtime).toContain(
-      "backendMode==='mock'?loadState():await services.loadBootstrapData",
+      "return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly})",
     );
     expect(runtime).toContain(
       "Reset Demo Data is available only in local preview mode.",
@@ -97,7 +121,7 @@ describe('authoritative visual extraction', () => {
     );
     expect(runtime).toContain('acceptAuthoritativeState');
     expect(runtime).toContain('runtimeExtensions.install()');
-    expect(runtime).toContain('runtimeExtensions.start()');
+    expect(runtime).toContain('runtimeExtensions?.start()');
 
     for (const hook of [
       'bindGlobalEvents()',

@@ -1,5 +1,39 @@
 # Work Continuation
 
+## Latest checkpoint — P0 Production Bootstrap Diagnosis and Recovery
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Repository branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `2a9ac342ca584257e0bbf6ea09ffb9d4f892a7c7`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Ending commit: this focused P0 implementation commit; exact SHA is reported after commit
+- Worktree policy: the accepted planning-document commit was the only ahead commit at start; no push was performed
+
+### Delivered
+
+- Contained the complete read-only bootstrap startup sequence inside one controller boundary with explicit request, response validation, normalization, static options, extensions, bindings, first render, post-render, and ready stages.
+- Added supported-envelope validation before normalization, safe synthetic fixtures, server-side JSON-safe serialization coverage, client stage timings/counts, an eight-second slow state, one active attempt, Retry reset, and obsolete callback protection.
+- Added an accessible loading failure surface with plain-language copy, safe support code, live-region semantics, keyboard focus on Retry, and an idempotent success/failure finalizer.
+- Regenerated the visual runtime and additive loading styles from the preserved legacy baseline. No generated HTML was hand-edited.
+
+### Local evidence
+
+- `npm ci`: passed.
+- `npm run check`: passed; full Vitest 15 files / 118 tests, Apps Script package/static checks, generated parity, and standalone verification passed.
+- Focused packaged Apps Script Chromium suite: 14 passed at 390 px, including slow-state and rapid Retry coverage.
+- Complete Playwright matrix: 138 cases across 320, 390, 768, 1024, 1366, and 1440 px projects; 48 passed, 90 scoped skips, 0 failed.
+- Synthetic local static shell measurement: visible in 81 ms at 390x844; this does not establish staging or production p95.
+- No `clasp` command, push, deployment, Sheet/Drive write, or other external action was performed.
+
+### Remaining unknowns and rollback
+
+- Live Apps Script timing, HTML Service behavior, deployment response shape, and production-volume behavior remain unverified because staging and production were not touched.
+- If this commit is later integrated, revert the single focused implementation commit. If later deployed under separate authorization, move only the deployment pointer back to the preceding immutable version; no external records require rollback from this checkpoint.
+
+### Next action
+
+Manager review of the exact diff and local evidence. Do not push or begin another milestone until separately authorized.
+
 ## Latest working checkpoint — Version 0.5.0 live sync, lending search, and catalog controls
 
 - Date: `2026-07-13` (`Asia/Manila`)

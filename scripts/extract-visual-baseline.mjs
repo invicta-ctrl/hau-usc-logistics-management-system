@@ -22,13 +22,42 @@ if (!scriptMatch) {
 }
 
 const markup = body.slice(0, scriptMatch.index);
+const p0StartupBridge = String.raw`function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>{const safe={...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))};['lendingAudience','maximumLoanQuantity','defaultLoanDays','approvalRequired','reorderThreshold','storageLocation','notes','verificationNote','legacy'].forEach(name=>delete safe[name]);return safe;});['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}
+  function startupTestHook(stage){if(globalThis.__HAU_BOOTSTRAP_TEST_MODE__===true&&typeof globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__==='function')globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__(stage);}
+  function applyAppsScriptEnvironmentLabel(){if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label='â— Apps Script Â· '+safeEnvironment;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class="live-dot"></span>Apps Script '+safeEnvironment+'</strong>Server authorization, Sheets repositories, and audit logging are active.';}}
+  async function init(){
+    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
+    const loadingUi=createBootstrapUi();
+    let controller;
+    loadingUi.retryButton.onclick=()=>{loadingUi.reset();controller?.start();};
+    controller=createBootstrapController({
+      load:()=>{startupTestHook(BOOTSTRAP_STAGES.REQUEST);return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly});},
+      onUpdate:event=>loadingUi.update(event),
+      onReady:()=>loadingUi.finalize({ok:true}),
+      onFailure:failure=>loadingUi.finalize({ok:false,failure}),
+      steps:{
+        validate(value){startupTestHook(BOOTSTRAP_STAGES.RESPONSE_VALIDATION);return validateBootstrapEnvelope(value,{backendMode});},
+        normalize(value){startupTestHook(BOOTSTRAP_STAGES.NORMALIZATION);state=requestOnly&&backendMode==='mock'?sanitizeRequestOnlyState(value):value;normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}applyAppsScriptEnvironmentLabel();return state;},
+        staticOptions(value){startupTestHook(BOOTSTRAP_STAGES.STATIC_OPTIONS);populateStaticOptions();return value;},
+        extensions(value){startupTestHook(BOOTSTRAP_STAGES.EXTENSIONS);runtimeExtensions=createRuntimeExtensions({backendMode,services,getState:()=>state,acceptState:acceptAuthoritativeState,commit,toast,openModal,closeModal,isRequestOnly:()=>document.body.classList.contains('request-mode'),hasUnsavedRuntimeState:()=>ui.requestDraftLines.length>0||Object.values(ui.uploads).some(Boolean)});runtimeExtensions.install();return value;},
+        bindings(value){startupTestHook(BOOTSTRAP_STAGES.BINDINGS);bindGlobalEvents();setupUploaders();return value;},
+        firstRender(value){startupTestHook(BOOTSTRAP_STAGES.FIRST_RENDER);renderAll();return value;},
+        postRender(value){startupTestHook(BOOTSTRAP_STAGES.POST_RENDER);runtimeExtensions?.afterRender();runtimeExtensions?.start();return value;},
+      },
+    });
+    controller.start();
+  }
+`;
+const p0InitBridge = p0StartupBridge
+  .replace(/^function sanitizeRequestOnlyState[\s\S]*?\n(?=\x20{2}function startupTestHook)/, '')
+  .replace(/const label='[^']*'\+safeEnvironment;/, "const label='\\u25CF Apps Script \\u00B7 '+safeEnvironment;");
 function bridgeRuntime(runtime) {
   const normalizedRuntime = runtime.replace(/\r\n?/g, '\n');
 
   return normalizedRuntime
     .replace(
       "'use strict';",
-      "import { appEnvironment, backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';\nimport { createRuntimeExtensions } from './runtime-extensions.js';\n  'use strict';",
+      "import { appEnvironment, backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';\nimport { BOOTSTRAP_STAGES, createBootstrapController, validateBootstrapEnvelope } from './bootstrap-controller.js';\nimport { createBootstrapUi } from './bootstrap-ui.js';\nimport { createRuntimeExtensions } from './runtime-extensions.js';\n  'use strict';",
     )
     .replace(
       "  let state;\n  const ui=",
@@ -134,6 +163,10 @@ function bridgeRuntime(runtime) {
     .replace(
       /function sanitizeRequestOnlyState[\s\S]*?(?=\n {2}function normalizeStateRecords)/,
       "function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>{const safe={...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))};['lendingAudience','maximumLoanQuantity','defaultLoanDays','approvalRequired','reorderThreshold','storageLocation','notes','verificationNote','legacy'].forEach(name=>delete safe[name]);return safe;});['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}\n  async function init(){\n    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';\n    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}\n    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}\n    if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label=`● Apps Script · ${safeEnvironment}`;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML=`<strong><span class=\"live-dot\"></span>Apps Script ${safeEnvironment}</strong>Server authorization, Sheets repositories, and audit logging are active.`;}\n    populateStaticOptions();runtimeExtensions=createRuntimeExtensions({backendMode,services,getState:()=>state,acceptState:acceptAuthoritativeState,commit,toast,openModal,closeModal,isRequestOnly:()=>document.body.classList.contains('request-mode'),hasUnsavedRuntimeState:()=>ui.requestDraftLines.length>0||Object.values(ui.uploads).some(Boolean)});runtimeExtensions.install();bindGlobalEvents();setupUploaders();renderAll();runtimeExtensions.afterRender();byId('loading').classList.add('hidden');runtimeExtensions.start();\n  }\n"
+    )
+    .replace(
+      /async function init[\s\S]*?(?=\n {2}function normalizeStateRecords)/,
+      p0InitBridge,
     )
     .replace(
       "    state.statusHistory=state.statusHistory||[];state.auditLog=state.auditLog||[];",
@@ -289,6 +322,11 @@ const cssModules = [
   ['responsive', '@media(max-width:1180px)'],
 ].map(([name, marker]) => ({ name, start: css.indexOf(marker) }));
 
+const p0OverlayCss = `
+    .loading-panel{width:min(460px,calc(100% - 32px));padding:26px 24px;border:1px solid rgba(97,11,15,.14);border-radius:18px;background:rgba(255,255,255,.94);box-shadow:0 18px 60px rgba(36,5,7,.16);text-align:center}
+    .loading-panel[role="alert"]{border-color:rgba(123,23,27,.35)}.loading-title{display:block;font-size:18px;color:var(--oxblood)}.loading-detail{margin:9px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.loading-support{margin:12px 0 0;color:var(--muted);font-size:11px}.loading-retry{margin-top:15px}.loading-retry[hidden]{display:none!important}.loading-overlay[data-state="slow"] .spinner{animation-duration:1.4s}
+`;
+
 if (cssModules.some(({ start }) => start < 0)) {
   throw new Error('The authoritative stylesheet no longer matches the documented module boundaries.');
 }
@@ -303,7 +341,7 @@ const outputs = new Map([
   ['src/visual/runtime.js', bridgeRuntime(scriptMatch[1]).trim() + '\n'],
   ...cssModules.map(({ name, start, end }) => [
     `src/styles/visual/${name}.css`,
-    css.slice(start, end).trim() + '\n',
+    `${css.slice(start, end).trim()}${name === 'overlays' ? p0OverlayCss.trim() : ''}\n`,
   ]),
   ...views.map(({ id, html }) => [`src/visual/views/${id}.html`, generatedNotice + html + '\n']),
 ]);

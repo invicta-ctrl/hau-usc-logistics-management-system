@@ -1,4 +1,6 @@
 import { appEnvironment, backendMode, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';
+import { BOOTSTRAP_STAGES, createBootstrapController, validateBootstrapEnvelope } from './bootstrap-controller.js';
+import { createBootstrapUi } from './bootstrap-ui.js';
 import { createRuntimeExtensions } from './runtime-extensions.js';
   'use strict';
   /* =========================================================
@@ -291,12 +293,29 @@ import { createRuntimeExtensions } from './runtime-extensions.js';
      ========================================================= */
   document.addEventListener('DOMContentLoaded',init);
   function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>{const safe={...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))};['lendingAudience','maximumLoanQuantity','defaultLoanDays','approvalRequired','reorderThreshold','storageLocation','notes','verificationNote','legacy'].forEach(name=>delete safe[name]);return safe;});['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}
+    function startupTestHook(stage){if(globalThis.__HAU_BOOTSTRAP_TEST_MODE__===true&&typeof globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__==='function')globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__(stage);}
+  function applyAppsScriptEnvironmentLabel(){if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label='\u25CF Apps Script \u00B7 '+safeEnvironment;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class="live-dot"></span>Apps Script '+safeEnvironment+'</strong>Server authorization, Sheets repositories, and audit logging are active.';}}
   async function init(){
     const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
-    try{state=backendMode==='mock'?loadState():await services.loadBootstrapData({requestOnly});if(requestOnly&&backendMode==='mock')state=sanitizeRequestOnlyState(state);}catch(error){byId('loading').classList.add('hidden');toast(`${error.message||'Backend unavailable'}${error.correlationId?` · ${error.correlationId}`:''}`,true);return;}
-    normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}
-    if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label=`● Apps Script · ${safeEnvironment}`;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML=`<strong><span class="live-dot"></span>Apps Script ${safeEnvironment}</strong>Server authorization, Sheets repositories, and audit logging are active.`;}
-    populateStaticOptions();runtimeExtensions=createRuntimeExtensions({backendMode,services,getState:()=>state,acceptState:acceptAuthoritativeState,commit,toast,openModal,closeModal,isRequestOnly:()=>document.body.classList.contains('request-mode'),hasUnsavedRuntimeState:()=>ui.requestDraftLines.length>0||Object.values(ui.uploads).some(Boolean)});runtimeExtensions.install();bindGlobalEvents();setupUploaders();renderAll();runtimeExtensions.afterRender();byId('loading').classList.add('hidden');runtimeExtensions.start();
+    const loadingUi=createBootstrapUi();
+    let controller;
+    loadingUi.retryButton.onclick=()=>{loadingUi.reset();controller?.start();};
+    controller=createBootstrapController({
+      load:()=>{startupTestHook(BOOTSTRAP_STAGES.REQUEST);return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly});},
+      onUpdate:event=>loadingUi.update(event),
+      onReady:()=>loadingUi.finalize({ok:true}),
+      onFailure:failure=>loadingUi.finalize({ok:false,failure}),
+      steps:{
+        validate(value){startupTestHook(BOOTSTRAP_STAGES.RESPONSE_VALIDATION);return validateBootstrapEnvelope(value,{backendMode});},
+        normalize(value){startupTestHook(BOOTSTRAP_STAGES.NORMALIZATION);state=requestOnly&&backendMode==='mock'?sanitizeRequestOnlyState(value):value;normalizeStateRecords();if(requestOnly){document.body.classList.add('request-mode');ui.view='request';document.querySelectorAll('.view').forEach(view=>view.classList.toggle('active',view.id==='request'));}applyAppsScriptEnvironmentLabel();return state;},
+        staticOptions(value){startupTestHook(BOOTSTRAP_STAGES.STATIC_OPTIONS);populateStaticOptions();return value;},
+        extensions(value){startupTestHook(BOOTSTRAP_STAGES.EXTENSIONS);runtimeExtensions=createRuntimeExtensions({backendMode,services,getState:()=>state,acceptState:acceptAuthoritativeState,commit,toast,openModal,closeModal,isRequestOnly:()=>document.body.classList.contains('request-mode'),hasUnsavedRuntimeState:()=>ui.requestDraftLines.length>0||Object.values(ui.uploads).some(Boolean)});runtimeExtensions.install();return value;},
+        bindings(value){startupTestHook(BOOTSTRAP_STAGES.BINDINGS);bindGlobalEvents();setupUploaders();return value;},
+        firstRender(value){startupTestHook(BOOTSTRAP_STAGES.FIRST_RENDER);renderAll();return value;},
+        postRender(value){startupTestHook(BOOTSTRAP_STAGES.POST_RENDER);runtimeExtensions?.afterRender();runtimeExtensions?.start();return value;},
+      },
+    });
+    controller.start();
   }
 
   function normalizeStateRecords(){

@@ -18,6 +18,51 @@
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
+## P0 Production Bootstrap Diagnosis and Recovery — repository-only checkpoint
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `2a9ac342ca584257e0bbf6ea09ffb9d4f892a7c7`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Ending commit: this focused P0 implementation commit; the exact SHA is recorded in the final handoff
+- Scope: startup diagnosis, bootstrap-envelope validation, bounded recovery UI, safe client diagnostics, and local verification seams only
+
+### Diagnosis and recovery
+
+- The previous startup catch covered the remote request but left normalization, static-option preparation, runtime-extension installation, event binding, first render, and post-render work outside the same recoverable boundary. A failure after the response could therefore leave the loading overlay active without a Retry path.
+- The P0 controller now emits named stages from shell readiness through ready, records safe client-side timings/counts, rejects malformed or unsupported JSON-safe envelopes before normalization, and keeps one active attempt at a time.
+- An attempt token prevents an obsolete callback from completing a newer Retry attempt. The terminal UI finalizer is idempotent, clears the overlay on success, keeps it actionable on failure, reports a plain-language message with an opaque support code, and announces failure through an accessible live region with keyboard focus on Retry.
+- Slow loading is reported locally after eight seconds without creating another request. The existing Apps Script adapter success/failure handling and 30-second timeout remain unchanged.
+- Apps Script response sanitization now converts Date, non-finite, function, symbol, undefined, and bigint values into JSON-safe output before they reach the browser. No endpoint, payload, schema, or external data source was changed.
+
+### Verification
+
+- `npm ci`: passed; 139 packages installed and no vulnerabilities reported.
+- `npm run lint`: passed.
+- Focused P0 Vitest: 4 files / 29 tests passed.
+- Full Vitest: 14 files / 116 tests passed.
+- `npm run check`: passed, including lint, full Vitest, Vite build, Apps Script static/package checks, generated-file parity, and standalone verification.
+- Focused P0 Vitest: 5 files / 30 tests passed during iteration; final full Vitest: 15 files / 118 tests passed.
+- Focused packaged Apps Script Chromium suite at 390 px: 14 passed, including slow-state, finalizer, retry, and stage-failure coverage.
+- Complete Playwright run across the six configured viewport projects: 138 cases, 48 passed, 90 intentionally scoped skips, 0 failed.
+- Generated visual modules were regenerated from `legacy/HAU-USC_Logistics-Prototype.original.html`; generated standalone artifacts were rebuilt and verified at 252,036 bytes each with SHA-256 `40e211acf12a581436e2a28074a94fb60152eb9ad4d6667e2d46c6c6136080bd`. The generated Apps Script shell remained 615 bytes with SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`.
+- Synthetic local shell measurement at 390x844 rendered the loading surface in 81 ms; this is not a staging or production latency claim.
+
+### External boundary and remaining unknowns
+
+- No Slice 2, committee, roster, composite-request, catalog, restock, polling, hosting, database, deployment, staging, production, Google Sheets, Google Drive, Apps Script deployment, trigger, or external write work was performed.
+- `clasp status` and `clasp push --dry-run` were not run because no authorized staging-script verification was in scope. No live Apps Script response, live timing, deployment behavior, or production bootstrap volume is claimed by this checkpoint.
+- The local synthetic fixtures prove realistic-volume sequencing and failure recovery but do not establish staging latency, Apps Script HTML Service behavior, or production data correctness.
+
+### Rollback
+
+- Before any push or deployment, rollback is simply to retain the approved starting checkpoint; after integration, use a focused `git revert` of this implementation commit rather than resetting or discarding work.
+- If a later separately authorized deployment uses this commit, rollback must move only the deployment pointer to the preceding immutable version. No Sheet/Drive data, ledger, schema, or external records were changed by this checkpoint.
+
+### Next action
+
+Manager review of this local evidence and the focused diff. Do not push, deploy, or start another milestone without separate explicit authorization.
+
 ## Version 0.5.0 working revision
 
 - Successful Apps Script mutations are followed by an authoritative bootstrap reload before success is rendered. A failed follow-up read does not repeat the recorded command.

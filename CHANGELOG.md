@@ -6,6 +6,15 @@
 - Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
 - Ending commit: this handoff commit; exact SHA is reported after commit and push
 
+### P0 Production Bootstrap Diagnosis and Recovery
+
+- Diagnosed the unhandled post-response startup failure boundary and added named bootstrap stages from request through first render and ready.
+- Added contract validation before normalization, JSON-safety checks, one-active-attempt recovery, obsolete-callback protection, eight-second slow-state messaging, safe stage diagnostics, and an accessible Retry surface with an idempotent terminal finalizer.
+- Added synthetic empty/realistic-volume fixtures and failure seams for transport, malformed responses, every post-response startup stage, timeout/late success, Retry, focus/live-region behavior, and packaged Apps Script execution.
+- Preserved the existing Apps Script adapter timeout/callback behavior and made no endpoint, payload, schema, deployment, or external-system change.
+- Verification: `npm ci`, `npm run check`, full Vitest (15 files / 118 tests), focused packaged Chromium (14 tests), and the six-project Playwright run (48 passed, 90 scoped skips, 0 failed across 138 cases). A synthetic 390x844 shell measurement rendered in 81 ms; staging p95 remains unrun.
+- No staging/production deployment, Apps Script push, Google Sheets/Drive write, or other external action was performed.
+
 ### Added
 
 - A compact `api_getDataRevision` read endpoint backed by `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` rows in `17_CONFIG`.
