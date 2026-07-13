@@ -104,7 +104,7 @@ describe('trusted portal modes and sanitized lending bootstrap', () => {
   });
 
   it('returns a strict lending allowlist with no balances, storage, history, or collections', () => {
-    const ctx = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs', 'PortalService.gs']);
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'ItemRepository.gs', 'InventoryService.gs', 'PortalService.gs']);
     ctx.resolveRequesterUser_ = () => ({ User_ID: 'PUBLIC', Role: 'REQUESTER', Active: true });
     ctx.isInternalBootstrapUser_ = () => false;
     ctx.resolveRuntimeConfig_ = () => ({ environment: 'STAGING' });
@@ -180,11 +180,12 @@ describe('trusted portal modes and sanitized lending bootstrap', () => {
   });
 
   it('does not relabel inactive requester catalog items as active', () => {
-    const ctx = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs']);
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'ItemRepository.gs', 'InventoryService.gs']);
     expect(
       ctx.requesterItemDto_({
         Item_ID: 'ITM-3',
         Item_Name: 'Inactive item',
+        Handling: 'CONSUMABLE',
         Status: 'INACTIVE',
       }).status,
     ).toBe('INACTIVE');

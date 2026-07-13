@@ -9,6 +9,14 @@ function normalizeHandling_(value) {
   return token;
 }
 
+function isValidHandling_(value) {
+  try { normalizeHandling_(value); return true; } catch (error) { return false; }
+}
+
+function safeHandlingCode_(value) {
+  try { return normalizeHandling_(value); } catch (error) { return 'NON_CIRCULATING'; }
+}
+
 function normalizeLendingAudience_(value) {
   var token = String(value || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
   var aliases = {
@@ -42,7 +50,7 @@ function defaultLendingAudienceForItem_(item) {
 
 function effectiveLendingAudience_(item) {
   var value = String(item.Lending_Audience || '').trim();
-  return value ? normalizeLendingAudience_(value) : defaultLendingAudienceForItem_(item);
+  try { return value ? normalizeLendingAudience_(value) : defaultLendingAudienceForItem_(item); } catch (error) { return 'NOT_AVAILABLE_FOR_LENDING'; }
 }
 
 function normalizeCatalogType_(value, stockArea) {

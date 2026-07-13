@@ -2,6 +2,8 @@
 
 This page is the durable map for implementers, reviewers, operators, and future maintainers. The repository is the source of truth. Never infer deployment state from a screenshot, local folder, chat transcript, or uncommitted note.
 
+The current deployment evidence is recorded in [Work Continuation](WORK_CONTINUATION.md), [Project Status](../PROJECT_STATUS.md), and [V1 Readiness Audit](V1_READINESS_AUDIT.md). As of 2026-07-13, staging Version 13 and production Version 3 serve the corrected package; read-only smoke passed, while full mutation acceptance and release approval remain open.
+
 ## Status vocabulary
 
 - **CURRENT** describes behavior implemented in this repository. It may still require an authorized staging deployment before it is operational.

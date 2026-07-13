@@ -12,6 +12,10 @@ Migration is non-destructive and administrator-controlled.
 
 Reconciliation compares legacy discovery count, item-master count, missing source mappings, VERIFY and zero counts, duplicate groups, conflicting units, reference-list matches, categories, and stock areas. Dry-run performs zero destructive changes. Keep the JSON report with the launch evidence pack.
 
+### Verified V1 deployment state
+
+Staging and production both completed schema setup/validation, migration dry run, reconciliation, launch backup, and health checks before serving the corrected package. The authoritative item master contains legacy Handling values outside the approved enum, including TO_CLASSIFY. Those source values remain untouched; the application maps them to VERIFY/NON_CIRCULATING and blocks transaction paths. applyApprovedMigration was not run, and no operational rows or ledger entries were created.
+
 ## V1 schema `1.2.0` additive migration
 
 This migration does not replace sheets, rebuild item rows, or modify the four legacy tabs.

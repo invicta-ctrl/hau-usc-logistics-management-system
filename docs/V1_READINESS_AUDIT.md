@@ -9,6 +9,7 @@
 - Verified base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10`
 - Release-candidate code checkpoint: `283002cf2784b0d3e148258278c664f8afb0d7f4`
+- Deployment hardening: bounded setup ranges and fail-closed handling for legacy values outside the approved circulation enum
 - Final handoff SHA: the branch HEAD after this remote-evidence record; report it from Git after the evidence commit is pushed because a commit cannot contain its own SHA
 - Audit scope: repository implementation, local production build, standalone demos, Google Workspace deployment readiness, GitHub readiness, and future-platform preparation
 
@@ -21,9 +22,9 @@ This is an evidence ledger, not a declaration that source code is live. Reposito
 | Mergeable repository candidate | Ready for draft review | Draft PR #3 is clean/mergeable and all three required checks passed at code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` |
 | Standalone fictional demo | Ready | Three pinned self-contained portal files build and pass direct-file browser checks |
 | Apps Script source package | Locally ready | Static, parser-safe assembly, callable, and browser package checks pass |
-| Staging deployment | Blocked before mutation | Exact title-labeled project is privately reconciled at Version 10 with Version 9 retained; backup, properties, audience, and live acceptance remain outstanding |
-| Live Sheets/Drive migration | Blocked | Current CLI OAuth cannot read Sheets or export the workbook; no authoritative mapping read or verified pre-push backup exists |
-| Production release | Not ready | Staging workflow/privacy/reconciliation, governance approvals, and rollback drill are outstanding |
+| Staging deployment | Deployed; bounded acceptance passed | Version 13 serves the corrected package; setup, schema, Drive, trigger, parity, internal/request-only/lending smoke, and staging diagnostic evidence passed; workflow mutations remain unrun |
+| Live Sheets/Drive migration | Partially accepted | Fresh private backups, schema setup, Drive validation, migration dry run, reconciliation, launch backup, and health checks passed; approved migration application and full workflow/evidence tests remain unrun |
+| Production release | Package promoted; release gate open | Version 3 serves the corrected package and read-only smoke passed; full D4 acceptance, owner/privacy/security approval, and rollback drill remain outstanding |
 | Tag/GitHub release | Not appropriate yet | Candidate remains a release candidate with live security/data-integrity gates unresolved |
 
 ## Six-specialist orchestration evidence
@@ -53,6 +54,20 @@ The orchestrator separately integrated shared-contract corrections (`57876f1`), 
 | Roadmap and What Changed | Structured published-content source and safe renderer | No live publish | Repository pass; live pending |
 | Branding | Protected upload/version/activation/fallback | No official asset uploaded or activated | Repository pass; live pending |
 
+### Live portal smoke
+
+| Environment | Route | Result |
+| --- | --- | --- |
+| Staging | Main Hub/internal | Passed: Apps Script staging mode, internal navigation, live sync indicator |
+| Staging | Request Center/request-only | Passed after bootstrap wait; sanitized response and no tested private fields |
+| Staging | Lending Hub/requester-safe | Passed; legacy TO_CLASSIFY item displayed as blocked VERIFY/non-circulating |
+| Staging | Diagnostic | Passed; staging-only diagnostic rendered without operational data or Sheet/Drive writes |
+| Production | Main Hub/internal | Passed: Apps Script production mode, internal navigation, live sync indicator |
+| Production | Request Center/request-only | Passed after bootstrap wait; sanitized response and no tested private fields |
+| Production | Lending Hub/requester-safe | Passed after bootstrap wait; no tested private fields; no workflow mutation |
+
+These are read-only/browser-bound smoke results. They do not replace the two-account authorization test, full mutation matrix, evidence upload, content/branding, or ledger reconciliation acceptance.
+
 ## Security and privacy acceptance
 
 - Public/request/lending bootstraps use explicit DTO allowlists and server-owned portal routing.
@@ -78,7 +93,7 @@ Residual production security gates: institutional access/MFA/offboarding evidenc
 - Ledger, audit, history, and command-journal integrity are append-only/forward-correction based.
 - Backup creation requires distinct configured operational/backup resources and verifies the copied file before success.
 
-No live workbook backup, setup, migration, seed, protection, formula, reconciliation, or adapter write test occurred because the owner-authorized Sheets/Drive verification path is not yet available.
+Fresh private predeployment spreadsheet backups were created and verified for staging and production. Schema 1.2.0 setup, validation, Drive validation, trigger setup, migration dry run, reconciliation, launch backup, health check, and adapter read smoke completed. No approved migration application, demo seed, user seeding, operational mutation, or ledger write test occurred. Legacy handling values outside the approved enum remain source-preserved and fail-closed as VERIFY/non-circulating.
 
 ## Drive, evidence, and branding acceptance
 
@@ -100,7 +115,7 @@ Configuration validation rejects missing/placeholder/inaccessible IDs, wrong par
 
 Evidence uses deterministic privacy-safe filenames, protected original-name metadata, checksum deduplication, verified private parent/sharing, and explicit quarantine/recovery metadata. Branding uses server-owned version IDs, verified byte metadata/dimensions/checksum, activation history, supersession, and built-in text fallback. Client/public DTOs never return private Drive URLs or IDs.
 
-No live root/folder creation, sharing change, upload, evidence attachment, quarantine move, branding upload, or activation occurred.
+The configured private Drive roots and eleven canonical direct children were validated in both environments, and the fresh backup destinations were verified private. No new root/folder creation, sharing change, evidence upload, quarantine move, branding upload, or activation occurred.
 
 ## Automated verification evidence
 
@@ -114,7 +129,7 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 ### Integrated QA checkpoint
 
 - Focused new security/integrity tests: 15/15 passed.
-- Full unit after production-trigger hardening: 19 files / 147 tests passed.
+- Full unit after deployment hardening: 19 files / 148 tests passed.
 - ESLint and all four governance checks: passed.
 - `npm run check` and `npm run verify`: passed.
 - Apps Script: 27 source files, 26 public/setup callables, and 3 private trigger handlers validated.
@@ -143,7 +158,7 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 | Sensitive/docs/governance | Passed after staging: 239 tracked paths sensitive-clean; 45 tracked Markdown files/link-clean; continuation and AGENTS guardrails passed |
 | GitHub CI | Passed for trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd`: Apps Script [run 29235731774](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731774); repository/browser [run 29235731769](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731769) |
 
-Local evidence and trigger-security-checkpoint GitHub CI are complete. Any later evidence-only branch HEAD must also be green before handoff; obtain that final state from PR #3 after push. Staging and production remain independent gates and are not implied by these results.
+Local evidence and trigger-security-checkpoint GitHub CI are complete. The final evidence commit must also be pushed and checked through PR #3 before handoff. Staging and production remain independent gates; their read-only smoke does not imply full workflow acceptance.
 
 ## Standalone portal deliverables
 
@@ -156,11 +171,11 @@ They contain inline classic JavaScript/CSS and fictional local state. They are s
 
 ## Deployment and rollback gate
 
-The ignored production clasp configuration and a separate private staging configuration now resolve to the exact title-labeled projects. Read-only `clasp` inventory and remote pulls are complete. Do not push, version, deploy, inspect/change properties or triggers, or touch Sheets/Drive until the owner-authorized Sheets/Drive path verifies properties, mappings, audience, and a restorable pre-push backup.
+The ignored production clasp configuration and separate private staging configuration resolve to the exact title-labeled projects. The corrected package was pushed and pulled in both environments with exact 33-file source/manifest parity. Staging serves Version 13 and production serves Version 3 through existing deployment pointers. Clasp 3.3 does not support push --dry-run; parity was established with pre/post pull snapshots instead.
 
-Smallest human action: authorize a signed-in browser fallback or provide OAuth with Sheets and reviewed Drive access. Then follow the exact staged backup, schema, Drive, access, trigger, source-parity, deployment, two-account privacy, workflow, reconciliation, and rollback sequence in the runbooks.
+The release gate remains open because no approved non-personal acceptance fixture exists for the full mutation matrix, the authoritative item master contains legacy TO_CLASSIFY handling values awaiting owner reconciliation, and manual accessibility/two-account/privacy/evidence-upload approval is outstanding. The Google account also showed an Almost out of storage warning at approximately 14.03 GB of 15 GB; no files were deleted.
 
-Repository rollback point is `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`. Private live rollback inventory is staging Version 9 before current Version 10 and production Version 1 before any V1 promotion. Additive schema and posted records are retained during application rollback; corrections are forward and audited. Trigger-handler failure also requires restoring the captured predeployment source.
+Repository rollback point is `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`. Private live rollback inventory is staging Version 9 before current Version 13 and production Version 1 before Version 2 and current Version 3. Additive schema and posted records are retained during application rollback; corrections are forward and audited. Trigger-handler failure also requires restoring the captured predeployment source.
 
 ## Future platform readiness
 
@@ -170,9 +185,9 @@ Both paths retain PostgreSQL as the only command authority, a transactional outb
 
 ## Actions that did not occur
 
-- No live Google Sheet, Drive, Apps Script, Script Property, trigger, content, branding, backup, or deployment write.
-- No staging or production smoke test using a real adapter.
-- No production promotion.
+- No approved staging/production workflow transaction, ledger movement, evidence upload, content/branding mutation, or user-access mutation.
+- No applyApprovedMigration, seedStagingDemoData, or fictional production transaction.
+- No production operational promotion or release sign-off beyond the existing deployment-pointer update.
 - No protected PR #2 modification.
 - No branch merge, tag, or GitHub release before live gates.
 - No official logo fabrication or upload.

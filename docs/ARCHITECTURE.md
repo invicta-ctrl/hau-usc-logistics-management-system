@@ -10,6 +10,8 @@ The system supports HAU University Student Council Department of Logistics reque
 
 The visual baseline in `legacy/HAU-USC_Logistics-Prototype.original.html` is immutable. `npm run extract:visual` regenerates the authoritative `src/visual/` fragments. Vite injects those fragments through `scripts/authoritative-visual-plugin.mjs`; generated HTML must never be hand-edited.
 
+The current Apps Script deployment record is staging Version 13 and production Version 3 through existing deployment pointers. Both serve the reviewed package and passed bounded read-only portal smoke. Full operational mutation acceptance remains a separate release gate.
+
 ## Users and responsibilities
 
 | User                              | Primary need                                             | Current authority boundary                                                                                                   |

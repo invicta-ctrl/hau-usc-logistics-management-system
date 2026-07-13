@@ -58,6 +58,7 @@ describe('demo seed privacy', () => {
     const ctx = gasContext([
       'Config.gs',
       'Validation.gs',
+      'ItemRepository.gs',
       'InventoryService.gs',
       'PortalService.gs',
     ]);

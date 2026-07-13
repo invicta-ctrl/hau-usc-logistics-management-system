@@ -2,7 +2,7 @@
 
 ## Security state
 
-The deterministic browser preview is **DEMO**, not a security boundary. The Apps Script authorization, validation, and storage controls described as **CURRENT** are implemented in source, but they are not evidence that a particular deployment, Google account, Sheet, or Drive folder is configured correctly. Production remains blocked until the launch evidence, privacy decisions, access review, and unresolved controls in this document are approved.
+The deterministic browser preview is **DEMO**, not a security boundary. The reviewed Apps Script package is now serving in staging Version 13 and production Version 3 through existing deployment pointers. Read-only portal smoke and request-only DTO checks passed, but production release remains gated by full mutation acceptance, two-account authorization, privacy/access approval, manual accessibility, evidence-upload acceptance, and unresolved controls in this document.
 
 Security objectives are:
 
@@ -37,6 +37,8 @@ The server forces public and requester identities through the sanitized bootstra
 The requester is told that stock routing is pending DOL review. The later locked review command rechecks current availability and policy. The request-only client receives no revision fields and does not start internal polling. Direct invocation of a staff mutation still runs the permission check.
 
 Evidence upload authorization occurs before file decode or Drive access. Receiving evidence requires `Can_Receive`, release/lending evidence requires `Can_Release`, and other supporting evidence requires `Can_Admin`. See [Google Drive Evidence](GOOGLE_DRIVE_EVIDENCE.md).
+
+Legacy catalog Handling values outside the approved enum are treated as VERIFY and NON_CIRCULATING at the DTO/transaction boundary. The raw source value is preserved for owner reconciliation; no browser-supplied classification can authorize circulation.
 
 ## Trust boundaries and threat register
 

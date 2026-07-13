@@ -23,6 +23,10 @@ For every mutation:
 3. The server rechecks current state, allocates canonical IDs, writes the business change, appends status/audit records, records the idempotent result, and advances the revision once.
 4. The browser reloads authoritative bootstrap data. It never assumes that the command response is a full state snapshot.
 
+### Deployment safety note
+
+The deployed staging Version 13 and production Version 3 use this contract. Legacy catalog handling values outside the approved enum are normalized only at the safe DTO boundary as VERIFY/NON_CIRCULATING and rejected by transaction callables; the source cell is preserved for an approved reconciliation. Live smoke verified the mode/privacy boundary, but not the mutation workflows.
+
 ## Read callables
 
 | Browser method / Apps Script callable       | Purpose and caller                             | Permission and input                                                                          | Output                                                                                                      | Mutation / tests                                                 |

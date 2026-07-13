@@ -2,6 +2,10 @@
 
 The operational database is selected only by reviewed environment Script Properties. `apps-script/Config.gs` defines schema `1.2.0` and the exact required headers. `setupDatabase()` preflights every known table, adds missing backend tabs or compatible missing trailing headers without wiping data, and stops before repair on duplicate or incompatible headers. `validateDatabaseSchema()` reports discrepancies.
 
+### Verified deployment notes
+
+The V1 setup was run against the private staging and production operational spreadsheets and reported schema 1.2.0. Setup validation, warning protections, formatting, and filters are bounded by a reserved managed row range of 1,000 rows so large blank sheets do not cause an unbounded setup timeout. Legacy source rows are not rewritten. If Handling is outside the approved enum, application DTOs expose VERIFY with NON_CIRCULATING safety and transaction guards reject circulation until an owner-approved reconciliation updates the source through the documented migration path.
+
 ## Preserved legacy tabs
 
 `MAIN INVENTORY`, `FAST MOVING ITEMS`, `FOR SALE ITEMS`, and `TO BUY` are read-only migration inputs. The application never deletes, merges, corrects, or posts transactions into them.

@@ -2,7 +2,13 @@
 
 Version `1.0.0-rc.1` is the repository-ready V1 release candidate for the Holy Angel University University Student Council Department of Logistics. It preserves the approved maroon, oxblood, gold, cream, and white visual baseline while adding secure request, lending, inventory, release/return, procurement, evidence, content, branding, and administration workflows.
 
-> **Release truth:** the local production build and repository checks are available, but this commit is not a verified live production deployment. The exact staging and production Apps Script projects and rollback versions are now privately reconciled. Live Google work remains gated on a verified pre-push Sheet/Drive backup, Script Properties and Drive mappings, approved web-app audience, and an owner-authorized Sheets/Drive access mechanism. No Apps Script push/version/deployment, trigger change, Google Sheet write, Google Drive write, merge, tag, or GitHub release is claimed here.
+> **Release truth:** the repository is a release candidate with a verified Apps Script staging and production deployment record. The current staging pointer is immutable Version 13 and the current production pointer is immutable Version 3; both were pulled back with exact 33-file source parity. Live read-only portal smoke passed, but the full mutation acceptance matrix, release approval, merge, tag, and GitHub release remain intentionally incomplete.
+
+## Verified deployment snapshot
+
+The current Apps Script backend is serving the reviewed package in both staging and production. Staging uses the existing web deployment at Version 13, and production uses the existing web deployment at Version 3. Both environments report the expected Apps Script mode in the live browser. Fresh private predeployment spreadsheet backups were created and verified for both environments, schema 1.2.0 setup and health/reconciliation checks completed, and canonical Drive configuration was validated.
+
+The live acceptance evidence is deliberately bounded: internal, request-only, and requester-safe lending pages load without the tested private-data fields; invalid legacy handling values remain blocked as VERIFY/non-circulating. No operational workflow mutation, evidence upload, content/branding change, or production transaction was executed. See [Project Status](PROJECT_STATUS.md), [Work Continuation](docs/WORK_CONTINUATION.md), and [V1 Readiness Audit](docs/V1_READINESS_AUDIT.md) for the exact gate state.
 
 ## Ready in this release candidate
 
@@ -71,7 +77,7 @@ Do not hand-edit generated HTML. Change source or the generator, rebuild, and re
 | Mode | Purpose | Authority |
 | --- | --- | --- |
 | `mock` | Local and standalone fictional demo | Browser-local state only |
-| `apps-script` | Current staging/initial production architecture | Apps Script authorization, Sheets repositories, Drive storage |
+| `apps-script` | Current deployed staging and production backend | Apps Script authorization, Sheets repositories, Drive storage |
 | `rest` | Future hosted system | Reserved HTTP adapter boundary; no hosted API exists yet |
 
 Browser features call semantic service adapters. Only `src/services/apps-script-adapter.js` may invoke `google.script.run`. UI hiding is never authorization.

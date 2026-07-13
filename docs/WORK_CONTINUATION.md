@@ -9,11 +9,22 @@
 - Starting commit: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10` (`fix: close V1 QA integrity gaps`).
 - Upstream: `origin/feat/v1-one-shot-demo-and-deployment`; trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd` was pushed at `0` ahead / `0` behind and passed all three PR checks.
-- Current phase: authorized production continuation — target inventory and external predeployment source/Git backups are complete; the trigger-security repair is committed, pushed, and CI-green. No live Google mutation has occurred, and Workspace deployment remains gated on owner-authorized Sheets/Drive access, a verified workbook/Drive backup, Script Properties/mappings, and the web-app audience.
+- Current phase: deployment evidence and release handoff — source hardening, staging promotion, production promotion, live portal smoke, private backups, and parity evidence are complete; full operational mutation acceptance remains deliberately open.
 - Protected pull request: PR #2 must not be modified, retargeted, closed, or merged.
-- Live state at task start: the exact title-labeled staging project resolves to immutable Version 10 with Version 9 retained, and the supplied production project retains Version 1. Both remote HEADs were pulled privately before any write. Production remains untouched.
-- External backup: verified Git bundle `hau-usc-logistics-management-system-20260713-124624.bundle`, SHA-256 `255d9769398533c881fd9a6f43b776ef87c411d05d6a311bb7e299c1bd635c3c`.
-- Production predeployment backup root: `HAU_USC_V1_FULL_DEPLOYMENT_20260713-160912` outside the repository. It contains a verified all-refs Git bundle (SHA-256 `00681857745f288b739877b24e16cb7400fc9e7b1e6b39673d04f7e38d9bd373`), HEAD archive, uncommitted patch, private configs, and separate 29-file staging/production remote pulls. It does not yet contain a verified Sheet/Drive backup.
+- Live state at task start: staging served immutable Version 10 with Version 9 retained, and production served immutable Version 1; both were pulled privately before the authorized promotion work.
+- Live state after deployment: staging serves immutable Version 13 and production serves immutable Version 3 through their existing deployment pointers. Staging Version 9 and production Version 1 remain private rollback points; production Version 2 is also retained as the preceding accepted package.
+- External backup: the verified handoff bundle and deployment snapshots are in the sanitized external backup root HAU_USC_V1_DEPLOYMENT_RESUME_20260713-190657 outside the repository. Private configs, resource identifiers, and raw Workspace exports remain outside git and the final public package.
+- Workspace evidence: fresh private staging and production predeployment spreadsheet backups were created and verified; private backup properties, schema 1.2.0 setup, Drive validation, trigger setup, migration dry run, reconciliation, launch backup, and health checks completed.
+
+### Current verified deployment state
+
+- Apps Script source: the corrected 33-file package was pushed to both targets, pulled back, and matched local source/manifest parity with 33 files and 0 mismatches in each environment.
+- Staging: Version 13 is serving. Internal, request-only, and requester-safe lending routes loaded in Apps Script staging mode; no tested private-data leak was observed. The staging-only diagnostic route passed without operational data or writes.
+- Production: Version 3 is serving. Internal, request-only, and requester-safe lending routes loaded in Apps Script production mode; no tested private-data leak was observed. The staging-only diagnostic route was not run in production.
+- Catalog safety: authoritative legacy Handling values outside the approved enum, including TO_CLASSIFY, are presented as VERIFY/non-circulating and rejected by transaction guards. No source classification was guessed or rewritten.
+- Workflow boundary: no request, restock, lending, release, return, evidence upload, content/branding change, user-access mutation, ledger transaction, migration application, or demo seed occurred. The staging demo seed remains blocked by DEMO_FIXTURE_NOT_APPROVED.
+- Environment limitation: Google Workspace displayed an Almost out of storage warning at approximately 14.03 GB of 15 GB. No files were deleted; broader evidence-upload acceptance requires owner review of storage and retention.
+- Final handoff SHA: obtain the exact branch HEAD from Git after the evidence commit is created and pushed; the commit cannot contain its own SHA.
 
 ### Production execution ownership — 2026-07-13
 
@@ -37,22 +48,22 @@ No specialist may edit files or mutate Google Workspace or GitHub. The orchestra
 - Release QA repaired multi-line release partial mutation, admin browser/server contract drift, content revision conflicts and underscore keys, branding key/upload flow, unregistered-user portal downgrade, exceptional return evidence, and real-looking demo identities.
 - Production preflight additionally found and repaired publicly callable maintenance-trigger handlers. Backup, overdue, and operational-edit handlers are now private; installers validate source/event type, lock, migrate current-user legacy/duplicate handlers, and audit changes; overdue transitions also append audit evidence.
 - Main Hub, Request Center, and Lending Hub now have separate root standalone HTML artifacts pinned to `internal`, `request`, and `lending` modes; the legacy shareable remains the canonical-build alias.
-- Final local verification after trigger hardening passed 19 files / 147 unit tests, ESLint, all governance checks, `npm run check`, `npm run verify`, 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers, and 60 browser passes / 60 intentional applicability skips / 0 failures across all six required widths. The total includes 18/18 direct-file portal checks.
+- Final local verification after deployment hardening passed 19 files / 148 unit tests, ESLint, all governance checks, `npm run check`, 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers, and 60 browser passes / 60 intentional applicability skips / 0 failures across all six required widths. The total includes 18/18 direct-file portal checks.
 - Two consecutive builds reproduced all nine artifacts byte-for-byte. `dist/index.html` and the legacy alias are 288,464 bytes at `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; the exact named-portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
 
 ### Known gaps, blocker, and next actions
 
-- The authorized feature branch push, trigger-security commit, and draft PR #3 update occurred. No Sheet, Drive, remote Apps Script source, deployment, version, Script Property, trigger, production, merge, tag, release, or protected PR #2 mutation occurred.
-- Draft [PR #3](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3) targets `feat/live-sync-lending-search-catalog-controls`, is clean/mergeable, and keeps protected PR #2 unchanged. At trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd`, Apps Script [run 29235731774](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731774) and repository/browser [run 29235731769](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731769) passed.
-- Exact staging and production projects, deployment inventories, rollback versions, manifests, and remote HEAD snapshots are privately reconciled. Staging points to Version 10 with Version 9 retained; production retains Version 1. No live resource was changed.
-- Smallest owner action: authorize a signed-in browser fallback or provide OAuth with Sheets and reviewed Drive access. The active CLI token can manage Apps Script and limited Drive metadata but cannot read Sheets or export the workbook.
-- Before any source push: verify Script Properties, operational/backup distinction, authoritative Drive mappings/private sharing, web-app audience, and a fresh restorable backup. Then complete staging parity/setup/acceptance before any production promotion.
+- The corrected 33-file package was pushed and pulled in staging and production with exact source/manifest parity. Staging serves Version 13 and production serves Version 3 through existing deployment pointers; prior rollback versions remain private.
+- Draft [PR #3](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3) remains stacked on `feat/live-sync-lending-search-catalog-controls` and keeps protected PR #2 unchanged. The final evidence commit must be checked through CI after push.
+- Fresh private predeployment spreadsheet backups, private backup properties, schema/Drive/trigger setup, migration dry run, reconciliation, launch backup, and health checks were verified in both environments.
+- Remaining owner action: approve a non-personal acceptance fixture or explicit test records, review legacy TO_CLASSIFY reconciliation, and approve the full mutation/privacy/accessibility/evidence/rollback release gate. No workflow transaction was executed.
+- The Google Workspace account displayed an Almost out of storage warning at approximately 14.03 GB of 15 GB; no files were deleted. The active tree also redacts a spreadsheet identifier that remains in shared history; the resource owner must review restriction/rotation/replacement.
 - The active tree redacts a spreadsheet identifier that remains in shared git history. The resource owner must review restriction/rotation/replacement; do not rewrite protected/shared history automatically.
 
 ### Frozen cross-cutting contracts, rollback, and handoff
 
 - Repository rollback base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
-- Private live rollback inventory: staging Version 9 precedes the current Version 10 pointer; production Version 1 precedes any V1 promotion, without exposing their identifiers in git or public output.
+- Private live rollback inventory: staging Version 9 precedes current Version 13; production Version 1 is the original baseline, Version 2 the preceding accepted package, and Version 3 current, without exposing identifiers in git or public output.
 - Trigger-handler rollback requires restoring the captured predeployment remote source when handler migration is implicated; repointing only the web deployment does not restore project-HEAD trigger functions.
 - Schema/data rollback is forward-only: keep appended columns/config, ledger, audit, history, evidence, and command rows; repoint reviewed code and reconcile. Never delete posted records.
 - The release-candidate code checkpoint, draft PR, CI runs, final test counts, and hashes are recorded above. The final handoff SHA is the branch HEAD after this evidence-only commit is created and pushed; obtain it from Git/PR because a commit cannot contain its own SHA. Require final branch parity, green CI, and clean status before closing the handoff.

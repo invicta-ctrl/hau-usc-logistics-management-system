@@ -4,7 +4,9 @@ Perform these steps in staging first with the designated deployment-owner instit
 
 ## Current `1.0.0-rc.1` target gate
 
-The repository candidate is ready for controlled staging setup. The exact title-labeled staging project is privately reconciled at immutable Version 10 with Version 9 retained, and production retains Version 1. Do not push until an owner-authorized Sheets/Drive session verifies Script Properties, operational/backup separation, authoritative Drive mappings, a restorable pre-push backup, and the intended web-app audience.
+The reviewed package is deployed through the existing staging and production pointers at immutable Version 13 and Version 3. Both remote projects were pulled back with exact 33-file source/manifest parity. Private predeployment spreadsheet backups, Script Properties, schema 1.2.0 setup, Drive validation, trigger setup, migration dry run, reconciliation, launch backup, and health checks were verified.
+
+The remaining gate is functional and governance acceptance, not source upload: no approved non-personal fixture exists for the full mutation matrix, and legacy TO_CLASSIFY handling values remain VERIFY/non-circulating until the data owner approves a source-preserving reconciliation. Do not seed or transact those items.
 
 ## Required Script Properties
 
@@ -35,6 +37,13 @@ For production, use `PRODUCTION` and separately reviewed production IDs. The ope
 13. Do not run `applyApprovedMigration()` until mappings are approved.
 14. Run `setupTimeTriggers()` once and confirm no duplicate overdue/backup triggers.
 
+## Deployment evidence
+
+- Staging: Version 13, existing web deployment pointer, 33-file parity, live internal/request-only/lending smoke passed, staging diagnostic passed.
+- Production: Version 3, existing web deployment pointer, 33-file parity, live internal/request-only/lending smoke passed.
+- The installed Clasp 3.3 CLI does not support push --dry-run; the required safeguard was the pre-push remote pull plus post-push pull/parity comparison.
+- The current source maps invalid legacy handling values to VERIFY/non-circulating DTOs and rejects transactions without changing the authoritative source cell.
+
 ## Setup functions
 
 `setupDatabase`, `validateDatabaseSchema`, `setupOperationalEditTrigger`, `setupDriveFolders`, `validateDriveConfiguration`, `setupTimeTriggers`, `seedRolesAndPermissions`, `runMigrationDryRun`, `applyApprovedMigration`, `createLaunchBackup`, `runReconciliation`, and `healthCheck` are administrator operations.
@@ -47,4 +56,4 @@ For production, use `PRODUCTION` and separately reviewed production IDs. The ope
 
 ## V1 additive migration safety
 
-The additive schema migration may run before the new web deployment is activated only after target identity, a fresh verified backup, and the approved staging window are established. Staging Version 9 is the private rollback for the current Version 10 pointer; production Version 1 precedes any V1 promotion. If code rollback is needed, restore the confirmed preceding deployment version and, when trigger handlers are implicated, the captured predeployment source, while retaining additive schema and all content, branding, command-journal, audit, history, and ledger data. Never “roll back” by deleting columns, config rows, versions, or posted records. Removing or disabling a trigger is a separate external action requiring owner authorization and evidence that the trigger is implicated.
+The additive schema migration may run before a new web deployment is activated only after target identity, a fresh verified backup, and the approved window are established. Staging Version 9 is the private rollback for current Version 13; production Versions 1 and 2 precede current Version 3. If code rollback is needed, restore the confirmed preceding deployment version and, when trigger handlers are implicated, the captured predeployment source, while retaining additive schema and all content, branding, command-journal, audit, history, and ledger data. Never “roll back” by deleting columns, config rows, versions, or posted records. Removing or disabling a trigger is a separate external action requiring owner authorization and evidence that the trigger is implicated.

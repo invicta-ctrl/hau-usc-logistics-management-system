@@ -4,7 +4,7 @@
 
 Everything in this document is **FUTURE / PROPOSED**. The repository has an `HttpApiAdapter` scaffold, but no hosted API, managed PostgreSQL schema, hosted identity, object-storage migration, queue, infrastructure-as-code, or production cutover. The current Apps Script pilot must not be described as already migrated.
 
-The provider comparison dated 2026-07-13 is in [Hosting and Database Candidates](HOSTING_AND_DATABASE_CANDIDATES.md). [ADR 0001](adr/0001-future-hosted-platform.md) proposes Cloudflare plus Supabase, with a Google-native runner-up; the decision remains reversible pending a two-stack validation spike and institutional review.
+The current Apps Script pilot serves staging Version 13 and production Version 3, but it is not a hosted-platform migration. The provider comparison dated 2026-07-13 is in [Hosting and Database Candidates](HOSTING_AND_DATABASE_CANDIDATES.md). [ADR 0001](adr/0001-future-hosted-platform.md) proposes Cloudflare plus Supabase, with a Google-native runner-up; the decision remains reversible pending a two-stack validation spike and institutional review.
 
 ## Target boundaries
 

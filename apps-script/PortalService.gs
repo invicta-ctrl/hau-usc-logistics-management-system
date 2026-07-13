@@ -1,6 +1,7 @@
 function lendingPortalItemDto_(item) {
   var status = String(item.Status || '').toUpperCase();
-  var handlingCode = String(item.Handling || 'NON_CIRCULATING').trim().toUpperCase().replace(/[\s-]+/g, '_');
+  var handlingValid = isValidHandling_(item.Handling);
+  var handlingCode = safeHandlingCode_(item.Handling);
   return {
     id: item.Item_ID,
     name: item.Item_Name,
@@ -10,8 +11,8 @@ function lendingPortalItemDto_(item) {
     handling: item.Handling,
     handlingCode: handlingCode,
     unit: item.Unit,
-    status: status === 'VERIFY' ? 'VERIFY' : 'ACTIVE',
-    lendingAudience: item.Lending_Audience || 'NOT_AVAILABLE_FOR_LENDING',
+    status: !handlingValid || status === 'VERIFY' ? 'VERIFY' : 'ACTIVE',
+    lendingAudience: effectiveLendingAudience_(item),
     defaultLoanDays: item.Default_Loan_Days === '' || item.Default_Loan_Days == null ? '' : Number(item.Default_Loan_Days),
     maximumLoanQuantity: item.Maximum_Loan_Qty === '' || item.Maximum_Loan_Qty == null ? '' : Number(item.Maximum_Loan_Qty),
     approvalRequired: !(item.Approval_Required === false || String(item.Approval_Required).toUpperCase() === 'FALSE'),

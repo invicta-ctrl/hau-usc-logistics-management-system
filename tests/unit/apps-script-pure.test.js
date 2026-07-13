@@ -115,7 +115,7 @@ describe('Apps Script authorization and migration discovery', () => {
     expect(auth.canPermission_({ Role: 'DOL_STAFF', Active: false, Can_Release: true }, 'Can_Release')).toBe(false);
   });
   it('removes quantities, reservations, and legacy trace fields from requester catalog records', () => {
-    const inventory = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs']);
+    const inventory = gasContext(['Config.gs', 'Validation.gs', 'ItemRepository.gs', 'InventoryService.gs']);
     const item = inventory.requesterItemDto_({
       Item_ID: 'ITM-0001', Item_Name: 'Paper', Aliases: 'copy|a4', Category: 'OFFICE_SUPPLIES',
       Stock_Area: 'Inventory', Handling: 'Consumable', Unit: 'ream', Status: 'ACTIVE',

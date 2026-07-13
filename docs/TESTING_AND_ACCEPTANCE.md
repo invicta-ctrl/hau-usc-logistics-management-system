@@ -19,16 +19,28 @@ npm run test:e2e
 
 ## V1 release-candidate repository verification
 
-The final local `1.0.0-rc.1` run completed after a clean dependency install. GitHub then verified release-candidate code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` with green Apps Script validation, repository verification, and browser smoke. Live staging/production remain separate blocked gates.
+The final local `1.0.0-rc.1` run completed after a clean dependency install. GitHub verified the preceding release-candidate checkpoint with green Apps Script validation, repository verification, and browser smoke. The deployment continuation then added fail-closed legacy handling and bounded setup-range coverage; live staging and production smoke are recorded below, while full mutation acceptance remains a separate gate.
 
 | Gate | Final local result |
 | --- | --- |
 | `npm ci` | Passed: 139 packages added, 140 audited, 0 reported vulnerabilities; npm emitted an `esbuild` allow-scripts review warning |
-| Unit, lint, governance, Apps Script, build, verify | Passed: 19 files / 147 tests; 4 governance gates; 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers; `npm run check` and `npm run verify` |
+| Unit, lint, governance, Apps Script, build, verify | Passed: 19 files / 148 tests; 4 governance gates; 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers; `npm run check` |
 | Combined Playwright matrix | Passed: 60 passed, 60 intentional applicability skips, 0 failed across 120 cases and six viewport projects; Playwright `1.61.1` |
 | Two-build deterministic artifact comparison | Passed: all 9 standalone/Apps Script artifacts retained identical byte lengths and SHA-256 values |
 
 Toolchain: Node `v26.3.0`, npm `11.16.0`, Git `2.54.0.windows.1`. Exact artifact hashes are recorded in [V1 Readiness Audit](V1_READINESS_AUDIT.md).
+
+## Verified live smoke
+
+- Staging immutable Version 13 and production immutable Version 3 serve the corrected package through the existing deployment pointers.
+- Both environments loaded internal Main Hub, request-only Request Center, and requester-safe Lending Hub routes in the expected Apps Script mode without the tested private-data fields.
+- Staging diagnostic passed without operational data or Sheet/Drive writes.
+- An invalid legacy Handling value rendered as VERIFY/non-circulating and was blocked from lending; the source cell was not rewritten.
+- Setup/schema/Drive/trigger/migration/reconciliation/health checks and fresh private predeployment backups were verified in both environments.
+
+## Acceptance still required
+
+The complete staging/production matrix remains unrun for request/restock/release/return/lending mutations, ledger and reservation reconciliation, evidence upload/deduplication/quarantine, content/branding mutation, two-account isolation, idempotent replay, revision polling under mutation, manual accessibility, and rollback drill. The staging demo seed is blocked by DEMO_FIXTURE_NOT_APPROVED, and no fictional production transactions are permitted.
 
 ## Historical Version 0.5.0 repository verification
 

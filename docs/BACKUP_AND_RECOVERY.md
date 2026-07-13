@@ -1,5 +1,11 @@
 # Backup and Recovery
 
+## Verified V1 backup record
+
+Fresh private predeployment spreadsheet backups were created and verified for both staging and production on 2026-07-13. The corrected package serves staging Version 13 and production Version 3; prior deployment versions and predeployment Apps Script source pulls are retained in the restricted external handoff backup. Backup references and resource IDs are intentionally omitted from git.
+
+The current release gate still requires an approved restore drill before release sign-off. No operational transaction or evidence upload was run against the live targets, and the Google account showed an Almost out of storage warning at approximately 14.03 GB of 15 GB.
+
 ## Backup layers
 
 - Pre-rework reference: the operator-held private spreadsheet identifier is intentionally absent from git; application writes are prohibited.

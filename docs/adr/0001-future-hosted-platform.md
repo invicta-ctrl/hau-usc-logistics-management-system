@@ -5,6 +5,8 @@
 - **Decision owners:** HAU/USC data owner, system owner, privacy/security owner, and procurement (unassigned in repository)
 - **Scope:** FUTURE hosted application only; no current deployment authorization
 
+The current Apps Script pilot is serving staging Version 13 and production Version 3. This ADR does not authorize a hosted cutover; the V1 Apps Script release remains subject to its separate mutation, privacy, recovery, and owner-approval gates.
+
 ## Context
 
 The current Apps Script/Sheets/Drive design supports a bounded pilot but uses a global script lock, tab-based integrity, broad Google scopes, and platform-specific HTML/callable behavior. A future system needs transactional PostgreSQL authority, managed identity, private object storage, previewable static hosting, durable asynchronous Sheets reporting, observability, backup/PITR, and a provider exit path.

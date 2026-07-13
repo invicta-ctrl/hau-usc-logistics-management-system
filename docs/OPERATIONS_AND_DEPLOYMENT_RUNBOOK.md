@@ -16,7 +16,9 @@ A passing local build, clasp exit code, source upload, or immutable version alon
 
 ### Current V1 handoff gate
 
-For `1.0.0-rc.1`, local source and artifact work may proceed. The exact staging and production projects and immutable rollback versions are privately inventoried, but Google mutations remain blocked until an owner-authorized Sheets/Drive session proves Script Properties, operational/backup separation, authoritative folder mappings, restorable backups, and the approved web-app audience. No production promotion may begin until staging setup, two-account acceptance, reconciliation, rollback, privacy, and owner approvals pass.
+For `1.0.0-rc.1`, the corrected package is deployed through the existing staging Version 13 and production Version 3 pointers. Both remote source/manifest sets match the reviewed 33-file package. Private predeployment backups, schema/Drive/trigger setup, migration dry run, reconciliation, launch backup, health checks, and read-only portal smoke are complete.
+
+The release gate remains open: no approved non-personal acceptance fixture exists for the full mutation matrix; legacy TO_CLASSIFY handling values are blocked as VERIFY/non-circulating; and two-account authorization, evidence upload, manual accessibility, storage/retention, privacy/security, and rollback-drill approvals remain outstanding. No operational workflow transaction was executed.
 
 ## Environment matrix
 

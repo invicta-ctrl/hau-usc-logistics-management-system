@@ -27,7 +27,7 @@ function gasContext(files) {
 
 describe('request-only identity boundary', () => {
   it('downgrades an unregistered institutional account instead of loading internal data', () => {
-    const ctx = gasContext(['Config.gs', 'Validation.gs', 'InventoryService.gs']);
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'ItemRepository.gs', 'InventoryService.gs']);
     let privilegedResolutionCalls = 0;
     let inventoryIndexCalls = 0;
     ctx.resolveCurrentUser_ = () => {

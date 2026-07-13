@@ -38,6 +38,8 @@ Canonical identifiers are strings and are never sheet row numbers. Date-times ar
 
 Handling never implies audience. For example, a reusable asset can be staff-only, students-and-staff, or unavailable. Browser labels are advisory; the server normalizes and validates canonical values.
 
+Legacy handling values outside the approved enum, including TO_CLASSIFY, are not guessed or rewritten by bootstrap. The server preserves the raw source value for reconciliation, exposes a safe DTO as VERIFY with NON_CIRCULATING handling, and rejects transacting or lending the item until an approved source correction is recorded.
+
 The predictive search stores the selected `Item_ID`, not the visible query text. A query without a suggestion-backed Item ID is `ITEM_NOT_SELECTED` and cannot create a lending ticket.
 
 Sensitive fields include student identifiers, borrower contacts, requester email, supplier TIN, Drive IDs, and access records. They never appear in public bootstrap payloads or Drive filenames.

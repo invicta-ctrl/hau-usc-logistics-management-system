@@ -1,6 +1,29 @@
 # Changelog
 
-## 1.0.0-rc.1 - 2026-07-13
+## Unreleased — V1 deployment continuation — 2026-07-13
+
+### Changed
+
+- Hardened Apps Script setup so validation/protection/formatting work is bounded to the managed row range and cannot scan an unbounded blank sheet.
+- Hardened catalog DTOs and transaction guards so legacy handling values such as TO_CLASSIFY remain VERIFY/non-circulating and cannot be transacted; the authoritative source cell is preserved for owner reconciliation.
+
+### Deployment evidence
+
+- Staging serves the corrected 33-file package at immutable Version 13 through the existing deployment pointer; production serves it at Version 3. Both were pulled back with exact source/manifest parity (33 files, 0 mismatches).
+- Fresh private staging and production predeployment spreadsheet backups were created and verified. Schema 1.2.0 setup, Drive validation, triggers, migration dry run, reconciliation, and health checks completed.
+- Live internal, request-only, and requester-safe lending smoke passed in both environments; the staging diagnostic route passed. Full D4 mutation acceptance, evidence upload, content/branding, and ledger workflow tests were intentionally not run.
+
+### Verification
+
+- npm test: 19 files / 148 tests passed.
+- npm run check: passed, including governance, lint, build, generated-artifact parity, Apps Script validation, and dist verification.
+- npm run test:e2e: 60 passed / 60 intentional skips / 0 failed across the six configured viewports.
+
+### Release gate
+
+- The branch remains a draft PR candidate. No merge, tag, GitHub release, protected PR #2 change, or fictional production transaction occurred. Release approval remains pending an approved acceptance fixture and owner review of legacy classifications, privacy/security gates, accessibility, storage capacity, and full mutation evidence.
+
+## 1.0.0-rc.1 — repository-only checkpoint — 2026-07-13
 
 Release-candidate source and standalone production build. Exact Apps Script targets and rollback versions are privately reconciled; live staging and production remain blocked on owner-authorized Sheets/Drive access, verified backups/configuration, audience approval, and acceptance.
 
@@ -40,7 +63,7 @@ Release-candidate source and standalone production build. Exact Apps Script targ
 ### External actions
 
 - Pushed `feat/v1-one-shot-demo-and-deployment`, opened stacked draft PR #3, and verified green Apps Script validation, repository verification, and browser-smoke checks at code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`.
-- No Apps Script push/version/deployment, Sheet/Drive write, trigger change, production action, protected PR #2 change, merge, tag, or GitHub release occurred.
+- At this earlier repository-only checkpoint, no Apps Script push/version/deployment, Sheet/Drive write, trigger change, production action, protected PR #2 change, merge, tag, or GitHub release occurred.
 
 ## 0.5.0 - Unreleased
 

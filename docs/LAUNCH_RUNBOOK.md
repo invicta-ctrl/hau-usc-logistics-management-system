@@ -2,7 +2,9 @@
 
 ## Current `1.0.0-rc.1` release gate
 
-The repository candidate and standalone portal artifacts may be built and reviewed locally. The exact title-labeled staging project is privately reconciled at immutable Version 10 with Version 9 retained, and the production target retains Version 1. Google mutation remains blocked until an owner-authorized Sheets/Drive access mechanism verifies Script Properties, operational/backup separation, authoritative Drive mappings, a restorable pre-push backup, and the intended web-app audience. Production remains a later gate after staging acceptance and owner/privacy/security approval.
+The reviewed Apps Script package is deployed through the existing staging and production web deployment pointers at immutable Version 13 and Version 3. Both remote projects were pulled back with exact 33-file source/manifest parity. Fresh private predeployment spreadsheet backups, schema 1.2.0 setup, Drive validation, trigger setup, migration dry run, reconciliation, launch backup, and health checks are recorded.
+
+Read-only internal, request-only, and requester-safe lending smoke passed in both environments; the staging diagnostic route also passed. The release gate remains open because full D4 mutation acceptance, two-account authorization, evidence upload, content/branding, accessibility, storage/retention, and owner/privacy/security approvals are incomplete. Legacy TO_CLASSIFY handling values are source-preserved and fail closed as VERIFY/non-circulating.
 
 ## Staging
 
@@ -34,7 +36,7 @@ Do not derive access mode solely from `location.search` in client JavaScript. Ap
 
 ## V1 staging migration and acceptance sequence
 
-This sequence is a handoff plan only. It does not authorize external actions.
+This sequence records the required acceptance gates. Completed deployment evidence is recorded above; any remaining mutation, approval, or release action still requires the named owner and a reviewed fixture.
 
 1. Verify the exact reviewed `1.0.0-rc.1` commit, clean checkout, CI, `npm run check`, `npm run verify`, deterministic artifact hashes, and the complete browser matrix including the three named shareable portals. Confirm `.clasp.json`, Script IDs, spreadsheet/Drive IDs, credentials, personal records, supplier TINs, and evidence files are untracked and not staged.
 2. Create and privately record a fresh staging schema backup before changing source or headers.
@@ -96,4 +98,4 @@ If any inventory, authorization, evidence, or privacy test fails, stop writes an
 
 ## Unresolved manual values
 
-All eleven canonical Drive folder mappings, staging/production Script IDs and deployment pointers, current/rollback immutable versions, deployment owner, approved access list, content/branding approvers, backup retention, evidence/quarantine retention, malware/PDF handling policy, notification sender, and production audience must be assigned by HAU/DOL.
+The private record now contains the staging and production target references, existing deployment pointers, current versions (13 and 3), rollback versions (staging 9; production 1 and 2), private backup references, and validated canonical Drive mappings. HAU/DOL must still approve the access list and two-account test identities, content/branding approvers, backup/evidence/quarantine retention, malware/PDF handling policy, notification sender, production audience, storage capacity, accessibility evidence, and release decision.

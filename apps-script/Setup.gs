@@ -20,6 +20,16 @@ var HAU_DATA_VALIDATION_LISTS_ = Object.freeze({
   '22_COMMAND_JOURNAL': { Status: ['PENDING','COMPLETED','FAILED'], Recovery_Status: ['NOT_REQUIRED','REVIEW_REQUIRED','RECOVERED','MANUAL_REVIEW'] }
 });
 
+// Google Sheets commonly provisions large blank row capacities. Keep setup
+// idempotent and bounded while still covering existing data plus a practical
+// reserve for newly appended operational rows.
+var HAU_SETUP_RESERVED_ROWS_ = 1000;
+
+function setupManagedRowCount_(sheet) {
+  var availableRows = Math.max(1, sheet.getMaxRows() - 1);
+  return Math.min(availableRows, HAU_SETUP_RESERVED_ROWS_);
+}
+
 function sheetHeaderValues_(sheet) {
   var width = Math.max(1, sheet.getLastColumn());
   return sheet.getRange(1, 1, 1, width).getDisplayValues()[0].map(function(value) { return String(value || '').trim(); });
@@ -95,7 +105,7 @@ function contiguousColumnSpans_(columns) {
 function applyDataValidations_(sheet, name) {
   var definitions = HAU_DATA_VALIDATION_LISTS_[name] || {};
   var headers = sheetHeaderValues_(sheet);
-  var rowCount = Math.max(1, sheet.getMaxRows() - 1);
+  var rowCount = setupManagedRowCount_(sheet);
   var applied = [];
   Object.keys(definitions).forEach(function(header) {
     var index = headers.indexOf(header);
@@ -117,7 +127,7 @@ function ensureSystemColumnWarnings_(sheet, name) {
   var protectedColumns = [];
   headers.forEach(function(header, index) { if (systemManagedHeader_(name, header)) protectedColumns.push(index + 1); });
   var existing = sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE);
-  var rowCount = Math.max(1, sheet.getMaxRows() - 1);
+  var rowCount = setupManagedRowCount_(sheet);
   var added = [];
   contiguousColumnSpans_(protectedColumns).forEach(function(span) {
     var range = sheet.getRange(2, span.start, rowCount, span.end - span.start + 1);
@@ -287,9 +297,11 @@ function seedStagingDemoData() {
 
 function formatBackendSheet_(sheet) {
   var columns = Math.max(1, sheet.getLastColumn());
+  var lastRow = Math.max(1, sheet.getLastRow());
+  var formatRows = Math.min(lastRow, HAU_SETUP_RESERVED_ROWS_ + 1);
   sheet.getRange(1, 1, 1, columns).setBackground('#3A0608').setFontColor('#FFF7E6').setFontWeight('bold').setWrap(true);
-  if (!sheet.getFilter()) sheet.getRange(1, 1, Math.max(1, sheet.getLastRow()), columns).createFilter();
-  sheet.autoResizeColumns(1, Math.min(columns, 26));
+  if (!sheet.getFilter()) sheet.getRange(1, 1, formatRows, columns).createFilter();
+  if (lastRow <= HAU_SETUP_RESERVED_ROWS_ + 1) sheet.autoResizeColumns(1, Math.min(columns, 26));
 }
 
 function driveValidationFailure_(key, name, error) {

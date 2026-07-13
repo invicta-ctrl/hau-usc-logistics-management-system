@@ -134,11 +134,23 @@ describe('bootstrap privacy boundary', () => {
     expect(result.currentUser.role).toBe('READ_ONLY_AUDITOR');
     expect(result.inventoryItems[0]).toHaveProperty('openingOnHand', 99);
   });
+
+  it('fails closed for legacy handling values without rewriting the source row', () => {
+    const ctx = bootstrapContext({ User_ID:'USR-DOL', Role:'READ_ONLY_AUDITOR', Active:true });
+    const sourceRow = { Item_ID:'ITM-LEGACY', Item_Name:'Legacy item', Category:'Office', Stock_Area:'Inventory', Handling:'TO_CLASSIFY', Unit:'piece', Status:'ACTIVE', Opening_Qty:4, Lending_Audience:'TO_CLASSIFY' };
+    ctx.readObjects_ = (sheet) => sheet === ctx.HAU_SHEETS.ITEMS ? [sourceRow] : [];
+
+    const result = ctx.getBootstrapData_({ requestOnly:false });
+
+    expect(result.inventoryItems[0]).toMatchObject({ status:'VERIFY', handlingCode:'NON_CIRCULATING' });
+    expect(sourceRow.Handling).toBe('TO_CLASSIFY');
+    expect(() => ctx.assertTransactableItem_(sourceRow)).toThrow(expect.objectContaining({ code:'ITEM_REQUIRES_VERIFICATION' }));
+  });
 });
 
 describe('catalog opening-stock authorization', () => {
   const ctx = gasContext(['Config.gs', 'Validation.gs', 'Auth.gs', 'ItemRepository.gs', 'InventoryService.gs']);
-  const active = { Item_ID:'ITM-1', Status:'ACTIVE' };
+  const active = { Item_ID:'ITM-1', Status:'ACTIVE', Handling:'CONSUMABLE' };
 
   it('rejects catalog-only opening stock', () => {
     expect(() => ctx.permittedInitialCatalogQuantity_({ initialQuantity:5 }, { Role:'REQUESTER', Active:true, Can_Manage_Catalog:true }, active)).toThrow(expect.objectContaining({ code:'FORBIDDEN' }));
@@ -147,7 +159,7 @@ describe('catalog opening-stock authorization', () => {
   it('allows existing receive/admin authorization only for active items', () => {
     expect(ctx.permittedInitialCatalogQuantity_({ initialQuantity:2 }, { Role:'DOL_STAFF', Active:true }, active)).toBe(2);
     expect(() => ctx.permittedInitialCatalogQuantity_({ initialQuantity:2 }, { Role:'ADMIN', Active:true }, { Item_ID:'ITM-2', Status:'VERIFY' })).toThrow(expect.objectContaining({ code:'ITEM_REQUIRES_VERIFICATION' }));
-    expect(() => ctx.permittedInitialCatalogQuantity_({ initialQuantity:2 }, { Role:'ADMIN', Active:true }, { Item_ID:'ITM-3', Status:'INACTIVE' })).toThrow(expect.objectContaining({ code:'ITEM_INACTIVE' }));
+    expect(() => ctx.permittedInitialCatalogQuantity_({ initialQuantity:2 }, { Role:'ADMIN', Active:true }, { Item_ID:'ITM-3', Status:'INACTIVE', Handling:'CONSUMABLE' })).toThrow(expect.objectContaining({ code:'ITEM_INACTIVE' }));
   });
 });
 
