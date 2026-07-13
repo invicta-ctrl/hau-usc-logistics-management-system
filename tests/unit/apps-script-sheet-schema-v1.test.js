@@ -179,7 +179,7 @@ function allKeys(value, output = []) {
 
 describe('Apps Script additive V1-preparation schema', () => {
   it('bumps prerelease metadata and exposes all frozen new-table headers through the backend command path', () => {
-    const ctx = gasContext(['Config.gs']);
+    const ctx = gasContext(['Config.gs', 'Setup.gs']);
     expect(ctx.HAU_CONFIG.APP_VERSION).toBe('0.6.0-dev.1');
     expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.2.0');
     expect(ctx.HAU_SHEETS.COMMANDS).toBe('22_COMMAND_JOURNAL');
@@ -194,6 +194,8 @@ describe('Apps Script additive V1-preparation schema', () => {
       'Command_ID','Operation','Actor_User_ID','Actor_Email','Idempotency_Scope','Client_Request_ID','Payload_SHA256','Status','Started_At','Completed_At','Correlation_ID','Related_Entity_Type','Related_Entity_ID','Result_JSON','Error_Code','Error_Message','Recovery_Status','Recovery_Notes',
     ]);
     expect(Object.keys(ctx.HAU_HEADERS)).toHaveLength(22);
+    expect(Array.from(ctx.HAU_DATA_VALIDATION_LISTS_['22_COMMAND_JOURNAL'].Status)).toContain('PENDING');
+    expect(Array.from(ctx.HAU_DATA_VALIDATION_LISTS_['22_COMMAND_JOURNAL'].Recovery_Status)).toContain('REVIEW_REQUIRED');
   });
 
   it('creates every known sheet once and is a no-op for headers on a repeated run', () => {
@@ -369,7 +371,7 @@ describe('Apps Script generic Sheet write safety', () => {
     ctx.getDatabase_ = () => database;
 
     ctx.appendObject_(ctx.HAU_SHEETS.COMMANDS, {
-      Command_ID: 'CMD-1', Operation: '=unsafe', Client_Request_ID: 'REQ-1', Status: 'STARTED',
+      Command_ID: 'CMD-1', Operation: '=unsafe', Client_Request_ID: 'REQ-1', Status: 'PENDING',
     });
     expect(commands.values[1][headers.indexOf('Command_ID')]).toBe('CMD-1');
     expect(commands.values[1][headers.indexOf('Operation')]).toBe("'=unsafe");

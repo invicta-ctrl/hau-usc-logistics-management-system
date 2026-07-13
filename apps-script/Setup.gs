@@ -17,7 +17,7 @@ var HAU_DATA_VALIDATION_LISTS_ = Object.freeze({
   },
   '20_CONTENT': { Status: ['DRAFT','PUBLISHED','SUPERSEDED','ARCHIVED'] },
   '21_BRANDING': { Status: ['DRAFT','ACTIVE','SUPERSEDED','ARCHIVED'], Active: ['TRUE','FALSE'] },
-  '22_COMMAND_JOURNAL': { Status: ['STARTED','COMPLETED','FAILED'], Recovery_Status: ['NOT_REQUIRED','PENDING','RECOVERED','MANUAL_REVIEW'] }
+  '22_COMMAND_JOURNAL': { Status: ['PENDING','COMPLETED','FAILED'], Recovery_Status: ['NOT_REQUIRED','REVIEW_REQUIRED','RECOVERED','MANUAL_REVIEW'] }
 });
 
 function sheetHeaderValues_(sheet) {
