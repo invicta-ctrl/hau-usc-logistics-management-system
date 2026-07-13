@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "route_id": "example-terra-medium",
+  "route_class": "exploration",
+  "safe_to_execute": true,
+  "model": "gpt-5.6-terra",
+  "reasoning_effort": "medium",
+  "agent": "explorer",
+  "sandbox": "workspace-write",
+  "approval_policy": "on-request",
+  "verification_profile": "focused",
+  "use_subagents": false,
+  "use_worktrees": false,
+  "usage_justification": "Cross-file tracing is the main difficulty; one worker is sufficient.",
+  "why_not_cheaper": "Low effort would under-resource the repository exploration.",
+  "why_not_more_expensive": "The architecture is established and the plausible causes are bounded.",
+  "requires_user_approval": false,
+  "stop_reasons": []
+}

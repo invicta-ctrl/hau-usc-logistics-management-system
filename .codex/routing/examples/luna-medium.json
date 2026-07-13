@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "route_id": "example-luna-medium",
+  "route_class": "implementation",
+  "safe_to_execute": true,
+  "model": "gpt-5.6-luna",
+  "reasoning_effort": "medium",
+  "agent": "worker",
+  "sandbox": "workspace-write",
+  "approval_policy": "on-request",
+  "verification_profile": "focused",
+  "use_subagents": false,
+  "use_worktrees": false,
+  "usage_justification": "The change is bounded, sequential, and objectively testable.",
+  "why_not_cheaper": "The task spans related files and needs a focused regression test.",
+  "why_not_more_expensive": "The target architecture and acceptance conditions are already known.",
+  "requires_user_approval": false,
+  "stop_reasons": []
+}

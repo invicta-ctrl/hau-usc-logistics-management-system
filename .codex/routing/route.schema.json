@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://invicta-ctrl.example/hau-usc/route.json",
+  "title": "HAU-USC Codex route",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "route_id", "route_class", "safe_to_execute", "model", "reasoning_effort", "agent", "sandbox", "approval_policy", "verification_profile", "use_subagents", "use_worktrees", "usage_justification", "why_not_cheaper", "why_not_more_expensive", "requires_user_approval", "stop_reasons"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "route_id": { "type": "string", "minLength": 1 },
+    "route_class": { "enum": ["fast", "implementation", "exploration", "judgment", "deep_review"] },
+    "safe_to_execute": { "type": "boolean" },
+    "model": { "enum": ["gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.6-sol"] },
+    "reasoning_effort": { "enum": ["minimal", "low", "medium", "high", "xhigh"] },
+    "agent": { "enum": ["worker", "explorer", "judgment-worker", "reviewer"] },
+    "sandbox": { "enum": ["read-only", "workspace-write"] },
+    "approval_policy": { "enum": ["on-request", "never"] },
+    "verification_profile": { "enum": ["documentation", "focused", "full", "release"] },
+    "use_subagents": { "type": "boolean" },
+    "use_worktrees": { "type": "boolean" },
+    "usage_justification": { "type": "string", "minLength": 1 },
+    "why_not_cheaper": { "type": "string", "minLength": 1 },
+    "why_not_more_expensive": { "type": "string", "minLength": 1 },
+    "requires_user_approval": { "type": "boolean" },
+    "stop_reasons": { "type": "array", "items": { "type": "string" } },
+    "approval_recorded": { "type": "boolean" }
+  }
+}

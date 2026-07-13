@@ -1,0 +1,10 @@
+# Project-scoped Codex defaults. Route-specific model and reasoning overrides
+# are supplied by scripts/codex-route.ps1 after validation.
+
+[agents]
+max_threads = 2
+max_depth = 1
+
+[features]
+hooks = true
+

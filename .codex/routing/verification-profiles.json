@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "documentation": {
+      "purpose": "Routing documentation and schema validation only.",
+      "launcher_commands": ["node scripts/codex-routing.mjs docs"]
+    },
+    "focused": {
+      "purpose": "Routing fixtures and focused project tests.",
+      "launcher_commands": ["node scripts/codex-routing.mjs docs", "npm test -- tests/routing"]
+    },
+    "full": {
+      "purpose": "Repository-standard lint, tests, build, package, and artifact checks.",
+      "launcher_commands": ["npm run check"]
+    },
+    "release": {
+      "purpose": "Full verification plus the configured browser matrix.",
+      "launcher_commands": ["npm run check", "npm run test:e2e"]
+    }
+  }
+}

@@ -10,6 +10,7 @@
     "build:share": "node scripts/create-shareable.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
     "check:apps-script": "node scripts/check-apps-script.mjs",
+    "codex:validate": "node scripts/validate-codex-routing.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://invicta-ctrl.example/hau-usc/task-refinement.json",
+  "title": "HAU-USC Codex task refinement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["input_kind", "original_input", "interpreted_objective", "refined_prompt", "authoritative_context_read", "verified_facts", "scope", "non_goals", "requirements", "constraints", "acceptance_criteria", "verification_profile_hint", "documentation_updates", "assumptions", "unresolved_material_questions", "material_scope_expansion", "requires_user_approval", "confidence", "safe_to_route"],
+  "properties": {
+    "input_kind": { "enum": ["rough_instruction", "partial_task", "complete_prompt", "precise_command"] },
+    "original_input": { "type": "string", "minLength": 1 },
+    "interpreted_objective": { "type": "string", "minLength": 1 },
+    "refined_prompt": { "type": "string", "minLength": 1 },
+    "authoritative_context_read": { "type": "array", "items": { "type": "string" } },
+    "verified_facts": { "type": "array", "items": { "type": "string" } },
+    "scope": { "type": "array", "items": { "type": "string" } },
+    "non_goals": { "type": "array", "items": { "type": "string" } },
+    "requirements": { "type": "array", "items": { "type": "string" } },
+    "constraints": { "type": "array", "items": { "type": "string" } },
+    "acceptance_criteria": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "verification_profile_hint": { "type": "string", "minLength": 1 },
+    "documentation_updates": { "type": "array", "items": { "type": "string" } },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "unresolved_material_questions": { "type": "array", "items": { "type": "string" } },
+    "material_scope_expansion": { "type": "boolean" },
+    "requires_user_approval": { "type": "boolean" },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "safe_to_route": { "type": "boolean" }
+  }
+}

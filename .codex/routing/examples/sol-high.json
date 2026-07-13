@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "route_id": "example-sol-high",
+  "route_class": "deep_review",
+  "safe_to_execute": false,
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "xhigh",
+  "agent": "reviewer",
+  "sandbox": "read-only",
+  "approval_policy": "on-request",
+  "verification_profile": "release",
+  "use_subagents": false,
+  "use_worktrees": false,
+  "usage_justification": "The task is security-sensitive or irreversible and requires deep review.",
+  "why_not_cheaper": "A lower tier cannot reliably assess the consequence or data-integrity risk.",
+  "why_not_more_expensive": "The highest verified project tier is sufficient; no broader fan-out is justified.",
+  "requires_user_approval": true,
+  "stop_reasons": ["Explicit approval is required before irreversible or external-write work."]
+}

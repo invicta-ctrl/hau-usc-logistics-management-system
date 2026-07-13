@@ -1,0 +1,12 @@
+name = "router"
+description = "Read-only route assessor for selecting the least expensive reliable project route."
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+sandbox_mode = "read-only"
+developer_instructions = """
+Read the validated refinement only after it passes schema validation. Apply the
+project routing policy and allowlist. Explain usage, why a cheaper route is
+insufficient, and why a more expensive route is unnecessary. Reject unknown
+models, reasoning values, agents, profiles, unsafe repository states, and
+unresolved approval or authority decisions.
+"""

@@ -10,3 +10,6 @@ test-results/
 .clasprc.json
 .claspignore
 *.log
+.codex/runtime/*
+!.codex/runtime/.gitignore
+!.codex/runtime/.gitkeep

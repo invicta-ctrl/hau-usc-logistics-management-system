@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "confidence_threshold": 0.85,
+  "high_risk_patterns": ["deploy", "publish", "merge", "push", "migrat", "production", "delete", "drop", "reset", "credential", "secret", "permission", "authorization", "security", "schema", "ledger", "inventory", "data integrity", "spreadsheet", "drive", "clasp"],
+  "exploration_patterns": ["locate", "find", "trace", "why", "root cause", "unfamiliar", "cross-file", "debug"],
+  "documentation_patterns": ["readme", "documentation", "markdown", "typo", "wording", "link", "changelog"],
+  "parallel_workstream_minimum": 3,
+  "max_agent_depth": 1,
+  "default_max_threads": 2
+}
