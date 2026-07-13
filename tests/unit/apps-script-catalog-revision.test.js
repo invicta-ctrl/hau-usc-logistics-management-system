@@ -103,6 +103,7 @@ describe('bootstrap privacy boundary', () => {
   function bootstrapContext(user) {
     const ctx = gasContext(['Config.gs', 'Validation.gs', 'Auth.gs', 'ItemRepository.gs', 'InventoryService.gs']);
     ctx.resolveCurrentUser_ = () => user;
+    ctx.resolveRuntimeConfig_ = () => ({ environment:'STAGING' });
     ctx.getConfigValue_ = () => 'STAGING';
     ctx.userPermissionsDto_ = () => ({ review:false, release:false, receive:false, admin:false, manageCatalog:false });
     ctx.getDataRevision_ = () => ({ revision:7, updatedAt:'now', environment:'STAGING' });

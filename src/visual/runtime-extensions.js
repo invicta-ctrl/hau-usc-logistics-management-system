@@ -592,14 +592,24 @@ export function createRuntimeExtensions(options) {
     renderRequestReviewQueue();
   };
 
+  const normalizePublishedBlock = (block) => {
+    if (!block || typeof block !== 'object') return block;
+    let body = block.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch { body = null; }
+    }
+    if (Array.isArray(body)) return { ...block, items: body, entries: body };
+    return body && typeof body === 'object' ? { ...block, ...body } : block;
+  };
+
   const publishedBlock = (state, alias, key) => {
     const roots = [state?.publishedContent, state?.publicContent, state?.content];
     for (const root of roots) {
       if (!root) continue;
-      if (!Array.isArray(root) && root[alias]) return root[alias];
+      if (!Array.isArray(root) && root[alias]) return normalizePublishedBlock(root[alias]);
       const rows = Array.isArray(root) ? root : root.items;
       const match = rows?.find((row) => [row.key, row.contentKey, row.Content_Key].includes(key));
-      if (match) return match;
+      if (match) return normalizePublishedBlock(match);
     }
     return null;
   };

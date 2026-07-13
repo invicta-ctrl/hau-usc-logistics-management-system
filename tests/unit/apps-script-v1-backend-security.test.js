@@ -85,7 +85,10 @@ describe('trusted portal modes and sanitized lending bootstrap', () => {
     expect(Object.keys(result).sort()).toEqual(
       [
         'backendMode',
+        'branding',
+        'brandingFallbackRequired',
         'catalogAvailabilityProtected',
+        'content',
         'currentUser',
         'environment',
         'historyAvailable',
@@ -121,6 +124,12 @@ describe('trusted portal modes and sanitized lending bootstrap', () => {
     );
     expect(JSON.stringify(result)).not.toMatch(
       /Opening_Qty|openingOnHand|availableToPromise|Storage|Legacy|auditLog|ledgerTransactions|statusHistory/i,
+    );
+  });
+
+  it('accepts the frontend revisionId alias for an explicit content revert target', () => {
+    expect(source('AdminService.gs')).toContain(
+      "command.targetRevisionId||command.contentRevisionId||command.revisionId",
     );
   });
 

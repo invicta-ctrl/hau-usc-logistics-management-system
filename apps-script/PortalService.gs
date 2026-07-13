@@ -23,6 +23,8 @@ function lendingPortalItemDto_(item) {
 function getLendingBootstrap_() {
   var user = resolveRequesterUser_();
   var internal = isInternalBootstrapUser_(user);
+  var published = typeof getPublishedContent_ === 'function' ? getPublishedContent_() : { content: [] };
+  var branding = typeof getBrandingState_ === 'function' ? getBrandingState_() : { branding: [], fallbackRequired: true };
   var items = readObjects_(HAU_SHEETS.ITEMS).filter(function(item) {
     var status = String(item.Status || '').toUpperCase();
     return status === 'ACTIVE' || status === 'VERIFY';
@@ -39,6 +41,9 @@ function getLendingBootstrap_() {
     },
     inventoryItems: items,
     catalogAvailabilityProtected: true,
-    historyAvailable: false
+    historyAvailable: false,
+    content: published.content || [],
+    branding: branding.branding || [],
+    brandingFallbackRequired: branding.fallbackRequired !== false
   };
 }
