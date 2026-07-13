@@ -58,6 +58,8 @@ sandbox flags, allowlisted verification profiles, and an independent review.
 It never performs Apps Script, Sheet, Drive, deployment, migration, or merge
 actions. See `.codex/routing/` for policy, schemas, examples, and limitations.
 
+The complete execution sequence is documented in [`docs/CODEX_FULL_STACK_EXECUTION_PLAN.md`](docs/CODEX_FULL_STACK_EXECUTION_PLAN.md).
+
 `npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 
 - `dist/index.html` – canonical standalone production build.
