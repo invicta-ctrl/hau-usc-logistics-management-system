@@ -1,5 +1,72 @@
 # Work Continuation
 
+## CURRENT TASK RESUME BLOCK
+
+- Date: `2026-07-13` (`Asia/Manila`)
+- Authorized objective: complete the V1 one-shot implementation, verified demo deployment, release evidence, and future-platform documentation as far as verified credentials, rollback, and provider controls safely allow.
+- Worktree: `D:\Documents\DOL Website GitHub - V1 Deployment`
+- Branch: `feat/v1-one-shot-demo-and-deployment`
+- Starting commit: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
+- Upstream: intentionally absent until the first verified push of the new branch.
+- Current phase: Phase 1 — baseline, ownership assignment, contract freeze, and implementation-gap audit.
+- Protected pull request: PR #2 must not be modified, retargeted, closed, or merged.
+- Live state at task start: staging immutable Version 9 remains deployed; production remains untouched.
+- External backup: verified Git bundle `hau-usc-logistics-management-system-20260713-124624.bundle`, SHA-256 `255d9769398533c881fd9a6f43b776ef87c411d05d6a311bb7e299c1bd635c3c`.
+
+### Verified baseline
+
+- Original continuation checkout fetched successfully, was clean, and was `0` ahead / `0` behind its upstream at `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
+- The isolated worktree started clean from that exact commit.
+- `npm ci`: passed; 139 packages installed, 0 reported vulnerabilities.
+- `npm test`: passed; 12 files / 93 tests.
+- `npm run check`: passed, including lint, tests, deterministic build, Apps Script static/package validation, and standalone verification.
+- `npm run verify`: passed.
+- `npm run test:e2e`: passed; 38 passed, 40 intentionally scoped skips, 0 failed across 320, 390, 768, 1024, 1366, and 1440 px projects.
+- No Sheet, Drive, Apps Script source, deployment, trigger, production, PR, tag, or release mutation has occurred in this task.
+
+### Six-specialist ownership map
+
+| Specialist | Primary ownership | Shared-file rule |
+|---|---|---|
+| 1 — Frontend, UX, accessibility, PWA | `src/visual/`, frontend feature/view/component/state/style files, public route behavior, frontend-focused tests when assigned | Must not hand-edit generated HTML; adapter/API changes require orchestrator approval. |
+| 2 — Apps Script backend, APIs, auth | Apps Script service/controller/auth/validation/router files and browser adapter contracts assigned by the orchestrator | Must not change schema headers, Drive storage implementation, deployment state, or generated artifacts independently. |
+| 3 — Sheets schema, ledger, migration | `Config.gs`, `Setup.gs`, Sheet repositories, migration/reconciliation/ledger schema, data dictionary and schema-focused tests | Additive changes only; never rewrite posted ledger or legacy evidence and never transact `VERIFY`. |
+| 4 — Drive, uploads, evidence, branding | Drive/evidence/branding storage services, upload validation/naming, Drive documentation, storage-focused tests | Folder resolution must fail closed; never expose IDs, private links, or evidence. |
+| 5 — Security, privacy, QA | Test files, threat model, security/secret validators, adversarial/browser evidence and defect reports | May not weaken assertions or change product behavior except through an explicitly reassigned repair. |
+| 6 — Integration, DevOps, docs, future platform | package/CI/build/deployment integration, canonical documentation, future-platform research, release evidence | Owns final integration only after specialist work is accepted; live writes remain orchestrator-gated. |
+
+The orchestrator owns `README.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`, this resume block, cross-cutting contract decisions, generated-artifact regeneration, Git integration, and every live-system go/no-go. No two specialists may edit the same shared file concurrently.
+
+### Frozen cross-cutting contracts
+
+- Visual authority remains `legacy/HAU-USC_Logistics-Prototype.original.html`; visual extraction and generated build scripts own derived markup/styles.
+- Browser code uses service adapters; only `src/services/apps-script-adapter.js` may call `google.script.run`.
+- Existing server-generated stable IDs and current sheet names remain authoritative. Schema changes are append-only and idempotent.
+- Posted ledger, audit, status-history, and legacy provenance records are immutable. Corrections use documented reversals or adjustments.
+- `VERIFY`, inactive, archived, and non-circulating items cannot transact.
+- Current permissions remain `Can_Review`, `Can_Release`, `Can_Receive`, `Can_Admin`, and `Can_Manage_Catalog`. New admin surfaces use server-checked `Can_Admin` unless a narrower reviewed permission is added additively.
+- Request-only and lending-only bootstraps are sanitized server-side. Student ID is never authorization; private requester history stays unavailable unless a scoped expiring-token contract is implemented and tested.
+- Every state-changing Apps Script call requires validation, authorization, server IDs, idempotency, a lock where state may race, audit/history evidence, and exactly one aggregate revision increment for a successful non-replay mutation.
+- Error responses retain stable codes, safe messages, correlation IDs, retryability, and bounded safe details; public responses never include stack traces or configured resource values.
+- Uploads require permission checks before byte decoding/Drive access, MIME-extension-size validation, sanitized deterministic names, protected original-name metadata, checksums/deduplication where supported, and fail-closed configured folders.
+- Live mutation remains blocked until the intended account, Script project, operational Sheet, backup Sheet, Drive mappings, current deployment/rollback version, and fresh backup are verified without exposing their identifiers.
+
+### Immediate known gaps and next actions
+
+- Add and test `npm run check:agents` and `npm run check:continuation`.
+- The current branch redacts a previously tracked spreadsheet identifier from `docs/BACKUP_AND_RECOVERY.md`. Commit history still contains the historical value; do not rewrite protected history automatically. The resource owner must verify access restrictions and rotate/replace the identifier if institutional policy requires it before the no-live-ID release gate can be accepted.
+- Add a bounded secret/live-ID diff validator that reports locations without printing matched values.
+- Complete the six-specialist gap audit, then assign non-overlapping implementation slices.
+- Keep all live Google and release actions paused until repository implementation, target verification, backup, and rollback gates pass.
+
+### External blocker — staging target conflict
+
+- The only ignored authenticated `.clasp.json` is in the original checkout, not this worktree.
+- A bounded read-only remote inventory found that its project/deployment/version state does not match the committed record for staging immutable Version 9 and includes a production-labeled immutable version.
+- This is a conflicting-authoritative-target condition. Do not copy that configuration into the V1 worktree and do not run `clasp push`, create a version, update a deployment, inspect or change live properties/triggers, or mutate a Sheet/Drive target through it.
+- Smallest human action: the deployment owner must supply or confirm the ignored `.clasp.json` for the documented Version 9 staging project, with the intended account and environment, without posting its Script ID in chat or git.
+- Repository implementation, tests, documentation, GitHub branch/PR preparation, and other non-live work continue independently.
+
 ## Latest working checkpoint — Version 0.5.0 live sync, lending search, and catalog controls
 
 - Date: `2026-07-13` (`Asia/Manila`)

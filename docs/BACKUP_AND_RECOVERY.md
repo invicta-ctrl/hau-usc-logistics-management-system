@@ -2,7 +2,7 @@
 
 ## Backup layers
 
-- Pre-rework reference: spreadsheet `17nyUqDACyc4ZpWL_mZ1S-QAmIGECKtbXFci9rWtqTBg`; application writes are prohibited.
+- Pre-rework reference: the operator-held private spreadsheet identifier is intentionally absent from git; application writes are prohibited.
 - Pre-migration launch backup: create with `createLaunchBackup()` into the configured archive folder.
 - Scheduled spreadsheet backup: daily trigger after launch, with retention reviewed by the owner.
 - Evidence: retain original Drive folder structure and metadata export; consider a controlled secondary Workspace/Cloud backup based on HAU policy.
