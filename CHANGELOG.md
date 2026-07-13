@@ -2,7 +2,7 @@
 
 ## 1.0.0-rc.1 - 2026-07-13
 
-Release-candidate source and standalone production build. Live staging and production deployment remain blocked by an unverified/conflicting authenticated Apps Script target.
+Release-candidate source and standalone production build. Exact Apps Script targets and rollback versions are privately reconciled; live staging and production remain blocked on owner-authorized Sheets/Drive access, verified backups/configuration, audience approval, and acceptance.
 
 ### Added
 
@@ -22,6 +22,7 @@ Release-candidate source and standalone production build. Live staging and produ
 - Demo names, emails, contacts, student IDs, and supplier tax values use explicit fictional/reserved tokens.
 - Stable content and branding keys preserve uppercase underscore/hyphen identifiers instead of silently rewriting them.
 - Generated standalone verification now covers all three pinned portal artifacts as well as the compatibility shareable alias.
+- Scheduled backup, overdue, and operational-edit handlers are client-private. Trigger installers now validate event type/source, run under the script lock, migrate current-user legacy/duplicate handlers, and append durable audit evidence; overdue transitions also receive correlation-scoped audit rows.
 
 ### Security and privacy
 
@@ -32,7 +33,7 @@ Release-candidate source and standalone production build. Live staging and produ
 
 ### Verification
 
-- Integrated QA passed 19 files / 144 unit tests, ESLint, governance, build, Apps Script/static package validation, and standalone verification.
+- Integrated QA plus production-trigger hardening passed 19 files / 147 unit tests, ESLint, governance, build, Apps Script/static package validation, and standalone verification.
 - Final Playwright passed 60 tests with 60 intentional viewport/applicability skips and 0 failures across 120 configured cases at 320, 390, 768, 1024, 1366, and 1440 px; 18/18 are direct-file checks for the three named portal artifacts.
 - Two consecutive builds reproduced all nine generated files byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; all exact portal/Apps Script hashes are recorded in `docs/V1_READINESS_AUDIT.md`.
 
@@ -51,7 +52,7 @@ Release-candidate source and standalone production build. Live staging and produ
 
 - A compact `api_getDataRevision` read endpoint backed by `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` rows in `17_CONFIG`.
 - Five-second internal polling while the document is visible and online, with focus, visibility, reconnect, and manual-refresh checks, non-overlapping requests, and bounded error backoff. This is polling, not WebSockets.
-- An idempotent `setupOperationalEditTrigger()` installer and `handleOperationalSheetEdit(e)` handler so direct human edits to the configured operational spreadsheet advance the shared revision.
+- An idempotent `setupOperationalEditTrigger()` installer and private `handleOperationalSheetEdit_(e)` handler so direct human edits to the configured operational spreadsheet advance the shared revision.
 - Dirty-form and active-modal protection. Background changes show a non-blocking update banner with Refresh now and Continue editing choices instead of silently discarding input.
 - Accessible predictive Lending Hub search with exact/prefix/token/substring ranking, keyboard navigation, an authoritative hidden Item ID, selected-item summary, and distinct out-of-stock, verification, audience, circulation, quantity, and no-match explanations.
 - Website catalog APIs and controls for item lookup, creation, metadata editing, storage-context changes, archive, and restore.

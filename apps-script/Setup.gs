@@ -473,17 +473,43 @@ function setupDriveFolders() {
 }
 
 function setupTimeTriggers() {
-  return guardApi_('setupTimeTriggers', {}, function() {
+  return guardApi_('setupTimeTriggers', {}, function(correlationId) {
     var user = setupUser_();
-    var wanted = { updateOverdueLending: { hour: 2 }, scheduledBackup: { hour: 3 } };
-    var existing = ScriptApp.getProjectTriggers();
-    var created = [];
-    Object.keys(wanted).forEach(function(handler) {
-      if (existing.some(function(trigger) { return trigger.getHandlerFunction() === handler; })) return;
-      ScriptApp.newTrigger(handler).timeBased().everyDays(1).atHour(wanted[handler].hour).create();
-      created.push(handler);
+    return withScriptLock_(function() {
+      var wanted = {
+        updateOverdueLending_: { hour: 2, legacyHandler: 'updateOverdueLending' },
+        scheduledBackup_: { hour: 3, legacyHandler: 'scheduledBackup' }
+      };
+      var existing = ScriptApp.getProjectTriggers();
+      var created = [];
+      var removed = [];
+      Object.keys(wanted).forEach(function(handler) {
+        var named = existing.filter(function(trigger) { return trigger.getHandlerFunction() === handler; });
+        var configured = named.filter(function(trigger) {
+          return typeof trigger.getEventType === 'function' && trigger.getEventType() === ScriptApp.EventType.CLOCK &&
+            typeof trigger.getTriggerSource === 'function' && trigger.getTriggerSource() === ScriptApp.TriggerSource.CLOCK;
+        });
+        if (!configured.length) {
+          ScriptApp.newTrigger(handler).timeBased().everyDays(1).atHour(wanted[handler].hour).create();
+          created.push(handler);
+        }
+        configured.slice(1).concat(named.filter(function(trigger) { return configured.indexOf(trigger) === -1; })).forEach(function(trigger) {
+          ScriptApp.deleteTrigger(trigger);
+          removed.push(handler);
+        });
+        existing.filter(function(trigger) {
+          return trigger.getHandlerFunction() === wanted[handler].legacyHandler;
+        }).forEach(function(trigger) {
+          ScriptApp.deleteTrigger(trigger);
+          removed.push(wanted[handler].legacyHandler);
+        });
+      });
+      var visibleHandlers = ScriptApp.getProjectTriggers().map(function(trigger) { return trigger.getHandlerFunction(); });
+      audit_('SETUP_TIME_TRIGGERS', 'CONFIG', 'TIME_TRIGGERS', user, correlationId, {
+        after: { created: created, removed: removed, visibleHandlers: visibleHandlers, scope: 'CURRENT_USER' }
+      });
+      return { created: created, removed: removed, existing: visibleHandlers, scope: 'CURRENT_USER', actor: user.User_ID };
     });
-    return { created: created, existing: ScriptApp.getProjectTriggers().map(function(trigger) { return trigger.getHandlerFunction(); }), actor: user.User_ID };
   });
 }
 

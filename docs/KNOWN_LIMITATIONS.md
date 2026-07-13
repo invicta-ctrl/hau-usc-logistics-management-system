@@ -1,6 +1,7 @@
 # Known Limitations
 
-- `1.0.0-rc.1` is a repository-ready release candidate, not evidence of a live staging or production deployment. The only authenticated ignored clasp target inspected during this task conflicts with the documented staging Version 9 record, so no Google mutation or live acceptance occurred.
+- `1.0.0-rc.1` is a repository-ready release candidate, not evidence of a live staging or production deployment. The exact staging project is now privately reconciled at Version 10 with Version 9 retained, and production retains Version 1, but the active CLI OAuth lacks Sheets/full-Drive scope. No authoritative config read, verified workbook backup, Google mutation, or live acceptance has occurred.
+- Installable-trigger inventory is scoped to the current Google user. Even the hardened setup functions cannot prove that a former or second project editor owns no additional trigger; release evidence must record the designated trigger owner and any prior-owner cleanup.
 - The three named shareable HTML files and the legacy standalone alias run deterministic fictional DEMO data in a browser. They are review/demo artifacts, not authenticated production portals and do not provide shared concurrency, durable backup, institutional access control, or Google Drive persistence.
 - Apps Script authorization resolves the active Google identity and server-side access row. Local role display is demonstrative and must never be treated as authorization evidence.
 - Authenticated internal near-real-time behavior uses five-second polling, not WebSockets or guaranteed server push. Hidden/offline tabs pause, failures back off, and normal visibility/network timing can exceed the target 5–10 second observation window. Request-only mode stays outside internal polling.

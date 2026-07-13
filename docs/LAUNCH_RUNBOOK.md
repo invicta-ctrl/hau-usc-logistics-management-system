@@ -2,7 +2,7 @@
 
 ## Current `1.0.0-rc.1` release gate
 
-The repository candidate and standalone portal artifacts may be built and reviewed locally. Google deployment is blocked because the only authenticated ignored `.clasp.json` inspected during this task conflicts with the documented staging Version 9 target. Do not run a target-dependent status/push, setup, trigger, Sheet, Drive, immutable-version, or deployment-pointer mutation until the deployment owner privately confirms the intended staging project/account/environment, current deployment pointer, and preceding rollback version. Production remains a later gate after staging acceptance and owner/privacy/security approval.
+The repository candidate and standalone portal artifacts may be built and reviewed locally. The exact title-labeled staging project is privately reconciled at immutable Version 10 with Version 9 retained, and the production target retains Version 1. Google mutation remains blocked until an owner-authorized Sheets/Drive access mechanism verifies Script Properties, operational/backup separation, authoritative Drive mappings, a restorable pre-push backup, and the intended web-app audience. Production remains a later gate after staging acceptance and owner/privacy/security approval.
 
 ## Staging
 

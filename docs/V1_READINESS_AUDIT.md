@@ -21,8 +21,8 @@ This is an evidence ledger, not a declaration that source code is live. Reposito
 | Mergeable repository candidate | Ready for draft review | Draft PR #3 is clean/mergeable and all three required checks passed at code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` |
 | Standalone fictional demo | Ready | Three pinned self-contained portal files build and pass direct-file browser checks |
 | Apps Script source package | Locally ready | Static, parser-safe assembly, callable, and browser package checks pass |
-| Staging deployment | Blocked | Authenticated clasp target conflicts with the documented staging Version 9 record |
-| Live Sheets/Drive migration | Blocked | Exact target, fresh backup, owners, mappings, and rollback version are not verified |
+| Staging deployment | Blocked before mutation | Exact title-labeled project is privately reconciled at Version 10 with Version 9 retained; backup, properties, audience, and live acceptance remain outstanding |
+| Live Sheets/Drive migration | Blocked | Current CLI OAuth cannot read Sheets or export the workbook; no authoritative mapping read or verified pre-push backup exists |
 | Production release | Not ready | Staging workflow/privacy/reconciliation, governance approvals, and rollback drill are outstanding |
 | Tag/GitHub release | Not appropriate yet | Candidate remains a release candidate with live security/data-integrity gates unresolved |
 
@@ -78,7 +78,7 @@ Residual production security gates: institutional access/MFA/offboarding evidenc
 - Ledger, audit, history, and command-journal integrity are append-only/forward-correction based.
 - Backup creation requires distinct configured operational/backup resources and verifies the copied file before success.
 
-No live workbook backup, setup, migration, seed, protection, formula, reconciliation, or adapter write test occurred because the target is not verified.
+No live workbook backup, setup, migration, seed, protection, formula, reconciliation, or adapter write test occurred because the owner-authorized Sheets/Drive verification path is not yet available.
 
 ## Drive, evidence, and branding acceptance
 
@@ -114,11 +114,11 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 ### Integrated QA checkpoint
 
 - Focused new security/integrity tests: 15/15 passed.
-- Full unit: 19 files / 144 tests passed.
+- Full unit after production-trigger hardening: 19 files / 147 tests passed.
 - ESLint and all four governance checks: passed.
 - `npm run check` and `npm run verify`: passed.
-- Apps Script: 27 source files and 27 required functions validated.
-- Browser: 42 passed / 60 intentional applicability skips across 320, 390, 768, 1024, 1366, and 1440 px.
+- Apps Script: 27 source files, 26 public/setup callables, and 3 private trigger handlers validated.
+- Browser: 60 passed / 60 intentional applicability skips across 320, 390, 768, 1024, 1366, and 1440 px.
 - Portal shareables: 18/18 direct `file://` tests passed across the same widths.
 
 ### Final release build
@@ -127,8 +127,8 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 | --- | --- |
 | Toolchain | Node `v26.3.0`; npm `11.16.0`; Playwright `1.61.1`; Git `2.54.0.windows.1` |
 | Clean install | Passed: 139 packages added, 140 audited, 0 reported vulnerabilities; `esbuild@0.28.1` emitted an allow-scripts review warning |
-| Unit | 19 files / 144 passed / 0 failed |
-| Check/package | ESLint, all 4 governance gates, `npm run check`, `npm run verify`, 27 Apps Script sources / 27 required functions passed |
+| Unit | 19 files / 147 passed / 0 failed |
+| Check/package | ESLint, all 4 governance gates, `npm run check`, `npm run verify`, 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers passed |
 | Combined Playwright | 60 passed / 60 intentional applicability skips / 0 failed across 120 configured cases and six viewports |
 | `dist/index.html` | 288,464 bytes / `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13` |
 | Legacy shareable alias | 288,464 bytes / `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13` |
@@ -156,11 +156,11 @@ They contain inline classic JavaScript/CSS and fictional local state. They are s
 
 ## Deployment and rollback gate
 
-The current ignored clasp configuration is a conflicting-authoritative-target condition. Do not run `clasp status`, push, version, deploy, inspect/change properties or triggers, or touch Sheets/Drive through it.
+The ignored production clasp configuration and a separate private staging configuration now resolve to the exact title-labeled projects. Read-only `clasp` inventory and remote pulls are complete. Do not push, version, deploy, inspect/change properties or triggers, or touch Sheets/Drive until the owner-authorized Sheets/Drive path verifies properties, mappings, audience, and a restorable pre-push backup.
 
-Smallest human action: the deployment owner privately supplies/confirms the ignored `.clasp.json` for the documented staging project/account/environment, then confirms current deployment and rollback version. After that, follow the exact staged backup, schema, Drive, access, trigger, source-parity, deployment, two-account privacy, workflow, reconciliation, and rollback sequence in the runbooks.
+Smallest human action: authorize a signed-in browser fallback or provide OAuth with Sheets and reviewed Drive access. Then follow the exact staged backup, schema, Drive, access, trigger, source-parity, deployment, two-account privacy, workflow, reconciliation, and rollback sequence in the runbooks.
 
-Repository rollback point is `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`. A live immutable rollback version is unknown until target confirmation. Additive schema and posted records are retained during application rollback; corrections are forward and audited.
+Repository rollback point is `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`. Private live rollback inventory is staging Version 9 before current Version 10 and production Version 1 before any V1 promotion. Additive schema and posted records are retained during application rollback; corrections are forward and audited. Trigger-handler failure also requires restoring the captured predeployment source.
 
 ## Future platform readiness
 

@@ -24,6 +24,52 @@ function source(file) {
   return readFileSync(resolve(appsScriptRoot, file), 'utf8');
 }
 
+function installableTriggerHarness(ctx, initial = []) {
+  const EventType = { CLOCK: 'CLOCK', ON_EDIT: 'ON_EDIT', ON_OPEN: 'ON_OPEN' };
+  const TriggerSource = { CLOCK: 'CLOCK', SPREADSHEETS: 'SPREADSHEETS' };
+  const makeTrigger = ({ handler, eventType, source: triggerSource, sourceId = '' }) => ({
+    getHandlerFunction: () => handler,
+    getEventType: () => eventType,
+    getTriggerSource: () => triggerSource,
+    getTriggerSourceId: () => sourceId,
+  });
+  const triggers = initial.map(makeTrigger);
+  ctx.ScriptApp = {
+    EventType,
+    TriggerSource,
+    getProjectTriggers: () => [...triggers],
+    deleteTrigger: (target) => triggers.splice(triggers.indexOf(target), 1),
+    newTrigger: (handler) => {
+      const definition = { handler, eventType: null, source: null, sourceId: '' };
+      const builder = {
+        timeBased: () => {
+          definition.eventType = EventType.CLOCK;
+          definition.source = TriggerSource.CLOCK;
+          return builder;
+        },
+        everyDays: () => builder,
+        atHour: () => builder,
+        forSpreadsheet: (spreadsheet) => {
+          definition.source = TriggerSource.SPREADSHEETS;
+          definition.sourceId = spreadsheet.getId();
+          return builder;
+        },
+        onEdit: () => {
+          definition.eventType = EventType.ON_EDIT;
+          return builder;
+        },
+        create: () => {
+          const created = makeTrigger(definition);
+          triggers.push(created);
+          return created;
+        },
+      };
+      return builder;
+    },
+  };
+  return triggers;
+}
+
 describe('trusted portal modes and sanitized lending bootstrap', () => {
   it('derives only the three server-owned portal modes from doGet parameters', () => {
     const ctx = gasContext(['Code.gs']);
@@ -217,6 +263,131 @@ describe('scoped command idempotency', () => {
 });
 
 describe('admin and workflow security contracts', () => {
+  it('keeps scheduled handlers private and migrates legacy, duplicate, or wrong-type triggers', () => {
+    expect(source('BackupService.gs')).toMatch(/function scheduledBackup_\s*\(/);
+    expect(source('BackupService.gs')).not.toMatch(/function scheduledBackup\s*\(/);
+    expect(source('LendingService.gs')).toMatch(/function updateOverdueLending_\s*\(/);
+    expect(source('LendingService.gs')).not.toMatch(/function updateOverdueLending\s*\(/);
+    expect(source('LendingService.gs')).toContain("audit_('LENDING_OVERDUE'");
+
+    const ctx = gasContext(['Setup.gs']);
+    const triggers = installableTriggerHarness(ctx, [
+      { handler: 'updateOverdueLending', eventType: 'CLOCK', source: 'CLOCK' },
+      { handler: 'scheduledBackup', eventType: 'CLOCK', source: 'CLOCK' },
+      { handler: 'scheduledBackup_', eventType: 'CLOCK', source: 'CLOCK' },
+      { handler: 'scheduledBackup_', eventType: 'CLOCK', source: 'CLOCK' },
+      { handler: 'updateOverdueLending_', eventType: 'ON_OPEN', source: 'SPREADSHEETS' },
+    ]);
+    let locks = 0;
+    const audits = [];
+    ctx.guardApi_ = (_operation, _metadata, operation) => operation('COR-TRIGGER');
+    ctx.setupUser_ = () => ({ User_ID: 'USR-ADMIN' });
+    ctx.withScriptLock_ = (operation) => {
+      locks += 1;
+      return operation();
+    };
+    ctx.audit_ = (...args) => audits.push(args);
+
+    const result = ctx.setupTimeTriggers();
+    expect(triggers.map((row) => row.getHandlerFunction()).sort()).toEqual([
+      'scheduledBackup_',
+      'updateOverdueLending_',
+    ]);
+    expect(result.created).toEqual(['updateOverdueLending_']);
+    expect(result.removed.sort()).toEqual([
+      'scheduledBackup',
+      'scheduledBackup_',
+      'updateOverdueLending',
+      'updateOverdueLending_',
+    ]);
+    expect(result.scope).toBe('CURRENT_USER');
+
+    expect(ctx.setupTimeTriggers()).toMatchObject({ created: [], removed: [] });
+    expect(locks).toBe(2);
+    expect(audits).toHaveLength(2);
+  });
+
+  it('retains legacy clock triggers if a private replacement cannot be created', () => {
+    const ctx = gasContext(['Setup.gs']);
+    const triggers = installableTriggerHarness(ctx, [
+      { handler: 'updateOverdueLending', eventType: 'CLOCK', source: 'CLOCK' },
+      { handler: 'scheduledBackup', eventType: 'CLOCK', source: 'CLOCK' },
+    ]);
+    const originalNewTrigger = ctx.ScriptApp.newTrigger;
+    ctx.ScriptApp.newTrigger = (handler) => {
+      const builder = originalNewTrigger(handler);
+      builder.create = () => {
+        throw new Error('CREATE_FAILED');
+      };
+      return builder;
+    };
+    ctx.guardApi_ = (_operation, _metadata, operation) => operation('COR-TRIGGER');
+    ctx.setupUser_ = () => ({ User_ID: 'USR-ADMIN' });
+    ctx.withScriptLock_ = (operation) => operation();
+    ctx.audit_ = () => undefined;
+
+    expect(() => ctx.setupTimeTriggers()).toThrow(/CREATE_FAILED/);
+    expect(triggers.map((row) => row.getHandlerFunction()).sort()).toEqual([
+      'scheduledBackup',
+      'updateOverdueLending',
+    ]);
+  });
+
+  it('keeps the operational edit handler private and recreates only an exact on-edit trigger', () => {
+    expect(source('DataRevisionService.gs')).toMatch(/function handleOperationalSheetEdit_\s*\(/);
+    expect(source('DataRevisionService.gs')).not.toMatch(
+      /function handleOperationalSheetEdit\s*\(/,
+    );
+
+    const ctx = gasContext(['DataRevisionService.gs']);
+    const triggers = installableTriggerHarness(ctx, [
+      {
+        handler: 'handleOperationalSheetEdit',
+        eventType: 'ON_EDIT',
+        source: 'SPREADSHEETS',
+        sourceId: 'SHEET-1',
+      },
+      {
+        handler: 'handleOperationalSheetEdit_',
+        eventType: 'ON_OPEN',
+        source: 'SPREADSHEETS',
+        sourceId: 'SHEET-1',
+      },
+      {
+        handler: 'handleOperationalSheetEdit_',
+        eventType: 'ON_EDIT',
+        source: 'SPREADSHEETS',
+        sourceId: 'SHEET-2',
+      },
+    ]);
+    const audits = [];
+    let locks = 0;
+    ctx.guardApi_ = (_operation, _metadata, operation) => operation('COR-EDIT');
+    ctx.setupUser_ = () => ({ User_ID: 'USR-ADMIN' });
+    ctx.resolveRuntimeConfig_ = () => ({ spreadsheetId: 'SHEET-1' });
+    ctx.getDatabase_ = () => ({ getId: () => 'SHEET-1' });
+    ctx.withScriptLock_ = (operation) => {
+      locks += 1;
+      return operation();
+    };
+    ctx.audit_ = (...args) => audits.push(args);
+
+    expect(ctx.setupOperationalEditTrigger()).toMatchObject({
+      created: true,
+      existing: 1,
+      scope: 'CURRENT_USER',
+    });
+    expect(triggers).toHaveLength(1);
+    expect(triggers[0].getHandlerFunction()).toBe('handleOperationalSheetEdit_');
+    expect(triggers[0].getEventType()).toBe('ON_EDIT');
+    expect(triggers[0].getTriggerSource()).toBe('SPREADSHEETS');
+    expect(triggers[0].getTriggerSourceId()).toBe('SHEET-1');
+
+    expect(ctx.setupOperationalEditTrigger()).toMatchObject({ created: false, removed: [] });
+    expect(locks).toBe(2);
+    expect(audits).toHaveLength(2);
+  });
+
   it('accepts nested UI permission names without trusting unknown fields', () => {
     const ctx = gasContext(['Config.gs', 'Validation.gs', 'AdminService.gs']);
     expect(

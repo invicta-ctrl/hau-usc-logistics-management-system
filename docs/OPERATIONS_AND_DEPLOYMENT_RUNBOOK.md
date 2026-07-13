@@ -16,7 +16,7 @@ A passing local build, clasp exit code, source upload, or immutable version alon
 
 ### Current V1 handoff gate
 
-For `1.0.0-rc.1`, local source and artifact work may proceed, but all Google mutations remain blocked. The only authenticated ignored clasp target inspected during this task conflicts with the documented staging Version 9 record. The deployment owner must privately confirm the intended project/account/environment, existing deployment pointer, and preceding immutable rollback version before even a live `clasp status` is treated as target evidence. No production promotion may begin until that staging identity, setup, two-account acceptance, reconciliation, rollback, privacy, and owner approvals pass.
+For `1.0.0-rc.1`, local source and artifact work may proceed. The exact staging and production projects and immutable rollback versions are privately inventoried, but Google mutations remain blocked until an owner-authorized Sheets/Drive session proves Script Properties, operational/backup separation, authoritative folder mappings, restorable backups, and the approved web-app audience. No production promotion may begin until staging setup, two-account acceptance, reconciliation, rollback, privacy, and owner approvals pass.
 
 ## Environment matrix
 

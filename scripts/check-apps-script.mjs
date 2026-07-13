@@ -20,10 +20,12 @@ const requiredFunctions = [
   'setupDatabase','validateDatabaseSchema','setupDriveFolders','validateDriveConfiguration','setupTimeTriggers',
   'seedRolesAndPermissions','runMigrationDryRun','applyApprovedMigration','createLaunchBackup','runReconciliation','healthCheck',
   'api_getBootstrapData','api_submitRequest','api_reviewRequest','api_confirmRelease','api_uploadEvidence',
-  'api_getDataRevision','setupOperationalEditTrigger','handleOperationalSheetEdit','api_getInventoryItem',
+  'api_getDataRevision','setupOperationalEditTrigger','api_getInventoryItem',
   'api_createInventoryItem','api_updateInventoryItem','api_updateInventoryStorageContext','api_archiveInventoryItem','api_restoreInventoryItem',
   'api_htmlDiagnosticPing','htmlTemplateDiagnostics',
 ];
+const privateTriggerHandlers = ['scheduledBackup_', 'updateOverdueLending_', 'handleOperationalSheetEdit_'];
+const forbiddenPublicTriggerHandlers = ['scheduledBackup', 'updateOverdueLending', 'handleOperationalSheetEdit'];
 const root = resolve('apps-script');
 const existing = new Set(await readdir(root));
 const missing = requiredFiles.filter((file) => !existing.has(file));
@@ -37,8 +39,15 @@ for (const file of gasFiles) {
 }
 const missingFunctions = requiredFunctions.filter((name) => !new RegExp(`function\\s+${name}\\s*\\(`).test(combined));
 if (missingFunctions.length) throw new Error(`Missing Apps Script functions: ${missingFunctions.join(', ')}`);
+const missingPrivateTriggerHandlers = privateTriggerHandlers.filter((name) => !new RegExp(`function\\s+${name}\\s*\\(`).test(combined));
+if (missingPrivateTriggerHandlers.length) throw new Error(`Missing private Apps Script trigger handlers: ${missingPrivateTriggerHandlers.join(', ')}`);
+const exposedTriggerHandlers = forbiddenPublicTriggerHandlers.filter((name) => new RegExp(`function\\s+${name}\\s*\\(`).test(combined));
+if (exposedTriggerHandlers.length) throw new Error(`Scheduled Apps Script handlers must be private: ${exposedTriggerHandlers.join(', ')}`);
 const manifest = JSON.parse(await readFile(resolve(root, 'appsscript.json'), 'utf8'));
 if (manifest.runtimeVersion !== 'V8' || manifest.timeZone !== 'Asia/Manila') throw new Error('Apps Script manifest is not configured for V8 and Asia/Manila.');
+if (manifest.webapp?.executeAs !== 'USER_ACCESSING' || manifest.webapp?.access !== 'MYSELF') {
+  throw new Error('Apps Script web-app access must preserve the reviewed USER_ACCESSING / MYSELF policy until a separate audience approval changes it.');
+}
 
 const [index, appBody, appStyles, appScript, diagnosticShell] = await Promise.all([
   readFile(resolve(root, 'Index.html'), 'utf8'),
@@ -97,6 +106,7 @@ console.log(
       message: 'Validated Apps Script sources, parser-safe package assembly, executable bootstrap, and deterministic generated-file parity.',
       appsScriptSourceFiles: gasFiles.length,
       requiredFunctions: requiredFunctions.length,
+      privateTriggerHandlers: privateTriggerHandlers.length,
       generatedFiles: bundleDiagnostics(files),
     },
     null,

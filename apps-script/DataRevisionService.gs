@@ -108,7 +108,7 @@ function revisionOnlyConfigEdit_(range) {
   });
 }
 
-function handleOperationalSheetEdit(e) {
+function handleOperationalSheetEdit_(e) {
   if (!e || !e.range) return { ignored: true, reason: 'EVENT_REQUIRED' };
   var runtime = resolveRuntimeConfig_();
   var sheet = e.range.getSheet();
@@ -121,15 +121,35 @@ function handleOperationalSheetEdit(e) {
 }
 
 function setupOperationalEditTrigger() {
-  return guardApi_('setupOperationalEditTrigger', {}, function() {
+  return guardApi_('setupOperationalEditTrigger', {}, function(correlationId) {
     var user = setupUser_();
     var runtime = resolveRuntimeConfig_();
-    var existing = ScriptApp.getProjectTriggers().filter(function(trigger) {
-      if (trigger.getHandlerFunction() !== 'handleOperationalSheetEdit') return false;
-      return typeof trigger.getTriggerSourceId !== 'function' || String(trigger.getTriggerSourceId() || '') === String(runtime.spreadsheetId);
+    return withScriptLock_(function() {
+      var visible = ScriptApp.getProjectTriggers();
+      var named = visible.filter(function(trigger) { return trigger.getHandlerFunction() === 'handleOperationalSheetEdit_'; });
+      var configured = named.filter(function(trigger) {
+        return typeof trigger.getEventType === 'function' && trigger.getEventType() === ScriptApp.EventType.ON_EDIT &&
+          typeof trigger.getTriggerSource === 'function' && trigger.getTriggerSource() === ScriptApp.TriggerSource.SPREADSHEETS &&
+          typeof trigger.getTriggerSourceId === 'function' && String(trigger.getTriggerSourceId() || '') === String(runtime.spreadsheetId);
+      });
+      var created = false;
+      var removed = [];
+      if (!configured.length) {
+        ScriptApp.newTrigger('handleOperationalSheetEdit_').forSpreadsheet(getDatabase_()).onEdit().create();
+        created = true;
+      }
+      configured.slice(1).concat(named.filter(function(trigger) { return configured.indexOf(trigger) === -1; })).forEach(function(trigger) {
+        ScriptApp.deleteTrigger(trigger);
+        removed.push('handleOperationalSheetEdit_');
+      });
+      visible.filter(function(trigger) { return trigger.getHandlerFunction() === 'handleOperationalSheetEdit'; }).forEach(function(trigger) {
+        ScriptApp.deleteTrigger(trigger);
+        removed.push('handleOperationalSheetEdit');
+      });
+      audit_('SETUP_OPERATIONAL_EDIT_TRIGGER', 'CONFIG', 'OPERATIONAL_EDIT_TRIGGER', user, correlationId, {
+        after: { created: created, removed: removed, scope: 'CURRENT_USER' }
+      });
+      return { created: created, existing: 1, removed: removed, scope: 'CURRENT_USER', spreadsheetId: runtime.spreadsheetId, actor: user.User_ID };
     });
-    if (existing.length) return { created: false, existing: existing.length, spreadsheetId: runtime.spreadsheetId, actor: user.User_ID };
-    ScriptApp.newTrigger('handleOperationalSheetEdit').forSpreadsheet(getDatabase_()).onEdit().create();
-    return { created: true, existing: 0, spreadsheetId: runtime.spreadsheetId, actor: user.User_ID };
   });
 }

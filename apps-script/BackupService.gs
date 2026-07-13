@@ -60,7 +60,7 @@ function createLaunchBackup() {
   });
 }
 
-function scheduledBackup() {
+function scheduledBackup_() {
   return withScriptLock_(function() {
     return createLaunchBackup_({ User_ID: 'SYSTEM', Email: '', Role: 'SYSTEM' }, correlationId_(), 'Scheduled');
   });

@@ -156,17 +156,19 @@ function confirmReturn_(command, correlationId) {
   });
 }
 
-function updateOverdueLending() {
+function updateOverdueLending_() {
   return withScriptLock_(function() {
-    var now = new Date(), updated = [];
+    var now = new Date(), updated = [], correlationId = correlationId_();
+    var systemUser = { User_ID: 'SYSTEM', Email: '', Role: 'SYSTEM' };
     readObjects_(HAU_SHEETS.LENDING).forEach(function(ticket) {
       if (String(ticket.Status) === 'ON_LOAN' && ticket.Due_At && new Date(ticket.Due_At) < now) {
         updateObject_(HAU_SHEETS.LENDING, ticket._row, { Status: 'OVERDUE', Updated_At: nowIso_() });
-        history_('LENDING', ticket.Lending_Ticket_ID, 'ON_LOAN', 'OVERDUE', { User_ID: 'SYSTEM' }, 'Daily overdue trigger', {});
+        history_('LENDING', ticket.Lending_Ticket_ID, 'ON_LOAN', 'OVERDUE', systemUser, 'Daily overdue trigger', { metadata: { dueAt: ticket.Due_At, correlationId: correlationId } });
+        audit_('LENDING_OVERDUE', 'LENDING', ticket.Lending_Ticket_ID, systemUser, correlationId, { before: { status: 'ON_LOAN', dueAt: ticket.Due_At }, after: { status: 'OVERDUE' } });
         updated.push(ticket.Lending_Ticket_ID);
       }
     });
-    if (updated.length) touchDataRevision_({ User_ID:'SYSTEM' });
-    return { updated: updated };
+    if (updated.length) touchDataRevision_(systemUser);
+    return { updated: updated, correlationId: correlationId };
   });
 }

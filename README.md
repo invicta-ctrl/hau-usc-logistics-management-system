@@ -2,7 +2,7 @@
 
 Version `1.0.0-rc.1` is the repository-ready V1 release candidate for the Holy Angel University University Student Council Department of Logistics. It preserves the approved maroon, oxblood, gold, cream, and white visual baseline while adding secure request, lending, inventory, release/return, procurement, evidence, content, branding, and administration workflows.
 
-> **Release truth:** the local production build and repository checks are available, but this commit is not a verified live production deployment. The authenticated clasp target available during this task conflicts with the recorded staging project. No Apps Script push/version/deployment, trigger change, Google Sheet write, Google Drive write, merge, tag, or GitHub release may be claimed until the deployment owner confirms the correct staging target and rollback state.
+> **Release truth:** the local production build and repository checks are available, but this commit is not a verified live production deployment. The exact staging and production Apps Script projects and rollback versions are now privately reconciled. Live Google work remains gated on a verified pre-push Sheet/Drive backup, Script Properties and Drive mappings, approved web-app audience, and an owner-authorized Sheets/Drive access mechanism. No Apps Script push/version/deployment, trigger change, Google Sheet write, Google Drive write, merge, tag, or GitHub release is claimed here.
 
 ## Ready in this release candidate
 

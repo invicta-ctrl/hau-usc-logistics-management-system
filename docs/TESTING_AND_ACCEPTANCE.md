@@ -24,7 +24,7 @@ The final local `1.0.0-rc.1` run completed after a clean dependency install. Git
 | Gate | Final local result |
 | --- | --- |
 | `npm ci` | Passed: 139 packages added, 140 audited, 0 reported vulnerabilities; npm emitted an `esbuild` allow-scripts review warning |
-| Unit, lint, governance, Apps Script, build, verify | Passed: 19 files / 144 tests; 4 governance gates; 27 Apps Script sources / 27 required functions; `npm run check` and `npm run verify` |
+| Unit, lint, governance, Apps Script, build, verify | Passed: 19 files / 147 tests; 4 governance gates; 27 Apps Script sources / 26 public/setup callables / 3 private trigger handlers; `npm run check` and `npm run verify` |
 | Combined Playwright matrix | Passed: 60 passed, 60 intentional applicability skips, 0 failed across 120 cases and six viewport projects; Playwright `1.61.1` |
 | Two-build deterministic artifact comparison | Passed: all 9 standalone/Apps Script artifacts retained identical byte lengths and SHA-256 values |
 

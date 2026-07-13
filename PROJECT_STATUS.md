@@ -10,7 +10,7 @@
 - Verified base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10`
 - Upstream/PR: tracks `origin/feat/v1-one-shot-demo-and-deployment`; draft [PR #3](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3) targets `feat/live-sync-lending-search-catalog-controls`; protected draft PR #2 remains untouched
-- Live Apps Script version/deployment: **not verified or changed in this task**
+- Live Apps Script version/deployment: **privately inventoried; not changed in this task**
 - Production: **not deployed or modified**
 
 ## Readiness by layer
@@ -20,8 +20,8 @@
 | Repository implementation | Release candidate | Frontend, Apps Script, Sheets, Drive, QA, governance, and future-platform slices integrated |
 | Local standalone demo | Ready | Main, Request, and Lending shareables build and open directly with fictional data |
 | Apps Script package | Locally verified | Parser-safe generated package, static callable validation, and assembled-browser tests |
-| Staging environment | Blocked | Available authenticated clasp target conflicts with the documented staging Version 9 record |
-| Live Sheets/Drive acceptance | Not run | Correct target, fresh backup, mappings, owners, and rollback version must be confirmed first |
+| Staging environment | Blocked before mutation | Exact title-labeled project is privately reconciled at immutable Version 10 with Version 9 retained; verified Sheet/Drive backup, properties, audience, and owner-authorized Workspace access remain required |
+| Live Sheets/Drive acceptance | Not run | Current CLI OAuth lacks Sheets/full-Drive scope; no authoritative config read or verified workbook/Drive backup has occurred |
 | Production promotion | Not authorized by evidence | Requires accepted staging workflow, governance decisions, owner sign-off, and rollback drill |
 | GitHub review | Ready for review | Draft PR #3 is clean/mergeable and all three checks passed at release-candidate code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`; no merge/tag/release |
 
@@ -65,7 +65,7 @@
 ## Verification snapshot
 
 - Baseline before V1: `npm ci` passed with 139 packages and 0 reported vulnerabilities; 12 files / 93 unit tests; 38 browser passes / 40 intentional skips.
-- Integrated QA: 19 files / 144 unit tests passed; ESLint passed; governance passed; `npm run check` and `npm run verify` passed; 27 Apps Script source files and 27 required functions validated.
+- Integrated QA plus production-trigger hardening: 19 files / 147 unit tests passed; ESLint and governance passed; `npm run check` and `npm run verify` passed; 27 Apps Script source files, 26 public/setup callables, and 3 private trigger handlers validated.
 - Final combined browser matrix: 60 passed / 60 intentional applicability skips / 0 failed across 120 configured cases at all six viewports. This includes 18/18 direct `file://` portal checks for pinned mode, active view, navigation isolation, and no page-level overflow.
 - Two consecutive builds reproduced all nine generated artifacts byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; exact portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
 - Final local verification used Node `v26.3.0`, npm `11.16.0`, Playwright `1.61.1`, and Git `2.54.0.windows.1`.
@@ -75,11 +75,11 @@
 
 The feature branch was pushed and draft PR #3 was opened as authorized. No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred.
 
-The only live-target inspection was bounded and read-only. It proved that the available ignored authenticated clasp configuration does not match the committed staging Version 9 record, so it was not copied or used.
+The live-target inspection was bounded and read-only. It reconciled the exact title-labeled staging project at immutable Version 10 with Version 9 retained, and the supplied production project at its existing immutable Version 1. Separate remote source snapshots and deployment/version inventories were captured outside the repository; no Google resource was changed.
 
 ## Hard blocker and smallest owner action
 
-The deployment owner must privately supply or confirm the ignored `.clasp.json` for the documented staging project/account/environment and confirm the current immutable deployment plus rollback version without exposing identifiers in git or chat. Then the operator can verify Script Properties, operational/backup distinction, Drive mappings, fresh backup, schema, triggers, and bounded staging acceptance before any deployment pointer moves.
+The active clasp identity can manage Apps Script and limited Drive metadata, but it cannot read Sheets or export the workbook. Before any source push, the owner must authorize a signed-in browser fallback or provide OAuth with Sheets and reviewed Drive access so the operator can verify Script Properties, operational/backup distinction, authoritative Drive mappings, the web-app audience, and a fresh restorable backup. Staging acceptance must still precede production.
 
 The repository history also contains a spreadsheet identifier removed from the current tree. The resource owner must verify restriction/rotation/replacement according to institutional policy. This task did not rewrite shared history.
 
@@ -87,7 +87,8 @@ The repository history also contains a spreadsheet identifier removed from the c
 
 - Repository pre-V1 base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
 - Local V1 commits are additive and preserve the legacy visual baseline.
-- A live Apps Script rollback version cannot be truthfully named until the correct staging target is confirmed. Do not assume the historical Version 9 record matches the authenticated target currently available.
+- Private rollback inventory: staging immutable Version 9 precedes the current Version 10 pointer; production immutable Version 1 precedes any V1 promotion. Deployment identifiers stay outside git and public output.
+- Trigger-handler rollback also requires restoring the captured predeployment Apps Script source if the private handler migration fails; changing only a versioned web-app pointer does not restore project-HEAD trigger functions.
 - Schema rollback is forward-only: retain appended columns/config/history/ledger/audit/evidence; repoint application code and reconcile. Never delete posted records to imitate rollback.
 
 See [V1 Readiness Audit](docs/V1_READINESS_AUDIT.md), [Known Limitations](docs/KNOWN_LIMITATIONS.md), and [Work Continuation](docs/WORK_CONTINUATION.md).

@@ -111,14 +111,14 @@ These are Apps Script editor/operator entry points, not browser launch-service m
 | `setupDatabase`                   | Setup owner during empty bootstrap, then `Can_Admin`; locked       | Add missing backend tabs/headers and conservative defaults; never wipes rows                   |
 | `validateDriveConfiguration`      | Setup owner or `Can_Admin`                                         | Read-only required-folder validation                                                           |
 | `setupDriveFolders`               | Setup owner or `Can_Admin`; locked                                 | Creates approved child folders only beneath a configured accessible root; no My Drive fallback |
-| `setupTimeTriggers`               | Setup owner or `Can_Admin`                                         | Idempotently adds overdue and scheduled-backup triggers                                        |
-| `setupOperationalEditTrigger`     | Setup owner or `Can_Admin`                                         | Idempotently adds the operational spreadsheet edit trigger                                     |
+| `setupTimeTriggers`               | Setup owner or `Can_Admin`; locked                                 | Audits and reconciles current-user `CLOCK` triggers for private overdue and backup handlers     |
+| `setupOperationalEditTrigger`     | Setup owner or `Can_Admin`; locked                                 | Audits and reconciles the current-user private `ON_EDIT` trigger for the operational Sheet      |
 | `seedRolesAndPermissions(users)`  | Setup owner or `Can_Admin`; explicit non-empty users array; locked | Adds reviewed access rows without embedding identities in source                               |
 | `runMigrationDryRun`              | `Can_Admin`                                                        | Reads legacy sources and reports mappings/exceptions; no migration apply                       |
 | `applyApprovedMigration`          | `Can_Admin`; locked and one-time frozen                            | Applies only explicitly approved mappings and records version/audit                            |
 | `runReconciliation`               | `Can_Admin`                                                        | Read-only reconciliation report                                                                |
 | `createLaunchBackup`              | `Can_Admin`; locked                                                | Copies the operational spreadsheet to the separately configured backup destination             |
-| `scheduledBackup`                 | Installed system trigger; locked                                   | Scheduled copy with system attribution; retention remains an operator policy                   |
+| `scheduledBackup_`                | Private installed system trigger; locked                           | Scheduled copy with system attribution; retention remains an operator policy                   |
 
 ## Error taxonomy
 

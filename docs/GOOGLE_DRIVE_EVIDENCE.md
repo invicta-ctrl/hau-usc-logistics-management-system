@@ -4,7 +4,7 @@
 
 In the **CURRENT repository architecture**, controlled Google Drive folders store evidence/branding bytes and Sheets store restricted metadata. `DriveService.gs` owns folder resolution, privacy checks, signatures/dimensions, naming helpers, and quarantine. `EvidenceService.gs` owns evidence authorization/storage/metadata. `AdminService.gs` owns protected branding upload/version activation.
 
-Implemented source is not proof that a live Drive is configured. No live folder, permission, upload, quarantine, or branding mutation occurred for `1.0.0-rc.1` because the authenticated Apps Script target conflicts with the documented staging target.
+Implemented source is not proof that a live Drive is configured. Exact Apps Script targets are privately reconciled, but the active CLI OAuth cannot read the authoritative Sheet mappings or export the workbook. No live folder, permission, upload, quarantine, or branding mutation has occurred for `1.0.0-rc.1`.
 
 A Drive link is never authorization. The server permission check happens before bytes are decoded or Drive is accessed, and client/public DTOs omit private file/folder IDs and URLs.
 
