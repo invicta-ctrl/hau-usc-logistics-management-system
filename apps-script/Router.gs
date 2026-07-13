@@ -1,4 +1,9 @@
 function api_getBootstrapData(command) { return guardApi_('getBootstrapData', command || {}, function() { return getBootstrapData_(command || {}); }); }
+function api_getLendingBootstrap(command) { return guardApi_('getLendingBootstrap',command||{},function(){return getLendingBootstrap_();}); }
+function api_getAdminDashboard(command) { return guardApi_('getAdminDashboard',command||{},function(){return getAdminDashboard_();}); }
+function api_getPublishedContent(command) { return guardApi_('getPublishedContent',command||{},function(){return getPublishedContent_();}); }
+function api_previewContentRevision(command) { return guardApi_('previewContentRevision',command||{},function(){return previewContentRevision_(command||{});}); }
+function api_getBrandingState(command) { return guardApi_('getBrandingState',command||{},function(){return getBrandingState_();}); }
 function api_searchCatalog(command) { return guardApi_('searchCatalog', command || {}, function() { var user=resolveRequesterUser_(),includeSensitive=canPermission_(user,'Can_Review');return { items: searchCatalog_(command || {},includeSensitive), availabilityProtected:!includeSensitive }; }); }
 function api_getInventoryItem(command) { return guardApi_('getInventoryItem', command || {}, function() { return getInventoryItem_(command || {}); }); }
 function api_submitRequest(command) { return guardMutationApi_('submitRequest', command, function(c) { return submitRequest_(command, c); }); }
@@ -23,6 +28,25 @@ function api_updateInventoryItem(command) { return guardMutationApi_('updateInve
 function api_updateInventoryStorageContext(command) { return guardMutationApi_('updateInventoryStorageContext', command, function(c) { return updateInventoryStorageContext_(command, c); }); }
 function api_archiveInventoryItem(command) { return guardMutationApi_('archiveInventoryItem', command, function(c) { return archiveInventoryItem_(command, c); }); }
 function api_restoreInventoryItem(command) { return guardMutationApi_('restoreInventoryItem', command, function(c) { return restoreInventoryItem_(command, c); }); }
+function api_resolveInventoryVerification(command) { return guardMutationApi_('resolveInventoryVerification',command,function(c){return resolveInventoryVerification_(command,c);}); }
+function api_saveUserAccess(command) { return guardMutationApi_('saveUserAccess',command,function(c){return saveUserAccess_(command,c);}); }
+function api_createUserAccess(command) { command=Object.assign({},command);delete command.userId;return api_saveUserAccess(command); }
+function api_updateUserAccess(command) { return api_saveUserAccess(command); }
+function api_deactivateUserAccess(command) { command=Object.assign({},command,{active:false});return api_saveUserAccess(command); }
+function api_saveEvent(command) { return guardMutationApi_('saveEvent',command,function(c){return saveEvent_(command,c);}); }
+function api_createEvent(command) { command=Object.assign({},command);delete command.eventId;return api_saveEvent(command); }
+function api_createSubEvent(command) { command=Object.assign({},command);delete command.eventId;return api_saveEvent(command); }
+function api_updateEvent(command) { return api_saveEvent(command); }
+function api_archiveEvent(command) { command=Object.assign({},command,{action:'ARCHIVE'});return api_saveEvent(command); }
+function api_restoreEvent(command) { command=Object.assign({},command,{action:'RESTORE'});return api_saveEvent(command); }
+function api_saveContentRevision(command) { return guardMutationApi_('saveContentRevision',command,function(c){return saveContentRevision_(command,c);}); }
+function api_publishContentRevision(command) { return guardMutationApi_('publishContentRevision',command,function(c){return publishContentRevision_(command,c);}); }
+function api_revertContentRevision(command) { return guardMutationApi_('revertContentRevision',command,function(c){return revertContentRevision_(command,c);}); }
+function api_saveBrandingMetadata(command) { return guardMutationApi_('saveBrandingMetadata',command,function(c){return saveBrandingMetadata_(command,c);}); }
+function api_activateBrandingVersion(command) { return guardMutationApi_('activateBrandingVersion',command,function(c){return activateBrandingVersion_(command,c);}); }
+function api_updateCanvassReference(command) { return guardMutationApi_('updateCanvassReference',command,function(c){return updateCanvassReference_(command,c);}); }
+function api_archiveCanvassReference(command) { return guardMutationApi_('archiveCanvassReference',command,function(c){return archiveCanvassReference_(command,c);}); }
+function api_restoreCanvassReference(command) { return guardMutationApi_('restoreCanvassReference',command,function(c){return restoreCanvassReference_(command,c);}); }
 function api_acceptRequest(command) { command=Object.assign({},command,{decision:'ACCEPT'}); return api_reviewRequest(command); }
 function api_confirmLendingReturn(command) { return api_confirmReturn(command); }
 function api_transferEventItem(command) { return api_transferEventItemToInventory(command); }

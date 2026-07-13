@@ -11,6 +11,7 @@ const INCLUDE_MARKERS = Object.freeze({
   appScript: "<?!= include_('AppScript'); ?>",
 });
 const REQUEST_ONLY_VALUE_MARKER = "<?= requestOnly ? 'true' : 'false' ?>";
+const PORTAL_MODE_VALUE_MARKER = '<?= portalMode ?>';
 const APP_ENVIRONMENT_VALUE_MARKER = "<?= appEnvironment ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
@@ -345,11 +346,14 @@ function addRuntimeAttributes(bodyOpen) {
   if (/\sdata-app-environment\s*=/i.test(bodyOpen)) {
     throw new Error('Expanded source body already defines data-app-environment.');
   }
+  if (/\sdata-portal-mode\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-portal-mode.');
+  }
   const closingIndex = bodyOpen.lastIndexOf('>');
   if (closingIndex <= 0 || bodyOpen[closingIndex - 1] === '/') {
     throw new Error('Expanded source body opening tag is invalid.');
   }
-  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
+  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-portal-mode="${PORTAL_MODE_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
 }
 
 export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSources }) {
@@ -438,19 +442,25 @@ export async function createAppsScriptBundleFromProject() {
 
 export function assembleAppsScriptTemplate(
   files,
-  { requestOnly = false, appEnvironment = 'STAGING' } = {},
+  { requestOnly = false, portalMode, appEnvironment = 'STAGING' } = {},
 ) {
   const normalizedEnvironment = String(appEnvironment).trim().toUpperCase();
   if (!['STAGING', 'PRODUCTION'].includes(normalizedEnvironment)) {
     throw new Error('Apps Script environment must be STAGING or PRODUCTION.');
   }
+  const normalizedPortalMode = String(portalMode ?? (requestOnly ? 'request' : 'internal')).trim().toLowerCase();
+  if (!['internal', 'request', 'lending'].includes(normalizedPortalMode)) {
+    throw new Error('Apps Script portal mode must be internal, request, or lending.');
+  }
+  const effectiveRequestOnly = normalizedPortalMode !== 'internal';
 
   let assembled = files.index;
   const replacements = [
     [INCLUDE_MARKERS.appStyles, files.appStyles],
     [INCLUDE_MARKERS.appBody, files.appBody],
     [INCLUDE_MARKERS.appScript, files.appScript],
-    [REQUEST_ONLY_VALUE_MARKER, requestOnly ? 'true' : 'false'],
+    [REQUEST_ONLY_VALUE_MARKER, effectiveRequestOnly ? 'true' : 'false'],
+    [PORTAL_MODE_VALUE_MARKER, normalizedPortalMode],
     [APP_ENVIRONMENT_VALUE_MARKER, normalizedEnvironment],
   ];
   for (const [marker, value] of replacements) {
@@ -519,9 +529,19 @@ export function bundleDiagnostics(files) {
       {
         bytes: Buffer.byteLength(source),
         sha256: sha256(source),
+        trustedPortalModeMarker: {
+          count: positionsOf(source, PORTAL_MODE_VALUE_MARKER).length,
+          positions: positionsOf(source, PORTAL_MODE_VALUE_MARKER),
+        },
         markers: Object.fromEntries(
           markers.map((marker) => {
-            const positions = positionsOf(source, marker, marker.startsWith('<'));
+            // Keep the established generic-delimiter diagnostic stable while
+            // reporting the explicitly allowlisted portal marker separately.
+            const diagnosticSource =
+              marker === '<?' || marker === '?>'
+                ? source.replaceAll(PORTAL_MODE_VALUE_MARKER, ' '.repeat(PORTAL_MODE_VALUE_MARKER.length))
+                : source;
+            const positions = positionsOf(diagnosticSource, marker, marker.startsWith('<'));
             return [marker, { count: positions.length, positions }];
           }),
         ),

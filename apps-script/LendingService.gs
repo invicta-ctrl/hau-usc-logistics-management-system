@@ -6,6 +6,15 @@ function borrowerEligibleForAudience_(audience, borrowerType, user) {
   return false;
 }
 
+function verifiedBorrowerType_(requestedType, user) {
+  var requested = normalizeBorrowerType_(requestedType || 'ANGELITE');
+  if (requested !== 'USC_STAFF') return 'ANGELITE';
+  if (!isInternalBootstrapUser_(user)) {
+    throw appError_('STAFF_IDENTITY_REQUIRED', 'USC staff eligibility requires an authenticated authorized staff account.', false);
+  }
+  return 'USC_STAFF';
+}
+
 function validateLendingPolicy_(item, input, user, availabilityMode) {
   if (!item) throw appError_('ITEM_NOT_FOUND', 'Inventory item was not found.', false);
   var status = String(item.Status || '').toUpperCase();
@@ -43,7 +52,8 @@ function createLendingTicket_(command, correlationId) {
     if (replay) return Object.assign({ idempotentReplay: true }, replay);
     if (!String(command.itemId || '').trim()) throw appError_('ITEM_NOT_SELECTED', 'Select an inventory item from the suggestions before submitting.', false);
     var item = itemById_(String(command.itemId).trim());
-    var policy = validateLendingPolicy_(item, { borrowerType:command.borrowerType || command.borrowerGroup || 'ANGELITE', quantity:command.quantity, dueAt:command.dueAt }, user, 'AVAILABLE_TO_PROMISE');
+    var borrowerType = verifiedBorrowerType_(command.borrowerType || command.borrowerGroup || 'ANGELITE', user);
+    var policy = validateLendingPolicy_(item, { borrowerType:borrowerType, quantity:command.quantity, dueAt:command.dueAt }, user, 'AVAILABLE_TO_PROMISE');
     var id = allocateId_('LND'), row = {
       Lending_Ticket_ID: id, Created_At: nowIso_(), Updated_At: nowIso_(),
       Student_ID_Number: requireText_(command.studentIdNumber || command.studentId, 'studentIdNumber'),
@@ -103,7 +113,23 @@ function confirmLendingHandoff_(command, correlationId) {
 }
 
 function returnedQuantityForTicket_(ticketId) {
-  return findAll_(HAU_SHEETS.HISTORY, function(row) { return String(row.Entity_Type) === 'LENDING' && String(row.Entity_ID) === String(ticketId) && String(row.Reason) === 'Return received'; }).reduce(function(sum, row) { try { return sum + Number(JSON.parse(row.Metadata_JSON || '{}').returnedQuantity || 0); } catch (error) { return sum; } }, 0);
+  return lendingReturnSummary_(ticketId).returnedQuantity;
+}
+
+function lendingReturnSummary_(ticketId, ticketQuantity) {
+  var summary = { returnedQuantity:0, restoredQuantity:0, lostQuantity:0, damagedBeyondUseQuantity:0, remainingQuantity:Number(ticketQuantity||0), evidenceIds:[] };
+  findAll_(HAU_SHEETS.HISTORY, function(row) { return String(row.Entity_Type) === 'LENDING' && String(row.Entity_ID) === String(ticketId) && String(row.Reason) === 'Return received'; }).forEach(function(row) {
+    try {
+      var metadata = JSON.parse(row.Metadata_JSON || '{}');
+      summary.returnedQuantity += Number(metadata.returnedQuantity || 0);
+      summary.restoredQuantity += Number(metadata.restoredQuantity || 0);
+      summary.lostQuantity += Number(metadata.lostQuantity || 0);
+      summary.damagedBeyondUseQuantity += Number(metadata.damagedBeyondUseQuantity || 0);
+      if (metadata.evidenceId && summary.evidenceIds.indexOf(metadata.evidenceId) < 0) summary.evidenceIds.push(metadata.evidenceId);
+    } catch (ignored) {}
+  });
+  summary.remainingQuantity = Math.max(0, Number(ticketQuantity || summary.returnedQuantity) - summary.returnedQuantity);
+  return summary;
 }
 
 function confirmReturn_(command, correlationId) {
@@ -115,15 +141,18 @@ function confirmReturn_(command, correlationId) {
     var previouslyReturned = returnedQuantityForTicket_(ticket.Lending_Ticket_ID), remaining = Number(ticket.Quantity) - previouslyReturned;
     var returnedNow = positiveNumber_(command.returnedQuantity == null ? remaining : command.returnedQuantity, 'returnedQuantity');
     if (returnedNow > remaining) throw appError_('OVER_RETURN', 'Returned quantity exceeds the remaining loan quantity.', false, { remaining: remaining });
-    var restorable = returnedNow - nonNegativeNumber_(command.lostQuantity, 'lostQuantity') - nonNegativeNumber_(command.damagedBeyondUseQuantity, 'damagedBeyondUseQuantity');
+    var lostQuantity = nonNegativeNumber_(command.lostQuantity, 'lostQuantity'), damagedBeyondUseQuantity = nonNegativeNumber_(command.damagedBeyondUseQuantity, 'damagedBeyondUseQuantity');
+    var restorable = returnedNow - lostQuantity - damagedBeyondUseQuantity;
     if (restorable < 0) throw appError_('VALIDATION_ERROR', 'Lost and damaged quantities cannot exceed the returned quantity.', false);
-    var tx = restorable > 0 ? appendLedger_({ type: 'LOAN_RETURN', direction: 'IN', itemId: ticket.Item_ID, quantity: restorable, unit: ticket.Unit, relatedEntityType: 'LENDING', relatedEntityId: ticket.Lending_Ticket_ID, idempotencyKey: key, notes: command.condition || command.notes || '' }, user) : null;
+    if ((lostQuantity > 0 || damagedBeyondUseQuantity > 0) && !command.evidence) throw appError_('RETURN_EVIDENCE_REQUIRED', 'Photo evidence is required when returned items are lost or damaged beyond use.', false);
     var accounted = previouslyReturned + returnedNow, next = accounted === Number(ticket.Quantity) ? 'RETURNED' : 'ON_LOAN', evidenceId = '';
     if (command.evidence) evidenceId = uploadEvidence_(Object.assign({}, command.evidence, { evidenceType: 'LENDING_RETURN_PHOTO', relatedEntityType: 'LENDING', relatedEntityId: ticket.Lending_Ticket_ID, itemId: ticket.Item_ID, secondaryId: ticket.Item_ID, clientRequestId: key + ':evidence' }), correlationId).evidenceId;
+    var tx = restorable > 0 ? appendLedger_({ type: 'LOAN_RETURN', direction: 'IN', itemId: ticket.Item_ID, quantity: restorable, unit: ticket.Unit, relatedEntityType: 'LENDING', relatedEntityId: ticket.Lending_Ticket_ID, idempotencyKey: key, notes: command.condition || command.notes || '' }, user) : null;
     updateObject_(HAU_SHEETS.LENDING, ticket._row, { Status: next, Returned_At: next === 'RETURNED' ? nowIso_() : '', Updated_At: nowIso_(), Notes: [ticket.Notes, command.damageNotes, command.missingParts, command.lostQuantity && 'Lost ' + command.lostQuantity, command.damagedBeyondUseQuantity && 'Damaged beyond use ' + command.damagedBeyondUseQuantity, evidenceId && 'Evidence ' + evidenceId].filter(Boolean).join(' | ') });
-    history_('LENDING', ticket.Lending_Ticket_ID, ticket.Status, next, user, 'Return received', { idempotencyKey: key, metadata: { returnedQuantity: returnedNow, restoredQuantity: restorable } });
-    audit_('LENDING_RETURN', 'LENDING', ticket.Lending_Ticket_ID, user, correlationId, { after: { transaction: tx, returnedQuantity: returnedNow, restoredQuantity: restorable } });
-    return recordIdempotency_(key, { ticketId: ticket.Lending_Ticket_ID, status: next, transactionId: tx && tx.Transaction_ID, evidenceId: evidenceId }, user, correlationId);
+    var remainingAfter = Math.max(0, Number(ticket.Quantity) - accounted);
+    history_('LENDING', ticket.Lending_Ticket_ID, ticket.Status, next, user, 'Return received', { idempotencyKey: key, metadata: { returnedQuantity: returnedNow, restoredQuantity: restorable, lostQuantity:lostQuantity, damagedBeyondUseQuantity:damagedBeyondUseQuantity, remainingQuantity:remainingAfter, evidenceId:evidenceId } });
+    audit_('LENDING_RETURN', 'LENDING', ticket.Lending_Ticket_ID, user, correlationId, { before:{ status:ticket.Status, previouslyReturnedQuantity:previouslyReturned, remainingQuantity:remaining }, after: { status:next, transactionId:tx&&tx.Transaction_ID, returnedQuantity: returnedNow, restoredQuantity: restorable, lostQuantity:lostQuantity, damagedBeyondUseQuantity:damagedBeyondUseQuantity, remainingQuantity:remainingAfter, evidenceId:evidenceId } });
+    return recordIdempotency_(key, { ticketId: ticket.Lending_Ticket_ID, status: next, transactionId: tx && tx.Transaction_ID, evidenceId: evidenceId, returnedQuantity:returnedNow, restoredQuantity:restorable, lostQuantity:lostQuantity, damagedBeyondUseQuantity:damagedBeyondUseQuantity, remainingQuantity:remainingAfter, fullyReturned:remainingAfter===0 }, user, correlationId);
   });
 }
 

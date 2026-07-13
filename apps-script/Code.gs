@@ -1,6 +1,7 @@
 function doGet(e) {
   var runtime = resolveRuntimeConfig_();
   var diagnostic = Boolean(e && e.parameter && e.parameter.diagnostic === '1');
+  var portalMode = portalModeFromRequest_(e);
   var templateName = 'Index';
   if (diagnostic) {
     if (runtime.environment !== 'STAGING') {
@@ -9,12 +10,20 @@ function doGet(e) {
     templateName = 'DiagnosticShell';
   }
   var template = HtmlService.createTemplateFromFile(templateName);
-  template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
+  template.portalMode = portalMode;
+  template.requestOnly = portalMode !== 'internal';
   template.appEnvironment = runtime.environment;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.DEFAULT);
+}
+
+function portalModeFromRequest_(e) {
+  var parameters = e && e.parameter || {};
+  if (String(parameters.lending || '') === '1') return 'lending';
+  if (String(parameters.request || '') === '1') return 'request';
+  return 'internal';
 }
 
 function include_(name) {

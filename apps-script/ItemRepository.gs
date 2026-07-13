@@ -177,6 +177,9 @@ function updateInventoryItem_(command, correlationId) {
     var item = itemById_(requireText_(command.itemId, 'itemId'));
     if (String(item.Status) === 'ARCHIVED') throw appError_('ITEM_ARCHIVED', 'Restore this item before editing it.', false);
     var patch = {}, has = function(name) { return Object.prototype.hasOwnProperty.call(command, name); };
+    if (String(item.Status) === 'VERIFY' && ((has('status') && String(command.status || '').toUpperCase() !== 'VERIFY') || (has('verificationNote') && String(command.verificationNote || '') !== String(item.Verification_Note || '')))) {
+      throw appError_('VERIFY_RESOLUTION_REQUIRED', 'Use the administrator verification-resolution workflow to change a VERIFY item status or verification note.', false, { itemId:item.Item_ID });
+    }
     if (has('itemName') || has('name')) patch.Item_Name = requireText_(command.itemName || command.name, 'itemName');
     if (has('aliases')) patch.Aliases = aliasesValue_(command.aliases);
     if (has('category')) patch.Category = requireText_(command.category, 'category');
@@ -260,5 +263,27 @@ function restoreInventoryItem_(command, correlationId) {
     history_('INVENTORY_ITEM', item.Item_ID, 'ARCHIVED', next, user, command.reason || 'Item restored', { idempotencyKey:key });
     audit_('RESTORE_INVENTORY_ITEM', 'INVENTORY_ITEM', item.Item_ID, user, correlationId, { before:item, after:patch, notes:command.reason || '' });
     return recordIdempotency_(key, { itemId:item.Item_ID, status:next }, user, correlationId);
+  });
+}
+
+function resolveInventoryVerification_(command, correlationId) {
+  return withScriptLock_(function() {
+    var user = requirePermission_('Can_Admin'), key = requireIdempotency_(command), replay = idempotencyReplay_(key, user);
+    if (replay) return Object.assign({ idempotentReplay:true }, replay);
+    var item = itemById_(requireText_(command.itemId, 'itemId'));
+    if (String(item.Status) !== 'VERIFY') throw appError_('INVALID_TRANSITION', 'Only VERIFY items may use the verification-resolution workflow.', false);
+    var decision = String(command.decision || command.status || '').trim().toUpperCase();
+    if (['ACTIVE','INACTIVE'].indexOf(decision) < 0) throw appError_('VALIDATION_ERROR', 'Verification decision must be ACTIVE or INACTIVE.', false, { field:'decision' });
+    var reason = requireText_(command.reason, 'reason');
+    var patch = {
+      Status: decision,
+      Lending_Audience: decision === 'ACTIVE' && normalizeHandling_(item.Handling) !== 'NON_CIRCULATING' ? 'USC_STAFF_ONLY' : 'NOT_AVAILABLE_FOR_LENDING',
+      Updated_At: nowIso_(),
+      Updated_By: user.User_ID
+    };
+    updateObject_(HAU_SHEETS.ITEMS, item._row, patch);
+    history_('INVENTORY_ITEM', item.Item_ID, 'VERIFY', decision, user, reason, { idempotencyKey:key, metadata:{ verificationNotePreserved:true } });
+    audit_('RESOLVE_INVENTORY_VERIFICATION', 'INVENTORY_ITEM', item.Item_ID, user, correlationId, { before:{ status:item.Status, verificationNote:item.Verification_Note, legacySourceSheet:item.Legacy_Source_Sheet, legacySourceRow:item.Legacy_Source_Row, legacySourceBlock:item.Legacy_Source_Block }, after:patch, notes:reason });
+    return recordIdempotency_(key, { itemId:item.Item_ID, status:decision, entityType:'INVENTORY_ITEM', entityId:item.Item_ID }, user, correlationId);
   });
 }

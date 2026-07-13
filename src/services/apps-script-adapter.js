@@ -2,6 +2,8 @@ import { AppError } from '../app/errors.js';
 
 const METHODS = Object.freeze({
   getBootstrapData: 'api_getBootstrapData', getCurrentUser: 'api_getCurrentUser', getDataRevision: 'api_getDataRevision', searchCatalog: 'api_searchCatalog',
+  getLendingBootstrap: 'api_getLendingBootstrap', getAdminDashboard: 'api_getAdminDashboard', getPublishedContent: 'api_getPublishedContent',
+  previewContentRevision: 'api_previewContentRevision', getBrandingState: 'api_getBrandingState',
   submitRequest: 'api_submitRequest', reviewRequest: 'api_reviewRequest', reserveStock: 'api_reserveStock',
   createLendingTicket: 'api_createLendingTicket', approveLendingTicket: 'api_approveLendingTicket',
   confirmLendingHandoff: 'api_confirmLendingHandoff', confirmReturn: 'api_confirmReturn',
@@ -13,6 +15,12 @@ const METHODS = Object.freeze({
   getInventoryItem: 'api_getInventoryItem', createInventoryItem: 'api_createInventoryItem',
   updateInventoryItem: 'api_updateInventoryItem', updateInventoryStorageContext: 'api_updateInventoryStorageContext',
   archiveInventoryItem: 'api_archiveInventoryItem', restoreInventoryItem: 'api_restoreInventoryItem',
+  resolveInventoryVerification: 'api_resolveInventoryVerification', saveUserAccess: 'api_saveUserAccess',
+  createUserAccess: 'api_createUserAccess', updateUserAccess: 'api_updateUserAccess', deactivateUserAccess: 'api_deactivateUserAccess',
+  saveEvent: 'api_saveEvent', createEvent: 'api_createEvent', createSubEvent: 'api_createSubEvent', updateEvent: 'api_updateEvent', archiveEvent: 'api_archiveEvent', restoreEvent: 'api_restoreEvent',
+  saveContentRevision: 'api_saveContentRevision', publishContentRevision: 'api_publishContentRevision', revertContentRevision: 'api_revertContentRevision',
+  saveBrandingMetadata: 'api_saveBrandingMetadata', activateBrandingVersion: 'api_activateBrandingVersion',
+  updateCanvassReference: 'api_updateCanvassReference', archiveCanvassReference: 'api_archiveCanvassReference', restoreCanvassReference: 'api_restoreCanvassReference',
 });
 
 export class AppsScriptAdapter {

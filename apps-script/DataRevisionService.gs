@@ -71,7 +71,7 @@ function touchDataRevisionForMutation_(actor) {
 function guardMutationApi_(operationName, command, fn) {
   return guardApi_(operationName, command, function(correlationId) {
     var previous = HAU_MUTATION_CONTEXT_;
-    var context = { operation: operationName, touched: false, revision: null };
+    var context = { operation: operationName, command:command || {}, correlationId:correlationId, commandScopes:[], touched: false, revision: null };
     HAU_MUTATION_CONTEXT_ = context;
     try {
       var result = fn(correlationId) || {};
@@ -84,6 +84,9 @@ function guardMutationApi_(operationName, command, fn) {
         result.dataRevisionUpdatedAt = context.revision.updatedAt;
       }
       return result;
+    } catch (error) {
+      if (typeof failScopedCommands_ === 'function') failScopedCommands_(context,error);
+      throw error;
     } finally {
       HAU_MUTATION_CONTEXT_ = previous;
     }
