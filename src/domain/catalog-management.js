@@ -1,3 +1,5 @@
+import { can } from './permissions.js';
+
 const EDITABLE_FIELDS = Object.freeze([
   'itemName', 'aliases', 'category', 'catalogType', 'stockArea', 'storageLocation',
   'handling', 'unit', 'reorderThreshold', 'lendingAudience', 'defaultLoanDays',
@@ -6,8 +8,9 @@ const EDITABLE_FIELDS = Object.freeze([
 
 export function canManageCatalog(currentUser) {
   if (!currentUser) return false;
+  if (currentUser.authorization?.modelVersion >= 2) return can(currentUser, 'manage_catalog');
   if (currentUser.permissions?.manageCatalog === true) return true;
-  return ['ADMIN', 'DOL_DIRECTOR'].includes(String(currentUser.role ?? '').toUpperCase());
+  return ['ADMIN', 'ADMINISTRATOR', 'DOL_DIRECTOR', 'DIRECTOR'].includes(String(currentUser.role ?? '').toUpperCase());
 }
 
 export function buildCatalogUpdateCommand(itemId, draft) {

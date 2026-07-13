@@ -5,9 +5,19 @@ import {
 } from '../../scripts/apps-script-bundle-lib.mjs';
 
 const internalBootstrap = ({ revision = 1, manageCatalog = false, tickets = [] } = {}) => ({
-  version: '0.5.0', schemaVersion: '1.1.0', backendMode: 'apps-script', environment: 'STAGING',
+  version: '0.5.0', schemaVersion: '1.2.0', backendMode: 'apps-script', environment: 'STAGING',
   dataRevision: revision, dataRevisionUpdatedAt: '2026-07-13T12:00:00+08:00',
-  currentUser: { id: 'USR-1', displayName: 'Test User', role: 'DOL_STAFF', permissions: { review: true, release: true, receive: true, admin: false, manageCatalog } },
+  currentUser: {
+    id: 'USR-1', displayName: 'Test User', role: 'DOL_STAFF',
+    permissions: { review: true, release: true, receive: true, admin: false, manageCatalog },
+    authorization: {
+      contract: 'canonical-authorization', contractVersion: 2, modelVersion: 2,
+      roleId: 'DOL_STAFF', roleLabel: 'DOL Staff', scopeMode: 'COMMITTEE',
+      committeeIds: ['COM_FOOD'], committees: [{ id: 'COM_FOOD', name: 'Food Committee' }],
+      capabilities: ['view.request', 'view.internal', 'view.inventory', 'lending.create'],
+      mappingStatus: 'MAPPED', active: true,
+    },
+  },
   eventSeries: [], events: [], requests: [], requestLines: [], reservations: [], ledgerTransactions: [],
   inventoryItems: [
     { id: 'ITM-0003', name: 'Extension Cord — 10 m', aliases: ['extension wire'], category: 'Equipment', stockArea: 'Inventory', catalogType: 'OFFICE_INVENTORY', storageLocation: 'Equipment Rack', handling: 'LOANABLE', handlingCode: 'LOANABLE', unit: 'piece', openingOnHand: 4, onHand: 4, reserved: 0, availableToPromise: 4, reorderThreshold: 1, lendingAudience: 'STUDENTS_AND_STAFF', defaultLoanDays: 3, maximumLoanQuantity: 2, approvalRequired: true, status: 'ACTIVE' },
@@ -112,6 +122,7 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
         committee: state.currentUser.committee || '',
         permissions: state.currentUser.permissions,
         scopes: { committee: [] },
+        authorization: state.currentUser.authorization,
       },
       navigation: ['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory']
         .map((id) => ({ id, label: id, enabled: true })),
@@ -166,11 +177,14 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
         if (typeof property === 'symbol') return undefined;
         return (payload) => queueMicrotask(() => {
            const method = String(property);
-           globalThis.__server.calls.push({ method, payload });
-           if (method === 'api_getEssentialBootstrapData') {
-             successHandler({ ...essentialBootstrap(globalThis.__server.bootstrap) });
-             return;
-           }
+            globalThis.__server.calls.push({ method, payload });
+            if (method === 'api_getEssentialBootstrapData') {
+              if (globalThis.__server.failNextBootstrap) {
+                globalThis.__server.failNextBootstrap = false;
+                failureHandler(new Error('Simulated refresh failure'));
+              } else successHandler({ ...essentialBootstrap(globalThis.__server.bootstrap) });
+              return;
+            }
            if (method === 'api_getBootstrapModule') {
              successHandler({ ...moduleBootstrap(globalThis.__server.bootstrap, payload.module) });
              return;

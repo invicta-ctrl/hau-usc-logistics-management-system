@@ -233,6 +233,7 @@ export function createRuntimeExtensions(options) {
     getState,
     acceptState,
     commit,
+    loadAuthoritativeState = (requestOnly) => services.loadBootstrapData({ requestOnly }),
     toast,
     openModal,
     closeModal,
@@ -277,7 +278,7 @@ export function createRuntimeExtensions(options) {
     if (refreshPromise) return refreshPromise;
     refreshPromise = (async () => {
       setSyncStatus('checking');
-      const next = await services.loadBootstrapData({ requestOnly: isRequestOnly() });
+      const next = await loadAuthoritativeState(isRequestOnly());
       acceptState(next);
       acceptedRevision = normalizeRevisionPayload({
         revision: next.dataRevision,

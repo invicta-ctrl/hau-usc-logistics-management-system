@@ -1,6 +1,8 @@
-function api_getBootstrapData(command) { return guardApi_('getBootstrapData', command || {}, function() { return getBootstrapData_(command || {}); }); }
+function api_getBootstrapData(command) { return guardApi_('getBootstrapData', command || {}, function() { if (typeof authorizationContractVersion_ === 'function' && authorizationContractVersion_() >= 2) throw appError_('LEGACY_BOOTSTRAP_DISABLED', 'The legacy bootstrap endpoint is disabled while the canonical bootstrap contract is active.', false, { reason: 'CANONICAL_BOOTSTRAP_REQUIRED' }); return getBootstrapData_(command || {}); }); }
 function api_getEssentialBootstrapData(command) { return guardApi_('getEssentialBootstrapData', command || {}, function() { return apiEssentialBootstrapData_(command || {}); }); }
 function api_getBootstrapModule(command) { return guardApi_('getBootstrapModule', command || {}, function() { return apiGetBootstrapModule_(command || {}); }); }
+function api_runAuthorizationMappingDryRun() { return runAuthorizationMappingDryRun(); }
+function api_applyAuthorizationMapping(command) { return applyAuthorizationMapping(command || {}); }
 function api_searchCatalog(command) { return guardApi_('searchCatalog', command || {}, function() { var user=resolveRequesterUser_(),includeSensitive=canPermission_(user,'Can_Review');return { items: searchCatalog_(command || {},includeSensitive), availabilityProtected:!includeSensitive }; }); }
 function api_getInventoryItem(command) { return guardApi_('getInventoryItem', command || {}, function() { return getInventoryItem_(command || {}); }); }
 function api_submitRequest(command) { return guardMutationApi_('submitRequest', command, function(c) { return submitRequest_(command, c); }); }

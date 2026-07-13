@@ -1,4 +1,51 @@
-# Slice 2 Current Slice Checkpoint
+# Slice 3 Current Slice Checkpoint
+
+CURRENT SLICE: Slice 3 - Canonical roles, committee scopes, and authorization contract
+CURRENT STAGE: READY_TO_COMMIT
+LAST UPDATED: 2026-07-14 (Asia/Manila)
+
+## Starting checkpoint for Slice 3
+
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved Slice 3 starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Handshake: fetch completed; local/upstream count was `0 0`; remote head matched the starting commit; no competing writer or lock was found.
+- A local rollback tag was created at the starting commit before implementation. The worktree is intentionally dirty with only Slice 3 implementation and documentation changes.
+
+## Slice 3 goal and bounded scope
+
+- Server-owned canonical role, committee, capability, scope, and safe-denial decisions.
+- Exactly three permanent committees with immutable IDs and explicit legacy mappings.
+- Sanitized authorization metadata in current-user/bootstrap responses and client consumption of server capabilities.
+- Additive access/membership schema, dry-run reconciliation, explicit approval gate, and no immutable-history rewrite.
+
+## Slice 3 exclusions
+
+- No roster import or roster synchronization, committee UI, composite requests, catalog, restock, polling/live-update, hosting, database, deployment, staging/production, Google Sheets/Drive/Apps Script external write, or private operational-data work.
+- No hand edits to generated HTML or generated visual fragments.
+
+## Slice 3 final local evidence
+
+- Owner-auto-accepted defaults are recorded in `docs/AUTHORIZATION_CONTRACT.md`.
+- `npm run check` passes: ESLint, full Vitest (20 files / 161 tests), production build, Apps Script validation (26 source files / 32 required functions), generated parity, and standalone verification.
+- `npm run verify` passes; the complete Chromium matrix passes 49 tests with 95 intentionally skipped and 0 failed across 144 cases. The v2 mutation-refresh recovery scenario passes in the focused run.
+- `git diff --check` passes. The sensitive-value scan passes over the changed scope: no `.clasp` files, credentials, private Google identifiers, non-placeholder contacts, private supplier-TIN values, evidence links, roster rows, or operational records were found; only schema references and synthetic/mock placeholders are present. Regenerated standalone files retain only the pre-existing fictional preview baseline.
+- Initial independent review findings were repaired and covered by focused tests; final read-only review closure is the last review record before staging.
+
+## Slice 3 rollback and transition
+
+- Local rollback checkpoint: tag `hau-usc-slice2-checkpoint-23c4f61` at `23c4f61e5f1b113d4b77c2955f1716139a03c121`.
+- Before commit, preserve the current worktree and use a focused revert after commit if rollback is required; do not reset or discard changes.
+- Do not advance to Slice 4 until Slice 3 review findings are closed, all local gates pass, documentation is current, and the focused commit and remote evidence are reviewed.
+
+## Slice 3 generated-artifact evidence
+
+- `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`: 274,038 bytes each, SHA-256 `3646b8b799cecc954c3226580ca0a173da1b2cd61e94740b485597ebaaf11fa9`.
+- Apps Script generated parity: `Index.html` 681 bytes / SHA-256 `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; `AppScript.html` 214,742 bytes / SHA-256 `986b0e4e5148172936ad5e680c0dd8400f5b13ff19c694e2187a7863b4bb8a2e`; `AppBody.html` 28,967 bytes / SHA-256 `b90a90470fec14fb5fc3936f068733d28d91d102c24fbc9da53ec044efc0ace2`; `AppStyles.html` 29,484 bytes / SHA-256 `b73493dfe76f9f01f5da296825cbde9bd2e358f58a409d9d432b64c16a30f4e4`.
+
+---
+
+# Slice 2 Historical Checkpoint
 
 CURRENT SLICE: Slice 2 - Essential bootstrap and lazy module contracts
 CURRENT STAGE: PENDING_MANAGER_REVIEW

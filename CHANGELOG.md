@@ -2,6 +2,17 @@
 
 ## 0.5.0 - Unreleased
 
+### Slice 3 - Canonical roles, committee scopes, and authorization contract
+
+- Added a server-owned canonical authorization registry with six roles, immutable role IDs, exactly three committee IDs, separate capability and scope decisions, safe denial reasons, and fail-closed inactive, unknown, ambiguous, and unreconciled mappings.
+- Added sanitized authorization metadata to the essential bootstrap/current-user contract and a client projection that consumes server capabilities instead of granting access from visible UI roles.
+- Added additive authorization fields to `14_USERS_ACCESS`, the `20_USER_COMMITTEE_SCOPE` membership schema, the `HAU_AUTHORIZATION_CONTRACT_VERSION` rollout property, and an approval-gated mapping dry run/apply path that preserves legacy labels and immutable history.
+- Recorded the owner-auto-accepted role/committee defaults and migration controls in `docs/AUTHORIZATION_CONTRACT.md`.
+- Regenerated visual and standalone artifacts through `npm run extract:visual` and `npm run build`; no generated file was hand-edited.
+- Final local verification passes: `npm run check` with ESLint, 20 Vitest files / 161 tests, production build, Apps Script validation (26 source files / 32 required functions), generated parity, and standalone verification; `npm run verify`; full Chromium 49 passed / 95 intentionally skipped / 0 failed across 144 cases; and `git diff --check`.
+- Sensitive-value scan passes over the changed scope with no `.clasp` files, credentials, private identifiers, contacts, roster rows, private supplier-TIN values, evidence links, or operational records; only schema references and synthetic/mock placeholders are present. Regenerated standalone files retain only the pre-existing fictional preview baseline. Initial review findings were repaired; final read-only review closure and the focused commit remain pending.
+- No roster import, external authorization activation, migration, deployment, staging/production write, or private operational-data change was performed.
+
 ### Slice 2 - Essential bootstrap and lazy module contracts
 
 - Added versioned allowlisted essential/module read contracts with request-only privacy enforcement, bounded pagination/filtering, fail-closed entity scope checks, JSON-safety validation, and compatibility-preserving runtime selection.

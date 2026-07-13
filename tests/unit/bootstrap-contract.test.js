@@ -23,6 +23,14 @@ describe('essential bootstrap contract', () => {
     expect(JSON.stringify(state)).not.toContain('SYNTHETIC_PRIVATE_CANARY');
   });
 
+  it('requires canonical authorization metadata in the v2 essential response', () => {
+    const fixture = createEssentialBootstrapFixture();
+    delete fixture.currentUser.authorization;
+    expect(() => validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toThrowError(
+      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
+    );
+  });
+
   it.each([
     ['unknown top-level field', (value) => { value.privateStudentRecords = []; }],
     ['missing schema version', (value) => { delete value.schemaVersion; }],
@@ -39,17 +47,26 @@ describe('essential bootstrap contract', () => {
   });
 
   it.each(['studentIdNumber', 'requester_email', 'borrowerName', 'evidenceId'])('rejects sensitive module field %s and unsupported module data keys', (field) => {
-    const sensitive = createBootstrapModuleFixture();
+    const sensitive = createBootstrapModuleFixture({ requestOnly: true });
     sensitive.data.inventoryItems[0][field] = 'SYNTHETIC-PRIVATE-CANARY';
     expect(() => validateBootstrapModule(sensitive, { backendMode: 'mock', module: 'request' })).toThrowError(
       expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
     );
 
-    const unsupported = createBootstrapModuleFixture();
+    const unsupported = createBootstrapModuleFixture({ requestOnly: true });
     unsupported.data.ledgerTransactions = [];
     expect(() => validateBootstrapModule(unsupported, { backendMode: 'mock', module: 'request' })).toThrowError(
       expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
     );
+  });
+
+  it('allows authorized internal modules to carry operational borrower fields without treating them as public cache data', () => {
+    const internal = createBootstrapModuleFixture({ module: 'lending', cacheSafe: false });
+    internal.data.lendingTickets = [{
+      id: 'SYNTHETIC-TICKET-001', studentIdNumber: 'SYNTHETIC-STUDENT-001', borrowerName: 'Synthetic Borrower',
+      contact: 'synthetic-contact', itemId: 'SYNTHETIC-ITEM-001', quantity: 1, status: 'FOR_REVIEW',
+    }];
+    expect(validateBootstrapModule(internal, { backendMode: 'mock', module: 'lending' })).toBe(internal);
   });
 
   it('rejects false envelopes and cache policies that could retain session data', () => {

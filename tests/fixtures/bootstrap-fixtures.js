@@ -5,7 +5,7 @@ const iso = (day) => `2026-07-${String(day).padStart(2, '0')}T08:00:00.000Z`;
 export function createEmptyBootstrapFixture({ backendMode = 'mock', environment = 'STAGING' } = {}) {
   return {
     version: '0.5.0',
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
     backendMode,
     environment,
     currentUser: {

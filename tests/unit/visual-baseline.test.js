@@ -100,6 +100,8 @@ describe('authoritative visual extraction', () => {
     expect(runtime).toContain("if(useEssentialBootstrap)return services.loadEssentialBootstrap({requestOnly})");
     expect(runtime).toContain("return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly})");
     expect(runtime).toContain("services.loadBootstrapModule(module,params)");
+    expect(runtime).toContain('async function loadAuthoritativeState(requestOnly)');
+    expect(runtime).toContain('acceptAuthoritativeState(await loadAuthoritativeState(document.body.classList.contains(\'request-mode\')))');
     expect(runtime).toContain("BOOTSTRAP_STAGES.ACTIVE_MODULE");
     expect(runtime).toContain("function renderActiveModule()");
     expect(runtime).toContain(

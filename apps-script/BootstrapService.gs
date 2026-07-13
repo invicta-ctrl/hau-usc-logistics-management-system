@@ -26,6 +26,18 @@ function bootstrapSession_(command) {
 }
 
 function bootstrapModuleAllowed_(module, session) {
+  if (typeof authorizationContractVersion_ === 'function' && authorizationContractVersion_() >= 2) {
+    var canonical = {
+      overview: [HAU_CAPABILITIES_.VIEW_COMMITTEE_SUMMARY, HAU_CAPABILITIES_.VIEW_ALL_SUMMARY],
+      request: [HAU_CAPABILITIES_.VIEW_REQUEST, HAU_CAPABILITIES_.REQUEST_CREATE],
+      lending: [HAU_CAPABILITIES_.VIEW_INVENTORY, HAU_CAPABILITIES_.LENDING_APPROVE],
+      release: [HAU_CAPABILITIES_.FULFILL_RELEASE],
+      restocking: [HAU_CAPABILITIES_.FULFILL_RECEIVE, HAU_CAPABILITIES_.REQUEST_REVIEW],
+      procurement: [HAU_CAPABILITIES_.FULFILL_RECEIVE, HAU_CAPABILITIES_.FULFILL_CANVASS],
+      inventory: [HAU_CAPABILITIES_.VIEW_INVENTORY, HAU_CAPABILITIES_.REFERENCE_CATALOG_MANAGE]
+    }[module] || [];
+    return canonical.some(function(capability) { return authorizationCan_(session.user, capability, null, { allowUnresolvedScope: true }); });
+  }
   if (session.requestOnly) return module === 'request';
   if (module === 'overview' || module === 'request') return true;
   if (module === 'lending' || module === 'inventory') return canPermission_(session.user, 'Can_Review');
@@ -52,14 +64,17 @@ function bootstrapNavigation_(session) {
 
 function bootstrapUserDto_(session) {
   var user = session.user;
-  return {
+  var authorization = typeof authorizationDto_ === 'function' ? authorizationDto_(user) : null;
+  var dto = {
     id: bootstrapText_(user.User_ID, 'PUBLIC', 80),
     displayName: bootstrapText_(user.Display_Name, 'Requester', 120),
-    role: bootstrapText_(user.Role, 'REQUESTER', 80),
-    committee: bootstrapText_(user.Committee, '', 120),
+    role: bootstrapText_(authorization ? authorization.roleId || user.Role : user.Role, 'REQUESTER', 80),
+    committee: bootstrapText_(authorization ? (authorization.committees[0] ? authorization.committees[0].name : '') : user.Committee, '', 120),
     permissions: userPermissionsDto_(user),
-    scopes: { committee: user.Committee ? [bootstrapText_(user.Committee, '', 120)] : [] }
+    scopes: { committee: authorization ? authorization.committeeIds.slice() : (user.Committee ? [bootstrapText_(user.Committee, '', 120)] : []), organization: [] }
   };
+  if (authorization) dto.authorization = authorization;
+  return dto;
 }
 
 function bootstrapRevision_(session) {
@@ -97,7 +112,7 @@ function essentialBootstrapData_(command, stats) {
     activeModule: session.requestOnly ? 'request' : 'overview',
     currentUser: bootstrapUserDto_(session),
     navigation: bootstrapNavigation_(session),
-    moduleConfig: { maxPageSize: 50, defaultPageSize: 10, legacyEndpointAvailable: true, activeModuleOnly: true },
+    moduleConfig: { maxPageSize: 50, defaultPageSize: 10, legacyEndpointAvailable: typeof authorizationContractVersion_ !== 'function' || authorizationContractVersion_() < 2, activeModuleOnly: true },
     revision: bootstrapRevision_(session),
     metrics: { readCount: stats.readCount, cacheHits: stats.cacheHits }
   });
@@ -138,6 +153,14 @@ function bootstrapScopeValues_(session) {
 }
 
 function bootstrapScopeMatches_(row, session, fields) {
+  if (typeof authorizationContractVersion_ === 'function' && authorizationContractVersion_() >= 2) {
+    var authorization = authorizationContext_(session && session.user);
+    if (authorization.scopeMode === 'ALL' || authorization.scopeMode === 'SELF') return true;
+    if (authorization.scopeMode !== 'COMMITTEE' || !authorization.committeeIds.length) return false;
+    var canonicalFields = fields && fields.length ? fields : HAU_BOOTSTRAP_SCOPE_FIELDS_;
+    var canonicalRows = canonicalFields.map(function(field) { return canonicalCommitteeId_(row[field]); }).filter(Boolean);
+    return canonicalRows.some(function(id) { return authorization.committeeIds.indexOf(id) >= 0; });
+  }
   var scopes = bootstrapScopeValues_(session);
   if (!scopes.length) return true;
   var scopeFields = fields && fields.length ? fields : HAU_BOOTSTRAP_SCOPE_FIELDS_;

@@ -25,7 +25,7 @@ Module queries accept positive integer pages, page sizes from 1 through 50, and 
 
 ## Privacy and authorization
 
-Apps Script remains authoritative for authorization and request-only enforcement. Request-only sessions may load only the public request module. Server DTOs omit email, student identifiers, contacts, supplier tax identifiers, Drive identifiers/URLs, evidence, audit, history, ledger, and roster fields. Client validation rejects unknown top-level/data fields, JSON-unsafe values, circular values, sensitive field names, and unsupported schema/version values.
+Apps Script remains authoritative for authorization and request-only enforcement. Request-only sessions may load only the public request module. Essential/current-user DTOs and request-only module DTOs omit email, student identifiers, contacts, supplier tax identifiers, Drive identifiers/URLs, evidence, audit, history, ledger, and roster fields. Authorized internal module DTOs remain capability/scope-filtered, session-operational, and non-cacheable; their operational fields are never accepted in request-only responses. Client validation rejects unknown top-level/data fields, JSON-unsafe values, circular values, and sensitive field names in request-only module responses, plus unsupported schema/version values.
 
 ## Read and cache policy
 

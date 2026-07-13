@@ -19,7 +19,7 @@ describe('bootstrap contract validation', () => {
 
     expect(empty.eventSeries).toEqual([]);
     expect(summary.contractVersion).toBe('0.5.0');
-    expect(summary.schemaVersion).toBe('1.1.0');
+    expect(summary.schemaVersion).toBe('1.2.0');
     expect(summary.payloadBytes).toBeGreaterThan(10_000);
     expect(summary.collectionCounts.inventoryItems).toBe(24);
     expect(summary.collectionCounts.requests).toBe(30);

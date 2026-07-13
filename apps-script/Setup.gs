@@ -210,12 +210,19 @@ function seedRolesAndPermissions(users) {
         var role = requireText_(input.role, 'role').toUpperCase();
         if (!ROLE_PERMISSIONS_[role]) throw appError_('VALIDATION_ERROR', 'Unknown role: ' + role, false);
         var permissions = ROLE_PERMISSIONS_[role];
+        var authorization = typeof authorizationContext_ === 'function' ? authorizationContext_({ Role: role, Committee: input.committee || '' }, { membershipRows: [] }) : null;
+        if (authorization && authorizationContractVersion_() >= 2 && authorization.mappingStatus !== 'MAPPED' && authorization.roleId !== 'REQUESTER') throw appError_('AUTHORIZATION_MAPPING_INCOMPLETE', 'The user requires an explicit canonical role and committee mapping.', false, { reason: 'RECONCILIATION_REQUIRED' });
         var row = {
           User_ID: allocateId_('USR', { year: false }), Email: email, Display_Name: input.displayName || email,
           Role: role, Committee: input.committee || '', Active: true,
           Can_Review: permissions.indexOf('Can_Review') >= 0, Can_Release: permissions.indexOf('Can_Release') >= 0,
           Can_Receive: permissions.indexOf('Can_Receive') >= 0, Can_Admin: permissions.indexOf('Can_Admin') >= 0,
           Can_Manage_Catalog: permissions.indexOf('Can_Manage_Catalog') >= 0,
+          Role_ID: authorization && authorization.roleId || '',
+          Committee_IDs_JSON: authorization ? JSON.stringify(authorization.committeeIds) : '',
+          Authorization_Overrides_JSON: '',
+          Authorization_Status: authorization && authorization.mappingStatus || '',
+          Authorization_Revision: authorization ? 'AUTH-2' : '',
           Created_At: nowIso_(), Updated_At: nowIso_(), Last_Login_At: '', Notes: input.notes || ''
         };
         appendObject_(HAU_SHEETS.USERS, row);

@@ -41,7 +41,8 @@ function withScriptLock_(operation) {
 function guardApi_(operationName, command, fn) {
   var correlationId = correlationId_();
   try {
-    var result = fn(correlationId);
+    var authorization = typeof authorizeOperation_ === 'function' ? authorizeOperation_(operationName, command || {}) : null;
+    var result = fn(correlationId, authorization);
     return clientSafeValue_(Object.assign({ ok: true, correlationId: correlationId }, result || {}));
   }
   catch (error) {

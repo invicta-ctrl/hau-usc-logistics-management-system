@@ -7,19 +7,30 @@ PROGRAM STATE: IN_PROGRESS
 - Program: HAU-USC V1 release and stabilization program.
 - Source plan: `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`.
 - Program start date: 2026-07-14 (Asia/Manila).
-- Current run stage: Slice 2 essential-bootstrap and lazy-module contracts are committed and pushed; local and remote checks pass, with manager review pending.
+- Current run stage: Slice 3 canonical authorization implementation is ready to commit after final read-only review closure; the focused commit is pending.
 - Repository root: `D:\Documents\DOL Website GitHub`.
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Approved Slice 2 starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2` (`fix: add bootstrap startup recovery`).
+- Approved Slice 3 starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121` (`docs: record Slice 2 remote verification`).
 - Upstream: `origin/feat/live-sync-lending-search-catalog-controls`.
-- Slice 2 ending comparison: local `0` commits ahead and `0` behind after fetch; remote ref matches `576393f1be28687d984ea7632a2501aa8d3fc30d`.
+- Slice 3 starting comparison: local `0` commits ahead and `0` behind after fetch; remote ref matched `23c4f61e5f1b113d4b77c2955f1716139a03c121`.
 
 ## Run and concurrency check
 
 - The scheduled continuation is the only authorized run for this checkout; no competing writer was found during the Slice 2 handshake.
-- The worktree was clean at the Slice 2 starting checkpoint and remains owned by this implementation run.
+- The worktree was clean at the Slice 2 starting checkpoint and remains owned by this implementation run; no competing writer or repository lock was found during the current run.
 
-## Slice 2 current run
+## Slice 3 current run
+
+- Current slice: Slice 3 - canonical roles, committee scopes, and authorization contract.
+- Stage: `READY_TO_COMMIT`.
+- The approved planning defaults are recorded as owner-auto-accepted in `docs/AUTHORIZATION_CONTRACT.md`: six roles, exactly three committees, immutable IDs, multiple membership rows, committee-head scope with no default release, and Director/Administrator separation.
+- The server registry, additive access/membership schema, safe bootstrap DTO, client projection, legacy mapping dry run, and approval gate are implemented locally. No external activation or migration was run.
+- Final local gates pass: `npm run check` with ESLint and 20 Vitest files / 161 tests, `npm run verify`, and full Chromium with 49 passed / 95 intentionally skipped / 0 failed across 144 cases. Apps Script parity validates 26 source files and 32 required functions; `git diff --check` and the sensitive-value scan pass.
+- Initial independent-review findings were repaired, including v2 endpoint gating, rollout compatibility, mapping activation, locked/idempotent/audited mapping apply, linked resource scope resolution, and canonical client fail-closed behavior. The final read-only review response is the last review record before staging.
+- Generated parity is verified: both standalone artifacts are 274,038 bytes with SHA-256 `3646b8b799cecc954c3226580ca0a173da1b2cd61e94740b485597ebaaf11fa9`; Apps Script `Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`, and `AppScript.html` is 214,742 bytes / `986b0e4e5148172936ad5e680c0dd8400f5b13ff19c694e2187a7863b4bb8a2e`.
+- Later slices remain gated and not started.
+
+## Slice 2 historical run
 
 - Current slice: Slice 2 - essential bootstrap and lazy module contracts.
 - Stage: `PENDING_MANAGER_REVIEW`.
@@ -39,7 +50,7 @@ PROGRAM STATE: IN_PROGRESS
 |---|---|---|
 | 1 — P0 bootstrap observability and recovery | COMMITTED_LOCAL | Implementation repaired after independent review; local gates and focused commit passed. |
 | 2 — Essential bootstrap and lazy module contracts | READY_LOCAL | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending. |
-| 3 — Canonical roles, committee scopes, and authorization contract | NOT_STARTED | Dependency-gated. |
+| 3 — Canonical roles, committee scopes, and authorization contract | READY_TO_COMMIT | Implementation, repairs, final local gates, generated parity, and sensitive scan complete; final review response and focused commit remain. |
 | 4 — Private roster synchronization and access freshness | NOT_STARTED | Dependency-gated; private source remains out of ordinary bootstrap. |
 | 5 — Committee Main Hub and Inventory and Pantry vertical slice | NOT_STARTED | Dependency-gated. |
 | 6 — Composite Event Logistics request foundation | NOT_STARTED | Dependency-gated. |

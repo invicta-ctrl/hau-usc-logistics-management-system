@@ -2,7 +2,7 @@ export const ESSENTIAL_BOOTSTRAP_CONTRACT = 'essential-bootstrap';
 export const BOOTSTRAP_MODULE_CONTRACT = 'bootstrap-module';
 export const ESSENTIAL_BOOTSTRAP_VERSION = 2;
 
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.2.0', '1.1.0', '1.0.0', '3', 3]);
 
 export const BOOTSTRAP_MODULES = Object.freeze([
   'overview',
@@ -92,6 +92,18 @@ const MODULE_KEYS = new Set([
 
 const PERMISSION_KEYS = new Set(['review', 'release', 'receive', 'admin', 'manageCatalog']);
 const SCOPE_KEYS = new Set(['committee', 'organization']);
+const AUTHORIZATION_ROLES = new Set(['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR']);
+const AUTHORIZATION_COMMITTEES = new Set(['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS']);
+const AUTHORIZATION_SCOPE_MODES = new Set(['SELF', 'COMMITTEE', 'ALL', 'DENY']);
+const AUTHORIZATION_MAPPING_STATUSES = new Set(['MAPPED', 'INACTIVE', 'NEEDS_REVIEW', 'UNKNOWN_ROLE']);
+const AUTHORIZATION_CAPABILITIES = new Set([
+  'view.request', 'view.internal', 'view.committee.summary', 'view.all.summary', 'view.audit', 'view.inventory',
+  'request.create', 'request.review', 'request.missing_information', 'request.reject', 'request.reopen',
+  'workflow.assign_committee', 'workflow.assign_staff', 'workflow.escalate',
+  'fulfillment.canvass', 'fulfillment.procure', 'fulfillment.reserve', 'fulfillment.receive', 'fulfillment.release',
+  'lending.create', 'lending.approve', 'lending.handoff', 'lending.return', 'inventory.merge_event_item', 'inventory.adjust',
+  'reference.catalog.manage', 'reference.manage', 'access.admin', 'system.admin', 'system.diagnostics', 'evidence.upload',
+]);
 const SENSITIVE_KEYS = new Set([
   'email',
   'requesteremail',
@@ -182,6 +194,37 @@ function assertBoolean(value) {
   if (typeof value !== 'boolean') fail();
 }
 
+function assertAuthorization(value) {
+  if (!isPlainObject(value)) fail();
+  assertAllowedKeys(value, new Set(['contract', 'contractVersion', 'modelVersion', 'roleId', 'roleLabel', 'scopeMode', 'committeeIds', 'committees', 'capabilities', 'mappingStatus', 'active']));
+  if (value.contract !== 'canonical-authorization' || value.contractVersion !== 2) fail();
+  if (!Number.isInteger(value.modelVersion) || ![1, 2].includes(value.modelVersion)) fail();
+  assertSafeText(value.roleId, { max: 40 });
+  if (value.roleId && !AUTHORIZATION_ROLES.has(value.roleId)) fail();
+  assertSafeText(value.roleLabel, { max: 80 });
+  if (!AUTHORIZATION_SCOPE_MODES.has(value.scopeMode)) fail();
+  if (!Array.isArray(value.committeeIds) || value.committeeIds.length > 3) fail();
+  value.committeeIds.forEach((id) => {
+    assertSafeText(id, { required: true, max: 40 });
+    if (!AUTHORIZATION_COMMITTEES.has(id)) fail();
+  });
+  if (!Array.isArray(value.committees) || value.committees.length > 3) fail();
+  value.committees.forEach((committee) => {
+    if (!isPlainObject(committee)) fail();
+    assertAllowedKeys(committee, new Set(['id', 'name']));
+    assertSafeText(committee.id, { required: true, max: 40 });
+    if (!AUTHORIZATION_COMMITTEES.has(committee.id)) fail();
+    assertSafeText(committee.name, { required: true, max: 80 });
+  });
+  if (!Array.isArray(value.capabilities) || value.capabilities.length > AUTHORIZATION_CAPABILITIES.size) fail();
+  value.capabilities.forEach((capability) => {
+    assertSafeText(capability, { required: true, max: 80 });
+    if (!AUTHORIZATION_CAPABILITIES.has(capability)) fail();
+  });
+  if (!AUTHORIZATION_MAPPING_STATUSES.has(value.mappingStatus)) fail();
+  assertBoolean(value.active);
+}
+
 function assertNonNegativeInteger(value) {
   if (!Number.isInteger(value) || value < 0) fail();
 }
@@ -203,9 +246,9 @@ function assertMetrics(value) {
   });
 }
 
-function assertCurrentUser(value) {
+function assertCurrentUser(value, { requireAuthorization = false } = {}) {
   if (!isPlainObject(value)) fail();
-  assertAllowedKeys(value, new Set(['id', 'displayName', 'role', 'committee', 'permissions', 'scopes']));
+  assertAllowedKeys(value, new Set(['id', 'displayName', 'role', 'committee', 'permissions', 'scopes', 'authorization']));
   assertSafeText(value.id, { required: true, max: 80 });
   assertSafeText(value.displayName, { required: true, max: 120 });
   assertSafeText(value.role, { required: true, max: 80 });
@@ -222,6 +265,8 @@ function assertCurrentUser(value) {
       value.scopes[key].forEach((scope) => assertSafeText(scope, { max: 120 }));
     });
   }
+  if (requireAuthorization && value.authorization === undefined) fail('Canonical authorization metadata is required for the v2 bootstrap contract.');
+  if (value.authorization !== undefined) assertAuthorization(value.authorization);
 }
 
 function assertNavigation(value) {
@@ -258,7 +303,7 @@ export function validateEssentialBootstrap(value, { backendMode = 'mock' } = {})
   if (!SAFE_ENVIRONMENTS.has(String(value.environment).toUpperCase())) fail();
   assertBoolean(value.requestOnly);
   if (!BOOTSTRAP_MODULES.includes(value.activeModule)) fail();
-  assertCurrentUser(value.currentUser);
+  assertCurrentUser(value.currentUser, { requireAuthorization: true });
   assertNavigation(value.navigation);
   assertModuleConfig(value.moduleConfig);
   assertRevision(value.revision);
@@ -319,7 +364,7 @@ export function validateBootstrapModule(value, { backendMode = 'mock', module } 
   Object.entries(value.data).forEach(([_key, rows]) => {
     if (!Array.isArray(rows) || rows.length > 100) fail();
   });
-  assertNoSensitiveKeys(value.data);
+  if (value.requestOnly) assertNoSensitiveKeys(value.data);
   assertPagination(value.pagination);
   assertRevision(value.revision);
   assertCache(value.cache);

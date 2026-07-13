@@ -7,7 +7,7 @@ import {
 const user = (requestOnly) => ({
   id: requestOnly ? 'PUBLIC' : 'SYNTHETIC-USER-001',
   displayName: requestOnly ? 'Requester' : 'Synthetic Operator',
-  role: requestOnly ? 'REQUESTER' : 'ADMIN',
+  role: requestOnly ? 'REQUESTER' : 'ADMINISTRATOR',
   committee: '',
   permissions: {
     review: !requestOnly,
@@ -17,6 +17,15 @@ const user = (requestOnly) => ({
     manageCatalog: !requestOnly,
   },
   scopes: { committee: [] },
+  authorization: requestOnly ? {
+    contract: 'canonical-authorization', contractVersion: 2, modelVersion: 2,
+    roleId: 'REQUESTER', roleLabel: 'Requester', scopeMode: 'SELF', committeeIds: [], committees: [],
+    capabilities: ['view.request', 'request.create', 'lending.create'], mappingStatus: 'MAPPED', active: true,
+  } : {
+    contract: 'canonical-authorization', contractVersion: 2, modelVersion: 2,
+    roleId: 'ADMINISTRATOR', roleLabel: 'Administrator', scopeMode: 'ALL', committeeIds: [], committees: [],
+    capabilities: ['view.request', 'view.internal', 'view.all.summary', 'view.audit', 'view.inventory', 'reference.catalog.manage', 'reference.manage', 'access.admin', 'system.admin', 'system.diagnostics', 'evidence.upload'], mappingStatus: 'MAPPED', active: true,
+  },
 });
 
 export function createEssentialBootstrapFixture({ backendMode = 'mock', environment = 'STAGING', requestOnly = false } = {}) {
@@ -33,7 +42,7 @@ export function createEssentialBootstrapFixture({ backendMode = 'mock', environm
     contract: ESSENTIAL_BOOTSTRAP_CONTRACT,
     contractVersion: ESSENTIAL_BOOTSTRAP_VERSION,
     appVersion: '0.5.0',
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
     backendMode,
     environment,
     requestOnly,
@@ -92,7 +101,7 @@ export function createBootstrapModuleFixture({ backendMode = 'mock', environment
     contract: BOOTSTRAP_MODULE_CONTRACT,
     contractVersion: ESSENTIAL_BOOTSTRAP_VERSION,
     appVersion: '0.5.0',
-    schemaVersion: '1.1.0',
+    schemaVersion: '1.2.0',
     backendMode,
     environment,
     requestOnly,

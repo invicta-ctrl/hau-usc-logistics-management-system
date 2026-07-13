@@ -50,7 +50,7 @@ export const BOOTSTRAP_STATES = Object.freeze({
 });
 
 const SUPPORTED_BOOTSTRAP_VERSIONS = new Set(['0.5.0', '1.0.0']);
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.2.0', '1.1.0', '1.0.0', '3', 3]);
 const SAFE_TOKEN = /^[A-Z0-9][A-Z0-9_-]{2,63}$/i;
 const noop = () => {};
 
