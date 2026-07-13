@@ -1,5 +1,28 @@
 # Work Continuation
 
+## Codex routing implementation checkpoint — local feature branch
+
+- Date: `2026-07-13` (`Asia/Manila`)
+- Branch: `feat/automated-codex-model-routing`
+- Starting commit: `81efe82` (current synchronized launch-readiness head)
+- Scope: project-local instruction refinement, deterministic routing, launcher,
+  hooks, custom agents, schemas, examples, tests, and documentation.
+- External actions: none. No Apps Script push, deployment, Sheet/Drive write,
+  migration, access seeding, production action, merge, or PR update occurred.
+- Runtime safety: `.codex/runtime/` is gitignored; no live prompt or route is
+  intended for commit.
+- Verification: `npm run codex:validate` passed; routing and repository tests
+  passed (11 files / 82 tests); ESLint passed; `npm run check` passed including
+  Vite build, Apps Script static validation, generated-package checks, and
+  standalone artifact verification (210,313 bytes each); `npm run test:e2e`
+  passed (29 passed, 25 intentionally skipped).
+- Live refinement smoke: the installed Codex CLI (`0.144.0-alpha.4`) refined a
+  rough inventory-search instruction through `gpt-5.6-terra` at medium effort;
+  the result classified as `partial_task`, validated, and routed to exploration
+  without editing the repository or performing external actions.
+- Generated HTML artifacts were restored after the build check; no protected
+  generated output is included in this routing change.
+
 ## Latest checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
 
 - Date: `2026-07-13` (`Asia/Manila`)

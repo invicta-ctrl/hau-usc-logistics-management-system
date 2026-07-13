@@ -14,6 +14,20 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
+## Codex routing checks
+
+```powershell
+npm run codex:validate
+npm test -- tests/routing
+```
+
+The routing suite verifies input classification, original-instruction
+preservation, proportional complete-prompt handling, schema validation,
+prompt-bloat boundaries, safe stops, unsupported-model rejection, exploration
+versus judgment routing, deterministic profile lookup, and disabled default
+subagents. The launcher maps profiles to fixed commands; it does not execute
+model-generated shell text.
+
 ## Staging acceptance
 
 Exercise: full-stock request, partial split, no-stock procurement and cumulative deliverable receipts, partial/full release, loan approval/handoff/overdue/return, line-level multi-restock receipts, evidence upload/deduplication/failure, over-transfer rejection, duplicate-click replay, competing allocation, VERIFY blocking, unauthorized staff invocation, request-only data isolation, migration dry-run, backup, and recovery health check.

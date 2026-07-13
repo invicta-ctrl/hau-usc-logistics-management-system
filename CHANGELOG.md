@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added project-scoped Codex instruction classification, read-only refinement,
+  validated route schemas, model/reasoning allowlists, verification profiles,
+  custom agent roles, trusted-hook context loading, and a PowerShell launcher.
+- Added routing fixtures covering rough, partial, complete, precise, unsafe,
+  unsupported, exploration, and cost-selection decisions.
+- Added local-only runtime handling so raw prompts, refined briefs, route
+  decisions, worker output, and review output are not committed.
+
+### Safety
+
+- Routing does not authorize Apps Script, Google Sheets, Google Drive,
+  deployment, migration, publication, merge, or production work.
+- Hooks are documented as best-effort guardrails; the launcher remains the
+  authoritative preflight and verification boundary.
+
 ## 0.4.0 - 2026-07-12
 
 ### Added

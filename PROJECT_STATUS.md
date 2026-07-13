@@ -16,6 +16,23 @@
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
+## Codex routing implementation status
+
+The local feature branch `feat/automated-codex-model-routing` adds a project-
+scoped instruction-refinement gate and deterministic model-routing wrapper. It
+does not change product roadmap status or authorize any Apps Script, Sheet,
+Drive, deployment, migration, publication, or merge action.
+
+- Rough and partial instructions are refined with a read-only structured brief.
+- Complete prompts and precise commands bypass unnecessary rewriting.
+- Runtime prompts and decisions live only in gitignored `.codex/runtime/`.
+- Verified local model aliases are `gpt-5.6-terra`, `gpt-5.6-luna`, and
+  `gpt-5.6-sol`; unsupported routes are rejected.
+- `npm run codex:validate` and the routing fixture suite provide deterministic
+  policy checks.
+- The installed Codex CLI must be available for live refinement/worker runs;
+  if it cannot start, the launcher stops without implementation.
+
 ## Completed in this branch
 
 - Preserved the approved visual baseline and generated visual modules.

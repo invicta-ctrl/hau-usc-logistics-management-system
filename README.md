@@ -25,6 +25,39 @@ npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
 
+## Codex instruction refinement and routing
+
+Natural instructions may be used, but implementation starts only after the
+project routing gate has classified and, when needed, refined them. The gate
+reads the authoritative project guidance, preserves the original instruction
+locally, validates a structured brief, selects a verified model/reasoning pair,
+and blocks unsafe or ambiguous work. Complete prompts and precise named-file
+commands are not unnecessarily expanded.
+
+```powershell
+# Validate the project routing policy
+npm run codex:validate
+
+# Refine only, then inspect the brief
+.\scripts\codex-route.ps1 -Instruction "Fix the inventory search." -RefineOnly
+Get-Content .codex\runtime\current-task-brief.md
+
+# Assess a route without starting a worker
+.\scripts\codex-route.ps1 -Instruction "Fix the inventory search." -Assess
+
+# Execute only after reviewing the brief and route
+.\scripts\codex-route.ps1 -Instruction "Fix the inventory search." -Execute
+.\scripts\codex-route.ps1 -PromptFile .\tasks\approved-task.md -Execute
+
+# Review the latest local route and review output
+.\scripts\codex-route.ps1 -ReviewLatest
+```
+
+The launcher uses read-only structured refinement, explicit `codex exec`
+sandbox flags, allowlisted verification profiles, and an independent review.
+It never performs Apps Script, Sheet, Drive, deployment, migration, or merge
+actions. See `.codex/routing/` for policy, schemas, examples, and limitations.
+
 `npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 
 - `dist/index.html` – canonical standalone production build.

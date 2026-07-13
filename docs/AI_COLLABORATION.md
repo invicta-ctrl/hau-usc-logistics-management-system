@@ -2,6 +2,20 @@
 
 This repository is the durable context bridge between ChatGPT web and the Codex app. Separate chats do not automatically share their full conversation history. Both agents must reconstruct current context from GitHub and the committed files listed below.
 
+## Routing gate
+
+Before a Codex worker starts, use `scripts/codex-route.ps1`. It preserves the
+original instruction locally, refines rough or partial input with a read-only
+structured output, and writes an inspectable brief and route under the ignored
+`.codex/runtime/` directory. Complete prompts and precise commands are kept
+proportional. Inspect the brief and route before passing `-Execute`.
+
+The route must use a verified model/reasoning alias and an allowlisted
+verification profile. Subagents are disabled by default and parallel writes
+require isolated ownership or worktrees. The router never authorizes live
+Apps Script, Google Sheets, Google Drive, deployment, migration, publication,
+merge, or production actions.
+
 ## Shared source of truth
 
 Read in this order:

@@ -30,6 +30,11 @@ Do not derive access mode solely from `location.search` in client JavaScript. Ap
 
 ## Production promotion
 
+Codex routing is a repository preflight only. A valid route does not authorize
+Apps Script push, deployment version creation, migration, access seeding,
+Google Sheet or Drive writes, production promotion, or pull-request merge.
+Those actions still require a separate explicit manager task and user approval.
+
 Obtain DOL owner sign-off, freeze config/mappings, create a fresh backup, push the reviewed commit to the production Apps Script project, create an immutable deployment version, restrict audience, run smoke tests, and record deployment owner/version/commit/time/result. Keep the previous deployment version available for application rollback.
 
 ## Immediate smoke tests

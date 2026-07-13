@@ -4,6 +4,13 @@ These instructions apply to ChatGPT web, Codex local tasks, Codex worktrees, and
 
 Before editing, read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
 
+## Codex routing preflight
+
+- Use `scripts/codex-route.ps1` for implementation work. Rough and partial instructions must be refined before routing; complete prompts and precise named-file commands remain proportional.
+- Inspect `.codex/runtime/current-task-brief.md` and `.codex/runtime/current-route.json` before execution. Runtime files are local and gitignored.
+- Run `npm run codex:validate` for routing-policy changes. Never execute arbitrary commands emitted by a model; use the launcher's allowlisted verification profiles.
+- The router does not authorize Apps Script, Google Sheets, Google Drive, deployment, migration, publication, merge, or production work. Those actions still require explicit approval under the launch runbook.
+
 ## Required start-of-task handshake
 
 1. Report the repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
