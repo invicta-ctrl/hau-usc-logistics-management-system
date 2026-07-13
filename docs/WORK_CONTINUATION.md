@@ -6,8 +6,8 @@
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
 - Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
-- Current stage: `READY_FOR_FOCUSED_COMMIT`; implementation, repairs, and final local gates are complete.
-- Handshake: worktree clean, local/upstream `0 0`, remote head matched the starting commit, and no competing writer was found.
+- Current stage: `PENDING_MANAGER_REVIEW`; implementation, repairs, final local gates, push, and PR CI are complete.
+- Handshake: worktree clean, local/upstream `0 0`, remote head is `576393f1be28687d984ea7632a2501aa8d3fc30d`, and no competing writer was found.
 
 ### Slice 2 implementation
 
@@ -25,7 +25,7 @@
 ### Current evidence and next transition
 
 - `npm run check` passed with 18 Vitest files / 143 tests; `npm run verify` passed; focused packaging passed 15/15; full Playwright passed 49 with 95 intentionally scoped skips and 0 failures across 144 cases. Initial independent-review FAIL findings were repaired. A current-snapshot re-review returned WARN/incomplete, so no re-review PASS is claimed.
-- Sensitive scan and generated parity pass. The next transition is one focused implementation commit, followed by authorized remote/PR/CI verification. Do not deploy or broaden the scope.
+- Sensitive scan and generated parity pass. The focused implementation commit is `576393f1be28687d984ea7632a2501aa8d3fc30d`; draft PR #6 is open and `validate`, `verify`, and `browser-smoke` pass. Obtain manager acceptance before any new milestone; do not deploy or broaden the scope.
 
 ## Latest checkpoint — P0 Production Bootstrap Diagnosis and Recovery
 

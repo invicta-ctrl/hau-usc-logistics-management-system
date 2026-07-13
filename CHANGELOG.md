@@ -13,7 +13,8 @@
 
 - Working branch: `feat/live-sync-lending-search-catalog-controls`
 - Starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
-- Ending commit: one focused Slice 2 implementation commit is pending; exact SHA is reported after commit
+- Ending commit: `576393f1be28687d984ea7632a2501aa8d3fc30d`; pushed to the feature branch with local/upstream parity `0 0`
+- Draft PR #6 is open and its `validate`, `verify`, and `browser-smoke` checks pass; manager review remains pending.
 
 ### P0 Production Bootstrap Diagnosis and Recovery
 

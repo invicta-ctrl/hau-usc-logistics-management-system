@@ -6,9 +6,9 @@
 - Date: `2026-07-13`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
-- Ending commit: this handoff commit; exact SHA is reported after commit and push
+- Ending commit: `576393f1be28687d984ea7632a2501aa8d3fc30d` (`feat: add essential bootstrap module contracts`)
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #2, open, mergeable, unmerged
+- Pull request: draft PR #6, open, unmerged; `validate`, `verify`, and `browser-smoke` pass
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable version 9 on the existing deployment ID
@@ -22,7 +22,8 @@ Always verify the current remote head and CI because documentation commits may f
 
 - Date: `2026-07-14` (`Asia/Manila`)
 - Approved starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
-- Current stage: `READY_FOR_FOCUSED_COMMIT`; implementation, repairs, and final local gates are complete.
+- Current stage: `PENDING_MANAGER_REVIEW`; implementation, repairs, final local gates, push, and PR CI are complete.
+- Remote ending SHA: `576393f1be28687d984ea7632a2501aa8d3fc30d`; local/upstream ahead/behind is `0 0`.
 - Apps Script renders `HAU_BOOTSTRAP_CONTRACT_VERSION` from Script Properties: absent defaults to v1, explicit v2 requests an allowlisted essential DTO followed by one active-module DTO, and v1 retains the compatibility endpoint.
 - Added bounded pagination/filtering across module collections, fail-closed explicit entity-scope filtering for committee-scoped sessions, strict JSON/sensitive-field validation, exact UTF-8 payload metrics with a 100 KiB server bound, safe public-reference caching, in-request Sheet-read deduplication, and generated-runtime integration.
 - Verification: `npm run check` passed with 18 Vitest files / 143 tests; `npm run verify` passed; focused packaging passed 15/15; full Playwright passed 49 with 95 intentionally scoped skips and 0 failures across 144 cases.

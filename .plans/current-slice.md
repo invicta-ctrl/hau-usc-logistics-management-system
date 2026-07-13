@@ -1,7 +1,7 @@
 # Slice 2 Current Slice Checkpoint
 
 CURRENT SLICE: Slice 2 - Essential bootstrap and lazy module contracts
-CURRENT STAGE: READY_FOR_FOCUSED_COMMIT
+CURRENT STAGE: PENDING_MANAGER_REVIEW
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 ## Starting checkpoint for Slice 2
@@ -37,7 +37,7 @@ Bound startup work and payload so the initial shell reads only the essential boo
 - [x] Module loaders apply bounded query/filter/page inputs, fail closed for committee-scoped users without matching explicit scope, and enforce a final serialized response bound of 100 KiB.
 - [x] Focused and final local gates pass: 18 Vitest files / 143 tests, focused packaging 15/15, and full Playwright 49 passed / 95 intentionally skipped / 0 failed across 144 cases.
 - [x] Initial independent review FAIL findings were repaired; current-snapshot re-review was attempted but returned WARN/incomplete, so no re-review PASS is claimed.
-- [ ] Focused commit and remote/CI evidence remain.
+- [x] Focused commit `576393f1be28687d984ea7632a2501aa8d3fc30d` is pushed; remote parity is `0 0`, and PR #6 `validate`, `verify`, and `browser-smoke` pass.
 - [ ] Staging timing/payload and `clasp` checks requiring configured staging remain intentionally unrun.
 
 ## Current local evidence and rollback
@@ -47,6 +47,7 @@ Bound startup work and payload so the initial shell reads only the essential boo
 - Sensitive scan passed by category over the Slice 2 changed scope; no credentials, private identifiers, roster/student/contact/supplier/evidence values, operational data, or `.clasp.json` content is staged.
 - No external Sheets/Drive/Apps Script reads or writes, deployments, migrations, database/hosting work, or staging/production actions were performed. `clasp` remains intentionally unrun.
 - Rollback: set `HAU_BOOTSTRAP_CONTRACT_VERSION=1` to select the compatibility endpoint; if code rollback is required after commit, revert the single Slice 2 commit to `8b40f60a48323065ad69517e37915a33f32a51d2`.
+- Remote checkpoint: `576393f1be28687d984ea7632a2501aa8d3fc30d` is the verified ending SHA; the worktree is clean and manager acceptance is the remaining gate.
 
 ## Previous Slice 1 record
 
