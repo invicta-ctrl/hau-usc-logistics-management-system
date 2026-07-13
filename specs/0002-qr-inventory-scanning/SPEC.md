@@ -1,12 +1,12 @@
 ---
 spec_id: "0002"
 title: "QR Inventory Scanning, Labels, and Immediate Issue"
-status: IN_REVIEW
+status: ACCEPTED
 owner: "Earl Adriano"
 created: 2026-07-13
 last_updated: 2026-07-13
-accepted_by: null
-accepted_at: null
+accepted_by: "Earl Adriano"
+accepted_at: 2026-07-13
 supersedes: null
 superseded_by: null
 ---
@@ -17,6 +17,7 @@ superseded_by: null
 
 - Initial user instruction: “Add QR-code inventory scanning to the HAU-USC Logistics Management System. Start editing the repository immediately.”
 - Amendment instruction: “Before I accept it, add a new requirement: scanning a QR code should immediately deduct inventory and create a ledger transaction.”
+- Acceptance instruction: “Accept amended spec 0002.”
 - Governing repository rules: `AGENTS.md`, `docs/SPEC_DRIVEN_DEVELOPMENT.md`, `docs/AI_COLLABORATION.md`, and `specs/README.md`.
 - Project state: `PROJECT_STATUS.md` and `docs/WORK_CONTINUATION.md` from the V1 release-candidate line.
 - Relevant architecture/domain/security documents: `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, `docs/API_AND_SERVICE_CONTRACTS.md`, `docs/TESTING_AND_ACCEPTANCE.md`, and `docs/LAUNCH_RUNBOOK.md`.
@@ -142,7 +143,7 @@ Each inventory item can also display a printable QR label whose encoded payload 
 ### Time, environment, and tooling constraints
 
 - Preserve the one-writer rule.
-- Implementation starts only after this amended specification is explicitly accepted.
+- This amended specification was explicitly accepted by Earl on 2026-07-13.
 - Repository work is allowed only on the isolated feature branch.
 - Live Google Workspace and deployment actions remain prohibited.
 
@@ -318,7 +319,7 @@ Evidence expected:
 
 ## 12. Task checklist
 
-- [ ] Amended spec explicitly accepted by Earl.
+- [x] Amended spec explicitly accepted by Earl.
 - [ ] Add and test payload generator/parser (`REQ-001`, `REQ-002`).
 - [ ] Add and test scanner-session lifecycle and duplicate-frame suppression (`REQ-003`, `REQ-005`, `REQ-008`).
 - [ ] Add manual fallback with equivalent issue behavior (`REQ-004`).
@@ -388,7 +389,6 @@ Run focused QR/backend mutation tests and the full relevant Playwright matrix wh
 Stop and report before continuing when:
 
 - the branch or starting commit differs from `feat/qr-inventory-scanning` at base `bfafcf242e03a85ad450f220d423af8bad064f07` without an approved amendment;
-- this amended specification has not been explicitly accepted;
 - another writer is actively changing the same branch or shared files;
 - implementing the command requires a Sheet schema change, new permission model, live deployment, or live external write not authorized here;
 - current ledger, command-journal, lock, audit/history, or revision services cannot satisfy atomicity and replay requirements;
@@ -401,7 +401,7 @@ Stop and report before continuing when:
 
 ## 17. Open questions
 
-None blocking review. This amended specification resolves the immediate-deduction request as follows:
+None blocking implementation. This accepted specification resolves the immediate-deduction request as follows:
 
 - The feature is a dedicated, explicitly armed **Issue by QR** workflow, not passive scanning anywhere in the application.
 - Quantity defaults visibly to one base unit and may be changed before arming.
@@ -417,12 +417,12 @@ Per-unit asset serialization, QR receiving, QR returns, QR lending, and QR reque
 | ID | Date | Type | Decision/change | Approved by | Affected IDs |
 |---|---|---|---|---|---|
 | `DEC-001` | 2026-07-13 | Superseded decision | Initial draft limited scanning to read-only item identification | Superseded by user amendment | Former `REQ-003`–`REQ-006`, former `AC-002`–`AC-006` |
-| `AMD-001` | 2026-07-13 | Material amendment | Add immediate inventory deduction and immutable ledger creation on a valid authorized QR scan | Requested by Earl; pending full spec acceptance | Sections 2–17; `REQ-005`–`REQ-009`; `AC-002`–`AC-007` |
-| `DEC-002` | 2026-07-13 | Decision | Encode only a versioned type marker and stable item ID | Pending acceptance | `REQ-001`, `REQ-002`, `AC-001` |
-| `DEC-003` | 2026-07-13 | Decision | Use a dedicated armed Issue by QR mode with visible quantity/context and no second confirmation after scan | Pending acceptance | `REQ-003`–`REQ-005`, `AC-002`, `AC-004`, `AC-007`, `AC-010` |
-| `DEC-004` | 2026-07-13 | Decision | Preserve append-only ledger truth; never rewrite quantity directly | Pending acceptance | `REQ-006`, `AC-002`, `AC-003`, Section 14 |
-| `DEC-005` | 2026-07-13 | Decision | Reject loanable, reusable, reservation-backed, event, and workflow-controlled items from immediate issue | Pending acceptance | `REQ-007`, `AC-005` |
-| `DEC-006` | 2026-07-13 | Decision | Keep live Workspace writes, deployment, migration, merge, tag, and release outside this repository task | Pending acceptance | Section 9 |
+| `AMD-001` | 2026-07-13 | Material amendment | Add immediate inventory deduction and immutable ledger creation on a valid authorized QR scan | Earl Adriano | Sections 2–17; `REQ-005`–`REQ-009`; `AC-002`–`AC-007` |
+| `DEC-002` | 2026-07-13 | Decision | Encode only a versioned type marker and stable item ID | Earl Adriano | `REQ-001`, `REQ-002`, `AC-001` |
+| `DEC-003` | 2026-07-13 | Decision | Use a dedicated armed Issue by QR mode with visible quantity/context and no second confirmation after scan | Earl Adriano | `REQ-003`–`REQ-005`, `AC-002`, `AC-004`, `AC-007`, `AC-010` |
+| `DEC-004` | 2026-07-13 | Decision | Preserve append-only ledger truth; never rewrite quantity directly | Earl Adriano | `REQ-006`, `AC-002`, `AC-003`, Section 14 |
+| `DEC-005` | 2026-07-13 | Decision | Reject loanable, reusable, reservation-backed, event, and workflow-controlled items from immediate issue | Earl Adriano | `REQ-007`, `AC-005` |
+| `DEC-006` | 2026-07-13 | Decision | Keep live Workspace writes, deployment, migration, merge, tag, and release outside this repository task | Earl Adriano | Section 9 |
 
 A material amendment returns the spec to `IN_REVIEW` until renewed approval is recorded.
 
@@ -448,8 +448,8 @@ Complete during verification.
 
 - Current branch: `feat/qr-inventory-scanning`.
 - Starting commit: `bfafcf242e03a85ad450f220d423af8bad064f07`.
-- Current status: amended specification is `IN_REVIEW`; implementation remains prohibited until explicit acceptance.
+- Current status: amended specification `0002` is `ACCEPTED`; implementation is authorized on the isolated feature branch.
 - Files changed so far: `specs/0002-qr-inventory-scanning/SPEC.md`.
-- External actions performed: created the isolated feature branch, opened draft PR #5, and amended the specification in response to Earl’s requirement.
+- External actions performed: created the isolated feature branch, opened draft PR #5, amended the specification, and recorded Earl’s explicit acceptance.
 - External actions not performed: no implementation, generated artifact, Google Workspace, deployment, migration, merge, tag, release, or protected PR #2 change.
-- Recommended next action: Earl reviews and explicitly accepts amended spec `0002`; implementation may then begin on the same isolated branch.
+- Recommended next action: begin implementation of `REQ-001` through `REQ-011`, maintaining one-writer coordination and recording evidence against `AC-001` through `AC-011`.
