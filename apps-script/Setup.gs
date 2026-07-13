@@ -64,6 +64,7 @@ function setupDatabase() {
       var db = getDatabase_();
       var created = [];
       var headersAdded = [];
+      var defaultsUpdated = [];
       Object.keys(HAU_HEADERS).forEach(function(name) {
         var sheet = db.getSheetByName(name);
         if (!sheet) {
@@ -75,7 +76,7 @@ function setupDatabase() {
         if (sheet.getLastRow() === 0 || actual.every(function(value) { return !value; })) {
           sheet.getRange(1, 1, 1, HAU_HEADERS[name].length).setValues([HAU_HEADERS[name]]);
           headersAdded.push({ sheet: name, headers: HAU_HEADERS[name] });
-        } else if (missing.length && name === '01_ITEM_MASTER') {
+        } else if (missing.length && [HAU_SHEETS.ITEMS, HAU_SHEETS.USERS].indexOf(name) >= 0) {
           sheet.getRange(1, sheet.getLastColumn() + 1, 1, missing.length).setValues([missing]);
           headersAdded.push({ sheet: name, headers: missing });
         }
@@ -87,15 +88,30 @@ function setupDatabase() {
           setConfigValue_(key, 'TO_BE_ASSIGNED', runtime.environment, 'Managed Google Drive folder ID', 'PENDING', user);
         }
       });
+      readObjects_(HAU_SHEETS.ITEMS).forEach(function(item) {
+        var defaults = catalogItemDefaults_(item, user);
+        var patch = {};
+        Object.keys(defaults).forEach(function(field) {
+          if ((item[field] === '' || item[field] == null) && defaults[field] !== '') patch[field] = defaults[field];
+        });
+        if (Object.keys(patch).length) {
+          updateObject_(HAU_SHEETS.ITEMS, item._row, patch);
+          defaultsUpdated.push(item.Item_ID);
+        }
+      });
+      ensureDataRevisionConfig_(user);
       setConfigValue_('SCHEMA_VERSION', HAU_CONFIG.SCHEMA_VERSION, runtime.environment, 'Backend schema version', 'VALID', user);
+      var dataRevision = touchDataRevision_(user);
       audit_('SETUP_DATABASE', 'DATABASE', runtime.spreadsheetId, user, correlationId, {
-        after: { environment: runtime.environment, created: created, headersAdded: headersAdded }
+        after: { environment: runtime.environment, created: created, headersAdded: headersAdded, defaultsUpdated: defaultsUpdated, dataRevision: dataRevision.revision }
       });
       return {
         environment: runtime.environment,
         spreadsheetId: runtime.spreadsheetId,
         createdSheets: created,
         headersAdded: headersAdded,
+        defaultsUpdated: defaultsUpdated,
+        dataRevision: dataRevision,
         validation: validateDatabaseSchema_()
       };
     });
@@ -199,13 +215,15 @@ function seedRolesAndPermissions(users) {
           Role: role, Committee: input.committee || '', Active: true,
           Can_Review: permissions.indexOf('Can_Review') >= 0, Can_Release: permissions.indexOf('Can_Release') >= 0,
           Can_Receive: permissions.indexOf('Can_Receive') >= 0, Can_Admin: permissions.indexOf('Can_Admin') >= 0,
+          Can_Manage_Catalog: permissions.indexOf('Can_Manage_Catalog') >= 0,
           Created_At: nowIso_(), Updated_At: nowIso_(), Last_Login_At: '', Notes: input.notes || ''
         };
         appendObject_(HAU_SHEETS.USERS, row);
         added.push(row.User_ID);
       });
-      audit_('SEED_USERS_ACCESS', 'USERS_ACCESS', 'BATCH', actor, correlationId, { after: { added: added } });
-      return { added: added };
+      if (added.length) audit_('SEED_USERS_ACCESS', 'USERS_ACCESS', 'BATCH', actor, correlationId, { after: { added: added } });
+      var dataRevision = added.length ? touchDataRevision_(actor) : null;
+      return { added: added, dataRevision:dataRevision };
     });
   });
 }

@@ -1,8 +1,17 @@
 # HAU-USC Logistics Management System
 
-Version 0.4.0 is the launch-readiness branch for the Holy Angel University – University Student Council Department of Logistics. It preserves the approved maroon, burgundy, gold, cream, paper, and white prototype while adding a production Google Apps Script boundary for the prepared Google Sheet and future Drive evidence folders.
+Version 0.5.0 is the repository-only live synchronization, lending search, and catalog-controls revision for the Holy Angel University – University Student Council Department of Logistics. It builds on the 0.4.0 launch-readiness foundation while preserving the approved maroon, burgundy, gold, cream, paper, and white prototype and the production Google Apps Script boundary.
 
-> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. No production deployment or spreadsheet mutation is performed by repository commands. The application must remain in staging until the launch runbook passes.
+> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. Version 0.5.0 has not been pushed or deployed, and no Sheet, Drive, trigger, or other external write was performed for this revision. The existing immutable staging Version 9 remains untouched; production remains untouched.
+
+## Version 0.5.0 scope
+
+- Successful Apps Script mutations reload authoritative bootstrap state before the interface renders success. A recorded mutation is never submitted again merely because the follow-up reload failed.
+- Internal sessions check a compact data revision every five seconds while the tab is visible and online. This is polling, not WebSockets or server push.
+- Direct human edits can advance the revision through an idempotently installed operational spreadsheet edit trigger.
+- Dirty forms and active modal work defer background reloads and show a non-blocking “New operational data is available” choice instead of discarding input.
+- The Lending Hub uses an accessible predictive item search with borrower-aware audience, handling, stock, verification, and quantity explanations. Final eligibility is always revalidated on the server.
+- Authorized catalog managers can create, edit, relocate, archive, and restore items through audited Apps Script APIs. Item IDs, ledger history, quantity truth, provenance, and unsafe unit changes remain protected.
 
 ## Start locally
 
@@ -24,6 +33,8 @@ npm run verify:dist
 npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
+
+Recorded repository verification for 0.5.0 is complete: `npm ci`, `npm run check`, and `npm run verify` passed; Vitest passed 93 tests across 12 files; the focused Chromium 390 px suite passed 4 tests; and the complete six-viewport Playwright matrix finished with 38 passed, 40 intentionally scoped skips, and 0 failures. A second build reproduced the same standalone and Apps Script shell hashes. Live staging acceptance remains a separately authorized activity.
 
 `npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 
@@ -77,7 +88,7 @@ The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placehold
 
 The repository includes an isolated `DiagnosticShell.html`. After a reviewed staging push and deployment, `?diagnostic=1` is available only when `HAU_ENVIRONMENT=STAGING`. It proves template evaluation, body rendering, style application, inline JavaScript, and one harmless `google.script.run` round trip without reading or writing operational data. The admin-only `htmlTemplateDiagnostics()` function reports bounded lengths, prefixes, and suffixes; it never logs the complete generated application.
 
-Controlled staging Version 8 passed all four diagnostic checks and the authorized internal `/exec` entry point rendered without raw JavaScript or a loading-overlay stall. Its live `?request=1` privacy test failed because the outer query was lost inside the Apps Script sandbox iframe. The repository now injects the server-trusted request-only value into the generated body and tests both bootstrap modes, but that repair is not yet deployed. No production deployment or operational workflow write has been performed as part of this recovery.
+Controlled staging Version 9 passed the diagnostic, authorized internal `/exec`, and request-only `/exec?request=1` privacy checks. Version 0.5.0 remains repository-only and has not changed that deployment. No production deployment or operational workflow write was performed for this revision.
 
 ## First steps for a maintainer
 

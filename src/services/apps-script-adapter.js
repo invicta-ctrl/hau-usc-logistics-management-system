@@ -1,7 +1,7 @@
 import { AppError } from '../app/errors.js';
 
 const METHODS = Object.freeze({
-  getBootstrapData: 'api_getBootstrapData', getCurrentUser: 'api_getCurrentUser', searchCatalog: 'api_searchCatalog',
+  getBootstrapData: 'api_getBootstrapData', getCurrentUser: 'api_getCurrentUser', getDataRevision: 'api_getDataRevision', searchCatalog: 'api_searchCatalog',
   submitRequest: 'api_submitRequest', reviewRequest: 'api_reviewRequest', reserveStock: 'api_reserveStock',
   createLendingTicket: 'api_createLendingTicket', approveLendingTicket: 'api_approveLendingTicket',
   confirmLendingHandoff: 'api_confirmLendingHandoff', confirmReturn: 'api_confirmReturn',
@@ -10,6 +10,9 @@ const METHODS = Object.freeze({
   transferEventItemToInventory: 'api_transferEventItemToInventory', uploadEvidence: 'api_uploadEvidence',
   getAuditTimeline: 'api_getAuditTimeline', transitionDeliverable: 'api_transitionDeliverable',
   postEmergencyIssue: 'api_postEmergencyIssue', postCycleCountAdjustment: 'api_postCycleCountAdjustment',
+  getInventoryItem: 'api_getInventoryItem', createInventoryItem: 'api_createInventoryItem',
+  updateInventoryItem: 'api_updateInventoryItem', updateInventoryStorageContext: 'api_updateInventoryStorageContext',
+  archiveInventoryItem: 'api_archiveInventoryItem', restoreInventoryItem: 'api_restoreInventoryItem',
 });
 
 export class AppsScriptAdapter {

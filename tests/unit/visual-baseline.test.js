@@ -70,6 +70,7 @@ describe('authoritative visual extraction', () => {
     expect(runtime).toContain(
       "import { appEnvironment, backendMode, createLegacyRuntimeAdapter }",
     );
+    expect(runtime).toContain("import { createRuntimeExtensions }");
     expect(runtime).toContain(
       "backendMode==='mock'?loadState():await services.loadBootstrapData",
     );
@@ -94,6 +95,9 @@ describe('authoritative visual extraction', () => {
     expect(runtime).toContain(
       'The request was recorded for DOL review. Submission did not reduce physical stock.',
     );
+    expect(runtime).toContain('acceptAuthoritativeState');
+    expect(runtime).toContain('runtimeExtensions.install()');
+    expect(runtime).toContain('runtimeExtensions.start()');
 
     for (const hook of [
       'bindGlobalEvents()',

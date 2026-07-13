@@ -2,20 +2,26 @@
 
 ## Roles and permissions
 
-| Role | Review/reserve | Release | Receive | Admin |
-|---|---:|---:|---:|---:|
-| REQUESTER | no | no | no | no |
-| DOL_STAFF | yes | yes | yes | no |
-| COMMITTEE_HEAD | yes | no | yes | no |
-| DOL_DIRECTOR | yes | yes | yes | yes |
-| ADMIN | yes | yes | yes | yes |
-| READ_ONLY_AUDITOR | no | no | no | no |
+| Role | Review/reserve | Release | Receive | Admin | Manage catalog |
+|---|---:|---:|---:|---:|---:|
+| REQUESTER | no | no | no | no | explicit only |
+| DOL_STAFF | yes | yes | yes | no | explicit only |
+| COMMITTEE_HEAD | yes | no | yes | no | explicit only |
+| DOL_DIRECTOR | yes | yes | yes | yes | yes |
+| ADMIN | yes | yes | yes | yes | yes |
+| READ_ONLY_AUDITOR | no | no | no | no | explicit only |
 
-Every sensitive server action resolves the active Google identity and checks `14_USERS_ACCESS`. Frontend role display is not security. Catalog exceptions, migration, configuration, access changes, cycle-count adjustments, event-item merges, and environment health checks require admin permission.
+Every sensitive server action resolves the active Google identity and checks `14_USERS_ACCESS`. Frontend role display is not security. Migration, configuration, access changes, cycle-count adjustments, event-item merges, and environment health checks require admin permission.
+
+Internal inventory detail lookup requires `Can_Review` or `Can_Manage_Catalog`; creation, metadata/storage updates, archive, and restore require `Can_Manage_Catalog`. The field is appended to existing access rows. For backward compatibility, an active ADMIN or DOL_DIRECTOR is allowed when the new cell is blank. Every other active role is denied unless the field is explicitly true; blank does not grant it. UI controls are hidden or disabled for convenience, but manually invoked mutation endpoints still perform the server check and return `CATALOG_PERMISSION_REQUIRED`.
+
+Catalog commands cannot change quantity truth, posted ledger rows, legacy provenance, or server IDs. Nonzero initial stock requires receive or admin permission and an append-only opening ledger movement; VERIFY and inactive items cannot receive one. Unit changes and archive/restore transitions are also protected by dependency checks, audit records, status history, locks, and idempotency.
 
 ## Public/request-only boundary
 
-The request-only bootstrap returns event choices and sanitized catalog suggestions without exact on-hand, reserved, available-to-promise, verification-note, or legacy-source values. The requester UI labels stock routing as pending DOL review; the locked review command performs the authoritative full/partial/none decision. Request-only data excludes users, authorization flags, ledger rows, reservations, suppliers/TINs, borrower records, evidence internals, audits, errors, configuration values, health reports, and admin functions. Server entry points still reject staff commands invoked manually.
+The request-only bootstrap returns event choices and sanitized catalog suggestions without exact on-hand, reserved, available-to-promise, verification-note, or legacy-source values. The requester UI labels stock routing as pending DOL review; the locked review command performs the authoritative full/partial/none decision. Request-only data excludes users, authorization flags, ledger rows, reservations, suppliers/TINs, borrower records, evidence internals, audits, errors, configuration values, health reports, and admin functions. The server forces PUBLIC and REQUESTER identities through this sanitized path even if a client sends `requestOnly: false`; staff endpoints still reject manual unauthorized calls.
+
+The compact data-revision endpoint returns only `revision`, `updatedAt`, and environment and no operational rows. The request-only bootstrap omits revision fields and the requester UI does not start the internal polling controller; direct endpoint invocation still reveals only those compact non-operational values. Request-only users do not receive catalog-management permissions or internal circulation policies/balances.
 
 Evidence uploads are also permission-gated server-side before file bytes are decoded or Drive is accessed: receiving evidence requires `Can_Receive`, release/lending evidence requires `Can_Release`, and other supporting documents require `Can_Admin`.
 

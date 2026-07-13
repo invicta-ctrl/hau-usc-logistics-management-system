@@ -408,7 +408,7 @@ export async function createAppsScriptBundleFromProject() {
     import('vite'),
     import('./authoritative-visual-plugin.mjs'),
   ]);
-  const sourceHtml = await readFile(resolve('src/index.html'), 'utf8');
+  const sourceHtml = (await readFile(resolve('src/index.html'), 'utf8')).replace(/\r\n?/g, '\n');
   const visualPlugin = authoritativeVisual();
   const expandedHtml = await visualPlugin.transformIndexHtml(sourceHtml);
   const viteResult = await build({

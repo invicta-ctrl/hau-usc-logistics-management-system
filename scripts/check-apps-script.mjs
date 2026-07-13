@@ -10,7 +10,7 @@ import {
 } from './apps-script-bundle-lib.mjs';
 
 const requiredFiles = [
-  'Code.gs','Config.gs','Auth.gs','Router.gs','IdService.gs','Validation.gs','SheetRepository.gs',
+  'Code.gs','Config.gs','Auth.gs','Router.gs','IdService.gs','Validation.gs','SheetRepository.gs','DataRevisionService.gs',
   'ItemRepository.gs','RequestService.gs','InventoryService.gs','ReservationService.gs','LendingService.gs',
   'ReleaseService.gs','RestockService.gs','ProcurementService.gs','CanvassService.gs','EvidenceService.gs',
   'DriveService.gs','AuditService.gs','MigrationService.gs','BackupService.gs','ErrorService.gs','Setup.gs',
@@ -20,6 +20,8 @@ const requiredFunctions = [
   'setupDatabase','validateDatabaseSchema','setupDriveFolders','validateDriveConfiguration','setupTimeTriggers',
   'seedRolesAndPermissions','runMigrationDryRun','applyApprovedMigration','createLaunchBackup','runReconciliation','healthCheck',
   'api_getBootstrapData','api_submitRequest','api_reviewRequest','api_confirmRelease','api_uploadEvidence',
+  'api_getDataRevision','setupOperationalEditTrigger','handleOperationalSheetEdit','api_getInventoryItem',
+  'api_createInventoryItem','api_updateInventoryItem','api_updateInventoryStorageContext','api_archiveInventoryItem','api_restoreInventoryItem',
   'api_htmlDiagnosticPing','htmlTemplateDiagnostics',
 ];
 const root = resolve('apps-script');

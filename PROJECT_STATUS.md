@@ -2,9 +2,11 @@
 
 ## Current version
 
-- Version: `0.4.0`
+- Version: `0.5.0` (working revision; undeployed)
 - Date: `2026-07-13`
-- Branch: `feat/apps-script-backend-and-launch-readiness`
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
+- Ending commit: this handoff commit; exact SHA is reported after commit and push
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #2, open, mergeable, unmerged
 - Local/demo backend: `mock`
@@ -12,11 +14,40 @@
 - Current staging deployment: immutable version 9 on the existing deployment ID
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: rendering and request-only privacy acceptance passed on Version 9; runtime-truthfulness commit `7156c256414b797f4b0f19431b399009f31feebd` is pushed and both GitHub CI workflows passed. The repair remains undeployed pending explicit authorization for a bounded Version 10 staging update.
+- Live readiness: rendering and request-only privacy acceptance passed on Version 9. The 0.5.0 live-sync, lending-search, and catalog-controls revision is repository-only and has not changed the staging deployment or production.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
-## Completed in this branch
+## Version 0.5.0 working revision
+
+- Successful Apps Script mutations are followed by an authoritative bootstrap reload before success is rendered. A failed follow-up read does not repeat the recorded command.
+- Internal clients check `api_getDataRevision` every five seconds while visible and online. Focus, visibility restoration, reconnect, and the visible Refresh control request immediate checks. Polling requests do not overlap and back off after repeated errors.
+- Revision state is stored in `17_CONFIG`. Each successful non-replay mutation advances it exactly once; bootstrap, search, health, diagnostics, and other read-only operations do not advance it.
+- An installable operational spreadsheet edit trigger advances the revision for relevant direct human edits. Trigger setup is idempotent and is not performed by repository commands.
+- Dirty forms, local request drafts, pending uploads, and active modal workflows defer automatic refresh and show an Updates available banner.
+- The Lending Hub uses predictive text selection with a hidden authoritative Item ID, accessible keyboard behavior, and specific availability/restriction messages.
+- Server lending validation covers item existence/status, VERIFY, handling, borrower audience, quantity, maximum quantity, available-to-promise, and due dates at creation and again during approval/handoff.
+- Authorized catalog managers can create, edit, relocate, archive, and restore items through locked, idempotent, audited APIs. Quantity truth remains append-only; unit and archive protections preserve dependencies and history.
+- `Can_Manage_Catalog` is appended to access rows. ADMIN and DOL_DIRECTOR retain backward-compatible access when the cell is blank; other roles require an explicit true value.
+- The `01_ITEM_MASTER`, `14_USERS_ACCESS`, and `17_CONFIG` changes are additive and safe to prepare before the new web deployment becomes active.
+
+### Repository verification
+
+- `npm ci`: passed.
+- ESLint: passed.
+- Vitest: 12 files / 93 tests passed.
+- Focused new Chromium suite at 390 px: 4 passed.
+- `npm run check`: passed, including the 22-module Vite build, 24-file/27-entry-point Apps Script static and packaging checks, generated-file parity, and standalone verification.
+- `npm run verify`: passed.
+- Complete Playwright/browser matrix across all six configured viewport projects: 38 passed, 40 intentionally scoped skips, 0 failed.
+- A second build reproduced the byte-identical 238,891-byte standalone artifacts with SHA-256 `8192ddff053f9776ba41f74be4eadf9c627b6db638db0cf7f8b6cf03d410ed8f` and the 615-byte Apps Script shell with SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`.
+
+### External-action record
+
+- No `clasp push`, immutable Apps Script version, deployment update, Sheet/Drive write, live trigger change, production action, or PR #2 merge was performed for 0.5.0.
+- Immutable staging Version 9 remains the live staging version. Production remains untouched.
+
+## Launch-readiness foundation completed in 0.4.0
 
 - Preserved the approved visual baseline and generated visual modules.
 - Added strict browser adapters for mock, Apps Script, and future authenticated HTTP implementations.
@@ -123,12 +154,13 @@ The runtime-truthfulness repair is included in this repository update. It resolv
 
 ## Remaining launch blockers and limitations
 
+- Obtain manager review of the exact 0.5.0 diff, pushed commit, and CI state.
 - Review and seed the final institutional access rows in `14_USERS_ACCESS` before broader staging acceptance.
-- Obtain explicit authorization before preparing any bounded Version 10 staging deployment.
+- Obtain explicit authorization before any staging schema migration, operational edit-trigger installation, code push, or deployment.
 - Complete one controlled Sheet/Drive end-to-end workflow and verify audit, history, error, and evidence records.
 - Obtain DOL owner approval before production promotion or merging PR #2.
 - The compatibility runtime remains relatively large; Google Sheets remains suitable for a controlled v1 pilot, not high-volume transactional scale.
 
 ## Next recommended task
 
-Obtain explicit authorization for one bounded Version 10 staging deployment of commit `7156c256414b797f4b0f19431b399009f31feebd`. The deployment must preserve the existing deployment ID, avoid all operational Sheet/Drive writes, and be followed only by diagnostic, internal-rendering, request-only privacy, and runtime-label acceptance checks. Do not touch production or merge PR #2.
+Review the pushed 0.5.0 handoff commit and CI evidence. Only after separate explicit authorization should an operator follow the staged backup, additive schema migration, edit-trigger setup, deployment, acceptance, and rollback sequence in `docs/LAUNCH_RUNBOOK.md`. Do not touch production or merge PR #2 as part of repository verification.

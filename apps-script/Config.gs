@@ -7,8 +7,8 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
 var HAU_CONFIG = Object.freeze({
-  APP_VERSION: '0.4.0',
-  SCHEMA_VERSION: '1.0.0',
+  APP_VERSION: '0.5.0',
+  SCHEMA_VERSION: '1.1.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -78,7 +78,7 @@ var HAU_SHEETS = Object.freeze({
 });
 
 var HAU_HEADERS = Object.freeze({
-  '01_ITEM_MASTER': ['Item_ID','Item_Name','Aliases','Category','Stock_Area','Handling','Unit','Opening_Qty','Reserved_Qty','Available_To_Promise','Status','Legacy_Source_Sheet','Legacy_Source_Row','Legacy_Source_Block','Verification_Note','_Helper_Name','_Helper_Qty','_Helper_Unit','_Helper_Row','_Helper_Block'],
+  '01_ITEM_MASTER': ['Item_ID','Item_Name','Aliases','Category','Stock_Area','Handling','Unit','Opening_Qty','Reserved_Qty','Available_To_Promise','Status','Legacy_Source_Sheet','Legacy_Source_Row','Legacy_Source_Block','Verification_Note','_Helper_Name','_Helper_Qty','_Helper_Unit','_Helper_Row','_Helper_Block','Catalog_Type','Storage_Location','Reorder_Threshold','Lending_Audience','Default_Loan_Days','Maximum_Loan_Qty','Approval_Required','Updated_At','Updated_By','Notes'],
   '02_LEDGER': ['Transaction_ID','Created_At','Type','Direction','Item_ID','Event_Item_ID','Quantity','Unit','Signed_Qty','Related_Entity_Type','Related_Entity_ID','Request_ID','Event_ID','Actor_User_ID','Idempotency_Key','Notes','Reversal_Of','Status'],
   '03_REQUESTS': ['Request_ID','Created_At','Updated_At','Request_Type','Request_Stage','Parent_Request_ID','Additional_Sequence','Event_Series_ID','Event_ID','Catalog_Type','Requester_Name','Requester_Email','Department','Priority','Purpose','Status','Created_By','Client_Request_ID','Archived_At','Notes'],
   '04_REQUEST_LINES': ['Request_Line_ID','Request_ID','Event_ID','Item_ID','Event_Item_ID','Description','Specification','Category','Requested_Qty','Unit','Fulfillment_Source','Split_Group_ID','Needed_At','Return_Due','Lead_Time_Rule','Suggested_Supplier','Released_Qty','Received_Qty','Status','Created_At','Updated_At','Created_By','Client_Line_ID','Notes'],
@@ -91,7 +91,7 @@ var HAU_HEADERS = Object.freeze({
   '11_SUPPLIERS': ['Supplier_ID','Created_At','Updated_At','Supplier_Name','Normalized_Name','Location','Contact_Name','Contact_Number','Email','Supplier_TIN','Receipt_Capability','Reliability','Active','Created_By','Last_Canvassed_At','Notes','Archive_Reason','Archived_At'],
   '12_EVIDENCE': ['Evidence_ID','Created_At','Evidence_Type','Evidence_Label','Original_File_Name','Normalized_File_Name','Mime_Type','Size_Bytes','SHA256','Drive_File_ID','Drive_Folder_ID','Drive_URL','Related_Entity_Type','Related_Entity_ID','Request_ID','Request_Line_ID','Event_ID','Item_ID','Event_Item_ID','Supplier_ID','Uploaded_By','Upload_Status','Duplicate_Of','Notes'],
   '13_EVENTS': ['Event_ID','Event_Series_ID','Series_Code','Event_Series_Name','Event_Name','Start_At','End_At','Venue','Owner_Committee','Department','Status','Created_At','Updated_At','Created_By','Archived_At','Notes','External_Reference','Active'],
-  '14_USERS_ACCESS': ['User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes'],
+  '14_USERS_ACCESS': ['User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes','Can_Manage_Catalog'],
   '15_STATUS_HISTORY': ['History_ID','Entity_Type','Entity_ID','Previous_Status','New_Status','Changed_At','Changed_By','Reason','Request_ID','Event_ID','Idempotency_Key','Metadata_JSON'],
   '16_AUDIT_LOG': ['Audit_ID','Created_At','Action','Entity_Type','Entity_ID','Actor_User_ID','Actor_Email','Request_ID','Event_ID','Before_JSON','After_JSON','IP_or_Client','Correlation_ID','Notes'],
   '17_CONFIG': ['Key','Value','Environment','Description','Secret','Updated_At','Updated_By','Validation_Status'],

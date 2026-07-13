@@ -80,6 +80,10 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
     await expect(page.locator('body')).toHaveClass(/request-mode/);
     await expect(page.locator('#primaryNav')).toBeHidden();
     await expect(page.locator('.portal-header')).toBeVisible();
+    await expect(page.locator('#syncIndicator')).toHaveCount(0);
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await page.waitForTimeout(50);
+    await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
     await expect(
       page.locator('.portal-header .preview-badge'),
     ).toHaveText(expectedEnvironmentLabel);

@@ -27,4 +27,4 @@ if (createHash('sha256').update(html).digest('hex') !== createHash('sha256').upd
   throw new Error('The root shareable HTML file does not match dist/index.html.');
 }
 
-console.log(`Verified both standalone HTML artifacts (${html.length.toLocaleString()} bytes each).`);
+console.log(`Verified both standalone HTML artifacts (${Buffer.byteLength(html).toLocaleString()} bytes each).`);

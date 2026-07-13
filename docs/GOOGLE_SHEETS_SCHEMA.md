@@ -1,6 +1,6 @@
 # Google Sheets Schema
 
-The production database is `1D28OX2dTx0rfus4hDd9VcyDZtxo26CFLGFk22URFAjw`. `apps-script/Config.gs` contains the exact required headers. `setupDatabase()` adds missing backend tabs or approved missing headers without wiping data; `validateDatabaseSchema()` reports discrepancies.
+The operational database is selected only by the reviewed environment Script Properties. `apps-script/Config.gs` contains the exact required headers. `setupDatabase()` adds missing backend tabs or approved missing headers without wiping data; `validateDatabaseSchema()` reports discrepancies.
 
 ## Preserved legacy tabs
 
@@ -22,6 +22,28 @@ The production database is `1D28OX2dTx0rfus4hDd9VcyDZtxo26CFLGFk22URFAjw`. `apps
 | `15_STATUS_HISTORY`, `16_AUDIT_LOG`, `18_ERROR_LOG` | observability and history |
 | `17_CONFIG` | non-secret operational configuration |
 | `19_MIGRATION_MAP` | explicit migration/reconciliation decisions |
+
+## Version 0.5.0 additive fields
+
+`setupDatabase()` appends the following fields after the pre-existing `01_ITEM_MASTER` columns; it does not insert or reorder them:
+
+| Field | Purpose / safe blank default |
+|---|---|
+| `Catalog_Type` | `OFFICE_INVENTORY`, `PANTRY`, or `EVENT_SPECIFIC`, derived from stock area when blank |
+| `Storage_Location` | physical context; blank values become `TO_BE_ASSIGNED` |
+| `Reorder_Threshold` | non-negative metadata; default `0` |
+| `Lending_Audience` | active circulating legacy items default `USC_STAFF_ONLY`; VERIFY/inactive/archived/non-circulating items default `NOT_AVAILABLE_FOR_LENDING` |
+| `Default_Loan_Days` | returnable items default `3`; consumables/non-circulating items remain blank |
+| `Maximum_Loan_Qty` | conservative positive limit; default `1` for circulating items and blank for non-circulating items |
+| `Approval_Required` | default `TRUE` |
+| `Updated_At`, `Updated_By` | catalog metadata change attribution |
+| `Notes` | non-quantity catalog notes |
+
+`14_USERS_ACCESS` appends `Can_Manage_Catalog` after all existing fields. Blank values preserve catalog management only for ADMIN and DOL_DIRECTOR; no other role receives an implicit grant.
+
+`17_CONFIG` receives `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` when missing. The first is a monotonic non-negative integer; the second records its last update time. They are operational coordination metadata, not secrets.
+
+The migration is safe to run before the 0.5.0 web deployment becomes active. Existing values, legacy tabs, Drive configuration, users, audit/history records, and operational rows remain in place. Repeated setup runs fill only missing schema/default values and must not reset reviewed fields.
 
 ## Sheet usability
 

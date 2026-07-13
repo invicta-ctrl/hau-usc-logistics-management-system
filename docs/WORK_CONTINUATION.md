@@ -1,5 +1,68 @@
 # Work Continuation
 
+## Latest working checkpoint — Version 0.5.0 live sync, lending search, and catalog controls
+
+- Date: `2026-07-13` (`Asia/Manila`)
+- Repository: `invicta-ctrl/hau-usc-logistics-management-system`
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
+- Ending commit: this handoff commit; exact SHA is reported after commit and push
+- Base pull request: draft PR #2 remains open and unmodified by this milestone
+- Current staging deployment: immutable version 9 on the existing deployment ID
+- Production state: untouched
+
+### Repository behavior prepared
+
+- Apps Script mutations now require a successful authoritative bootstrap reload before the browser renders success. The mutation is never automatically resubmitted if that read fails; the UI reports that the action was recorded, includes a correlation ID when available, and offers a safe Refresh action.
+- Internal clients poll the compact `api_getDataRevision` endpoint every five seconds only while visible, online, and not already checking. Visibility restoration, focus, reconnect, and manual Refresh cause immediate checks. Repeated failures use bounded backoff. This is polling, not WebSockets.
+- `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` in `17_CONFIG` form a monotonic shared revision. A successful non-replay mutation advances it exactly once; read-only bootstrap/search/health/diagnostic calls do not.
+- `handleOperationalSheetEdit(e)` advances the revision for relevant direct edits to the configured operational spreadsheet. `setupOperationalEditTrigger()` is idempotent and must be run explicitly in each environment after review.
+- Dirty forms, request drafts, pending uploads, and open modal workflows defer background reload and show “New operational data is available” with Refresh now and Continue editing choices.
+- The Lending Hub uses an accessible predictive search instead of the hundreds-item select. Typed but unselected text cannot submit, and unavailable, out-of-stock, VERIFY, staff-only, non-circulating, quantity-limited, and no-match states remain distinguishable.
+- Handling and audience are separate. `CONSUMABLE` completes on handoff without a return due date; `LOANABLE` and `REUSABLE_ASSET` require a future due date and return workflow; `NON_CIRCULATING` is blocked. Audience is `NOT_AVAILABLE_FOR_LENDING`, `USC_STAFF_ONLY`, `STUDENTS_AND_STAFF`, or future-ready `DOL_INTERNAL_ONLY`.
+- Website catalog controls call server APIs for item lookup, creation, metadata/storage editing, archive, and restore. Server authorization, lock, idempotency, server IDs, before/after audit, status history, and append-only quantity rules remain authoritative.
+- Unit changes are blocked when historical or active ledger, reservation, lending, request, restock, or release records depend on the item. Archive requires zero on-hand, zero active reservation, and no open lending/request dependency. Restore preserves history and returns verification-marked items to `VERIFY`.
+- `Can_Manage_Catalog` is appended to `14_USERS_ACCESS`. Blank cells retain catalog permission only for ADMIN and DOL_DIRECTOR; other roles require explicit true.
+
+### Additive schema preparation
+
+- `01_ITEM_MASTER` appends `Catalog_Type`, `Storage_Location`, `Reorder_Threshold`, `Lending_Audience`, `Default_Loan_Days`, `Maximum_Loan_Qty`, `Approval_Required`, `Updated_At`, `Updated_By`, and `Notes` after all prior columns.
+- `14_USERS_ACCESS` appends `Can_Manage_Catalog`.
+- `17_CONFIG` receives `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` rows when missing.
+- Repeated `setupDatabase()` runs add only missing columns/rows and preserve existing values, legacy tabs, Drive configuration, users, audit history, and operational data.
+- Blank legacy defaults fail closed: active circulating items become staff-only unless explicitly reviewed; VERIFY, inactive, archived, and non-circulating items remain unavailable; returnable items default to three loan days; maximum ticket quantity defaults to one; approval defaults to true.
+
+### Repository verification
+
+- `npm ci`: passed.
+- ESLint: passed.
+- Vitest: 12 files / 93 tests passed.
+- Focused 0.5.0 Chromium suite at 390 px: 4 passed.
+- `npm run check`: passed, including a 22-module Vite build, Apps Script validation across 24 source files and 27 required entry points, generated-file parity, and standalone verification.
+- `npm run verify`: passed.
+- Complete Playwright/browser matrix at 320, 390, 768, 1024, 1366, and 1440 px: 38 passed, 40 intentionally scoped skips, 0 failed.
+- A second build was byte-deterministic: both 238,891-byte standalone artifacts retained SHA-256 `8192ddff053f9776ba41f74be4eadf9c627b6db638db0cf7f8b6cf03d410ed8f`; the 615-byte Apps Script shell retained SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`.
+
+### External actions
+
+- No `clasp push` was run.
+- No immutable Apps Script version was created.
+- No deployment was updated.
+- No Google Sheet or Drive write was performed.
+- No live trigger was created, changed, or removed.
+- Production was not touched.
+- PR #2 was not modified, merged, or deleted.
+
+### Deployment handoff after separate authorization
+
+Staging order: verify the reviewed commit and full checks; create a staging schema backup; compare/push the reviewed package; run additive `setupDatabase()`; run idempotent `setupOperationalEditTrigger()`; validate schema, Drive, permissions, and revision rows; run functional and privacy acceptance; then create an immutable staging version and update the existing deployment ID. Production order: obtain owner approval; create a fresh production backup; push the exact accepted commit; run the additive schema migration and edit-trigger setup before activating the web version; validate schema/Drive/access; create and activate an immutable production version; then run bounded acceptance.
+
+Rollback changes only the deployment pointer to the preceding immutable version. Do not delete the appended columns, revision rows, audit/history/ledger records, or migrated metadata. The additive schema remains backward-compatible with Version 9. If the edit trigger itself is implicated, stop writes, preserve evidence, and remove or disable it only with explicit owner authorization.
+
+### Next action
+
+Review the pushed handoff commit and CI state, then obtain manager approval before any staging work or new milestone. Do not deploy, migrate a live Sheet, install a live trigger, or start a new milestone without separate explicit authorization.
+
 ## Latest checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
 
 - Date: `2026-07-13` (`Asia/Manila`)
