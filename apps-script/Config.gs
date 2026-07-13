@@ -6,23 +6,42 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
+var HAU_DRIVE_CANONICAL_FOLDERS_ = Object.freeze([
+  Object.freeze({ key: 'DRIVE_REQUESTS_FOLDER_ID', name: 'Requests' }),
+  Object.freeze({ key: 'DRIVE_LENDING_FOLDER_ID', name: 'Lending' }),
+  Object.freeze({ key: 'DRIVE_RELEASES_RETURNS_FOLDER_ID', name: 'Releases and Returns' }),
+  Object.freeze({ key: 'DRIVE_PROCUREMENT_FOLDER_ID', name: 'Procurement' }),
+  Object.freeze({ key: 'DRIVE_CANVASSING_FOLDER_ID', name: 'Canvassing' }),
+  Object.freeze({ key: 'DRIVE_RECEIPTS_INVOICES_FOLDER_ID', name: 'Receipts and Invoices' }),
+  Object.freeze({ key: 'DRIVE_INVENTORY_EVIDENCE_FOLDER_ID', name: 'Inventory Evidence' }),
+  Object.freeze({ key: 'DRIVE_BRANDING_FOLDER_ID', name: 'Branding' }),
+  Object.freeze({ key: 'DRIVE_EXPORTS_FOLDER_ID', name: 'Exports' }),
+  Object.freeze({ key: 'DRIVE_BACKUPS_FOLDER_ID', name: 'Backups' }),
+  Object.freeze({ key: 'DRIVE_QUARANTINE_FOLDER_ID', name: 'Quarantine' })
+]);
+
+var HAU_DRIVE_LEGACY_ALIASES_ = Object.freeze({
+  DRIVE_RECEIPTS_FOLDER_ID: 'DRIVE_RECEIPTS_INVOICES_FOLDER_ID',
+  DRIVE_CANVASS_FOLDER_ID: 'DRIVE_CANVASSING_FOLDER_ID',
+  DRIVE_RELEASE_FOLDER_ID: 'DRIVE_RELEASES_RETURNS_FOLDER_ID',
+  DRIVE_DELIVERABLE_FOLDER_ID: 'DRIVE_PROCUREMENT_FOLDER_ID',
+  DRIVE_ARCHIVE_FOLDER_ID: 'DRIVE_BACKUPS_FOLDER_ID'
+});
+
 var HAU_CONFIG = Object.freeze({
   APP_VERSION: '0.6.0-dev.1',
   SCHEMA_VERSION: '1.2.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
+  MAX_IMAGE_DIMENSION_PX: 12000,
+  MAX_IMAGE_PIXELS: 40000000,
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
   LEGACY_SHEETS: ['MAIN INVENTORY', 'FAST MOVING ITEMS', 'FOR SALE ITEMS', 'TO BUY'],
-  DRIVE_KEYS: [
-    'DRIVE_ROOT_FOLDER_ID',
-    'DRIVE_RECEIPTS_FOLDER_ID',
-    'DRIVE_CANVASS_FOLDER_ID',
-    'DRIVE_RELEASE_FOLDER_ID',
-    'DRIVE_DELIVERABLE_FOLDER_ID',
-    'DRIVE_LENDING_FOLDER_ID',
-    'DRIVE_ARCHIVE_FOLDER_ID'
-  ]
+  DRIVE_KEYS: ['DRIVE_ROOT_FOLDER_ID'].concat(
+    HAU_DRIVE_CANONICAL_FOLDERS_.map(function(definition) { return definition.key; }),
+    Object.keys(HAU_DRIVE_LEGACY_ALIASES_)
+  )
 });
 
 function isPlaceholderRuntimeValue_(value) {

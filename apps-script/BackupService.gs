@@ -40,7 +40,7 @@ function openBackupCopyForVerification_(backupFile) {
 
 function createLaunchBackup_(user, correlationId, label) {
   var runtime = resolveRuntimeConfig_();
-  var folder = archiveFolder_();
+  var folder = typeof backupFolder_ === 'function' ? backupFolder_() : archiveFolder_();
   var sourceSpreadsheet = getDatabase_();
   var sourceFile = DriveApp.getFileById(runtime.spreadsheetId);
   var name = 'HAU-USC Logistics ' + (label || 'Launch') + ' Backup ' + Utilities.formatDate(new Date(), HAU_CONFIG.TIMEZONE, 'yyyy-MM-dd HHmmss');

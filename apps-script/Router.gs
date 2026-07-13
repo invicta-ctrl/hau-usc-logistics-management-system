@@ -43,6 +43,7 @@ function api_saveContentRevision(command) { return guardMutationApi_('saveConten
 function api_publishContentRevision(command) { return guardMutationApi_('publishContentRevision',command,function(c){return publishContentRevision_(command,c);}); }
 function api_revertContentRevision(command) { return guardMutationApi_('revertContentRevision',command,function(c){return revertContentRevision_(command,c);}); }
 function api_saveBrandingMetadata(command) { return guardMutationApi_('saveBrandingMetadata',command,function(c){return saveBrandingMetadata_(command,c);}); }
+function api_uploadBrandingAsset(command) { return guardMutationApi_('uploadBrandingAsset',command,function(c){return uploadBrandingAsset_(command,c);}); }
 function api_activateBrandingVersion(command) { return guardMutationApi_('activateBrandingVersion',command,function(c){return activateBrandingVersion_(command,c);}); }
 function api_updateCanvassReference(command) { return guardMutationApi_('updateCanvassReference',command,function(c){return updateCanvassReference_(command,c);}); }
 function api_archiveCanvassReference(command) { return guardMutationApi_('archiveCanvassReference',command,function(c){return archiveCanvassReference_(command,c);}); }

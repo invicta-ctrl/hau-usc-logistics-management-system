@@ -32,6 +32,7 @@ export class MockAdapter extends MockService {
   publishContentRevision() { return Promise.reject(new Error('Content administration requires Apps Script staging.')); }
   revertContentRevision() { return Promise.reject(new Error('Content administration requires Apps Script staging.')); }
   saveBrandingMetadata() { return Promise.reject(new Error('Branding administration requires Apps Script staging.')); }
+  uploadBrandingAsset() { return Promise.reject(new Error('Branding upload requires Apps Script staging.')); }
   activateBrandingVersion() { return Promise.reject(new Error('Branding administration requires Apps Script staging.')); }
   updateCanvassReference() { return Promise.reject(new Error('Canvass administration requires Apps Script staging.')); }
   archiveCanvassReference() { return Promise.reject(new Error('Canvass administration requires Apps Script staging.')); }

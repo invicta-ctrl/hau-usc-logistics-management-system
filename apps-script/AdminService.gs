@@ -38,13 +38,253 @@ function revertContentRevision_(command,correlationId){return withScriptLock_(fu
 function previewContentRevision_(command){requirePermission_('Can_Admin');var row=contentRevision_(command);if(!row)throw appError_('CONTENT_REVISION_NOT_FOUND','The content revision was not found.',false);return{content:contentDto_(row)};}
 function getPublishedContent_(){return{content:adminRows_(HAU_SHEETS.CONTENT).filter(function(row){return String(row.Status)==='PUBLISHED';}).map(publishedContentDto_)};}
 
-function brandingVersionNumber_(assetKey){return adminRows_(HAU_SHEETS.BRANDING).filter(function(row){return String(row.Asset_Key)===assetKey;}).reduce(function(max,row){return Math.max(max,Number(row.Version_Number||0));},0)+1;}
-function brandingAdminDto_(row){return{versionId:row.Branding_Version_ID,assetKey:row.Asset_Key,displayName:row.Display_Name,altText:row.Alt_Text,mimeType:row.Mime_Type,fileExtension:row.File_Extension,sizeBytes:Number(row.Size_Bytes||0),width:Number(row.Width_Px||0),height:Number(row.Height_Px||0),status:row.Status,version:Number(row.Version_Number||0),active:String(row.Active).toUpperCase()==='TRUE'||row.Active===true,createdAt:row.Created_At||'',activatedAt:row.Activated_At||''};}
-function brandingPublicDto_(row){return{assetKey:row.Asset_Key,displayName:row.Display_Name,altText:row.Alt_Text,mimeType:row.Mime_Type,width:Number(row.Width_Px||0),height:Number(row.Height_Px||0),version:Number(row.Version_Number||0),active:true,deliveryAvailable:false,useFallback:true,fallbackKey:'BUILT_IN_WORDMARK'};}
-function requireBrandingMetadataOnly_(command){if(command.base64||command.bytes||command.fileData||command.dataUrl)throw appError_('BRANDING_METADATA_ONLY','Branding administration accepts verified metadata only; upload file bytes through an approved storage workflow.',false);}
-function activateBrandingCore_(row,user,correlationId,reason,key){if(!row.Drive_File_ID||!row.SHA256)throw appError_('BRANDING_STORAGE_REQUIRED','Branding cannot be activated until verified storage metadata and checksum are present.',false);adminRows_(HAU_SHEETS.BRANDING).filter(function(candidate){return String(candidate.Asset_Key)===String(row.Asset_Key)&&String(candidate.Branding_Version_ID)!==String(row.Branding_Version_ID)&&(candidate.Active===true||String(candidate.Active).toUpperCase()==='TRUE');}).forEach(function(candidate){updateObject_(HAU_SHEETS.BRANDING,candidate._row,{Active:false,Status:'SUPERSEDED'});});var patch={Active:true,Status:'ACTIVE',Activated_At:nowIso_(),Activated_By:user.User_ID},after=Object.assign({},row,patch);updateObject_(HAU_SHEETS.BRANDING,row._row,patch);history_('BRANDING',row.Branding_Version_ID,row.Status||'DRAFT','ACTIVE',user,reason||'Branding version activated',{idempotencyKey:key||''});audit_('ACTIVATE_BRANDING','BRANDING',row.Branding_Version_ID,user,correlationId,{before:brandingAdminDto_(row),after:brandingAdminDto_(after),notes:reason||''});return after;}
-function saveBrandingMetadata_(command,correlationId){return withScriptLock_(function(){var user=requirePermission_('Can_Admin'),key=requireIdempotency_(command),replay=idempotencyReplay_(key,user);if(replay)return Object.assign({idempotentReplay:true},replay);requireBrandingMetadataOnly_(command);var assetKey=sanitizeSystemToken_(adminText_(command.assetKey,'assetKey',80)),mime=String(command.mimeType||'').toLowerCase();if(HAU_BRANDING_MIME_TYPES_.indexOf(mime)<0)throw appError_('UNSUPPORTED_FILE_TYPE','Branding assets must be JPG, PNG, or WEBP.',false);var extension=String(command.fileExtension||'').toLowerCase().replace(/^\./,'');var expected={"image/jpeg":'jpg',"image/png":'png',"image/webp":'webp'}[mime];if(extension==='jpeg')extension='jpg';if(extension!==expected)throw appError_('MIME_EXTENSION_MISMATCH','Branding file extension does not match MIME type.',false);var driveFileId=String(command.driveFileId||'').trim(),driveFolderId=String(command.driveFolderId||'').trim();if(driveFileId&&!/^[A-Za-z0-9_-]{20,}$/.test(driveFileId))throw appError_('VALIDATION_ERROR','driveFileId is invalid.',false,{field:'driveFileId'});if(driveFolderId&&!/^[A-Za-z0-9_-]{20,}$/.test(driveFolderId))throw appError_('VALIDATION_ERROR','driveFolderId is invalid.',false,{field:'driveFolderId'});var sha=String(command.sha256||'').toLowerCase();if(sha&&!/^[a-f0-9]{64}$/.test(sha))throw appError_('VALIDATION_ERROR','sha256 must be a hexadecimal SHA-256 digest.',false,{field:'sha256'});var now=nowIso_(),row={Branding_Version_ID:allocateId_('BRD'),Asset_Key:assetKey,Display_Name:adminText_(command.displayName,'displayName',160),Alt_Text:adminText_(command.altText,'altText',250),Mime_Type:mime,File_Extension:extension,Size_Bytes:nonNegativeNumber_(command.sizeBytes,'sizeBytes'),Width_Px:positiveNumber_(command.widthPx,'widthPx'),Height_Px:positiveNumber_(command.heightPx,'heightPx'),SHA256:sha,Drive_File_ID:driveFileId,Drive_Folder_ID:driveFolderId,Drive_URL:adminHttpsUrl_(command.driveUrl,'driveUrl'),Status:'DRAFT',Version_Number:brandingVersionNumber_(assetKey),Active:false,Created_At:now,Created_By:user.User_ID,Activated_At:'',Activated_By:'',Supersedes_Version_ID:String(command.supersedesVersionId||''),Notes:String(command.notes||'').slice(0,1000)};appendObject_(HAU_SHEETS.BRANDING,row);audit_('SAVE_BRANDING_METADATA','BRANDING',row.Branding_Version_ID,user,correlationId,{after:brandingAdminDto_(row)});if(command.activate===true||String(command.activate).toUpperCase()==='TRUE')row=activateBrandingCore_(row,user,correlationId,command.reason,key);return recordIdempotency_(key,{branding:brandingAdminDto_(row),brandingVersionId:row.Branding_Version_ID,entityType:'BRANDING',entityId:row.Branding_Version_ID},user,correlationId);});}
-function activateBrandingVersion_(command,correlationId){return withScriptLock_(function(){var user=requirePermission_('Can_Admin'),key=requireIdempotency_(command),replay=idempotencyReplay_(key,user);if(replay)return Object.assign({idempotentReplay:true},replay);var row=findOne_(HAU_SHEETS.BRANDING,'Branding_Version_ID',requireText_(command.brandingVersionId,'brandingVersionId'));if(!row)throw appError_('BRANDING_VERSION_NOT_FOUND','The branding version was not found.',false);var after=activateBrandingCore_(row,user,correlationId,command.reason,key);return recordIdempotency_(key,{branding:brandingAdminDto_(after),brandingVersionId:after.Branding_Version_ID,entityType:'BRANDING',entityId:after.Branding_Version_ID},user,correlationId);});}
-function getBrandingState_(){var rows=adminRows_(HAU_SHEETS.BRANDING).filter(function(row){return row.Active===true||String(row.Active).toUpperCase()==='TRUE';}),assets=rows.map(brandingPublicDto_);if(!assets.length)assets=[{assetKey:'BRAND_WORDMARK',displayName:'HAU-USC Logistics',altText:'HAU-USC Logistics',active:false,deliveryAvailable:false,useFallback:true,fallbackKey:'BUILT_IN_WORDMARK'}];return{branding:assets,fallbackRequired:true};}
+function brandingVersionNumber_(assetKey) {
+  return adminRows_(HAU_SHEETS.BRANDING).filter(function(row) { return String(row.Asset_Key) === assetKey; })
+    .reduce(function(max, row) { return Math.max(max, Number(row.Version_Number || 0)); }, 0) + 1;
+}
+
+function brandingAdminDto_(row) {
+  return {
+    versionId: row.Branding_Version_ID, assetKey: row.Asset_Key, displayName: row.Display_Name,
+    altText: row.Alt_Text, mimeType: row.Mime_Type, fileExtension: row.File_Extension,
+    sizeBytes: Number(row.Size_Bytes || 0), width: Number(row.Width_Px || 0), height: Number(row.Height_Px || 0),
+    status: row.Status, version: Number(row.Version_Number || 0),
+    active: String(row.Active).toUpperCase() === 'TRUE' || row.Active === true,
+    createdAt: row.Created_At || '', activatedAt: row.Activated_At || ''
+  };
+}
+
+function brandingPublicDto_(row) {
+  return {
+    assetKey: row.Asset_Key, displayName: row.Display_Name, altText: row.Alt_Text,
+    mimeType: row.Mime_Type, width: Number(row.Width_Px || 0), height: Number(row.Height_Px || 0),
+    version: Number(row.Version_Number || 0), active: true, deliveryAvailable: false,
+    useFallback: true, fallbackKey: 'BUILT_IN_WORDMARK'
+  };
+}
+
+function requireBrandingMetadataOnly_(command) {
+  if (command.base64 || command.bytes || command.fileData || command.dataUrl || command.data) {
+    throw appError_('BRANDING_METADATA_ONLY', 'This branding operation is metadata only. Use the protected branding upload operation for file bytes.', false);
+  }
+}
+
+function brandingAssetKey_(value) {
+  var key = sanitizeSystemToken_(adminText_(value, 'assetKey', 80));
+  if (!/^[A-Z0-9][A-Z0-9-]{1,79}$/.test(key)) throw appError_('VALIDATION_ERROR', 'assetKey must be a stable system token.', false, { field: 'assetKey' });
+  return key;
+}
+
+function brandingSafeText_(value, field, maximum) {
+  var text = adminText_(value, field, maximum);
+  if (/[<>\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text)) throw appError_('UNSAFE_BRANDING_METADATA', field + ' contains unsupported markup or control characters.', false, { field: field });
+  return text;
+}
+
+function brandingMimeAndExtension_(mimeValue, extensionValue) {
+  var mime = String(mimeValue || '').trim().toLowerCase();
+  if (HAU_BRANDING_MIME_TYPES_.indexOf(mime) < 0) throw appError_('UNSUPPORTED_FILE_TYPE', 'Branding assets must be JPG, PNG, or WEBP.', false);
+  var extension = String(extensionValue || '').trim().toLowerCase().replace(/^\./, '');
+  if (extension === 'jpeg') extension = 'jpg';
+  if (extension !== extensionForMime_(mime)) throw appError_('MIME_EXTENSION_MISMATCH', 'Branding file extension does not match MIME type.', false);
+  return { mime: mime, extension: extension };
+}
+
+function brandingLatestVersion_(assetKey) {
+  return adminRows_(HAU_SHEETS.BRANDING).filter(function(row) { return String(row.Asset_Key) === assetKey; })
+    .sort(function(left, right) { return Number(right.Version_Number || 0) - Number(left.Version_Number || 0); })[0] || null;
+}
+
+function verifyBrandingFile_(file, folder, expected) {
+  if (!fileHasOnlyParent_(file, folder)) throw appError_('BRANDING_PARENT_MISMATCH', 'Branding storage is outside the controlled Branding folder.', false);
+  requireSafeDriveSharing_(folder, 'DRIVE_BRANDING_FOLDER_ID');
+  requireSafeDriveSharing_(file, 'BRANDING_FILE');
+  var size;
+  try { size = Number(file.getSize()); }
+  catch (error) { throw appError_('BRANDING_STORAGE_VERIFICATION_FAILED', 'Branding file size could not be verified.', false); }
+  if (!isFinite(size) || size <= 0 || size > HAU_CONFIG.MAX_UPLOAD_BYTES) throw appError_('FILE_TOO_LARGE', 'Branding file size is invalid or exceeds the upload limit.', false, { maxBytes: HAU_CONFIG.MAX_UPLOAD_BYTES });
+  var bytes;
+  try { bytes = file.getBlob().getBytes(); }
+  catch (error) { throw appError_('BRANDING_STORAGE_VERIFICATION_FAILED', 'Branding bytes could not be verified.', false); }
+  if (bytes.length !== size || bytes.length > HAU_CONFIG.MAX_UPLOAD_BYTES) throw appError_('BRANDING_SIZE_MISMATCH', 'Branding stored size does not match verified bytes.', false);
+  validateUploadedBytes_(bytes, expected.mime, false);
+  var dimensions = imageDimensions_(bytes, expected.mime);
+  var digest = sha256Hex_(bytes);
+  var actualMime = typeof file.getMimeType === 'function' ? String(file.getMimeType() || '').toLowerCase() : expected.mime;
+  if (actualMime !== expected.mime) throw appError_('BRANDING_MIME_MISMATCH', 'Stored branding MIME type does not match metadata.', false);
+  if (normalizedUploadExtension_(file.getName()) !== expected.extension) throw appError_('MIME_EXTENSION_MISMATCH', 'Stored branding filename extension does not match MIME type.', false);
+  return { bytes: bytes, size: size, width: dimensions.width, height: dimensions.height, sha256: digest };
+}
+
+function verifyBrandingStoredRow_(row) {
+  if (!row.Drive_File_ID || !row.Drive_Folder_ID || !row.SHA256) throw appError_('BRANDING_STORAGE_REQUIRED', 'Branding cannot be activated until verified storage metadata and checksum are present.', false);
+  var expected = brandingMimeAndExtension_(row.Mime_Type, row.File_Extension);
+  var folder = brandingFolder_();
+  if (String(row.Drive_Folder_ID) !== String(folder.getId())) throw appError_('BRANDING_PARENT_MISMATCH', 'Branding metadata does not reference the controlled Branding folder.', false);
+  var file;
+  try { file = DriveApp.getFileById(String(row.Drive_File_ID)); }
+  catch (error) { throw appError_('BRANDING_STORAGE_VERIFICATION_FAILED', 'Branding file cannot be accessed for activation.', false); }
+  var verified = verifyBrandingFile_(file, folder, expected);
+  if (verified.size !== Number(row.Size_Bytes) || verified.width !== Number(row.Width_Px) || verified.height !== Number(row.Height_Px) || verified.sha256 !== String(row.SHA256).toLowerCase()) {
+    throw appError_('BRANDING_METADATA_MISMATCH', 'Stored branding bytes do not match the recorded verified metadata.', false);
+  }
+  return verified;
+}
+
+function activateBrandingCore_(row, user, correlationId, reason, key) {
+  verifyBrandingStoredRow_(row);
+  adminRows_(HAU_SHEETS.BRANDING).filter(function(candidate) {
+    return String(candidate.Asset_Key) === String(row.Asset_Key) &&
+      String(candidate.Branding_Version_ID) !== String(row.Branding_Version_ID) &&
+      (candidate.Active === true || String(candidate.Active).toUpperCase() === 'TRUE');
+  }).forEach(function(candidate) { updateObject_(HAU_SHEETS.BRANDING, candidate._row, { Active: false, Status: 'SUPERSEDED' }); });
+  var patch = { Active: true, Status: 'ACTIVE', Activated_At: nowIso_(), Activated_By: user.User_ID };
+  var after = Object.assign({}, row, patch);
+  updateObject_(HAU_SHEETS.BRANDING, row._row, patch);
+  history_('BRANDING', row.Branding_Version_ID, row.Status || 'DRAFT', 'ACTIVE', user, reason || 'Branding version activated', { idempotencyKey: key || '' });
+  audit_('ACTIVATE_BRANDING', 'BRANDING', row.Branding_Version_ID, user, correlationId, { before: brandingAdminDto_(row), after: brandingAdminDto_(after), notes: reason || '' });
+  return after;
+}
+
+function brandingRow_(command, user, verifiedStorage) {
+  var assetKey = brandingAssetKey_(command.assetKey);
+  var metadata = brandingMimeAndExtension_(command.mimeType, command.fileExtension || normalizedUploadExtension_(command.originalFileName));
+  var latest = brandingLatestVersion_(assetKey);
+  var storage = verifiedStorage || {};
+  var now = nowIso_();
+  return {
+    Branding_Version_ID: storage.versionId || allocateId_('BRD'), Asset_Key: assetKey,
+    Display_Name: brandingSafeText_(command.displayName, 'displayName', 160),
+    Alt_Text: brandingSafeText_(command.altText, 'altText', 250), Mime_Type: metadata.mime,
+    File_Extension: metadata.extension, Size_Bytes: storage.size == null ? nonNegativeNumber_(command.sizeBytes, 'sizeBytes') : storage.size,
+    Width_Px: storage.width == null ? positiveNumber_(command.widthPx, 'widthPx') : storage.width,
+    Height_Px: storage.height == null ? positiveNumber_(command.heightPx, 'heightPx') : storage.height,
+    SHA256: storage.sha256 || String(command.sha256 || '').toLowerCase(),
+    Drive_File_ID: storage.fileId || String(command.driveFileId || ''),
+    Drive_Folder_ID: storage.folderId || String(command.driveFolderId || ''),
+    Drive_URL: storage.driveUrl || '', Status: 'DRAFT', Version_Number: brandingVersionNumber_(assetKey),
+    Active: false, Created_At: now, Created_By: user.User_ID, Activated_At: '', Activated_By: '',
+    Supersedes_Version_ID: latest && latest.Branding_Version_ID || '', Notes: String(command.notes || '').slice(0, 1000)
+  };
+}
+
+function saveBrandingMetadata_(command, correlationId) {
+  return withScriptLock_(function() {
+    var user = requirePermission_('Can_Admin');
+    var key = requireIdempotency_(command);
+    var replay = idempotencyReplay_(key, user);
+    if (replay) return Object.assign({ idempotentReplay: true }, replay);
+    requireBrandingMetadataOnly_(command);
+    var suppliedFileId = String(command.driveFileId || '').trim();
+    var suppliedFolderId = String(command.driveFolderId || '').trim();
+    var suppliedSha = String(command.sha256 || '').trim().toLowerCase();
+    if (suppliedFileId && !/^[A-Za-z0-9_-]{20,}$/.test(suppliedFileId)) throw appError_('VALIDATION_ERROR', 'driveFileId is invalid.', false, { field: 'driveFileId' });
+    if (suppliedFolderId && !/^[A-Za-z0-9_-]{20,}$/.test(suppliedFolderId)) throw appError_('VALIDATION_ERROR', 'driveFolderId is invalid.', false, { field: 'driveFolderId' });
+    if (suppliedFolderId && !suppliedFileId) throw appError_('VALIDATION_ERROR', 'driveFolderId requires a verified driveFileId.', false, { field: 'driveFolderId' });
+    if (suppliedSha && !/^[a-f0-9]{64}$/.test(suppliedSha)) throw appError_('VALIDATION_ERROR', 'sha256 must be a hexadecimal SHA-256 digest.', false, { field: 'sha256' });
+    var verifiedStorage = null;
+    if (suppliedFileId) {
+      var metadata = brandingMimeAndExtension_(command.mimeType, command.fileExtension);
+      var folder = brandingFolder_();
+      if (command.driveFolderId && String(command.driveFolderId) !== String(folder.getId())) throw appError_('BRANDING_PARENT_MISMATCH', 'Branding metadata must use the controlled Branding folder.', false);
+      var file;
+      try { file = DriveApp.getFileById(suppliedFileId); }
+      catch (error) { throw appError_('BRANDING_STORAGE_VERIFICATION_FAILED', 'Branding file cannot be accessed for verification.', false); }
+      var verified = verifyBrandingFile_(file, folder, metadata);
+      if (suppliedSha && suppliedSha !== verified.sha256) throw appError_('BRANDING_METADATA_MISMATCH', 'Supplied checksum does not match the verified branding bytes.', false);
+      if (command.sizeBytes != null && command.sizeBytes !== '' && Number(command.sizeBytes) !== verified.size) throw appError_('BRANDING_METADATA_MISMATCH', 'Supplied size does not match the verified branding bytes.', false);
+      if (command.widthPx != null && command.widthPx !== '' && Number(command.widthPx) !== verified.width || command.heightPx != null && command.heightPx !== '' && Number(command.heightPx) !== verified.height) throw appError_('BRANDING_DIMENSIONS_MISMATCH', 'Supplied dimensions do not match the verified branding image.', false);
+      verifiedStorage = { size: verified.size, width: verified.width, height: verified.height, sha256: verified.sha256, fileId: file.getId(), folderId: folder.getId(), driveUrl: file.getUrl() };
+    }
+    var row = brandingRow_(command, user, verifiedStorage);
+    appendObject_(HAU_SHEETS.BRANDING, row);
+    audit_('SAVE_BRANDING_METADATA', 'BRANDING', row.Branding_Version_ID, user, correlationId, { after: brandingAdminDto_(row) });
+    if (command.activate === true || String(command.activate).toUpperCase() === 'TRUE') row = activateBrandingCore_(row, user, correlationId, command.reason, key);
+    return recordIdempotency_(key, { branding: brandingAdminDto_(row), brandingVersionId: row.Branding_Version_ID, entityType: 'BRANDING', entityId: row.Branding_Version_ID }, user, correlationId);
+  });
+}
+
+function uploadBrandingAsset_(command, correlationId) {
+  return withScriptLock_(function() {
+    var user = requirePermission_('Can_Admin');
+    var key = requireIdempotency_(command);
+    var replay = idempotencyReplay_(key, user);
+    if (replay) return Object.assign({ idempotentReplay: true }, replay);
+    var assetKey = brandingAssetKey_(command.assetKey);
+    var metadata = brandingMimeAndExtension_(command.mimeType, normalizedUploadExtension_(command.originalFileName));
+    brandingSafeText_(command.displayName, 'displayName', 160);
+    brandingSafeText_(command.altText, 'altText', 250);
+    var bytes = decodeEvidenceBytes_(command);
+    validateUploadedBytes_(bytes, metadata.mime, false);
+    var dimensions = imageDimensions_(bytes, metadata.mime);
+    if (command.widthPx && Number(command.widthPx) !== dimensions.width || command.heightPx && Number(command.heightPx) !== dimensions.height) {
+      throw appError_('BRANDING_DIMENSIONS_MISMATCH', 'Declared branding dimensions do not match the verified image.', false);
+    }
+    var digest = sha256Hex_(bytes);
+    var duplicate = adminRows_(HAU_SHEETS.BRANDING).find(function(row) {
+      return String(row.Asset_Key) === assetKey && String(row.SHA256).toLowerCase() === digest && String(row.Status) !== 'ARCHIVED';
+    });
+    if (duplicate) {
+      verifyBrandingStoredRow_(duplicate);
+      var duplicateRow = duplicate;
+      if ((command.activate === true || String(command.activate).toUpperCase() === 'TRUE') && !(duplicate.Active === true || String(duplicate.Active).toUpperCase() === 'TRUE')) duplicateRow = activateBrandingCore_(duplicate, user, correlationId, command.reason, key);
+      audit_('DUPLICATE_BRANDING_UPLOAD', 'BRANDING', duplicate.Branding_Version_ID, user, correlationId, { after: { assetKey: assetKey, checksumReplay: true } });
+      return recordIdempotency_(key, { branding: brandingAdminDto_(duplicateRow), brandingVersionId: duplicateRow.Branding_Version_ID, duplicate: true, entityType: 'BRANDING', entityId: duplicateRow.Branding_Version_ID }, user, correlationId);
+    }
+    var folder = brandingFolder_();
+    var version = brandingVersionNumber_(assetKey);
+    var versionId = allocateId_('BRD');
+    var filename = ['BRAND', assetKey, 'V' + version, Utilities.formatDate(new Date(), HAU_CONFIG.TIMEZONE, 'yyyyMMdd-HHmmss'), sanitizeSystemToken_(versionId).slice(-24)].join('_') + '.' + metadata.extension;
+    var file;
+    try {
+      file = folder.createFile(Utilities.newBlob(bytes, metadata.mime, filename));
+      file.setName(filename);
+      file.setDescription('HAU-USC verified branding asset | ' + assetKey + ' | version ' + version);
+      verifyCreatedFileParent_(file, folder);
+      requireSafeDriveSharing_(file, 'BRANDING_FILE');
+    } catch (error) {
+      var recovery = file ? moveToQuarantine_(file, 'branding upload verification failed') : { status: 'NOT_CREATED' };
+      throw appError_(error && error.code || 'BRANDING_UPLOAD_FAILED', 'Branding could not be stored in verified private storage.', true, { recoveryStatus: recovery.status });
+    }
+    var row = brandingRow_(Object.assign({}, command, { assetKey: assetKey, fileExtension: metadata.extension }), user, {
+      size: bytes.length, width: dimensions.width, height: dimensions.height, sha256: digest,
+      fileId: file.getId(), folderId: folder.getId(), driveUrl: file.getUrl(), versionId: versionId
+    });
+    row.Version_Number = version;
+    try { appendObject_(HAU_SHEETS.BRANDING, row); }
+    catch (error) {
+      var metadataRecovery = moveToQuarantine_(file, 'branding metadata write failed');
+      try {
+        audit_('QUARANTINE_BRANDING_ASSET', 'BRANDING', row.Branding_Version_ID, user, correlationId, {
+          after: { assetKey: row.Asset_Key, recoveryStatus: metadataRecovery.status, metadataRecorded: false }
+        });
+      } catch (ignored) {}
+      throw appError_('BRANDING_METADATA_FAILED', 'The branding file was quarantined because version metadata could not be recorded.', true, { recoveryStatus: metadataRecovery.status });
+    }
+    audit_('UPLOAD_BRANDING_ASSET', 'BRANDING', row.Branding_Version_ID, user, correlationId, { after: brandingAdminDto_(row) });
+    if (command.activate === true || String(command.activate).toUpperCase() === 'TRUE') row = activateBrandingCore_(row, user, correlationId, command.reason, key);
+    return recordIdempotency_(key, { branding: brandingAdminDto_(row), brandingVersionId: row.Branding_Version_ID, duplicate: false, entityType: 'BRANDING', entityId: row.Branding_Version_ID }, user, correlationId);
+  });
+}
+
+function activateBrandingVersion_(command, correlationId) {
+  return withScriptLock_(function() {
+    var user = requirePermission_('Can_Admin');
+    var key = requireIdempotency_(command);
+    var replay = idempotencyReplay_(key, user);
+    if (replay) return Object.assign({ idempotentReplay: true }, replay);
+    var row = findOne_(HAU_SHEETS.BRANDING, 'Branding_Version_ID', requireText_(command.brandingVersionId, 'brandingVersionId'));
+    if (!row) throw appError_('BRANDING_VERSION_NOT_FOUND', 'The branding version was not found.', false);
+    var after = activateBrandingCore_(row, user, correlationId, command.reason, key);
+    return recordIdempotency_(key, { branding: brandingAdminDto_(after), brandingVersionId: after.Branding_Version_ID, entityType: 'BRANDING', entityId: after.Branding_Version_ID }, user, correlationId);
+  });
+}
+
+function getBrandingState_() {
+  var rows = adminRows_(HAU_SHEETS.BRANDING).filter(function(row) { return row.Active === true || String(row.Active).toUpperCase() === 'TRUE'; });
+  var assets = rows.map(brandingPublicDto_);
+  if (!assets.length) assets = [{ assetKey: 'BRAND_WORDMARK', displayName: 'HAU-USC Logistics', altText: 'HAU-USC Logistics', active: false, deliveryAvailable: false, useFallback: true, fallbackKey: 'BUILT_IN_WORDMARK' }];
+  return { branding: assets, fallbackRequired: true };
+}
 
 function getAdminDashboard_(){var user=requirePermission_('Can_Admin'),commands=adminRows_(HAU_SHEETS.COMMANDS);return{environment:resolveRuntimeConfig_().environment,currentUser:{id:user.User_ID,displayName:user.Display_Name||'',role:user.Role},counts:{users:adminRows_(HAU_SHEETS.USERS).length,events:adminRows_(HAU_SHEETS.EVENTS).length,contentRevisions:adminRows_(HAU_SHEETS.CONTENT).length,brandingVersions:adminRows_(HAU_SHEETS.BRANDING).length,pendingCommands:commands.filter(function(row){return String(row.Status)==='PENDING';}).length,failedCommands:commands.filter(function(row){return String(row.Status)==='FAILED';}).length},users:adminRows_(HAU_SHEETS.USERS).map(userAccessDto_),events:adminRows_(HAU_SHEETS.EVENTS).map(eventAdminDto_),content:adminRows_(HAU_SHEETS.CONTENT).map(contentDto_),branding:adminRows_(HAU_SHEETS.BRANDING).map(brandingAdminDto_)};}

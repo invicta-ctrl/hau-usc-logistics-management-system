@@ -8,7 +8,7 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'saveUserAccess', 'createUserAccess', 'updateUserAccess', 'deactivateUserAccess',
   'saveEvent', 'createEvent', 'createSubEvent', 'updateEvent', 'archiveEvent', 'restoreEvent',
   'saveContentRevision', 'publishContentRevision', 'revertContentRevision',
-  'saveBrandingMetadata', 'activateBrandingVersion',
+  'saveBrandingMetadata', 'uploadBrandingAsset', 'activateBrandingVersion',
   'updateCanvassReference', 'archiveCanvassReference', 'restoreCanvassReference',
 ]);
 

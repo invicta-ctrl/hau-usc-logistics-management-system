@@ -292,22 +292,125 @@ function formatBackendSheet_(sheet) {
   sheet.autoResizeColumns(1, Math.min(columns, 26));
 }
 
+function driveValidationFailure_(key, name, error) {
+  var statusByCode = {
+    SETUP_REQUIRED: 'MISSING',
+    DRIVE_FOLDER_INVALID: 'INACCESSIBLE',
+    DRIVE_FOLDER_NAME_MISMATCH: 'NAME_MISMATCH',
+    DRIVE_FOLDER_PARENT_MISMATCH: 'PARENT_MISMATCH',
+    DRIVE_FOLDER_DUPLICATE_NAME: 'DUPLICATE_NAME',
+    DRIVE_FOLDER_MAPPING_MISMATCH: 'MAPPING_MISMATCH',
+    DRIVE_FOLDER_MAPPING_DUPLICATE: 'MAPPING_DUPLICATE',
+    DRIVE_SHARING_UNSAFE: 'SHARING_UNSAFE',
+    DRIVE_FOLDER_ALIAS_MISMATCH: 'ALIAS_MISMATCH'
+  };
+  return {
+    key: key,
+    name: name,
+    status: statusByCode[error && error.code] || 'INVALID',
+    message: error && error.code === 'DRIVE_SHARING_UNSAFE' ? 'Sharing is not proven private.' : 'Folder configuration failed validation.'
+  };
+}
+
 function validateDriveConfiguration_() {
   var config = configMap_();
-  var results = HAU_CONFIG.DRIVE_KEYS.map(function(key) {
-    var value = config[key];
-    var status = 'VALID';
-    var message = 'Configured';
-    if (!value || value === 'TO_BE_ASSIGNED') {
-      status = 'MISSING';
-      message = 'Folder ID is not assigned.';
-    } else {
-      try { DriveApp.getFolderById(value).getName(); }
-      catch (error) { status = 'INACCESSIBLE'; message = 'Folder cannot be accessed.'; }
-    }
-    return { key: key, status: status, message: message };
+  var root;
+  var rootResult;
+  try {
+    root = configuredRootFolder_(config);
+    var rootSharing = driveSharingDiagnostic_(root);
+    rootResult = {
+      key: 'DRIVE_ROOT_FOLDER_ID',
+      name: 'Configured root',
+      status: rootSharing.safe ? 'VALID' : 'SHARING_' + rootSharing.status,
+      message: rootSharing.safe ? 'Accessible with private sharing.' : rootSharing.message,
+      sharing: rootSharing
+    };
+  } catch (error) {
+    rootResult = driveValidationFailure_('DRIVE_ROOT_FOLDER_ID', 'Configured root', error);
+  }
+
+  var configuredIds = {};
+  var configuredErrors = {};
+  var configuredOwners = {};
+  var duplicateConfiguredKeys = {};
+  HAU_DRIVE_CANONICAL_FOLDERS_.forEach(function(definition) {
+    try {
+      var configuredId = configuredFolderId_(definition.key, config);
+      configuredIds[definition.key] = configuredId;
+      if (configuredOwners[configuredId]) {
+        duplicateConfiguredKeys[configuredOwners[configuredId]] = true;
+        duplicateConfiguredKeys[definition.key] = true;
+      } else configuredOwners[configuredId] = definition.key;
+    } catch (error) { configuredErrors[definition.key] = error; }
   });
-  return { ok: results.every(function(result) { return result.status === 'VALID'; }), folders: results };
+
+  var canonicalIds = {};
+  var folders = HAU_DRIVE_CANONICAL_FOLDERS_.map(function(definition) {
+    if (!root) return { key: definition.key, name: definition.name, status: 'ROOT_INVALID', message: 'The configured root must validate first.' };
+    if (duplicateConfiguredKeys[definition.key]) return { key: definition.key, name: definition.name, status: 'MAPPING_DUPLICATE', message: 'Canonical folders must use distinct direct children.' };
+    if (configuredErrors[definition.key]) return driveValidationFailure_(definition.key, definition.name, configuredErrors[definition.key]);
+    try {
+      var id = configuredIds[definition.key];
+      var folder = driveFolderById_(id, definition.key);
+      assertDirectChildFolder_(folder, root, definition);
+      var exactMatches = directChildFoldersNamed_(root, definition.name);
+      if (exactMatches.length !== 1) {
+        throw appError_('DRIVE_FOLDER_DUPLICATE_NAME', 'The configured Drive root must contain exactly one direct child with the canonical name.', false, {
+          key: definition.key,
+          expectedName: definition.name,
+          count: exactMatches.length
+        });
+      }
+      if (String(exactMatches[0].getId()) !== String(folder.getId())) {
+        throw appError_('DRIVE_FOLDER_MAPPING_MISMATCH', 'The configured Drive folder does not match the canonical exact-name direct child.', false, { key: definition.key });
+      }
+      var sharing = driveSharingDiagnostic_(folder);
+      canonicalIds[definition.key] = String(folder.getId());
+      return {
+        key: definition.key,
+        name: definition.name,
+        status: sharing.safe ? 'VALID' : 'SHARING_' + sharing.status,
+        message: sharing.safe ? 'Exact direct child with private sharing.' : sharing.message,
+        sharing: sharing
+      };
+    } catch (error) {
+      return driveValidationFailure_(definition.key, definition.name, error);
+    }
+  });
+
+  var mappedKeys = {};
+  Object.keys(canonicalIds).forEach(function(key) {
+    var id = canonicalIds[key];
+    if (!mappedKeys[id]) mappedKeys[id] = [];
+    mappedKeys[id].push(key);
+  });
+  Object.keys(mappedKeys).forEach(function(id) {
+    if (mappedKeys[id].length < 2) return;
+    mappedKeys[id].forEach(function(key) {
+      var result = folders.filter(function(candidate) { return candidate.key === key; })[0];
+      if (result) {
+        result.status = 'MAPPING_DUPLICATE';
+        result.message = 'Canonical folders must use distinct direct children.';
+      }
+    });
+  });
+
+  var aliases = Object.keys(HAU_DRIVE_LEGACY_ALIASES_).map(function(aliasKey) {
+    var canonicalKey = HAU_DRIVE_LEGACY_ALIASES_[aliasKey];
+    var aliasId = usableConfiguredFolderId_(config[aliasKey]);
+    var canonicalId = canonicalIds[canonicalKey] || '';
+    if (!aliasId) return { key: aliasKey, canonicalKey: canonicalKey, status: 'MISSING', message: 'Legacy alias has not been synchronized.' };
+    if (!canonicalId || aliasId !== canonicalId) return { key: aliasKey, canonicalKey: canonicalKey, status: 'ALIAS_MISMATCH', message: 'Legacy alias does not match its canonical folder.' };
+    return { key: aliasKey, canonicalKey: canonicalKey, status: 'VALID', message: 'Legacy alias matches the canonical folder.' };
+  });
+
+  return {
+    ok: rootResult.status === 'VALID' && folders.every(function(result) { return result.status === 'VALID'; }) && aliases.every(function(result) { return result.status === 'VALID'; }),
+    root: rootResult,
+    folders: folders,
+    aliases: aliases
+  };
 }
 
 function validateDriveConfiguration() {
@@ -322,30 +425,49 @@ function setupDriveFolders() {
     return withScriptLock_(function() {
       var runtime = resolveRuntimeConfig_();
       var user = setupUser_();
-      var rootId = getConfigValue_('DRIVE_ROOT_FOLDER_ID', true);
-      var root;
-      try { root = DriveApp.getFolderById(rootId); }
-      catch (error) { throw appError_('DRIVE_FOLDER_INVALID', 'DRIVE_ROOT_FOLDER_ID cannot be accessed.', false); }
-      var definitions = {
-        DRIVE_RECEIPTS_FOLDER_ID: 'Receipts and Invoices',
-        DRIVE_CANVASS_FOLDER_ID: 'Canvass Evidence',
-        DRIVE_RELEASE_FOLDER_ID: 'Release Confirmations',
-        DRIVE_DELIVERABLE_FOLDER_ID: 'Deliverable Evidence',
-        DRIVE_LENDING_FOLDER_ID: 'Lending Evidence',
-        DRIVE_ARCHIVE_FOLDER_ID: 'Archive and Recovery'
-      };
+      var root = configuredRootFolder_(configMap_());
+      requireSafeDriveSharing_(root, 'DRIVE_ROOT_FOLDER_ID');
+      var resolved = {};
+      HAU_DRIVE_CANONICAL_FOLDERS_.forEach(function(definition) {
+        var matches = directChildFoldersNamed_(root, definition.name);
+        if (matches.length > 1) {
+          throw appError_('DRIVE_FOLDER_DUPLICATE_NAME', 'More than one exact-name direct child exists under the configured Drive root.', false, {
+            key: definition.key,
+            expectedName: definition.name,
+            count: matches.length
+          });
+        }
+        if (matches.length === 1) {
+          assertDirectChildFolder_(matches[0], root, definition);
+          requireSafeDriveSharing_(matches[0], definition.key);
+          resolved[definition.key] = matches[0];
+        }
+      });
+
       var created = [];
-      Object.keys(definitions).forEach(function(key) {
-        var current = configMap_()[key];
-        if (current && current !== 'TO_BE_ASSIGNED') return;
-        var folder = root.createFolder(definitions[key]);
-        setConfigValue_(key, folder.getId(), runtime.environment, definitions[key], 'VALID', user);
-        created.push({ key: key, id: folder.getId(), name: definitions[key] });
+      var existing = [];
+      HAU_DRIVE_CANONICAL_FOLDERS_.forEach(function(definition) {
+        var folder = resolved[definition.key];
+        if (!folder) {
+          folder = root.createFolder(definition.name);
+          assertDirectChildFolder_(folder, root, definition);
+          requireSafeDriveSharing_(folder, definition.key);
+          resolved[definition.key] = folder;
+          created.push({ key: definition.key, name: definition.name });
+        } else {
+          existing.push({ key: definition.key, name: definition.name });
+        }
+        setConfigValue_(definition.key, folder.getId(), runtime.environment, definition.name + ' direct child of configured Drive root', 'VALID', user);
+        legacyAliasesForCanonicalKey_(definition.key).forEach(function(aliasKey) {
+          setConfigValue_(aliasKey, folder.getId(), runtime.environment, 'Legacy alias for ' + definition.key, 'VALID', user);
+        });
       });
+      var validation = validateDriveConfiguration_();
+      if (!validation.ok) throw appError_('DRIVE_CONFIGURATION_INVALID', 'Drive folder setup did not pass fail-closed validation.', false);
       audit_('SETUP_DRIVE_FOLDERS', 'CONFIG', 'DRIVE', user, correlationId, {
-        after: { environment: runtime.environment, created: created }
+        after: { environment: runtime.environment, created: created, existing: existing }
       });
-      return { environment: runtime.environment, created: created, validation: validateDriveConfiguration_() };
+      return { environment: runtime.environment, created: created, existing: existing, validation: validation };
     });
   });
 }

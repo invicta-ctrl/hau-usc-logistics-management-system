@@ -19,7 +19,7 @@ const METHODS = Object.freeze({
   createUserAccess: 'api_createUserAccess', updateUserAccess: 'api_updateUserAccess', deactivateUserAccess: 'api_deactivateUserAccess',
   saveEvent: 'api_saveEvent', createEvent: 'api_createEvent', createSubEvent: 'api_createSubEvent', updateEvent: 'api_updateEvent', archiveEvent: 'api_archiveEvent', restoreEvent: 'api_restoreEvent',
   saveContentRevision: 'api_saveContentRevision', publishContentRevision: 'api_publishContentRevision', revertContentRevision: 'api_revertContentRevision',
-  saveBrandingMetadata: 'api_saveBrandingMetadata', activateBrandingVersion: 'api_activateBrandingVersion',
+  saveBrandingMetadata: 'api_saveBrandingMetadata', uploadBrandingAsset: 'api_uploadBrandingAsset', activateBrandingVersion: 'api_activateBrandingVersion',
   updateCanvassReference: 'api_updateCanvassReference', archiveCanvassReference: 'api_archiveCanvassReference', restoreCanvassReference: 'api_restoreCanvassReference',
 });
 
