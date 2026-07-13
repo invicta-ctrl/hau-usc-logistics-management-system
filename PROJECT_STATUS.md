@@ -18,6 +18,17 @@
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
+## Slice 2 - essential bootstrap and lazy module contracts (repository-only)
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Approved starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
+- Current stage: `READY_FOR_FOCUSED_COMMIT`; implementation, repairs, and final local gates are complete.
+- Apps Script renders `HAU_BOOTSTRAP_CONTRACT_VERSION` from Script Properties: absent defaults to v1, explicit v2 requests an allowlisted essential DTO followed by one active-module DTO, and v1 retains the compatibility endpoint.
+- Added bounded pagination/filtering across module collections, fail-closed explicit entity-scope filtering for committee-scoped sessions, strict JSON/sensitive-field validation, exact UTF-8 payload metrics with a 100 KiB server bound, safe public-reference caching, in-request Sheet-read deduplication, and generated-runtime integration.
+- Verification: `npm run check` passed with 18 Vitest files / 143 tests; `npm run verify` passed; focused packaging passed 15/15; full Playwright passed 49 with 95 intentionally scoped skips and 0 failures across 144 cases.
+- No deployment, `clasp` command, Google Sheets/Drive/Apps Script external write, staging/production action, private-data access, migration, database, hosting, committee, roster, composite-request, catalog, restock, or polling work was performed.
+- Rollback: set `HAU_BOOTSTRAP_CONTRACT_VERSION=1` to use the compatibility endpoint; if code rollback is required after commit, revert the single focused Slice 2 commit. No external rollback is applicable to this local checkpoint.
+
 ## P0 Production Bootstrap Diagnosis and Recovery — repository-only checkpoint
 
 - Date: `2026-07-14` (`Asia/Manila`)

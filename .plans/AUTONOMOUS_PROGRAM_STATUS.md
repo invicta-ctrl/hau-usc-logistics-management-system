@@ -7,20 +7,26 @@ PROGRAM STATE: IN_PROGRESS
 - Program: HAU-USC V1 release and stabilization program.
 - Source plan: `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`.
 - Program start date: 2026-07-14 (Asia/Manila).
-- Current run stage: Slice 1 implementation is committed locally after repair, independent review, and final local gates; push/PR/CI review remains.
+- Current run stage: Slice 2 essential-bootstrap and lazy-module contracts are implemented and locally verified; the focused commit is the next controlled checkpoint.
 - Repository root: `D:\Documents\DOL Website GitHub`.
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Accepted local planning checkpoint / starting commit: `2a9ac342ca584257e0bbf6ea09ffb9d4f892a7c7` (`docs: add V1 release planning package`).
+- Approved Slice 2 starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2` (`fix: add bootstrap startup recovery`).
 - Upstream: `origin/feat/live-sync-lending-search-catalog-controls`.
-- Initial upstream comparison: local `1` commit ahead and `0` behind; upstream remote ref was `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
+- Slice 2 handshake comparison: local `0` commits ahead and `0` behind after fetch; remote ref matched the starting commit.
 
 ## Run and concurrency check
 
-- No `.plans` lock, active-run marker, status file, or current-slice file existed at the start of this run.
-- No separate `codex` or `codex-cli` process was found during the start check.
-- This run owns the current local worktree. No other writer is authorized for this checkout.
+- The scheduled continuation is the only authorized run for this checkout; no competing writer was found during the Slice 2 handshake.
+- The worktree was clean at the Slice 2 starting checkpoint and remains owned by this implementation run.
 
-## Current slice and stage
+## Slice 2 current run
+
+- Current slice: Slice 2 - essential bootstrap and lazy module contracts.
+- Stage: `READY_FOR_FOCUSED_COMMIT`.
+- Slice 1 is the accepted dependency checkpoint at `8b40f60a48323065ad69517e37915a33f32a51d2`; this run is adding only the contract, adapter, generated-runtime, test, and documentation changes bounded to Slice 2.
+- Later slices remain gated and not started.
+
+## Previous Slice 1 stage record
 
 - Current slice: Slice 1 — P0 bootstrap observability and recovery.
 - Stage: `COMMITTED_LOCAL_PENDING_PUSH_REVIEW`.
@@ -32,7 +38,7 @@ PROGRAM STATE: IN_PROGRESS
 | Slice | State | Note |
 |---|---|---|
 | 1 — P0 bootstrap observability and recovery | COMMITTED_LOCAL | Implementation repaired after independent review; local gates and focused commit passed. |
-| 2 — Essential bootstrap and lazy module contracts | NOT_STARTED | Requires accepted Slice 1 measurements and manager gate. |
+| 2 — Essential bootstrap and lazy module contracts | READY_LOCAL | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending. |
 | 3 — Canonical roles, committee scopes, and authorization contract | NOT_STARTED | Dependency-gated. |
 | 4 — Private roster synchronization and access freshness | NOT_STARTED | Dependency-gated; private source remains out of ordinary bootstrap. |
 | 5 — Committee Main Hub and Inventory and Pantry vertical slice | NOT_STARTED | Dependency-gated. |
@@ -53,20 +59,36 @@ PROGRAM STATE: IN_PROGRESS
 - Run Slice 1 before Slice 2; do not begin product-feature slices before the dependency gate is recorded.
 - Treat the reported startup symptom as a P0 failure class without claiming a production root cause until the affected environment and artifact are privately identified.
 - Preserve the current bootstrap endpoint, fields, endpoint behavior, rollback-compatible Version 9 target, ledger/history/audit semantics, and request-only privacy behavior.
+- Keep Slice 2 on a versioned essential bootstrap plus one active module, with the compatibility endpoint and runtime flag retained for rollback.
+- Measure read count, serialized payload size, and active-module behavior with synthetic/repository-local evidence only; do not claim staging or production performance.
 - Keep diagnostics allowlisted and synthetic; never commit credentials, private identifiers, roster/student/contact/supplier data, evidence, or operational records.
-- No schema change, migration, deployment, staging mutation, production mutation, Google Sheets/Drive/Apps Script external write, or database/hosting work is part of Slice 1.
+- No schema change, migration, deployment, staging mutation, production mutation, Google Sheets/Drive/Apps Script external write, or database/hosting work is part of Slice 2.
 - Generated artifacts may only be refreshed by the repository generator/build path; no hand edits.
 - One focused logical commit per accepted slice; no push or release claim without verified evidence.
+
+## Slice 2 local gate status
+
+- Final local gates pass: 18 Vitest files / 143 tests, focused packaged Chromium 15/15, and full Playwright 49 passed / 95 intentionally skipped / 0 failed across 144 cases.
+- Independent read-only review found actionable FAILs in runtime rollback and module pagination/scope; both were repaired and covered by focused tests and the final full gates. A second re-review was requested; no re-review PASS is claimed until its current-snapshot response is available.
+- The current local implementation is not yet pushed. No PR/CI or deployment claim is made for Slice 2.
 
 ## Commits, pushes, review, and CI
 
 - Accepted planning commit: `2a9ac342ca584257e0bbf6ea09ffb9d4f892a7c7`.
-- Slice 1 implementation commit: this focused local commit (`fix: add bootstrap startup recovery`); exact ending SHA is recorded at handoff.
+- Slice 1 accepted dependency: `8b40f60a48323065ad69517e37915a33f32a51d2` (`fix: add bootstrap startup recovery`).
+- Slice 2 implementation commit: not yet created; one focused commit is pending after this documentation update.
 - Pushes: none during this run.
-- PR/CI: not yet verified for the Slice 1 implementation commit.
-- Independent read-only review: completed; initial FAIL findings were repaired, and re-review returned WARN with no remaining FAILs.
+- PR/CI: not yet verified for Slice 2.
+- Independent read-only review: initial FAIL findings were repaired; current-snapshot re-review is still pending and is not represented as a PASS.
 
-## Local implementation files currently changed
+## Slice 2 implementation checkpoint
+
+- Essential contract, module allowlists, pagination/filter bounds, request-only enforcement, explicit entity-scope filtering, safe cache policy, request-scoped read deduplication, and a 100 KB response bound are implemented with synthetic tests.
+- The sole browser adapter now exposes the versioned essential/module reads. Apps Script renders `HAU_BOOTSTRAP_CONTRACT_VERSION` into the page; absent configuration defaults to v1, explicit `2` enables the essential/module path, and v1 retains the compatibility endpoint.
+- Generated artifacts were rebuilt through `npm run build`; no generated file was hand-edited.
+- No Sheets, Drive, Apps Script deployment, `clasp`, staging, production, database, hosting, roster, committee, catalog, restock, or live-update operation was performed.
+
+## Previous Slice 1 implementation files (historical)
 
 - `src/visual/bootstrap-controller.js` — new pure startup controller, envelope validation, safe diagnostics, and terminal-state recovery.
 - `src/visual/bootstrap-ui.js` — accessible loading/slow/error/Retry state handling with safe diagnostics.
@@ -86,46 +108,54 @@ PROGRAM STATE: IN_PROGRESS
 - `PROJECT_STATUS.md`, `CHANGELOG.md`, `docs/WORK_CONTINUATION.md` — P0 historical handoff updates.
 - `apps-script/Index.html` — unchanged.
 
+## Current Slice 2 implementation files
+
+- Apps Script: `apps-script/BootstrapService.gs`, `apps-script/Code.gs`, `apps-script/Config.gs`, `apps-script/Router.gs`, `apps-script/SheetRepository.gs`.
+- Browser contracts/services: `src/app/bootstrap-contract.js`, `src/app/module-data-controller.js`, `src/app/config.js`, `src/services/apps-script-adapter.js`, `src/services/legacy-runtime-adapter.js`.
+- Runtime sources/generator: `src/visual/bootstrap-controller.js`, `src/visual/bootstrap-ui.js`, `src/visual/runtime.js`, `scripts/extract-visual-baseline.mjs`, `scripts/apps-script-bundle-lib.mjs`, `scripts/check-apps-script.mjs`.
+- Generated artifacts: `dist/index.html`, `HAU-USC_Logistics-Prototype-Shareable.html`, `apps-script/Index.html`, `apps-script/AppScript.html`.
+- Tests/fixtures: `tests/fixtures/essential-bootstrap-fixtures.js`, `tests/unit/bootstrap-contract.test.js`, `tests/unit/module-data-controller.test.js`, `tests/unit/apps-script-bootstrap.test.js`, `tests/unit/apps-script-adapter.test.js`, `tests/unit/apps-script-bundle.test.js`, `tests/unit/apps-script-pure.test.js`, `tests/unit/visual-baseline.test.js`, `tests/e2e/apps-script-packaging.spec.js`, `tests/e2e/lending-catalog-sync.spec.js`.
+- Documentation: `docs/ESSENTIAL_BOOTSTRAP_CONTRACT.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`, `docs/WORK_CONTINUATION.md`, `.plans/current-slice.md`, and this status record.
+
 ## Verification recorded so far
 
 - `npm ci`: passed; 139 packages installed, no reported vulnerabilities.
-- Focused Vitest: passed, 5 files / 30 tests before final diagnostic additions; the final full run passed 15 files / 118 tests.
-- `npm test`: passed, 15 files / 118 tests.
-- `npm run check`: passed; lint, tests, Vite build, Apps Script checks, and generated-artifact verification passed.
+- `npm run check`: passed; ESLint clean, 18 Vitest files / 143 tests, Vite build, Apps Script checks, and generated-artifact verification passed.
 - `npm run verify`: passed; package/static verification and generated-artifact verification passed.
-- Focused packaging Playwright (`chromium-390`): passed, 14 tests, including packaged slow-state timing.
-- Full six-viewport Playwright suite: passed, 48 tests; 90 intentionally scoped skips; 0 failures across 138 cases.
-- Local static packaged shell measurement: visible at 390x844 in 81 ms; synthetic only, not a staging p95 claim.
-- Local packaged slow-state measurement: state appeared at the configured 8-second threshold with one bootstrap call; no duplicate call.
-- Sensitive-value scan of added Slice 1 content: passed; no credentials, private identifiers, private records, evidence values, or `.clasp.json` content found in the staged scope.
+- Focused packaging Playwright (`chromium-390`): passed, 15/15 tests, including slow-state, active-module failure, and runtime packaging checks.
+- Full Playwright suite: passed, 49 tests; 95 intentionally scoped skips; 0 failures across 144 cases.
+- Synthetic payload comparison: legacy realistic fixture 82,356 bytes; essential fixture 836 bytes; overview module fixture 11,377 bytes; essential-plus-overview fixture 12,237 bytes (85.1% smaller than the synthetic legacy fixture). This is repository-local evidence, not staging/production performance.
+- Apps Script VM tests cover request read deduplication including empty sheets, request-only privacy, payload bounds, runtime flag v1/v2 behavior, pagination/filtering, and entity-scope filtering.
+- Sensitive-value scan of Slice 2 added/modified scope: passed by category; no credentials, private identifiers, roster/student/contact/supplier/evidence values, `.clasp.json` content, or operational data was staged.
 
 ## Generated-artifact evidence
 
-- `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`: 252,036 bytes each; SHA-256 `40e211acf12a581436e2a28074a94fb60152eb9ad4d6667e2d46c6c6136080bd`.
-- Apps Script deterministic package checks passed: `Index.html` 615 bytes / SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`; `AppBody.html` 28,967 bytes / SHA-256 `b90a90470fec14fb5fc3936f068733d28d91d102c24fbc9da53ec044efc0ace2`; `AppStyles.html` 29,484 bytes / SHA-256 `b73493dfe76f9f01f5da296825cbde9bd2e358f58a409d9d432b64c16a30f4e4`; `AppScript.html` 192,655 bytes / SHA-256 `90c10065bcecd7fc2af3907c587c2288b16db460eb03aefe6da80d8fa66ec92c`.
-- Generated files were rebuilt through the repository generator/build path; `apps-script/Index.html` remained unchanged.
+- `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`: 265,246 bytes each; SHA-256 `9454509a247d8db2630898eddcbfe812c5d266552c8359f14af9b3e3472fc1ff`.
+- Apps Script deterministic package checks passed: `Index.html` 681 bytes / SHA-256 `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; `AppBody.html` 28,967 bytes / SHA-256 `b90a90470fec14fb5fc3936f068733d28d91d102c24fbc9da53ec044efc0ace2`; `AppStyles.html` 29,484 bytes / SHA-256 `b73493dfe76f9f01f5da296825cbde9bd2e358f58a409d9d432b64c16a30f4e4`; `AppScript.html` 205,950 bytes / SHA-256 `f0ded7d5eca276ebdaadc8cd1e5fa7045f5c6eb0706f0abfff3165aa2702922a`.
+- Generated files were rebuilt through the repository generator/build path and verified for deterministic parity.
 
 ## External operations and migration state
 
-- Google Sheets/Drive: no reads or writes in this run.
+- Google Sheets/Drive: no external reads or writes in this run; only local synthetic VM fixtures were used.
 - Apps Script deployment/execution: none.
 - Staging/production: no deployment or data mutation.
-- Schema/tab/migration: none; no migration dry run is applicable to Slice 1.
-- `clasp status` and `clasp push --dry-run`: intentionally unrun. A local ignored `.clasp.json` exists, but it was not read into output, modified, staged, or committed.
+- Schema/tab/migration: none; no migration dry run is applicable to Slice 2.
+- `clasp status` and `clasp push --dry-run`: intentionally unrun because no configured staging script is authorized for this local checkpoint. `.clasp.json` was excluded from reads/output and is not staged.
 
 ## Unknowns and open risks
 
 - The exact affected URL/deployment/version/source artifact for the reported startup symptom is not identified in this local run; no production claim is made.
-- Representative authorized staging cold/warm performance samples, screenshots, safe deployed trace, and rollback rehearsal are not available locally and remain unrun.
-- The upstream branch does not yet contain the local Slice 1 work; the final commit/push/PR/CI state remains open.
-- Retry after a partially completed startup stage has no explicit teardown for previously installed bindings/extensions; this remains a bounded local residual risk and is not expanded into a broader lifecycle refactor in Slice 1.
+- Representative authorized staging cold/warm performance samples, screenshots, safe deployed traces, HTML Service behavior, and rollback rehearsal remain unrun.
+- Full production-volume module read cost is still unknown because overview and module handlers bound returned DTOs but still read repository sheets server-side; this requires later authorized staging measurement.
+- Canonical role/committee scope policy remains a later Slice 3 dependency. Slice 2 applies existing permission checks plus explicit row-scope matching and fails closed for committee-scoped users without a matching scope; it does not start committee workflows or roster synchronization.
+- The final commit/push/PR/CI state remains open at this pre-commit checkpoint.
 
 ## Rollback checkpoint
 
 - Before any later consequential operation, retain the accepted implementation commit and the prior accepted planning checkpoint as immutable local references.
-- Slice 1 rollback is a code revert to the pre-Slice-1 checkpoint and, only if separately authorized, redeployment of the last approved staging version; no production operation belongs to this slice.
-- Keep the existing rollback-compatible endpoint and recorded Version 9 target until a later accepted slice explicitly closes that window.
+- Slice 2 rollback is first a server-side `HAU_BOOTSTRAP_CONTRACT_VERSION=1` setting, which selects the retained compatibility endpoint; if code rollback is required, revert the single focused Slice 2 commit to `8b40f60a48323065ad69517e37915a33f32a51d2`.
+- No deployment or external rollback is applicable to this local checkpoint; retain the existing compatibility endpoint until a later accepted slice closes the window.
 
 ## Next action
 
-Verify the ending SHA and clean state, then perform only the authorized push/PR/CI review steps. Do not start Slice 2 until the Slice 1 commit and evidence have been reviewed and its dependency gate is recorded.
+Create the one focused Slice 2 commit after the documentation update, then verify its SHA, clean state, remote parity, and authorized PR/CI state. Do not start Slice 3 until this Slice 2 checkpoint is reviewed and accepted.

@@ -4,6 +4,7 @@ import { HttpApiAdapter } from './http-api-adapter.js';
 
 export const backendMode = config.backendMode;
 export const appEnvironment = config.appEnvironment;
+export const bootstrapContractVersion = config.bootstrapContractVersion;
 const clientRequestId = (prefix) => `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
 const stableMutationValue = (value) => {
@@ -54,6 +55,8 @@ export function createLegacyRuntimeAdapter(mockServices) {
   })[metadata.folderType] ?? metadata.evidenceType ?? 'OTHER_SUPPORTING_DOCUMENT';
   return {
     async loadBootstrapData(options = {}) { const result = await remote.getBootstrapData(options); return result.data ?? result; },
+    async loadEssentialBootstrap(options = {}) { const result = await remote.getEssentialBootstrapData(options); return result.data ?? result; },
+    async loadBootstrapModule(module, options = {}) { return remote.getBootstrapModule({ ...options, module }); },
     getDataRevision() { return remote.getDataRevision({}); },
     async getInventoryItem(itemId) { const result = await remote.getInventoryItem({ itemId }); return result.item; },
     async submitRequest(payload) { const result = await mutationRequests.run('request', payload, (command) => remote.submitRequest(command)); return { id: result.requestId, displayName: payload.requestType === 'CATALOG_RESTOCK' ? 'Catalog Restock' : payload.eventName || payload.purpose, status: 'FOR_REVIEW', ...result }; },

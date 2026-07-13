@@ -94,6 +94,64 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
   const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
   await page.goto('about:blank');
   await page.evaluate((bootstrap) => {
+    const essentialBootstrap = (state) => ({
+      ok: true,
+      correlationId: 'COR-SYNTHETIC-ESSENTIAL',
+      contract: 'essential-bootstrap',
+      contractVersion: 2,
+      appVersion: state.version,
+      schemaVersion: state.schemaVersion,
+      backendMode: state.backendMode,
+      environment: state.environment,
+      requestOnly: false,
+      activeModule: 'overview',
+      currentUser: {
+        id: state.currentUser.id,
+        displayName: state.currentUser.displayName,
+        role: state.currentUser.role,
+        committee: state.currentUser.committee || '',
+        permissions: state.currentUser.permissions,
+        scopes: { committee: [] },
+      },
+      navigation: ['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory']
+        .map((id) => ({ id, label: id, enabled: true })),
+      moduleConfig: { maxPageSize: 50, defaultPageSize: 10, legacyEndpointAvailable: true, activeModuleOnly: true },
+      revision: { revision: state.dataRevision, updatedAt: state.dataRevisionUpdatedAt },
+      metrics: { readCount: 2, cacheHits: 0 },
+    });
+    const moduleBootstrap = (state, module) => {
+      const data = {
+        overview: {
+          eventSeries: state.eventSeries,
+          events: state.events,
+          requests: state.requests,
+          requestLines: state.requestLines,
+          inventoryItems: state.inventoryItems,
+          lendingTickets: state.lendingTickets,
+          restockRequests: state.restockRequests,
+          deliverables: state.deliverables,
+          roadmapMilestones: state.roadmapMilestones,
+        },
+        lending: { inventoryItems: state.inventoryItems, lendingTickets: state.lendingTickets },
+      }[module] || { inventoryItems: state.inventoryItems };
+      return {
+        ok: true,
+        correlationId: `COR-SYNTHETIC-${module.toUpperCase()}`,
+        contract: 'bootstrap-module',
+        contractVersion: 2,
+        appVersion: state.version,
+        schemaVersion: state.schemaVersion,
+        backendMode: state.backendMode,
+        environment: state.environment,
+        requestOnly: false,
+        module,
+        data,
+        pagination: { page: 1, pageSize: 10, total: data.lendingTickets?.length || data.inventoryItems?.length || 0, hasMore: false },
+        revision: { revision: state.dataRevision, updatedAt: state.dataRevisionUpdatedAt },
+        cache: { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 },
+        metrics: { readCount: 2, cacheHits: 0 },
+      };
+    };
     globalThis.__server = { bootstrap, revision: 1, writes: 0, failNextBootstrap: false, calls: [] };
     let successHandler = () => {};
     let failureHandler = () => {};
@@ -107,9 +165,17 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
         if (property in object) return object[property];
         if (typeof property === 'symbol') return undefined;
         return (payload) => queueMicrotask(() => {
-          const method = String(property);
-          globalThis.__server.calls.push({ method, payload });
-          if (method === 'api_getBootstrapData') {
+           const method = String(property);
+           globalThis.__server.calls.push({ method, payload });
+           if (method === 'api_getEssentialBootstrapData') {
+             successHandler({ ...essentialBootstrap(globalThis.__server.bootstrap) });
+             return;
+           }
+           if (method === 'api_getBootstrapModule') {
+             successHandler({ ...moduleBootstrap(globalThis.__server.bootstrap, payload.module) });
+             return;
+           }
+           if (method === 'api_getBootstrapData') {
             if (globalThis.__server.failNextBootstrap) {
               globalThis.__server.failNextBootstrap = false;
               failureHandler(new Error('Simulated refresh failure'));

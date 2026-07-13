@@ -1,4 +1,54 @@
-# Current Slice Checkpoint
+# Slice 2 Current Slice Checkpoint
+
+CURRENT SLICE: Slice 2 - Essential bootstrap and lazy module contracts
+CURRENT STAGE: READY_FOR_FOCUSED_COMMIT
+LAST UPDATED: 2026-07-14 (Asia/Manila)
+
+## Starting checkpoint for Slice 2
+
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved Slice 2 starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Handshake count: `0 0` (ahead/behind) after fetch; remote head matched the starting commit.
+- Worktree was clean at the checkpoint and no competing writer was found.
+
+## Slice 2 goal
+
+Bound startup work and payload so the initial shell reads only the essential bootstrap and then loads one active module on demand.
+
+## Slice 2 in scope
+
+- Versioned allowlisted essential-bootstrap and bootstrap-module DTOs with request-only privacy enforcement.
+- Sole Apps Script adapter methods, reversible runtime flag, compatibility endpoint retention, bounded pagination/filter inputs, safe public-reference caching, and request-scoped repository read deduplication.
+- Generated visual runtime integration, synthetic contract/controller/Apps Script/packaging tests, and required status/changelog/continuation documentation.
+
+## Slice 2 exclusions
+
+- No committee, roster, composite-request, catalog, restock, polling/live-update, hosting, database, migration, deployment, staging/production, Google Sheets/Drive/Apps Script external write, or private operational-data work.
+- No hand edits to generated HTML or generated visual fragments.
+
+## Slice 2 acceptance gates
+
+- [x] Essential DTO is allowlisted, JSON-safe, sanitized, and bounded.
+- [x] Module DTOs enforce module/data allowlists, permission isolation, request-only behavior, pagination bounds, and safe-cache policy.
+- [x] Repeated repository reads deduplicate within a request, including empty-sheet reads.
+- [x] Lazy controller deduplicates in-flight reads, bounds queries, expires/evicts safe cache entries, and cancels stale responses.
+- [x] Generated runtime uses a server-rendered `HAU_BOOTSTRAP_CONTRACT_VERSION` flag: v1 retains compatibility and explicit v2 loads essential bootstrap plus one active module.
+- [x] Module loaders apply bounded query/filter/page inputs, fail closed for committee-scoped users without matching explicit scope, and enforce a final serialized response bound of 100 KiB.
+- [x] Focused and final local gates pass: 18 Vitest files / 143 tests, focused packaging 15/15, and full Playwright 49 passed / 95 intentionally skipped / 0 failed across 144 cases.
+- [x] Initial independent review FAIL findings were repaired; current-snapshot re-review was attempted but returned WARN/incomplete, so no re-review PASS is claimed.
+- [ ] Focused commit and remote/CI evidence remain.
+- [ ] Staging timing/payload and `clasp` checks requiring configured staging remain intentionally unrun.
+
+## Current local evidence and rollback
+
+- Synthetic payload evidence: legacy realistic fixture 82,356 bytes; essential fixture 836 bytes; overview module fixture 11,377 bytes; essential-plus-overview fixture 12,237 bytes, an 85.1% local reduction. This is not staging or production performance evidence.
+- Generated parity: standalone artifacts are 265,246 bytes each with SHA-256 `9454509a247d8db2630898eddcbfe812c5d266552c8359f14af9b3e3472fc1ff`; Apps Script `Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; `AppScript.html` is 205,950 bytes / `f0ded7d5eca276ebdaadc8cd1e5fa7045f5c6eb0706f0abfff3165aa2702922a`; parity checks also cover AppBody/AppStyles.
+- Sensitive scan passed by category over the Slice 2 changed scope; no credentials, private identifiers, roster/student/contact/supplier/evidence values, operational data, or `.clasp.json` content is staged.
+- No external Sheets/Drive/Apps Script reads or writes, deployments, migrations, database/hosting work, or staging/production actions were performed. `clasp` remains intentionally unrun.
+- Rollback: set `HAU_BOOTSTRAP_CONTRACT_VERSION=1` to select the compatibility endpoint; if code rollback is required after commit, revert the single Slice 2 commit to `8b40f60a48323065ad69517e37915a33f32a51d2`.
+
+## Previous Slice 1 record
 
 CURRENT SLICE: Slice 1 — P0 bootstrap observability and recovery
 CURRENT STAGE: COMMITTED_LOCAL_PENDING_PUSH_REVIEW

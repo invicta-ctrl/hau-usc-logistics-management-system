@@ -11,6 +11,7 @@ function doGet(e) {
   var template = HtmlService.createTemplateFromFile(templateName);
   template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
   template.appEnvironment = runtime.environment;
+  template.bootstrapContractVersion = runtime.bootstrapContractVersion;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')

@@ -15,6 +15,32 @@ function runnerFor(result) {
 afterEach(() => { delete globalThis.google; });
 
 describe('AppsScriptAdapter', () => {
+  it('routes essential and module bootstrap reads through the sole Apps Script adapter', async () => {
+    const calls = [];
+    let success;
+    let proxy;
+    const runner = {
+      withSuccessHandler(handler) { success = handler; return proxy; },
+      withFailureHandler() { return proxy; },
+    };
+    proxy = new Proxy(runner, {
+      get(target, property) {
+        if (property in target) return target[property];
+        return (command) => { calls.push({ method: property, command }); queueMicrotask(() => success({ ok: true, data: {} })); };
+      },
+    });
+    globalThis.google = { script: { run: proxy } };
+
+    const adapter = new AppsScriptAdapter();
+    await adapter.getEssentialBootstrapData({ requestOnly: true });
+    await adapter.getBootstrapModule({ module: 'request', page: 1 });
+
+    expect(calls).toEqual([
+      { method: 'api_getEssentialBootstrapData', command: { requestOnly: true } },
+      { method: 'api_getBootstrapModule', command: { module: 'request', page: 1 } },
+    ]);
+  });
+
   it('normalizes successful server responses', async () => {
     globalThis.google = { script: { run: runnerFor({ ok: true, correlationId: 'COR-1', requestId: 'LREQ-2026-0001' }) } };
     await expect(new AppsScriptAdapter().submitRequest({ clientRequestId: 'client-1' })).resolves.toEqual(expect.objectContaining({ requestId: 'LREQ-2026-0001' }));

@@ -62,6 +62,20 @@ describe('Apps Script runtime configuration isolation', () => {
     expect(ctx.resolveRuntimeConfig_().environment).toBe('PRODUCTION');
   });
 
+  it('defaults to the legacy bootstrap and accepts an explicit v2 rollout flag', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs']);
+    setRuntimeProperties(ctx, {
+      HAU_ENVIRONMENT: 'STAGING',
+      HAU_SPREADSHEET_ID: 'staging-sheet-id-1234567890',
+      HAU_BACKUP_SPREADSHEET_ID: 'staging-backup-id-1234567890',
+    });
+    expect(ctx.resolveRuntimeConfig_().bootstrapContractVersion).toBe(1);
+    setRuntimeProperties(ctx, { HAU_BOOTSTRAP_CONTRACT_VERSION: '2' });
+    expect(ctx.resolveRuntimeConfig_().bootstrapContractVersion).toBe(2);
+    setRuntimeProperties(ctx, { HAU_BOOTSTRAP_CONTRACT_VERSION: '3' });
+    expect(() => ctx.resolveRuntimeConfig_()).toThrow(/1 or 2/);
+  });
+
   it('has no hardcoded spreadsheet fallback and rejects placeholders', () => {
     const ctx = gasContext(['Config.gs', 'Validation.gs']);
     expect(ctx.HAU_CONFIG.SPREADSHEET_ID).toBeUndefined();

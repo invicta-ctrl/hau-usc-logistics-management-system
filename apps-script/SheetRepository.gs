@@ -1,8 +1,20 @@
+var HAU_REQUEST_READ_CACHE_ = null;
+var HAU_REQUEST_READ_STATS_ = null;
+function withRequestReadCache_(operation) {
+  var previousCache = HAU_REQUEST_READ_CACHE_, previousStats = HAU_REQUEST_READ_STATS_;
+  HAU_REQUEST_READ_CACHE_ = {};
+  HAU_REQUEST_READ_STATS_ = { readCount: 0, cacheHits: 0 };
+  try { return operation(HAU_REQUEST_READ_STATS_); } finally { HAU_REQUEST_READ_CACHE_ = previousCache; HAU_REQUEST_READ_STATS_ = previousStats; }
+}
 function sheet_(name) { var s = getDatabase_().getSheetByName(name); if (!s) throw appError_('SCHEMA_MISSING', 'Required sheet is missing: ' + name, false); return s; }
 function headers_(name) { var s = sheet_(name), width = Math.max(1, s.getLastColumn()); return s.getRange(1, 1, 1, width).getDisplayValues()[0].map(function(v) { return String(v).trim(); }); }
 function readObjects_(name) {
-  var s = sheet_(name), lastRow = s.getLastRow(), h = headers_(name); if (lastRow < 2) return [];
-  return s.getRange(2, 1, lastRow - 1, h.length).getValues().map(function(values, index) { var o = { _row: index + 2 }; h.forEach(function(key, i) { if (key) o[key] = values[i]; }); return o; }).filter(function(o) { return h.some(function(key) { return key && o[key] !== '' && o[key] != null; }); });
+  if (HAU_REQUEST_READ_CACHE_ && Object.prototype.hasOwnProperty.call(HAU_REQUEST_READ_CACHE_, name)) { HAU_REQUEST_READ_STATS_.cacheHits += 1; return HAU_REQUEST_READ_CACHE_[name]; }
+  if (HAU_REQUEST_READ_STATS_) HAU_REQUEST_READ_STATS_.readCount += 1;
+  var s = sheet_(name), lastRow = s.getLastRow(), h = headers_(name), rows = [];
+  if (lastRow >= 2) rows = s.getRange(2, 1, lastRow - 1, h.length).getValues().map(function(values, index) { var o = { _row: index + 2 }; h.forEach(function(key, i) { if (key) o[key] = values[i]; }); return o; }).filter(function(o) { return h.some(function(key) { return key && o[key] !== '' && o[key] != null; }); });
+  if (HAU_REQUEST_READ_CACHE_) HAU_REQUEST_READ_CACHE_[name] = rows;
+  return rows;
 }
 function findOne_(name, field, value) { return readObjects_(name).find(function(row) { return String(row[field]) === String(value); }) || null; }
 function findAll_(name, predicate) { return readObjects_(name).filter(predicate); }

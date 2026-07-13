@@ -1,5 +1,32 @@
 # Work Continuation
 
+## Current checkpoint - Slice 2 essential bootstrap and lazy module contracts
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Current stage: `READY_FOR_FOCUSED_COMMIT`; implementation, repairs, and final local gates are complete.
+- Handshake: worktree clean, local/upstream `0 0`, remote head matched the starting commit, and no competing writer was found.
+
+### Slice 2 implementation
+
+- Added the versioned `essential-bootstrap` and `bootstrap-module` contracts with strict allowlists, JSON-safety checks, sensitive-field rejection, pagination bounds, request-only enforcement, and legacy-compatible state merging.
+- Added Apps Script essential/module APIs beside the existing bootstrap endpoint. Repository reads are deduplicated within one request, and the browser controller deduplicates in-flight reads, cancels stale responses, and caches only bounded public-reference projections.
+- Added the reversible runtime flag and generated-runtime path: `HAU_BOOTSTRAP_CONTRACT_VERSION` defaults to v1 and explicit v2 loads essential bootstrap followed by the active module; version 1 retains the compatibility endpoint.
+- Added final UTF-8 payload-byte measurement with a 100 KiB server bound, bounded page/filter handling across module collections, and fail-closed explicit entity-scope filtering for committee-scoped sessions.
+- Added synthetic contract, cache, cancellation, adapter, Apps Script VM, and packaged Chromium coverage. Generated outputs were rebuilt through the repository generator/build path.
+
+### Scope and external boundary
+
+- No committee, roster, composite-request, catalog, restock, polling/live-update, hosting, database, migration, deployment, staging/production, Google Sheets/Drive/Apps Script external write, or private operational-data work was performed.
+- `clasp status` and `clasp push --dry-run` remain unrun because no staging script was configured for this local checkpoint.
+
+### Current evidence and next transition
+
+- `npm run check` passed with 18 Vitest files / 143 tests; `npm run verify` passed; focused packaging passed 15/15; full Playwright passed 49 with 95 intentionally scoped skips and 0 failures across 144 cases. Initial independent-review FAIL findings were repaired. A current-snapshot re-review returned WARN/incomplete, so no re-review PASS is claimed.
+- Sensitive scan and generated parity pass. The next transition is one focused implementation commit, followed by authorized remote/PR/CI verification. Do not deploy or broaden the scope.
+
 ## Latest checkpoint — P0 Production Bootstrap Diagnosis and Recovery
 
 - Date: `2026-07-14` (`Asia/Manila`)

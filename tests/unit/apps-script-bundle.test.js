@@ -143,12 +143,18 @@ describe('Apps Script separate-output packaging', () => {
   it('renders the server-trusted request-only flag into the assembled body', () => {
     const files = fixtureFiles();
     expect(files.index).toContain("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"");
+    expect(files.index).toContain('data-bootstrap-contract-version="<?= bootstrapContractVersion ?>"');
     const internal = analyzeAssembledDocument(assembleAppsScriptTemplate(files));
     const requestOnly = analyzeAssembledDocument(assembleAppsScriptTemplate(files, { requestOnly: true }));
+    const legacy = analyzeAssembledDocument(assembleAppsScriptTemplate(files, { bootstrapContractVersion: 1 }));
     const internalBody = internal.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
     const requestOnlyBody = requestOnly.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
+    const legacyBody = legacy.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
     expect(internalBody.attributes.get('data-request-only')).toBe('false');
     expect(requestOnlyBody.attributes.get('data-request-only')).toBe('true');
+    expect(internalBody.attributes.get('data-bootstrap-contract-version')).toBe('2');
+    expect(legacyBody.attributes.get('data-bootstrap-contract-version')).toBe('1');
+    expect(() => assembleAppsScriptTemplate(files, { bootstrapContractVersion: 3 })).toThrow(/1 or 2/);
   });
 
   it('runs one minified-identifier bootstrap and reaches the mocked Apps Script API once', () => {
@@ -171,7 +177,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(5);
+    expect(diagnostics.index.markers['<?'].count).toBe(6);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),

@@ -26,6 +26,7 @@ export const BOOTSTRAP_STAGES = Object.freeze({
   STATIC_OPTIONS: 'STATIC_OPTIONS',
   EXTENSIONS: 'EXTENSIONS',
   BINDINGS: 'BINDINGS',
+  ACTIVE_MODULE: 'ACTIVE_MODULE',
   FIRST_RENDER: 'FIRST_RENDER',
   POST_RENDER: 'POST_RENDER',
   READY: 'READY',
@@ -40,6 +41,7 @@ export const BOOTSTRAP_STATES = Object.freeze({
   PREPARING_STATIC_OPTIONS: 'PREPARING_STATIC_OPTIONS',
   INSTALLING_EXTENSIONS: 'INSTALLING_EXTENSIONS',
   BINDING_EVENTS: 'BINDING_EVENTS',
+  LOADING_ACTIVE_MODULE: 'LOADING_ACTIVE_MODULE',
   RENDERING_ACTIVE_VIEW: 'RENDERING_ACTIVE_VIEW',
   POST_RENDER: 'POST_RENDER',
   SLOW: 'SLOW',
@@ -60,6 +62,7 @@ const STAGE_STATES = Object.freeze({
   [BOOTSTRAP_STAGES.STATIC_OPTIONS]: BOOTSTRAP_STATES.PREPARING_STATIC_OPTIONS,
   [BOOTSTRAP_STAGES.EXTENSIONS]: BOOTSTRAP_STATES.INSTALLING_EXTENSIONS,
   [BOOTSTRAP_STAGES.BINDINGS]: BOOTSTRAP_STATES.BINDING_EVENTS,
+  [BOOTSTRAP_STAGES.ACTIVE_MODULE]: BOOTSTRAP_STATES.LOADING_ACTIVE_MODULE,
   [BOOTSTRAP_STAGES.FIRST_RENDER]: BOOTSTRAP_STATES.RENDERING_ACTIVE_VIEW,
   [BOOTSTRAP_STAGES.POST_RENDER]: BOOTSTRAP_STATES.POST_RENDER,
   [BOOTSTRAP_STAGES.READY]: BOOTSTRAP_STATES.READY,
@@ -72,6 +75,7 @@ const STAGE_MESSAGES = Object.freeze({
   [BOOTSTRAP_STAGES.STATIC_OPTIONS]: 'The workspace could not prepare its controls.',
   [BOOTSTRAP_STAGES.EXTENSIONS]: 'The workspace could not prepare its runtime helpers.',
   [BOOTSTRAP_STAGES.BINDINGS]: 'The workspace could not activate its controls.',
+  [BOOTSTRAP_STAGES.ACTIVE_MODULE]: 'The workspace could not load the active module.',
   [BOOTSTRAP_STAGES.FIRST_RENDER]: 'The workspace could not render its first usable view.',
   [BOOTSTRAP_STAGES.POST_RENDER]: 'The workspace could not finish preparing the view.',
   [BOOTSTRAP_STAGES.READY]: 'The workspace could not finish loading.',
@@ -152,6 +156,13 @@ function byteLength(value) {
   const serialized = JSON.stringify(value);
   if (typeof TextEncoder === 'function') return new TextEncoder().encode(serialized).length;
   return serialized.length;
+}
+
+function summarizeStagePayload(value) {
+  if (!value || typeof value !== 'object') return null;
+  if (value.version) return summarizeBootstrap(value);
+  if (value.contract) return { payloadBytes: byteLength(value), collectionCounts: {} };
+  return null;
 }
 
 export function summarizeBootstrap(value) {
@@ -283,7 +294,7 @@ export function createBootstrapController({
       if (next && next.bootstrapMeta?.correlationId) {
         attempt.correlationId = safeCorrelationId(next.bootstrapMeta.correlationId, attempt.correlationId);
       }
-      const summary = next?.version ? summarizeBootstrap(next) : null;
+      const summary = summarizeStagePayload(next);
       if (summary) {
         attempt.payloadBytes = summary.payloadBytes;
         attempt.collectionCounts = summary.collectionCounts;
@@ -307,6 +318,7 @@ export function createBootstrapController({
         [BOOTSTRAP_STAGES.STATIC_OPTIONS, steps.staticOptions],
         [BOOTSTRAP_STAGES.EXTENSIONS, steps.extensions],
         [BOOTSTRAP_STAGES.BINDINGS, steps.bindings],
+        [BOOTSTRAP_STAGES.ACTIVE_MODULE, steps.activeModule],
         [BOOTSTRAP_STAGES.FIRST_RENDER, steps.firstRender],
         [BOOTSTRAP_STAGES.POST_RENDER, steps.postRender],
       ]) {

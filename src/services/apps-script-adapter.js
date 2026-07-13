@@ -1,7 +1,7 @@
 import { AppError } from '../app/errors.js';
 
 const METHODS = Object.freeze({
-  getBootstrapData: 'api_getBootstrapData', getCurrentUser: 'api_getCurrentUser', getDataRevision: 'api_getDataRevision', searchCatalog: 'api_searchCatalog',
+  getBootstrapData: 'api_getBootstrapData', getEssentialBootstrapData: 'api_getEssentialBootstrapData', getBootstrapModule: 'api_getBootstrapModule', getCurrentUser: 'api_getCurrentUser', getDataRevision: 'api_getDataRevision', searchCatalog: 'api_searchCatalog',
   submitRequest: 'api_submitRequest', reviewRequest: 'api_reviewRequest', reserveStock: 'api_reserveStock',
   createLendingTicket: 'api_createLendingTicket', approveLendingTicket: 'api_approveLendingTicket',
   confirmLendingHandoff: 'api_confirmLendingHandoff', confirmReturn: 'api_confirmReturn',

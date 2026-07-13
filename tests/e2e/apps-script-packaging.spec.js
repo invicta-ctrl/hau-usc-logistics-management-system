@@ -4,7 +4,7 @@ import {
   assembleAppsScriptTemplate,
   createAppsScriptBundleFromProject,
 } from '../../scripts/apps-script-bundle-lib.mjs';
-import { createEmptyBootstrapFixture } from '../fixtures/bootstrap-fixtures.js';
+import { createBootstrapModuleFixture, createEssentialBootstrapFixture } from '../fixtures/essential-bootstrap-fixtures.js';
 
 for (const appEnvironment of ['STAGING', 'PRODUCTION']) {
 for (const requestOnly of [false, true]) {
@@ -21,7 +21,9 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
   expect(analysis.suspiciousVisibleJavaScriptTokenCount).toBe(0);
 
   await page.goto('about:blank');
-  await page.evaluate((bootstrap) => {
+  const essential = createEssentialBootstrapFixture({ backendMode: 'apps-script', requestOnly });
+  const module = createBootstrapModuleFixture({ backendMode: 'apps-script', requestOnly, module: requestOnly ? 'request' : 'overview' });
+  await page.evaluate(({ essential: bootstrap, module: activeModule }) => {
     globalThis.__appsScriptApiCalls = [];
     let successHandler = () => {};
     let failureHandler = () => {};
@@ -37,20 +39,22 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
         return (payload) => {
           globalThis.__appsScriptApiCalls.push({ method: String(property), payload });
           queueMicrotask(() => {
-            if (property === 'api_getBootstrapData') successHandler({ ok: true, data: bootstrap });
+            if (property === 'api_getEssentialBootstrapData') successHandler({ ok: true, ...bootstrap });
+            else if (property === 'api_getBootstrapModule') successHandler({ ok: true, ...activeModule });
             else failureHandler(new Error(`Unexpected Apps Script call: ${String(property)}`));
           });
         };
       },
     });
     globalThis.google = { script: { run: runner } };
-  }, createEmptyBootstrapFixture({ backendMode: 'apps-script' }));
+  }, { essential, module });
 
   await page.setContent(assembled, { waitUntil: 'load' });
-  await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
+  await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  expect(await page.evaluate(() => globalThis.__appsScriptApiCalls)).toEqual([
-    { method: 'api_getBootstrapData', payload: { requestOnly } },
+  expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.map(({ method, payload }) => ({ method, payload })))).toEqual([
+    { method: 'api_getEssentialBootstrapData', payload: { requestOnly } },
+    { method: 'api_getBootstrapModule', payload: { requestOnly, page: 1, pageSize: 10, query: '', filter: '', module: requestOnly ? 'request' : 'overview' } },
   ]);
   await expect(page.locator('body')).toHaveAttribute(
     'data-request-only',
@@ -77,7 +81,7 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
     await expect(page.locator('#syncIndicator')).toHaveCount(0);
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await page.waitForTimeout(50);
-    await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
+    await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
     await expect(
       page.locator('.portal-header .preview-badge'),
     ).toHaveText(expectedEnvironmentLabel);
@@ -99,7 +103,8 @@ test('packaged Apps Script bootstrap recovers with one focused retry and safe di
   test.skip(testInfo.project.name !== 'chromium-390', 'One real browser recovery run is sufficient for packaging verification.');
   const files = await createAppsScriptBundleFromProject();
   const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
-  const bootstrap = createEmptyBootstrapFixture({ backendMode: 'apps-script' });
+  const essential = createEssentialBootstrapFixture({ backendMode: 'apps-script' });
+  const module = createBootstrapModuleFixture({ backendMode: 'apps-script', module: 'overview' });
 
   await page.goto('about:blank');
   await page.evaluate((fixture) => {
@@ -127,13 +132,13 @@ test('packaged Apps Script bootstrap recovers with one focused retry and safe di
           queueMicrotask(() => {
             globalThis.__activeBootstrapCalls -= 1;
             if (globalThis.__appsScriptApiCalls.length === 1) failureHandler(new Error('SENSITIVE_BOOTSTRAP_CANARY'));
-            else successHandler({ ok: true, data: fixture });
+            else successHandler({ ok: true, ...(globalThis.__appsScriptApiCalls.length === 2 ? fixture.essential : fixture.module) });
           });
         };
       },
     });
     globalThis.google = { script: { run: runner } };
-  }, bootstrap);
+  }, { essential, module });
   await page.setContent(assembled, { waitUntil: 'load' });
 
   await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
@@ -151,12 +156,13 @@ test('packaged Apps Script bootstrap recovers with one focused retry and safe di
     button.click();
     button.click();
   });
-  await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
+  await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(3);
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
   expect(await page.evaluate(() => globalThis.__maxConcurrentBootstrapCalls)).toBe(1);
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.map((call) => call.method))).toEqual([
-    'api_getBootstrapData',
-    'api_getBootstrapData',
+    'api_getEssentialBootstrapData',
+    'api_getEssentialBootstrapData',
+    'api_getBootstrapModule',
   ]);
 });
 
@@ -164,7 +170,7 @@ test('packaged Apps Script bootstrap rejects an unsupported response without exp
   test.skip(testInfo.project.name !== 'chromium-390', 'One real browser contract run is sufficient for packaging verification.');
   const files = await createAppsScriptBundleFromProject();
   const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
-  const invalidBootstrap = { ...createEmptyBootstrapFixture({ backendMode: 'apps-script' }), version: 'UNSUPPORTED-VERSION' };
+  const invalidBootstrap = { ...createEssentialBootstrapFixture({ backendMode: 'apps-script' }), contractVersion: 99 };
 
   await page.goto('about:blank');
   await page.evaluate((fixture) => {
@@ -181,7 +187,7 @@ test('packaged Apps Script bootstrap rejects an unsupported response without exp
         if (typeof property === 'symbol') return undefined;
         return (payload) => {
           globalThis.__appsScriptApiCalls.push({ method: String(property), payload });
-          queueMicrotask(() => successHandler({ ok: true, data: fixture }));
+          queueMicrotask(() => successHandler({ ok: true, ...fixture }));
         };
       },
     });
@@ -200,11 +206,14 @@ test('packaged Apps Script bootstrap shows the slow state without a duplicate ca
   test.skip(testInfo.project.name !== 'chromium-390', 'One real browser slow-state run is sufficient for packaging verification.');
   const files = await createAppsScriptBundleFromProject();
   const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
-  const bootstrap = createEmptyBootstrapFixture({ backendMode: 'apps-script' });
+  const essential = createEssentialBootstrapFixture({ backendMode: 'apps-script' });
+  const module = createBootstrapModuleFixture({ backendMode: 'apps-script', module: 'overview' });
 
   await page.goto('about:blank');
-  await page.evaluate(() => {
+  await page.evaluate(({ essential: bootstrap, module: activeModule }) => {
     globalThis.__appsScriptApiCalls = [];
+    globalThis.__slowEssential = bootstrap;
+    globalThis.__slowModule = activeModule;
     let successHandler = () => {};
     let runner;
     const target = {
@@ -217,19 +226,20 @@ test('packaged Apps Script bootstrap shows the slow state without a duplicate ca
         if (typeof property === 'symbol') return undefined;
         return () => {
           globalThis.__appsScriptApiCalls.push(String(property));
-          globalThis.__resolveSlowBootstrap = (fixture) => successHandler({ ok: true, data: fixture });
+          if (property === 'api_getEssentialBootstrapData') globalThis.__resolveSlowBootstrap = () => successHandler({ ok: true, ...globalThis.__slowEssential });
+          if (property === 'api_getBootstrapModule') queueMicrotask(() => successHandler({ ok: true, ...globalThis.__slowModule }));
         };
       },
     });
     globalThis.google = { script: { run: runner } };
-  });
+  }, { essential, module });
   await page.setContent(assembled, { waitUntil: 'load' });
 
   await expect(page.locator('#loading')).toHaveAttribute('data-state', 'slow', { timeout: 10_000 });
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
-  await page.evaluate((fixture) => globalThis.__resolveSlowBootstrap(fixture), bootstrap);
+  await page.evaluate(() => globalThis.__resolveSlowBootstrap());
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
+  expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
 });
 
 for (const stage of [
@@ -238,6 +248,7 @@ for (const stage of [
   'STATIC_OPTIONS',
   'EXTENSIONS',
   'BINDINGS',
+  'ACTIVE_MODULE',
   'FIRST_RENDER',
   'POST_RENDER',
 ]) {
@@ -245,9 +256,10 @@ for (const stage of [
     test.skip(testInfo.project.name !== 'chromium-390', 'One real browser stage-boundary run is sufficient for packaging verification.');
     const files = await createAppsScriptBundleFromProject();
     const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
-    const bootstrap = createEmptyBootstrapFixture({ backendMode: 'apps-script' });
+    const essential = createEssentialBootstrapFixture({ backendMode: 'apps-script' });
+    const module = createBootstrapModuleFixture({ backendMode: 'apps-script', module: 'overview' });
     await page.goto('about:blank');
-    await page.evaluate(({ fixture, failureStage }) => {
+    await page.evaluate(({ essential: bootstrap, module: activeModule, failureStage }) => {
       globalThis.__HAU_BOOTSTRAP_TEST_MODE__ = true;
       globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__ = (currentStage) => {
         if (currentStage === failureStage) throw new Error('SENSITIVE_STAGE_CANARY');
@@ -265,15 +277,15 @@ for (const stage of [
           if (typeof property === 'symbol') return undefined;
           return (payload) => {
             globalThis.__appsScriptApiCalls.push({ method: String(property), payload });
-            queueMicrotask(() => successHandler({ ok: true, data: fixture }));
+            queueMicrotask(() => successHandler({ ok: true, ...(property === 'api_getEssentialBootstrapData' ? bootstrap : activeModule) }));
           };
         },
       });
       globalThis.google = { script: { run: runner } };
-    }, { fixture: bootstrap, failureStage: stage });
+    }, { essential, module, failureStage: stage });
     await page.setContent(assembled, { waitUntil: 'load' });
 
-    await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(1);
+    await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(['FIRST_RENDER', 'POST_RENDER'].includes(stage) ? 2 : 1);
     await expect(page.locator('#loading')).toHaveAttribute('data-state', 'error');
     await expect(page.locator('#loadingRetry')).toBeVisible();
     const failureText = await page.locator('#loading').innerText();

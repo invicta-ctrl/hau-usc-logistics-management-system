@@ -6,6 +6,7 @@ export const config = Object.freeze({
   previewMode: true,
   backendMode: runtime.backendMode ?? import.meta.env?.VITE_BACKEND_MODE ?? 'mock',
   appEnvironment: runtime.appEnvironment ?? import.meta.env?.VITE_APP_ENV ?? 'development',
+  bootstrapContractVersion: Number(runtime.bootstrapContractVersion ?? import.meta.env?.VITE_BOOTSTRAP_CONTRACT_VERSION ?? 1),
   httpApiBaseUrl: runtime.httpApiBaseUrl ?? import.meta.env?.VITE_HTTP_API_BASE_URL ?? '',
   timezone: 'Asia/Manila',
   locale: 'en-PH',

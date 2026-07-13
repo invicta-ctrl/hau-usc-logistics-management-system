@@ -92,12 +92,16 @@ describe('authoritative visual extraction', () => {
     const runtime = await read('src/visual/runtime.js');
     expect(runtime).toContain("createLegacyRuntimeAdapter(mockServices)");
     expect(runtime).toContain(
-      "import { appEnvironment, backendMode, createLegacyRuntimeAdapter }",
+      "import { appEnvironment, backendMode, bootstrapContractVersion, createLegacyRuntimeAdapter }",
     );
+    expect(runtime).toContain("import { validateEssentialBootstrap, validateBootstrapModule, createStateFromEssentialBootstrap, mergeBootstrapModule }");
+    expect(runtime).toContain("import { createModuleDataController }");
     expect(runtime).toContain("import { createRuntimeExtensions }");
-    expect(runtime).toContain(
-      "return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly})",
-    );
+    expect(runtime).toContain("if(useEssentialBootstrap)return services.loadEssentialBootstrap({requestOnly})");
+    expect(runtime).toContain("return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly})");
+    expect(runtime).toContain("services.loadBootstrapModule(module,params)");
+    expect(runtime).toContain("BOOTSTRAP_STAGES.ACTIVE_MODULE");
+    expect(runtime).toContain("function renderActiveModule()");
     expect(runtime).toContain(
       "Reset Demo Data is available only in local preview mode.",
     );

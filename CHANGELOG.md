@@ -2,9 +2,18 @@
 
 ## 0.5.0 - Unreleased
 
+### Slice 2 - Essential bootstrap and lazy module contracts
+
+- Added versioned allowlisted essential/module read contracts with request-only privacy enforcement, bounded pagination/filtering, fail-closed entity scope checks, JSON-safety validation, and compatibility-preserving runtime selection.
+- Added Apps Script module APIs beside the existing bootstrap endpoint, request-scoped repository read deduplication, exact UTF-8 payload metrics with a 100 KiB response bound, bounded public-reference caching, in-flight deduplication, stale-response cancellation, and active-module rendering.
+- Made the rollout flag server-controlled through `HAU_BOOTSTRAP_CONTRACT_VERSION`; the safe default is v1 and explicit v2 enables the new path.
+- Added synthetic contract/controller/Apps Script VM/adapter/packaging coverage and regenerated visual/standalone/Apps Script artifacts through the repository build path.
+- Verification passes: 18 Vitest files / 143 tests, focused packaged Chromium 15/15, and full Playwright 49 passed / 95 intentionally skipped / 0 failed across 144 cases. Initial independent-review FAIL findings were repaired; current-snapshot re-review returned WARN/incomplete, so no re-review PASS is claimed.
+- No deployment, external-system write, private operational-data change, or Slice 3+ feature work was performed.
+
 - Working branch: `feat/live-sync-lending-search-catalog-controls`
-- Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
-- Ending commit: this handoff commit; exact SHA is reported after commit and push
+- Starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
+- Ending commit: one focused Slice 2 implementation commit is pending; exact SHA is reported after commit
 
 ### P0 Production Bootstrap Diagnosis and Recovery
 

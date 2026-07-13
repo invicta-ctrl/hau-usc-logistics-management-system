@@ -10,7 +10,7 @@ import {
 } from './apps-script-bundle-lib.mjs';
 
 const requiredFiles = [
-  'Code.gs','Config.gs','Auth.gs','Router.gs','IdService.gs','Validation.gs','SheetRepository.gs','DataRevisionService.gs',
+  'Code.gs','Config.gs','Auth.gs','BootstrapService.gs','Router.gs','IdService.gs','Validation.gs','SheetRepository.gs','DataRevisionService.gs',
   'ItemRepository.gs','RequestService.gs','InventoryService.gs','ReservationService.gs','LendingService.gs',
   'ReleaseService.gs','RestockService.gs','ProcurementService.gs','CanvassService.gs','EvidenceService.gs',
   'DriveService.gs','AuditService.gs','MigrationService.gs','BackupService.gs','ErrorService.gs','Setup.gs',
@@ -19,7 +19,7 @@ const requiredFiles = [
 const requiredFunctions = [
   'setupDatabase','validateDatabaseSchema','setupDriveFolders','validateDriveConfiguration','setupTimeTriggers',
   'seedRolesAndPermissions','runMigrationDryRun','applyApprovedMigration','createLaunchBackup','runReconciliation','healthCheck',
-  'api_getBootstrapData','api_submitRequest','api_reviewRequest','api_confirmRelease','api_uploadEvidence',
+  'api_getBootstrapData','api_getEssentialBootstrapData','api_getBootstrapModule','api_submitRequest','api_reviewRequest','api_confirmRelease','api_uploadEvidence',
   'api_getDataRevision','setupOperationalEditTrigger','handleOperationalSheetEdit','api_getInventoryItem',
   'api_createInventoryItem','api_updateInventoryItem','api_updateInventoryStorageContext','api_archiveInventoryItem','api_restoreInventoryItem',
   'api_htmlDiagnosticPing','htmlTemplateDiagnostics',
@@ -54,6 +54,9 @@ if (missingIncludes.length) throw new Error(`Apps Script template is missing: ${
 if (!index.includes("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"")) {
   throw new Error('Apps Script template does not expose the server request-only flag.');
 }
+if (!index.includes('data-bootstrap-contract-version="<?= bootstrapContractVersion ?>"')) {
+  throw new Error('Apps Script template does not expose the server bootstrap contract flag.');
+}
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"')) throw new Error('AppBody.html is missing required interface markup.');
 if (!appStyles.includes('.app-shell') || !appStyles.includes('.loading-overlay')) throw new Error('AppStyles.html is missing required interface styles.');
@@ -83,6 +86,9 @@ const requestOnlyBody = tokenizeHtml(requestOnlyAssembled).find(
 );
 if (requestOnlyBody?.attributes.get('data-request-only') !== 'true') {
   throw new Error('Assembled Apps Script request-only document lost the server request flag.');
+}
+if (tokenizeHtml(assembled).find((token) => token.type === 'tag' && !token.closing && token.name === 'body')?.attributes.get('data-bootstrap-contract-version') !== '2') {
+  throw new Error('Assembled Apps Script document lost the v2 bootstrap contract flag.');
 }
 if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script')) throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');
 

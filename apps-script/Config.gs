@@ -1,7 +1,8 @@
 var HAU_RUNTIME_PROPERTIES = Object.freeze({
   ENVIRONMENT: 'HAU_ENVIRONMENT',
   SPREADSHEET_ID: 'HAU_SPREADSHEET_ID',
-  BACKUP_SPREADSHEET_ID: 'HAU_BACKUP_SPREADSHEET_ID'
+  BACKUP_SPREADSHEET_ID: 'HAU_BACKUP_SPREADSHEET_ID',
+  BOOTSTRAP_CONTRACT_VERSION: 'HAU_BOOTSTRAP_CONTRACT_VERSION'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
@@ -45,6 +46,18 @@ function requireGoogleResourceId_(properties, key) {
   return value;
 }
 
+function resolveBootstrapContractVersion_(properties) {
+  var raw = String(properties.getProperty(HAU_RUNTIME_PROPERTIES.BOOTSTRAP_CONTRACT_VERSION) || '1').trim();
+  var version = raw === '' ? 1 : Number(raw);
+  if (![1, 2].includes(version) || Math.floor(version) !== version) {
+    throw appError_('CONFIGURATION_INVALID', 'HAU_BOOTSTRAP_CONTRACT_VERSION must be 1 or 2.', false, {
+      key: HAU_RUNTIME_PROPERTIES.BOOTSTRAP_CONTRACT_VERSION,
+      allowed: [1, 2]
+    });
+  }
+  return version;
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -64,7 +77,8 @@ function resolveRuntimeConfig_() {
   return {
     environment: environment,
     spreadsheetId: spreadsheetId,
-    backupSpreadsheetId: backupSpreadsheetId
+    backupSpreadsheetId: backupSpreadsheetId,
+    bootstrapContractVersion: resolveBootstrapContractVersion_(properties)
   };
 }
 
