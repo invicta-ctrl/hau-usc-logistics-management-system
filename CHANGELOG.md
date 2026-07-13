@@ -38,7 +38,8 @@ Release-candidate source and standalone production build. Live staging and produ
 
 ### External actions
 
-- No Apps Script push/version/deployment, Sheet/Drive write, trigger change, production action, protected PR #2 change, merge, tag, or GitHub release occurred before the live-target blocker.
+- Pushed `feat/v1-one-shot-demo-and-deployment`, opened stacked draft PR #3, and verified green Apps Script validation, repository verification, and browser-smoke checks at code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`.
+- No Apps Script push/version/deployment, Sheet/Drive write, trigger change, production action, protected PR #2 change, merge, tag, or GitHub release occurred.
 
 ## 0.5.0 - Unreleased
 

@@ -9,7 +9,7 @@
 - Branch: `feat/v1-one-shot-demo-and-deployment`
 - Verified base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10`
-- Upstream/PR: pending first verified push; protected draft PR #2 remains untouched
+- Upstream/PR: tracks `origin/feat/v1-one-shot-demo-and-deployment`; draft [PR #3](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3) targets `feat/live-sync-lending-search-catalog-controls`; protected draft PR #2 remains untouched
 - Live Apps Script version/deployment: **not verified or changed in this task**
 - Production: **not deployed or modified**
 
@@ -23,7 +23,7 @@
 | Staging environment | Blocked | Available authenticated clasp target conflicts with the documented staging Version 9 record |
 | Live Sheets/Drive acceptance | Not run | Correct target, fresh backup, mappings, owners, and rollback version must be confirmed first |
 | Production promotion | Not authorized by evidence | Requires accepted staging workflow, governance decisions, owner sign-off, and rollback drill |
-| GitHub release | Pending | New branch/draft PR and CI are completed only after final local verification; no merge/tag/release yet |
+| GitHub review | Ready for review | Draft PR #3 is clean/mergeable and all three checks passed at release-candidate code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`; no merge/tag/release |
 
 ## Integrated V1 behavior
 
@@ -68,11 +68,12 @@
 - Integrated QA: 19 files / 144 unit tests passed; ESLint passed; governance passed; `npm run check` and `npm run verify` passed; 27 Apps Script source files and 27 required functions validated.
 - Final combined browser matrix: 60 passed / 60 intentional applicability skips / 0 failed across 120 configured cases at all six viewports. This includes 18/18 direct `file://` portal checks for pinned mode, active view, navigation isolation, and no page-level overflow.
 - Two consecutive builds reproduced all nine generated artifacts byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; exact portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
-- Final local verification used Node `v26.3.0`, npm `11.16.0`, Playwright `1.61.1`, and Git `2.54.0.windows.1`. GitHub CI remains pending the first branch push/draft PR.
+- Final local verification used Node `v26.3.0`, npm `11.16.0`, Playwright `1.61.1`, and Git `2.54.0.windows.1`.
+- GitHub passed `validate` in [Apps Script static check run 29230937478](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937478), plus `verify` and `browser-smoke` in [CI run 29230937486](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937486), for code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`.
 
 ## External-action record
 
-No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred during implementation and QA.
+The feature branch was pushed and draft PR #3 was opened as authorized. No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred.
 
 The only live-target inspection was bounded and read-only. It proved that the available ignored authenticated clasp configuration does not match the committed staging Version 9 record, so it was not copied or used.
 

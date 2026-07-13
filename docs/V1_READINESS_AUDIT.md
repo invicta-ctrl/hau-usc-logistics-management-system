@@ -5,9 +5,11 @@
 - Candidate: `1.0.0-rc.1`
 - Date: `2026-07-13` (`Asia/Manila`)
 - Branch: `feat/v1-one-shot-demo-and-deployment`
+- Draft PR: [#3 — feat: complete V1 demo and deployment readiness](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3), stacked on `feat/live-sync-lending-search-catalog-controls`
 - Verified base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10`
-- Final handoff SHA: recorded after the final documentation/build commit and push
+- Release-candidate code checkpoint: `283002cf2784b0d3e148258278c664f8afb0d7f4`
+- Final handoff SHA: the branch HEAD after this remote-evidence record; report it from Git after the evidence commit is pushed because a commit cannot contain its own SHA
 - Audit scope: repository implementation, local production build, standalone demos, Google Workspace deployment readiness, GitHub readiness, and future-platform preparation
 
 This is an evidence ledger, not a declaration that source code is live. Repository readiness, local demo readiness, staging readiness, and production readiness are separate states.
@@ -16,7 +18,7 @@ This is an evidence ledger, not a declaration that source code is live. Reposito
 
 | Decision area | Result | Reason |
 | --- | --- | --- |
-| Mergeable repository candidate | Pending draft-PR review/CI | Local implementation and QA are complete; remote evidence follows the first push |
+| Mergeable repository candidate | Ready for draft review | Draft PR #3 is clean/mergeable and all three required checks passed at code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` |
 | Standalone fictional demo | Ready | Three pinned self-contained portal files build and pass direct-file browser checks |
 | Apps Script source package | Locally ready | Static, parser-safe assembly, callable, and browser package checks pass |
 | Staging deployment | Blocked | Authenticated clasp target conflicts with the documented staging Version 9 record |
@@ -139,9 +141,9 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 | Apps Script `AppScript.html` | 226,964 bytes / `5e00715fb3260b3669a80c06275a1f046f91712f2d2ec1ef664f913b03e631c3` |
 | Determinism | Two consecutive builds reproduced all nine byte lengths and SHA-256 values exactly |
 | Sensitive/docs/governance | Passed after staging: 239 tracked paths sensitive-clean; 45 tracked Markdown files/link-clean; continuation and AGENTS guardrails passed |
-| GitHub CI | Pending push/PR |
+| GitHub CI | Passed for code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`: Apps Script [run 29230937478](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937478); repository/browser [run 29230937486](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937486) |
 
-Local evidence is complete. GitHub CI, staging, and production remain independent gates and are not implied by these results.
+Local evidence and code-checkpoint GitHub CI are complete. The evidence-only branch HEAD must also be green before handoff; obtain that final state from PR #3 after push. Staging and production remain independent gates and are not implied by these results.
 
 ## Standalone portal deliverables
 

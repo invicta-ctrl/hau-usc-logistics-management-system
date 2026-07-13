@@ -19,7 +19,7 @@ npm run test:e2e
 
 ## V1 release-candidate repository verification
 
-The final local `1.0.0-rc.1` run completed after a clean dependency install. CI still must verify the pushed commit, and live staging/production remain separate blocked gates.
+The final local `1.0.0-rc.1` run completed after a clean dependency install. GitHub then verified release-candidate code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` with green Apps Script validation, repository verification, and browser smoke. Live staging/production remain separate blocked gates.
 
 | Gate | Final local result |
 | --- | --- |

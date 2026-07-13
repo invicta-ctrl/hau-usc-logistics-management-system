@@ -8,8 +8,8 @@
 - Branch: `feat/v1-one-shot-demo-and-deployment`
 - Starting commit: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
 - Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10` (`fix: close V1 QA integrity gaps`).
-- Upstream: intentionally absent until the first verified push of the new branch.
-- Current phase: Phase 5/6 — all six specialist slices, independent QA, versioning, canonical documentation, final local verification, and deterministic generated artifacts are complete; GitHub branch/draft PR and CI evidence are next. Live Workspace deployment is blocked.
+- Upstream: `origin/feat/v1-one-shot-demo-and-deployment`; code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4` was pushed at `0` ahead / `0` behind.
+- Current phase: Phase 6/6 — all six specialist slices, independent QA, versioning, documentation, local verification, deterministic artifacts, branch push, stacked draft PR, and code-checkpoint CI evidence are complete. This block is the final evidence-only repository handoff record; its push, green CI, branch parity, and clean status close the repository portion. Live Workspace deployment is blocked.
 - Protected pull request: PR #2 must not be modified, retargeted, closed, or merged.
 - Live state at task start: committed records claim staging immutable Version 9, but the only ignored authenticated clasp target conflicts with that record; the deployed staging version is therefore unverified for this task. Production remains untouched.
 - External backup: verified Git bundle `hau-usc-logistics-management-system-20260713-124624.bundle`, SHA-256 `255d9769398533c881fd9a6f43b776ef87c411d05d6a311bb7e299c1bd635c3c`.
@@ -18,6 +18,7 @@
 
 - Version: `1.0.0-rc.1`; Sheets schema: `1.2.0`.
 - Integrated target commits after the verified base: `a78635a`, `6cec509`, `cf06070`, `95423cd`, `57876f1`, `c9e2441`, `29a4b34`, `d416faa`, `b767aab`, and `4e87150`.
+
 ### Six-specialist ownership map
 
 - Specialist 1 delivered frontend/product/accessibility behavior; Specialist 2 delivered Apps Script/auth/API contracts; Specialist 3 delivered additive Sheets/schema/formula/backup hardening; Specialist 4 delivered Drive/evidence/branding hardening; Specialist 5 delivered independent adversarial QA and repairs; Specialist 6 delivered CI/governance/operations/future-platform documentation. The detailed file boundaries and shared-file rules remain recorded in the historical in-task checkpoint below.
@@ -28,8 +29,8 @@
 
 ### Known gaps, blocker, and next actions
 
-- No Sheet, Drive, remote Apps Script source, deployment, version, Script Property, trigger, production, merge, tag, release, or protected PR #2 mutation occurred in this task.
-- The target feature branch has not yet been pushed and has no upstream at this checkpoint. A new stacked draft V1 PR should target `feat/live-sync-lending-search-catalog-controls` so its delta does not alter or subsume protected PR #2.
+- The authorized feature branch push and draft PR #3 creation occurred. No Sheet, Drive, remote Apps Script source, deployment, version, Script Property, trigger, production, merge, tag, release, or protected PR #2 mutation occurred.
+- Draft [PR #3](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/pull/3) targets `feat/live-sync-lending-search-catalog-controls`, is clean/mergeable, and keeps protected PR #2 unchanged. At code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`, Apps Script [run 29230937478](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937478) and repository/browser [run 29230937486](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937486) passed.
 - Live mutation remains blocked because the only authenticated ignored `.clasp.json` resolves to project/deployment/version state that conflicts with the documented staging Version 9 target. It was not copied or used for a write.
 - Smallest owner action: privately supply or confirm the ignored `.clasp.json` for the documented staging project/account/environment and confirm its current immutable deployment plus rollback version without exposing their identifiers in git or chat.
 - After target confirmation: verify Script Properties, operational/backup distinction, eleven Drive mappings/private sharing, fresh verified backup, additive schema, reviewed access rows, triggers, remote source parity, bounded workflow/privacy acceptance, reconciliation, and rollback before moving a deployment pointer.
@@ -40,7 +41,7 @@
 - Repository rollback base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
 - Live rollback version: unknown until the correct target is confirmed; do not assume the historical Version 9 record matches the authenticated project currently available.
 - Schema/data rollback is forward-only: keep appended columns/config, ledger, audit, history, evidence, and command rows; repoint reviewed code and reconcile. Never delete posted records.
-- Before final handoff, update this block with the pushed branch, exact final SHA, draft PR, final CI run/state, final test counts/hashes, and clean status.
+- The release-candidate code checkpoint, draft PR, CI runs, final test counts, and hashes are recorded above. The final handoff SHA is the branch HEAD after this evidence-only commit is created and pushed; obtain it from Git/PR because a commit cannot contain its own SHA. Require final branch parity, green CI, and clean status before closing the handoff.
 
 ## Previous in-task checkpoint (historical)
 
