@@ -23,7 +23,7 @@ describe('catalog schema and permission migration', () => {
       'Catalog_Type','Storage_Location','Reorder_Threshold','Lending_Audience','Default_Loan_Days','Maximum_Loan_Qty','Approval_Required','Updated_At','Updated_By','Notes',
     ]);
     expect(Array.from(ctx.HAU_HEADERS['14_USERS_ACCESS']).at(-1)).toBe('Can_Manage_Catalog');
-    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.1.0');
+    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.2.0');
   });
 
   it('uses least-privilege catalog permission fallback', () => {

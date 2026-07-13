@@ -7,8 +7,8 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
 var HAU_CONFIG = Object.freeze({
-  APP_VERSION: '0.5.0',
-  SCHEMA_VERSION: '1.1.0',
+  APP_VERSION: '0.6.0-dev.1',
+  SCHEMA_VERSION: '1.2.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -74,7 +74,8 @@ var HAU_SHEETS = Object.freeze({
   RELEASES: '07_RELEASES', RESTOCK: '08_RESTOCK', DELIVERABLES: '09_DELIVERABLES',
   CANVASS: '10_CANVASS', SUPPLIERS: '11_SUPPLIERS', EVIDENCE: '12_EVIDENCE', EVENTS: '13_EVENTS',
   USERS: '14_USERS_ACCESS', HISTORY: '15_STATUS_HISTORY', AUDIT: '16_AUDIT_LOG', CONFIG: '17_CONFIG',
-  ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP'
+  ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP', CONTENT: '20_CONTENT', BRANDING: '21_BRANDING',
+  COMMANDS: '22_COMMAND_JOURNAL', COMMAND_JOURNAL: '22_COMMAND_JOURNAL'
 });
 
 var HAU_HEADERS = Object.freeze({
@@ -96,7 +97,10 @@ var HAU_HEADERS = Object.freeze({
   '16_AUDIT_LOG': ['Audit_ID','Created_At','Action','Entity_Type','Entity_ID','Actor_User_ID','Actor_Email','Request_ID','Event_ID','Before_JSON','After_JSON','IP_or_Client','Correlation_ID','Notes'],
   '17_CONFIG': ['Key','Value','Environment','Description','Secret','Updated_At','Updated_By','Validation_Status'],
   '18_ERROR_LOG': ['Error_ID','Created_At','Severity','Operation','User_ID','User_Email','Entity_Type','Entity_ID','Correlation_ID','Client_Request_ID','Message','Stack_Trace','Resolved','Resolution_Notes'],
-  '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes']
+  '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes'],
+  '20_CONTENT': ['Content_Revision_ID','Content_Key','Content_Type','Title','Body_JSON','Status','Revision_Number','Published_At','Published_By','Created_At','Created_By','Updated_At','Updated_By','Supersedes_Revision_ID','Reverted_From_Revision_ID','Notes'],
+  '21_BRANDING': ['Branding_Version_ID','Asset_Key','Display_Name','Alt_Text','Mime_Type','File_Extension','Size_Bytes','Width_Px','Height_Px','SHA256','Drive_File_ID','Drive_Folder_ID','Drive_URL','Status','Version_Number','Active','Created_At','Created_By','Activated_At','Activated_By','Supersedes_Version_ID','Notes'],
+  '22_COMMAND_JOURNAL': ['Command_ID','Operation','Actor_User_ID','Actor_Email','Idempotency_Scope','Client_Request_ID','Payload_SHA256','Status','Started_At','Completed_At','Correlation_ID','Related_Entity_Type','Related_Entity_ID','Result_JSON','Error_Code','Error_Message','Recovery_Status','Recovery_Notes']
 });
 
 var HAU_DATABASE_CACHE_ = null;
