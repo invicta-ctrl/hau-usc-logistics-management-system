@@ -23,7 +23,7 @@
 | Staging environment | Blocked before mutation | Exact title-labeled project is privately reconciled at immutable Version 10 with Version 9 retained; verified Sheet/Drive backup, properties, audience, and owner-authorized Workspace access remain required |
 | Live Sheets/Drive acceptance | Not run | Current CLI OAuth lacks Sheets/full-Drive scope; no authoritative config read or verified workbook/Drive backup has occurred |
 | Production promotion | Not authorized by evidence | Requires accepted staging workflow, governance decisions, owner sign-off, and rollback drill |
-| GitHub review | Ready for review | Draft PR #3 is clean/mergeable and all three checks passed at release-candidate code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`; no merge/tag/release |
+| GitHub review | Ready for review | Draft PR #3 is clean/mergeable and all three checks passed at trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd`; no merge/tag/release |
 
 ## Integrated V1 behavior
 
@@ -69,11 +69,11 @@
 - Final combined browser matrix: 60 passed / 60 intentional applicability skips / 0 failed across 120 configured cases at all six viewports. This includes 18/18 direct `file://` portal checks for pinned mode, active view, navigation isolation, and no page-level overflow.
 - Two consecutive builds reproduced all nine generated artifacts byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; exact portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
 - Final local verification used Node `v26.3.0`, npm `11.16.0`, Playwright `1.61.1`, and Git `2.54.0.windows.1`.
-- GitHub passed `validate` in [Apps Script static check run 29230937478](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937478), plus `verify` and `browser-smoke` in [CI run 29230937486](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937486), for code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`.
+- GitHub passed `validate` in [Apps Script static check run 29235731774](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731774), plus `verify` and `browser-smoke` in [CI run 29235731769](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731769), for trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd`.
 
 ## External-action record
 
-The feature branch was pushed and draft PR #3 was opened as authorized. No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred.
+The feature branch and trigger-security repair were pushed and draft PR #3 was updated as authorized. No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred.
 
 The live-target inspection was bounded and read-only. It reconciled the exact title-labeled staging project at immutable Version 10 with Version 9 retained, and the supplied production project at its existing immutable Version 1. Separate remote source snapshots and deployment/version inventories were captured outside the repository; no Google resource was changed.
 

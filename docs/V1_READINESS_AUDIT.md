@@ -141,9 +141,9 @@ No live root/folder creation, sharing change, upload, evidence attachment, quara
 | Apps Script `AppScript.html` | 226,964 bytes / `5e00715fb3260b3669a80c06275a1f046f91712f2d2ec1ef664f913b03e631c3` |
 | Determinism | Two consecutive builds reproduced all nine byte lengths and SHA-256 values exactly |
 | Sensitive/docs/governance | Passed after staging: 239 tracked paths sensitive-clean; 45 tracked Markdown files/link-clean; continuation and AGENTS guardrails passed |
-| GitHub CI | Passed for code checkpoint `283002cf2784b0d3e148258278c664f8afb0d7f4`: Apps Script [run 29230937478](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937478); repository/browser [run 29230937486](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29230937486) |
+| GitHub CI | Passed for trigger-security checkpoint `5a72340988eedef8c17a7e0b752ba68a02714bfd`: Apps Script [run 29235731774](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731774); repository/browser [run 29235731769](https://github.com/invicta-ctrl/hau-usc-logistics-management-system/actions/runs/29235731769) |
 
-Local evidence and code-checkpoint GitHub CI are complete. The evidence-only branch HEAD must also be green before handoff; obtain that final state from PR #3 after push. Staging and production remain independent gates and are not implied by these results.
+Local evidence and trigger-security-checkpoint GitHub CI are complete. Any later evidence-only branch HEAD must also be green before handoff; obtain that final state from PR #3 after push. Staging and production remain independent gates and are not implied by these results.
 
 ## Standalone portal deliverables
 
