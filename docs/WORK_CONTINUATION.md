@@ -1,5 +1,19 @@
 # Work Continuation
 
+## Active full-stack execution plan
+
+- Plan: [`docs/CODEX_FULL_STACK_EXECUTION_PLAN.md`](CODEX_FULL_STACK_EXECUTION_PLAN.md)
+- Plan commit: `363676d` (`Add comprehensive Codex full-stack execution plan`)
+- Current phase: Phase 0, baseline and governance
+- Next bounded milestone: document and test the backend-neutral API/service
+  contract; do not connect to live Sheets, Drive, hosted infrastructure, or
+  production data.
+- Operational source of truth: the existing Apps Script/Sheets/Drive V1 until
+  a separately approved cutover.
+- External actions authorized by this plan: none by default. Deployment,
+  migration, access seeding, operational Sheet/Drive writes, and production
+  work require a separate explicit task approval.
+
 ## Codex routing implementation checkpoint — local feature branch
 
 - Date: `2026-07-13` (`Asia/Manila`)
