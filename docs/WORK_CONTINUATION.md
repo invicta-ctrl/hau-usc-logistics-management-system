@@ -7,10 +7,11 @@
 - Worktree: `D:\Documents\DOL Website GitHub - V1 Deployment`
 - Branch: `feat/v1-one-shot-demo-and-deployment`
 - Starting commit: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
+- Integrated implementation HEAD before this checkpoint record: `57876f1` (`fix: align published content bootstrap contracts`).
 - Upstream: intentionally absent until the first verified push of the new branch.
-- Current phase: Phase 1 — baseline, ownership assignment, contract freeze, and implementation-gap audit.
+- Current phase: Phase 2 — frontend, backend, and documentation slices integrated; additive Sheets/schema work is in progress before Drive and independent QA.
 - Protected pull request: PR #2 must not be modified, retargeted, closed, or merged.
-- Live state at task start: staging immutable Version 9 remains deployed; production remains untouched.
+- Live state at task start: committed records claim staging immutable Version 9, but the only ignored authenticated clasp target conflicts with that record; the deployed staging version is therefore unverified for this task. Production remains untouched.
 - External backup: verified Git bundle `hau-usc-logistics-management-system-20260713-124624.bundle`, SHA-256 `255d9769398533c881fd9a6f43b776ef87c411d05d6a311bb7e299c1bd635c3c`.
 
 ### Verified baseline
@@ -23,6 +24,19 @@
 - `npm run verify`: passed.
 - `npm run test:e2e`: passed; 38 passed, 40 intentionally scoped skips, 0 failed across 320, 390, 768, 1024, 1366, and 1440 px projects.
 - No Sheet, Drive, Apps Script source, deployment, trigger, production, PR, tag, or release mutation has occurred in this task.
+
+### Integrated implementation checkpoint
+
+- Specialist 1 commit `971417e` was reviewed and integrated as `6cec509`: trusted request/internal/lending portal modes, strict public mock allowlists, lending receipt with no public history, request review, duplicate consolidation, restock compatibility, partial release/return controls, structured Roadmap and What Changed views, permission-gated admin UI, accessibility affordances, and focused browser coverage.
+- Specialist 2 commit `eba02bb` was reviewed and integrated as `95423cd`: server-owned portal routing, lending-only bootstrap, admin/content/branding APIs, scoped command journal support, staff-borrower verification, VERIFY resolution, canvass lifecycle, partial release/full-return accounting, and one Apps Script browser gateway.
+- Specialist 6 commit `561b53d` was reviewed and integrated as `cf06070`: governance validators, narrower CI diagnostics, canonical architecture/API/operations/security/onboarding guides, and an official-source future-platform matrix plus proposed ADR.
+- Orchestrator integration commit `57876f1` aligns the content-revert alias and exposes safe published content/branding through live bootstraps; published structured bodies are normalized for the existing Roadmap and What Changed renderer.
+- Integrated `npm run check:governance`: passed; 37-line AGENTS guardrail, continuation guardrail, 228 tracked paths sensitive-clean, and 44 Markdown documents/link-clean.
+- Integrated `npm test`: passed; 13 files / 105 tests. Focused backend security: 12 / 12 passed. ESLint and diff checks passed.
+- Specialist 1 evidence before integration: 93 unit tests passed; full Playwright run passed with 42 tests and 60 configured viewport/applicability skips.
+- Specialist 2 evidence before integration: 104 unit tests, lint, Apps Script parsing, build, Apps Script package validation, and distribution verification passed.
+- Specialist 6 evidence before integration: repository check passed; Playwright passed with 38 tests and 40 configured skips.
+- No specialist pushed a branch or performed a live Google/GitHub mutation.
 
 ### Six-specialist ownership map
 
@@ -53,10 +67,11 @@ The orchestrator owns `README.md`, `CHANGELOG.md`, `PROJECT_STATUS.md`, this res
 
 ### Immediate known gaps and next actions
 
-- Add and test `npm run check:agents` and `npm run check:continuation`.
 - The current branch redacts a previously tracked spreadsheet identifier from `docs/BACKUP_AND_RECOVERY.md`. Commit history still contains the historical value; do not rewrite protected history automatically. The resource owner must verify access restrictions and rotate/replace the identifier if institutional policy requires it before the no-live-ID release gate can be accepted.
-- Add a bounded secret/live-ID diff validator that reports locations without printing matched values.
-- Complete the six-specialist gap audit, then assign non-overlapping implementation slices.
+- Complete and integrate Specialist 3's additive schema, formula-safety, partial-repair, and backup-verification slice.
+- Run Specialist 4 against that integrated schema for canonical Drive resolution, upload validation, quarantine, permission diagnostics, and branding storage contracts.
+- Run Specialist 5 independently across the integrated branch, repair reproducible failures, regenerate owned artifacts, and rerun every required local check and browser viewport.
+- Reconcile the frontend administrative forms with final backend/Drive metadata contracts and record unsupported live-only actions honestly.
 - Keep all live Google and release actions paused until repository implementation, target verification, backup, and rollback gates pass.
 
 ### External blocker — staging target conflict
