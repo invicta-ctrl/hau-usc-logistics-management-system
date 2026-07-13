@@ -26,4 +26,4 @@ This migration does not replace sheets, rebuild item rows, or modify the four le
 
 Run the migration against a backed-up staging spreadsheet first, validate headers and defaults, install the operational edit trigger, and complete functional/reconciliation acceptance. Production requires a fresh backup and the identical accepted code/defaults. It is safe to migrate schema before activating the 0.5.0 web deployment because Version 9 ignores appended fields and revision rows.
 
-Rollback re-points the web deployment to the preceding immutable version. It does not delete appended columns, config rows, defaults, catalog edits, ledger movements, audit/history records, or the existing `LND-2026-0001` production ticket. If a correction is needed, use an explicit audited forward migration or adjustment.
+Rollback re-points the web deployment to the preceding immutable version. It does not delete appended columns, config rows, defaults, catalog edits, ledger movements, audit/history records, or any existing production lending ticket. If a correction is needed, use an explicit audited forward migration or adjustment.

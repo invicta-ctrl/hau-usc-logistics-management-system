@@ -9,7 +9,7 @@ Before editing, read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.m
 1. Report the repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
 2. Run `git fetch origin --prune` when network access is available.
 3. Compare local and upstream with `git rev-list --left-right --count HEAD...@{upstream}`.
-4. If the working tree is clean and only behind, use `git pull --ff-only`. If it is dirty, divergent, on the wrong branch, or lacks an upstream, stop and report the condition; never reset or discard work automatically.
+4. If the working tree is clean and only behind, use `git pull --ff-only`. If it is dirty, divergent, or on the wrong branch, stop and report the condition; never reset or discard work automatically. A fresh task branch may lack an upstream only when the manager task names the exact branch and starting commit and explicitly says the missing upstream is intentional; verify that base and proceed locally until the first authorized push establishes the upstream.
 5. Confirm the expected starting commit from the manager task or `docs/WORK_CONTINUATION.md` before changing files.
 6. For read-only review or planning tasks, do not create commits or mutate external systems.
 
@@ -31,6 +31,6 @@ Before editing, read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.m
 - Drive folder configuration must fail closed. Never fall back to the script owner’s My Drive root.
 - UI hiding is not authorization. Keep request-only bootstrap sanitized.
 - Do not commit `.clasp.json`, secrets, institutional credentials, personal student records, private contacts, supplier TINs, or evidence files.
-- Run `npm run check`; run Playwright where Chromium is installed. Run `clasp status` and `clasp push --dry-run` only after configuring a staging script.
+- Run `npm run check`; run Playwright where Chromium is installed. Run `clasp status` only after configuring a staging script. Clasp 3.3 has no supported `push --dry-run`; before any authorized push, use the separate remote-snapshot, status, manifest-preservation, and post-push parity safeguard in `docs/LAUNCH_RUNBOOK.md`.
 - Update `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` before handoff. State unrun checks and unresolved values honestly.
 - Commit in a small logical unit, push the feature branch when authorized, and report the exact commit SHA and PR/CI state. Never claim a push, test, deployment, or external write without verification.

@@ -11,6 +11,11 @@
     "verify:dist": "node scripts/verify-dist.mjs",
     "verify": "npm run check:apps-script && npm run verify:dist",
     "check:apps-script": "node scripts/check-apps-script.mjs",
+    "check:agents": "node scripts/check-agents.mjs",
+    "check:continuation": "node scripts/check-continuation.mjs",
+    "check:sensitive": "node scripts/check-sensitive-content.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "check:governance": "npm run check:agents && npm run check:continuation && npm run check:sensitive && npm run check:docs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -18,7 +23,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist"
+    "check": "npm run check:governance && npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

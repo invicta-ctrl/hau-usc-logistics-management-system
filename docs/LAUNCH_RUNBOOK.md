@@ -3,7 +3,7 @@
 ## Staging
 
 1. Confirm branch/commit and passing CI.
-2. Build and run `clasp status` / `clasp push --dry-run` against staging.
+2. Build, run `clasp status`, and complete the remote snapshot/status/manifest comparison below against staging.
 3. Run schema setup/validation, configure and validate all Drive folders, seed reviewed users, and create triggers.
 4. Run migration dry-run and reconciliation; resolve all launch-blocking `VERIFY` decisions without modifying legacy cells.
 5. Create a launch backup; record backup ID privately.
@@ -12,7 +12,7 @@
 
 ### Clasp 3.3 manifest safeguard
 
-Clasp 3.3.0 does not support `clasp push --dry-run`. Use `clasp status` for the bounded file list and retain generated hashes/sizes from `npm run check:apps-script`.
+Clasp 3.3.0 does not provide a supported simulated-push flag. Use `clasp status` for the bounded file list and retain generated hashes/sizes from `npm run check:apps-script`.
 
 Do not interpret `Skipping push` as proof that Apps Script is current. When `appsscript.json` differs, clasp 3.3 attempts an overwrite confirmation; in a non-interactive session it can decline and skip every file. Before creating a version:
 
