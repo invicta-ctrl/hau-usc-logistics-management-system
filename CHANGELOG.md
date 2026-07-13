@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.0.0-rc.1 - 2026-07-13
+
+Release-candidate source and standalone production build. Live staging and production deployment remain blocked by an unverified/conflicting authenticated Apps Script target.
+
+### Added
+
+- Dedicated sanitized Request Center and Lending Hub portal modes, plus clearly named self-contained Main Hub, Request Center, and Lending Hub shareable HTML files.
+- Dynamic event readiness, request review/routing, duplicate consolidation, partial release/return controls, due-date and condition handling, Roadmap, What Changed, and a permission-gated Admin Dashboard.
+- Admin access/event/content/branding callables, content draft/publish/revert concurrency checks, protected branding upload/activation, canvass lifecycle, VERIFY resolution, and a scoped command journal.
+- Additive Sheets schema version `1.2.0`, partial-schema repair, formula-leading text neutralization, warning protections, command-journal validation, and verified backup-copy checks.
+- Eleven-folder fail-closed Drive hierarchy, exact parent/name/sharing validation, magic-byte/image-bound upload checks, checksum deduplication, deterministic naming, quarantine recovery, and branding storage verification.
+- Governance, sensitive-content, continuation, and documentation validators; operator/requester/admin guides; release/rollback runbooks; V1 readiness audit; and official-source future-platform comparison/ADR.
+- Adversarial unit coverage for public DTO allowlists, release preflight/recovery, admin browser/server contracts, revision conflicts, demo privacy, request-only downgrade, return evidence, formula safety, schema repair, Drive permissions/uploads, and adapter gateway boundaries.
+
+### Changed
+
+- Unregistered, public, and requester identities now receive sanitized request-only bootstrap state without loading ledger/reservation indexes.
+- Multi-line release validates all selected lines, aggregate balances, reservations, recipient, and evidence before writes; unexpected partial failure requires explicit reconciliation.
+- Exceptional lending returns retain all loss/damage/partial fields across the browser adapter and require photo evidence when the server policy requires it.
+- Demo names, emails, contacts, student IDs, and supplier tax values use explicit fictional/reserved tokens.
+- Stable content and branding keys preserve uppercase underscore/hyphen identifiers instead of silently rewriting them.
+- Generated standalone verification now covers all three pinned portal artifacts as well as the compatibility shareable alias.
+
+### Security and privacy
+
+- Public/requester payloads omit protected balances, ledger, suppliers, private contacts/tax fields, users, permissions, audit, private notes, Drive configuration, and evidence URLs/IDs.
+- Evidence permission is checked before decode/Drive access; root/folder/file sharing must be proven private.
+- Formula-leading Sheet text is neutralized centrally; posted ledger/audit/history records remain immutable.
+- The active repository tree contains no live Google resource identifiers detected by the tracked-content scanner. A historical spreadsheet identifier remains in shared git history and requires owner review rather than an automatic rewrite.
+
+### Verification
+
+- Integrated QA passed 19 files / 144 unit tests, ESLint, governance, build, Apps Script/static package validation, and standalone verification.
+- Final Playwright passed 60 tests with 60 intentional viewport/applicability skips and 0 failures across 120 configured cases at 320, 390, 768, 1024, 1366, and 1440 px; 18/18 are direct-file checks for the three named portal artifacts.
+- Two consecutive builds reproduced all nine generated files byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; all exact portal/Apps Script hashes are recorded in `docs/V1_READINESS_AUDIT.md`.
+
+### External actions
+
+- No Apps Script push/version/deployment, Sheet/Drive write, trigger change, production action, protected PR #2 change, merge, tag, or GitHub release occurred before the live-target blocker.
+
 ## 0.5.0 - Unreleased
 
 - Working branch: `feat/live-sync-lending-search-catalog-controls`

@@ -180,7 +180,7 @@ function allKeys(value, output = []) {
 describe('Apps Script additive V1-preparation schema', () => {
   it('bumps prerelease metadata and exposes all frozen new-table headers through the backend command path', () => {
     const ctx = gasContext(['Config.gs', 'Setup.gs']);
-    expect(ctx.HAU_CONFIG.APP_VERSION).toBe('0.6.0-dev.1');
+    expect(ctx.HAU_CONFIG.APP_VERSION).toBe('1.0.0-rc.1');
     expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.2.0');
     expect(ctx.HAU_SHEETS.COMMANDS).toBe('22_COMMAND_JOURNAL');
     expect(ctx.HAU_SHEETS.COMMAND_JOURNAL).toBe(ctx.HAU_SHEETS.COMMANDS);

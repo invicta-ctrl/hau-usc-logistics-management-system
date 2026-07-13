@@ -2,104 +2,149 @@
 
 ## Current boundary
 
-In the **CURRENT** Apps Script architecture, controlled Google Drive folders store evidence bytes and `12_EVIDENCE` stores searchable metadata. All application uploads flow through `EvidenceService.gs` and `DriveService.gs`. Workflow services pass semantic metadata to that boundary; they do not choose arbitrary folders or call `DriveApp` themselves.
+In the **CURRENT repository architecture**, controlled Google Drive folders store evidence/branding bytes and Sheets store restricted metadata. `DriveService.gs` owns folder resolution, privacy checks, signatures/dimensions, naming helpers, and quarantine. `EvidenceService.gs` owns evidence authorization/storage/metadata. `AdminService.gs` owns protected branding upload/version activation.
 
-A Drive link is not an authorization decision. Access is determined by Drive sharing and the server permission check performed before bytes are decoded. Never use link possession as a substitute for role checks.
+Implemented source is not proof that a live Drive is configured. No live folder, permission, upload, quarantine, or branding mutation occurred for `1.0.0-rc.1` because the authenticated Apps Script target conflicts with the documented staging target.
 
-## Required folder configuration
+A Drive link is never authorization. The server permission check happens before bytes are decoded or Drive is accessed, and client/public DTOs omit private file/folder IDs and URLs.
 
-All seven keys must be assigned to reviewed folders. IDs are stored in controlled environment configuration and must never be committed, copied into screenshots, or included in public test output.
+## Canonical private folder hierarchy
 
-| Configuration key             | Purpose                                                  | Expected application permission |
-| ----------------------------- | -------------------------------------------------------- | ------------------------------- |
-| `DRIVE_ROOT_FOLDER_ID`        | Approved parent for application-owned evidence hierarchy | Setup/admin only                |
-| `DRIVE_RECEIPTS_FOLDER_ID`    | Restock invoices/receipts                                | `Can_Receive` upload path       |
-| `DRIVE_CANVASS_FOLDER_ID`     | Quote documents and canvass photos                       | `Can_Receive` upload path       |
-| `DRIVE_RELEASE_FOLDER_ID`     | Recipient/release confirmation                           | `Can_Release` upload path       |
-| `DRIVE_DELIVERABLE_FOLDER_ID` | Deliverable receipt and delivery proof                   | `Can_Receive` upload path       |
-| `DRIVE_LENDING_FOLDER_ID`     | Lending handoff and return evidence                      | `Can_Release` upload path       |
-| `DRIVE_ARCHIVE_FOLDER_ID`     | Recovery quarantine for partially completed uploads      | Admin/recovery only             |
+`DRIVE_ROOT_FOLDER_ID` must identify the reviewed institution-owned root. The following eleven folders must be exact, unique, direct children:
 
-Missing, placeholder, malformed, inaccessible, or wrong-environment configuration fails closed with `SETUP_REQUIRED`, `CONFIGURATION_INVALID`, or `DRIVE_FOLDER_INVALID`. There is no fallback to the script owner's My Drive root. The root must itself be configured and accessible before child-folder setup; setup may not create an unreviewed hierarchy elsewhere.
+| Canonical key | Exact child name | Purpose |
+| --- | --- | --- |
+| `DRIVE_REQUESTS_FOLDER_ID` | `Requests` | Request supporting evidence |
+| `DRIVE_LENDING_FOLDER_ID` | `Lending` | Handoff and return evidence |
+| `DRIVE_RELEASES_RETURNS_FOLDER_ID` | `Releases and Returns` | Recipient/release/return confirmations |
+| `DRIVE_PROCUREMENT_FOLDER_ID` | `Procurement` | Deliverable/procurement evidence |
+| `DRIVE_CANVASSING_FOLDER_ID` | `Canvassing` | Quotes and canvass photos |
+| `DRIVE_RECEIPTS_INVOICES_FOLDER_ID` | `Receipts and Invoices` | Restock receipts and invoices |
+| `DRIVE_INVENTORY_EVIDENCE_FOLDER_ID` | `Inventory Evidence` | Cycle counts and inventory support |
+| `DRIVE_BRANDING_FOLDER_ID` | `Branding` | Verified private branding versions |
+| `DRIVE_EXPORTS_FOLDER_ID` | `Exports` | Controlled generated exports |
+| `DRIVE_BACKUPS_FOLDER_ID` | `Backups` | Restricted Drive-side recovery material |
+| `DRIVE_QUARANTINE_FOLDER_ID` | `Quarantine` | Failed/partial upload recovery |
 
-Recommended ownership is an institution-controlled Shared Drive or equivalent durable institutional owner, subject to HAU policy. Do not make folders public, transfer them to a personal account, or depend on a graduating student's account. The DOL data owner, system owner, and privacy owner must approve group membership, external-sharing restrictions, retention, and offboarding.
+Legacy configuration aliases map forward without creating a second hierarchy:
 
-## Upload authorization and validation
+| Legacy key | Canonical key |
+| --- | --- |
+| `DRIVE_RECEIPTS_FOLDER_ID` | `DRIVE_RECEIPTS_INVOICES_FOLDER_ID` |
+| `DRIVE_CANVASS_FOLDER_ID` | `DRIVE_CANVASSING_FOLDER_ID` |
+| `DRIVE_RELEASE_FOLDER_ID` | `DRIVE_RELEASES_RETURNS_FOLDER_ID` |
+| `DRIVE_DELIVERABLE_FOLDER_ID` | `DRIVE_PROCUREMENT_FOLDER_ID` |
+| `DRIVE_ARCHIVE_FOLDER_ID` | `DRIVE_BACKUPS_FOLDER_ID` |
 
-Authorization occurs before base64 decoding or Drive access:
+Backups and Quarantine are intentionally distinct. An old archive alias maps to Backups only; quarantine recovery always uses the canonical Quarantine folder.
 
-| Evidence family           | Examples                                                                 | Required permission |
-| ------------------------- | ------------------------------------------------------------------------ | ------------------- |
-| Receiving/procurement     | restock receipt, invoice, canvass quote/photo, deliverable receipt/proof | `Can_Receive`       |
-| Release/lending           | release confirmation, lending handoff, lending return                    | `Can_Release`       |
-| Other supporting document | admin migration/reconciliation or exceptional evidence                   | `Can_Admin`         |
+## Fail-closed resolution and setup
 
-The current validator accepts JPEG, PNG, WEBP, and PDF, with a maximum decoded size of 10 MB. It rejects empty content, unsupported MIME types, and a filename extension that does not match the claimed MIME. Executables, HTML, and scripts are unsupported. File type is still client-asserted metadata; file-signature inspection, image-dimension limits, malware scanning, and PDF active-content controls are **PLANNED** launch-hardening work.
+`validateDriveConfiguration()` and runtime folder resolution reject:
 
-The server also requires a supported evidence type, related entity ID/type, idempotency key, and authorized user. User-supplied entity IDs are validated against the workflow by the business command; an upload endpoint must not become a generic file drop.
+- missing, placeholder, malformed, inaccessible, or deleted IDs;
+- a root or child whose sharing cannot be proven private;
+- configured folders with the wrong exact name or parent;
+- a child with multiple parents or a parent other than the configured root;
+- duplicate exact-name direct children;
+- the same folder ID assigned to different canonical keys;
+- canonical/legacy alias conflicts;
+- fallback to the script owner's My Drive root.
 
-## Naming and metadata
+`setupDriveFolders()` is locked and additive. It verifies the root first, resolves one existing exact private direct child when present, rejects duplicates/conflicts, creates only missing canonical children, re-verifies name/parent/sharing, and synchronizes compatible alias configuration. It does not silently rename, move, re-share, or adopt an arbitrary folder.
 
-Normalized filenames follow:
+Use an institution-controlled Shared Drive or durable institutional owner subject to HAU policy. Do not depend on a graduating student's personal account. The data/system/privacy owners must approve groups, external-sharing restrictions, retention, and offboarding.
+
+## Upload authorization
+
+Authorization precedes base64 decode and Drive work:
+
+| Evidence family | Examples | Required permission |
+| --- | --- | --- |
+| Receiving/procurement | restock receipt/invoice, canvass quote/photo, deliverable proof | `Can_Receive` |
+| Release/lending | release confirmation, lending handoff, lending return | `Can_Release` |
+| Other operational support | request/inventory/exceptional evidence | `Can_Admin` unless a narrower reviewed route applies |
+| Branding | official asset candidate and activation | `Can_Admin` |
+
+The server also requires a supported evidence type, exact related entity type/ID, and idempotency key. Workflow services supply the relation; the upload endpoint is not a generic file drop.
+
+## Byte and metadata validation
+
+Current limits and checks:
+
+- supported MIME: JPEG, PNG, WEBP, PDF;
+- maximum decoded size: 10 MiB;
+- bounded encoded input before decode and decoded length after decode;
+- claimed MIME must match the normalized extension;
+- magic bytes must match JPEG/PNG/WEBP/PDF structure;
+- image dimensions must parse and stay within 12,000 px per side and 40,000,000 pixels;
+- zero-length, unsupported, mismatched, malformed, or over-limit data is rejected before file creation;
+- the server computes actual size, SHA-256, image dimensions, normalized filename, folder, uploader, and timestamps;
+- stored file MIME/extension/size/parent/sharing are re-read and verified after creation.
+
+Malware scanning and deeper PDF active-content analysis are not implemented by the current Apps Script code. Production policy must decide whether to add a scanning service, restrict PDF workflows, and require safe-viewer guidance.
+
+## Deterministic privacy-safe names
+
+Evidence follows a type/entity/time/server-ID pattern equivalent to:
 
 ```text
 <TYPE-CODE>_<RELATED-SYSTEM-ID>_<SECONDARY-SYSTEM-ID>_<PHT-TIMESTAMP>_<EVIDENCE-ID>.<extension>
 ```
 
-They never contain a borrower or requester name, student number, email address, phone number, supplier tax number, or original user-supplied filename. The human-readable `Evidence_Label` uses approved type labels, system identifiers, and Philippine time. `Original_File_Name` may be retained in the restricted metadata row for investigation, so it must never be copied into request-only DTOs, public logs, or generated public filenames.
+Names never include requester/borrower names, student numbers, emails, phone numbers, supplier contacts/tax identifiers, or the original filename. `Original_File_Name` may be retained only in restricted metadata.
 
-### Fully fictitious example
-
-This example contains no live identifier or person:
+Fictitious example:
 
 ```text
-Input:
-  evidence type: RESTOCK_RECEIPT
-  related entity: REQ-DEMO-0042
-  secondary entity: ITEM-DEMO-0017
-  original filename: sample-receipt.pdf
-
-Normalized Drive filename:
-  RR_REQ-DEMO-0042_ITEM-DEMO-0017_20260713-143000_EVID-DEMO-0099.pdf
-
-Restricted metadata:
-  Evidence_Label = "Restock receipt | REQ-DEMO-0042 | ITEM-DEMO-0017 | 2026-07-13 14:30 PHT"
-  SHA256 = stored digest, never used as a public URL token
-  Drive_File_ID / Drive_Folder_ID = private configuration-derived references
-  Upload_Status = UPLOADED
+RR_REQ-DEMO-0042_ITM-DEMO-0017_20260713-143000_EVD-DEMO-0099.pdf
 ```
 
-Do not copy fictional values into a live environment as defaults. Operators select the real related entity through the authorized UI; they never paste a folder ID into a workflow form.
+The evidence label may use approved system IDs and Philippine time. Operators select an entity through the authorized UI; they never paste a folder ID into a workflow form.
 
-## Deduplication, idempotency, and compensation
+## Idempotency, duplicate verification, and recovery
 
-Evidence upload has two distinct protections:
+- The client request ID returns the recorded result for a safe replay.
+- A SHA-256 match for the same controlled entity/type returns the existing verified evidence and audits the duplicate attempt.
+- A duplicate is accepted only after the referenced file remains accessible, private, in the expected folder, and consistent with recorded metadata.
+- Drive file creation and Sheets metadata append are not atomic. If post-create verification or metadata persistence fails, the service moves the file to Quarantine when possible and records bounded recovery state.
+- A failed operational workflow is never reported complete merely because bytes exist.
+- Recovery uses an audited forward attachment/status action or approved retention deletion; it never fabricates metadata or silently changes posted history.
 
-- The command idempotency key returns the recorded result when the same command is retried.
-- A SHA-256 digest match for the same related entity and uploaded status returns the existing evidence and appends a duplicate-attempt audit event.
+Evidence IDs, digests, uploader, creation time, and original storage relationship are immutable proof fields. Corrections supersede or append an audited state.
 
-Drive creation and Sheet metadata append are not one atomic transaction. If Drive succeeds but metadata persistence fails, the service moves the file to the configured archive/recovery folder, labels it as quarantine, and reports failure. It must never report an operational workflow as complete merely because bytes exist. Recovery staff reconcile quarantined files by correlation ID and either perform an audited forward attachment or delete them under an approved retention/incident process; they do not fabricate metadata or silently move files back.
+## Branding lifecycle
 
-The evidence row is immutable as proof of the original upload. Corrections use a superseding/reversal relationship or an auditable status update defined by policy; do not overwrite a digest, Drive reference, uploader, or creation time.
+`api_uploadBrandingAsset` accepts protected file bytes and metadata; the browser never asks for a Drive ID or URL. The server:
 
-## Sharing, access review, and link handling
+1. re-authorizes `Can_Admin` and idempotency;
+2. validates stable asset key, display/alt text, MIME/extension/magic/size/dimensions;
+3. detects verified checksum duplicates;
+4. creates one deterministic private version file in `Branding`;
+5. verifies parent, sharing, MIME, extension, size, dimensions, and checksum;
+6. records a server-owned branding version ID and history;
+7. optionally activates it after storage verification.
 
-1. Use institution-managed groups, not individual ad hoc shares, wherever the platform and HAU policy allow.
-2. Disable public and broad domain-link sharing unless a formally approved use case requires it.
-3. Separate upload authority from Drive administration. Application operators do not need permission to re-share or delete folder contents.
-4. Review group membership at least quarterly and immediately on role change, graduation, separation, or incident.
-5. Treat copied Drive URLs as restricted records. Do not send them in public email, issue trackers, chat transcripts, analytics, or client error telemetry.
-6. Validate service/deployment owner access and folder inheritance during every staging and production promotion.
-7. Keep the archive/recovery folder narrower than routine operational folders.
+Activation re-verifies the stored bytes/metadata, supersedes the prior active version for the same key, and appends audit/history. Public state exposes safe descriptive metadata and a built-in wordmark fallback, never private delivery URLs/IDs. No official logo was fabricated, uploaded, or activated in this task.
 
-## Retention, deletion, and legal hold
+## Sharing and access review
 
-Production requires approved durations for each evidence type, backup copy, metadata row, audit event, and recovery-quarantine file. Until those durations and the responsible approver are recorded, destructive automation remains disabled. A deletion job must check legal hold, investigation status, linked immutable ledger/audit needs, and backup expiry, then record an auditable tombstone without reusing the evidence ID.
+1. Use institution-managed groups rather than ad hoc individual shares where policy allows.
+2. Disable public/anyone-with-link/broad-domain sharing unless formally approved.
+3. Separate upload authority from Drive administration and deletion/re-sharing.
+4. Review membership on role change, graduation, separation, and at least quarterly.
+5. Keep URLs/IDs out of public email, issues, chat, analytics, screenshots, and client errors.
+6. Verify deployment-owner access and inherited sharing at every staging/production promotion.
+7. Restrict Quarantine and Backups at least as strongly as operational evidence.
 
-If access or disclosure is suspected, stop further sharing, preserve audit and metadata evidence, rotate or revoke affected access, identify every linked entity, notify the HAU incident/privacy owners through the approved channel, and follow [Security and Access](SECURITY_AND_ACCESS.md). Do not delete suspected evidence before the incident owner releases preservation.
+## Retention and incident handling
 
-## Future object-storage model
+Production needs approved retention for each evidence type, branding version, backup, metadata row, audit record, and quarantined file. Destructive automation remains disabled until legal hold, incident preservation, approval, and tombstone rules are assigned.
 
-In the **FUTURE** hosted architecture, evidence moves to private object storage with opaque object keys, server-side encryption, checksum verification, lifecycle policy, versioning or object lock where required, and separate metadata in PostgreSQL. The API authorizes each read and issues only a short-lived signed URL or streams the bytes. Anyone possessing an unexpired signed URL may use it, so URLs must be short-lived, excluded from logs/referrers, scoped to one object and operation, and never stored as permanent evidence authority.
+On suspected disclosure: stop further sharing/writes, preserve metadata/audit evidence, restrict or revoke access, identify linked entities, notify institutional owners, and follow [Security and Access](SECURITY_AND_ACCESS.md). Do not delete suspected evidence before preservation is released.
 
-Migration must copy bytes, verify digest/size/type, write the new object version, preserve the old Drive reference as restricted provenance, and reconcile counts before cutover. Drive stays read-only during a bounded rollback window. If reconciliation fails, disable new-storage reads/writes and return to the prior Drive-backed release; do not dual-write indefinitely.
+## Future object storage
+
+The **FUTURE** hosted architecture uses a private object bucket with opaque keys, encryption, checksum/size/type metadata, independent backup/export, lifecycle/legal-hold policy, and authorization on every read. Downloads use a short-lived single-object signed URL or server stream; URLs stay out of logs/referrers.
+
+Migration copies one object, verifies digest/size/type, records the new key and restricted old Drive provenance, and reconciles before cutover. Drive remains read-only during a bounded rollback window. Do not dual-write indefinitely.

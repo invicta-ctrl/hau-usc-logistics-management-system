@@ -1,7 +1,7 @@
 const runtime = globalThis.__HAU_RUNTIME_CONFIG__ ?? {};
 
 export const config = Object.freeze({
-  appVersion: '0.5.0',
+  appVersion: '1.0.0-rc.1',
   schemaVersion: 3,
   previewMode: true,
   backendMode: runtime.backendMode ?? import.meta.env?.VITE_BACKEND_MODE ?? 'mock',

@@ -14,6 +14,10 @@ git commit + reviewed branch/tag + artifact digest + Apps Script remote parity
 
 A passing local build, clasp exit code, source upload, or immutable version alone is not a deployment.
 
+### Current V1 handoff gate
+
+For `1.0.0-rc.1`, local source and artifact work may proceed, but all Google mutations remain blocked. The only authenticated ignored clasp target inspected during this task conflicts with the documented staging Version 9 record. The deployment owner must privately confirm the intended project/account/environment, existing deployment pointer, and preceding immutable rollback version before even a live `clasp status` is treated as target evidence. No production promotion may begin until that staging identity, setup, two-account acceptance, reconciliation, rollback, privacy, and owner approvals pass.
+
 ## Environment matrix
 
 | Environment        | Data and identity                                          | External writes                     | Release evidence                                                                        | Rollback                                                           |
@@ -71,7 +75,7 @@ Never use `clasp push` as production evidence or create an immutable version mer
 3. Create and privately verify a fresh staging backup before schema, migration, or acceptance writes.
 4. Complete the remote snapshot and post-upload parity safeguard above.
 5. Run additive `setupDatabase()`; validate expected tabs/headers/defaults and preserved legacy/data rows. Repeated setup must be idempotent.
-6. Validate operational/backup routing is correct and different. Validate all seven Drive folders and least-privilege sharing.
+6. Validate operational/backup routing is correct and different. Validate all eleven canonical Drive folders as exact-name direct children with unique mappings, accepted legacy aliases, and private least-privilege sharing.
 7. Seed/review explicit staging users. Run idempotent operational-edit and time-trigger setup; require one intended trigger per handler/source.
 8. Run migration dry-run and reconciliation. Apply only explicitly approved mappings in a separate recorded step; unresolved rows stay VERIFY.
 9. Run admin health check and prove expected environment without publishing resource IDs.
@@ -110,7 +114,7 @@ Store the pack in the approved restricted location with a sanitized summary for 
 | Apps Script source | Pre/post remote snapshot times, complete file-set/manifest comparison, preserved webapp access, post-upload exact parity                 |
 | Deployment         | Project/environment (identifier kept private), immutable version, existing deployment pointer, owner, audience, prior rollback version   |
 | Sheets             | Schema version, tab/header validation, row/count reconciliation, data revision, migration/version result, operational/backup distinction |
-| Drive              | Seven-folder validation, owner/group/share review, sample upload/digest/metadata/quarantine result without IDs                           |
+| Drive              | Eleven-folder exact-name/parent/mapping/alias validation, owner/group/share review, sample upload/signature/image-bound/digest/metadata/quarantine result without IDs |
 | Identity/access    | Audience, active-role/permission review, unauthorized tests, owner/MFA/recovery evidence                                                 |
 | Triggers/jobs      | Expected handlers, count, source/environment, owner, last success, duplicate absence                                                     |
 | Functional         | Screen/workflow acceptance with entity references, correlations, ledger/history/audit outcomes                                           |

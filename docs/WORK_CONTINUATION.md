@@ -7,12 +7,42 @@
 - Worktree: `D:\Documents\DOL Website GitHub - V1 Deployment`
 - Branch: `feat/v1-one-shot-demo-and-deployment`
 - Starting commit: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
-- Integrated implementation HEAD before this checkpoint record: `57876f1` (`fix: align published content bootstrap contracts`).
+- Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10` (`fix: close V1 QA integrity gaps`).
 - Upstream: intentionally absent until the first verified push of the new branch.
-- Current phase: Phase 2 — frontend, backend, and documentation slices integrated; additive Sheets/schema work is in progress before Drive and independent QA.
+- Current phase: Phase 5/6 — all six specialist slices, independent QA, versioning, canonical documentation, final local verification, and deterministic generated artifacts are complete; GitHub branch/draft PR and CI evidence are next. Live Workspace deployment is blocked.
 - Protected pull request: PR #2 must not be modified, retargeted, closed, or merged.
 - Live state at task start: committed records claim staging immutable Version 9, but the only ignored authenticated clasp target conflicts with that record; the deployed staging version is therefore unverified for this task. Production remains untouched.
 - External backup: verified Git bundle `hau-usc-logistics-management-system-20260713-124624.bundle`, SHA-256 `255d9769398533c881fd9a6f43b776ef87c411d05d6a311bb7e299c1bd635c3c`.
+
+### Verified baseline and completed work
+
+- Version: `1.0.0-rc.1`; Sheets schema: `1.2.0`.
+- Integrated target commits after the verified base: `a78635a`, `6cec509`, `cf06070`, `95423cd`, `57876f1`, `c9e2441`, `29a4b34`, `d416faa`, `b767aab`, and `4e87150`.
+### Six-specialist ownership map
+
+- Specialist 1 delivered frontend/product/accessibility behavior; Specialist 2 delivered Apps Script/auth/API contracts; Specialist 3 delivered additive Sheets/schema/formula/backup hardening; Specialist 4 delivered Drive/evidence/branding hardening; Specialist 5 delivered independent adversarial QA and repairs; Specialist 6 delivered CI/governance/operations/future-platform documentation. The detailed file boundaries and shared-file rules remain recorded in the historical in-task checkpoint below.
+- Release QA repaired multi-line release partial mutation, admin browser/server contract drift, content revision conflicts and underscore keys, branding key/upload flow, unregistered-user portal downgrade, exceptional return evidence, and real-looking demo identities.
+- Main Hub, Request Center, and Lending Hub now have separate root standalone HTML artifacts pinned to `internal`, `request`, and `lending` modes; the legacy shareable remains the canonical-build alias.
+- Final local verification passed 19 files / 144 unit tests, ESLint, all governance checks, `npm run check`, `npm run verify`, 27 Apps Script source/27 required-callable validation, and 60 browser passes / 60 intentional applicability skips / 0 failures across all six required widths. The total includes 18/18 direct-file portal checks.
+- Two consecutive builds reproduced all nine artifacts byte-for-byte. `dist/index.html` and the legacy alias are 288,464 bytes at `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; the exact named-portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
+
+### Known gaps, blocker, and next actions
+
+- No Sheet, Drive, remote Apps Script source, deployment, version, Script Property, trigger, production, merge, tag, release, or protected PR #2 mutation occurred in this task.
+- The target feature branch has not yet been pushed and has no upstream at this checkpoint. A new stacked draft V1 PR should target `feat/live-sync-lending-search-catalog-controls` so its delta does not alter or subsume protected PR #2.
+- Live mutation remains blocked because the only authenticated ignored `.clasp.json` resolves to project/deployment/version state that conflicts with the documented staging Version 9 target. It was not copied or used for a write.
+- Smallest owner action: privately supply or confirm the ignored `.clasp.json` for the documented staging project/account/environment and confirm its current immutable deployment plus rollback version without exposing their identifiers in git or chat.
+- After target confirmation: verify Script Properties, operational/backup distinction, eleven Drive mappings/private sharing, fresh verified backup, additive schema, reviewed access rows, triggers, remote source parity, bounded workflow/privacy acceptance, reconciliation, and rollback before moving a deployment pointer.
+- The active tree redacts a spreadsheet identifier that remains in shared git history. The resource owner must review restriction/rotation/replacement; do not rewrite protected/shared history automatically.
+
+### Frozen cross-cutting contracts, rollback, and handoff
+
+- Repository rollback base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
+- Live rollback version: unknown until the correct target is confirmed; do not assume the historical Version 9 record matches the authenticated project currently available.
+- Schema/data rollback is forward-only: keep appended columns/config, ledger, audit, history, evidence, and command rows; repoint reviewed code and reconcile. Never delete posted records.
+- Before final handoff, update this block with the pushed branch, exact final SHA, draft PR, final CI run/state, final test counts/hashes, and clean status.
+
+## Previous in-task checkpoint (historical)
 
 ### Verified baseline
 
@@ -23,7 +53,7 @@
 - `npm run check`: passed, including lint, tests, deterministic build, Apps Script static/package validation, and standalone verification.
 - `npm run verify`: passed.
 - `npm run test:e2e`: passed; 38 passed, 40 intentionally scoped skips, 0 failed across 320, 390, 768, 1024, 1366, and 1440 px projects.
-- No Sheet, Drive, Apps Script source, deployment, trigger, production, PR, tag, or release mutation has occurred in this task.
+- No Sheet, Drive, remote Apps Script source, deployment, trigger, production, PR, tag, or release mutation has occurred in this task.
 
 ### Integrated implementation checkpoint
 

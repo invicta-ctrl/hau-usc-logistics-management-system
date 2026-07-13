@@ -1,166 +1,92 @@
 # Project Status
 
-## Current version
+## Current release candidate
 
-- Version: `0.5.0` (working revision; undeployed)
-- Date: `2026-07-13`
-- Branch: `feat/live-sync-lending-search-catalog-controls`
-- Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
-- Ending commit: this handoff commit; exact SHA is reported after commit and push
-- Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #2, open, mergeable, unmerged
-- Local/demo backend: `mock`
-- Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: immutable version 9 on the existing deployment ID
-- Standalone artifact: `dist/index.html`
-- Production deployment: **not performed**
-- Live readiness: rendering and request-only privacy acceptance passed on Version 9. The 0.5.0 live-sync, lending-search, and catalog-controls revision is repository-only and has not changed the staging deployment or production.
+- Version: `1.0.0-rc.1`
+- Date: `2026-07-13` (`Asia/Manila`)
+- Repository: `invicta-ctrl/hau-usc-logistics-management-system`
+- Worktree: `D:\Documents\DOL Website GitHub - V1 Deployment`
+- Branch: `feat/v1-one-shot-demo-and-deployment`
+- Verified base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`
+- Integrated QA checkpoint: `4e871506f0bc2394f25beeab73187847289f7b10`
+- Upstream/PR: pending first verified push; protected draft PR #2 remains untouched
+- Live Apps Script version/deployment: **not verified or changed in this task**
+- Production: **not deployed or modified**
 
-Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+## Readiness by layer
 
-## Version 0.5.0 working revision
+| Layer | State | Evidence / gate |
+| --- | --- | --- |
+| Repository implementation | Release candidate | Frontend, Apps Script, Sheets, Drive, QA, governance, and future-platform slices integrated |
+| Local standalone demo | Ready | Main, Request, and Lending shareables build and open directly with fictional data |
+| Apps Script package | Locally verified | Parser-safe generated package, static callable validation, and assembled-browser tests |
+| Staging environment | Blocked | Available authenticated clasp target conflicts with the documented staging Version 9 record |
+| Live Sheets/Drive acceptance | Not run | Correct target, fresh backup, mappings, owners, and rollback version must be confirmed first |
+| Production promotion | Not authorized by evidence | Requires accepted staging workflow, governance decisions, owner sign-off, and rollback drill |
+| GitHub release | Pending | New branch/draft PR and CI are completed only after final local verification; no merge/tag/release yet |
 
-- Successful Apps Script mutations are followed by an authoritative bootstrap reload before success is rendered. A failed follow-up read does not repeat the recorded command.
-- Internal clients check `api_getDataRevision` every five seconds while visible and online. Focus, visibility restoration, reconnect, and the visible Refresh control request immediate checks. Polling requests do not overlap and back off after repeated errors.
-- Revision state is stored in `17_CONFIG`. Each successful non-replay mutation advances it exactly once; bootstrap, search, health, diagnostics, and other read-only operations do not advance it.
-- An installable operational spreadsheet edit trigger advances the revision for relevant direct human edits. Trigger setup is idempotent and is not performed by repository commands.
-- Dirty forms, local request drafts, pending uploads, and active modal workflows defer automatic refresh and show an Updates available banner.
-- The Lending Hub uses predictive text selection with a hidden authoritative Item ID, accessible keyboard behavior, and specific availability/restriction messages.
-- Server lending validation covers item existence/status, VERIFY, handling, borrower audience, quantity, maximum quantity, available-to-promise, and due dates at creation and again during approval/handoff.
-- Authorized catalog managers can create, edit, relocate, archive, and restore items through locked, idempotent, audited APIs. Quantity truth remains append-only; unit and archive protections preserve dependencies and history.
-- `Can_Manage_Catalog` is appended to access rows. ADMIN and DOL_DIRECTOR retain backward-compatible access when the cell is blank; other roles require an explicit true value.
-- The `01_ITEM_MASTER`, `14_USERS_ACCESS`, and `17_CONFIG` changes are additive and safe to prepare before the new web deployment becomes active.
+## Integrated V1 behavior
 
-### Repository verification
+### Frontend and portals
 
-- `npm ci`: passed.
-- ESLint: passed.
-- Vitest: 12 files / 93 tests passed.
-- Focused new Chromium suite at 390 px: 4 passed.
-- `npm run check`: passed, including the 22-module Vite build, 24-file/27-entry-point Apps Script static and packaging checks, generated-file parity, and standalone verification.
-- `npm run verify`: passed.
-- Complete Playwright/browser matrix across all six configured viewport projects: 38 passed, 40 intentionally scoped skips, 0 failed.
-- A second build reproduced the byte-identical 238,891-byte standalone artifacts with SHA-256 `8192ddff053f9776ba41f74be4eadf9c627b6db638db0cf7f8b6cf03d410ed8f` and the 615-byte Apps Script shell with SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`.
+- Dynamic event/sub-event readiness, progress, overdue cues, and workflow navigation.
+- Event logistics and office restock requests with selector-backed context, predictive catalog search, duplicate consolidation, safe confirmation, and status tracking.
+- Staff inventory/catalog create/edit/relocate/archive/restore controls without direct quantity rewriting.
+- Requester-safe Lending Hub with catalog eligibility guidance, secure submission, confirmation receipt, and no insecure history fallback.
+- Release Desk with aggregate preflight, partial-release reasons, recipient confirmation, return due visibility, partial returns, loss/damage accounting, and conditional photo evidence.
+- Paginated/searchable canvass reference workflow, structured Roadmap/What Changed, and admin controls for access, events, content, and branding.
+- Separate Main Hub, Request Center, and Lending Hub standalone shareables pinned to their own portal modes.
 
-### External-action record
+### Apps Script and permissions
 
-- No `clasp push`, immutable Apps Script version, deployment update, Sheet/Drive write, live trigger change, production action, or PR #2 merge was performed for 0.5.0.
-- Immutable staging Version 9 remains the live staging version. Production remains untouched.
+- One browser gateway for `google.script.run`; mock, Apps Script, and future HTTP adapters preserve semantic method boundaries.
+- Server-owned portal downgrade prevents public/requester sessions from loading internal bootstrap collections or ledger/reservation indexes.
+- Public DTO allowlists exclude users, permissions, audit, suppliers, contacts, tax fields, private notes, Drive IDs/URLs, protected balances, ledger, and evidence internals.
+- Mutations enforce permission, validation, server IDs, idempotency, locking where state may race, audit/history, and data-revision rules.
+- Multi-line release validates every line, aggregate stock/event balance, reservations, recipient, and evidence before operational writes. Unexpected post-write failure returns `RELEASE_RECOVERY_REQUIRED` with bounded reconciliation context.
+- Content keys and branding keys preserve stable underscore tokens; content draft/publish/revert rejects stale expected revisions and retains reasons.
 
-## Launch-readiness foundation completed in 0.4.0
+### Google Sheets source
 
-- Preserved the approved visual baseline and generated visual modules.
-- Added strict browser adapters for mock, Apps Script, and future authenticated HTTP implementations.
-- Added Apps Script repositories, setup, schema checks, authorization, collision-safe IDs, locks, idempotency, structured errors, audit/status history, append-only inventory, reservations, request routing, lending, release, restocking, procurement, canvass, evidence, migration, reconciliation, backup, and triggers.
-- Added privacy-safe evidence labels and filenames, MIME/extension/size checks, digest deduplication, configured folder routing, and quarantine recovery.
-- Request-only Apps Script payloads hide exact inventory balances and legacy trace fields; authoritative stock routing occurs during locked DOL review.
-- Evidence upload entry points require receive, release, or admin permission according to evidence type.
-- Runtime configuration accepts only `STAGING` or `PRODUCTION`, rejects missing/placeholder/malformed values, requires separate operational and backup IDs, and has no production fallback.
-- Setup, migration/reconciliation access, launch backup creation, and admin health checks route through the resolved environment target.
-- Removed the Apps Script packaging dependency on regular-expression extraction from the already-minified standalone HTML.
-- Apps Script body, CSS, and JavaScript now come from deterministic separate build outputs.
-- Dangerous raw-text closing sequences are escaped before JavaScript or CSS is embedded in HTML.
-- Added parser-level assembled-document checks, a browser execution check, deterministic hash/size diagnostics, generated-file parity checks, and a literal `</script>` regression fixture.
-- Added a staging-only minimal diagnostic shell and bounded admin template diagnostics that do not log the full application or any resource IDs.
-- CI now retains concise failure diagnostics only when a job fails.
+- Schema version `1.2.0` defines 22 backend tabs plus four preserved legacy tabs.
+- `setupDatabase()` creates only missing tabs/headers/config rows, fills only blank conservative defaults, applies validations/warnings, and stops on duplicate/blank/incompatible known headers.
+- All repository writes use formula-leading text neutralization; typed values remain typed.
+- System-managed columns receive warning protections; server authorization remains the real control.
+- Posted ledger, audit, history, release, evidence, and command-journal records are never silently rewritten or deleted.
+- Backup routing requires a distinct configured destination and verifies the copied spreadsheet before reporting success.
 
-## Staging work already completed
+### Google Drive source
 
-The following staging operations were completed before the packaging repair and must not be repeated merely to validate rendering:
+- Eleven exact canonical direct children: Requests; Lending; Releases and Returns; Procurement; Canvassing; Receipts and Invoices; Inventory Evidence; Branding; Exports; Backups; Quarantine.
+- Root/folder IDs, exact names, direct parents, duplicate children, legacy aliases, cross-key reuse, and private sharing are validated fail-closed.
+- Upload authorization happens before decode/Drive work. Encoded and decoded limits, MIME/extension/magic signatures, image dimensions/pixels, deterministic privacy-safe names, checksums, duplicate verification, private parent/sharing, and quarantine recovery are implemented.
+- Branding upload uses a protected byte endpoint, server IDs, verified dimensions/checksum/storage, version history, activation history, and a text fallback; client DTOs omit private Drive URLs/IDs.
 
-- Dedicated staging Apps Script project created and locally authenticated with untracked `clasp` configuration.
-- Required `STAGING` Script Properties configured and runtime target validated.
-- Staging database setup and schema validation completed.
-- Dedicated staging Drive root and evidence folders configured and validated.
-- Migration dry-run and reconciliation completed.
-- Timestamped launch backup created.
-- Daily overdue-lending and scheduled-backup triggers created and verified.
-- Initial staging web app versions created during the incident investigation.
-- Version 9 now serves the parser-safe request-only repair on the existing staging deployment. The isolated diagnostic, authorized internal `/exec`, and request-only `/exec?request=1` routes passed read-only acceptance.
+## Verification snapshot
 
-No production migration was applied and no production resource was modified.
+- Baseline before V1: `npm ci` passed with 139 packages and 0 reported vulnerabilities; 12 files / 93 unit tests; 38 browser passes / 40 intentional skips.
+- Integrated QA: 19 files / 144 unit tests passed; ESLint passed; governance passed; `npm run check` and `npm run verify` passed; 27 Apps Script source files and 27 required functions validated.
+- Final combined browser matrix: 60 passed / 60 intentional applicability skips / 0 failed across 120 configured cases at all six viewports. This includes 18/18 direct `file://` portal checks for pinned mode, active view, navigation isolation, and no page-level overflow.
+- Two consecutive builds reproduced all nine generated artifacts byte-for-byte. Canonical `dist/index.html` is 288,464 bytes at SHA-256 `25db9bfa66bae8661eff204f8428ec28d7d389757af30b5fbe4dd926ef1d8f13`; exact portal and Apps Script hashes are in `docs/V1_READINESS_AUDIT.md`.
+- Final local verification used Node `v26.3.0`, npm `11.16.0`, Playwright `1.61.1`, and Git `2.54.0.windows.1`. GitHub CI remains pending the first branch push/draft PR.
 
-## Earlier read-only production validation
+## External-action record
 
-- Production spreadsheet title and timezone matched the supplied target during the earlier read-only validation.
-- All four original legacy tabs and all 20 prepared backend tabs were present.
-- The four legacy tabs matched the supplied backup value-for-value at validation time.
-- `01_ITEM_MASTER` contained 397 records (`ITM-0001`–`ITM-0397`): 394 `ACTIVE`, 3 `VERIFY`, 2 zero-quantity, and no missing units.
-- Known date-serial anomalies remain flagged `VERIFY`; no quantity was corrected.
+No `clasp push`, remote Apps Script source change, immutable Apps Script version, deployment creation/update, Script Property read/write, trigger change, Google Sheet mutation, Google Drive mutation, production action, PR #2 change, merge, tag, or GitHub release occurred during implementation and QA.
 
-See `docs/SCHEMA_VALIDATION_2026-07-12.md`.
+The only live-target inspection was bounded and read-only. It proved that the available ignored authenticated clasp configuration does not match the committed staging Version 9 record, so it was not copied or used.
 
-## Verification status
+## Hard blocker and smallest owner action
 
-### Latest runtime-truthfulness verification
+The deployment owner must privately supply or confirm the ignored `.clasp.json` for the documented staging project/account/environment and confirm the current immutable deployment plus rollback version without exposing identifiers in git or chat. Then the operator can verify Script Properties, operational/backup distinction, Drive mappings, fresh backup, schema, triggers, and bounded staging acceptance before any deployment pointer moves.
 
-- Focused Vitest verification: 2 files / 14 tests passed.
-- `npm run check`: passed with exit code 0.
-- ESLint passed.
-- Vitest passed: 10 files / 69 tests.
-- Vite build passed with 17 modules transformed.
-- Apps Script static validation passed.
-- Deterministic generated-package checks passed.
-- Standalone artifact verification passed at 210,112 bytes each.
-- `npm run test:e2e`: 29 passed, 25 intentionally skipped, 0 failed.
-- Staging and production template assembly tests passed for both internal and request-only modes.
-- GitHub Apps Script static check run 52: **passed**.
-- GitHub CI run 52: **passed**.
-- Runtime-truthfulness commit: `7156c256414b797f4b0f19431b399009f31feebd`.
-- No Apps Script push or deployment was performed for this repository repair.
+The repository history also contains a spreadsheet identifier removed from the current tree. The resource owner must verify restriction/rotation/replacement according to institutional policy. This task did not rewrite shared history.
 
-At packaging-repair code checkpoint `74f2f0f...`:
+## Rollback point
 
-- GitHub Apps Script static check run 47: **passed**.
-- GitHub CI run 47: **passed**.
-- CI verify job: **passed**, including ESLint, 10 Vitest files / 67 tests, build, Apps Script validation, deterministic generated-file parity, and standalone artifact verification.
-- CI browser-smoke job: **passed** across the configured 320, 390, 768, 1024, 1366, and 1440 px projects.
-- Generated Apps Script package sizes at the verified build:
-  - `Index.html`: 512 bytes
-  - `AppBody.html`: 28,967 bytes
-  - `AppStyles.html`: 26,850 bytes
-  - `AppScript.html`: 153,161 bytes
-- Apps Script static validation covered 23 `.gs` source files and 18 required functions.
-- Standalone artifact verification reported 209,742 bytes for each reviewer-facing standalone file.
-- Local browser execution of the packaging test also passed using installed Chromium.
+- Repository pre-V1 base: `5a3b1248569b9a5f9148b95bcd4d2bc829639c9f`.
+- Local V1 commits are additive and preserve the legacy visual baseline.
+- A live Apps Script rollback version cannot be truthfully named until the correct staging target is confirmed. Do not assume the historical Version 9 record matches the authenticated target currently available.
+- Schema rollback is forward-only: retain appended columns/config/history/ledger/audit/evidence; repoint application code and reconcile. Never delete posted records to imitate rollback.
 
-During controlled staging verification, clasp 3.3.0 did not support `push --dry-run`. The first non-force push printed `Skipping push` because the changed manifest required an interactive overwrite confirmation; it did not update remote source. Version 7 therefore retained the old raw-partial package and reproduced `Exception: Malformed HTML content` on `/exec`.
-
-After the mismatch was confirmed by a bounded remote pull, the existing remote `webapp` manifest settings were preserved exactly and one authorized `clasp push --force` replaced all 29 staging files. A fresh pull matched all 29 validated local files and confirmed exactly one application script and one application style element. Immutable version 8 was created and the existing deployment ID was updated to version 8.
-
-Live version-8 evidence now confirms:
-
-- `?diagnostic=1` passes body, style, inline-script, and harmless server-call checks;
-- authorized internal `/exec` renders without raw JavaScript or malformed-HTML errors;
-- the loading overlay clears and the Apps Script staging adapter reaches bootstrap successfully;
-- no setup, migration, trigger, Sheet workflow, Drive workflow, production action, or PR merge occurred during recovery.
-
-## Confirmed findings and limitation
-
-The previous package design was structurally unsafe because it extracted executable assets from minified HTML with regular expressions and force-printed raw source inside an outer script/style context. A deterministic fixture reproduced the observed failure class: an unescaped raw-text closing sequence terminates the script element and moves the remaining JavaScript into visible body text.
-
-The fixed real bundle contains one intended application script element, one intended application style element, no unexpected template delimiters, and no raw JavaScript body text. Version 8 confirms recovery in Apps Script HTML Service. The exact omitted Version 6 server exception remains unavailable, but the live Version 7 failure is confirmed to have used stale pre-repair remote files after a skipped clasp push.
-
-Live Version 9 acceptance confirms:
-
-- `?diagnostic=1` rendered the body and styles, executed inline JavaScript, and completed the harmless server call;
-- authorized internal `/exec` rendered the complete workspace and cleared the loading overlay;
-- `/exec?request=1` rendered only the requester portal;
-- request-only mode exposed no internal sidebar, exact inventory balances, ledger, release desk, supplier internals, users, or administrative controls;
-- no operational Sheet or Drive workflow was performed;
-- production was untouched and PR #2 was not merged.
-
-The runtime-truthfulness repair is included in this repository update. It resolves the trusted Script Property environment, renders it into `body[data-app-environment]`, shows accurate staging or production labels, and removes the local-only reset control from Apps Script interaction. It passed local checks and remains undeployed to Apps Script; Version 10 has not been created.
-
-## Remaining launch blockers and limitations
-
-- Obtain manager review of the exact 0.5.0 diff, pushed commit, and CI state.
-- Review and seed the final institutional access rows in `14_USERS_ACCESS` before broader staging acceptance.
-- Obtain explicit authorization before any staging schema migration, operational edit-trigger installation, code push, or deployment.
-- Complete one controlled Sheet/Drive end-to-end workflow and verify audit, history, error, and evidence records.
-- Obtain DOL owner approval before production promotion or merging PR #2.
-- The compatibility runtime remains relatively large; Google Sheets remains suitable for a controlled v1 pilot, not high-volume transactional scale.
-
-## Next recommended task
-
-Review the pushed 0.5.0 handoff commit and CI evidence. Only after separate explicit authorization should an operator follow the staged backup, additive schema migration, edit-trigger setup, deployment, acceptance, and rollback sequence in `docs/LAUNCH_RUNBOOK.md`. Do not touch production or merge PR #2 as part of repository verification.
+See [V1 Readiness Audit](docs/V1_READINESS_AUDIT.md), [Known Limitations](docs/KNOWN_LIMITATIONS.md), and [Work Continuation](docs/WORK_CONTINUATION.md).

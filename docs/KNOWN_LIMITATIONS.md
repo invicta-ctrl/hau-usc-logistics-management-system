@@ -1,18 +1,17 @@
 # Known Limitations
 
-- Local mock mode is preview-only browser persistence with no shared concurrency or durable backup. Apps Script mode uses the server boundary; the future REST mode remains reserved.
-- Local role display is demonstrative. Apps Script authorization always resolves the active Google identity and server-side access row.
-- Version 0.5.0 near-real-time behavior for authenticated internal sessions uses five-second polling, not WebSockets or guaranteed server push. Hidden/offline tabs pause, failures back off, and normal visibility/network timing can exceed the target 5–10 second observation window. The request-only portal stays outside the internal polling controller.
-- Dirty-state protection defers refresh; it does not merge simultaneous edits. The user must choose when to reload and may need to re-enter conflicting changes.
-- The direct-edit revision mechanism detects relevant spreadsheet edits after the installable trigger is configured; it does not make manual sheet editing a supported transactional workflow or add row-level conflict resolution.
-- The operational edit trigger is environment-specific and is not created by repository commands. Each staging/production spreadsheet requires explicit reviewed setup.
-- Google Sheets remains appropriate for a controlled low-volume pilot, not high-throughput transactional concurrency. Revision polling signals change but does not turn Sheets into an ACID database.
-- Evidence in local mock mode validates type/size and stores metadata only; object URLs are session-local. Apps Script evidence still depends on reviewed Drive configuration and retention policy.
-- Browser exports are simple JSON/CSV structures, not signed official reports.
-- Printable release and label views use browser printing, not a controlled PDF service.
-- Generated catalog/quote rows prove pagination but are fictional.
-- Formal accessibility conformance, records-retention approval, institutional identity policy, sustained concurrency/load testing, offline editing, and disaster-recovery exercises remain future work.
-- The 0.5.0 repository gates and complete configured Playwright matrix pass locally, but live two-session polling, direct-edit trigger behavior, operational workflow acceptance, and manual accessibility checks still require a separately authorized staging exercise.
-- The restored visual compatibility runtime is still generated as one large controller and has not yet been migrated view-by-view to the hardened modular service contract.
-- Legacy browser confirmations and broad rerender behavior remain inside that compatibility runtime; do not copy those patterns into new controllers.
-- GitHub's file viewer does not execute HTML. Download `dist/index.html`, use GitHub Pages, or run `npm run dev`/`npm run preview` to interact with the site.
+- `1.0.0-rc.1` is a repository-ready release candidate, not evidence of a live staging or production deployment. The only authenticated ignored clasp target inspected during this task conflicts with the documented staging Version 9 record, so no Google mutation or live acceptance occurred.
+- The three named shareable HTML files and the legacy standalone alias run deterministic fictional DEMO data in a browser. They are review/demo artifacts, not authenticated production portals and do not provide shared concurrency, durable backup, institutional access control, or Google Drive persistence.
+- Apps Script authorization resolves the active Google identity and server-side access row. Local role display is demonstrative and must never be treated as authorization evidence.
+- Authenticated internal near-real-time behavior uses five-second polling, not WebSockets or guaranteed server push. Hidden/offline tabs pause, failures back off, and normal visibility/network timing can exceed the target 5–10 second observation window. Request-only mode stays outside internal polling.
+- Dirty-state protection defers refresh; it does not merge simultaneous edits. Users choose when to reload and may need to re-enter conflicting changes.
+- The direct-edit revision mechanism detects relevant spreadsheet edits only after the environment-specific installable trigger is configured. It does not make manual Sheet editing a supported transactional workflow or add row-level conflict resolution.
+- Google Sheets is suitable only for a controlled low-volume pilot. Script locks, command journaling, idempotency, preflight, and revision polling reduce risk but do not turn Sheets into a high-throughput ACID database.
+- Apps Script evidence/branding validation checks authority before decode, encoded/decoded size, MIME/extension/magic signature, image dimensions/pixels, digest, exact private storage, and quarantine recovery. It does not perform malware scanning or deep PDF active-content analysis; institutional viewer/retention policy remains unresolved.
+- Browser exports are simple JSON/CSV structures, not signed official reports. Printable release and label views use browser printing, not a controlled PDF service.
+- Formal WCAG conformance, screen-reader/keyboard/high-contrast/200% zoom manual acceptance, sustained load/concurrency, live two-account privacy, trigger behavior, restore drills, institutional identity policy, and records-retention approval remain staging/production gates.
+- Production lawful-purpose/minimization, personal/student/contact/supplier-field handling, evidence/audit/error/backup/quarantine retention, deletion/legal-hold, incident notification, and external sharing decisions remain with HAU privacy, records, security, procurement, and DOL owners.
+- The clean npm install reported 0 known vulnerabilities but emitted an allow-scripts review warning for `esbuild@0.28.1`. Build/tests passed without changing install policy; maintainers must review and intentionally approve or continue blocking dependency install scripts under institutional supply-chain policy.
+- The current tree contains no configured spreadsheet identifier, but repository history previously tracked one. The resource owner must restrict or rotate/replace it and decide whether coordinated history remediation is required.
+- The restored visual compatibility runtime remains a generated large controller rather than a fully view-by-view modular UI. Legacy browser confirmations and broad rerender behavior remain inside it; new controllers should continue using the hardened service contract.
+- Generated catalog/quote rows and identities are fictional. GitHub's file viewer does not execute HTML; open a downloaded shareable artifact locally or use `npm run dev` / `npm run preview`.

@@ -1,103 +1,95 @@
 # HAU-USC Logistics Management System
 
-Version 0.5.0 is the repository-only live synchronization, lending search, and catalog-controls revision for the Holy Angel University – University Student Council Department of Logistics. It builds on the 0.4.0 launch-readiness foundation while preserving the approved maroon, burgundy, gold, cream, paper, and white prototype and the production Google Apps Script boundary.
+Version `1.0.0-rc.1` is the repository-ready V1 release candidate for the Holy Angel University University Student Council Department of Logistics. It preserves the approved maroon, oxblood, gold, cream, and white visual baseline while adding secure request, lending, inventory, release/return, procurement, evidence, content, branding, and administration workflows.
 
-> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. Version 0.5.0 has not been pushed or deployed, and no Sheet, Drive, trigger, or other external write was performed for this revision. The existing immutable staging Version 9 remains untouched; production remains untouched.
+> **Release truth:** the local production build and repository checks are available, but this commit is not a verified live production deployment. The authenticated clasp target available during this task conflicts with the recorded staging project. No Apps Script push/version/deployment, trigger change, Google Sheet write, Google Drive write, merge, tag, or GitHub release may be claimed until the deployment owner confirms the correct staging target and rollback state.
 
-## Version 0.5.0 scope
+## Ready in this release candidate
 
-- Successful Apps Script mutations reload authoritative bootstrap state before the interface renders success. A recorded mutation is never submitted again merely because the follow-up reload failed.
-- Internal sessions check a compact data revision every five seconds while the tab is visible and online. This is polling, not WebSockets or server push.
-- Direct human edits can advance the revision through an idempotently installed operational spreadsheet edit trigger.
-- Dirty forms and active modal work defer background reloads and show a non-blocking “New operational data is available” choice instead of discarding input.
-- The Lending Hub uses an accessible predictive item search with borrower-aware audience, handling, stock, verification, and quantity explanations. Final eligibility is always revalidated on the server.
-- Authorized catalog managers can create, edit, relocate, archive, and restore items through audited Apps Script APIs. Item IDs, ledger history, quantity truth, provenance, and unsafe unit changes remain protected.
+- Main staff workspace with dynamic event readiness, Request Center, inventory/catalog controls, restocking, procurement, canvass history, Lending Hub, Release Desk, returns, Roadmap, What Changed, and a permission-gated Admin Dashboard.
+- Dedicated request-only and lending-only portal modes with server-owned routing and sanitized bootstraps. Public/requester responses exclude protected balances, ledger, suppliers, contacts, tax fields, users, permissions, audit data, private notes, Drive configuration, and private evidence references.
+- Apps Script services with server-side authorization, locks for racing mutations, idempotency, stable IDs/errors, audit/status history, additive Sheets setup, append-only stock movements, content revision conflicts, and recovery-required release diagnostics.
+- Fail-closed Drive configuration with eleven canonical folders, private-sharing checks, deterministic filenames, MIME/extension/magic-byte/size/image-bound validation, checksum deduplication, quarantine recovery, and protected branding upload/version activation.
+- Fictional local demo data with explicit `Demo` identities and reserved `.invalid`, contact, student, and tax tokens.
+- A future-platform proposal comparing current providers and retaining PostgreSQL command authority, a transactional outbox, asynchronous Sheets projection, reconciliation, retry, and dead-letter handling.
+
+## Shareable portal HTML files
+
+`npm run build` creates self-contained classic-script HTML files with inline CSS and JavaScript. They can be opened directly from disk and do not require a server:
+
+| Portal | Artifact | Pinned mode |
+| --- | --- | --- |
+| Main Hub | [HAU-USC_Logistics-Main-Hub-Shareable.html](HAU-USC_Logistics-Main-Hub-Shareable.html) | Internal demo workspace |
+| Request Center | [HAU-USC_Logistics-Request-Center-Shareable.html](HAU-USC_Logistics-Request-Center-Shareable.html) | Sanitized request portal |
+| Lending Hub | [HAU-USC_Logistics-Lending-Hub-Shareable.html](HAU-USC_Logistics-Lending-Hub-Shareable.html) | Sanitized lending portal |
+
+The historical [HAU-USC_Logistics-Prototype-Shareable.html](HAU-USC_Logistics-Prototype-Shareable.html) remains a byte-identical alias of `dist/index.html`. All standalone files use fictional browser-local data; they are demonstrations, not authenticated operational systems. Do not place real student, supplier, finance, or evidence data in them.
 
 ## Start locally
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite. Add `?request=1` for the sanitized request-only portal.
+Open the URL printed by Vite. Use `?request=1` for Request Center or `?lending=1` for Lending Hub when testing through the development server.
 
-## Verification and builds
+## Verification
 
 ```bash
-npm run lint
 npm test
-npm run build
-npm run check:apps-script
-npm run verify:dist
 npm run check
-npm run test:e2e              # requires Playwright Chromium
+npm run verify
+npm run check:agents
+npm run check:continuation
+npm run check:sensitive
+npm run check:docs
+npm run test:e2e
 ```
 
-Recorded repository verification for 0.5.0 is complete: `npm ci`, `npm run check`, and `npm run verify` passed; Vitest passed 93 tests across 12 files; the focused Chromium 390 px suite passed 4 tests; and the complete six-viewport Playwright matrix finished with 38 passed, 40 intentionally scoped skips, and 0 failures. A second build reproduced the same standalone and Apps Script shell hashes. Live staging acceptance remains a separately authorized activity.
+Playwright covers 320, 390, 768, 1024, 1366, and 1440 px. The portal-specific browser suite also opens each root shareable through `file://`, confirms its pinned mode, and checks page-level overflow at every required width. Current exact results are recorded in [Project Status](PROJECT_STATUS.md) and [V1 Readiness Audit](docs/V1_READINESS_AUDIT.md).
 
-`npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
+## Generated-file ownership
 
-- `dist/index.html` – canonical standalone production build.
-- `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
-- `apps-script/Index.html` – small Apps Script template shell.
-- `apps-script/AppBody.html` – generated approved body markup.
-- `apps-script/AppStyles.html` – generated complete application style element.
-- `apps-script/AppScript.html` – generated complete application script element with staging runtime configuration.
+`npm run build` owns these files:
 
-The Apps Script body, CSS, and JavaScript are produced from separate Vite outputs. The generator does not parse minified JavaScript out of `dist/index.html`, and it escapes raw-text closing sequences before embedding code in HTML. Do not edit generated HTML directly. Change source or the generator, then rebuild.
+- `dist/index.html`
+- all four root `*-Shareable.html` artifacts listed above, including the compatibility alias
+- `apps-script/Index.html`
+- `apps-script/AppBody.html`
+- `apps-script/AppStyles.html`
+- `apps-script/AppScript.html`
+
+Do not hand-edit generated HTML. Change source or the generator, rebuild, and require `npm run check:apps-script` plus `npm run verify:dist` to pass.
 
 ## Approved visual baseline
 
-`legacy/HAU-USC_Logistics-Prototype.original.html` remains the authoritative visual source. `npm run extract:visual` reproducibly extracts its shell, seven view fragments, ordered CSS modules, and compatibility runtime. Small backend changes must not regenerate the design or replace it with a generic dashboard.
+`legacy/HAU-USC_Logistics-Prototype.original.html` remains the approved visual authority. Run `npm run extract:visual` only when intentionally regenerating the visual modules; do not casually redesign or replace it with a generic dashboard.
 
-## Runtime modes
+## Runtime boundaries
 
-| Mode | Use | Authority |
-|---|---|---|
-| `mock` | Local demo and shareable prototype | Browser-only fictional state |
-| `apps-script` | Staging and initial production web app | Server authorization, Google Sheets, and Drive |
-| `rest` | Future hosted frontend | Reserved secure HTTP adapter boundary |
+| Mode | Purpose | Authority |
+| --- | --- | --- |
+| `mock` | Local and standalone fictional demo | Browser-local state only |
+| `apps-script` | Current staging/initial production architecture | Apps Script authorization, Sheets repositories, Drive storage |
+| `rest` | Future hosted system | Reserved HTTP adapter boundary; no hosted API exists yet |
 
-Feature code calls service adapters; it never reads Google Sheets or `google.script.run` directly. `src/services/apps-script-adapter.js` is the only browser-to-Apps-Script gateway.
+Browser features call semantic service adapters. Only `src/services/apps-script-adapter.js` may invoke `google.script.run`. UI hiding is never authorization.
 
-## Repository map
+## Google Workspace configuration
 
-```text
-src/            approved browser UI, modules, domain rules, and adapters
-apps-script/    V8 Apps Script backend, generated web package, setup, migration, backup
-scripts/        visual extraction, standalone build, Apps Script package generation/checks
-tests/          Vitest domain/package tests and Playwright browser checks
-docs/           architecture, schema, security, deployment, migration, and launch runbooks
-legacy/         preserved approved prototype
-dist/           generated standalone artifact
-.github/        pull-request template and CI workflows
-```
-
-## Google Workspace target
-
-Apps Script does not contain a hardcoded operational or backup spreadsheet ID. Each deployment must set these Script Properties explicitly:
+Each Apps Script environment must resolve these restricted Script Properties:
 
 - `HAU_ENVIRONMENT`
 - `HAU_SPREADSHEET_ID`
 - `HAU_BACKUP_SPREADSHEET_ID`
 
-The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placeholders, requires separate operational and backup spreadsheets, and fails closed before opening a Sheet when configuration is invalid. Drive folder IDs remain controlled configuration values. See `docs/APPS_SCRIPT_SETUP.md`.
+The operational and backup IDs must be different. The configured Drive root and eleven canonical child-folder mappings must also validate as private, exact, direct children. Missing, conflicting, unsafe, or wrong-target configuration stops setup and uploads; there is no My Drive root fallback.
 
-## Staging HTML diagnostic
+See [Apps Script Setup](docs/APPS_SCRIPT_SETUP.md), [Google Drive Evidence](docs/GOOGLE_DRIVE_EVIDENCE.md), and [Launch Runbook](docs/LAUNCH_RUNBOOK.md). Never commit `.clasp.json`, credentials, private resource IDs, personal records, supplier tax data, or evidence files.
 
-The repository includes an isolated `DiagnosticShell.html`. After a reviewed staging push and deployment, `?diagnostic=1` is available only when `HAU_ENVIRONMENT=STAGING`. It proves template evaluation, body rendering, style application, inline JavaScript, and one harmless `google.script.run` round trip without reading or writing operational data. The admin-only `htmlTemplateDiagnostics()` function reports bounded lengths, prefixes, and suffixes; it never logs the complete generated application.
+## Documentation map
 
-Controlled staging Version 9 passed the diagnostic, authorized internal `/exec`, and request-only `/exec?request=1` privacy checks. Version 0.5.0 remains repository-only and has not changed that deployment. No production deployment or operational workflow write was performed for this revision.
+Start with [Documentation Index](docs/DOCUMENTATION_INDEX.md). The canonical architecture, domain, security, API, Sheets, Drive, testing, operations, requester, administrator, future-platform, and recovery guides are linked there.
 
-## First steps for a maintainer
-
-1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
-2. Run `npm install && npm run check`.
-3. Work on the feature branch; do not edit the default branch directly.
-4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
-5. Update tests, `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` with verified facts.
-
-## AI collaboration
-
-ChatGPT web and Codex do not rely on shared chat memory. They coordinate through the active GitHub branch, pull request, `AGENTS.md`, and the continuation record. Use the one-writer manager/implementer protocol in `docs/AI_COLLABORATION.md` before starting a coding milestone.
+Maintainers must first read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.

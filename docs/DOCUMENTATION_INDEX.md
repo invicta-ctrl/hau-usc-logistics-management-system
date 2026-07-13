@@ -26,6 +26,7 @@ This page is the durable map for implementers, reviewers, operators, and future 
 | Request submission and requester privacy boundary          | [Requester Guide](REQUESTER_GUIDE.md)                                     | CURRENT                                |
 | Daily receiving, release, lending, and reconciliation      | [Operator Checklist](OPERATOR_CHECKLIST.md)                               | CURRENT                                |
 | Environment gates, release evidence, and complete rollback | [Operations and Deployment Runbook](OPERATIONS_AND_DEPLOYMENT_RUNBOOK.md) | CURRENT                                |
+| V1 repository/live gate matrix and exact evidence          | [V1 Readiness Audit](V1_READINESS_AUDIT.md)                              | CURRENT release evidence               |
 | Dated provider research and weighted comparison            | [Hosting and Database Candidates](HOSTING_AND_DATABASE_CANDIDATES.md)     | FUTURE                                 |
 | Proposed hosted architecture and migration phases          | [Future Hosting and Database](FUTURE_HOSTING_AND_DATABASE.md)             | FUTURE                                 |
 | Hosted-platform decision and reversal conditions           | [ADR 0001: Future Hosted Platform](adr/0001-future-hosted-platform.md)    | Proposed                               |

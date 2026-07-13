@@ -5,7 +5,7 @@ import {
 } from '../../scripts/apps-script-bundle-lib.mjs';
 
 const internalBootstrap = ({ revision = 1, manageCatalog = false, tickets = [] } = {}) => ({
-  version: '0.5.0', schemaVersion: '1.1.0', backendMode: 'apps-script', environment: 'STAGING',
+  version: '1.0.0-rc.1', schemaVersion: '1.2.0', backendMode: 'apps-script', environment: 'STAGING',
   dataRevision: revision, dataRevisionUpdatedAt: '2026-07-13T12:00:00+08:00',
   currentUser: { id: 'USR-1', displayName: 'Test User', role: 'DOL_STAFF', permissions: { review: true, release: true, receive: true, admin: false, manageCatalog } },
   eventSeries: [], events: [], requests: [], requestLines: [], reservations: [], ledgerTransactions: [],

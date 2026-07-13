@@ -29,7 +29,7 @@ var HAU_DRIVE_LEGACY_ALIASES_ = Object.freeze({
 });
 
 var HAU_CONFIG = Object.freeze({
-  APP_VERSION: '0.6.0-dev.1',
+  APP_VERSION: '1.0.0-rc.1',
   SCHEMA_VERSION: '1.2.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
