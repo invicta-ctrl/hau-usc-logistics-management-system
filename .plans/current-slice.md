@@ -1,7 +1,7 @@
 # Slice 3 Current Slice Checkpoint
 
 CURRENT SLICE: Slice 3 - Canonical roles, committee scopes, and authorization contract
-CURRENT STAGE: READY_TO_COMMIT
+CURRENT STAGE: PENDING_MANAGER_REVIEW
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 ## Starting checkpoint for Slice 3
@@ -10,7 +10,9 @@ LAST UPDATED: 2026-07-14 (Asia/Manila)
 - Approved Slice 3 starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121`
 - Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
 - Handshake: fetch completed; local/upstream count was `0 0`; remote head matched the starting commit; no competing writer or lock was found.
-- A local rollback tag was created at the starting commit before implementation. The worktree is intentionally dirty with only Slice 3 implementation and documentation changes.
+- Implementation commit: `5107afc57904dccc5214fcafc20aba65c0622632` (`feat: add canonical authorization contract`).
+- Remote verification: the feature branch and PR #6 head match the implementation commit; `validate`, `verify`, and `browser-smoke` pass; local/upstream count is `0 0`; the worktree is clean.
+- A local rollback tag was created at the starting commit before implementation, and `hau-usc-slice3-checkpoint-5107afc` points to the implementation commit.
 
 ## Slice 3 goal and bounded scope
 
@@ -30,13 +32,13 @@ LAST UPDATED: 2026-07-14 (Asia/Manila)
 - `npm run check` passes: ESLint, full Vitest (20 files / 161 tests), production build, Apps Script validation (26 source files / 32 required functions), generated parity, and standalone verification.
 - `npm run verify` passes; the complete Chromium matrix passes 49 tests with 95 intentionally skipped and 0 failed across 144 cases. The v2 mutation-refresh recovery scenario passes in the focused run.
 - `git diff --check` passes. The sensitive-value scan passes over the changed scope: no `.clasp` files, credentials, private Google identifiers, non-placeholder contacts, private supplier-TIN values, evidence links, roster rows, or operational records were found; only schema references and synthetic/mock placeholders are present. Regenerated standalone files retain only the pre-existing fictional preview baseline.
-- Initial independent review findings were repaired and covered by focused tests; final read-only review closure is the last review record before staging.
+- Initial independent review findings were repaired and covered by focused tests. The implementation-validator pass found no blocking issue; a second reviewer did not return a final response before handoff, so no re-review PASS is claimed. Manager review is now the remaining gate.
 
 ## Slice 3 rollback and transition
 
 - Local rollback checkpoint: tag `hau-usc-slice2-checkpoint-23c4f61` at `23c4f61e5f1b113d4b77c2955f1716139a03c121`.
 - Before commit, preserve the current worktree and use a focused revert after commit if rollback is required; do not reset or discard changes.
-- Do not advance to Slice 4 until Slice 3 review findings are closed, all local gates pass, documentation is current, and the focused commit and remote evidence are reviewed.
+- Do not advance to Slice 4 until the manager accepts Slice 3 and the committed remote evidence is reviewed.
 
 ## Slice 3 generated-artifact evidence
 
