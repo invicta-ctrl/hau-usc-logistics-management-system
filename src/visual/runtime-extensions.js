@@ -678,7 +678,7 @@ export function createRuntimeExtensions(options) {
     const triggers = dashboard.triggers ?? dashboard.triggerStatus ?? {};
     const users = adminRows(dashboard, 'users', 'userAccess');
     const events = adminRows(dashboard, 'events', 'eventRows');
-    const revisions = adminRows(dashboard, 'contentRevisions', 'revisions');
+    const revisions = adminRows(dashboard, 'content', 'contentRevisions', 'revisions');
     const branding = adminRows(dashboard, 'brandingAssets', 'branding');
     const errors = adminRows(dashboard, 'errors', 'recentErrors');
     const audit = adminRows(dashboard, 'audit', 'recentAudit');
@@ -687,17 +687,19 @@ export function createRuntimeExtensions(options) {
         <div class="grid-4">${adminReadinessCard('Environment', health.environment || dashboard.environment, health.status || 'Protected status')}${adminReadinessCard('Schema', schema.status || health.schemaStatus, schema.summary)}${adminReadinessCard('Ledger reconciliation', reconciliation.status, reconciliation.summary)}${adminReadinessCard('Backup readiness', backup.status || backup.readiness, backup.lastCompletedAt ? `Last completed ${readableDate(backup.lastCompletedAt)}` : backup.summary)}${adminReadinessCard('Drive folders', drive.status || health.driveStatus, drive.summary)}${adminReadinessCard('Triggers', triggers.status || health.triggerStatus, triggers.summary)}${adminReadinessCard('Data revision', health.dataRevision ?? dashboard.dataRevision, health.updatedAt ? `Updated ${readableDate(health.updatedAt)}` : '')}${adminReadinessCard('Cache / reports', dashboard.cacheStatus || dashboard.reportStatus, dashboard.exportStatus || '')}</div>
       </section>
       <section class="panel"><div class="panel-head"><div><h2>User Access</h2><p>Create or update access without deleting history.</p></div><span class="pill">${users.length} records</span></div>
-        <form data-admin-form="user"><div class="form-grid"><label>Email / identity<input name="email" type="email" required></label><label>Display name<input name="displayName" required></label><label>Role<select name="role"><option>REQUESTER</option><option>DOL_STAFF</option><option>COMMITTEE_HEAD</option><option>DOL_DIRECTOR</option><option>ADMIN</option><option>READ_ONLY_AUDITOR</option></select></label><label>Account status<select name="active"><option value="true">Active</option><option value="false">Deactivated</option></select></label></div><fieldset class="permission-grid"><legend>Server-checked permissions</legend><label><input type="checkbox" name="canReview"> Review</label><label><input type="checkbox" name="canRelease"> Release</label><label><input type="checkbox" name="canReceive"> Receive</label><label><input type="checkbox" name="canAdmin"> Admin</label><label><input type="checkbox" name="canManageCatalog"> Catalog</label></fieldset><button class="primary" type="submit">Save User Access</button></form>
-        <div class="admin-record-list">${users.slice(0, 6).map((user) => `<div class="detail-line"><div><strong>${esc(user.displayName || user.name || user.email || user.id)}</strong><small>${esc(user.role || 'Role not reported')} · ${user.active === false ? 'Deactivated' : 'Active'}</small></div></div>`).join('') || '<div class="empty">No access rows were returned.</div>'}</div>
+        <form data-admin-form="user"><input name="userId" type="hidden"><div class="form-grid"><label>Email / identity<input name="email" type="email" required></label><label>Display name<input name="displayName" required></label><label>Role<select name="role"><option>REQUESTER</option><option>DOL_STAFF</option><option>COMMITTEE_HEAD</option><option>DOL_DIRECTOR</option><option>ADMIN</option><option>READ_ONLY_AUDITOR</option></select></label><label>Committee<input name="committee"></label><label>Account status<select name="active"><option value="true">Active</option><option value="false">Deactivated</option></select></label><label class="span-2">Access-change reason<input name="reason" required></label></div><fieldset class="permission-grid"><legend>Server-checked permissions</legend><label><input type="checkbox" name="canReview"> Review</label><label><input type="checkbox" name="canRelease"> Release</label><label><input type="checkbox" name="canReceive"> Receive</label><label><input type="checkbox" name="canAdmin"> Admin</label><label><input type="checkbox" name="canManageCatalog"> Catalog</label></fieldset><div class="button-row"><button class="primary" type="submit">Save User Access</button><button class="ghost" type="reset" data-admin-user-new>Clear / New User</button></div></form>
+        <div class="admin-record-list">${users.slice(0, 10).map((user) => `<div class="detail-line"><div><strong>${esc(user.displayName || user.name || user.email || user.id)}</strong><small>${esc(user.role || 'Role not reported')} · ${user.active === false ? 'Deactivated' : 'Active'}</small></div><div class="button-row"><button class="secondary mini" type="button" data-admin-user-edit="${esc(user.id)}">Edit</button>${user.active === false ? '' : `<button class="danger mini" type="button" data-admin-user-deactivate="${esc(user.id)}">Deactivate</button>`}</div></div>`).join('') || '<div class="empty">No access rows were returned.</div>'}</div>
       </section>
       <section class="panel"><div class="panel-head"><div><h2>Events and Sub-events</h2><p>Create or revise metadata; the server retains stable IDs and history.</p></div><span class="pill">${events.length} records</span></div>
-        <form data-admin-form="event"><div class="form-grid"><label>Event ID (for edit)<input name="eventId" placeholder="Leave blank for server-generated ID"></label><label>Series ID<input name="eventSeriesId" required></label><label>Series name<input name="eventSeriesName" required></label><label>Event / sub-event name<input name="eventName" required></label><label>Start<input name="startAt" type="datetime-local" required></label><label>End<input name="endAt" type="datetime-local" required></label><label>Owner / committee<input name="owner"></label><label>Venue<input name="venue"></label><label>Status<select name="status"><option>UPCOMING</option><option>ACTIVE</option><option>COMPLETED</option><option>ARCHIVED</option></select></label></div><button class="primary" type="submit">Save Event</button></form>
+        <form data-admin-form="event"><div class="form-grid"><label>Event ID (for edit)<input name="eventId" placeholder="Leave blank for server-generated ID"></label><label>Series ID<input name="eventSeriesId" placeholder="Leave blank to create a server-generated series"></label><label>Series name<input name="seriesName" required></label><label>Event / sub-event name<input name="eventName" required></label><label>Start<input name="startAt" type="datetime-local" required></label><label>End<input name="endAt" type="datetime-local" required></label><label>Owner / committee<input name="ownerCommittee"></label><label>Department<input name="department"></label><label>Venue<input name="venue"></label><label>Status<select name="status"><option>ACTIVE</option><option>ARCHIVED</option></select></label><label class="span-2">Change reason<input name="reason" required></label></div><button class="primary" type="submit">Save Event</button></form>
       </section>
       <section class="panel"><div class="panel-head"><div><h2>Published Content</h2><p>Draft, publish, or revert stable structured content keys.</p></div><span class="pill">${revisions.length} revisions</span></div>
-        <form data-admin-form="content"><div class="form-grid"><label>Content key<select name="contentKey"><option value="PUBLIC_ROADMAP">Public Roadmap</option><option value="PUBLIC_WHAT_CHANGED">What Changed</option><option value="PUBLIC_HOME">Public home guidance</option></select></label><label>Revision ID<input name="revisionId" placeholder="Required to publish or revert"></label><label>Expected revision<input name="expectedRevision" type="number" min="0"></label><label>Title<input name="title"></label><label class="span-2">Structured content<textarea name="body" rows="7" placeholder="Server-validated structured content"></textarea></label><label class="span-2">Change note<input name="changeNote" required></label></div><div class="button-row"><button class="secondary" type="submit" data-admin-action="draft">Save Draft</button><button class="primary" type="submit" data-admin-action="publish">Publish Revision</button><button class="ghost" type="submit" data-admin-action="revert">Revert to Revision</button></div></form>
+        <form data-admin-form="content"><div class="form-grid"><label>Content key<select name="contentKey"><option value="PUBLIC_ROADMAP">Public Roadmap</option><option value="PUBLIC_WHAT_CHANGED">What Changed</option><option value="PUBLIC_HOME">Public home guidance</option></select></label><label>Content type<select name="contentType"><option value="ROADMAP">Roadmap</option><option value="CHANGELOG">What Changed</option><option value="PAGE">Page</option><option value="JSON">Structured JSON</option></select></label><label>Revision ID<input name="revisionId" placeholder="Required to publish or revert"></label><label>Expected latest revision<input name="expectedRevision" type="number" min="0" step="1" required></label><label>Title<input name="title"></label><label class="span-2">Structured content<textarea name="body" rows="7" placeholder="Server-validated JSON object or array"></textarea></label><label class="span-2">Change note / reason<input name="notes" required></label></div><div class="button-row"><button class="secondary" type="submit" data-admin-action="draft">Save Draft</button><button class="primary" type="submit" data-admin-action="publish">Publish Revision</button><button class="ghost" type="submit" data-admin-action="revert">Revert to Revision</button></div></form>
+        <div class="admin-record-list">${revisions.slice(0, 10).map((revision) => `<div class="detail-line"><div><strong>${esc(revision.title || revision.key)} · revision ${esc(revision.revision)}</strong><small>${esc(revision.status)} · ${esc(revision.notes || 'No change note')}</small></div><button class="secondary mini" type="button" data-admin-content-select="${esc(revision.revisionId)}">Select</button></div>`).join('') || '<div class="empty">No content revisions were returned.</div>'}</div>
       </section>
       <section class="panel"><div class="panel-head"><div><h2>Branding Metadata</h2><p>Official assets are never fabricated; missing assets retain a text fallback.</p></div><span class="pill">${branding.length} versions</span></div>
-        <form data-admin-form="branding"><div class="form-grid"><label>Asset key<select name="assetKey"><option value="DOL_LOGO">DOL logo</option><option value="USC_LOGO">USC logo</option><option value="HAU_LOGO">HAU logo</option></select></label><label>Protected asset ID<input name="assetId" required></label><label class="span-2">Alt text<input name="altText" required></label><label>Status<select name="status"><option>DRAFT</option><option>ACTIVE</option><option>FALLBACK</option><option>ARCHIVED</option></select></label><label>Expected revision<input name="expectedRevision" type="number" min="0"></label><label class="span-2">Version note<input name="versionNote" required></label></div><button class="primary" type="submit">Save Branding Metadata</button></form>
+        <form data-admin-form="branding"><div class="form-grid"><label>Asset key<select name="assetKey"><option value="DOL_LOGO">DOL logo</option><option value="USC_LOGO">USC logo</option><option value="HAU_LOGO">HAU logo</option></select></label><label>Display name<input name="displayName" required></label><label class="span-2">Alt text<input name="altText" required></label><label class="span-2">Protected image file<input name="brandingFile" type="file" accept="image/jpeg,image/png,image/webp" required><small>The browser sends bytes to the protected upload API; Drive IDs and private URLs are never shown.</small></label><label class="span-2">Version note<input name="notes" required></label><label class="span-2 checkbox"><input name="activate" type="checkbox" value="true"> Activate this verified version after upload</label></div><button class="primary" type="submit">Upload Branding Version</button></form>
+        <div class="admin-record-list">${branding.slice(0, 10).map((asset) => `<div class="detail-line"><div><strong>${esc(asset.displayName || asset.assetKey)} · version ${esc(asset.version)}</strong><small>${esc(asset.status || 'DRAFT')} · ${asset.active ? 'Active' : 'Not active'}</small></div>${asset.active ? '' : `<button class="secondary mini" type="button" data-admin-branding-activate="${esc(asset.versionId)}">Activate</button>`}</div>`).join('') || '<div class="empty">No branding versions were returned; the built-in text fallback remains active.</div>'}</div>
       </section>
       <section class="panel admin-span-all"><div class="grid-2"><div><div class="panel-head"><div><h2>Recent Errors</h2><p>Safe messages and correlation IDs only.</p></div><span class="pill">${errors.length}</span></div><div class="admin-record-list">${errors.slice(0, 8).map((row) => `<div class="detail-line"><div><strong>${esc(row.code || 'ERROR')} · ${esc(row.message || 'Safe details unavailable')}</strong><small>${esc(row.correlationId || 'No correlation ID')} · ${esc(readableDate(row.at || row.createdAt))}</small></div></div>`).join('') || '<div class="empty">No recent errors were returned.</div>'}</div></div><div><div class="panel-head"><div><h2>Recent Audit</h2><p>Read-only administrative activity.</p></div><span class="pill">${audit.length}</span></div><div class="admin-record-list">${audit.slice(0, 8).map((row) => `<div class="detail-line"><div><strong>${esc(row.action || 'Activity')} · ${esc(row.entityType || '')}</strong><small>${esc(row.entityId || '')} · ${esc(readableDate(row.at || row.createdAt))}</small></div></div>`).join('') || '<div class="empty">No recent audit rows were returned.</div>'}</div></div></div></section>
     </div>`;
@@ -726,9 +728,55 @@ export function createRuntimeExtensions(options) {
     const payload = Object.fromEntries(new FormData(form).entries());
     if (form.dataset.adminForm === 'user') {
       payload.active = payload.active === 'true';
-      for (const name of ['canReview', 'canRelease', 'canReceive', 'canAdmin', 'canManageCatalog']) payload[name] = form.elements[name].checked;
+      payload.permissions = {
+        review: form.elements.canReview.checked,
+        release: form.elements.canRelease.checked,
+        receive: form.elements.canReceive.checked,
+        admin: form.elements.canAdmin.checked,
+        manageCatalog: form.elements.canManageCatalog.checked,
+      };
     }
+    if (form.dataset.adminForm === 'content') {
+      payload.expectedRevision = Number(payload.expectedRevision);
+      payload.reason = payload.notes;
+    }
+    if (form.dataset.adminForm === 'branding') payload.activate = form.elements.activate.checked;
     return payload;
+  };
+
+  const populateAdminUserForm = (userId) => {
+    const user = adminRows(adminData, 'users', 'userAccess').find((row) => String(row.id) === String(userId));
+    const form = document.querySelector('[data-admin-form="user"]');
+    if (!user || !form) return;
+    form.elements.userId.value = user.id;
+    form.elements.email.value = user.email || '';
+    form.elements.displayName.value = user.displayName || user.name || '';
+    form.elements.role.value = user.role || 'REQUESTER';
+    form.elements.committee.value = user.committee || '';
+    form.elements.active.value = user.active === false ? 'false' : 'true';
+    form.elements.reason.value = '';
+    form.elements.canReview.checked = Boolean(user.permissions?.review);
+    form.elements.canRelease.checked = Boolean(user.permissions?.release);
+    form.elements.canReceive.checked = Boolean(user.permissions?.receive);
+    form.elements.canAdmin.checked = Boolean(user.permissions?.admin);
+    form.elements.canManageCatalog.checked = Boolean(user.permissions?.manageCatalog);
+    form.elements.email.focus();
+  };
+
+  const populateAdminContentForm = (revisionId) => {
+    const revisions = adminRows(adminData, 'content', 'contentRevisions', 'revisions');
+    const revision = revisions.find((row) => String(row.revisionId) === String(revisionId));
+    const form = document.querySelector('[data-admin-form="content"]');
+    if (!revision || !form) return;
+    const latest = revisions.filter((row) => row.key === revision.key).reduce((max, row) => Math.max(max, Number(row.revision || 0)), 0);
+    form.elements.contentKey.value = revision.key;
+    form.elements.contentType.value = revision.type || 'JSON';
+    form.elements.revisionId.value = revision.revisionId;
+    form.elements.expectedRevision.value = String(latest);
+    form.elements.title.value = revision.title || '';
+    form.elements.body.value = JSON.stringify(revision.body ?? {}, null, 2);
+    form.elements.notes.value = '';
+    form.elements.revisionId.focus();
   };
 
   const mountAdminDashboard = () => {
@@ -740,7 +788,35 @@ export function createRuntimeExtensions(options) {
     document.querySelector('#inventory')?.insertAdjacentHTML('afterend', '<section id="admin" class="view"><article class="panel"><div class="panel-head"><div><p class="eyebrow">Admin only</p><h2>Protected Administrative Controls</h2><p>Every write is re-authorized, validated, audited, and conflict-checked by the server.</p></div></div><div id="adminDashboardBody"><div class="empty">Open this view to load protected status.</div></div></article></section>');
     nav.querySelector('[data-view="admin"]').addEventListener('click', () => { void loadAdminDashboard(); });
     const section = document.querySelector('#admin');
-    section.addEventListener('click', (event) => { if (event.target.closest('[data-admin-refresh]')) void loadAdminDashboard(); });
+    section.addEventListener('click', async (event) => {
+      if (event.target.closest('[data-admin-refresh]')) { void loadAdminDashboard(); return; }
+      const editUser = event.target.closest('[data-admin-user-edit]');
+      if (editUser) { populateAdminUserForm(editUser.dataset.adminUserEdit); return; }
+      const deactivateUser = event.target.closest('[data-admin-user-deactivate]');
+      if (deactivateUser) {
+        if (!confirm('Deactivate this user access row? Existing audit and history records will remain.')) return;
+        deactivateUser.disabled = true;
+        try {
+          await runAdminMutation('saveUserAccess', { userId: deactivateUser.dataset.adminUserDeactivate, active: false, reason: 'Deactivated from Admin Dashboard' }, 'User access deactivated.');
+        } catch (error) {
+          toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
+          deactivateUser.disabled = false;
+        }
+        return;
+      }
+      const selectContent = event.target.closest('[data-admin-content-select]');
+      if (selectContent) { populateAdminContentForm(selectContent.dataset.adminContentSelect); return; }
+      const activateBranding = event.target.closest('[data-admin-branding-activate]');
+      if (activateBranding) {
+        activateBranding.disabled = true;
+        try {
+          await runAdminMutation('activateBrandingVersion', { brandingVersionId: activateBranding.dataset.adminBrandingActivate, reason: 'Activated from Admin Dashboard' }, 'Branding version activated.');
+        } catch (error) {
+          toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
+          activateBranding.disabled = false;
+        }
+      }
+    });
     section.addEventListener('submit', async (event) => {
       const form = event.target.closest('[data-admin-form]');
       if (!form) return;
@@ -753,7 +829,12 @@ export function createRuntimeExtensions(options) {
         const payload = adminPayload(form);
         if (form.dataset.adminForm === 'user') await runAdminMutation('saveUserAccess', payload, 'User access saved.');
         if (form.dataset.adminForm === 'event') await runAdminMutation('saveEvent', payload, 'Event metadata saved.');
-        if (form.dataset.adminForm === 'branding') await runAdminMutation('saveBrandingMetadata', payload, 'Branding metadata saved.');
+        if (form.dataset.adminForm === 'branding') {
+          const file = form.elements.brandingFile.files[0];
+          if (!file) throw new Error('Choose a JPG, PNG, or WEBP branding file.');
+          delete payload.brandingFile;
+          await runAdminMutation('uploadBrandingAsset', { ...payload, file }, 'Branding version uploaded.');
+        }
         if (form.dataset.adminForm === 'content') {
           const action = button.dataset.adminAction || 'draft';
           if (action !== 'draft' && !payload.revisionId) throw new Error('Choose a revision ID before publishing or reverting.');
@@ -804,7 +885,7 @@ export function createRuntimeExtensions(options) {
   const openReturnWorkflow = (ticket) => {
     const remaining = Math.max(0, Number(ticket.quantity || 0) - Number(ticket.returnedQuantity || 0));
     openModal(`Return ${ticket.id}`, `<form id="returnForm"><div class="mode-note"><strong>${esc(ticket.id)}</strong><br>${esc(remaining)} of ${esc(ticket.quantity)} units remain to be accounted for.${ticket.dueAt ? `<br>Due ${esc(readableDate(ticket.dueAt))}` : ''}</div>
-      <div class="form-grid" style="margin-top:14px"><label>Returned / accounted quantity<input name="returnedQuantity" type="number" min="0.01" max="${esc(remaining)}" step="0.01" value="${esc(remaining)}" required></label><label>Condition<select name="condition"><option value="GOOD">Good / reusable</option><option value="DAMAGED">Damaged</option><option value="INCOMPLETE">Incomplete / missing parts</option><option value="LOST">Lost</option></select></label><label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" min="0" max="${esc(remaining)}" step="0.01" value="0" required></label><label>Lost quantity<input name="lostQuantity" type="number" min="0" max="${esc(remaining)}" step="0.01" value="0" required></label><label class="span-2">Damage, loss, or missing-parts details<textarea name="damageNotes" aria-describedby="returnDamageHelp"></textarea><small id="returnDamageHelp" class="field-help">Required when any quantity is damaged beyond use or lost.</small></label><label class="span-2">Partial-return reason<textarea name="partialReason" aria-describedby="partialReturnHelp"></textarea><small id="partialReturnHelp" class="field-help">Required when less than the remaining quantity is accounted for now.</small></label></div><button class="primary" type="submit">Post Return</button>
+      <div class="form-grid" style="margin-top:14px"><label>Returned / accounted quantity<input name="returnedQuantity" type="number" min="0.01" max="${esc(remaining)}" step="0.01" value="${esc(remaining)}" required></label><label>Condition<select name="condition"><option value="GOOD">Good / reusable</option><option value="DAMAGED">Damaged</option><option value="INCOMPLETE">Incomplete / missing parts</option><option value="LOST">Lost</option></select></label><label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" min="0" max="${esc(remaining)}" step="0.01" value="0" required></label><label>Lost quantity<input name="lostQuantity" type="number" min="0" max="${esc(remaining)}" step="0.01" value="0" required></label><label class="span-2">Damage, loss, or missing-parts details<textarea name="damageNotes" aria-describedby="returnDamageHelp"></textarea><small id="returnDamageHelp" class="field-help">Required when any quantity is damaged beyond use or lost.</small></label><label class="span-2">Partial-return reason<textarea name="partialReason" aria-describedby="partialReturnHelp"></textarea><small id="partialReturnHelp" class="field-help">Required when less than the remaining quantity is accounted for now.</small></label><label class="span-2">Return photo evidence<input name="returnEvidence" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="returnEvidenceHelp"><small id="returnEvidenceHelp" class="field-help">Required for lost or damaged-beyond-use quantities; optional otherwise.</small></label></div><button class="primary" type="submit">Post Return</button>
     </form>`, (modal) => {
       const form = modal.querySelector('#returnForm');
       const sync = () => {
@@ -815,8 +896,10 @@ export function createRuntimeExtensions(options) {
         const partial = returned < remaining;
         form.elements.damageNotes.required = exceptional;
         form.elements.partialReason.required = partial;
+        form.elements.returnEvidence.required = exceptional;
         form.elements.damageNotes.setAttribute('aria-required', String(exceptional));
         form.elements.partialReason.setAttribute('aria-required', String(partial));
+        form.elements.returnEvidence.setAttribute('aria-required', String(exceptional));
       };
       form.addEventListener('input', sync); form.addEventListener('change', sync); sync();
       form.addEventListener('submit', async (event) => {
@@ -825,12 +908,15 @@ export function createRuntimeExtensions(options) {
         payload.returnedQuantity = Number(payload.returnedQuantity);
         payload.damagedBeyondUseQuantity = Number(payload.damagedBeyondUseQuantity || 0);
         payload.lostQuantity = Number(payload.lostQuantity || 0);
+        const returnEvidence = form.elements.returnEvidence.files[0];
+        delete payload.returnEvidence;
+        if (returnEvidence) payload.file = returnEvidence;
         if (payload.damagedBeyondUseQuantity + payload.lostQuantity > payload.returnedQuantity) { toast('Lost and damaged quantities cannot exceed the returned quantity.', true); return; }
         if (!form.reportValidity()) return;
         const button = event.submitter || form.querySelector('[type="submit"]');
         button.disabled = true; button.textContent = 'Posting…';
         try {
-          const result = await services.confirmReturn(ticket.id, payload);
+          const result = await services.confirmReturn({ ticketId: ticket.id, ...payload });
           markFormClean(form); closeModal();
           await commit(`Return recorded for ${ticket.id}.`, 'success', result);
         } catch (error) {

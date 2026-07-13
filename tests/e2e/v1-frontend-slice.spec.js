@@ -111,10 +111,12 @@ test('release and return controls require reasons and expose due dates and condi
   await expect(returnForm.locator('[name="returnedQuantity"]')).toBeVisible();
   await expect(returnForm.locator('[name="damagedBeyondUseQuantity"]')).toBeVisible();
   await expect(returnForm.locator('[name="lostQuantity"]')).toBeVisible();
+  await expect(returnForm.locator('[name="returnEvidence"]')).toBeVisible();
   await returnForm.locator('[name="returnedQuantity"]').fill('0.5');
   await expect(returnForm.locator('[name="partialReason"]')).toHaveAttribute('required', '');
   await returnForm.locator('[name="lostQuantity"]').fill('0.25');
   await expect(returnForm.locator('[name="damageNotes"]')).toHaveAttribute('required', '');
+  await expect(returnForm.locator('[name="returnEvidence"]')).toHaveAttribute('required', '');
 });
 
 test('roadmap, release notes, admin hooks, and accessibility affordances render coherently', async ({ page }, testInfo) => {

@@ -37,6 +37,29 @@ export function createMutationRequestTracker({ createId = clientRequestId } = {}
   };
 }
 
+export function normalizeReturnPayload(ticketOrPayload, notesOrPayload = '') {
+  if (ticketOrPayload && typeof ticketOrPayload === 'object') return { ...ticketOrPayload };
+  if (notesOrPayload && typeof notesOrPayload === 'object') {
+    return { ticketId: ticketOrPayload, ...notesOrPayload };
+  }
+  return { ticketId: ticketOrPayload, notes: notesOrPayload };
+}
+
+export async function normalizeBrandingUploadCommand(
+  fileOrPayload,
+  metadata = {},
+  convertFile = fileToEvidencePayload,
+) {
+  const payload = fileOrPayload?.file
+    ? { ...fileOrPayload }
+    : { ...metadata, file: fileOrPayload };
+  const command = payload.file
+    ? { ...payload, ...(await convertFile(payload.file)) }
+    : { ...payload };
+  delete command.file;
+  return command;
+}
+
 export function createLegacyRuntimeAdapter(mockServices) {
   if (backendMode === 'mock') return mockServices;
   const remote = backendMode === 'apps-script' ? new AppsScriptAdapter() : new HttpApiAdapter(config.httpApiBaseUrl);
@@ -65,7 +88,7 @@ export function createLegacyRuntimeAdapter(mockServices) {
     async createLendingTicket(payload) { const result = await mutationRequests.run('lending', payload, (command) => remote.createLendingTicket(command)); return { id: result.ticketId, status: 'FOR_REVIEW', ...result }; },
     async approveLendingTicket(ticketId) { const result = await mutationRequests.run('approve-lending', { ticketId }, (command) => remote.approveLendingTicket(command)); return { id: result.ticketId, ...result }; },
     async confirmLoanHandoff(ticketId) { const result = await mutationRequests.run('lending-handoff', { ticketId }, (command) => remote.confirmLendingHandoff(command)); return { id: result.ticketId, ...result }; },
-    async confirmReturn(ticketOrPayload, notes = '') { const payload = typeof ticketOrPayload === 'object' ? ticketOrPayload : { ticketId: ticketOrPayload, notes }; const command = await evidencePayload(payload, 'LENDING_RETURN_PHOTO'); const result = await mutationRequests.run('lending-return', command, (tracked) => remote.confirmReturn(tracked)); return { id: result.ticketId, ...result }; },
+    async confirmReturn(ticketOrPayload, notes = '') { const payload = normalizeReturnPayload(ticketOrPayload, notes); const command = await evidencePayload(payload, 'LENDING_RETURN_PHOTO'); const result = await mutationRequests.run('lending-return', command, (tracked) => remote.confirmReturn(tracked)); return { id: result.ticketId, ...result }; },
     async saveCanvassReference(payload) { const command = await evidencePayload(payload, 'CANVASS_QUOTE'); const result = await mutationRequests.run('canvass', command, (tracked) => remote.saveCanvassReference(tracked)); return { id: result.canvassId, ...result }; },
     selectPreferredCanvass(payload) { return mutationRequests.run('preferred-canvass', payload, (command) => remote.selectPreferredCanvass(command)); },
     transitionDeliverable(payload) { return mutationRequests.run('deliverable-transition', payload, (command) => remote.transitionDeliverable(command)); },
@@ -88,7 +111,7 @@ export function createLegacyRuntimeAdapter(mockServices) {
     publishContentRevision(payload) { return mutationRequests.run('content-publish', payload, (command) => remote.publishContentRevision(command)); },
     revertContentRevision(payload) { return mutationRequests.run('content-revert', payload, (command) => remote.revertContentRevision(command)); },
     saveBrandingMetadata(payload) { return mutationRequests.run('branding', payload, (command) => remote.saveBrandingMetadata(command)); },
-    async uploadBrandingAsset(fileOrPayload, metadata = {}) { const payload = fileOrPayload?.file ? fileOrPayload : { ...metadata, file: fileOrPayload }; const command = payload.file ? { ...payload, ...(await fileToEvidencePayload(payload.file)) } : payload; delete command.file; return mutationRequests.run('branding-upload', command, (tracked) => remote.uploadBrandingAsset(tracked)); },
+    async uploadBrandingAsset(fileOrPayload, metadata = {}) { const command = await normalizeBrandingUploadCommand(fileOrPayload, metadata); return mutationRequests.run('branding-upload', command, (tracked) => remote.uploadBrandingAsset(tracked)); },
     activateBrandingVersion(payload) { return mutationRequests.run('branding-activate', payload, (command) => remote.activateBrandingVersion(command)); },
     updateCanvassReference(payload) { return mutationRequests.run('canvass-update', payload, (command) => remote.updateCanvassReference(command)); },
     archiveCanvassReference(payload) { return mutationRequests.run('canvass-archive', payload, (command) => remote.archiveCanvassReference(command)); },
