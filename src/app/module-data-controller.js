@@ -32,7 +32,9 @@ function normalizeRequest(module, params, maxPageSize) {
   if (query.length > 80) throw controllerError('MODULE_QUERY_INVALID', 'Module query is too long.');
   const filter = params.filter === undefined ? '' : String(params.filter).trim();
   if (filter.length > 80) throw controllerError('MODULE_QUERY_INVALID', 'Module filter is too long.');
-  return { page, pageSize, query, filter, requestOnly: params.requestOnly === true };
+  const committeeId = params.committeeId === undefined ? '' : String(params.committeeId).trim();
+  if (committeeId.length > 40 || (committeeId && !/^[A-Z0-9_]+$/i.test(committeeId))) throw controllerError('MODULE_QUERY_INVALID', 'The committee context is invalid.');
+  return { page, pageSize, query, filter, committeeId, requestOnly: params.requestOnly === true };
 }
 
 function cacheKey(module, request) {

@@ -2,7 +2,7 @@ export const ESSENTIAL_BOOTSTRAP_CONTRACT = 'essential-bootstrap';
 export const BOOTSTRAP_MODULE_CONTRACT = 'bootstrap-module';
 export const ESSENTIAL_BOOTSTRAP_VERSION = 2;
 
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.2.0', '1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
 
 export const BOOTSTRAP_MODULES = Object.freeze([
   'overview',
@@ -32,6 +32,11 @@ const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'roadmapMilestones',
   'statusHistory',
   'auditLog',
+  'dashboardMeta',
+  'dashboardQueues',
+  'dashboardStaffWorkload',
+  'dashboardActivity',
+  'dashboardLinks',
 ]);
 
 const MODULE_DATA_KEYS = Object.freeze({
@@ -45,6 +50,11 @@ const MODULE_DATA_KEYS = Object.freeze({
     'restockRequests',
     'deliverables',
     'roadmapMilestones',
+    'dashboardMeta',
+    'dashboardQueues',
+    'dashboardStaffWorkload',
+    'dashboardActivity',
+    'dashboardLinks',
   ]),
   request: Object.freeze(['eventSeries', 'events', 'inventoryItems']),
   lending: Object.freeze(['inventoryItems', 'lendingTickets']),

@@ -14,7 +14,7 @@ const requiredFiles = [
   'ItemRepository.gs','RequestService.gs','InventoryService.gs','ReservationService.gs','LendingService.gs',
   'ReleaseService.gs','RestockService.gs','ProcurementService.gs','CanvassService.gs','EvidenceService.gs',
   'DriveService.gs','AuditService.gs','MigrationService.gs','BackupService.gs','ErrorService.gs','Setup.gs',
-  'RosterSyncService.gs',
+  'RosterSyncService.gs','CommitteeDashboardService.gs',
   'appsscript.json','Index.html','AppBody.html','AppStyles.html','AppScript.html','DiagnosticShell.html',
 ];
 const requiredFunctions = [
@@ -24,7 +24,7 @@ const requiredFunctions = [
   'api_getDataRevision','setupOperationalEditTrigger','handleOperationalSheetEdit','api_getInventoryItem',
   'api_createInventoryItem','api_updateInventoryItem','api_updateInventoryStorageContext','api_archiveInventoryItem','api_restoreInventoryItem',
   'api_htmlDiagnosticPing','htmlTemplateDiagnostics',
-  'api_runRosterSync','api_getRosterSyncHealth','api_setRosterEmergencyDeny','setupRosterSyncTrigger','runScheduledRosterSync',
+  'api_runRosterSync','api_getRosterSyncHealth','api_setRosterEmergencyDeny','setupRosterSyncTrigger','runScheduledRosterSync','committeeDashboard_',
 ];
 const root = resolve('apps-script');
 const existing = new Set(await readdir(root));

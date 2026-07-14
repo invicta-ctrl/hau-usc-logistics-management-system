@@ -32,6 +32,22 @@ describe('lazy module data controller', () => {
     expect(() => controller.load('request', { page: 0 })).toThrowError(/page/i);
     expect(() => controller.load('request', { pageSize: 21 })).toThrowError(/page size/i);
     expect(() => controller.load('request', { query: 'x'.repeat(81) })).toThrowError(/query/i);
+    expect(() => controller.load('overview', { committeeId: 'COM FOOD' })).toThrowError(/committee/i);
+  });
+
+  it('keeps committee context in the bounded request and cache key', async () => {
+    const received = [];
+    const controller = createModuleDataController({
+      load: async (_module, request) => {
+        received.push(request);
+        return createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
+      },
+    });
+
+    await controller.load('overview', { committeeId: 'COM_FOOD' });
+    await controller.load('overview', { committeeId: 'COM_MATERIALS' });
+
+    expect(received.map((request) => request.committeeId)).toEqual(['COM_FOOD', 'COM_MATERIALS']);
   });
 
   it('caches only bounded public-reference responses and expires them using the injected clock', async () => {

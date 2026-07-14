@@ -17,12 +17,21 @@ function bootstrapSession_(command) {
   var requestedRequestOnly = Boolean(command && command.requestOnly);
   var resolved = requestedRequestOnly ? bootstrapPublicUser_() : resolveRequesterUser_();
   var internal = !requestedRequestOnly && isInternalBootstrapUser_(resolved);
-  return {
+  var session = {
     requestedRequestOnly: requestedRequestOnly,
     requestOnly: !internal,
     internal: internal,
     user: internal ? resolved : bootstrapPublicUser_()
   };
+  if (internal && typeof authorizationContractVersion_ === 'function' && authorizationContractVersion_() >= 2 && typeof authorizationContext_ === 'function') {
+    session.authorization = authorizationContext_(resolved);
+    if (typeof dashboardContext_ === 'function') {
+      session.dashboardContext = dashboardContext_(command || {}, session);
+      session.activeCommitteeId = session.dashboardContext.activeId;
+      session.allowedCommitteeIds = session.dashboardContext.allowedIds.slice();
+    }
+  }
+  return session;
 }
 
 function bootstrapModuleAllowed_(module, session) {
@@ -36,6 +45,7 @@ function bootstrapModuleAllowed_(module, session) {
       procurement: [HAU_CAPABILITIES_.FULFILL_RECEIVE, HAU_CAPABILITIES_.FULFILL_CANVASS],
       inventory: [HAU_CAPABILITIES_.VIEW_INVENTORY, HAU_CAPABILITIES_.REFERENCE_CATALOG_MANAGE]
     }[module] || [];
+    if (session.authorization) return session.authorization.mappingStatus === 'MAPPED' && canonical.some(function(capability) { return session.authorization.capabilities.indexOf(capability) >= 0; });
     return canonical.some(function(capability) { return authorizationCan_(session.user, capability, null, { allowUnresolvedScope: true }); });
   }
   if (session.requestOnly) return module === 'request';
@@ -64,7 +74,7 @@ function bootstrapNavigation_(session) {
 
 function bootstrapUserDto_(session) {
   var user = session.user;
-  var authorization = typeof authorizationDto_ === 'function' ? authorizationDto_(user) : null;
+  var authorization = typeof authorizationDto_ === 'function' ? authorizationDto_(user, session.authorization) : null;
   var dto = {
     id: bootstrapText_(user.User_ID, 'PUBLIC', 80),
     displayName: bootstrapText_(user.Display_Name, 'Requester', 120),
@@ -152,14 +162,23 @@ function bootstrapScopeValues_(session) {
   return String(session.user && session.user.Committee || '').split(/[|,;]/).map(function(value) { return value.trim().toLowerCase(); }).filter(Boolean);
 }
 
-function bootstrapScopeMatches_(row, session, fields) {
+function bootstrapDefaultScopeIds_(sheetName) {
+  return [HAU_SHEETS.ITEMS, HAU_SHEETS.LENDING, HAU_SHEETS.RESTOCK].indexOf(sheetName) >= 0 ? ['COM_INVENTORY_PANTRY'] : [];
+}
+
+function bootstrapScopeMatches_(row, session, fields, sheetName) {
   if (typeof authorizationContractVersion_ === 'function' && authorizationContractVersion_() >= 2) {
-    var authorization = authorizationContext_(session && session.user);
-    if (authorization.scopeMode === 'ALL' || authorization.scopeMode === 'SELF') return true;
-    if (authorization.scopeMode !== 'COMMITTEE' || !authorization.committeeIds.length) return false;
+    var authorization = session && session.authorization || authorizationContext_(session && session.user);
+    var activeCommitteeId = session && session.activeCommitteeId || '';
+    if (authorization.scopeMode === 'ALL' && !activeCommitteeId || authorization.scopeMode === 'SELF') return true;
+    if (authorization.scopeMode !== 'COMMITTEE' && authorization.scopeMode !== 'ALL') return false;
+    var allowedCommitteeIds = authorization.scopeMode === 'ALL' ? (session && session.allowedCommitteeIds || ['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS']) : authorization.committeeIds;
+    if (!allowedCommitteeIds.length) return false;
     var canonicalFields = fields && fields.length ? fields : HAU_BOOTSTRAP_SCOPE_FIELDS_;
     var canonicalRows = canonicalFields.map(function(field) { return canonicalCommitteeId_(row[field]); }).filter(Boolean);
-    return canonicalRows.some(function(id) { return authorization.committeeIds.indexOf(id) >= 0; });
+    if (!canonicalRows.length) canonicalRows = bootstrapDefaultScopeIds_(sheetName);
+    if (activeCommitteeId) return canonicalRows.indexOf(activeCommitteeId) >= 0;
+    return canonicalRows.some(function(id) { return allowedCommitteeIds.indexOf(id) >= 0; });
   }
   var scopes = bootstrapScopeValues_(session);
   if (!scopes.length) return true;
@@ -172,7 +191,7 @@ function bootstrapScopeMatches_(row, session, fields) {
 function bootstrapRows_(sheetName, command, session, queryFields, scopeFields, predicate) {
   var query = bootstrapQuery_(command);
   return readObjects_(sheetName).filter(function(row) {
-    return (!predicate || predicate(row)) && bootstrapScopeMatches_(row, session, scopeFields && scopeFields.length ? scopeFields : HAU_BOOTSTRAP_SCOPE_FIELDS_) && bootstrapMatches_(row, query, queryFields || []);
+    return (!predicate || predicate(row)) && bootstrapScopeMatches_(row, session, scopeFields && scopeFields.length ? scopeFields : HAU_BOOTSTRAP_SCOPE_FIELDS_, sheetName) && bootstrapMatches_(row, query, queryFields || []);
   });
 }
 
@@ -296,8 +315,9 @@ function bootstrapOverviewModule_(command, session) {
     return ['RETURNED', 'COMPLETED', 'REJECTED', 'CANCELLED'].indexOf(String(row.Status)) < 0;
   }), command, bootstrapLendingDto_);
   var deliverablePage = bootstrapPage_(bootstrapDeliverableRows_(command, session), command, bootstrapDeliverableDto_);
+  var dashboard = committeeDashboard_(command, session);
   return {
-    data: { eventSeries: bootstrapSeriesFromEvents_(eventPage.rows), events: eventPage.rows, requests: requestPage.rows, requestLines: linePage.rows, inventoryItems: itemsPage.rows, lendingTickets: lendingPage.rows, restockRequests: [], deliverables: deliverablePage.rows, roadmapMilestones: [] },
+    data: { eventSeries: bootstrapSeriesFromEvents_(eventPage.rows), events: eventPage.rows, requests: requestPage.rows, requestLines: linePage.rows, inventoryItems: itemsPage.rows, lendingTickets: lendingPage.rows, restockRequests: [], deliverables: deliverablePage.rows, roadmapMilestones: [], dashboardMeta: dashboard.meta, dashboardQueues: dashboard.queues, dashboardStaffWorkload: dashboard.staff, dashboardActivity: dashboard.activity, dashboardLinks: dashboard.links },
     pagination: requestPage.pagination,
     cache: { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 }
   };

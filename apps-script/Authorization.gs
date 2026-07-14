@@ -334,8 +334,8 @@ function authorizationRequire_(user, capability, resource, options) {
   return user;
 }
 
-function authorizationDto_(user) {
-  var context = authorizationContext_(user), committees = context.committeeIds.map(function(id) {
+function authorizationDto_(user, suppliedContext) {
+  var context = suppliedContext || authorizationContext_(user), committees = context.committeeIds.map(function(id) {
     var committee = canonicalCommittee_(id);
     return { id: id, name: committee ? committee.name : id };
   });

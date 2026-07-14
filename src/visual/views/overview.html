@@ -5,6 +5,13 @@
           <div id="heroStats" class="hero-stats"></div>
         </article>
         <div id="overviewMetrics" class="grid-4"></div>
+        <article id="committeeDashboardPanel" class="panel section-gap">
+          <div class="panel-head"><div><h2>Committee Main Hub</h2><p id="dashboardScopeNote">Capability-aware queues for the active committee context.</p></div><div class="button-row"><label>Active committee<select id="dashboardCommitteeSelect"></select></label><button id="dashboardRefresh" class="secondary" type="button">Refresh dashboard</button></div></div>
+          <div id="dashboardFreshness" class="mode-note" role="status" aria-live="polite">Loading dashboard freshness…</div>
+          <div id="dashboardQueues" class="grid-4 section-gap"></div>
+          <div class="grid-2 section-gap"><section><div class="section-kicker">Assigned staff workload</div><div id="dashboardStaff" class="line-list"></div></section><section><div class="section-kicker">Recent activity</div><div id="dashboardActivity" class="line-list"></div></section></div>
+          <div id="dashboardQuickLinks" class="button-row section-gap"></div>
+        </article>
         <div class="section-title"><div><h2>Upcoming Events</h2><p>Readiness is calculated from live request-line status, not from hard-coded event cards.</p></div><span id="upcomingCount" class="pill">—</span></div>
         <div id="upcomingEvents" class="event-series"></div>
         <div class="grid-2 section-gap">

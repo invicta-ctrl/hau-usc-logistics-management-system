@@ -69,6 +69,18 @@ describe('essential bootstrap contract', () => {
     expect(validateBootstrapModule(internal, { backendMode: 'mock', module: 'lending' })).toBe(internal);
   });
 
+  it('accepts the additive 1.3.0 schema and the overview dashboard projections', () => {
+    const overview = createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
+    overview.schemaVersion = '1.3.0';
+    overview.data.dashboardMeta = [{ scopeMode: 'ALL', activeCommitteeId: '', allowedCommitteeIds: [], stale: false }];
+    overview.data.dashboardQueues = [{ id: 'requests-review', count: 0, recordIds: [], truncated: false }];
+    overview.data.dashboardStaffWorkload = [];
+    overview.data.dashboardActivity = [];
+    overview.data.dashboardLinks = [{ id: 'overview', label: 'Main Hub', view: 'overview' }];
+
+    expect(validateBootstrapModule(overview, { backendMode: 'mock', module: 'overview' })).toBe(overview);
+  });
+
   it('rejects false envelopes and cache policies that could retain session data', () => {
     const essential = createEssentialBootstrapFixture();
     essential.ok = false;
