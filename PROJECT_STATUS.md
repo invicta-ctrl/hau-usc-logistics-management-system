@@ -2,23 +2,37 @@
 
 ## Current version
 
-- Version: `0.5.0` (working revision; undeployed)
+- Version: `0.5.0` (staging-accepted; production undeployed)
 - Date: `2026-07-14`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121` (approved Slice 3 checkpoint)
-- Ending implementation commit: `5107afc57904dccc5214fcafc20aba65c0622632` (`feat: add canonical authorization contract`)
+- Ending implementation commit: `fcb004e8be78d3d431164c95c7f847ab1033d927` (`fix: extend bootstrap module deadline`)
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open, unmerged; `validate`, `verify`, and `browser-smoke` pass
+- Pull request: draft PR #6, open, unmerged; prior Slice 3 `validate`, `verify`, and `browser-smoke` pass; the current fix remains unpushed
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: immutable Version 13 after the authorized Phase F rollback; exactly one WEB_APP entry point was verified
+- Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance is blocked by the confirmed v2 UI startup timeout; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
-## Current staging acceptance checkpoint - Phase E blocked
+## Current staging acceptance checkpoint - Phase E accepted
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`; implementation checkpoint: `fcb004e8be78d3d431164c95c7f847ab1033d927`.
+- The accepted staging handoff reports Version 18 serving bootstrap contract v2 with authorization contract v1/absent. Version 13 remains available for rollback.
+- Root cause identified in staging: the read-only bootstrap-module callback completed at approximately 40 seconds, beyond the former 30-second browser deadline. The fix gives `api_getBootstrapModule` a bounded 60-second client deadline while mutations and all other calls remain at 30 seconds.
+- The staging handoff reports 32-file pull-back parity, preservation of the owner-only web-app manifest, a ready internal v2 workspace, and passing diagnostic and request-only privacy checks. No production or operational records were touched.
+- Local verification after the fix: `npm run check` passed with 20 Vitest files / 164 tests; `npm run verify` passed; full Playwright passed 50 with 100 intentionally skipped and 0 failed across 150 cases; `git diff --check` passed; the sensitive-value scan passed.
+- Generated parity: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 274,348 bytes each / SHA-256 `63e25fc21657c725c5c40cab8500a702f74aaaa521efa156b6218bd690c91485`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; `AppScript.html` is 215,052 bytes / `6c3ee9ade3fe465d34ad0ffeefce6cd81aa8c37cb53023ded34df35a27fccbd1`.
+- Independent review was reported as PASS in the staging handoff. The live staging claims above are accepted from that handoff and were not re-fetched in this session because the local Chrome bridge was unavailable.
+- No Slice 4 work, production deployment, Google Sheets/Drive write, or private operational-data change was performed. A separate explicit push authorization is still required before publishing the local implementation and documentation commits.
+
+## Superseded staging acceptance checkpoint - Phase E previously blocked
 
 - Date: `2026-07-14` (`Asia/Manila`)
 - Branch: `feat/live-sync-lending-search-catalog-controls`; current local documentation checkpoint: `85aef6b`

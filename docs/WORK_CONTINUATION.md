@@ -1,21 +1,20 @@
 # Work Continuation
 
-## Current checkpoint - Slices 1-3 staging acceptance (Phase E blocked)
+## Current checkpoint - Slices 1-3 staging acceptance (Phase E accepted)
 
 - Date: `2026-07-14` (`Asia/Manila`)
 - Branch: `feat/live-sync-lending-search-catalog-controls`
-- Local HEAD: `950552c444feaddd89492f68bb53edd0e8e9cb91`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `5 0`; worktree is clean.
-- The two local Apps Script/bootstrap repair commits and two documentation checkpoints are complete and remain unpushed because final v2 staging acceptance has not passed. The remote branch remains at `3f038590bdebe5b117018356838b82d94683ad37`.
+- Implementation checkpoint: `fcb004e8be78d3d431164c95c7f847ab1033d927`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count before this documentation checkpoint: `8 0`; the remote branch remains at `3f038590bdebe5b117018356838b82d94683ad37`.
+- Current stage: `PHASE_E_ACCEPTED_DOCUMENTED_NO_PUSH`. This documentation checkpoint is the only change after the implementation checkpoint; after it the local/upstream count is `9 0` and the worktree is clean.
 - Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target. The reviewed 32-file package matched remotely, the web-app manifest was preserved, the existing staging deployment served Version 17, and non-target deployments were unchanged. A fresh timestamped staging backup was verified before the push.
 - Live v1 checks passed for the diagnostic route, authorized internal workspace, request-only portal, desktop cold/warm startup, mobile startup, and legacy v1 endpoint. Request-only content remained sanitized and empty of internal operational lists; no operational mutation was performed.
-- Current stage: `PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS_NO_REPRO`. The staging owner set `HAU_BOOTSTRAP_CONTRACT_VERSION=2` while authorization contract v1/absent remained in force. Direct v2 endpoint checks passed, but the live v2 workspace stayed in slow startup and reached the retryable read-only-service timeout instead of ready.
-- Rollback: the existing staging deployment was immediately restored to immutable Version 13 with exactly one WEB_APP entry point. The staging owner now reports that the bootstrap property is restored to `1`; this checkout cannot read Script Properties directly.
-- Direct endpoint evidence is not UI acceptance: essential bootstrap was contract v2 / STAGING, 1,433 bytes, read count 3; overview module was contract v2 / STAGING, 662 bytes, read count 10. The confirmed failure is the v2 UI startup timeout; the root cause remains to be isolated.
-- A local synthetic end-to-end check covering the checked-in Apps Script DTO, authorization v1/absent behavior, JSON-safe callback normalization, and browser v2 validator passes; no local contract-shape defect or reproducible timeout was found. Do not use the production-target local configuration, add a temporary setter, or create a temporary deployment. Obtain sanitized server-side timing/execution evidence before making a speculative repair. Do not claim the acceptance marker or begin Slice 4.
-- Do not claim `STAGING ACCEPTANCE: SLICES 1-3 PASSED`, push, merge, promote, or start Slice 4 until Phase E v2 diagnostic, internal, request-only, cold/warm, module, retry/error, bounded-payload, request-count, and privacy checks pass.
-- Safe rollback: if v2 is enabled and fails, restore the bootstrap property to its effective v1 setting; if deployment rollback is needed, point the existing staging deployment to immutable Version 13. Preserve the versions and backup.
+- Accepted Phase E evidence reports immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2`, authorization contract v1/absent, a ready v2 internal workspace, and passing diagnostic/request-only privacy checks. The former approximately 40-second read-only module callback exceeded the old 30-second client deadline; `api_getBootstrapModule` now uses a bounded 60-second deadline while mutations and all other calls remain at 30 seconds.
+- The staging handoff reports 32-file pull-back parity and preservation of the owner-only web-app manifest. Version 13 remains the rollback target. The live staging evidence was accepted from the supplied handoff and was not re-fetched in this session because the local Chrome bridge was unavailable.
+- Local gates after the fix passed: `npm run check` (20 Vitest files / 164 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150 cases), `git diff --check`, generated parity, and the sensitive-value scan. Independent review was reported as PASS.
+- No production deployment, Slice 4 work, Google Sheets/Drive write, or private operational-data change was performed. The local implementation and documentation commits remain unpushed pending separate explicit push authorization.
+- Safe rollback remains: set the bootstrap contract back to its effective v1 setting and, if needed, point the existing deployment to immutable Version 13; preserve all versions and the backup.
 
-## Current checkpoint - Slice 3 canonical roles, committee scopes, and authorization contract
+## Historical checkpoint - Slice 3 canonical roles, committee scopes, and authorization contract
 
 - Date: `2026-07-14` (`Asia/Manila`)
 - Branch: `feat/live-sync-lending-search-catalog-controls`

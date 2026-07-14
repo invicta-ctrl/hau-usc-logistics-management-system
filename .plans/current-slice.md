@@ -1,20 +1,23 @@
 # P0 Production Bootstrap Diagnosis and Recovery - staging acceptance checkpoint
 
 CURRENT SLICE: Slices 1-3 staging acceptance (Slice 3 implementation already complete)
-CURRENT STAGE: PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS_NO_REPRO
+CURRENT STAGE: PHASE_E_ACCEPTED_DOCUMENTED_NO_PUSH
 LAST UPDATED: 2026-07-14 (Asia/Manila)
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
 ## Current run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Local HEAD: `950552c444feaddd89492f68bb53edd0e8e9cb91`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `5 0`; worktree: clean.
-- The two local repair commits and two documentation checkpoints are complete and unpushed. No generated file was hand-edited.
+- Implementation checkpoint: `fcb004e8be78d3d431164c95c7f847ab1033d927`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count before this documentation checkpoint: `8 0`; the documentation checkpoint below is the only subsequent change and remains unpushed.
+- No generated file was hand-edited. After this documentation commit, local/upstream is expected to be `9 0` with a clean worktree.
 - Phase D compatibility-mode staging acceptance passed on Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target, and the pre-push staging backup was verified.
-- Phase E v2 acceptance was attempted after the staging owner set the bootstrap property to v2 and retained authorization contract v1/absent. Direct v2 endpoint checks passed, but the live UI remained in slow startup and reached the retryable read-only-service timeout instead of ready.
-- Rollback completed immediately: the existing staging deployment serves immutable Version 13 with exactly one WEB_APP entry point. The staging owner reports that the bootstrap property is restored to `1`; this checkout cannot read Script Properties directly.
-- A local synthetic end-to-end server DTO, callback-normalization, and browser v2 validation check passes with authorization contract v1/absent; no local contract-shape defect or reproducible timeout was found. The exact success marker is intentionally absent. Do not push, merge, promote, or begin Slice 4 until Phase E passes.
+- Phase E acceptance is complete on the supplied staging handoff: immutable Version 18 served bootstrap contract v2 with authorization contract v1/absent, the v2 internal workspace reached ready, and diagnostic/request-only privacy checks passed. The approximately 40-second read-only module callback was recovered by the bounded 60-second module deadline; all other calls and mutations remain at 30 seconds.
+- The handoff reports 32-file pull-back parity and preserved owner-only web-app manifest. Version 13 remains the rollback target. This live evidence was accepted from the handoff and was not re-fetched in this session because the local Chrome bridge was unavailable.
+- Local verification passed: `npm run check` (20 Vitest files / 164 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150 cases), `git diff --check`, generated parity, and sensitive-value scan. Independent review was reported as PASS.
+- No production deployment, Slice 4 work, Google Sheets/Drive write, or private operational-data change was performed. The separate push authorization remains pending.
 
-## Staging acceptance boundary
+## Historical staging acceptance boundary (before the accepted repair)
 
 - The reviewed package was verified remotely at all 32 expected files; the web-app manifest was preserved; Version 17 served from the existing staging deployment; and non-target deployments were unchanged.
 - The live v1 diagnostic, authorized internal workspace, request-only portal, desktop cold/warm, mobile cold, and legacy v1 endpoint checks passed without operational mutation. Direct v2 endpoint calls passed, but the live v2 UI timed out during essential bootstrap; server-side timing/callback cause and final staging acceptance remain unresolved.
@@ -22,7 +25,7 @@ LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 ---
 
-# Slice 3 Current Slice Checkpoint
+# Slice 3 Historical Checkpoint
 
 CURRENT SLICE: Slice 3 - Canonical roles, committee scopes, and authorization contract
 CURRENT STAGE: PENDING_MANAGER_REVIEW

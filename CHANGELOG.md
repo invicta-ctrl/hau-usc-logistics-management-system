@@ -2,7 +2,18 @@
 
 ## 0.5.0 - Unreleased
 
-### Controlled staging acceptance checkpoint (Phase E blocked)
+### Phase E staging acceptance completed
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+- Accepted the staging handoff for immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2` and authorization contract v1/absent; Version 13 remains the rollback target.
+- Confirmed staging root cause and repair: the read-only bootstrap-module callback completed at approximately 40 seconds, beyond the former 30-second browser deadline. `api_getBootstrapModule` now has a bounded 60-second client deadline; mutations and all other adapter calls remain at 30 seconds.
+- The handoff reports 32-file pull-back parity, the owner-only web-app manifest preserved, the live v2 internal workspace reaching ready, and diagnostic/request-only privacy checks passing. Production and operational records were untouched.
+- Local gates passed after the fix: `npm run check` with 20 Vitest files / 164 tests, `npm run verify`, full Playwright with 50 passed / 100 intentional skips / 0 failed across 150 cases, `git diff --check`, and the sensitive-value scan. Independent review was reported as PASS.
+- Generated output was refreshed by the build path and verified; no generated file was hand-edited. Implementation commit: `fcb004e8be78d3d431164c95c7f847ab1033d927`.
+- The staging handoff was accepted from supplied evidence; the local Chrome bridge was unavailable for a second live fetch. No push or production promotion was performed, and Slice 4 remains out of scope.
+
+### Controlled staging acceptance checkpoint (Phase E previously blocked)
 
 - Phase D compatibility acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent.
 - Phase E v2 direct read-only endpoint checks passed, but the live v2 workspace remained in slow startup and reached the retryable read-only-service timeout instead of ready.

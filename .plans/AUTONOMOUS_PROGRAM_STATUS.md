@@ -1,8 +1,25 @@
 # HAU-USC V1 Autonomous Program Status
 
-PROGRAM STATE: IN_PROGRESS
+PROGRAM STATE: COMPLETE
 
-## Current run checkpoint - P0 staging acceptance (Phase E blocked)
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Current run checkpoint - P0 staging acceptance (Phase E accepted)
+
+- Date: 2026-07-14 (Asia/Manila).
+- Current run stage: `PHASE_E_ACCEPTED_DOCUMENTED_NO_PUSH`.
+- This bounded P0 run is complete for the already implemented Slices 1-3 in Apps Script staging. `PROGRAM STATE: COMPLETE` applies to this bounded staging-acceptance run; Slice 4 and all later product slices remain NOT_STARTED and production remains untouched.
+- Repository handshake before this documentation checkpoint: branch `feat/live-sync-lending-search-catalog-controls`; implementation HEAD `fcb004e8be78d3d431164c95c7f847ab1033d927`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `8 0`; remote head remains `3f038590bdebe5b117018356838b82d94683ad37`; worktree was clean.
+- The staging handoff reports immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2`, authorization contract v1/absent, 32-file pull-back parity, preserved owner-only web-app manifest, a ready v2 internal workspace, and passing diagnostic/request-only privacy checks. Version 13 remains the rollback target.
+- Staging identified the root cause as a read-only bootstrap-module callback completing at approximately 40 seconds, beyond the former 30-second browser deadline. Implementation commit `fcb004e8be78d3d431164c95c7f847ab1033d927` bounds that read-only module call at 60 seconds while mutations and all other calls remain at 30 seconds.
+- Local gates passed after the fix: `npm run check` with 20 Vitest files / 164 tests; `npm run verify`; full Playwright with 50 passed / 100 intentionally skipped / 0 failed across 150 cases; `git diff --check`; generated-artifact parity; and the sensitive-value scan. Independent review was reported as PASS in the staging handoff.
+- The live staging evidence was accepted from the supplied handoff and was not re-fetched in this session because the local Chrome bridge was unavailable. No production deployment, Slice 4 work, Google Sheets/Drive write, or private operational-data change was performed.
+- This documentation checkpoint is the only change after the implementation commit and remains unpushed pending separate explicit push authorization. After its commit, the expected local/upstream count is `9 0` and the worktree is clean.
+- Rollback: restore the bootstrap contract to its effective v1 setting; if deployment rollback is required, point the existing deployment to immutable Version 13. Preserve all versions and the backup.
+
+## Superseded checkpoint - P0 staging acceptance (Phase E previously blocked)
+
+### Historical record of the blocked Phase E checkpoint
 
 - Date: 2026-07-14 (Asia/Manila).
 - Current run stage: `PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS_NO_REPRO`.
@@ -23,7 +40,7 @@ PROGRAM STATE: IN_PROGRESS
 - Program: HAU-USC V1 release and stabilization program.
 - Source plan: `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`.
 - Program start date: 2026-07-14 (Asia/Manila).
-- Current run stage: Slice 3 canonical authorization implementation is committed and pushed with green CI; manager review is pending.
+- Current run stage: bounded P0/Phase E staging acceptance for Slices 1-3 is complete locally; later slices remain gated.
 - Repository root: `D:\Documents\DOL Website GitHub`.
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
 - Approved Slice 3 starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121` (`docs: record Slice 2 remote verification`).
@@ -35,7 +52,7 @@ PROGRAM STATE: IN_PROGRESS
 - The scheduled continuation is the only authorized run for this checkout; no competing writer was found during the Slice 2 handshake.
 - The worktree was clean at the Slice 2 starting checkpoint and remains owned by this implementation run; no competing writer or repository lock was found during the current run.
 
-## Slice 3 current run
+## Slice 3 historical run
 
 - Current slice: Slice 3 - canonical roles, committee scopes, and authorization contract.
 - Stage: `PENDING_MANAGER_REVIEW`.
