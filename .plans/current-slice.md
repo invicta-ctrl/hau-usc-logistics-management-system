@@ -1,12 +1,27 @@
-# HAU-USC V1 Autonomous Program - Slice 4 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 5 checkpoint
 
-CURRENT SLICE: Slice 4 - Private roster synchronization and access freshness
-CURRENT STAGE: SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
+CURRENT SLICE: Slice 5 - Committee Main Hub and Inventory and Pantry vertical slice
+CURRENT STAGE: SLICE_5_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run state
+## Slice 5 current run state
+
+- Branch: `feat/live-sync-lending-search-catalog-controls`.
+- Approved Slice 5 starting checkpoint: `89a7accdf0bcd3e3d080bcde5ad2e8874ba7d03e`; implementation commit: `a1784f15bc6a160ebf3c2405e9776b6517ce52e5`; upstream is `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count is `0 0`; worktree is clean and remote head matches HEAD.
+- Local rollback tag: `hau-usc-slice5-start-89a7acc`.
+- Slice 5 goal: deliver one capability-aware Main Hub with approved committee contexts, scoped counts and queues, bounded recent activity/completions, safe links, freshness/manual refresh state, and canonical scope propagation into the existing Inventory/Pantry/Lending/Restocking reads.
+- Scope includes Food, Inventory and Pantry, Materials, Director all-committee oversight, and capability-aware Administrator presentation through the one shared Main Hub; no parallel application shell was created.
+- Server projection includes new/unassigned, awaiting-review, needs-information, due-soon, overdue, blocked, missing-evidence, escalated, inventory-attention, lending-review/overdue, upcoming-needs, and bounded recent-completions queues; status history and audit activity are reduced to safe entity/action/time fields.
+- Defaults used are due-soon 7 days, upcoming needs 14 days, and recent completions 30 days with bounded identifiers. Exact owner queue definitions, institutional timezone boundary samples, and safe staff-display policy remain documented inputs for later staging acceptance.
+- Exclusions: no Food/Materials specialization, composite submit, venue/equipment catalog, admin editor, automatic action permission based on committee membership alone, polling/live updates, hosting, database work, migration, deployment, or external Sheet/Drive/Apps Script writes.
+- No generated file was hand-edited. `npm run extract:visual` and the build/check pipeline regenerated the visual/runtime, standalone, and Apps Script outputs.
+- Local gates passed: `npm run check` (22 Vitest files / 183 tests), `npm run verify`, full Playwright (56 passed / 100 skipped / 0 failed across 156), `git diff --check`, generated parity, and the changed-scope sensitive scan.
+- Independent implementation review: PASS. The review verified exact queue/detail reconciliation, active-context authorization, no audit/roster/contact/TIN delivery, read-once dashboard source access, keyboard queue access, and server-controlled rollback hiding.
+- The focused implementation commit is pushed and PR #6 `validate`, `verify`, and `browser-smoke` checks are green. `clasp status` and `clasp push --dry-run` were intentionally not run because no staging script is configured; no external system changed. Next stage is manager review before Slice 6.
+
+## Historical Slice 4 run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
 - Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; upstream is `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count is `0 0`; worktree is clean and remote head matches HEAD.

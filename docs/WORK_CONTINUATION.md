@@ -1,5 +1,18 @@
 # Work Continuation
 
+## Current checkpoint - Slice 5 committed, pushed, and CI verified
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved Slice 5 starting checkpoint: `89a7accdf0bcd3e3d080bcde5ad2e8874ba7d03e`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count at scope lock and after push: `0 0`; remote head and PR #6 head match implementation commit `a1784f15bc6a160ebf3c2405e9776b6517ce52e5`.
+- Current stage: `SLICE_5_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. The worktree was clean after the implementation commit; this documentation checkpoint records the required handoff files only.
+- Scope delivered: one server-scoped capability-aware Committee Main Hub, active committee context, bounded queue/count/detail projections, safe history/audit activity, recent completions, quick links, freshness/manual refresh state, and canonical active-context propagation to existing inventory-family module reads.
+- Queue defaults recorded for this repository slice: due soon 7 days, upcoming needs 14 days, recent completions 30 days, and at most 100 returned record identifiers per queue. Exact owner queue definitions, institutional timezone boundary samples, and safe staff-display policy remain later staging inputs.
+- Local evidence: `npm run check` passed with 22 Vitest files / 183 tests, build, Apps Script validation (28 source files / 38 required functions), generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 56 with 100 skipped and 0 failures across 156 cases; `git diff --check` passed; the changed-source sensitive scan passed with zero matches across all protected categories; independent review was PASS.
+- Generated evidence: standalone HTML artifacts are 282,306 bytes each / SHA-256 `fe937a21807ee12dad4317b0ac3945d7a5ecf0a1389a6b307226a655db0f248d`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; the split Apps Script bundle passed deterministic parity.
+- Implementation commit: `a1784f15bc6a160ebf3c2405e9776b6517ce52e5` (`feat: add committee main hub dashboard`); pushed with PR #6 `validate`, `verify`, and `browser-smoke` green. Local rollback tag: `hau-usc-slice5-start-89a7acc`.
+- No deployment, Script Property change, trigger activation, Sheet/Drive write, migration, private operational-data access, or production change occurred. `clasp status` and `clasp push --dry-run` were intentionally not run because no staging script is configured. The accepted Phase E staging state remains the prior dependency baseline; Slice 6 is gated on manager review.
+
 ## Current checkpoint - Slice 4 committed and CI verified
 
 - Date: `2026-07-14` (`Asia/Manila`)

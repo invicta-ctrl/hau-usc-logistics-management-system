@@ -4,19 +4,21 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Slice 4 committed and CI verified
+## Current run checkpoint - Slice 5 committed, pushed, and CI verified
 
 - Date: 2026-07-14 (Asia/Manila).
-- Current run stage: `SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
-- The accepted Phase E staging checkpoint for Slices 1-3 is the dependency baseline. This autonomous program is continuing through Slices 4-16; production remains untouched.
-- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; HEAD `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0`; worktree clean; remote head matches HEAD.
-- Slice 4 scope is limited to private-roster synchronization, validated local access freshness, explicit admin/scheduled sync controls, safe health/diagnostic output, and emergency deny. No source contents, private identifiers, credentials, roster rows, or external configuration values are present in this checkout.
-- Slice 4 exclusions are committee UI, composite requests, catalog, restock, polling/live updates, hosting, database work, deployment, migration, trigger activation, and production changes.
-- Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9` points to the approved starting HEAD. If the implementation is rejected, use a focused revert after review; do not reset or discard work.
-- Local evidence: `npm run check` passed with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 50 / 100 intentional skips / 0 failures across 150 cases; lint, diff check, and changed-scope sensitive scan passed.
-- Independent implementation review: PASS; no blocking privacy, authorization, source-read, membership, freshness, rollback, or generated-artifact issue remains in the bounded Slice 4 scope.
-- Focused implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` (`feat: add private roster sync and access freshness`), pushed to the feature branch. Draft PR #6 `validate`, `verify`, and `browser-smoke` checks are green; the Node.js deprecation annotation is non-blocking. Manager review is the next gate before Slice 5.
-- No deployment, trigger activation, Sheet/Drive write, private source read, migration, or production change has occurred for Slice 4.
+- Current run stage: `SLICE_5_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
+- The accepted Phase E staging checkpoint for Slices 1-3 remains the dependency baseline. This autonomous program is continuing through Slices 4-16; production remains untouched.
+- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; HEAD `a1784f15bc6a160ebf3c2405e9776b6517ce52e5`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0`; worktree clean; remote head matches HEAD.
+- Slice 5 scope is limited to one capability-aware Committee Main Hub, server-scoped committee context, safe queue/count/detail projections, bounded activity/completions, quick links, freshness/manual refresh state, and canonical active-context propagation into existing inventory-family module reads.
+- Slice 5 exclusions remain in force: no Food or Materials specialization, composite requests, venue/equipment catalog, admin editor, automatic action permission, polling/live updates, hosting, database work, migration, deployment, or external Sheet/Drive/Apps Script writes.
+- Rollback checkpoint: local tag `hau-usc-slice5-start-89a7acc` points to the approved starting HEAD. The dashboard remains server-controlled and hides itself when the v2 projection is absent; a rejected implementation must use a focused revert, not reset or discard work.
+- Local evidence: `npm run check` passed with 22 Vitest files / 183 tests, build, Apps Script validation (28 source files / 38 required functions), generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 56 / 100 intentional skips / 0 failures across 156 cases; `git diff --check` passed.
+- Sensitive-value scan over changed source additions and new fixtures passed with zero matches for credentials, clasp/config contents, private Google identifiers, roster/student records, contacts, supplier TINs, or evidence links/files. Regenerated standalone output retains only the pre-existing fictional preview baseline.
+- Generated artifacts: standalone HTML files are 282,306 bytes each / SHA-256 `fe937a21807ee12dad4317b0ac3945d7a5ecf0a1389a6b307226a655db0f248d`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; generated `AppBody.html`, `AppStyles.html`, and `AppScript.html` match the verified build parity.
+- Independent implementation review: PASS; authorization context reuse, active committee validation, safe history/audit projection, bounded queue identifiers, v1/v2 rollback gating, and inventory-family scope propagation were verified with no blocking issue.
+- Focused implementation commit: `a1784f15bc6a160ebf3c2405e9776b6517ce52e5` (`feat: add committee main hub dashboard`), pushed to the feature branch. Draft PR #6 `validate`, `verify`, and `browser-smoke` checks are green; manager review is the next gate before Slice 6.
+- No staging or production deployment, Script Property change, trigger activation, Sheet/Drive write, private operational-data access, migration, or `clasp status`/`clasp push --dry-run` was performed; no staging script is configured in this checkout. Remaining unknowns are owner confirmation of exact queue/timezone/staff-display policy and real-volume staging timing, deferred to the later acceptance slice.
 
 ## Superseded checkpoint - P0 staging acceptance (Phase E previously blocked)
 

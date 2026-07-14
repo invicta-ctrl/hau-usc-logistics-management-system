@@ -2,21 +2,32 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slice 4 committed and CI-verified; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-5 committed and CI-verified; production undeployed)
 - Date: `2026-07-14`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
-- Approved Slice 4 starting commit: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891` (accepted Phase E documentation checkpoint)
-- Current implementation checkpoint: Slice 4 commit `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; pushed; worktree clean; local/upstream count `0 0`
+- Approved Slice 5 starting commit: `89a7accdf0bcd3e3d080bcde5ad2e8874ba7d03e` (Slice 4 remote-verification documentation checkpoint)
+- Current implementation checkpoint: Slice 5 commit `a1784f15bc6a160ebf3c2405e9776b6517ce52e5`; pushed; worktree clean; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 4 head; manager review is pending
+- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 5 head; manager review is pending
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slice 4 is repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-5 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 5 - Committee Main Hub and Inventory and Pantry vertical slice
+
+- Stage: `COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
+- Scope: one capability-aware Main Hub with active committee context, server-scoped queue/count/detail projections, bounded status-history/audit activity, recent completions, safe links, freshness/manual refresh state, and active-context propagation into existing inventory-family module reads.
+- Queue defaults: new/unassigned, awaiting review, needs information, due soon (7 days), overdue, blocked, missing evidence, escalated, inventory attention, lending review/overdue, upcoming needs (14 days), and recent completions (30 days). Exact owner policy and institutional timezone boundary samples remain later staging inputs.
+- Repository implementation: `apps-script/CommitteeDashboardService.gs`, bootstrap authorization/context reuse, additive 1.3.0 dashboard collections, active-context module requests, visual Main Hub source, generated artifacts, and focused synthetic/browser tests. No private roster, contact, supplier-TIN, evidence-link, credential, or external operational value was added.
+- Evidence: `npm run check` passes with 22 Vitest files / 183 tests, build, Apps Script validation (28 source files / 38 required functions), generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 56 with 100 intentional skips and 0 failures across 156 cases; `git diff --check` and the changed-scope sensitive scan pass. Independent review is PASS.
+- Generated parity: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 282,306 bytes each / SHA-256 `fe937a21807ee12dad4317b0ac3945d7a5ecf0a1389a6b307226a655db0f248d`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; the split Apps Script generated outputs passed deterministic parity.
+- Implementation commit `a1784f15bc6a160ebf3c2405e9776b6517ce52e5` is pushed and PR #6 CI is green. Rollback checkpoint is `hau-usc-slice5-start-89a7acc`; use a focused revert if rejected and preserve the starting tag.
+- No staging/production deployment, Script Property change, trigger activation, Sheet/Drive write, migration, or external operational-data access occurred. `clasp status` and `clasp push --dry-run` were not run because no staging script is configured; live volume timing and owner policy confirmation remain for the later staging slice.
 
 ## Current Slice 4 - Private roster synchronization and access freshness
 

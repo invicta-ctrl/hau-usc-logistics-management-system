@@ -2,6 +2,15 @@
 
 ## 0.5.0 - Unreleased
 
+### Slice 5 - Committee Main Hub and Inventory and Pantry vertical slice
+
+- Added one capability-aware Committee Main Hub with active Food, Inventory and Pantry, Materials, and Director contexts, safe quick links, freshness/manual refresh state, bounded queue counts, and bounded record identifiers for detail reconciliation.
+- Added server-side queues for new/unassigned, review, needs-information, due-soon, overdue, blocked, missing-evidence, escalated, inventory attention, lending review/overdue, upcoming needs, and recent completions; activity is a safe projection of immutable status history and audit rows.
+- Propagated the validated committee context into existing inventory, lending, and restocking module reads without granting action authority from membership alone; reused the resolved authorization context to avoid repeated membership reads.
+- Added additive bootstrap schema 1.3.0 dashboard collections, synthetic Apps Script scope/read/privacy tests, keyboard/browser coverage across the configured viewports, and rollback-safe hiding when the server dashboard projection is unavailable.
+- Regenerated visual, standalone, and Apps Script outputs only through `npm run extract:visual` and the build/check pipeline. Local gates pass: 22 Vitest files / 183 tests, full Playwright 56 passed / 100 skipped / 0 failed across 156 cases, Apps Script/generated parity, and sensitive-value scan. Commit `a1784f15bc6a160ebf3c2405e9776b6517ce52e5` is pushed and PR #6 CI is green.
+- No deployment, external configuration, Google Sheets/Drive write, private operational-data access, migration, or Slice 6 work was performed. Owner queue/timezone/staff-display policy confirmation and real-volume staging timing remain deferred to the later acceptance slice.
+
 ### Slice 4 - Private roster synchronization and access freshness
 
 - Added a fail-closed Apps Script roster boundary that reads a private source only during an explicit admin/scheduled sync and validates the exact five-column source schema, strict types, canonical roles/committees, duplicate normalized identities, and committee scope.
