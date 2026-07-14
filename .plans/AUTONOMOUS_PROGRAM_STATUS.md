@@ -5,16 +5,18 @@ PROGRAM STATE: IN_PROGRESS
 ## Current run checkpoint - P0 staging acceptance (Phase E blocked)
 
 - Date: 2026-07-14 (Asia/Manila).
-- Current run stage: `PHASE_E_V2_BOOTSTRAP_PROPERTY_BLOCKED`.
+- Current run stage: `PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORE_REQUIRED`.
 - This run is accepting the already implemented Slices 1-3 in Apps Script staging only; Slice 4 and all later product slices remain out of scope.
 - Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; local HEAD `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `2 0`; remote head remains `3f038590bdebe5b117018356838b82d94683ad37`; worktree is clean.
 - Local repair commits are `8bf1074033e8133a5872dd0004a1694f492237d7` (`fix: tolerate legacy handling in bootstrap`) and `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0` (`fix: normalize Apps Script callback payloads`). They have not been pushed.
 - Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. The prior immutable staging Version 13 remains the rollback target; a fresh timestamped staging backup was verified before the package push.
 - The exact reviewed Apps Script package matched remotely for all 32 expected files, the preserved web-app manifest was present, the existing staging deployment served Version 17, and no non-target deployment changed.
-- Phase E is not complete. The staging owner must set `HAU_BOOTSTRAP_CONTRACT_VERSION=2` while leaving `HAU_AUTHORIZATION_CONTRACT_VERSION` at v1/absent. No Script Property was changed in this run.
+- Phase E was attempted after the staging owner set `HAU_BOOTSTRAP_CONTRACT_VERSION=2`; authorization contract v1/absent was retained. The v2 diagnostic rendered and direct read-only endpoint calls returned the v2 contract, but the live v2 workspace stayed in `slow` and reached the retryable read-only-service timeout instead of reaching `ready`.
+- Rollback was completed immediately: the existing staging deployment now serves immutable Version 13 with one web entry point, and Version 13 remains preserved. The user must restore `HAU_BOOTSTRAP_CONTRACT_VERSION` to `1` or remove it so the effective setting is v1; this checkout could not perform that property edit because no authenticated staging Apps Script editor/property-access session is available.
+- Direct endpoint evidence is not UI acceptance: essential bootstrap returned contract v2 / STAGING with a 1,433-byte payload and read count 3; the overview module returned contract v2 / STAGING with a 662-byte payload and read count 10. The UI startup timeout remains the confirmed live failure; its root cause is not yet isolated.
 - Blocker: no authenticated staging Apps Script editor/property-access session is available in this checkout. The reviewed source has no approved property setter, and the Apps Script content/version/deployment API does not expose Script Properties. Do not use the production-target local configuration, add a temporary setter, or create a temporary deployment.
 - Do not add `STAGING ACCEPTANCE: SLICES 1-3 PASSED` until all Phase E checks pass. Do not push, merge, or promote to production from this checkpoint.
-- Next action: obtain the staging owner’s authenticated editor access, set only the bootstrap property to v2, then rerun the Phase E diagnostic, internal, request-only, cold/warm, module, retry/error, bounded-payload, request-count, and privacy checks without repeating completed Phase D work.
+- Next action: restore the bootstrap property to v1/absent, verify Version 13 is serving, diagnose and repair only the confirmed v2 UI timeout locally, rerun all local gates and independent review, then deploy a new immutable staging version and repeat Phase E. Do not add the success marker.
 
 ## Program identity
 
