@@ -14,7 +14,7 @@ const requiredFiles = [
   'ItemRepository.gs','RequestService.gs','InventoryService.gs','ReservationService.gs','LendingService.gs',
   'ReleaseService.gs','RestockService.gs','ProcurementService.gs','CanvassService.gs','EvidenceService.gs',
   'DriveService.gs','AuditService.gs','MigrationService.gs','BackupService.gs','ErrorService.gs','Setup.gs',
-  'RosterSyncService.gs','CommitteeDashboardService.gs',
+  'RosterSyncService.gs','CommitteeDashboardService.gs','CompositeRequestService.gs',
   'appsscript.json','Index.html','AppBody.html','AppStyles.html','AppScript.html','DiagnosticShell.html',
 ];
 const requiredFunctions = [
@@ -25,6 +25,7 @@ const requiredFunctions = [
   'api_createInventoryItem','api_updateInventoryItem','api_updateInventoryStorageContext','api_archiveInventoryItem','api_restoreInventoryItem',
   'api_htmlDiagnosticPing','htmlTemplateDiagnostics',
   'api_runRosterSync','api_getRosterSyncHealth','api_setRosterEmergencyDeny','setupRosterSyncTrigger','runScheduledRosterSync','committeeDashboard_',
+  'api_submitCompositeRequest','api_getCompositeRequest','api_transitionCompositeComponent','api_cancelCompositeRequest','api_reopenCompositeRequest','api_amendCompositeRequest','api_addCompositeSection','api_assignCompositeComponent','api_escalateCompositeComponent',
 ];
 const root = resolve('apps-script');
 const existing = new Set(await readdir(root));
@@ -59,6 +60,9 @@ if (!index.includes("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"
 if (!index.includes('data-bootstrap-contract-version="<?= bootstrapContractVersion ?>"')) {
   throw new Error('Apps Script template does not expose the server bootstrap contract flag.');
 }
+if (!index.includes("data-composite-requests-enabled=\"<?= compositeRequestsEnabled ? 'true' : 'false' ?>\"")) {
+  throw new Error('Apps Script template does not expose the server composite request feature flag.');
+}
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"')) throw new Error('AppBody.html is missing required interface markup.');
 if (!appStyles.includes('.app-shell') || !appStyles.includes('.loading-overlay')) throw new Error('AppStyles.html is missing required interface styles.');
@@ -91,6 +95,9 @@ if (requestOnlyBody?.attributes.get('data-request-only') !== 'true') {
 }
 if (tokenizeHtml(assembled).find((token) => token.type === 'tag' && !token.closing && token.name === 'body')?.attributes.get('data-bootstrap-contract-version') !== '2') {
   throw new Error('Assembled Apps Script document lost the v2 bootstrap contract flag.');
+}
+if (tokenizeHtml(assembled).find((token) => token.type === 'tag' && !token.closing && token.name === 'body')?.attributes.get('data-composite-requests-enabled') !== 'false') {
+  throw new Error('Assembled Apps Script document did not default composite requests to disabled.');
 }
 if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script')) throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');
 

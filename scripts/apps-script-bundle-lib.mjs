@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 export const APPS_SCRIPT_RUNTIME_SOURCE =
-  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase(),bootstrapContractVersion:Number(document.body?.dataset?.bootstrapContractVersion||1)};';
+  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase(),bootstrapContractVersion:Number(document.body?.dataset?.bootstrapContractVersion||1),compositeRequestsEnabled:document.body?.dataset?.compositeRequestsEnabled==="true"};';
 
 const INCLUDE_MARKERS = Object.freeze({
   appStyles: "<?!= include_('AppStyles'); ?>",
@@ -13,6 +13,7 @@ const INCLUDE_MARKERS = Object.freeze({
 const REQUEST_ONLY_VALUE_MARKER = "<?= requestOnly ? 'true' : 'false' ?>";
 const APP_ENVIRONMENT_VALUE_MARKER = "<?= appEnvironment ?>";
 const BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER = "<?= bootstrapContractVersion ?>";
+const COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER = "<?= compositeRequestsEnabled ? 'true' : 'false' ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
 const ATTR_NAME_CHAR = /[^\s=/>]/;
@@ -349,11 +350,14 @@ function addRuntimeAttributes(bodyOpen) {
   if (/\sdata-bootstrap-contract-version\s*=/i.test(bodyOpen)) {
     throw new Error('Expanded source body already defines data-bootstrap-contract-version.');
   }
+  if (/\sdata-composite-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-composite-requests-enabled.');
+  }
   const closingIndex = bodyOpen.lastIndexOf('>');
   if (closingIndex <= 0 || bodyOpen[closingIndex - 1] === '/') {
     throw new Error('Expanded source body opening tag is invalid.');
   }
-  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}" data-bootstrap-contract-version="${BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
+  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}" data-bootstrap-contract-version="${BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER}" data-composite-requests-enabled="${COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
 }
 
 export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSources }) {
@@ -442,7 +446,7 @@ export async function createAppsScriptBundleFromProject() {
 
 export function assembleAppsScriptTemplate(
   files,
-  { requestOnly = false, appEnvironment = 'STAGING', bootstrapContractVersion = 2 } = {},
+  { requestOnly = false, appEnvironment = 'STAGING', bootstrapContractVersion = 2, compositeRequestsEnabled = false } = {},
 ) {
   const normalizedEnvironment = String(appEnvironment).trim().toUpperCase();
   if (!['STAGING', 'PRODUCTION'].includes(normalizedEnvironment)) {
@@ -461,6 +465,7 @@ export function assembleAppsScriptTemplate(
     [REQUEST_ONLY_VALUE_MARKER, requestOnly ? 'true' : 'false'],
     [APP_ENVIRONMENT_VALUE_MARKER, normalizedEnvironment],
     [BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER, String(normalizedBootstrapContractVersion)],
+    [COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER, compositeRequestsEnabled ? 'true' : 'false'],
   ];
   for (const [marker, value] of replacements) {
     if (countOccurrences(assembled, marker) !== 1) {

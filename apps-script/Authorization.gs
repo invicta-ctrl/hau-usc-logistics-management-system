@@ -91,6 +91,15 @@ var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
   getInventoryItem: HAU_CAPABILITIES_.VIEW_INVENTORY,
   searchCatalog: HAU_CAPABILITIES_.VIEW_REQUEST,
   submitRequest: HAU_CAPABILITIES_.REQUEST_CREATE,
+  submitCompositeRequest: HAU_CAPABILITIES_.REQUEST_CREATE,
+  getCompositeRequest: HAU_CAPABILITIES_.VIEW_REQUEST,
+  transitionCompositeComponent: HAU_CAPABILITIES_.REQUEST_REVIEW,
+  cancelCompositeRequest: HAU_CAPABILITIES_.REQUEST_REVIEW,
+  reopenCompositeRequest: HAU_CAPABILITIES_.REQUEST_REOPEN,
+  amendCompositeRequest: HAU_CAPABILITIES_.REQUEST_REVIEW,
+  addCompositeSection: HAU_CAPABILITIES_.REQUEST_REVIEW,
+  assignCompositeComponent: HAU_CAPABILITIES_.ASSIGN_STAFF,
+  escalateCompositeComponent: HAU_CAPABILITIES_.ESCALATE,
   reviewRequest: HAU_CAPABILITIES_.REQUEST_REVIEW,
   reserveStock: HAU_CAPABILITIES_.FULFILL_RESERVE,
   createLendingTicket: HAU_CAPABILITIES_.LENDING_CREATE,
@@ -132,6 +141,8 @@ var HAU_SCOPE_OPTIONAL_OPERATIONS_ = Object.freeze({
   searchCatalog: true,
   getInventoryItem: true,
   submitRequest: true,
+  submitCompositeRequest: true,
+  getCompositeRequest: true,
   reserveStock: true,
   createLendingTicket: true,
   approveLendingTicket: true,
@@ -479,6 +490,11 @@ function authorizationResourceFromCommand_(operationName, command) {
   [].concat(command.lines || []).forEach(function(line) {
     if (line && line.requestLineId) authorizationResourceAppendRequestLine_(resource, line.requestLineId);
   });
+  if (/Composite/.test(String(operationName || '')) && typeof authorizationResourceFindAll_ === 'function' && HAU_SHEETS.COMPOSITE_REQUESTS) {
+    authorizationResourceFindAll_(HAU_SHEETS.COMPOSITE_REQUESTS, function(row) {
+      return (command.requestId && String(row.Request_ID) === String(command.requestId)) || (command.componentId && String(row.Component_ID) === String(command.componentId));
+    }).forEach(function(row) { authorizationResourceAddRow_(resource, row); });
+  }
   authorizationResourceAppendEntity_(resource, command.entityType || command.relatedEntityType, command.entityId || command.relatedEntityId);
   if (command.evidence) {
     authorizationResourceAppendEntity_(resource, command.evidence.relatedEntityType, command.evidence.relatedEntityId);

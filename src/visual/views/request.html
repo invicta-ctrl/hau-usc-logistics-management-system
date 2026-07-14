@@ -49,4 +49,22 @@
             <aside class="panel stack" style="align-self:start;position:sticky;top:20px"><div class="panel-head"><div><h2>Review before sending</h2><p>Line decisions explain what can be issued from stock and what still needs procurement.</p></div><span id="draftLineCount" class="pill">0 lines</span></div><div id="requestSummary" class="mode-note">Add at least one request line.</div><label><span><input id="requestConsent" type="checkbox" style="width:auto;min-height:auto;margin-right:6px" required>I confirm that these details are accurate and may be used for USC logistics processing.</span></label><button class="primary" type="submit">Submit for DOL Review</button><p class="hint">Submission creates a FOR REVIEW record. Physical stock is not reduced until a controlled release is confirmed.</p></aside>
           </div>
         </form>
+        <article id="compositeRequestPanel" class="panel section-gap" data-composite-feature hidden>
+          <div class="panel-head"><div><p class="eyebrow">Composite event logistics</p><h2>Review the event request as one parent with independent sections</h2><p>Food, Materials, and Venue &amp; Equipment are optional. Every selected non-empty section becomes one independently trackable child; blank sections create no child.</p></div><span class="pill">Feature-flagged</span></div>
+          <form id="compositeRequestForm" novalidate>
+            <div class="form-grid">
+              <label>Requester name<input name="compositeRequesterName" value="Preview Requester" required></label>
+              <label>Department / office<input name="compositeDepartment" value="DOL - Preview Committee" required></label>
+              <label>Approved event / sub-event<select id="compositeEvent" name="eventId" required></select></label>
+              <label>Purpose / justification<input name="compositePurpose" value="Preview composite logistics request" required></label>
+            </div>
+            <div class="grid-2 section-gap">
+              <fieldset class="panel" data-composite-section="FOOD"><legend><label><input type="checkbox" name="foodEnabled" value="FOOD" data-composite-toggle> Food</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="foodLabel" placeholder="Food section label"></label><label>Line description<input name="foodLine" placeholder="Required when selected"></label><label>Quantity<input name="foodQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="foodUnit"><option value="meal">Meal</option><option value="pack">Pack</option><option value="piece">Piece</option></select></label></div></fieldset>
+              <fieldset class="panel" data-composite-section="MATERIALS"><legend><label><input type="checkbox" name="materialsEnabled" value="MATERIALS" data-composite-toggle> Materials</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="materialsLabel" placeholder="Materials section label"></label><label>Line description<input name="materialsLine" placeholder="Required when selected"></label><label>Quantity<input name="materialsQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="materialsUnit"><option value="piece">Piece</option><option value="pack">Pack</option><option value="box">Box</option></select></label></div></fieldset>
+              <fieldset class="panel" data-composite-section="VENUE_EQUIPMENT"><legend><label><input type="checkbox" name="venueEquipmentEnabled" value="VENUE_EQUIPMENT" data-composite-toggle> Venue &amp; Equipment</label></legend><div class="form-grid" data-composite-fields><label>Optional label<input name="venueEquipmentLabel" placeholder="Venue or equipment label"></label><label>Line description<input name="venueEquipmentLine" placeholder="Required when selected"></label><label>Quantity<input name="venueEquipmentQuantity" type="number" min="0.01" step="0.01" value="1"></label><label>Unit<select name="venueEquipmentUnit"><option value="service">Service</option><option value="piece">Piece</option><option value="set">Set</option></select></label></div></fieldset>
+            </div>
+            <div class="button-row section-gap"><button class="primary" type="submit">Review composite request</button><span id="compositeRequestReview" class="muted" aria-live="polite">Select at least one section.</span></div>
+            <div id="compositeRequestResult" class="mode-note hidden" aria-live="polite"></div>
+          </form>
+        </article>
       </section>

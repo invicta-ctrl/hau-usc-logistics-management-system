@@ -6,6 +6,7 @@ import { availableToPromise } from '../../domain/inventory.js';
 import { consolidateDraftLines, routingDecision } from '../../domain/requests.js';
 import { meetsLeadTime } from '../../domain/dates.js';
 import { announce } from '../../app/events.js';
+import { config } from '../../app/config.js';
 
 const templateLines = {
   OFFICE: [
@@ -37,13 +38,34 @@ const templateLines = {
   ],
 };
 
+const compositeSections = [
+  ['FOOD', 'Food', 'food'],
+  ['MATERIALS', 'Materials', 'materials'],
+  ['VENUE_EQUIPMENT', 'Venue & Equipment', 'venueEquipment'],
+];
+
+function renderCompositePanel(state) {
+  if (!config.compositeRequestsEnabled) return '';
+  const eventOptions = state.events
+    .filter((event) => event.status === 'UPCOMING')
+    .map((event) => `<option value="${event.id}">${escapeHtml(event.name)}</option>`)
+    .join('');
+  return `<section class="panel stack composite-request-panel" aria-labelledby="composite-request-title"><div class="panel-head"><div><p class="eyebrow">Composite event logistics</p><h2 id="composite-request-title">Review Food, Materials, and Venue &amp; Equipment together</h2><p>Each selected non-empty section becomes one independently trackable child under one parent request. Blank sections create no child.</p></div><span class="pill">Feature-flagged</span></div><form id="composite-request-form" novalidate><div class="form-grid"><label>Requester name<input name="compositeRequesterName" value="Preview Requester" required /></label><label>Department<input name="compositeDepartment" value="DOL - Preview Committee" required /></label><label>Event<select name="compositeEventId" required><option value="">Select an upcoming event</option>${eventOptions}</select></label><label>Purpose<input name="compositePurpose" value="Preview composite logistics request" required /></label></div><div class="composite-sections" data-composite-sections>${compositeSections.map(([type, title, key]) => `<fieldset class="panel inset" data-composite-section="${type}"><legend><label><input type="checkbox" name="${key}Enabled" value="${type}" data-composite-toggle /> ${title}</label></legend><div class="form-grid" data-composite-fields><label>Section label<input name="${key}Label" placeholder="Optional label" /></label><label>Line description<input name="${key}Line" placeholder="One minimal request line" /></label><label>Quantity<input name="${key}Quantity" type="number" min="0.01" step="0.01" value="1" /></label><label>Unit<select name="${key}Unit"><option>piece</option><option>box</option><option>pack</option><option>meal</option><option>service</option></select></label></div></fieldset>`).join('')}</div><div class="button-row section-gap"><button class="primary" type="submit">Review composite request</button><span class="muted" data-composite-review aria-live="polite">Select at least one section.</span></div><div class="alert hidden" data-composite-result aria-live="polite"></div></form></section>`;
+}
+
+function compositeResultHtml(request) {
+  if (!request) return '';
+  const children = request.children ?? [];
+  return `<strong>${escapeHtml(request.requestId ?? 'Composite request')} · ${escapeHtml(request.status ?? 'FOR_REVIEW')}</strong><ul>${children.map((child) => `<li><strong>${escapeHtml(child.componentType)}</strong> · ${escapeHtml(child.status)} · ${escapeHtml(child.componentId)}</li>`).join('')}</ul>`;
+}
+
 export function renderRequests(ctx) {
   const { state, ui, requestOnly } = ctx;
   const lines = ui.requestDraftLines ?? [];
   const internalQueue = requestOnly
     ? []
     : state.requests.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return `<div class="view-grid"><section class="panel hero"><p class="eyebrow">Request Center</p><h2>Describe the need; the system proposes the fulfillment route.</h2><p>Submission creates <strong>For Review</strong>. It never deducts stock. “Ready to Release” means procurement is unnecessary—not that a physical handoff already occurred.</p></section>
+  return `<div class="view-grid"><section class="panel hero"><p class="eyebrow">Request Center</p><h2>Describe the need; the system proposes the fulfillment route.</h2><p>Submission creates <strong>For Review</strong>. It never deducts stock. “Ready to Release” means procurement is unnecessary—not that a physical handoff already occurred.</p></section>${renderCompositePanel(state)}
   <section class="split"><form id="request-form" class="panel stack" novalidate><div class="panel-head"><div><h2>New logistics request</h2><p>Preview-only submission with fixed demo events.</p></div><span class="pill">No writes</span></div><div class="form-grid"><label>Request type<select name="type"><option value="EVENT_LOGISTICS">Event Logistics</option><option value="CATALOG_RESTOCK">Catalog Restock</option></select></label><label>Request template<select name="template"><option value="">Start blank</option><option value="OFFICE">Common office needs</option><option value="PANTRY">Pantry restock</option><option value="EVENT">Recurring event materials</option></select></label><label>Event series<select name="eventSeriesId"><option value="">Select series</option>${state.eventSeries.map((series) => `<option value="${series.id}">${escapeHtml(series.name)}</option>`).join('')}</select></label><label>Approved sub-event<select name="eventId"><option value="">Select event</option>${state.events
     .filter((event) => event.status === 'UPCOMING')
     .map((event) => `<option value="${event.id}">${escapeHtml(event.name)}</option>`)
@@ -60,6 +82,81 @@ export function renderRequests(ctx) {
 }
 
 export function mountRequests(ctx, root) {
+  const compositeForm = root.querySelector('#composite-request-form');
+  if (compositeForm) {
+    const compositeFields = {
+      FOOD: 'food',
+      MATERIALS: 'materials',
+      VENUE_EQUIPMENT: 'venueEquipment',
+    };
+    const syncCompositeReview = () => {
+      const selected = [...root.querySelectorAll('[data-composite-toggle]:checked')].map((toggle) => {
+        const key = compositeFields[toggle.value];
+        const label = compositeForm.elements[`${key}Label`].value.trim();
+        const line = compositeForm.elements[`${key}Line`].value.trim();
+        return `${toggle.value}${label ? ` · ${label}` : ''}${line ? ` · ${line}` : ''}`;
+      });
+      root.querySelector('[data-composite-review]').textContent = selected.length
+        ? `${selected.length} child section${selected.length === 1 ? '' : 's'} ready: ${selected.join(' | ')}`
+        : 'Select at least one section.';
+      root.querySelectorAll('[data-composite-section]').forEach((section) => {
+        const toggle = section.querySelector('[data-composite-toggle]');
+        section.querySelector('[data-composite-fields]').toggleAttribute('aria-hidden', !toggle.checked);
+        section
+          .querySelectorAll('[data-composite-fields] input, [data-composite-fields] select')
+          .forEach((field) => {
+            field.disabled = !toggle.checked;
+          });
+      });
+    };
+    root
+      .querySelectorAll('[data-composite-toggle]')
+      .forEach((toggle) => toggle.addEventListener('change', syncCompositeReview));
+    root
+      .querySelectorAll('[data-composite-fields] input, [data-composite-fields] select')
+      .forEach((field) => field.addEventListener('input', syncCompositeReview));
+    compositeForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!compositeForm.reportValidity()) return;
+      const sections = [...root.querySelectorAll('[data-composite-toggle]:checked')].map((toggle) => {
+        const key = compositeFields[toggle.value];
+        return {
+          type: toggle.value,
+          label: compositeForm.elements[`${key}Label`].value,
+          lines: [
+            {
+              label: compositeForm.elements[`${key}Line`].value,
+              quantity: compositeForm.elements[`${key}Quantity`].value,
+              unit: compositeForm.elements[`${key}Unit`].value,
+            },
+          ],
+        };
+      });
+      try {
+        const result = await ctx.service.submitCompositeRequest({
+          requesterName: compositeForm.elements.compositeRequesterName.value,
+          department: compositeForm.elements.compositeDepartment.value,
+          eventId: compositeForm.elements.compositeEventId.value,
+          purpose: compositeForm.elements.compositePurpose.value,
+          sections,
+          idempotencyKey: globalThis.crypto?.randomUUID?.() ?? `composite-${Date.now()}`,
+          actor: compositeForm.elements.compositeRequesterName.value,
+        });
+        const resultBox = root.querySelector('[data-composite-result]');
+        resultBox.classList.remove('hidden');
+        resultBox.innerHTML = compositeResultHtml(result.request ?? result);
+        ctx.toast(
+          `${result.requestId} submitted with ${result.componentIds?.length ?? sections.length} child sections.`,
+        );
+        announce('Composite request submitted for review. Each selected section is independently trackable.');
+        compositeForm.reset();
+        syncCompositeReview();
+      } catch (error) {
+        ctx.toast(`${error.message}${error.correlationId ? ` Incident ${error.correlationId}` : ''}`, true);
+      }
+    });
+    syncCompositeReview();
+  }
   const form = root.querySelector('#request-form');
   const input = form.elements.itemSearch;
   const listbox = root.querySelector('#request-item-listbox');

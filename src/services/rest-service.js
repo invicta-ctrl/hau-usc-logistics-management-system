@@ -24,6 +24,15 @@ export class RestService {
 
 for (const method of [
   'submitRequest',
+  'submitCompositeRequest',
+  'getCompositeRequest',
+  'transitionCompositeComponent',
+  'cancelCompositeRequest',
+  'reopenCompositeRequest',
+  'amendCompositeRequest',
+  'addCompositeSection',
+  'assignCompositeComponent',
+  'escalateCompositeComponent',
   'acceptRequest',
   'createLendingTicket',
   'approveLendingTicket',

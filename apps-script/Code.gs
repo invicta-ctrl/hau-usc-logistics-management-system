@@ -12,6 +12,7 @@ function doGet(e) {
   template.requestOnly = Boolean(e && e.parameter && e.parameter.request === '1');
   template.appEnvironment = runtime.environment;
   template.bootstrapContractVersion = runtime.bootstrapContractVersion;
+  template.compositeRequestsEnabled = runtime.compositeRequestsEnabled;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')

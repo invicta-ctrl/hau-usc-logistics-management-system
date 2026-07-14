@@ -7,6 +7,15 @@ function api_searchCatalog(command) { return guardApi_('searchCatalog', command 
 function api_getInventoryItem(command) { return guardApi_('getInventoryItem', command || {}, function() { return getInventoryItem_(command || {}); }); }
 function api_submitRequest(command) { return guardMutationApi_('submitRequest', command, function(c) { return submitRequest_(command, c); }); }
 function api_reviewRequest(command) { return guardMutationApi_('reviewRequest', command, function(c) { return reviewRequest_(command, c); }); }
+function api_submitCompositeRequest(command) { return guardMutationApi_('submitCompositeRequest', command, function(c) { return submitCompositeRequest_(command, c); }); }
+function api_getCompositeRequest(command) { return guardApi_('getCompositeRequest', command || {}, function() { return getCompositeRequest_(command || {}); }); }
+function api_transitionCompositeComponent(command) { return guardMutationApi_('transitionCompositeComponent', command, function(c) { return transitionCompositeComponent_(command, c); }); }
+function api_cancelCompositeRequest(command) { return guardMutationApi_('cancelCompositeRequest', command, function(c) { return cancelCompositeRequest_(command, c); }); }
+function api_reopenCompositeRequest(command) { return guardMutationApi_('reopenCompositeRequest', command, function(c) { return reopenCompositeRequest_(command, c); }); }
+function api_amendCompositeRequest(command) { return guardMutationApi_('amendCompositeRequest', command, function(c) { return amendCompositeRequest_(command, c); }); }
+function api_addCompositeSection(command) { return guardMutationApi_('addCompositeSection', command, function(c) { return addCompositeSection_(command, c); }); }
+function api_assignCompositeComponent(command) { return guardMutationApi_('assignCompositeComponent', command, function(c) { return assignCompositeComponent_(command, c); }); }
+function api_escalateCompositeComponent(command) { return guardMutationApi_('escalateCompositeComponent', command, function(c) { return escalateCompositeComponent_(command, c); }); }
 function api_reserveStock(command) { return guardMutationApi_('reserveStock', command, function(c) { return reserveStockCommand_(command, c); }); }
 function api_createLendingTicket(command) { return guardMutationApi_('createLendingTicket', command, function(c) { return createLendingTicket_(command, c); }); }
 function api_approveLendingTicket(command) { return guardMutationApi_('approveLendingTicket', command, function(c) { return approveLendingTicket_(command, c); }); }

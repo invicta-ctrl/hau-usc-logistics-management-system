@@ -47,6 +47,8 @@ function migrateOperationalCollections(state) {
     'idempotencyRecords',
     'evidenceFiles',
     'eventTasks',
+    'compositeRequests',
+    'compositeComponents',
   ])
     state[key] ??= [];
   state.revisions ??= { inventory: 1, requests: 1, lending: 1, receipts: 1, quotes: 1, tasks: 1 };

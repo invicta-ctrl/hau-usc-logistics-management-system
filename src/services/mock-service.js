@@ -17,9 +17,37 @@ import {
 } from '../domain/validators.js';
 import { recomputeRestockParent } from '../domain/restocking.js';
 import { can } from '../domain/permissions.js';
+import {
+  amendCompositeSection,
+  buildCompositeView,
+  createCompositePacket,
+  deriveCompositeParentStatus,
+  transitionCompositeChild,
+} from '../domain/composite-requests.js';
 import { requireIdempotencyKey, previousResult, storeResult } from './idempotency-service.js';
 
 const now = () => new Date().toISOString();
+
+function ensureCompositeState(state) {
+  state.compositeRequests ??= [];
+  state.compositeComponents ??= [];
+}
+
+function compositeRecord(state, requestId) {
+  ensureCompositeState(state);
+  const parent = state.compositeRequests.find((row) => row.requestId === requestId);
+  if (!parent) throw new AppError('REQUEST_NOT_FOUND', 'Composite request was not found.');
+  const children = state.compositeComponents.filter((row) => row.requestId === requestId);
+  if (!children.length)
+    throw new AppError('ATOMICITY_INCOMPLETE', 'The composite request has no child sections.');
+  return { parent, children };
+}
+
+function updateCompositeParent(parent, children) {
+  const derived = deriveCompositeParentStatus(children);
+  Object.assign(parent, derived, { updatedAt: now(), revision: Number(parent.revision ?? 1) + 1 });
+  return derived;
+}
 
 function requirePermission(state, action) {
   if (!can(state.role, action))
@@ -70,35 +98,41 @@ function appendLedger(
 export class MockService {
   constructor(store) {
     this.store = store;
+    this.mutationTail = Promise.resolve();
   }
 
-  async _run(command, action, mutator, change = { views: ['active'], shared: true }) {
-    const key = requireIdempotencyKey(command);
-    const original = this.store.getState();
-    const previous = previousResult(original, key);
-    if (previous) return { ...previous, idempotentReplay: true };
-    const draft = structuredClone(original);
-    const correlationId = `COR-${allocateId(draft, 'AUD').replace('AUD-', '')}`;
-    try {
-      const result = await mutator(draft, { key, correlationId, actor: command.actor ?? 'PREVIEW_USER' });
-      const normalized = { ...structuredClone(result), correlationId };
-      storeResult(draft, { key, action, result: normalized, correlationId });
-      appendAudit(draft, {
-        action,
-        entityType: result.entityType ?? 'COMMAND',
-        entityId: result.entityId ?? key,
-        actor: command.actor ?? 'PREVIEW_USER',
-        correlationId,
-        summary: result.summary ?? action,
-      });
-      this.store.replace(draft, change);
-      return normalized;
-    } catch (error) {
-      const normalized = normalizeError(error);
-      normalized.correlationId = correlationId;
-      console.error(`[${correlationId}] ${action}`, error);
-      throw normalized;
-    }
+  _run(command, action, mutator, change = { views: ['active'], shared: true }) {
+    const execute = async () => {
+      const key = requireIdempotencyKey(command);
+      const original = this.store.getState();
+      const previous = previousResult(original, key);
+      if (previous) return { ...previous, idempotentReplay: true };
+      const draft = structuredClone(original);
+      const correlationId = `COR-${allocateId(draft, 'AUD').replace('AUD-', '')}`;
+      try {
+        const result = await mutator(draft, { key, correlationId, actor: command.actor ?? 'PREVIEW_USER' });
+        const normalized = { ...structuredClone(result), correlationId };
+        storeResult(draft, { key, action, result: normalized, correlationId });
+        appendAudit(draft, {
+          action,
+          entityType: result.entityType ?? 'COMMAND',
+          entityId: result.entityId ?? key,
+          actor: command.actor ?? 'PREVIEW_USER',
+          correlationId,
+          summary: result.summary ?? action,
+        });
+        this.store.replace(draft, change);
+        return normalized;
+      } catch (error) {
+        const normalized = normalizeError(error);
+        normalized.correlationId = correlationId;
+        console.error(`[${correlationId}] ${action}`, error);
+        throw normalized;
+      }
+    };
+    const operation = this.mutationTail.then(execute, execute);
+    this.mutationTail = operation.catch(() => undefined);
+    return operation;
   }
 
   submitRequest(command) {
@@ -147,6 +181,269 @@ export class MockService {
         }
         state.revisions.requests += 1;
         return { entityType: 'REQUEST', entityId: id, requestId: id, summary: `${id} submitted for review.` };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  submitCompositeRequest(command) {
+    return this._run(
+      command,
+      'SUBMIT_COMPOSITE_REQUEST',
+      async (state, tx) => {
+        requirePermission(state, 'submit_request');
+        ensureCompositeState(state);
+        const packet = createCompositePacket(command, {
+          requestId: allocateId(state, 'LREQ', 2026),
+          componentIds: (command.sections ?? [])
+            .filter((section) => section?.lines?.length || section?.label || section?.notes)
+            .map(() => allocateSimpleId(state, 'CMP')),
+          actor: tx.actor,
+          now: now(),
+        });
+        const { children, ...parent } = packet.parent;
+        state.compositeRequests.push(parent);
+        state.compositeComponents.push(...children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_REQUEST',
+          entityId: parent.requestId,
+          requestId: parent.requestId,
+          componentIds: children.map((child) => child.componentId),
+          status: parent.status,
+          request: buildCompositeView(parent, children),
+          summary: `${parent.requestId} submitted with ${children.length} sections.`,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  getCompositeRequest({ requestId }) {
+    const { parent, children } = compositeRecord(this.store.getState(), requestId);
+    return Promise.resolve({ ok: true, request: buildCompositeView(parent, children) });
+  }
+
+  transitionCompositeComponent(command) {
+    return this._run(
+      command,
+      'TRANSITION_COMPOSITE_COMPONENT',
+      async (state, tx) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        const next = transitionCompositeChild(child, command.action, { reason: command.reason });
+        Object.assign(child, next, { revision: Number(child.revision ?? 1) + 1, updatedAt: now() });
+        const derived = updateCompositeParent(parent, children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          status: child.status,
+          parentStatus: derived.status,
+          summary: `${child.componentId} moved to ${child.status}.`,
+          request: buildCompositeView(parent, children),
+          actor: tx.actor,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  cancelCompositeRequest(command) {
+    return this._run(
+      command,
+      'CANCEL_COMPOSITE_REQUEST',
+      async (state) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        for (const child of children) {
+          if (!['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+            Object.assign(child, transitionCompositeChild(child, 'CANCEL', { reason: command.reason }), {
+              revision: Number(child.revision ?? 1) + 1,
+              updatedAt: now(),
+            });
+        }
+        const derived = updateCompositeParent(parent, children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_REQUEST',
+          entityId: parent.requestId,
+          requestId: parent.requestId,
+          status: derived.status,
+          request: buildCompositeView(parent, children),
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  reopenCompositeRequest(command) {
+    return this._run(
+      command,
+      'REOPEN_COMPOSITE_REQUEST',
+      async (state) => {
+        if (!can(state.role, 'request.reopen'))
+          throw new AppError(
+            'FORBIDDEN',
+            `The ${state.role} preview role cannot reopen a composite request.`,
+          );
+        const { parent, children } = compositeRecord(state, command.requestId);
+        if (!['REJECTED', 'CANCELLED'].includes(parent.status))
+          throw new AppError(
+            'INVALID_TRANSITION',
+            'Only rejected or cancelled composite requests may be reopened.',
+          );
+        for (const child of children) {
+          if (['REJECTED', 'CANCELLED'].includes(child.status))
+            Object.assign(child, transitionCompositeChild(child, 'REOPEN', { reason: command.reason }), {
+              revision: Number(child.revision ?? 1) + 1,
+              updatedAt: now(),
+            });
+        }
+        const derived = updateCompositeParent(parent, children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_REQUEST',
+          entityId: parent.requestId,
+          requestId: parent.requestId,
+          status: derived.status,
+          request: buildCompositeView(parent, children),
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  amendCompositeRequest(command) {
+    return this._run(
+      command,
+      'AMEND_COMPOSITE_REQUEST',
+      async (state) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        Object.assign(child, amendCompositeSection(child, command.section ?? {}, { now: now() }));
+        const derived = updateCompositeParent(parent, children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          status: child.status,
+          parentStatus: derived.status,
+          request: buildCompositeView(parent, children),
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  addCompositeSection(command) {
+    return this._run(
+      command,
+      'ADD_COMPOSITE_SECTION',
+      async (state, tx) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        if (['COMPLETED', 'CANCELLED'].includes(parent.status))
+          throw new AppError(
+            'AMENDMENT_NOT_ALLOWED',
+            'A completed or cancelled composite request cannot receive a new section.',
+          );
+        if (children.some((child) => child.componentType === command.section?.type))
+          throw new AppError('DUPLICATE_COMPONENT', 'That composite section already exists.');
+        const packet = createCompositePacket(
+          {
+            requesterName: parent.requesterName,
+            requesterEmail: parent.requesterEmail,
+            department: parent.department,
+            eventId: parent.eventId,
+            eventSeriesId: parent.eventSeriesId,
+            eventName: parent.eventName,
+            eventStartAt: parent.eventStartAt,
+            eventEndAt: parent.eventEndAt,
+            priority: parent.priority,
+            purpose: parent.purpose,
+            sections: [command.section],
+          },
+          {
+            requestId: parent.requestId,
+            componentIds: [allocateSimpleId(state, 'CMP')],
+            actor: tx.actor,
+            now: now(),
+          },
+        );
+        state.compositeComponents.push(packet.children[0]);
+        const derived = updateCompositeParent(parent, [...children, packet.children[0]]);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: packet.children[0].componentId,
+          requestId: parent.requestId,
+          componentId: packet.children[0].componentId,
+          status: packet.children[0].status,
+          parentStatus: derived.status,
+          request: buildCompositeView(parent, [...children, packet.children[0]]),
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  assignCompositeComponent(command) {
+    return this._run(
+      command,
+      'ASSIGN_COMPOSITE_COMPONENT',
+      async (state) => {
+        if (!can(state.role, 'workflow.assign_staff'))
+          throw new AppError('FORBIDDEN', `The ${state.role} preview role cannot assign composite sections.`);
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        child.ownerUserId = String(command.userId ?? '').trim();
+        child.revision = Number(child.revision ?? 1) + 1;
+        child.updatedAt = now();
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          committeeId: child.ownerCommitteeId,
+          userId: child.ownerUserId,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
+  escalateCompositeComponent(command) {
+    return this._run(
+      command,
+      'ESCALATE_COMPOSITE_COMPONENT',
+      async (state) => {
+        if (!can(state.role, 'workflow.escalate'))
+          throw new AppError(
+            'FORBIDDEN',
+            `The ${state.role} preview role cannot escalate composite sections.`,
+          );
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        child.attentionFlags = [...new Set([...(child.attentionFlags ?? []), 'ESCALATED'])];
+        child.updatedAt = now();
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          attentionFlags: child.attentionFlags,
+        };
       },
       { views: ['requests', 'overview'], shared: true },
     );

@@ -8,14 +8,15 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
   ROSTER_FRESHNESS_MINUTES: 'HAU_ROSTER_FRESHNESS_MINUTES',
   ROSTER_SYNC_DISABLED: 'HAU_ROSTER_SYNC_DISABLED',
   ROSTER_SYNC_APPROVED: 'HAU_ROSTER_SYNC_APPROVED',
-  ROSTER_EMERGENCY_DENY: 'HAU_ROSTER_EMERGENCY_DENY'
+  ROSTER_EMERGENCY_DENY: 'HAU_ROSTER_EMERGENCY_DENY',
+  COMPOSITE_REQUESTS_ENABLED: 'HAU_COMPOSITE_REQUESTS_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
 var HAU_CONFIG = Object.freeze({
   APP_VERSION: '0.5.0',
-  SCHEMA_VERSION: '1.3.0',
+  SCHEMA_VERSION: '1.4.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -76,6 +77,19 @@ function resolveAuthorizationContractVersion_(properties) {
   return version;
 }
 
+function resolveBooleanRuntimeProperty_(properties, key, fallback) {
+  var raw = properties.getProperty(key);
+  if (raw == null || String(raw).trim() === '') return Boolean(fallback);
+  var normalized = String(raw).trim().toLowerCase();
+  if (['true', '1', 'yes', 'on'].indexOf(normalized) >= 0) return true;
+  if (['false', '0', 'no', 'off'].indexOf(normalized) >= 0) return false;
+  throw appError_('CONFIGURATION_INVALID', key + ' must be a boolean value.', false, { key: key, allowed: ['true', 'false'] });
+}
+
+function resolveCompositeRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.COMPOSITE_REQUESTS_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -97,7 +111,8 @@ function resolveRuntimeConfig_() {
     spreadsheetId: spreadsheetId,
     backupSpreadsheetId: backupSpreadsheetId,
     bootstrapContractVersion: resolveBootstrapContractVersion_(properties),
-    authorizationContractVersion: resolveAuthorizationContractVersion_(properties)
+    authorizationContractVersion: resolveAuthorizationContractVersion_(properties),
+    compositeRequestsEnabled: resolveCompositeRequestsEnabled_(properties)
   };
 }
 
@@ -108,7 +123,7 @@ var HAU_SHEETS = Object.freeze({
   CANVASS: '10_CANVASS', SUPPLIERS: '11_SUPPLIERS', EVIDENCE: '12_EVIDENCE', EVENTS: '13_EVENTS',
   USERS: '14_USERS_ACCESS', HISTORY: '15_STATUS_HISTORY', AUDIT: '16_AUDIT_LOG', CONFIG: '17_CONFIG',
   ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP', USER_COMMITTEE_SCOPE: '20_USER_COMMITTEE_SCOPE',
-  ACCESS_SYNC_RUNS: '21_ACCESS_SYNC_RUNS', ACCESS_SYNC_SNAPSHOT: '22_ACCESS_SYNC_SNAPSHOT', MEMBERSHIP_SYNC_SNAPSHOT: '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT'
+  ACCESS_SYNC_RUNS: '21_ACCESS_SYNC_RUNS', ACCESS_SYNC_SNAPSHOT: '22_ACCESS_SYNC_SNAPSHOT', MEMBERSHIP_SYNC_SNAPSHOT: '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT', COMPOSITE_REQUESTS: '24_COMPOSITE_REQUESTS'
 });
 
 var HAU_HEADERS = Object.freeze({
@@ -134,7 +149,8 @@ var HAU_HEADERS = Object.freeze({
   '20_USER_COMMITTEE_SCOPE': ['Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes'],
   '21_ACCESS_SYNC_RUNS': ['Sync_Run_ID','Started_At','Completed_At','Source_Revision','Source_Row_Count','Active_Row_Count','Inactive_Row_Count','Conflict_Count','Unknown_Role_Count','Unknown_Committee_Count','Invalid_Type_Count','Changed_Grant_Count','Revocation_Count','Validation_Status','Activation_Status','Freshness_Expires_At','Emergency_Deny_Active','Failure_Code','Activated_At','Activated_By','Previous_Run_ID','Notes'],
   '22_ACCESS_SYNC_SNAPSHOT': ['Snapshot_Run_ID','User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes','Can_Manage_Catalog','Role_ID','Committee_IDs_JSON','Authorization_Overrides_JSON','Authorization_Status','Authorization_Revision','Access_Source','Access_Source_Revision','Access_Sync_Run_ID','Access_Last_Seen_At','Roster_Managed'],
-  '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT': ['Snapshot_Run_ID','Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes']
+  '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT': ['Snapshot_Run_ID','Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes'],
+  '24_COMPOSITE_REQUESTS': ['Record_ID','Record_Type','Request_ID','Component_ID','Relationship_Type','Relationship_Version','Component_Type','Label','Requester_Name','Requester_Email','Department','Event_Series_ID','Event_ID','Event_Name','Event_Start_At','Event_End_At','Priority','Purpose','Component_Payload_JSON','Lifecycle_Status','Owner_Committee_ID','Owner_User_ID','Due_At','Attention_Flags_JSON','Progress_JSON','Revision','Created_At','Updated_At','Created_By','Client_Request_ID','Client_Component_ID','Idempotency_Key','Archived_At','Notes']
 });
 
 var HAU_DATABASE_CACHE_ = null;

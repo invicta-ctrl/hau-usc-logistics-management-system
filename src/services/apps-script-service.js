@@ -15,6 +15,15 @@ export class AppsScriptService {
 
 for (const [client, server] of Object.entries({
   submitRequest: 'api_submitRequest',
+  submitCompositeRequest: 'api_submitCompositeRequest',
+  getCompositeRequest: 'api_getCompositeRequest',
+  transitionCompositeComponent: 'api_transitionCompositeComponent',
+  cancelCompositeRequest: 'api_cancelCompositeRequest',
+  reopenCompositeRequest: 'api_reopenCompositeRequest',
+  amendCompositeRequest: 'api_amendCompositeRequest',
+  addCompositeSection: 'api_addCompositeSection',
+  assignCompositeComponent: 'api_assignCompositeComponent',
+  escalateCompositeComponent: 'api_escalateCompositeComponent',
   acceptRequest: 'api_acceptRequest',
   createLendingTicket: 'api_createLendingTicket',
   approveLendingTicket: 'api_approveLendingTicket',

@@ -2,6 +2,14 @@
 
 ## 0.5.0 - Unreleased
 
+### Slice 6 - Composite Event Logistics request foundation
+
+- Added a feature-flagged composite Event Logistics foundation with one server-owned parent and one independently trackable child per non-empty Food, Materials, and Venue & Equipment section; blank sections create no child.
+- Added canonical validation, exact duplicate-line consolidation, server-generated IDs, one-append Apps Script creation, idempotent replay, locked mutation paths, versioned parent/child relationships, derived parent status/attention flags, lifecycle transitions, cancellation/reopen/amend/add-section rules, assignment/escalation boundaries, history, audit, and requester-scoped reads.
+- Added service/adaptor contracts, serialized mock mutations for concurrent-submit safety, source UI hierarchy/review flow, generated visual/standalone/Apps Script parity, and focused unit, Apps Script VM, and Chromium coverage.
+- Local gates pass: lint; Vitest 24 files / 203 tests; `npm run verify` with 29 Apps Script sources / 47 required functions; full Playwright 61 passed / 101 intentional skips / 0 failed across 162 cases; focused composite browser smoke; and `git diff --check`. Independent implementation review is PASS.
+- No specialization, catalog, restock, polling/live-update, hosting, database, migration, deployment, staging/production change, Script Property change, Google Sheets/Drive write, push, or private operational-data access was performed. `HAU_COMPOSITE_REQUESTS_ENABLED` remains an external opt-in flag and was not changed here.
+
 ### Slice 5 - Committee Main Hub and Inventory and Pantry vertical slice
 
 - Added one capability-aware Committee Main Hub with active Food, Inventory and Pantry, Materials, and Director contexts, safe quick links, freshness/manual refresh state, bounded queue counts, and bounded record identifiers for detail reconciliation.

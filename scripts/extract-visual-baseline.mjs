@@ -69,8 +69,8 @@ function bridgeRuntime(runtime) {
       "import { appEnvironment, backendMode, bootstrapContractVersion, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';\nimport { projectClientAuthorization } from '../domain/permissions.js';\nimport { validateEssentialBootstrap, validateBootstrapModule, createStateFromEssentialBootstrap, mergeBootstrapModule } from '../app/bootstrap-contract.js';\nimport { createModuleDataController } from '../app/module-data-controller.js';\nimport { BOOTSTRAP_STAGES, createBootstrapController, validateBootstrapEnvelope } from './bootstrap-controller.js';\nimport { createBootstrapUi } from './bootstrap-ui.js';\nimport { createRuntimeExtensions } from './runtime-extensions.js';\n  'use strict';",
     )
     .replace(
-      "  let state;\n  const ui=",
-      "  let state;\n  let runtimeExtensions;\n  let moduleDataController;\n  let activeModuleRequest;\n  const useEssentialBootstrap=backendMode==='apps-script'&&bootstrapContractVersion>=2;\n  const ui=",
+      "  let state;\n  const compositeRequestsEnabled = globalThis.__HAU_RUNTIME_CONFIG__?.compositeRequestsEnabled ?? true;\n  const ui=",
+      "  let state;\n  let runtimeExtensions;\n  let moduleDataController;\n  let activeModuleRequest;\n  const useEssentialBootstrap=backendMode==='apps-script'&&bootstrapContractVersion>=2;\n  const compositeRequestsEnabled = globalThis.__HAU_RUNTIME_CONFIG__?.compositeRequestsEnabled ?? true;\n  const ui=",
     )
     .replace(
       "function persist(){ state.updatedAt=isoNow(); try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(e){toast('Preview changes could not be saved locally. Storage may be full.',true);} }",
@@ -128,6 +128,10 @@ function bridgeRuntime(runtime) {
     .replace(
       "if(onReady)onReady(m);setTimeout(()=>m.querySelector('input,select,button')?.focus(),20)}\n  function closeModal(){byId('modalBackdrop').classList.remove('show')}",
       "if(onReady)onReady(m);m.onkeydown=e=>{if(e.key!=='Tab')return;const focusable=[...m.querySelectorAll('button,input,select,textarea,[href],[tabindex]:not([tabindex=\"-1\"])')].filter(x=>!x.disabled);if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};setTimeout(()=>m.querySelector('input,select,button')?.focus(),20)}\n  function closeModal(){const wasOpen=byId('modalBackdrop').classList.contains('show');byId('modalBackdrop').classList.remove('show');if(wasOpen){layerReturnFocus?.focus();layerReturnFocus=null;}}",
+    )
+    .replace(
+      "applyCompositeRequestFeatureState();populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');",
+      "populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');",
     )
     .replace(
       "function init(){\n    state=loadState();normalizeStateRecords();\n    const requestOnly=new URLSearchParams(location.search).get('request')==='1';if(requestOnly){document.body.classList.add('request-mode');ui.view='request';}\n    populateStaticOptions();bindGlobalEvents();setupUploaders();renderAll();byId('loading').classList.add('hidden');\n  }",
@@ -292,6 +296,14 @@ function bridgeRuntime(runtime) {
     .replace(
       "if(backendMode!=='mock'&&!['MATCH','RECEIVE'].includes(action)){if(action==='ACCEPT'||action==='SPLIT')await services.reviewRequest(d.requestId,'ACCEPT','Accepted from Deliverables queue');else if(action==='REJECT')await services.reviewRequest(d.requestId,'REJECT','Rejected from Deliverables queue');else await services.transitionDeliverable({deliverableId:d.id,status:action,note:`Moved to ${statusLabel(action)}`});closeModal();await commit(`${d.id} updated.`);return;}",
       "if(backendMode!=='mock'&&!['MATCH','RECEIVE'].includes(action)){let result;if(action==='ACCEPT'||action==='SPLIT')result=await services.reviewRequest(d.requestId,'ACCEPT','Accepted from Deliverables queue');else if(action==='REJECT')result=await services.reviewRequest(d.requestId,'REJECT','Rejected from Deliverables queue');else result=await services.transitionDeliverable({deliverableId:d.id,status:action,note:`Moved to ${statusLabel(action)}`});closeModal();await commit(`${d.id} updated.`,'success',result);return;}",
+    )
+    .replace(
+      "bindings(value){startupTestHook(BOOTSTRAP_STAGES.BINDINGS);bindGlobalEvents();setupUploaders();return value;}",
+      "bindings(value){startupTestHook(BOOTSTRAP_STAGES.BINDINGS);applyCompositeRequestFeatureState();bindGlobalEvents();setupUploaders();return value;}",
+    )
+    .replace(
+      /\['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','statusHistory','auditLog','roadmapMilestones'\]/g,
+      "['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','compositeRequests','compositeComponents','statusHistory','auditLog','roadmapMilestones']",
     );
 }
 const viewIds = [

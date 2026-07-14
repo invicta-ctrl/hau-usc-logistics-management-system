@@ -272,6 +272,7 @@ export function createSeedState() {
     demoToday: '2026-07-11',
     previewMode: true,
     backendMode: 'mock',
+    compositeRequestsEnabled: true,
     revisions: { inventory: 1, requests: 1, lending: 1, receipts: 1, quotes: 1, tasks: 1 },
     counters: {
       'TXN-2026': 131,
@@ -352,6 +353,8 @@ export function createSeedState() {
         createdAt: '2026-07-09T02:00:00.000Z',
       },
     ],
+    compositeRequests: [],
+    compositeComponents: [],
     requestLines: [
       {
         id: 'RL-0001',

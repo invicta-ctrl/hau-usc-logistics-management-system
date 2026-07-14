@@ -1,10 +1,38 @@
 export const LAUNCH_SERVICE_METHODS = Object.freeze([
-  'getBootstrapData', 'getCurrentUser', 'getDataRevision', 'searchCatalog', 'submitRequest', 'reviewRequest', 'reserveStock',
-  'createLendingTicket', 'approveLendingTicket', 'confirmLendingHandoff', 'confirmReturn',
-  'saveCanvassReference', 'selectPreferredCanvass', 'receiveRestock', 'receiveDeliverable',
-  'confirmRelease', 'transferEventItemToInventory', 'uploadEvidence', 'getAuditTimeline',
-  'getInventoryItem', 'createInventoryItem', 'updateInventoryItem', 'updateInventoryStorageContext',
-  'archiveInventoryItem', 'restoreInventoryItem',
+  'getBootstrapData',
+  'getCurrentUser',
+  'getDataRevision',
+  'searchCatalog',
+  'submitRequest',
+  'reviewRequest',
+  'reserveStock',
+  'submitCompositeRequest',
+  'getCompositeRequest',
+  'transitionCompositeComponent',
+  'cancelCompositeRequest',
+  'reopenCompositeRequest',
+  'amendCompositeRequest',
+  'addCompositeSection',
+  'assignCompositeComponent',
+  'escalateCompositeComponent',
+  'createLendingTicket',
+  'approveLendingTicket',
+  'confirmLendingHandoff',
+  'confirmReturn',
+  'saveCanvassReference',
+  'selectPreferredCanvass',
+  'receiveRestock',
+  'receiveDeliverable',
+  'confirmRelease',
+  'transferEventItemToInventory',
+  'uploadEvidence',
+  'getAuditTimeline',
+  'getInventoryItem',
+  'createInventoryItem',
+  'updateInventoryItem',
+  'updateInventoryStorageContext',
+  'archiveInventoryItem',
+  'restoreInventoryItem',
 ]);
 
 export function assertLaunchServiceContract(service) {
@@ -12,4 +40,3 @@ export function assertLaunchServiceContract(service) {
   if (missing.length) throw new Error(`Launch service adapter is missing: ${missing.join(', ')}`);
   return service;
 }
-
