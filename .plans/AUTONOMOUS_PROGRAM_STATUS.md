@@ -2,6 +2,20 @@
 
 PROGRAM STATE: IN_PROGRESS
 
+## Current run checkpoint - P0 staging acceptance (Phase E blocked)
+
+- Date: 2026-07-14 (Asia/Manila).
+- Current run stage: `PHASE_E_V2_BOOTSTRAP_PROPERTY_BLOCKED`.
+- This run is accepting the already implemented Slices 1-3 in Apps Script staging only; Slice 4 and all later product slices remain out of scope.
+- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; local HEAD `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `2 0`; remote head remains `3f038590bdebe5b117018356838b82d94683ad37`; worktree is clean.
+- Local repair commits are `8bf1074033e8133a5872dd0004a1694f492237d7` (`fix: tolerate legacy handling in bootstrap`) and `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0` (`fix: normalize Apps Script callback payloads`). They have not been pushed.
+- Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. The prior immutable staging Version 13 remains the rollback target; a fresh timestamped staging backup was verified before the package push.
+- The exact reviewed Apps Script package matched remotely for all 32 expected files, the preserved web-app manifest was present, the existing staging deployment served Version 17, and no non-target deployment changed.
+- Phase E is not complete. The staging owner must set `HAU_BOOTSTRAP_CONTRACT_VERSION=2` while leaving `HAU_AUTHORIZATION_CONTRACT_VERSION` at v1/absent. No Script Property was changed in this run.
+- Blocker: no authenticated staging Apps Script editor/property-access session is available in this checkout. The reviewed source has no approved property setter, and the Apps Script content/version/deployment API does not expose Script Properties. Do not use the production-target local configuration, add a temporary setter, or create a temporary deployment.
+- Do not add `STAGING ACCEPTANCE: SLICES 1-3 PASSED` until all Phase E checks pass. Do not push, merge, or promote to production from this checkpoint.
+- Next action: obtain the staging owner’s authenticated editor access, set only the bootstrap property to v2, then rerun the Phase E diagnostic, internal, request-only, cold/warm, module, retry/error, bounded-payload, request-count, and privacy checks without repeating completed Phase D work.
+
 ## Program identity
 
 - Program: HAU-USC V1 release and stabilization program.

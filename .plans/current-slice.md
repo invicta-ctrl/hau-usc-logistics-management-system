@@ -1,3 +1,26 @@
+# P0 Production Bootstrap Diagnosis and Recovery - staging acceptance checkpoint
+
+CURRENT SLICE: Slices 1-3 staging acceptance (Slice 3 implementation already complete)
+CURRENT STAGE: PHASE_E_V2_BOOTSTRAP_PROPERTY_BLOCKED
+LAST UPDATED: 2026-07-14 (Asia/Manila)
+
+## Current run state
+
+- Branch: `feat/live-sync-lending-search-catalog-controls`.
+- Local HEAD: `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `2 0`; worktree: clean.
+- The two local repair commits are complete and unpushed. No generated file was hand-edited.
+- Phase D compatibility-mode staging acceptance passed on Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target, and the pre-push staging backup was verified.
+- Phase E v2 acceptance is blocked before changing any Script Property because an authenticated staging Apps Script editor/property-access session is unavailable. The safe next action is to set `HAU_BOOTSTRAP_CONTRACT_VERSION=2` only, leave authorization contract v1/absent, and rerun the required v2 checks.
+- The exact success marker is intentionally absent. Do not push, merge, promote, or begin Slice 4 until Phase E passes.
+
+## Staging acceptance boundary
+
+- The reviewed package was verified remotely at all 32 expected files; the web-app manifest was preserved; Version 17 served from the existing staging deployment; and non-target deployments were unchanged.
+- The live v1 diagnostic, authorized internal workspace, request-only portal, desktop cold/warm, mobile cold, and legacy v1 endpoint checks passed without operational mutation. The v2 UI flow, v2 timings/payload/request-count evidence, and final staging acceptance remain unknown.
+- Rollback: restore the bootstrap property to its effective v1 setting if v2 is enabled and fails; if deployment rollback is required, point the existing staging deployment to immutable Version 13. Preserve both versions and the backup.
+
+---
+
 # Slice 3 Current Slice Checkpoint
 
 CURRENT SLICE: Slice 3 - Canonical roles, committee scopes, and authorization contract

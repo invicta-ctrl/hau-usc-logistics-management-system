@@ -1,5 +1,18 @@
 # Work Continuation
 
+## Current checkpoint - Slices 1-3 staging acceptance (Phase E blocked)
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Local HEAD: `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `2 0`; worktree is clean.
+- The two local Apps Script/bootstrap repair commits are complete and remain unpushed because final v2 staging acceptance has not passed. The remote branch remains at `3f038590bdebe5b117018356838b82d94683ad37`.
+- Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target. The reviewed 32-file package matched remotely, the web-app manifest was preserved, the existing staging deployment served Version 17, and non-target deployments were unchanged. A fresh timestamped staging backup was verified before the push.
+- Live v1 checks passed for the diagnostic route, authorized internal workspace, request-only portal, desktop cold/warm startup, mobile startup, and legacy v1 endpoint. Request-only content remained sanitized and empty of internal operational lists; no operational mutation was performed.
+- Current stage: `PHASE_E_V2_BOOTSTRAP_PROPERTY_BLOCKED`. The staging owner must set `HAU_BOOTSTRAP_CONTRACT_VERSION=2` while leaving `HAU_AUTHORIZATION_CONTRACT_VERSION` at v1/absent. No Script Property was changed in this run.
+- Blocker: this checkout has no authenticated staging Apps Script editor/property-access session. The reviewed source has no approved setter, and the Apps Script API used for content/version/deployment operations does not expose Script Properties. Do not use the production-target local configuration, add a temporary setter, or create a temporary deployment.
+- Do not claim `STAGING ACCEPTANCE: SLICES 1-3 PASSED`, push, merge, promote, or start Slice 4 until Phase E v2 diagnostic, internal, request-only, cold/warm, module, retry/error, bounded-payload, request-count, and privacy checks pass.
+- Safe rollback: if v2 is enabled and fails, restore the bootstrap property to its effective v1 setting; if deployment rollback is needed, point the existing staging deployment to immutable Version 13. Preserve the versions and backup.
+
 ## Current checkpoint - Slice 3 canonical roles, committee scopes, and authorization contract
 
 - Date: `2026-07-14` (`Asia/Manila`)
