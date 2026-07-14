@@ -133,6 +133,18 @@ describe('bootstrap privacy boundary', () => {
     expect(result.currentUser.role).toBe('READ_ONLY_AUDITOR');
     expect(result.inventoryItems[0]).toHaveProperty('openingOnHand', 99);
   });
+
+  it('maps unrecognized legacy handling and lending values conservatively in read DTOs', () => {
+    const context = bootstrapContext({ User_ID:'USR-DOL', Role:'READ_ONLY_AUDITOR', Active:true });
+    const item = context.itemDto_({
+      Item_ID:'ITM-LEGACY', Item_Name:'Legacy Item', Aliases:'', Category:'Office', Stock_Area:'Inventory',
+      Handling:'Legacy Handling', Unit:'piece', Status:'ACTIVE', Lending_Audience:'Legacy Audience',
+    }, { onHand:{ 'ITM-LEGACY': 2 }, reserved:{ 'ITM-LEGACY': 0 } });
+
+    expect(item).toMatchObject({
+      handling:'NON_CIRCULATING', handlingCode:'NON_CIRCULATING', lendingAudience:'NOT_AVAILABLE_FOR_LENDING',
+    });
+  });
 });
 
 describe('catalog opening-stock authorization', () => {
