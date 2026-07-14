@@ -46,6 +46,18 @@ describe('AppsScriptAdapter', () => {
     await expect(new AppsScriptAdapter().submitRequest({ clientRequestId: 'client-1' })).resolves.toEqual(expect.objectContaining({ requestId: 'LREQ-2026-0001' }));
   });
 
+  it('clones cross-realm Apps Script responses before contract validation', async () => {
+    const result = Object.create({ inherited: true });
+    result.ok = true;
+    result.data = Object.assign(Object.create({ inherited: true }), { version: '0.5.0' });
+    globalThis.google = { script: { run: runnerFor(result) } };
+
+    const response = await new AppsScriptAdapter().getBootstrapData({ requestOnly: false });
+
+    expect(Object.getPrototypeOf(response)).toBe(Object.prototype);
+    expect(response.data).toMatchObject({ version: '0.5.0' });
+  });
+
   it('preserves safe error codes, retryability, and correlation IDs', async () => {
     globalThis.google = { script: { run: runnerFor({ ok: false, code: 'INSUFFICIENT_STOCK', message: 'Only 3 pieces are available to promise.', retryable: false, correlationId: 'COR-2' }) } };
     await expect(new AppsScriptAdapter().reserveStock({ clientRequestId: 'client-2' })).rejects.toMatchObject({ code: 'INSUFFICIENT_STOCK', correlationId: 'COR-2', retryable: false });
