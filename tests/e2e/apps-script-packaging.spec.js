@@ -242,6 +242,51 @@ test('packaged Apps Script bootstrap shows the slow state without a duplicate ca
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
 });
 
+test('packaged Apps Script bootstrap accepts a module response after the legacy timeout', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One real browser timeout-boundary run is sufficient for packaging verification.');
+  const files = await createAppsScriptBundleFromProject();
+  const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
+  const essential = createEssentialBootstrapFixture({ backendMode: 'apps-script' });
+  const module = createBootstrapModuleFixture({ backendMode: 'apps-script', module: 'overview' });
+
+  await page.goto('about:blank');
+  await page.clock.install({ time: new Date('2026-07-14T06:00:00Z') });
+  await page.evaluate(({ essential: bootstrap, module: activeModule }) => {
+    globalThis.__appsScriptApiCalls = [];
+    let successHandler = () => {};
+    let runner;
+    const target = {
+      withSuccessHandler(handler) { successHandler = handler; return runner; },
+      withFailureHandler() { return runner; },
+    };
+    runner = new Proxy(target, {
+      get(object, property) {
+        if (property in object) return object[property];
+        if (typeof property === 'symbol') return undefined;
+        return () => {
+          globalThis.__appsScriptApiCalls.push(String(property));
+          if (property === 'api_getEssentialBootstrapData') queueMicrotask(() => successHandler({ ok: true, ...bootstrap }));
+          if (property === 'api_getBootstrapModule') setTimeout(() => successHandler({ ok: true, ...activeModule }), 40_000);
+        };
+      },
+    });
+    globalThis.google = { script: { run: runner } };
+  }, { essential, module });
+  await page.setContent(assembled, { waitUntil: 'load' });
+
+  await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
+  await page.clock.fastForward(30_001);
+  await expect(page.locator('#loading')).toHaveAttribute('data-state', 'slow');
+  await expect(page.locator('#loading')).not.toHaveAttribute('data-state', 'error');
+
+  await page.clock.fastForward(10_000);
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  expect(await page.evaluate(() => globalThis.__appsScriptApiCalls)).toEqual([
+    'api_getEssentialBootstrapData',
+    'api_getBootstrapModule',
+  ]);
+});
+
 for (const stage of [
   'RESPONSE_VALIDATION',
   'NORMALIZATION',

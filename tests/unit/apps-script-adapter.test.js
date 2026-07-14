@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AppsScriptAdapter } from '../../src/services/apps-script-adapter.js';
 
 function runnerFor(result) {
@@ -12,7 +12,7 @@ function runnerFor(result) {
   return proxy;
 }
 
-afterEach(() => { delete globalThis.google; });
+afterEach(() => { delete globalThis.google; vi.useRealTimers(); });
 
 describe('AppsScriptAdapter', () => {
   it('routes essential and module bootstrap reads through the sole Apps Script adapter', async () => {
@@ -61,6 +61,33 @@ describe('AppsScriptAdapter', () => {
   it('preserves safe error codes, retryability, and correlation IDs', async () => {
     globalThis.google = { script: { run: runnerFor({ ok: false, code: 'INSUFFICIENT_STOCK', message: 'Only 3 pieces are available to promise.', retryable: false, correlationId: 'COR-2' }) } };
     await expect(new AppsScriptAdapter().reserveStock({ clientRequestId: 'client-2' })).rejects.toMatchObject({ code: 'INSUFFICIENT_STOCK', correlationId: 'COR-2', retryable: false });
+  });
+
+  it('allows a slow read-only bootstrap module without relaxing mutation timeouts', async () => {
+    vi.useFakeTimers();
+    let success;
+    let proxy;
+    const runner = {
+      withSuccessHandler(handler) { success = handler; return proxy; },
+      withFailureHandler() { return proxy; },
+    };
+    proxy = new Proxy(runner, {
+      get(target, property) {
+        if (property in target) return target[property];
+        return () => setTimeout(() => success({ ok: true, data: {} }), 40_000);
+      },
+    });
+    globalThis.google = { script: { run: proxy } };
+
+    const adapter = new AppsScriptAdapter();
+    const moduleRead = adapter.getBootstrapModule({ module: 'overview' });
+    await vi.advanceTimersByTimeAsync(40_000);
+    await expect(moduleRead).resolves.toEqual({ ok: true, data: {} });
+
+    const mutation = adapter.submitRequest({ clientRequestId: 'client-1' });
+    const mutationResult = expect(mutation).rejects.toMatchObject({ code: 'BACKEND_TIMEOUT', retryable: true });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await mutationResult;
   });
 
   it('keeps a timeout terminal when a late success callback arrives', async () => {

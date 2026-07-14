@@ -15,13 +15,21 @@ const METHODS = Object.freeze({
   archiveInventoryItem: 'api_archiveInventoryItem', restoreInventoryItem: 'api_restoreInventoryItem',
 });
 
+const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_BOOTSTRAP_MODULE_TIMEOUT_MS = 60_000;
+
 export class AppsScriptAdapter {
-  constructor({ timeoutMs = 30_000 } = {}) { this.mode = 'apps-script'; this.timeoutMs = timeoutMs; }
+  constructor({ timeoutMs = DEFAULT_TIMEOUT_MS, bootstrapModuleTimeoutMs = DEFAULT_BOOTSTRAP_MODULE_TIMEOUT_MS } = {}) {
+    this.mode = 'apps-script';
+    this.timeoutMs = timeoutMs;
+    this.bootstrapModuleTimeoutMs = bootstrapModuleTimeoutMs;
+  }
   _call(method, command = {}) {
     const runner = globalThis.google?.script?.run;
     if (!runner) return Promise.reject(new AppError('BACKEND_UNAVAILABLE', 'Google Apps Script is unavailable.', { retryable: true }));
     return new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new AppError('BACKEND_TIMEOUT', 'The server took too long to respond. Retrying is safe.', { retryable: true })), this.timeoutMs);
+      const timeoutMs = method === METHODS.getBootstrapModule ? this.bootstrapModuleTimeoutMs : this.timeoutMs;
+      const timeout = setTimeout(() => reject(new AppError('BACKEND_TIMEOUT', 'The server took too long to respond. Retrying is safe.', { retryable: true })), timeoutMs);
       runner.withSuccessHandler((result) => {
         clearTimeout(timeout);
         let normalized;
