@@ -4,19 +4,21 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Slice 6 committed locally, pending manager review
+## Current run checkpoint - Slice 6 committed, pushed, and CI verified
 
-- Date: 2026-07-14 (Asia/Manila).
-- Current run stage: `SLICE_6_COMMITTED_LOCAL_PENDING_MANAGER_REVIEW`.
-- Manager approval: explicit user approval received after Slice 5 remote and CI review.
-- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; starting HEAD `6548ca23f5d46b5afe40e592a3833de548b18574`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; worktree was clean; local rollback tag `hau-usc-slice6-start-6548ca2` points to the starting HEAD; no external system was changed.
+- Date: 2026-07-15 (Asia/Manila).
+- Current run stage: `SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
+- Manager approval: explicit user approval for the Slice 6 branch push was received 2026-07-15 after the local checkpoint review.
+- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; starting HEAD `6548ca23f5d46b5afe40e592a3833de548b18574`; implementation commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0` after push; remote and PR #6 heads matched the implementation commit; local rollback tag `hau-usc-slice6-start-6548ca2` points to the starting HEAD.
 - Scope: feature-flagged Composite Event Logistics request foundation only: one server-owned parent and one independent child per non-empty Food, Materials, and Venue & Equipment section; validation/review/submit, exact duplicate consolidation, atomic idempotent creation, visible hierarchy, independent child lifecycle, derived parent status, cancellation/reopen/amend/add-section, assignment/escalation boundaries, history, and audit.
 - Explicit exclusions: no Slice 7 specialization, catalog editor, availability promise, polling/live updates, hosting, database work, migration, deployment, staging/production change, or Google Sheets/Drive/Apps Script external write; no generated-file hand edits.
-- Implementation is complete and committed locally in the focused Slice 6 commit. The feature-flagged composite request foundation, additive Apps Script schema/routes, adapters/mock contracts, source UI, generated parity, and focused tests are present; no migration or external setup ran.
+- Implementation is complete in focused commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` and is pushed to the feature branch. The feature-flagged composite request foundation, additive Apps Script schema/routes, adapters/mock contracts, source UI, generated parity, and focused tests are present; no migration or external setup ran.
 - Local evidence: lint passed; Vitest passed with 24 files / 203 tests; `npm run verify` passed with 29 Apps Script sources / 47 required functions; the full Playwright matrix passed with 61 passed / 101 intentional skips / 0 failed across 162 cases; the focused composite browser test passed; and `git diff --check` passed.
 - Independent implementation review is PASS after a scoped MockService mutation-queue repair for concurrent submission safety. Sensitive scan found no newly introduced protected values; existing fictional preview baseline values remain unchanged. No external system or generated file was hand-edited.
 - Generated evidence: standalone artifacts 293,406 bytes each / SHA-256 `f9592c86f6e63377b82d656333b64188dea0c4284f2b23108cecb2dfd0866558`; Apps Script `Index.html` 766 bytes / SHA-256 `9615ba949ac8479ed6b8057c6561370eedcdda0db997f238ef4c631b727a47de`; split outputs pass deterministic parity.
-- Next stage: manager review of the exact local commit. Do not push, deploy, migrate, modify external configuration, or start Slice 7. The program remains `IN_PROGRESS`.
+- Remote evidence: PR #6 head matched `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; Apps Script static check run `29377313232` passed `validate`; CI run `29377313250` passed `verify` and `browser-smoke`.
+- The three owner-confirmed Phase 2 `.codex` configuration files were preserved outside the repository with matching SHA-256 hashes and removed from this checkout before push; they are not part of Slice 6.
+- Next stage: manager review of the exact pushed commit and CI evidence. Do not deploy, migrate, modify external configuration, begin Phase 2, or start Slice 7 until that review accepts this checkpoint. The program remains `IN_PROGRESS`.
 - Rollback: disable the feature flag for new submissions; retain any created records for read/service continuity; use the Slice 6 rollback tag for a focused revert if local gates fail.
 
 ## Current run checkpoint - Slice 5 committed, pushed, and CI verified

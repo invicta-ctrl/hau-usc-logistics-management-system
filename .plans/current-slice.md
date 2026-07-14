@@ -1,8 +1,8 @@
 # HAU-USC V1 Autonomous Program - Slice 6 checkpoint
 
 CURRENT SLICE: Slice 6 - Composite Event Logistics request foundation
-CURRENT STAGE: SLICE_6_COMMITTED_LOCAL_PENDING_MANAGER_REVIEW
-LAST UPDATED: 2026-07-14 (Asia/Manila)
+CURRENT STAGE: SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
+LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
@@ -19,12 +19,14 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 - Required evidence: all seven non-empty section combinations, all-blank rejection, validation/focus behavior, exact retry and concurrent submit, atomic failure, duplicate consolidation, child transitions and mixed-state rejection, cancellation/reopen/amend/add-section, parent derivation properties, authorization/audit, generated-artifact parity, privacy scan, `npm run check`, `npm run verify`, and independent implementation review.
 - Migration impact: additive repository schema only; no external migration or setup run; existing `03_REQUESTS.Parent_Request_ID` remains untouched.
 - Rollback: disable the composite submission feature flag; retain created records for read/service continuity; if code rollback is required, revert the focused Slice 6 commit to the `hau-usc-slice6-start-6548ca2` checkpoint without resetting or discarding unrelated work.
-- Implementation is complete and committed locally in the focused Slice 6 commit. It adds `src/domain/composite-requests.js`, `apps-script/CompositeRequestService.gs`, the additive `24_COMPOSITE_REQUESTS` schema and routes, adapter/mock/service-contract wiring, feature-flagged source UI, focused unit/Apps Script tests, and one composite browser smoke test. Generated outputs were regenerated through `npm run extract:visual` and the build pipeline; no generated file was hand-edited.
+- Implementation is complete and pushed in focused commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`. It adds `src/domain/composite-requests.js`, `apps-script/CompositeRequestService.gs`, the additive `24_COMPOSITE_REQUESTS` schema and routes, adapter/mock/service-contract wiring, feature-flagged source UI, focused unit/Apps Script tests, and one composite browser smoke test. Generated outputs were regenerated through `npm run extract:visual` and the build pipeline; no generated file was hand-edited.
 - Local evidence: `npm run lint` passed; `npm test` passed with 24 files / 203 tests after the concurrency repair; `npm run verify` passed with 29 Apps Script sources / 47 required functions and standalone parity; the complete Playwright matrix passed with 61 passed / 101 intentional skips / 0 failed across 162 cases; the focused composite browser test passed at 390 px; and `git diff --check` passed.
 - Independent implementation review: PASS after repairing the mock mutation boundary to serialize concurrent submissions. The review verified the seven non-empty section combinations, blank-section rejection, duplicate consolidation, server-owned IDs, single-append Apps Script creation, idempotent replay, parent derivation, lifecycle/authorization boundaries, request-only sanitization, audit/history hooks, and generated parity.
 - Sensitive scan: no newly introduced credential, `.clasp` content, private Google identifier, roster/student record, private contact, supplier-TIN literal, or evidence link/file was found in the changed additions. Existing fictional preview baseline values in regenerated standalone artifacts were unchanged. No external system, deployment, migration, or Script Property was modified; `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
 - Generated evidence from the final build: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 293,406 bytes / SHA-256 `f9592c86f6e63377b82d656333b64188dea0c4284f2b23108cecb2dfd0866558`; `apps-script/Index.html` is 766 bytes / SHA-256 `9615ba949ac8479ed6b8057c6561370eedcdda0db997f238ef4c631b727a47de`; the split Apps Script outputs passed deterministic parity.
-- Focused commit: `70c4946a16a60e00ed22fe778f17c789250de639` (`feat: add composite event logistics request foundation`). It is local only; do not push or begin Slice 7. The branch remains ahead of the unchanged upstream for manager review.
+- Focused commit: `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` (`feat: add composite event logistics request foundation`). Local, upstream, and PR #6 heads matched after push; `validate`, `verify`, and `browser-smoke` passed in GitHub Actions runs `29377313232` and `29377313250`. The worktree was clean and local/upstream count was `0 0` before this documentation checkpoint.
+- Owner-confirmed Phase 2 `.codex` configuration files were preserved in a dated external archive with matching SHA-256 hashes, then removed from this checkout; they were not staged or included in Slice 6.
+- Next stage is manager review of the pushed implementation and CI evidence. Do not deploy, migrate, begin Phase 2, or start Slice 7 before acceptance.
 
 ## Historical Slice 5 checkpoint
 

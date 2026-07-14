@@ -2,30 +2,31 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-5 committed and CI-verified; Slice 6 locally committed and verified; production undeployed)
-- Date: `2026-07-14`
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 committed and CI-verified; production undeployed)
+- Date: `2026-07-15`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
-- Approved Slice 5 starting commit: `89a7accdf0bcd3e3d080bcde5ad2e8874ba7d03e` (Slice 4 remote-verification documentation checkpoint)
-- Current implementation checkpoint: Slice 6 implementation is verified and committed locally in the focused Slice 6 commit; the approved starting checkpoint was `6548ca23f5d46b5afe40e592a3833de548b18574`; no push has occurred for Slice 6
+- Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
+- Current implementation checkpoint: Slice 6 commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; pushed; remote and PR #6 heads matched; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 5 head; manager review is pending
+- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 6 implementation head; manager review is pending
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-5 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-6 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
 ## Current Slice 6 - Composite Event Logistics request foundation
 
-- Stage: `SLICE_6_COMMITTED_LOCAL_PENDING_MANAGER_REVIEW`.
+- Stage: `SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
 - Scope: a feature-flagged, server-owned parent request with one independent child for each non-empty Food, Materials, and Venue & Equipment section; validation, exact duplicate consolidation, atomic idempotent creation, visible hierarchy, child lifecycle, derived parent status, cancellation/reopen/amend/add-section, assignment/escalation boundaries, history, and audit.
 - Repository implementation: additive `24_COMPOSITE_REQUESTS` schema and `CompositeRequestService.gs`, nine Apps Script routes, canonical domain/service contracts, serialized mock mutations, feature-flagged source UI, and focused unit/Apps Script/browser tests. Existing `03_REQUESTS.Parent_Request_ID` remains untouched.
 - Evidence: `npm run lint` passed; `npm test` passed with 24 files / 203 tests; `npm run verify` passed with 29 Apps Script sources / 47 required functions; full Playwright passed 61 / 101 intentional skips / 0 failed across 162 cases; the focused composite browser test passed; and `git diff --check` passed. Independent review is PASS after the concurrency repair.
 - Generated evidence: standalone artifacts are 293,406 bytes each / SHA-256 `f9592c86f6e63377b82d656333b64188dea0c4284f2b23108cecb2dfd0866558`; Apps Script `Index.html` is 766 bytes / `9615ba949ac8479ed6b8057c6561370eedcdda0db997f238ef4c631b727a47de`; split outputs pass deterministic parity.
-- Privacy/external boundary: no newly introduced credentials, `.clasp` content, private identifiers, roster/student data, private contacts, supplier TINs, or evidence files/links; no Sheet/Drive/Apps Script external write, Script Property change, migration, deployment, or push occurred. `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
+- Remote evidence: implementation commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` is pushed and PR #6 `validate`, `verify`, and `browser-smoke` are green in runs `29377313232` and `29377313250`.
+- Privacy/external boundary: no newly introduced credentials, `.clasp` content, private identifiers, roster/student data, private contacts, supplier TINs, or evidence files/links; no Sheet/Drive/Apps Script external write, Script Property change, migration, or deployment occurred. `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
 - Rollback: disable `HAU_COMPOSITE_REQUESTS_ENABLED` for new submissions; retain any created records for read continuity; use a focused revert to the `hau-usc-slice6-start-6548ca2` checkpoint if required. Do not reset or discard work. Slice 7 remains gated.
 
 ## Current Slice 5 - Committee Main Hub and Inventory and Pantry vertical slice

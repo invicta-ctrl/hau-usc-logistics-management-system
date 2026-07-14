@@ -1,15 +1,18 @@
 # Work Continuation
 
-## Current checkpoint - Slice 6 implementation committed locally
+## Current checkpoint - Slice 6 committed, pushed, and CI verified
 
-- Date: `2026-07-14` (`Asia/Manila`)
+- Date: `2026-07-15` (`Asia/Manila`)
 - Repository root: `D:\Documents\DOL Website GitHub`; branch: `feat/live-sync-lending-search-catalog-controls`; approved starting checkpoint: `6548ca23f5d46b5afe40e592a3833de548b18574`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; rollback tag: `hau-usc-slice6-start-6548ca2`.
-- Current stage: `SLICE_6_COMMITTED_LOCAL_PENDING_MANAGER_REVIEW`. The worktree is clean and the bounded Slice 6 implementation, generated outputs, tests, and required documentation edits are committed locally in the focused Slice 6 commit. No push has occurred.
+- Current stage: `SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. Implementation commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` is pushed; local, upstream, and PR #6 heads matched; local/upstream count was `0 0`; and the worktree was clean before this documentation checkpoint.
 - Scope delivered: feature-flagged Composite Event Logistics request foundation only - Food, Materials, and Venue & Equipment parent/child hierarchy, validation, duplicate consolidation, atomic/idempotent creation, independent lifecycle, parent derivation, cancellation/reopen/amend/add-section, assignment/escalation boundaries, history, audit, and requester-scoped reads. Slice 7 specialization and all later slices remain gated.
 - Local evidence: lint passed; Vitest passed with 24 files / 203 tests; `npm run verify` passed with 29 Apps Script sources / 47 required functions; full Playwright passed 61 / 101 intentional skips / 0 failed across 162 cases; focused composite browser smoke passed; and `git diff --check` passed. Independent implementation review is PASS after the mock concurrent-mutation repair.
 - Generated evidence: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 293,406 bytes each / SHA-256 `f9592c86f6e63377b82d656333b64188dea0c4284f2b23108cecb2dfd0866558`; `apps-script/Index.html` is 766 bytes / SHA-256 `9615ba949ac8479ed6b8057c6561370eedcdda0db997f238ef4c631b727a47de`; split outputs pass deterministic parity.
-- Privacy/external boundary: changed additions contain no newly introduced credentials, `.clasp` content, private Google identifiers, roster/student records, private contacts, supplier TINs, or evidence links/files. No Sheet/Drive/Apps Script external write, Script Property change, migration, deployment, or push occurred. `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
+- Remote evidence: Apps Script static check run `29377313232` passed `validate`; CI run `29377313250` passed `verify` and `browser-smoke`; PR #6 remained open and draft at the exact implementation head.
+- Privacy/external boundary: changed additions contain no newly introduced credentials, `.clasp` content, private Google identifiers, roster/student records, private contacts, supplier TINs, or evidence links/files. No Sheet/Drive/Apps Script external write, Script Property change, migration, or deployment occurred. `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
+- Owner-confirmed Phase 2 `.codex` configuration files were preserved at `D:\Documents\DOL Website GitHub Backups\HAU_USC_CODEX_PHASE2_PRESERVATION_20260715-074959`; each archived SHA-256 matched its source before the untracked originals were removed. They were not included in Slice 6.
 - Rollback: disable `HAU_COMPOSITE_REQUESTS_ENABLED` for new submissions; retain created records for read continuity; if code rollback is required, use a focused revert to `hau-usc-slice6-start-6548ca2` without resetting or discarding unrelated work.
+- Next action: manager review of pushed commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` and its green CI evidence. Do not deploy, migrate, change external configuration, begin Phase 2, or start Slice 7 before acceptance.
 
 ## Current checkpoint - Slice 5 committed, pushed, and CI verified
 
