@@ -1,17 +1,17 @@
 # P0 Production Bootstrap Diagnosis and Recovery - staging acceptance checkpoint
 
 CURRENT SLICE: Slices 1-3 staging acceptance (Slice 3 implementation already complete)
-CURRENT STAGE: PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORE_REQUIRED
+CURRENT STAGE: PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 ## Current run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Local HEAD: `eb823dccb574b46f6ef7ac23bd4eba66b47e64d0`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `2 0`; worktree: clean.
+- Local HEAD: `b8beda10e6271fbbe91d3b0f0b04e4c0828e4c21`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `4 0`; worktree: clean.
 - The two local repair commits are complete and unpushed. No generated file was hand-edited.
 - Phase D compatibility-mode staging acceptance passed on Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target, and the pre-push staging backup was verified.
 - Phase E v2 acceptance was attempted after the staging owner set the bootstrap property to v2 and retained authorization contract v1/absent. Direct v2 endpoint checks passed, but the live UI remained in slow startup and reached the retryable read-only-service timeout instead of ready.
-- Rollback completed immediately: the existing staging deployment serves immutable Version 13 with one web entry point. Restore the bootstrap property to v1/absent before any further staging check; the property edit cannot be performed from this checkout without the authenticated staging editor.
+- Rollback completed immediately: the existing staging deployment serves immutable Version 13 with exactly one WEB_APP entry point. The staging owner reports that the bootstrap property is restored to `1`; this checkout cannot read Script Properties directly.
 - The exact success marker is intentionally absent. Do not push, merge, promote, or begin Slice 4 until Phase E passes.
 
 ## Staging acceptance boundary
