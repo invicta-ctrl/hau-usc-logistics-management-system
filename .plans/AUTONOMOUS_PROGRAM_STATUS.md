@@ -4,18 +4,19 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Slice 4 local gates passed
+## Current run checkpoint - Slice 4 committed and CI verified
 
 - Date: 2026-07-14 (Asia/Manila).
-- Current run stage: `SLICE_4_LOCAL_GATES_PASSED_PENDING_COMMIT`.
+- Current run stage: `SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
 - The accepted Phase E staging checkpoint for Slices 1-3 is the dependency baseline. This autonomous program is continuing through Slices 4-16; production remains untouched.
-- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; HEAD `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0`; worktree clean; remote head matches HEAD.
+- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; HEAD `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0`; worktree clean; remote head matches HEAD.
 - Slice 4 scope is limited to private-roster synchronization, validated local access freshness, explicit admin/scheduled sync controls, safe health/diagnostic output, and emergency deny. No source contents, private identifiers, credentials, roster rows, or external configuration values are present in this checkout.
 - Slice 4 exclusions are committee UI, composite requests, catalog, restock, polling/live updates, hosting, database work, deployment, migration, trigger activation, and production changes.
 - Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9` points to the approved starting HEAD. If the implementation is rejected, use a focused revert after review; do not reset or discard work.
 - Local evidence: `npm run check` passed with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 50 / 100 intentional skips / 0 failures across 150 cases; lint, diff check, and changed-scope sensitive scan passed.
 - Independent implementation review: PASS; no blocking privacy, authorization, source-read, membership, freshness, rollback, or generated-artifact issue remains in the bounded Slice 4 scope.
-- No commit, push, deployment, trigger activation, Sheet/Drive write, private source read, migration, or production change has occurred for Slice 4.
+- Focused implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` (`feat: add private roster sync and access freshness`), pushed to the feature branch. Draft PR #6 `validate`, `verify`, and `browser-smoke` checks are green; the Node.js deprecation annotation is non-blocking. Manager review is the next gate before Slice 5.
+- No deployment, trigger activation, Sheet/Drive write, private source read, migration, or production change has occurred for Slice 4.
 
 ## Superseded checkpoint - P0 staging acceptance (Phase E previously blocked)
 
@@ -40,7 +41,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 - Program: HAU-USC V1 release and stabilization program.
 - Source plan: `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`.
 - Program start date: 2026-07-14 (Asia/Manila).
-- Current run stage: bounded P0/Phase E staging acceptance for Slices 1-3 is complete locally; later slices remain gated.
+- Current run stage: Slice 4 is committed, pushed, and CI-green; manager review gates Slice 5 and later slices remain unstarted.
 - Repository root: `D:\Documents\DOL Website GitHub`.
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
 - Approved Slice 3 starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121` (`docs: record Slice 2 remote verification`).

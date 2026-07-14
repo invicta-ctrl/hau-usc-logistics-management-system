@@ -1,20 +1,21 @@
 # Work Continuation
 
-## Current checkpoint - Slice 4 local gates passed
+## Current checkpoint - Slice 4 committed and CI verified
 
 - Date: `2026-07-14` (`Asia/Manila`)
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count at scope lock was `0 0`; remote head matched the starting checkpoint.
-- Current stage: `SLICE_4_LOCAL_GATES_PASSED_PENDING_COMMIT_AND_PUSH`. The worktree intentionally contains only the bounded Slice 4 implementation, tests, and required documentation updates; no commit has been created for this Slice 4 unit yet.
+- Current stage: `SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. The worktree is clean and contains the bounded Slice 4 implementation, tests, and required documentation updates.
+- Implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` (`feat: add private roster sync and access freshness`); pushed to the feature branch with local/upstream count `0 0`.
 - Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target. The reviewed 32-file package matched remotely, the web-app manifest was preserved, the existing staging deployment served Version 17, and non-target deployments were unchanged. A fresh timestamped staging backup was verified before the push.
 - Live v1 checks passed for the diagnostic route, authorized internal workspace, request-only portal, desktop cold/warm startup, mobile startup, and legacy v1 endpoint. Request-only content remained sanitized and empty of internal operational lists; no operational mutation was performed.
 - Accepted Phase E evidence reports immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2`, authorization contract v1/absent, a ready v2 internal workspace, and passing diagnostic/request-only privacy checks. The former approximately 40-second read-only module callback exceeded the old 30-second client deadline; `api_getBootstrapModule` now uses a bounded 60-second deadline while mutations and all other calls remain at 30 seconds.
 - The staging handoff reports 32-file pull-back parity and preservation of the owner-only web-app manifest. Version 13 remains the rollback target. The live staging evidence was accepted from the supplied handoff and was not re-fetched in this session because the local Chrome bridge was unavailable.
 - Local gates after the fix passed: `npm run check` (20 Vitest files / 164 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150 cases), `git diff --check`, generated parity, and the sensitive-value scan. Independent review was reported as PASS.
 - Slice 4 adds the exact private-roster source boundary, safe source validation, explicit approval/disable/freshness controls, access and committee-membership last-known-good snapshots, emergency deny, safe health output, and zero source reads during ordinary startup. The private source ID and all source contents remain external Script Property/Sheet state and are not present here.
-- Local evidence: `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit, push, and PR CI are still pending.
+- Local evidence: `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` is pushed and PR #6 CI is green.
 - No schema migration, trigger activation, deployment, Google Sheets/Drive write, private operational-data access, or production change was performed. Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9`.
-- Next action: stage only the bounded Slice 4 files, create one focused implementation commit, push the authorized branch, and wait for PR #6 CI before advancing to Slice 5.
+- PR #6 `validate`, `verify`, and `browser-smoke` checks are green for the implementation commit; the only annotation is the repository’s non-blocking Node.js deprecation warning. Manager review of the exact diff and evidence is the next gate before Slice 5.
 - Safe rollback remains: set the bootstrap contract back to its effective v1 setting and, if needed, point the existing deployment to immutable Version 13; preserve all versions and the backup.
 
 ## Historical checkpoint - Slice 3 canonical roles, committee scopes, and authorization contract

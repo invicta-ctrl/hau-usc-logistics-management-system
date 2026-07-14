@@ -2,13 +2,13 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slice 4 repository implementation in progress; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slice 4 committed and CI-verified; production undeployed)
 - Date: `2026-07-14`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved Slice 4 starting commit: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891` (accepted Phase E documentation checkpoint)
-- Current local implementation checkpoint: uncommitted Slice 4 changes; commit and push remain gated on final local verification and review
+- Current implementation checkpoint: Slice 4 commit `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; pushed; worktree clean; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open, unmerged; prior Slice 3/Phase E CI evidence is green; the Slice 4 implementation is not yet pushed
+- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 4 head; manager review is pending
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
@@ -20,11 +20,11 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Slice 4 - Private roster synchronization and access freshness
 
-- Stage: `LOCAL_GATES_PASSED_PENDING_COMMIT_AND_PUSH`.
+- Stage: `COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
 - Scope: exact private-roster source validation, explicit/admin or scheduled sync, metadata-only run records, access and membership last-known-good snapshots, freshness expiry, emergency deny, safe admin health, and zero private-source reads during ordinary startup.
 - Additive schema: `HAU_CONFIG.SCHEMA_VERSION=1.3.0`; roster access fields on `14_USERS_ACCESS`; `21_ACCESS_SYNC_RUNS`; `22_ACCESS_SYNC_SNAPSHOT`; and `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT`. No schema migration or external setup was run.
 - Repository implementation: `apps-script/RosterSyncService.gs`, access/config/authorization/setup wiring, synthetic VM coverage in `tests/unit/apps-script-roster-sync.test.js`, and updated setup/security documentation. No private source ID, source row, credential, roster record, or operational value is present in the changed files.
-- Local evidence: `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit and push remain pending.
+- Evidence: local `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` is pushed and PR #6 CI is green.
 - Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9` points to the approved starting HEAD. A rejected implementation must be reverted as a focused commit; do not reset or discard work.
 
 ## Current staging acceptance checkpoint - Phase E accepted

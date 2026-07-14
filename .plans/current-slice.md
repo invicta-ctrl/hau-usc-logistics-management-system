@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Slice 4 checkpoint
 
 CURRENT SLICE: Slice 4 - Private roster synchronization and access freshness
-CURRENT STAGE: SLICE_4_LOCAL_GATES_PASSED_PENDING_COMMIT
+CURRENT STAGE: SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -9,7 +9,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 ## Current run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream is `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count is `0 0`; worktree was clean at scope lock.
+- Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df`; upstream is `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count is `0 0`; worktree is clean and remote head matches HEAD.
 - Local rollback tag: `hau-usc-slice4-start-a3fffb9`.
 - Slice 4 goal: add a fail-closed, explicit private-roster sync boundary that validates an exact source schema, records metadata-only run state, activates only a fully valid last-known-good snapshot, and denies roster-managed access after emergency disable or freshness expiry.
 - Slice 4 acceptance requires synthetic tests for missing/inaccessible source, exact-header/type validation, duplicate identity, unknown role/committee, partial/timeout failure, concurrent sync, stale snapshot, revocation, emergency deny, safe health output, source non-disclosure, and zero source reads during normal startup.
@@ -17,7 +17,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 - No generated file was hand-edited. Generated artifacts were rebuilt only by the repository build/check pipeline and remained byte-identical.
 - Local gates passed: `npm run check` (21 Vitest files / 177 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150), `npm run lint`, `git diff --check`, generated-artifact verification, and the changed-scope sensitive scan.
 - Independent implementation review: PASS. One membership integration gap found during review was repaired before this checkpoint by adding `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT` and synchronized rollback-safe updates to `20_USER_COMMITTEE_SCOPE`.
-- No commit, push, external configuration, trigger activation, deployment, migration, Sheet/Drive write, private source read, or production change has occurred. Next stage is focused staging, commit, and authorized push/PR CI verification.
+- The focused commit is pushed. Draft PR #6 `validate`, `verify`, and `browser-smoke` checks are green; only the repository’s non-blocking Node.js deprecation annotation remains. No external configuration, trigger activation, deployment, migration, Sheet/Drive write, private source read, or production change has occurred. Next stage is manager review before Slice 5.
 
 ## Historical staging acceptance boundary (before the accepted repair)
 
