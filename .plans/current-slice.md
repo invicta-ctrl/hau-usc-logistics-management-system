@@ -1,23 +1,23 @@
 # P0 Production Bootstrap Diagnosis and Recovery - staging acceptance checkpoint
 
 CURRENT SLICE: Slices 1-3 staging acceptance (Slice 3 implementation already complete)
-CURRENT STAGE: PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS
+CURRENT STAGE: PHASE_E_V2_ROLLED_BACK_PROPERTY_RESTORED_LOCAL_DIAGNOSIS_NO_REPRO
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 ## Current run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Local HEAD: `b8beda10e6271fbbe91d3b0f0b04e4c0828e4c21`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `4 0`; worktree: clean.
-- The two local repair commits are complete and unpushed. No generated file was hand-edited.
+- Local HEAD: `950552c444feaddd89492f68bb53edd0e8e9cb91`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count: `5 0`; worktree: clean.
+- The two local repair commits and two documentation checkpoints are complete and unpushed. No generated file was hand-edited.
 - Phase D compatibility-mode staging acceptance passed on Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target, and the pre-push staging backup was verified.
 - Phase E v2 acceptance was attempted after the staging owner set the bootstrap property to v2 and retained authorization contract v1/absent. Direct v2 endpoint checks passed, but the live UI remained in slow startup and reached the retryable read-only-service timeout instead of ready.
 - Rollback completed immediately: the existing staging deployment serves immutable Version 13 with exactly one WEB_APP entry point. The staging owner reports that the bootstrap property is restored to `1`; this checkout cannot read Script Properties directly.
-- The exact success marker is intentionally absent. Do not push, merge, promote, or begin Slice 4 until Phase E passes.
+- A local synthetic end-to-end server DTO, callback-normalization, and browser v2 validation check passes with authorization contract v1/absent; no local contract-shape defect or reproducible timeout was found. The exact success marker is intentionally absent. Do not push, merge, promote, or begin Slice 4 until Phase E passes.
 
 ## Staging acceptance boundary
 
 - The reviewed package was verified remotely at all 32 expected files; the web-app manifest was preserved; Version 17 served from the existing staging deployment; and non-target deployments were unchanged.
-- The live v1 diagnostic, authorized internal workspace, request-only portal, desktop cold/warm, mobile cold, and legacy v1 endpoint checks passed without operational mutation. The v2 UI flow, v2 timings/payload/request-count evidence, and final staging acceptance remain unknown.
+- The live v1 diagnostic, authorized internal workspace, request-only portal, desktop cold/warm, mobile cold, and legacy v1 endpoint checks passed without operational mutation. Direct v2 endpoint calls passed, but the live v2 UI timed out during essential bootstrap; server-side timing/callback cause and final staging acceptance remain unresolved.
 - Rollback: restore the bootstrap property to its effective v1 setting if v2 is enabled and fails; if deployment rollback is required, point the existing staging deployment to immutable Version 13. Preserve both versions and the backup.
 
 ---
