@@ -2,6 +2,14 @@
 
 ## 0.5.0 - Unreleased
 
+### Controlled staging acceptance checkpoint (Phase E blocked)
+
+- Phase D compatibility acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent.
+- Phase E v2 direct read-only endpoint checks passed, but the live v2 workspace remained in slow startup and reached the retryable read-only-service timeout instead of ready.
+- Applied the authorized rollback by restoring the existing staging deployment pointer to immutable Version 13; the staging owner reports the bootstrap property is restored to `1`, and authorization contract v1/absent remains in force.
+- A local synthetic end-to-end diagnosis covering the checked-in Apps Script DTO, JSON-safe callback normalization, and browser v2 validator passed; no local contract-shape defect or reproducible timeout was found.
+- The staging acceptance marker remains intentionally absent. No production deployment, push, Slice 4 work, or private operational-data change was performed.
+
 ### Slice 3 - Canonical roles, committee scopes, and authorization contract
 
 - Added a server-owned canonical authorization registry with six roles, immutable role IDs, exactly three committee IDs, separate capability and scope decisions, safe denial reasons, and fail-closed inactive, unknown, ambiguous, and unreconciled mappings.

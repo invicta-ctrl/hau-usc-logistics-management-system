@@ -11,12 +11,22 @@
 - Pull request: draft PR #6, open, unmerged; `validate`, `verify`, and `browser-smoke` pass
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: unchanged by this run; no staging operation was performed
+- Current staging deployment: immutable Version 13 after the authorized Phase F rollback; exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: this Slice 3 authorization revision is repository-only and has not changed staging or production.
+- Live readiness: Phase E staging acceptance is blocked by the confirmed v2 UI startup timeout; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current staging acceptance checkpoint - Phase E blocked
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`; current local documentation checkpoint: `85aef6b`
+- Phase D compatibility acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent.
+- Phase E v2 direct read-only endpoint checks passed, but the live v2 workspace remained in slow startup and reached the retryable read-only-service timeout instead of ready.
+- The existing staging deployment was immediately rolled back to immutable Version 13; the staging owner reports the bootstrap property is restored to `1`, while this checkout has no direct Script Property read path. Authorization contract v1/absent remains the required setting.
+- A local synthetic end-to-end check covering the checked-in Apps Script DTO, authorization v1/absent behavior, JSON-safe callback normalization, and browser v2 validation passes; no local contract-shape defect or reproducible timeout was found.
+- The exact marker `STAGING ACCEPTANCE: SLICES 1-3 PASSED` is absent. No push, production deployment, Slice 4 work, Sheet/Drive write, or private operational-data change is authorized from this blocked checkpoint.
 
 ## Slice 3 - canonical roles, committee scopes, and authorization contract (repository-only)
 
