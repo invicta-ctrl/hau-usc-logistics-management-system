@@ -2,21 +2,30 @@
 
 ## Current version
 
-- Version: `0.5.0` (staging-accepted; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slice 4 repository implementation in progress; production undeployed)
 - Date: `2026-07-14`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
-- Starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121` (approved Slice 3 checkpoint)
-- Ending implementation commit: `fcb004e8be78d3d431164c95c7f847ab1033d927` (`fix: extend bootstrap module deadline`)
+- Approved Slice 4 starting commit: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891` (accepted Phase E documentation checkpoint)
+- Current local implementation checkpoint: uncommitted Slice 4 changes; commit and push remain gated on final local verification and review
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open, unmerged; prior Slice 3 `validate`, `verify`, and `browser-smoke` pass; the current fix remains unpushed
+- Pull request: draft PR #6, open, unmerged; prior Slice 3/Phase E CI evidence is green; the Slice 4 implementation is not yet pushed
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slice 4 is repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 4 - Private roster synchronization and access freshness
+
+- Stage: `LOCAL_GATES_PASSED_PENDING_COMMIT_AND_PUSH`.
+- Scope: exact private-roster source validation, explicit/admin or scheduled sync, metadata-only run records, access and membership last-known-good snapshots, freshness expiry, emergency deny, safe admin health, and zero private-source reads during ordinary startup.
+- Additive schema: `HAU_CONFIG.SCHEMA_VERSION=1.3.0`; roster access fields on `14_USERS_ACCESS`; `21_ACCESS_SYNC_RUNS`; `22_ACCESS_SYNC_SNAPSHOT`; and `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT`. No schema migration or external setup was run.
+- Repository implementation: `apps-script/RosterSyncService.gs`, access/config/authorization/setup wiring, synthetic VM coverage in `tests/unit/apps-script-roster-sync.test.js`, and updated setup/security documentation. No private source ID, source row, credential, roster record, or operational value is present in the changed files.
+- Local evidence: `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit and push remain pending.
+- Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9` points to the approved starting HEAD. A rejected implementation must be reverted as a focused commit; do not reset or discard work.
 
 ## Current staging acceptance checkpoint - Phase E accepted
 
@@ -30,7 +39,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 - Local verification after the fix: `npm run check` passed with 20 Vitest files / 164 tests; `npm run verify` passed; full Playwright passed 50 with 100 intentionally skipped and 0 failed across 150 cases; `git diff --check` passed; the sensitive-value scan passed.
 - Generated parity: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 274,348 bytes each / SHA-256 `63e25fc21657c725c5c40cab8500a702f74aaaa521efa156b6218bd690c91485`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; `AppScript.html` is 215,052 bytes / `6c3ee9ade3fe465d34ad0ffeefce6cd81aa8c37cb53023ded34df35a27fccbd1`.
 - Independent review was reported as PASS in the staging handoff. The live staging claims above are accepted from that handoff and were not re-fetched in this session because the local Chrome bridge was unavailable.
-- No Slice 4 work, production deployment, Google Sheets/Drive write, or private operational-data change was performed. A separate explicit push authorization is still required before publishing the local implementation and documentation commits.
+- No Slice 4 work, production deployment, Google Sheets/Drive write, or private operational-data change had been performed at this historical Phase E handoff. The active Slices 4-16 continuation goal now authorizes a focused repository push after Slice 4 gates; that push has not yet occurred.
 
 ## Superseded staging acceptance checkpoint - Phase E previously blocked
 

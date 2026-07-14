@@ -7,7 +7,7 @@ var ROLE_PERMISSIONS_ = Object.freeze({
 function resolveCurrentUser_() {
   var email = normalizeEmail_(Session.getActiveUser().getEmail());
   if (!email) return { User_ID: 'PUBLIC', Email: '', Display_Name: 'Public requester', Role: 'REQUESTER', Active: true };
-  var matches = readObjects_(HAU_SHEETS.USERS).filter(function(row) { return normalizeEmail_(row.Email) === email && accessRowActive_(row); });
+  var matches = readObjects_(HAU_SHEETS.USERS).filter(function(row) { return normalizeEmail_(row.Email) === email && accessRowEligible_(row); });
   if (matches.length > 1) throw appError_('AMBIGUOUS_IDENTITY', 'Your institutional account has multiple active access mappings.', false, { reason: 'AMBIGUOUS_IDENTITY' });
   if (!matches.length) throw appError_('UNAUTHORIZED', 'Your institutional account is not authorized for this action.', false);
   return matches[0];
@@ -16,13 +16,13 @@ function resolveCurrentUser_() {
 function resolveRequesterUser_() {
   var email = normalizeEmail_(Session.getActiveUser().getEmail());
   if (!email) return { User_ID: 'PUBLIC', Email: '', Display_Name: 'Public requester', Role: 'REQUESTER', Active: true };
-  var matches = readObjects_(HAU_SHEETS.USERS).filter(function(row) { return normalizeEmail_(row.Email) === email && accessRowActive_(row); });
+  var matches = readObjects_(HAU_SHEETS.USERS).filter(function(row) { return normalizeEmail_(row.Email) === email && accessRowEligible_(row); });
   if (matches.length > 1) throw appError_('AMBIGUOUS_IDENTITY', 'Your institutional account has multiple active access mappings.', false, { reason: 'AMBIGUOUS_IDENTITY' });
   return matches[0] || { User_ID: 'PUBLIC', Email: email, Display_Name: 'Institutional requester', Role: 'REQUESTER', Active: true };
 }
 
 function isInternalBootstrapUser_(user) {
-  if (!user || !user.User_ID || String(user.User_ID) === 'PUBLIC' || !accessRowActive_(user)) return false;
+  if (!user || !user.User_ID || String(user.User_ID) === 'PUBLIC' || !accessRowEligible_(user)) return false;
   var roleId = typeof canonicalRoleId_ === 'function' ? canonicalRoleId_(user.Role_ID || user.Role) : String(user.Role || 'REQUESTER');
   return Boolean(roleId && roleId !== 'REQUESTER');
 }
@@ -62,6 +62,12 @@ function requireCatalogPermission_() {
 function accessRowActive_(row) {
   var value = row && row.Active;
   return value === true || String(value == null ? '' : value).trim().toUpperCase() === 'TRUE';
+}
+
+function accessRowEligible_(row) {
+  if (!accessRowActive_(row)) return false;
+  if (typeof rosterAccessDenied_ === 'function' && typeof rosterManagedRow_ === 'function' && rosterManagedRow_(row)) return !rosterAccessDenied_(row);
+  return true;
 }
 
 function userPermissionsDto_(user) {

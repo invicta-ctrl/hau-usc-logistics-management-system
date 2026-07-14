@@ -1,7 +1,7 @@
-# P0 Production Bootstrap Diagnosis and Recovery - staging acceptance checkpoint
+# HAU-USC V1 Autonomous Program - Slice 4 checkpoint
 
-CURRENT SLICE: Slices 1-3 staging acceptance (Slice 3 implementation already complete)
-CURRENT STAGE: PHASE_E_ACCEPTED_DOCUMENTED_NO_PUSH
+CURRENT SLICE: Slice 4 - Private roster synchronization and access freshness
+CURRENT STAGE: SLICE_4_LOCAL_GATES_PASSED_PENDING_COMMIT
 LAST UPDATED: 2026-07-14 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -9,13 +9,15 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 ## Current run state
 
 - Branch: `feat/live-sync-lending-search-catalog-controls`.
-- Implementation checkpoint: `fcb004e8be78d3d431164c95c7f847ab1033d927`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count before this documentation checkpoint: `8 0`; the documentation checkpoint below is the only subsequent change and remains unpushed.
-- No generated file was hand-edited. After this documentation commit, local/upstream is expected to be `9 0` with a clean worktree.
-- Phase D compatibility-mode staging acceptance passed on Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target, and the pre-push staging backup was verified.
-- Phase E acceptance is complete on the supplied staging handoff: immutable Version 18 served bootstrap contract v2 with authorization contract v1/absent, the v2 internal workspace reached ready, and diagnostic/request-only privacy checks passed. The approximately 40-second read-only module callback was recovered by the bounded 60-second module deadline; all other calls and mutations remain at 30 seconds.
-- The handoff reports 32-file pull-back parity and preserved owner-only web-app manifest. Version 13 remains the rollback target. This live evidence was accepted from the handoff and was not re-fetched in this session because the local Chrome bridge was unavailable.
-- Local verification passed: `npm run check` (20 Vitest files / 164 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150 cases), `git diff --check`, generated parity, and sensitive-value scan. Independent review was reported as PASS.
-- No production deployment, Slice 4 work, Google Sheets/Drive write, or private operational-data change was performed. The separate push authorization remains pending.
+- Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream is `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count is `0 0`; worktree was clean at scope lock.
+- Local rollback tag: `hau-usc-slice4-start-a3fffb9`.
+- Slice 4 goal: add a fail-closed, explicit private-roster sync boundary that validates an exact source schema, records metadata-only run state, activates only a fully valid last-known-good snapshot, and denies roster-managed access after emergency disable or freshness expiry.
+- Slice 4 acceptance requires synthetic tests for missing/inaccessible source, exact-header/type validation, duplicate identity, unknown role/committee, partial/timeout failure, concurrent sync, stale snapshot, revocation, emergency deny, safe health output, source non-disclosure, and zero source reads during normal startup.
+- Slice 4 exclusions: no roster source contents in git/logs/fixtures/screenshots/generated output; no external Sheet/Drive/Apps Script configuration or deployment; no source writes; no migration/trigger activation; no committee UI, composite requests, catalog, restock, polling/live updates, hosting, or database work.
+- No generated file was hand-edited. Generated artifacts were rebuilt only by the repository build/check pipeline and remained byte-identical.
+- Local gates passed: `npm run check` (21 Vitest files / 177 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150), `npm run lint`, `git diff --check`, generated-artifact verification, and the changed-scope sensitive scan.
+- Independent implementation review: PASS. One membership integration gap found during review was repaired before this checkpoint by adding `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT` and synchronized rollback-safe updates to `20_USER_COMMITTEE_SCOPE`.
+- No commit, push, external configuration, trigger activation, deployment, migration, Sheet/Drive write, private source read, or production change has occurred. Next stage is focused staging, commit, and authorized push/PR CI verification.
 
 ## Historical staging acceptance boundary (before the accepted repair)
 

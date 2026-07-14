@@ -2,7 +2,7 @@
 
 Version 0.5.0 is the repository-only live synchronization, lending search, and catalog-controls revision for the Holy Angel University – University Student Council Department of Logistics. It builds on the 0.4.0 launch-readiness foundation while preserving the approved maroon, burgundy, gold, cream, paper, and white prototype and the production Google Apps Script boundary.
 
-> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. Version 0.5.0 has not been pushed or deployed, and no Sheet, Drive, trigger, or other external write was performed for this revision. The existing immutable staging Version 9 remains untouched; production remains untouched.
+> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. Slices 1-3 were accepted on staging Version 18 with Version 13 preserved for rollback; the current Slice 4 roster implementation is repository-only and has not been deployed. No Slice 4 Sheet, Drive, trigger, or other external write was performed; production remains untouched.
 
 ## Version 0.5.0 scope
 
@@ -34,7 +34,7 @@ npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
 
-Recorded repository verification for 0.5.0 is complete: `npm ci`, `npm run check`, and `npm run verify` passed; Vitest passed 93 tests across 12 files; the focused Chromium 390 px suite passed 4 tests; and the complete six-viewport Playwright matrix finished with 38 passed, 40 intentionally scoped skips, and 0 failures. A second build reproduced the same standalone and Apps Script shell hashes. Live staging acceptance remains a separately authorized activity.
+The accepted Slices 1-3 repository and staging evidence is recorded in `PROJECT_STATUS.md`. The current Slice 4 local gates pass: `npm run check` (21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification), `npm run verify`, full Playwright (50 passed / 100 intentional skips / 0 failures across 150), lint, diff check, and the changed-scope sensitive scan. Live staging and production actions remain separately gated.
 
 `npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 

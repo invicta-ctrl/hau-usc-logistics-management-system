@@ -1,21 +1,21 @@
 # HAU-USC V1 Autonomous Program Status
 
-PROGRAM STATE: COMPLETE
+PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - P0 staging acceptance (Phase E accepted)
+## Current run checkpoint - Slice 4 local gates passed
 
 - Date: 2026-07-14 (Asia/Manila).
-- Current run stage: `PHASE_E_ACCEPTED_DOCUMENTED_NO_PUSH`.
-- This bounded P0 run is complete for the already implemented Slices 1-3 in Apps Script staging. `PROGRAM STATE: COMPLETE` applies to this bounded staging-acceptance run; Slice 4 and all later product slices remain NOT_STARTED and production remains untouched.
-- Repository handshake before this documentation checkpoint: branch `feat/live-sync-lending-search-catalog-controls`; implementation HEAD `fcb004e8be78d3d431164c95c7f847ab1033d927`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `8 0`; remote head remains `3f038590bdebe5b117018356838b82d94683ad37`; worktree was clean.
-- The staging handoff reports immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2`, authorization contract v1/absent, 32-file pull-back parity, preserved owner-only web-app manifest, a ready v2 internal workspace, and passing diagnostic/request-only privacy checks. Version 13 remains the rollback target.
-- Staging identified the root cause as a read-only bootstrap-module callback completing at approximately 40 seconds, beyond the former 30-second browser deadline. Implementation commit `fcb004e8be78d3d431164c95c7f847ab1033d927` bounds that read-only module call at 60 seconds while mutations and all other calls remain at 30 seconds.
-- Local gates passed after the fix: `npm run check` with 20 Vitest files / 164 tests; `npm run verify`; full Playwright with 50 passed / 100 intentionally skipped / 0 failed across 150 cases; `git diff --check`; generated-artifact parity; and the sensitive-value scan. Independent review was reported as PASS in the staging handoff.
-- The live staging evidence was accepted from the supplied handoff and was not re-fetched in this session because the local Chrome bridge was unavailable. No production deployment, Slice 4 work, Google Sheets/Drive write, or private operational-data change was performed.
-- This documentation checkpoint is the only change after the implementation commit and remains unpushed pending separate explicit push authorization. After its commit, the expected local/upstream count is `9 0` and the worktree is clean.
-- Rollback: restore the bootstrap contract to its effective v1 setting; if deployment rollback is required, point the existing deployment to immutable Version 13. Preserve all versions and the backup.
+- Current run stage: `SLICE_4_LOCAL_GATES_PASSED_PENDING_COMMIT`.
+- The accepted Phase E staging checkpoint for Slices 1-3 is the dependency baseline. This autonomous program is continuing through Slices 4-16; production remains untouched.
+- Repository handshake: branch `feat/live-sync-lending-search-catalog-controls`; HEAD `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count `0 0`; worktree clean; remote head matches HEAD.
+- Slice 4 scope is limited to private-roster synchronization, validated local access freshness, explicit admin/scheduled sync controls, safe health/diagnostic output, and emergency deny. No source contents, private identifiers, credentials, roster rows, or external configuration values are present in this checkout.
+- Slice 4 exclusions are committee UI, composite requests, catalog, restock, polling/live updates, hosting, database work, deployment, migration, trigger activation, and production changes.
+- Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9` points to the approved starting HEAD. If the implementation is rejected, use a focused revert after review; do not reset or discard work.
+- Local evidence: `npm run check` passed with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 50 / 100 intentional skips / 0 failures across 150 cases; lint, diff check, and changed-scope sensitive scan passed.
+- Independent implementation review: PASS; no blocking privacy, authorization, source-read, membership, freshness, rollback, or generated-artifact issue remains in the bounded Slice 4 scope.
+- No commit, push, deployment, trigger activation, Sheet/Drive write, private source read, migration, or production change has occurred for Slice 4.
 
 ## Superseded checkpoint - P0 staging acceptance (Phase E previously blocked)
 

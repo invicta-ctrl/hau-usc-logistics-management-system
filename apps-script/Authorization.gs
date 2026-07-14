@@ -120,7 +120,11 @@ var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
   seedRolesAndPermissions: HAU_CAPABILITIES_.ACCESS_ADMIN,
   getAuthorizationContract: HAU_CAPABILITIES_.ACCESS_ADMIN,
   runAuthorizationMappingDryRun: HAU_CAPABILITIES_.ACCESS_ADMIN,
-  applyAuthorizationMapping: HAU_CAPABILITIES_.ACCESS_ADMIN
+  applyAuthorizationMapping: HAU_CAPABILITIES_.ACCESS_ADMIN,
+  runRosterSync: HAU_CAPABILITIES_.ACCESS_ADMIN,
+  getRosterSyncHealth: HAU_CAPABILITIES_.ACCESS_ADMIN,
+  setRosterEmergencyDeny: HAU_CAPABILITIES_.ACCESS_ADMIN,
+  setupRosterSyncTrigger: HAU_CAPABILITIES_.SYSTEM_ADMIN
 });
 
 var HAU_SCOPE_OPTIONAL_OPERATIONS_ = Object.freeze({

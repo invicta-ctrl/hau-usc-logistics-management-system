@@ -271,6 +271,7 @@ function healthCheck_(correlationId) {
       verify: items.filter(function(item) { return String(item.Status) === 'VERIFY'; }).length,
       zero: items.filter(function(item) { return Number(item.Opening_Qty) === 0; }).length
     },
+    roster: typeof rosterHealth_ === 'function' ? rosterHealth_() : { status: 'UNAVAILABLE' },
     legacyMatchesBackup: legacyMatches,
     correlationId: correlationId
   };

@@ -2,6 +2,14 @@
 
 ## 0.5.0 - Unreleased
 
+### Slice 4 - Private roster synchronization and access freshness
+
+- Added a fail-closed Apps Script roster boundary that reads a private source only during an explicit admin/scheduled sync and validates the exact five-column source schema, strict types, canonical roles/committees, duplicate normalized identities, and committee scope.
+- Added additive `14_USERS_ACCESS` freshness fields, `21_ACCESS_SYNC_RUNS`, `22_ACCESS_SYNC_SNAPSHOT`, and `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT`; activation updates only roster-managed access/membership rows and preserves a local last-known-good rollback snapshot.
+- Added explicit approval/disable/freshness Script Property controls, idempotent locked admin sync and emergency-deny endpoints, an at-most-once idempotent trigger installer, safe admin health metadata, and stale/emergency fail-closed access without source reads during ordinary startup.
+- Added synthetic coverage for source configuration, schema/type/identity/scope failures, timeout/partial reads, conflict and revocation planning, membership activation, stale/emergency denial, non-disclosure, locking, and source-read isolation. No external configuration, Sheet/Drive write, deployment, or trigger activation was performed.
+- Local gates pass: `npm run check` with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify`; full Playwright with 50 passed / 100 intentional skips / 0 failed across 150 cases; `npm run lint`; `git diff --check`; and the changed-scope sensitive scan. Independent implementation review found no blocking issue. Commit and push remain pending.
+
 ### Phase E staging acceptance completed
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
