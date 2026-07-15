@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-7 and Phase 2 governance committed and CI-verified; Slice 8 locally accepted pending commit; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-8 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
 - Date: `2026-07-15`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 8 starting commit: `290dc629fd9c0765bca39144224798c65b667eaa` (Slice 7 remote-verification documentation checkpoint)
-- Current implementation checkpoint: Slice 8 is locally verified and independently accepted in the working tree; focused commit/push and PR #7 CI remain
+- Current implementation checkpoint: Slice 8 commit `1f05b526e457a946e0575b4aed2660c249105923`; pushed; local, upstream, and PR #7 heads matched; local/upstream `0 0`; all three PR checks green
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -20,7 +20,7 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Slice 8 - Materials Committee workflow
 
-- Stage: `SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT` from
+- Stage: `SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT` from
   accepted starting checkpoint `290dc629fd9c0765bca39144224798c65b667eaa`
   on `integration/v0.5-baseline`.
 - Scope delivered: versioned controlled Materials category/specification,
@@ -41,6 +41,11 @@ Always verify the current remote head and CI because documentation commits may f
   `8d9035ee09f9eb514bcb374a9b399714bac693c02898825b196555f3c0621485`;
   `AppScript.html` is 265,782 bytes / SHA-256
   `946a2424d5c30e23b12128049bc60a5551279b8ad9f146b4405ccc1100b32faf`.
+- Remote evidence: implementation commit
+  `1f05b526e457a946e0575b4aed2660c249105923` is pushed and matched PR #7.
+  Apps Script run `29390112932` passed `validate` in 12 seconds; CI run
+  `29390112933` passed `verify` in 16 seconds and `browser-smoke` in 2 minutes.
+  The PR remained open, draft, and mergeable.
 - External boundary: no deployment, migration, Script Property change, Apps
   Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
   production action occurred.

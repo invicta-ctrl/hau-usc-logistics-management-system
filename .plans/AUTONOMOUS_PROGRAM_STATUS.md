@@ -4,10 +4,10 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 8 locally accepted, pending commit
+## Current run checkpoint - Phase 4 / Slice 8 pushed and CI green
 
 - Date: 2026-07-15 (Asia/Manila).
-- Stage: `SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT`.
+- Stage: `SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
 - Accepted starting checkpoint: `290dc629fd9c0765bca39144224798c65b667eaa`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
@@ -30,7 +30,13 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   two 329,544-byte artifacts. Full Playwright passes 61 / 101 intentional skips
   / 0 failures. Changed-scope sensitive and diff checks pass. Independent final
   review is PASS with no remaining findings.
-- Remote result: none yet for Slice 8. No external operational system changed.
+- Remote result: implementation commit
+  `1f05b526e457a946e0575b4aed2660c249105923` is pushed and matched local,
+  upstream, and draft PR #7; the PR remained open and mergeable. Apps Script
+  run `29390112932` passed `validate` in 12 seconds. CI run `29390112933`
+  passed `verify` in 16 seconds and `browser-smoke` in 2 minutes. No external
+  operational system changed. Commit/push this evidence record, verify its CI,
+  then begin bounded Slice 9 without a manager pause.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

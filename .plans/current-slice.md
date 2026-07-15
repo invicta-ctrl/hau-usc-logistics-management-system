@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Slice 8 checkpoint
 
 CURRENT SLICE: Slice 8 - Materials Committee specialization
-CURRENT STAGE: SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT
+CURRENT STAGE: SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -28,7 +28,11 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   and two 329,544-byte artifacts. Full Playwright passes 61 / 101 intentional
   skips / 0 failures, including the Materials form/persist/queue/update flow.
   Changed-scope sensitive and diff checks pass. Independent review is final
-  PASS with no remaining finding. The focused commit/push and remote CI remain.
+  PASS with no remaining finding. Implementation commit
+  `1f05b526e457a946e0575b4aed2660c249105923` is pushed at local/upstream/PR
+  parity; runs `29390112932` and `29390112933` passed `validate`, `verify`, and
+  `browser-smoke`. Commit/push this evidence record and verify its CI, then
+  bounded Slice 9 is unlocked without another manager prompt.
 
 ---
 

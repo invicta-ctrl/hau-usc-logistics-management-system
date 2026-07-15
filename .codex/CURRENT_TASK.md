@@ -41,10 +41,14 @@
   server-validated; scoped queue and parent derivation reconcile; full local
   gates, independent review, push, CI, and clean parity pass.
 - **Current stage:**
-  `SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT`.
+  `SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
   `npm run check` passes 30 Vitest files / 244 tests, a 31-module build,
   31 Apps Script sources / 51 required functions, deterministic generated
   parity, and two 329,544-byte standalone artifacts. Full Playwright passes
   61 / 101 intentional skips / 0 failures; the independent final verdict is
   PASS with no remaining findings; changed-scope sensitive and diff checks
-  pass. The focused commit/push and GitHub CI remain before Slice 9 begins.
+  pass. Implementation commit
+  `1f05b526e457a946e0575b4aed2660c249105923` is pushed at local/upstream/PR
+  parity. Runs `29390112932` and `29390112933` passed `validate` (12s),
+  `verify` (16s), and `browser-smoke` (2m0s). This evidence-only checkpoint
+  remains before Slice 9 begins.
