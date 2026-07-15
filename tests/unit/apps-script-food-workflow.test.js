@@ -12,6 +12,7 @@ function contextFor() {
     ['HAU_BACKUP_SPREADSHEET_ID', 'SYNTHETIC-BACKUP-ID-12345678901234567890'],
     ['HAU_COMPOSITE_REQUESTS_ENABLED', 'true'],
     ['HAU_FOOD_REQUESTS_ENABLED', 'true'],
+    ['HAU_MATERIALS_REQUESTS_ENABLED', 'true'],
   ]);
   const tables = new Map();
   const idempotency = new Map();
@@ -52,6 +53,7 @@ function contextFor() {
     'Validation.gs',
     'IdService.gs',
     'FoodWorkflowService.gs',
+    'MaterialsWorkflowService.gs',
     'CompositeRequestService.gs',
     'Router.gs',
   ])
@@ -118,6 +120,13 @@ function command() {
         type: 'MATERIALS',
         label: 'Signs',
         lines: [{ label: 'Directional sign', quantity: 1, unit: 'piece' }],
+        materials: {
+          materialCategory: 'PRINTING_SIGNAGE',
+          specification: 'Directional event sign',
+          requiredBy: '2026-08-08',
+          usagePurpose: 'Synthetic event wayfinding',
+          sourcingPreference: 'STOCK_REVIEW',
+        },
       },
     ],
   };
@@ -262,10 +271,11 @@ describe('Apps Script Food workflow', () => {
     const context = contextFor();
     const created = context.submitCompositeRequest_(command(), 'COR-SUBMIT');
     const food = created.request.children.find((child) => child.componentType === 'FOOD');
+    const materials = created.request.children.find((child) => child.componentType === 'MATERIALS');
     context.cancelCompositeRequest_(
       {
         requestId: created.requestId,
-        expectedRevisions: { [food.componentId]: 1 },
+        expectedRevisions: { [food.componentId]: 1, [materials.componentId]: 1 },
         idempotencyKey: 'SYN-CANCEL-ATTENTION',
       },
       'COR-CANCEL-ATTENTION',
@@ -273,7 +283,7 @@ describe('Apps Script Food workflow', () => {
     context.reopenCompositeRequest_(
       {
         requestId: created.requestId,
-        expectedRevisions: { [food.componentId]: 2 },
+        expectedRevisions: { [food.componentId]: 2, [materials.componentId]: 2 },
         idempotencyKey: 'SYN-REOPEN-ATTENTION',
       },
       'COR-REOPEN-ATTENTION',

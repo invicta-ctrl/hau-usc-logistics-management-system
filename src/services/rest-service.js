@@ -28,6 +28,8 @@ for (const method of [
   'getCompositeRequest',
   'getFoodWorkQueue',
   'updateFoodComponent',
+  'getMaterialsWorkQueue',
+  'updateMaterialsComponent',
   'transitionCompositeComponent',
   'cancelCompositeRequest',
   'reopenCompositeRequest',

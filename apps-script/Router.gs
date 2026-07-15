@@ -11,6 +11,8 @@ function api_submitCompositeRequest(command) { return guardMutationApi_('submitC
 function api_getCompositeRequest(command) { return guardApi_('getCompositeRequest', command || {}, function() { return getCompositeRequest_(command || {}); }); }
 function api_getFoodWorkQueue(command) { return guardApi_('getFoodWorkQueue', command || {}, function() { return getFoodWorkQueue_(); }); }
 function api_updateFoodComponent(command) { return guardMutationApi_('updateFoodComponent', command, function(c) { return updateFoodComponent_(command, c); }); }
+function api_getMaterialsWorkQueue(command) { return guardApi_('getMaterialsWorkQueue', command || {}, function() { return getMaterialsWorkQueue_(); }); }
+function api_updateMaterialsComponent(command) { return guardMutationApi_('updateMaterialsComponent', command, function(c) { return updateMaterialsComponent_(command, c); }); }
 function api_transitionCompositeComponent(command) { return guardMutationApi_('transitionCompositeComponent', command, function(c) { return transitionCompositeComponent_(command, c); }); }
 function api_cancelCompositeRequest(command) { return guardMutationApi_('cancelCompositeRequest', command, function(c) { return cancelCompositeRequest_(command, c); }); }
 function api_reopenCompositeRequest(command) { return guardMutationApi_('reopenCompositeRequest', command, function(c) { return reopenCompositeRequest_(command, c); }); }

@@ -12,6 +12,7 @@ function contextFor({ enabled = true, failAppend = false } = {}) {
     ['HAU_BACKUP_SPREADSHEET_ID', 'SYNTHETIC-BACKUP-ID-12345678901234567890'],
     ['HAU_COMPOSITE_REQUESTS_ENABLED', enabled ? 'true' : 'false'],
     ['HAU_FOOD_REQUESTS_ENABLED', enabled ? 'true' : 'false'],
+    ['HAU_MATERIALS_REQUESTS_ENABLED', enabled ? 'true' : 'false'],
   ]);
   const database = [];
   let appendCalls = 0;
@@ -44,6 +45,7 @@ function contextFor({ enabled = true, failAppend = false } = {}) {
     'Validation.gs',
     'IdService.gs',
     'FoodWorkflowService.gs',
+    'MaterialsWorkflowService.gs',
     'CompositeRequestService.gs',
   ])
     vm.runInContext(readFileSync(resolve(appScriptRoot, file), 'utf8'), context, { filename: file });
@@ -99,6 +101,13 @@ function requestCommand(key = 'SYN-COMPOSITE-1') {
         type: 'MATERIALS',
         label: 'Materials',
         lines: [{ label: 'Directional sign', quantity: 1, unit: 'piece' }],
+        materials: {
+          materialCategory: 'PRINTING_SIGNAGE',
+          specification: 'Directional event sign',
+          requiredBy: '2026-08-08',
+          usagePurpose: 'Synthetic event wayfinding',
+          sourcingPreference: 'STOCK_REVIEW',
+        },
       },
       {
         type: 'VENUE_EQUIPMENT',

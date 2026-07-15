@@ -1,5 +1,9 @@
 import { AppError } from '../app/errors.js';
 import { foodAttentionFlags, normalizeFoodDetails } from './food-workflow.js';
+import {
+  materialsAttentionFlags,
+  normalizeMaterialsDetails,
+} from './materials-workflow.js';
 
 export const COMPOSITE_SECTION_TYPES = Object.freeze(['FOOD', 'MATERIALS', 'VENUE_EQUIPMENT']);
 
@@ -35,6 +39,7 @@ export const COMPOSITE_ATTENTION_FLAGS = Object.freeze({
   AMENDED: 'AMENDED',
   ESCALATED: 'ESCALATED',
   FOOD_ATTENTION: 'FOOD_ATTENTION',
+  MATERIALS_ATTENTION: 'MATERIALS_ATTENTION',
 });
 
 const MAX_TEXT_LENGTH = 240;
@@ -150,13 +155,20 @@ function normalizeSection(section, index, context = {}) {
     lines.map((line, lineIndex) => normalizedLine(line, lineIndex)),
   );
   const food = type === 'FOOD' ? normalizeFoodDetails(section.food, context) : undefined;
+  const normalizedMaterials =
+    type === 'MATERIALS'
+      ? normalizeMaterialsDetails(section.materials, normalizedLines, context)
+      : undefined;
+  const materials = normalizedMaterials ? { ...normalizedMaterials } : undefined;
+  if (materials) delete materials.lines;
   return {
     type,
     label: label || COMPOSITE_SECTION_LABELS[type],
     notes,
     clientComponentId: text(section.clientComponentId, `sections[${index}].clientComponentId`, { max: 120 }),
-    lines: normalizedLines,
+    lines: normalizedMaterials?.lines ?? normalizedLines,
     ...(food ? { food } : {}),
+    ...(materials ? { materials } : {}),
   };
 }
 
@@ -164,7 +176,7 @@ function requestValue(command, key, nestedKey) {
   return command?.[key] ?? command?.requester?.[nestedKey] ?? '';
 }
 
-export function validateCompositeDraft(command) {
+export function validateCompositeDraft(command, context = {}) {
   if (!command || typeof command !== 'object' || Array.isArray(command))
     throw new AppError('VALIDATION_ERROR', 'Composite request is required.');
   if (command.requestId || command.parentRequestId || command.componentId)
@@ -189,7 +201,12 @@ export function validateCompositeDraft(command) {
   const submittedAt = command.submittedAt || new Date().toISOString();
   const sections = rawSections
     .map((section, index) =>
-      normalizeSection(section, index, { submittedAt, eventStartAt, examWeeks: command.examWeeks }),
+      normalizeSection(section, index, {
+        ...context,
+        submittedAt,
+        eventStartAt,
+        examWeeks: command.examWeeks,
+      }),
     )
     .filter(Boolean);
   const seenTypes = new Set();
@@ -223,9 +240,15 @@ export function validateCompositeDraft(command) {
 
 export function createCompositePacket(
   command,
-  { requestId, componentIds, actor = 'SYSTEM', now = new Date().toISOString() } = {},
+  {
+    requestId,
+    componentIds,
+    actor = 'SYSTEM',
+    now = new Date().toISOString(),
+    resolveMaterialReference,
+  } = {},
 ) {
-  const draft = validateCompositeDraft(command);
+  const draft = validateCompositeDraft(command, { resolveMaterialReference });
   if (!requestId) throw new AppError('SERVER_ID_REQUIRED', 'A server request ID is required.');
   if (
     !Array.isArray(componentIds) ||
@@ -276,7 +299,11 @@ export function createCompositePacket(
     ownerUserId: '',
     dueAt: draft.eventStartAt,
     status: 'FOR_REVIEW',
-    attentionFlags: section.food ? foodAttentionFlags(section.food) : [],
+    attentionFlags: section.food
+      ? foodAttentionFlags(section.food)
+      : section.materials
+        ? materialsAttentionFlags(section.materials)
+        : [],
     progress: {
       lineCount: section.lines.length,
       duplicateCount: section.lines.reduce((sum, line) => sum + line.duplicateCount, 0),
@@ -285,6 +312,7 @@ export function createCompositePacket(
       notes: section.notes,
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
       ...(section.food ? { food: section.food } : {}),
+      ...(section.materials ? { materials: section.materials } : {}),
     },
     revision: 1,
     createdAt: now,
@@ -333,6 +361,12 @@ export function deriveCompositeParentStatus(children) {
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION);
   if (children.some((child) => (child.attentionFlags || []).some((flag) => String(flag).startsWith('FOOD_'))))
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.FOOD_ATTENTION);
+  if (
+    children.some((child) =>
+      (child.attentionFlags || []).some((flag) => String(flag).startsWith('MATERIALS_')),
+    )
+  )
+    attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.MATERIALS_ATTENTION);
   if (children.some((child) => !child.ownerCommitteeId || !child.ownerUserId))
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.UNASSIGNED_SECTION);
   return {
@@ -417,18 +451,28 @@ export function transitionCompositeChild(child, action, { reason = '' } = {}) {
       normalizedAction === ACTIONS.REOPEN
         ? child.componentType === 'FOOD'
           ? foodAttentionFlags(child.payload?.food)
+          : child.componentType === 'MATERIALS'
+            ? materialsAttentionFlags(child.payload?.materials)
           : []
         : (child.attentionFlags || []).filter((flag) => flag !== COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION),
     transitionReason: text(reason, 'reason', { max: 500 }),
   };
 }
 
-export function amendCompositeSection(child, patch, { now = new Date().toISOString() } = {}) {
+export function amendCompositeSection(
+  child,
+  patch,
+  { now = new Date().toISOString(), resolveMaterialReference } = {},
+) {
   if (!child || TERMINAL_STATUSES.has(child.status))
     throw new AppError(
       'AMENDMENT_NOT_ALLOWED',
       'Completed, rejected, or cancelled sections cannot be amended directly.',
     );
+  const existingMaterials = child.payload?.materials ?? null;
+  const materialsDraft = existingMaterials
+    ? { ...existingMaterials, ...(patch?.materials ?? {}) }
+    : patch?.materials;
   const section = normalizeSection(
     {
       type: child.componentType,
@@ -436,8 +480,10 @@ export function amendCompositeSection(child, patch, { now = new Date().toISOStri
       notes: patch?.notes ?? '',
       lines: patch?.lines ?? child.payload?.lines,
       food: patch?.food ?? child.payload?.food,
+      materials: materialsDraft,
     },
     0,
+    { resolveMaterialReference, existingMaterials },
   );
   if (!section) throw new AppError('VALIDATION_ERROR', 'An amended section cannot be blank.');
   return {
@@ -446,7 +492,16 @@ export function amendCompositeSection(child, patch, { now = new Date().toISOStri
     status: 'FOR_REVIEW',
     attentionFlags: [
       ...new Set([
-        ...(section.food ? foodAttentionFlags(section.food) : child.attentionFlags || []),
+        ...(section.food
+          ? foodAttentionFlags(section.food)
+          : section.materials
+            ? [
+                ...(child.attentionFlags || []).filter(
+                  (flag) => !String(flag).startsWith('MATERIALS_'),
+                ),
+                ...materialsAttentionFlags(section.materials),
+              ]
+            : child.attentionFlags || []),
         COMPOSITE_ATTENTION_FLAGS.AMENDED,
       ]),
     ],
@@ -454,6 +509,7 @@ export function amendCompositeSection(child, patch, { now = new Date().toISOStri
       notes: section.notes,
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
       ...(section.food ? { food: section.food } : {}),
+      ...(section.materials ? { materials: section.materials } : {}),
     },
     relationshipVersion: Number(child.relationshipVersion || 1) + 1,
     revision: Number(child.revision || 1) + 1,

@@ -10,7 +10,8 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
   ROSTER_SYNC_APPROVED: 'HAU_ROSTER_SYNC_APPROVED',
   ROSTER_EMERGENCY_DENY: 'HAU_ROSTER_EMERGENCY_DENY',
   COMPOSITE_REQUESTS_ENABLED: 'HAU_COMPOSITE_REQUESTS_ENABLED',
-  FOOD_REQUESTS_ENABLED: 'HAU_FOOD_REQUESTS_ENABLED'
+  FOOD_REQUESTS_ENABLED: 'HAU_FOOD_REQUESTS_ENABLED',
+  MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
@@ -95,6 +96,10 @@ function resolveFoodRequestsEnabled_(properties) {
   return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.FOOD_REQUESTS_ENABLED, false);
 }
 
+function resolveMaterialsRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.MATERIALS_REQUESTS_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -118,7 +123,8 @@ function resolveRuntimeConfig_() {
     bootstrapContractVersion: resolveBootstrapContractVersion_(properties),
     authorizationContractVersion: resolveAuthorizationContractVersion_(properties),
     compositeRequestsEnabled: resolveCompositeRequestsEnabled_(properties),
-    foodRequestsEnabled: resolveFoodRequestsEnabled_(properties)
+    foodRequestsEnabled: resolveFoodRequestsEnabled_(properties),
+    materialsRequestsEnabled: resolveMaterialsRequestsEnabled_(properties)
   };
 }
 

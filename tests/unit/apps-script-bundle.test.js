@@ -190,7 +190,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(8);
+    expect(diagnostics.index.markers['<?'].count).toBe(9);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),

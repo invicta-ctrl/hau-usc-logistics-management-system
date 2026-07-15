@@ -19,6 +19,8 @@ for (const [client, server] of Object.entries({
   getCompositeRequest: 'api_getCompositeRequest',
   getFoodWorkQueue: 'api_getFoodWorkQueue',
   updateFoodComponent: 'api_updateFoodComponent',
+  getMaterialsWorkQueue: 'api_getMaterialsWorkQueue',
+  updateMaterialsComponent: 'api_updateMaterialsComponent',
   transitionCompositeComponent: 'api_transitionCompositeComponent',
   cancelCompositeRequest: 'api_cancelCompositeRequest',
   reopenCompositeRequest: 'api_reopenCompositeRequest',

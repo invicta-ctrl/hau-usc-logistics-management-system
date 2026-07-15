@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 export const APPS_SCRIPT_RUNTIME_SOURCE =
-  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase(),bootstrapContractVersion:Number(document.body?.dataset?.bootstrapContractVersion||1),compositeRequestsEnabled:document.body?.dataset?.compositeRequestsEnabled==="true",foodRequestsEnabled:document.body?.dataset?.foodRequestsEnabled==="true"};';
+  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase(),bootstrapContractVersion:Number(document.body?.dataset?.bootstrapContractVersion||1),compositeRequestsEnabled:document.body?.dataset?.compositeRequestsEnabled==="true",foodRequestsEnabled:document.body?.dataset?.foodRequestsEnabled==="true",materialsRequestsEnabled:document.body?.dataset?.materialsRequestsEnabled==="true"};';
 
 const INCLUDE_MARKERS = Object.freeze({
   appStyles: "<?!= include_('AppStyles'); ?>",
@@ -15,6 +15,7 @@ const APP_ENVIRONMENT_VALUE_MARKER = '<?= appEnvironment ?>';
 const BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER = '<?= bootstrapContractVersion ?>';
 const COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER = "<?= compositeRequestsEnabled ? 'true' : 'false' ?>";
 const FOOD_REQUESTS_ENABLED_VALUE_MARKER = "<?= foodRequestsEnabled ? 'true' : 'false' ?>";
+const MATERIALS_REQUESTS_ENABLED_VALUE_MARKER = "<?= materialsRequestsEnabled ? 'true' : 'false' ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
 const ATTR_NAME_CHAR = /[^\s=/>]/;
@@ -367,11 +368,14 @@ function addRuntimeAttributes(bodyOpen) {
   if (/\sdata-food-requests-enabled\s*=/i.test(bodyOpen)) {
     throw new Error('Expanded source body already defines data-food-requests-enabled.');
   }
+  if (/\sdata-materials-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-materials-requests-enabled.');
+  }
   const closingIndex = bodyOpen.lastIndexOf('>');
   if (closingIndex <= 0 || bodyOpen[closingIndex - 1] === '/') {
     throw new Error('Expanded source body opening tag is invalid.');
   }
-  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}" data-bootstrap-contract-version="${BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER}" data-composite-requests-enabled="${COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER}" data-food-requests-enabled="${FOOD_REQUESTS_ENABLED_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
+  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}" data-bootstrap-contract-version="${BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER}" data-composite-requests-enabled="${COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER}" data-food-requests-enabled="${FOOD_REQUESTS_ENABLED_VALUE_MARKER}" data-materials-requests-enabled="${MATERIALS_REQUESTS_ENABLED_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
 }
 
 export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSources }) {
@@ -466,6 +470,7 @@ export function assembleAppsScriptTemplate(
     bootstrapContractVersion = 2,
     compositeRequestsEnabled = false,
     foodRequestsEnabled = false,
+    materialsRequestsEnabled = false,
   } = {},
 ) {
   const normalizedEnvironment = String(appEnvironment).trim().toUpperCase();
@@ -487,6 +492,7 @@ export function assembleAppsScriptTemplate(
     [BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER, String(normalizedBootstrapContractVersion)],
     [COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER, compositeRequestsEnabled ? 'true' : 'false'],
     [FOOD_REQUESTS_ENABLED_VALUE_MARKER, foodRequestsEnabled ? 'true' : 'false'],
+    [MATERIALS_REQUESTS_ENABLED_VALUE_MARKER, materialsRequestsEnabled ? 'true' : 'false'],
   ];
   for (const [marker, value] of replacements) {
     if (countOccurrences(assembled, marker) !== 1) {

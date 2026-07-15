@@ -10,6 +10,8 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'getCompositeRequest',
   'getFoodWorkQueue',
   'updateFoodComponent',
+  'getMaterialsWorkQueue',
+  'updateMaterialsComponent',
   'transitionCompositeComponent',
   'cancelCompositeRequest',
   'reopenCompositeRequest',

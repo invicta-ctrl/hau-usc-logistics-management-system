@@ -7,6 +7,7 @@ export const appEnvironment = config.appEnvironment;
 export const bootstrapContractVersion = config.bootstrapContractVersion;
 export const compositeRequestsEnabled = config.compositeRequestsEnabled;
 export const foodRequestsEnabled = config.foodRequestsEnabled;
+export const materialsRequestsEnabled = config.materialsRequestsEnabled;
 const clientRequestId = (prefix) =>
   `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
@@ -110,6 +111,14 @@ export function createLegacyRuntimeAdapter(mockServices) {
     },
     updateFoodComponent(payload) {
       return mutationRequests.run('food-update', payload, (command) => remote.updateFoodComponent(command));
+    },
+    async getMaterialsWorkQueue() {
+      return remote.getMaterialsWorkQueue({});
+    },
+    updateMaterialsComponent(payload) {
+      return mutationRequests.run('materials-update', payload, (command) =>
+        remote.updateMaterialsComponent(command),
+      );
     },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>

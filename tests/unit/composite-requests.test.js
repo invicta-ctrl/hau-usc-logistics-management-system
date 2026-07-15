@@ -34,6 +34,13 @@ const allSections = {
     type: 'MATERIALS',
     label: 'Materials',
     lines: [{ label: 'Directional sign', quantity: 4, unit: 'piece' }],
+    materials: {
+      materialCategory: 'PRINTING_SIGNAGE',
+      specification: 'Directional event sign',
+      requiredBy: '2026-08-08',
+      usagePurpose: 'Synthetic event wayfinding',
+      sourcingPreference: 'STOCK_REVIEW',
+    },
   },
   VENUE_EQUIPMENT: {
     type: 'VENUE_EQUIPMENT',
@@ -235,14 +242,14 @@ describe('composite request mock workflow', () => {
     await service.cancelCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic cancellation',
-      expectedRevisions: { [food.componentId]: 3 },
+      expectedRevisions: { [food.componentId]: 3, [materials.componentId]: 1 },
       idempotencyKey: 'SYN-CANCEL',
     });
     expect(getState().compositeComponents.every((child) => child.status === 'CANCELLED')).toBe(true);
     const reopened = await service.reopenCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic reopen',
-      expectedRevisions: { [food.componentId]: 4 },
+      expectedRevisions: { [food.componentId]: 4, [materials.componentId]: 2 },
       idempotencyKey: 'SYN-REOPEN',
     });
     expect(reopened.status).toBe('FOR_REVIEW');

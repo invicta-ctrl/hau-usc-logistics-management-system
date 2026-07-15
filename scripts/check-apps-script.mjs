@@ -40,6 +40,7 @@ const requiredFiles = [
   'CommitteeDashboardService.gs',
   'CompositeRequestService.gs',
   'FoodWorkflowService.gs',
+  'MaterialsWorkflowService.gs',
   'appsscript.json',
   'Index.html',
   'AppBody.html',
@@ -90,6 +91,8 @@ const requiredFunctions = [
   'api_getCompositeRequest',
   'api_getFoodWorkQueue',
   'api_updateFoodComponent',
+  'api_getMaterialsWorkQueue',
+  'api_updateMaterialsComponent',
   'api_transitionCompositeComponent',
   'api_cancelCompositeRequest',
   'api_reopenCompositeRequest',
@@ -141,6 +144,9 @@ if (
 }
 if (!index.includes("data-food-requests-enabled=\"<?= foodRequestsEnabled ? 'true' : 'false' ?>\"")) {
   throw new Error('Apps Script template does not expose the server Food request feature flag.');
+}
+if (!index.includes("data-materials-requests-enabled=\"<?= materialsRequestsEnabled ? 'true' : 'false' ?>\"")) {
+  throw new Error('Apps Script template does not expose the server Materials request feature flag.');
 }
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"'))

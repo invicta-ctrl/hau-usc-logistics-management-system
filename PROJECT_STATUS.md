@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-7 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-7 and Phase 2 governance committed and CI-verified; Slice 8 locally accepted pending commit; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
 - Date: `2026-07-15`
 - Branch: `integration/v0.5-baseline`
-- Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
-- Current implementation checkpoint: Slice 6 commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; pushed; remote and PR #6 heads matched; local/upstream count `0 0`
+- Accepted Slice 8 starting commit: `290dc629fd9c0765bca39144224798c65b667eaa` (Slice 7 remote-verification documentation checkpoint)
+- Current implementation checkpoint: Slice 8 is locally verified and independently accepted in the working tree; focused commit/push and PR #7 CI remain
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -14,9 +14,39 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-6 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-8 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 8 - Materials Committee workflow
+
+- Stage: `SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT` from
+  accepted starting checkpoint `290dc629fd9c0765bca39144224798c65b667eaa`
+  on `integration/v0.5-baseline`.
+- Scope delivered: versioned controlled Materials category/specification,
+  exact quantity/unit, required-by and usage, sourcing preference, live catalog
+  validation, immutable legacy source provenance and amendment history, exact
+  `ACTIVE`/category and `VERIFY` denial, one stock-or-procurement path,
+  approved-substitution audit, blockers, path-matching evidence, completion
+  rechecks, Materials-scoped queue/update, authorization/revision/idempotency,
+  active UI, and fail-closed feature control.
+- Verification: `npm run check` passes 30 Vitest files / 244 tests, a 31-module
+  build, 31 Apps Script sources / 51 required functions, deterministic package
+  parity, and two 329,544-byte standalone artifacts. Full Playwright passes
+  61 / 101 intentional skips / 0 failures. The changed-scope sensitive scan and
+  `git diff --check` pass. Independent final review is PASS with no findings.
+- Generated evidence: standalone SHA-256
+  `8c34bf25f14fc09b8bd2e89433fdbba7c4c23ec0ca402b05b4b69a8f748e4216`;
+  Apps Script `Index.html` is 926 bytes / SHA-256
+  `8d9035ee09f9eb514bcb374a9b399714bac693c02898825b196555f3c0621485`;
+  `AppScript.html` is 265,782 bytes / SHA-256
+  `946a2424d5c30e23b12128049bc60a5551279b8ad9f146b4405ccc1100b32faf`.
+- External boundary: no deployment, migration, Script Property change, Apps
+  Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production action occurred.
+- Rollback: set `HAU_MATERIALS_REQUESTS_ENABLED=false` for new Materials
+  sections while retaining versioned stored children/history; use a focused
+  revert of the eventual Slice 8 commit for code rollback.
 
 ## Current Slice 7 - Food Committee workflow
 

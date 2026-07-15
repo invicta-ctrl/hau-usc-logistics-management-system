@@ -29,6 +29,10 @@ export const config = Object.freeze({
     runtime.foodRequestsEnabled ?? import.meta.env?.VITE_FOOD_REQUESTS_ENABLED,
     configuredBackendMode === 'mock',
   ),
+  materialsRequestsEnabled: booleanFlag(
+    runtime.materialsRequestsEnabled ?? import.meta.env?.VITE_MATERIALS_REQUESTS_ENABLED,
+    configuredBackendMode === 'mock',
+  ),
   httpApiBaseUrl: runtime.httpApiBaseUrl ?? import.meta.env?.VITE_HTTP_API_BASE_URL ?? '',
   timezone: 'Asia/Manila',
   locale: 'en-PH',

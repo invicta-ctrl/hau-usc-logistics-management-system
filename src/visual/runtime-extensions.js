@@ -14,6 +14,11 @@ import {
 } from '../domain/catalog-management.js';
 import { createRevisionPoller, normalizeRevisionPayload, revisionChanged } from '../app/revision-sync.js';
 import { foodAttentionFlags, normalizeFoodDetails, updateFoodWorkflow } from '../domain/food-workflow.js';
+import {
+  materialsAttentionFlags,
+  normalizeMaterialsDetails,
+  updateMaterialsWorkflow,
+} from '../domain/materials-workflow.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -298,8 +303,12 @@ export function createRuntimeExtensions(options) {
   let foodQueue = null;
   let foodQueueItems = null;
   let foodQueuePromise = null;
+  let materialsQueue = null;
+  let materialsQueueItems = null;
+  let materialsQueuePromise = null;
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
+  const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
   const foodFormPayload = () => {
     const form = document.querySelector('#compositeRequestForm');
     if (!form) return null;
@@ -554,6 +563,297 @@ export function createRuntimeExtensions(options) {
     );
   };
 
+  const canAccessMaterialsQueue = () => {
+    const user = getState()?.currentUser ?? {};
+    const role = String(user.authorization?.roleId ?? user.role ?? '')
+      .trim()
+      .replace(/[\s-]+/g, '_')
+      .toUpperCase();
+    const capabilities = user.authorization?.capabilities ?? [];
+    const mayReview =
+      capabilities.includes('request.review') ||
+      user.permissions?.review === true ||
+      ['DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR'].includes(role) ||
+      (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role));
+    if (!mayReview) return false;
+    if (role === 'DIRECTOR' || (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role)))
+      return true;
+    const committeeIds = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
+    if (committeeIds.length) return committeeIds.includes('COM_MATERIALS');
+    return backendMode === 'mock' && user.permissions?.review === true;
+  };
+
+  const materialsFormPayload = () => {
+    const form = document.querySelector('#compositeRequestForm');
+    if (!form) return null;
+    return {
+      materialCategory: form.elements.materialsMaterialCategory?.value,
+      specification: form.elements.materialsSpecification?.value,
+      requiredBy: form.elements.materialsRequiredBy?.value,
+      usagePurpose: form.elements.materialsUsagePurpose?.value,
+      sourcingPreference: form.elements.materialsSourcingPreference?.value,
+    };
+  };
+
+  const localMaterialsQueue = () => {
+    const state = getState();
+    const parents = new Map(
+      (state?.compositeRequests ?? []).map((parent) => [parent.requestId ?? parent.id, parent]),
+    );
+    return (state?.compositeComponents ?? [])
+      .filter((child) => child.componentType === 'MATERIALS')
+      .map((child) => {
+        const parent = parents.get(child.requestId) ?? {};
+        return {
+          requestId: child.requestId,
+          componentId: child.componentId ?? child.id,
+          status: child.status,
+          ownerCommitteeId: 'COM_MATERIALS',
+          ownerUserId: child.ownerUserId ?? '',
+          dueAt: child.dueAt ?? '',
+          revision: Number(child.revision ?? 1),
+          parent: {
+            eventId: parent.eventId ?? parent.event?.id ?? '',
+            eventName: parent.eventName ?? parent.event?.name ?? '',
+            eventStartAt: parent.eventStartAt ?? parent.event?.startAt ?? '',
+            priority: parent.priority ?? 'ROUTINE',
+            purpose: parent.purpose ?? '',
+            department: parent.department ?? parent.requester?.department ?? '',
+          },
+          materials: child.payload?.materials,
+          lines: child.payload?.lines ?? [],
+          attentionFlags: child.attentionFlags ?? [],
+        };
+      });
+  };
+
+  const installLocalMaterialsServices = () => {
+    if (backendMode !== 'mock') return;
+    services.getMaterialsWorkQueue ??= async () => ({
+      committeeId: 'COM_MATERIALS',
+      items: localMaterialsQueue(),
+    });
+    services.updateMaterialsComponent ??= async (command) => {
+      const child = (getState()?.compositeComponents ?? []).find(
+        (entry) =>
+          entry.componentType === 'MATERIALS' &&
+          entry.requestId === command.requestId &&
+          (entry.componentId ?? entry.id) === command.componentId,
+      );
+      if (!child) throw new Error('Materials component was not found.');
+      if (['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+        throw new Error('Terminal Materials components cannot be updated.');
+      if (Number(command.expectedRevision) !== Number(child.revision ?? 1))
+        throw new Error('Materials component changed; refresh before updating.');
+      const materials = updateMaterialsWorkflow(child.payload?.materials, command.patch ?? {}, {
+        resolveMaterialReference: (referenceId) =>
+          (getState()?.inventoryItems ?? []).find((item) => item.id === referenceId),
+      });
+      if (materials.fulfillmentEvidenceId) {
+        const requiredEvidenceType =
+          materials.fulfillmentPath === 'STOCK_ISSUE'
+            ? 'MATERIALS_ISSUE_PROOF'
+            : materials.fulfillmentPath === 'PROCUREMENT_RECEIPT'
+              ? 'DELIVERABLE_RECEIPT'
+              : '';
+        const evidenceUploaded = (getState()?.evidenceFiles ?? []).some(
+          (evidence) =>
+            evidence.id === materials.fulfillmentEvidenceId &&
+            (evidence.evidenceType ?? evidence.metadata?.evidenceType ?? evidence.folderType) ===
+              requiredEvidenceType &&
+            (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) ===
+              'COMPOSITE_COMPONENT' &&
+            (evidence.relatedEntityId ?? evidence.relatedId ?? evidence.metadata?.relatedEntityId) ===
+              child.componentId,
+        );
+        if (!evidenceUploaded)
+          throw new Error('Materials evidence type must match the selected fulfillment path.');
+      }
+      child.payload = { ...(child.payload ?? {}), materials };
+      child.attentionFlags = materialsAttentionFlags(materials);
+      child.revision = Number(child.revision ?? 1) + 1;
+      child.updatedAt = new Date().toISOString();
+      return {
+        entityType: 'COMPOSITE_COMPONENT',
+        entityId: command.componentId,
+        requestId: command.requestId,
+        componentId: command.componentId,
+        revision: child.revision,
+        materials,
+      };
+    };
+  };
+
+  const refreshMaterialsQueue = async ({ force = false } = {}) => {
+    if (
+      !materialsQueue ||
+      !canAccessMaterialsQueue() ||
+      typeof services.getMaterialsWorkQueue !== 'function'
+    )
+      return;
+    if (materialsQueuePromise) return materialsQueuePromise;
+    if (!force && materialsQueueItems !== null) return;
+    materialsQueuePromise = (async () => {
+      const result = await services.getMaterialsWorkQueue();
+      materialsQueueItems = Array.isArray(result?.items) ? result.items : [];
+      renderMaterialsQueue();
+    })();
+    try {
+      await materialsQueuePromise;
+    } catch (error) {
+      materialsQueueItems = [];
+      renderMaterialsQueue(error.message);
+    } finally {
+      materialsQueuePromise = null;
+    }
+  };
+
+  const renderMaterialsQueue = (error = '') => {
+    if (!materialsQueue) return;
+    const items = materialsQueueItems ?? [];
+    materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} Â· ${esc(item.materials?.fulfillmentPath || 'PENDING_DECISION')} Â· ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
+  };
+
+  const openMaterialsWorkflow = (componentId) => {
+    const item = (materialsQueueItems ?? []).find((entry) => entry.componentId === componentId);
+    if (!item) return;
+    openModal(
+      `Manage Materials ${item.componentId}`,
+      `<form id="materialsWorkflowForm"><div class="mode-note">Choose one fulfillment path. Exact-only remains the default; substitutions require an approved catalog reference and reason.</div><div class="form-grid" style="margin-top:14px"><label>Fulfillment path<select name="fulfillmentPath">${option('PENDING_DECISION', 'Pending decision', item.materials?.fulfillmentPath)}${option('STOCK_ISSUE', 'Issue from stock', item.materials?.fulfillmentPath)}${option('PROCUREMENT_RECEIPT', 'Procurement and receipt', item.materials?.fulfillmentPath)}</select></label><label>Substitution policy<select name="substitutionPolicy">${option('EXACT_ONLY', 'Exact only', item.materials?.substitutionPolicy)}${option('APPROVED_SUBSTITUTION', 'Approved substitution', item.materials?.substitutionPolicy)}</select></label><label>Approved substitute reference<input name="approvedSubstitutionReferenceId" maxlength="100" value="${esc(item.materials?.approvedSubstitutionReferenceId ?? '')}"></label><label>Substitution reason<input name="substitutionReason" maxlength="500" value="${esc(item.materials?.substitutionReason ?? '')}"></label><label>Blocker status<select name="blockerStatus">${option('NONE', 'No blocker', item.materials?.blockerStatus)}${option('BLOCKED', 'Blocked', item.materials?.blockerStatus)}</select></label><label>Blocker reason<input name="blockerReason" maxlength="500" value="${esc(item.materials?.blockerReason ?? '')}"></label><label class="span-2">Issue / receipt evidence (optional)<input name="fulfillmentEvidence" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><small>${item.materials?.fulfillmentEvidenceId ? `Linked evidence: ${esc(item.materials.fulfillmentEvidenceId)}` : 'A path-matching upload is required before completion.'}</small></label></div><button class="primary" type="submit">Save Materials Workflow</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#materialsWorkflowForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          button.textContent = 'Savingâ€¦';
+          try {
+            const values = Object.fromEntries(new FormData(form).entries());
+            let fulfillmentEvidenceId = item.materials?.fulfillmentEvidenceId ?? '';
+            const file = form.elements.fulfillmentEvidence.files?.[0];
+            if (file) {
+              if (typeof services.uploadEvidenceFile !== 'function')
+                throw new Error('Evidence upload is unavailable.');
+              if (values.fulfillmentPath === 'PENDING_DECISION')
+                throw new Error('Choose a fulfillment path before uploading evidence.');
+              const evidence = await services.uploadEvidenceFile(file, {
+                evidenceType:
+                  values.fulfillmentPath === 'STOCK_ISSUE'
+                    ? 'MATERIALS_ISSUE_PROOF'
+                    : 'DELIVERABLE_RECEIPT',
+                relatedEntityType: 'COMPOSITE_COMPONENT',
+                relatedEntityId: item.componentId,
+                requestId: item.requestId,
+              });
+              fulfillmentEvidenceId = evidence.id;
+            }
+            const result = await services.updateMaterialsComponent({
+              requestId: item.requestId,
+              componentId: item.componentId,
+              expectedRevision: item.revision,
+              patch: {
+                fulfillmentPath: values.fulfillmentPath,
+                substitutionPolicy: values.substitutionPolicy,
+                approvedSubstitutionReferenceId: values.approvedSubstitutionReferenceId,
+                substitutionReason: values.substitutionReason,
+                blockerStatus: values.blockerStatus,
+                blockerReason: values.blockerReason,
+                fulfillmentEvidenceId,
+              },
+              reason: 'Materials workflow updated from the scoped queue',
+              idempotencyKey: `materials-update-${item.componentId}-${item.revision}`,
+            });
+            markFormClean(form);
+            closeModal();
+            await commit(`${item.componentId} Materials workflow updated.`, 'success', result);
+            await refreshMaterialsQueue({ force: true });
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+            button.textContent = 'Save Materials Workflow';
+          }
+        });
+      },
+    );
+  };
+
+  const installMaterialsWorkflow = () => {
+    const section = document.querySelector('[data-composite-section="MATERIALS"]');
+    const fields = section?.querySelector('[data-composite-fields]');
+    const toggle = section?.querySelector('[data-composite-toggle]');
+    if (!section || !fields || !toggle) return;
+    if (!materialsRequestsEnabled) {
+      toggle.disabled = true;
+      section.insertAdjacentHTML(
+        'beforeend',
+        '<p class="muted">Materials specialization is disabled for new submissions.</p>',
+      );
+    }
+    if (!fields.querySelector('[name="materialsMaterialCategory"]')) {
+      fields.insertAdjacentHTML(
+        'beforeend',
+        `<label>Controlled category<select name="materialsMaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        <label>Required by<input name="materialsRequiredBy" type="date" required></label>
+        <label class="span-2">Exact specification<input name="materialsSpecification" maxlength="500" placeholder="Enter the exact material specification" required></label>
+        <label class="span-2">Usage / purpose<input name="materialsUsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required></label>
+        <label>Sourcing preference<select name="materialsSourcingPreference" required><option value="STOCK_REVIEW">Review available stock</option><option value="PROCUREMENT_REQUIRED">Procurement required</option></select></label>
+        <p class="muted span-2">Exact-only by default. No automatic substitution or unit conversion.</p>`,
+      );
+    }
+    const originalSubmit = services.submitCompositeRequest.bind(services);
+    services.submitCompositeRequest = async (payload) => {
+      const enriched = structuredClone(payload);
+      const sectionDraft = enriched.sections?.find((entry) => entry.type === 'MATERIALS');
+      let normalizedMaterials = null;
+      if (sectionDraft) {
+        if (!materialsRequestsEnabled)
+          throw new Error('Materials request specialization is not enabled.');
+        sectionDraft.materials = materialsFormPayload();
+        sectionDraft.lines = (sectionDraft.lines ?? []).map((line) => ({
+          ...line,
+          category: sectionDraft.materials.materialCategory,
+        }));
+        normalizedMaterials = normalizeMaterialsDetails(sectionDraft.materials, sectionDraft.lines, {
+          resolveMaterialReference: (referenceId) =>
+            (getState()?.inventoryItems ?? []).find((item) => item.id === referenceId),
+        });
+        sectionDraft.lines = normalizedMaterials.lines;
+        sectionDraft.materials = { ...normalizedMaterials };
+        delete sectionDraft.materials.lines;
+      }
+      const result = await originalSubmit(enriched);
+      if (backendMode === 'mock' && normalizedMaterials) {
+        const requestId = result.requestId || result.request?.requestId;
+        const child = (getState()?.compositeComponents ?? []).find(
+          (entry) => entry.requestId === requestId && entry.componentType === 'MATERIALS',
+        );
+        if (child) {
+          child.payload = {
+            notes: '',
+            lines: normalizedMaterials.lines,
+            materials: sectionDraft.materials,
+          };
+          child.attentionFlags = materialsAttentionFlags(sectionDraft.materials);
+        }
+      }
+      await refreshMaterialsQueue({ force: true });
+      return result;
+    };
+    if (!isRequestOnly() && canAccessMaterialsQueue()) {
+      materialsQueue = document.createElement('article');
+      materialsQueue.id = 'materialsCommitteeQueue';
+      materialsQueue.className = 'panel section-gap';
+      materialsQueue.setAttribute('aria-labelledby', 'materialsCommitteeQueueTitle');
+      section.closest('#compositeRequestPanel')?.after(materialsQueue);
+      materialsQueue.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-materials-manage]');
+        if (button) openMaterialsWorkflow(button.dataset.materialsManage);
+      });
+      void refreshMaterialsQueue();
+    }
+  };
+
   const cleanDisconnectedForms = () => {
     for (const form of dirtyForms) if (!form.isConnected) dirtyForms.delete(form);
   };
@@ -788,7 +1088,9 @@ export function createRuntimeExtensions(options) {
 
   const install = () => {
     installLocalFoodServices();
+    installLocalMaterialsServices();
     installFoodWorkflow();
+    installMaterialsWorkflow();
     if (!isRequestOnly()) lending = createLendingController({ markFormClean });
     mountSyncUi();
     const statusFilter = document.querySelector('#inventoryStatusFilter');
@@ -836,6 +1138,7 @@ export function createRuntimeExtensions(options) {
       catalogButton.setAttribute('aria-hidden', String(!allowed));
     }
     renderFoodQueue();
+    renderMaterialsQueue();
   };
 
   const start = () => {

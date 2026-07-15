@@ -26,6 +26,13 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   ).toHaveCount(0);
   await panel.locator('[data-composite-toggle][value="MATERIALS"]').check();
   await panel.locator('[name="materialsLine"]').fill('Directional signs');
+  await expect(panel.locator('[name="materialsMaterialCategory"]')).toBeVisible();
+  await panel.locator('[name="materialsMaterialCategory"]').selectOption('PRINTING_SIGNAGE');
+  await panel.locator('[name="materialsRequiredBy"]').fill('2026-08-08');
+  await panel
+    .locator('[name="materialsSpecification"]')
+    .fill('A3 directional signs with approved event wording');
+  await panel.locator('[name="materialsUsagePurpose"]').fill('Synthetic event wayfinding');
   await panel.getByRole('button', { name: 'Review composite request' }).click();
 
   const result = panel.locator('#compositeRequestResult');
@@ -46,6 +53,19 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
     sourcingMode: 'APPROVED_EXTERNAL_SOURCE',
     sourceReference: 'SYN-SOURCE-UI',
   });
+  const storedMaterials = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
+    return state.compositeComponents.find((child) => child.componentType === 'MATERIALS')?.payload
+      ?.materials;
+  });
+  expect(storedMaterials).toMatchObject({
+    version: 1,
+    materialCategory: 'PRINTING_SIGNAGE',
+    specification: 'A3 directional signs with approved event wording',
+    usagePurpose: 'Synthetic event wayfinding',
+    fulfillmentPath: 'PENDING_DECISION',
+    substitutionPolicy: 'EXACT_ONLY',
+  });
 
   const foodQueue = page.locator('#foodCommitteeQueue');
   await expect(foodQueue).toBeVisible();
@@ -65,5 +85,24 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   expect(updatedFood).toMatchObject({
     revision: 2,
     food: { dietarySummary: 'NONE_REPORTED', dietaryAttentionServings: 0 },
+  });
+
+  const materialsQueue = page.locator('#materialsCommitteeQueue');
+  await expect(materialsQueue).toBeVisible();
+  await expect(materialsQueue).toContainText('PENDING_DECISION');
+  await materialsQueue.getByRole('button', { name: 'Manage' }).click();
+  const materialsWorkflow = page.locator('#materialsWorkflowForm');
+  await expect(materialsWorkflow).toBeVisible();
+  await materialsWorkflow.locator('[name="fulfillmentPath"]').selectOption('STOCK_ISSUE');
+  await materialsWorkflow.getByRole('button', { name: 'Save Materials Workflow' }).click();
+  await expect(materialsWorkflow).toBeHidden();
+  const updatedMaterials = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
+    const child = state.compositeComponents.find((entry) => entry.componentType === 'MATERIALS');
+    return { revision: child.revision, materials: child.payload?.materials };
+  });
+  expect(updatedMaterials).toMatchObject({
+    revision: 2,
+    materials: { fulfillmentPath: 'STOCK_ISSUE', substitutionPolicy: 'EXACT_ONLY' },
   });
 });

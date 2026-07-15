@@ -30,6 +30,12 @@ import {
   foodAttentionFlags,
   updateFoodWorkflow,
 } from '../domain/food-workflow.js';
+import {
+  assertMaterialsTransition,
+  buildMaterialsQueueItem,
+  materialsAttentionFlags,
+  updateMaterialsWorkflow,
+} from '../domain/materials-workflow.js';
 import { requireIdempotencyKey, previousResult, storeResult } from './idempotency-service.js';
 
 const now = () => new Date().toISOString();
@@ -69,6 +75,28 @@ function requireFoodRevisionMap(command, children, statuses) {
   )) {
     if (Number(expected[child.componentId]) !== Number(child.revision ?? 1))
       throw new AppError('REVISION_CONFLICT', 'Food component changed; refresh before updating.', {
+        retryable: true,
+      });
+  }
+}
+
+function requireMaterialsRevision(command, child) {
+  if (
+    child?.componentType === 'MATERIALS' &&
+    Number(command.expectedRevision) !== Number(child.revision ?? 1)
+  )
+    throw new AppError('REVISION_CONFLICT', 'Materials component changed; refresh before updating.', {
+      retryable: true,
+    });
+}
+
+function requireMaterialsRevisionMap(command, children, statuses) {
+  const expected = command.expectedRevisions ?? {};
+  for (const child of children.filter(
+    (entry) => entry.componentType === 'MATERIALS' && statuses.includes(entry.status),
+  )) {
+    if (Number(expected[child.componentId]) !== Number(child.revision ?? 1))
+      throw new AppError('REVISION_CONFLICT', 'Materials component changed; refresh before updating.', {
         retryable: true,
       });
   }
@@ -218,6 +246,11 @@ export class MockService {
       async (state, tx) => {
         requirePermission(state, 'submit_request');
         ensureCompositeState(state);
+        if (
+          command.sections?.some((section) => section?.type === 'MATERIALS') &&
+          state.materialsRequestsEnabled === false
+        )
+          throw new AppError('FEATURE_DISABLED', 'Materials request specialization is not enabled.');
         const packet = createCompositePacket(command, {
           requestId: allocateId(state, 'LREQ', 2026),
           componentIds: (command.sections ?? [])
@@ -225,6 +258,8 @@ export class MockService {
             .map(() => allocateSimpleId(state, 'CMP')),
           actor: tx.actor,
           now: now(),
+          resolveMaterialReference: (referenceId) =>
+            state.inventoryItems.find((item) => item.id === referenceId),
         });
         const { children, ...parent } = packet.parent;
         state.compositeRequests.push(parent);
@@ -317,6 +352,84 @@ export class MockService {
     );
   }
 
+  getMaterialsWorkQueue() {
+    const state = this.store.getState();
+    requirePermission(state, 'review_request');
+    ensureCompositeState(state);
+    const parents = new Map(state.compositeRequests.map((parent) => [parent.requestId, parent]));
+    const items = state.compositeComponents
+      .filter((child) => child.componentType === 'MATERIALS')
+      .map((child) => buildMaterialsQueueItem(parents.get(child.requestId), child));
+    return Promise.resolve({ ok: true, committeeId: 'COM_MATERIALS', items });
+  }
+
+  updateMaterialsComponent(command) {
+    return this._run(
+      command,
+      'UPDATE_MATERIALS_COMPONENT',
+      async (state) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child || child.componentType !== 'MATERIALS')
+          throw new AppError('MATERIALS_COMPONENT_NOT_FOUND', 'Materials component was not found.');
+        if (['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+          throw new AppError(
+            'MATERIALS_UPDATE_NOT_ALLOWED',
+            'Terminal Materials components cannot be updated.',
+          );
+        requireMaterialsRevision(command, child);
+        const materials = updateMaterialsWorkflow(child.payload?.materials, command.patch, {
+          resolveMaterialReference: (referenceId) =>
+            state.inventoryItems.find((item) => item.id === referenceId),
+        });
+        let evidenceUploaded = false;
+        if (materials.fulfillmentEvidenceId) {
+          const requiredEvidenceType =
+            materials.fulfillmentPath === 'STOCK_ISSUE'
+              ? 'MATERIALS_ISSUE_PROOF'
+              : materials.fulfillmentPath === 'PROCUREMENT_RECEIPT'
+                ? 'DELIVERABLE_RECEIPT'
+                : '';
+          evidenceUploaded = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === materials.fulfillmentEvidenceId &&
+              evidence.evidenceType === requiredEvidenceType &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          if (!evidenceUploaded)
+            throw new AppError(
+              'MATERIALS_COMPLETION_EVIDENCE_INVALID',
+              'Materials evidence must be uploaded and linked to this component.',
+            );
+        }
+        child.payload = { ...child.payload, materials };
+        child.attentionFlags = materialsAttentionFlags(materials);
+        child.progress = {
+          ...child.progress,
+          fulfillmentPath: materials.fulfillmentPath,
+          evidenceLinked: Boolean(materials.fulfillmentEvidenceId),
+          blockerStatus: materials.blockerStatus,
+        };
+        child.revision = Number(child.revision) + 1;
+        child.updatedAt = now();
+        updateCompositeParent(parent, children);
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          revision: child.revision,
+          materials,
+          evidenceUploaded,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
   transitionCompositeComponent(command) {
     return this._run(
       command,
@@ -327,6 +440,7 @@ export class MockService {
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
+        requireMaterialsRevision(command, child);
         if (child.componentType === 'FOOD') {
           const evidenceUploaded = (state.evidenceFiles ?? []).some(
             (evidence) =>
@@ -337,6 +451,17 @@ export class MockService {
               evidence.uploadStatus === 'UPLOADED',
           );
           assertFoodTransition(child.payload?.food, command.action, { evidenceUploaded });
+        }
+        if (child.componentType === 'MATERIALS') {
+          const evidenceUploaded = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === child.payload?.materials?.fulfillmentEvidenceId &&
+              ['MATERIALS_ISSUE_PROOF', 'DELIVERABLE_RECEIPT'].includes(evidence.evidenceType) &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          assertMaterialsTransition(child.payload?.materials, command.action, { evidenceUploaded });
         }
         const next = transitionCompositeChild(child, command.action, { reason: command.reason });
         Object.assign(child, next, { revision: Number(child.revision ?? 1) + 1, updatedAt: now() });
@@ -366,6 +491,14 @@ export class MockService {
         requirePermission(state, 'review_request');
         const { parent, children } = compositeRecord(state, command.requestId);
         requireFoodRevisionMap(command, children, [
+          'DRAFT',
+          'FOR_REVIEW',
+          'ACCEPTED',
+          'IN_PROGRESS',
+          'PARTIALLY_FULFILLED',
+          'READY_FOR_HANDOFF',
+        ]);
+        requireMaterialsRevisionMap(command, children, [
           'DRAFT',
           'FOR_REVIEW',
           'ACCEPTED',
@@ -406,6 +539,7 @@ export class MockService {
           );
         const { parent, children } = compositeRecord(state, command.requestId);
         requireFoodRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
+        requireMaterialsRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
         if (!['REJECTED', 'CANCELLED'].includes(parent.status))
           throw new AppError(
             'INVALID_TRANSITION',
@@ -442,7 +576,15 @@ export class MockService {
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
-        Object.assign(child, amendCompositeSection(child, command.section ?? {}, { now: now() }));
+        requireMaterialsRevision(command, child);
+        Object.assign(
+          child,
+          amendCompositeSection(child, command.section ?? {}, {
+            now: now(),
+            resolveMaterialReference: (referenceId) =>
+              state.inventoryItems.find((item) => item.id === referenceId),
+          }),
+        );
         const derived = updateCompositeParent(parent, children);
         state.revisions.requests += 1;
         return {
@@ -475,6 +617,8 @@ export class MockService {
           throw new AppError('DUPLICATE_COMPONENT', 'That composite section already exists.');
         if (command.section?.type === 'FOOD' && state.foodRequestsEnabled === false)
           throw new AppError('FEATURE_DISABLED', 'Food request specialization is not enabled.');
+        if (command.section?.type === 'MATERIALS' && state.materialsRequestsEnabled === false)
+          throw new AppError('FEATURE_DISABLED', 'Materials request specialization is not enabled.');
         if (
           command.section?.type === 'FOOD' &&
           Number(command.expectedParentRevision) !== Number(parent.revision ?? 1)
@@ -482,6 +626,15 @@ export class MockService {
           throw new AppError('REVISION_CONFLICT', 'Composite request changed; refresh before adding Food.', {
             retryable: true,
           });
+        if (
+          command.section?.type === 'MATERIALS' &&
+          Number(command.expectedParentRevision) !== Number(parent.revision ?? 1)
+        )
+          throw new AppError(
+            'REVISION_CONFLICT',
+            'Composite request changed; refresh before adding Materials.',
+            { retryable: true },
+          );
         const packet = createCompositePacket(
           {
             requesterName: parent.requesterName,
@@ -501,6 +654,8 @@ export class MockService {
             componentIds: [allocateSimpleId(state, 'CMP')],
             actor: tx.actor,
             now: now(),
+            resolveMaterialReference: (referenceId) =>
+              state.inventoryItems.find((item) => item.id === referenceId),
           },
         );
         state.compositeComponents.push(packet.children[0]);

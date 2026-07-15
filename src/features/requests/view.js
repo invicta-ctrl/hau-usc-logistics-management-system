@@ -48,9 +48,18 @@ function foodFields(key) {
   return `<div class="form-grid span-2" data-food-fields><label>Service class<select name="${key}ServiceClass" required><option value="BULK_NON_PERISHABLE_OR_CATERING">Bulk / non-perishable / catering (10 business days)</option><option value="PERISHABLE_FOOD">Perishable food (5 business days)</option></select></label><label>Expected headcount<input name="${key}ExpectedHeadcount" type="number" min="1" step="1" value="10" required /></label><label>Required servings<input name="${key}RequiredServings" type="number" min="1" step="1" value="10" required /></label><label>Service start (Manila time)<input name="${key}ServiceStartAt" type="datetime-local" value="2026-08-08T12:00" required /></label><label>Service end (optional)<input name="${key}ServiceEndAt" type="datetime-local" /></label><label>Service location<input name="${key}ServiceLocation" maxlength="120" value="Event service area" required /></label><label>Dietary summary<select name="${key}DietarySummary" required><option value="NONE_REPORTED">None reported</option><option value="ATTENTION_REQUIRED">Attention required (aggregate only)</option><option value="PENDING_CONFIRMATION">Pending confirmation</option></select></label><label>Servings needing attention<input name="${key}DietaryAttentionServings" type="number" min="0" step="1" value="0" required /></label><label>Sourcing mode<select name="${key}SourcingMode" required><option value="PANTRY_STOCK_REVIEW">Pantry stock review</option><option value="CANVASS_REQUIRED">Canvass required</option><option value="APPROVED_EXTERNAL_SOURCE">Approved external source</option></select></label><label>Source reference (no contacts or payment data)<input name="${key}SourceReference" maxlength="120" /></label><p class="muted span-2">Use aggregate counts only. Do not enter names, diagnoses, medical narratives, supplier contacts, TINs, or payment data.</p></div>`;
 }
 
+function materialsFields(key) {
+  return `<div class="form-grid span-2" data-materials-fields><label>Controlled category<select name="${key}MaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label><label>Required by<input name="${key}RequiredBy" type="date" required /></label><label class="span-2">Exact specification<input name="${key}Specification" maxlength="500" placeholder="Enter the exact material specification" required /></label><label class="span-2">Usage / purpose<input name="${key}UsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required /></label><label>Sourcing preference<select name="${key}SourcingPreference" required><option value="STOCK_REVIEW">Review available stock</option><option value="PROCUREMENT_REQUIRED">Procurement required</option></select></label><p class="muted span-2">Exact-only is the default. The Materials Committee records one stock-issue or procurement-receipt path; substitutions require a recorded approval.</p></div>`;
+}
+
 function renderCompositeSection([type, title, key]) {
   if (type === 'FOOD' && !config.foodRequestsEnabled) return '';
-  return `<fieldset class="panel inset" data-composite-section="${type}"><legend><label><input type="checkbox" name="${key}Enabled" value="${type}" data-composite-toggle /> ${title}</label></legend><div class="form-grid" data-composite-fields><label>Section label<input name="${key}Label" placeholder="Optional label" /></label><label>Line description<input name="${key}Line" placeholder="One minimal request line" /></label><label>Quantity<input name="${key}Quantity" type="number" min="0.01" step="0.01" value="1" /></label><label>Unit<select name="${key}Unit"><option>piece</option><option>box</option><option>pack</option><option>meal</option><option>service</option></select></label>${type === 'FOOD' ? foodFields(key) : ''}</div></fieldset>`;
+  if (type === 'MATERIALS' && !config.materialsRequestsEnabled) return '';
+  const units =
+    type === 'MATERIALS'
+      ? ['piece', 'box', 'pack', 'ream', 'roll', 'sheet', 'bottle', 'meter', 'kilogram', 'liter']
+      : ['piece', 'box', 'pack', 'meal', 'service'];
+  return `<fieldset class="panel inset" data-composite-section="${type}"><legend><label><input type="checkbox" name="${key}Enabled" value="${type}" data-composite-toggle /> ${title}</label></legend><div class="form-grid" data-composite-fields><label>Section label<input name="${key}Label" placeholder="Optional label" /></label><label>Line description<input name="${key}Line" placeholder="One minimal request line" /></label><label>Quantity<input name="${key}Quantity" type="number" min="0.01" step="0.01" value="1" /></label><label>Unit<select name="${key}Unit">${units.map((unit) => `<option>${unit}</option>`).join('')}</select></label>${type === 'FOOD' ? foodFields(key) : type === 'MATERIALS' ? materialsFields(key) : ''}</div></fieldset>`;
 }
 
 function renderCompositePanel(state) {
@@ -137,6 +146,9 @@ export function mountRequests(ctx, root) {
               label: compositeForm.elements[`${key}Line`].value,
               quantity: compositeForm.elements[`${key}Quantity`].value,
               unit: compositeForm.elements[`${key}Unit`].value,
+              ...(toggle.value === 'MATERIALS'
+                ? { category: compositeForm.elements.materialsMaterialCategory.value }
+                : {}),
             },
           ],
         };
@@ -153,6 +165,15 @@ export function mountRequests(ctx, root) {
             dietaryAttentionServings: compositeForm.elements.foodDietaryAttentionServings.value,
             sourcingMode: compositeForm.elements.foodSourcingMode.value,
             sourceReference: compositeForm.elements.foodSourceReference.value,
+          };
+        }
+        if (toggle.value === 'MATERIALS') {
+          section.materials = {
+            materialCategory: compositeForm.elements.materialsMaterialCategory.value,
+            specification: compositeForm.elements.materialsSpecification.value,
+            requiredBy: compositeForm.elements.materialsRequiredBy.value,
+            usagePurpose: compositeForm.elements.materialsUsagePurpose.value,
+            sourcingPreference: compositeForm.elements.materialsSourcingPreference.value,
           };
         }
         return section;

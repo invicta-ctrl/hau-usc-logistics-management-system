@@ -4,33 +4,33 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 7 accepted
+## Current run checkpoint - Phase 4 / Slice 8 locally accepted, pending commit
 
 - Date: 2026-07-15 (Asia/Manila).
-- Stage: `SLICE_7_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
-- Accepted starting checkpoint: `5c9bb501e01eeee961bae01279f2c0188d0429ce`
+- Stage: `SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT`.
+- Accepted starting checkpoint: `290dc629fd9c0765bca39144224798c65b667eaa`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
-- User authorization: the Phase 3.5/naming checkpoint is accepted and Phase 4
-  continuation is approved. The master guide still requires Slices 7-12 to be
-  implemented, reviewed, pushed, CI-verified, and accepted one at a time.
-- Current bounded scope: controlled Food Committee workflow on the accepted
+- User authorization: direct bounded continuation is approved without another
+  manager-approval pause. Each slice still requires complete local proof,
+  independent review, a focused push, and green CI before the next starts.
+- Current bounded scope: Materials Committee specialization on the accepted
   composite-request foundation, as specified in
-  `docs/FOOD_COMMITTEE_WORKFLOW.md`.
+  `docs/MATERIALS_COMMITTEE_WORKFLOW.md`.
 - External boundary: repository implementation and feature-branch GitHub CI
   only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
   PR merge, Cloudflare, database, or production action is authorized here.
-- Local result: controlled Food specialization, scoped server queue/detail,
-  active queue/update/evidence UI, cross-path revision/attention preservation,
-  and fail-closed flags are implemented. `npm run check` passes 28 files / 231
-  tests, 30 modules, 30 Apps Script sources / 49 functions, generated parity,
-  and two 311,165-byte artifacts; Playwright passes 61 / 101 intentional skips /
-  0 failures; sensitive/diff checks pass; final independent review is PASS.
-- Remote result: implementation commit
-  `e85e27558f02e6a1f8b3b51be514a0382df24a10` is pushed and matched PR #7;
-  run `29388258079` passed `validate`; run `29388258076` passed `verify` and
-  `browser-smoke`. The owner's no-more-manager-approval authorization accepts
-  the completed gates and unlocks bounded Slice 8.
+- Local result: controlled Materials detail, exact immutable catalog
+  provenance with amendment history, exact `ACTIVE`/category enforcement,
+  `VERIFY` denial, fulfillment-path exclusivity, approved substitution with
+  durable before/after audit, blocker/evidence completion rechecks, scoped
+  server queue, blank operational UI inputs, and fail-closed flags are
+  implemented. `npm run check` passes 30 Vitest files / 244 tests, a 31-module
+  build, 31 Apps Script sources / 51 required functions, generated parity, and
+  two 329,544-byte artifacts. Full Playwright passes 61 / 101 intentional skips
+  / 0 failures. Changed-scope sensitive and diff checks pass. Independent final
+  review is PASS with no remaining findings.
+- Remote result: none yet for Slice 8. No external operational system changed.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

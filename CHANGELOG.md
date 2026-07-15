@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased - Slice 8 Materials Committee workflow
+
+- Added a versioned Materials specialization with controlled category,
+  specification, required-by, usage, sourcing preference, exact quantity/unit,
+  live catalog validation, and immutable legacy source provenance across
+  amendments.
+- Enforced exact `ACTIVE` status and controlled category, retained the dedicated
+  `VERIFY` denial, prohibited automatic substitution/unit conversion, and
+  required one stock-issue or procurement-receipt path.
+- Added explicit substitution reference/reason with immutable before/after
+  history and audit metadata, blocker controls, path-matching uploaded evidence,
+  and full readiness rechecks at handoff and completion.
+- Added the `COM_MATERIALS`-scoped server queue/update route, revision,
+  idempotency, locking, authorization, parent projection, fail-closed
+  `HAU_MATERIALS_REQUESTS_ENABLED` flag, active request/queue UI, and blank
+  required operational inputs.
+- Verification passes: `npm run check` (30 Vitest files / 244 tests, 31-module
+  build, 31 Apps Script sources / 51 required functions, generated parity, and
+  two 329,544-byte artifacts); full Playwright 61 passed / 101 intentional skips
+  / 0 failures; changed-scope sensitive scan; `git diff --check`; and final
+  independent review PASS with no findings.
+- No deployment, migration, Script Property change, Apps Script/Sheets/Drive
+  external write, private operational data access, PR merge, Cloudflare,
+  database, staging, or production change was performed.
+
 ## Unreleased - Slice 7 Food Committee workflow
 
 - Added a versioned, privacy-minimized Food specialization to composite Event

@@ -248,6 +248,12 @@ describe('Apps Script canonical authorization contract', () => {
       }).committeeIds,
     ).toEqual(['COM_FOOD']);
     expect(
+      context.authorizationResourceFromCommand_('updateMaterialsComponent', {
+        requestId: 'SYNTHETIC-COMPOSITE',
+        componentId: 'SYNTHETIC-MATERIALS-COMPONENT',
+      }).committeeIds,
+    ).toEqual(['COM_MATERIALS']);
+    expect(
       context.authorizationResourceFromCommand_('selectPreferredCanvass', { canvassId: 'SYNTHETIC-CANVASS' })
         .committeeIds,
     ).toEqual(['COM_MATERIALS', 'COM_FOOD']);

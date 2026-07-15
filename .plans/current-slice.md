@@ -1,4 +1,38 @@
-# HAU-USC V1 Autonomous Program - Slice 7 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 8 checkpoint
+
+CURRENT SLICE: Slice 8 - Materials Committee specialization
+CURRENT STAGE: SLICE_8_IMPLEMENTED_VERIFIED_INDEPENDENT_PASS_PENDING_COMMIT
+LAST UPDATED: 2026-07-15 (Asia/Manila)
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Slice 8 scope lock
+
+- Starting checkpoint: `290dc629fd9c0765bca39144224798c65b667eaa` on
+  `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.
+- Contract: `docs/MATERIALS_COMMITTEE_WORKFLOW.md`.
+- Delivered scope: versioned controlled Materials detail; exact quantity/unit;
+  server-resolved catalog snapshots with legacy provenance; `VERIFY`, inactive,
+  renamed, and unit-converted reference denial; stock-or-procurement path
+  exclusivity; explicit substitution approval; blocker and matching-evidence
+  gates; Materials-only queue; authorization/revision/idempotency/lock guards;
+  active request/update UI; fail-closed runtime flag; focused tests.
+- Exclusions: posted ledger writes, automatic equivalence or conversion, vendor
+  redesign, Venue/Equipment changes, private supplier data, deployment,
+  migration, external Google writes, PR merge, Cloudflare/database, staging,
+  and production.
+- Rollback: set `HAU_MATERIALS_REQUESTS_ENABLED=false` for new sections and
+  retain stored versioned children/history; use a focused revert if required.
+- Current proof: `npm run check` passes 30 Vitest files / 244 tests, a 31-module
+  build, 31 Apps Script sources / 51 required functions, deterministic parity,
+  and two 329,544-byte artifacts. Full Playwright passes 61 / 101 intentional
+  skips / 0 failures, including the Materials form/persist/queue/update flow.
+  Changed-scope sensitive and diff checks pass. Independent review is final
+  PASS with no remaining finding. The focused commit/push and remote CI remain.
+
+---
+
+## Historical Slice 7 checkpoint
 
 CURRENT SLICE: Slice 7 - Food Committee workflow
 CURRENT STAGE: SLICE_7_COMMITTED_PUSHED_CI_GREEN_ACCEPTED
@@ -6,7 +40,7 @@ LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Slice 7 scope lock
+### Slice 7 scope lock
 
 - Explicit user acceptance received 2026-07-15 for Phase 3.5 and continuation
   into Phase 4. The verified Slice 7 starting checkpoint is
