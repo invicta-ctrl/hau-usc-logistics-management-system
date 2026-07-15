@@ -4,6 +4,33 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
+## Current run checkpoint - Phase 3.5 locally verified
+
+- Date: 2026-07-15 (Asia/Manila).
+- Stage: `PHASE_3_5_VERIFIED_PENDING_COMMIT`.
+- Frozen state: active checkout/branch/upstream/PR #6 at
+  `6abfb411c34a78aa5f98330c124c9e3a06c87762`; `0 0`; clean; CI green.
+- Scope: local/Git/GitHub consolidation only; no product or external operational
+  phase.
+- Deterministic inventory found one authoritative candidate, one retained
+  deployment worktree, one superseded routing clone with four ignored runtime
+  artifacts, verified/private/unknown folders that must remain, two fully
+  contained stale PRs, three fully contained remote cleanup candidates, and
+  four unique dependency branches that must remain.
+- Preservation: verified 34-ref complete-history bundle plus exact six-file
+  routing-runtime archive; both private-config source/copy pairs match.
+- Execution: deployment worktree moved through Git into the consolidation root;
+  redundant routing clone removed; fully contained PR #1/#2 closed without
+  merge; three contained/bundled remote refs deleted; unique dependencies and
+  unknown/private material retained.
+- Verification: governance passed 8 project files / 14 continuation fields;
+  full `npm run check` passed 25 files / 216 tests, 28-module build, 29 Apps
+  Script sources / 47 functions, generated parity, and two 293,406-byte
+  artifacts. Git integrity, bundle, manifest, structure, PR/ref,
+  Codex-placement, and diff checks pass.
+- Required next gate: checkpoint commit/push/CI, corrected PR #6 metadata,
+  verified Phase 3.5 tag, and final parity/clean proof.
+
 ## Current run checkpoint - Phase 3 pushed, CI-green, and tagged
 
 - Date: 2026-07-15 (Asia/Manila).

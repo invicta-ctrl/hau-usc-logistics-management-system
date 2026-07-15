@@ -2,13 +2,13 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; Phase 3 consolidation locally complete; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; Phase 3 complete; Phase 3.5 local consolidation executed pending repository verification; production undeployed)
 - Date: `2026-07-15`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
 - Current implementation checkpoint: Slice 6 commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; pushed; remote and PR #6 heads matched; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open, unmerged, and mergeable; head `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`; `validate`, `verify`, and `browser-smoke` are green; manager review is pending
+- Pull request: draft PR #6, open, unmerged, and mergeable; Phase 3.5 starting head `6abfb411c34a78aa5f98330c124c9e3a06c87762`; `validate`, `verify`, and `browser-smoke` were green at the freeze; live verification follows the documentation checkpoint
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
@@ -17,6 +17,42 @@
 - Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-6 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Phase 3.5 - Repository and workspace final reconciliation
+
+- Stage: `PHASE_3_5_VERIFIED_PENDING_COMMIT`.
+- Authority: `D:\Documents\DOL Website GitHub` remains the single active
+  checkout on `feat/live-sync-lending-search-catalog-controls` from clean,
+  synchronized, CI-green starting head `6abfb411...`.
+- Preservation: new 34-ref complete-history bundle, 1,559,241 bytes, SHA-256
+  `924E52E027E40EAFB141A73C4431E0FAF0DA35432D84F36AA531E090B10BE04F`.
+  The routing clone's six runtime files are preserved exactly with zero copy
+  mismatches and metadata aggregate SHA-256
+  `548C972D309A3DFADDFB7B0A76AC6DFC53CA6102516CAA6B3174E54D0AD49535`.
+- Local structure: the clean deployment linked worktree moved through Git to
+  `D:\Documents\HAU-USC Logistics System\worktrees\v1-deployment`; the
+  redundant routing clone was removed only after remote/bundle/runtime parity.
+- GitHub reconciliation: PR #1 and PR #2 were closed without merge because
+  their complete heads are contained in active and bundled. Their head branches
+  and the fully contained runtime-truthfulness branch were deleted remotely and
+  verified absent after prune.
+- Retained: PR #3-#6; active, main, deployment, SDD, QR, routing, and snapshot
+  branches; every tag; all unique/private/unknown folders and backups.
+- Codex placement: `.codex/config.toml`, `agents/repo-mapper.toml`, and
+  `agents/log-triage.toml` are present in the authoritative checkout and nowhere
+  else among current local HAU-USC checkouts. Root `AGENTS.md` already contains
+  the required skill, intent, Caveman, cost, and sole-writer triggers.
+- No product/generated source, deployment, migration, Apps Script, Sheets,
+  Drive, Cloudflare, database, staging, production, or PR #6 merge occurred.
+- Verification: governance passed 8 project files / 14 continuation fields;
+  full `npm run check` passed 25 files / 216 tests, 28-module build, 29 Apps
+  Script sources / 47 functions, generated parity, and two 293,406-byte
+  artifacts. Git integrity, bundle, manifest, structure, PR/ref,
+  Codex-placement, and diff checks pass.
+- Remaining gates: checkpoint commit/push/CI, corrected cumulative PR #6
+  metadata, verified Phase 3.5 tag, and final clean/parity map.
+- Complete evidence and rollback:
+  `docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`.
 
 ## Current Phase 3 - Repository and local workspace consolidation
 

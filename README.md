@@ -100,6 +100,8 @@ Controlled staging Version 9 passed the diagnostic, authorized internal `/exec`,
 
 The preservation-first local workspace classification and recovery map is in
 [`docs/WORKSPACE_CONSOLIDATION.md`](docs/WORKSPACE_CONSOLIDATION.md).
+The live Phase 3.5 folder, branch, PR, preservation, and execution plan is in
+[`docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`](docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md).
 
 ## AI collaboration
 

@@ -1,5 +1,10 @@
 # Phase 3 Workspace Consolidation
 
+> Phase 3.5 final reconciliation, including the live folder/branch/PR inventory,
+> new bundle, linked-worktree relocation, redundant-clone removal, contained PR
+> and ref cleanup, final structure, and rollback, is recorded in
+> `docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`.
+
 ## Outcome
 
 `D:\Documents\DOL Website GitHub` is the single authoritative active checkout.

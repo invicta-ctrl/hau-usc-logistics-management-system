@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased - Phase 3.5 repository/workspace reconciliation
+
+### Preservation and structure
+
+- Froze clean synchronized Phase 3 head `6abfb411...`, rebuilt the complete
+  local-folder/Git/worktree/branch/tag/PR inventory, and wrote the execution plan
+  before cleanup.
+- Created and verified a current 34-ref complete-history bundle (1,559,241
+  bytes; SHA-256
+  `924E52E027E40EAFB141A73C4431E0FAF0DA35432D84F36AA531E090B10BE04F`).
+- Preserved the superseded routing clone's six runtime files exactly outside Git
+  before removal: 6,791 bytes, zero mismatches, aggregate metadata SHA-256
+  `548C972D309A3DFADDFB7B0A76AC6DFC53CA6102516CAA6B3174E54D0AD49535`.
+- Moved the clean deployment dependency through `git worktree move` into the
+  structured consolidation root and removed the verified redundant routing
+  clone. Unique remote commits remain preserved by the remote ref and bundle.
+
+### GitHub and Codex reconciliation
+
+- Closed PR #1 and PR #2 without merge after proving their heads fully contained
+  in active and bundled. Deleted their remote head branches plus the fully
+  contained runtime-truthfulness branch; verified all three absent after prune.
+- Retained PR #3-#6, every unique dependency branch, `main`, the historical
+  snapshot, and all eight existing tags.
+- Confirmed the requested project `.codex/config.toml`, `repo-mapper.toml`, and
+  `log-triage.toml` active set exists only in the authoritative local checkout;
+  the incompatible legacy routing config was not copied.
+- Added the complete Phase 3.5 plan, folder/branch/PR maps, preservation proof,
+  final-structure target, stop conditions, and rollback procedure.
+- Verification passes: governance 8 files / 14 continuation fields; full
+  `npm run check` 25 test files / 216 tests, 28-module build, 29 Apps Script
+  sources / 47 functions, generated parity, two 293,406-byte artifacts, Git
+  integrity, bundle, external manifest, structure, ref/PR, Codex placement, and
+  diff checks.
+- No product behavior, generated application source, PR merge, deployment,
+  migration, external operational data, or private configuration changed.
+
 ## Unreleased - Phase 3 workspace consolidation
 
 ### Repository and local workspace

@@ -1,10 +1,34 @@
-# HAU-USC V1 Autonomous Program - Phase 3 consolidation checkpoint
+# HAU-USC V1 Autonomous Program - Phase 3.5 consolidation checkpoint
 
 CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
-CURRENT STAGE: PHASE_3_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_REVIEW
+CURRENT STAGE: PHASE_3_5_VERIFIED_PENDING_COMMIT
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Phase 3.5 scope lock
+
+- Starting checkpoint: `6abfb411c34a78aa5f98330c124c9e3a06c87762`;
+  branch/upstream/PR #6 matched, local/upstream `0 0`, worktree clean, and all
+  three PR checks green.
+- The preservation-first execution plan is
+  `docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`.
+- No product phase or Slice 7 begins. Bundle, ignored-runtime, private-config,
+  ancestry, and absolute-path gates precede every cleanup action.
+- Target outcome: one authoritative active checkout, one retained deployment
+  dependency under the consolidation root, no redundant routing clone, exact
+  active Codex configuration placement, reconciled fully contained PRs/refs,
+  and a clean pushed/CI-green tagged checkpoint.
+- Local result: complete 34-ref bundle and exact six-file runtime archive
+  verified; deployment worktree relocated through Git; redundant routing clone
+  removed; PR #1/#2 closed without merge; three bundled/contained remote refs
+  deleted; unique/private/unknown work retained.
+- Verification: governance passed 8 files / 14 fields; full `npm run check`
+  passed 25 files / 216 tests, 28-module build, 29 Apps Script sources / 47
+  functions, generated parity, and two 293,406-byte artifacts. Git integrity,
+  bundle, manifest, structure, PR/ref, Codex-placement, and diff checks pass.
+- Remaining gate: documentation checkpoint commit/push/CI, PR #6 metadata
+  correction, verified Phase 3.5 tag, and final clean/parity proof.
 
 ## Phase 3 scope lock
 
