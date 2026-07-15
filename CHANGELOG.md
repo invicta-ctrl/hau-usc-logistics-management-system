@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased - Naming and visibility baseline
+
+### Clear workspace and GitHub names
+
+- Standardized the single active checkout as `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system` and renamed the active branch to `integration/v0.5-baseline`.
+- Consolidated the legacy deployment configuration, institutional source, and repository-backup folders under `private-config`, `source-material`, and `backups` without changing file counts or byte counts. Archived the older non-Git Context Vault snapshot separately under `D:\Documents\GitHub\archives`.
+- Moved both ignored Apps Script `.clasp.json` files to named restricted locations under `private-config\apps-script`; no private values entered Git or command output.
+- Created and pushed five dated archive tags for the exact deployment, SDD, QR, routing, and approved-prototype heads. Created a second verified 37-ref complete-history bundle (1,574,863 bytes; SHA-256 `EE76A23C590679F2E19B95B047FCB18B42F520B28C547A7799A4EA342E53C765`).
+- Closed PRs #3-#5 without merge, deleted their archived remote branches plus the routing and snapshot branches, and verified the branch list contains only `integration/v0.5-baseline` and `main`.
+- GitHub closed PR #6 automatically during the active-branch rename and would not reopen it. Created draft PR #7 at the unchanged head and linked #6 as the preserved audit trail.
+- Retired the clean deployment linked worktree after preserving its exact private configuration and branch tip. No product behavior, generated application source, merge, deployment, migration, external operational data, or production state changed.
+
 ## Unreleased - Phase 3.5 repository/workspace reconciliation
 
 ### Preservation and structure

@@ -5,6 +5,22 @@ Captured from live Git, GitHub, and filesystem metadata on
 any Phase 3.5 cleanup. It does not authorize a product phase, deployment,
 migration, history rewrite, force-push, or deletion of unknown/private work.
 
+## Post-acceptance naming cleanup (2026-07-15)
+
+The owner accepted the preserved Phase 3.5 state and then requested removal of
+the remaining visible legacy names locally and on GitHub. This section records
+that follow-on execution; the frozen Phase 3.5 tables below remain historical.
+
+- Current authority: `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system` on `integration/v0.5-baseline`.
+- Current GitHub branches: `integration/v0.5-baseline` and `main` only.
+- Current review: draft PR #7. GitHub closed PR #6 automatically during the branch rename; #6 remains the audit trail and was not merged.
+- Archived exact heads: dated remote tags retain deployment `5935771`, SDD `bfafcf2`, QR `7c88eac`, routing `46a59c6`, and approved prototype `1b3d1ab` before their branches were deleted.
+- Preservation bundle: `D:\Documents\HAU-USC Logistics\backups\git-bundles\hau-usc-all-refs-naming-cleanup-20260715-110336.bundle`; 37 refs; complete history; SHA-256 `EE76A23C590679F2E19B95B047FCB18B42F520B28C547A7799A4EA342E53C765`.
+- Local naming scheme: `active` for the checkout, `backups` for immutable preservation, `private-config` for ignored credentials/configuration, and `source-material` for institutional records. The older non-Git Context Vault snapshot is under `D:\Documents\GitHub\archives`, outside the project workspace.
+- File-count and byte-count parity was verified for each intact legacy-folder move. Both ignored `.clasp.json` files were hash-preserved outside Git.
+- The former top-level repository path is an empty hidden compatibility shell while this Codex workspace holds its empty `.git` directory handle. It is not a repository and should be deleted after the workspace releases it.
+- No PR merge, direct `main` update, product edit, generated application edit, deployment, migration, or operational-system write was authorized or performed.
+
 ## Frozen authoritative state
 
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`.
