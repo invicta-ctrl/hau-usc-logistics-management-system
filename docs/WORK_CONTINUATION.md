@@ -3,19 +3,19 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; accepted Slice 7 starting HEAD `5c9bb501e01eeee961bae01279f2c0188d0429ce`; upstream `origin/integration/v0.5-baseline`; starting count `0 0` and clean.
-- **Current phase/stage:** Phase 4 / Slice 7 Food Committee workflow; `SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI`.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; accepted Slice 7 starting HEAD `5c9bb501e01eeee961bae01279f2c0188d0429ce`; implementation HEAD `e85e27558f02e6a1f8b3b51be514a0382df24a10`; upstream `origin/integration/v0.5-baseline`; implementation/upstream `0 0` after push.
+- **Current phase/stage:** Phase 4 / Slice 7 Food Committee workflow; `SLICE_7_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
 - **Accepted scope:** controlled and privacy-minimized Food child workflow, server-scoped Food queue/detail, assignment/lifecycle/audit, sourcing/lead-time/evidence gates, active UI and adapter parity, tests, generated artifacts, documentation, commit, push, and CI.
 - **Completed work:** implemented versioned Food domain/server/mock/UI behavior; canonical authorization and public read denial; server-owned time and revision guards; operational scoped queue/update/evidence UI; generic reopen/amend attention preservation; fail-closed flags; parser-safe Apps Script replacement hardening; focused and full validation; final independent PASS.
 - **Files changed by purpose:** Food domain/service/Apps Script routes and configuration; adapters/contracts; active request and queue UI; deterministic bundle tooling; focused unit/Apps Script/browser tests; generated artifacts; Slice 7 specification and checkpoint records.
-- **Tests verified at current SHA:** working tree `npm run check` passes governance, lint, 28 Vitest files / 231 tests, 30-module build, 30 Apps Script sources / 49 functions, generated parity, and standalone verification. Full Playwright passes 61 / 101 intentional skips / 0 failures across 162. Focused rendered Food flow, sensitive scan, `git diff --check`, and final independent review pass.
+- **Tests verified at current SHA:** implementation `e85e275...` has local `npm run check` passing governance, lint, 28 Vitest files / 231 tests, 30-module build, 30 Apps Script sources / 49 functions, generated parity, and standalone verification. Full Playwright passes 61 / 101 intentional skips / 0 failures across 162. Focused rendered Food flow, sensitive scan, `git diff --check`, and final independent review pass. PR #7 run `29388258079` passed `validate`; run `29388258076` passed `verify` and `browser-smoke`.
 - **Generated artifacts:** `dist/index.html` and the shareable artifact are 311,165 bytes each / SHA-256 `d35d9ebcc08b1b4d0be788057e9993f24d12602eb227cdb2f7421e5027b8ce73`; Apps Script `Index.html` is 841 bytes / `6c8709cf75c5558156407f292308abd95ac2f034dfe8092b9f8a0955096bad0c`; `AppScript.html` is 247,320 bytes / `c100b172d3c77cdee4edf67f762787cf87ba46af7e1a8643bebc9a592a2f20a8`.
-- **External actions:** none yet for Slice 7. No merge, `main` update, deployment, Apps Script push, Sheet/Drive write, migration, Cloudflare, database, staging, or production action.
+- **External actions:** pushed the focused Slice 7 commit to the existing feature branch and verified PR #7 CI only. No merge, `main` update, deployment, Apps Script push, Sheet/Drive write, migration, Cloudflare, database, staging, or production action.
 - **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
 - **Rollback:** set `HAU_FOOD_REQUESTS_ENABLED=false` to stop new Food submissions while retaining stored versioned children; revert the focused Slice 7 commit for code rollback without resetting or discarding unrelated work.
 - **Blocker:** none for the repository slice.
 - **Windows note:** the obsolete `D:\Documents\DOL Website GitHub` compatibility shell remains outside this authoritative checkout and is unrelated to Slice 7.
-- **Next three actions:** commit the locally verified Slice 7 unit; push `integration/v0.5-baseline`; verify PR #7 head/CI and record the clean remote checkpoint before Slice 8.
+- **Next three actions:** commit/push this remote-evidence record; verify final documentation CI/parity; scope-lock and implement Slice 8 Materials Committee specialization.
 - **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run check`; `npm run test:e2e`; `gh pr checks 7`.
 - **Prohibited actions:** no PR merge, history rewrite, force-push, archive-tag deletion, private-config commit, deployment, migration, Apps Script/Sheets/Drive external mutation, Cloudflare, database, staging, or production action during this repository slice.
 
