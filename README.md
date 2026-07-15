@@ -98,6 +98,9 @@ Controlled staging Version 9 passed the diagnostic, authorized internal `/exec`,
 4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
 5. Update tests, `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` with verified facts.
 
+The preservation-first local workspace classification and recovery map is in
+[`docs/WORKSPACE_CONSOLIDATION.md`](docs/WORKSPACE_CONSOLIDATION.md).
+
 ## AI collaboration
 
 ChatGPT web and Codex do not rely on shared chat memory. They coordinate through the active GitHub branch, pull request, `AGENTS.md`, and the continuation record. Use the one-writer manager/implementer protocol in `docs/AI_COLLABORATION.md` before starting a coding milestone.

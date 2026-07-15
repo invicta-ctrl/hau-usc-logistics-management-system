@@ -2,20 +2,20 @@
 
 ## Current resume block
 
-- **Repository/worktree:** `D:\Documents\DOL Website GitHub`; authoritative active checkout.
-- **Branch/HEAD/upstream:** `feat/live-sync-lending-search-catalog-controls`; Phase 2 implementation `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; verified count `0 0` before this documentation checkpoint.
-- **Current phase/stage:** Phase 2 - Caveman Light and efficiency layer; implementation committed, pushed, CI-green, and pending manager acceptance.
-- **Accepted scope:** project intent/skill routing, Caveman Light workflow, bounded context/output controls, compact task/history records, deterministic governance and continuation validation, and two read-only low-cost agent profiles.
-- **Completed work:** Slice 6 is accepted, pushed, documented, and CI-green; the Phase 2 specification and current official Codex configuration schema were reviewed; the bounded implementation passed two repair rounds, final independent review, commit, push, parity, and PR CI verification.
-- **Files changed by purpose:** `AGENTS.md` and `.codex/*.md` for workflow; `.codex/config.toml` and `.codex/agents/*.toml` for Codex configuration; `tools/codex/` and `scripts/check-*.mjs` for deterministic helpers; focused tests, package scripts, ignore rules, and checkpoint documents for verification.
-- **Tests verified at current SHA:** implementation checkpoint governance checks passed 8 project files / 14 continuation fields; focused Vitest passed 13 tests; repaired capped `npm run check` passed 25 files / 216 tests, build, 29 Apps Script sources / 47 required functions, generated parity, and two 293,406-byte standalone artifacts. ESLint, formatting, and diff checks pass. PR runs `29379450091` and `29379450069` passed all three checks.
-- **Generated artifacts:** none changed for Phase 2; generated application HTML remains off limits.
-- **External actions:** official Codex manual fetched read-only; implementation commit pushed to GitHub and PR CI verified. No Apps Script action, deployment, Sheet/Drive write, migration, or configuration change outside this repository. Strict config parsing is unrun because the local `codex.exe` launcher returned access denied; local Playwright was not repeated because no application/generated source changed.
-- **Rollback:** preserve the archived source configuration and use focused `git revert 8e82a8601e930ecf223a6e9170dc3d4dd9954bb1` without resetting or discarding unrelated work.
-- **Blocker:** none.
-- **Next three actions:** commit and push this remote-verification record; verify final parity and PR CI; request manager acceptance before any later phase.
-- **Resume commands:** `git status --short --untracked-files=all`; `npm run check:governance`; `npx vitest run tests/unit/codex-governance.test.js`; `node tools/codex/repo-summary.mjs`.
-- **Prohibited actions:** no Slice 7 implementation, repository consolidation/deletion, external configuration, staging/production action, migration, Apps Script push, or Google Sheets/Drive write.
+- **Repository/worktree:** `D:\Documents\DOL Website GitHub`; the one authoritative active checkout. The registered V1 Deployment worktree and separate routing/planning clone are classified dependencies, not competing authorities.
+- **Branch/HEAD/upstream:** `feat/live-sync-lending-search-catalog-controls`; Phase 3 starting HEAD `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; starting count `0 0` and clean.
+- **Current phase/stage:** Phase 3 - repository and local workspace consolidation; consolidation, repository verification, and independent review complete; checkpoint commit pending.
+- **Accepted scope:** inventory/classification of branches, PRs, tags, worktrees, clones, archives, exports, generated folders, handoffs, private configuration, and unknown work; preservation artifacts; only proven-safe consolidation; one documented authoritative checkout and recoverable baseline.
+- **Completed work:** all items classified; current 47-ref bundle verified; exact dirty generated/private files preserved; six superseded worktrees and seven redundant local refs removed; historical prototype/analysis/generated folders moved intact to dated archives; unique/unknown/private/dependent work retained; independent read-only review passed after one targeted documentation repair round.
+- **Files changed by purpose:** `.codex/` and `.plans/` task/program checkpoints; `docs/WORKSPACE_CONSOLIDATION.md` classification and recovery report; `README.md`, `PROJECT_STATUS.md`, `CHANGELOG.md`, and this continuation record. External preservation and archive records live under `D:\Documents\HAU-USC Logistics System`.
+- **Tests verified at current SHA:** the unchanged application state at starting SHA `048578d1db9fdda93b9ba95b94b74ac1791cfc8c` plus the current Phase 3 documentation working tree passed governance for 8 required project files / 14 continuation fields and full `npm run check` with 25 test files / 216 tests, a 28-module build, 29 Apps Script sources / 47 functions, generated parity, and two 293,406-byte artifacts. `git diff --check`, Git integrity, bundle verification, external manifest parsing, and final inventory assertions pass.
+- **Generated artifacts:** no generated repository artifact changed. Exact pre-cleanup Drive/QA generated snapshots and binary patches were preserved externally; rebuildable dependencies/build/test output left with retired worktrees.
+- **External actions:** local Git/workspace consolidation and external preservation archives only. No GitHub state mutation yet; no Apps Script, Sheet, Drive, deployment, migration, Cloudflare, database, or production action.
+- **Rollback:** verify `hau-usc-all-refs-phase3-20260715-095903.bundle`, restore a removed ref/worktree from its recorded tip, apply the preserved binary patch only if needed, and move intact dated archives back only after validating absolute source/destination paths. Keep private configuration outside Git.
+- **Blocker:** none; baseline tag remains gated on commit, push, and CI.
+- **Next three actions:** commit and push the reviewed checkpoint; verify PR CI and branch parity; create and verify the Phase 3 development-baseline tag.
+- **Resume commands:** `git status --short --untracked-files=all`; `git worktree list --porcelain`; `git branch -vv`; `git bundle verify "D:\Documents\HAU-USC Logistics System\backups\git-bundles\hau-usc-all-refs-phase3-20260715-095903.bundle"`; `npm run check:governance`.
+- **Prohibited actions:** no Slice 7 implementation, PR close/merge, remote branch deletion, history rewrite, force-push, unknown/private deletion, external configuration, staging/production action, migration, Apps Script push, or Google Sheets/Drive write.
 
 ## Current checkpoint - Slice 6 committed, pushed, and CI verified
 

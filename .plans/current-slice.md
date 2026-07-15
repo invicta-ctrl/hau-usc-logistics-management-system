@@ -1,10 +1,47 @@
-# HAU-USC V1 Autonomous Program - Phase 2 checkpoint
+# HAU-USC V1 Autonomous Program - Phase 3 consolidation checkpoint
 
 CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
-CURRENT STAGE: PHASE_2_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
+CURRENT STAGE: PHASE_3_REVIEW_PASS_PENDING_COMMIT
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Phase 3 scope lock
+
+- User instruction `proceed to phase 3` accepts the master goal prompt's
+  repository and local workspace consolidation phase from clean checkpoint
+  `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`.
+- Inventory and classification precede every cleanup action. Unique, unmerged,
+  private, or unknown work must be preserved; unknown work is never deleted.
+- Registered worktrees may be removed only with Git worktree commands after
+  their dirty state, untracked files, commits, upstream, PR/dependency, and
+  preservation status are proven.
+- No Slice 7 implementation, PR merge, shared-history rewrite, force-push,
+  deployment, migration, Apps Script, Sheets, Drive, Cloudflare, database, or
+  production action is part of this phase.
+- The intended outcome is one documented authoritative active checkout, clear
+  external archives, private configuration outside Git/shared archives, and a
+  recoverable verified baseline. Cleanup remains candidate-by-candidate gated.
+- Current result: the worktree registry contains only the authoritative checkout
+  and the retained V1 Deployment dependency. Six patch-equivalent specialist
+  worktrees and seven redundant local refs were removed after preservation.
+- The clean planning clone remains an explicit `UNIQUE_UNMERGED_WORK` dependency
+  because its remote-backed routing branch contains four unique commits.
+- A verified 47-ref all-history bundle, exact Drive/QA generated snapshots and
+  binary patches, and distinct private configuration copies are preserved under
+  `D:\Documents\HAU-USC Logistics System`.
+- Historical prototype/analysis and pre-sync generated folders were moved intact
+  to dated archives with count, byte, and aggregate-hash evidence. Potentially
+  private `06. LOGISTICS`, Downloads exports, existing release backups, open
+  PRs, remote refs, and rollback tags were left untouched.
+- Detailed evidence and recovery instructions are in
+  `docs/WORKSPACE_CONSOLIDATION.md`.
+- Verification passed: governance 8 files / 14 fields; full `npm run check` 25
+  files / 216 tests, 28-module build, 29 Apps Script sources / 47 functions,
+  generated parity, and two 293,406-byte artifacts; `git diff --check`, Git
+  integrity, bundle verification, and external JSON parsing also pass.
+- Independent review passed after one targeted documentation repair round with
+  no remaining actionable findings. The Phase 3 checkpoint commit remains.
 
 ## Phase 2 scope lock
 

@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased - Phase 3 workspace consolidation
+
+### Repository and local workspace
+
+- Classified Git branches, remote branches, six open draft PRs, rollback tags,
+  eight registered worktrees, the independent planning clone, related archives,
+  Downloads exports, generated folders, and private configuration using the
+  accepted Phase 3 preservation labels.
+- Created and verified a 47-ref complete-history Git bundle (1,518,711 bytes;
+  SHA-256
+  `DBA723337646546AC841A417FFFC9B2BA54C6FBEA2536B61CC1CF1F86CB5C7C0`)
+  before cleanup.
+- Preserved exact Drive/QA dirty generated files and binary patches plus two
+  distinct ignored private configurations outside Git before retiring anything.
+- Removed six patch-equivalent specialist worktrees with normal Git worktree
+  commands and deleted only their bundle-preserved local refs. Removed the fully
+  contained local Apps Script launch-readiness ref normally.
+- Retained the authoritative checkout, V1 Deployment dependency, unique planning
+  clone, remote branches, all PRs, checkpoint tags, release backups, private
+  institutional source, and unknown Downloads exports.
+- Moved only classified historical prototype/analysis and pre-sync generated
+  folders intact into dated archives with count/byte/aggregate-hash evidence.
+- Added `docs/WORKSPACE_CONSOLIDATION.md` with classification, preservation,
+  deliberate non-actions, and recovery instructions.
+- Verification passes: governance 8 files / 14 continuation fields; full
+  `npm run check` 25 test files / 216 tests, 28-module build, 29 Apps Script
+  sources / 47 functions, generated parity, and two 293,406-byte artifacts; Git
+  diff/integrity, bundle verification, and external manifest parsing.
+- Independent read-only review passed after one targeted documentation repair
+  round with no remaining actionable findings.
+- No product behavior, generated repository source, external operational system,
+  deployment, migration, PR state, or remote ref changed.
+
 ## 0.5.0 - Unreleased
 
 ### Phase 2 - Caveman Light and efficiency layer

@@ -2,7 +2,7 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; Phase 3 consolidation locally complete; production undeployed)
 - Date: `2026-07-15`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
@@ -17,6 +17,43 @@
 - Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-6 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Phase 3 - Repository and local workspace consolidation
+
+- Stage: `PHASE_3_REVIEW_PASS_PENDING_COMMIT`.
+- Authority: `D:\Documents\DOL Website GitHub` remains the one authoritative
+  active checkout on `feat/live-sync-lending-search-catalog-controls` from
+  accepted starting checkpoint `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`.
+- Worktrees: reduced from eight registered entries to two. The authoritative
+  checkout and clean `feat/v1-one-shot-demo-and-deployment` dependency remain;
+  six patch-equivalent specialist worktrees were removed normally through Git.
+- Branches: six bundled `codex/v1-*` refs and the fully contained local Apps
+  Script launch-readiness ref were removed. `main`, the authoritative branch,
+  and the deployment dependency remain locally. No remote ref or PR changed.
+- Unique work: the separate clean planning clone at
+  `D:\Documents\GitHub\hau-usc-logistics-management-system` remains because
+  `feat/automated-codex-model-routing` contains four unique remote-backed commits.
+- Preservation: current 47-ref complete-history bundle verified at 1,518,711
+  bytes and SHA-256
+  `DBA723337646546AC841A417FFFC9B2BA54C6FBEA2536B61CC1CF1F86CB5C7C0`.
+  Exact Drive/QA generated files and binary patches plus two distinct private
+  configuration copies are hash-verified outside Git.
+- Archives: historical prototype/analysis and pre-sync generated folders moved
+  intact to dated archives. Potentially private `06. LOGISTICS`, Download
+  exports, release evidence/backups, open PRs, remote branches, and rollback
+  tags remain untouched.
+- Verification: governance passed 8 files / 14 continuation fields; full
+  `npm run check` passed 25 test files / 216 tests, 28-module build, 29 Apps
+  Script sources / 47 functions, deterministic generated parity, and two
+  293,406-byte artifacts. `git diff --check`, Git integrity, bundle verification,
+  and external manifest parsing pass.
+- Detailed classification and recovery are recorded in
+  `docs/WORKSPACE_CONSOLIDATION.md`. Independent review passed with no remaining
+  actionable findings; commit/push/CI and the development-baseline tag remain
+  pending.
+- No Slice 7 code, application/generated repository source, PR merge/close,
+  deployment, migration, Apps Script, Sheets, Drive, Cloudflare, database, or
+  production action occurred.
 
 ## Current Phase 2 - Caveman Light and efficiency layer
 

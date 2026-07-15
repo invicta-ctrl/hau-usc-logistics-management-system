@@ -1,65 +1,85 @@
 # Current Task
 
-- **Task ID:** PHASE-2-CAVEMAN-EFFICIENCY
-- **Original instruction:** `I accept`
+- **Task ID:** `PHASE-3-WORKSPACE-CONSOLIDATION`
+- **Original instruction:** `proceed to phase 3`
 - **Intent and mode:** `REPOSITORY_MAINTENANCE`; execute
 - **Secondary intents:** `TESTING`, `DOCUMENT_OR_ARTIFACT`
-- **Matched skills:** `openai-docs` for current Codex configuration schema
-- **Objective:** Install and verify the accepted project-scoped Caveman Light,
-  intent/skill routing, bounded-output, continuation, and read-only agent layer.
-- **Verified starting state:** `D:\Documents\DOL Website GitHub` on
-  `feat/live-sync-lending-search-catalog-controls` at
-  `c96bdc32e6777d948c6520bd94200f5dc537374d`, upstream synchronized `0 0`, clean.
-- **Authoritative specification:** accepted master goal prompt, Phase 2; root
-  `AGENTS.md`; current official Codex configuration manual.
-- **Dependencies:** accepted Slice 6 remote/CI checkpoint; owner-confirmed
-  archived `.codex` configuration candidates.
-- **In scope:** concise repository instructions; `.codex` workflow, routing,
-  usage, current-task, history, project config, read-only agents; deterministic
-  governance/continuation checks; capped-output and compact-summary helpers;
-  focused tests; required status records.
-- **Out of scope:** Slice 7 product behavior; generated application artifacts;
-  Apps Script, Sheets, Drive, staging, production, migration, Cloudflare, or
-  database changes; repository consolidation/deletion.
-- **Allowed files:** `AGENTS.md`, `.gitignore`, `package.json`,
-  `eslint.config.js`, `.codex/**`, `tools/codex/**`, `scripts/check-*.mjs`,
-  focused tests, and required checkpoint documentation.
-- **Off-limits files:** generated HTML and application/backend source unrelated
-  to governance.
-- **Assumptions:** the accepted master prompt is the Phase 2 specification;
-  `gpt-5.6-terra`, project custom agents, and the selected config fields are
-  current documented Codex capabilities.
-- **Domain/security constraints:** preserve all repository domain invariants;
-  no credentials, private identifiers, external configuration, or operational
-  evidence in Git or logs.
-- **External-system boundary:** GitHub push/CI only after local acceptance;
-  no other external mutation.
-- **Risks:** unsupported config, stale checkpoint fields, excessive output,
-  accidental parallel writers, or governance rules that conflict with root
-  instructions.
-- **Rollback:** focused revert of the Phase 2 commit; archived source configs
-  remain preserved outside the repository.
-- **Focused tests:** agent/config validator, continuation validator, capped
-  runner tests, config strict parsing where locally supported.
-- **Final verification:** `npm run check:governance`, focused Vitest, full
-  `npm run check`, `git diff --check`, independent read-only review, push parity,
-  and PR CI.
-- **Acceptance criteria:** all Phase 2 files are present and internally
-  consistent; routing/config smoke tests pass; output caps and true exit codes
-  are tested; required status records reconcile; worktree ends clean.
-- **Evidence required:** exact commands, counts, commit SHA, PR head/checks,
-  unrun checks and reasons, and confirmation of no external operational action.
-- **Safe-to-continue result:** yes; clean synchronized checkpoint and explicit
-  manager acceptance were verified.
-- **Verified results:** governance checks passed 8 project files / 14 resume
-  fields; focused Vitest passed 13 tests; capped `npm run check` passed 25 files /
-  216 tests, a 28-module build, 29 Apps Script sources / 47 required functions,
-  generated parity, and standalone verification. Lint, formatting, and diff
-  checks pass. Implementation commit `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`
-  is pushed; PR #6 validate, verify, and browser-smoke checks are green.
-- **Unrun checks:** strict Codex config parsing is not claimed because the local
-  `codex.exe` launcher returned access denied. Local Playwright was not repeated
-  because Phase 2 changes no application/generated source; accepted Slice 6
-  browser evidence remains applicable and PR CI will rerun browser smoke.
-- **Current stage:** implementation committed, pushed, CI-green, and pending
-  manager acceptance.
+- **Matched skills:** `pdf` for the attached operating-guide review
+- **Objective:** Inventory, classify, preserve, and safely consolidate the
+  HAU-USC repository and local workspace into one clearly authoritative active
+  checkout without losing unique, unknown, private, or unmerged work.
+- **Verified starting state:** authoritative checkout
+  `D:\Documents\DOL Website GitHub`; branch
+  `feat/live-sync-lending-search-catalog-controls`; HEAD/upstream/PR #6 at
+  `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`; count `0 0`; clean; PR open,
+  draft, mergeable, and three-check CI green. Seven additional registered
+  worktrees exist and require classification.
+- **Authoritative specification:** accepted master goal prompt Phase 3; attached
+  `HAU_USC_Master_Prompt_Review_and_Operating_Guide.pdf`, sections 7 and 9;
+  root `AGENTS.md`; current project status and continuation records.
+- **Dependencies:** accepted Phase 2 implementation
+  `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1` and documentation checkpoint
+  `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`.
+- **In scope:** local/remote branches, PRs, tags, registered worktrees, duplicate
+  clones, prototype/export/build/handoff folders, private configuration, unknown
+  work, preservation artifacts, verified-safe cleanup, one authoritative
+  checkout, status reconciliation, and a verified development-baseline tag when
+  justified by repository convention.
+- **Out of scope:** Slice 7 product behavior; merging PR #6; rewriting or
+  force-pushing shared history; deployment, migration, Apps Script, Sheets,
+  Drive, Cloudflare, database, or production changes.
+- **Allowed files/systems:** repository checkpoint/governance documentation;
+  read-only Git/GitHub/local filesystem inspection; dated archives and Git
+  bundles outside the active checkout; verified-safe Git worktree/branch cleanup
+  only after preservation and classification.
+- **Off-limits actions:** reset, stash, clean, manual deletion of registered
+  worktree folders, deletion of unknown work, unrelated merges, shared-history
+  rewrite, or committing private configuration/generated operational evidence.
+- **Assumptions:** `D:\Documents\DOL Website GitHub` remains the authoritative
+  active checkout unless inventory proves otherwise; user approval to proceed
+  authorizes the accepted Phase 3 consolidation scope but not unrelated external
+  systems or PR merge.
+- **Domain/security constraints:** preserve all application invariants; never
+  expose credentials, resource IDs, personal records, private contacts, supplier
+  TINs, Drive links, or operational evidence while classifying configuration.
+- **External-system boundary:** GitHub read-only inventory plus authorized branch
+  push/CI after the bounded repository checkpoint; no other external mutation.
+- **Risks:** hidden untracked/unpushed work, duplicate clones with unique commits,
+  private configuration entering archives, stale worktree registration, active
+  dependencies, and cleanup performed before preservation proof.
+- **Rollback:** retain pre-cleanup branch/tag references, a verified external Git
+  bundle, and dated preservation archives; restore a removed worktree only from
+  its retained branch/commit after verifying the target path.
+- **Focused tests:** deterministic inventory/classification checks, bundle
+  verification, branch containment/ahead-behind checks, clean-status proof, and
+  governance/continuation validators.
+- **Final verification:** repository-required tests where source state changes;
+  `git fsck`, bundle verification, final worktree/branch/folder inventory,
+  `git diff --check`, independent read-only review, push parity, and PR CI.
+- **Acceptance criteria:** every in-scope item has a classification and evidence;
+  unique/unknown work is preserved; only proven-safe items are consolidated; one
+  authoritative checkout is documented; private configuration remains outside
+  Git/shared archives; final state is clean, recoverable, and synchronized.
+- **Evidence required:** before/after inventories, classification and disposition,
+  preservation paths/hashes, exact Git commands, tests, review, commits, PR/CI,
+  remaining unknowns, rollback, and external-action record.
+- **Safe-to-continue result:** yes for read-only inventory and preservation;
+  cleanup of any individual candidate remains gated by its classification.
+- **Verified consolidation result:** eight registered worktrees reduced to the
+  authoritative checkout plus one deployment dependency; six superseded
+  specialist worktrees and seven redundant local refs removed only after bundle
+  and exact-file preservation; unique planning work, remote refs, PRs, tags,
+  private configuration, institutional files, and unknown exports retained.
+- **Preservation:** verified 47-ref all-history bundle at SHA-256
+  `DBA723337646546AC841A417FFFC9B2BA54C6FBEA2536B61CC1CF1F86CB5C7C0`;
+  exact Drive/QA generated files and patches preserved; distinct private config
+  copies hash-verified outside Git.
+- **Verified tests:** governance passed 8 required project files / 14 resume
+  fields; full `npm run check` passed 25 Vitest files / 216 tests, 28-module
+  build, 29 Apps Script sources / 47 required functions, deterministic generated
+  parity, and two 293,406-byte standalone artifacts. `git diff --check`, JSON
+  parsing, Git integrity, and bundle verification pass.
+- **Independent review:** PASS after one targeted documentation repair round;
+  no remaining actionable findings.
+- **Current stage:** consolidation, repository verification, and independent
+  review complete; checkpoint commit pending.
