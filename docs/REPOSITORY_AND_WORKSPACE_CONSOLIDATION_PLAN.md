@@ -159,8 +159,16 @@ Repository verification passes: governance 8 files / 14 continuation fields;
 full `npm run check` 25 files / 216 tests, 28-module build, 29 Apps Script
 sources / 47 functions, generated parity, two 293,406-byte artifacts, Git
 integrity, bundle, manifest, structure, PR/ref, Codex-placement, and diff checks.
-Checkpoint commit/push/CI, PR #6 metadata correction, and the Phase 3.5
-consolidation tag remain after this local execution record.
+At the local execution-record boundary, checkpoint commit/push/CI, PR #6
+metadata correction, and the Phase 3.5 consolidation tag remained.
+
+Remote gates subsequently passed: checkpoint
+`efee2dda0148c5a70bd9c681e729a75372622b8e` is pushed at branch/PR parity;
+Actions runs `29385021439` and `29385021514` passed `validate`, `verify`, and
+`browser-smoke`; lightweight tag `hau-usc-phase3.5-consolidation-efee2dd` is
+verified locally/remotely; and PR #6 has corrected cumulative v0.5 title/body.
+Only this verification-record commit, final parity/CI/clean proof, and manager
+acceptance remain.
 
 ## Safe execution matrix
 

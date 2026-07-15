@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Phase 3.5 consolidation checkpoint
 
 CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
-CURRENT STAGE: PHASE_3_5_VERIFIED_PENDING_COMMIT
+CURRENT STAGE: PHASE_3_5_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_ACCEPTANCE
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -27,8 +27,15 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   passed 25 files / 216 tests, 28-module build, 29 Apps Script sources / 47
   functions, generated parity, and two 293,406-byte artifacts. Git integrity,
   bundle, manifest, structure, PR/ref, Codex-placement, and diff checks pass.
-- Remaining gate: documentation checkpoint commit/push/CI, PR #6 metadata
-  correction, verified Phase 3.5 tag, and final clean/parity proof.
+- Remote result: checkpoint `efee2dda0148c5a70bd9c681e729a75372622b8e`
+  pushed at branch/PR parity. Runs `29385021439` and `29385021514` passed
+  `validate` (13 seconds), `verify` (15 seconds), and `browser-smoke` (1 minute
+  36 seconds).
+- Lightweight tag `hau-usc-phase3.5-consolidation-efee2dd` is verified locally
+  and remotely at the checkpoint. PR #6 remains open/draft/mergeable with title
+  `feat: complete HAU-USC v0.5 repository baseline` and a cumulative body.
+- Remaining gate: commit/push this remote-verification record, verify final
+  parity/CI/clean structure, then obtain manager acceptance.
 
 ## Phase 3 scope lock
 

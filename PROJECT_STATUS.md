@@ -8,7 +8,7 @@
 - Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
 - Current implementation checkpoint: Slice 6 commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; pushed; remote and PR #6 heads matched; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open, unmerged, and mergeable; Phase 3.5 starting head `6abfb411c34a78aa5f98330c124c9e3a06c87762`; `validate`, `verify`, and `browser-smoke` were green at the freeze; live verification follows the documentation checkpoint
+- Pull request: draft PR #6, open, unmerged, and mergeable; Phase 3.5 checkpoint head `efee2dda0148c5a70bd9c681e729a75372622b8e`; `validate`, `verify`, and `browser-smoke` are green; remote-verification documentation may follow the checkpoint
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
@@ -20,7 +20,8 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Phase 3.5 - Repository and workspace final reconciliation
 
-- Stage: `PHASE_3_5_VERIFIED_PENDING_COMMIT`.
+- Stage:
+  `PHASE_3_5_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_ACCEPTANCE`.
 - Authority: `D:\Documents\DOL Website GitHub` remains the single active
   checkout on `feat/live-sync-lending-search-catalog-controls` from clean,
   synchronized, CI-green starting head `6abfb411...`.
@@ -49,8 +50,16 @@ Always verify the current remote head and CI because documentation commits may f
   Script sources / 47 functions, generated parity, and two 293,406-byte
   artifacts. Git integrity, bundle, manifest, structure, PR/ref,
   Codex-placement, and diff checks pass.
-- Remaining gates: checkpoint commit/push/CI, corrected cumulative PR #6
-  metadata, verified Phase 3.5 tag, and final clean/parity map.
+- Remote result: checkpoint `efee2dda0148c5a70bd9c681e729a75372622b8e`
+  is pushed at branch/PR parity. Actions runs `29385021439` and `29385021514`
+  passed `validate` (13 seconds), `verify` (15 seconds), and `browser-smoke` (1
+  minute 36 seconds).
+- Lightweight tag `hau-usc-phase3.5-consolidation-efee2dd` is verified locally
+  and remotely at the checkpoint. PR #6 remains open/draft/mergeable with
+  corrected title `feat: complete HAU-USC v0.5 repository baseline` and a
+  cumulative evidence body.
+- Remaining gate: push this remote-verification record, verify final parity/CI
+  and clean structure, then obtain manager acceptance.
 - Complete evidence and rollback:
   `docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`.
 

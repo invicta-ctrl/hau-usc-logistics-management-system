@@ -4,10 +4,11 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 3.5 locally verified
+## Current run checkpoint - Phase 3.5 pushed, CI-green, and tagged
 
 - Date: 2026-07-15 (Asia/Manila).
-- Stage: `PHASE_3_5_VERIFIED_PENDING_COMMIT`.
+- Stage:
+  `PHASE_3_5_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_ACCEPTANCE`.
 - Frozen state: active checkout/branch/upstream/PR #6 at
   `6abfb411c34a78aa5f98330c124c9e3a06c87762`; `0 0`; clean; CI green.
 - Scope: local/Git/GitHub consolidation only; no product or external operational
@@ -28,8 +29,13 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   Script sources / 47 functions, generated parity, and two 293,406-byte
   artifacts. Git integrity, bundle, manifest, structure, PR/ref,
   Codex-placement, and diff checks pass.
-- Required next gate: checkpoint commit/push/CI, corrected PR #6 metadata,
-  verified Phase 3.5 tag, and final parity/clean proof.
+- Remote result: checkpoint `efee2dda0148c5a70bd9c681e729a75372622b8e`
+  pushed at branch/PR parity; runs `29385021439` and `29385021514` passed all
+  three checks; lightweight tag `hau-usc-phase3.5-consolidation-efee2dd` is
+  verified locally/remotely.
+- PR #6 remains open/draft/mergeable with corrected cumulative v0.5 title/body.
+- Required next gate: commit/push this verification record, final parity/CI and
+  clean-structure proof, then manager acceptance before any product phase.
 
 ## Current run checkpoint - Phase 3 pushed, CI-green, and tagged
 

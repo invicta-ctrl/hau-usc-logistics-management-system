@@ -43,5 +43,11 @@
   build, 29 Apps Script sources / 47 functions, deterministic generated parity,
   and two 293,406-byte standalone artifacts. Git integrity, bundle, manifest,
   structure, remote-ref, PR-state, Codex-placement, and diff checks pass.
-- **Current stage:** local execution and verification complete; checkpoint
-  commit/push/CI pending.
+- **Remote verification:** checkpoint
+  `efee2dda0148c5a70bd9c681e729a75372622b8e` is pushed at branch/PR parity;
+  Actions runs `29385021439` and `29385021514` passed `validate` (13 seconds),
+  `verify` (15 seconds), and `browser-smoke` (1 minute 36 seconds). Lightweight
+  tag `hau-usc-phase3.5-consolidation-efee2dd` is verified locally/remotely.
+  PR #6 is still open/draft/mergeable with corrected cumulative title/body.
+- **Current stage:** Phase 3.5 committed, pushed, CI-green, tagged, and pending
+  manager acceptance after this remote-verification record.

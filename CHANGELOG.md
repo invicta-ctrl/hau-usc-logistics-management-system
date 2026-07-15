@@ -34,6 +34,12 @@
   sources / 47 functions, generated parity, two 293,406-byte artifacts, Git
   integrity, bundle, external manifest, structure, ref/PR, Codex placement, and
   diff checks.
+- Checkpoint `efee2dda0148c5a70bd9c681e729a75372622b8e` is pushed and Actions
+  runs `29385021439` / `29385021514` are green. Verified tag:
+  `hau-usc-phase3.5-consolidation-efee2dd`.
+- Corrected PR #6 from stale Slice 1 metadata to cumulative title
+  `feat: complete HAU-USC v0.5 repository baseline` and current scope,
+  validation, preservation, and boundary evidence; the PR remains a draft.
 - No product behavior, generated application source, PR merge, deployment,
   migration, external operational data, or private configuration changed.
 
