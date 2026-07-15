@@ -10,3 +10,4 @@ test-results/
 .clasprc.json
 .claspignore
 *.log
+.codex/runtime/

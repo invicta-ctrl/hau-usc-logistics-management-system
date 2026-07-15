@@ -1,5 +1,22 @@
 # Work Continuation
 
+## Current resume block
+
+- **Repository/worktree:** `D:\Documents\DOL Website GitHub`; authoritative active checkout.
+- **Branch/HEAD/upstream:** `feat/live-sync-lending-search-catalog-controls`; Phase 2 starting HEAD `c96bdc32e6777d948c6520bd94200f5dc537374d`; upstream `origin/feat/live-sync-lending-search-catalog-controls`; starting count `0 0`.
+- **Current phase/stage:** Phase 2 - Caveman Light and efficiency layer; local verification and independent review PASS, checkpoint commit pending.
+- **Accepted scope:** project intent/skill routing, Caveman Light workflow, bounded context/output controls, compact task/history records, deterministic governance and continuation validation, and two read-only low-cost agent profiles.
+- **Completed work:** Slice 6 is accepted, pushed, documented, and CI-green; the Phase 2 specification and current official Codex configuration schema were reviewed; the bounded implementation and focused repair are complete in the working tree.
+- **Files changed by purpose:** `AGENTS.md` and `.codex/*.md` for workflow; `.codex/config.toml` and `.codex/agents/*.toml` for Codex configuration; `tools/codex/` and `scripts/check-*.mjs` for deterministic helpers; focused tests, package scripts, ignore rules, and checkpoint documents for verification.
+- **Tests verified at current SHA:** working-tree governance checks passed 8 project files / 14 continuation fields; focused Vitest passed 13 tests; repaired capped `npm run check` passed 25 files / 216 tests, build, 29 Apps Script sources / 47 required functions, generated parity, and two 293,406-byte standalone artifacts. ESLint, formatting, and diff checks pass.
+- **Generated artifacts:** none changed for Phase 2; generated application HTML remains off limits.
+- **External actions:** official Codex manual fetched read-only; no Phase 2 GitHub push, Apps Script action, deployment, Sheet/Drive write, migration, or configuration change outside this repository. Strict config parsing is unrun because the local `codex.exe` launcher returned access denied; local Playwright was not repeated because no application/generated source changed.
+- **Rollback:** preserve the archived source configuration; if Phase 2 is rejected after commit, use a focused revert without resetting or discarding unrelated work.
+- **Blocker:** none.
+- **Next three actions:** create the focused Phase 2 checkpoint commit; push the authorized feature branch; verify parity and PR CI.
+- **Resume commands:** `git status --short --untracked-files=all`; `npm run check:governance`; `npx vitest run tests/unit/codex-governance.test.js`; `node tools/codex/repo-summary.mjs`.
+- **Prohibited actions:** no Slice 7 implementation, repository consolidation/deletion, external configuration, staging/production action, migration, Apps Script push, or Google Sheets/Drive write.
+
 ## Current checkpoint - Slice 6 committed, pushed, and CI verified
 
 - Date: `2026-07-15` (`Asia/Manila`)

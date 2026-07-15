@@ -4,6 +4,20 @@ These instructions apply to ChatGPT web, Codex local tasks, Codex worktrees, and
 
 Before editing, read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
 
+## Intent, skills, and Caveman Light
+
+- Scan the available skill registry before choosing a workflow. Use the smallest matching skill set and record it in `.codex/CURRENT_TASK.md`; do not invent or silently install unavailable skills.
+- Before broad retrieval or execution, route the request by intent, mode, target, authority, risk, deliverable, verification, and stop conditions. Follow `.codex/TASK_ROUTING.md`.
+- Short owner instructions such as `Continue`, `Fix the current blocker`, or `Give me the decision` use `.codex/CAVEMAN_WORKFLOW.md`. Simpler input never bypasses specifications, security, domain invariants, tests, review, backup, rollback, or truthful evidence.
+- Non-trivial features, behavior changes, migrations, deployments, architecture decisions, and destructive maintenance require an accepted specification or amendment before implementation.
+- Keep `.codex/CURRENT_TASK.md` concise and current. Use `.plans/current-slice.md` for the active product Slice and `.plans/AUTONOMOUS_PROGRAM_STATUS.md` for the program; do not create competing roadmaps.
+
+## Context and usage discipline
+
+- Prefer deterministic scripts, diff-first inspection, targeted reads, and SHA-based verification reuse. Follow `.codex/USAGE_POLICY.md` and use `tools/codex/run-capped.mjs` for potentially large command output.
+- The parent agent is the only writer by default. Use at most two concurrent read-only subagents with one delegation level, only for bounded large-input mapping, log triage, independent review, or genuinely independent read-only investigations requested by the task or an applicable skill.
+- Do not repeat expensive tests, reviews, builds, migrations, or deployments when the commit and relevant artifacts are unchanged and the prior evidence is recorded.
+
 ## Required start-of-task handshake
 
 1. Report the repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.

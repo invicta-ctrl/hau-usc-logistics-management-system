@@ -4,6 +4,24 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
+## Current run checkpoint - Phase 2 locally verified and review PASS
+
+- Date: 2026-07-15 (Asia/Manila).
+- Current run stage: `PHASE_2_VERIFIED_REVIEW_PASS_PENDING_COMMIT`.
+- Starting checkpoint: branch `feat/live-sync-lending-search-catalog-controls`; HEAD and upstream `c96bdc32e6777d948c6520bd94200f5dc537374d`; local/upstream `0 0`; clean; Slice 6 explicitly accepted.
+- Scope: repository-only Caveman Light, intent/skill routing, compact task/history records, bounded context/output policy, deterministic governance and continuation validation, compact repo/context helpers, and two project-scoped read-only low-cost agent profiles.
+- Configuration evidence: the current official Codex manual confirms `.codex/config.toml`, `.codex/agents/*.toml`, `agents.max_threads`, `agents.max_depth`, `gpt-5.6-terra`, `model_reasoning_effort`, and per-agent `sandbox_mode`. The archived owner-confirmed configurations were restored in the documented project locations and narrowed to read-only duties.
+- Focused evidence: `npm run check:governance` passed with 8 required project files and 14 continuation fields; `tests/unit/codex-governance.test.js` passed 13 tests, including strict configuration drift, fail-closed Git status, marked head/tail context truncation, output-tail, true-exit-code, full-log, and an end-to-end Windows command-shim case.
+- Complete local gate: repaired `npm run check` passed through `tools/codex/run-capped.mjs` with 25 Vitest files / 216 tests, a 28-module build, 29 Apps Script sources / 47 required functions, deterministic generated parity, and two verified 293,406-byte standalone artifacts. `git diff --check`, ESLint, and targeted Prettier checks pass.
+- Generated application artifacts are unchanged. Local Playwright was not repeated because Phase 2 changes no application/generated source and the accepted Slice 6 browser evidence remains applicable; PR CI will rerun browser smoke after push.
+- `codex --strict-config --version` could not run because the local `codex.exe` launcher returned access denied. No strict-parser pass is claimed; official schema review plus deterministic repository validation are the available configuration evidence.
+- No Slice 7 implementation, consolidation/deletion, deployment, migration, Apps Script action, external configuration, or Google Sheets/Drive write occurred.
+- The initial independent review returned three findings. The first targeted repair round now makes Git status fail closed, preserves the head and tail of byte-bounded context with explicit markers, and parses the supported TOML subset strictly while enforcing the exact agent model and safety fields.
+- Re-review verified those three repairs but found one unsupported TOML escape accepted through JSON decoding. The second and final targeted repair round adds a TOML-specific escape allowlist and regression assertion; focused and complete local gates pass again.
+- Final independent read-only review returned PASS with no actionable findings. It directly confirmed rejected unsupported escapes, accepted supported restricted escapes, fail-closed Git status, marked byte-bounded context with tail evidence, and exact config enforcement.
+- Next stage: checkpoint commit, authorized push, parity verification, and PR CI verification.
+- Rollback: focused revert of the eventual Phase 2 commit; preserved archived configuration remains available outside Git.
+
 ## Current run checkpoint - Slice 6 committed, pushed, and CI verified
 
 - Date: 2026-07-15 (Asia/Manila).
@@ -100,24 +118,24 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
 ## Slice state (pre-commit snapshot; superseded by the current stage above)
 
-| Slice | State | Note |
-|---|---|---|
-| 1 — P0 bootstrap observability and recovery | COMMITTED_LOCAL | Implementation repaired after independent review; local gates and focused commit passed. |
-| 2 — Essential bootstrap and lazy module contracts | READY_LOCAL | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending. |
+| Slice                                                             | State                  | Note                                                                                                                                               |
+| ----------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — P0 bootstrap observability and recovery                       | COMMITTED_LOCAL        | Implementation repaired after independent review; local gates and focused commit passed.                                                           |
+| 2 — Essential bootstrap and lazy module contracts                 | READY_LOCAL            | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending.                                           |
 | 3 — Canonical roles, committee scopes, and authorization contract | PENDING_MANAGER_REVIEW | Implementation commit `5107afc57904dccc5214fcafc20aba65c0622632` is pushed; local gates, generated parity, sensitive scan, and PR #6 CI are green. |
-| 4 — Private roster synchronization and access freshness | NOT_STARTED | Dependency-gated; private source remains out of ordinary bootstrap. |
-| 5 — Committee Main Hub and Inventory and Pantry vertical slice | NOT_STARTED | Dependency-gated. |
-| 6 — Composite Event Logistics request foundation | NOT_STARTED | Dependency-gated. |
-| 7 — Food Committee specialization | NOT_STARTED | Dependency-gated. |
-| 8 — Materials Committee specialization | NOT_STARTED | Dependency-gated. |
-| 9 — Venue and Equipment reference and request vertical slice | NOT_STARTED | Dependency-gated. |
-| 10 — Authorized reference-data administration | NOT_STARTED | Dependency-gated. |
-| 11 — Restock review and safe server actions | NOT_STARTED | Dependency-gated. |
-| 12 — Bounded near-live active-module refresh | NOT_STARTED | Dependency-gated. |
-| 13 — Full staging operational acceptance | NOT_STARTED | Requires accepted implementation slices and authorized synthetic/redacted staging. |
-| 14 — Production approval and controlled promotion | NOT_STARTED | Requires explicit go/no-go and all release evidence. |
-| 15 — Hosted-frontend architecture spike and decision record | NOT_STARTED | Later architecture decision; no hosting work started. |
-| 16 — Future PostgreSQL/Supabase specification only | NOT_STARTED | Specification-only boundary; no database work started. |
+| 4 — Private roster synchronization and access freshness           | NOT_STARTED            | Dependency-gated; private source remains out of ordinary bootstrap.                                                                                |
+| 5 — Committee Main Hub and Inventory and Pantry vertical slice    | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 6 — Composite Event Logistics request foundation                  | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 7 — Food Committee specialization                                 | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 8 — Materials Committee specialization                            | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 9 — Venue and Equipment reference and request vertical slice      | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 10 — Authorized reference-data administration                     | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 11 — Restock review and safe server actions                       | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 12 — Bounded near-live active-module refresh                      | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| 13 — Full staging operational acceptance                          | NOT_STARTED            | Requires accepted implementation slices and authorized synthetic/redacted staging.                                                                 |
+| 14 — Production approval and controlled promotion                 | NOT_STARTED            | Requires explicit go/no-go and all release evidence.                                                                                               |
+| 15 — Hosted-frontend architecture spike and decision record       | NOT_STARTED            | Later architecture decision; no hosting work started.                                                                                              |
+| 16 — Future PostgreSQL/Supabase specification only                | NOT_STARTED            | Specification-only boundary; no database work started.                                                                                             |
 
 ## Decisions and controls
 

@@ -1,12 +1,26 @@
-# HAU-USC V1 Autonomous Program - Slice 6 checkpoint
+# HAU-USC V1 Autonomous Program - Phase 2 checkpoint
 
-CURRENT SLICE: Slice 6 - Composite Event Logistics request foundation
-CURRENT STAGE: SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW
+CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
+CURRENT STAGE: PHASE_2_VERIFIED_REVIEW_PASS_PENDING_COMMIT
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Slice 6 scope lock
+## Phase 2 scope lock
+
+- Starting checkpoint: `c96bdc32e6777d948c6520bd94200f5dc537374d`; branch and upstream `feat/live-sync-lending-search-catalog-controls`; local/upstream `0 0`; clean; Slice 6 accepted by the owner.
+- Goal: install a concise project-scoped Caveman Light and efficiency layer without changing product behavior or beginning Slice 7.
+- Accepted scope: intent and skill routing, owner short-command expansion, current task/history records, bounded output and context helpers, deterministic governance/continuation checks, two read-only custom agents, focused tests, and required checkpoint documentation.
+- Exclusions: all Slice 7 product work; generated application edits; repository/worktree cleanup; hosting, database, migration, deployment, Script Properties, Apps Script, Sheets, Drive, staging, and production actions.
+- Configuration: `.codex/config.toml` caps agents at two threads and depth one; `repo_mapper` and `log_triage` use current documented `gpt-5.6-terra`, low reasoning, and read-only sandboxes. The parent remains the only writer.
+- Helpers: `tools/codex/run-capped.mjs` preserves full ignored logs, true exit codes, 4 KiB success/12 KiB failure output caps, direct executable spawning, and guarded Windows command-shim support; repo-summary and context-packet tools keep restart context compact.
+- Validators: `scripts/check-agent-instructions.mjs` requires the routing/safety triggers and project files; `scripts/check-work-continuation.mjs` requires the 14-field compact resume block. Both are part of `npm run check` through `check:governance`.
+- Local evidence: governance checks passed 8 project files / 14 continuation fields; focused Vitest passed 13 tests; the repaired capped `npm run check` passed 25 files / 216 tests, build, 29 Apps Script sources / 47 required functions, generated parity, and standalone verification; lint, formatting, and diff checks pass.
+- Initial independent review findings were repaired in one targeted round: repository status now fails closed, context packets preserve marked head/tail evidence within UTF-8 byte limits, and the restricted TOML validator rejects malformed syntax or exact model/safety drift. Re-review verified those repairs and found one unsupported-escape edge case; the second and final targeted round now rejects it. Final independent review is PASS with no actionable findings.
+- Unrun evidence: strict Codex config parsing is not claimed because the local `codex.exe` launcher returned access denied. Local Playwright was not repeated because no application/generated source changed; accepted Slice 6 browser evidence remains the reuse point and PR CI will rerun browser smoke after push.
+- No external operational system changed. Next stage is final checkpointing, commit, push, and CI; Slice 7 remains gated.
+
+## Historical Slice 6 checkpoint
 
 - Starting checkpoint: `6548ca23f5d46b5afe40e592a3833de548b18574`; rollback tag `hau-usc-slice6-start-6548ca2`; branch `feat/live-sync-lending-search-catalog-controls`; upstream `origin/feat/live-sync-lending-search-catalog-controls`.
 - Manager approval: explicit user approval received 2026-07-14 after Slice 5 remote and CI review.
