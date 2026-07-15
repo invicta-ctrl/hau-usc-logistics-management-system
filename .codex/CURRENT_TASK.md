@@ -55,10 +55,11 @@
   fields; focused Vitest passed 13 tests; capped `npm run check` passed 25 files /
   216 tests, a 28-module build, 29 Apps Script sources / 47 required functions,
   generated parity, and standalone verification. Lint, formatting, and diff
-  checks pass.
+  checks pass. Implementation commit `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`
+  is pushed; PR #6 validate, verify, and browser-smoke checks are green.
 - **Unrun checks:** strict Codex config parsing is not claimed because the local
   `codex.exe` launcher returned access denied. Local Playwright was not repeated
   because Phase 2 changes no application/generated source; accepted Slice 6
   browser evidence remains applicable and PR CI will rerun browser smoke.
-- **Current stage:** implementation verified and independent review PASS;
-  checkpoint commit pending.
+- **Current stage:** implementation committed, pushed, CI-green, and pending
+  manager acceptance.

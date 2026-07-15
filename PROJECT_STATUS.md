@@ -2,13 +2,13 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 committed and CI-verified; Phase 2 governance locally verified; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; production undeployed)
 - Date: `2026-07-15`
 - Branch: `feat/live-sync-lending-search-catalog-controls`
 - Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
 - Current implementation checkpoint: Slice 6 commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; pushed; remote and PR #6 heads matched; local/upstream count `0 0`
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
-- Pull request: draft PR #6, open and unmerged; `validate`, `verify`, and `browser-smoke` are green for the Slice 6 implementation head; manager review is pending
+- Pull request: draft PR #6, open, unmerged, and mergeable; head `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`; `validate`, `verify`, and `browser-smoke` are green; manager review is pending
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
@@ -20,14 +20,15 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Phase 2 - Caveman Light and efficiency layer
 
-- Stage: `PHASE_2_VERIFIED_REVIEW_PASS_PENDING_COMMIT`.
+- Stage: `PHASE_2_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`.
 - Scope: repository-only intent/skill routing, Caveman Light short-command expansion, compact task/history/resume packets, bounded output/context tools, deterministic agent/continuation validators, and two read-only custom-agent profiles. Slice 7 and all external systems remain out of scope.
 - Codex configuration: project `.codex/config.toml` limits concurrency to two threads and one delegation level; current official documentation supports the project config/custom-agent locations and the selected `gpt-5.6-terra`, low-reasoning, read-only profiles.
 - Verification: governance checks pass 8 required project files and 14 continuation fields; focused Vitest passes 13 tests; repaired capped `npm run check` passes 25 files / 216 tests, a 28-module build, 29 Apps Script sources / 47 required functions, generated parity, and standalone verification. ESLint, targeted Prettier, and `git diff --check` pass.
 - Review: the initial three findings are repaired. The re-review verified those repairs but found JSON's `\/` escape was still accepted; the second and final targeted round now rejects every escape outside the supported TOML subset. Final independent review is PASS with no actionable findings.
+- Remote verification: implementation commit `8e82a8601e930ecf223a6e9170dc3d4dd9954bb1` is pushed; local, upstream, and PR #6 heads matched with local/upstream `0 0`. Actions runs `29379450091` and `29379450069` passed `validate` (14s), `verify` (16s), and `browser-smoke` (1m53s).
 - Generated application artifacts remain unchanged. Local Playwright was not repeated because no browser/application source changed; accepted Slice 6 browser evidence is reused and PR CI will run after push.
 - Strict Codex config parsing is unrun because the local `codex.exe` launcher is access-denied; no strict-parser pass is claimed. No deployment, migration, configuration outside the repository, Apps Script action, or Google Sheets/Drive write occurred.
-- Rollback: focused revert of the eventual Phase 2 commit. Next gate is commit/push, CI, and manager acceptance before consolidation or Slice 7.
+- Rollback: focused `git revert 8e82a8601e930ecf223a6e9170dc3d4dd9954bb1`. Next gate is manager acceptance before consolidation or Slice 7.
 
 ## Current Slice 6 - Composite Event Logistics request foundation
 
