@@ -11,6 +11,7 @@ function contextFor({ enabled = true, failAppend = false } = {}) {
     ['HAU_SPREADSHEET_ID', 'SYNTHETIC-SPREADSHEET-ID-12345678901234567890'],
     ['HAU_BACKUP_SPREADSHEET_ID', 'SYNTHETIC-BACKUP-ID-12345678901234567890'],
     ['HAU_COMPOSITE_REQUESTS_ENABLED', enabled ? 'true' : 'false'],
+    ['HAU_FOOD_REQUESTS_ENABLED', enabled ? 'true' : 'false'],
   ]);
   const database = [];
   let appendCalls = 0;
@@ -38,7 +39,13 @@ function contextFor({ enabled = true, failAppend = false } = {}) {
       }),
     },
   });
-  for (const file of ['Config.gs', 'Validation.gs', 'IdService.gs', 'CompositeRequestService.gs'])
+  for (const file of [
+    'Config.gs',
+    'Validation.gs',
+    'IdService.gs',
+    'FoodWorkflowService.gs',
+    'CompositeRequestService.gs',
+  ])
     vm.runInContext(readFileSync(resolve(appScriptRoot, file), 'utf8'), context, { filename: file });
   context.withScriptLock_ = (operation) => operation();
   context.resolveRequesterUser_ = () => ({
@@ -72,7 +79,22 @@ function requestCommand(key = 'SYN-COMPOSITE-1') {
     eventId: 'SYN-EVENT-1',
     purpose: 'Synthetic composite request',
     sections: [
-      { type: 'FOOD', label: 'Food', lines: [{ label: 'Packed meal', quantity: 2, unit: 'meal' }] },
+      {
+        type: 'FOOD',
+        label: 'Food',
+        lines: [{ label: 'Packed meal', quantity: 2, unit: 'meal' }],
+        food: {
+          serviceClass: 'PERISHABLE_FOOD',
+          expectedHeadcount: 2,
+          requiredServings: 2,
+          serviceStartAt: '2026-08-08T12:00:00+08:00',
+          serviceLocation: 'Synthetic service area',
+          dietarySummary: 'NONE_REPORTED',
+          dietaryAttentionServings: 0,
+          sourcingMode: 'APPROVED_EXTERNAL_SOURCE',
+          sourceReference: 'SYN-SOURCE-1',
+        },
+      },
       {
         type: 'MATERIALS',
         label: 'Materials',

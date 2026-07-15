@@ -44,13 +44,22 @@ const compositeSections = [
   ['VENUE_EQUIPMENT', 'Venue & Equipment', 'venueEquipment'],
 ];
 
+function foodFields(key) {
+  return `<div class="form-grid span-2" data-food-fields><label>Service class<select name="${key}ServiceClass" required><option value="BULK_NON_PERISHABLE_OR_CATERING">Bulk / non-perishable / catering (10 business days)</option><option value="PERISHABLE_FOOD">Perishable food (5 business days)</option></select></label><label>Expected headcount<input name="${key}ExpectedHeadcount" type="number" min="1" step="1" value="10" required /></label><label>Required servings<input name="${key}RequiredServings" type="number" min="1" step="1" value="10" required /></label><label>Service start (Manila time)<input name="${key}ServiceStartAt" type="datetime-local" value="2026-08-08T12:00" required /></label><label>Service end (optional)<input name="${key}ServiceEndAt" type="datetime-local" /></label><label>Service location<input name="${key}ServiceLocation" maxlength="120" value="Event service area" required /></label><label>Dietary summary<select name="${key}DietarySummary" required><option value="NONE_REPORTED">None reported</option><option value="ATTENTION_REQUIRED">Attention required (aggregate only)</option><option value="PENDING_CONFIRMATION">Pending confirmation</option></select></label><label>Servings needing attention<input name="${key}DietaryAttentionServings" type="number" min="0" step="1" value="0" required /></label><label>Sourcing mode<select name="${key}SourcingMode" required><option value="PANTRY_STOCK_REVIEW">Pantry stock review</option><option value="CANVASS_REQUIRED">Canvass required</option><option value="APPROVED_EXTERNAL_SOURCE">Approved external source</option></select></label><label>Source reference (no contacts or payment data)<input name="${key}SourceReference" maxlength="120" /></label><p class="muted span-2">Use aggregate counts only. Do not enter names, diagnoses, medical narratives, supplier contacts, TINs, or payment data.</p></div>`;
+}
+
+function renderCompositeSection([type, title, key]) {
+  if (type === 'FOOD' && !config.foodRequestsEnabled) return '';
+  return `<fieldset class="panel inset" data-composite-section="${type}"><legend><label><input type="checkbox" name="${key}Enabled" value="${type}" data-composite-toggle /> ${title}</label></legend><div class="form-grid" data-composite-fields><label>Section label<input name="${key}Label" placeholder="Optional label" /></label><label>Line description<input name="${key}Line" placeholder="One minimal request line" /></label><label>Quantity<input name="${key}Quantity" type="number" min="0.01" step="0.01" value="1" /></label><label>Unit<select name="${key}Unit"><option>piece</option><option>box</option><option>pack</option><option>meal</option><option>service</option></select></label>${type === 'FOOD' ? foodFields(key) : ''}</div></fieldset>`;
+}
+
 function renderCompositePanel(state) {
   if (!config.compositeRequestsEnabled) return '';
   const eventOptions = state.events
     .filter((event) => event.status === 'UPCOMING')
     .map((event) => `<option value="${event.id}">${escapeHtml(event.name)}</option>`)
     .join('');
-  return `<section class="panel stack composite-request-panel" aria-labelledby="composite-request-title"><div class="panel-head"><div><p class="eyebrow">Composite event logistics</p><h2 id="composite-request-title">Review Food, Materials, and Venue &amp; Equipment together</h2><p>Each selected non-empty section becomes one independently trackable child under one parent request. Blank sections create no child.</p></div><span class="pill">Feature-flagged</span></div><form id="composite-request-form" novalidate><div class="form-grid"><label>Requester name<input name="compositeRequesterName" value="Preview Requester" required /></label><label>Department<input name="compositeDepartment" value="DOL - Preview Committee" required /></label><label>Event<select name="compositeEventId" required><option value="">Select an upcoming event</option>${eventOptions}</select></label><label>Purpose<input name="compositePurpose" value="Preview composite logistics request" required /></label></div><div class="composite-sections" data-composite-sections>${compositeSections.map(([type, title, key]) => `<fieldset class="panel inset" data-composite-section="${type}"><legend><label><input type="checkbox" name="${key}Enabled" value="${type}" data-composite-toggle /> ${title}</label></legend><div class="form-grid" data-composite-fields><label>Section label<input name="${key}Label" placeholder="Optional label" /></label><label>Line description<input name="${key}Line" placeholder="One minimal request line" /></label><label>Quantity<input name="${key}Quantity" type="number" min="0.01" step="0.01" value="1" /></label><label>Unit<select name="${key}Unit"><option>piece</option><option>box</option><option>pack</option><option>meal</option><option>service</option></select></label></div></fieldset>`).join('')}</div><div class="button-row section-gap"><button class="primary" type="submit">Review composite request</button><span class="muted" data-composite-review aria-live="polite">Select at least one section.</span></div><div class="alert hidden" data-composite-result aria-live="polite"></div></form></section>`;
+  return `<section class="panel stack composite-request-panel" aria-labelledby="composite-request-title"><div class="panel-head"><div><p class="eyebrow">Composite event logistics</p><h2 id="composite-request-title">Review Food, Materials, and Venue &amp; Equipment together</h2><p>Each selected non-empty section becomes one independently trackable child under one parent request. Blank sections create no child.</p></div><span class="pill">Feature-flagged</span></div><form id="composite-request-form" novalidate><div class="form-grid"><label>Requester name<input name="compositeRequesterName" value="Preview Requester" required /></label><label>Department<input name="compositeDepartment" value="DOL - Preview Committee" required /></label><label>Event<select name="compositeEventId" required><option value="">Select an upcoming event</option>${eventOptions}</select></label><label>Purpose<input name="compositePurpose" value="Preview composite logistics request" required /></label></div><div class="composite-sections" data-composite-sections>${compositeSections.map(renderCompositeSection).join('')}</div><div class="button-row section-gap"><button class="primary" type="submit">Review composite request</button><span class="muted" data-composite-review aria-live="polite">Select at least one section.</span></div><div class="alert hidden" data-composite-result aria-live="polite"></div></form></section>`;
 }
 
 function compositeResultHtml(request) {
@@ -120,7 +129,7 @@ export function mountRequests(ctx, root) {
       if (!compositeForm.reportValidity()) return;
       const sections = [...root.querySelectorAll('[data-composite-toggle]:checked')].map((toggle) => {
         const key = compositeFields[toggle.value];
-        return {
+        const section = {
           type: toggle.value,
           label: compositeForm.elements[`${key}Label`].value,
           lines: [
@@ -131,6 +140,22 @@ export function mountRequests(ctx, root) {
             },
           ],
         };
+        if (toggle.value === 'FOOD') {
+          const toManilaIso = (value) => (value ? `${value}:00+08:00` : '');
+          section.food = {
+            serviceClass: compositeForm.elements.foodServiceClass.value,
+            expectedHeadcount: compositeForm.elements.foodExpectedHeadcount.value,
+            requiredServings: compositeForm.elements.foodRequiredServings.value,
+            serviceStartAt: toManilaIso(compositeForm.elements.foodServiceStartAt.value),
+            serviceEndAt: toManilaIso(compositeForm.elements.foodServiceEndAt.value),
+            serviceLocation: compositeForm.elements.foodServiceLocation.value,
+            dietarySummary: compositeForm.elements.foodDietarySummary.value,
+            dietaryAttentionServings: compositeForm.elements.foodDietaryAttentionServings.value,
+            sourcingMode: compositeForm.elements.foodSourcingMode.value,
+            sourceReference: compositeForm.elements.foodSourceReference.value,
+          };
+        }
+        return section;
       });
       try {
         const result = await ctx.service.submitCompositeRequest({

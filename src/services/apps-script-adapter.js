@@ -12,6 +12,8 @@ const METHODS = Object.freeze({
   reserveStock: 'api_reserveStock',
   submitCompositeRequest: 'api_submitCompositeRequest',
   getCompositeRequest: 'api_getCompositeRequest',
+  getFoodWorkQueue: 'api_getFoodWorkQueue',
+  updateFoodComponent: 'api_updateFoodComponent',
   transitionCompositeComponent: 'api_transitionCompositeComponent',
   cancelCompositeRequest: 'api_cancelCompositeRequest',
   reopenCompositeRequest: 'api_reopenCompositeRequest',

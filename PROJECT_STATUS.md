@@ -2,7 +2,7 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-6 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; Slice 7 locally verified pending push/CI; production undeployed)
 - Date: `2026-07-15`
 - Branch: `integration/v0.5-baseline`
 - Approved Slice 6 starting commit: `6548ca23f5d46b5afe40e592a3833de548b18574` (Slice 5 remote-verification documentation checkpoint)
@@ -17,6 +17,45 @@
 - Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-6 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 7 - Food Committee workflow
+
+- Stage: `SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI` from accepted starting
+  checkpoint `5c9bb501e01eeee961bae01279f2c0188d0429ce` on
+  `integration/v0.5-baseline`.
+- Scope delivered: versioned controlled Food fields, aggregate-only dietary
+  handling, server-owned lead-time derivation, sourcing and completion-evidence
+  gates, Food-scoped queue/detail projection, canonical authorization,
+  revision/idempotency guards across generic and specialized mutation paths,
+  durable history/audit, and mock/service/active-UI parity.
+- Privacy and authority: public guessed-ID reads fail closed; Food users cannot
+  receive sibling payloads; delivery evidence is revalidated by type/entity/
+  component/upload status; Administrator system authority remains separate
+  from Director operational oversight. No person-level dietary narrative,
+  private supplier/contact/TIN/payment data, credentials, or Google resource
+  URL was introduced.
+- Verification: full `npm run check` passes governance, lint, 28 Vitest files / 231
+  tests, a 30-module build, 30 Apps Script sources / 49 functions, deterministic
+  package assembly, and both 311,165-byte standalone artifacts. Full Playwright
+  passes 61 / 101 intentional skips / 0 failures across 162 cases; the focused
+  rendered Food submission/queue/update flow passes; changed-file sensitive
+  scans and `git diff --check` pass. Final independent review is PASS.
+- Generated evidence: standalone SHA-256
+  `d35d9ebcc08b1b4d0be788057e9993f24d12602eb227cdb2f7421e5027b8ce73`;
+  Apps Script `Index.html` is 841 bytes / SHA-256
+  `6c8709cf75c5558156407f292308abd95ac2f034dfe8092b9f8a0955096bad0c`;
+  `AppScript.html` is 247,320 bytes / SHA-256
+  `c100b172d3c77cdee4edf67f762787cf87ba46af7e1a8643bebc9a592a2f20a8`.
+- Packaging hardening: Apps Script template assembly now inserts generated
+  partials with a replacement callback, preventing minified `$&` tokens from
+  being interpreted as string-replacement directives; regression coverage is
+  included.
+- External boundary: no deployment, migration, Script Property change, Apps
+  Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production action occurred.
+- Rollback: set `HAU_FOOD_REQUESTS_ENABLED=false` to stop new Food submissions
+  while retaining stored versioned children for read/service continuity; use a
+  focused revert of the eventual Slice 7 commit for code rollback.
 
 ## Current naming and visibility baseline
 

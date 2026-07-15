@@ -9,6 +9,8 @@ function api_submitRequest(command) { return guardMutationApi_('submitRequest', 
 function api_reviewRequest(command) { return guardMutationApi_('reviewRequest', command, function(c) { return reviewRequest_(command, c); }); }
 function api_submitCompositeRequest(command) { return guardMutationApi_('submitCompositeRequest', command, function(c) { return submitCompositeRequest_(command, c); }); }
 function api_getCompositeRequest(command) { return guardApi_('getCompositeRequest', command || {}, function() { return getCompositeRequest_(command || {}); }); }
+function api_getFoodWorkQueue(command) { return guardApi_('getFoodWorkQueue', command || {}, function() { return getFoodWorkQueue_(); }); }
+function api_updateFoodComponent(command) { return guardMutationApi_('updateFoodComponent', command, function(c) { return updateFoodComponent_(command, c); }); }
 function api_transitionCompositeComponent(command) { return guardMutationApi_('transitionCompositeComponent', command, function(c) { return transitionCompositeComponent_(command, c); }); }
 function api_cancelCompositeRequest(command) { return guardMutationApi_('cancelCompositeRequest', command, function(c) { return cancelCompositeRequest_(command, c); }); }
 function api_reopenCompositeRequest(command) { return guardMutationApi_('reopenCompositeRequest', command, function(c) { return reopenCompositeRequest_(command, c); }); }

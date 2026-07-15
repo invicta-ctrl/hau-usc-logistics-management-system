@@ -273,6 +273,7 @@ export function createSeedState() {
     previewMode: true,
     backendMode: 'mock',
     compositeRequestsEnabled: true,
+    foodRequestsEnabled: true,
     revisions: { inventory: 1, requests: 1, lending: 1, receipts: 1, quotes: 1, tasks: 1 },
     counters: {
       'TXN-2026': 131,

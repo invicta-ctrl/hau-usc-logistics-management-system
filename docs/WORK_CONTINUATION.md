@@ -2,22 +2,22 @@
 
 ## Current resume block
 
-- **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; the single authoritative checkout. No linked project worktree or redundant project clone remains.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; pre-documentation head `0a3236a197939c8afd48eab43a09b4030b83f9f1`; upstream `origin/integration/v0.5-baseline`; count `0 0` and clean before this record.
-- **Current phase/stage:** naming and visibility baseline implemented; final documentation/check/push/CI verification remains.
-- **Accepted scope:** improve local and GitHub names, remove archived branch clutter, preserve every unique head first, consolidate legacy folders intact, and keep one active review branch.
-- **Completed work:** created/pushed five archive tags; created/verified a 37-ref full-history bundle; closed PRs #3-#5 without merge; deleted five archived branches; retired the deployment worktree; renamed the active branch; created replacement draft PR #7; moved legacy folders into one named workspace; moved both private Apps Script configs outside Git.
-- **Files changed by purpose:** current status, changelog, continuation record, and the Phase 3.5 consolidation plan receive a post-acceptance naming record. External current marker and naming manifest live at `D:\Documents\HAU-USC Logistics`.
-- **Tests verified at current SHA:** pre-documentation head `0a3236a...` has green `validate`, `verify`, and `browser-smoke` evidence from runs `29385194304` and `29385194266`. The naming-only working tree passes full `npm run check`: governance 8 files / 14 fields, lint, 25 test files / 216 tests, 28-module build, 29 Apps Script sources / 47 functions, generated parity, and two 293,406-byte standalone artifacts. New PR #7 CI must be verified after this documentation commit.
-- **Generated artifacts:** no product or generated application artifact is intentionally changed by this naming-only update.
-- **External actions:** branch and PR cleanup described above, remote archive tags, branch rename, and local folder moves only. No merge, `main` update, deployment, Apps Script push, Sheet/Drive write, migration, Cloudflare, database, staging, or production action.
-- **Preservation:** verify `D:\Documents\HAU-USC Logistics\backups\git-bundles\hau-usc-all-refs-naming-cleanup-20260715-110336.bundle`; SHA-256 `EE76A23C590679F2E19B95B047FCB18B42F520B28C547A7799A4EA342E53C765`. Archive tags retain the exact deployment, SDD, QR, routing, and approved-prototype heads.
-- **Rollback:** recreate any deleted branch at its recorded archive tag, restore the former active name from commit `0a3236a...` only if owner-directed, and use the verified bundle for complete local ref recovery. Reverse folder moves only with exact-path and parity checks; keep private configuration outside Git.
-- **Blocker:** none for repository verification. Deleting the zero-file hidden compatibility shell is deferred only until this running Codex workspace releases its empty `.git` directory handle.
-- **Windows note:** `D:\Documents\DOL Website GitHub` is an empty hidden shell only because this running Codex workspace holds its empty `.git` directory handle. Delete that shell after the workspace releases it; never treat it as a checkout.
-- **Next three actions:** run local verification; commit/push the naming record; verify PR #7 head/CI, two-branch remote state, one-worktree state, and clean status.
-- **Resume commands:** `git status --short --untracked-files=all`; `git worktree list --porcelain`; `git branch -a -vv`; `git bundle verify "D:\Documents\HAU-USC Logistics\backups\git-bundles\hau-usc-all-refs-naming-cleanup-20260715-110336.bundle"`; `npm run check`.
-- **Prohibited actions:** no product phase or Slice 7, PR merge, history rewrite, force-push, archive-tag deletion, private-config commit, deployment, migration, Apps Script push, or Google Sheets/Drive write.
+- **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; accepted Slice 7 starting HEAD `5c9bb501e01eeee961bae01279f2c0188d0429ce`; upstream `origin/integration/v0.5-baseline`; starting count `0 0` and clean.
+- **Current phase/stage:** Phase 4 / Slice 7 Food Committee workflow; `SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI`.
+- **Accepted scope:** controlled and privacy-minimized Food child workflow, server-scoped Food queue/detail, assignment/lifecycle/audit, sourcing/lead-time/evidence gates, active UI and adapter parity, tests, generated artifacts, documentation, commit, push, and CI.
+- **Completed work:** implemented versioned Food domain/server/mock/UI behavior; canonical authorization and public read denial; server-owned time and revision guards; operational scoped queue/update/evidence UI; generic reopen/amend attention preservation; fail-closed flags; parser-safe Apps Script replacement hardening; focused and full validation; final independent PASS.
+- **Files changed by purpose:** Food domain/service/Apps Script routes and configuration; adapters/contracts; active request and queue UI; deterministic bundle tooling; focused unit/Apps Script/browser tests; generated artifacts; Slice 7 specification and checkpoint records.
+- **Tests verified at current SHA:** working tree `npm run check` passes governance, lint, 28 Vitest files / 231 tests, 30-module build, 30 Apps Script sources / 49 functions, generated parity, and standalone verification. Full Playwright passes 61 / 101 intentional skips / 0 failures across 162. Focused rendered Food flow, sensitive scan, `git diff --check`, and final independent review pass.
+- **Generated artifacts:** `dist/index.html` and the shareable artifact are 311,165 bytes each / SHA-256 `d35d9ebcc08b1b4d0be788057e9993f24d12602eb227cdb2f7421e5027b8ce73`; Apps Script `Index.html` is 841 bytes / `6c8709cf75c5558156407f292308abd95ac2f034dfe8092b9f8a0955096bad0c`; `AppScript.html` is 247,320 bytes / `c100b172d3c77cdee4edf67f762787cf87ba46af7e1a8643bebc9a592a2f20a8`.
+- **External actions:** none yet for Slice 7. No merge, `main` update, deployment, Apps Script push, Sheet/Drive write, migration, Cloudflare, database, staging, or production action.
+- **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
+- **Rollback:** set `HAU_FOOD_REQUESTS_ENABLED=false` to stop new Food submissions while retaining stored versioned children; revert the focused Slice 7 commit for code rollback without resetting or discarding unrelated work.
+- **Blocker:** none for the repository slice.
+- **Windows note:** the obsolete `D:\Documents\DOL Website GitHub` compatibility shell remains outside this authoritative checkout and is unrelated to Slice 7.
+- **Next three actions:** commit the locally verified Slice 7 unit; push `integration/v0.5-baseline`; verify PR #7 head/CI and record the clean remote checkpoint before Slice 8.
+- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run check`; `npm run test:e2e`; `gh pr checks 7`.
+- **Prohibited actions:** no PR merge, history rewrite, force-push, archive-tag deletion, private-config commit, deployment, migration, Apps Script/Sheets/Drive external mutation, Cloudflare, database, staging, or production action during this repository slice.
 
 ## Current checkpoint - Slice 6 committed, pushed, and CI verified
 

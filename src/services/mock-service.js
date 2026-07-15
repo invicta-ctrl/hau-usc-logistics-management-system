@@ -24,6 +24,12 @@ import {
   deriveCompositeParentStatus,
   transitionCompositeChild,
 } from '../domain/composite-requests.js';
+import {
+  assertFoodTransition,
+  buildFoodQueueItem,
+  foodAttentionFlags,
+  updateFoodWorkflow,
+} from '../domain/food-workflow.js';
 import { requireIdempotencyKey, previousResult, storeResult } from './idempotency-service.js';
 
 const now = () => new Date().toISOString();
@@ -47,6 +53,25 @@ function updateCompositeParent(parent, children) {
   const derived = deriveCompositeParentStatus(children);
   Object.assign(parent, derived, { updatedAt: now(), revision: Number(parent.revision ?? 1) + 1 });
   return derived;
+}
+
+function requireFoodRevision(command, child) {
+  if (child?.componentType === 'FOOD' && Number(command.expectedRevision) !== Number(child.revision ?? 1))
+    throw new AppError('REVISION_CONFLICT', 'Food component changed; refresh before updating.', {
+      retryable: true,
+    });
+}
+
+function requireFoodRevisionMap(command, children, statuses) {
+  const expected = command.expectedRevisions ?? {};
+  for (const child of children.filter(
+    (entry) => entry.componentType === 'FOOD' && statuses.includes(entry.status),
+  )) {
+    if (Number(expected[child.componentId]) !== Number(child.revision ?? 1))
+      throw new AppError('REVISION_CONFLICT', 'Food component changed; refresh before updating.', {
+        retryable: true,
+      });
+  }
 }
 
 function requirePermission(state, action) {
@@ -224,6 +249,74 @@ export class MockService {
     return Promise.resolve({ ok: true, request: buildCompositeView(parent, children) });
   }
 
+  getFoodWorkQueue() {
+    const state = this.store.getState();
+    requirePermission(state, 'review_request');
+    ensureCompositeState(state);
+    const parents = new Map(state.compositeRequests.map((parent) => [parent.requestId, parent]));
+    const items = state.compositeComponents
+      .filter((child) => child.componentType === 'FOOD')
+      .map((child) => buildFoodQueueItem(parents.get(child.requestId), child));
+    return Promise.resolve({ ok: true, committeeId: 'COM_FOOD', items });
+  }
+
+  updateFoodComponent(command) {
+    return this._run(
+      command,
+      'UPDATE_FOOD_COMPONENT',
+      async (state) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child || child.componentType !== 'FOOD')
+          throw new AppError('FOOD_COMPONENT_NOT_FOUND', 'Food component was not found.');
+        if (['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+          throw new AppError('FOOD_UPDATE_NOT_ALLOWED', 'Terminal Food components cannot be updated.');
+        if (Number(command.expectedRevision) !== Number(child.revision))
+          throw new AppError('REVISION_CONFLICT', 'Food component changed; refresh before updating.', {
+            retryable: true,
+          });
+        let evidenceUploaded = false;
+        if (command.patch?.completionEvidenceId) {
+          evidenceUploaded = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === command.patch.completionEvidenceId &&
+              evidence.evidenceType === 'DELIVERABLE_DELIVERY_PROOF' &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          if (!evidenceUploaded)
+            throw new AppError(
+              'FOOD_COMPLETION_EVIDENCE_INVALID',
+              'Food completion evidence must be uploaded and linked to this component.',
+            );
+        }
+        const food = updateFoodWorkflow(child.payload?.food, command.patch);
+        child.payload = { ...child.payload, food };
+        child.attentionFlags = foodAttentionFlags(food);
+        child.progress = {
+          ...child.progress,
+          sourcingStatus: food.sourcingStatus,
+          evidenceLinked: Boolean(food.completionEvidenceId),
+        };
+        child.revision = Number(child.revision) + 1;
+        child.updatedAt = now();
+        updateCompositeParent(parent, children);
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: parent.requestId,
+          componentId: child.componentId,
+          revision: child.revision,
+          food,
+          evidenceUploaded,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
   transitionCompositeComponent(command) {
     return this._run(
       command,
@@ -233,6 +326,18 @@ export class MockService {
         const { parent, children } = compositeRecord(state, command.requestId);
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        requireFoodRevision(command, child);
+        if (child.componentType === 'FOOD') {
+          const evidenceUploaded = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === child.payload?.food?.completionEvidenceId &&
+              evidence.evidenceType === 'DELIVERABLE_DELIVERY_PROOF' &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          assertFoodTransition(child.payload?.food, command.action, { evidenceUploaded });
+        }
         const next = transitionCompositeChild(child, command.action, { reason: command.reason });
         Object.assign(child, next, { revision: Number(child.revision ?? 1) + 1, updatedAt: now() });
         const derived = updateCompositeParent(parent, children);
@@ -260,6 +365,14 @@ export class MockService {
       async (state) => {
         requirePermission(state, 'review_request');
         const { parent, children } = compositeRecord(state, command.requestId);
+        requireFoodRevisionMap(command, children, [
+          'DRAFT',
+          'FOR_REVIEW',
+          'ACCEPTED',
+          'IN_PROGRESS',
+          'PARTIALLY_FULFILLED',
+          'READY_FOR_HANDOFF',
+        ]);
         for (const child of children) {
           if (!['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
             Object.assign(child, transitionCompositeChild(child, 'CANCEL', { reason: command.reason }), {
@@ -292,6 +405,7 @@ export class MockService {
             `The ${state.role} preview role cannot reopen a composite request.`,
           );
         const { parent, children } = compositeRecord(state, command.requestId);
+        requireFoodRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
         if (!['REJECTED', 'CANCELLED'].includes(parent.status))
           throw new AppError(
             'INVALID_TRANSITION',
@@ -327,6 +441,7 @@ export class MockService {
         const { parent, children } = compositeRecord(state, command.requestId);
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        requireFoodRevision(command, child);
         Object.assign(child, amendCompositeSection(child, command.section ?? {}, { now: now() }));
         const derived = updateCompositeParent(parent, children);
         state.revisions.requests += 1;
@@ -358,6 +473,15 @@ export class MockService {
           );
         if (children.some((child) => child.componentType === command.section?.type))
           throw new AppError('DUPLICATE_COMPONENT', 'That composite section already exists.');
+        if (command.section?.type === 'FOOD' && state.foodRequestsEnabled === false)
+          throw new AppError('FEATURE_DISABLED', 'Food request specialization is not enabled.');
+        if (
+          command.section?.type === 'FOOD' &&
+          Number(command.expectedParentRevision) !== Number(parent.revision ?? 1)
+        )
+          throw new AppError('REVISION_CONFLICT', 'Composite request changed; refresh before adding Food.', {
+            retryable: true,
+          });
         const packet = createCompositePacket(
           {
             requesterName: parent.requesterName,
@@ -406,6 +530,7 @@ export class MockService {
         const { parent, children } = compositeRecord(state, command.requestId);
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        requireFoodRevision(command, child);
         child.ownerUserId = String(command.userId ?? '').trim();
         child.revision = Number(child.revision ?? 1) + 1;
         child.updatedAt = now();
@@ -435,6 +560,7 @@ export class MockService {
         const { parent, children } = compositeRecord(state, command.requestId);
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
+        requireFoodRevision(command, child);
         child.attentionFlags = [...new Set([...(child.attentionFlags ?? []), 'ESCALATED'])];
         child.updatedAt = now();
         return {

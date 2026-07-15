@@ -4,6 +4,7 @@ import { can } from '../../src/domain/permissions.js';
 import {
   COMPOSITE_ACTIONS,
   COMPOSITE_SECTION_TYPES,
+  amendCompositeSection,
   consolidateCompositeLines,
   createCompositePacket,
   deriveCompositeParentStatus,
@@ -13,7 +14,22 @@ import {
 import { MockService } from '../../src/services/mock-service.js';
 
 const allSections = {
-  FOOD: { type: 'FOOD', label: 'Meals', lines: [{ label: 'Packed meal', quantity: 10, unit: 'meal' }] },
+  FOOD: {
+    type: 'FOOD',
+    label: 'Meals',
+    lines: [{ label: 'Packed meal', quantity: 10, unit: 'meal' }],
+    food: {
+      serviceClass: 'BULK_NON_PERISHABLE_OR_CATERING',
+      expectedHeadcount: 10,
+      requiredServings: 10,
+      serviceStartAt: '2026-08-08T12:00:00+08:00',
+      serviceLocation: 'Synthetic service area',
+      dietarySummary: 'NONE_REPORTED',
+      dietaryAttentionServings: 0,
+      sourcingMode: 'APPROVED_EXTERNAL_SOURCE',
+      sourceReference: 'SYN-SOURCE-1',
+    },
+  },
   MATERIALS: {
     type: 'MATERIALS',
     label: 'Materials',
@@ -35,6 +51,7 @@ function command(sections, idempotencyKey = 'SYN-COMPOSITE-1') {
     eventId: 'SYN-EVENT-1',
     eventName: 'Synthetic Event',
     purpose: 'Synthetic composite request',
+    submittedAt: '2026-07-20T09:00:00+08:00',
     sections,
   };
 }
@@ -134,6 +151,22 @@ describe('composite request domain', () => {
     child = transitionCompositeChild(child, COMPOSITE_ACTIONS.COMPLETE);
     expect(child.status).toBe('COMPLETED');
   });
+
+  it('recomputes Food attention on reopen and amendment', () => {
+    const packet = createCompositePacket(command([allSections.FOOD]), {
+      requestId: 'LREQ-2026-0002',
+      componentIds: ['CMP-0002'],
+      actor: 'SYN-ACTOR',
+      now: '2026-07-14T00:00:00.000Z',
+    });
+    const cancelled = { ...packet.children[0], status: 'CANCELLED', attentionFlags: [] };
+    const reopened = transitionCompositeChild(cancelled, COMPOSITE_ACTIONS.REOPEN);
+    expect(reopened.attentionFlags).toContain('FOOD_COMPLETION_EVIDENCE_MISSING');
+    const amended = amendCompositeSection(reopened, { label: 'Amended Food request' });
+    expect(amended.attentionFlags).toEqual(
+      expect.arrayContaining(['FOOD_COMPLETION_EVIDENCE_MISSING', 'AMENDED']),
+    );
+  });
 });
 
 describe('composite request mock workflow', () => {
@@ -148,7 +181,7 @@ describe('composite request mock workflow', () => {
     expect(getState().compositeRequests).toHaveLength(1);
     await expect(
       service.submitCompositeRequest(
-        command([{ type: 'FOOD', lines: [{ label: '', quantity: 1, unit: 'piece' }] }], 'SYN-INVALID'),
+        command([{ ...allSections.FOOD, lines: [{ label: '', quantity: 1, unit: 'piece' }] }], 'SYN-INVALID'),
       ),
     ).rejects.toMatchObject({ code: 'VALIDATION_ERROR' });
     expect(getState().compositeRequests).toHaveLength(1);
@@ -183,12 +216,14 @@ describe('composite request mock workflow', () => {
       requestId: created.requestId,
       componentId: food.componentId,
       action: 'ACCEPT',
+      expectedRevision: 1,
       idempotencyKey: 'SYN-ACCEPT',
     });
     await service.amendCompositeRequest({
       requestId: created.requestId,
       componentId: food.componentId,
       section: { label: 'Amended meals', lines: [{ label: 'Packed meal', quantity: 12, unit: 'meal' }] },
+      expectedRevision: 2,
       idempotencyKey: 'SYN-AMEND',
     });
     const added = await service.addCompositeSection({
@@ -200,12 +235,14 @@ describe('composite request mock workflow', () => {
     await service.cancelCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic cancellation',
+      expectedRevisions: { [food.componentId]: 3 },
       idempotencyKey: 'SYN-CANCEL',
     });
     expect(getState().compositeComponents.every((child) => child.status === 'CANCELLED')).toBe(true);
     const reopened = await service.reopenCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic reopen',
+      expectedRevisions: { [food.componentId]: 4 },
       idempotencyKey: 'SYN-REOPEN',
     });
     expect(reopened.status).toBe('FOR_REVIEW');
@@ -237,6 +274,7 @@ describe('composite request mock workflow', () => {
         requestId: owned.requestId,
         componentId: owned.componentIds[0],
         userId: 'SYN-STAFF',
+        expectedRevision: 1,
         idempotencyKey: 'SYN-ASSIGN-1',
       }),
     ).resolves.toMatchObject({ committeeId: 'COM_FOOD' });

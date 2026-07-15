@@ -6,6 +6,7 @@ export const backendMode = config.backendMode;
 export const appEnvironment = config.appEnvironment;
 export const bootstrapContractVersion = config.bootstrapContractVersion;
 export const compositeRequestsEnabled = config.compositeRequestsEnabled;
+export const foodRequestsEnabled = config.foodRequestsEnabled;
 const clientRequestId = (prefix) =>
   `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
@@ -103,6 +104,12 @@ export function createLegacyRuntimeAdapter(mockServices) {
     },
     async getCompositeRequest(requestId) {
       return remote.getCompositeRequest({ requestId });
+    },
+    async getFoodWorkQueue() {
+      return remote.getFoodWorkQueue({});
+    },
+    updateFoodComponent(payload) {
+      return mutationRequests.run('food-update', payload, (command) => remote.updateFoodComponent(command));
     },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>

@@ -26,6 +26,8 @@ for (const method of [
   'submitRequest',
   'submitCompositeRequest',
   'getCompositeRequest',
+  'getFoodWorkQueue',
+  'updateFoodComponent',
   'transitionCompositeComponent',
   'cancelCompositeRequest',
   'reopenCompositeRequest',

@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased - Slice 7 Food Committee workflow
+
+- Added a versioned, privacy-minimized Food specialization to composite Event
+  Logistics requests with controlled service class, headcount/servings,
+  service window/location, aggregate dietary status, sourcing mode/reference,
+  server-owned lead-time state, and deterministic attention flags.
+- Added server-scoped Food queue/detail and revision-safe Food mutation routes,
+  canonical `COM_FOOD` authorization, public read denial, sibling-payload
+  filtering, idempotency/locking, durable history/audit, and evidence validation
+  before completion.
+- Added the active rendered Food request fields and Food Committee queue/update
+  workflow, including component-linked delivery-proof upload, plus mock and all
+  adapter/service contracts. New submissions remain behind the fail-closed
+  `HAU_FOOD_REQUESTS_ENABLED` flag while stored Food children remain readable.
+- Preserved Food attention across generic reopen/amend paths and required Food
+  revisions for transition/cancel/reopen/amend/add/assign/escalate operations.
+- Hardened Apps Script template assembly so minified `$&` tokens in generated
+  JavaScript are inserted literally rather than interpreted by string
+  replacement.
+- Verification passes: `npm run check` (28 Vitest files / 231 tests, 30-module
+  build, 30 Apps Script sources / 49 required functions, deterministic generated
+  parity, two 311,165-byte standalone artifacts); full Playwright 61 passed / 101
+  intentional skips / 0 failures; focused rendered Food workflow; changed-file
+  sensitive scan; `git diff --check`; and final independent review PASS.
+- No deployment, migration, Apps Script/Sheets/Drive external write, private
+  operational data access, PR merge, Cloudflare, database, staging, or
+  production change was performed.
+
 ## Unreleased - Naming and visibility baseline
 
 ### Clear workspace and GitHub names

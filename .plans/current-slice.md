@@ -1,10 +1,45 @@
-# HAU-USC V1 Autonomous Program - Phase 3.5 consolidation checkpoint
+# HAU-USC V1 Autonomous Program - Slice 7 checkpoint
 
-CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
-CURRENT STAGE: PHASE_3_5_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_ACCEPTANCE
+CURRENT SLICE: Slice 7 - Food Committee workflow
+CURRENT STAGE: SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Slice 7 scope lock
+
+- Explicit user acceptance received 2026-07-15 for Phase 3.5 and continuation
+  into Phase 4. The verified Slice 7 starting checkpoint is
+  `5c9bb501e01eeee961bae01279f2c0188d0429ce` on
+  `integration/v0.5-baseline`; branch/upstream `0 0`, clean, and PR #7 has all
+  three checks green.
+- The accepted contract is `docs/FOOD_COMMITTEE_WORKFLOW.md`: controlled meal
+  service class; distinct positive headcount and servings; Manila service
+  window and bounded location; controlled dietary summary/count only;
+  controlled sourcing mode/reference; recorded one- or two-business-week lead
+  time; Food committee assignment; and uploaded delivery evidence before
+  completion.
+- The Food queue/detail projection exposes only the Food child and bounded safe
+  parent context to Food-scoped reviewers. UI hiding never grants authority;
+  all reads and mutations are server scoped.
+- Exclusions: names or diagnoses in dietary data, free-form dietary narratives,
+  private supplier/contact/TIN fixtures, prices or accounting, ledger changes,
+  vendor catalog invention, Materials/Venue specialization, historical
+  backfill, deployment, migration, external Apps Script/Sheets/Drive writes,
+  PR merge, Cloudflare, or database work.
+- Required proof: domain and server validation, scoped DTO and authorization,
+  revision/idempotency behavior, sourcing/lead-time/evidence transition gates,
+  mock/service/UI parity, focused and full tests, browser coverage, generated
+  parity, sensitive-data scan, independent read-only review, focused commit,
+  push/CI, and a clean checkpoint.
+- Rollback: disable Food specialization for new Food submissions and preserve
+  versioned stored Food children for read/service continuity; revert only the
+  focused Slice 7 commit if code rollback is required.
+- Local result: `npm run check` passes 28 Vitest files / 231 tests, 30 modules,
+  30 Apps Script sources / 49 functions, generated parity, and two 311,165-byte
+  standalone artifacts. Full Playwright passes 61 / 101 intentional skips / 0
+  failures; changed-file sensitive scan and diff checks pass; final independent
+  review is PASS. No external operational system changed.
 
 ## Phase 3.5 scope lock
 

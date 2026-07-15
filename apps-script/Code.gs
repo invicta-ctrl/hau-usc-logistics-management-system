@@ -13,6 +13,7 @@ function doGet(e) {
   template.appEnvironment = runtime.environment;
   template.bootstrapContractVersion = runtime.bootstrapContractVersion;
   template.compositeRequestsEnabled = runtime.compositeRequestsEnabled;
+  template.foodRequestsEnabled = runtime.foodRequestsEnabled;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')

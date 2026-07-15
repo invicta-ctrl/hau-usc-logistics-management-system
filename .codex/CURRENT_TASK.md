@@ -1,53 +1,47 @@
 # Current Task
 
-- **Task ID:** `PHASE-3.5-REPOSITORY-WORKSPACE-CONSOLIDATION`
-- **Original instruction:** perform the attached missing Phase 3.5 consolidation
-  and install the project-scoped `.codex` set only in the authoritative checkout.
-- **Intent and mode:** `REPOSITORY_MAINTENANCE`; execute preservation-first.
-- **Matched skills:** none; repository and Git governance are authoritative.
-- **Objective:** reconcile local folders, worktrees, branches, PRs, tags,
-  backups, private configuration, and project Codex placement without losing
-  unique or uncertain work or starting a product phase.
-- **Verified starting state:** `D:\Documents\DOL Website GitHub` on
-  `feat/live-sync-lending-search-catalog-controls` at
-  `6abfb411c34a78aa5f98330c124c9e3a06c87762`; upstream `0 0`; clean; PR #6
-  open/draft/mergeable with three green checks.
-- **Authoritative specification:** attached Phase 3.5 contract, root
-  `AGENTS.md`, Context Vault registry/entrypoint, accepted project records, live
-  Git/GitHub metadata, and
-  `docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`.
-- **In scope:** deterministic inventory, preservation bundle, ignored-runtime
-  archive, safe worktree relocation, redundant clone removal, fully contained
-  PR/ref reconciliation, PR #6 metadata correction, target map, status records,
-  full checks, push/CI, and a verified Phase 3.5 tag.
-- **Out of scope:** product features, Slice 7, PR #6 merge, unique branch
-  integration, deployment, Apps Script/Sheets/Drive mutation, migration,
-  Cloudflare/database work, history rewrite, force-push, or unknown deletion.
-- **Writer boundary:** the parent is the only writer; the bounded routing mapper
-  is read-only.
-- **Private boundary:** never print configuration values or move private config
-  into Git; preserve unknown runtime files before duplicate-clone removal.
-- **Rollback:** verified Phase 3.5 all-ref bundle, restricted runtime archive,
-  reversible Git worktree move, recoverable closed PRs, and recorded ref SHAs.
-- **Acceptance:** one authoritative active checkout; clean retained dependency;
-  no redundant local clone; only the active checkout has the requested Codex
-  set; fully contained stale PRs/refs reconciled; checks/CI green; final map and
-  rollback documented.
-- **Verified local result:** complete 34-ref bundle and six-file runtime archive
-  pass; deployment worktree moved through Git; redundant clone removed; PRs
-  #1-#2 closed without merge; three fully contained remote branches deleted;
-  unique/private/unknown work retained; requested Codex set now exists only in
-  the authoritative active checkout.
-- **Verified checks:** governance passed 8 project files / 14 continuation
-  fields; full `npm run check` passed 25 test files / 216 tests, 28-module
-  build, 29 Apps Script sources / 47 functions, deterministic generated parity,
-  and two 293,406-byte standalone artifacts. Git integrity, bundle, manifest,
-  structure, remote-ref, PR-state, Codex-placement, and diff checks pass.
-- **Remote verification:** checkpoint
-  `efee2dda0148c5a70bd9c681e729a75372622b8e` is pushed at branch/PR parity;
-  Actions runs `29385021439` and `29385021514` passed `validate` (13 seconds),
-  `verify` (15 seconds), and `browser-smoke` (1 minute 36 seconds). Lightweight
-  tag `hau-usc-phase3.5-consolidation-efee2dd` is verified locally/remotely.
-  PR #6 is still open/draft/mergeable with corrected cumulative title/body.
-- **Current stage:** Phase 3.5 committed, pushed, CI-green, tagged, and pending
-  manager acceptance after this remote-verification record.
+- **Task ID:** `SLICE-7-FOOD-COMMITTEE-WORKFLOW`
+- **Original instruction:** accept the completed Phase 3.5 checkpoint and proceed
+  from Phase 4 onward under the attached master operating guide.
+- **Intent and mode:** `SOFTWARE_FEATURE`; execute one bounded accepted slice.
+- **Matched skill:** `pdf`; the attached operating guide fixes the phase order,
+  acceptance gates, and program-completion conditions.
+- **Objective:** specialize the accepted composite-request foundation for the
+  Food Committee without expanding Materials, Venue & Equipment, finance, or
+  external operations.
+- **Verified starting state:** authoritative checkout
+  `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
+  on `integration/v0.5-baseline` at
+  `5c9bb501e01eeee961bae01279f2c0188d0429ce`; upstream `0 0`; clean; draft
+  PR #7 open/mergeable with all three checks green.
+- **Authorization:** explicit user acceptance received 2026-07-15 for the
+  Phase 3.5/naming baseline and continuation into Phase 4. This authorizes the
+  repository implementation, focused commits, feature-branch pushes, and CI
+  checks required by the accepted one-slice-at-a-time process.
+- **Authoritative specification:** root `AGENTS.md`, attached master prompt and
+  operating guide, `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`,
+  and `docs/FOOD_COMMITTEE_WORKFLOW.md`.
+- **In scope:** controlled Food request fields; privacy minimization; lead-time
+  and sourcing prerequisites; Food-only server-scoped queue/detail; assignment,
+  lifecycle, audit/history, completion-evidence validation; mock/service/UI
+  parity; focused tests; generated parity; documentation and checkpoint proof.
+- **Out of scope:** Materials/Venue specialization, vendor catalog, private
+  contacts, supplier TINs, medical narratives, payments/accounting, ledger
+  edits, historical backfill, deployment, migration, Apps Script/Sheets/Drive
+  external writes, PR merge, Cloudflare, or database work.
+- **Writer boundary:** the parent is the only writer. The required independent
+  implementation review is read-only.
+- **Rollback:** disable the Food specialization flag for new Food submissions;
+  retain already-created versioned Food child payloads for safe read/service
+  continuity; use a focused revert if code rollback is required.
+- **Acceptance:** Food-only and combined requests validate; Food reviewers see
+  only the Food child plus bounded safe parent context; dietary data is
+  controlled and minimized; lead-time/sourcing/evidence prerequisites are
+  enforced server-side; assignments/transitions/audit are durable; full local
+  gates, independent review, push, CI, and a clean checkpoint pass.
+- **Current stage:** `SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI`. Full
+  `npm run check` passes 28 files / 231 tests, 30 modules, 30 Apps Script sources
+  / 49 functions, generated parity, and standalone verification; full
+  Playwright passes 61 / 101 intentional skips / 0 failures; the changed-file
+  sensitive scan and `git diff --check` pass; final independent review is PASS.
+  No external operational system has been changed.

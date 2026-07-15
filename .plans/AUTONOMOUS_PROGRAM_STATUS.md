@@ -4,7 +4,30 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 3.5 pushed, CI-green, and tagged
+## Current run checkpoint - Phase 4 / Slice 7 locally verified
+
+- Date: 2026-07-15 (Asia/Manila).
+- Stage: `SLICE_7_LOCAL_VERIFIED_PENDING_COMMIT_PUSH_CI`.
+- Accepted starting checkpoint: `5c9bb501e01eeee961bae01279f2c0188d0429ce`
+  on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
+  mergeable, and all three checks green.
+- User authorization: the Phase 3.5/naming checkpoint is accepted and Phase 4
+  continuation is approved. The master guide still requires Slices 7-12 to be
+  implemented, reviewed, pushed, CI-verified, and accepted one at a time.
+- Current bounded scope: controlled Food Committee workflow on the accepted
+  composite-request foundation, as specified in
+  `docs/FOOD_COMMITTEE_WORKFLOW.md`.
+- External boundary: repository implementation and feature-branch GitHub CI
+  only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
+  PR merge, Cloudflare, database, or production action is authorized here.
+- Local result: controlled Food specialization, scoped server queue/detail,
+  active queue/update/evidence UI, cross-path revision/attention preservation,
+  and fail-closed flags are implemented. `npm run check` passes 28 files / 231
+  tests, 30 modules, 30 Apps Script sources / 49 functions, generated parity,
+  and two 311,165-byte artifacts; Playwright passes 61 / 101 intentional skips /
+  0 failures; sensitive/diff checks pass; final independent review is PASS.
+
+## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 
 - Date: 2026-07-15 (Asia/Manila).
 - Stage:

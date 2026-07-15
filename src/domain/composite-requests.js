@@ -1,4 +1,5 @@
 import { AppError } from '../app/errors.js';
+import { foodAttentionFlags, normalizeFoodDetails } from './food-workflow.js';
 
 export const COMPOSITE_SECTION_TYPES = Object.freeze(['FOOD', 'MATERIALS', 'VENUE_EQUIPMENT']);
 
@@ -33,6 +34,7 @@ export const COMPOSITE_ATTENTION_FLAGS = Object.freeze({
   UNASSIGNED_SECTION: 'UNASSIGNED_SECTION',
   AMENDED: 'AMENDED',
   ESCALATED: 'ESCALATED',
+  FOOD_ATTENTION: 'FOOD_ATTENTION',
 });
 
 const MAX_TEXT_LENGTH = 240;
@@ -130,7 +132,7 @@ export function consolidateCompositeLines(lines) {
   return consolidated;
 }
 
-function normalizeSection(section, index) {
+function normalizeSection(section, index, context = {}) {
   if (!section || typeof section !== 'object' || Array.isArray(section))
     throw new AppError('VALIDATION_ERROR', `sections[${index}] is invalid.`);
   const type = normalizedType(section.type);
@@ -147,12 +149,14 @@ function normalizeSection(section, index) {
   const normalizedLines = consolidateCompositeLines(
     lines.map((line, lineIndex) => normalizedLine(line, lineIndex)),
   );
+  const food = type === 'FOOD' ? normalizeFoodDetails(section.food, context) : undefined;
   return {
     type,
     label: label || COMPOSITE_SECTION_LABELS[type],
     notes,
     clientComponentId: text(section.clientComponentId, `sections[${index}].clientComponentId`, { max: 120 }),
     lines: normalizedLines,
+    ...(food ? { food } : {}),
   };
 }
 
@@ -182,7 +186,12 @@ export function validateCompositeDraft(command) {
   const eventEndAt = text(command.eventEndAt ?? command.event?.endAt, 'eventEndAt', { max: 80 });
   const priority = text(command.priority, 'priority', { max: 40 }) || 'ROUTINE';
   const rawSections = Array.isArray(command.sections) ? command.sections : [];
-  const sections = rawSections.map(normalizeSection).filter(Boolean);
+  const submittedAt = command.submittedAt || new Date().toISOString();
+  const sections = rawSections
+    .map((section, index) =>
+      normalizeSection(section, index, { submittedAt, eventStartAt, examWeeks: command.examWeeks }),
+    )
+    .filter(Boolean);
   const seenTypes = new Set();
   for (const section of sections) {
     if (seenTypes.has(section.type))
@@ -207,6 +216,7 @@ export function validateCompositeDraft(command) {
     eventStartAt,
     eventEndAt,
     priority,
+    submittedAt,
     sections,
   };
 }
@@ -266,7 +276,7 @@ export function createCompositePacket(
     ownerUserId: '',
     dueAt: draft.eventStartAt,
     status: 'FOR_REVIEW',
-    attentionFlags: [],
+    attentionFlags: section.food ? foodAttentionFlags(section.food) : [],
     progress: {
       lineCount: section.lines.length,
       duplicateCount: section.lines.reduce((sum, line) => sum + line.duplicateCount, 0),
@@ -274,6 +284,7 @@ export function createCompositePacket(
     payload: {
       notes: section.notes,
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
+      ...(section.food ? { food: section.food } : {}),
     },
     revision: 1,
     createdAt: now,
@@ -320,6 +331,8 @@ export function deriveCompositeParentStatus(children) {
     )
   )
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION);
+  if (children.some((child) => (child.attentionFlags || []).some((flag) => String(flag).startsWith('FOOD_'))))
+    attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.FOOD_ATTENTION);
   if (children.some((child) => !child.ownerCommitteeId || !child.ownerUserId))
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.UNASSIGNED_SECTION);
   return {
@@ -402,7 +415,9 @@ export function transitionCompositeChild(child, action, { reason = '' } = {}) {
     status: nextStatus,
     attentionFlags:
       normalizedAction === ACTIONS.REOPEN
-        ? []
+        ? child.componentType === 'FOOD'
+          ? foodAttentionFlags(child.payload?.food)
+          : []
         : (child.attentionFlags || []).filter((flag) => flag !== COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION),
     transitionReason: text(reason, 'reason', { max: 500 }),
   };
@@ -420,6 +435,7 @@ export function amendCompositeSection(child, patch, { now = new Date().toISOStri
       label: patch?.label ?? child.label,
       notes: patch?.notes ?? '',
       lines: patch?.lines ?? child.payload?.lines,
+      food: patch?.food ?? child.payload?.food,
     },
     0,
   );
@@ -428,10 +444,16 @@ export function amendCompositeSection(child, patch, { now = new Date().toISOStri
     ...child,
     label: section.label,
     status: 'FOR_REVIEW',
-    attentionFlags: [...new Set([...(child.attentionFlags || []), COMPOSITE_ATTENTION_FLAGS.AMENDED])],
+    attentionFlags: [
+      ...new Set([
+        ...(section.food ? foodAttentionFlags(section.food) : child.attentionFlags || []),
+        COMPOSITE_ATTENTION_FLAGS.AMENDED,
+      ]),
+    ],
     payload: {
       notes: section.notes,
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
+      ...(section.food ? { food: section.food } : {}),
     },
     relationshipVersion: Number(child.relationshipVersion || 1) + 1,
     revision: Number(child.revision || 1) + 1,
