@@ -81,5 +81,11 @@
   parsing, Git integrity, and bundle verification pass.
 - **Independent review:** PASS after one targeted documentation repair round;
   no remaining actionable findings.
-- **Current stage:** consolidation, repository verification, and independent
-  review complete; checkpoint commit pending.
+- **Remote verification:** checkpoint
+  `58168edd4eec5ea0a063558dfb8071c4a7fd6c99` is pushed at branch/PR parity;
+  PR #6 runs `29383790687` and `29383790688` passed `validate` (14 seconds),
+  `verify` (16 seconds), and `browser-smoke` (1 minute 45 seconds). Lightweight
+  tag `hau-usc-phase3-baseline-58168ed` is verified locally and remotely at the
+  checkpoint commit.
+- **Current stage:** Phase 3 checkpoint committed, pushed, CI-green, tagged, and
+  pending manager acceptance.

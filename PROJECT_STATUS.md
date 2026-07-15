@@ -20,7 +20,7 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Phase 3 - Repository and local workspace consolidation
 
-- Stage: `PHASE_3_REVIEW_PASS_PENDING_COMMIT`.
+- Stage: `PHASE_3_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_REVIEW`.
 - Authority: `D:\Documents\DOL Website GitHub` remains the one authoritative
   active checkout on `feat/live-sync-lending-search-catalog-controls` from
   accepted starting checkpoint `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`.
@@ -49,8 +49,13 @@ Always verify the current remote head and CI because documentation commits may f
   and external manifest parsing pass.
 - Detailed classification and recovery are recorded in
   `docs/WORKSPACE_CONSOLIDATION.md`. Independent review passed with no remaining
-  actionable findings; commit/push/CI and the development-baseline tag remain
-  pending.
+  actionable findings.
+- Checkpoint `58168edd4eec5ea0a063558dfb8071c4a7fd6c99` is pushed at branch/PR
+  parity. PR #6 runs `29383790687` and `29383790688` passed `validate` (14
+  seconds), `verify` (16 seconds), and `browser-smoke` (1 minute 45 seconds).
+- Lightweight development-baseline tag `hau-usc-phase3-baseline-58168ed` is
+  verified locally and remotely at the checkpoint commit. Manager acceptance
+  remains before Phase 4 or Slice 7.
 - No Slice 7 code, application/generated repository source, PR merge/close,
   deployment, migration, Apps Script, Sheets, Drive, Cloudflare, database, or
   production action occurred.

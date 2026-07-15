@@ -4,10 +4,11 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 3 review passed, pending commit
+## Current run checkpoint - Phase 3 pushed, CI-green, and tagged
 
 - Date: 2026-07-15 (Asia/Manila).
-- Current run stage: `PHASE_3_REVIEW_PASS_PENDING_COMMIT`.
+- Current run stage:
+  `PHASE_3_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_REVIEW`.
 - Accepted starting checkpoint: branch
   `feat/live-sync-lending-search-catalog-controls`; HEAD, upstream, and PR #6
   `048578d1db9fdda93b9ba95b94b74ac1791cfc8c`; local/upstream `0 0`; clean;
@@ -37,8 +38,14 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   manifest parsing pass.
 - Independent review: PASS after one targeted documentation repair round; no
   remaining actionable findings.
-- Next stage: checkpoint commit/push/CI, then a verified Phase 3
-  development-baseline tag.
+- Remote result: checkpoint `58168edd4eec5ea0a063558dfb8071c4a7fd6c99`
+  pushed at branch/PR parity. PR #6 runs `29383790687` and `29383790688`
+  passed `validate` (14 seconds), `verify` (16 seconds), and `browser-smoke`
+  (1 minute 45 seconds).
+- Baseline: lightweight tag `hau-usc-phase3-baseline-58168ed` is verified
+  locally and remotely at the checkpoint commit.
+- Next stage: commit/push this remote-verification record, verify final parity
+  and CI, then request manager acceptance before Phase 4 or Slice 7.
 
 ## Current run checkpoint - Phase 2 committed, pushed, and CI green
 

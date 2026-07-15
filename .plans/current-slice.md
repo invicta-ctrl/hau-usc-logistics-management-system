@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Phase 3 consolidation checkpoint
 
 CURRENT SLICE: None - Slice 6 accepted; Slice 7 not started
-CURRENT STAGE: PHASE_3_REVIEW_PASS_PENDING_COMMIT
+CURRENT STAGE: PHASE_3_COMMITTED_PUSHED_CI_GREEN_TAGGED_PENDING_MANAGER_REVIEW
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -41,7 +41,13 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   generated parity, and two 293,406-byte artifacts; `git diff --check`, Git
   integrity, bundle verification, and external JSON parsing also pass.
 - Independent review passed after one targeted documentation repair round with
-  no remaining actionable findings. The Phase 3 checkpoint commit remains.
+  no remaining actionable findings.
+- Phase 3 checkpoint `58168edd4eec5ea0a063558dfb8071c4a7fd6c99` is pushed;
+  PR #6 runs `29383790687` and `29383790688` passed `validate` (14 seconds),
+  `verify` (16 seconds), and `browser-smoke` (1 minute 45 seconds).
+- Lightweight tag `hau-usc-phase3-baseline-58168ed` is verified locally and
+  remotely at the Phase 3 checkpoint. Manager acceptance remains before any
+  later phase or Slice 7.
 
 ## Phase 2 scope lock
 
