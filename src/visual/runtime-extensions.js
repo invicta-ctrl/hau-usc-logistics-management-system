@@ -19,6 +19,13 @@ import {
   normalizeMaterialsDetails,
   updateMaterialsWorkflow,
 } from '../domain/materials-workflow.js';
+import {
+  buildVenueEquipmentQueueItem,
+  normalizeVenueEquipmentDetails,
+  searchVenueEquipmentReferences,
+  updateVenueEquipmentWorkflow,
+  venueEquipmentAttentionFlags,
+} from '../domain/venue-equipment-workflow.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -306,9 +313,15 @@ export function createRuntimeExtensions(options) {
   let materialsQueue = null;
   let materialsQueueItems = null;
   let materialsQueuePromise = null;
+  let venueEquipmentQueue = null;
+  let venueEquipmentQueueItems = null;
+  let venueEquipmentQueuePromise = null;
+  let venueEquipmentLines = [];
+  let venueEquipmentSearchResults = [];
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
+  const venueEquipmentRequestsEnabled = config.venueEquipmentRequestsEnabled === true;
   const foodFormPayload = () => {
     const form = document.querySelector('#compositeRequestForm');
     if (!form) return null;
@@ -854,6 +867,519 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const venueEquipmentCommitteeIds = () => {
+    const user = getState()?.currentUser ?? {};
+    const role = String(user.authorization?.roleId ?? user.role ?? '')
+      .trim()
+      .replace(/[\s-]+/g, '_')
+      .toUpperCase();
+    const approved = ['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'];
+    if (role === 'DIRECTOR' || (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role)))
+      return approved;
+    const capabilities = user.authorization?.capabilities ?? [];
+    const mayReview =
+      capabilities.includes('request.review') ||
+      user.permissions?.review === true ||
+      ['DOL_STAFF', 'COMMITTEE_HEAD'].includes(role);
+    if (!mayReview) return [];
+    const scoped = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
+    return approved.filter((committeeId) => scoped.includes(committeeId));
+  };
+
+  const venueEquipmentEffectiveAt = (record, at) => {
+    const date = String(at ?? '').slice(0, 10);
+    return (
+      String(record.status ?? '').trim().toUpperCase() === 'ACTIVE' &&
+      (!record.effectiveFrom || date >= record.effectiveFrom) &&
+      (!record.effectiveTo || date <= record.effectiveTo)
+    );
+  };
+
+  const venueEquipmentRevision = (records, predicate, at, message) => {
+    const revisions = (records ?? []).filter(predicate);
+    if (!revisions.length) return undefined;
+    const effective = revisions.filter((record) => venueEquipmentEffectiveAt(record, at));
+    if (effective.length > 1) throw new Error(message);
+    return effective[0] ?? revisions[0];
+  };
+
+  const localVenueEquipmentResolvers = (at) => ({
+    resolveVenueEquipmentReference: (referenceId, effectiveAt = at) =>
+      venueEquipmentRevision(
+        getState()?.venueEquipmentReferences,
+        (reference) => reference.id === referenceId && !reference.archivedAt,
+        effectiveAt,
+        'A reference ID has overlapping active effective revisions.',
+      ),
+    resolveVenueEquipmentRoute: (routeId, effectiveAt = at) =>
+      venueEquipmentRevision(
+        getState()?.venueEquipmentRoutes,
+        (route) => route.id === routeId && !route.archivedAt,
+        effectiveAt,
+        'A route ID has overlapping active effective revisions.',
+      ),
+    resolveVenueEquipmentOtherRoute: (effectiveAt = at) => {
+      const effective = (getState()?.venueEquipmentRoutes ?? []).filter(
+        (route) =>
+          route.matchKind === 'OTHER' &&
+          !route.archivedAt &&
+          venueEquipmentEffectiveAt(route, effectiveAt),
+      );
+      if (effective.length > 1)
+        throw new Error('Controlled Other must resolve to exactly one active approved route.');
+      return effective[0];
+    },
+  });
+
+  const localVenueEquipmentQueue = (committeeId) => {
+    const state = getState();
+    const parents = new Map(
+      (state?.compositeRequests ?? []).map((parent) => [parent.requestId ?? parent.id, parent]),
+    );
+    return (state?.compositeComponents ?? [])
+      .filter(
+        (child) =>
+          child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId,
+      )
+      .map((child) => {
+        const parent = parents.get(child.requestId) ?? {};
+        return buildVenueEquipmentQueueItem(
+          {
+            requestId: child.requestId,
+            eventId: parent.eventId ?? parent.event?.id ?? '',
+            eventName: parent.eventName ?? parent.event?.name ?? '',
+            eventStartAt: parent.eventStartAt ?? parent.event?.startAt ?? '',
+            eventEndAt: parent.eventEndAt ?? parent.event?.endAt ?? '',
+            priority: parent.priority ?? 'ROUTINE',
+            purpose: parent.purpose ?? '',
+            department: parent.department ?? parent.requester?.department ?? '',
+          },
+          child,
+        );
+      });
+  };
+
+  const installLocalVenueEquipmentServices = () => {
+    if (backendMode !== 'mock') return;
+    services.searchVenueEquipmentReferences ??= async (command = {}) => {
+      const at = new Date().toISOString();
+      const items = searchVenueEquipmentReferences(getState()?.venueEquipmentReferences, {
+        ...command,
+        at,
+        resolveRoute: localVenueEquipmentResolvers(at).resolveVenueEquipmentRoute,
+      });
+      return { items, truncated: items.length >= 50 };
+    };
+    services.getVenueEquipmentWorkQueue ??= async (command = {}) => ({
+      committeeId: command.committeeId,
+      items: localVenueEquipmentQueue(command.committeeId),
+    });
+    services.updateVenueEquipmentComponent ??= async (command) => {
+      const child = (getState()?.compositeComponents ?? []).find(
+        (entry) =>
+          entry.componentType === 'VENUE_EQUIPMENT' &&
+          entry.requestId === command.requestId &&
+          (entry.componentId ?? entry.id) === command.componentId,
+      );
+      if (!child) throw new Error('Venue and Equipment component was not found.');
+      if (['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+        throw new Error('Terminal Venue and Equipment components cannot be updated.');
+      if (Number(command.expectedRevision) !== Number(child.revision ?? 1))
+        throw new Error('Venue and Equipment component changed; refresh before updating.');
+      const venueEquipment = updateVenueEquipmentWorkflow(
+        child.payload?.venueEquipment,
+        command.patch ?? {},
+      );
+      if (venueEquipment.fulfillmentEvidenceId) {
+        const evidenceUploaded = (getState()?.evidenceFiles ?? []).some(
+          (evidence) => {
+            const evidenceType =
+              evidence.evidenceType ?? evidence.metadata?.evidenceType ?? evidence.folderType;
+            const uploadStatus =
+              evidence.uploadStatus ??
+              evidence.metadata?.uploadStatus ??
+              (evidence.driveFileId ? 'UPLOADED' : '');
+            return (
+              evidence.id === venueEquipment.fulfillmentEvidenceId &&
+              evidenceType === 'VENUE_EQUIPMENT_CONFIRMATION' &&
+              uploadStatus === 'UPLOADED' &&
+              (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) ===
+                'COMPOSITE_COMPONENT' &&
+              (evidence.relatedEntityId ??
+                evidence.relatedId ??
+                evidence.metadata?.relatedEntityId) === child.componentId
+            );
+          },
+        );
+        if (!evidenceUploaded)
+          throw new Error('Venue and Equipment evidence must be uploaded and linked to this component.');
+      }
+      child.payload = { ...(child.payload ?? {}), venueEquipment };
+      child.attentionFlags = venueEquipmentAttentionFlags(venueEquipment);
+      child.revision = Number(child.revision ?? 1) + 1;
+      child.updatedAt = new Date().toISOString();
+      return {
+        requestId: child.requestId,
+        componentId: child.componentId,
+        revision: child.revision,
+        venueEquipment,
+      };
+    };
+  };
+
+  const renderVenueEquipmentLines = () => {
+    const container = document.querySelector('[data-venue-equipment-selected]');
+    const form = document.querySelector('#compositeRequestForm');
+    if (!container || !form) return;
+    container.innerHTML = venueEquipmentLines.length
+      ? venueEquipmentLines
+          .map(
+            (line, index) =>
+              `<div class="request-line"><div><strong>${esc(line.label)}</strong><small>${esc(line.referenceId || 'Controlled Other')} &middot; ${esc(line.category.replaceAll('_', ' '))} &middot; ${esc(line.unit)}</small><span>${line.referenceId ? 'Requestable - confirmation required; not a booking guarantee' : 'Pending classification - no booking or stock promise'}</span></div><div class="request-line-actions"><label>Quantity<input type="number" min="1" step="1" value="${esc(line.quantity)}" data-venue-equipment-quantity="${index}" aria-label="Quantity for ${esc(line.label)}"></label><button class="ghost mini" type="button" data-venue-equipment-remove="${index}">Remove</button></div></div>`,
+          )
+          .join('')
+      : '<div class="empty">Search and add a requestable venue or equipment reference, or add a constrained Other line.</div>';
+    const first = venueEquipmentLines[0];
+    form.elements.venueEquipmentLine.value = first?.label ?? '';
+    form.elements.venueEquipmentQuantity.value = first?.quantity ?? 1;
+    form.elements.venueEquipmentUnit.value = first?.unit ?? 'service';
+  };
+
+  const renderVenueEquipmentSearch = (error = '') => {
+    const container = document.querySelector('[data-venue-equipment-results]');
+    const input = document.querySelector('[name="venueEquipmentSearch"]');
+    if (!container) return;
+    input?.setAttribute('aria-expanded', String(Boolean(input.value.trim())));
+    if (error) {
+      container.innerHTML = `<div class="alert">${esc(error)}</div>`;
+      return;
+    }
+    container.innerHTML = venueEquipmentSearchResults.length
+      ? venueEquipmentSearchResults
+          .reduce((rows, reference, index, references) => {
+            const group = `${reference.type}|${reference.category}`;
+            const previous = index ? `${references[index - 1].type}|${references[index - 1].category}` : '';
+            if (group !== previous)
+              rows.push(
+                `<p class="eyebrow">${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</p>`,
+              );
+            rows.push(
+              `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
+            );
+            return rows;
+          }, [])
+          .join('')
+      : '<div class="empty">No matching active requestable references.</div>';
+  };
+
+  const searchVenueEquipment = async () => {
+    const form = document.querySelector('#compositeRequestForm');
+    if (!form || typeof services.searchVenueEquipmentReferences !== 'function') return;
+    const query = form.elements.venueEquipmentSearch?.value?.trim() ?? '';
+    if (!query) {
+      venueEquipmentSearchResults = [];
+      renderVenueEquipmentSearch();
+      return;
+    }
+    try {
+      const result = await services.searchVenueEquipmentReferences({
+        query,
+        type: form.elements.venueEquipmentTypeFilter?.value ?? '',
+        category: form.elements.venueEquipmentCategoryFilter?.value ?? '',
+        limit: 20,
+      });
+      venueEquipmentSearchResults = result?.items ?? result ?? [];
+      renderVenueEquipmentSearch();
+    } catch (error) {
+      venueEquipmentSearchResults = [];
+      renderVenueEquipmentSearch(error.message);
+    }
+  };
+
+  const venueEquipmentFormPayload = () => {
+    const form = document.querySelector('#compositeRequestForm');
+    if (!form) return null;
+    const event = (getState()?.events ?? []).find((entry) => entry.id === form.elements.eventId?.value);
+    const toManilaIso = (value) => (value ? `${value}:00+08:00` : '');
+    return {
+      purposeDetail: form.elements.venueEquipmentPurposeDetail?.value,
+      scheduleStartAt:
+        toManilaIso(form.elements.venueEquipmentScheduleStartAt?.value) || event?.startAt || '',
+      scheduleEndAt:
+        toManilaIso(form.elements.venueEquipmentScheduleEndAt?.value) || event?.endAt || '',
+    };
+  };
+
+  const refreshVenueEquipmentQueue = async ({ force = false } = {}) => {
+    const committeeIds = venueEquipmentCommitteeIds();
+    if (!venueEquipmentQueue || !committeeIds.length || typeof services.getVenueEquipmentWorkQueue !== 'function')
+      return;
+    if (venueEquipmentQueuePromise) return venueEquipmentQueuePromise;
+    if (!force && venueEquipmentQueueItems !== null) return;
+    venueEquipmentQueuePromise = (async () => {
+      const responses = await Promise.all(
+        committeeIds.map((committeeId) => services.getVenueEquipmentWorkQueue({ committeeId })),
+      );
+      const byComponent = new Map();
+      responses.forEach((response) =>
+        (response?.items ?? []).forEach((item) => byComponent.set(item.componentId, item)),
+      );
+      venueEquipmentQueueItems = [...byComponent.values()];
+      renderVenueEquipmentQueue();
+    })();
+    try {
+      await venueEquipmentQueuePromise;
+    } catch (error) {
+      venueEquipmentQueueItems = [];
+      renderVenueEquipmentQueue(error.message);
+    } finally {
+      venueEquipmentQueuePromise = null;
+    }
+  };
+
+  const renderVenueEquipmentQueue = (error = '') => {
+    if (!venueEquipmentQueue) return;
+    const items = venueEquipmentQueueItems ?? [];
+    venueEquipmentQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Effective-dated routing</p><h3 id="venueEquipmentQueueTitle">Scoped Venue &amp; Equipment work queue</h3><p>Requestability permits review; it never promises a booking, stock, or approval.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items
+      .map(
+        (item) =>
+          `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.ownerCommitteeId)} &middot; ${esc(item.venueEquipment?.confirmationStatus || 'PENDING_CONFIRMATION')} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
+      )
+      .join('') || '<div class="empty">No Venue &amp; Equipment work is in the current authorized scope.</div>'}</div>`;
+  };
+
+  const openVenueEquipmentWorkflow = (componentId) => {
+    const item = (venueEquipmentQueueItems ?? []).find((entry) => entry.componentId === componentId);
+    if (!item) return;
+    const details = item.venueEquipment ?? {};
+    openModal(
+      `Manage Venue & Equipment ${item.componentId}`,
+      `<form id="venueEquipmentWorkflowForm"><div class="mode-note">Record the authoritative confirmation and controlled obligations. Requestability is not a booking guarantee.</div><div class="form-grid" style="margin-top:14px"><label>Confirmation status<select name="confirmationStatus">${option('PENDING_CONFIRMATION', 'Pending confirmation', details.confirmationStatus)}${option('CONFIRMED', 'Confirmed', details.confirmationStatus)}${option('DECLINED', 'Declined', details.confirmationStatus)}</select></label><label>Confirmation reference<input name="confirmationReference" maxlength="120" value="${esc(details.confirmationReference ?? '')}"></label><label>Other triage<select name="otherTriageStatus" ${details.otherTriageStatus === 'NOT_REQUIRED' ? 'disabled' : ''}>${option('NOT_REQUIRED', 'Not required', details.otherTriageStatus)}${option('PENDING_CLASSIFICATION', 'Pending classification', details.otherTriageStatus)}${option('APPROVED_AS_SPECIFIED', 'Approved as specified', details.otherTriageStatus)}</select></label><label>Other disposition<input name="otherTriageReason" maxlength="500" value="${esc(details.otherTriageReason ?? '')}" ${details.otherTriageStatus === 'NOT_REQUIRED' ? 'disabled' : ''}></label><label>Blocker status<select name="blockerStatus">${option('NONE', 'No blocker', details.blockerStatus)}${option('BLOCKED', 'Blocked', details.blockerStatus)}</select></label><label>Blocker reason<input name="blockerReason" maxlength="500" value="${esc(details.blockerReason ?? '')}"></label><label>Return status<select name="returnStatus" ${details.returnRequired ? '' : 'disabled'}>${option('NOT_REQUIRED', 'Not required', details.returnStatus)}${option('PENDING_RETURN', 'Pending return', details.returnStatus)}${option('RETURNED', 'Returned', details.returnStatus)}</select></label><label class="span-2">Confirmation evidence (optional)<input name="fulfillmentEvidence" type="file" accept="image/jpeg,image/png,image/webp,application/pdf"><small>${details.fulfillmentEvidenceId ? `Linked evidence: ${esc(details.fulfillmentEvidenceId)}` : 'Uploaded component confirmation evidence is required before completion.'}</small></label></div><button class="primary" type="submit">Save Venue &amp; Equipment Workflow</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#venueEquipmentWorkflowForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          button.textContent = 'Saving...';
+          try {
+            const values = Object.fromEntries(new FormData(form).entries());
+            let fulfillmentEvidenceId = details.fulfillmentEvidenceId ?? '';
+            const file = form.elements.fulfillmentEvidence.files?.[0];
+            if (file) {
+              if (typeof services.uploadEvidenceFile !== 'function')
+                throw new Error('Evidence upload is unavailable.');
+              const evidence = await services.uploadEvidenceFile(file, {
+                evidenceType: 'VENUE_EQUIPMENT_CONFIRMATION',
+                relatedEntityType: 'COMPOSITE_COMPONENT',
+                relatedEntityId: item.componentId,
+                requestId: item.requestId,
+              });
+              fulfillmentEvidenceId = evidence.id;
+            }
+            const result = await services.updateVenueEquipmentComponent({
+              requestId: item.requestId,
+              componentId: item.componentId,
+              expectedRevision: item.revision,
+              patch: {
+                confirmationStatus: values.confirmationStatus,
+                confirmationReference: values.confirmationReference,
+                otherTriageStatus: details.otherTriageStatus === 'NOT_REQUIRED' ? 'NOT_REQUIRED' : values.otherTriageStatus,
+                otherTriageReason: details.otherTriageStatus === 'NOT_REQUIRED' ? '' : values.otherTriageReason,
+                blockerStatus: values.blockerStatus,
+                blockerReason: values.blockerReason,
+                returnStatus: details.returnRequired ? values.returnStatus : 'NOT_REQUIRED',
+                fulfillmentEvidenceId,
+              },
+              reason: 'Venue and Equipment workflow updated from the scoped queue',
+              idempotencyKey: `venue-equipment-update-${item.componentId}-${item.revision}`,
+            });
+            markFormClean(form);
+            closeModal();
+            await commit(`${item.componentId} Venue & Equipment workflow updated.`, 'success', result);
+            await refreshVenueEquipmentQueue({ force: true });
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` - ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+            button.textContent = 'Save Venue & Equipment Workflow';
+          }
+        });
+      },
+    );
+  };
+
+  const installVenueEquipmentWorkflow = () => {
+    const section = document.querySelector('[data-composite-section="VENUE_EQUIPMENT"]');
+    const fields = section?.querySelector('[data-composite-fields]');
+    const toggle = section?.querySelector('[data-composite-toggle]');
+    const form = document.querySelector('#compositeRequestForm');
+    if (!section || !fields || !toggle || !form) return;
+    if (!venueEquipmentRequestsEnabled) {
+      toggle.disabled = true;
+      section.insertAdjacentHTML(
+        'beforeend',
+        '<p class="muted">Venue &amp; Equipment specialization is disabled for new submissions.</p>',
+      );
+    }
+    for (const name of ['venueEquipmentLine', 'venueEquipmentQuantity', 'venueEquipmentUnit'])
+      form.elements[name]?.closest('label')?.setAttribute('hidden', '');
+    if (!fields.querySelector('[name="venueEquipmentSearch"]'))
+      fields.insertAdjacentHTML(
+        'beforeend',
+        `<label>Reference type<select name="venueEquipmentTypeFilter"><option value="">Venue and equipment</option><option value="VENUE">Venue</option><option value="EQUIPMENT">Equipment</option></select></label>
+        <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        <label class="span-2">Search approved references<input name="venueEquipmentSearch" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="venueEquipmentReferenceResults" aria-expanded="false" placeholder="Search canonical name, alias, category, or location"><small>Results show requestability only. Confirmation is still required.</small></label>
+        <div id="venueEquipmentReferenceResults" class="autocomplete-panel show span-2" role="listbox" data-venue-equipment-results><div class="empty">Enter a search term.</div></div>
+        <label>Quantity to add<input name="venueEquipmentAddQuantity" type="number" min="1" step="1" value="1"></label>
+        <div class="span-2 line-list" data-venue-equipment-selected></div>
+        <details class="span-2"><summary>Add constrained Other</summary><div class="form-grid section-gap"><label class="span-2">Specific description<input name="venueEquipmentOtherDescription" maxlength="240" placeholder="Do not enter only Other"></label><label>Unit<select name="venueEquipmentOtherUnit"><option value="service">Service</option><option value="piece">Piece</option><option value="set">Set</option><option value="unit">Unit</option></select></label><label>Quantity<input name="venueEquipmentOtherQuantity" type="number" min="1" step="1" value="1"></label><button class="secondary" type="button" data-venue-equipment-add-other>Add Other for triage</button></div></details>
+        <label class="span-2">Purpose detail<input name="venueEquipmentPurposeDetail" maxlength="500" required></label>
+        <label>Schedule start (Manila time)<input name="venueEquipmentScheduleStartAt" type="datetime-local"></label>
+        <label>Schedule end (optional)<input name="venueEquipmentScheduleEndAt" type="datetime-local"></label>
+        <p class="muted span-2">Routing, owner, lead time, responsible office, and approving authority are resolved by the server from effective-dated records.</p>`,
+      );
+    renderVenueEquipmentLines();
+    let searchTimer = null;
+    const scheduleSearch = () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => void searchVenueEquipment(), 150);
+    };
+    form.elements.venueEquipmentSearch.addEventListener('input', scheduleSearch);
+    form.elements.venueEquipmentSearch.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowDown') return;
+      const first = fields.querySelector('[data-venue-equipment-reference]');
+      if (!first) return;
+      event.preventDefault();
+      first.focus();
+    });
+    form.elements.venueEquipmentTypeFilter.addEventListener('change', scheduleSearch);
+    form.elements.venueEquipmentCategoryFilter.addEventListener('change', scheduleSearch);
+    fields.addEventListener('click', (event) => {
+      const referenceButton = event.target.closest('[data-venue-equipment-reference]');
+      if (referenceButton) {
+        const reference = venueEquipmentSearchResults.find(
+          (entry) => entry.id === referenceButton.dataset.venueEquipmentReference,
+        );
+        if (!reference) return;
+        const quantity = Number(form.elements.venueEquipmentAddQuantity.value || 1);
+        const existing = venueEquipmentLines.find((line) => line.referenceId === reference.id);
+        if (existing) existing.quantity += quantity;
+        else
+          venueEquipmentLines.push({
+            referenceId: reference.id,
+            referenceRevision: reference.referenceRevision,
+            label: reference.name,
+            quantity,
+            unit: reference.unit,
+            category: reference.category,
+            notes: '',
+          });
+        renderVenueEquipmentLines();
+        return;
+      }
+      const removeButton = event.target.closest('[data-venue-equipment-remove]');
+      if (removeButton) {
+        venueEquipmentLines.splice(Number(removeButton.dataset.venueEquipmentRemove), 1);
+        renderVenueEquipmentLines();
+        return;
+      }
+      if (event.target.closest('[data-venue-equipment-add-other]')) {
+        const label = form.elements.venueEquipmentOtherDescription.value.trim();
+        if (label.length < 5 || label.toLowerCase() === 'other') {
+          toast('Enter a specific description for controlled Other.', true);
+          return;
+        }
+        venueEquipmentLines.push({
+          referenceId: '',
+          label,
+          quantity: Number(form.elements.venueEquipmentOtherQuantity.value || 1),
+          unit: form.elements.venueEquipmentOtherUnit.value,
+          category: 'OTHER_CONTROLLED',
+          notes: '',
+        });
+        form.elements.venueEquipmentOtherDescription.value = '';
+        renderVenueEquipmentLines();
+      }
+    });
+    fields.addEventListener('input', (event) => {
+      const index = event.target.dataset.venueEquipmentQuantity;
+      if (index == null) return;
+      venueEquipmentLines[Number(index)].quantity = Math.max(1, Number(event.target.value || 1));
+      const first = venueEquipmentLines[0];
+      form.elements.venueEquipmentQuantity.value = first?.quantity ?? 1;
+    });
+    form.addEventListener('reset', () =>
+      setTimeout(() => {
+        venueEquipmentLines = [];
+        venueEquipmentSearchResults = [];
+        renderVenueEquipmentLines();
+        renderVenueEquipmentSearch();
+      }, 0),
+    );
+    const originalSubmit = services.submitCompositeRequest.bind(services);
+    services.submitCompositeRequest = async (payload) => {
+      const enriched = structuredClone(payload);
+      const replayExists =
+        backendMode === 'mock' &&
+        (getState()?.compositeRequests ?? []).some(
+          (request) => request.idempotencyKey === enriched.idempotencyKey,
+        );
+      if (replayExists) return originalSubmit({ idempotencyKey: enriched.idempotencyKey });
+      const sectionDraft = enriched.sections?.find((entry) => entry.type === 'VENUE_EQUIPMENT');
+      let normalizedVenueEquipment = null;
+      if (sectionDraft) {
+        if (!venueEquipmentLines.length)
+          throw new Error('Add at least one approved reference or constrained Other line.');
+        sectionDraft.lines = structuredClone(venueEquipmentLines);
+        sectionDraft.venueEquipment = venueEquipmentFormPayload();
+        enriched.submittedAt = new Date().toISOString();
+        if (backendMode === 'mock') {
+          const event = (getState()?.events ?? []).find((entry) => entry.id === enriched.eventId);
+          normalizedVenueEquipment = normalizeVenueEquipmentDetails(
+            sectionDraft.venueEquipment,
+            sectionDraft.lines,
+            {
+              submittedAt: enriched.submittedAt,
+              eventStartAt: event?.startAt,
+              eventEndAt: event?.endAt,
+              ...localVenueEquipmentResolvers(enriched.submittedAt),
+            },
+          );
+        }
+      }
+      const result = await originalSubmit(enriched);
+      if (backendMode === 'mock' && normalizedVenueEquipment) {
+        const requestId = result.requestId || result.request?.requestId;
+        const child = (getState()?.compositeComponents ?? []).find(
+          (entry) => entry.requestId === requestId && entry.componentType === 'VENUE_EQUIPMENT',
+        );
+        if (child) {
+          const { lines, ...venueEquipment } = normalizedVenueEquipment;
+          child.payload = { notes: '', lines, venueEquipment };
+          child.lines = lines;
+          child.ownerCommitteeId = venueEquipment.ownerCommitteeId;
+          child.ownerUserId = venueEquipment.ownerUserId;
+          child.attentionFlags = venueEquipmentAttentionFlags(venueEquipment);
+        }
+      }
+      await refreshVenueEquipmentQueue({ force: true });
+      return result;
+    };
+    if (!isRequestOnly() && venueEquipmentCommitteeIds().length) {
+      venueEquipmentQueue = document.createElement('article');
+      venueEquipmentQueue.id = 'venueEquipmentQueue';
+      venueEquipmentQueue.className = 'panel section-gap';
+      venueEquipmentQueue.setAttribute('aria-labelledby', 'venueEquipmentQueueTitle');
+      (materialsQueue ?? section.closest('#compositeRequestPanel'))?.after(venueEquipmentQueue);
+      venueEquipmentQueue.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-venue-equipment-manage]');
+        if (button) openVenueEquipmentWorkflow(button.dataset.venueEquipmentManage);
+      });
+      void refreshVenueEquipmentQueue();
+    }
+  };
+
   const cleanDisconnectedForms = () => {
     for (const form of dirtyForms) if (!form.isConnected) dirtyForms.delete(form);
   };
@@ -1089,8 +1615,10 @@ export function createRuntimeExtensions(options) {
   const install = () => {
     installLocalFoodServices();
     installLocalMaterialsServices();
+    installLocalVenueEquipmentServices();
     installFoodWorkflow();
     installMaterialsWorkflow();
+    installVenueEquipmentWorkflow();
     if (!isRequestOnly()) lending = createLendingController({ markFormClean });
     mountSyncUi();
     const statusFilter = document.querySelector('#inventoryStatusFilter');
@@ -1139,6 +1667,7 @@ export function createRuntimeExtensions(options) {
     }
     renderFoodQueue();
     renderMaterialsQueue();
+    renderVenueEquipmentQueue();
   };
 
   const start = () => {

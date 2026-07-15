@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased - Slice 9 Venue and Equipment reference/request workflow
+
+- Added additive, initially empty live Venue and Equipment reference/route
+  tables with stable IDs, revisions, effective dates, safe aliases/location,
+  responsible office/authority, lead time, requestability, and return policy.
+- Added bounded safe search, exact server validation, immutable reference/route
+  snapshots, amendment provenance, constrained Other triage, and server-owned
+  routing to exactly one of the three existing committees. Requestability is
+  explicitly not a booking, reservation, approval, or stock guarantee.
+- Added confirmation, blocker, Other disposition, return, linked evidence,
+  revision/idempotency/locking, audit/history, scoped queue/update endpoints,
+  adapters, feature flag, active predictive add/edit/remove UI, and workflow
+  management UI. Stored specialized children remain actionable when new
+  selection is disabled.
+- Added synthetic-only fixtures and domain, Apps Script VM, adapter/package,
+  and Playwright coverage. No institutional catalog was invented or imported.
+- Local verification passes governance, lint, 32 Vitest files / 262 tests,
+  32-module build, 32 Apps Script sources / 54 functions, deterministic parity,
+  standalone verification, full Playwright 61 passed / 101 intentional skips /
+  0 failed, sensitive scan, and `git diff --check`. Final independent review is
+  PASS after targeted effective-revision, server-clock, preview-parity,
+  replay-immutability, and exact evidence validation repairs.
+- No deployment, migration/import, Script Property change, external Google
+  write, PR merge, Cloudflare, database, staging, or production action occurred.
+
 ## Unreleased - Slice 8 Materials Committee workflow
 
 - Added a versioned Materials specialization with controlled category,

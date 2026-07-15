@@ -1,54 +1,55 @@
 # Current Task
 
-- **Task ID:** `SLICE-8-MATERIALS-COMMITTEE-WORKFLOW`
+- **Task ID:** `SLICE-9-VENUE-EQUIPMENT-REFERENCE-VERTICAL`
 - **Original instruction:** accept all prior gates and continue from Phase 4
   onward without another manager-approval pause.
 - **Intent and mode:** `SOFTWARE_FEATURE`; execute one bounded accepted slice.
 - **Matched skill:** `pdf`; the attached operating guide fixes phase order,
   verification gates, and program-completion conditions.
-- **Objective:** specialize the accepted composite-request foundation for the
-  Materials Committee without expanding Venue & Equipment, vendor management,
-  finance, deployment, or external operations.
+- **Objective:** add the accepted Venue and Equipment reference/request vertical
+  with versioned server-owned routing and truthful requestability, without a
+  fourth permanent committee or an admin editor.
 - **Verified starting state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
   on `integration/v0.5-baseline` at
-  `290dc629fd9c0765bca39144224798c65b667eaa`; upstream `0 0`; clean; draft
-  PR #7 open/mergeable with `validate`, `verify`, and `browser-smoke` green.
+  `a0b4e7f46620056b5fc73036bea69bfcf8da0f83`; upstream `0 0`; clean; draft
+  PR #7 open/mergeable. Final Slice 8 evidence runs `29390266015` and
+  `29390265681` passed `validate`, `verify`, and `browser-smoke`.
 - **Authorization:** owner acceptance permits the bounded implementation,
   focused commit, feature-branch push, CI verification, and direct transition
   to the next bounded slice after all gates pass. It does not authorize a
   deployment, migration, PR merge, or operational data write.
 - **Authoritative specification:** root `AGENTS.md`, attached master prompt and
   operating guide, `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`,
-  and `docs/MATERIALS_COMMITTEE_WORKFLOW.md`.
-- **In scope:** controlled Materials category/specification/quantity/unit;
-  required-by and usage; sourcing preference; exact catalog provenance and
-  `VERIFY` denial; one stock-or-procurement fulfillment path; explicitly
-  approved substitutions; blockers; path-matching evidence; Materials-only
-  server queue; revision/idempotency/authorization; active UI; tests/docs.
-- **Out of scope:** automatic substitution/equivalence, arbitrary unit
-  conversion, posted ledger mutation, vendor master redesign, Venue/Equipment,
-  private supplier identifiers, deployment, migration, Apps Script/Sheets/
-  Drive external writes, PR merge, Cloudflare, database, staging, or production.
+  and `docs/VENUE_EQUIPMENT_REFERENCE_WORKFLOW.md`.
+- **In scope:** additive versioned reference/routing schema; safe bounded lookup;
+  venue combobox and predictive equipment selection; quantity/unit and summary;
+  constrained Other triage; effective requestability; lead time/office/
+  authority/instructions; server-selected existing-committee routing; immutable
+  child snapshots; confirmation/blocker/return/evidence state; scoped queue;
+  revision/idempotency/authorization; tests/docs/generated parity.
+- **Out of scope:** institutional directory scraping, invented production
+  reference values, confirmed booking/real-time availability, fourth committee,
+  admin editor, raw-sheet import/backfill, private contacts, posted ledger
+  mutation, deployment, migration execution, Apps Script/Sheets/Drive external
+  writes, PR merge, Cloudflare, database, staging, or production.
 - **Writer boundary:** the parent is the only writer. The required independent
   implementation review is read-only.
-- **Rollback:** disable `HAU_MATERIALS_REQUESTS_ENABLED` for new submissions,
-  retain versioned stored children and history, and use a focused revert for
-  code rollback.
-- **Acceptance:** Materials-only and combined requests persist; exact quantity,
-  unit, and provenance remain auditable; `VERIFY` is denied; only one
-  authoritative fulfillment path exists; substitutions and evidence are
-  server-validated; scoped queue and parent derivation reconcile; full local
-  gates, independent review, push, CI, and clean parity pass.
-- **Current stage:**
-  `SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
-  `npm run check` passes 30 Vitest files / 244 tests, a 31-module build,
-  31 Apps Script sources / 51 required functions, deterministic generated
-  parity, and two 329,544-byte standalone artifacts. Full Playwright passes
-  61 / 101 intentional skips / 0 failures; the independent final verdict is
-  PASS with no remaining findings; changed-scope sensitive and diff checks
-  pass. Implementation commit
-  `1f05b526e457a946e0575b4aed2660c249105923` is pushed at local/upstream/PR
-  parity. Runs `29390112932` and `29390112933` passed `validate` (12s),
-  `verify` (16s), and `browser-smoke` (2m0s). This evidence-only checkpoint
-  remains before Slice 9 begins.
+- **Rollback:** disable `HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED` for new
+  specialized selections, retain versioned stored children/history, and use a
+  focused revert for code rollback.
+- **Acceptance:** safe approved references are searchable and historically
+  stable; requestability never claims booking; Other remains visible pending
+  triage; server routing selects only an existing committee/owner and conflicts
+  fail closed; confirmation/return/evidence gates and parent derivation hold;
+  full local gates, independent review, push, CI, and clean parity pass.
+- **Current stage:** `SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT`.
+  Domain, Apps Script, service contracts, active UI, generated artifacts, and
+  focused browser coverage are implemented. Governance, lint, 32 Vitest files /
+  262 tests, the 32-module build, 32 Apps Script sources / 54 functions,
+  deterministic parity, standalone verification, sensitive scan, full
+  Playwright (61 passed / 101 intentional skips / 0 failed), and
+  `git diff --check` pass. Independent review is final PASS after repairing
+  effective-revision selection, server-owned lookup time, legacy preview
+  parity, replay immutability, and exact uploaded evidence validation. The
+  focused commit and push are next.

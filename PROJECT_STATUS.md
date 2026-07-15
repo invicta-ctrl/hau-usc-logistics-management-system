@@ -2,7 +2,7 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-8 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-8 and Phase 2 governance committed and CI-verified; Slice 9 implemented with local gates green; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
 - Date: `2026-07-15`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 8 starting commit: `290dc629fd9c0765bca39144224798c65b667eaa` (Slice 7 remote-verification documentation checkpoint)
@@ -14,9 +14,33 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-8 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-9 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 9 - Venue and Equipment reference/request workflow
+
+- Stage: `SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT` from accepted
+  checkpoint `a0b4e7f46620056b5fc73036bea69bfcf8da0f83` on
+  `integration/v0.5-baseline`.
+- Delivered locally: additive empty live reference/route schema; exact active,
+  effective, revision, requestability, unit, category, and route validation;
+  safe predictive search; constrained Other triage; immutable route/reference
+  snapshots and amendment provenance; three-committee routing only;
+  confirmation/blocker/return/evidence completion gates; scoped queue/update;
+  feature flag; adapters; active source UI; synthetic mock/test fixtures.
+- Verification: governance, lint, 32 Vitest files / 262 tests, 32-module build,
+  32 Apps Script sources / 54 functions, generated parity, two verified
+  365,301-byte standalone artifacts, full Playwright 61 passed / 101 intentional
+  skips / 0 failed, sensitive scan, and `git diff --check` pass. Final
+  independent review is PASS after targeted effective-revision, server-clock,
+  legacy-preview, replay-immutability, and evidence-validation repairs.
+- External boundary: no deployment, migration/import, Script Property change,
+  Apps Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production change occurred. Live reference tables remain empty.
+- Rollback: set `HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED=false` for new specialized
+  selection while preserving stored children, snapshots, history, queue access,
+  and evidence; use a focused revert for code rollback.
 
 ## Current Slice 8 - Materials Committee workflow
 

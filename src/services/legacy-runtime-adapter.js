@@ -8,6 +8,7 @@ export const bootstrapContractVersion = config.bootstrapContractVersion;
 export const compositeRequestsEnabled = config.compositeRequestsEnabled;
 export const foodRequestsEnabled = config.foodRequestsEnabled;
 export const materialsRequestsEnabled = config.materialsRequestsEnabled;
+export const venueEquipmentRequestsEnabled = config.venueEquipmentRequestsEnabled;
 const clientRequestId = (prefix) =>
   `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
@@ -118,6 +119,18 @@ export function createLegacyRuntimeAdapter(mockServices) {
     updateMaterialsComponent(payload) {
       return mutationRequests.run('materials-update', payload, (command) =>
         remote.updateMaterialsComponent(command),
+      );
+    },
+    async searchVenueEquipmentReferences(payload = {}) {
+      return remote.searchVenueEquipmentReferences(payload);
+    },
+    async getVenueEquipmentWorkQueue(payload) {
+      const committeeId = typeof payload === 'string' ? payload : payload?.committeeId;
+      return remote.getVenueEquipmentWorkQueue({ committeeId });
+    },
+    updateVenueEquipmentComponent(payload) {
+      return mutationRequests.run('venue-equipment-update', payload, (command) =>
+        remote.updateVenueEquipmentComponent(command),
       );
     },
     transitionCompositeComponent(payload) {

@@ -36,6 +36,13 @@ import {
   materialsAttentionFlags,
   updateMaterialsWorkflow,
 } from '../domain/materials-workflow.js';
+import {
+  assertVenueEquipmentTransition,
+  buildVenueEquipmentQueueItem,
+  searchVenueEquipmentReferences,
+  updateVenueEquipmentWorkflow,
+  venueEquipmentAttentionFlags,
+} from '../domain/venue-equipment-workflow.js';
 import { requireIdempotencyKey, previousResult, storeResult } from './idempotency-service.js';
 
 const now = () => new Date().toISOString();
@@ -100,6 +107,86 @@ function requireMaterialsRevisionMap(command, children, statuses) {
         retryable: true,
       });
   }
+}
+
+function requireVenueEquipmentRevision(command, child) {
+  if (
+    child?.componentType === 'VENUE_EQUIPMENT' &&
+    child.payload?.venueEquipment &&
+    Number(command.expectedRevision) !== Number(child.revision ?? 1)
+  )
+    throw new AppError(
+      'REVISION_CONFLICT',
+      'Venue and Equipment component changed; refresh before updating.',
+      { retryable: true },
+    );
+}
+
+function requireVenueEquipmentRevisionMap(command, children, statuses) {
+  const expected = command.expectedRevisions ?? {};
+  for (const child of children.filter(
+    (entry) =>
+      entry.componentType === 'VENUE_EQUIPMENT' &&
+      entry.payload?.venueEquipment &&
+      statuses.includes(entry.status),
+  )) {
+    if (Number(expected[child.componentId]) !== Number(child.revision ?? 1))
+      throw new AppError(
+        'REVISION_CONFLICT',
+        'Venue and Equipment component changed; refresh before updating.',
+        { retryable: true },
+      );
+  }
+}
+
+function venueEquipmentEffectiveAt(record, at) {
+  const date = String(at ?? '').slice(0, 10);
+  return (
+    String(record.status ?? '').trim().toUpperCase() === 'ACTIVE' &&
+    (!record.effectiveFrom || date >= record.effectiveFrom) &&
+    (!record.effectiveTo || date <= record.effectiveTo)
+  );
+}
+
+function venueEquipmentRevision(records, predicate, at, conflictCode, conflictMessage) {
+  const revisions = (records ?? []).filter(predicate);
+  if (!revisions.length) return undefined;
+  const effective = revisions.filter((record) => venueEquipmentEffectiveAt(record, at));
+  if (effective.length > 1) throw new AppError(conflictCode, conflictMessage);
+  return effective[0] ?? revisions[0];
+}
+
+function venueEquipmentResolvers(state, at) {
+  return {
+    requireVenueEquipmentDetails: state.venueEquipmentRequestsEnabled === true,
+    resolveVenueEquipmentReference: (referenceId, effectiveAt = at) =>
+      venueEquipmentRevision(
+        state.venueEquipmentReferences,
+        (reference) => reference.id === referenceId && !reference.archivedAt,
+        effectiveAt,
+        'VENUE_EQUIPMENT_REFERENCE_CONFLICT',
+        'A reference ID has overlapping active effective revisions.',
+      ),
+    resolveVenueEquipmentRoute: (routeId, effectiveAt = at) =>
+      venueEquipmentRevision(
+        state.venueEquipmentRoutes,
+        (route) => route.id === routeId && !route.archivedAt,
+        effectiveAt,
+        'VENUE_EQUIPMENT_ROUTE_CONFLICT',
+        'A route ID has overlapping active effective revisions.',
+      ),
+    resolveVenueEquipmentOtherRoute: (effectiveAt = at) => {
+      const effective = (state.venueEquipmentRoutes ?? []).filter(
+        (route) => route.matchKind === 'OTHER' && !route.archivedAt && venueEquipmentEffectiveAt(route, effectiveAt),
+      );
+      if (effective.length > 1)
+        throw new AppError(
+          'VENUE_EQUIPMENT_ROUTE_CONFLICT',
+          'Controlled Other must resolve to exactly one active approved route.',
+        );
+      return effective[0];
+    },
+  };
 }
 
 function requirePermission(state, action) {
@@ -251,15 +338,27 @@ export class MockService {
           state.materialsRequestsEnabled === false
         )
           throw new AppError('FEATURE_DISABLED', 'Materials request specialization is not enabled.');
-        const packet = createCompositePacket(command, {
+        if (
+          command.sections?.some(
+            (section) => section?.type === 'VENUE_EQUIPMENT' && section?.venueEquipment,
+          ) &&
+          state.venueEquipmentRequestsEnabled === false
+        )
+          throw new AppError(
+            'FEATURE_DISABLED',
+            'Venue and Equipment request specialization is not enabled.',
+          );
+        const submittedAt = now();
+        const packet = createCompositePacket({ ...command, submittedAt }, {
           requestId: allocateId(state, 'LREQ', 2026),
           componentIds: (command.sections ?? [])
             .filter((section) => section?.lines?.length || section?.label || section?.notes)
             .map(() => allocateSimpleId(state, 'CMP')),
           actor: tx.actor,
-          now: now(),
+          now: submittedAt,
           resolveMaterialReference: (referenceId) =>
             state.inventoryItems.find((item) => item.id === referenceId),
+          ...venueEquipmentResolvers(state, submittedAt),
         });
         const { children, ...parent } = packet.parent;
         state.compositeRequests.push(parent);
@@ -363,6 +462,104 @@ export class MockService {
     return Promise.resolve({ ok: true, committeeId: 'COM_MATERIALS', items });
   }
 
+  searchVenueEquipmentReferences(command = {}) {
+    const state = this.store.getState();
+    if (state.venueEquipmentRequestsEnabled === false)
+      throw new AppError('FEATURE_DISABLED', 'Venue and Equipment request specialization is not enabled.');
+    const effectiveAt = now();
+    const items = searchVenueEquipmentReferences(state.venueEquipmentReferences, {
+      ...command,
+      at: effectiveAt,
+      resolveRoute: venueEquipmentResolvers(state, effectiveAt).resolveVenueEquipmentRoute,
+    });
+    return Promise.resolve({ ok: true, items, truncated: items.length >= 50 });
+  }
+
+  getVenueEquipmentWorkQueue(command = {}) {
+    const state = this.store.getState();
+    requirePermission(state, 'review_request');
+    ensureCompositeState(state);
+    const committeeId = String(command.committeeId ?? '').trim();
+    if (!['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].includes(committeeId))
+      throw new AppError(
+        'VENUE_EQUIPMENT_QUEUE_SCOPE_INVALID',
+        'Choose one approved existing committee context.',
+      );
+    const parents = new Map(state.compositeRequests.map((parent) => [parent.requestId, parent]));
+    const items = state.compositeComponents
+      .filter(
+        (child) =>
+          child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId,
+      )
+      .map((child) => buildVenueEquipmentQueueItem(parents.get(child.requestId), child));
+    return Promise.resolve({ ok: true, committeeId, items });
+  }
+
+  updateVenueEquipmentComponent(command) {
+    return this._run(
+      command,
+      'UPDATE_VENUE_EQUIPMENT_COMPONENT',
+      async (state) => {
+        requirePermission(state, 'review_request');
+        const { parent, children } = compositeRecord(state, command.requestId);
+        const child = children.find((row) => row.componentId === command.componentId);
+        if (!child || child.componentType !== 'VENUE_EQUIPMENT' || !child.payload?.venueEquipment)
+          throw new AppError(
+            'VENUE_EQUIPMENT_COMPONENT_NOT_FOUND',
+            'Venue and Equipment component was not found.',
+          );
+        if (['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
+          throw new AppError(
+            'VENUE_EQUIPMENT_UPDATE_NOT_ALLOWED',
+            'Terminal Venue and Equipment components cannot be updated.',
+          );
+        requireVenueEquipmentRevision(command, child);
+        const venueEquipment = updateVenueEquipmentWorkflow(
+          child.payload.venueEquipment,
+          command.patch,
+        );
+        if (venueEquipment.fulfillmentEvidenceId) {
+          const valid = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === venueEquipment.fulfillmentEvidenceId &&
+              evidence.evidenceType === 'VENUE_EQUIPMENT_CONFIRMATION' &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          if (!valid)
+            throw new AppError(
+              'VENUE_EQUIPMENT_EVIDENCE_INVALID',
+              'Venue and Equipment evidence must be uploaded and linked to this component.',
+            );
+        }
+        child.payload = { ...child.payload, venueEquipment };
+        child.attentionFlags = venueEquipmentAttentionFlags(venueEquipment);
+        child.progress = {
+          lineCount: child.payload.lines?.length ?? 0,
+          confirmationStatus: venueEquipment.confirmationStatus,
+          otherTriageStatus: venueEquipment.otherTriageStatus,
+          returnStatus: venueEquipment.returnStatus,
+          evidenceLinked: Boolean(venueEquipment.fulfillmentEvidenceId),
+        };
+        child.revision = Number(child.revision ?? 1) + 1;
+        child.updatedAt = now();
+        const derived = updateCompositeParent(parent, children);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'COMPOSITE_COMPONENT',
+          entityId: child.componentId,
+          requestId: child.requestId,
+          componentId: child.componentId,
+          revision: child.revision,
+          parentStatus: derived.status,
+          venueEquipment,
+        };
+      },
+      { views: ['requests', 'overview'], shared: true },
+    );
+  }
+
   updateMaterialsComponent(command) {
     return this._run(
       command,
@@ -441,6 +638,7 @@ export class MockService {
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
         requireMaterialsRevision(command, child);
+        requireVenueEquipmentRevision(command, child);
         if (child.componentType === 'FOOD') {
           const evidenceUploaded = (state.evidenceFiles ?? []).some(
             (evidence) =>
@@ -462,6 +660,19 @@ export class MockService {
               evidence.uploadStatus === 'UPLOADED',
           );
           assertMaterialsTransition(child.payload?.materials, command.action, { evidenceUploaded });
+        }
+        if (child.componentType === 'VENUE_EQUIPMENT' && child.payload?.venueEquipment) {
+          const evidenceUploaded = (state.evidenceFiles ?? []).some(
+            (evidence) =>
+              evidence.id === child.payload.venueEquipment.fulfillmentEvidenceId &&
+              evidence.evidenceType === 'VENUE_EQUIPMENT_CONFIRMATION' &&
+              evidence.relatedEntityType === 'COMPOSITE_COMPONENT' &&
+              evidence.relatedEntityId === child.componentId &&
+              evidence.uploadStatus === 'UPLOADED',
+          );
+          assertVenueEquipmentTransition(child.payload.venueEquipment, command.action, {
+            evidenceUploaded,
+          });
         }
         const next = transitionCompositeChild(child, command.action, { reason: command.reason });
         Object.assign(child, next, { revision: Number(child.revision ?? 1) + 1, updatedAt: now() });
@@ -506,6 +717,14 @@ export class MockService {
           'PARTIALLY_FULFILLED',
           'READY_FOR_HANDOFF',
         ]);
+        requireVenueEquipmentRevisionMap(command, children, [
+          'DRAFT',
+          'FOR_REVIEW',
+          'ACCEPTED',
+          'IN_PROGRESS',
+          'PARTIALLY_FULFILLED',
+          'READY_FOR_HANDOFF',
+        ]);
         for (const child of children) {
           if (!['COMPLETED', 'REJECTED', 'CANCELLED'].includes(child.status))
             Object.assign(child, transitionCompositeChild(child, 'CANCEL', { reason: command.reason }), {
@@ -540,6 +759,7 @@ export class MockService {
         const { parent, children } = compositeRecord(state, command.requestId);
         requireFoodRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
         requireMaterialsRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
+        requireVenueEquipmentRevisionMap(command, children, ['REJECTED', 'CANCELLED']);
         if (!['REJECTED', 'CANCELLED'].includes(parent.status))
           throw new AppError(
             'INVALID_TRANSITION',
@@ -577,12 +797,15 @@ export class MockService {
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
         requireMaterialsRevision(command, child);
+        requireVenueEquipmentRevision(command, child);
+        const amendmentAt = now();
         Object.assign(
           child,
           amendCompositeSection(child, command.section ?? {}, {
-            now: now(),
+            now: amendmentAt,
             resolveMaterialReference: (referenceId) =>
               state.inventoryItems.find((item) => item.id === referenceId),
+            ...venueEquipmentResolvers(state, amendmentAt),
           }),
         );
         const derived = updateCompositeParent(parent, children);
@@ -620,6 +843,15 @@ export class MockService {
         if (command.section?.type === 'MATERIALS' && state.materialsRequestsEnabled === false)
           throw new AppError('FEATURE_DISABLED', 'Materials request specialization is not enabled.');
         if (
+          command.section?.type === 'VENUE_EQUIPMENT' &&
+          command.section?.venueEquipment &&
+          state.venueEquipmentRequestsEnabled === false
+        )
+          throw new AppError(
+            'FEATURE_DISABLED',
+            'Venue and Equipment request specialization is not enabled.',
+          );
+        if (
           command.section?.type === 'FOOD' &&
           Number(command.expectedParentRevision) !== Number(parent.revision ?? 1)
         )
@@ -635,6 +867,16 @@ export class MockService {
             'Composite request changed; refresh before adding Materials.',
             { retryable: true },
           );
+        if (
+          command.section?.type === 'VENUE_EQUIPMENT' &&
+          Number(command.expectedParentRevision) !== Number(parent.revision ?? 1)
+        )
+          throw new AppError(
+            'REVISION_CONFLICT',
+            'Composite request changed; refresh before adding Venue and Equipment.',
+            { retryable: true },
+          );
+        const submittedAt = now();
         const packet = createCompositePacket(
           {
             requesterName: parent.requesterName,
@@ -648,14 +890,16 @@ export class MockService {
             priority: parent.priority,
             purpose: parent.purpose,
             sections: [command.section],
+            submittedAt,
           },
           {
             requestId: parent.requestId,
             componentIds: [allocateSimpleId(state, 'CMP')],
             actor: tx.actor,
-            now: now(),
+            now: submittedAt,
             resolveMaterialReference: (referenceId) =>
               state.inventoryItems.find((item) => item.id === referenceId),
+            ...venueEquipmentResolvers(state, submittedAt),
           },
         );
         state.compositeComponents.push(packet.children[0]);
@@ -686,6 +930,8 @@ export class MockService {
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
+        requireMaterialsRevision(command, child);
+        requireVenueEquipmentRevision(command, child);
         child.ownerUserId = String(command.userId ?? '').trim();
         child.revision = Number(child.revision ?? 1) + 1;
         child.updatedAt = now();
@@ -716,6 +962,8 @@ export class MockService {
         const child = children.find((row) => row.componentId === command.componentId);
         if (!child) throw new AppError('COMPONENT_NOT_FOUND', 'Composite section was not found.');
         requireFoodRevision(command, child);
+        requireMaterialsRevision(command, child);
+        requireVenueEquipmentRevision(command, child);
         child.attentionFlags = [...new Set([...(child.attentionFlags ?? []), 'ESCALATED'])];
         child.updatedAt = now();
         return {

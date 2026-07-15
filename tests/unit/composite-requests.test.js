@@ -45,8 +45,52 @@ const allSections = {
   VENUE_EQUIPMENT: {
     type: 'VENUE_EQUIPMENT',
     label: 'Venue setup',
-    lines: [{ label: 'Folding table', quantity: 2, unit: 'piece' }],
+    lines: [
+      {
+        referenceId: 'SYN-VENUE-1',
+        referenceRevision: 1,
+        label: 'Synthetic Assembly Room',
+        quantity: 1,
+        unit: 'service',
+        category: 'MEETING_SPACE',
+      },
+    ],
+    venueEquipment: { purposeDetail: 'Synthetic venue setup' },
   },
+};
+
+const venueRoute = {
+  id: 'SYN-ROUTE-VENUE',
+  matchKind: 'REFERENCE',
+  referenceId: 'SYN-VENUE-1',
+  ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+  ownerUserId: '',
+  responsibleOfficeId: 'SYN-OFFICE-FACILITIES',
+  approvingAuthorityId: 'SYN-AUTH-FACILITIES',
+  leadTimeBusinessDays: 5,
+  instructions: 'Synthetic route instructions',
+  effectiveFrom: '2026-01-01',
+  effectiveTo: '',
+  revision: 1,
+  status: 'ACTIVE',
+};
+const venueReference = {
+  id: 'SYN-VENUE-1',
+  type: 'VENUE',
+  category: 'MEETING_SPACE',
+  name: 'Synthetic Assembly Room',
+  aliases: [],
+  location: 'Synthetic Campus',
+  unit: 'service',
+  requestability: 'REQUESTABLE',
+  contactRole: 'Facilities coordinator',
+  routeId: 'SYN-ROUTE-VENUE',
+  returnRequired: false,
+  effectiveFrom: '2026-01-01',
+  effectiveTo: '',
+  revision: 1,
+  sourceRevision: 'SYN-REFSET-1',
+  status: 'ACTIVE',
 };
 
 function command(sections, idempotencyKey = 'SYN-COMPOSITE-1') {
@@ -59,6 +103,8 @@ function command(sections, idempotencyKey = 'SYN-COMPOSITE-1') {
     eventName: 'Synthetic Event',
     purpose: 'Synthetic composite request',
     submittedAt: '2026-07-20T09:00:00+08:00',
+    eventStartAt: '2026-08-08T09:00:00+08:00',
+    eventEndAt: '2026-08-08T17:00:00+08:00',
     sections,
   };
 }
@@ -90,6 +136,8 @@ describe('composite request domain', () => {
       componentIds: types.map((_, index) => `CMP-${String(index + 1).padStart(4, '0')}`),
       actor: 'SYN-ACTOR',
       now: '2026-07-14T00:00:00.000Z',
+      resolveVenueEquipmentReference: () => venueReference,
+      resolveVenueEquipmentRoute: () => venueRoute,
     });
     expect(packet.children).toHaveLength(types.length);
     expect(packet.children.map((child) => child.componentType)).toEqual(types);
@@ -177,6 +225,51 @@ describe('composite request domain', () => {
 });
 
 describe('composite request mock workflow', () => {
+  it('uses server time for public reference lookup and submission revision selection', async () => {
+    const { service, getState } = serviceContext();
+    const currentReference = getState().venueEquipmentReferences.find(
+      (reference) => reference.id === 'SYN-VENUE-1',
+    );
+    const currentRoute = getState().venueEquipmentRoutes.find(
+      (route) => route.id === 'SYN-ROUTE-VENUE',
+    );
+    currentReference.effectiveTo = '2098-12-31';
+    currentRoute.effectiveTo = '2098-12-31';
+    getState().venueEquipmentReferences.push({
+      ...currentReference,
+      name: 'Synthetic Future Assembly Room',
+      aliases: ['Synthetic Future Meeting Room'],
+      effectiveFrom: '2099-01-01',
+      effectiveTo: '',
+      revision: 2,
+      sourceRevision: 'SYN-REFSET-2',
+    });
+    getState().venueEquipmentRoutes.push({
+      ...currentRoute,
+      effectiveFrom: '2099-01-01',
+      effectiveTo: '',
+      revision: 2,
+      responsibleOfficeId: 'SYN-OFFICE-FACILITIES-FUTURE',
+    });
+
+    const lookup = await service.searchVenueEquipmentReferences({
+      query: 'assembly',
+      at: '2099-07-20T09:00:00+08:00',
+    });
+    expect(lookup.items).toEqual([
+      expect.objectContaining({ id: 'SYN-VENUE-1', referenceRevision: 1 }),
+    ]);
+
+    const submitted = await service.submitCompositeRequest({
+      ...command([allSections.VENUE_EQUIPMENT], 'SYN-SERVER-TIME'),
+      submittedAt: '2099-07-20T09:00:00+08:00',
+    });
+    expect(submitted.request.children[0].payload.venueEquipment.referenceSnapshots[0]).toMatchObject({
+      referenceRevision: 1,
+      routeRevision: 1,
+    });
+  });
+
   it('is idempotent, atomic on validation failure, and exposes the hierarchy', async () => {
     const { service, getState } = serviceContext();
     const accepted = await service.submitCompositeRequest(command([allSections.FOOD, allSections.MATERIALS]));
@@ -236,20 +329,29 @@ describe('composite request mock workflow', () => {
     const added = await service.addCompositeSection({
       requestId: created.requestId,
       section: allSections.VENUE_EQUIPMENT,
+      expectedParentRevision: 3,
       idempotencyKey: 'SYN-ADD',
     });
     expect(getState().compositeComponents).toHaveLength(3);
     await service.cancelCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic cancellation',
-      expectedRevisions: { [food.componentId]: 3, [materials.componentId]: 1 },
+      expectedRevisions: {
+        [food.componentId]: 3,
+        [materials.componentId]: 1,
+        [added.componentId]: 1,
+      },
       idempotencyKey: 'SYN-CANCEL',
     });
     expect(getState().compositeComponents.every((child) => child.status === 'CANCELLED')).toBe(true);
     const reopened = await service.reopenCompositeRequest({
       requestId: created.requestId,
       reason: 'Synthetic reopen',
-      expectedRevisions: { [food.componentId]: 4, [materials.componentId]: 2 },
+      expectedRevisions: {
+        [food.componentId]: 4,
+        [materials.componentId]: 2,
+        [added.componentId]: 2,
+      },
       idempotencyKey: 'SYN-REOPEN',
     });
     expect(reopened.status).toBe('FOR_REVIEW');

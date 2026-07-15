@@ -144,6 +144,9 @@ describe('Apps Script separate-output packaging', () => {
     const files = fixtureFiles();
     expect(files.index).toContain("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"");
     expect(files.index).toContain('data-bootstrap-contract-version="<?= bootstrapContractVersion ?>"');
+    expect(files.index).toContain(
+      "data-venue-equipment-requests-enabled=\"<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>\"",
+    );
     const internal = analyzeAssembledDocument(assembleAppsScriptTemplate(files));
     const requestOnly = analyzeAssembledDocument(assembleAppsScriptTemplate(files, { requestOnly: true }));
     const legacy = analyzeAssembledDocument(
@@ -190,7 +193,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(9);
+    expect(diagnostics.index.markers['<?'].count).toBe(10);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),

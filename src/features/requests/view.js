@@ -55,6 +55,7 @@ function materialsFields(key) {
 function renderCompositeSection([type, title, key]) {
   if (type === 'FOOD' && !config.foodRequestsEnabled) return '';
   if (type === 'MATERIALS' && !config.materialsRequestsEnabled) return '';
+  if (type === 'VENUE_EQUIPMENT' && !config.venueEquipmentRequestsEnabled) return '';
   const units =
     type === 'MATERIALS'
       ? ['piece', 'box', 'pack', 'ream', 'roll', 'sheet', 'bottle', 'meter', 'kilogram', 'liter']

@@ -4,39 +4,36 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 8 pushed and CI green
+## Current run checkpoint - Phase 4 / Slice 9 locally implemented
 
 - Date: 2026-07-15 (Asia/Manila).
-- Stage: `SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
-- Accepted starting checkpoint: `290dc629fd9c0765bca39144224798c65b667eaa`
+- Stage: `SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT`.
+- Accepted starting checkpoint: `a0b4e7f46620056b5fc73036bea69bfcf8da0f83`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
 - User authorization: direct bounded continuation is approved without another
   manager-approval pause. Each slice still requires complete local proof,
   independent review, a focused push, and green CI before the next starts.
-- Current bounded scope: Materials Committee specialization on the accepted
-  composite-request foundation, as specified in
-  `docs/MATERIALS_COMMITTEE_WORKFLOW.md`.
+- Current bounded scope: versioned Venue and Equipment references, safe lookup,
+  truthful requestability, constrained Other, server-owned effective routing to
+  one existing committee/owner, immutable child snapshots, scoped workflow, and
+  active UI as specified in `docs/VENUE_EQUIPMENT_REFERENCE_WORKFLOW.md`.
 - External boundary: repository implementation and feature-branch GitHub CI
   only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
   PR merge, Cloudflare, database, or production action is authorized here.
-- Local result: controlled Materials detail, exact immutable catalog
-  provenance with amendment history, exact `ACTIVE`/category enforcement,
-  `VERIFY` denial, fulfillment-path exclusivity, approved substitution with
-  durable before/after audit, blocker/evidence completion rechecks, scoped
-  server queue, blank operational UI inputs, and fail-closed flags are
-  implemented. `npm run check` passes 30 Vitest files / 244 tests, a 31-module
-  build, 31 Apps Script sources / 51 required functions, generated parity, and
-  two 329,544-byte artifacts. Full Playwright passes 61 / 101 intentional skips
-  / 0 failures. Changed-scope sensitive and diff checks pass. Independent final
-  review is PASS with no remaining findings.
-- Remote result: implementation commit
-  `1f05b526e457a946e0575b4aed2660c249105923` is pushed and matched local,
-  upstream, and draft PR #7; the PR remained open and mergeable. Apps Script
-  run `29390112932` passed `validate` in 12 seconds. CI run `29390112933`
-  passed `verify` in 16 seconds and `browser-smoke` in 2 minutes. No external
-  operational system changed. Commit/push this evidence record, verify its CI,
-  then begin bounded Slice 9 without a manager pause.
+- Accepted dependency: Slice 8 implementation
+  `1f05b526e457a946e0575b4aed2660c249105923` and evidence checkpoint
+  `a0b4e7f46620056b5fc73036bea69bfcf8da0f83` are pushed and CI green. Final
+  evidence runs `29390266015` / `29390265681` passed `validate` (14s), `verify`
+  (14s), and `browser-smoke` (1m53s).
+- Slice 9 result: the versioned reference/routing model, safe search, immutable
+  request snapshots, scoped server workflow, adapters, active request and
+  management UI, focused tests, and generated parity are implemented. Local
+  governance/lint/Vitest/build/Apps Script/standalone/full-browser/diff/
+  sensitive gates pass. Final independent review is PASS after targeted
+  effective-revision, server-clock, preview-parity, replay, and evidence
+  repairs. The focused commit/push is next. No external operational system
+  changed.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

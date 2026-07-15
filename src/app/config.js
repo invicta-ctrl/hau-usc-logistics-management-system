@@ -33,6 +33,10 @@ export const config = Object.freeze({
     runtime.materialsRequestsEnabled ?? import.meta.env?.VITE_MATERIALS_REQUESTS_ENABLED,
     configuredBackendMode === 'mock',
   ),
+  venueEquipmentRequestsEnabled: booleanFlag(
+    runtime.venueEquipmentRequestsEnabled ?? import.meta.env?.VITE_VENUE_EQUIPMENT_REQUESTS_ENABLED,
+    configuredBackendMode === 'mock',
+  ),
   httpApiBaseUrl: runtime.httpApiBaseUrl ?? import.meta.env?.VITE_HTTP_API_BASE_URL ?? '',
   timezone: 'Asia/Manila',
   locale: 'en-PH',

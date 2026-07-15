@@ -13,6 +13,9 @@ function api_getFoodWorkQueue(command) { return guardApi_('getFoodWorkQueue', co
 function api_updateFoodComponent(command) { return guardMutationApi_('updateFoodComponent', command, function(c) { return updateFoodComponent_(command, c); }); }
 function api_getMaterialsWorkQueue(command) { return guardApi_('getMaterialsWorkQueue', command || {}, function() { return getMaterialsWorkQueue_(); }); }
 function api_updateMaterialsComponent(command) { return guardMutationApi_('updateMaterialsComponent', command, function(c) { return updateMaterialsComponent_(command, c); }); }
+function api_searchVenueEquipmentReferences(command) { return guardApi_('searchVenueEquipmentReferences', command || {}, function() { return { items: searchVenueEquipmentReferences_(command || {}), availabilityProtected: true }; }); }
+function api_getVenueEquipmentWorkQueue(command) { return guardApi_('getVenueEquipmentWorkQueue', command || {}, function() { return getVenueEquipmentWorkQueue_(command || {}); }); }
+function api_updateVenueEquipmentComponent(command) { return guardMutationApi_('updateVenueEquipmentComponent', command, function(c) { return updateVenueEquipmentComponent_(command, c); }); }
 function api_transitionCompositeComponent(command) { return guardMutationApi_('transitionCompositeComponent', command, function(c) { return transitionCompositeComponent_(command, c); }); }
 function api_cancelCompositeRequest(command) { return guardMutationApi_('cancelCompositeRequest', command, function(c) { return cancelCompositeRequest_(command, c); }); }
 function api_reopenCompositeRequest(command) { return guardMutationApi_('reopenCompositeRequest', command, function(c) { return reopenCompositeRequest_(command, c); }); }

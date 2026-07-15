@@ -1,12 +1,54 @@
-# HAU-USC V1 Autonomous Program - Slice 8 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 9 checkpoint
 
-CURRENT SLICE: Slice 8 - Materials Committee specialization
-CURRENT STAGE: SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT
+CURRENT SLICE: Slice 9 - Venue and Equipment reference/request vertical
+CURRENT STAGE: SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT
 LAST UPDATED: 2026-07-15 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Slice 8 scope lock
+## Slice 9 scope lock
+
+- Starting checkpoint: `a0b4e7f46620056b5fc73036bea69bfcf8da0f83` on
+  `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.
+- Contract: `docs/VENUE_EQUIPMENT_REFERENCE_WORKFLOW.md`.
+- Accepted decisions: exactly three permanent committees; no fourth Venue
+  committee; server-owned effective routing by reference/category/responsible
+  office; requestable wording is not a booking; Other uses explicit triage; no
+  text-guess fallback; no institutional list invented in source; synthetic
+  fixtures only; live catalog remains empty until separately approved/imported.
+- Delivered scope target: additive versioned references/routes, bounded safe
+  lookup, venue combobox, predictive equipment add/edit/remove, quantities and
+  summary, immutable request snapshots, routing/confirmation/blocker/return/
+  evidence state, scoped queue/update, authorization/revision/idempotency,
+  active UI, fail-closed flag, tests/docs/generated parity.
+- Exclusions: admin editor (Slice 10), real-time booking/stock promise,
+  institutional import/backfill, private contacts, fourth committee, client
+  routing authority, posted ledger change, deployment/migration execution,
+  external Google writes, PR merge, Cloudflare/database, staging, production.
+- Rollback: disable `HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED`, retain stored
+  snapshots/history and safe fallback, and use a focused revert.
+- Local result: effective-dated reference and route tables, safe search,
+  constrained Other, server-owned existing-committee routing, immutable
+  snapshots/provenance, confirmation/blocker/return/evidence state, scoped
+  queue/update APIs, fail-closed flag, active request/management UI, adapters,
+  generated artifacts, and focused browser coverage are implemented.
+- Current proof: governance, lint, 32 Vitest files / 262 tests, 32-module build,
+  32 Apps Script sources / 54 required functions, deterministic package parity,
+  standalone verification, full Playwright (61 passed / 101 intentional skips /
+  0 failed), sensitive scan, and `git diff --check` pass. Final independent
+  review is PASS after effective-version, server-time, legacy-preview,
+  idempotent-replay, and exact evidence validation repairs. Commit/push is
+  next.
+
+---
+
+## Historical Slice 8 checkpoint
+
+CURRENT SLICE: Slice 8 - Materials Committee specialization
+CURRENT STAGE: SLICE_8_COMMITTED_PUSHED_CI_GREEN_ACCEPTED
+LAST UPDATED: 2026-07-15 (Asia/Manila)
+
+### Slice 8 scope lock
 
 - Starting checkpoint: `290dc629fd9c0765bca39144224798c65b667eaa` on
   `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.

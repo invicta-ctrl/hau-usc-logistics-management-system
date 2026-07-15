@@ -97,6 +97,9 @@ var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
   updateFoodComponent: HAU_CAPABILITIES_.REQUEST_REVIEW,
   getMaterialsWorkQueue: HAU_CAPABILITIES_.VIEW_REQUEST,
   updateMaterialsComponent: HAU_CAPABILITIES_.REQUEST_REVIEW,
+  searchVenueEquipmentReferences: HAU_CAPABILITIES_.VIEW_REQUEST,
+  getVenueEquipmentWorkQueue: HAU_CAPABILITIES_.VIEW_REQUEST,
+  updateVenueEquipmentComponent: HAU_CAPABILITIES_.REQUEST_REVIEW,
   transitionCompositeComponent: HAU_CAPABILITIES_.REQUEST_REVIEW,
   cancelCompositeRequest: HAU_CAPABILITIES_.REQUEST_REVIEW,
   reopenCompositeRequest: HAU_CAPABILITIES_.REQUEST_REOPEN,
@@ -143,6 +146,7 @@ var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
 var HAU_SCOPE_OPTIONAL_OPERATIONS_ = Object.freeze({
   getDataRevision: true,
   searchCatalog: true,
+  searchVenueEquipmentReferences: true,
   getInventoryItem: true,
   submitRequest: true,
   submitCompositeRequest: true,
@@ -494,7 +498,7 @@ function authorizationResourceFromCommand_(operationName, command) {
   [].concat(command.lines || []).forEach(function(line) {
     if (line && line.requestLineId) authorizationResourceAppendRequestLine_(resource, line.requestLineId);
   });
-  if (String(operationName || '') !== 'getCompositeRequest' && /(?:Composite|Food|Materials)/.test(String(operationName || '')) && typeof authorizationResourceFindAll_ === 'function' && HAU_SHEETS.COMPOSITE_REQUESTS) {
+  if (String(operationName || '') !== 'getCompositeRequest' && /(?:Composite|Food|Materials|VenueEquipment)/.test(String(operationName || '')) && typeof authorizationResourceFindAll_ === 'function' && HAU_SHEETS.COMPOSITE_REQUESTS) {
     authorizationResourceFindAll_(HAU_SHEETS.COMPOSITE_REQUESTS, function(row) {
       if (command.componentId) return String(row.Component_ID) === String(command.componentId);
       return command.requestId && String(row.Request_ID) === String(command.requestId);

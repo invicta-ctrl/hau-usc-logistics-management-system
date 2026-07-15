@@ -11,7 +11,8 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
   ROSTER_EMERGENCY_DENY: 'HAU_ROSTER_EMERGENCY_DENY',
   COMPOSITE_REQUESTS_ENABLED: 'HAU_COMPOSITE_REQUESTS_ENABLED',
   FOOD_REQUESTS_ENABLED: 'HAU_FOOD_REQUESTS_ENABLED',
-  MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED'
+  MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED',
+  VENUE_EQUIPMENT_REQUESTS_ENABLED: 'HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
@@ -100,6 +101,10 @@ function resolveMaterialsRequestsEnabled_(properties) {
   return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.MATERIALS_REQUESTS_ENABLED, false);
 }
 
+function resolveVenueEquipmentRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.VENUE_EQUIPMENT_REQUESTS_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -124,7 +129,8 @@ function resolveRuntimeConfig_() {
     authorizationContractVersion: resolveAuthorizationContractVersion_(properties),
     compositeRequestsEnabled: resolveCompositeRequestsEnabled_(properties),
     foodRequestsEnabled: resolveFoodRequestsEnabled_(properties),
-    materialsRequestsEnabled: resolveMaterialsRequestsEnabled_(properties)
+    materialsRequestsEnabled: resolveMaterialsRequestsEnabled_(properties),
+    venueEquipmentRequestsEnabled: resolveVenueEquipmentRequestsEnabled_(properties)
   };
 }
 
@@ -135,7 +141,8 @@ var HAU_SHEETS = Object.freeze({
   CANVASS: '10_CANVASS', SUPPLIERS: '11_SUPPLIERS', EVIDENCE: '12_EVIDENCE', EVENTS: '13_EVENTS',
   USERS: '14_USERS_ACCESS', HISTORY: '15_STATUS_HISTORY', AUDIT: '16_AUDIT_LOG', CONFIG: '17_CONFIG',
   ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP', USER_COMMITTEE_SCOPE: '20_USER_COMMITTEE_SCOPE',
-  ACCESS_SYNC_RUNS: '21_ACCESS_SYNC_RUNS', ACCESS_SYNC_SNAPSHOT: '22_ACCESS_SYNC_SNAPSHOT', MEMBERSHIP_SYNC_SNAPSHOT: '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT', COMPOSITE_REQUESTS: '24_COMPOSITE_REQUESTS'
+  ACCESS_SYNC_RUNS: '21_ACCESS_SYNC_RUNS', ACCESS_SYNC_SNAPSHOT: '22_ACCESS_SYNC_SNAPSHOT', MEMBERSHIP_SYNC_SNAPSHOT: '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT', COMPOSITE_REQUESTS: '24_COMPOSITE_REQUESTS',
+  VENUE_EQUIPMENT_REFERENCES: '25_VENUE_EQUIPMENT_REFERENCES', VENUE_EQUIPMENT_ROUTES: '26_VENUE_EQUIPMENT_ROUTES'
 });
 
 var HAU_HEADERS = Object.freeze({
@@ -162,7 +169,9 @@ var HAU_HEADERS = Object.freeze({
   '21_ACCESS_SYNC_RUNS': ['Sync_Run_ID','Started_At','Completed_At','Source_Revision','Source_Row_Count','Active_Row_Count','Inactive_Row_Count','Conflict_Count','Unknown_Role_Count','Unknown_Committee_Count','Invalid_Type_Count','Changed_Grant_Count','Revocation_Count','Validation_Status','Activation_Status','Freshness_Expires_At','Emergency_Deny_Active','Failure_Code','Activated_At','Activated_By','Previous_Run_ID','Notes'],
   '22_ACCESS_SYNC_SNAPSHOT': ['Snapshot_Run_ID','User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes','Can_Manage_Catalog','Role_ID','Committee_IDs_JSON','Authorization_Overrides_JSON','Authorization_Status','Authorization_Revision','Access_Source','Access_Source_Revision','Access_Sync_Run_ID','Access_Last_Seen_At','Roster_Managed'],
   '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT': ['Snapshot_Run_ID','Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes'],
-  '24_COMPOSITE_REQUESTS': ['Record_ID','Record_Type','Request_ID','Component_ID','Relationship_Type','Relationship_Version','Component_Type','Label','Requester_Name','Requester_Email','Department','Event_Series_ID','Event_ID','Event_Name','Event_Start_At','Event_End_At','Priority','Purpose','Component_Payload_JSON','Lifecycle_Status','Owner_Committee_ID','Owner_User_ID','Due_At','Attention_Flags_JSON','Progress_JSON','Revision','Created_At','Updated_At','Created_By','Client_Request_ID','Client_Component_ID','Idempotency_Key','Archived_At','Notes']
+  '24_COMPOSITE_REQUESTS': ['Record_ID','Record_Type','Request_ID','Component_ID','Relationship_Type','Relationship_Version','Component_Type','Label','Requester_Name','Requester_Email','Department','Event_Series_ID','Event_ID','Event_Name','Event_Start_At','Event_End_At','Priority','Purpose','Component_Payload_JSON','Lifecycle_Status','Owner_Committee_ID','Owner_User_ID','Due_At','Attention_Flags_JSON','Progress_JSON','Revision','Created_At','Updated_At','Created_By','Client_Request_ID','Client_Component_ID','Idempotency_Key','Archived_At','Notes'],
+  '25_VENUE_EQUIPMENT_REFERENCES': ['Reference_ID','Reference_Type','Category_ID','Display_Name','Aliases_JSON','Location_Label','Unit','Requestability','Contact_Role','Route_ID','Return_Required','Effective_From','Effective_To','Revision','Source_Revision','Status','Created_At','Updated_At','Archived_At','Notes'],
+  '26_VENUE_EQUIPMENT_ROUTES': ['Route_ID','Match_Kind','Reference_ID','Reference_Type','Category_ID','Owner_Committee_ID','Owner_User_ID','Responsible_Office_ID','Approving_Authority_ID','Lead_Time_Business_Days','Instructions','Effective_From','Effective_To','Revision','Status','Created_At','Updated_At','Archived_At','Notes']
 });
 
 var HAU_DATABASE_CACHE_ = null;

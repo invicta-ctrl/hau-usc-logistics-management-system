@@ -129,6 +129,103 @@ function inventoryItems() {
   return items;
 }
 
+function venueEquipmentRoutes() {
+  return [
+    {
+      id: 'SYN-ROUTE-VENUE',
+      matchKind: 'REFERENCE',
+      referenceId: 'SYN-VENUE-1',
+      referenceType: 'VENUE',
+      category: 'MEETING_SPACE',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-FACILITIES',
+      approvingAuthorityId: 'SYN-AUTH-FACILITIES',
+      leadTimeBusinessDays: 5,
+      instructions: 'Submit the synthetic setup plan for review.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-ROUTE-EQUIPMENT',
+      matchKind: 'REFERENCE',
+      referenceId: 'SYN-EQUIP-1',
+      referenceType: 'EQUIPMENT',
+      category: 'AUDIO_VISUAL',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-INVENTORY',
+      approvingAuthorityId: 'SYN-AUTH-INVENTORY',
+      leadTimeBusinessDays: 3,
+      instructions: 'Confirm the synthetic handoff and return plan.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-ROUTE-OTHER',
+      matchKind: 'OTHER',
+      referenceId: '',
+      referenceType: 'OTHER',
+      category: 'OTHER_CONTROLLED',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-TRIAGE',
+      approvingAuthorityId: 'SYN-AUTH-TRIAGE',
+      leadTimeBusinessDays: 5,
+      instructions: 'Classify the synthetic Other request before handoff.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+  ];
+}
+
+function venueEquipmentReferences() {
+  return [
+    {
+      id: 'SYN-VENUE-1',
+      type: 'VENUE',
+      category: 'MEETING_SPACE',
+      name: 'Synthetic Assembly Room',
+      aliases: ['Synthetic Meeting Room'],
+      location: 'Synthetic Campus',
+      unit: 'service',
+      requestability: 'REQUESTABLE',
+      contactRole: 'Facilities coordinator',
+      routeId: 'SYN-ROUTE-VENUE',
+      returnRequired: false,
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      sourceRevision: 'SYN-REFSET-1',
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-EQUIP-1',
+      type: 'EQUIPMENT',
+      category: 'AUDIO_VISUAL',
+      name: 'Synthetic Projector Set',
+      aliases: ['Synthetic AV Set'],
+      location: '',
+      unit: 'set',
+      requestability: 'REQUESTABLE',
+      contactRole: 'Inventory custodian',
+      routeId: 'SYN-ROUTE-EQUIPMENT',
+      returnRequired: true,
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      sourceRevision: 'SYN-REFSET-1',
+      status: 'ACTIVE',
+    },
+  ];
+}
+
 function ledgerTransactions() {
   const rows = baseItems.map(
     ([itemId, _name, _aliases, _category, _area, _handling, _unit, opening], index) => ({
@@ -275,6 +372,7 @@ export function createSeedState() {
     compositeRequestsEnabled: true,
     foodRequestsEnabled: true,
     materialsRequestsEnabled: true,
+    venueEquipmentRequestsEnabled: true,
     revisions: { inventory: 1, requests: 1, lending: 1, receipts: 1, quotes: 1, tasks: 1 },
     counters: {
       'TXN-2026': 131,
@@ -292,6 +390,8 @@ export function createSeedState() {
     eventSeries: structuredClone(eventSeries),
     events: structuredClone(demoEvents),
     inventoryItems: inventoryItems(),
+    venueEquipmentReferences: venueEquipmentReferences(),
+    venueEquipmentRoutes: venueEquipmentRoutes(),
     ledgerTransactions: ledgerTransactions(),
     reservations: [
       {

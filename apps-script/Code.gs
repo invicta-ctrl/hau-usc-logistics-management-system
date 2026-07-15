@@ -15,6 +15,7 @@ function doGet(e) {
   template.compositeRequestsEnabled = runtime.compositeRequestsEnabled;
   template.foodRequestsEnabled = runtime.foodRequestsEnabled;
   template.materialsRequestsEnabled = runtime.materialsRequestsEnabled;
+  template.venueEquipmentRequestsEnabled = runtime.venueEquipmentRequestsEnabled;
   return template
     .evaluate()
     .setTitle(diagnostic ? 'HAU-USC Logistics Staging Diagnostic' : 'HAU-USC Logistics Management System')

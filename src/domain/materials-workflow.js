@@ -151,7 +151,7 @@ export function normalizeMaterialsDetails(
   const normalizedLines = (lines ?? []).map((line, index) => {
     const unit = controlled(line.unit, MATERIAL_UNITS, `lines[${index}].unit`, { lower: true });
     const category = controlled(
-      line.category ?? raw.materialCategory,
+      line.category || raw.materialCategory,
       MATERIAL_CATEGORIES,
       `lines[${index}].category`,
     );

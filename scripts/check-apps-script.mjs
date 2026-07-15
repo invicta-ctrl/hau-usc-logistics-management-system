@@ -41,6 +41,7 @@ const requiredFiles = [
   'CompositeRequestService.gs',
   'FoodWorkflowService.gs',
   'MaterialsWorkflowService.gs',
+  'VenueEquipmentWorkflowService.gs',
   'appsscript.json',
   'Index.html',
   'AppBody.html',
@@ -93,6 +94,9 @@ const requiredFunctions = [
   'api_updateFoodComponent',
   'api_getMaterialsWorkQueue',
   'api_updateMaterialsComponent',
+  'api_searchVenueEquipmentReferences',
+  'api_getVenueEquipmentWorkQueue',
+  'api_updateVenueEquipmentComponent',
   'api_transitionCompositeComponent',
   'api_cancelCompositeRequest',
   'api_reopenCompositeRequest',
@@ -147,6 +151,9 @@ if (!index.includes("data-food-requests-enabled=\"<?= foodRequestsEnabled ? 'tru
 }
 if (!index.includes("data-materials-requests-enabled=\"<?= materialsRequestsEnabled ? 'true' : 'false' ?>\"")) {
   throw new Error('Apps Script template does not expose the server Materials request feature flag.');
+}
+if (!index.includes("data-venue-equipment-requests-enabled=\"<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>\"")) {
+  throw new Error('Apps Script template does not expose the server Venue and Equipment request feature flag.');
 }
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"'))
@@ -220,6 +227,13 @@ if (
     ?.attributes.get('data-food-requests-enabled') !== 'false'
 ) {
   throw new Error('Assembled Apps Script document did not default Food requests to disabled.');
+}
+if (
+  tokenizeHtml(assembled)
+    .find((token) => token.type === 'tag' && !token.closing && token.name === 'body')
+    ?.attributes.get('data-venue-equipment-requests-enabled') !== 'false'
+) {
+  throw new Error('Assembled Apps Script document did not default Venue and Equipment requests to disabled.');
 }
 if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script'))
   throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');

@@ -33,6 +33,14 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
     .locator('[name="materialsSpecification"]')
     .fill('A3 directional signs with approved event wording');
   await panel.locator('[name="materialsUsagePurpose"]').fill('Synthetic event wayfinding');
+  await panel.locator('[data-composite-toggle][value="VENUE_EQUIPMENT"]').check();
+  await panel.locator('[name="venueEquipmentSearch"]').fill('projector');
+  await panel
+    .locator('[data-venue-equipment-results] [data-venue-equipment-reference="SYN-EQUIP-1"]')
+    .click();
+  await panel
+    .locator('[name="venueEquipmentPurposeDetail"]')
+    .fill('Synthetic audiovisual support for the approved event');
   await panel.getByRole('button', { name: 'Review composite request' }).click();
 
   const result = panel.locator('#compositeRequestResult');
@@ -40,6 +48,7 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   await expect(result).toContainText(/LREQ-/);
   await expect(result).toContainText('FOOD');
   await expect(result).toContainText('MATERIALS');
+  await expect(result).toContainText('VENUE_EQUIPMENT');
   const storedFood = await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
     return state.compositeComponents.find((child) => child.componentType === 'FOOD')?.payload?.food;
@@ -65,6 +74,25 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
     usagePurpose: 'Synthetic event wayfinding',
     fulfillmentPath: 'PENDING_DECISION',
     substitutionPolicy: 'EXACT_ONLY',
+  });
+  const storedVenueEquipment = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
+    return state.compositeComponents.find((child) => child.componentType === 'VENUE_EQUIPMENT')
+      ?.payload?.venueEquipment;
+  });
+  expect(storedVenueEquipment).toMatchObject({
+    version: 1,
+    ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+    confirmationStatus: 'PENDING_CONFIRMATION',
+    returnRequired: true,
+    returnStatus: 'PENDING_RETURN',
+    referenceSnapshots: [
+      {
+        referenceId: 'SYN-EQUIP-1',
+        routeId: 'SYN-ROUTE-EQUIPMENT',
+        requestability: 'REQUESTABLE',
+      },
+    ],
   });
 
   const foodQueue = page.locator('#foodCommitteeQueue');
@@ -104,5 +132,33 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   expect(updatedMaterials).toMatchObject({
     revision: 2,
     materials: { fulfillmentPath: 'STOCK_ISSUE', substitutionPolicy: 'EXACT_ONLY' },
+  });
+
+  const venueEquipmentQueue = page.locator('#venueEquipmentQueue');
+  await expect(venueEquipmentQueue).toBeVisible();
+  await expect(venueEquipmentQueue).toContainText('PENDING_CONFIRMATION');
+  await venueEquipmentQueue.getByRole('button', { name: 'Manage' }).click();
+  const venueEquipmentWorkflow = page.locator('#venueEquipmentWorkflowForm');
+  await expect(venueEquipmentWorkflow).toBeVisible();
+  await venueEquipmentWorkflow.locator('[name="confirmationStatus"]').selectOption('CONFIRMED');
+  await venueEquipmentWorkflow.locator('[name="confirmationReference"]').fill('SYN-CONFIRM-UI');
+  await venueEquipmentWorkflow
+    .getByRole('button', { name: 'Save Venue & Equipment Workflow' })
+    .click();
+  await expect(venueEquipmentWorkflow).toBeHidden();
+  const updatedVenueEquipment = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
+    const child = state.compositeComponents.find(
+      (entry) => entry.componentType === 'VENUE_EQUIPMENT',
+    );
+    return { revision: child.revision, venueEquipment: child.payload?.venueEquipment };
+  });
+  expect(updatedVenueEquipment).toMatchObject({
+    revision: 2,
+    venueEquipment: {
+      confirmationStatus: 'CONFIRMED',
+      confirmationReference: 'SYN-CONFIRM-UI',
+      returnStatus: 'PENDING_RETURN',
+    },
   });
 });

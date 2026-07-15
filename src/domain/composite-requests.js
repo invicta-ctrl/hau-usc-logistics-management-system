@@ -4,6 +4,10 @@ import {
   materialsAttentionFlags,
   normalizeMaterialsDetails,
 } from './materials-workflow.js';
+import {
+  normalizeVenueEquipmentDetails,
+  venueEquipmentAttentionFlags,
+} from './venue-equipment-workflow.js';
 
 export const COMPOSITE_SECTION_TYPES = Object.freeze(['FOOD', 'MATERIALS', 'VENUE_EQUIPMENT']);
 
@@ -40,6 +44,7 @@ export const COMPOSITE_ATTENTION_FLAGS = Object.freeze({
   ESCALATED: 'ESCALATED',
   FOOD_ATTENTION: 'FOOD_ATTENTION',
   MATERIALS_ATTENTION: 'MATERIALS_ATTENTION',
+  VENUE_EQUIPMENT_ATTENTION: 'VENUE_EQUIPMENT_ATTENTION',
 });
 
 const MAX_TEXT_LENGTH = 240;
@@ -92,11 +97,20 @@ function normalizedLine(line, index) {
   const referenceId = text(line.referenceId ?? line.itemId, `lines[${index}].referenceId`, { max: 100 });
   const unit = normalizedUnit(line.unit, `lines[${index}].unit`);
   const notes = text(line.notes, `lines[${index}].notes`, { max: 240 });
+  const category = text(line.category, `lines[${index}].category`, { max: 80 }).toUpperCase();
+  const referenceRevision =
+    line.referenceRevision == null || line.referenceRevision === ''
+      ? undefined
+      : positiveQuantity(line.referenceRevision, `lines[${index}].referenceRevision`);
+  if (referenceRevision != null && !Number.isInteger(referenceRevision))
+    throw new AppError('VALIDATION_ERROR', `lines[${index}].referenceRevision must be a positive integer.`);
   return {
     referenceId,
+    ...(referenceRevision == null ? {} : { referenceRevision }),
     label,
     quantity: positiveQuantity(line.quantity, `lines[${index}].quantity`),
     unit,
+    category,
     notes,
   };
 }
@@ -159,16 +173,29 @@ function normalizeSection(section, index, context = {}) {
     type === 'MATERIALS'
       ? normalizeMaterialsDetails(section.materials, normalizedLines, context)
       : undefined;
+  const normalizedVenueEquipment =
+    type === 'VENUE_EQUIPMENT' && (context.requireVenueEquipmentDetails || section.venueEquipment)
+      ? normalizeVenueEquipmentDetails(section.venueEquipment, normalizedLines, context)
+      : undefined;
   const materials = normalizedMaterials ? { ...normalizedMaterials } : undefined;
   if (materials) delete materials.lines;
+  const venueEquipment = normalizedVenueEquipment ? { ...normalizedVenueEquipment } : undefined;
+  if (venueEquipment) delete venueEquipment.lines;
   return {
     type,
     label: label || COMPOSITE_SECTION_LABELS[type],
     notes,
     clientComponentId: text(section.clientComponentId, `sections[${index}].clientComponentId`, { max: 120 }),
-    lines: normalizedMaterials?.lines ?? normalizedLines,
+    lines: normalizedMaterials?.lines ?? normalizedVenueEquipment?.lines ?? normalizedLines,
+    ...(normalizedVenueEquipment
+      ? {
+          ownerCommitteeId: normalizedVenueEquipment.ownerCommitteeId,
+          ownerUserId: normalizedVenueEquipment.ownerUserId,
+        }
+      : {}),
     ...(food ? { food } : {}),
     ...(materials ? { materials } : {}),
+    ...(venueEquipment ? { venueEquipment } : {}),
   };
 }
 
@@ -246,9 +273,19 @@ export function createCompositePacket(
     actor = 'SYSTEM',
     now = new Date().toISOString(),
     resolveMaterialReference,
+    requireVenueEquipmentDetails = false,
+    resolveVenueEquipmentReference,
+    resolveVenueEquipmentRoute,
+    resolveVenueEquipmentOtherRoute,
   } = {},
 ) {
-  const draft = validateCompositeDraft(command, { resolveMaterialReference });
+  const draft = validateCompositeDraft(command, {
+    resolveMaterialReference,
+    requireVenueEquipmentDetails,
+    resolveVenueEquipmentReference,
+    resolveVenueEquipmentRoute,
+    resolveVenueEquipmentOtherRoute,
+  });
   if (!requestId) throw new AppError('SERVER_ID_REQUIRED', 'A server request ID is required.');
   if (
     !Array.isArray(componentIds) ||
@@ -295,14 +332,16 @@ export function createCompositePacket(
     relationshipVersion: 1,
     componentType: section.type,
     label: section.label,
-    ownerCommitteeId: COMPOSITE_COMMITTEES[section.type],
-    ownerUserId: '',
+    ownerCommitteeId: section.ownerCommitteeId || COMPOSITE_COMMITTEES[section.type],
+    ownerUserId: section.ownerUserId || '',
     dueAt: draft.eventStartAt,
     status: 'FOR_REVIEW',
     attentionFlags: section.food
       ? foodAttentionFlags(section.food)
       : section.materials
         ? materialsAttentionFlags(section.materials)
+        : section.venueEquipment
+          ? venueEquipmentAttentionFlags(section.venueEquipment)
         : [],
     progress: {
       lineCount: section.lines.length,
@@ -313,6 +352,7 @@ export function createCompositePacket(
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
       ...(section.food ? { food: section.food } : {}),
       ...(section.materials ? { materials: section.materials } : {}),
+      ...(section.venueEquipment ? { venueEquipment: section.venueEquipment } : {}),
     },
     revision: 1,
     createdAt: now,
@@ -367,6 +407,12 @@ export function deriveCompositeParentStatus(children) {
     )
   )
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.MATERIALS_ATTENTION);
+  if (
+    children.some((child) =>
+      (child.attentionFlags || []).some((flag) => String(flag).startsWith('VENUE_EQUIPMENT_')),
+    )
+  )
+    attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.VENUE_EQUIPMENT_ATTENTION);
   if (children.some((child) => !child.ownerCommitteeId || !child.ownerUserId))
     attentionFlags.push(COMPOSITE_ATTENTION_FLAGS.UNASSIGNED_SECTION);
   return {
@@ -453,6 +499,8 @@ export function transitionCompositeChild(child, action, { reason = '' } = {}) {
           ? foodAttentionFlags(child.payload?.food)
           : child.componentType === 'MATERIALS'
             ? materialsAttentionFlags(child.payload?.materials)
+            : child.componentType === 'VENUE_EQUIPMENT' && child.payload?.venueEquipment
+              ? venueEquipmentAttentionFlags(child.payload.venueEquipment)
           : []
         : (child.attentionFlags || []).filter((flag) => flag !== COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION),
     transitionReason: text(reason, 'reason', { max: 500 }),
@@ -462,7 +510,13 @@ export function transitionCompositeChild(child, action, { reason = '' } = {}) {
 export function amendCompositeSection(
   child,
   patch,
-  { now = new Date().toISOString(), resolveMaterialReference } = {},
+  {
+    now = new Date().toISOString(),
+    resolveMaterialReference,
+    resolveVenueEquipmentReference,
+    resolveVenueEquipmentRoute,
+    resolveVenueEquipmentOtherRoute,
+  } = {},
 ) {
   if (!child || TERMINAL_STATUSES.has(child.status))
     throw new AppError(
@@ -473,6 +527,10 @@ export function amendCompositeSection(
   const materialsDraft = existingMaterials
     ? { ...existingMaterials, ...(patch?.materials ?? {}) }
     : patch?.materials;
+  const existingVenueEquipment = child.payload?.venueEquipment ?? null;
+  const venueEquipmentDraft = existingVenueEquipment
+    ? { ...existingVenueEquipment, ...(patch?.venueEquipment ?? {}) }
+    : patch?.venueEquipment;
   const section = normalizeSection(
     {
       type: child.componentType,
@@ -481,14 +539,25 @@ export function amendCompositeSection(
       lines: patch?.lines ?? child.payload?.lines,
       food: patch?.food ?? child.payload?.food,
       materials: materialsDraft,
+      venueEquipment: venueEquipmentDraft,
     },
     0,
-    { resolveMaterialReference, existingMaterials },
+    {
+      resolveMaterialReference,
+      existingMaterials,
+      requireVenueEquipmentDetails: Boolean(existingVenueEquipment || venueEquipmentDraft),
+      resolveVenueEquipmentReference,
+      resolveVenueEquipmentRoute,
+      resolveVenueEquipmentOtherRoute,
+      existingVenueEquipment,
+    },
   );
   if (!section) throw new AppError('VALIDATION_ERROR', 'An amended section cannot be blank.');
   return {
     ...child,
     label: section.label,
+    ownerCommitteeId: section.ownerCommitteeId || child.ownerCommitteeId,
+    ownerUserId: section.ownerUserId || '',
     status: 'FOR_REVIEW',
     attentionFlags: [
       ...new Set([
@@ -501,6 +570,13 @@ export function amendCompositeSection(
                 ),
                 ...materialsAttentionFlags(section.materials),
               ]
+            : section.venueEquipment
+              ? [
+                  ...(child.attentionFlags || []).filter(
+                    (flag) => !String(flag).startsWith('VENUE_EQUIPMENT_'),
+                  ),
+                  ...venueEquipmentAttentionFlags(section.venueEquipment),
+                ]
             : child.attentionFlags || []),
         COMPOSITE_ATTENTION_FLAGS.AMENDED,
       ]),
@@ -510,6 +586,7 @@ export function amendCompositeSection(
       lines: section.lines.map(({ duplicateCount: _duplicateCount, ...line }) => line),
       ...(section.food ? { food: section.food } : {}),
       ...(section.materials ? { materials: section.materials } : {}),
+      ...(section.venueEquipment ? { venueEquipment: section.venueEquipment } : {}),
     },
     relationshipVersion: Number(child.relationshipVersion || 1) + 1,
     revision: Number(child.revision || 1) + 1,
