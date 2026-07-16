@@ -27,6 +27,10 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   matrix, stop rules, and a minimal complete unblock package. Repository-native
   tooling now creates the record outside Git and validates candidate hashes,
   required confirmations, and per-gate decisions without printing values.
+- Readiness tooling proof: `3591550` implemented the validator; Linux CI then
+  exposed Windows-only test-fixture paths. Repair `eecbf8f` is pushed at parity,
+  with `validate` run `29479074729` and `verify`/`browser-smoke` run
+  `29479074714` green. Independent implementation review is PASS.
 - External boundary held: no `clasp`, remote Google read, backup, setup,
   migration, seed, trigger, upload, deployment, staging write, production,
   merge, tag, release, hosting, or database action occurred.

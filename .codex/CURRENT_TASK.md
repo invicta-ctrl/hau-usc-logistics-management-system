@@ -42,8 +42,13 @@ approval, P0/P1, target drift, or any integrity failure`.
 - **Current bounded work:** repository-native private-package initializer and
   validator implemented with focused CLI/unit coverage and full repository
   checks; independent review repairs align rollback rehearsal with Gate E and
-  backup-before-setup ordering; final independent verdict is PASS. Focused
-  commit/push and exact-SHA CI remain.
+  backup-before-setup ordering; final independent verdict is PASS.
+- **Repository checkpoint:** implementation commit
+  `359155051bcd2f0203ca8ab34716431e42a97221` exposed Windows-only unit-fixture
+  paths in Linux CI. Focused repair commit
+  `eecbf8f651facaf10b2122f0d84e4a3f21195d56` uses platform-native absolute
+  paths and is pushed at parity. Run `29479074729` passed `validate`; run
+  `29479074714` passed `verify` and `browser-smoke`.
 - **Actions not performed:** no `clasp`, remote source read, Apps Script call,
   Sheet/Drive access, backup, setup, migration, seed, trigger, upload,
   deployment, external mutation, PR merge, `main`, production, hosting, or

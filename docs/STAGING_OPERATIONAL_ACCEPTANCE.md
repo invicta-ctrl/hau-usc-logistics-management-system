@@ -28,6 +28,10 @@ was performed during this readiness audit.
   `validate`, `verify`, and `browser-smoke`.
 - Evidence CI: runs `29477246636` and `29477246392` passed the same three
   checks.
+- Readiness tooling: validator implementation `3591550` plus platform-native
+  test repair `eecbf8f`; runs `29479074729` and `29479074714` pass `validate`,
+  `verify`, and `browser-smoke`. The earlier `3591550` verify failure was
+  limited to Windows-only unit-fixture paths and is retained in CI history.
 - Local package: 36 Vitest files / 303 tests; 67 Playwright passes / 119
   intentional skips / 0 failures; 33 Apps Script sources / 55 required
   functions; two 411,048-byte standalone artifacts.

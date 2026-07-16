@@ -33,6 +33,10 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   evidence rules, stop/rollback conditions, complete unblock package, and a
   fail-closed private-package initializer/validator that reports only field
   names and consecutive gate authorization.
+- Validator proof: implementation `3591550` plus cross-platform test repair
+  `eecbf8f` are pushed at parity. The initial Linux verify failure from
+  Windows-only fixture paths is repaired; runs `29479074729` and `29479074714`
+  pass `validate`, `verify`, and `browser-smoke` at the repair checkpoint.
 - External boundary: no `clasp`, remote source read, Apps Script execution,
   Sheet/Drive access, backup, schema setup, migration, seed, trigger, upload,
   deployment, staging write, production action, merge, tag, release, hosting,

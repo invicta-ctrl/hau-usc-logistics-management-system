@@ -6,7 +6,7 @@
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
-- Current implementation checkpoint: Slice 12 evidence commit `569d2a787585dbdf68d68c1da1d5440a18a2540a` is pushed/CI-green; Slice 13 is blocked before external preflight on missing named authority/resources/test inputs
+- Current repository checkpoint: Slice 13 readiness validator repair `eecbf8f651facaf10b2122f0d84e4a3f21195d56` is pushed/CI-green; the staged product candidate remains Slice 12 evidence commit `569d2a787585dbdf68d68c1da1d5440a18a2540a`; Slice 13 is blocked before external preflight on missing named authority/resources/test inputs
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -30,6 +30,11 @@ Always verify the current remote head and CI because documentation commits may f
   `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`. A fail-closed private-package
   initializer/validator refuses Git-resident records and reports only missing
   field names and consecutively authorized gates.
+- Readiness-tool verification: implementation commit `3591550` initially
+  failed Linux verify because four tests used Windows-only fixture paths;
+  repair `eecbf8f` uses platform-native absolute paths. Run `29479074729`
+  passed `validate`; run `29479074714` passed `verify` and `browser-smoke`.
+  PR #7 remains open, draft, mergeable, and unmerged.
 - Present but not authority: private staging clasp candidates and historical
   deployment/backup/parity records remain outside Git. They may be used only
   after the owner names the exact current target/config and action categories.

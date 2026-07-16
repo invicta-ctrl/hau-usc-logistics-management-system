@@ -12,6 +12,10 @@
   It refuses in-repository packages, binds safe labels to the reviewed commits
   and artifact hashes, checks all owner/resource/fixture/tester/window/evidence
   dependencies and explicit action decisions, and prints no supplied values.
+- Independent review is PASS after aligning rollback rehearsal to Gate E,
+  enforcing backup-before-setup order, resolving real paths, and sanitizing CLI
+  errors. Linux CI exposed Windows-only test fixture paths in `3591550`; repair
+  `eecbf8f` is green in `validate`, `verify`, and `browser-smoke`.
 - Confirmed that private staging clasp candidates and historical deployment
   evidence exist outside Git but are not current target authority. No signed
   matrix, approved non-personal fixture, named tester/signatory roster, current
