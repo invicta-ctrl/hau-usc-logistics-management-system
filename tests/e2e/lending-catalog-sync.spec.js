@@ -159,11 +159,12 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
         data,
         pagination: { page: 1, pageSize: 10, total: data.lendingTickets?.length || data.inventoryItems?.length || 0, hasMore: false },
         revision: { revision: state.dataRevision, updatedAt: state.dataRevisionUpdatedAt },
+        scopeRevision: { scope: module, token: state.dataRevision, updatedAt: state.dataRevisionUpdatedAt },
         cache: { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 },
         metrics: { readCount: 2, cacheHits: 0 },
       };
     };
-    globalThis.__server = { bootstrap, revision: 1, writes: 0, failNextBootstrap: false, calls: [] };
+    globalThis.__server = { bootstrap, revision: 1, writes: 0, failNextBootstrap: false, nearLiveEnabled: true, calls: [] };
     let successHandler = () => {};
     let failureHandler = () => {};
     let runner;
@@ -186,7 +187,10 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
               return;
             }
            if (method === 'api_getBootstrapModule') {
-             successHandler({ ...moduleBootstrap(globalThis.__server.bootstrap, payload.module) });
+             if (globalThis.__server.failNextBootstrap) {
+               globalThis.__server.failNextBootstrap = false;
+               failureHandler(new Error('Simulated refresh failure'));
+             } else successHandler({ ...moduleBootstrap(globalThis.__server.bootstrap, payload.module) });
              return;
            }
            if (method === 'api_getBootstrapData') {
@@ -198,6 +202,21 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
           }
           if (method === 'api_getDataRevision') {
             successHandler({ ok: true, revision: globalThis.__server.revision, updatedAt: 'now', environment: 'STAGING' });
+            return;
+          }
+          if (method === 'api_getScopedRevision') {
+            successHandler({
+              ok: true,
+              contract: 'scoped-revision',
+              contractVersion: 1,
+              enabled: globalThis.__server.nearLiveEnabled,
+              scope: payload.scope,
+              token: globalThis.__server.revision,
+              globalRevision: globalThis.__server.revision,
+              updatedAt: '2026-07-16T12:00:00+08:00',
+              environment: 'STAGING',
+              metrics: { revisionReads: 1, moduleReads: 0, requestCount: 1 },
+            });
             return;
           }
           if (method === 'api_createLendingTicket') {
@@ -215,7 +234,14 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
               }],
             };
             globalThis.__server.failNextBootstrap = true;
-            successHandler({ ok: true, ticketId: id, correlationId: 'COR-WRITE-1' });
+            successHandler({
+              ok: true,
+              ticketId: id,
+              correlationId: 'COR-WRITE-1',
+              dataRevision: globalThis.__server.revision,
+              dataRevisionUpdatedAt: '2026-07-16T12:00:00+08:00',
+              dataScopeRevisions: { overview: globalThis.__server.revision, lending: globalThis.__server.revision },
+            });
             return;
           }
           failureHandler(new Error(`Unexpected Apps Script call: ${method}`));
@@ -245,6 +271,50 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
   await expect(page.locator('#lendingTickets')).toContainText('Remote Borrower');
   expect(await page.evaluate(() => globalThis.__server.writes)).toBe(1);
 
+  const beforeChanged = await page.evaluate(() => ({
+    module: globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length,
+    essential: globalThis.__server.calls.filter((call) => call.method === 'api_getEssentialBootstrapData').length,
+  }));
+  await page.evaluate(() => {
+    globalThis.__server.revision += 1;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await expect.poll(() => page.evaluate(() =>
+    globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length,
+  )).toBe(beforeChanged.module + 1);
+  expect(await page.evaluate(() => globalThis.__server.calls.filter((call) => call.method === 'api_getEssentialBootstrapData').length)).toBe(beforeChanged.essential);
+  expect(await page.evaluate(() => globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').at(-1)?.payload?.module)).toBe('lending');
+
+  const beforeUnchanged = await page.evaluate(() => ({
+    module: globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length,
+    revision: globalThis.__server.calls.filter((call) => call.method === 'api_getScopedRevision').length,
+  }));
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => page.evaluate(() =>
+    globalThis.__server.calls.filter((call) => call.method === 'api_getScopedRevision').length,
+  )).toBe(beforeUnchanged.revision + 1);
+  expect(await page.evaluate(() => globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length)).toBe(beforeUnchanged.module);
+
+  const beforeAbandonedModal = await page.evaluate(() =>
+    globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length,
+  );
+  await page.evaluate(() => {
+    const modal = document.querySelector('#modal');
+    const backdrop = document.querySelector('#modalBackdrop');
+    modal.innerHTML = '<form id="abandonedNearLiveDraft"><input name="draft"></form>';
+    backdrop.classList.add('show');
+    const input = modal.querySelector('input');
+    input.value = 'abandoned';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    backdrop.classList.remove('show');
+    globalThis.__server.revision += 1;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await expect.poll(() => page.evaluate(() =>
+    globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length,
+  )).toBe(beforeAbandonedModal + 1);
+  await expect(page.locator('#syncUpdateBanner')).toBeHidden();
+
   await expect(page.locator('#adminCatalogException')).toBeHidden();
   await page.locator('#primaryNav [data-view="inventory"]').click();
   await expect(page.locator('[data-inventory-action="edit"]')).toHaveCount(0);
@@ -258,4 +328,23 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
   await expect(page.locator('#syncUpdateBanner')).toBeVisible();
   await expect(page.locator('#syncIndicator')).toContainText('Updates available');
   await expect(form.locator('[name="borrowerName"]')).toHaveValue('Unsaved input');
+  await testInfo.attach('near-live-dirty-deferral', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
+
+  await page.locator('[data-sync-continue]').click();
+  await page.evaluate(() => {
+    globalThis.__server.nearLiveEnabled = false;
+    window.dispatchEvent(new Event('focus'));
+  });
+  await expect(page.locator('#syncIndicator')).toContainText('Manual refresh only');
+  await testInfo.attach('near-live-remote-disable', {
+    body: await page.screenshot(),
+    contentType: 'image/png',
+  });
+  const beforeManual = await page.evaluate(() => globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length);
+  await page.locator('#refreshOperationalData').click();
+  await expect.poll(() => page.evaluate(() => globalThis.__server.calls.filter((call) => call.method === 'api_getBootstrapModule').length)).toBe(beforeManual + 1);
+  expect(await page.evaluate(() => globalThis.__server.writes)).toBe(1);
 });

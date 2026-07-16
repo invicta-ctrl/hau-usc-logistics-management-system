@@ -2,7 +2,7 @@
 
 - Local mock mode is preview-only browser persistence with no shared concurrency or durable backup. Apps Script mode uses the server boundary; the future REST mode remains reserved.
 - Local role display is demonstrative. Apps Script authorization always resolves the active Google identity and server-side access row.
-- Version 0.5.0 near-real-time behavior for authenticated internal sessions uses five-second polling, not WebSockets or guaranteed server push. Hidden/offline tabs pause, failures back off, and normal visibility/network timing can exceed the target 5–10 second observation window. The request-only portal stays outside the internal polling controller.
+- Version 0.5.0 near-live behavior for authenticated internal sessions uses 15-second jittered scoped polling, not WebSockets or guaranteed server push. Hidden/offline/inactive tabs pause, failures back off, dirty input defers refresh, and normal visibility/network timing can exceed the owner-approved p95-at-or-below-25-second staging target. The request-only portal stays outside the internal polling controller.
 - Dirty-state protection defers refresh; it does not merge simultaneous edits. The user must choose when to reload and may need to re-enter conflicting changes.
 - The direct-edit revision mechanism detects relevant spreadsheet edits after the installable trigger is configured; it does not make manual sheet editing a supported transactional workflow or add row-level conflict resolution.
 - The operational edit trigger is environment-specific and is not created by repository commands. Each staging/production spreadsheet requires explicit reviewed setup.

@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-11 committed and CI-verified; Slice 12 scope locked; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-11 committed and CI-verified; Slice 12 locally verified pending commit; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
-- Current implementation checkpoint: Slice 12 scope is locked; implementation has not started at this checkpoint
+- Current implementation checkpoint: Slice 12 implementation and complete local gates pass; focused commit/push and exact-SHA CI remain
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -20,7 +20,7 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Slice 12 - Bounded near-live active-module refresh
 
-- Stage: `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI` from accepted checkpoint
+- Stage: `SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT` from accepted checkpoint
   `6fa6222adde5e8314d2defc40e0cd6686fff953b` on
   `integration/v0.5-baseline`.
 - Locked behavior: 15-second default with bounded jitter; one scoped revision
@@ -39,6 +39,22 @@ Always verify the current remote head and CI because documentation commits may f
   production action is authorized.
 - Rollback: disable near-live polling remotely and preserve manual/on-mutation
   scoped refresh; use a focused code revert without rewriting data.
+- Delivered locally: per-scope revision storage and invalidation, compact
+  authorized endpoint, 15-second jittered single-flight controller,
+  active-module-only refresh, dirty/modal deferral and abandoned-modal cleanup,
+  request-only token isolation, stale/manual-only UX, fail-closed remote flag,
+  safe counters, adapters, docs, tests, and regenerated artifacts.
+- Verification: `npm run check` passes 36 Vitest files / 303 tests, a 34-module
+  build, 33 Apps Script sources / 55 functions, deterministic generated parity,
+  and two 411,048-byte artifacts. Full Playwright passes 67 / 119 intentional
+  skips / 0 failed; focused near-live proof, privacy/diff review, and final
+  implementation validation pass.
+- Generated evidence: standalone SHA-256
+  `b65d717f22fd085acaa19d847ca827964f891374e1a03b9d0578add5ba833580`;
+  Apps Script `Index.html` 1,022 bytes / SHA-256
+  `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
+  `AppScript.html` 343,759 bytes / SHA-256
+  `a35f25e5f3c4ca2ccd8922434ea72cfa8776d449fd9850da6129bfe77bc04645`.
 
 ## Historical Slice 11 - Restock Safety
 

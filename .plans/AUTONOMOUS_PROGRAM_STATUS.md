@@ -4,10 +4,10 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 12 scope lock
+## Current run checkpoint - Phase 4 / Slice 12 locally verified
 
 - Date: 2026-07-16 (Asia/Manila).
-- Stage: `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI`.
+- Stage: `SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT`.
 - Accepted starting checkpoint: `6fa6222adde5e8314d2defc40e0cd6686fff953b`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
@@ -43,6 +43,22 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   2026-07-16. Repository load evidence will model 1, 10, and 30 active sessions;
   these are engineering scenarios, while live p95 and institutional concurrency
   acceptance remain the separately authorized Slice 13 staging gate.
+- Slice 12 result: per-module revision tokens and conservative mutation
+  mappings, compact authorized polling, active bounded-module refresh,
+  visibility/online/activity/single-flight/backoff controls, dirty and modal
+  deferral, abandoned-modal cleanup, request-only token isolation, stale and
+  manual-only UX, fail-closed remote disable, safe counters, adapters, docs,
+  tests, and generated parity are complete locally.
+- Verification: `npm run check` passes 36 Vitest files / 303 tests, a 34-module
+  build, 33 Apps Script sources / 55 required functions, deterministic parity,
+  and two 411,048-byte standalone artifacts. Full Playwright passes 67 / 119
+  intentional skips / 0 failed; focused near-live network proof, privacy and
+  diff checks pass. Final implementation validation is PASS after targeted
+  repairs for baseline token propagation, request-only privacy, and abandoned
+  modal state.
+- Scope checkpoint: `ef05589015af636ff0fef820681e72cc54f6bb76` is pushed at
+  parity; runs `29475376088` and `29475376055` passed all three CI checks.
+  Implementation commit/push and exact-SHA CI evidence are the next gate.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

@@ -81,6 +81,9 @@ export function createLegacyRuntimeAdapter(mockServices) {
     getDataRevision() {
       return remote.getDataRevision({});
     },
+    getScopedRevision(scope) {
+      return remote.getScopedRevision({ scope });
+    },
     async getInventoryItem(itemId) {
       const result = await remote.getInventoryItem({ itemId });
       return result.item;

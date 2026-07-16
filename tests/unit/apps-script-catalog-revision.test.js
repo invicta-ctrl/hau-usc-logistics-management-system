@@ -122,7 +122,12 @@ describe('data revision mutation guard', () => {
     ctx.correlationId_ = () => 'COR-1';
     ctx.clientSafeValue_ = (value) => value;
     ctx.audit_ = () => ({});
-    ctx.touchDataRevision_ = () => ({ revision: ++touches, updatedAt: 'now', environment: 'STAGING' });
+    ctx.touchDataRevision_ = (_actor, scopes) => ({
+      revision: ++touches,
+      updatedAt: 'now',
+      environment: 'STAGING',
+      scopes: Object.fromEntries(scopes.map((scope) => [scope, touches])),
+    });
     ctx.withScriptLock_ = (fn) => fn();
     const result = ctx.guardMutationApi_('compound', {}, () => {
       ctx.recordIdempotency_('nested', { nested: true }, { User_ID: 'USR-1' }, 'COR-1');
@@ -130,12 +135,77 @@ describe('data revision mutation guard', () => {
     });
     expect(result.ok).toBe(true);
     expect(result.dataRevision).toBe(1);
+    expect(result.dataScopeRevisions).toMatchObject({ overview: 1, request: 1 });
     expect(touches).toBe(1);
     ctx.guardMutationApi_('replay', {}, () => ({ idempotentReplay: true }));
     expect(touches).toBe(1);
     ctx.getDataRevision_ = () => ({ revision: 1, updatedAt: 'now', environment: 'STAGING' });
     expect(ctx.api_getDataRevision().revision).toBe(1);
     expect(touches).toBe(1);
+  });
+
+  it('returns only an authorized scoped token and fails closed when scheduled refresh is disabled', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'DataRevisionService.gs']);
+    ctx.correlationId_ = () => 'COR-1';
+    ctx.clientSafeValue_ = (value) => value;
+    ctx.withRequestReadCache_ = (fn) => fn({ readCount: 1, cacheHits: 0 });
+    ctx.bootstrapSession_ = () => ({ internal: true });
+    ctx.bootstrapModuleAllowed_ = (scope) => scope === 'inventory';
+    ctx.getDataRevision_ = () => ({ revision: 9, updatedAt: 'global', environment: 'STAGING' });
+    ctx.revisionScopeMap_ = () => ({ inventory: { token: 4, updatedAt: 'scoped' } });
+    ctx.resolveNearLiveRefreshEnabled_ = () => false;
+    expect(ctx.api_getScopedRevision({ scope: 'inventory' })).toMatchObject({
+      ok: true,
+      contract: 'scoped-revision',
+      contractVersion: 1,
+      enabled: false,
+      scope: 'inventory',
+      token: 4,
+      globalRevision: 9,
+      metrics: { revisionReads: 1, moduleReads: 0, requestCount: 1 },
+    });
+    expect(ctx.api_getScopedRevision({ scope: 'request' })).toMatchObject({
+      ok: false, code: 'FORBIDDEN',
+    });
+    expect(ctx.api_getScopedRevision({ scope: 'unknown' })).toMatchObject({
+      ok: false, code: 'REVISION_SCOPE_INVALID',
+    });
+  });
+
+  it('maps mutations to bounded affected scopes and treats unknown operations conservatively', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'DataRevisionService.gs']);
+    expect(ctx.revisionScopesForOperation_('confirmReturn')).toEqual(
+      expect.arrayContaining(['overview', 'lending', 'release', 'inventory']),
+    );
+    expect(ctx.revisionScopesForOperation_('receiveRestock')).toEqual(
+      expect.arrayContaining(['overview', 'restocking', 'inventory']),
+    );
+    expect(ctx.revisionScopesForOperation_('unknownFutureMutation')).toHaveLength(7);
+  });
+
+  it('increments only the affected scope tokens and keeps the remote flag fail closed', () => {
+    const ctx = gasContext(['Config.gs', 'Validation.gs', 'DataRevisionService.gs']);
+    const writes = [];
+    ctx.ensureDataRevisionConfig_ = () => ({});
+    ctx.getDataRevision_ = () => ({ revision: 5, updatedAt: 'before', environment: 'STAGING' });
+    ctx.revisionScopeMap_ = () => Object.fromEntries(
+      ['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory']
+        .map((scope) => [scope, { token: 5, updatedAt: 'before' }]),
+    );
+    ctx.nowIso_ = () => 'after';
+    ctx.writeRevisionConfig_ = (key, value) => { writes.push({ key, value }); };
+    const result = ctx.touchDataRevision_({ User_ID: 'USR-1' }, ['inventory']);
+    expect(result).toMatchObject({ revision: 6, scopes: { inventory: 6 } });
+    const scopeWrite = writes.find((write) => write.key === 'DATA_SCOPE_REVISIONS_JSON');
+    expect(JSON.parse(scopeWrite.value)).toMatchObject({
+      inventory: { token: 6, updatedAt: 'after' },
+      lending: { token: 5, updatedAt: 'before' },
+    });
+    expect(ctx.resolveNearLiveRefreshEnabled_({ getProperty: () => null })).toBe(false);
+    expect(ctx.resolveNearLiveRefreshEnabled_({ getProperty: () => 'true' })).toBe(true);
+    expect(() => ctx.resolveNearLiveRefreshEnabled_({ getProperty: () => 'sometimes' })).toThrow(
+      expect.objectContaining({ code: 'CONFIGURATION_INVALID' }),
+    );
   });
 });
 

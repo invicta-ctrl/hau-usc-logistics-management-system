@@ -12,7 +12,11 @@ import {
   canManageCatalog,
   validateCatalogDraft,
 } from '../domain/catalog-management.js';
-import { createRevisionPoller, normalizeRevisionPayload, revisionChanged } from '../app/revision-sync.js';
+import {
+  createRevisionPoller,
+  normalizeScopedRevisionPayload,
+  revisionChanged,
+} from '../app/revision-sync.js';
 import { foodAttentionFlags, normalizeFoodDetails, updateFoodWorkflow } from '../domain/food-workflow.js';
 import {
   materialsAttentionFlags,
@@ -44,11 +48,13 @@ const option = (value, label, selected) =>
   `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(label)}</option>`;
 
 const statusText = {
-  synced: 'Live · synced just now',
+  synced: 'Near-live · updated just now',
   checking: 'Checking for updates',
   'updates-available': 'Updates available',
   offline: 'Offline',
   delayed: 'Sync delayed',
+  stale: 'Updates may be stale',
+  'manual-only': 'Manual refresh only',
 };
 
 function localDueValue(days) {
@@ -303,9 +309,11 @@ export function createRuntimeExtensions(options) {
     closeModal,
     isRequestOnly,
     hasUnsavedRuntimeState = () => false,
+    getActiveModule = () => 'overview',
+    refreshActiveModule = null,
   } = options;
   const dirtyForms = new Set();
-  let acceptedRevision = normalizeRevisionPayload({ revision: getState()?.dataRevision });
+  const acceptedRevisions = new Map();
   let pendingRevision = null;
   let refreshPromise = null;
   let syncIndicator = null;
@@ -326,6 +334,8 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let lastActiveAt = Date.now();
+  let lastUpdatedAt = '';
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
@@ -1722,21 +1732,33 @@ export function createRuntimeExtensions(options) {
     }
   };
 
-  const cleanDisconnectedForms = () => {
-    for (const form of dirtyForms) if (!form.isConnected) dirtyForms.delete(form);
+  const cleanAbandonedForms = () => {
+    const modalOpen = document.querySelector('#modalBackdrop')?.classList.contains('show');
+    for (const form of dirtyForms) {
+      if (!form.isConnected || (!modalOpen && form.closest('#modal'))) dirtyForms.delete(form);
+    }
   };
   const isDirty = () => {
-    cleanDisconnectedForms();
+    cleanAbandonedForms();
     return (
       dirtyForms.size > 0 ||
       document.querySelector('#modalBackdrop')?.classList.contains('show') ||
       hasUnsavedRuntimeState()
     );
   };
-  const setSyncStatus = (status) => {
+  const setSyncStatus = (status, detail = {}) => {
     if (!syncIndicator) return;
+    const updatedAt = detail?.revision?.updatedAt || detail?.lastUpdatedAt || '';
+    if (updatedAt) lastUpdatedAt = updatedAt;
     syncIndicator.dataset.syncStatus = status;
-    syncIndicator.textContent = statusText[status] ?? statusText.delayed;
+    const timestamp = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
+    const suffix = timestamp && !Number.isNaN(timestamp.getTime())
+      ? ` · ${timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+      : '';
+    syncIndicator.textContent = `${statusText[status] ?? statusText.delayed}${suffix}`;
+    syncIndicator.title = lastUpdatedAt
+      ? `Last successful update: ${lastUpdatedAt}`
+      : 'No successful near-live update recorded yet.';
   };
   const hideBanner = () => {
     if (updateBanner) updateBanner.hidden = true;
@@ -1755,22 +1777,29 @@ export function createRuntimeExtensions(options) {
   const markAllClean = () => {
     dirtyForms.clear();
   };
-  const refreshAuthoritative = async (reason = 'manual') => {
+  const acceptScopedRevision = (revision) => {
+    if (!revision?.scope) return;
+    acceptedRevisions.set(revision.scope, revision);
+    if (revision.updatedAt) lastUpdatedAt = revision.updatedAt;
+  };
+  const refreshAuthoritative = async (reason = 'manual', revision = pendingRevision) => {
     if (refreshPromise) return refreshPromise;
     refreshPromise = (async () => {
       setSyncStatus('checking');
-      const next = await loadAuthoritativeState(isRequestOnly());
-      acceptState(next);
-      acceptedRevision = normalizeRevisionPayload({
-        revision: next.dataRevision,
-        updatedAt: next.dataRevisionUpdatedAt,
-        environment: next.environment,
-      });
+      if (typeof refreshActiveModule === 'function') {
+        const scope = revision?.scope || getActiveModule();
+        const result = await refreshActiveModule({ scope, reason });
+        if (result?.ignored) return false;
+      } else {
+        const next = await loadAuthoritativeState(isRequestOnly());
+        acceptState(next);
+      }
+      if (revision) acceptScopedRevision(revision);
       pendingRevision = null;
       markAllClean();
       hideBanner();
-      setSyncStatus('synced');
-      return { state: next, reason };
+      setSyncStatus('synced', { revision });
+      return { scope: revision?.scope || getActiveModule(), reason };
     })();
     try {
       return await refreshPromise;
@@ -1938,11 +1967,13 @@ export function createRuntimeExtensions(options) {
       '<span data-sync-message>New operational data is available.</span><div class="button-row"><button class="primary mini" type="button" data-sync-refresh>Refresh now</button><button class="ghost mini" type="button" data-sync-continue>Continue editing</button></div>';
     document.querySelector(requestOnly ? '.portal-header' : '.app-header').after(updateBanner);
     refresh.addEventListener('click', () => {
-      void poller?.check('manual');
+      void refreshAuthoritative('manual').catch((error) => {
+        showBanner(`Refresh failed. ${error.message}`, { failure: true });
+      });
     });
     updateBanner.querySelector('[data-sync-refresh]').addEventListener('click', async () => {
       try {
-        await refreshAuthoritative('explicit-refresh');
+        await refreshAuthoritative('explicit-refresh', pendingRevision);
       } catch (error) {
         showBanner(`Refresh failed. ${error.message}`, { failure: true });
       }
@@ -1991,16 +2022,13 @@ export function createRuntimeExtensions(options) {
       true,
     );
     document.addEventListener('reset', (event) => setTimeout(() => markFormClean(event.target), 0), true);
+    ['pointerdown', 'keydown'].forEach((eventName) => {
+      document.addEventListener(eventName, () => { lastActiveAt = Date.now(); }, { passive: true });
+    });
     afterRender();
   };
 
   const afterRender = () => {
-    const stateRevision = normalizeRevisionPayload({
-      revision: getState()?.dataRevision,
-      updatedAt: getState()?.dataRevisionUpdatedAt,
-      environment: getState()?.environment,
-    });
-    if (stateRevision.revision >= acceptedRevision.revision) acceptedRevision = stateRevision;
     lending?.setItems(getState()?.inventoryItems ?? []);
     const catalogButton = document.querySelector('#adminCatalogException');
     if (catalogButton) {
@@ -2019,22 +2047,27 @@ export function createRuntimeExtensions(options) {
   };
 
   const start = () => {
-    if (isRequestOnly() || backendMode !== 'apps-script' || typeof services.getDataRevision !== 'function')
+    if (isRequestOnly() || backendMode !== 'apps-script' || typeof services.getScopedRevision !== 'function')
       return;
     poller = createRevisionPoller({
-      readRevision: () => services.getDataRevision(),
+      readRevision: (scope) => services.getScopedRevision(scope),
+      getScope: () => getActiveModule(),
       isVisible: () => document.visibilityState === 'visible',
       isOnline: () => navigator.onLine,
+      isActive: () => document.hasFocus() || Date.now() - lastActiveAt <= 60_000,
       onStatus: setSyncStatus,
       onRevision: async (incoming) => {
-        if (!revisionChanged(acceptedRevision, incoming)) return true;
+        const accepted = acceptedRevisions.get(incoming.scope) || { scope: incoming.scope, token: 0 };
+        if (!revisionChanged(accepted, incoming)) {
+          acceptScopedRevision(incoming);
+          return true;
+        }
         pendingRevision = incoming;
         if (isDirty()) {
           showBanner('New operational data is available.');
           return false;
         }
-        await refreshAuthoritative('poll');
-        return true;
+        return (await refreshAuthoritative('poll', incoming)) !== false;
       },
     });
     document.addEventListener('visibilitychange', () => {
@@ -2042,6 +2075,7 @@ export function createRuntimeExtensions(options) {
       else poller.pause('delayed');
     });
     window.addEventListener('focus', () => {
+      lastActiveAt = Date.now();
       void poller.resume('focus');
     });
     window.addEventListener('online', () => {
@@ -2058,6 +2092,43 @@ export function createRuntimeExtensions(options) {
     afterRender,
     markFormClean,
     refreshAuthoritative,
+    async refreshAfterMutation(result = {}) {
+      const scope = getActiveModule();
+      const token = Number(result?.dataScopeRevisions?.[scope]);
+      const revision = Number.isFinite(token)
+        ? normalizeScopedRevisionPayload({
+          contract: 'scoped-revision',
+          contractVersion: 1,
+          enabled: true,
+          scope,
+          token,
+          globalRevision: result.dataRevision,
+          updatedAt: result.dataRevisionUpdatedAt,
+          environment: getState()?.environment,
+          metrics: {},
+        }, scope)
+        : null;
+      return refreshAuthoritative('mutation', revision);
+    },
+    activeModuleChanged() {
+      lastActiveAt = Date.now();
+      return poller?.resume('scope-change') ?? Promise.resolve(false);
+    },
+    acceptModuleRevision(scope, revision) {
+      if (!revision || revision.scope !== scope || !Number.isFinite(Number(revision.token))) return false;
+      acceptScopedRevision({
+        contract: 'scoped-revision',
+        contractVersion: 1,
+        enabled: true,
+        scope,
+        token: Math.max(0, Math.floor(Number(revision.token))),
+        globalRevision: Number(getState()?.dataRevision || 0),
+        updatedAt: String(revision.updatedAt || ''),
+        environment: String(getState()?.environment || ''),
+        metrics: { revisionReads: 0, moduleReads: 1, requestCount: 1 },
+      });
+      return true;
+    },
     get lending() {
       return lending;
     },

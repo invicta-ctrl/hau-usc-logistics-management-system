@@ -11,7 +11,10 @@ import {
 import {
   backoffDelayMs,
   createRevisionPoller,
+  jitterDelayMs,
+  modelNearLiveLoad,
   normalizeRevisionPayload,
+  normalizeScopedRevisionPayload,
   revisionChanged,
 } from '../../src/app/revision-sync.js';
 import { createMutationRequestTracker } from '../../src/services/legacy-runtime-adapter.js';
@@ -73,11 +76,31 @@ describe('catalog client boundary', () => {
 });
 
 describe('revision polling controller', () => {
+  const scoped = (overrides = {}) => ({
+    contract: 'scoped-revision',
+    contractVersion: 1,
+    enabled: true,
+    scope: 'overview',
+    token: 2,
+    globalRevision: 2,
+    updatedAt: '2026-07-16T12:00:00+08:00',
+    environment: 'STAGING',
+    metrics: { revisionReads: 1, moduleReads: 0, requestCount: 1 },
+    ...overrides,
+  });
+
   it('normalizes revisions and uses bounded exponential backoff', () => {
     expect(normalizeRevisionPayload({ revision: '4', updatedAt: 'now' })).toMatchObject({ revision: 4, updatedAt: 'now' });
+    expect(normalizeScopedRevisionPayload(scoped({ token: '4' }), 'overview')).toMatchObject({
+      enabled: true, scope: 'overview', token: 4, globalRevision: 2,
+    });
     expect(revisionChanged({ revision: 3 }, { revision: 4 })).toBe(true);
     expect(revisionChanged({ revision: 4 }, { revision: 4 })).toBe(false);
-    expect([backoffDelayMs(0), backoffDelayMs(1), backoffDelayMs(2), backoffDelayMs(8)]).toEqual([5000, 10000, 20000, 30000]);
+    expect(revisionChanged({ token: 3 }, { token: 4 })).toBe(true);
+    expect([backoffDelayMs(0), backoffDelayMs(1), backoffDelayMs(2), backoffDelayMs(8)]).toEqual([15000, 30000, 60000, 120000]);
+    expect([jitterDelayMs(15000, { random: () => 0 }), jitterDelayMs(15000, { random: () => 0.5 }), jitterDelayMs(15000, { random: () => 1 })]).toEqual([13500, 15000, 16500]);
+    expect(modelNearLiveLoad({ sessions: 10 })).toMatchObject({ revisionRequests: 2400, revisionReads: 2400, moduleRequests: 0, unchangedModuleRequests: 0 });
+    expect(modelNearLiveLoad({ sessions: 30, changedTicks: 2 })).toMatchObject({ revisionRequests: 7200, moduleRequests: 60, totalRequests: 7260 });
   });
 
   it('prevents overlapping calls and pauses while hidden or offline', async () => {
@@ -94,13 +117,14 @@ describe('revision polling controller', () => {
       isOnline: () => online,
       schedule: () => 1,
       cancel: () => {},
+      random: () => 0.5,
     });
     poller.start();
     const first = poller.check('focus');
     expect(poller.inFlight).toBe(true);
     await expect(poller.check('online')).resolves.toBe(false);
     expect(readRevision).toHaveBeenCalledTimes(1);
-    resolveRead({ revision: 2 });
+    resolveRead(scoped());
     await expect(first).resolves.toBe(true);
     visible = false;
     await expect(poller.check('hidden')).resolves.toBe(false);
@@ -119,11 +143,55 @@ describe('revision polling controller', () => {
       onStatus: (status) => statuses.push(status),
       schedule: (_callback, delay) => { scheduledDelay = delay; return 1; },
       cancel: () => {},
+      random: () => 0.5,
     });
     poller.start();
     await expect(poller.check('poll')).resolves.toBe(false);
     expect(statuses).toContain('delayed');
-    expect(scheduledDelay).toBe(5000);
+    expect(scheduledDelay).toBe(15000);
+  });
+
+  it('fails closed when scheduled refresh is remotely disabled while retaining manual recheck', async () => {
+    const scheduled = [];
+    const readRevision = vi.fn()
+      .mockResolvedValueOnce(scoped({ enabled: false }))
+      .mockResolvedValueOnce(scoped({ enabled: true, token: 3 }));
+    const statuses = [];
+    const poller = createRevisionPoller({
+      readRevision,
+      onRevision: vi.fn(),
+      onStatus: (status) => statuses.push(status),
+      schedule: (_callback, delay) => { scheduled.push(delay); return scheduled.length; },
+      cancel: () => {},
+      random: () => 0.5,
+    });
+    poller.start();
+    await expect(poller.check('focus')).resolves.toBe(true);
+    expect(poller.automaticEnabled).toBe(false);
+    await expect(poller.resume('focus')).resolves.toBe(false);
+    await expect(poller.check('manual')).resolves.toBe(true);
+    expect(poller.automaticEnabled).toBe(true);
+    expect(statuses).toContain('manual-only');
+  });
+
+  it('ignores a response when the active scope changes before it settles', async () => {
+    let scope = 'overview';
+    let resolveRead;
+    const onRevision = vi.fn();
+    const poller = createRevisionPoller({
+      readRevision: () => new Promise((resolve) => { resolveRead = resolve; }),
+      onRevision,
+      getScope: () => scope,
+      schedule: () => 1,
+      cancel: () => {},
+      random: () => 0.5,
+    });
+    poller.start();
+    const pending = poller.check('focus');
+    scope = 'inventory';
+    resolveRead(scoped());
+    await expect(pending).resolves.toBe(false);
+    expect(onRevision).not.toHaveBeenCalled();
   });
 });
 

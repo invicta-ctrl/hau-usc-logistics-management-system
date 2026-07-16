@@ -79,7 +79,7 @@ Keep the preceding immutable deployment version available throughout acceptance.
 - test request submit/review/reserve/release produces one movement;
 - test evidence gets safe label/filename and metadata;
 - duplicate retry returns the original result;
-- revision advances once for the test mutation, remains stable for reads/replays, and another idle session refreshes within approximately 5–10 seconds;
+- global and affected scoped revisions advance once for the test mutation, remain stable for reads/replays, and another eligible clean session meets the approved p95-at-or-below-25-second visibility target with no routine sample above 35 seconds;
 - dirty form input is preserved behind the updates-available banner;
 - logs contain correlation IDs and no public stack trace.
 

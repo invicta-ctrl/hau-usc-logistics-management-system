@@ -13,7 +13,9 @@
 
 .sync-indicator[data-sync-status="synced"] { color: #245b43; }
 .sync-indicator[data-sync-status="offline"],
-.sync-indicator[data-sync-status="delayed"] { color: #8f1d23; }
+.sync-indicator[data-sync-status="delayed"],
+.sync-indicator[data-sync-status="stale"] { color: #8f1d23; }
+.sync-indicator[data-sync-status="manual-only"] { color: #765f5d; }
 
 .sync-update-banner {
   display: flex;

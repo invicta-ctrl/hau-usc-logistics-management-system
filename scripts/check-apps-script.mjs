@@ -72,6 +72,7 @@ const requiredFunctions = [
   'api_confirmRelease',
   'api_uploadEvidence',
   'api_getDataRevision',
+  'api_getScopedRevision',
   'setupOperationalEditTrigger',
   'handleOperationalSheetEdit',
   'api_getInventoryItem',

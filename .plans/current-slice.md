@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Slice 12 checkpoint
 
 CURRENT SLICE: Slice 12 - Bounded near-live active-module refresh
-CURRENT STAGE: SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI
+CURRENT STAGE: SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT
 LAST UPDATED: 2026-07-16 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -34,6 +34,32 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   explicitly authorized Slice 13 staging gate.
 - Rollback: disable near-live polling remotely, preserve manual/on-mutation
   scoped refresh, and use a focused Slice 12 revert without rewriting data.
+- Scope checkpoint: `ef05589015af636ff0fef820681e72cc54f6bb76` is pushed at
+  local/upstream/PR parity. Run `29475376088` passed `validate`; run
+  `29475376055` passed `verify` and `browser-smoke`.
+- Delivered locally: per-module CONFIG tokens and conservative mutation
+  invalidation; compact authorized scoped endpoint; 15-second jittered,
+  single-flight, visibility/online/activity-aware polling; active-module-only
+  refresh; dirty-input and active-modal deferral; abandoned-modal cleanup;
+  stale/manual-only UX; remote disable; request-only token isolation; safe
+  metrics; adapters; documentation; synthetic unit/browser coverage; and
+  regenerated parity artifacts.
+- Local proof: `npm run check` passes governance/lint, 36 Vitest files / 303
+  tests, a 34-module build, 33 Apps Script sources / 55 required functions,
+  deterministic parity, and two 411,048-byte standalone artifacts. Full
+  Playwright passes 67 / 119 intentional skips / 0 failed across six
+  viewports. Focused 390 px near-live proof, changed-scope privacy review,
+  `git diff --check`, and final implementation validation pass.
+- Generated evidence: standalone SHA-256
+  `b65d717f22fd085acaa19d847ca827964f891374e1a03b9d0578add5ba833580`;
+  Apps Script `Index.html` is 1,022 bytes / SHA-256
+  `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
+  `AppScript.html` is 343,759 bytes / SHA-256
+  `a35f25e5f3c4ca2ccd8922434ea72cfa8776d449fd9850da6129bfe77bc04645`.
+- No deployment, migration/import, Script Property change, external Apps
+  Script/Sheets/Drive write, PR merge, staging, production, database, or
+  hosting action occurred. Live latency/quota/concurrency proof remains Slice
+  13 and is not claimed here.
 
 ---
 

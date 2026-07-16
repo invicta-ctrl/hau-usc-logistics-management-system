@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased - Slice 12 Bounded near-live active-module refresh
+
+- Replaced five-second global polling with a 15-second, bounded-jitter,
+  single-flight scoped controller that runs only for visible, online,
+  focused/recently-active internal sessions and backs off after failures.
+- Added one compact re-authorized `api_getScopedRevision` contract, per-module
+  CONFIG tokens, conservative operation-to-scope invalidation, and exactly-once
+  global mutation revision behavior. Unknown operations and direct Sheet edits
+  invalidate all modules.
+- An unchanged token performs no module fetch; a changed token invalidates only
+  the active bounded module. Dirty forms, request drafts, uploads, and active
+  modal workflows defer refresh without overwriting input; abandoned closed
+  modal drafts no longer leave stale dirty markers.
+- Added request-only revision-token isolation, stale/last-updated/manual-only
+  status, fail-closed `HAU_NEAR_LIVE_REFRESH_ENABLED`, safe manual and
+  post-mutation refresh, late-response rejection, request/read counters,
+  adapters, documentation, and synthetic browser network evidence.
+- Verification passes `npm run check` (36 Vitest files / 303 tests, 34-module
+  build, 33 Apps Script sources / 55 functions, deterministic parity, two
+  411,048-byte artifacts), full Playwright (67 passed / 119 intentional skips /
+  0 failed), focused 390 px proof, privacy/diff review, and final implementation
+  validation after baseline-token, request-only, and modal-lifecycle repairs.
+- No deployment, migration/import, Script Property change, external Apps
+  Script/Sheets/Drive write, PR merge, staging, production, Cloudflare,
+  database, or hosting action occurred. Live p95/quota/concurrency acceptance
+  remains Slice 13 and is not claimed by repository evidence.
+
 ## Unreleased - Slice 11 Restock Safety
 
 - Replaced consequential queue-row controls with authoritative detail review,

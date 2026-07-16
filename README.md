@@ -7,7 +7,7 @@ Version 0.5.0 is the repository-only live synchronization, lending search, and c
 ## Version 0.5.0 scope
 
 - Successful Apps Script mutations reload authoritative bootstrap state before the interface renders success. A recorded mutation is never submitted again merely because the follow-up reload failed.
-- Internal sessions check a compact data revision every five seconds while the tab is visible and online. This is polling, not WebSockets or server push.
+- Internal sessions use a fail-closed 15-second jittered scoped-revision check only while visible, online, and focused or recently active. Unchanged checks fetch no module data; changed checks refresh only the active bounded module. This is polling, not WebSockets or server push.
 - Direct human edits can advance the revision through an idempotently installed operational spreadsheet edit trigger.
 - Dirty forms and active modal work defer background reloads and show a non-blocking “New operational data is available” choice instead of discarding input.
 - The Lending Hub uses an accessible predictive item search with borrower-aware audience, handling, stock, verification, and quantity explanations. Final eligibility is always revalidated on the server.

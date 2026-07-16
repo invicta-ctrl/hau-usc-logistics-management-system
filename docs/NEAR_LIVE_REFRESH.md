@@ -71,6 +71,20 @@ require named-owner acceptance in the separately authorized Slice 13 staging
 exercise. Repository acceptance proves deterministic behavior, request/read
 counts, and a conservative model; it does not claim live quota or latency proof.
 
+The accepted engineering operating envelope uses 10 active sessions as the
+expected model and 30 as the peak model. This is a capacity target, not an
+institutional forecast. It yields 2,400 and 7,200 upper-bound revision requests
+per hour respectively. At a provisional two-second p95 revision-call target,
+the peak average is four concurrent script executions, far below the documented
+1,000-per-script ceiling. A single user opening 30 simultaneous active tabs
+would consume the entire documented per-user concurrency ceiling and is not an
+accepted operating pattern; multi-tab staging must verify coalescing and safety.
+
+The owner-approved live staging visibility target is p95 at or below 25 seconds
+for an eligible clean second session, with no routine sample above 35 seconds.
+The target allows the 15-second cadence, jitter, compact check, and one bounded
+module read. It is a release gate, not a result claimed by repository tests.
+
 ## Acceptance evidence
 
 - fake-timer cadence, jitter, backoff, recovery, and remote-disable tests;

@@ -2,6 +2,7 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'getBootstrapData',
   'getCurrentUser',
   'getDataRevision',
+  'getScopedRevision',
   'searchCatalog',
   'submitRequest',
   'reviewRequest',

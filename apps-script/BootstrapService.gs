@@ -380,6 +380,7 @@ function bootstrapModuleResponse_(command, stats) {
   if (!bootstrapModuleAllowed_(module, session)) throw appError_('FORBIDDEN', 'This workspace module is not available for the current session.', false);
   var built = bootstrapModuleData_(module, command || {}, session);
   var revision = bootstrapRevision_(session);
+  var scopeState = session.internal ? revisionScopeMap_(revision)[module] : null;
   return bootstrapBoundedResponse_({
     contract: HAU_BOOTSTRAP_MODULE_CONTRACT_,
     contractVersion: HAU_BOOTSTRAP_VERSION_,
@@ -392,6 +393,7 @@ function bootstrapModuleResponse_(command, stats) {
     data: built.data,
     pagination: built.pagination,
     revision: revision,
+    scopeRevision: scopeState ? { scope: module, token: scopeState.token, updatedAt: scopeState.updatedAt } : null,
     cache: built.cache,
     metrics: { readCount: stats.readCount, cacheHits: stats.cacheHits }
   });

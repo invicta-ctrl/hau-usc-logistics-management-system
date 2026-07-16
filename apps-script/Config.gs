@@ -14,7 +14,8 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
   MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED',
   VENUE_EQUIPMENT_REQUESTS_ENABLED: 'HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED',
   REFERENCE_ADMIN_WRITES_ENABLED: 'HAU_REFERENCE_ADMIN_WRITES_ENABLED',
-  RESTOCK_WORKFLOW_ENABLED: 'HAU_RESTOCK_WORKFLOW_ENABLED'
+  RESTOCK_WORKFLOW_ENABLED: 'HAU_RESTOCK_WORKFLOW_ENABLED',
+  NEAR_LIVE_REFRESH_ENABLED: 'HAU_NEAR_LIVE_REFRESH_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
@@ -115,6 +116,10 @@ function resolveRestockWorkflowEnabled_(properties) {
   return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.RESTOCK_WORKFLOW_ENABLED, false);
 }
 
+function resolveNearLiveRefreshEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.NEAR_LIVE_REFRESH_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -141,7 +146,8 @@ function resolveRuntimeConfig_() {
     foodRequestsEnabled: resolveFoodRequestsEnabled_(properties),
     materialsRequestsEnabled: resolveMaterialsRequestsEnabled_(properties),
     venueEquipmentRequestsEnabled: resolveVenueEquipmentRequestsEnabled_(properties),
-    referenceAdminWritesEnabled: resolveReferenceAdminWritesEnabled_(properties)
+    referenceAdminWritesEnabled: resolveReferenceAdminWritesEnabled_(properties),
+    nearLiveRefreshEnabled: resolveNearLiveRefreshEnabled_(properties)
   };
 }
 

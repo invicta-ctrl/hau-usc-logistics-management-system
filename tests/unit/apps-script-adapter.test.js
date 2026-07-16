@@ -34,10 +34,12 @@ describe('AppsScriptAdapter', () => {
     const adapter = new AppsScriptAdapter();
     await adapter.getEssentialBootstrapData({ requestOnly: true });
     await adapter.getBootstrapModule({ module: 'request', page: 1 });
+    await adapter.getScopedRevision({ scope: 'request' });
 
     expect(calls).toEqual([
       { method: 'api_getEssentialBootstrapData', command: { requestOnly: true } },
       { method: 'api_getBootstrapModule', command: { module: 'request', page: 1 } },
+      { method: 'api_getScopedRevision', command: { scope: 'request' } },
     ]);
   });
 

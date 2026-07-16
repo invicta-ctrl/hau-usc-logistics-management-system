@@ -88,6 +88,7 @@ var HAU_FLAG_CAPABILITY_MAP_ = Object.freeze({
 var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
   getAuditTimeline: HAU_CAPABILITIES_.VIEW_AUDIT,
   getDataRevision: HAU_CAPABILITIES_.VIEW_INTERNAL,
+  getScopedRevision: HAU_CAPABILITIES_.VIEW_INTERNAL,
   getInventoryItem: HAU_CAPABILITIES_.VIEW_INVENTORY,
   searchCatalog: HAU_CAPABILITIES_.VIEW_REQUEST,
   submitRequest: HAU_CAPABILITIES_.REQUEST_CREATE,
@@ -151,6 +152,7 @@ var HAU_OPERATION_CAPABILITIES_ = Object.freeze({
 
 var HAU_SCOPE_OPTIONAL_OPERATIONS_ = Object.freeze({
   getDataRevision: true,
+  getScopedRevision: true,
   searchCatalog: true,
   searchVenueEquipmentReferences: true,
   getInventoryItem: true,

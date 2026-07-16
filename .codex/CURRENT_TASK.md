@@ -17,6 +17,9 @@
   `6fa6222adde5e8314d2defc40e0cd6686fff953b`; upstream `0 0`; clean. Run
   `29475144749` passed `validate`; run `29475144793` passed `verify` and
   `browser-smoke`.
+- **Scope checkpoint:** `ef05589015af636ff0fef820681e72cc54f6bb76` is pushed
+  at local/upstream/PR parity; runs `29475376088` and `29475376055` passed
+  `validate`, `verify`, and `browser-smoke` before implementation began.
 - **Authorization:** owner acceptance permits this bounded implementation,
   focused commit, feature-branch push, CI verification, and direct transition
   to the next program gate after all Slice 12 gates pass. It does not authorize
@@ -50,4 +53,16 @@
 - **Rollback:** set the near-live feature flag false; preserve manual and
   post-mutation refresh, accepted revision state, and all immutable records;
   use a focused Slice 12 revert only for code rollback.
-- **Current stage:** `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI`.
+- **Local result:** scoped CONFIG tokens, strict internal endpoint, active-module
+  polling/controller, clean/dirty/modal lifecycle policy, fail-closed remote
+  flag, request-only token isolation, instrumentation, UX, docs, tests, and
+  generated parity are implemented. Final validation is PASS after repairing
+  first-navigation token baselining, request-only token exposure, and abandoned
+  modal dirty-state retention.
+- **Local proof:** `npm run check` passes 36 Vitest files / 303 tests, a
+  34-module build, 33 Apps Script sources / 55 required functions,
+  deterministic generated parity, and two 411,048-byte artifacts. Full
+  Playwright passes 67 / 119 intentional skips / 0 failed; focused 390 px
+  near-live proof, `git diff --check`, artifact hashing, and sensitive review
+  pass.
+- **Current stage:** `SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT`.

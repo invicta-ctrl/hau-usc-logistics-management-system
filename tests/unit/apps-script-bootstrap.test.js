@@ -106,6 +106,7 @@ describe('Apps Script essential bootstrap recovery contract', () => {
 
     expect(response.module).toBe('request');
     expect(response.requestOnly).toBe(true);
+    expect(response.scopeRevision).toBeNull();
     expect(response.data.inventoryItems).toHaveLength(1);
     expect(response.data.inventoryItems[0]).toEqual(expect.objectContaining({ availabilityProtected: true }));
     const filteredResponse = context.apiGetBootstrapModule_({ requestOnly: true, module: 'request', filter: 'ACTIVE', page: 1, pageSize: 1 });

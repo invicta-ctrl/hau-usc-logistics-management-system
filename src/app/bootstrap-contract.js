@@ -2,7 +2,7 @@ export const ESSENTIAL_BOOTSTRAP_CONTRACT = 'essential-bootstrap';
 export const BOOTSTRAP_MODULE_CONTRACT = 'bootstrap-module';
 export const ESSENTIAL_BOOTSTRAP_VERSION = 2;
 
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.6.0', '1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
 
 export const BOOTSTRAP_MODULES = Object.freeze([
   'overview',
@@ -96,6 +96,7 @@ const MODULE_KEYS = new Set([
   'data',
   'pagination',
   'revision',
+  'scopeRevision',
   'cache',
   'metrics',
 ]);
@@ -247,6 +248,18 @@ function assertRevision(value) {
   assertSafeText(value.updatedAt, { max: 64 });
 }
 
+function assertScopeRevision(value, module, { requestOnly = false } = {}) {
+  if (requestOnly) {
+    if (value !== null) fail();
+    return;
+  }
+  if (!isPlainObject(value)) fail();
+  assertAllowedKeys(value, new Set(['scope', 'token', 'updatedAt']));
+  if (value.scope !== module) fail();
+  assertNonNegativeInteger(value.token);
+  assertSafeText(value.updatedAt, { max: 64 });
+}
+
 function assertMetrics(value) {
   if (value === undefined) return;
   if (!isPlainObject(value)) fail();
@@ -377,6 +390,7 @@ export function validateBootstrapModule(value, { backendMode = 'mock', module } 
   if (value.requestOnly) assertNoSensitiveKeys(value.data);
   assertPagination(value.pagination);
   assertRevision(value.revision);
+  assertScopeRevision(value.scopeRevision, value.module, { requestOnly: value.requestOnly });
   assertCache(value.cache);
   assertMetrics(value.metrics);
   return value;
@@ -396,16 +410,20 @@ export function createStateFromEssentialBootstrap(value, { requestOnly = value?.
     dataRevision: value.revision?.revision ?? null,
     dataRevisionUpdatedAt: value.revision?.updatedAt ?? '',
     moduleConfig: value.moduleConfig,
+    scopeRevisions: {},
   };
 }
 
 export function mergeBootstrapModule(state, value, { backendMode = state?.backendMode } = {}) {
   validateBootstrapModule(value, { backendMode, module: value.module });
+  const scopeRevisions = { ...(state?.scopeRevisions ?? {}) };
+  if (value.scopeRevision !== null) scopeRevisions[value.module] = value.scopeRevision;
   return {
     ...state,
     ...value.data,
     dataRevision: value.revision?.revision ?? state?.dataRevision ?? null,
     dataRevisionUpdatedAt: value.revision?.updatedAt ?? state?.dataRevisionUpdatedAt ?? '',
+    scopeRevisions,
     catalogAvailabilityProtected: Boolean(state?.catalogAvailabilityProtected || value.requestOnly),
   };
 }

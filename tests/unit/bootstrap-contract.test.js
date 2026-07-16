@@ -60,6 +60,15 @@ describe('essential bootstrap contract', () => {
     );
   });
 
+  it('requires request-only modules to omit scoped revision metadata', () => {
+    const requestOnly = createBootstrapModuleFixture({ requestOnly: true });
+    expect(validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' }).scopeRevision).toBeNull();
+    requestOnly.scopeRevision = { scope: 'request', token: 1, updatedAt: '2026-07-16T12:00:00+08:00' };
+    expect(() => validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' })).toThrowError(
+      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
+    );
+  });
+
   it('allows authorized internal modules to carry operational borrower fields without treating them as public cache data', () => {
     const internal = createBootstrapModuleFixture({ module: 'lending', cacheSafe: false });
     internal.data.lendingTickets = [{
@@ -69,9 +78,9 @@ describe('essential bootstrap contract', () => {
     expect(validateBootstrapModule(internal, { backendMode: 'mock', module: 'lending' })).toBe(internal);
   });
 
-  it('accepts the additive 1.3.0 schema and the overview dashboard projections', () => {
+  it.each(['1.3.0', '1.6.0'])('accepts additive schema %s and the overview dashboard projections', (schemaVersion) => {
     const overview = createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
-    overview.schemaVersion = '1.3.0';
+    overview.schemaVersion = schemaVersion;
     overview.data.dashboardMeta = [{ scopeMode: 'ALL', activeCommitteeId: '', allowedCommitteeIds: [], stale: false }];
     overview.data.dashboardQueues = [{ id: 'requests-review', count: 0, recordIds: [], truncated: false }];
     overview.data.dashboardStaffWorkload = [];

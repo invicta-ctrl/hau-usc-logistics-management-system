@@ -6,6 +6,7 @@ const METHODS = Object.freeze({
   getBootstrapModule: 'api_getBootstrapModule',
   getCurrentUser: 'api_getCurrentUser',
   getDataRevision: 'api_getDataRevision',
+  getScopedRevision: 'api_getScopedRevision',
   searchCatalog: 'api_searchCatalog',
   submitRequest: 'api_submitRequest',
   reviewRequest: 'api_reviewRequest',

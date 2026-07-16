@@ -109,6 +109,7 @@ export function createBootstrapModuleFixture({ backendMode = 'mock', environment
     data: dataByModule[module],
     pagination: { page: 1, pageSize: 10, total: rows, hasMore: false },
     revision: null,
+    scopeRevision: requestOnly ? null : { scope: module, token: 1, updatedAt: '2026-07-16T12:00:00+08:00' },
     cache: { safe: cacheSafe, scope: cacheSafe ? 'PUBLIC_REFERENCE' : 'SESSION_OPERATIONAL', ttlMs: cacheSafe ? 300_000 : 0 },
     metrics: { readCount: 2, cacheHits: 1 },
   };
