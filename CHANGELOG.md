@@ -26,6 +26,9 @@
   two 393,977-byte standalone artifacts, full Playwright 65 passed / 115
   intentional skips / 0 failures, sensitive scan, and `git diff --check`.
   Independent implementation validation is final PASS after targeted repairs.
+- Remote verification is green at implementation commit
+  `ece5bf846399c2793ab088214ba2a1693d3693ae`: run `29472954664` passed
+  `validate`, and run `29472954676` passed `verify` and `browser-smoke`.
 - No deployment, migration/import, Script Property change, external Apps
   Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
   production action occurred.

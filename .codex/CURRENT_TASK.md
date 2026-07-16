@@ -49,5 +49,10 @@
   and `git diff --check` pass. Independent validation is final PASS after
   repairing self-review, dormant emergency grants, partial-write ordering,
   reconciliation, actionable review, and an eager-bootstrap fetch regression.
-- **Current stage:** `SLICE_10_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT`.
-  Focused commit/push and PR #7 CI verification are next.
+- **Remote evidence:** implementation commit
+  `ece5bf846399c2793ab088214ba2a1693d3693ae` is pushed at local/upstream/PR
+  parity. Runs `29472954664` and `29472954676` passed `validate` (11s),
+  `verify` (20s), and `browser-smoke` (2m14s); PR #7 remains open, draft, and
+  mergeable with a current through-Slice-10 title/body.
+- **Current stage:** `SLICE_10_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
+  Commit/push this evidence record, verify its CI, then start bounded Slice 11.

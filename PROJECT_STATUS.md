@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-9 and Phase 2 governance committed and CI-verified; Slice 10 implemented with local gates green; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-10 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 10 starting commit: `4374fad7d3420c650abbe565bf03be00f2e208d4` (Slice 9 final evidence checkpoint)
-- Current implementation checkpoint: Slice 10 is locally implemented and verified but not yet committed; Slice 9 checkpoint `4374fad7d3420c650abbe565bf03be00f2e208d4` is pushed and CI green
+- Current implementation checkpoint: Slice 10 implementation commit `ece5bf846399c2793ab088214ba2a1693d3693ae` is pushed; local, upstream, and PR #7 heads matched and all required checks passed
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -20,7 +20,7 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Slice 10 - Authorized reference-data administration
 
-- Stage: `SLICE_10_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT` from
+- Stage: `SLICE_10_COMMITTED_PUSHED_CI_GREEN_ACCEPTED` from
   accepted checkpoint `4374fad7d3420c650abbe565bf03be00f2e208d4` on
   `integration/v0.5-baseline`.
 - Delivered locally: canonical server operations and capabilities; bounded
@@ -47,6 +47,10 @@ Always verify the current remote head and CI because documentation commits may f
   `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
   `AppScript.html` is 327,085 bytes / SHA-256
   `94eaae333a7bf19a423d101bb19b60954f8cb72f03d5810addacdfd5737cd9db`.
+- Remote evidence: implementation commit
+  `ece5bf846399c2793ab088214ba2a1693d3693ae` is at local/upstream/PR parity;
+  run `29472954664` passed `validate` and run `29472954676` passed `verify`
+  and `browser-smoke`. PR #7 remains open, draft, and mergeable.
 - External boundary: no deployment, live schema execution, migration/import,
   Script Property change, Apps Script/Sheets/Drive external write, PR merge,
   Cloudflare, database, staging, or production action occurred.
