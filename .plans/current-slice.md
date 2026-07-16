@@ -1,4 +1,49 @@
-# HAU-USC V1 Autonomous Program - Slice 12 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
+
+CURRENT SLICE: Slice 13 - Full staging operational acceptance
+CURRENT STAGE: SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT
+LAST UPDATED: 2026-07-16 (Asia/Manila)
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
+
+## Slice 13 dependency audit
+
+- Starting checkpoint: Slice 12 evidence commit
+  `569d2a787585dbdf68d68c1da1d5440a18a2540a` on
+  `integration/v0.5-baseline`; clean, synchronized `0 0`, PR #7 open/draft,
+  mergeable, and all three checks green in runs `29477246636` and
+  `29477246392`.
+- Contract: accepted planning package Slice 13 plus
+  `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
+- Repository dependency: READY. Slices 4-12 are committed/pushed/CI-green;
+  exact candidate, artifact hashes, tests, privacy boundaries, and rollback
+  controls are recorded.
+- Private-config inventory: candidate staging `.clasp.json` files exist only
+  outside Git. None is copied into or active in the authoritative checkout;
+  none is treated as authorized from filename/history alone.
+- Current configuration contract: distinct operational/backup spreadsheets and
+  seven private Drive mappings are required. Values were not read or exposed.
+- Missing hard dependencies: current named staging owner/operator; exact
+  approved private config/resource set; allowed external action categories;
+  owner-approved synthetic/redacted fixture and record namespace; named tester
+  roles and signatories; current deployment/rollback labels; window/stop
+  authority; evidence retention/location; storage-headroom confirmation.
+- Prepared repository work: exact traceability, dependency matrix, private
+  authorization record, gated execution order, must-pass acceptance matrix,
+  evidence rules, stop/rollback conditions, and complete unblock package.
+- External boundary: no `clasp`, remote source read, Apps Script execution,
+  Sheet/Drive access, backup, schema setup, migration, seed, trigger, upload,
+  deployment, staging write, production action, merge, tag, release, hosting,
+  or database mutation occurred.
+- Blocker classification: genuine external authority/coordination dependency.
+  Proceeding would require guessing the target, people, data, and permitted
+  writes, which the accepted Slice 13 contract explicitly forbids.
+- Downstream: Slice 14 remains blocked on signed Slice 13 acceptance; Slices
+  15-16 remain blocked on stable measured V1 and later named-owner decisions.
+
+---
+
+# Historical Slice 12 checkpoint
 
 CURRENT SLICE: Slice 12 - Bounded near-live active-module refresh
 CURRENT STAGE: SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED

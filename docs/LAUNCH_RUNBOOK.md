@@ -2,6 +2,11 @@
 
 ## Staging
 
+Complete Gate A in `STAGING_OPERATIONAL_ACCEPTANCE.md` before step 1. An old
+private config, deployment report, or blanket continuation instruction does not
+identify the current authorized target, operator, fixture, testers, or allowed
+write categories.
+
 1. Confirm branch/commit and passing CI.
 2. Build and run `clasp status` / `clasp push --dry-run` against staging.
 3. Run schema setup/validation, configure and validate all Drive folders, seed reviewed users, and create triggers.

@@ -6,7 +6,7 @@
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
-- Current implementation checkpoint: Slice 12 implementation commit `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is pushed and exact-SHA CI green
+- Current implementation checkpoint: Slice 12 evidence commit `569d2a787585dbdf68d68c1da1d5440a18a2540a` is pushed/CI-green; Slice 13 is blocked before external preflight on missing named authority/resources/test inputs
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -14,11 +14,38 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-12 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-12 are repository-complete but not currently staging-accepted; Slice 13 readiness pack is complete and external prerequisites are missing; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
-## Current Slice 12 - Bounded near-live active-module refresh
+## Current Slice 13 - Full staging operational acceptance
+
+- Stage: `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT` from Slice 12 evidence
+  checkpoint `569d2a787585dbdf68d68c1da1d5440a18a2540a` on
+  `integration/v0.5-baseline`; local/upstream/PR parity and all three checks
+  green in runs `29477246636` and `29477246392`.
+- Ready: exact repository candidate, generated hashes, automated validation,
+  privacy/authorization contracts, rollback-aware runbooks, seven-folder
+  source contract, and complete executable readiness/acceptance matrix in
+  `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
+- Present but not authority: private staging clasp candidates and historical
+  deployment/backup/parity records remain outside Git. They may be used only
+  after the owner names the exact current target/config and action categories.
+- Missing: current named owner/operator; exact approved staging resource set;
+  approved synthetic/redacted fixture/namespace; tester-role matrix and
+  signatories; current deployment/rollback; test window/stop authority;
+  evidence retention/location; storage headroom; explicit permission for each
+  remote read/write/deployment/rollback action category.
+- External audit result: no current signed acceptance matrix or named tester
+  roster exists in the active workspace. Historical evidence predates Slices
+  4-12 and cannot establish their current staging acceptance.
+- Actions not performed: no `clasp`, remote source read, Apps Script/Sheets/
+  Drive access, backup, setup, migration, seed, trigger, upload, deployment,
+  staging write, production action, PR merge, `main`, hosting, or database.
+- Downstream: Slice 14 is blocked on signed Slice 13 acceptance; Slices 15-16
+  remain blocked on stable measured V1 and later owner decisions.
+
+## Historical Slice 12 - Bounded near-live active-module refresh
 
 - Stage: `SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED` from accepted checkpoint
   `6fa6222adde5e8314d2defc40e0cd6686fff953b` on

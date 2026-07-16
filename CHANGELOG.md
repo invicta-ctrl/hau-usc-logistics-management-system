@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - Slice 13 staging-readiness pack
+
+- Recorded the exact Slice 12 candidate/evidence checkpoint and distinguished
+  repository readiness from current Google Workspace authorization.
+- Added a dependency inventory, private owner-authorization record, ordered
+  preflight/backup/setup/test/rollback gates, must-pass operational acceptance
+  matrix, evidence/redaction rules, stop conditions, and a minimal complete
+  unblock package.
+- Confirmed that private staging clasp candidates and historical deployment
+  evidence exist outside Git but are not current target authority. No signed
+  matrix, approved non-personal fixture, named tester/signatory roster, current
+  owner/operator record, test window, or action-category authorization exists
+  in the active workspace.
+- No `clasp`, remote Google read, Apps Script/Sheets/Drive access, backup,
+  setup, migration, seed, trigger, upload, deployment, staging write,
+  production, merge, hosting, or database action occurred.
+
 ## Unreleased - Slice 12 Bounded near-live active-module refresh
 
 - Replaced five-second global polling with a 15-second, bounded-jitter,

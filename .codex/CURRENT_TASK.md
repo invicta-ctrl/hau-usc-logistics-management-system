@@ -1,76 +1,54 @@
 # Current Task
 
-- **Task ID:** `SLICE-12-BOUNDED-NEAR-LIVE-REFRESH`
-- **Original instruction:** accept all prior gates and continue from Phase 4
-  onward without another manager-approval pause.
-- **Routing envelope:** `INTENT: SOFTWARE_FEATURE`; `MODE: execute`;
-  `TARGET: repository Slice 12 bounded near-live active-module refresh`;
-  `RISK: high`; `DELIVERABLE: scoped revision signaling and safe active-module
-  refresh`; `STOP CONDITIONS: unsafe Git state, failed mandatory gate after
-  two targeted repair rounds, missing external authority, or scope expansion`.
-- **Matched skills:** `pdf` fixed the accepted phase/gate contract;
-  `impl-validator` is required for the independent final implementation audit;
-  `github:yeet` governs the focused publish checkpoint.
+- **Task ID:** `SLICE-13-STAGING-OPERATIONAL-ACCEPTANCE`
+- **Original instruction:** continue from accepted Phase 4 through the remaining
+  master program until complete or a genuine owner-action blocker.
+- **Routing envelope:** `INTENT: RELEASE_ACCEPTANCE`; `MODE: readiness`;
+  `TARGET: Slice 13 full staging operational acceptance`; `RISK: critical`;
+  `DELIVERABLE: signed staging evidence or an exact dependency block`;
+  `STOP CONDITIONS: unnamed owner/resource/tester, absent fixture or rollback,
+  privacy/authorization ambiguity, external action outside explicit category
+  approval, P0/P1, target drift, or any integrity failure`.
 - **Verified starting state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
-  on `integration/v0.5-baseline` at
-  `6fa6222adde5e8314d2defc40e0cd6686fff953b`; upstream `0 0`; clean. Run
-  `29475144749` passed `validate`; run `29475144793` passed `verify` and
-  `browser-smoke`.
-- **Scope checkpoint:** `ef05589015af636ff0fef820681e72cc54f6bb76` is pushed
-  at local/upstream/PR parity; runs `29475376088` and `29475376055` passed
-  `validate`, `verify`, and `browser-smoke` before implementation began.
-- **Authorization:** owner acceptance permits this bounded implementation,
-  focused commit, feature-branch push, CI verification, and direct transition
-  to the next program gate after all Slice 12 gates pass. It does not authorize
-  deployment, migration/import, PR merge, `main`, or operational Google writes.
-- **Authoritative specification:** accepted master prompt, accepted planning
-  package Slice 12, and `docs/NEAR_LIVE_REFRESH.md`.
-- **Decision lock:** use a 15-second default plus bounded deterministic jitter;
-  check at most one scoped revision per internal session while visible, online,
-  and focused or recently active; an unchanged token performs no module read;
-  a changed token refreshes only the active bounded module; dirty input is
-  never overwritten. Manual and post-mutation refresh remain available.
-- **In scope:** per-scope revision DTO/service; sole adapter; active-module
-  controller; visibility/focus/online/dirty/in-flight policy; bounded
-  backoff/jitter; out-of-order protection; last-updated/stale/manual UX;
-  fail-closed remote disable; request/read instrumentation; tests, docs, and
-  generated parity.
-- **Out of scope:** WebSockets, five-second polling, background/full-bootstrap
-  polling, inactive-module refresh, cached-client authorization, write replay,
-  new database/realtime/hosting service, deployment, migration, external Apps
-  Script/Sheets/Drive writes, PR merge, staging, or production.
-- **Current quota preflight:** official Google documentation rechecked
-  2026-07-16: six-minute execution limit, 30 simultaneous executions per user,
-  1,000 per script, and ten concurrent `google.script.run` calls per page. These
-  are ceilings, not targets; the design minimizes and batches service reads.
-- **Load-model boundary:** repository evidence will report parameterized 1, 10,
-  and 30 active-session scenarios. These are engineering scenarios, not a claim
-  about institutional usage; live p95/concurrency acceptance remains Slice 13
-  staging work and requires separately authorized resources and named owners.
-- **Writer boundary:** the parent is the only writer; final validation is
-  independently read-only.
-- **Rollback:** set the near-live feature flag false; preserve manual and
-  post-mutation refresh, accepted revision state, and all immutable records;
-  use a focused Slice 12 revert only for code rollback.
-- **Local result:** scoped CONFIG tokens, strict internal endpoint, active-module
-  polling/controller, clean/dirty/modal lifecycle policy, fail-closed remote
-  flag, request-only token isolation, instrumentation, UX, docs, tests, and
-  generated parity are implemented. Final validation is PASS after repairing
-  first-navigation token baselining, request-only token exposure, and abandoned
-  modal dirty-state retention.
-- **Local proof:** `npm run check` passes 36 Vitest files / 303 tests, a
-  34-module build, 33 Apps Script sources / 55 required functions,
-  deterministic generated parity, and two 411,048-byte artifacts. Full
-  Playwright passes 67 / 119 intentional skips / 0 failed; focused 390 px
-  near-live proof, `git diff --check`, artifact hashing, and sensitive review
-  pass.
-- **Remote proof:** focused implementation commit
-  `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is pushed at
-  local/upstream/PR parity. Run `29477031867` passed `validate`; run
-  `29477031799` passed `verify` and `browser-smoke`. PR #7 remains open,
-  draft, and mergeable.
-- **Current stage:** `SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
-- **Next gate:** record this evidence checkpoint, verify its exact-SHA CI, then
-  enter Slice 13 staging-readiness preflight without deploying or mutating an
-  external resource.
+  on `integration/v0.5-baseline` at Slice 12 evidence checkpoint
+  `569d2a787585dbdf68d68c1da1d5440a18a2540a`; local/upstream/PR parity,
+  clean, draft PR #7 open/mergeable. Runs `29477246636` and `29477246392`
+  passed `validate`, `verify`, and `browser-smoke` at the exact checkpoint.
+- **Accepted dependency:** Slice 12 implementation
+  `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is remotely green after final
+  validation and includes bounded near-live behavior required by Slice 13.
+- **Authoritative specification:** accepted planning package Slice 13,
+  `docs/LAUNCH_RUNBOOK.md`, `docs/TESTING_AND_ACCEPTANCE.md`, and
+  `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
+- **Authorization boundary:** uninterrupted continuation authorizes repository
+  readiness analysis, documentation, focused feature-branch commits/pushes,
+  PR metadata, and CI. It does not identify or authorize a specific private
+  staging target, signed-in owner account, backup/setup/migration/seed/test
+  write, upload, deployment, trigger change, or rollback rehearsal.
+- **Readiness result:** private staging clasp candidates and historical
+  deployment evidence exist outside Git, but they are preservation artifacts,
+  not current authority. No current signed acceptance matrix, approved
+  non-personal fixture, named tester roster, current staging owner/operator
+  record, test window, or explicit action-category authorization was found.
+- **Current source requirement:** seven Drive mappings are required: root,
+  receipts, canvass, release, deliverable, lending, and archive. Their private
+  values were not read or exposed.
+- **Prepared evidence:** the Slice 13 readiness pack records exact candidate
+  traceability, dependency inventory, owner authorization form, ordered gates,
+  must-pass functional/security/privacy/sync/performance/accessibility/recovery
+  matrix, stop conditions, and the smallest complete unblock request.
+- **Actions not performed:** no `clasp`, remote source read, Apps Script call,
+  Sheet/Drive access, backup, setup, migration, seed, trigger, upload,
+  deployment, external mutation, PR merge, `main`, production, hosting, or
+  database action.
+- **Current stage:** `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`.
+- **Exact unblock:** named staging owner/operator; one exact approved private
+  config and safe staging label; permitted external action categories;
+  approved synthetic/redacted fixture/namespace; named tester-role matrix and
+  business/data/privacy/security/accessibility/deployment signatories; current
+  deployment/rollback labels; window/stop authority; private evidence
+  retention; and storage-headroom confirmation.
+- **Downstream gate:** Slice 14 cannot begin without signed Slice 13 acceptance;
+  Slices 15-16 remain dependent on a stable measured V1 and later owner
+  decisions.

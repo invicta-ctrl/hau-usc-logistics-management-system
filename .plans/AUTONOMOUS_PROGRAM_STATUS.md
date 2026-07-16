@@ -4,7 +4,38 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 12 locally verified
+## Current run checkpoint - Slice 13 readiness blocked before external preflight
+
+- Date: 2026-07-16 (Asia/Manila).
+- Stage: `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`.
+- Accepted starting checkpoint:
+  `569d2a787585dbdf68d68c1da1d5440a18a2540a` on
+  `integration/v0.5-baseline`; local/upstream/PR parity, clean, PR #7
+  open/draft/mergeable, and runs `29477246636` plus `29477246392` green.
+- Slice 12 is accepted: implementation
+  `a563f2f179b710ac7c0d46a8af05a4349a5e625b` and final evidence checkpoint
+  are both remotely verified. Slices 4-12 now require current staging
+  operational acceptance before a production decision.
+- Readiness audit: private staging clasp candidates and historical deployment
+  evidence exist outside Git, but no current authorization binds one exact
+  private target/config to this run. No approved non-personal fixture, named
+  tester/signatory roster, current owner/operator record, test window, or
+  action-category authorization was found.
+- Prepared work: `docs/STAGING_OPERATIONAL_ACCEPTANCE.md` provides exact
+  traceability, resource/dependency inventory, private owner authorization
+  record, ordered preflight/setup/test/rollback gates, must-pass acceptance
+  matrix, stop rules, and a minimal complete unblock package.
+- External boundary held: no `clasp`, remote Google read, backup, setup,
+  migration, seed, trigger, upload, deployment, staging write, production,
+  merge, tag, release, hosting, or database action occurred.
+- Genuine blocker: named owner/operator and exact approved target; permitted
+  external action categories; synthetic/redacted fixture/namespace; testers
+  and signatories; current deployment/rollback; window/stop authority;
+  evidence retention/location; and storage capacity confirmation.
+- Slice 14 cannot start until the Slice 13 matrix is signed. Slices 15-16 remain
+  dependent on a stable measured V1 and later owner decisions.
+
+## Historical checkpoint - Phase 4 / Slice 12 locally verified
 
 - Date: 2026-07-16 (Asia/Manila).
 - Stage: `SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
@@ -270,7 +301,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 | 10 — Authorized reference-data administration                     | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
 | 11 — Restock review and safe server actions                       | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
 | 12 — Bounded near-live active-module refresh                      | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 13 — Full staging operational acceptance                          | NOT_STARTED            | Requires accepted implementation slices and authorized synthetic/redacted staging.                                                                 |
+| 13 — Full staging operational acceptance                          | BLOCKED_EXTERNAL_INPUTS | Readiness pack complete; requires exact authorized staging target/owner, fixture, testers/signatories, window, rollback, evidence retention, and action-category approval. |
 | 14 — Production approval and controlled promotion                 | NOT_STARTED            | Requires explicit go/no-go and all release evidence.                                                                                               |
 | 15 — Hosted-frontend architecture spike and decision record       | NOT_STARTED            | Later architecture decision; no hosting work started.                                                                                              |
 | 16 — Future PostgreSQL/Supabase specification only                | NOT_STARTED            | Specification-only boundary; no database work started.                                                                                             |

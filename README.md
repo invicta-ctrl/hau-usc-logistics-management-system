@@ -92,7 +92,7 @@ Controlled staging Version 9 passed the diagnostic, authorized internal `/exec`,
 
 ## First steps for a maintainer
 
-1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
+1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, `docs/LAUNCH_RUNBOOK.md`, and `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
 2. Run `npm install && npm run check`.
 3. Work on the feature branch; do not edit the default branch directly.
 4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
