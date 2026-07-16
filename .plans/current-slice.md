@@ -71,8 +71,8 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   none is treated as authorized from filename/history alone.
 - Current configuration contract: distinct operational/backup spreadsheets and
   seven private Drive mappings are required. Values were not read or exposed.
-- Missing hard dependencies: current named staging owner/operator; exact
-  approved private config/resource set;
+- Missing hard dependencies: current named staging owner/operator; approved
+  operational and backup workbooks;
   named tester roles and signatories; current deployment/rollback labels;
   window/stop authority; storage-headroom confirmation; active operator
   session; and seven restricted Drive-mapping confirmations.
@@ -83,11 +83,14 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   evidence-exclusion confirmations are recorded. The deterministic synthetic
   fixture, namespace, mutation/retention rules, private evidence directory,
   redaction/disposal policy, and restricted local ACL are now complete.
-  Six preserved clasp configs resolve to two distinct private targets, and a
-  staging-labelled preservation file shares the production-labelled target;
-  target selection cannot be inferred safely. Validation remains
-  `INVALID`/authorized through `NONE` until the named target, people, window,
-  capacity, live-session, deployment, and Drive confirmations are completed.
+  Six preserved clasp configs resolve to two targets. Two independent backup
+  sets establish the staging/production fingerprints consistently. The owner's
+  `current demo` instruction is now bound to a newly protected
+  `private-config/staging/current-demo.clasp.json` matching staging and distinct
+  from production, with private provenance recorded. Validation remains
+  `INVALID`/authorized through `NONE` until owner/operator/tester labels,
+  operational/backup workbook labels, window, capacity, live session, and
+  seven restricted Drive confirmations are completed.
 - Prepared repository work: exact traceability, dependency matrix, private
   authorization record, gated execution order, must-pass acceptance matrix,
   evidence rules, stop/rollback conditions, complete unblock package, and a

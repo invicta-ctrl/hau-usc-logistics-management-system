@@ -72,6 +72,11 @@
   invalid/authorized through `NONE` until live owner/target/tester/window/
   capacity/session/deployment/Drive facts are completed; no private value or
   external resource was exposed.
+- Bound the owner's `current demo` instruction to a newly protected private
+  config whose fingerprint matches staging in two independent deployment
+  backup sets and is distinct from production. Recorded expected Version 18 /
+  rollback Version 13 labels for read-only Gate B verification and stored a
+  private provenance note without Google identifiers.
 - Independent review is PASS after aligning rollback rehearsal to Gate E,
   enforcing backup-before-setup order, resolving real paths, and sanitizing CLI
   errors. Linux CI exposed Windows-only test fixture paths in `3591550`; repair

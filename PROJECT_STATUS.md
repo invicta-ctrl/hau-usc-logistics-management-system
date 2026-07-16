@@ -38,8 +38,8 @@ Always verify the current remote head and CI because documentation commits may f
 - Present but not authority: private staging clasp candidates and historical
   deployment/backup/parity records remain outside Git. They may be used only
   after the owner names the exact current target/config and action categories.
-- Missing: current named owner/operator; exact approved staging resource set;
-  tester-role matrix and signatories; current deployment/rollback; test
+- Missing: current named owner/operator; approved operational/backup workbooks;
+  tester-role matrix and signatories; test
   window/stop authority; storage headroom; active operator session; and seven
   verified restricted Drive mappings.
 - Authorization update: the 2026-07-16 owner task message approves every
@@ -49,12 +49,15 @@ Always verify the current remote head and CI because documentation commits may f
   now also contains a deterministic synthetic-only fixture, bounded namespace,
   mutation/retention rules, private evidence boundary, redaction/disposal
   policy, and verified current-user/SYSTEM-only ACL. A safe local inventory
-  found six preserved clasp configs resolving to two targets, with a
-  staging-labelled preservation file sharing the production-labelled target;
-  selecting by filename would be unsafe. The validator remains `INVALID`,
-  authorized through `NONE`, because live identity, exact target,
-  tester/signatory, window, capacity, session, deployment, and Drive facts are
-  incomplete.
+  found six preserved clasp configs resolving to two targets. Two independent
+  deployment backup sets consistently identify staging versus production. The
+  owner instruction to use `current demo` is now bound to a newly protected
+  `private-config/staging/current-demo.clasp.json` matching staging and distinct
+  from production; expected Version 18 and rollback Version 13 labels are
+  recorded for Gate B verification. The validator remains `INVALID`,
+  authorized through `NONE`, because owner/operator/tester labels,
+  operational/backup workbook labels, window, capacity, live session, and
+  seven restricted Drive facts are incomplete.
 - External audit result: no current signed acceptance matrix or named tester
   roster exists in the active workspace. Historical evidence predates Slices
   4-12 and cannot establish their current staging acceptance.

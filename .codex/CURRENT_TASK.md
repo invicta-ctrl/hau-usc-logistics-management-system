@@ -64,12 +64,15 @@ approval, P0/P1, target drift, or any integrity failure`.
   Repository/captured-evidence value exclusion is confirmed. A deterministic
   synthetic-only fixture manifest, private evidence boundary, retention and
   redaction rules, and current-user/SYSTEM-only ACL are prepared and verified.
-  Safe inventory found six preserved clasp configs resolving to two distinct
-  targets; one staging-labelled preservation file resolves to the same target
-  identity as production-labelled files, so filename inference is unsafe. The
-  validator remains `INVALID`, authorized through `NONE`, on only real-world
-  identity, exact-target, tester, window, capacity, live-session, deployment,
-  and Drive-restriction facts. No private value was printed or copied into Git.
+  Safe inventory found six preserved clasp configs resolving to two targets.
+  Two independent backup sets identify the staging fingerprint and production
+  fingerprint consistently. Per the owner's `current demo` instruction, a new
+  protected `private-config/staging/current-demo.clasp.json` is bound to the
+  verified staging fingerprint and confirmed distinct from production; private
+  provenance is recorded without IDs. The validator remains `INVALID`,
+  authorized through `NONE`, only on owner/operator/tester labels, operational
+  and backup workbooks, window, capacity, live session, and seven restricted
+  Drive-mapping facts. No private value was printed or copied into Git.
 - **Exact unblock:** named staging owner/operator; one exact approved private
   config and safe staging label; approved synthetic/redacted fixture/namespace;
   named tester-role matrix and
