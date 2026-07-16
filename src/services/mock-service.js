@@ -16,6 +16,7 @@ import {
   nonNegativeNumber,
 } from '../domain/validators.js';
 import { recomputeRestockParent } from '../domain/restocking.js';
+import { restockActionDecisions, validateRestockTransition } from '../domain/restock-workflow.js';
 import { can } from '../domain/permissions.js';
 import {
   amendCompositeSection,
@@ -1242,6 +1243,95 @@ export class MockService {
     );
   }
 
+  getRestockDetail({ restockRequestId, requestLineId } = {}) {
+    const state = this.store.getState();
+    const restock = state.restockRequests.find(
+      (row) => (!restockRequestId || row.id === restockRequestId) && (!requestLineId || row.requestLineId === requestLineId),
+    );
+    if (!restock) return Promise.reject(new AppError('NOT_FOUND', 'The selected restock request line was not found.'));
+    const totals = receiptTotals(state.restockReceipts, restock.id);
+    const line = state.requestLines.find((row) => row.id === restock.requestLineId);
+    const reconciliationRequired = Number(line?.receivedQuantity ?? totals.received) !== totals.received;
+    const preferredQuote = (state.quotes ?? state.canvassReferences ?? []).find(
+      (row) => row.id === restock.preferredCanvassId || row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId),
+    );
+    return Promise.resolve({
+      ok: true,
+      restock: {
+        ...structuredClone(restock),
+        workflowRevision: Number(restock.workflowRevision ?? 1),
+        receivedQuantity: totals.received,
+        remainingQuantity: Number(restock.quantityOrdered) - totals.received,
+        preferredQuote: preferredQuote
+          ? { id: preferredQuote.id, supplierName: preferredQuote.supplierName, price: preferredQuote.price, unit: preferredQuote.unit, checkedAt: preferredQuote.checkedAt }
+          : null,
+        receipts: structuredClone(state.restockReceipts.filter((row) => row.relatedId === restock.id)),
+        timeline: structuredClone(restock.statusHistory ?? []),
+        reconciliationRequired,
+        workflowEnabled: true,
+        allowedActions: restockActionDecisions({
+          status: restock.status,
+          hasPreferredQuote: Boolean(preferredQuote),
+          canTransition: can(state.role, 'procure'),
+          canReceive: can(state.role, 'receive'),
+          reconciliationRequired,
+        }),
+      },
+    });
+  }
+
+  transitionRestock(command) {
+    return this._run(
+      command,
+      'TRANSITION_RESTOCK',
+      async (state) => {
+        requirePermission(state, 'procure');
+        const restock = state.restockRequests.find(
+          (row) => row.id === command.restockRequestId && row.requestLineId === command.requestLineId,
+        );
+        if (!restock) throw new AppError('NOT_FOUND', 'The selected restock request line was not found.');
+        const receiptTotal = receiptTotals(state.restockReceipts, restock.id).received;
+        const storedLine = state.requestLines.find((row) => row.id === restock.requestLineId);
+        if (Number(storedLine?.receivedQuantity ?? receiptTotal) !== receiptTotal)
+          throw new AppError('RESTOCK_RECONCILIATION_REQUIRED', 'Receipt totals require reconciliation before another action.');
+        const preferredQuote = (state.quotes ?? state.canvassReferences ?? []).find(
+          (row) => row.id === restock.preferredCanvassId || row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId),
+        );
+        const validation = validateRestockTransition({
+          status: restock.status,
+          action: command.action,
+          reason: command.reason,
+          hasPreferredQuote: Boolean(preferredQuote),
+          expectedRevision: command.expectedRevision,
+          currentRevision: restock.workflowRevision ?? 1,
+        });
+        if (!validation.valid) throw new AppError(validation.code, validation.message);
+        const previous = restock.status;
+        restock.status = validation.targetStatus;
+        restock.workflowRevision = Number(restock.workflowRevision ?? 1) + 1;
+        restock.updatedAt = now();
+        restock.statusHistory = [...(restock.statusHistory ?? []), { status: restock.status, previousStatus: previous, changedAt: restock.updatedAt, reason: command.reason }];
+        const line = state.requestLines.find((row) => row.id === restock.requestLineId);
+        if (line) {
+          line.status = restock.status;
+          line.workflowRevision = restock.workflowRevision;
+        }
+        recomputeRestockParent(state, restock.requestId);
+        state.revisions.requests += 1;
+        return {
+          entityType: 'REQUEST_LINE',
+          entityId: restock.requestLineId,
+          restockRequestId: restock.id,
+          requestLineId: restock.requestLineId,
+          status: restock.status,
+          workflowRevision: restock.workflowRevision,
+          summary: `${restock.id} moved to ${restock.status}.`,
+        };
+      },
+      { views: ['restocking', 'overview'], shared: true },
+    );
+  }
+
   receiveRestock(command) {
     return this._run(
       command,
@@ -1252,9 +1342,17 @@ export class MockService {
           (row) => row.id === command.restockRequestId && row.requestLineId === command.requestLineId,
         );
         if (!restock) throw new AppError('NOT_FOUND', 'The selected restock request line was not found.');
+        if (Number(command.expectedRevision) !== Number(restock.workflowRevision ?? 1))
+          throw new AppError('REVISION_CONFLICT', 'The restock line changed. Refresh before receiving.');
         if (!['TO_BE_PROCURED', 'PARTIALLY_RECEIVED'].includes(restock.status))
           throw new AppError('INVALID_TRANSITION', 'This restock line is not ready for receiving.');
+        const item = state.inventoryItems.find((row) => row.id === restock.itemId);
+        if (command.unit && String(command.unit).toLowerCase() !== String(item?.unit ?? '').toLowerCase())
+          throw new AppError('UNIT_MISMATCH', 'The receipt unit must match the linked restock line.');
         const totals = receiptTotals(state.restockReceipts, restock.id);
+        const storedLine = state.requestLines.find((row) => row.id === restock.requestLineId);
+        if (Number(storedLine?.receivedQuantity ?? totals.received) !== totals.received)
+          throw new AppError('RESTOCK_RECONCILIATION_REQUIRED', 'Receipt totals require reconciliation before another receipt.');
         const validation = validateReceipt({
           requiredTotal: restock.quantityOrdered,
           alreadyReceived: totals.received,
@@ -1283,7 +1381,7 @@ export class MockService {
           idempotencyKey: tx.key,
         });
         appendLedger(state, {
-          type: 'RECEIPT',
+          type: 'PURCHASE_RECEIPT',
           direction: 'IN',
           quantity: validation.receivedNow,
           itemId: restock.itemId,
@@ -1298,8 +1396,15 @@ export class MockService {
           requiredTotal: restock.quantityOrdered,
           finalStatus: 'RESTOCKED',
         });
+        restock.workflowRevision = Number(restock.workflowRevision ?? 1) + 1;
+        restock.updatedAt = now();
+        restock.statusHistory = [...(restock.statusHistory ?? []), { status: restock.status, changedAt: restock.updatedAt, reason: 'Catalog restock receipt' }];
         const line = state.requestLines.find((row) => row.id === restock.requestLineId);
-        if (line) line.status = restock.status;
+        if (line) {
+          line.receivedQuantity = validation.receivedTotal;
+          line.status = restock.status;
+          line.workflowRevision = restock.workflowRevision;
+        }
         recomputeRestockParent(state, restock.requestId);
         state.revisions.receipts += 1;
         state.revisions.requests += 1;
@@ -1309,7 +1414,9 @@ export class MockService {
           restockRequestId: restock.id,
           receiptId,
           receivedTotal: validation.receivedTotal,
+          quantityReceivedTotal: validation.receivedTotal,
           quantityRemaining: validation.quantityRemaining,
+          workflowRevision: restock.workflowRevision,
           summary: `${restock.id} received at line level; sibling lines unchanged.`,
         };
       },

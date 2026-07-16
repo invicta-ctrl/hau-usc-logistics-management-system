@@ -259,7 +259,7 @@ function bootstrapRequestDto_(row) {
 }
 
 function bootstrapLineDto_(row) {
-  return { id: row.Request_Line_ID, requestId: row.Request_ID, eventId: row.Event_ID, itemId: row.Item_ID, description: row.Description, specification: row.Specification, category: row.Category, quantity: Number(row.Requested_Qty || 0), unit: row.Unit, fulfillmentSource: row.Fulfillment_Source, neededAt: row.Needed_At, returnDue: row.Return_Due, releasedQuantity: Number(row.Released_Qty || 0), receivedQuantity: Number(row.Received_Qty || 0), status: row.Status, createdAt: row.Created_At, updatedAt: row.Updated_At };
+  return { id: row.Request_Line_ID, requestId: row.Request_ID, eventId: row.Event_ID, itemId: row.Item_ID, description: row.Description, specification: row.Specification, category: row.Category, quantity: Number(row.Requested_Qty || 0), unit: row.Unit, fulfillmentSource: row.Fulfillment_Source, neededAt: row.Needed_At, returnDue: row.Return_Due, releasedQuantity: Number(row.Released_Qty || 0), receivedQuantity: Number(row.Received_Qty || 0), status: row.Status, workflowRevision: Number(row.Workflow_Revision || 1), createdAt: row.Created_At, updatedAt: row.Updated_At };
 }
 
 function bootstrapLendingDto_(row) {
@@ -348,7 +348,8 @@ function bootstrapRestockingModule_(command, session) {
   var page = bootstrapPage_(records, command, bootstrapRestockDto_);
   var itemPage = bootstrapRowsForItems_(command, session, true);
   var canvassPage = bootstrapPage_(bootstrapRows_(HAU_SHEETS.CANVASS, command, session, ['Canvass_ID', 'Linked_Request_Line_ID', 'Linked_Deliverable_ID', 'Supplier_ID', 'Supplier_Name', 'Location', 'Item_Spec', 'Status'], [], null), command, bootstrapCanvassDto_);
-  return { data: { inventoryItems: itemPage.rows, restockRequests: [], restockRecords: page.rows, canvassReferences: canvassPage.rows }, pagination: page.pagination, cache: { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 } };
+  var restockRows = typeof restockQueueDtos_ === 'function' ? restockQueueDtos_(session.user) : [];
+  return { data: { inventoryItems: itemPage.rows, restockRequests: restockRows, restockRecords: page.rows, canvassReferences: canvassPage.rows }, pagination: page.pagination, cache: { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 } };
 }
 
 function bootstrapProcurementModule_(command, session) {

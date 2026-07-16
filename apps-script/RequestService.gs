@@ -30,7 +30,7 @@ function submitRequest_(command, correlationId) {
         Needed_At: line.neededAt || '', Return_Due: line.returnDue || '', Lead_Time_Rule: line.leadTimeRule || '',
         Suggested_Supplier: line.suggestedSupplier || '', Released_Qty: 0, Received_Qty: 0,
         Status: 'FOR_REVIEW', Created_At: now, Updated_At: now, Created_By: user.User_ID || 'PUBLIC',
-        Client_Line_ID: line.clientLineId || Utilities.getUuid(), Notes: line.notes || ''
+        Client_Line_ID: line.clientLineId || Utilities.getUuid(), Notes: line.notes || '', Workflow_Revision: 1
       };
     });
     appendObject_(HAU_SHEETS.REQUESTS, request);
@@ -66,7 +66,7 @@ function applyAcceptancePlan_(request, plans, user, key) {
   plans.forEach(function(plan) {
     var line = plan.line, now = nowIso_();
     if (plan.kind === 'RESTOCK') {
-      updateObject_(HAU_SHEETS.REQUEST_LINES, line._row, { Fulfillment_Source: 'RESTOCK', Status: 'FOR_CANVASSING', Updated_At: now });
+      updateObject_(HAU_SHEETS.REQUEST_LINES, line._row, { Fulfillment_Source: 'RESTOCK', Status: 'FOR_CANVASSING', Workflow_Revision: Number(line.Workflow_Revision || 1) + 1, Updated_At: now });
       history_('REQUEST_LINE', line.Request_Line_ID, line.Status, 'FOR_CANVASSING', user, 'Catalog restock accepted', { requestId: request.Request_ID, idempotencyKey: key });
       return;
     }
@@ -82,7 +82,7 @@ function applyAcceptancePlan_(request, plans, user, key) {
       updateObject_(HAU_SHEETS.REQUEST_LINES, line._row, { Requested_Qty: plan.stock, Fulfillment_Source: 'ISSUE_FROM_STOCK', Split_Group_ID: split, Status: 'READY_TO_RELEASE', Updated_At: now });
       var procurementLine = Object.assign({}, line, {
         Request_Line_ID: allocateId_('RL'), Requested_Qty: plan.procurement, Fulfillment_Source: 'PROCUREMENT',
-        Split_Group_ID: split, Status: 'FOR_CANVASSING', Created_At: now, Updated_At: now, Client_Line_ID: Utilities.getUuid()
+        Split_Group_ID: split, Status: 'FOR_CANVASSING', Created_At: now, Updated_At: now, Client_Line_ID: Utilities.getUuid(), Workflow_Revision: 1
       });
       delete procurementLine._row;
       appendObject_(HAU_SHEETS.REQUEST_LINES, procurementLine);

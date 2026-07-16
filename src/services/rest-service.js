@@ -48,6 +48,8 @@ for (const method of [
   'confirmLendingReturn',
   'receiveDeliverable',
   'transitionDeliverable',
+  'getRestockDetail',
+  'transitionRestock',
   'receiveRestock',
   'confirmRelease',
   'transferEventItem',

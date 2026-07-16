@@ -1,4 +1,39 @@
-# HAU-USC V1 Autonomous Program - Slice 10 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 11 checkpoint
+
+CURRENT SLICE: Slice 11 - Restock Safety
+CURRENT STAGE: SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT
+LAST UPDATED: 2026-07-16 (Asia/Manila)
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Slice 11 scope lock
+
+- Starting checkpoint: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` on
+  `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.
+- Contract: `docs/RESTOCK_SAFETY_WORKFLOW.md`.
+- Accepted decisions: one restock is the projection of one durable
+  `CATALOG_RESTOCK` request line; server-returned allowed actions; preferred
+  quote and reason prerequisites; completion by cumulative line receipt only;
+  optimistic workflow revision; fail-closed write flag; no sibling mutation.
+- In scope: queue/detail DTOs and timeline; transition/disabled explanations;
+  confirmation; authorization/scope; idempotency/lock/revision/history/audit;
+  exact line receipt/ledger integration; authoritative refresh; active UI;
+  schema/docs/tests/generated parity.
+- Exclusions: separate duplicate entity, arbitrary/client-only transitions,
+  one-click completion, sibling completion, ledger rewrite, procurement
+  redesign, legacy backfill, deployment/migration/external Google writes, PR
+  merge, Cloudflare/database, staging, and production.
+- Rollback: set `HAU_RESTOCK_WORKFLOW_ENABLED=false`, retain read-only detail,
+  preserve all immutable records, and use a focused revert for code rollback.
+- Local proof: governance/lint, 36 Vitest files / 296 tests, 34-module build,
+  33 Apps Script sources / 54 functions, deterministic generated parity, two
+  406,243-byte standalone artifacts, full Playwright (67 passed / 119
+  intentional skips / 0 failed), focused 390px/1366px restock proof, privacy
+  review, `git diff --check`, and final implementation validation pass.
+
+---
+
+# Historical Slice 10 checkpoint
 
 CURRENT SLICE: Slice 10 - Authorized reference-data administration
 CURRENT STAGE: SLICE_10_COMMITTED_PUSHED_CI_GREEN_ACCEPTED

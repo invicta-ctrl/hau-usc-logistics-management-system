@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-10 and Phase 2 governance committed and CI-verified; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-10 committed and CI-verified; Slice 11 locally verified; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
-- Accepted Slice 10 starting commit: `4374fad7d3420c650abbe565bf03be00f2e208d4` (Slice 9 final evidence checkpoint)
-- Current implementation checkpoint: Slice 10 implementation commit `ece5bf846399c2793ab088214ba2a1693d3693ae` is pushed; local, upstream, and PR #7 heads matched and all required checks passed
+- Accepted Slice 11 starting commit: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` (Slice 10 final evidence checkpoint)
+- Current implementation checkpoint: Slice 11 local gates and independent validation pass; focused implementation commit and CI remain
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -14,9 +14,40 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-10 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-11 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 11 - Restock Safety
+
+- Stage: `SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT` from accepted checkpoint
+  `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` on
+  `integration/v0.5-baseline`.
+- Delivered locally: stable request-line-derived restock identities; bounded
+  queue/detail/timeline and disabled reasons; separated scoped capabilities;
+  preferred-quote/reason/confirmation prerequisites; optimistic revision,
+  lock, idempotency, history, and audit; exact line/item/unit receiving;
+  immutable purchase receipts and ledger entries; reconciliation protection;
+  receipt-derived completion; parent derivation without sibling mutation;
+  fail-closed writes; adapters; responsive UI; schema/docs/tests.
+- Verification: governance/lint, 36 Vitest files / 296 tests, 34-module build,
+  33 Apps Script sources / 54 functions, deterministic generated parity, two
+  406,243-byte artifacts, full Playwright 67 / 119 intentional skips / 0
+  failed, focused mobile/desktop workflow proof, privacy review, and
+  `git diff --check` pass. Final implementation validation is PASS after
+  exact-unit hardening.
+- Generated evidence: standalone SHA-256
+  `b4ccc05c6ce40e020b23567ef27fc3c0e7377dcaae1c0782b776bb5313f450ec`;
+  Apps Script `Index.html` is 1,022 bytes / SHA-256
+  `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
+  `AppScript.html` is 339,054 bytes / SHA-256
+  `c5771eb265712e6f77fe17ebcc269ebe120c75a2c8539b2654062afbe42f469f`.
+- External boundary: no deployment, live schema execution, migration/import,
+  Script Property change, Apps Script/Sheets/Drive external write, PR merge,
+  Cloudflare, database, staging, or production action occurred.
+- Rollback: set `HAU_RESTOCK_WORKFLOW_ENABLED=false`, retain read-only review
+  and immutable records, and revert only the focused Slice 11 commit if code
+  rollback is required.
 
 ## Current Slice 10 - Authorized reference-data administration
 

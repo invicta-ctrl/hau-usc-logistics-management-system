@@ -4,40 +4,39 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 10 locally implemented
+## Current run checkpoint - Phase 4 / Slice 11 implementation
 
 - Date: 2026-07-16 (Asia/Manila).
-- Stage: `SLICE_10_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
-- Accepted starting checkpoint: `4374fad7d3420c650abbe565bf03be00f2e208d4`
+- Stage: `SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT`.
+- Accepted starting checkpoint: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
 - User authorization: direct bounded continuation is approved without another
   manager-approval pause. Each slice still requires complete local proof,
   independent review, a focused push, and green CI before the next starts.
-- Current bounded scope: authorized reference-data administration with bounded
-  allowlisted projections and forms, non-destructive versioning, effective
-  dates, dependencies, review-gated permissions/routing, read-only roster/sync
-  health, emergency revocation, history/audit, fail-closed reconciliation, and
-  active UI as specified in `docs/REFERENCE_DATA_ADMINISTRATION.md`.
+- Current bounded scope: restock queue/detail as a projection of one durable
+  catalog-restock request line; server-owned review/procurement transitions;
+  line-level cumulative receiving; revision/idempotency/lock/history/audit;
+  authoritative refresh; and active UI as specified in
+  `docs/RESTOCK_SAFETY_WORKFLOW.md`.
 - External boundary: repository implementation and feature-branch GitHub CI
   only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
   PR merge, Cloudflare, database, or production action is authorized here.
-- Accepted dependency: Slice 9 checkpoint
-  `4374fad7d3420c650abbe565bf03be00f2e208d4` is pushed and CI green. Final
-  evidence runs `29392777117` / `29392777176` passed `validate`, `verify`, and
+- Accepted dependency: Slice 10 final checkpoint
+  `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` is pushed at parity and CI green.
+  Runs `29473310329` / `29473310294` passed `validate`, `verify`, and
   `browser-smoke`.
-- Slice 10 result: schema, service, canonical routes, adapters, controlled UI,
-  pending-review comparison, tests, docs, and generated parity are implemented.
-  Governance/lint, 34 Vitest files / 284 tests, 33-module build, 33 Apps Script
-  sources / 54 functions, two 393,977-byte artifacts, full Playwright 65 / 115
-  intentional skips / 0 failures, sensitive scan, and diff checks pass. Final
-  implementation validation is PASS after targeted authorization, emergency,
-  fail-safe ordering, reconciliation, review UI, and eager-fetch repairs. The
-  implementation commit `ece5bf846399c2793ab088214ba2a1693d3693ae` is pushed
-  at local/upstream/PR parity. Runs `29472954664` and `29472954676` passed
-  `validate` (11s), `verify` (20s), and `browser-smoke` (2m14s). Commit/push
-  this evidence record, then Slice 11 is unlocked. No external operational
-  system changed.
+- Slice 11 local result: schema `1.6.0`, server restock projection/detail,
+  allowed-action decisions, guarded transitions, line-level cumulative
+  receiving, exact item/unit/revision checks, idempotency/lock/history/audit,
+  reconciliation protection, fail-closed writes, adapters, controlled UI,
+  docs, and generated parity are implemented. Governance/lint, 36 Vitest files
+  / 296 tests, 34-module build, 33 Apps Script sources / 54 functions, two
+  406,243-byte artifacts, full Playwright 67 / 119 intentional skips / 0
+  failures, privacy review, and diff checks pass. Final implementation
+  validation is PASS after exact-unit hardening. A focused implementation
+  commit, push, PR update, and green CI are the remaining Slice 11 gates. No
+  external operational system changed.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

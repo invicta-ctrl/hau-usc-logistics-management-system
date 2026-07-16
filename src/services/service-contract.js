@@ -19,6 +19,8 @@ export const SERVICE_METHODS = Object.freeze([
   'confirmLendingReturn',
   'receiveDeliverable',
   'transitionDeliverable',
+  'getRestockDetail',
+  'transitionRestock',
   'receiveRestock',
   'confirmRelease',
   'transferEventItem',

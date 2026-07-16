@@ -32,6 +32,8 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'confirmReturn',
   'saveCanvassReference',
   'selectPreferredCanvass',
+  'getRestockDetail',
+  'transitionRestock',
   'receiveRestock',
   'receiveDeliverable',
   'confirmRelease',

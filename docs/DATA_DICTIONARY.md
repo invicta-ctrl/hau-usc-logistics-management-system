@@ -7,7 +7,7 @@ Canonical identifiers are strings and are never sheet row numbers. Date-times ar
 | Item | `Item_ID` (`ITM-`) | Opening quantity plus posted item ledger; `VERIFY` blocks transactions | Legacy sheet/row/block, catalog type, storage, handling, lending audience |
 | Ledger transaction | `Transaction_ID` (`TXN-`) | Immutable signed movement | item/event item, related entity, idempotency key |
 | Request | `Request_ID` (`LREQ-`) | Parent status derived from lines | event, requester, parent request |
-| Request line | `Request_Line_ID` (`RL-`) | Requested/received/released quantities | item/event item, split group |
+| Request line | `Request_Line_ID` (`RL-`) | Requested/received/released quantities plus `Workflow_Revision` for guarded restock mutations | item/event item, split group |
 | Reservation | `Reservation_ID` (`RSV-`) | `ACTIVE` quantities reduce ATP | request line or lending ticket |
 | Lending ticket | `Lending_Ticket_ID` (`LND-`) | circulation status + ledger | borrower, item, due date |
 | Release | `Release_ID` (`REL-`) | posted release header plus ledger | request/lines/evidence |
@@ -20,6 +20,10 @@ Canonical identifiers are strings and are never sheet row numbers. Date-times ar
 | Audit log | `Audit_ID` (`AUD-`) | append-only actions/correlation | any entity |
 | Migration mapping | `Migration_ID` (`MAP-`) | explicit approval/apply decision | legacy source and new item |
 | Data revision | `DATA_REVISION` config key | monotonic exactly-once successful mutation counter | update timestamp and environment |
+
+`RRQ-<Request_Line_ID>` is a stable display/projection identifier for a durable
+catalog-restock request line. It is not a second persisted workflow record and
+must never be generated independently of the linked `Request_Line_ID`.
 
 ## Catalog and circulation fields
 

@@ -255,6 +255,15 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.selectPreferredCanvass(command),
       );
     },
+    async getRestockDetail(payload) {
+      const command = typeof payload === 'string' ? { requestLineId: payload } : payload;
+      return remote.getRestockDetail(command);
+    },
+    transitionRestock(payload) {
+      return mutationRequests.run('restock-transition', payload, (command) =>
+        remote.transitionRestock(command),
+      );
+    },
     transitionDeliverable(payload) {
       return mutationRequests.run('deliverable-transition', payload, (command) =>
         remote.transitionDeliverable(command),

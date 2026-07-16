@@ -34,6 +34,8 @@ function api_confirmLendingHandoff(command) { return guardMutationApi_('confirmL
 function api_confirmReturn(command) { return guardMutationApi_('confirmReturn', command, function(c) { return confirmReturn_(command, c); }); }
 function api_saveCanvassReference(command) { return guardMutationApi_('saveCanvassReference', command, function(c) { return saveCanvassReference_(command, c); }); }
 function api_selectPreferredCanvass(command) { return guardMutationApi_('selectPreferredCanvass', command, function(c) { return selectPreferredCanvass_(command, c); }); }
+function api_getRestockDetail(command) { return guardApi_('getRestockDetail', command || {}, function() { return getRestockDetail_(command || {}); }); }
+function api_transitionRestock(command) { return guardMutationApi_('transitionRestock', command, function(c) { return transitionRestock_(command, c); }); }
 function api_receiveRestock(command) { return guardMutationApi_('receiveRestock', command, function(c) { return receiveRestock_(command, c); }); }
 function api_receiveDeliverable(command) { return guardMutationApi_('receiveDeliverable', command, function(c) { return receiveDeliverable_(command, c); }); }
 function api_confirmRelease(command) { return guardMutationApi_('confirmRelease', command, function(c) { return confirmRelease_(command, c); }); }

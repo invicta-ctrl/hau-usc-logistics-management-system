@@ -583,26 +583,28 @@ export function createSeedState() {
     ],
     restockRequests: [
       {
-        id: 'RRQ-0001',
+        id: 'RRQ-RL-0004',
         requestId: 'REQ-2026-00003',
         requestLineId: 'RL-0004',
         itemId: 'ITM-0002',
         quantityOrdered: 10,
         status: 'PARTIALLY_RECEIVED',
+        workflowRevision: 2,
       },
       {
-        id: 'RRQ-0002',
+        id: 'RRQ-RL-0005',
         requestId: 'REQ-2026-00003',
         requestLineId: 'RL-0005',
         itemId: 'ITM-0008',
         quantityOrdered: 3,
         status: 'TO_BE_PROCURED',
+        workflowRevision: 1,
       },
     ],
     restockReceipts: [
       {
         id: 'RRCP-2026-00000',
-        relatedId: 'RRQ-0001',
+        relatedId: 'RRQ-RL-0004',
         quantityReceived: 4,
         quantityDamaged: 0,
         quantityRejected: 0,

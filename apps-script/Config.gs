@@ -13,14 +13,15 @@ var HAU_RUNTIME_PROPERTIES = Object.freeze({
   FOOD_REQUESTS_ENABLED: 'HAU_FOOD_REQUESTS_ENABLED',
   MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED',
   VENUE_EQUIPMENT_REQUESTS_ENABLED: 'HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED',
-  REFERENCE_ADMIN_WRITES_ENABLED: 'HAU_REFERENCE_ADMIN_WRITES_ENABLED'
+  REFERENCE_ADMIN_WRITES_ENABLED: 'HAU_REFERENCE_ADMIN_WRITES_ENABLED',
+  RESTOCK_WORKFLOW_ENABLED: 'HAU_RESTOCK_WORKFLOW_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
 var HAU_CONFIG = Object.freeze({
   APP_VERSION: '0.5.0',
-  SCHEMA_VERSION: '1.5.0',
+  SCHEMA_VERSION: '1.6.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -110,6 +111,10 @@ function resolveReferenceAdminWritesEnabled_(properties) {
   return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.REFERENCE_ADMIN_WRITES_ENABLED, false);
 }
 
+function resolveRestockWorkflowEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.RESTOCK_WORKFLOW_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -156,7 +161,7 @@ var HAU_HEADERS = Object.freeze({
   '01_ITEM_MASTER': ['Item_ID','Item_Name','Aliases','Category','Stock_Area','Handling','Unit','Opening_Qty','Reserved_Qty','Available_To_Promise','Status','Legacy_Source_Sheet','Legacy_Source_Row','Legacy_Source_Block','Verification_Note','_Helper_Name','_Helper_Qty','_Helper_Unit','_Helper_Row','_Helper_Block','Catalog_Type','Storage_Location','Reorder_Threshold','Lending_Audience','Default_Loan_Days','Maximum_Loan_Qty','Approval_Required','Updated_At','Updated_By','Notes'],
   '02_LEDGER': ['Transaction_ID','Created_At','Type','Direction','Item_ID','Event_Item_ID','Quantity','Unit','Signed_Qty','Related_Entity_Type','Related_Entity_ID','Request_ID','Event_ID','Actor_User_ID','Idempotency_Key','Notes','Reversal_Of','Status'],
   '03_REQUESTS': ['Request_ID','Created_At','Updated_At','Request_Type','Request_Stage','Parent_Request_ID','Additional_Sequence','Event_Series_ID','Event_ID','Catalog_Type','Requester_Name','Requester_Email','Department','Priority','Purpose','Status','Created_By','Client_Request_ID','Archived_At','Notes'],
-  '04_REQUEST_LINES': ['Request_Line_ID','Request_ID','Event_ID','Item_ID','Event_Item_ID','Description','Specification','Category','Requested_Qty','Unit','Fulfillment_Source','Split_Group_ID','Needed_At','Return_Due','Lead_Time_Rule','Suggested_Supplier','Released_Qty','Received_Qty','Status','Created_At','Updated_At','Created_By','Client_Line_ID','Notes'],
+  '04_REQUEST_LINES': ['Request_Line_ID','Request_ID','Event_ID','Item_ID','Event_Item_ID','Description','Specification','Category','Requested_Qty','Unit','Fulfillment_Source','Split_Group_ID','Needed_At','Return_Due','Lead_Time_Rule','Suggested_Supplier','Released_Qty','Received_Qty','Status','Created_At','Updated_At','Created_By','Client_Line_ID','Notes','Workflow_Revision'],
   '05_RESERVATIONS': ['Reservation_ID','Created_At','Updated_At','Item_ID','Quantity','Unit','Request_Line_ID','Lending_Ticket_ID','Status','Created_By','Cleared_At','Clear_Reason','Idempotency_Key','Notes'],
   '06_LENDING': ['Lending_Ticket_ID','Created_At','Updated_At','Student_ID_Number','Borrower_Name','Borrower_Type','Department_Organization','Contact','Item_ID','Quantity','Unit','Purpose','Due_At','Ticket_Type','Status','Approved_By','Approved_At','Released_By','Released_At','Returned_At','Created_By','Notes'],
   '07_RELEASES': ['Release_ID','Created_At','Request_ID','Event_ID','Lending_Ticket_ID','Recipient_Name','Recipient_Role','Department','Released_By','Released_At','Status','Evidence_ID','Confirmation_Label','Notes','Client_Request_ID','Request_Line_IDs_JSON','Quantities_JSON','Units_JSON','Idempotency_Key','Reversed_By'],

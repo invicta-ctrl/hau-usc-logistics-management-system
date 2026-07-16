@@ -74,6 +74,32 @@ describe('AppsScriptAdapter', () => {
     ]);
   });
 
+  it('routes restock detail, transition, and line receipt through explicit endpoints', async () => {
+    const calls = [];
+    let success;
+    let proxy;
+    const runner = {
+      withSuccessHandler(handler) { success = handler; return proxy; },
+      withFailureHandler() { return proxy; },
+    };
+    proxy = new Proxy(runner, {
+      get(target, property) {
+        if (property in target) return target[property];
+        return (command) => { calls.push({ method: String(property), command }); queueMicrotask(() => success({ ok: true })); };
+      },
+    });
+    globalThis.google = { script: { run: proxy } };
+    const adapter = new AppsScriptAdapter();
+    await adapter.getRestockDetail({ requestLineId: 'SYN-LINE' });
+    await adapter.transitionRestock({ requestLineId: 'SYN-LINE', expectedRevision: 2 });
+    await adapter.receiveRestock({ requestLineId: 'SYN-LINE', expectedRevision: 3 });
+    expect(calls.map((call) => call.method)).toEqual([
+      'api_getRestockDetail',
+      'api_transitionRestock',
+      'api_receiveRestock',
+    ]);
+  });
+
   it('clones cross-realm Apps Script responses before contract validation', async () => {
     const result = Object.create({ inherited: true });
     result.ok = true;

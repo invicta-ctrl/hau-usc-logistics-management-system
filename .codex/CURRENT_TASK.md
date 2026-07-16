@@ -1,58 +1,49 @@
 # Current Task
 
-- **Task ID:** `SLICE-10-AUTHORIZED-REFERENCE-ADMINISTRATION`
+- **Task ID:** `SLICE-11-RESTOCK-SAFETY`
 - **Original instruction:** accept all prior gates and continue from Phase 4
   onward without another manager-approval pause.
-- **Intent and mode:** `SOFTWARE_FEATURE`; execute one bounded accepted slice.
+- **Routing envelope:** `INTENT: SOFTWARE_FEATURE`; `MODE: execute`;
+  `TARGET: repository Slice 11 restock workflow`; `RISK: high`;
+  `DELIVERABLE: durable server-owned restock review, transitions, and
+  line-level receiving`; `STOP CONDITIONS: unsafe Git state, failed mandatory
+  gate after two targeted repair rounds, missing external authority, or scope
+  expansion`.
 - **Matched skills:** `pdf` fixed the accepted phase/gate contract;
-  `impl-validator` drove the independent implementation audit; `github:yeet`
-  governs the focused publish checkpoint.
-- **Objective:** provide a controlled administrator workspace for reference,
-  routing, lifecycle, permission, roster-ownership, and sync-health domains so
-  operators do not edit raw Sheets.
+  `impl-validator` is required for the independent final implementation audit;
+  `github:yeet` governs the focused publish checkpoint; `gh-fix-ci` diagnosed
+  and repaired the Slice 10 continuation-label CI regression.
 - **Verified starting state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
   on `integration/v0.5-baseline` at
-  `4374fad7d3420c650abbe565bf03be00f2e208d4`; upstream `0 0`; clean. Slice 9
-  final runs `29392777117` and `29392777176` passed `validate`, `verify`, and
+  `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d`; upstream `0 0`; clean. Runs
+  `29473310329` and `29473310294` passed `validate`, `verify`, and
   `browser-smoke`.
-- **Authorization:** owner acceptance permits the bounded implementation,
+- **Authorization:** owner acceptance permits this bounded implementation,
   focused commit, feature-branch push, CI verification, and direct transition
-  to the next slice after all gates pass. It does not authorize deployment,
+  to Slice 12 after all gates pass. It does not authorize deployment,
   migration/import, PR merge, `main`, or operational Google writes.
-- **Authoritative specification:** accepted master prompt/operating guide,
-  `.plans/hau-usc-v1-release-planning-and-recommendation-package.todo.md`, and
-  `docs/REFERENCE_DATA_ADMINISTRATION.md`.
-- **In scope:** bounded domain projections; controlled add/update/archive/
-  restore; effective dates and aliases; optimistic revisions; dependency
-  warnings; before/after confirmation; idempotency/lock/history/audit;
-  roster-owned read-only data; permission/routing second review; emergency
-  revocation; fail-closed reconciliation; active mobile/desktop UI; tests,
-  docs, and generated parity.
-- **Out of scope:** permanent delete, raw-grid editing, roster-source editing,
-  production bulk import, direct ledger/history mutation, self-escalation,
-  deployment, live schema execution, external Apps Script/Sheets/Drive writes,
-  PR merge, Cloudflare/database, staging, or production.
-- **Writer boundary:** the parent is the only writer; validation was read-only.
-- **Rollback:** set `HAU_REFERENCE_ADMIN_WRITES_ENABLED=false`, preserve every
-  version/change/history/audit row, use compensating revisions for data repair,
-  and use a focused Slice 10 revert for code rollback.
-- **Acceptance result:** server authorization, allowlisted DTOs and fields,
-  append-before-supersede versioning, dependency protection, revision conflict,
-  idempotency, reconciliation state, review separation, requester/reviewer
-  self-escalation denial, emergency revocation-only validation, and actionable
-  review UI all pass synthetic verification.
-- **Current proof:** governance/lint pass; 34 Vitest files / 284 tests pass; the
-  build transforms 33 modules; 33 Apps Script sources / 54 required functions,
-  generated parity, and both 393,977-byte standalone artifacts pass; full
-  Playwright passes 65 / 115 intentional skips / 0 failures; sensitive scan
-  and `git diff --check` pass. Independent validation is final PASS after
-  repairing self-review, dormant emergency grants, partial-write ordering,
-  reconciliation, actionable review, and an eager-bootstrap fetch regression.
-- **Remote evidence:** implementation commit
-  `ece5bf846399c2793ab088214ba2a1693d3693ae` is pushed at local/upstream/PR
-  parity. Runs `29472954664` and `29472954676` passed `validate` (11s),
-  `verify` (20s), and `browser-smoke` (2m14s); PR #7 remains open, draft, and
-  mergeable with a current through-Slice-10 title/body.
-- **Current stage:** `SLICE_10_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
-  Commit/push this evidence record, verify its CI, then start bounded Slice 11.
+- **Authoritative specification:** accepted master prompt, accepted planning
+  package, and `docs/RESTOCK_SAFETY_WORKFLOW.md`.
+- **Decision lock:** a restock workflow is the durable projection of one
+  `CATALOG_RESTOCK` request line; its stable server identity is derived from
+  that line. Review/procurement transitions and receipts mutate only that
+  line, under an optimistic workflow revision. Completion is receipt-derived
+  only; sibling lines are never changed implicitly.
+- **In scope:** safe queue/detail DTOs; server-returned allowed actions and
+  disabled reasons; transition/precondition matrix; explicit reason and
+  confirmation; preferred-quote prerequisite; fail-closed write flag;
+  idempotency, lock, revision conflict, history/audit; linked cumulative
+  receipts and immutable ledger append; authoritative refresh; active
+  desktop/mobile UI; tests, docs, schema, and generated parity.
+- **Out of scope:** separate duplicate restock table, arbitrary status strings,
+  one-click completion, client-only transitions, sibling completion,
+  procurement redesign, ledger/history rewrite, legacy backfill, deployment,
+  live schema execution, external Apps Script/Sheets/Drive writes, PR merge,
+  Cloudflare/database, staging, or production.
+- **Writer boundary:** the parent is the only writer; final validation is
+  independently read-only.
+- **Rollback:** set `HAU_RESTOCK_WORKFLOW_ENABLED=false`; retain read-only
+  queue/detail and all request, receipt, ledger, history, and audit rows; use a
+  focused Slice 11 revert only for code rollback.
+- **Current stage:** `SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT`.

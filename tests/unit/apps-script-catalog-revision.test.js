@@ -77,7 +77,8 @@ describe('catalog schema and permission migration', () => {
       'Roster_Managed',
       'Admin_Revision',
     ]);
-    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.5.0');
+    expect(Array.from(ctx.HAU_HEADERS['04_REQUEST_LINES']).at(-1)).toBe('Workflow_Revision');
+    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.6.0');
   });
 
   it('uses least-privilege catalog permission fallback', () => {

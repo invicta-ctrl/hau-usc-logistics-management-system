@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased - Slice 11 Restock Safety
+
+- Replaced consequential queue-row controls with authoritative detail review,
+  server-returned allowed actions and disabled reasons, explicit confirmation,
+  required reasons, and bounded timeline/quote/receipt projections.
+- Defined each restock as the stable `RRQ-<Request_Line_ID>` projection of one
+  durable catalog-restock line. Added schema `1.6.0` optimistic
+  `Workflow_Revision`, exact line/item/unit validation, preferred-quote gates,
+  cumulative receipt-derived completion, and parent-status derivation without
+  implicit sibling mutation.
+- Added scoped capabilities, fail-closed `HAU_RESTOCK_WORKFLOW_ENABLED`, script
+  locking, idempotent replay, stale-revision denial, reconciliation protection,
+  immutable `08_RESTOCK` plus `PURCHASE_RECEIPT` ledger appends, history, audit,
+  adapters, active desktop/mobile UI, and authoritative refresh.
+- Verification passes `npm run check` (36 Vitest files / 296 tests, 34-module
+  build, 33 Apps Script sources / 54 required functions, deterministic parity,
+  standalone verification), full Playwright (67 passed / 119 intentional skips
+  / 0 failed), focused mobile/desktop restock proof, sensitive-data review,
+  `git diff --check`, and final implementation validation after exact-unit
+  hardening.
+- No deployment, migration/import, Script Property change, external Apps
+  Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production action occurred.
+
 ## Unreleased - Slice 10 Authorized reference-data administration
 
 - Added a bounded Reference Administration workspace for organization,

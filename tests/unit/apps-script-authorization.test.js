@@ -66,6 +66,15 @@ describe('Apps Script canonical authorization contract', () => {
     expect(context.authorizationCan_(admin, context.HAU_CAPABILITIES_.ACCESS_ADMIN, {})).toBe(true);
   });
 
+  it('maps restock reads, transitions, and receipts to separated capabilities', () => {
+    const context = gasContext();
+    expect(context.HAU_OPERATION_CAPABILITIES_).toMatchObject({
+      getRestockDetail: context.HAU_CAPABILITIES_.VIEW_REQUEST,
+      transitionRestock: context.HAU_CAPABILITIES_.FULFILL_PROCURE,
+      receiveRestock: context.HAU_CAPABILITIES_.FULFILL_RECEIVE,
+    });
+  });
+
   it('enforces committee scope, Director oversight, inactive access, and capability separation', () => {
     const context = gasContext();
     const head = {

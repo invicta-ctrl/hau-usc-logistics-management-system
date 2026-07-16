@@ -39,6 +39,8 @@ for (const [client, server] of Object.entries({
   confirmLendingReturn: 'api_confirmLendingReturn',
   receiveDeliverable: 'api_receiveDeliverable',
   transitionDeliverable: 'api_transitionDeliverable',
+  getRestockDetail: 'api_getRestockDetail',
+  transitionRestock: 'api_transitionRestock',
   receiveRestock: 'api_receiveRestock',
   confirmRelease: 'api_confirmRelease',
   transferEventItem: 'api_transferEventItem',

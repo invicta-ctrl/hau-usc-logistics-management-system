@@ -14,6 +14,17 @@ Before running any setup function, open **Apps Script → Project Settings → S
 
 For production, use `PRODUCTION` and separately reviewed production IDs. The operational and backup IDs must be different. Missing values, placeholders, malformed IDs, and unsupported environments fail closed. The repository contains no spreadsheet-ID fallback.
 
+## Restock workflow activation (Slice 11)
+
+`HAU_RESTOCK_WORKFLOW_ENABLED` is optional and defaults to `false`. Leave it
+unset or false during repository verification and schema preparation. Enabling
+it is an external operational action and requires an authorized staging
+checkpoint after schema `1.6.0` is validated, a fresh backup exists, stored
+`Received_Qty` values reconcile with immutable `08_RESTOCK` totals, and the
+rollback path has been reviewed. Disabling the property immediately returns
+the restock workspace to read-only review without deleting history, receipts,
+ledger rows, or audit evidence.
+
 ## Private roster synchronization (Slice 4)
 
 Private access synchronization is an explicit, admin-controlled boundary. The source spreadsheet is configured only in an Apps Script Script Property; the source ID, source rows, and institutional identities must never be committed, logged, placed in fixtures, or returned by a diagnostic endpoint.
@@ -40,7 +51,7 @@ Run `setupDatabase()` before a first sync so the additive `21_ACCESS_SYNC_RUNS`,
 4. Run `npm install`, `npm run check`, and `npm run build`.
 5. Run `clasp status` and inspect the bounded file list. Clasp 3.3.0 has no `push --dry-run`; follow the remote-pull/manifest/parity safeguard in `docs/LAUNCH_RUNBOOK.md` before any authorized push.
 6. In Apps Script, create a staging schema backup, then run `setupDatabase()` and review its detailed report. The report must show `STAGING` and the exact disposable demo spreadsheet ID. Stop immediately if either value is wrong.
-7. Run `validateDatabaseSchema()`. Confirm the appended 0.5.0 item/access fields, Slice 4 roster tabs/columns (including the membership rollback snapshot), and the two data-revision config rows without changing prior values.
+7. Run `validateDatabaseSchema()`. Confirm the appended 0.5.0 item/access fields, Slice 4 roster tabs/columns (including the membership rollback snapshot), Slice 11 `Workflow_Revision` request-line field, and the two data-revision config rows without changing prior values.
 8. Run `setupOperationalEditTrigger()` once. Its result must report either one newly created trigger or the existing matching trigger; duplicates are a failure.
 9. Enter `DRIVE_ROOT_FOLDER_ID`, then run `setupDriveFolders()` or enter all seven reviewed folder IDs manually.
 10. Run `validateDriveConfiguration()`; all results must be `VALID`.
@@ -54,7 +65,7 @@ Run `setupDatabase()` before a first sync so the additive `21_ACCESS_SYNC_RUNS`,
 
 `setupDatabase`, `validateDatabaseSchema`, `setupOperationalEditTrigger`, `setupDriveFolders`, `validateDriveConfiguration`, `setupTimeTriggers`, `seedRolesAndPermissions`, `runMigrationDryRun`, `applyApprovedMigration`, `createLaunchBackup`, `runReconciliation`, and `healthCheck` are administrator operations.
 
-`setupDatabase()` adds missing backend tabs, approved appended headers, and config keys only; fills safe defaults only when new fields are blank; validates exact headers; records schema version for the active environment; freezes/styles headers; and leaves legacy tabs untouched. The 0.5.0 migration appends ten item fields, appends `Can_Manage_Catalog`, and ensures `DATA_REVISION` / `DATA_REVISION_UPDATED_AT`. Slice 4 appends roster access freshness columns and creates metadata/snapshot tabs. It preserves all existing item, user, Drive, audit, history, and operational values and is safe to rerun.
+`setupDatabase()` adds missing backend tabs, approved appended headers, and config keys only; fills safe defaults only when new fields are blank; validates exact headers; records schema version for the active environment; freezes/styles headers; and leaves legacy tabs untouched. The 0.5.0 migration appends ten item fields, appends `Can_Manage_Catalog`, and ensures `DATA_REVISION` / `DATA_REVISION_UPDATED_AT`. Slice 4 appends roster access freshness columns and creates metadata/snapshot tabs. Slice 11 appends `Workflow_Revision` to request lines for optimistic concurrency. It preserves all existing item, user, Drive, audit, history, and operational values and is safe to rerun.
 
 `setupOperationalEditTrigger()` creates at most one installable `handleOperationalSheetEdit` trigger for the configured operational spreadsheet. Repository build/test commands do not install it. Apps Script-originated mutations advance revision explicitly because they do not fire edit triggers; direct human edits advance revision through this trigger. The handler ignores the human README tab and edits limited to the revision keys to avoid self-trigger loops.
 

@@ -48,6 +48,11 @@ The operational database is selected only by the reviewed environment Script Pro
 
 `17_CONFIG` receives `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` when missing. The first is a monotonic non-negative integer; the second records its last update time. They are operational coordination metadata, not secrets.
 
+Schema `1.6.0` appends `Workflow_Revision` to `04_REQUEST_LINES`. Existing rows
+resolve a blank value as revision `1`; the setup path appends the field without
+moving or deleting any prior column. Every successful restock transition or
+line-level receipt increments the linked line revision exactly once.
+
 The migration is safe to run before the 0.5.0 web deployment becomes active. Existing values, legacy tabs, Drive configuration, users, audit/history records, and operational rows remain in place. Repeated setup runs fill only missing schema/default values and must not reset reviewed fields.
 
 ## Slice 10 reference administration records
@@ -55,6 +60,12 @@ The migration is safe to run before the 0.5.0 web deployment becomes active. Exi
 `27_REFERENCE_ADMIN_RECORDS` stores an append-only sequence of stable-ID revisions for domains without a dedicated table. `28_REFERENCE_ADMIN_CHANGES` stores the before/after proposal, changed-field allowlist, risk, requester, distinct reviewer, decision timestamps, idempotency key, and correlation ID. Specific venue/equipment and route revisions remain in tabs 25 and 26. Applying a revision marks the prior current row `SUPERSEDED` and appends the new row; archive and restore are new revisions, not deletion.
 
 `HAU_REFERENCE_ADMIN_WRITES_ENABLED` is a Script Property kill switch and defaults to `false`. It is not stored in `17_CONFIG`, does not appear in a client DTO, and must be enabled only in an explicitly authorized environment after schema validation, backup, dry run, reconciliation, and rollback proof.
+
+`HAU_RESTOCK_WORKFLOW_ENABLED` is a separate Script Property kill switch and
+also defaults to `false`. Queue and detail reads remain available, while every
+restock transition and receipt fails closed until an explicitly authorized
+environment enables it after schema validation, backup, reconciliation, and
+rollback proof.
 
 ## Sheet usability
 
