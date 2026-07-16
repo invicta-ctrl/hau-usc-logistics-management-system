@@ -64,9 +64,14 @@
   dependencies and explicit action decisions, and prints no supplied values.
 - Initialized the safe private Slice 13 record outside Git and recorded the
   owner task message as approval for every Gate B-F action category. The
-  package remains invalid/authorized through `NONE` until the named target,
-  people, fixture, window, capacity, access, and restriction confirmations are
-  completed; no private value or external resource was accessed.
+  package now includes a deterministic synthetic-only fixture manifest,
+  bounded namespace, mutation/retention rules, private evidence boundary,
+  redaction/disposal policy, and verified current-user/SYSTEM-only ACL. Safe
+  inventory proved that six preserved clasp configs resolve to two targets and
+  that filename labels cannot safely select one. The package remains
+  invalid/authorized through `NONE` until live owner/target/tester/window/
+  capacity/session/deployment/Drive facts are completed; no private value or
+  external resource was exposed.
 - Independent review is PASS after aligning rollback rehearsal to Gate E,
   enforcing backup-before-setup order, resolving real paths, and sanitizing CLI
   errors. Linux CI exposed Windows-only test fixture paths in `3591550`; repair

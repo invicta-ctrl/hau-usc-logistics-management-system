@@ -61,10 +61,15 @@ approval, P0/P1, target drift, or any integrity failure`.
   or safety confirmations.
 - **Private package state:** the repository initializer created the safe
   out-of-Git record `private-config/staging/slice-13-authorization.json`.
-  Repository/captured-evidence value exclusion is confirmed. The fail-closed
-  validator still reports the package `INVALID`, authorized through `NONE`,
-  because the remaining real-world fields are incomplete. No private values
-  were printed or copied into Git.
+  Repository/captured-evidence value exclusion is confirmed. A deterministic
+  synthetic-only fixture manifest, private evidence boundary, retention and
+  redaction rules, and current-user/SYSTEM-only ACL are prepared and verified.
+  Safe inventory found six preserved clasp configs resolving to two distinct
+  targets; one staging-labelled preservation file resolves to the same target
+  identity as production-labelled files, so filename inference is unsafe. The
+  validator remains `INVALID`, authorized through `NONE`, on only real-world
+  identity, exact-target, tester, window, capacity, live-session, deployment,
+  and Drive-restriction facts. No private value was printed or copied into Git.
 - **Exact unblock:** named staging owner/operator; one exact approved private
   config and safe staging label; approved synthetic/redacted fixture/namespace;
   named tester-role matrix and

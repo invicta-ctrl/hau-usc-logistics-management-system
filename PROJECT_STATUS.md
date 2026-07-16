@@ -39,17 +39,22 @@ Always verify the current remote head and CI because documentation commits may f
   deployment/backup/parity records remain outside Git. They may be used only
   after the owner names the exact current target/config and action categories.
 - Missing: current named owner/operator; exact approved staging resource set;
-  approved synthetic/redacted fixture/namespace; tester-role matrix and
-  signatories; current deployment/rollback; test window/stop authority;
-  evidence retention/location; storage headroom; and verified access/safety
-  confirmations.
+  tester-role matrix and signatories; current deployment/rollback; test
+  window/stop authority; storage headroom; active operator session; and seven
+  verified restricted Drive mappings.
 - Authorization update: the 2026-07-16 owner task message approves every
   Gate B-F action category. The private package initializer created the safe
   out-of-Git record `private-config/staging/slice-13-authorization.json`, and
   repository/captured-evidence value exclusion is confirmed. The validator
-  remains `INVALID`, authorized through `NONE`, because real-world identity,
-  target, fixture, tester/signatory, window, capacity, access, and restriction
-  fields are incomplete.
+  now also contains a deterministic synthetic-only fixture, bounded namespace,
+  mutation/retention rules, private evidence boundary, redaction/disposal
+  policy, and verified current-user/SYSTEM-only ACL. A safe local inventory
+  found six preserved clasp configs resolving to two targets, with a
+  staging-labelled preservation file sharing the production-labelled target;
+  selecting by filename would be unsafe. The validator remains `INVALID`,
+  authorized through `NONE`, because live identity, exact target,
+  tester/signatory, window, capacity, session, deployment, and Drive facts are
+  incomplete.
 - External audit result: no current signed acceptance matrix or named tester
   roster exists in the active workspace. Historical evidence predates Slices
   4-12 and cannot establish their current staging acceptance.
