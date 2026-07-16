@@ -21,9 +21,11 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   skips / 0 failed across six configured viewports; the module proof runs once
   at 390 px and opens all seven files. Rebuild determinism and `git diff
 --check` pass.
-- This adjunct is committed locally and pending push/CI verification. It
-  performed no Google, deployment, staging, production, merge, hosting, or
-  database action and does not clear the external Slice 13 blocker.
+- Focused commit `472013d2b807d7efff6f63a6a9db218303258783` is pushed at
+  local/upstream/PR parity. Runs `29480998590` and `29480998709` pass
+  `validate`, `verify`, and `browser-smoke`. The adjunct performed no Google,
+  deployment, staging, production, merge, hosting, or database action and does
+  not clear the external Slice 13 blocker.
 
 ## Slice 13 dependency audit
 

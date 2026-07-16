@@ -18,6 +18,9 @@
   intentional skips and zero failures; the focused `file://` proof opens all
   seven module artifacts in Chromium. A second build retained every shareable
   hash, and `git diff --check` passes.
+- Focused commit `472013d2b807d7efff6f63a6a9db218303258783` is pushed at
+  parity. GitHub runs `29480998590` and `29480998709` pass `validate`,
+  `verify`, and `browser-smoke` against that exact SHA.
 - No generated HTML was hand-edited. No upload, deployment, Apps Script/Sheets/
   Drive access, external write, staging, production, merge, hosting, or
   database action occurred.

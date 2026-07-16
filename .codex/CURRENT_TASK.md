@@ -77,5 +77,7 @@ approval, P0/P1, target drift, or any integrity failure`.
   not clear the Slice 13 external preflight blocker.
 - **Current status:** implementation and local verification are complete; 38
   Vitest files / 313 tests and full Playwright 68 passed / 124 intentional skips
-  / 0 failed. The focused commit is local; push and exact-SHA CI verification
-  remain.
+  / 0 failed. Focused commit
+  `472013d2b807d7efff6f63a6a9db218303258783` is pushed at parity; runs
+  `29480998590` and `29480998709` pass `validate`, `verify`, and
+  `browser-smoke`.
