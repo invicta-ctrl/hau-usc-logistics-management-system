@@ -22,6 +22,9 @@
   411,048-byte artifacts), full Playwright (67 passed / 119 intentional skips /
   0 failed), focused 390 px proof, privacy/diff review, and final implementation
   validation after baseline-token, request-only, and modal-lifecycle repairs.
+- Remote verification is green at focused implementation commit
+  `a563f2f179b710ac7c0d46a8af05a4349a5e625b`: run `29477031867` passed
+  `validate`; run `29477031799` passed `verify` and `browser-smoke`.
 - No deployment, migration/import, Script Property change, external Apps
   Script/Sheets/Drive write, PR merge, staging, production, Cloudflare,
   database, or hosting action occurred. Live p95/quota/concurrency acceptance

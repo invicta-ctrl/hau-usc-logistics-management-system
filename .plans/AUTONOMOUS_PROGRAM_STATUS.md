@@ -7,7 +7,7 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 ## Current run checkpoint - Phase 4 / Slice 12 locally verified
 
 - Date: 2026-07-16 (Asia/Manila).
-- Stage: `SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT`.
+- Stage: `SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
 - Accepted starting checkpoint: `6fa6222adde5e8314d2defc40e0cd6686fff953b`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
@@ -58,7 +58,12 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   modal state.
 - Scope checkpoint: `ef05589015af636ff0fef820681e72cc54f6bb76` is pushed at
   parity; runs `29475376088` and `29475376055` passed all three CI checks.
-  Implementation commit/push and exact-SHA CI evidence are the next gate.
+  Focused implementation commit
+  `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is also pushed at exact
+  local/upstream/PR parity. Run `29477031867` passed `validate`; run
+  `29477031799` passed `verify` and `browser-smoke`. PR #7 remains open,
+  draft, and mergeable. Commit/push this evidence record and verify its CI;
+  then Slice 13 staging-readiness preflight is unlocked.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

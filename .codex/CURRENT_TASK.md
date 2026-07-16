@@ -65,4 +65,12 @@
   Playwright passes 67 / 119 intentional skips / 0 failed; focused 390 px
   near-live proof, `git diff --check`, artifact hashing, and sensitive review
   pass.
-- **Current stage:** `SLICE_12_LOCAL_VERIFIED_PENDING_COMMIT`.
+- **Remote proof:** focused implementation commit
+  `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is pushed at
+  local/upstream/PR parity. Run `29477031867` passed `validate`; run
+  `29477031799` passed `verify` and `browser-smoke`. PR #7 remains open,
+  draft, and mergeable.
+- **Current stage:** `SLICE_12_COMMITTED_PUSHED_CI_GREEN_ACCEPTED`.
+- **Next gate:** record this evidence checkpoint, verify its exact-SHA CI, then
+  enter Slice 13 staging-readiness preflight without deploying or mutating an
+  external resource.
