@@ -9,8 +9,12 @@ import {
   validateAuthorizationPackage,
 } from '../../scripts/staging-authorization.mjs';
 
-function completedPackage() {
-  const source = createAuthorizationTemplate('D:\\private-config\\staging\\approved.clasp.json');
+const FAKE_REPO_ROOT = path.resolve('test-paths', 'repo');
+const FAKE_PRIVATE_ROOT = path.resolve('test-paths', 'private');
+const FAKE_PACKAGE_PATH = path.join(FAKE_PRIVATE_ROOT, 'authorization.json');
+
+function completedPackage(privateClaspConfigPath = path.join(FAKE_PRIVATE_ROOT, 'approved.clasp.json')) {
+  const source = createAuthorizationTemplate(privateClaspConfigPath);
   source.authorization.owner = 'Owner label';
   source.authorization.operatorAccountLabel = 'Operator label';
   source.authorization.approvalReferenceLabel = 'Approval record label';
@@ -71,8 +75,8 @@ function completedPackage() {
 describe('staging authorization package', () => {
   it('binds a complete private package to the reviewed candidate and all gates', () => {
     const result = validateAuthorizationPackage(completedPackage(), {
-      repoRoot: 'D:\\repo',
-      packagePath: 'D:\\private-config\\staging\\authorization.json',
+      repoRoot: FAKE_REPO_ROOT,
+      packagePath: FAKE_PACKAGE_PATH,
       claspConfigExists: true,
     });
     expect(result).toMatchObject({ valid: true, authorizedThroughGate: 'F', issues: [], warnings: [] });
@@ -83,8 +87,8 @@ describe('staging authorization package', () => {
     source.authorization.owner = 'REPLACE_PRIVATELY';
     source.people.testers.accessibility = '';
     const result = validateAuthorizationPackage(source, {
-      repoRoot: 'D:\\repo',
-      packagePath: 'D:\\private-config\\staging\\authorization.json',
+      repoRoot: FAKE_REPO_ROOT,
+      packagePath: FAKE_PACKAGE_PATH,
     });
     expect(result.valid).toBe(false);
     expect(result.issues).toEqual(
@@ -98,10 +102,10 @@ describe('staging authorization package', () => {
 
   it('fails closed for repository paths and missing private clasp configuration', () => {
     const source = completedPackage();
-    source.target.privateClaspConfigPath = path.join('D:\\repo', 'private.clasp.json');
+    source.target.privateClaspConfigPath = path.join(FAKE_REPO_ROOT, 'private.clasp.json');
     const result = validateAuthorizationPackage(source, {
-      repoRoot: 'D:\\repo',
-      packagePath: path.join('D:\\repo', 'authorization.json'),
+      repoRoot: FAKE_REPO_ROOT,
+      packagePath: path.join(FAKE_REPO_ROOT, 'authorization.json'),
       claspConfigExists: false,
     });
     expect(result.valid).toBe(false);
@@ -118,8 +122,8 @@ describe('staging authorization package', () => {
     const source = completedPackage();
     source.authorization.actions.backupCreation = 'DENIED';
     const result = validateAuthorizationPackage(source, {
-      repoRoot: 'D:\\repo',
-      packagePath: 'D:\\private-config\\staging\\authorization.json',
+      repoRoot: FAKE_REPO_ROOT,
+      packagePath: FAKE_PACKAGE_PATH,
     });
     expect(result.valid).toBe(true);
     expect(result.authorizedThroughGate).toBe('B');
@@ -130,8 +134,8 @@ describe('staging authorization package', () => {
     const source = completedPackage();
     source.authorization.actions.rollbackRehearsal = 'DENIED';
     const result = validateAuthorizationPackage(source, {
-      repoRoot: 'D:\\repo',
-      packagePath: 'D:\\private-config\\staging\\authorization.json',
+      repoRoot: FAKE_REPO_ROOT,
+      packagePath: FAKE_PACKAGE_PATH,
     });
     expect(result.valid).toBe(true);
     expect(result.authorizedThroughGate).toBe('D');
