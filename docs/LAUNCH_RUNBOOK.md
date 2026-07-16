@@ -7,13 +7,32 @@ private config, deployment report, or blanket continuation instruction does not
 identify the current authorized target, operator, fixture, testers, or allowed
 write categories.
 
-1. Confirm branch/commit and passing CI.
-2. Build and run `clasp status` / `clasp push --dry-run` against staging.
-3. Run schema setup/validation, configure and validate all Drive folders, seed reviewed users, and create triggers.
-4. Run migration dry-run and reconciliation; resolve all launch-blocking `VERIFY` decisions without modifying legacy cells.
-5. Create a launch backup; record backup ID privately.
-6. Deploy staging web app. Test internal and `?request=1` entry points with separate authorized/unauthorized accounts.
-7. Run the complete staging acceptance matrix and verify audit/history/error/evidence records.
+Create the private Gate A record outside Git with
+`npm run staging:authorization:init -- <absolute-private-json-path>` and require
+`npm run staging:authorization:check -- <absolute-private-json-path>` to report
+at least Gate B before any remote source/status read. A structurally valid
+record does not authorize a gate reported as `DENIED` or `PENDING`.
+
+1. Confirm branch/commit, passing CI, and a valid outside-Git authorization
+   package through Gate B.
+2. Run read-only `clasp status` and pull/compare the remote source in a separate
+   temporary location; stop on target, source, manifest, audience, rollback, or
+   capacity drift.
+3. Require Gate C authorization, create and verify the staging backup, and
+   record its identifier privately before any setup or write.
+4. Run additive schema setup/validation and configure/validate all seven Drive
+   folders against the named staging resources only.
+5. Run migration dry-run and reconciliation; apply nothing without a separately
+   approved report, and resolve launch-blocking `VERIFY` decisions without
+   modifying legacy cells.
+6. Create or verify approved triggers idempotently.
+7. Require Gate D authorization, push/pull the reviewed package with exact
+   parity, and use an approved test deployment without moving the accepted
+   deployment pointer.
+8. Seed only the approved synthetic namespace and least-privilege test roles;
+   verify revocation before functional writes.
+9. Require Gate E authorization, run the complete staging acceptance and
+   rollback-rehearsal matrix, and verify audit/history/error/evidence records.
 
 ### Clasp 3.3 manifest safeguard
 

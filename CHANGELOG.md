@@ -8,6 +8,10 @@
   preflight/backup/setup/test/rollback gates, must-pass operational acceptance
   matrix, evidence/redaction rules, stop conditions, and a minimal complete
   unblock package.
+- Added a fail-closed private authorization-package initializer and validator.
+  It refuses in-repository packages, binds safe labels to the reviewed commits
+  and artifact hashes, checks all owner/resource/fixture/tester/window/evidence
+  dependencies and explicit action decisions, and prints no supplied values.
 - Confirmed that private staging clasp candidates and historical deployment
   evidence exist outside Git but are not current target authority. No signed
   matrix, approved non-personal fixture, named tester/signatory roster, current

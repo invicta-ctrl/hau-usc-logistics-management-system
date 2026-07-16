@@ -24,7 +24,9 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 - Prepared work: `docs/STAGING_OPERATIONAL_ACCEPTANCE.md` provides exact
   traceability, resource/dependency inventory, private owner authorization
   record, ordered preflight/setup/test/rollback gates, must-pass acceptance
-  matrix, stop rules, and a minimal complete unblock package.
+  matrix, stop rules, and a minimal complete unblock package. Repository-native
+  tooling now creates the record outside Git and validates candidate hashes,
+  required confirmations, and per-gate decisions without printing values.
 - External boundary held: no `clasp`, remote Google read, backup, setup,
   migration, seed, trigger, upload, deployment, staging write, production,
   merge, tag, release, hosting, or database action occurred.
@@ -287,24 +289,24 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
 ## Slice state (pre-commit snapshot; superseded by the current stage above)
 
-| Slice                                                             | State                  | Note                                                                                                                                               |
-| ----------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1 — P0 bootstrap observability and recovery                       | COMMITTED_LOCAL        | Implementation repaired after independent review; local gates and focused commit passed.                                                           |
-| 2 — Essential bootstrap and lazy module contracts                 | READY_LOCAL            | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending.                                           |
-| 3 — Canonical roles, committee scopes, and authorization contract | PENDING_MANAGER_REVIEW | Implementation commit `5107afc57904dccc5214fcafc20aba65c0622632` is pushed; local gates, generated parity, sensitive scan, and PR #6 CI are green. |
-| 4 — Private roster synchronization and access freshness           | NOT_STARTED            | Dependency-gated; private source remains out of ordinary bootstrap.                                                                                |
-| 5 — Committee Main Hub and Inventory and Pantry vertical slice    | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 6 — Composite Event Logistics request foundation                  | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 7 — Food Committee specialization                                 | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 8 — Materials Committee specialization                            | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 9 — Venue and Equipment reference and request vertical slice      | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 10 — Authorized reference-data administration                     | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 11 — Restock review and safe server actions                       | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
-| 12 — Bounded near-live active-module refresh                      | NOT_STARTED            | Dependency-gated.                                                                                                                                  |
+| Slice                                                             | State                   | Note                                                                                                                                                                       |
+| ----------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 — P0 bootstrap observability and recovery                       | COMMITTED_LOCAL         | Implementation repaired after independent review; local gates and focused commit passed.                                                                                   |
+| 2 — Essential bootstrap and lazy module contracts                 | READY_LOCAL             | Implementation, repairs, review findings, and final local gates are complete; focused commit is pending.                                                                   |
+| 3 — Canonical roles, committee scopes, and authorization contract | PENDING_MANAGER_REVIEW  | Implementation commit `5107afc57904dccc5214fcafc20aba65c0622632` is pushed; local gates, generated parity, sensitive scan, and PR #6 CI are green.                         |
+| 4 — Private roster synchronization and access freshness           | NOT_STARTED             | Dependency-gated; private source remains out of ordinary bootstrap.                                                                                                        |
+| 5 — Committee Main Hub and Inventory and Pantry vertical slice    | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 6 — Composite Event Logistics request foundation                  | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 7 — Food Committee specialization                                 | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 8 — Materials Committee specialization                            | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 9 — Venue and Equipment reference and request vertical slice      | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 10 — Authorized reference-data administration                     | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 11 — Restock review and safe server actions                       | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
+| 12 — Bounded near-live active-module refresh                      | NOT_STARTED             | Dependency-gated.                                                                                                                                                          |
 | 13 — Full staging operational acceptance                          | BLOCKED_EXTERNAL_INPUTS | Readiness pack complete; requires exact authorized staging target/owner, fixture, testers/signatories, window, rollback, evidence retention, and action-category approval. |
-| 14 — Production approval and controlled promotion                 | NOT_STARTED            | Requires explicit go/no-go and all release evidence.                                                                                               |
-| 15 — Hosted-frontend architecture spike and decision record       | NOT_STARTED            | Later architecture decision; no hosting work started.                                                                                              |
-| 16 — Future PostgreSQL/Supabase specification only                | NOT_STARTED            | Specification-only boundary; no database work started.                                                                                             |
+| 14 — Production approval and controlled promotion                 | NOT_STARTED             | Requires explicit go/no-go and all release evidence.                                                                                                                       |
+| 15 — Hosted-frontend architecture spike and decision record       | NOT_STARTED             | Later architecture decision; no hosting work started.                                                                                                                      |
+| 16 — Future PostgreSQL/Supabase specification only                | NOT_STARTED             | Specification-only boundary; no database work started.                                                                                                                     |
 
 ## Decisions and controls
 

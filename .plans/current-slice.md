@@ -30,7 +30,9 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   authority; evidence retention/location; storage-headroom confirmation.
 - Prepared repository work: exact traceability, dependency matrix, private
   authorization record, gated execution order, must-pass acceptance matrix,
-  evidence rules, stop/rollback conditions, and complete unblock package.
+  evidence rules, stop/rollback conditions, complete unblock package, and a
+  fail-closed private-package initializer/validator that reports only field
+  names and consecutive gate authorization.
 - External boundary: no `clasp`, remote source read, Apps Script execution,
   Sheet/Drive access, backup, schema setup, migration, seed, trigger, upload,
   deployment, staging write, production action, merge, tag, release, hosting,

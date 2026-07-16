@@ -13,6 +13,8 @@
     "check:apps-script": "node scripts/check-apps-script.mjs",
     "check:agents": "node scripts/check-agent-instructions.mjs",
     "check:continuation": "node scripts/check-work-continuation.mjs",
+    "staging:authorization:init": "node scripts/staging-authorization.mjs init",
+    "staging:authorization:check": "node scripts/staging-authorization.mjs check",
     "check:governance": "npm run check:agents && npm run check:continuation",
     "preview": "vite preview",
     "test": "vitest run",

@@ -27,7 +27,9 @@ Always verify the current remote head and CI because documentation commits may f
 - Ready: exact repository candidate, generated hashes, automated validation,
   privacy/authorization contracts, rollback-aware runbooks, seven-folder
   source contract, and complete executable readiness/acceptance matrix in
-  `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
+  `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`. A fail-closed private-package
+  initializer/validator refuses Git-resident records and reports only missing
+  field names and consecutively authorized gates.
 - Present but not authority: private staging clasp candidates and historical
   deployment/backup/parity records remain outside Git. They may be used only
   after the owner names the exact current target/config and action categories.
