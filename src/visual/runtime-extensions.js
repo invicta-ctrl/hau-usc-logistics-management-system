@@ -26,6 +26,11 @@ import {
   updateVenueEquipmentWorkflow,
   venueEquipmentAttentionFlags,
 } from '../domain/venue-equipment-workflow.js';
+import { can } from '../domain/permissions.js';
+import {
+  filterReferenceAdminRecords,
+  previewReferenceAdminChange,
+} from '../domain/reference-administration.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -318,10 +323,347 @@ export function createRuntimeExtensions(options) {
   let venueEquipmentQueuePromise = null;
   let venueEquipmentLines = [];
   let venueEquipmentSearchResults = [];
+  let referenceAdminWorkspace = null;
+  let referenceAdminPromise = null;
+  let referenceAdminDomain = 'VENUES';
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
   const venueEquipmentRequestsEnabled = config.venueEquipmentRequestsEnabled === true;
+
+  const referenceAdminAllowed = () => {
+    const user = getState()?.currentUser;
+    return can(user, 'manage_reference');
+  };
+
+  const localReferenceAdminRecords = (domain) => {
+    const state = getState() ?? {};
+    if (domain === 'VENUES' || domain === 'EQUIPMENT')
+      return (state.venueEquipmentReferences ?? [])
+        .filter((entry) => entry.type === (domain === 'VENUES' ? 'VENUE' : 'EQUIPMENT'))
+        .map((entry) => ({
+          id: entry.id,
+          domain,
+          revision: Number(entry.revision ?? 1),
+          status: entry.status ?? 'ACTIVE',
+          payload: {
+            displayName: entry.name,
+            aliases: entry.aliases ?? [],
+            category: entry.category,
+            location: entry.location ?? '',
+            unit: entry.unit,
+            requestability: entry.requestability,
+            contactRole: entry.contactRole ?? '',
+            routeId: entry.routeId ?? '',
+            returnRequired: entry.returnRequired === true,
+            effectiveFrom: entry.effectiveFrom ?? '',
+            effectiveTo: entry.effectiveTo ?? '',
+            notes: entry.notes ?? '',
+          },
+          effectiveFrom: entry.effectiveFrom ?? '',
+          effectiveTo: entry.effectiveTo ?? '',
+          updatedAt: entry.updatedAt ?? '',
+        }));
+    if (domain === 'ROUTING')
+      return (state.venueEquipmentRoutes ?? []).map((entry) => ({
+        id: entry.id,
+        domain,
+        revision: Number(entry.revision ?? 1),
+        status: entry.status ?? 'ACTIVE',
+        payload: { ...entry },
+        effectiveFrom: entry.effectiveFrom ?? '',
+        effectiveTo: entry.effectiveTo ?? '',
+        updatedAt: entry.updatedAt ?? '',
+      }));
+    if (domain === 'PERMISSIONS') {
+      const user = state.currentUser ?? {};
+      return [{
+        id: user.id ?? 'PREVIEW-USER',
+        domain,
+        revision: Number(user.authorization?.revision ?? 1),
+        status: user.authorization?.active === false ? 'ARCHIVED' : 'ACTIVE',
+        payload: {
+          roleId: user.authorization?.roleId ?? user.role ?? 'REQUESTER',
+          committeeIds: user.authorization?.committeeIds ?? user.scopes?.committee ?? [],
+          active: user.authorization?.active !== false,
+        },
+      }];
+    }
+    if (domain === 'PEOPLE_MEMBERSHIPS') {
+      const user = state.currentUser ?? {};
+      return [{ id: user.id ?? 'PREVIEW-USER', domain, revision: 1, status: 'ACTIVE', payload: { displayName: user.displayName ?? 'Preview user', rosterManaged: true } }];
+    }
+    if (domain === 'SYNC_HEALTH')
+      return [{ id: 'PREVIEW-SYNC', domain, revision: 1, status: 'ACTIVE', payload: { validationStatus: 'PREVIEW_ONLY', conflictCount: 0, revocationCount: 0 } }];
+    return (state.referenceAdminRecords ?? []).filter((entry) => entry.domain === domain);
+  };
+
+  const installLocalReferenceAdminServices = () => {
+    if (backendMode !== 'mock') return;
+    const state = getState();
+    state.referenceAdminRecords ??= [];
+    state.referenceAdminChanges ??= [];
+    services.getReferenceAdminWorkspace ??= async (command = {}) => {
+      const domain = command.domain ?? 'VENUES';
+      const currentById = new Map();
+      localReferenceAdminRecords(domain).forEach((record) => {
+        const current = currentById.get(record.id);
+        if (!current || Number(record.revision) > Number(current.revision)) currentById.set(record.id, record);
+      });
+      return {
+        contract: 'reference-administration',
+        contractVersion: 1,
+        domain,
+        writesEnabled: true,
+        items: filterReferenceAdminRecords([...currentById.values()], command),
+        pendingChanges: state.referenceAdminChanges.filter((entry) => entry.domain === domain && entry.reviewStatus === 'PENDING_REVIEW'),
+        fieldOwnership: { peopleMemberships: 'AUTHORITATIVE_ROSTER_READ_ONLY', permissions: 'REVIEW_GATED', routing: 'REVIEW_GATED' },
+        actor: { id: state.currentUser?.id ?? 'PREVIEW-ADMIN', role: state.currentUser?.role ?? 'ADMINISTRATOR' },
+      };
+    };
+    services.previewReferenceAdminChange ??= async (command) => previewReferenceAdminChange(command, {
+      current: localReferenceAdminRecords(command.domain)
+        .filter((entry) => entry.id === command.targetId)
+        .sort((left, right) => Number(right.revision) - Number(left.revision))[0],
+      actorId: state.currentUser?.id ?? 'PREVIEW-ADMIN',
+      dependencies: [],
+    });
+    services.submitReferenceAdminChange ??= async (command) => {
+      const preview = await services.previewReferenceAdminChange(command);
+      const changeId = `PREVIEW-CHANGE-${state.referenceAdminChanges.length + 1}`;
+      if (preview.requiresReview) {
+        state.referenceAdminChanges.push({ changeId, domain: preview.domain, action: preview.action, targetId: preview.targetId, expectedRevision: preview.expectedRevision, risk: preview.risk, requestedAt: new Date().toISOString(), requestedBy: state.currentUser?.id ?? 'PREVIEW-ADMIN', reviewStatus: 'PENDING_REVIEW', before: preview.before, after: preview.after, changedFields: preview.changedFields });
+        return { changeId, reviewStatus: 'PENDING_REVIEW', applied: false, preview };
+      }
+      const updatedAt = new Date().toISOString();
+      if (preview.domain === 'VENUES' || preview.domain === 'EQUIPMENT') {
+        state.venueEquipmentReferences ??= [];
+        state.venueEquipmentReferences.push({
+          id: preview.after.id,
+          type: preview.domain === 'VENUES' ? 'VENUE' : 'EQUIPMENT',
+          name: preview.after.payload.displayName,
+          aliases: preview.after.payload.aliases ?? [],
+          category: preview.after.payload.category,
+          location: preview.after.payload.location ?? '',
+          unit: preview.after.payload.unit,
+          requestability: preview.after.payload.requestability,
+          contactRole: preview.after.payload.contactRole ?? '',
+          routeId: preview.after.payload.routeId ?? '',
+          returnRequired: preview.after.payload.returnRequired === true,
+          effectiveFrom: preview.after.effectiveFrom,
+          effectiveTo: preview.after.effectiveTo,
+          revision: preview.after.revision,
+          status: preview.after.status,
+          updatedAt,
+        });
+      } else if (preview.domain === 'ROUTING') {
+        state.venueEquipmentRoutes ??= [];
+        state.venueEquipmentRoutes.push({
+          id: preview.after.id,
+          ...preview.after.payload,
+          revision: preview.after.revision,
+          status: preview.after.status,
+          effectiveFrom: preview.after.effectiveFrom,
+          effectiveTo: preview.after.effectiveTo,
+          updatedAt,
+        });
+      } else state.referenceAdminRecords.push({ ...preview.after, updatedAt });
+      return { changeId, reviewStatus: 'APPLIED', applied: true, preview };
+    };
+    services.reviewReferenceAdminChange ??= async () => {
+      throw new Error('Preview review requires a different administrator session to demonstrate separation of duties.');
+    };
+  };
+
+  const referenceAdminFields = (domain, record = {}) => {
+    const payload = record.payload ?? {};
+    const common = `<label>Display name<input name="displayName" maxlength="160" value="${esc(payload.displayName ?? '')}"></label><label>Aliases<input name="aliases" maxlength="500" value="${esc((payload.aliases ?? []).join(' | '))}"></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
+    if (domain === 'VENUES' || domain === 'EQUIPMENT') return `${common}<label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}" required></label><label>Location<input name="location" maxlength="160" value="${esc(payload.location ?? '')}"></label><label>Unit<select name="unit">${['service', 'piece', 'set', 'unit'].map((value) => option(value, value, payload.unit)).join('')}</select></label><label>Requestability<select name="requestability">${option('REQUESTABLE', 'Requestable - confirmation required', payload.requestability)}${option('NOT_REQUESTABLE', 'Not requestable', payload.requestability)}</select></label><label>Contact role<input name="contactRole" maxlength="120" value="${esc(payload.contactRole ?? '')}"></label><label>Route ID<input name="routeId" maxlength="100" value="${esc(payload.routeId ?? '')}" required></label>${domain === 'EQUIPMENT' ? `<label class="checkbox"><input name="returnRequired" type="checkbox" ${payload.returnRequired ? 'checked' : ''}> Return required</label>` : ''}<label class="span-2">Notes<textarea name="notes" maxlength="500">${esc(payload.notes ?? '')}</textarea></label>`;
+    if (domain === 'ROUTING') return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, value, payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, value.replaceAll('_', ' '), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
+    if (domain === 'PERMISSIONS') return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
+    return `${common}<label class="span-2">Description<textarea name="description" maxlength="500">${esc(payload.description ?? '')}</textarea></label>`;
+  };
+
+  const referenceAdminPatchFromForm = (domain, form) => {
+    const values = Object.fromEntries(new FormData(form).entries());
+    delete values.targetId;
+    if (Object.prototype.hasOwnProperty.call(values, 'aliases')) values.aliases = values.aliases.split(/[|,]/).map((entry) => entry.trim()).filter(Boolean);
+    if (domain === 'PERMISSIONS') {
+      values.committeeIds = String(values.committeeIds ?? '').split(/[|,]/).map((entry) => entry.trim()).filter(Boolean);
+      values.active = form.elements.active.checked;
+      values.emergencyRevocation = form.elements.emergencyRevocation.checked;
+    }
+    if (domain === 'EQUIPMENT') values.returnRequired = form.elements.returnRequired.checked;
+    if (domain === 'ROUTING') values.leadTimeBusinessDays = Number(values.leadTimeBusinessDays);
+    return Object.fromEntries(Object.entries(values).filter(([, value]) => value !== ''));
+  };
+
+  const refreshReferenceAdminWorkspace = async ({ force = false } = {}) => {
+    const root = document.querySelector('#referenceAdminWorkspace');
+    if (!root || !referenceAdminAllowed()) return;
+    if (referenceAdminPromise) return referenceAdminPromise;
+    if (!force && referenceAdminWorkspace?.domain === referenceAdminDomain) return;
+    const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
+    const status = root.querySelector('[name="referenceAdminStatus"]')?.value ?? 'ALL';
+    referenceAdminPromise = services.getReferenceAdminWorkspace({ domain: referenceAdminDomain, query, status, limit: 50 });
+    try {
+      referenceAdminWorkspace = await referenceAdminPromise;
+      renderReferenceAdminWorkspace();
+    } catch (error) {
+      root.querySelector('[data-reference-admin-results]').innerHTML = `<div class="alert error">${esc(error.message)}</div>`;
+    } finally {
+      referenceAdminPromise = null;
+    }
+  };
+
+  const openReferenceAdminChange = (record, action = record ? 'UPDATE' : 'ADD') => {
+    const targetId = record?.id ?? '';
+    openModal(
+      `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${referenceAdminDomain.replaceAll('_', ' ')}`,
+      `<form id="referenceAdminChangeForm"><div class="mode-note">Controlled fields only. Roster-owned identity is read-only; permission and cross-office routing changes require a distinct reviewer.</div><div class="form-grid" style="margin-top:14px"><label>Stable ID<input name="targetId" maxlength="100" value="${esc(targetId)}" ${record ? 'readonly' : ''} required></label>${action === 'UPDATE' || action === 'ADD' ? referenceAdminFields(referenceAdminDomain, record) : `<label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`}</div><button class="primary" type="submit">Preview change</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#referenceAdminChangeForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const command = {
+            domain: referenceAdminDomain,
+            action,
+            targetId: form.elements.targetId.value,
+            expectedRevision: Number(record?.revision ?? 0),
+            patch: action === 'ADD' || action === 'UPDATE' ? referenceAdminPatchFromForm(referenceAdminDomain, form) : {},
+            reason: form.elements.reason?.value ?? '',
+          };
+          try {
+            const preview = await services.previewReferenceAdminChange(command);
+            openModal('Confirm administrative change', `<div class="mode-note"><strong>${esc(preview.risk)}</strong> &middot; ${preview.requiresReview ? 'Separate review required' : 'Applies after confirmation'} &middot; Revision ${esc(preview.expectedRevision)} to ${esc(preview.after.revision)}</div><div class="comparison-grid section-gap"><article class="card"><h3>Before</h3><pre>${esc(JSON.stringify(preview.before, null, 2))}</pre></article><article class="card"><h3>After</h3><pre>${esc(JSON.stringify(preview.after, null, 2))}</pre></article></div><button class="primary" type="button" data-reference-admin-confirm>Confirm ${preview.requiresReview ? 'review request' : 'change'}</button>`, (confirmation) => {
+              confirmation.querySelector('[data-reference-admin-confirm]').addEventListener('click', async (confirmEvent) => {
+                const button = confirmEvent.currentTarget;
+                button.disabled = true;
+                try {
+                  const result = await services.submitReferenceAdminChange({ ...command, idempotencyKey: `reference-admin-${globalThis.crypto?.randomUUID?.() ?? Date.now()}` });
+                  closeModal();
+                  referenceAdminWorkspace = null;
+                  await refreshReferenceAdminWorkspace({ force: true });
+                  toast(result.applied ? 'Administrative change applied and audited.' : 'Administrative change queued for separate review.');
+                } catch (error) {
+                  toast(error.message, true);
+                  button.disabled = false;
+                }
+              });
+            });
+          } catch (error) {
+            toast(error.message, true);
+          }
+        });
+      },
+    );
+  };
+
+  const openReferenceAdminReview = (change, decision) => {
+    const normalizedDecision = decision === 'REJECT' ? 'REJECT' : 'APPROVE';
+    openModal(
+      `${normalizedDecision === 'APPROVE' ? 'Approve' : 'Reject'} administrative change`,
+      `<div class="mode-note"><strong>${esc(change.risk)}</strong> &middot; requested by ${esc(change.requestedBy)} &middot; expected revision ${esc(change.expectedRevision)}</div><div class="comparison-grid section-gap"><article class="card"><h3>Before</h3><pre>${esc(JSON.stringify(change.before, null, 2))}</pre></article><article class="card"><h3>After</h3><pre>${esc(JSON.stringify(change.after, null, 2))}</pre></article></div><form id="referenceAdminReviewForm"><label class="section-gap">Independent review reason<textarea name="reason" maxlength="500" required></textarea></label><button class="${normalizedDecision === 'APPROVE' ? 'primary' : 'danger'}" type="submit">Confirm ${normalizedDecision.toLowerCase()}</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#referenceAdminReviewForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const result = await services.reviewReferenceAdminChange({
+              changeId: change.changeId,
+              decision: normalizedDecision,
+              reason: form.elements.reason.value,
+              idempotencyKey: `reference-admin-review-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+            });
+            closeModal();
+            referenceAdminWorkspace = null;
+            await refreshReferenceAdminWorkspace({ force: true });
+            toast(result.applied ? 'Administrative change approved, applied, and audited.' : 'Administrative change rejected and audited.');
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const renderReferenceAdminWorkspace = () => {
+    const root = document.querySelector('#referenceAdminWorkspace');
+    if (!root) return;
+    const allowed = referenceAdminAllowed();
+    root.hidden = !allowed;
+    if (!allowed) return;
+    const workspace = referenceAdminWorkspace;
+    root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled ? 'Controlled writes enabled' : 'Read-only / kill switch active';
+    const results = root.querySelector('[data-reference-admin-results]');
+    const readOnly = ['PEOPLE_MEMBERSHIPS', 'SYNC_HEALTH'].includes(referenceAdminDomain);
+    root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
+    results.innerHTML = (workspace?.items ?? []).map((record) => `<div class="request-line"><div><strong>${esc(record.payload?.displayName ?? record.payload?.roleId ?? record.payload?.instructions ?? record.id)}</strong><small>${esc(record.id)} &middot; revision ${esc(record.revision)} &middot; ${esc(record.status)}</small></div><div class="request-line-actions">${readOnly ? '<span class="pill">Read only</span>' : `<button class="secondary mini" type="button" data-reference-admin-edit="${esc(record.id)}">View / edit</button><button class="${record.status === 'ARCHIVED' ? 'secondary' : 'danger'} mini" type="button" data-reference-admin-lifecycle="${esc(record.id)}" data-reference-admin-action="${record.status === 'ARCHIVED' ? 'RESTORE' : 'ARCHIVE'}">${record.status === 'ARCHIVED' ? 'Restore' : 'Archive'}</button>`}</div></div>`).join('') || '<div class="empty">No records match the current controlled filters.</div>';
+    const pending = root.querySelector('[data-reference-admin-pending]');
+    pending.innerHTML = (workspace?.pendingChanges ?? []).map((change) => {
+      const applying = change.reviewStatus === 'APPLYING';
+      const canReview = !applying && workspace?.writesEnabled && change.requestedBy !== workspace?.actor?.id;
+      const action = applying
+        ? '<span class="pill">Reconciliation required</span>'
+        : canReview
+          ? `<div class="request-line-actions"><button class="secondary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="REJECT">Reject</button><button class="primary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="APPROVE">Review and approve</button></div>`
+          : '<span class="pill">Different administrator required</span>';
+      return `<div class="request-line"><div><strong>${esc(change.action)} ${esc(change.targetId)}</strong><small>${esc(change.risk)} &middot; requested by ${esc(change.requestedBy)} &middot; ${esc(change.requestedAt ?? '')}</small></div>${action}</div>`;
+    }).join('') || '<div class="empty">No pending second-review changes in this domain.</div>';
+  };
+
+  const installReferenceAdminWorkspace = () => {
+    const root = document.querySelector('#referenceAdminWorkspace');
+    if (!root || root.dataset.bound === 'true') return;
+    root.dataset.bound = 'true';
+    const navigation = document.querySelector('[data-admin-view="referenceAdmin"]');
+    if (navigation) {
+      const allowed = referenceAdminAllowed();
+      navigation.hidden = !allowed;
+      navigation.disabled = !allowed;
+      navigation.setAttribute('aria-hidden', String(!allowed));
+      navigation.addEventListener('click', () => {
+        document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === 'referenceAdmin'));
+        document.querySelectorAll('#primaryNav button').forEach((button) => button.classList.toggle('active', button === navigation));
+        const title = document.querySelector('#pageTitle');
+        if (title) title.textContent = 'Reference Administration';
+        document.querySelector('#referenceAdmin')?.scrollIntoView({ block: 'start' });
+        void refreshReferenceAdminWorkspace({ force: true });
+      });
+    }
+    root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
+    root.querySelector('[name="referenceAdminDomain"]').addEventListener('change', (event) => {
+      referenceAdminDomain = event.target.value;
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
+    });
+    root.querySelector('[name="referenceAdminSearch"]').addEventListener('input', () => {
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
+    });
+    root.querySelector('[name="referenceAdminStatus"]').addEventListener('change', () => {
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
+    });
+    root.querySelector('[data-reference-admin-refresh]').addEventListener('click', () => void refreshReferenceAdminWorkspace({ force: true }));
+    root.querySelector('[data-reference-admin-add]').addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));
+    root.addEventListener('click', (event) => {
+      const edit = event.target.closest('[data-reference-admin-edit]');
+      if (edit) openReferenceAdminChange(referenceAdminWorkspace?.items.find((record) => record.id === edit.dataset.referenceAdminEdit));
+      const lifecycle = event.target.closest('[data-reference-admin-lifecycle]');
+      if (lifecycle) openReferenceAdminChange(referenceAdminWorkspace?.items.find((record) => record.id === lifecycle.dataset.referenceAdminLifecycle), lifecycle.dataset.referenceAdminAction);
+      const review = event.target.closest('[data-reference-admin-review]');
+      if (review) {
+        const change = referenceAdminWorkspace?.pendingChanges.find((entry) => entry.changeId === review.dataset.referenceAdminReview);
+        if (change) openReferenceAdminReview(change, review.dataset.referenceAdminDecision);
+      }
+    });
+  };
   const foodFormPayload = () => {
     const form = document.querySelector('#compositeRequestForm');
     if (!form) return null;
@@ -1616,9 +1958,11 @@ export function createRuntimeExtensions(options) {
     installLocalFoodServices();
     installLocalMaterialsServices();
     installLocalVenueEquipmentServices();
+    installLocalReferenceAdminServices();
     installFoodWorkflow();
     installMaterialsWorkflow();
     installVenueEquipmentWorkflow();
+    installReferenceAdminWorkspace();
     if (!isRequestOnly()) lending = createLendingController({ markFormClean });
     mountSyncUi();
     const statusFilter = document.querySelector('#inventoryStatusFilter');
@@ -1668,6 +2012,10 @@ export function createRuntimeExtensions(options) {
     renderFoodQueue();
     renderMaterialsQueue();
     renderVenueEquipmentQueue();
+    if (document.querySelector('#referenceAdminWorkspace')?.closest('.view.active')) {
+      installReferenceAdminWorkspace();
+      void refreshReferenceAdminWorkspace();
+    }
   };
 
   const start = () => {

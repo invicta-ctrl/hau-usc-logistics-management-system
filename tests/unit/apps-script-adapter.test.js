@@ -46,6 +46,34 @@ describe('AppsScriptAdapter', () => {
     await expect(new AppsScriptAdapter().submitRequest({ clientRequestId: 'client-1' })).resolves.toEqual(expect.objectContaining({ requestId: 'LREQ-2026-0001' }));
   });
 
+  it('routes all reference-administration reads and mutations through the sole adapter', async () => {
+    const calls = [];
+    let success;
+    let proxy;
+    const runner = {
+      withSuccessHandler(handler) { success = handler; return proxy; },
+      withFailureHandler() { return proxy; },
+    };
+    proxy = new Proxy(runner, {
+      get(target, property) {
+        if (property in target) return target[property];
+        return (command) => { calls.push({ method: String(property), command }); queueMicrotask(() => success({ ok: true })); };
+      },
+    });
+    globalThis.google = { script: { run: proxy } };
+    const adapter = new AppsScriptAdapter();
+    await adapter.getReferenceAdminWorkspace({ domain: 'VENUES' });
+    await adapter.previewReferenceAdminChange({ domain: 'VENUES', action: 'UPDATE' });
+    await adapter.submitReferenceAdminChange({ idempotencyKey: 'SYN-1' });
+    await adapter.reviewReferenceAdminChange({ idempotencyKey: 'SYN-2' });
+    expect(calls.map((call) => call.method)).toEqual([
+      'api_getReferenceAdminWorkspace',
+      'api_previewReferenceAdminChange',
+      'api_submitReferenceAdminChange',
+      'api_reviewReferenceAdminChange',
+    ]);
+  });
+
   it('clones cross-realm Apps Script responses before contract validation', async () => {
     const result = Object.create({ inherited: true });
     result.ok = true;

@@ -4,36 +4,36 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 9 locally implemented
+## Current run checkpoint - Phase 4 / Slice 10 locally implemented
 
-- Date: 2026-07-15 (Asia/Manila).
-- Stage: `SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT`.
-- Accepted starting checkpoint: `a0b4e7f46620056b5fc73036bea69bfcf8da0f83`
+- Date: 2026-07-16 (Asia/Manila).
+- Stage: `SLICE_10_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT`.
+- Accepted starting checkpoint: `4374fad7d3420c650abbe565bf03be00f2e208d4`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
 - User authorization: direct bounded continuation is approved without another
   manager-approval pause. Each slice still requires complete local proof,
   independent review, a focused push, and green CI before the next starts.
-- Current bounded scope: versioned Venue and Equipment references, safe lookup,
-  truthful requestability, constrained Other, server-owned effective routing to
-  one existing committee/owner, immutable child snapshots, scoped workflow, and
-  active UI as specified in `docs/VENUE_EQUIPMENT_REFERENCE_WORKFLOW.md`.
+- Current bounded scope: authorized reference-data administration with bounded
+  allowlisted projections and forms, non-destructive versioning, effective
+  dates, dependencies, review-gated permissions/routing, read-only roster/sync
+  health, emergency revocation, history/audit, fail-closed reconciliation, and
+  active UI as specified in `docs/REFERENCE_DATA_ADMINISTRATION.md`.
 - External boundary: repository implementation and feature-branch GitHub CI
   only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
   PR merge, Cloudflare, database, or production action is authorized here.
-- Accepted dependency: Slice 8 implementation
-  `1f05b526e457a946e0575b4aed2660c249105923` and evidence checkpoint
-  `a0b4e7f46620056b5fc73036bea69bfcf8da0f83` are pushed and CI green. Final
-  evidence runs `29390266015` / `29390265681` passed `validate` (14s), `verify`
-  (14s), and `browser-smoke` (1m53s).
-- Slice 9 result: the versioned reference/routing model, safe search, immutable
-  request snapshots, scoped server workflow, adapters, active request and
-  management UI, focused tests, and generated parity are implemented. Local
-  governance/lint/Vitest/build/Apps Script/standalone/full-browser/diff/
-  sensitive gates pass. Final independent review is PASS after targeted
-  effective-revision, server-clock, preview-parity, replay, and evidence
-  repairs. The focused commit/push is next. No external operational system
-  changed.
+- Accepted dependency: Slice 9 checkpoint
+  `4374fad7d3420c650abbe565bf03be00f2e208d4` is pushed and CI green. Final
+  evidence runs `29392777117` / `29392777176` passed `validate`, `verify`, and
+  `browser-smoke`.
+- Slice 10 result: schema, service, canonical routes, adapters, controlled UI,
+  pending-review comparison, tests, docs, and generated parity are implemented.
+  Governance/lint, 34 Vitest files / 284 tests, 33-module build, 33 Apps Script
+  sources / 54 functions, two 393,977-byte artifacts, full Playwright 65 / 115
+  intentional skips / 0 failures, sensitive scan, and diff checks pass. Final
+  implementation validation is PASS after targeted authorization, emergency,
+  fail-safe ordering, reconciliation, review UI, and eager-fetch repairs. The
+  focused commit/push is next. No external operational system changed.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 

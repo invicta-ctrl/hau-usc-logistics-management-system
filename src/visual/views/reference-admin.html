@@ -1,0 +1,43 @@
+<section id="referenceAdmin" class="view internal-only">
+  <div id="referenceAdminWorkspace" class="view-stack" hidden>
+    <article class="hero panel">
+      <div>
+        <p class="eyebrow">Authorized administration</p>
+        <h2>Reference and access change control</h2>
+        <p>Manage versioned operational references without editing raw sheets. Roster-owned identity remains read-only; permission and cross-office routing changes require a separate reviewer.</p>
+      </div>
+      <div class="hero-actions">
+        <span class="pill" data-reference-admin-write-state>Checking write controls</span>
+        <button class="secondary" type="button" data-reference-admin-refresh>Refresh</button>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <div><h2>Controlled domain workspace</h2><p>Search, inspect, add, version, archive, or restore through server-authorized forms.</p></div>
+        <button class="primary" type="button" data-reference-admin-add>Add record</button>
+      </div>
+      <div class="toolbar reference-admin-toolbar">
+        <label>Domain<select name="referenceAdminDomain">
+          <option value="ORGANIZATION">Organization</option>
+          <option value="PEOPLE_MEMBERSHIPS">People and memberships</option>
+          <option value="COMMITTEES">Committees</option>
+          <option value="VENUES" selected>Venues</option>
+          <option value="EQUIPMENT">Equipment</option>
+          <option value="ROUTING">Routing</option>
+          <option value="LIFECYCLE">Lifecycle</option>
+          <option value="PERMISSIONS">Permissions</option>
+          <option value="SYNC_HEALTH">Sync health</option>
+        </select></label>
+        <label>Search<input name="referenceAdminSearch" maxlength="120" placeholder="Stable ID, name, or alias"></label>
+        <label>Status<select name="referenceAdminStatus"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="ARCHIVED">Archived</option></select></label>
+      </div>
+      <div class="line-list section-gap" data-reference-admin-results><div class="empty">Loading authorized references…</div></div>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head"><div><h2>Pending second review</h2><p>Permission escalation and cross-office routing remain unapplied until a different authorized administrator reviews them.</p></div></div>
+      <div class="line-list" data-reference-admin-pending><div class="empty">Loading review queue…</div></div>
+    </article>
+  </div>
+</section>

@@ -1,44 +1,60 @@
-# HAU-USC V1 Autonomous Program - Slice 9 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 10 checkpoint
 
-CURRENT SLICE: Slice 9 - Venue and Equipment reference/request vertical
-CURRENT STAGE: SLICE_9_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT
-LAST UPDATED: 2026-07-15 (Asia/Manila)
+CURRENT SLICE: Slice 10 - Authorized reference-data administration
+CURRENT STAGE: SLICE_10_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT
+LAST UPDATED: 2026-07-16 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Slice 9 scope lock
+## Slice 10 scope lock
 
-- Starting checkpoint: `a0b4e7f46620056b5fc73036bea69bfcf8da0f83` on
+- Starting checkpoint: `4374fad7d3420c650abbe565bf03be00f2e208d4` on
   `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.
-- Contract: `docs/VENUE_EQUIPMENT_REFERENCE_WORKFLOW.md`.
-- Accepted decisions: exactly three permanent committees; no fourth Venue
-  committee; server-owned effective routing by reference/category/responsible
-  office; requestable wording is not a booking; Other uses explicit triage; no
-  text-guess fallback; no institutional list invented in source; synthetic
-  fixtures only; live catalog remains empty until separately approved/imported.
-- Delivered scope target: additive versioned references/routes, bounded safe
-  lookup, venue combobox, predictive equipment add/edit/remove, quantities and
-  summary, immutable request snapshots, routing/confirmation/blocker/return/
-  evidence state, scoped queue/update, authorization/revision/idempotency,
-  active UI, fail-closed flag, tests/docs/generated parity.
-- Exclusions: admin editor (Slice 10), real-time booking/stock promise,
-  institutional import/backfill, private contacts, fourth committee, client
-  routing authority, posted ledger change, deployment/migration execution,
-  external Google writes, PR merge, Cloudflare/database, staging, production.
-- Rollback: disable `HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED`, retain stored
-  snapshots/history and safe fallback, and use a focused revert.
-- Local result: effective-dated reference and route tables, safe search,
-  constrained Other, server-owned existing-committee routing, immutable
-  snapshots/provenance, confirmation/blocker/return/evidence state, scoped
-  queue/update APIs, fail-closed flag, active request/management UI, adapters,
-  generated artifacts, and focused browser coverage are implemented.
-- Current proof: governance, lint, 32 Vitest files / 262 tests, 32-module build,
-  32 Apps Script sources / 54 required functions, deterministic package parity,
-  standalone verification, full Playwright (61 passed / 101 intentional skips /
-  0 failed), sensitive scan, and `git diff --check` pass. Final independent
-  review is PASS after effective-version, server-time, legacy-preview,
-  idempotent-replay, and exact evidence validation repairs. Commit/push is
-  next.
+- Contract: `docs/REFERENCE_DATA_ADMINISTRATION.md`.
+- Accepted decisions: controlled forms and projections instead of raw grids;
+  roster-owned people/memberships and sync health remain read-only; no
+  permanent delete; permission escalation and cross-office routing require a
+  different reviewer; emergency access is revocation-only; all mutations use
+  server authorization, revision, lock, idempotency, history, and audit.
+- Delivered scope: organization, committees, venue/equipment, routing,
+  lifecycle, permission, roster, and sync-health domains; bounded search;
+  allowlisted detail/forms; add/update/archive/restore; effective dates and
+  aliases; dependency checks; before/after confirmation; pending-review UI;
+  append-before-supersede versioning; visible `APPLYING` reconciliation;
+  requester/reviewer self-escalation denial; adapters; active UI; schema/docs;
+  synthetic unit/browser coverage; regenerated parity artifacts.
+- Exclusions: raw-sheet editor, permanent delete, roster-source mutation,
+  production bulk import, direct history/ledger changes, self-escalation,
+  deployment/migration/import, external Google writes, PR merge,
+  Cloudflare/database, staging, and production.
+- Rollback: set `HAU_REFERENCE_ADMIN_WRITES_ENABLED=false`, preserve all
+  versions/change/history/audit rows, restore values through compensating
+  revisions, and use a focused revert for code rollback.
+- Current proof: governance/lint, 34 Vitest files / 284 tests, 33-module build,
+  33 Apps Script sources / 54 functions, deterministic generated parity, two
+  393,977-byte artifacts, full Playwright (65 passed / 115 intentional skips /
+  0 failed), sensitive scan, and `git diff --check` pass. Final implementation
+  validation is PASS after repairing reviewer self-grants, dormant emergency
+  grants, partial-write ordering, reconciliation behavior, actionable review,
+  and eager hidden-view fetching. Commit/push is next.
+
+---
+
+## Historical Slice 9 checkpoint
+
+CURRENT SLICE: Slice 9 - Venue and Equipment reference/request vertical
+CURRENT STAGE: SLICE_9_COMMITTED_PUSHED_CI_GREEN_ACCEPTED
+LAST UPDATED: 2026-07-15 (Asia/Manila)
+
+- Final checkpoint: `4374fad7d3420c650abbe565bf03be00f2e208d4` on
+  `integration/v0.5-baseline`; local/upstream/PR parity and clean status passed.
+- Delivered: versioned Venue and Equipment references/routes, bounded safe
+  lookup, truthful requestability, constrained Other, server-owned routing to
+  the three existing committees, immutable snapshots, operational confirmation
+  and evidence gates, scoped queue/update, active UI, and generated parity.
+- Final remote proof: runs `29392777117` and `29392777176` passed `validate`,
+  `verify`, and `browser-smoke`. No deployment, migration/import, external
+  Google write, PR merge, staging, or production action occurred.
 
 ---
 

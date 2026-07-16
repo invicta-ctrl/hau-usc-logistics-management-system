@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-8 and Phase 2 governance committed and CI-verified; Slice 9 implemented with local gates green; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
-- Date: `2026-07-15`
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-9 and Phase 2 governance committed and CI-verified; Slice 10 implemented with local gates green; Phase 3/3.5 consolidation complete; naming baseline finalized; production undeployed)
+- Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
-- Accepted Slice 8 starting commit: `290dc629fd9c0765bca39144224798c65b667eaa` (Slice 7 remote-verification documentation checkpoint)
-- Current implementation checkpoint: Slice 8 commit `1f05b526e457a946e0575b4aed2660c249105923`; pushed; local, upstream, and PR #7 heads matched; local/upstream `0 0`; all three PR checks green
+- Accepted Slice 10 starting commit: `4374fad7d3420c650abbe565bf03be00f2e208d4` (Slice 9 final evidence checkpoint)
+- Current implementation checkpoint: Slice 10 is locally implemented and verified but not yet committed; Slice 9 checkpoint `4374fad7d3420c650abbe565bf03be00f2e208d4` is pushed and CI green
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -14,9 +14,45 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-9 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-10 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
+
+## Current Slice 10 - Authorized reference-data administration
+
+- Stage: `SLICE_10_LOCAL_GATES_AND_INDEPENDENT_REVIEW_PASS_READY_COMMIT` from
+  accepted checkpoint `4374fad7d3420c650abbe565bf03be00f2e208d4` on
+  `integration/v0.5-baseline`.
+- Delivered locally: canonical server operations and capabilities; bounded
+  allowlisted domain projections; controlled add/update/archive/restore;
+  effective dates, aliases, and dependency checks; append-before-supersede
+  versioning; explicit `APPLYING` reconciliation; idempotency, lock, history,
+  and audit; read-only roster/sync health; emergency revocation-only policy;
+  distinct-review permission/routing flow; active responsive UI; schema/docs;
+  adapters; and synthetic fixtures/tests.
+- Authorization and safety: `DIRECTOR` remains operational oversight and does
+  not inherit legacy administration; non-admin reads fail closed; raw Sheets,
+  permanent delete, roster-source mutation, requester/reviewer self-grants,
+  and dormant grants in emergency revocation are denied. Hidden views do not
+  issue bootstrap calls.
+- Verification: governance/lint pass; 34 Vitest files / 284 tests pass; build
+  transforms 33 modules; 33 Apps Script sources / 54 functions, deterministic
+  parity, and two 393,977-byte standalone artifacts pass; full Playwright
+  passes 65 / 115 intentional skips / 0 failures; sensitive scan and
+  `git diff --check` pass. Final implementation validation is PASS after the
+  targeted safety and integration repairs.
+- Generated evidence: standalone SHA-256
+  `aa856fa30b205dc621d715db5d7d4d3254ea2d1bff666ba5d309df6918a85127`;
+  Apps Script `Index.html` is 1,022 bytes / SHA-256
+  `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
+  `AppScript.html` is 327,085 bytes / SHA-256
+  `94eaae333a7bf19a423d101bb19b60954f8cb72f03d5810addacdfd5737cd9db`.
+- External boundary: no deployment, live schema execution, migration/import,
+  Script Property change, Apps Script/Sheets/Drive external write, PR merge,
+  Cloudflare, database, staging, or production action occurred.
+- Rollback: set `HAU_REFERENCE_ADMIN_WRITES_ENABLED=false`, preserve all
+  versions/change/history/audit rows, use compensating revisions, and revert
+  only the focused Slice 10 commit if code rollback is required.
 
 ## Current Slice 9 - Venue and Equipment reference/request workflow
 

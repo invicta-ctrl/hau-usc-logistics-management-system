@@ -75,8 +75,9 @@ describe('catalog schema and permission migration', () => {
       'Access_Sync_Run_ID',
       'Access_Last_Seen_At',
       'Roster_Managed',
+      'Admin_Revision',
     ]);
-    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.4.0');
+    expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.5.0');
   });
 
   it('uses least-privilege catalog permission fallback', () => {

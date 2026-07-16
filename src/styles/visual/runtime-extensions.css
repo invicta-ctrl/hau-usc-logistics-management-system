@@ -57,3 +57,4 @@
   .lending-suggestions .suggestion { grid-template-columns: 1fr; }
   .lending-suggestions .suggestion .stock { grid-row: auto; grid-column: auto; text-align: left; }
 }
+.reference-admin-toolbar{align-items:end}.reference-admin-toolbar label{min-width:180px}.comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.comparison-grid pre{max-height:360px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:11px}.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}@media(max-width:768px){.comparison-grid{grid-template-columns:1fr}.reference-admin-toolbar label{min-width:100%}}

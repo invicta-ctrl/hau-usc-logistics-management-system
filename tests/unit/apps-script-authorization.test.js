@@ -51,6 +51,21 @@ describe('Apps Script canonical authorization contract', () => {
     expect(context.canonicalRoleId_('DOL Director')).toBe('DIRECTOR');
   });
 
+  it('maps reference administration endpoints to canonical server capabilities', () => {
+    const context = gasContext();
+    expect(context.HAU_OPERATION_CAPABILITIES_).toMatchObject({
+      getReferenceAdminWorkspace: context.HAU_CAPABILITIES_.REFERENCE_MANAGE,
+      previewReferenceAdminChange: context.HAU_CAPABILITIES_.REFERENCE_MANAGE,
+      submitReferenceAdminChange: context.HAU_CAPABILITIES_.REFERENCE_MANAGE,
+      reviewReferenceAdminChange: context.HAU_CAPABILITIES_.ACCESS_ADMIN,
+    });
+    const requester = { User_ID: 'SYNTHETIC-REQUESTER', Role: 'REQUESTER', Active: true };
+    const admin = { User_ID: 'SYNTHETIC-ADMIN', Role: 'ADMINISTRATOR', Active: true };
+    expect(context.authorizationCan_(requester, context.HAU_CAPABILITIES_.REFERENCE_MANAGE, {})).toBe(false);
+    expect(context.authorizationCan_(admin, context.HAU_CAPABILITIES_.REFERENCE_MANAGE, {})).toBe(true);
+    expect(context.authorizationCan_(admin, context.HAU_CAPABILITIES_.ACCESS_ADMIN, {})).toBe(true);
+  });
+
   it('enforces committee scope, Director oversight, inactive access, and capability separation', () => {
     const context = gasContext();
     const head = {

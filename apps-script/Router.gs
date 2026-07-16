@@ -16,6 +16,10 @@ function api_updateMaterialsComponent(command) { return guardMutationApi_('updat
 function api_searchVenueEquipmentReferences(command) { return guardApi_('searchVenueEquipmentReferences', command || {}, function() { return { items: searchVenueEquipmentReferences_(command || {}), availabilityProtected: true }; }); }
 function api_getVenueEquipmentWorkQueue(command) { return guardApi_('getVenueEquipmentWorkQueue', command || {}, function() { return getVenueEquipmentWorkQueue_(command || {}); }); }
 function api_updateVenueEquipmentComponent(command) { return guardMutationApi_('updateVenueEquipmentComponent', command, function(c) { return updateVenueEquipmentComponent_(command, c); }); }
+function api_getReferenceAdminWorkspace(command) { return guardApi_('getReferenceAdminWorkspace', command || {}, function() { return getReferenceAdminWorkspace_(command || {}); }); }
+function api_previewReferenceAdminChange(command) { return guardApi_('previewReferenceAdminChange', command || {}, function() { return previewReferenceAdminChange_(command || {}); }); }
+function api_submitReferenceAdminChange(command) { return guardMutationApi_('submitReferenceAdminChange', command || {}, function(c) { return submitReferenceAdminChange_(command || {}, c); }); }
+function api_reviewReferenceAdminChange(command) { return guardMutationApi_('reviewReferenceAdminChange', command || {}, function(c) { return reviewReferenceAdminChange_(command || {}, c); }); }
 function api_transitionCompositeComponent(command) { return guardMutationApi_('transitionCompositeComponent', command, function(c) { return transitionCompositeComponent_(command, c); }); }
 function api_cancelCompositeRequest(command) { return guardMutationApi_('cancelCompositeRequest', command, function(c) { return cancelCompositeRequest_(command, c); }); }
 function api_reopenCompositeRequest(command) { return guardMutationApi_('reopenCompositeRequest', command, function(c) { return reopenCompositeRequest_(command, c); }); }

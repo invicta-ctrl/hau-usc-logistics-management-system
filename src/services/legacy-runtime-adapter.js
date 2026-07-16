@@ -133,6 +133,22 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.updateVenueEquipmentComponent(command),
       );
     },
+    async getReferenceAdminWorkspace(payload = {}) {
+      return remote.getReferenceAdminWorkspace(payload);
+    },
+    async previewReferenceAdminChange(payload = {}) {
+      return remote.previewReferenceAdminChange(payload);
+    },
+    submitReferenceAdminChange(payload) {
+      return mutationRequests.run('reference-admin-submit', payload, (command) =>
+        remote.submitReferenceAdminChange(command),
+      );
+    },
+    reviewReferenceAdminChange(payload) {
+      return mutationRequests.run('reference-admin-review', payload, (command) =>
+        remote.reviewReferenceAdminChange(command),
+      );
+    },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>
         remote.transitionCompositeComponent(command),

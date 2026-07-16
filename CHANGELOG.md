@@ -1,5 +1,35 @@
 # Changelog
 
+## Unreleased - Slice 10 Authorized reference-data administration
+
+- Added a bounded Reference Administration workspace for organization,
+  committees, venue/equipment, routing, lifecycle, permissions, roster-owned
+  memberships, and synchronization health without exposing a raw-sheet grid.
+- Added controlled add/update/archive/restore, effective dates and aliases,
+  dependency protection, explicit before/after comparison, optimistic numeric
+  revisions, script locking, idempotency, durable history/audit, and a
+  fail-closed `HAU_REFERENCE_ADMIN_WRITES_ENABLED` control.
+- Added distinct-review permission escalation and cross-office routing with an
+  actionable reviewer comparison, required reason, stored-payload revalidation,
+  stale-revision denial, requester/reviewer self-escalation denial, and
+  revocation-only emergency access that rejects dormant role/scope grants.
+- Hardened partial-write behavior by recording `APPLYING`, appending before
+  superseding the exact expected revision, preserving the old record on append
+  failure, detecting overlapping current revisions, and returning a visible
+  reconciliation-required state instead of retrying or claiming success.
+- Added schema v1.5 tables/columns, canonical operations/capabilities, adapters,
+  active responsive UI, server-safe DTOs, synthetic unit/browser fixtures, and
+  generated standalone/Apps Script parity. Closed an integration finding by
+  deferring the admin workspace fetch until its view is opened.
+- Verification passes governance/lint, 34 Vitest files / 284 tests, a 33-module
+  build, 33 Apps Script sources / 54 required functions, deterministic parity,
+  two 393,977-byte standalone artifacts, full Playwright 65 passed / 115
+  intentional skips / 0 failures, sensitive scan, and `git diff --check`.
+  Independent implementation validation is final PASS after targeted repairs.
+- No deployment, migration/import, Script Property change, external Apps
+  Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production action occurred.
+
 ## Unreleased - Slice 9 Venue and Equipment reference/request workflow
 
 - Added additive, initially empty live Venue and Equipment reference/route

@@ -2,7 +2,7 @@ export const ESSENTIAL_BOOTSTRAP_CONTRACT = 'essential-bootstrap';
 export const BOOTSTRAP_MODULE_CONTRACT = 'bootstrap-module';
 export const ESSENTIAL_BOOTSTRAP_VERSION = 2;
 
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
 
 export const BOOTSTRAP_MODULES = Object.freeze([
   'overview',

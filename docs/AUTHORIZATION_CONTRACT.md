@@ -51,3 +51,7 @@ The additive schema appends canonical fields to `14_USERS_ACCESS` and defines `2
 ## Verification
 
 Synthetic browser and Apps Script VM tests cover role aliases, the three-committee bound, Committee Head scope, Director oversight, inactive and unknown identity denial, Administrator/reference separation, safe denial messages, client capability projection, and mapping dry-run findings. Generated output is refreshed only through the repository generator/build path.
+
+## Reference administration separation of duties
+
+The Slice 10 operation map requires `reference.manage` to read, preview, and submit controlled reference changes, and `access.admin` to review permission/routing proposals. Permission activation, role assignment, committee-scope expansion, and cross-office routing do not apply at submission: they create a pending proposal. The reviewer must be a different user, and approval rechecks the target revision. Administrators cannot grant or expand their own access. Emergency access is revocation-only and audited. Roster-owned identity and membership fields remain read-only in the application.
