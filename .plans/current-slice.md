@@ -46,6 +46,10 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   review is PASS after the documented repairs.
 - Two consecutive builds retain exact byte/hash parity for the all-in-one,
   guided, seven direct-module, and split Apps Script artifacts.
+- Implementation commit `9b452bf208828b378ad91fd461b25a1f9573a764` is
+  pushed at local/upstream/PR parity. Runs `29483577291` and `29483577272`
+  pass `validate`, `verify`, and `browser-smoke`; PR #7 remains open, draft,
+  and mergeable. The guided-demo/usability adjunct is complete.
 - This work uses fictional preview data and performs no Google, deployment,
   staging, production, merge, hosting, or database action. Slice 13 remains
   blocked before external preflight.

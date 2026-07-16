@@ -19,6 +19,9 @@
 - Independent read-only review is PASS after reconciling the documented tour
   order, enforcing exact generated-artifact parity, and expanding guided
   control coverage at both 390 px and 1366 px.
+- Implementation commit `9b452bf208828b378ad91fd461b25a1f9573a764` is
+  pushed at parity. GitHub runs `29483577291` and `29483577272` pass
+  `validate`, `verify`, and `browser-smoke` against that exact SHA.
 - No generated HTML was hand-edited. No Google resource, upload, deployment,
   staging, production, merge, hosting, or database action occurred.
 

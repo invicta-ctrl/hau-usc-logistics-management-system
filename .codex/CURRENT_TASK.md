@@ -104,9 +104,13 @@ approval, P0/P1, target drift, or any integrity failure`.
   redesign is silently included.
 - **External boundary:** the demo uses fictional local data only. It does not
   deploy, publish, upload, access Google resources, or clear Slice 13.
-- **Current status:** local implementation, visual review at 390 px and 1366
-  px, `npm run check` (39 files / 317 tests), and full Playwright (70 passed /
-  128 intentional skips / 0 failed) are green. Independent read-only review is
-  PASS after order, exact-artifact parity, and full guided-control coverage
-  repairs. Two consecutive builds retained every generated hash. Commit/push
-  and exact-SHA CI remain.
+- **Current status:** COMPLETE and pushed at parity. Local visual review at
+  390 px and 1366 px, `npm run check` (39 files / 317 tests), and full
+  Playwright (70 passed / 128 intentional skips / 0 failed) are green.
+  Independent read-only review is PASS after order, exact-artifact parity, and
+  full guided-control coverage repairs. Two consecutive builds retained every
+  generated hash. Implementation commit
+  `9b452bf208828b378ad91fd461b25a1f9573a764` is green in runs
+  `29483577291` (`validate`) and `29483577272` (`verify`, `browser-smoke`).
+  PR #7 remains open, draft, and mergeable. Slice 13 remains externally
+  blocked and no Google or deployment action occurred.

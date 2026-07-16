@@ -3,8 +3,8 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; clean synchronized starting checkpoint `89f26a3a34a5ac3e84710ecf93c7f66043c4dd2f`; guided-demo/usability adjunct is locally verified and uncommitted.
-- **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; independent demo adjunct is `LOCAL_VERIFIED_PENDING_COMMIT`.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; synchronized guided-demo implementation checkpoint `9b452bf208828b378ad91fd461b25a1f9573a764` is pushed and CI-green; this block records the final evidence.
+- **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; independent demo adjunct is `COMPLETE_PUSHED_CI_GREEN`.
 - **Accepted scope:** create one self-contained offline guided demo from the verified shareables, a presenter runbook, and a prioritized usability review. Google staging still requires a named target/owner/fixture/tester/rollback package. No production redesign, merge, tag, or release.
 - **Completed work:** added seven-step guided navigation, purpose/highlight content, open/close/previous/next/restart controls, Escape/focus/live-announcement/reduced-motion behavior, deterministic generation/verification, unit/offline browser coverage, visual QA, presenter guidance, and a bounded UX backlog.
 - **Files changed by purpose:** guided-demo generator and generated artifact; shareable build/verification integration; unit and Playwright coverage; approved demo baseline, runbook, usability backlog, README, changelog, task, and continuation records. No source production workflow, Apps Script source, private config, or external system changed.
@@ -19,12 +19,13 @@
   exact-artifact parity, and browser-coverage repairs. Two consecutive builds
   retain exact byte/hash parity across every generated artifact.
 - **Generated artifacts:** the unchanged `dist/index.html` and all-in-one shareable remain 411,124 bytes / SHA-256 `9444e972eb16f0de9adde79f05c97bd35d0d4a51487376110f3b67c3238327e9`. The guided demo is 419,215 bytes / SHA-256 `01a056fc845728f5ac8a4d7bf41451ab2155b1f9aef46c739e5aaa2fbd7730dd`; direct module hashes remain at the green `472013d` checkpoint.
+- **Remote evidence:** implementation commit `9b452bf208828b378ad91fd461b25a1f9573a764` is pushed at local/upstream/PR parity. Run `29483577291` passes `validate`; run `29483577272` passes `verify` and `browser-smoke`. PR #7 is open, draft, and mergeable.
 - **External actions:** no `clasp`, remote Google read, backup, setup, migration, seed, trigger, upload, deployment, staging write, production action, merge, `main`, hosting, or database action.
 - **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
 - **Rollback:** no external state exists to roll back. If the demo adjunct is rejected after commit, use a focused revert to starting checkpoint `89f26a3`; do not reset or delete accepted history.
 - **Blocker:** genuine external authority/coordination dependency: named staging owner/operator and exact approved private config/resources; permitted action categories; approved synthetic/redacted fixture/namespace; tester-role matrix and signatories; current deployment/rollback; window/stop authority; evidence location/retention; storage-headroom confirmation.
 - **Windows note:** private staging candidate files remain outside Git under the consolidated `private-config` root; do not copy or print their values. The obsolete `D:\Documents\DOL Website GitHub` compatibility shell is unrelated.
-- **Next three actions:** commit/push the guided-demo unit; verify PR #7 CI at the exact SHA; obtain and validate the complete private staging authorization package before Gate A/B.
+- **Next three actions:** obtain and validate the complete private staging authorization package; execute Gate A/B only under the named owner/operator and approved action categories; preserve the demo and direct-module shareables as the presentation fallback.
 - **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run check`; `npm run test:e2e`; `gh pr checks 7`.
 - **Prohibited actions:** no guessing a target/owner/tester/data set; no private-config commit/value output; no `clasp` or Google external access before authorization; no PR merge, history rewrite, force-push, archive-tag deletion, production, hosting, or database action.
 
