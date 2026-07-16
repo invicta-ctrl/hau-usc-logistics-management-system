@@ -62,6 +62,11 @@
   It refuses in-repository packages, binds safe labels to the reviewed commits
   and artifact hashes, checks all owner/resource/fixture/tester/window/evidence
   dependencies and explicit action decisions, and prints no supplied values.
+- Initialized the safe private Slice 13 record outside Git and recorded the
+  owner task message as approval for every Gate B-F action category. The
+  package remains invalid/authorized through `NONE` until the named target,
+  people, fixture, window, capacity, access, and restriction confirmations are
+  completed; no private value or external resource was accessed.
 - Independent review is PASS after aligning rollback rehearsal to Gate E,
   enforcing backup-before-setup order, resolving real paths, and sanitizing CLI
   errors. Linux CI exposed Windows-only test fixture paths in `3591550`; repair

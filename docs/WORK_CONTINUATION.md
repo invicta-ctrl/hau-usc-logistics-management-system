@@ -3,13 +3,14 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; synchronized guided-demo implementation checkpoint `9b452bf208828b378ad91fd461b25a1f9573a764` is pushed and CI-green; this block records the final evidence.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; synchronized checkpoint `edfa5a552cd3cb52aab3c87114104cd2fda1506f` is pushed and CI-green; the private authorization-package follow-up is outside Git and this block records only safe state.
 - **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; independent demo adjunct is `COMPLETE_PUSHED_CI_GREEN`.
-- **Accepted scope:** create one self-contained offline guided demo from the verified shareables, a presenter runbook, and a prioritized usability review. Google staging still requires a named target/owner/fixture/tester/rollback package. No production redesign, merge, tag, or release.
-- **Completed work:** added seven-step guided navigation, purpose/highlight content, open/close/previous/next/restart controls, Escape/focus/live-announcement/reduced-motion behavior, deterministic generation/verification, unit/offline browser coverage, visual QA, presenter guidance, and a bounded UX backlog.
-- **Files changed by purpose:** guided-demo generator and generated artifact; shareable build/verification integration; unit and Playwright coverage; approved demo baseline, runbook, usability backlog, README, changelog, task, and continuation records. No source production workflow, Apps Script source, private config, or external system changed.
-- **Tests verified at current SHA:** the current worktree is based on green
-  checkpoint `89f26a3`. `npm run check` passes governance/lint, 39 Vitest files /
+- **Accepted scope:** record the owner task message as approval for every Gate B-F action category, initialize/validate the private Slice 13 authorization package outside Git, and begin remote preflight only if the package passes. No target, identity, fixture, tester, confirmation, or external result may be guessed.
+- **Completed work:** initialized `private-config/staging/slice-13-authorization.json` outside Git; recorded all eleven external action decisions as `APPROVED` from the 2026-07-16 owner task message; confirmed repository/captured-evidence value exclusion; reran the fail-closed validator without printing private values.
+- **Files changed by purpose:** only safe repository status/checkpoint documents are changed in Git; the incomplete authorization record exists only under the consolidated private-config root. No application source, generated artifact, Apps Script source, or external system changed.
+- **Tests verified at current SHA:** checkpoint `edfa5a5` is green in runs
+  `29483782077` (`validate`) and `29483782104` (`verify`, `browser-smoke`).
+  The unchanged implementation also passed `npm run check`: 39 Vitest files /
   317 tests, a 34-module build, 33 Apps Script sources / 55 functions,
   deterministic generated parity, and standalone verification. Full Playwright
   passes 70 with 128 intentional skips and 0 failures across six viewport
@@ -19,14 +20,14 @@
   exact-artifact parity, and browser-coverage repairs. Two consecutive builds
   retain exact byte/hash parity across every generated artifact.
 - **Generated artifacts:** the unchanged `dist/index.html` and all-in-one shareable remain 411,124 bytes / SHA-256 `9444e972eb16f0de9adde79f05c97bd35d0d4a51487376110f3b67c3238327e9`. The guided demo is 419,215 bytes / SHA-256 `01a056fc845728f5ac8a4d7bf41451ab2155b1f9aef46c739e5aaa2fbd7730dd`; direct module hashes remain at the green `472013d` checkpoint.
-- **Remote evidence:** implementation commit `9b452bf208828b378ad91fd461b25a1f9573a764` is pushed at local/upstream/PR parity. Run `29483577291` passes `validate`; run `29483577272` passes `verify` and `browser-smoke`. PR #7 is open, draft, and mergeable.
-- **External actions:** no `clasp`, remote Google read, backup, setup, migration, seed, trigger, upload, deployment, staging write, production action, merge, `main`, hosting, or database action.
+- **Remote evidence:** implementation commit `9b452bf208828b378ad91fd461b25a1f9573a764` and evidence checkpoint `edfa5a552cd3cb52aab3c87114104cd2fda1506f` are pushed at parity. Runs `29483577291`, `29483577272`, `29483782077`, and `29483782104` pass `validate`, `verify`, and `browser-smoke`. PR #7 is open, draft, and mergeable.
+- **External actions:** none. No `clasp`, remote Google read, backup, setup, migration, seed, trigger, upload, deployment, staging write, production action, merge, `main`, hosting, or database action.
 - **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
-- **Rollback:** no external state exists to roll back. If the demo adjunct is rejected after commit, use a focused revert to starting checkpoint `89f26a3`; do not reset or delete accepted history.
-- **Blocker:** genuine external authority/coordination dependency: named staging owner/operator and exact approved private config/resources; permitted action categories; approved synthetic/redacted fixture/namespace; tester-role matrix and signatories; current deployment/rollback; window/stop authority; evidence location/retention; storage-headroom confirmation.
+- **Rollback:** no external state exists to roll back. Preserve the private approval record as audit evidence; if authorization is withdrawn, mark the affected action decisions `DENIED` or `PENDING` and rerun the validator. Do not delete accepted history.
+- **Blocker:** action categories are approved, but the private package remains `INVALID`/authorized through `NONE`: named staging owner/operator and exact approved private config/resources; approved synthetic/redacted fixture/namespace; tester-role matrix and signatories; current deployment/rollback; window/stop authority; evidence location/retention; storage-headroom, access/session, and Drive-restriction confirmations remain incomplete.
 - **Windows note:** private staging candidate files remain outside Git under the consolidated `private-config` root; do not copy or print their values. The obsolete `D:\Documents\DOL Website GitHub` compatibility shell is unrelated.
-- **Next three actions:** obtain and validate the complete private staging authorization package; execute Gate A/B only under the named owner/operator and approved action categories; preserve the demo and direct-module shareables as the presentation fallback.
-- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run check`; `npm run test:e2e`; `gh pr checks 7`.
+- **Next three actions:** complete the remaining real-world fields privately in `private-config/staging/slice-13-authorization.json`; rerun `npm run staging:authorization:check -- <private-path>` until it reports valid through the intended gate; only then execute Gate B read-only remote preflight under the named operator/session.
+- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run staging:authorization:check -- D:\Documents\HAU-USC Logistics\private-config\staging\slice-13-authorization.json`; after a valid package, follow Gate B in `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
 - **Prohibited actions:** no guessing a target/owner/tester/data set; no private-config commit/value output; no `clasp` or Google external access before authorization; no PR merge, history rewrite, force-push, archive-tag deletion, production, hosting, or database action.
 
 ## Current checkpoint - Slice 6 committed, pushed, and CI verified

@@ -54,9 +54,20 @@ approval, P0/P1, target drift, or any integrity failure`.
   deployment, external mutation, PR merge, `main`, production, hosting, or
   database action.
 - **Current stage:** `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`.
+- **Latest owner instruction:** the 2026-07-16 task message `i approve all`
+  is recorded privately as `APPROVED` for every Gate B-F external action
+  category. This closes the action-decision portion only; it does not supply
+  or verify identities, targets, fixtures, testers, dates, capacity, access,
+  or safety confirmations.
+- **Private package state:** the repository initializer created the safe
+  out-of-Git record `private-config/staging/slice-13-authorization.json`.
+  Repository/captured-evidence value exclusion is confirmed. The fail-closed
+  validator still reports the package `INVALID`, authorized through `NONE`,
+  because the remaining real-world fields are incomplete. No private values
+  were printed or copied into Git.
 - **Exact unblock:** named staging owner/operator; one exact approved private
-  config and safe staging label; permitted external action categories;
-  approved synthetic/redacted fixture/namespace; named tester-role matrix and
+  config and safe staging label; approved synthetic/redacted fixture/namespace;
+  named tester-role matrix and
   business/data/privacy/security/accessibility/deployment signatories; current
   deployment/rollback labels; window/stop authority; private evidence
   retention; and storage-headroom confirmation.

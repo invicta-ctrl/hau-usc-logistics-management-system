@@ -72,10 +72,17 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
 - Current configuration contract: distinct operational/backup spreadsheets and
   seven private Drive mappings are required. Values were not read or exposed.
 - Missing hard dependencies: current named staging owner/operator; exact
-  approved private config/resource set; allowed external action categories;
+  approved private config/resource set;
   owner-approved synthetic/redacted fixture and record namespace; named tester
   roles and signatories; current deployment/rollback labels; window/stop
   authority; evidence retention/location; storage-headroom confirmation.
+- Authorization progress: the owner task message dated 2026-07-16 explicitly
+  approves every Gate B-F action category. A private template now exists
+  outside Git at the safe label
+  `private-config/staging/slice-13-authorization.json`; action decisions and
+  evidence-exclusion confirmations are recorded. Validation remains
+  `INVALID`/authorized through `NONE` until the named target, people, fixture,
+  window, capacity, access, and restriction confirmations are completed.
 - Prepared repository work: exact traceability, dependency matrix, private
   authorization record, gated execution order, must-pass acceptance matrix,
   evidence rules, stop/rollback conditions, complete unblock package, and a
