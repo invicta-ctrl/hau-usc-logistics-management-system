@@ -6,7 +6,7 @@
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 11 starting commit: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` (Slice 10 final evidence checkpoint)
-- Current implementation checkpoint: Slice 11 local gates and independent validation pass; focused implementation commit and CI remain
+- Current implementation checkpoint: Slice 11 implementation commit `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is pushed; local, upstream, and PR #7 heads matched and all required checks passed
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -20,7 +20,7 @@ Always verify the current remote head and CI because documentation commits may f
 
 ## Current Slice 11 - Restock Safety
 
-- Stage: `SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT` from accepted checkpoint
+- Stage: `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT` from accepted checkpoint
   `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` on
   `integration/v0.5-baseline`.
 - Delivered locally: stable request-line-derived restock identities; bounded
@@ -42,6 +42,10 @@ Always verify the current remote head and CI because documentation commits may f
   `bf52d20bbbc8d2a35b39351500edf7c65db93ab2dbddb18cd77c1587389d6035`;
   `AppScript.html` is 339,054 bytes / SHA-256
   `c5771eb265712e6f77fe17ebcc269ebe120c75a2c8539b2654062afbe42f469f`.
+- Remote evidence: implementation commit
+  `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is at local/upstream/PR parity;
+  run `29474985205` passed `validate` and run `29474985252` passed `verify`
+  and `browser-smoke`. PR #7 remains open, draft, and mergeable.
 - External boundary: no deployment, live schema execution, migration/import,
   Script Property change, Apps Script/Sheets/Drive external write, PR merge,
   Cloudflare, database, staging, or production action occurred.

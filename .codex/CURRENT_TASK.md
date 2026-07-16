@@ -46,4 +46,4 @@
 - **Rollback:** set `HAU_RESTOCK_WORKFLOW_ENABLED=false`; retain read-only
   queue/detail and all request, receipt, ledger, history, and audit rows; use a
   focused Slice 11 revert only for code rollback.
-- **Current stage:** `SLICE_11_LOCAL_GATES_GREEN_READY_TO_COMMIT`.
+- **Current stage:** `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.

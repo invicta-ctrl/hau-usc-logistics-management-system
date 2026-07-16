@@ -20,6 +20,9 @@
   / 0 failed), focused mobile/desktop restock proof, sensitive-data review,
   `git diff --check`, and final implementation validation after exact-unit
   hardening.
+- Remote verification is green at implementation commit
+  `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51`: run `29474985205` passed
+  `validate`, and run `29474985252` passed `verify` and `browser-smoke`.
 - No deployment, migration/import, Script Property change, external Apps
   Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
   production action occurred.
