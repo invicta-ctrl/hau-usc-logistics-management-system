@@ -1,49 +1,53 @@
 # Current Task
 
-- **Task ID:** `SLICE-11-RESTOCK-SAFETY`
+- **Task ID:** `SLICE-12-BOUNDED-NEAR-LIVE-REFRESH`
 - **Original instruction:** accept all prior gates and continue from Phase 4
   onward without another manager-approval pause.
 - **Routing envelope:** `INTENT: SOFTWARE_FEATURE`; `MODE: execute`;
-  `TARGET: repository Slice 11 restock workflow`; `RISK: high`;
-  `DELIVERABLE: durable server-owned restock review, transitions, and
-  line-level receiving`; `STOP CONDITIONS: unsafe Git state, failed mandatory
-  gate after two targeted repair rounds, missing external authority, or scope
-  expansion`.
+  `TARGET: repository Slice 12 bounded near-live active-module refresh`;
+  `RISK: high`; `DELIVERABLE: scoped revision signaling and safe active-module
+  refresh`; `STOP CONDITIONS: unsafe Git state, failed mandatory gate after
+  two targeted repair rounds, missing external authority, or scope expansion`.
 - **Matched skills:** `pdf` fixed the accepted phase/gate contract;
   `impl-validator` is required for the independent final implementation audit;
-  `github:yeet` governs the focused publish checkpoint; `gh-fix-ci` diagnosed
-  and repaired the Slice 10 continuation-label CI regression.
+  `github:yeet` governs the focused publish checkpoint.
 - **Verified starting state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
   on `integration/v0.5-baseline` at
-  `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d`; upstream `0 0`; clean. Runs
-  `29473310329` and `29473310294` passed `validate`, `verify`, and
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b`; upstream `0 0`; clean. Run
+  `29475144749` passed `validate`; run `29475144793` passed `verify` and
   `browser-smoke`.
 - **Authorization:** owner acceptance permits this bounded implementation,
   focused commit, feature-branch push, CI verification, and direct transition
-  to Slice 12 after all gates pass. It does not authorize deployment,
-  migration/import, PR merge, `main`, or operational Google writes.
+  to the next program gate after all Slice 12 gates pass. It does not authorize
+  deployment, migration/import, PR merge, `main`, or operational Google writes.
 - **Authoritative specification:** accepted master prompt, accepted planning
-  package, and `docs/RESTOCK_SAFETY_WORKFLOW.md`.
-- **Decision lock:** a restock workflow is the durable projection of one
-  `CATALOG_RESTOCK` request line; its stable server identity is derived from
-  that line. Review/procurement transitions and receipts mutate only that
-  line, under an optimistic workflow revision. Completion is receipt-derived
-  only; sibling lines are never changed implicitly.
-- **In scope:** safe queue/detail DTOs; server-returned allowed actions and
-  disabled reasons; transition/precondition matrix; explicit reason and
-  confirmation; preferred-quote prerequisite; fail-closed write flag;
-  idempotency, lock, revision conflict, history/audit; linked cumulative
-  receipts and immutable ledger append; authoritative refresh; active
-  desktop/mobile UI; tests, docs, schema, and generated parity.
-- **Out of scope:** separate duplicate restock table, arbitrary status strings,
-  one-click completion, client-only transitions, sibling completion,
-  procurement redesign, ledger/history rewrite, legacy backfill, deployment,
-  live schema execution, external Apps Script/Sheets/Drive writes, PR merge,
-  Cloudflare/database, staging, or production.
+  package Slice 12, and `docs/NEAR_LIVE_REFRESH.md`.
+- **Decision lock:** use a 15-second default plus bounded deterministic jitter;
+  check at most one scoped revision per internal session while visible, online,
+  and focused or recently active; an unchanged token performs no module read;
+  a changed token refreshes only the active bounded module; dirty input is
+  never overwritten. Manual and post-mutation refresh remain available.
+- **In scope:** per-scope revision DTO/service; sole adapter; active-module
+  controller; visibility/focus/online/dirty/in-flight policy; bounded
+  backoff/jitter; out-of-order protection; last-updated/stale/manual UX;
+  fail-closed remote disable; request/read instrumentation; tests, docs, and
+  generated parity.
+- **Out of scope:** WebSockets, five-second polling, background/full-bootstrap
+  polling, inactive-module refresh, cached-client authorization, write replay,
+  new database/realtime/hosting service, deployment, migration, external Apps
+  Script/Sheets/Drive writes, PR merge, staging, or production.
+- **Current quota preflight:** official Google documentation rechecked
+  2026-07-16: six-minute execution limit, 30 simultaneous executions per user,
+  1,000 per script, and ten concurrent `google.script.run` calls per page. These
+  are ceilings, not targets; the design minimizes and batches service reads.
+- **Load-model boundary:** repository evidence will report parameterized 1, 10,
+  and 30 active-session scenarios. These are engineering scenarios, not a claim
+  about institutional usage; live p95/concurrency acceptance remains Slice 13
+  staging work and requires separately authorized resources and named owners.
 - **Writer boundary:** the parent is the only writer; final validation is
   independently read-only.
-- **Rollback:** set `HAU_RESTOCK_WORKFLOW_ENABLED=false`; retain read-only
-  queue/detail and all request, receipt, ledger, history, and audit rows; use a
-  focused Slice 11 revert only for code rollback.
-- **Current stage:** `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
+- **Rollback:** set the near-live feature flag false; preserve manual and
+  post-mutation refresh, accepted revision state, and all immutable records;
+  use a focused Slice 12 revert only for code rollback.
+- **Current stage:** `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI`.

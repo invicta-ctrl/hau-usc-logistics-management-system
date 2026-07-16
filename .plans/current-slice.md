@@ -1,7 +1,46 @@
-# HAU-USC V1 Autonomous Program - Slice 11 checkpoint
+# HAU-USC V1 Autonomous Program - Slice 12 checkpoint
+
+CURRENT SLICE: Slice 12 - Bounded near-live active-module refresh
+CURRENT STAGE: SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI
+LAST UPDATED: 2026-07-16 (Asia/Manila)
+
+STAGING ACCEPTANCE: SLICES 1-3 PASSED
+
+## Slice 12 scope lock
+
+- Starting checkpoint: `6fa6222adde5e8314d2defc40e0cd6686fff953b` on
+  `integration/v0.5-baseline`; clean, synchronized `0 0`, and PR #7 green.
+- Slice 11 closure: run `29475144749` passed `validate`; run `29475144793`
+  passed `verify` and `browser-smoke` against the exact evidence commit.
+- Contract: `docs/NEAR_LIVE_REFRESH.md` and accepted planning package Slice 12.
+- Accepted decisions: 15-second default plus bounded jitter; one active scoped
+  revision call maximum; visible/online/focused-or-recently-active sessions
+  only; unchanged token means no module fetch; changed token refreshes only the
+  active bounded module; dirty input is deferred; manual/post-mutation refresh
+  remain; remote disable fails closed.
+- In scope: scoped revision DTO/service, adapter, active-module controller,
+  cadence/backoff/jitter, visibility/focus/online/dirty/in-flight and stale
+  policy, out-of-order protection, last-updated/manual UX, read/request
+  instrumentation, tests/docs/generated parity.
+- Exclusions: WebSockets, five-second/default full-bootstrap polling, inactive
+  module fetch, automatic dirty-form overwrite, replayed writes, new hosting or
+  database service, deployment/migration/external Google writes, PR merge,
+  staging, and production.
+- Current official-limit preflight (2026-07-16): six-minute execution limit,
+  30 simultaneous executions per user, 1,000 per script, and ten concurrent
+  `google.script.run` page calls. Limits are ceilings and subject to change.
+- Load evidence uses parameterized 1/10/30 active-session scenarios, not an
+  institutional forecast. Live p95/concurrency acceptance remains an
+  explicitly authorized Slice 13 staging gate.
+- Rollback: disable near-live polling remotely, preserve manual/on-mutation
+  scoped refresh, and use a focused Slice 12 revert without rewriting data.
+
+---
+
+# Historical Slice 11 checkpoint
 
 CURRENT SLICE: Slice 11 - Restock Safety
-CURRENT STAGE: SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT
+CURRENT STAGE: SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED
 LAST UPDATED: 2026-07-16 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
@@ -34,6 +73,10 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is pushed at local/upstream/PR
   parity. Run `29474985205` passed `validate`; run `29474985252` passed
   `verify` and `browser-smoke`. PR #7 remains open, draft, and mergeable.
+- Final evidence checkpoint:
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b` is at local/upstream/PR parity;
+  run `29475144749` passed `validate`, and run `29475144793` passed `verify`
+  and `browser-smoke`.
 
 ---
 

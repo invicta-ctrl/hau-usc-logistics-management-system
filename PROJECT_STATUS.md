@@ -2,11 +2,11 @@
 
 ## Current version
 
-- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-10 committed and CI-verified; Slice 11 locally verified; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
+- Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-11 committed and CI-verified; Slice 12 scope locked; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
 - Date: `2026-07-16`
 - Branch: `integration/v0.5-baseline`
-- Accepted Slice 11 starting commit: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` (Slice 10 final evidence checkpoint)
-- Current implementation checkpoint: Slice 11 implementation commit `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is pushed; local, upstream, and PR #7 heads matched and all required checks passed
+- Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
+- Current implementation checkpoint: Slice 12 scope is locked; implementation has not started at this checkpoint
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
@@ -14,13 +14,35 @@
 - Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-11 are repository-only; production remains untouched.
+- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-12 are repository-only; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
-## Current Slice 11 - Restock Safety
+## Current Slice 12 - Bounded near-live active-module refresh
 
-- Stage: `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT` from accepted checkpoint
+- Stage: `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI` from accepted checkpoint
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b` on
+  `integration/v0.5-baseline`.
+- Locked behavior: 15-second default with bounded jitter; one scoped revision
+  call maximum while visible, online, and focused/recently active; unchanged
+  token causes no module fetch; changed token refreshes only the active bounded
+  module; dirty input is deferred; manual/post-mutation refresh remains.
+- Current-limit preflight: official Google documentation rechecked 2026-07-16
+  lists six minutes per execution, 30 simultaneous executions per user, 1,000
+  per script, and ten concurrent `google.script.run` calls per page. These are
+  safety ceilings, not operating targets.
+- Evidence boundary: repository modeling uses 1/10/30 active-session scenarios.
+  Live p95, institutional concurrency, and operational acceptance remain Slice
+  13 staging work requiring separate authorization and named owners.
+- External boundary: no deployment, migration/import, Script Property change,
+  Apps Script/Sheets/Drive write, PR merge, Cloudflare, database, staging, or
+  production action is authorized.
+- Rollback: disable near-live polling remotely and preserve manual/on-mutation
+  scoped refresh; use a focused code revert without rewriting data.
+
+## Historical Slice 11 - Restock Safety
+
+- Stage: `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED` from accepted checkpoint
   `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` on
   `integration/v0.5-baseline`.
 - Delivered locally: stable request-line-derived restock identities; bounded
@@ -46,6 +68,10 @@ Always verify the current remote head and CI because documentation commits may f
   `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is at local/upstream/PR parity;
   run `29474985205` passed `validate` and run `29474985252` passed `verify`
   and `browser-smoke`. PR #7 remains open, draft, and mergeable.
+- Final evidence checkpoint:
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b` is pushed at parity; run
+  `29475144749` passed `validate`, and run `29475144793` passed `verify` and
+  `browser-smoke`.
 - External boundary: no deployment, live schema execution, migration/import,
   Script Property change, Apps Script/Sheets/Drive external write, PR merge,
   Cloudflare, database, staging, or production action occurred.

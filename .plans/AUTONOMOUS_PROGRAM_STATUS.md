@@ -4,29 +4,28 @@ PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
-## Current run checkpoint - Phase 4 / Slice 11 implementation
+## Current run checkpoint - Phase 4 / Slice 12 scope lock
 
 - Date: 2026-07-16 (Asia/Manila).
-- Stage: `SLICE_11_COMMITTED_PUSHED_CI_GREEN_ACCEPTED_PENDING_EVIDENCE_COMMIT`.
-- Accepted starting checkpoint: `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d`
+- Stage: `SLICE_12_SCOPE_LOCKED_PENDING_CHECKPOINT_CI`.
+- Accepted starting checkpoint: `6fa6222adde5e8314d2defc40e0cd6686fff953b`
   on `integration/v0.5-baseline`; upstream `0 0`; clean; PR #7 open/draft,
   mergeable, and all three checks green.
 - User authorization: direct bounded continuation is approved without another
   manager-approval pause. Each slice still requires complete local proof,
   independent review, a focused push, and green CI before the next starts.
-- Current bounded scope: restock queue/detail as a projection of one durable
-  catalog-restock request line; server-owned review/procurement transitions;
-  line-level cumulative receiving; revision/idempotency/lock/history/audit;
-  authoritative refresh; and active UI as specified in
-  `docs/RESTOCK_SAFETY_WORKFLOW.md`.
+- Current bounded scope: scoped revision signaling, 15-second jittered cadence,
+  one-call maximum, active bounded-module refresh, dirty-input deferral,
+  stale/manual UX, remote disable, request/read instrumentation, and tests as
+  specified in `docs/NEAR_LIVE_REFRESH.md`.
 - External boundary: repository implementation and feature-branch GitHub CI
   only. No deployment, migration, Apps Script/Sheets/Drive external mutation,
   PR merge, Cloudflare, database, or production action is authorized here.
-- Accepted dependency: Slice 10 final checkpoint
-  `d067eb43e74e6da4fa5cc85977fafa1d6e1df55d` is pushed at parity and CI green.
-  Runs `29473310329` / `29473310294` passed `validate`, `verify`, and
+- Accepted dependency: Slice 11 final evidence checkpoint
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b` is pushed at parity and CI green.
+  Run `29475144749` passed `validate`; run `29475144793` passed `verify` and
   `browser-smoke`.
-- Slice 11 local result: schema `1.6.0`, server restock projection/detail,
+- Slice 11 result: schema `1.6.0`, server restock projection/detail,
   allowed-action decisions, guarded transitions, line-level cumulative
   receiving, exact item/unit/revision checks, idempotency/lock/history/audit,
   reconciliation protection, fail-closed writes, adapters, controlled UI,
@@ -37,8 +36,13 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
   validation is PASS after exact-unit hardening. Implementation commit
   `d5cf2247f1997b18d8d2b8ef9fb367b0e7214d51` is pushed at local/upstream/PR
   parity; run `29474985205` passed `validate`, and run `29474985252` passed
-  `verify` and `browser-smoke`. Commit and push this evidence record, verify its
-  CI, then Slice 12 is unlocked. No external operational system changed.
+  `verify` and `browser-smoke`. Evidence commit
+  `6fa6222adde5e8314d2defc40e0cd6686fff953b` is also green at exact parity.
+  No external operational system changed.
+- Slice 12 preflight: current official Google limits were rechecked on
+  2026-07-16. Repository load evidence will model 1, 10, and 30 active sessions;
+  these are engineering scenarios, while live p95 and institutional concurrency
+  acceptance remain the separately authorized Slice 13 staging gate.
 
 ## Historical checkpoint - Phase 3.5 pushed, CI-green, and tagged
 
