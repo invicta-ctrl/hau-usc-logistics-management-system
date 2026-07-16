@@ -201,7 +201,9 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   let activeModuleRequest;
   const useEssentialBootstrap=backendMode==='apps-script'&&bootstrapContractVersion>=2;
   const compositeRequestsEnabled = globalThis.__HAU_RUNTIME_CONFIG__?.compositeRequestsEnabled ?? true;
-  const ui={view:'overview',activeCommitteeId:'',dashboardStale:false,requestDraftLines:[],editingRequestLineIndex:-1,selectedRequestItemId:'',requestSuggestions:[],requestSuggestionIndex:-1,lendingTab:'FOR_REVIEW',procurementTab:'deliverables',recentDays:7,canvassPage:1,canvassPageSize:8,inventoryPage:1,inventoryPageSize:10,uploads:{restock:null,canvass:null,deliverable:null,release:null},filters:{},renderQueued:false};
+  const shareableModule=document.documentElement.dataset.shareableModule;
+  const defaultView=Object.hasOwn(VIEW_TITLES,shareableModule)?shareableModule:'overview';
+  const ui={view:defaultView,activeCommitteeId:'',dashboardStale:false,requestDraftLines:[],editingRequestLineIndex:-1,selectedRequestItemId:'',requestSuggestions:[],requestSuggestionIndex:-1,lendingTab:'FOR_REVIEW',procurementTab:'deliverables',recentDays:7,canvassPage:1,canvassPageSize:8,inventoryPage:1,inventoryPageSize:10,uploads:{restock:null,canvass:null,deliverable:null,release:null},filters:{},renderQueued:false};
   function loadState(){
     try{ const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved&&saved.version==='1.0.0')return saved; }catch(e){ console.warn('Could not read preview storage',e); }
     const seed=createSeedState(); try{localStorage.setItem(STORAGE_KEY,JSON.stringify(seed));}catch(e){} return seed;

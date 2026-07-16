@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - Separate shareable HTML modules
+
+- Preserved the canonical all-in-one shareable and added seven deterministic,
+  self-contained HTML entry points for Overview, Request Center, Office
+  Lending Hub, Release Desk, Restocking, Procurement & Deliverables, and
+  Inventory Management.
+- Added one ordered module registry shared by authoritative visual assembly,
+  generation, verification, and tests. Output names use numeric ordering and
+  lowercase kebab-case under `shareable-html-modules/`.
+- Each file opens directly in its named module while retaining complete offline
+  styles, runtime, navigation, and cross-module workflows. Verification rejects
+  missing, stale, extra, externally dependent, or incorrectly activated files.
+- Local proof passes `npm run check` with 38 Vitest files / 313 tests, a
+  34-module build, 33 Apps Script sources / 55 functions, generated parity,
+  and all eight standalone artifacts. Full Playwright passes 68 tests with 124
+  intentional skips and zero failures; the focused `file://` proof opens all
+  seven module artifacts in Chromium. A second build retained every shareable
+  hash, and `git diff --check` passes.
+- No generated HTML was hand-edited. No upload, deployment, Apps Script/Sheets/
+  Drive access, external write, staging, production, merge, hosting, or
+  database action occurred.
+
 ## Unreleased - Slice 13 staging-readiness pack
 
 - Recorded the exact Slice 12 candidate/evidence checkpoint and distinguished

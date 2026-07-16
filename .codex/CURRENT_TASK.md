@@ -63,3 +63,19 @@ approval, P0/P1, target drift, or any integrity failure`.
 - **Downstream gate:** Slice 14 cannot begin without signed Slice 13 acceptance;
   Slices 15-16 remain dependent on a stable measured V1 and later owner
   decisions.
+
+## Authorized repository packaging adjunct - shareable HTML modules
+
+- **Instruction:** retain the all-in-one shareable HTML and also produce a
+  separately shareable HTML entry point for every primary module, with an
+  improved naming scheme.
+- **Scope:** repository-native deterministic generation, validation, tests,
+  documentation, generated artifacts, commit, push, and CI evidence.
+- **Contract:** `docs/SHAREABLE_HTML_MODULES.md`.
+- **External boundary:** this adjunct does not name a Google staging target,
+  account, fixture, tester roster, or action-category matrix and therefore does
+  not clear the Slice 13 external preflight blocker.
+- **Current status:** implementation and local verification are complete; 38
+  Vitest files / 313 tests and full Playwright 68 passed / 124 intentional skips
+  / 0 failed. The focused commit is local; push and exact-SHA CI verification
+  remain.

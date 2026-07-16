@@ -40,12 +40,20 @@ The accepted Slices 1-3 repository and staging evidence is recorded in `PROJECT_
 
 - `dist/index.html` – canonical standalone production build.
 - `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
+- `shareable-html-modules/*.html` – seven ordered, self-contained entry points
+  that open directly in Overview, Request Center, Office Lending, Release,
+  Restocking, Procurement, or Inventory while retaining shared navigation.
 - `apps-script/Index.html` – small Apps Script template shell.
 - `apps-script/AppBody.html` – generated approved body markup.
 - `apps-script/AppStyles.html` – generated complete application style element.
 - `apps-script/AppScript.html` – generated complete application script element with staging runtime configuration.
 
-The Apps Script body, CSS, and JavaScript are produced from separate Vite outputs. The generator does not parse minified JavaScript out of `dist/index.html`, and it escapes raw-text closing sequences before embedding code in HTML. Do not edit generated HTML directly. Change source or the generator, then rebuild.
+The module filenames use numeric ordering and lowercase kebab-case; the full
+contract is in `docs/SHAREABLE_HTML_MODULES.md`. The Apps Script body, CSS, and
+JavaScript are produced from separate Vite outputs. The generator does not
+parse minified JavaScript out of `dist/index.html`, and it escapes raw-text
+closing sequences before embedding code in HTML. Do not edit generated HTML
+directly. Change source or the generator, then rebuild.
 
 ## Approved visual baseline
 
@@ -53,11 +61,11 @@ The Apps Script body, CSS, and JavaScript are produced from separate Vite output
 
 ## Runtime modes
 
-| Mode | Use | Authority |
-|---|---|---|
-| `mock` | Local demo and shareable prototype | Browser-only fictional state |
+| Mode          | Use                                    | Authority                                      |
+| ------------- | -------------------------------------- | ---------------------------------------------- |
+| `mock`        | Local demo and shareable prototype     | Browser-only fictional state                   |
 | `apps-script` | Staging and initial production web app | Server authorization, Google Sheets, and Drive |
-| `rest` | Future hosted frontend | Reserved secure HTTP adapter boundary |
+| `rest`        | Future hosted frontend                 | Reserved secure HTTP adapter boundary          |
 
 Feature code calls service adapters; it never reads Google Sheets or `google.script.run` directly. `src/services/apps-script-adapter.js` is the only browser-to-Apps-Script gateway.
 

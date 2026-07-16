@@ -6,6 +6,25 @@ LAST UPDATED: 2026-07-16 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
 
+## Authorized repository packaging adjunct
+
+- User authorization adds deterministic separate HTML shareables without
+  changing the Slice 13 Google Workspace authorization boundary.
+- Contract: `docs/SHAREABLE_HTML_MODULES.md`.
+- Delivered locally: a canonical seven-module registry, numeric lowercase
+  kebab-case outputs under `shareable-html-modules/`, direct named-module
+  startup, complete offline shared runtime/navigation, fail-closed artifact
+  verification, unit coverage, and real `file://` Chromium proof.
+- Local gates: `npm run check` passes 38 Vitest files / 313 tests, 34-module
+  build, 33 Apps Script sources / 55 functions, deterministic generated parity,
+  and eight standalone artifacts. Full Playwright passes 68 / 124 intentional
+  skips / 0 failed across six configured viewports; the module proof runs once
+  at 390 px and opens all seven files. Rebuild determinism and `git diff
+--check` pass.
+- This adjunct is committed locally and pending push/CI verification. It
+  performed no Google, deployment, staging, production, merge, hosting, or
+  database action and does not clear the external Slice 13 blocker.
+
 ## Slice 13 dependency audit
 
 - Starting checkpoint: Slice 12 evidence commit
