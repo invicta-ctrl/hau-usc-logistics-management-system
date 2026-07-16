@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - Guided offline demo and usability review
+
+- Added `hau-usc-logistics-guided-demo.html`, a generated self-contained
+  presenter artifact that opens from `file://` and walks the seven primary
+  modules in the same order as the canonical registry.
+- Added accessible open/close, Previous, Next, Restart, and Open module
+  controls; Escape returns focus to the launcher, updates are announced, touch
+  targets are bounded, and reduced-motion preferences are respected.
+- Added a timed 12-minute presenter runbook, safety/claim guardrails, fallback
+  direct module entry points, and a prioritized usability backlog focused on
+  clarity, next actions, cognitive load, responsive interaction,
+  accessibility, and operator confidence.
+- Local proof passes `npm run check` with 39 Vitest files / 317 tests, full
+  Playwright with 70 passed / 128 intentional skips / 0 failed, focused
+  `file://` traversal of all seven steps, visual review at 390 px and 1366 px,
+  standalone verification, and `git diff --check`.
+- Independent read-only review is PASS after reconciling the documented tour
+  order, enforcing exact generated-artifact parity, and expanding guided
+  control coverage at both 390 px and 1366 px.
+- No generated HTML was hand-edited. No Google resource, upload, deployment,
+  staging, production, merge, hosting, or database action occurred.
+
 ## Unreleased - Separate shareable HTML modules
 
 - Preserved the canonical all-in-one shareable and added seven deterministic,

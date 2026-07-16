@@ -40,6 +40,8 @@ The accepted Slices 1-3 repository and staging evidence is recorded in `PROJECT_
 
 - `dist/index.html` – canonical standalone production build.
 - `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
+- `hau-usc-logistics-guided-demo.html` – self-contained offline application
+  with an accessible seven-step presenter guide.
 - `shareable-html-modules/*.html` – seven ordered, self-contained entry points
   that open directly in Overview, Request Center, Office Lending, Release,
   Restocking, Procurement, or Inventory while retaining shared navigation.

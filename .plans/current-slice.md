@@ -27,6 +27,29 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   deployment, staging, production, merge, hosting, or database action and does
   not clear the external Slice 13 blocker.
 
+## Authorized guided-demo and usability adjunct
+
+- Starting checkpoint: documentation commit
+  `89f26a3a34a5ac3e84710ecf93c7f66043c4dd2f`, pushed at parity with runs
+  `29481228461` and `29481228468` green.
+- Contract: `docs/DEMO_RUNBOOK.md`, `docs/USABILITY_IMPROVEMENT_BACKLOG.md`,
+  and the approved visual baseline.
+- Delivered locally: generated `hau-usc-logistics-guided-demo.html`, seven-step
+  module-aligned tour, keyboard/Escape/focus behavior, live announcements,
+  reduced-motion behavior, presenter runbook, and prioritized production UX
+  proposals that remain separately specified work.
+- Local proof: `npm run check` passes 39 Vitest files / 317 tests, 34-module
+  build, Apps Script/generated parity, and the guided plus direct shareables.
+  Full Playwright passes 70 / 128 intentional skips / 0 failed; the focused
+  offline test walks all seven steps, all controls, and restart at 390 px and
+  1366 px. Visual inspection at both widths is clean. Independent read-only
+  review is PASS after the documented repairs.
+- Two consecutive builds retain exact byte/hash parity for the all-in-one,
+  guided, seven direct-module, and split Apps Script artifacts.
+- This work uses fictional preview data and performs no Google, deployment,
+  staging, production, merge, hosting, or database action. Slice 13 remains
+  blocked before external preflight.
+
 ## Slice 13 dependency audit
 
 - Starting checkpoint: Slice 12 evidence commit

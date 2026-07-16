@@ -13,6 +13,10 @@ The backward-compatible all-in-one artifact remains:
 
 - `HAU-USC_Logistics-Prototype-Shareable.html`
 
+The presenter-focused guided artifact is:
+
+- `hau-usc-logistics-guided-demo.html`
+
 The generated `shareable-html-modules/` directory contains:
 
 1. `hau-usc-logistics-01-overview-shareable.html`
@@ -31,8 +35,8 @@ case ambiguity, and operating-system-specific path behavior.
 - `scripts/shareable-module-registry.mjs` is the single ordered registry used
   by visual assembly, generation, verification, and tests.
 - `npm run build` assembles the authoritative visual, creates the all-in-one
-  artifact, then recreates all seven module artifacts from that exact bundled
-  HTML. Generated HTML must not be hand-edited.
+  artifact and guided demo, then recreates all seven module artifacts from that
+  exact bundled HTML. Generated HTML must not be hand-edited.
 - Each module artifact has a validated default-view marker, matching static
   navigation/view state, module-specific document title, and module heading.
 - Every artifact is a single file with no external script or stylesheet and no

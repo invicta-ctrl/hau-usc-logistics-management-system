@@ -1,10 +1,12 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
+import { assertGuidedDemoShareable } from './guided-demo.mjs';
 import { shareableModules } from './shareable-module-registry.mjs';
 
 const html = await readFile(resolve('dist/index.html'), 'utf8');
 const shareable = await readFile(resolve('HAU-USC_Logistics-Prototype-Shareable.html'), 'utf8');
+const guidedDemo = await readFile(resolve('hau-usc-logistics-guided-demo.html'), 'utf8');
 const moduleDirectory = resolve('shareable-html-modules');
 const requiredMarkers = [
   'id="primaryNav"',
@@ -35,10 +37,25 @@ function verifyStandalone(content, label) {
 
 verifyStandalone(html, 'dist/index.html');
 verifyStandalone(shareable, 'the all-in-one shareable');
+verifyStandalone(guidedDemo, 'the guided demo shareable');
+assertGuidedDemoShareable(html, guidedDemo);
 if (
   createHash('sha256').update(html).digest('hex') !== createHash('sha256').update(shareable).digest('hex')
 ) {
   throw new Error('The root shareable HTML file does not match dist/index.html.');
+}
+
+const guidedDemoMarkers = [
+  'data-guided-demo="true"',
+  '<title>HAU-USC Logistics - Guided Demo</title>',
+  'id="demoGuideLauncher"',
+  'id="demoGuide"',
+  'id="guidedDemoScript"',
+  'Step ',
+];
+const missingGuidedDemoMarkers = guidedDemoMarkers.filter((marker) => !guidedDemo.includes(marker));
+if (missingGuidedDemoMarkers.length) {
+  throw new Error(`The guided demo is missing: ${missingGuidedDemoMarkers.join(', ')}`);
 }
 
 const expectedFiles = shareableModules.map(({ filename }) => filename).sort();
@@ -73,5 +90,5 @@ for (const module of shareableModules) {
 }
 
 console.log(
-  `Verified the all-in-one standalone (${Buffer.byteLength(html).toLocaleString()} bytes) and ${shareableModules.length} module shareables.`,
+  `Verified the all-in-one standalone (${Buffer.byteLength(html).toLocaleString()} bytes), guided demo, and ${shareableModules.length} module shareables.`,
 );

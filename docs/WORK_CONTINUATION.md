@@ -3,27 +3,28 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; shareable-module implementation `472013d2b807d7efff6f63a6a9db218303258783` is pushed at local/upstream/PR parity and green.
-- **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; the independent repository packaging adjunct is `COMMITTED_PUSHED_CI_GREEN`.
-- **Accepted scope:** retain the all-in-one shareable and produce one self-contained HTML entry point per primary module with improved portable naming; repository generation, tests, documentation, commit, push, and CI are authorized. Google staging still requires a named target/owner/fixture/tester/rollback package. No production, merge, tag, or release.
-- **Completed work:** added the canonical seven-module registry, deterministic module generator, direct named-module startup, exact static active state, fail-closed verification, unit coverage, offline Chromium coverage, documentation, and generated artifacts. Cross-module navigation and the all-in-one artifact remain intact.
-- **Files changed by purpose:** generation/verification registry and scripts; authoritative runtime default-view selection; unit/browser tests; shareable contract/build/continuation documentation; regenerated `dist/index.html`, the all-in-one shareable, and seven files under `shareable-html-modules/`. No generated file was hand-edited and no private config changed.
-- **Tests verified at current SHA:** this evidence applies to focused
-  implementation `472013d`. `npm run check` passes governance/lint, 38 Vitest
-  files / 313 tests, a 34-module build, 33 Apps Script sources / 55 functions,
-  deterministic generated parity, and eight shareable artifacts. Full
-  Playwright passes 68 with 124 intentional skips and 0 failures across six
-  viewport projects; the 390 px `file://` proof opens all seven module files. A
-  second complete build retained every shareable hash; `git diff --check`
-  passes. Run `29480998590` passes `validate`; run `29480998709` passes
-  `verify` and `browser-smoke` at the exact implementation SHA.
-- **Generated artifacts:** `dist/index.html` and the all-in-one shareable are 411,124 bytes / SHA-256 `9444e972eb16f0de9adde79f05c97bd35d0d4a51487376110f3b67c3238327e9`. Ordered module hashes are Overview `58cdd8963913407a8723871d77e40c8e511bad727084b3adbd6d5f1118f664bc`; Request `ba93a30e60a09987e14de87ba3badea582d4b7c81fd4cfab1d8b4c8cb4b8dfc4`; Lending `4f15e6252642ef11f4f0e3a69988d11bdaad2d7a2eb06d8687265dca36bb34bc`; Release `773114592d15c3d4b32252b04606bd81cb93b18f3c6160dcf4bd46099b9195a9`; Restocking `e8aa8fd6fc78893bed38781e77f771ba31344f32b907f77a57f3f42ca4666de6`; Procurement `ce847f88e5cbd6fb2ab94b69b514d81bd45077f1969a83e9d13ed3eb61809596`; Inventory `8892bb73be486db50f39a59941e0ddb711e878ba53d522482f7ac504e080fc59`.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; clean synchronized starting checkpoint `89f26a3a34a5ac3e84710ecf93c7f66043c4dd2f`; guided-demo/usability adjunct is locally verified and uncommitted.
+- **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; independent demo adjunct is `LOCAL_VERIFIED_PENDING_COMMIT`.
+- **Accepted scope:** create one self-contained offline guided demo from the verified shareables, a presenter runbook, and a prioritized usability review. Google staging still requires a named target/owner/fixture/tester/rollback package. No production redesign, merge, tag, or release.
+- **Completed work:** added seven-step guided navigation, purpose/highlight content, open/close/previous/next/restart controls, Escape/focus/live-announcement/reduced-motion behavior, deterministic generation/verification, unit/offline browser coverage, visual QA, presenter guidance, and a bounded UX backlog.
+- **Files changed by purpose:** guided-demo generator and generated artifact; shareable build/verification integration; unit and Playwright coverage; approved demo baseline, runbook, usability backlog, README, changelog, task, and continuation records. No source production workflow, Apps Script source, private config, or external system changed.
+- **Tests verified at current SHA:** the current worktree is based on green
+  checkpoint `89f26a3`. `npm run check` passes governance/lint, 39 Vitest files /
+  317 tests, a 34-module build, 33 Apps Script sources / 55 functions,
+  deterministic generated parity, and standalone verification. Full Playwright
+  passes 70 with 128 intentional skips and 0 failures across six viewport
+  projects; focused 390 px and 1366 px offline proofs traverse all seven tour
+  steps, every control, and restart. Visual review at both widths is clean;
+  `git diff --check` passes. Independent read-only review is PASS after order,
+  exact-artifact parity, and browser-coverage repairs. Two consecutive builds
+  retain exact byte/hash parity across every generated artifact.
+- **Generated artifacts:** the unchanged `dist/index.html` and all-in-one shareable remain 411,124 bytes / SHA-256 `9444e972eb16f0de9adde79f05c97bd35d0d4a51487376110f3b67c3238327e9`. The guided demo is 419,215 bytes / SHA-256 `01a056fc845728f5ac8a4d7bf41451ab2155b1f9aef46c739e5aaa2fbd7730dd`; direct module hashes remain at the green `472013d` checkpoint.
 - **External actions:** no `clasp`, remote Google read, backup, setup, migration, seed, trigger, upload, deployment, staging write, production action, merge, `main`, hosting, or database action.
 - **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
-- **Rollback:** no external state exists to roll back. If the packaging adjunct is rejected after commit, use a focused revert to starting checkpoint `469eddc`; do not reset or delete accepted history.
+- **Rollback:** no external state exists to roll back. If the demo adjunct is rejected after commit, use a focused revert to starting checkpoint `89f26a3`; do not reset or delete accepted history.
 - **Blocker:** genuine external authority/coordination dependency: named staging owner/operator and exact approved private config/resources; permitted action categories; approved synthetic/redacted fixture/namespace; tester-role matrix and signatories; current deployment/rollback; window/stop authority; evidence location/retention; storage-headroom confirmation.
 - **Windows note:** private staging candidate files remain outside Git under the consolidated `private-config` root; do not copy or print their values. The obsolete `D:\Documents\DOL Website GitHub` compatibility shell is unrelated.
-- **Next three actions:** create the authorized repository demo package from the verified shareables; perform the bounded site/module usability audit and specify prioritized improvements; obtain and validate the complete private staging authorization package before Gate A/B.
+- **Next three actions:** commit/push the guided-demo unit; verify PR #7 CI at the exact SHA; obtain and validate the complete private staging authorization package before Gate A/B.
 - **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run check`; `npm run test:e2e`; `gh pr checks 7`.
 - **Prohibited actions:** no guessing a target/owner/tester/data set; no private-config commit/value output; no `clasp` or Google external access before authorization; no PR merge, history rewrite, force-push, archive-tag deletion, production, hosting, or database action.
 

@@ -1,10 +1,12 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createGuidedDemoShareable } from './guided-demo.mjs';
 import { shareableModules } from './shareable-module-registry.mjs';
 
 const source = resolve('dist/index.html');
 const destination = resolve('HAU-USC_Logistics-Prototype-Shareable.html');
+const guidedDemoDestination = resolve('hau-usc-logistics-guided-demo.html');
 const moduleDirectory = resolve('shareable-html-modules');
 
 function replaceRequired(html, from, to, label) {
@@ -64,6 +66,7 @@ export async function generateShareableArtifacts() {
   const standalone = (await readFile(source, 'utf8')).replace(/\r+\n/g, '\n').replace(/[ \t]+$/gm, '');
   await writeFile(source, standalone);
   await writeFile(destination, standalone);
+  await writeFile(guidedDemoDestination, createGuidedDemoShareable(standalone));
 
   if (moduleDirectory === resolve('.') || !moduleDirectory.endsWith('shareable-html-modules')) {
     throw new Error('Refusing to replace an unexpected shareable module directory.');
@@ -77,7 +80,7 @@ export async function generateShareableArtifacts() {
   );
 
   console.log(
-    `Created the all-in-one shareable and ${shareableModules.length} module shareables in shareable-html-modules/.`,
+    `Created the all-in-one shareable, guided demo, and ${shareableModules.length} module shareables in shareable-html-modules/.`,
   );
 }
 

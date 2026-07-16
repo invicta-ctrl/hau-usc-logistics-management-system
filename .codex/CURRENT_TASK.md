@@ -81,3 +81,32 @@ approval, P0/P1, target drift, or any integrity failure`.
   `472013d2b807d7efff6f63a6a9db218303258783` is pushed at parity; runs
   `29480998590` and `29480998709` pass `validate`, `verify`, and
   `browser-smoke`.
+
+## Authorized repository demo and usability review
+
+- **Original instruction:** “After finishing all the phases, proceed on
+  creating the demo. Then think about the ways on how to make the website and
+  its modules more intuitive, interactive, and easier to use and understand.”
+- **Routing envelope:** `INTENT: DOCUMENT_OR_ARTIFACT` with secondary
+  `SOFTWARE_FEATURE` and `CODE_REVIEW`; `MODE: execute`; `RISK: medium`;
+  `SKILLS: pdf (authoritative master-guide review) plus repository-native
+  generation`; `DELIVERABLE: self-contained guided demo, presenter runbook,
+  and prioritized usability backlog`.
+- **Verified starting state:** documentation checkpoint
+  `89f26a3a34a5ac3e84710ecf93c7f66043c4dd2f` is pushed at parity; runs
+  `29481228461` and `29481228468` pass all three checks.
+- **Accepted specification:** `docs/DEMO_RUNBOOK.md` and
+  `docs/USABILITY_IMPROVEMENT_BACKLOG.md`, grounded in
+  `docs/FINAL_DEMO_BASELINE.md` and `docs/SHAREABLE_HTML_MODULES.md`.
+- **Scope:** one generated offline guided demo, seven ordered module steps,
+  accessible controls, presenter timing/guardrails, deterministic validation,
+  browser proof, and bounded UX recommendations. No production-interface
+  redesign is silently included.
+- **External boundary:** the demo uses fictional local data only. It does not
+  deploy, publish, upload, access Google resources, or clear Slice 13.
+- **Current status:** local implementation, visual review at 390 px and 1366
+  px, `npm run check` (39 files / 317 tests), and full Playwright (70 passed /
+  128 intentional skips / 0 failed) are green. Independent read-only review is
+  PASS after order, exact-artifact parity, and full guided-control coverage
+  repairs. Two consecutive builds retained every generated hash. Commit/push
+  and exact-SHA CI remain.

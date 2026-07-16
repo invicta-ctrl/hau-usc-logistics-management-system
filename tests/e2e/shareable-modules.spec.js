@@ -22,3 +22,57 @@ test('every generated module shareable opens offline in its named workspace', as
     await expect(page.locator('section.view.active')).toHaveCount(1);
   }
 });
+
+test('guided demo walks through offline modules with accessible controls', async ({ page }, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'Phone and desktop browsers are sufficient for offline demo proof.',
+  );
+
+  await page.goto(pathToFileURL(resolve('hau-usc-logistics-guided-demo.html')).href);
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await expect(page).toHaveTitle('HAU-USC Logistics - Guided Demo');
+  await page.locator('#demoGuideLauncher').click();
+  await expect(page.locator('#demoGuide')).toBeVisible();
+  await expect(page.locator('#demoGuideCount')).toHaveText('Step 1 of 7');
+  await expect(page.locator('#demoGuideTitle')).toHaveText('Operations Overview');
+
+  await page.locator('#demoGuideOpen').press('Enter');
+  await expect(page.locator('#overview')).toHaveClass(/demo-guided-highlight/);
+
+  await page.locator('#demoGuideNext').press('Enter');
+  await expect(page.locator('#demoGuideCount')).toHaveText('Step 2 of 7');
+  await expect(page.locator('#request')).toHaveClass(/active/);
+
+  await page.locator('#demoGuideNext').click();
+  await expect(page.locator('#demoGuideCount')).toHaveText('Step 3 of 7');
+  await expect(page.locator('#lending')).toHaveClass(/active/);
+
+  await page.locator('#demoGuideBack').click();
+  await expect(page.locator('#demoGuideCount')).toHaveText('Step 2 of 7');
+  await expect(page.locator('#request')).toHaveClass(/active/);
+
+  const remainingSteps = [
+    ['lending', 'Office Lending Hub'],
+    ['release', 'Release Desk'],
+    ['restocking', 'Restocking'],
+    ['procurement', 'Procurement & Deliverables'],
+    ['inventory', 'Inventory Management'],
+  ];
+  for (const [stepIndex, [moduleId, title]] of remainingSteps.entries()) {
+    await page.locator('#demoGuideNext').click();
+    await expect(page.locator('#demoGuideCount')).toHaveText(`Step ${stepIndex + 3} of 7`);
+    await expect(page.locator('#demoGuideTitle')).toHaveText(title);
+    await expect(page.locator(`#${moduleId}`)).toHaveClass(/active/);
+    await expect(page.locator(`#${moduleId}`)).toHaveClass(/demo-guided-highlight/);
+  }
+
+  await expect(page.locator('#demoGuideNext')).toHaveText('Restart tour');
+  await page.locator('#demoGuideNext').click();
+  await expect(page.locator('#demoGuideCount')).toHaveText('Step 1 of 7');
+  await expect(page.locator('#overview')).toHaveClass(/active/);
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#demoGuide')).toBeHidden();
+  await expect(page.locator('#demoGuideLauncher')).toBeFocused();
+});
