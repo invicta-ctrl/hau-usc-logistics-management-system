@@ -76,7 +76,10 @@ function setupDatabase() {
         if (sheet.getLastRow() === 0 || actual.every(function(value) { return !value; })) {
           sheet.getRange(1, 1, 1, HAU_HEADERS[name].length).setValues([HAU_HEADERS[name]]);
           headersAdded.push({ sheet: name, headers: HAU_HEADERS[name] });
-        } else if (missing.length && [HAU_SHEETS.ITEMS, HAU_SHEETS.USERS].indexOf(name) >= 0) {
+        } else if (
+          missing.length &&
+          [HAU_SHEETS.ITEMS, HAU_SHEETS.USERS, HAU_SHEETS.REQUEST_LINES].indexOf(name) >= 0
+        ) {
           sheet.getRange(1, sheet.getLastColumn() + 1, 1, missing.length).setValues([missing]);
           headersAdded.push({ sheet: name, headers: missing });
         }

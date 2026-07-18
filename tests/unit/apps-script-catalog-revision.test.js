@@ -27,6 +27,7 @@ function gasContext(files) {
 
 describe('catalog schema and permission migration', () => {
   const ctx = gasContext(['Config.gs', 'Validation.gs', 'Auth.gs', 'ItemRepository.gs']);
+  const setupSource = readFileSync(resolve(import.meta.dirname, '../../apps-script/Setup.gs'), 'utf8');
 
   it('appends catalog fields without moving legacy item or user fields', () => {
     expect(Array.from(ctx.HAU_HEADERS['01_ITEM_MASTER']).slice(0, 20)).toEqual([
@@ -79,6 +80,12 @@ describe('catalog schema and permission migration', () => {
     ]);
     expect(Array.from(ctx.HAU_HEADERS['04_REQUEST_LINES']).at(-1)).toBe('Workflow_Revision');
     expect(ctx.HAU_CONFIG.SCHEMA_VERSION).toBe('1.6.0');
+  });
+
+  it('allows the request-line workflow revision to be added to an existing sheet', () => {
+    expect(setupSource).toMatch(
+      /\[HAU_SHEETS\.ITEMS, HAU_SHEETS\.USERS, HAU_SHEETS\.REQUEST_LINES\]\.indexOf\(name\)/,
+    );
   });
 
   it('uses least-privilege catalog permission fallback', () => {
