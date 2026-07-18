@@ -145,6 +145,37 @@ describe('Apps Script canonical authorization contract', () => {
     expect(context.authorizationMessage_('OUT_OF_SCOPE')).toMatch(/outside.*committee scope/i);
   });
 
+  it('ignores legacy committee labels for roles whose scope is not committee-bound', () => {
+    const context = gasContext();
+    const administrator = context.authorizationContext_({
+      User_ID: 'SYNTHETIC-ADMIN',
+      Role: 'ADMIN',
+      Committee: 'STAGING',
+      Active: true,
+    });
+    const requester = context.authorizationContext_({
+      User_ID: 'SYNTHETIC-REQUESTER',
+      Role: 'REQUESTER',
+      Committee: 'Legacy requester label',
+      Active: true,
+    });
+
+    expect(administrator).toMatchObject({
+      roleId: 'ADMINISTRATOR',
+      scopeMode: 'ALL',
+      committeeIds: [],
+      mappingStatus: 'MAPPED',
+      issues: [],
+    });
+    expect(requester).toMatchObject({
+      roleId: 'REQUESTER',
+      scopeMode: 'SELF',
+      committeeIds: [],
+      mappingStatus: 'MAPPED',
+      issues: [],
+    });
+  });
+
   it('fails closed when the login identity has multiple active access rows', () => {
     const context = gasContext({
       users: [

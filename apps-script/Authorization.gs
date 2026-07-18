@@ -270,7 +270,7 @@ function authorizationCommitteeResolution_(user, options) {
 function authorizationContext_(user, options) {
   var row = user || {}, roleId = canonicalRoleId_(row.Role_ID || row.Role), role = roleId ? HAU_ROLE_REGISTRY_[roleId] : null;
   var activeValue = authorizationActiveValue_(row.Active), active = activeValue.active;
-  var committees = authorizationCommitteeResolution_(row, options || {});
+  var committees = role && role.scopeMode === 'COMMITTEE' ? authorizationCommitteeResolution_(row, options || {}) : { ids: [], issues: [] };
   var issues = committees.issues.slice();
   if (!role) issues.push('UNKNOWN_ROLE');
   if (!activeValue.valid) issues.push('INVALID_ACTIVE');
