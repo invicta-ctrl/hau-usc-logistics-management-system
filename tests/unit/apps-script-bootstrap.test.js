@@ -7,10 +7,17 @@ const appScriptRoot = resolve(import.meta.dirname, '../../apps-script');
 
 function sheet(name, headers, rows = []) {
   const valuesFor = (row, width) => headers.slice(0, width).map((header) => row[header] ?? '');
+  let dataRangeReads = 0;
   return {
     getName: () => name,
+    get dataRangeReads() { return dataRangeReads; },
     getLastColumn: () => headers.length,
     getLastRow: () => rows.length + 1,
+    getDataRange() {
+      dataRangeReads += 1;
+      const values = [headers, ...rows.map((item) => valuesFor(item, headers.length))];
+      return { getValues: () => values };
+    },
     getRange(row, _column, rowCount, columnCount) {
       const values = row === 1
         ? [headers.slice(0, columnCount)]
@@ -81,6 +88,14 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     });
 
     expect(observed).toEqual({ readCount: 1, cacheHits: 1 });
+  });
+
+  it('reads a complete sheet through one values service call', () => {
+    const context = gasContext();
+    const target = context.getDatabase_().getSheetByName('01_ITEM_MASTER');
+
+    expect(context.readObjects_('01_ITEM_MASTER')).toHaveLength(1);
+    expect(target.dataRangeReads).toBe(1);
   });
 
   it('returns a sanitized essential DTO with bounded read metrics', () => {
