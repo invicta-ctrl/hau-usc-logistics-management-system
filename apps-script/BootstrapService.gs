@@ -110,6 +110,8 @@ function bootstrapBoundedResponse_(response) {
 }
 
 function essentialBootstrapData_(command, stats) {
+  var revision = getDataRevision_();
+  setSharedReadCacheRevision_(revision.revision);
   var session = bootstrapSession_(command || {});
   return bootstrapBoundedResponse_({
     contract: HAU_BOOTSTRAP_CONTRACT_,
@@ -123,7 +125,7 @@ function essentialBootstrapData_(command, stats) {
     currentUser: bootstrapUserDto_(session),
     navigation: bootstrapNavigation_(session),
     moduleConfig: { maxPageSize: 50, defaultPageSize: 10, legacyEndpointAvailable: typeof authorizationContractVersion_ !== 'function' || authorizationContractVersion_() < 2, activeModuleOnly: true },
-    revision: bootstrapRevision_(session),
+    revision: session.internal ? { revision: revision.revision, updatedAt: revision.updatedAt } : null,
     metrics: { readCount: stats.readCount, cacheHits: stats.cacheHits }
   });
 }
@@ -376,11 +378,13 @@ function bootstrapModuleData_(module, command, session) {
 function bootstrapModuleResponse_(command, stats) {
   var module = bootstrapText_(command && command.module, '', 40).toLowerCase();
   if (HAU_BOOTSTRAP_MODULES_.indexOf(module) < 0) throw appError_('MODULE_NOT_FOUND', 'The requested workspace module is not available.', false);
+  var revision = getDataRevision_();
+  setSharedReadCacheRevision_(revision.revision);
   var session = bootstrapSession_(command || {});
   if (!bootstrapModuleAllowed_(module, session)) throw appError_('FORBIDDEN', 'This workspace module is not available for the current session.', false);
   var built = bootstrapModuleData_(module, command || {}, session);
-  var revision = bootstrapRevision_(session);
-  var scopeState = session.internal ? revisionScopeMap_(revision)[module] : null;
+  var revisionDto = session.internal ? { revision: revision.revision, updatedAt: revision.updatedAt } : null;
+  var scopeState = session.internal ? revisionScopeMap_(revisionDto)[module] : null;
   return bootstrapBoundedResponse_({
     contract: HAU_BOOTSTRAP_MODULE_CONTRACT_,
     contractVersion: HAU_BOOTSTRAP_VERSION_,
@@ -392,7 +396,7 @@ function bootstrapModuleResponse_(command, stats) {
     module: module,
     data: built.data,
     pagination: built.pagination,
-    revision: revision,
+    revision: revisionDto,
     scopeRevision: scopeState ? { scope: module, token: scopeState.token, updatedAt: scopeState.updatedAt } : null,
     cache: built.cache,
     metrics: { readCount: stats.readCount, cacheHits: stats.cacheHits }

@@ -31,6 +31,7 @@ function sheet(name, headers, rows = []) {
 }
 
 function gasContext() {
+  const sharedCache = new Map();
   const properties = new Map([
     ['HAU_ENVIRONMENT', 'STAGING'],
     ['HAU_SPREADSHEET_ID', 'SYNTHETIC-SPREADSHEET-ID-0001'],
@@ -68,6 +69,10 @@ function gasContext() {
       getUuid: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
     },
     PropertiesService: { getScriptProperties: () => ({ getProperty: (key) => properties.get(key) ?? null }) },
+    CacheService: { getScriptCache: () => ({
+      get: (key) => sharedCache.get(key) ?? null,
+      put: (key, value) => sharedCache.set(key, String(value)),
+    }) },
     Session: { getActiveUser: () => ({ getEmail: () => 'synthetic.operator@example.invalid' }) },
   });
   for (const file of ['Config.gs', 'Validation.gs', 'Auth.gs', 'SheetRepository.gs', 'DataRevisionService.gs', 'ItemRepository.gs', 'InventoryService.gs', 'BootstrapService.gs']) {
@@ -96,6 +101,22 @@ describe('Apps Script essential bootstrap recovery contract', () => {
 
     expect(context.readObjects_('01_ITEM_MASTER')).toHaveLength(1);
     expect(target.dataRangeReads).toBe(1);
+  });
+
+  it('reuses revision-keyed sheet rows across bootstrap requests', () => {
+    const context = gasContext();
+    const target = context.getDatabase_().getSheetByName('01_ITEM_MASTER');
+    const stats = [];
+    for (let request = 0; request < 2; request += 1) {
+      context.withRequestReadCache_((current) => {
+        context.setSharedReadCacheRevision_(7);
+        expect(context.readObjects_('01_ITEM_MASTER')).toHaveLength(1);
+        stats.push({ ...current });
+      });
+    }
+
+    expect(target.dataRangeReads).toBe(1);
+    expect(stats).toEqual([{ readCount: 1, cacheHits: 0 }, { readCount: 0, cacheHits: 1 }]);
   });
 
   it('returns a sanitized essential DTO with bounded read metrics', () => {

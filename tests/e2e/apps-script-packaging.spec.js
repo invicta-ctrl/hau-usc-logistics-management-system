@@ -243,7 +243,7 @@ test('packaged Apps Script bootstrap shows the slow state without a duplicate ca
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
 });
 
-test('packaged Apps Script bootstrap accepts a module response after the legacy timeout', async ({ page }, testInfo) => {
+test('packaged Apps Script bootstrap remains usable while a module finishes after the legacy timeout', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One real browser timeout-boundary run is sufficient for packaging verification.');
   const files = await createAppsScriptBundleFromProject();
   const assembled = assembleAppsScriptTemplate(files, { requestOnly: false, appEnvironment: 'STAGING' });
@@ -276,8 +276,10 @@ test('packaged Apps Script bootstrap accepts a module response after the legacy 
   await page.setContent(assembled, { waitUntil: 'load' });
 
   await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await expect(page.locator('#loading')).toHaveAttribute('data-state', 'ready');
   await page.clock.fastForward(30_001);
-  await expect(page.locator('#loading')).toHaveAttribute('data-state', 'slow');
+  await expect(page.locator('#loading')).toHaveAttribute('data-state', 'ready');
   await expect(page.locator('#loading')).not.toHaveAttribute('data-state', 'error');
 
   await page.clock.fastForward(10_000);
@@ -285,6 +287,7 @@ test('packaged Apps Script bootstrap accepts a module response after the legacy 
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls)).toEqual([
     'api_getEssentialBootstrapData',
     'api_getBootstrapModule',
+    'api_getScopedRevision',
   ]);
 });
 

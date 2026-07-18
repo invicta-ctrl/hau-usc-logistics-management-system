@@ -368,7 +368,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
         staticOptions(value){startupTestHook(BOOTSTRAP_STAGES.STATIC_OPTIONS);populateStaticOptions();return value;},
         extensions(value){startupTestHook(BOOTSTRAP_STAGES.EXTENSIONS);runtimeExtensions=createRuntimeExtensions({backendMode,services,getState:()=>state,acceptState:acceptAuthoritativeState,commit,loadAuthoritativeState,getActiveModule:activeModuleName,refreshActiveModule:({scope})=>loadAndRenderModule(scope,{force:true,propagate:true,syncRefresh:true}),toast,openModal,closeModal,isRequestOnly:()=>document.body.classList.contains('request-mode'),hasUnsavedRuntimeState:()=>ui.requestDraftLines.length>0||Object.values(ui.uploads).some(Boolean)});runtimeExtensions.install();return value;},
         bindings(value){startupTestHook(BOOTSTRAP_STAGES.BINDINGS);applyCompositeRequestFeatureState();bindGlobalEvents();setupUploaders();return value;},
-        activeModule(value){startupTestHook(BOOTSTRAP_STAGES.ACTIVE_MODULE);return loadActiveModule(requestOnly);},
+        activeModule(value){startupTestHook(BOOTSTRAP_STAGES.ACTIVE_MODULE);if(useEssentialBootstrap){void loadAndRenderModule(activeModuleName(),{syncRefresh:true});return value;}return loadActiveModule(requestOnly);},
         firstRender(value){startupTestHook(BOOTSTRAP_STAGES.FIRST_RENDER);renderAll();return value;},
         postRender(value){startupTestHook(BOOTSTRAP_STAGES.POST_RENDER);runtimeExtensions?.afterRender();runtimeExtensions?.start();return value;},
       },
