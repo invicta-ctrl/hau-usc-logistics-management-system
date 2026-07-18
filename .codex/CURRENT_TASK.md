@@ -3,9 +3,10 @@
 - **Task ID:** `SLICE-13-STAGING-OPERATIONAL-ACCEPTANCE`
 - **Original instruction:** continue from accepted Phase 4 through the remaining
   master program until complete or a genuine owner-action blocker.
-- **Routing envelope:** `INTENT: RELEASE_ACCEPTANCE`; `MODE: readiness`;
+- **Routing envelope:** `INTENT: BUG_FIX` with secondary
+  `RELEASE_ACCEPTANCE`; `MODE: execute`;
   `TARGET: Slice 13 full staging operational acceptance`; `RISK: critical`;
-  `SKILLS: none (repository-native readiness tooling)`;
+  `SKILLS: browser:control-in-app-browser and google-drive:google-sheets`;
   `DELIVERABLE: signed staging evidence or an exact dependency block`;
   `STOP CONDITIONS: unnamed owner/resource/tester, absent fixture or rollback,
 privacy/authorization ambiguity, external action outside explicit category
@@ -35,6 +36,12 @@ approval, P0/P1, target drift, or any integrity failure`.
   matrix, stop conditions, and the smallest complete unblock request.
 - **Current bounded work:** complete the remaining Gate E/F rows without
   bypassing canonical authorization, self-escalation, or reviewer separation.
+- **Gate E incident repair:** live progressive bootstrap exposed one unresolved
+  legacy handling value that the full-bootstrap DTO already mapped safely but
+  the progressive DTO validated strictly. Repair only that read projection to
+  fail closed as non-circulating, add regression coverage, deploy an isolated
+  immutable candidate, and repeat accepted-version compatibility before any
+  near-live reactivation.
 - **Repository checkpoint:** authorization scope repair
   `9b7e627798a8939efd9e043484145bb7d91eb8bb`; full local gate is 39 Vitest
   files / 323 tests and PR #7 checks are green.

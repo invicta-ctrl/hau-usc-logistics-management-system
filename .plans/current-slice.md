@@ -1,10 +1,27 @@
 # HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
 
 CURRENT SLICE: Slice 13 - Full staging operational acceptance
-CURRENT STAGE: SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT
-LAST UPDATED: 2026-07-16 (Asia/Manila)
+CURRENT STAGE: SLICE_13_GATE_E_PROGRESSIVE_BOOTSTRAP_REPAIR
+LAST UPDATED: 2026-07-18 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
+
+## Gate E progressive-bootstrap repair amendment
+
+- Live acceptance identified one unresolved legacy `Handling` placeholder in
+  the staging item master. The established full-bootstrap read DTO already
+  maps unknown handling and lending policy to `NON_CIRCULATING` and
+  `NOT_AVAILABLE_FOR_LENDING`, but the newer paged bootstrap DTO called strict
+  mutation validation and failed the entire active module.
+- Authorized repair scope: make the paged read projection use the same
+  conservative mapping, retain strict validation for catalog writes and
+  lending decisions, add a focused regression test, rebuild deterministic
+  artifacts, prove all repository gates, push the focused commit, publish a
+  new isolated immutable test version, and retest accepted-pointer
+  compatibility before near-live activation.
+- Non-goals: no direct item-row correction, no inventory transaction, no
+  permission override, no accepted-pointer move, no production action, and no
+  deletion of ledger, audit, history, evidence, or error records.
 
 ## Authorized repository packaging adjunct
 

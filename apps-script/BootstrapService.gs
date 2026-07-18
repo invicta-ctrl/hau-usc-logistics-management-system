@@ -259,6 +259,7 @@ function bootstrapEventDto_(row, requestOnly) {
 function bootstrapInventoryDto_(row, indexes) {
   var onHand = indexes ? Number(indexes.onHand[row.Item_ID] || 0) : Number(row.Opening_Qty || 0);
   var reserved = indexes ? Number(indexes.reserved[row.Item_ID] || 0) : 0;
+  var handling = bootstrapHandling_(row.Handling);
   return {
     id: row.Item_ID,
     name: row.Item_Name,
@@ -267,8 +268,8 @@ function bootstrapInventoryDto_(row, indexes) {
     stockArea: row.Stock_Area,
     catalogType: row.Catalog_Type || normalizeCatalogType_('', row.Stock_Area),
     storageLocation: row.Storage_Location || '',
-    handling: row.Handling,
-    handlingCode: normalizeHandling_(row.Handling),
+    handling: handling,
+    handlingCode: handling,
     unit: row.Unit,
     openingOnHand: Number(row.Opening_Qty || 0),
     onHand: onHand,
@@ -276,7 +277,7 @@ function bootstrapInventoryDto_(row, indexes) {
     availableToPromise: onHand - reserved,
     status: row.Status,
     reorderThreshold: Number(row.Reorder_Threshold || 0),
-    lendingAudience: effectiveLendingAudience_(row),
+    lendingAudience: bootstrapLendingAudience_(row),
     defaultLoanDays: row.Default_Loan_Days === '' ? '' : Number(row.Default_Loan_Days || 0),
     maximumLoanQuantity: row.Maximum_Loan_Qty === '' ? '' : Number(row.Maximum_Loan_Qty || 0),
     approvalRequired: booleanValue_(row.Approval_Required, true),

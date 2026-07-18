@@ -48,7 +48,7 @@ function gasContext() {
       Event_ID: 'SYNTHETIC-EVENT-002', Event_Series_ID: 'SYNTHETIC-SERIES-002', Series_Code: 'SYN-002', Event_Series_Name: 'Other Series', Event_Name: 'Other Event', Start_At: '2026-07-21T08:00:00Z', End_At: '2026-07-21T09:00:00Z', Venue: 'Other Venue', Owner_Committee: 'Other Committee', Status: 'ACTIVE',
     }])],
     ['01_ITEM_MASTER', sheet('01_ITEM_MASTER', ['Item_ID', 'Item_Name', 'Aliases', 'Category', 'Stock_Area', 'Handling', 'Unit', 'Status'], [{
-      Item_ID: 'SYNTHETIC-ITEM-001', Item_Name: 'Synthetic Item', Aliases: 'synthetic', Category: 'Office Supplies', Stock_Area: 'Inventory', Handling: 'Consumable', Unit: 'piece', Status: 'ACTIVE',
+      Item_ID: 'SYNTHETIC-ITEM-001', Item_Name: 'Synthetic Item', Aliases: 'synthetic', Category: 'Office Supplies', Stock_Area: 'Inventory', Handling: 'TO_CLASSIFY', Unit: 'piece', Status: 'ACTIVE',
     }])],
     ['EMPTY', sheet('EMPTY', ['Synthetic_Key'])],
   ]);
@@ -150,6 +150,11 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     const context = gasContext();
     const internalResponse = context.apiGetBootstrapModule_({ requestOnly: false, module: 'request', page: 1, pageSize: 1 });
     expect(internalResponse.cache).toEqual({ safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 });
+    expect(internalResponse.data.inventoryItems[0]).toMatchObject({
+      handling: 'NON_CIRCULATING',
+      handlingCode: 'NON_CIRCULATING',
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+    });
     const response = context.apiGetBootstrapModule_({ requestOnly: true, module: 'request', page: 1, pageSize: 1 });
 
     expect(response.module).toBe('request');
