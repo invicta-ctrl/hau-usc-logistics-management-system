@@ -14,7 +14,7 @@ approval, P0/P1, target drift, or any integrity failure`.
 - **Verified current state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
   on `integration/v0.5-baseline`; source checkpoint
-  `9b7e627798a8939efd9e043484145bb7d91eb8bb` is pushed at parity and
+  `4211711c78ce382a54b57a96aca01d17252ffd6c` is pushed at parity and
   draft PR #7 passes `validate`, `verify`, and `browser-smoke`.
 - **Accepted dependency:** Slice 12 implementation
   `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is remotely green after final
@@ -42,19 +42,25 @@ approval, P0/P1, target drift, or any integrity failure`.
   fail closed as non-circulating, add regression coverage, deploy an isolated
   immutable candidate, and repeat accepted-version compatibility before any
   near-live reactivation.
-- **Repository checkpoint:** authorization scope repair
-  `9b7e627798a8939efd9e043484145bb7d91eb8bb`; full local gate is 39 Vitest
+- **Repository checkpoint:** progressive bootstrap fail-closed repair
+  `4211711c78ce382a54b57a96aca01d17252ffd6c`; full local gate is 39 Vitest
   files / 323 tests and PR #7 checks are green.
+- **Recovery action:** the accepted Version 18 pointer was recovered under the
+  approved rollback authority to verified immutable Version 13 after the
+  legacy progressive-bootstrap incident. Internal and requester-only modes
+  pass; immutable Version 12 is the separately verified backup. Isolated
+  Version 25 is restored as the non-accepted repair candidate.
 - **Actions not performed after blocker:** no operational review, reservation,
-  receipt, release, lending, evidence upload, accepted-pointer move, PR merge,
-  `main`, production, hosting, or database action.
+  receipt, release, lending, evidence upload, PR merge, `main`, production,
+  hosting, or database action. The accepted-pointer move was recovery only.
 - **Current stage:** `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED`.
 - **Latest owner instruction:** proceed through full private demo deployment;
   the owner subsequently supplied and confirmed the named owner/operator,
   workbook/folder labels, tester/signatory mapping, capacity, live session,
   and all seven restricted Drive facts in the private authorization record.
 - **Private package state:** valid through Gate F. Exact 39-file parity,
-  isolated Version 24, accepted Version 18, rollback Version 13, five
+  isolated Version 25, accepted current demo Version 13, verified backup
+  Version 12, five
   reconciled access rows, authorization v2, and current Gate E evidence are
   recorded privately without exposing identifiers.
 - **Exact unblock:** provide one distinct signed-in institutional DOL

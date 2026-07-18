@@ -2,15 +2,32 @@
 
 ## Unreleased - Slice 13 Gate D completion and Gate E checkpoint
 
+- Repaired the progressive bootstrap read projection so unresolved legacy
+  handling and lending-policy values fail closed consistently with the full
+  bootstrap, while mutation validation remains strict. Commit `4211711`
+  passes 39 Vitest files / 323 tests, full Playwright, and PR #7 `validate`,
+  `verify`, and `browser-smoke`; generated artifact hashes are unchanged.
+- During bounded near-live activation, accepted Version 18 exposed the legacy
+  projection failure. The flag was immediately restored to manual-only,
+  temporary audited runners were removed, and exact 39-file parity was
+  re-proved without changing an item row or inventory ledger.
+- Verified immutable Versions 13 and 12 in both internal and requester-only
+  modes, recovered the accepted current-demo pointer to Version 13, and
+  designated Version 12 as the distinct verified backup. Isolated Version 25
+  retains the repair candidate; Version 18 is preserved as incident evidence.
+- Completed the protected private authorization record with the recovered
+  current-demo and backup labels; it validates through Gate F and keeps all
+  private identifiers outside Git.
+
 - Completed private authorization and Gates B-D against the owner-approved
   current demo. Created and verified the launch backup, additive schema,
   seven restricted Drive mappings, migration dry run, reconciliation, and
   canonical triggers without applying a migration or touching production.
 - Deployed the reviewed source only to an isolated test deployment, proved
   exact 39-file pull-back parity, preserved owner-only access, and retained
-  accepted Version 18 plus rollback Version 13.
+  immutable versions needed for incident recovery and comparison.
 - Repaired revision-scoped bootstrap performance and canonical authorization
-  mapping. Source checkpoint `9b7e627798a8939efd9e043484145bb7d91eb8bb`
+  mapping. The earlier checkpoint `9b7e627798a8939efd9e043484145bb7d91eb8bb`
   passes 39 Vitest files / 323 tests and GitHub `validate`, `verify`, and
   `browser-smoke`.
 - Activated authorization v2 after a clean mapping dry run. Five access rows

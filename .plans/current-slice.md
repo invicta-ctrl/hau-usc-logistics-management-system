@@ -1,7 +1,7 @@
 # HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
 
 CURRENT SLICE: Slice 13 - Full staging operational acceptance
-CURRENT STAGE: SLICE_13_GATE_E_PROGRESSIVE_BOOTSTRAP_REPAIR
+CURRENT STAGE: SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED
 LAST UPDATED: 2026-07-18 (Asia/Manila)
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
@@ -20,8 +20,28 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   new isolated immutable test version, and retest accepted-pointer
   compatibility before near-live activation.
 - Non-goals: no direct item-row correction, no inventory transaction, no
-  permission override, no accepted-pointer move, no production action, and no
-  deletion of ledger, audit, history, evidence, or error records.
+  permission override, no non-recovery accepted-pointer move, no production
+  action, and no deletion of ledger, audit, history, evidence, or error
+  records.
+
+### Repair and recovery result
+
+- Repair commit `4211711c78ce382a54b57a96aca01d17252ffd6c` is pushed at
+  parity; 39 Vitest files / 323 tests, full Playwright, `validate`, `verify`,
+  and `browser-smoke` pass. Immutable isolated Version 25 contains the repair
+  with exact 39-file pull-back parity and the owner-only manifest preserved.
+- Near-live activation exposed the accepted Version 18 compatibility failure;
+  the flag was immediately restored to manual-only and both temporary audited
+  runners were deleted. No item row or inventory ledger was changed.
+- Recovery rehearsal proved internal and requester-only behavior on immutable
+  Versions 13 and 12. The accepted current-demo pointer was then recovered to
+  Version 13; a fresh internal load and a post-propagation requester-only load
+  pass. Version 12 is the distinct verified backup. Version 18 is retained as
+  incident evidence, not as a rollback target.
+- The protected private authorization package now names the recovered current
+  demo and backup and validates through Gate F. The isolated pointer is
+  restored to Version 25 for continued investigation; one later transient
+  read-only startup failure prevents signing it as accepted.
 
 ## Authorized repository packaging adjunct
 
