@@ -97,6 +97,34 @@ function bootstrapUtf8Bytes_(value) {
   return unescape(encodeURIComponent(String(value || ''))).length;
 }
 
+function bootstrapCacheToken_(value) {
+  var text = String(value || ''), hash = 2166136261;
+  for (var index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function bootstrapModuleCacheKey_(module, command, session, revision) {
+  var authorization = session.authorization || {};
+  return 'HAU_MODULE:' + bootstrapCacheToken_(JSON.stringify({
+    module: module,
+    page: command.page || 1,
+    pageSize: command.pageSize || 10,
+    query: command.query || '',
+    filter: command.filter || '',
+    committeeId: command.committeeId || '',
+    requestOnly: session.requestOnly,
+    revision: revision.revision,
+    userId: session.user && session.user.User_ID || 'PUBLIC',
+    roleId: authorization.roleId || session.user && session.user.Role || '',
+    authorizationRevision: authorization.authorizationRevision || '',
+    committeeIds: authorization.committeeIds || [],
+    capabilities: authorization.capabilities || []
+  }));
+}
+
 function bootstrapBoundedResponse_(response) {
   var payloadBytes = 0;
   response.metrics.payloadBytes = 0;
@@ -382,10 +410,23 @@ function bootstrapModuleResponse_(command, stats) {
   setSharedReadCacheRevision_(revision.revision);
   var session = bootstrapSession_(command || {});
   if (!bootstrapModuleAllowed_(module, session)) throw appError_('FORBIDDEN', 'This workspace module is not available for the current session.', false);
+  var responseCache = typeof CacheService !== 'undefined' ? CacheService.getScriptCache() : null;
+  var responseCacheKey = bootstrapModuleCacheKey_(module, command || {}, session, revision);
+  var cachedResponse = responseCache ? responseCache.get(responseCacheKey) : null;
+  if (cachedResponse) {
+    try {
+      var parsedResponse = JSON.parse(cachedResponse);
+      if (parsedResponse.contract === HAU_BOOTSTRAP_MODULE_CONTRACT_ && parsedResponse.contractVersion === HAU_BOOTSTRAP_VERSION_ && parsedResponse.module === module && parsedResponse.requestOnly === session.requestOnly) {
+        stats.cacheHits += 1;
+        parsedResponse.metrics = { readCount: stats.readCount, cacheHits: stats.cacheHits };
+        return bootstrapBoundedResponse_(parsedResponse);
+      }
+    } catch (_error) {}
+  }
   var built = bootstrapModuleData_(module, command || {}, session);
   var revisionDto = session.internal ? { revision: revision.revision, updatedAt: revision.updatedAt } : null;
   var scopeState = session.internal ? revisionScopeMap_(revisionDto)[module] : null;
-  return bootstrapBoundedResponse_({
+  var response = bootstrapBoundedResponse_({
     contract: HAU_BOOTSTRAP_MODULE_CONTRACT_,
     contractVersion: HAU_BOOTSTRAP_VERSION_,
     appVersion: HAU_CONFIG.APP_VERSION,
@@ -401,6 +442,8 @@ function bootstrapModuleResponse_(command, stats) {
     cache: built.cache,
     metrics: { readCount: stats.readCount, cacheHits: stats.cacheHits }
   });
+  if (responseCache) { try { var serialized = JSON.stringify(response); if (serialized.length <= 90000) responseCache.put(responseCacheKey, serialized, 300); } catch (_error) {} }
+  return response;
 }
 
 function apiGetBootstrapModule_(command) {

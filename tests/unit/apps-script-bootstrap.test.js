@@ -153,6 +153,17 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     expect(() => context.apiGetBootstrapModule_({ requestOnly: true, module: 'request', pageSize: 51 })).toThrow(/page size/i);
   });
 
+  it('reuses a revision-and-authorization-keyed module response', () => {
+    const context = gasContext();
+    const command = { requestOnly: false, module: 'request', page: 1, pageSize: 1 };
+    const first = context.apiGetBootstrapModule_(command);
+    const second = context.apiGetBootstrapModule_(command);
+
+    expect(first.data).toEqual(second.data);
+    expect(second.metrics.cacheHits).toBeGreaterThan(first.metrics.cacheHits);
+    expect(second.metrics.readCount).toBeLessThan(first.metrics.readCount);
+  });
+
   it('applies server-side entity scope before pagination and query results', () => {
     const context = gasContext();
     context.resolveRequesterUser_ = () => ({
