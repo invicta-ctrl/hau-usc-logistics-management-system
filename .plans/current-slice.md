@@ -26,10 +26,12 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
 
 ### Repair and recovery result
 
-- Repair commit `4211711c78ce382a54b57a96aca01d17252ffd6c` is pushed at
+- Repair commit `4211711c78ce382a54b57a96aca01d17252ffd6c` and mobile
+  containment commit `24ef0b9d435eca1522e9b72dc449167453266618` are pushed at
   parity; 39 Vitest files / 323 tests, full Playwright, `validate`, `verify`,
-  and `browser-smoke` pass. Immutable isolated Version 25 contains the repair
-  with exact 39-file pull-back parity and the owner-only manifest preserved.
+  and `browser-smoke` pass. Immutable isolated Version 26 contains both
+  repairs with exact 39-file pull-back parity and the owner-only manifest
+  preserved.
 - Near-live activation exposed the accepted Version 18 compatibility failure;
   the flag was immediately restored to manual-only and both temporary audited
   runners were deleted. No item row or inventory ledger was changed.
@@ -40,8 +42,27 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED; SLICES 4-12 REQUIRE CURRENT ACCEPTANCE
   incident evidence, not as a rollback target.
 - The protected private authorization package now names the recovered current
   demo and backup and validates through Gate F. The isolated pointer is
-  restored to Version 25 for continued investigation; one later transient
-  read-only startup failure prevents signing it as accepted.
+  restored to Version 26 for continued investigation. It remains non-accepted
+  because the full Gate E matrix is incomplete, not because of source drift.
+
+### Version 26 continuation evidence
+
+- Exact live widths 320, 390, 768, 1024, 1366, and 1440 reach READY without
+  document-level overflow or unlabeled visible controls. The protected visual
+  baseline is unchanged; the 320 px Reference Administration regression is
+  contained only through the approved runtime extension.
+- Five warm internal starts complete in 4.413-5.701 seconds with zero failures.
+  The signed-in in-app browser was the only available browser, so COMPAT-01
+  remains partial.
+- Two isolated sessions reached near-live state during a bounded rehearsal,
+  but the monitor timed out before exact propagation samples returned. The
+  remote flag was disabled, both sessions returned to manual refresh only,
+  the temporary runner was removed, and a fresh pull matched all 39 candidate
+  files with zero differences or extras. SYNC-01 is not claimed as a pass.
+- The private current-demo authorization record now includes current Drive
+  label readback, the owner confirmation for all seven restricted mappings,
+  owner/operator tester and signatory mapping, sufficient capacity, and the
+  active institutional session; deterministic validation remains Gate F.
 
 ## Authorized repository packaging adjunct
 

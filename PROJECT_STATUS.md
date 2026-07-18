@@ -6,12 +6,12 @@
 - Date: `2026-07-18`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
-- Current repository checkpoint: Slice 13 progressive-bootstrap repair `4211711c78ce382a54b57a96aca01d17252ffd6c` is pushed and CI-green; Gates A-D are complete and Gate E is partially complete
+- Current repository checkpoint: Slice 13 mobile containment `24ef0b9d435eca1522e9b72dc449167453266618` is pushed and CI-green on top of progressive-bootstrap repair `4211711c78ce382a54b57a96aca01d17252ffd6c`; Gates A-D are complete and Gate E is partially complete
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: accepted current demo recovered to immutable Version 13; immutable Version 12 is the separately verified backup; isolated repair candidate Version 25 retains exact-source parity
+- Current staging deployment: accepted current demo recovered to immutable Version 13; immutable Version 12 is the separately verified backup; isolated repair candidate Version 26 retains exact-source parity
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
 - Live readiness: Gates A-D pass; Gate E trace/privacy/performance/private-owner load rows pass, but operational role workflows and separation-of-duties evidence require distinct authenticated institutional test identities; production remains untouched.
@@ -21,7 +21,7 @@ Always verify the current remote head and CI because documentation commits may f
 ## Current Slice 13 - Full staging operational acceptance
 
 - Stage: `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED` from
-  source checkpoint `4211711c78ce382a54b57a96aca01d17252ffd6c` on
+  source checkpoint `24ef0b9d435eca1522e9b72dc449167453266618` on
   `integration/v0.5-baseline`; local/upstream parity and PR #7 `validate`,
   `verify`, and `browser-smoke` are green.
 - Ready: exact repository candidate, generated hashes, automated validation,
@@ -59,11 +59,18 @@ Always verify the current remote head and CI because documentation commits may f
   `FOR_REVIEW` with one line, one audit/history chain, one revision advance,
   zero stock movement, and zero error rows. All other must-pass rows remain
   unsigned unless independently completed.
+- Version 26 evidence: all six exact target widths reach READY without page
+  overflow or unlabeled visible controls; five warm starts complete in
+  4.413-5.701 seconds; a bounded two-session near-live rehearsal was restored
+  to manual-only; and a fresh pull matches all 39 candidate files with no
+  temporary runner. Exact sync latency, multi-browser, and manual accessibility
+  evidence remain unsigned.
 - Incident recovery: a live progressive-bootstrap compatibility failure on
   accepted Version 18 was repaired in source and the accepted pointer was
   recovered to verified Version 13. Version 12 independently passes internal
-  and requester-only checks. Isolated Version 25 contains the source repair;
-  one later transient read-only startup failure remains under investigation.
+  and requester-only checks. Isolated Version 26 contains the source and
+  mobile repairs and remains non-accepted until every required Gate E row is
+  signed.
 - Actions not performed after the operational-role blocker: no review,
   reservation, receipt, release, lending, evidence upload, production action,
   PR merge, `main`, hosting, or database action. The only accepted-pointer move

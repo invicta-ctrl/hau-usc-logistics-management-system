@@ -2,6 +2,22 @@
 
 ## Unreleased - Slice 13 Gate D completion and Gate E checkpoint
 
+- Contained the live 320 px Reference Administration overflow through the
+  approved runtime-extension layer and added a Chromium 320 px regression.
+  Commit `24ef0b9` passes 39 Vitest files / 323 tests, full Playwright, and PR
+  #7 `validate`, `verify`, and `browser-smoke`; the original visual baseline is
+  unchanged.
+- Published immutable isolated Version 26 and verified exact live widths 320,
+  390, 768, 1024, 1366, and 1440 without document-level overflow or unlabeled
+  visible controls. Five warm starts complete in 4.413-5.701 seconds.
+- Rehearsed near-live mode in two isolated sessions, then restored both to
+  manual refresh only. Exact sync latency was not captured, so SYNC-01 remains
+  partial. The temporary runner was removed and a fresh pull matched all 39
+  candidate files with zero differences or extras.
+- Refreshed the protected private authorization record from current Drive
+  label readback and owner confirmation; it retains accepted demo Version 13,
+  rollback Version 12, and validates through Gate F without exposing private
+  identifiers.
 - Repaired the progressive bootstrap read projection so unresolved legacy
   handling and lending-policy values fail closed consistently with the full
   bootstrap, while mutation validation remains strict. Commit `4211711`
@@ -13,7 +29,7 @@
   re-proved without changing an item row or inventory ledger.
 - Verified immutable Versions 13 and 12 in both internal and requester-only
   modes, recovered the accepted current-demo pointer to Version 13, and
-  designated Version 12 as the distinct verified backup. Isolated Version 25
+  designated Version 12 as the distinct verified backup. Isolated Version 26
   retains the repair candidate; Version 18 is preserved as incident evidence.
 - Completed the protected private authorization record with the recovered
   current-demo and backup labels; it validates through Gate F and keeps all

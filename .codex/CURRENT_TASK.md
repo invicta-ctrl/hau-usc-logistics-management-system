@@ -14,7 +14,7 @@ approval, P0/P1, target drift, or any integrity failure`.
 - **Verified current state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
   on `integration/v0.5-baseline`; source checkpoint
-  `4211711c78ce382a54b57a96aca01d17252ffd6c` is pushed at parity and
+  `24ef0b9d435eca1522e9b72dc449167453266618` is pushed at parity and
   draft PR #7 passes `validate`, `verify`, and `browser-smoke`.
 - **Accepted dependency:** Slice 12 implementation
   `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is remotely green after final
@@ -42,14 +42,22 @@ approval, P0/P1, target drift, or any integrity failure`.
   fail closed as non-circulating, add regression coverage, deploy an isolated
   immutable candidate, and repeat accepted-version compatibility before any
   near-live reactivation.
-- **Repository checkpoint:** progressive bootstrap fail-closed repair
-  `4211711c78ce382a54b57a96aca01d17252ffd6c`; full local gate is 39 Vitest
-  files / 323 tests and PR #7 checks are green.
+- **Repository checkpoint:** progressive-bootstrap fail-closed repair
+  `4211711c78ce382a54b57a96aca01d17252ffd6c` plus mobile Reference
+  Administration containment `24ef0b9d435eca1522e9b72dc449167453266618`;
+  the full local gate is 39 Vitest files / 323 tests and PR #7 checks are
+  green on the current commit.
 - **Recovery action:** the accepted Version 18 pointer was recovered under the
   approved rollback authority to verified immutable Version 13 after the
   legacy progressive-bootstrap incident. Internal and requester-only modes
   pass; immutable Version 12 is the separately verified backup. Isolated
-  Version 25 is restored as the non-accepted repair candidate.
+  Version 26 is the non-accepted repair candidate.
+- **Latest identity-independent evidence:** Version 26 reaches READY without
+  page overflow at 320, 390, 768, 1024, 1366, and 1440 px; five warm loads
+  complete in 4.413-5.701 seconds; two temporary near-live sessions were
+  restored to manual-only; and the clean remote head pulls back at exact
+  39/39 parity with no verification runner. Multi-browser, exact sync latency,
+  manual screen-reader, and high-contrast evidence remain unsigned.
 - **Actions not performed after blocker:** no operational review, reservation,
   receipt, release, lending, evidence upload, PR merge, `main`, production,
   hosting, or database action. The accepted-pointer move was recovery only.
@@ -59,7 +67,7 @@ approval, P0/P1, target drift, or any integrity failure`.
   workbook/folder labels, tester/signatory mapping, capacity, live session,
   and all seven restricted Drive facts in the private authorization record.
 - **Private package state:** valid through Gate F. Exact 39-file parity,
-  isolated Version 25, accepted current demo Version 13, verified backup
+  isolated Version 26, accepted current demo Version 13, verified backup
   Version 12, five
   reconciled access rows, authorization v2, and current Gate E evidence are
   recorded privately without exposing identifiers.
