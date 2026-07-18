@@ -1,5 +1,16 @@
 import { expect, test } from '@playwright/test';
 
+test('reference administration stays within the 320 px viewport', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-320', 'The smallest supported viewport is the regression target.');
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await page.locator('[data-admin-view="referenceAdmin"]').click();
+  await expect(page.locator('#referenceAdmin')).toHaveClass(/active/);
+  await expect.poll(
+    () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+  ).toBeLessThanOrEqual(1);
+});
+
 test('authorized administrator uses controlled reference workspace with before-after confirmation', async ({ page }, testInfo) => {
   test.skip(!['chromium-390', 'chromium-1366'].includes(testInfo.project.name), 'One mobile and one desktop proof are sufficient.');
   await page.goto('/');
