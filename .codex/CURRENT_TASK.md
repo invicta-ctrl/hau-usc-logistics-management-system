@@ -10,75 +10,50 @@
   `STOP CONDITIONS: unnamed owner/resource/tester, absent fixture or rollback,
 privacy/authorization ambiguity, external action outside explicit category
 approval, P0/P1, target drift, or any integrity failure`.
-- **Verified starting state:** authoritative checkout
+- **Verified current state:** authoritative checkout
   `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`
-  on `integration/v0.5-baseline` at Slice 12 evidence checkpoint
-  `569d2a787585dbdf68d68c1da1d5440a18a2540a`; local/upstream/PR parity,
-  clean, draft PR #7 open/mergeable. Runs `29477246636` and `29477246392`
-  passed `validate`, `verify`, and `browser-smoke` at the exact checkpoint.
+  on `integration/v0.5-baseline`; source checkpoint
+  `9b7e627798a8939efd9e043484145bb7d91eb8bb` is pushed at parity and
+  draft PR #7 passes `validate`, `verify`, and `browser-smoke`.
 - **Accepted dependency:** Slice 12 implementation
   `a563f2f179b710ac7c0d46a8af05a4349a5e625b` is remotely green after final
   validation and includes bounded near-live behavior required by Slice 13.
 - **Authoritative specification:** accepted planning package Slice 13,
   `docs/LAUNCH_RUNBOOK.md`, `docs/TESTING_AND_ACCEPTANCE.md`, and
   `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
-- **Authorization boundary:** uninterrupted continuation authorizes repository
-  readiness analysis, documentation, focused feature-branch commits/pushes,
-  PR metadata, and CI. It does not identify or authorize a specific private
-  staging target, signed-in owner account, backup/setup/migration/seed/test
-  write, upload, deployment, trigger change, or rollback rehearsal.
-- **Readiness result:** private staging clasp candidates and historical
-  deployment evidence exist outside Git, but they are preservation artifacts,
-  not current authority. No current signed acceptance matrix, approved
-  non-personal fixture, named tester roster, current staging owner/operator
-  record, test window, or explicit action-category authorization was found.
-- **Current source requirement:** seven Drive mappings are required: root,
-  receipts, canvass, release, deliverable, lending, and archive. Their private
-  values were not read or exposed.
+- **Authorization boundary:** the protected private package validates through
+  Gate F for the named owner/current demo and all Gate B-F action categories.
+  Production, PR merge, hosting, and database remain outside this slice.
+- **Readiness result:** Gates A-D pass. Gate E trace, privacy, performance, and
+  the approved private-owner load envelope pass; one namespaced public request
+  reached `FOR_REVIEW` with no stock movement.
+- **Current source requirement:** all seven restricted Drive mappings are
+  verified privately; their identifiers remain outside Git and public evidence.
 - **Prepared evidence:** the Slice 13 readiness pack records exact candidate
   traceability, dependency inventory, owner authorization form, ordered gates,
   must-pass functional/security/privacy/sync/performance/accessibility/recovery
   matrix, stop conditions, and the smallest complete unblock request.
-- **Current bounded work:** repository-native private-package initializer and
-  validator implemented with focused CLI/unit coverage and full repository
-  checks; independent review repairs align rollback rehearsal with Gate E and
-  backup-before-setup ordering; final independent verdict is PASS.
-- **Repository checkpoint:** implementation commit
-  `359155051bcd2f0203ca8ab34716431e42a97221` exposed Windows-only unit-fixture
-  paths in Linux CI. Focused repair commit
-  `eecbf8f651facaf10b2122f0d84e4a3f21195d56` uses platform-native absolute
-  paths and is pushed at parity. Run `29479074729` passed `validate`; run
-  `29479074714` passed `verify` and `browser-smoke`.
-- **Actions not performed:** no `clasp`, remote source read, Apps Script call,
-  Sheet/Drive access, backup, setup, migration, seed, trigger, upload,
-  deployment, external mutation, PR merge, `main`, production, hosting, or
-  database action.
-- **Current stage:** `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`.
-- **Latest owner instruction:** the 2026-07-16 task message `i approve all`
-  is recorded privately as `APPROVED` for every Gate B-F external action
-  category. This closes the action-decision portion only; it does not supply
-  or verify identities, targets, fixtures, testers, dates, capacity, access,
-  or safety confirmations.
-- **Private package state:** the repository initializer created the safe
-  out-of-Git record `private-config/staging/slice-13-authorization.json`.
-  Repository/captured-evidence value exclusion is confirmed. A deterministic
-  synthetic-only fixture manifest, private evidence boundary, retention and
-  redaction rules, and current-user/SYSTEM-only ACL are prepared and verified.
-  Safe inventory found six preserved clasp configs resolving to two targets.
-  Two independent backup sets identify the staging fingerprint and production
-  fingerprint consistently. Per the owner's `current demo` instruction, a new
-  protected `private-config/staging/current-demo.clasp.json` is bound to the
-  verified staging fingerprint and confirmed distinct from production; private
-  provenance is recorded without IDs. The validator remains `INVALID`,
-  authorized through `NONE`, only on owner/operator/tester labels, operational
-  and backup workbooks, window, capacity, live session, and seven restricted
-  Drive-mapping facts. No private value was printed or copied into Git.
-- **Exact unblock:** named staging owner/operator; one exact approved private
-  config and safe staging label; approved synthetic/redacted fixture/namespace;
-  named tester-role matrix and
-  business/data/privacy/security/accessibility/deployment signatories; current
-  deployment/rollback labels; window/stop authority; private evidence
-  retention; and storage-headroom confirmation.
+- **Current bounded work:** complete the remaining Gate E/F rows without
+  bypassing canonical authorization, self-escalation, or reviewer separation.
+- **Repository checkpoint:** authorization scope repair
+  `9b7e627798a8939efd9e043484145bb7d91eb8bb`; full local gate is 39 Vitest
+  files / 323 tests and PR #7 checks are green.
+- **Actions not performed after blocker:** no operational review, reservation,
+  receipt, release, lending, evidence upload, accepted-pointer move, PR merge,
+  `main`, production, hosting, or database action.
+- **Current stage:** `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED`.
+- **Latest owner instruction:** proceed through full private demo deployment;
+  the owner subsequently supplied and confirmed the named owner/operator,
+  workbook/folder labels, tester/signatory mapping, capacity, live session,
+  and all seven restricted Drive facts in the private authorization record.
+- **Private package state:** valid through Gate F. Exact 39-file parity,
+  isolated Version 24, accepted Version 18, rollback Version 13, five
+  reconciled access rows, authorization v2, and current Gate E evidence are
+  recorded privately without exposing identifiers.
+- **Exact unblock:** provide one distinct signed-in institutional DOL
+  operational test identity and one distinct access-review identity. The sole
+  administrator cannot review/receive/release/lend or approve its own access
+  expansion; do not bypass those controls with direct overrides.
 - **Downstream gate:** Slice 14 cannot begin without signed Slice 13 acceptance;
   Slices 15-16 remain dependent on a stable measured V1 and later owner
   decisions.

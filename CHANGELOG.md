@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased - Slice 13 Gate D completion and Gate E checkpoint
+
+- Completed private authorization and Gates B-D against the owner-approved
+  current demo. Created and verified the launch backup, additive schema,
+  seven restricted Drive mappings, migration dry run, reconciliation, and
+  canonical triggers without applying a migration or touching production.
+- Deployed the reviewed source only to an isolated test deployment, proved
+  exact 39-file pull-back parity, preserved owner-only access, and retained
+  accepted Version 18 plus rollback Version 13.
+- Repaired revision-scoped bootstrap performance and canonical authorization
+  mapping. Source checkpoint `9b7e627798a8939efd9e043484145bb7d91eb8bb`
+  passes 39 Vitest files / 323 tests and GitHub `validate`, `verify`, and
+  `browser-smoke`.
+- Activated authorization v2 after a clean mapping dry run. Five access rows
+  reconcile with zero duplicate IDs, four mapped active subjects, one inactive
+  synthetic revocation subject, complete audit/history evidence, and no
+  activation error row.
+- Gate E currently passes trace, request-only privacy, performance, and the
+  approved private-owner load envelope. One synthetic public request reached
+  `FOR_REVIEW` with no stock movement and reconciled audit/history/revision.
+- Gate E is not complete: the sole authenticated administrator is correctly
+  denied operational review/reserve/receive/release/lending capabilities, and
+  self-escalation/separation rules prohibit using that same identity as its own
+  operational reviewer. Distinct institutional operational and access-review
+  identities are required; no control was bypassed.
+
 ## Unreleased - Guided offline demo and usability review
 
 - Added `hau-usc-logistics-guided-demo.html`, a generated self-contained

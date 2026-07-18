@@ -3,32 +3,22 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
-- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; synchronized ambiguity checkpoint `60efaee3d4c75dd0b9912d74d22ddce715bf37f6` is pushed and CI-green; the private target-binding follow-up remains outside Git and this block records only safe state.
-- **Current phase/stage:** Slice 13 remains `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT`; private package is `PARTIALLY_COMPLETED_CURRENT_DEMO_BOUND`.
-- **Accepted scope:** record the owner task message as approval for every Gate B-F action category, initialize/validate the private Slice 13 authorization package outside Git, and begin remote preflight only if the package passes. No target, identity, fixture, tester, confirmation, or external result may be guessed.
-- **Completed work:** initialized the private authorization record; approved all action categories; created the deterministic synthetic fixture and private evidence boundary; hardened ACLs; compared six clasp configs and two independent backup sets by safe fingerprint; created protected `private-config/staging/current-demo.clasp.json` matching verified staging and distinct from production; bound expected Version 18 / rollback Version 13 labels for Gate B verification; and recorded private target provenance without IDs.
-- **Files changed by purpose:** only safe repository status/checkpoint documents are changed in Git; the incomplete authorization record exists only under the consolidated private-config root. No application source, generated artifact, Apps Script source, or external system changed.
-- **Tests verified at current SHA:** checkpoint `3b95c7f` is green in runs
-  `29485619985` (`validate`) and `29485620042` (`verify`, `browser-smoke`).
-  The unchanged implementation also passed `npm run check`: 39 Vitest files /
-  317 tests, a 34-module build, 33 Apps Script sources / 55 functions,
-  deterministic generated parity, and standalone verification. Full Playwright
-  passes 70 with 128 intentional skips and 0 failures across six viewport
-  projects; focused 390 px and 1366 px offline proofs traverse all seven tour
-  steps, every control, and restart. Visual review at both widths is clean;
-  `git diff --check` passes. Independent read-only review is PASS after order,
-  exact-artifact parity, and browser-coverage repairs. Two consecutive builds
-  retain exact byte/hash parity across every generated artifact.
-- **Generated artifacts:** the unchanged `dist/index.html` and all-in-one shareable remain 411,124 bytes / SHA-256 `9444e972eb16f0de9adde79f05c97bd35d0d4a51487376110f3b67c3238327e9`. The guided demo is 419,215 bytes / SHA-256 `01a056fc845728f5ac8a4d7bf41451ab2155b1f9aef46c739e5aaa2fbd7730dd`; direct module hashes remain at the green `472013d` checkpoint.
-- **Remote evidence:** implementation `9b452bf`, demo evidence `edfa5a5`, and authorization checkpoint `3b95c7f7dca761f235dd52d365cedb5c64ddc060` are pushed at parity. Latest runs `29485619985` and `29485620042` pass `validate`, `verify`, and `browser-smoke`. PR #7 is open, draft, and mergeable.
-- **External actions:** none. No `clasp`, remote Google read, backup, setup, migration, seed, trigger, upload, deployment, staging write, production action, merge, `main`, hosting, or database action.
-- **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git.
-- **Rollback:** no external state exists to roll back. Preserve the private approval record as audit evidence; if authorization is withdrawn, mark the affected action decisions `DENIED` or `PENDING` and rerun the validator. Do not delete accepted history.
-- **Blocker:** action categories, exact current-demo Apps Script target, expected deployment/rollback labels, synthetic fixture, evidence boundary, retention/redaction, and local ACL are complete, but the package remains `INVALID`/authorized through `NONE`. Named owner/operator/tester/signatory labels, operational and backup workbooks, window/stop authority, capacity, live operator session, and seven Drive-restriction confirmations remain incomplete.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; source checkpoint `9b7e627798a8939efd9e043484145bb7d91eb8bb` is pushed at parity and PR #7 checks are green.
+- **Current phase/stage:** `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED`; Gates A-D pass on isolated Version 24.
+- **Accepted scope:** owner-approved Gate B-F execution against the named private current demo; production, PR merge, hosting, and database remain outside this slice.
+- **Completed work:** private authorization through Gate F; read-only preflight; launch backup; schema/Drive/migration-dry-run/reconciliation/triggers; exact source push/pull; isolated Version 24; safe synthetic access seed; duplicate-ID repair; revocation proof; canonical authorization v2 activation; trace/privacy/performance/private-owner load acceptance; and one namespaced request submitted for review with no stock movement.
+- **Files changed by purpose:** source repair scopes committee resolution to committee-bound roles; tests cover legacy labels on global/self roles; safe repository status documents record the live checkpoint. Private IDs, contacts, configs, and evidence remain outside Git.
+- **Tests verified at current SHA:** source checkpoint `9b7e627` passes `npm run check` with 39 Vitest files / 323 tests, build, 33 Apps Script sources / 55 functions, deterministic generated parity, standalone verification, guided demo, and seven module shareables. PR #7 `validate`, `verify`, and `browser-smoke` pass.
+- **Generated artifacts:** `dist/index.html` remains 411,157 bytes / SHA-256 `d8b8bab34ad3bd61b204d4587da7de979a3ee5b46a4ffcad85cfa0e4ae31a07a`; Apps Script client remains SHA-256 `4c5cc56134c30a1b746c44b5a4fd33bb80b862e22925fc8cf92cb9b52878abe2`.
+- **Remote evidence:** 39/39 exact pull-back parity, owner-only manifest, isolated Version 24, accepted Version 18 unchanged and compatible after v2 activation, rollback Version 13 preserved, five reconciled access rows, zero duplicate IDs, four mapped active rows, one inactive synthetic row, and no activation/request error row.
+- **External actions:** staging-only actions above occurred. No operational review/reservation/receipt/release/lending/evidence-upload after the blocker; no accepted pointer move, production, merge, `main`, hosting, or database action.
+- **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git; immutable audit/history rows are retained.
+- **Rollback:** accepted Version 18 and rollback Version 13 remain available. Stop writes and preserve all append-only rows; do not delete the synthetic request, audit, history, or access evidence.
+- **Blocker:** one authenticated `ADMINISTRATOR` cannot satisfy operational reviewer capabilities or approve its own permission expansion. Obtain a distinct signed-in institutional DOL operational test identity and a distinct access-review identity; do not bypass self-escalation or separation of duties.
 - **Windows note:** private staging candidate files remain outside Git under the consolidated `private-config` root; do not copy or print their values. The obsolete `D:\Documents\DOL Website GitHub` compatibility shell is unrelated.
-- **Next three actions:** name owner/operator/testers/signatories and operational/backup workbook labels; confirm window, capacity, live session, and seven restricted mappings in the private package; rerun the validator and execute Gate B only after it reports valid through B or later.
-- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count HEAD...@{upstream}`; `npm run staging:authorization:check -- D:\Documents\HAU-USC Logistics\private-config\staging\slice-13-authorization.json`; after a valid package, follow Gate B in `docs/STAGING_OPERATIONAL_ACCEPTANCE.md`.
-- **Prohibited actions:** no guessing a target/owner/tester/data set; no private-config commit/value output; no `clasp` or Google external access before authorization; no PR merge, history rewrite, force-push, archive-tag deletion, production, hosting, or database action.
+- **Next three actions:** add the two distinct institutional test identities; rerun AUTH-01/FUNC-01 and the remaining Gate E rows on isolated Version 24; move the accepted pointer only after every must-pass row is signed.
+- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count 'HEAD...@{upstream}'`; `gh pr checks 7`; validate the private authorization package; resume from the private Gate E checkpoint without repeating Gates B-D.
+- **Prohibited actions:** no self-role override, direct capability grant, reviewer impersonation, deletion of append-only evidence, accepted-pointer move before Gate E/F, PR merge, history rewrite, production, hosting, or database action.
 
 ## Current checkpoint - Slice 6 committed, pushed, and CI verified
 

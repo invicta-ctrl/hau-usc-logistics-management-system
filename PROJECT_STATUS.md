@@ -3,27 +3,27 @@
 ## Current version
 
 - Version: `0.5.0` (Slices 1-3 staging-accepted; Slices 4-12 committed and CI-verified; Phase 2 governance and Phase 3/3.5 consolidation complete; production undeployed)
-- Date: `2026-07-16`
+- Date: `2026-07-18`
 - Branch: `integration/v0.5-baseline`
 - Accepted Slice 12 starting commit: `6fa6222adde5e8314d2defc40e0cd6686fff953b` (Slice 11 final evidence checkpoint)
-- Current repository checkpoint: Slice 13 readiness validator repair `eecbf8f651facaf10b2122f0d84e4a3f21195d56` is pushed/CI-green; the staged product candidate remains Slice 12 evidence commit `569d2a787585dbdf68d68c1da1d5440a18a2540a`; Slice 13 is blocked before external preflight on missing named authority/resources/test inputs
+- Current repository checkpoint: Slice 13 source repair `9b7e627798a8939efd9e043484145bb7d91eb8bb` is pushed and CI-green; Gates A-D are complete on isolated Version 24 and Gate E is partially complete
 - Packaging-repair code checkpoint: `74f2f0f342bc9513681693be0fd542cf1f4d923a`
 - Pull request: draft PR #7, open and unmerged on `integration/v0.5-baseline`; PR #6 was closed automatically by GitHub during the branch rename and is retained as the audit trail
 - Local/demo backend: `mock`
 - Apps Script bundle mode: `apps-script` with explicit Script Property environment
-- Current staging deployment: immutable Version 18 with bootstrap contract v2; Version 13 remains the preserved rollback target and exactly one WEB_APP entry point was verified
+- Current staging deployment: accepted immutable Version 18 remains unchanged; isolated acceptance candidate Version 24 is exact-source verified; Version 13 remains the rollback target
 - Standalone artifact: `dist/index.html`
 - Production deployment: **not performed**
-- Live readiness: Phase E staging acceptance for Slices 1-3 passed; Slices 4-12 are repository-complete but not currently staging-accepted; Slice 13 readiness pack is complete and external prerequisites are missing; production remains untouched.
+- Live readiness: Gates A-D pass; Gate E trace/privacy/performance/private-owner load rows pass, but operational role workflows and separation-of-duties evidence require distinct authenticated institutional test identities; production remains untouched.
 
 Always verify the current remote head and CI because documentation commits may follow the code checkpoint.
 
 ## Current Slice 13 - Full staging operational acceptance
 
-- Stage: `SLICE_13_BLOCKED_BEFORE_EXTERNAL_PREFLIGHT` from Slice 12 evidence
-  checkpoint `569d2a787585dbdf68d68c1da1d5440a18a2540a` on
-  `integration/v0.5-baseline`; local/upstream/PR parity and all three checks
-  green in runs `29477246636` and `29477246392`.
+- Stage: `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED` from
+  source checkpoint `9b7e627798a8939efd9e043484145bb7d91eb8bb` on
+  `integration/v0.5-baseline`; local/upstream parity and PR #7 `validate`,
+  `verify`, and `browser-smoke` are green.
 - Ready: exact repository candidate, generated hashes, automated validation,
   privacy/authorization contracts, rollback-aware runbooks, seven-folder
   source contract, and complete executable readiness/acceptance matrix in
@@ -38,32 +38,30 @@ Always verify the current remote head and CI because documentation commits may f
 - Present but not authority: private staging clasp candidates and historical
   deployment/backup/parity records remain outside Git. They may be used only
   after the owner names the exact current target/config and action categories.
-- Missing: current named owner/operator; approved operational/backup workbooks;
-  tester-role matrix and signatories; test
-  window/stop authority; storage headroom; active operator session; and seven
-  verified restricted Drive mappings.
-- Authorization update: the 2026-07-16 owner task message approves every
-  Gate B-F action category. The private package initializer created the safe
-  out-of-Git record `private-config/staging/slice-13-authorization.json`, and
-  repository/captured-evidence value exclusion is confirmed. The validator
-  now also contains a deterministic synthetic-only fixture, bounded namespace,
-  mutation/retention rules, private evidence boundary, redaction/disposal
-  policy, and verified current-user/SYSTEM-only ACL. A safe local inventory
-  found six preserved clasp configs resolving to two targets. Two independent
-  deployment backup sets consistently identify staging versus production. The
-  owner instruction to use `current demo` is now bound to a newly protected
-  `private-config/staging/current-demo.clasp.json` matching staging and distinct
-  from production; expected Version 18 and rollback Version 13 labels are
-  recorded for Gate B verification. The validator remains `INVALID`,
-  authorized through `NONE`, because owner/operator/tester labels,
-  operational/backup workbook labels, window, capacity, live session, and
-  seven restricted Drive facts are incomplete.
-- External audit result: no current signed acceptance matrix or named tester
-  roster exists in the active workspace. Historical evidence predates Slices
-  4-12 and cannot establish their current staging acceptance.
-- Actions not performed: no `clasp`, remote source read, Apps Script/Sheets/
-  Drive access, backup, setup, migration, seed, trigger, upload, deployment,
-  staging write, production action, PR merge, `main`, hosting, or database.
+- Completed live dependencies: named owner/operator/signatories, approved
+  operational and backup workbooks, acceptance window/stop authority, storage
+  headroom, active operator session, restricted seven-folder mapping, private
+  authorization through Gate F, launch backup, additive schema, Drive,
+  migration dry run, reconciliation, triggers, safe synthetic access seed,
+  revocation proof, authorization v2 activation, and exact isolated deployment.
+- Remaining blocker: the sole authenticated owner is `ADMINISTRATOR`, which is
+  intentionally not an operational reviewer. At least one distinct signed-in
+  DOL operational identity and one distinct access-review identity are needed
+  to finish AUTH-01/FUNC-01 and permission separation. Do not grant the owner
+  temporary overrides or edit roles directly to bypass self-escalation.
+- Authorization update: the protected private package validates through Gate F
+  and records the current-demo target, owner/operator/tester/signatory labels,
+  approved fixture/evidence boundary, window/stop authority, capacity/session,
+  and all seven restricted Drive mappings without placing their identifiers or
+  private values in Git.
+- Current Gate E evidence: TRACE-01, PRIV-01, PERF-01, and the approved
+  private-owner LOAD-01 envelope pass. One namespaced public request reached
+  `FOR_REVIEW` with one line, one audit/history chain, one revision advance,
+  zero stock movement, and zero error rows. All other must-pass rows remain
+  unsigned unless independently completed.
+- Actions not performed after the operational-role blocker: no review,
+  reservation, receipt, release, lending, evidence upload, accepted-pointer
+  move, production action, PR merge, `main`, hosting, or database action.
 - Downstream: Slice 14 is blocked on signed Slice 13 acceptance; Slices 15-16
   remain blocked on stable measured V1 and later owner decisions.
 
