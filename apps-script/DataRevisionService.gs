@@ -3,6 +3,7 @@ var HAU_DATA_REVISION_KEYS_ = Object.freeze({
   UPDATED_AT: 'DATA_REVISION_UPDATED_AT',
   SCOPES: 'DATA_SCOPE_REVISIONS_JSON'
 });
+var HAU_DATA_REVISION_SNAPSHOT_PROPERTY_ = 'HAU_DATA_REVISION_SNAPSHOT_JSON';
 
 var HAU_DATA_REVISION_SCOPES_ = Object.freeze(['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory']);
 
@@ -10,6 +11,31 @@ var HAU_MUTATION_CONTEXT_ = null;
 
 function revisionConfigRow_(key) {
   return findOne_(HAU_SHEETS.CONFIG, 'Key', key);
+}
+
+function readDataRevisionSnapshot_(runtime) {
+  if (typeof PropertiesService === 'undefined') return null;
+  try {
+    var value = PropertiesService.getScriptProperties().getProperty(HAU_DATA_REVISION_SNAPSHOT_PROPERTY_);
+    var parsed = value ? JSON.parse(value) : null;
+    if (!parsed || parsed.environment !== runtime.environment || parsed.spreadsheetId !== runtime.spreadsheetId) return null;
+    var revision = Number(parsed.revision);
+    if (!isFinite(revision) || revision < 0) return null;
+    return { revision: Math.floor(revision), updatedAt: String(parsed.updatedAt || ''), environment: runtime.environment };
+  } catch (_error) { return null; }
+}
+
+function writeDataRevisionSnapshot_(revision, runtime) {
+  if (typeof PropertiesService === 'undefined') return;
+  try {
+    runtime = runtime || resolveRuntimeConfig_();
+    PropertiesService.getScriptProperties().setProperty(HAU_DATA_REVISION_SNAPSHOT_PROPERTY_, JSON.stringify({
+      revision: Math.max(0, Math.floor(Number(revision.revision || 0))),
+      updatedAt: String(revision.updatedAt || ''),
+      environment: runtime.environment,
+      spreadsheetId: runtime.spreadsheetId
+    }));
+  } catch (_error) {}
 }
 
 function writeRevisionConfig_(key, value, description, actor, timestamp) {
@@ -42,15 +68,20 @@ function ensureDataRevisionConfig_(actor) {
 }
 
 function getDataRevision_() {
+  var runtime = resolveRuntimeConfig_();
+  var snapshot = readDataRevisionSnapshot_(runtime);
+  if (snapshot) return snapshot;
   var revisionRow = revisionConfigRow_(HAU_DATA_REVISION_KEYS_.REVISION);
   var updatedRow = revisionConfigRow_(HAU_DATA_REVISION_KEYS_.UPDATED_AT);
   var revision = Number(revisionRow && revisionRow.Value || 0);
   if (!isFinite(revision) || revision < 0) revision = 0;
-  return {
+  var result = {
     revision: Math.floor(revision),
     updatedAt: String(updatedRow && updatedRow.Value || ''),
-    environment: resolveRuntimeConfig_().environment
+    environment: runtime.environment
   };
+  writeDataRevisionSnapshot_(result, runtime);
+  return result;
 }
 
 function revisionScopeMap_(globalRevision) {
@@ -103,6 +134,7 @@ function touchDataRevision_(actor, scopes) {
   writeRevisionConfig_(HAU_DATA_REVISION_KEYS_.REVISION, next, 'Monotonic operational data revision', actor, timestamp);
   writeRevisionConfig_(HAU_DATA_REVISION_KEYS_.UPDATED_AT, timestamp, 'Last operational data revision update', actor, timestamp);
   writeRevisionConfig_(HAU_DATA_REVISION_KEYS_.SCOPES, JSON.stringify(scopeMap), 'Per-module near-live revision tokens', actor, timestamp);
+  writeDataRevisionSnapshot_({ revision: next, updatedAt: timestamp, environment: current.environment });
   return { revision: next, updatedAt: timestamp, environment: current.environment, scopes: touchedScopes.reduce(function(result, scope) { result[scope] = scopeMap[scope].token; return result; }, {}) };
 }
 

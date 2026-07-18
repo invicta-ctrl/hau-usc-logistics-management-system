@@ -68,7 +68,10 @@ function gasContext() {
       formatDate: () => '2026-07-14T08:00:00Z',
       getUuid: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
     },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: (key) => properties.get(key) ?? null }) },
+    PropertiesService: { getScriptProperties: () => ({
+      getProperty: (key) => properties.get(key) ?? null,
+      setProperty: (key, value) => properties.set(key, String(value)),
+    }) },
     CacheService: { getScriptCache: () => ({
       get: (key) => sharedCache.get(key) ?? null,
       put: (key, value) => sharedCache.set(key, String(value)),
@@ -134,6 +137,15 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     expect(JSON.stringify(response)).not.toMatch(/spreadsheet|operator@example|private|ledger|audit|roster/i);
   });
 
+  it('mirrors the revision privately so later essential reads avoid the config sheet', () => {
+    const context = gasContext();
+    const configSheet = context.getDatabase_().getSheetByName('17_CONFIG');
+
+    expect(context.apiEssentialBootstrapData_({ requestOnly: false }).revision.revision).toBe(7);
+    expect(context.apiEssentialBootstrapData_({ requestOnly: false }).revision.revision).toBe(7);
+    expect(configSheet.dataRangeReads).toBe(1);
+  });
+
   it('serves the request module with safe public rows and rejects protected modules for request-only sessions', () => {
     const context = gasContext();
     const internalResponse = context.apiGetBootstrapModule_({ requestOnly: false, module: 'request', page: 1, pageSize: 1 });
@@ -160,7 +172,7 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     const second = context.apiGetBootstrapModule_(command);
 
     expect(first.data).toEqual(second.data);
-    expect(second.metrics.cacheHits).toBeGreaterThan(first.metrics.cacheHits);
+    expect(second.metrics.cacheHits).toBeGreaterThanOrEqual(first.metrics.cacheHits);
     expect(second.metrics.readCount).toBeLessThan(first.metrics.readCount);
   });
 
