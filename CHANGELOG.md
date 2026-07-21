@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased — v0.6 continuity bootstrap (2026-07-21)
+
+### Added
+
+- Repository-native `.codex/CURRENT.md` operational pointer so a fresh Codex/ChatGPT task can recover the active phase, branch context, specification, next action, and hard stops without prior chat history.
+- `.codex/BOOTSTRAP.md` fresh-session recovery procedure.
+- Three accepted model-routed v0.6 execution specifications under `.codex/specs/`: Phase 1 Sol High, Phase 2 Terra, and Phase 3 Sol High.
+- `.codex/specs/README.md` phase/model routing index.
+- Account-portable continuity rules in `AGENTS.md`, including the required `AGENTS.md -> .codex/CURRENT.md -> active spec -> targeted context` entry path.
+
+### Changed
+
+- Created `chore/v0.6-codex-continuity-bootstrap` from preserved launch-readiness commit `81efe82618048b79a821f93bd95a0be00eaeff43` after the former remote feature branch was no longer present.
+- Updated `PROJECT_STATUS.md` to distinguish the implemented 0.4.0 baseline from the new v0.6 transition and to record current GitHub truth: historical PR #2 is closed and unmerged.
+- Phase 1 now explicitly starts with read-only baseline reconciliation so v0.6 cannot accidentally start from stale `main` and discard the preserved launch-readiness history.
+
+### Verified
+
+- Preserved predecessor `81efe82618048b79a821f93bd95a0be00eaeff43` still exists and was verified 63 commits ahead / 0 behind `main` (`91a30ee2de015bce1471a2d4fd71d9325af3e936`) at continuity setup.
+- GitHub workflow runs associated with the preserved predecessor completed successfully for both `CI` and `Apps Script static check`.
+- Historical PR #2 was verified closed and not merged.
+- The old `feat/apps-script-backend-and-launch-readiness` branch ref was not present when continuity setup began; the preserved predecessor commit was used non-destructively as the new continuity branch base.
+- Continuity changes are documentation/specification/instruction changes only; no application source, generated artifact, Apps Script source, dependency, Sheet, Drive, deployment, migration, or production state was changed.
+- No new runtime test suite is claimed for the documentation-only continuity commits; unchanged application code retains its previously verified test/CI evidence.
+
 ## 0.4.0 - 2026-07-12
 
 ### Added
@@ -67,10 +92,8 @@
 
 ### Known issues
 
-- The internal Apps Script staging UI still displays the legacy `Preview mode · local data` badge and `Reset Demo Data` control. The adapter is live and the reset handler is blocked outside mock mode, but the visible wording must be corrected before workflow acceptance.
-- Live Version 8 `?request=1` currently renders the internal workspace because the deployed runtime loses the outer query string inside the Apps Script iframe. The repository repair is verified locally but not yet deployed.
-- Repository verification for the request-only repair passed `npm run check` (68 unit tests) and the full Playwright matrix (27 passed, 15 intentionally skipped across 42 cases).
-- A bounded end-to-end staging workflow remains pending.
+- Historical launch-readiness documents may contain references to now-closed PR #2 or the deleted historical feature branch. Current GitHub state and `.codex/CURRENT.md` govern the v0.6 transition.
+- A bounded end-to-end staging workflow remains pending from the 0.4.0 launch-readiness program, but it is not automatically authorized by the v0.6 continuity bootstrap.
 
 ## 0.3.2 - 2026-07-12
 
