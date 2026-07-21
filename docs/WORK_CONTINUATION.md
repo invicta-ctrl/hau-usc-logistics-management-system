@@ -1,6 +1,113 @@
 # Work Continuation
 
-## Latest checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
+## Latest checkpoint — v0.6 account-portable Codex continuity bootstrap
+
+- Date: `2026-07-21` (`Asia/Manila`)
+- Repository: `invicta-ctrl/hau-usc-logistics-management-system`
+- Active continuity branch: `chore/v0.6-codex-continuity-bootstrap`
+- Preserved launch-readiness predecessor: `81efe82618048b79a821f93bd95a0be00eaeff43`
+- `main` / merge-base checkpoint at continuity setup: `91a30ee2de015bce1471a2d4fd71d9325af3e936`
+- Preserved predecessor relationship: `63` commits ahead / `0` behind `main`
+- Historical PR #2: **closed and not merged**
+- Historical branch `feat/apps-script-backend-and-launch-readiness`: not present as a remote branch when continuity setup began
+- Known staging deployment inherited from the preserved predecessor: immutable Version 9
+- Production state: untouched
+
+### Why this checkpoint exists
+
+The project is being continued from a fresh Codex/ChatGPT context. The previous implementation must therefore be recoverable from Git alone, without relying on the former agent's chat history.
+
+The old launch-readiness branch ref was no longer present, but its final known commit still existed. That commit was verified against `main` and used non-destructively as the base of a new continuity branch so the 63-commit launch-readiness implementation is preserved.
+
+### Repository continuity files added
+
+- `.codex/CURRENT.md` — active operational pointer
+- `.codex/BOOTSTRAP.md` — fresh-session recovery procedure
+- `.codex/specs/v0.6-phase-1-sol-high.md`
+- `.codex/specs/v0.6-phase-2-terra.md`
+- `.codex/specs/v0.6-phase-3-sol-high.md`
+- `.codex/specs/README.md`
+
+`AGENTS.md` now requires the durable entry path:
+
+`Git state -> AGENTS.md -> .codex/CURRENT.md -> active spec -> targeted status/source/tests`
+
+### v0.6 phase routing
+
+1. Phase 1 — **SOL High**: repository/baseline reconciliation, architecture, authentication, security contracts.
+2. Phase 2 — **TERRA**: shared UI, five role experiences, Request Center, Lending Hub, operational implementation, responsive previews.
+3. Phase 3 — **SOL High**: integration, Cloudflare/D1 migration, Google sidecars, hardening, final repository acceptance.
+
+Do not advance because an account/chat changes. Advance only after the active phase has a verified repository handoff and `.codex/CURRENT.md` is updated.
+
+### Verified remote evidence at continuity setup
+
+- Commit `81efe82618048b79a821f93bd95a0be00eaeff43` exists.
+- Comparison against `main` showed 63 commits ahead and 0 behind.
+- GitHub workflow runs associated with that checkpoint completed successfully for both `CI` and `Apps Script static check`.
+- PR #2 was verified closed and unmerged.
+- Searching for the former feature branch ref returned no remote branch.
+- The new continuity branch was created from the preserved predecessor; no reset, force-push, deletion, or destructive history rewrite was performed.
+
+### Files changed in this continuity checkpoint
+
+- `AGENTS.md`
+- `PROJECT_STATUS.md`
+- `CHANGELOG.md`
+- `docs/WORK_CONTINUATION.md`
+- `.codex/CURRENT.md`
+- `.codex/BOOTSTRAP.md`
+- `.codex/specs/README.md`
+- `.codex/specs/v0.6-phase-1-sol-high.md`
+- `.codex/specs/v0.6-phase-2-terra.md`
+- `.codex/specs/v0.6-phase-3-sol-high.md`
+
+### Runtime/code impact
+
+None.
+
+This checkpoint does not change application source, generated artifacts, Apps Script source, dependencies, Google Sheets, Drive, staging deployment, migrations, triggers, access rows, or production state.
+
+No new runtime suite is claimed for these documentation/specification-only commits. The unchanged application implementation retains the predecessor's verified test/CI evidence; the next Codex task must still perform the required Git handshake and verify the actual local checkout before implementation.
+
+### Documentation reconciliation note
+
+Historical 0.4.0 records below say PR #2 is open/draft and reference the old feature branch. Those statements are preserved as historical evidence but are stale for current PR/branch state.
+
+Current v0.6 work must use `.codex/CURRENT.md` plus freshly verified GitHub state rather than executing an old “next action” blindly.
+
+### Exact next action
+
+Start a **fresh Codex task** at the Git root and remain **READ / VERIFY / REPORT only**.
+
+Read in order:
+
+1. `AGENTS.md`
+2. `.codex/CURRENT.md`
+3. `.codex/specs/v0.6-phase-1-sol-high.md`
+4. required status/continuation/architecture files specified by `AGENTS.md`
+
+Then:
+
+- report repository root, branch, HEAD, upstream, and `git status --short`;
+- `git fetch origin --prune` when network is available;
+- compare local/upstream;
+- verify the preserved launch-readiness history;
+- reconcile stale branch/PR documentation;
+- determine the safe v0.5/v0.6 baseline integration path;
+- report whether Phase 1 implementation is authorized before editing application code.
+
+### Hard stops
+
+- Do not start v0.6 from stale `main` if that would discard the preserved launch-readiness history.
+- Do not reset, clean, discard, force-push, or overwrite unknown work.
+- Do not deploy Apps Script or create another staging version from this continuity checkpoint.
+- Do not perform operational Sheet/Drive writes, access seeding, migration application, trigger changes, or production actions.
+- Do not begin Phase 2 until Phase 1 produces a verified handoff and advances `.codex/CURRENT.md`.
+
+---
+
+## Historical checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
 
 - Date: `2026-07-13` (`Asia/Manila`)
 - Repository: `invicta-ctrl/hau-usc-logistics-management-system`
@@ -49,9 +156,9 @@
 - Production was not touched.
 - PR #2 was not merged.
 
-### Next action
+### Historical next action
 
-The repository review and CI gate are complete. The next bounded milestone is one explicitly authorized Version 10 staging deployment of commit `7156c256414b797f4b0f19431b399009f31feebd`, preserving the current deployment ID and performing no operational Sheet or Drive writes. After deployment, retest the diagnostic route, authorized internal route, request-only privacy boundary, accurate Apps Script environment label, and absence of the local-only reset control.
+The repository review and CI gate were complete. The then-next bounded milestone was one explicitly authorized Version 10 staging deployment of commit `7156c256414b797f4b0f19431b399009f31feebd`, preserving the current deployment ID and performing no operational Sheet or Drive writes. This action is now historical and is **not automatically authorized** by the v0.6 continuity bootstrap.
 
 ## Previous verified checkpoint — Version 8 request-only privacy failure; repository repair pending deployment
 
@@ -89,7 +196,7 @@ A deterministic regression fixture reproduced the visible-raw-JavaScript failure
 
 The repaired generated package prevents that class of failure. The actual fixed package contains one application script element, one application style element, no nested wrappers, no unexpected Apps Script template delimiters in generated source, and no substantial JavaScript body text.
 
-The exact live Version 6 exception remains partly unobservable because Apps Script omitted the oversized log. The repository does not prove that a literal `</script>` in the real Version 6 application bundle was the sole live cause. One controlled staging deployment is therefore required to confirm the HTML Service result.
+The exact live Version 6 exception remains partly unobservable because Apps Script omitted the oversized log. The repository does not prove that a literal `</script>` in the real Version 6 application bundle was the sole live cause. One controlled staging deployment was therefore required to confirm the HTML Service result.
 
 ## CI incident during implementation
 
@@ -134,11 +241,11 @@ Verified live version-8 results:
 - authorized internal `/exec`: page rendered, loading overlay cleared, no raw JavaScript or malformed-HTML error, Apps Script staging adapter reached bootstrap;
 - no Sheet/Drive workflow, setup, migration, backup, trigger, production, or PR-merge action occurred.
 
-Remaining verified defect: the visible internal header still says `Preview mode · local data` and shows `Reset Demo Data`. This is stale UI wording, not a mock fallback; the sidebar changes to `Apps Script staging` only after non-mock bootstrap and the reset handler refuses to act outside mock mode.
+Remaining verified defect at that historical point: the visible internal header still said `Preview mode · local data` and showed `Reset Demo Data`. This was stale UI wording, not a mock fallback; the sidebar changed to `Apps Script staging` only after non-mock bootstrap and the reset handler refused to act outside mock mode.
 
 ## Request-only privacy incident and repository repair
 
-Live Version 8 `/exec?request=1` rendered the full internal workspace. Stop all staging workflow testing and do not broaden access.
+Live Version 8 `/exec?request=1` rendered the full internal workspace. Staging workflow testing was stopped and access was not broadened.
 
 Confirmed cause:
 
@@ -154,11 +261,9 @@ The repository repair:
 - makes the compatibility runtime trust `document.body.dataset.requestOnly` while preserving the local direct-query fallback;
 - validates internal `false` and request-only `true` paths in unit, static, and real Chromium packaging tests.
 
-The repair is committed only after focused/full checks pass. It has not been pushed to Apps Script or deployed; live Version 8 remains unsuitable for request-only access.
+The repair later passed live request-only acceptance in Version 9.
 
-Local verification passed `npm run check` (68 unit tests) and `npm run test:e2e` (27 passed, 15 intentionally skipped across 42 browser cases).
-
-## Staging work already completed — do not repeat
+## Staging work already completed — do not repeat merely because context changed
 
 - Dedicated staging Apps Script project creation
 - Apps Script API enablement and local `clasp` authentication
@@ -171,21 +276,6 @@ Local verification passed `npm run check` (68 unit tests) and `npm run test:e2e`
 - Trigger setup
 - Earlier staging deployment versions used during the incident
 
-Do not run `applyApprovedMigration()`. Do not touch production. Do not merge PR #2 yet.
-
-## Next bounded milestone — review and deploy request-only privacy repair
-
-1. Review the request-only code/test diff and pushed CI evidence.
-2. With new explicit authorization, preserve the remote web-app manifest, push the reviewed package, verify a remote pull, create one immutable version, and update the existing deployment ID.
-3. Retest `?diagnostic=1`, authorized internal `/exec`, and `?request=1` without operational writes.
-4. Confirm request-only mode has no internal navigation and no exact inventory, user, ledger, reservation, supplier, borrower, evidence-internal, audit, error, health, or configuration data.
-5. Only after privacy passes, implement the separate preview badge/reset-control UI correction.
-6. Do not run an operational workflow until both privacy and UI truthfulness are reviewed.
-
 ## External-write boundary
 
-The authorized Version 8 recovery push/deployment is complete. The request-only repair was later accepted live in Version 9. This historical checkpoint authorizes no further `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge without a new explicit approval.
-
-## Fresh-chat recovery prompt
-
-> Continue after the confirmed Version 8 request-only privacy failure. Verify repository `invicta-ctrl/hau-usc-logistics-management-system`, branch `feat/apps-script-backend-and-launch-readiness`, draft PR #2, and the latest GitHub CI. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`. The repository repair injects the server request flag into `body[data-request-only]`; review its tests and CI. Do not deploy without new explicit authorization, do not run workflows, and do not repeat setup, Drive, migration, reconciliation, backup, or triggers.
+Historical staging recovery/deployment actions above do not authorize any new `clasp push`, deployment version, access seeding, staging workflow write, production work, migration application, or PR merge.
