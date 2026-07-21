@@ -1,0 +1,112 @@
+.auth-required {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 15% 10%, rgba(198, 154, 61, 0.18), transparent 32rem),
+    linear-gradient(145deg, #42080b, #75151b 58%, #4a0a0e);
+}
+
+.auth-gateway {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.auth-card {
+  width: min(100%, 31rem);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border: 1px solid rgba(119, 80, 13, 0.22);
+  border-radius: 1.25rem;
+  background: #fffdf8;
+  box-shadow: 0 1.5rem 4rem rgba(32, 5, 7, 0.35);
+}
+
+.auth-card-wide {
+  width: min(100%, 39rem);
+}
+.auth-brand {
+  display: flex;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+}
+
+.auth-brand span {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  aspect-ratio: 1;
+  border: 2px solid #78151b;
+  border-radius: 50%;
+  color: #641015;
+  font:
+    700 0.78rem/1 system-ui,
+    sans-serif;
+}
+
+.auth-card h1 {
+  margin: 0.35rem 0 0.75rem;
+  color: #5e0d12;
+}
+.auth-intro {
+  margin: 0 0 1.5rem;
+  color: #5c5350;
+  line-height: 1.55;
+}
+.auth-form {
+  display: grid;
+  gap: 0.55rem;
+}
+.auth-form label {
+  margin-top: 0.45rem;
+  font-weight: 700;
+  color: #382725;
+}
+.auth-form input {
+  width: 100%;
+}
+.auth-form button {
+  margin-top: 0.85rem;
+  min-height: 2.9rem;
+}
+.auth-form small {
+  color: #706360;
+  line-height: 1.35;
+}
+.auth-help {
+  margin: 1.25rem 0 0;
+  color: #746864;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+.auth-alert {
+  margin-bottom: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-left: 0.3rem solid #a21d27;
+  background: #fff0f1;
+  color: #721118;
+}
+.auth-field-error:not(:empty) {
+  color: #9b1721;
+}
+.auth-session-label {
+  max-width: 18rem;
+  color: #5a4c49;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 640px) {
+  .auth-gateway {
+    align-items: start;
+    padding: 0;
+    background: #fffdf8;
+  }
+  .auth-card,
+  .auth-card-wide {
+    min-height: 100vh;
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 2rem 1.25rem;
+  }
+}

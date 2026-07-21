@@ -1,4 +1,5 @@
 import { AppError } from '../app/errors.js';
+import { getCsrfToken } from '../auth/session-state.js';
 
 export class RestService {
   constructor(baseUrl = '') {
@@ -10,7 +11,10 @@ export class RestService {
       throw new AppError('BACKEND_UNAVAILABLE', 'REST mode is not configured in this preview.');
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        ...(getCsrfToken() ? { 'x-csrf-token': getCsrfToken() } : {}),
+      },
       body: JSON.stringify(command),
       credentials: 'include',
     });

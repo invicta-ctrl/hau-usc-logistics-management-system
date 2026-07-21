@@ -1,5 +1,7 @@
 # Architecture
 
+The locked v0.6 portal, authentication, session, capability, threat-model, migration, and rollback contract is in `docs/V0_6_ARCHITECTURE_AND_SECURITY.md`. The v0.5 runtime below remains the preserved implementation and rollback boundary until Phase 3 migration acceptance.
+
 ## Runtime boundaries
 
 The approved HTML/CSS baseline is extracted into `src/visual/` and `src/styles/visual/`. Feature handlers call `createLegacyRuntimeAdapter()`; local builds receive the in-browser mock service, while `apps-script/Index.html` receives `AppsScriptAdapter`. Only that adapter knows `google.script.run`.

@@ -1,9 +1,11 @@
 import { appEnvironment, backendMode, bootstrapContractVersion, createLegacyRuntimeAdapter } from '../services/legacy-runtime-adapter.js';
+import { config } from '../app/config.js';
 import { projectClientAuthorization } from '../domain/permissions.js';
 import { validateEssentialBootstrap, validateBootstrapModule, createStateFromEssentialBootstrap, mergeBootstrapModule } from '../app/bootstrap-contract.js';
 import { createModuleDataController } from '../app/module-data-controller.js';
 import { BOOTSTRAP_STAGES, createBootstrapController, validateBootstrapEnvelope } from './bootstrap-controller.js';
 import { createBootstrapUi } from './bootstrap-ui.js';
+import { startAuthenticatedRuntime } from './auth-gateway.js';
 import { createRuntimeExtensions } from './runtime-extensions.js';
 import { restockActionDecisions, validateRestockTransition } from '../domain/restock-workflow.js';
   'use strict';
@@ -344,7 +346,10 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   /* =========================================================
      7. Application setup, navigation, and common UI
      ========================================================= */
-  document.addEventListener('DOMContentLoaded',init);
+  document.addEventListener('DOMContentLoaded',()=>{
+    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
+    void startAuthenticatedRuntime({backendMode,baseUrl:config.httpApiBaseUrl,requestOnly,start:init});
+  });
   function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>{const safe={...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))};['lendingAudience','maximumLoanQuantity','defaultLoanDays','approvalRequired','reorderThreshold','storageLocation','notes','verificationNote','legacy'].forEach(name=>delete safe[name]);return safe;});['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','compositeRequests','compositeComponents','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}
     function startupTestHook(stage){if(globalThis.__HAU_BOOTSTRAP_TEST_MODE__===true&&typeof globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__==='function')globalThis.__HAU_BOOTSTRAP_STAGE_HOOK__(stage);}
   function applyAppsScriptEnvironmentLabel(){if(backendMode!=='mock'){const environment=String(appEnvironment||'').trim().toLowerCase();const safeEnvironment=environment==='staging'||environment==='production'?environment:'unknown';const label='\u25CF Apps Script \u00B7 '+safeEnvironment;const internalBadge=document.querySelector('.app-header .preview-badge');if(internalBadge)internalBadge.textContent=label;const portalBadge=document.querySelector('.portal-header .preview-badge');if(portalBadge)portalBadge.textContent=label;const reset=byId('resetDemo');if(reset){reset.hidden=true;reset.disabled=true;reset.tabIndex=-1;reset.setAttribute('aria-hidden','true');}const foot=document.querySelector('.sidebar-foot');if(foot)foot.innerHTML='<strong><span class="live-dot"></span>Apps Script '+safeEnvironment+'</strong>Server authorization, Sheets repositories, and audit logging are active.';}}

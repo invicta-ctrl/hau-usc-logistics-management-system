@@ -1,15 +1,17 @@
 # Security and Access
 
+The v0.6 server-owned Access ID, temporary-password activation, password KDF, session, CSRF, reset, experience-routing, and protected-action contract is locked in `docs/V0_6_ARCHITECTURE_AND_SECURITY.md`. Existing Apps Script/Google-identity rules remain authoritative for the v0.5 rollback runtime.
+
 ## Roles and permissions
 
-| Role | Review/reserve | Release | Receive | Admin | Manage catalog |
-|---|---:|---:|---:|---:|---:|
-| REQUESTER | no | no | no | no | explicit only |
-| DOL_STAFF | yes | yes | yes | no | explicit only |
-| COMMITTEE_HEAD | yes | no | yes | no | explicit only |
-| DOL_DIRECTOR | yes | yes | yes | yes | yes |
-| ADMIN | yes | yes | yes | yes | yes |
-| READ_ONLY_AUDITOR | no | no | no | no | explicit only |
+| Role              | Review/reserve | Release | Receive | Admin | Manage catalog |
+| ----------------- | -------------: | ------: | ------: | ----: | -------------: |
+| REQUESTER         |             no |      no |      no |    no |  explicit only |
+| DOL_STAFF         |            yes |     yes |     yes |    no |  explicit only |
+| COMMITTEE_HEAD    |            yes |      no |     yes |    no |  explicit only |
+| DOL_DIRECTOR      |            yes |     yes |     yes |   yes |            yes |
+| ADMIN             |            yes |     yes |     yes |   yes |            yes |
+| READ_ONLY_AUDITOR |             no |      no |      no |    no |  explicit only |
 
 Every sensitive server action resolves the active Google identity and checks `14_USERS_ACCESS`. Frontend role display is not security. Migration, configuration, access changes, cycle-count adjustments, event-item merges, and environment health checks require admin permission.
 
