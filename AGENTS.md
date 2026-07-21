@@ -6,16 +6,22 @@ The GitHub repository is the durable shared source of truth. Chat history, accou
 
 ## Required entry sequence
 
-Before editing:
+Before editing, use the smallest authoritative read set:
 
 1. Read this `AGENTS.md`.
-2. If `.codex/CURRENT.md` exists, read it immediately as the operational pointer.
-3. Read the active accepted specification referenced by `.codex/CURRENT.md`.
-4. Read `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, and `docs/AI_COLLABORATION.md`.
-5. Read `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md` when required by the active task or current phase.
-6. Read only directly relevant source/tests after the authority and current milestone are known.
+2. Read `.codex/CURRENT.md`.
+3. Read `.codex/PHASE_AND_CONTEXT_POLICY.md`.
+4. Read only the active accepted specification referenced by `.codex/CURRENT.md`.
+5. Perform the required Git handshake.
+6. Read additional status, continuation, architecture, domain, security, source, or test files only when the current pointer/milestone requires them.
+
+Do **not** automatically reread `README.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, or the whole documentation tree on every task. Open only the sections/files needed to resolve the current milestone or a verified conflict.
 
 Do not broad-scan the repository by default.
+
+Do not reread unchanged files in the same task when their needed content is already in context. Prefer targeted sections, diffs, status, commit metadata, and directly relevant source/tests.
+
+All context-efficiency, phase-boundary, manual model-switch, and Terra escalation rules in `.codex/PHASE_AND_CONTEXT_POLICY.md` are mandatory.
 
 If repository/GitHub state contradicts stale status text, preserve both facts, trust verified current Git state for branch/commit/PR/CI facts, and update the stale record in the next authorized documentation checkpoint.
 
@@ -31,12 +37,12 @@ If repository/GitHub state contradicts stale status text, preserve both facts, t
 
 ## Required start-of-task handshake
 
-1. Report the repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
+1. Report repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
 2. Run `git fetch origin --prune` when network access is available.
 3. Compare local and upstream with `git rev-list --left-right --count HEAD...@{upstream}`.
 4. If the working tree is clean and only behind, use `git pull --ff-only`.
 5. If it is dirty, divergent, on the wrong branch, lacks an upstream, or contains unknown work, stop and report the condition; never reset, clean, discard, overwrite, or force-push automatically.
-6. Confirm the expected starting checkpoint from `.codex/CURRENT.md`, the active task packet, and `docs/WORK_CONTINUATION.md` before changing files.
+6. Confirm the expected starting checkpoint from `.codex/CURRENT.md` and the active task packet before changing files.
 7. For read-only review or planning tasks, do not create commits or mutate external systems.
 
 Do not assume `main` is the newest implementation branch. Verify the active pointer and Git graph before selecting a baseline.
@@ -45,15 +51,15 @@ Do not assume `main` is the newest implementation branch. Verify the active poin
 
 A fresh Codex/ChatGPT account or new machine must be able to resume from:
 
-`Git state -> AGENTS.md -> .codex/CURRENT.md -> active spec -> targeted status/source/tests`
+`Git state -> AGENTS.md -> .codex/CURRENT.md -> .codex/PHASE_AND_CONTEXT_POLICY.md -> active spec -> targeted context`
 
 - Never depend on a previous agent's private chat history to know what to do next.
-- When an important decision, checkpoint, blocker, or next action exists only in chat, record it in the appropriate repository continuation document before handing off.
-- A new Codex task must re-read this file and `.codex/CURRENT.md`.
+- When an important decision, checkpoint, blocker, or next action exists only in chat, record it in the appropriate repository continuation document before handoff.
+- A new Codex task must reread `AGENTS.md`, `.codex/CURRENT.md`, the phase/context policy, and the active spec; it must **not** reread the whole project by default.
 - After instruction or phase-pointer changes, restart an already-running Codex task so the new instruction chain is loaded.
-- Update `.codex/CURRENT.md` at every verified milestone/phase transition with the active branch, phase/spec, bounded milestone, evidence summary, next action, and blocker state.
+- Update `.codex/CURRENT.md` at every verified milestone/phase transition with the active branch, phase/spec, bounded milestone, evidence summary, next action, blocker state, and required model.
 
-## v0.6 model routing
+## v0.6 model routing and hard phase stops
 
 The accepted v0.6 execution specifications live under `.codex/specs/`:
 
@@ -63,23 +69,29 @@ The accepted v0.6 execution specifications live under `.codex/specs/`:
 
 Do not skip a phase merely because a new account or chat is being used.
 
-During Terra work, escalate the affected slice back to Sol when implementation would materially change authentication/session architecture, authorization/capability semantics, ledger/transaction invariants, migration/database architecture, or unresolved security boundaries.
+**The current Codex task must stop at every completed phase boundary. It must never begin the next phase in the same task.** Follow `.codex/PHASE_AND_CONTEXT_POLICY.md` exactly, update `.codex/CURRENT.md` to `READY FOR MANUAL MODEL SWITCH`, print the required phase-completion message, and stop so Earl can manually choose the required next model.
+
+During Terra work, if an escalation trigger in the phase/context policy occurs, set `.codex/CURRENT.md` to `SOL ESCALATION REQUIRED`, record the unresolved decision, print the required escalation message, and stop. Do not silently use Terra for Sol-class architecture/security decisions.
 
 ## Manager and implementer roles
 
 - ChatGPT web is the default manager/reviewer: verify remote GitHub state, define one bounded milestone, review pushed evidence, and keep repository guidance coherent.
 - Codex is the default implementer: verify the local checkout, implement only the accepted milestone, run checks, update continuation records, commit, and push the intended feature branch when authorized.
 - Only one agent may write to the same branch at a time.
-- Agents share durable context through committed repository files and GitHub, not assumed cross-chat memory. Follow `docs/AI_COLLABORATION.md`.
+- Agents share durable context through committed repository files and GitHub, not assumed cross-chat memory. Follow `docs/AI_COLLABORATION.md` only when collaboration mechanics need review or conflict resolution.
 
-## One-slice execution
+## One-slice execution and token discipline
 
 - Work one issue or vertical slice at a time.
 - Do not regenerate the entire application for a small change.
 - Do not begin a different milestone until the current pointer and continuation records are updated.
 - Preserve unknown work.
 - Review the complete logical diff before handoff.
-- Reuse valid expensive verification only when the relevant SHA/artifacts/external state are unchanged; record the reused evidence explicitly.
+- Prefer `git diff --stat`, `git diff --name-only`, targeted `git diff -- <path>`, and narrow reads before opening many files.
+- Read only directly affected source files and directly relevant tests.
+- Do not read generated artifacts unless investigating an artifact-specific failure; rely on source/generator files plus deterministic verification when authoritative.
+- Reuse valid expensive verification only when the relevant SHA, artifacts, configuration, and external state are unchanged; record reused evidence explicitly.
+- Do not rerun expensive full suites after documentation-only or unchanged-code work merely for ceremony.
 
 ## Product and data invariants
 
@@ -103,7 +115,7 @@ During Terra work, escalate the affected slice back to Sol when implementation w
 
 - Run relevant focused tests for every code change.
 - Before a code milestone handoff, run `npm run check`; run Playwright where Chromium is installed and relevant.
-- Run `clasp status` and any staging push/deployment commands only when the active task explicitly authorizes them and the required private staging configuration exists.
+- Run `clasp status` and staging push/deployment commands only when the active task explicitly authorizes them and required private staging configuration exists.
 - For documentation-only checkpoints that do not change code/generated artifacts, do not rerun expensive suites merely for ceremony; cite the last valid unchanged-code evidence and state that no new runtime verification was run.
 - Update `PROJECT_STATUS.md`, `CHANGELOG.md`, `docs/WORK_CONTINUATION.md`, and `.codex/CURRENT.md` with verified facts before handoff.
 - Commit in a small logical unit and report the exact commit SHA and remote/CI state.
