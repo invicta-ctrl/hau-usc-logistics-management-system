@@ -1,8 +1,56 @@
 # HAU-USC Logistics Management System
 
-Version 0.4.0 is the launch-readiness branch for the Holy Angel University – University Student Council Department of Logistics. It preserves the approved maroon, burgundy, gold, cream, paper, and white prototype while adding a production Google Apps Script boundary for the prepared Google Sheet and future Drive evidence folders.
+The repository currently preserves the implemented **0.4.0 launch-readiness baseline** while preparing the accepted **v0.6 multi-portal, role-aware program**.
 
-> **Safety status:** local Vite builds default to `backendMode = 'mock'`. The generated Apps Script package uses `backendMode = 'apps-script'` for staging. No production deployment or spreadsheet mutation is performed by repository commands. The application must remain in staging until the launch runbook passes.
+The v0.6 transition is intentionally repository-driven so development can continue across fresh Codex/ChatGPT tasks, accounts, or machines without relying on old chat history.
+
+## Start here
+
+For any new maintainer or Codex task, read in this order:
+
+1. `AGENTS.md`
+2. `.codex/CURRENT.md`
+3. the active specification referenced by `.codex/CURRENT.md`
+4. `PROJECT_STATUS.md`
+5. `docs/WORK_CONTINUATION.md`
+6. `docs/AI_COLLABORATION.md`
+7. only the additional architecture/domain/security/source/tests needed by the active milestone
+
+Do not assume `main` contains the newest implementation. Verify the active branch, commit graph, upstream, and current pointer first.
+
+## Current v0.6 routing
+
+The accepted model-routed implementation specifications are:
+
+- `.codex/specs/v0.6-phase-1-sol-high.md`
+- `.codex/specs/v0.6-phase-2-terra.md`
+- `.codex/specs/v0.6-phase-3-sol-high.md`
+
+See `.codex/specs/README.md` for the phase split.
+
+The active pointer currently starts at **Phase 1 — Sol High** for baseline reconciliation, architecture, authentication, and security contracts.
+
+## Preserved launch-readiness history
+
+The former launch-readiness branch was no longer present as a remote ref when the v0.6 continuity bootstrap began. Its preserved final known commit:
+
+`81efe82618048b79a821f93bd95a0be00eaeff43`
+
+still existed and was verified 63 commits ahead / 0 behind `main` at that checkpoint. It was used as the non-destructive base of:
+
+`chore/v0.6-codex-continuity-bootstrap`
+
+Historical PR #2 is closed and was not merged. Older documentation mentioning an open/draft PR is historical and must not override freshly verified GitHub state.
+
+## Safety status
+
+- Local Vite builds default to `backendMode = 'mock'`.
+- Generated Apps Script builds use the Apps Script adapter and explicit environment Script Properties.
+- The known staging deployment inherited from the preserved launch-readiness state is immutable Version 9.
+- Production promotion has not been performed.
+- The v0.6 continuity bootstrap changes repository instructions/specification/status documentation only; it does not authorize Apps Script pushes, operational Sheet/Drive writes, migrations, access seeding, trigger changes, or production actions.
+
+Follow `docs/LAUNCH_RUNBOOK.md` for any explicitly authorized staging/production action.
 
 ## Start locally
 
@@ -11,7 +59,7 @@ npm install
 npm run dev
 ```
 
-Open the URL printed by Vite. Add `?request=1` for the sanitized request-only portal.
+Open the URL printed by Vite. In the preserved 0.4.0 implementation, add `?request=1` for the sanitized request-only portal.
 
 ## Verification and builds
 
@@ -25,68 +73,87 @@ npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
 
-`npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
+`npm run build` creates the standalone reviewer artifacts and the parser-safe Apps Script package used by the preserved launch-readiness implementation:
 
-- `dist/index.html` – canonical standalone production build.
-- `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
-- `apps-script/Index.html` – small Apps Script template shell.
-- `apps-script/AppBody.html` – generated approved body markup.
-- `apps-script/AppStyles.html` – generated complete application style element.
-- `apps-script/AppScript.html` – generated complete application script element with staging runtime configuration.
+- `dist/index.html` — canonical standalone build
+- `HAU-USC_Logistics-Prototype-Shareable.html` — reviewer-facing copy
+- `apps-script/Index.html` — Apps Script template shell
+- `apps-script/AppBody.html` — generated approved body markup
+- `apps-script/AppStyles.html` — generated complete application style element
+- `apps-script/AppScript.html` — generated complete application script element
 
-The Apps Script body, CSS, and JavaScript are produced from separate Vite outputs. The generator does not parse minified JavaScript out of `dist/index.html`, and it escapes raw-text closing sequences before embedding code in HTML. Do not edit generated HTML directly. Change source or the generator, then rebuild.
+Do not hand-edit generated HTML. Change source/generator files and rebuild.
 
-## Approved visual baseline
+## Preserved visual baseline and v0.6 visual direction
 
-`legacy/HAU-USC_Logistics-Prototype.original.html` remains the authoritative visual source. `npm run extract:visual` reproducibly extracts its shell, seven view fragments, ordered CSS modules, and compatibility runtime. Small backend changes must not regenerate the design or replace it with a generic dashboard.
+`legacy/HAU-USC_Logistics-Prototype.original.html` remains the preserved approved historical visual baseline for the 0.4.0 implementation.
 
-## Runtime modes
+For v0.6, follow the accepted source-grounded visual specification referenced by the active phase. Preserve successful structural/interaction patterns instead of rebuilding unrelated modules from scratch.
+
+## Runtime boundaries in the preserved implementation
 
 | Mode | Use | Authority |
 |---|---|---|
-| `mock` | Local demo and shareable prototype | Browser-only fictional state |
-| `apps-script` | Staging and initial production web app | Server authorization, Google Sheets, and Drive |
-| `rest` | Future hosted frontend | Reserved secure HTTP adapter boundary |
+| `mock` | Local demo/shareable prototype | Browser-only fictional state |
+| `apps-script` | Existing staging/pilot boundary | Server authorization, Google Sheets, Drive |
+| `rest` | Future hosted frontend/API boundary | Reserved/transition path |
 
-Feature code calls service adapters; it never reads Google Sheets or `google.script.run` directly. `src/services/apps-script-adapter.js` is the only browser-to-Apps-Script gateway.
+Feature code calls service adapters; it does not read Google Sheets or `google.script.run` directly. While Apps Script remains active, `src/services/apps-script-adapter.js` is the browser-to-Apps-Script gateway.
+
+The accepted v0.6 program later moves toward Cloudflare Workers/API + D1 while retaining Google Drive evidence and Google Sheets reporting sidecars. That migration must occur only through the active v0.6 phase specification and its rollback/reconciliation gates.
 
 ## Repository map
 
 ```text
-src/            approved browser UI, modules, domain rules, and adapters
-apps-script/    V8 Apps Script backend, generated web package, setup, migration, backup
-scripts/        visual extraction, standalone build, Apps Script package generation/checks
-tests/          Vitest domain/package tests and Playwright browser checks
-docs/           architecture, schema, security, deployment, migration, and launch runbooks
-legacy/         preserved approved prototype
+.codex/         active Codex pointer, fresh-session bootstrap, accepted phase specs
+src/            browser UI, modules, domain rules, adapters
+apps-script/    preserved Apps Script backend and generated web package
+scripts/        extraction/build/package generation/checks
+tests/          Vitest and Playwright coverage
+docs/           status, architecture, security, migration, launch, continuation
+legacy/         preserved prototype/reference source
 dist/           generated standalone artifact
-.github/        pull-request template and CI workflows
+.github/        CI workflows and PR templates
 ```
 
-## Google Workspace target
+## Google Workspace configuration boundary
 
-Apps Script does not contain a hardcoded operational or backup spreadsheet ID. Each deployment must set these Script Properties explicitly:
+The preserved Apps Script backend does not contain a hardcoded operational or backup spreadsheet ID. Deployments require explicit Script Properties including:
 
 - `HAU_ENVIRONMENT`
 - `HAU_SPREADSHEET_ID`
 - `HAU_BACKUP_SPREADSHEET_ID`
 
-The backend accepts only `STAGING` or `PRODUCTION`, rejects unresolved placeholders, requires separate operational and backup spreadsheets, and fails closed before opening a Sheet when configuration is invalid. Drive folder IDs remain controlled configuration values. See `docs/APPS_SCRIPT_SETUP.md`.
+Missing/placeholder/malformed values fail closed. Drive folder IDs are controlled configuration values. Do not commit private configuration.
 
-## Staging HTML diagnostic
+## Historical staging acceptance
 
-The repository includes an isolated `DiagnosticShell.html`. After a reviewed staging push and deployment, `?diagnostic=1` is available only when `HAU_ENVIRONMENT=STAGING`. It proves template evaluation, body rendering, style application, inline JavaScript, and one harmless `google.script.run` round trip without reading or writing operational data. The admin-only `htmlTemplateDiagnostics()` function reports bounded lengths, prefixes, and suffixes; it never logs the complete generated application.
+The preserved launch-readiness history includes:
 
-Controlled staging Version 8 passed all four diagnostic checks and the authorized internal `/exec` entry point rendered without raw JavaScript or a loading-overlay stall. Its live `?request=1` privacy test failed because the outer query was lost inside the Apps Script sandbox iframe. The repository now injects the server-trusted request-only value into the generated body and tests both bootstrap modes, but that repair is not yet deployed. No production deployment or operational workflow write has been performed as part of this recovery.
+- parser-safe staging packaging;
+- controlled staging recovery through Version 8;
+- Version 9 read-only acceptance of the diagnostic route, authorized internal route, and request-only privacy boundary;
+- verified runtime-truthfulness repository repair at `7156c256414b797f4b0f19431b399009f31feebd`;
+- successful CI/static-check evidence associated with the preserved predecessor.
 
-## First steps for a maintainer
+Detailed incident and staging evidence remains in:
 
-1. Read `AGENTS.md`, `PROJECT_STATUS.md`, `docs/WORK_CONTINUATION.md`, `docs/AI_COLLABORATION.md`, `docs/ARCHITECTURE.md`, `docs/DOMAIN_RULES.md`, `docs/SECURITY_AND_ACCESS.md`, and `docs/LAUNCH_RUNBOOK.md`.
-2. Run `npm install && npm run check`.
-3. Work on the feature branch; do not edit the default branch directly.
-4. Never transact a `VERIFY` item or expose internal bootstrap data to request-only users.
-5. Update tests, `PROJECT_STATUS.md`, `CHANGELOG.md`, and `docs/WORK_CONTINUATION.md` with verified facts.
+- `PROJECT_STATUS.md`
+- `docs/WORK_CONTINUATION.md`
+- `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`
 
-## AI collaboration
+Do not repeat staging setup, migration dry-runs, Drive setup, backups, or triggers merely because the coding account/session changed.
 
-ChatGPT web and Codex do not rely on shared chat memory. They coordinate through the active GitHub branch, pull request, `AGENTS.md`, and the continuation record. Use the one-writer manager/implementer protocol in `docs/AI_COLLABORATION.md` before starting a coding milestone.
+## First action for a new Codex session
+
+Do **not** begin feature implementation immediately.
+
+1. Open the Git root.
+2. Start a fresh task.
+3. Read `AGENTS.md` and `.codex/CURRENT.md`.
+4. Perform the required Git handshake and fetch/prune.
+5. Read the active Phase 1 spec.
+6. Reconcile current remote state with the preserved launch-readiness history.
+7. Report whether implementation is authorized before editing application code.
+
+The account/session is replaceable; the repository continuity chain is not.
