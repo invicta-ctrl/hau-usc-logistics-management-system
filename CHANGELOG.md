@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 1 authentication and security foundation (2026-07-21)
+
+### Added
+
+- Locked `docs/V0_6_ARCHITECTURE_AND_SECURITY.md` covering the three product surfaces, five internal experiences, account lifecycle, canonical role/scope routing, cryptography, protected-action order, threat model, Phase 3 migration boundary, and v0.5 rollback.
+- Portable server authentication modules for PBKDF2 password credentials, digest-only opaque tokens, activation and authenticated sessions, CSRF, reset, account disable/revoke, canonical authorization, synthetic repositories, HTTP routing, and secure cookie serialization.
+- HTTP-mode Access ID login and starter-account activation UI that collects profile and password fields while preserving server-owned role and committee assignments.
+- Focused unit and browser regressions for password/token handling, cookies, safe HTTP responses, enumeration resistance, starter replay/expiry, role preservation, session invalidation, capability/scope denial, CSRF, client contracts, and the request-only authentication boundary.
+
+### Changed
+
+- Merged exact v0.5 integration candidate `12cdfd4de73120bfeedf49582c83e1861ae36b99` into the continuity branch at `aeb05c71937b8479f66d08a9a64800b005343784`, preserving predecessor history and leaving `main` and PR #7 untouched.
+- REST/HTTP mutations now send the current in-memory CSRF token when present.
+- HTTP-mode internal startup now authenticates before application bootstrap; public request-only mode remains outside the internal login gate.
+- Regenerated the all-in-one, guided-demo, and seven module shareables through the documented build pipeline.
+
+### Verified
+
+- Implementation commit `c07e6e6ad5777710a68bef4d1d2aa553b964c108` passes `npm run check`: agent/continuation governance, lint, 44 Vitest files / 340 tests, deterministic build, 33 Apps Script source files / 55 required functions, generated parity, and standalone verification.
+- Full Playwright passes 73 tests with 143 intentional project/viewport skips and zero failures.
+- Draft PR #9 passes remote `validate`, `verify`, and `browser-smoke` checks at implementation checkpoint `c07e6e6`.
+- `git diff --check`, targeted Prettier verification, changed-source sensitive-token scan, and sensitive-filename scan pass.
+- No Apps Script/Cloudflare deployment, migration, Sheet/Drive write, production action, `main` update, or PR merge occurred.
+
 ## Unreleased — v0.6 continuity bootstrap (2026-07-21)
 
 ### Added

@@ -1,5 +1,7 @@
 # HAU-USC V1 Autonomous Program Status
 
+> v0.6 authority update (2026-07-21): Phase 1 is complete at implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`, and `.codex/CURRENT.md` now routes a new GPT-5.6 Terra task to Phase 2. The historical v0.5 staging program below remains preserved and its acceptance blockers are not waived.
+
 PROGRAM STATE: IN_PROGRESS
 
 STAGING ACCEPTANCE: SLICES 1-3 PASSED

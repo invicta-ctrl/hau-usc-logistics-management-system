@@ -1,5 +1,20 @@
 # Project Status
 
+## v0.6 Phase 1 complete - ready for manual Phase 2 model switch
+
+- Phase/stage: `PHASE_1_COMPLETE_READY_FOR_MANUAL_MODEL_SWITCH`.
+- Branch: `chore/v0.6-codex-continuity-bootstrap`.
+- Verified implementation checkpoint: `c07e6e6ad5777710a68bef4d1d2aa553b964c108`.
+- Rollback checkpoint before the authentication foundation: `aeb05c71937b8479f66d08a9a64800b005343784`.
+- Draft pull request: PR #9, `feat(v0.6): establish Phase 1 security foundation`; `validate`, `verify`, and `browser-smoke` pass at implementation checkpoint `c07e6e6`.
+- Delivered: history-preserving v0.5 integration; locked v0.6 architecture/security/threat/migration contracts; portable authentication, first-login activation, session/CSRF, account lifecycle, password reset, canonical authorization, cookie/HTTP, synthetic repository, client gateway, and focused negative tests.
+- Local verification: `npm run check` passed with governance, lint, 44 Vitest files / 340 tests, deterministic build, 33 Apps Script sources / 55 required functions, generated parity, and eight standalone artifacts; full Playwright passed 73 / 143 intentional skips / 0 failed.
+- Privacy review: changed-source sensitive-token and sensitive-filename scans returned zero matches; no private config, institutional record, raw credential, or external identifier entered Git.
+- External boundary: source branch and draft PR only. No Apps Script deployment, Sheet/Drive write, D1 migration, Cloudflare deployment, production action, `main` update, or PR merge occurred.
+- Remaining known risk: the in-memory repository and sliding-window limiter are synthetic Phase 1 adapters, not multi-instance production infrastructure. Phase 3 must supply reviewed Worker/D1 persistence, distributed rate limiting, transport wiring, migration/reconciliation, secrets, and deployment hardening before cutover.
+- Intentionally unrun: no live Cloudflare Worker/D1, Apps Script, Sheet, Drive, institutional-account, migration, deployment, or production test; those actions were outside Phase 1 authority.
+- Next required model/spec: GPT-5.6 Terra and `.codex/specs/v0.6-phase-2-terra.md` in a new Codex task.
+
 ## Current implemented baseline
 
 - Implemented repository baseline: `0.5.0`

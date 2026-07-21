@@ -1,5 +1,7 @@
 # HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
 
+> v0.6 authority update (2026-07-21): Phase 1 is complete at implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`. The active cross-version pointer is `.codex/CURRENT.md`; this file preserves the v0.5 Slice 13 staging record and does not authorize bypassing its distinct-identity acceptance blocker.
+
 CURRENT SLICE: Slice 13 - Full staging operational acceptance
 CURRENT STAGE: SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED
 LAST UPDATED: 2026-07-18 (Asia/Manila)

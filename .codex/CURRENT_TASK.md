@@ -1,24 +1,18 @@
 # Current Task
 
-INTENT: SOFTWARE_FEATURE
-SECONDARY INTENTS: REPOSITORY_MAINTENANCE, ARCHITECTURE, SECURITY, AUTHENTICATION, TESTING
-MODE: execute
+INTENT: SOFTWARE_FEATURE_HANDOFF
+MODE: stop
 TARGET: HAU-USC Logistics v0.6 Phase 1 on `chore/v0.6-codex-continuity-bootstrap`
-SKILLS: none; no available skill directly covers this repository-native authentication foundation
-AUTHORITY: owner instruction; `.codex/specs/v0.6-phase-1-sol-high.md`; `AGENTS.md`; `.codex/CURRENT.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`
+AUTHORITY: `.codex/specs/v0.6-phase-1-sol-high.md`; `AGENTS.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`
 RISK: high
-DELIVERABLE: verified v0.5 baseline integration, locked v0.6 architecture/security contracts, authentication and first-login onboarding foundation, focused negative tests, and Phase 2 handoff
-VERIFICATION: focused tests during implementation; final `npm run check`; final Playwright where relevant; diff review; exact commit/push/CI evidence
-STOP CONDITIONS: production promotion, operational institutional-data writes, migration application, destructive history rewrite, sensitive-data exposure, two failed focused repair rounds, or completed Phase 1 manual-model-switch boundary
+DELIVERABLE: complete
+VERIFICATION: implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`; local `npm run check`; full Playwright; diff/privacy review; pushed draft PR #9 and remote checks
+STOP CONDITION: Phase 1 is complete; stop this task for the required manual model switch
 
-## Active bounded unit
+## Completed bounded unit
 
-Complete Phase 1 only. Preserve the integrated v0.5 repository baseline and all domain/security invariants. Do not begin broad role-dashboard, Request Center, Lending Hub, Cloudflare/D1 migration, or Phase 2 design work.
+Phase 1 is complete. The exact v0.5 baseline was integrated without changing `main`; v0.6 architecture/security contracts and the portable authentication/onboarding foundation are implemented and verified. Production, migration, operational institutional data, Apps Script deployment, and Phase 2 design implementation were not touched.
 
-## Verified starting facts
+## Next task
 
-- Preserved predecessor `81efe82618048b79a821f93bd95a0be00eaeff43` remains intact.
-- `origin/integration/v0.5-baseline` at `12cdfd4de73120bfeedf49582c83e1861ae36b99` is the exact v0.5 source candidate.
-- PR #7 is open, draft, mergeable, and CI-green (`validate`, `verify`, `browser-smoke`).
-- The integration head is being merged into the v0.6 continuity branch without modifying `main` or merging PR #7.
-- Production remains outside Phase 1.
+Start a new Codex task using GPT-5.6 Terra and follow `.codex/CURRENT.md` plus `.codex/specs/v0.6-phase-2-terra.md`. The first Phase 2 task is the S0003-first design-reference digest and bounded shared-shell work. Do not continue Phase 2 in this task.
