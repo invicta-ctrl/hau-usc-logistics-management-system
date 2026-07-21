@@ -8,8 +8,10 @@ Status: READ / VERIFY / RECONCILE
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
 
-Verified continuity checkpoint at policy update:
-`d44bebeacf8ca56bdb8230dabeccc73087f1f17e`
+Latest verified policy/status checkpoint before this pointer refresh:
+`e2a37f4fd874a2bf8ad150b9fdd45a0eb02bb7f7`
+
+The next Codex task must fetch and verify the actual current branch HEAD; do not assume the checkpoint above is still the branch tip.
 
 Verified preserved predecessor:
 `81efe82618048b79a821f93bd95a0be00eaeff43`
