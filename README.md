@@ -1,6 +1,6 @@
 # HAU-USC Logistics Management System
 
-The repository currently preserves the implemented **0.4.0 launch-readiness baseline** while preparing the accepted **v0.6 multi-portal, role-aware program**.
+The repository preserves the implemented **v0.5 operations baseline** and its **0.4.0 launch-readiness foundation** while preparing the accepted **v0.6 multi-portal, role-aware program**.
 
 The v0.6 transition is intentionally repository-driven so development can continue across fresh Codex/ChatGPT tasks, accounts, or machines without relying on old chat history.
 
@@ -46,11 +46,24 @@ Historical PR #2 is closed and was not merged. Older documentation mentioning an
 
 - Local Vite builds default to `backendMode = 'mock'`.
 - Generated Apps Script builds use the Apps Script adapter and explicit environment Script Properties.
-- The known staging deployment inherited from the preserved launch-readiness state is immutable Version 9.
+- The accepted staging demo is immutable Version 13; immutable Version 12 is the verified rollback, and isolated Version 26 remains a non-accepted Gate E candidate.
 - Production promotion has not been performed.
-- The v0.6 continuity bootstrap changes repository instructions/specification/status documentation only; it does not authorize Apps Script pushes, operational Sheet/Drive writes, migrations, access seeding, trigger changes, or production actions.
+- Phase 1 repository work does not authorize Apps Script pushes, operational Sheet/Drive writes, migrations, access seeding, trigger changes, or production actions.
 
 Follow `docs/LAUNCH_RUNBOOK.md` for any explicitly authorized staging/production action.
+
+## Version 0.5.0 baseline
+
+Version 0.5.0 is the repository-only live synchronization, lending search, and catalog-controls revision for the Holy Angel University – University Student Council Department of Logistics. It builds on the 0.4.0 launch-readiness foundation while preserving the approved maroon, burgundy, gold, cream, paper, and white prototype and the production Google Apps Script boundary.
+
+## Version 0.5.0 scope
+
+- Successful Apps Script mutations reload authoritative bootstrap state before the interface renders success. A recorded mutation is never submitted again merely because the follow-up reload failed.
+- Internal sessions use a fail-closed 15-second jittered scoped-revision check only while visible, online, and focused or recently active. Unchanged checks fetch no module data; changed checks refresh only the active bounded module. This is polling, not WebSockets or server push.
+- Direct human edits can advance the revision through an idempotently installed operational spreadsheet edit trigger.
+- Dirty forms and active modal work defer background reloads and show a non-blocking “New operational data is available” choice instead of discarding input.
+- The Lending Hub uses an accessible predictive item search with borrower-aware audience, handling, stock, verification, and quantity explanations. Final eligibility is always revalidated on the server.
+- Authorized catalog managers can create, edit, relocate, archive, and restore items through audited Apps Script APIs. Item IDs, ledger history, quantity truth, provenance, and unsafe unit changes remain protected.
 
 ## Start locally
 
@@ -73,16 +86,26 @@ npm run check
 npm run test:e2e              # requires Playwright Chromium
 ```
 
-`npm run build` creates the standalone reviewer artifacts and the parser-safe Apps Script package used by the preserved launch-readiness implementation:
+`npm run build` creates the standalone reviewer artifacts and a parser-safe Apps Script package:
 
-- `dist/index.html` — canonical standalone build
-- `HAU-USC_Logistics-Prototype-Shareable.html` — reviewer-facing copy
-- `apps-script/Index.html` — Apps Script template shell
-- `apps-script/AppBody.html` — generated approved body markup
-- `apps-script/AppStyles.html` — generated complete application style element
-- `apps-script/AppScript.html` — generated complete application script element
+- `dist/index.html` – canonical standalone production build.
+- `HAU-USC_Logistics-Prototype-Shareable.html` – reviewer-facing copy with the same bytes.
+- `hau-usc-logistics-guided-demo.html` – self-contained offline application
+  with an accessible seven-step presenter guide.
+- `shareable-html-modules/*.html` – seven ordered, self-contained entry points
+  that open directly in Overview, Request Center, Office Lending, Release,
+  Restocking, Procurement, or Inventory while retaining shared navigation.
+- `apps-script/Index.html` – small Apps Script template shell.
+- `apps-script/AppBody.html` – generated approved body markup.
+- `apps-script/AppStyles.html` – generated complete application style element.
+- `apps-script/AppScript.html` – generated complete application script element with staging runtime configuration.
 
-Do not hand-edit generated HTML. Change source/generator files and rebuild.
+The module filenames use numeric ordering and lowercase kebab-case; the full
+contract is in `docs/SHAREABLE_HTML_MODULES.md`. The Apps Script body, CSS, and
+JavaScript are produced from separate Vite outputs. The generator does not
+parse minified JavaScript out of `dist/index.html`, and it escapes raw-text
+closing sequences before embedding code in HTML. Do not edit generated HTML
+directly. Change source or the generator, then rebuild.
 
 ## Preserved visual baseline and v0.6 visual direction
 
@@ -134,7 +157,9 @@ The preserved launch-readiness history includes:
 - controlled staging recovery through Version 8;
 - Version 9 read-only acceptance of the diagnostic route, authorized internal route, and request-only privacy boundary;
 - verified runtime-truthfulness repository repair at `7156c256414b797f4b0f19431b399009f31feebd`;
-- successful CI/static-check evidence associated with the preserved predecessor.
+- successful CI/static-check evidence associated with the preserved predecessor;
+- recovery to accepted immutable Version 13 with Version 12 retained as rollback;
+- isolated Version 26 Gate E evidence without production promotion.
 
 Detailed incident and staging evidence remains in:
 
@@ -143,6 +168,11 @@ Detailed incident and staging evidence remains in:
 - `docs/INCIDENT_APPS_SCRIPT_STAGING_WEBAPP_2026-07-12.md`
 
 Do not repeat staging setup, migration dry-runs, Drive setup, backups, or triggers merely because the coding account/session changed.
+
+The preservation-first local workspace classification and recovery map is in
+[`docs/WORKSPACE_CONSOLIDATION.md`](docs/WORKSPACE_CONSOLIDATION.md).
+The live Phase 3.5 folder, branch, PR, preservation, and execution plan is in
+[`docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md`](docs/REPOSITORY_AND_WORKSPACE_CONSOLIDATION_PLAN.md).
 
 ## First action for a new Codex session
 

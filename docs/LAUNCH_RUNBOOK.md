@@ -2,13 +2,37 @@
 
 ## Staging
 
-1. Confirm branch/commit and passing CI.
-2. Build and run `clasp status` / `clasp push --dry-run` against staging.
-3. Run schema setup/validation, configure and validate all Drive folders, seed reviewed users, and create triggers.
-4. Run migration dry-run and reconciliation; resolve all launch-blocking `VERIFY` decisions without modifying legacy cells.
-5. Create a launch backup; record backup ID privately.
-6. Deploy staging web app. Test internal and `?request=1` entry points with separate authorized/unauthorized accounts.
-7. Run the complete staging acceptance matrix and verify audit/history/error/evidence records.
+Complete Gate A in `STAGING_OPERATIONAL_ACCEPTANCE.md` before step 1. An old
+private config, deployment report, or blanket continuation instruction does not
+identify the current authorized target, operator, fixture, testers, or allowed
+write categories.
+
+Create the private Gate A record outside Git with
+`npm run staging:authorization:init -- <absolute-private-json-path>` and require
+`npm run staging:authorization:check -- <absolute-private-json-path>` to report
+at least Gate B before any remote source/status read. A structurally valid
+record does not authorize a gate reported as `DENIED` or `PENDING`.
+
+1. Confirm branch/commit, passing CI, and a valid outside-Git authorization
+   package through Gate B.
+2. Run read-only `clasp status` and pull/compare the remote source in a separate
+   temporary location; stop on target, source, manifest, audience, rollback, or
+   capacity drift.
+3. Require Gate C authorization, create and verify the staging backup, and
+   record its identifier privately before any setup or write.
+4. Run additive schema setup/validation and configure/validate all seven Drive
+   folders against the named staging resources only.
+5. Run migration dry-run and reconciliation; apply nothing without a separately
+   approved report, and resolve launch-blocking `VERIFY` decisions without
+   modifying legacy cells.
+6. Create or verify approved triggers idempotently.
+7. Require Gate D authorization, push/pull the reviewed package with exact
+   parity, and use an approved test deployment without moving the accepted
+   deployment pointer.
+8. Seed only the approved synthetic namespace and least-privilege test roles;
+   verify revocation before functional writes.
+9. Require Gate E authorization, run the complete staging acceptance and
+   rollback-rehearsal matrix, and verify audit/history/error/evidence records.
 
 ### Clasp 3.3 manifest safeguard
 
@@ -28,9 +52,48 @@ Never create a new immutable version merely because a push command exited succes
 
 Do not derive access mode solely from `location.search` in client JavaScript. Apps Script serves the application inside a sandbox iframe whose URL may not retain the outer `/exec` query. Parse access flags in `doGet(e)`, inject the server result into evaluated HTML, and make the browser send that trusted value to bootstrap. Test both the internal and request-only template evaluations in a browser before deployment.
 
+## Version 0.5.0 staging migration sequence
+
+This sequence is a handoff plan only. It does not authorize external actions.
+
+1. Verify the exact reviewed 0.5.0 commit, clean checkout, CI, `npm run check`, `npm run verify`, and complete browser matrix. Confirm `.clasp.json`, Script IDs, spreadsheet/Drive IDs, credentials, personal records, supplier TINs, and evidence files are untracked and not staged.
+2. Create and privately record a fresh staging schema backup before changing source or headers.
+3. Use the clasp manifest safeguard above to compare remote/local files, preserve the existing staging `webapp` access block, push the reviewed package only with explicit authorization, and pull again for exact parity.
+4. Before activating the new web version, run additive `setupDatabase()` against the configured staging operational spreadsheet.
+5. Confirm the ten appended `01_ITEM_MASTER` columns, appended `Can_Manage_Catalog`, both revision rows, preserved existing values, preserved legacy tabs, preserved Drive configuration, and least-privilege defaults.
+6. Run idempotent `setupOperationalEditTrigger()` and confirm there is exactly one matching trigger for the configured staging spreadsheet.
+7. Run schema, health, Drive, and access validation. Verify the expected environment without exposing resource IDs in public evidence.
+8. Using an explicitly authorized Apps Script test deployment that executes the reviewed source without changing the existing Version 9 deployment, exercise revision reads, exactly-one increment per mutation, no increment on reads/replays, a direct human edit, authoritative post-mutation refresh, two-session polling, dirty-form deferral, predictive lending search, audience/handling rules, catalog permission/edit persistence, unit/archive protection, and request-only privacy. If that test-deployment mechanism is unavailable, stop and obtain an approved alternative before changing the Version 9 deployment pointer.
+9. Reconcile ledger, reservations, lending, status history, audit, errors, and evidence. Stop on any inventory, authorization, revision, evidence, or privacy failure.
+10. Only after acceptance, create one immutable staging version and update the existing deployment ID. Record version, commit, owner, time, and results.
+
+The schema migration is intentionally safe before deployment activation. Existing Version 9 ignores the appended columns and revision rows.
+
 ## Production promotion
 
-Obtain DOL owner sign-off, freeze config/mappings, create a fresh backup, push the reviewed commit to the production Apps Script project, create an immutable deployment version, restrict audience, run smoke tests, and record deployment owner/version/commit/time/result. Keep the previous deployment version available for application rollback.
+Obtain DOL owner sign-off and use this order:
+
+1. Freeze the reviewed commit, access list, catalog defaults, configuration, and migration evidence.
+2. Create and privately record a fresh production backup.
+3. Push the exact staging-accepted package to the production Apps Script project using the same remote parity and manifest safeguards.
+4. Before activating the web version, run additive `setupDatabase()` and validate all appended fields/rows, preserved data, environment routing, and Drive configuration.
+5. Run `setupOperationalEditTrigger()` once and confirm exactly one matching production trigger.
+6. Recheck reviewed `Can_Manage_Catalog` grants; blank must not expose catalog management beyond ADMIN/DOL_DIRECTOR fallback.
+7. Create one immutable production version, update the existing restricted deployment, and record deployment owner/version/commit/time/result.
+8. Run bounded production acceptance for internal bootstrap, request-only privacy, revision reads, one authorized test mutation and immediate refresh, lending eligibility, catalog permission, audit/history, and idempotent replay.
+9. Stop writes and roll back the deployment pointer on any inventory, authorization, revision, evidence, or privacy failure.
+
+Keep the preceding immutable deployment version available throughout acceptance.
+
+## Rollback sequence
+
+1. Stop new operational writes and capture the failing correlation IDs, revision, deployment version, and affected records.
+2. Update the existing deployment ID back to the preceding immutable version; do not create an unrelated deployment ID.
+3. Verify internal and request-only rendering and confirm the preceding version is serving.
+4. Reconcile every mutation completed before rollback. Do not delete or edit ledger, audit, status-history, lending, request, or evidence records.
+5. Retain the appended item/access columns, revision config rows, and catalog metadata. They are additive and Version 9 safely ignores them.
+6. Leave the operational edit trigger in place unless evidence identifies it as the failure source. Removing or disabling it requires explicit owner authorization and must be recorded.
+7. Correct the repository, rerun the entire staging sequence, and create a new immutable version; never overwrite historical versions.
 
 ## Immediate smoke tests
 
@@ -40,6 +103,8 @@ Obtain DOL owner sign-off, freeze config/mappings, create a fresh backup, push t
 - test request submit/review/reserve/release produces one movement;
 - test evidence gets safe label/filename and metadata;
 - duplicate retry returns the original result;
+- global and affected scoped revisions advance once for the test mutation, remain stable for reads/replays, and another eligible clean session meets the approved p95-at-or-below-25-second visibility target with no routine sample above 35 seconds;
+- dirty form input is preserved behind the updates-available banner;
 - logs contain correlation IDs and no public stack trace.
 
 If any inventory, authorization, evidence, or privacy test fails, stop writes and follow the recovery runbook. Never repair by deleting ledger rows.

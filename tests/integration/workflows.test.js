@@ -79,8 +79,9 @@ describe('guided workflows', () => {
 
   it('keeps sibling restock lines open after a line-level final receipt', async () => {
     const result = await service.receiveRestock({
-      restockRequestId: 'RRQ-0001',
+      restockRequestId: 'RRQ-RL-0004',
       requestLineId: 'RL-0004',
+      expectedRevision: 2,
       quantityReceivedNow: 6,
       quantityDamaged: 0,
       quantityRejected: 0,

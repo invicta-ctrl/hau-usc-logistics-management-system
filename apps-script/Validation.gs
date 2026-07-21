@@ -13,7 +13,9 @@ function correlationId_() { return 'COR-' + Utilities.getUuid().replace(/-/g, ''
 function publicError_(error, correlationId) { return { ok: false, code: error.code || 'INTERNAL_ERROR', message: error.code ? error.message : 'The operation could not be completed.', correlationId: correlationId, retryable: Boolean(error.retryable), details: error.code ? (error.details || {}) : {} }; }
 
 function clientSafeValue_(value) {
-  if (value == null) return value;
+  var valueType = typeof value;
+  if (value === null) return null;
+  if (valueType === 'undefined' || valueType === 'function' || valueType === 'symbol' || valueType === 'bigint') return null;
   if (Object.prototype.toString.call(value) === '[object Date]') {
     return isNaN(value.getTime()) ? '' : value.toISOString();
   }
@@ -23,7 +25,8 @@ function clientSafeValue_(value) {
     var output = {};
     Object.keys(value).forEach(function(key) {
       var item = value[key];
-      if (typeof item !== 'function' && typeof item !== 'undefined') output[key] = clientSafeValue_(item);
+      var itemType = typeof item;
+      if (itemType !== 'function' && itemType !== 'undefined' && itemType !== 'symbol' && itemType !== 'bigint') output[key] = clientSafeValue_(item);
     });
     return output;
   }
@@ -38,7 +41,8 @@ function withScriptLock_(operation) {
 function guardApi_(operationName, command, fn) {
   var correlationId = correlationId_();
   try {
-    var result = fn(correlationId);
+    var authorization = typeof authorizeOperation_ === 'function' ? authorizeOperation_(operationName, command || {}) : null;
+    var result = fn(correlationId, authorization);
     return clientSafeValue_(Object.assign({ ok: true, correlationId: correlationId }, result || {}));
   }
   catch (error) {

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 export const APPS_SCRIPT_RUNTIME_SOURCE =
-  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase()};';
+  'globalThis.__HAU_RUNTIME_CONFIG__={backendMode:"apps-script",appEnvironment:String(document.body?.dataset?.appEnvironment||"").toUpperCase(),bootstrapContractVersion:Number(document.body?.dataset?.bootstrapContractVersion||1),compositeRequestsEnabled:document.body?.dataset?.compositeRequestsEnabled==="true",foodRequestsEnabled:document.body?.dataset?.foodRequestsEnabled==="true",materialsRequestsEnabled:document.body?.dataset?.materialsRequestsEnabled==="true",venueEquipmentRequestsEnabled:document.body?.dataset?.venueEquipmentRequestsEnabled==="true"};';
 
 const INCLUDE_MARKERS = Object.freeze({
   appStyles: "<?!= include_('AppStyles'); ?>",
@@ -11,7 +11,12 @@ const INCLUDE_MARKERS = Object.freeze({
   appScript: "<?!= include_('AppScript'); ?>",
 });
 const REQUEST_ONLY_VALUE_MARKER = "<?= requestOnly ? 'true' : 'false' ?>";
-const APP_ENVIRONMENT_VALUE_MARKER = "<?= appEnvironment ?>";
+const APP_ENVIRONMENT_VALUE_MARKER = '<?= appEnvironment ?>';
+const BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER = '<?= bootstrapContractVersion ?>';
+const COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER = "<?= compositeRequestsEnabled ? 'true' : 'false' ?>";
+const FOOD_REQUESTS_ENABLED_VALUE_MARKER = "<?= foodRequestsEnabled ? 'true' : 'false' ?>";
+const MATERIALS_REQUESTS_ENABLED_VALUE_MARKER = "<?= materialsRequestsEnabled ? 'true' : 'false' ?>";
+const VENUE_EQUIPMENT_REQUESTS_ENABLED_VALUE_MARKER = "<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>";
 
 const TAG_NAME_CHAR = /[A-Za-z0-9:_-]/;
 const ATTR_NAME_CHAR = /[^\s=/>]/;
@@ -221,7 +226,9 @@ function oneElement(tokens, name, closing) {
     (token) => token.type === 'tag' && token.name === name && token.closing === closing,
   );
   if (matches.length !== 1) {
-    throw new Error(`Expected exactly one ${closing ? 'closing' : 'opening'} <${name}> tag; found ${matches.length}.`);
+    throw new Error(
+      `Expected exactly one ${closing ? 'closing' : 'opening'} <${name}> tag; found ${matches.length}.`,
+    );
   }
   return matches[0];
 }
@@ -252,12 +259,16 @@ function removeBuildReferences(section, location) {
   for (const token of tokens) {
     if (token.type !== 'tag' || token.closing) continue;
     if (token.name === 'style') {
-      throw new Error(`Inline <style> content is not allowed in the expanded ${location}; CSS must come from Vite assets.`);
+      throw new Error(
+        `Inline <style> content is not allowed in the expanded ${location}; CSS must come from Vite assets.`,
+      );
     }
     if (token.name === 'script') {
       const src = token.attributes.get('src');
       if (!src) {
-        throw new Error(`Inline <script> content is not allowed in the expanded ${location}; JavaScript must come from Vite chunks.`);
+        throw new Error(
+          `Inline <script> content is not allowed in the expanded ${location}; JavaScript must come from Vite chunks.`,
+        );
       }
       ranges.push([token.start, token.elementEnd ?? token.end]);
       continue;
@@ -281,7 +292,11 @@ export function splitExpandedSourceHtml(source) {
   const headClose = oneElement(tokens, 'head', true);
   const bodyOpen = oneElement(tokens, 'body', false);
   const bodyClose = oneElement(tokens, 'body', true);
-  if (!(htmlOpen.end <= headOpen.start && headClose.end <= bodyOpen.start && bodyClose.end <= htmlClose.start)) {
+  if (!(
+    htmlOpen.end <= headOpen.start &&
+    headClose.end <= bodyOpen.start &&
+    bodyClose.end <= htmlClose.start
+  )) {
     throw new Error('Expanded source HTML has an invalid document order.');
   }
   const headInner = source.slice(headOpen.end, headClose.start);
@@ -345,11 +360,26 @@ function addRuntimeAttributes(bodyOpen) {
   if (/\sdata-app-environment\s*=/i.test(bodyOpen)) {
     throw new Error('Expanded source body already defines data-app-environment.');
   }
+  if (/\sdata-bootstrap-contract-version\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-bootstrap-contract-version.');
+  }
+  if (/\sdata-composite-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-composite-requests-enabled.');
+  }
+  if (/\sdata-food-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-food-requests-enabled.');
+  }
+  if (/\sdata-materials-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-materials-requests-enabled.');
+  }
+  if (/\sdata-venue-equipment-requests-enabled\s*=/i.test(bodyOpen)) {
+    throw new Error('Expanded source body already defines data-venue-equipment-requests-enabled.');
+  }
   const closingIndex = bodyOpen.lastIndexOf('>');
   if (closingIndex <= 0 || bodyOpen[closingIndex - 1] === '/') {
     throw new Error('Expanded source body opening tag is invalid.');
   }
-  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
+  return `${bodyOpen.slice(0, closingIndex)} data-request-only="${REQUEST_ONLY_VALUE_MARKER}" data-app-environment="${APP_ENVIRONMENT_VALUE_MARKER}" data-bootstrap-contract-version="${BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER}" data-composite-requests-enabled="${COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER}" data-food-requests-enabled="${FOOD_REQUESTS_ENABLED_VALUE_MARKER}" data-materials-requests-enabled="${MATERIALS_REQUESTS_ENABLED_VALUE_MARKER}" data-venue-equipment-requests-enabled="${VENUE_EQUIPMENT_REQUESTS_ENABLED_VALUE_MARKER}"${bodyOpen.slice(closingIndex)}`;
 }
 
 export function createAppsScriptFiles({ expandedHtml, scriptSources, styleSources }) {
@@ -408,7 +438,7 @@ export async function createAppsScriptBundleFromProject() {
     import('vite'),
     import('./authoritative-visual-plugin.mjs'),
   ]);
-  const sourceHtml = await readFile(resolve('src/index.html'), 'utf8');
+  const sourceHtml = (await readFile(resolve('src/index.html'), 'utf8')).replace(/\r\n?/g, '\n');
   const visualPlugin = authoritativeVisual();
   const expandedHtml = await visualPlugin.transformIndexHtml(sourceHtml);
   const viteResult = await build({
@@ -438,11 +468,23 @@ export async function createAppsScriptBundleFromProject() {
 
 export function assembleAppsScriptTemplate(
   files,
-  { requestOnly = false, appEnvironment = 'STAGING' } = {},
+  {
+    requestOnly = false,
+    appEnvironment = 'STAGING',
+    bootstrapContractVersion = 2,
+    compositeRequestsEnabled = false,
+    foodRequestsEnabled = false,
+    materialsRequestsEnabled = false,
+    venueEquipmentRequestsEnabled = false,
+  } = {},
 ) {
   const normalizedEnvironment = String(appEnvironment).trim().toUpperCase();
   if (!['STAGING', 'PRODUCTION'].includes(normalizedEnvironment)) {
     throw new Error('Apps Script environment must be STAGING or PRODUCTION.');
+  }
+  const normalizedBootstrapContractVersion = Number(bootstrapContractVersion);
+  if (![1, 2].includes(normalizedBootstrapContractVersion)) {
+    throw new Error('Apps Script bootstrap contract version must be 1 or 2.');
   }
 
   let assembled = files.index;
@@ -452,12 +494,17 @@ export function assembleAppsScriptTemplate(
     [INCLUDE_MARKERS.appScript, files.appScript],
     [REQUEST_ONLY_VALUE_MARKER, requestOnly ? 'true' : 'false'],
     [APP_ENVIRONMENT_VALUE_MARKER, normalizedEnvironment],
+    [BOOTSTRAP_CONTRACT_VERSION_VALUE_MARKER, String(normalizedBootstrapContractVersion)],
+    [COMPOSITE_REQUESTS_ENABLED_VALUE_MARKER, compositeRequestsEnabled ? 'true' : 'false'],
+    [FOOD_REQUESTS_ENABLED_VALUE_MARKER, foodRequestsEnabled ? 'true' : 'false'],
+    [MATERIALS_REQUESTS_ENABLED_VALUE_MARKER, materialsRequestsEnabled ? 'true' : 'false'],
+    [VENUE_EQUIPMENT_REQUESTS_ENABLED_VALUE_MARKER, venueEquipmentRequestsEnabled ? 'true' : 'false'],
   ];
   for (const [marker, value] of replacements) {
     if (countOccurrences(assembled, marker) !== 1) {
       throw new Error(`Template marker ${marker} must appear exactly once before assembly.`);
     }
-    assembled = assembled.replace(marker, value.trimEnd());
+    assembled = assembled.replace(marker, () => value.trimEnd());
   }
   if (assembled.includes('<?') || assembled.includes('?>')) {
     throw new Error('Assembled Apps Script document still contains a template delimiter.');
@@ -474,10 +521,7 @@ export function analyzeAssembledDocument(document) {
   const bodyOpen = oneElement(tokens, 'body', false);
   const bodyClose = oneElement(tokens, 'body', true);
   const visibleBodyText = tokens
-    .filter(
-      (token) =>
-        token.type === 'text' && token.start >= bodyOpen.end && token.end <= bodyClose.start,
-    )
+    .filter((token) => token.type === 'text' && token.start >= bodyOpen.end && token.end <= bodyClose.start)
     .map((token) => token.raw)
     .join(' ');
   const suspiciousVisibleText = visibleBodyText.match(

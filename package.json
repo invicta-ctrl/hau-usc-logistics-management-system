@@ -1,6 +1,6 @@
 {
   "name": "hau-usc-logistics-management-system",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,13 @@
     "build": "vite build && node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
     "build:share": "node scripts/create-shareable.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",
+    "verify": "npm run check:apps-script && npm run verify:dist",
     "check:apps-script": "node scripts/check-apps-script.mjs",
+    "check:agents": "node scripts/check-agent-instructions.mjs",
+    "check:continuation": "node scripts/check-work-continuation.mjs",
+    "staging:authorization:init": "node scripts/staging-authorization.mjs init",
+    "staging:authorization:check": "node scripts/staging-authorization.mjs check",
+    "check:governance": "npm run check:agents && npm run check:continuation",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,7 +23,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist"
+    "check": "npm run check:governance && npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

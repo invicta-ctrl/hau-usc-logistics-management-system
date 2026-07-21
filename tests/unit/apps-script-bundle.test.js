@@ -143,25 +143,47 @@ describe('Apps Script separate-output packaging', () => {
   it('renders the server-trusted request-only flag into the assembled body', () => {
     const files = fixtureFiles();
     expect(files.index).toContain("data-request-only=\"<?= requestOnly ? 'true' : 'false' ?>\"");
+    expect(files.index).toContain('data-bootstrap-contract-version="<?= bootstrapContractVersion ?>"');
+    expect(files.index).toContain(
+      "data-venue-equipment-requests-enabled=\"<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>\"",
+    );
     const internal = analyzeAssembledDocument(assembleAppsScriptTemplate(files));
     const requestOnly = analyzeAssembledDocument(assembleAppsScriptTemplate(files, { requestOnly: true }));
-    const internalBody = internal.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
-    const requestOnlyBody = requestOnly.tokens.find((token) => token.type === 'tag' && !token.closing && token.name === 'body');
+    const legacy = analyzeAssembledDocument(
+      assembleAppsScriptTemplate(files, { bootstrapContractVersion: 1 }),
+    );
+    const internalBody = internal.tokens.find(
+      (token) => token.type === 'tag' && !token.closing && token.name === 'body',
+    );
+    const requestOnlyBody = requestOnly.tokens.find(
+      (token) => token.type === 'tag' && !token.closing && token.name === 'body',
+    );
+    const legacyBody = legacy.tokens.find(
+      (token) => token.type === 'tag' && !token.closing && token.name === 'body',
+    );
     expect(internalBody.attributes.get('data-request-only')).toBe('false');
     expect(requestOnlyBody.attributes.get('data-request-only')).toBe('true');
+    expect(internalBody.attributes.get('data-bootstrap-contract-version')).toBe('2');
+    expect(legacyBody.attributes.get('data-bootstrap-contract-version')).toBe('1');
+    expect(() => assembleAppsScriptTemplate(files, { bootstrapContractVersion: 3 })).toThrow(/1 or 2/);
+  });
+
+  it('inserts generated partials literally when minified identifiers contain replacement tokens', () => {
+    const files = fixtureFiles();
+    files.appScript = files.appScript.replace(
+      '</script>',
+      () => 'const $=true;$&&globalThis.__replacementTokenSafe=true;\n</script>',
+    );
+    const assembled = assembleAppsScriptTemplate(files);
+    expect(assembled).toContain('$&&globalThis.__replacementTokenSafe=true');
+    expect(assembled).not.toContain('<?');
   });
 
   it('runs one minified-identifier bootstrap and reaches the mocked Apps Script API once', () => {
-    const script = extractRawTextElementContent(
-      fixtureFiles().appScript,
-      'script',
-      'hau-app-script',
-    );
+    const script = extractRawTextElementContent(fixtureFiles().appScript, 'script', 'hau-app-script');
     const execution = executeFixtureScript(script);
     expect(execution.listeners).toHaveLength(1);
-    expect(execution.apiCalls).toEqual([
-      { method: 'api_getBootstrapData', payload: { requestOnly: false } },
-    ]);
+    expect(execution.apiCalls).toEqual([{ method: 'api_getBootstrapData', payload: { requestOnly: false } }]);
     expect(execution.loadingClasses.has('hidden')).toBe(true);
   });
 
@@ -171,7 +193,7 @@ describe('Apps Script separate-output packaging', () => {
     expect(second).toEqual(first);
     const diagnostics = bundleDiagnostics(first);
     expect(diagnostics.index.sha256).toMatch(/^[a-f0-9]{64}$/);
-    expect(diagnostics.index.markers['<?'].count).toBe(5);
+    expect(diagnostics.index.markers['<?'].count).toBe(10);
     expect(diagnostics.appScript.bytes).toBe(Buffer.byteLength(first.appScript));
     expect(diagnostics.appScript.markers['</script'].positions).toEqual([
       first.appScript.lastIndexOf('</script'),
@@ -211,9 +233,7 @@ describe('Apps Script separate-output packaging', () => {
   it('renders the trusted Apps Script environment into the assembled body', () => {
     const files = fixtureFiles();
 
-    expect(files.index).toContain(
-      'data-app-environment="<?= appEnvironment ?>"',
-    );
+    expect(files.index).toContain('data-app-environment="<?= appEnvironment ?>"');
 
     const staging = analyzeAssembledDocument(
       assembleAppsScriptTemplate(files, {
@@ -228,26 +248,16 @@ describe('Apps Script separate-output packaging', () => {
     );
 
     const stagingBody = staging.tokens.find(
-      (token) =>
-        token.type === 'tag' &&
-        !token.closing &&
-        token.name === 'body',
+      (token) => token.type === 'tag' && !token.closing && token.name === 'body',
     );
 
     const productionBody = production.tokens.find(
-      (token) =>
-        token.type === 'tag' &&
-        !token.closing &&
-        token.name === 'body',
+      (token) => token.type === 'tag' && !token.closing && token.name === 'body',
     );
 
-    expect(
-      stagingBody.attributes.get('data-app-environment'),
-    ).toBe('STAGING');
+    expect(stagingBody.attributes.get('data-app-environment')).toBe('STAGING');
 
-    expect(
-      productionBody.attributes.get('data-app-environment'),
-    ).toBe('PRODUCTION');
+    expect(productionBody.attributes.get('data-app-environment')).toBe('PRODUCTION');
 
     expect(() =>
       assembleAppsScriptTemplate(files, {
@@ -255,5 +265,4 @@ describe('Apps Script separate-output packaging', () => {
       }),
     ).toThrow(/STAGING or PRODUCTION/);
   });
-
 });

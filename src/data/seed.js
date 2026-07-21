@@ -129,6 +129,103 @@ function inventoryItems() {
   return items;
 }
 
+function venueEquipmentRoutes() {
+  return [
+    {
+      id: 'SYN-ROUTE-VENUE',
+      matchKind: 'REFERENCE',
+      referenceId: 'SYN-VENUE-1',
+      referenceType: 'VENUE',
+      category: 'MEETING_SPACE',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-FACILITIES',
+      approvingAuthorityId: 'SYN-AUTH-FACILITIES',
+      leadTimeBusinessDays: 5,
+      instructions: 'Submit the synthetic setup plan for review.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-ROUTE-EQUIPMENT',
+      matchKind: 'REFERENCE',
+      referenceId: 'SYN-EQUIP-1',
+      referenceType: 'EQUIPMENT',
+      category: 'AUDIO_VISUAL',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-INVENTORY',
+      approvingAuthorityId: 'SYN-AUTH-INVENTORY',
+      leadTimeBusinessDays: 3,
+      instructions: 'Confirm the synthetic handoff and return plan.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-ROUTE-OTHER',
+      matchKind: 'OTHER',
+      referenceId: '',
+      referenceType: 'OTHER',
+      category: 'OTHER_CONTROLLED',
+      ownerCommitteeId: 'COM_INVENTORY_PANTRY',
+      ownerUserId: '',
+      responsibleOfficeId: 'SYN-OFFICE-TRIAGE',
+      approvingAuthorityId: 'SYN-AUTH-TRIAGE',
+      leadTimeBusinessDays: 5,
+      instructions: 'Classify the synthetic Other request before handoff.',
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      status: 'ACTIVE',
+    },
+  ];
+}
+
+function venueEquipmentReferences() {
+  return [
+    {
+      id: 'SYN-VENUE-1',
+      type: 'VENUE',
+      category: 'MEETING_SPACE',
+      name: 'Synthetic Assembly Room',
+      aliases: ['Synthetic Meeting Room'],
+      location: 'Synthetic Campus',
+      unit: 'service',
+      requestability: 'REQUESTABLE',
+      contactRole: 'Facilities coordinator',
+      routeId: 'SYN-ROUTE-VENUE',
+      returnRequired: false,
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      sourceRevision: 'SYN-REFSET-1',
+      status: 'ACTIVE',
+    },
+    {
+      id: 'SYN-EQUIP-1',
+      type: 'EQUIPMENT',
+      category: 'AUDIO_VISUAL',
+      name: 'Synthetic Projector Set',
+      aliases: ['Synthetic AV Set'],
+      location: '',
+      unit: 'set',
+      requestability: 'REQUESTABLE',
+      contactRole: 'Inventory custodian',
+      routeId: 'SYN-ROUTE-EQUIPMENT',
+      returnRequired: true,
+      effectiveFrom: '2026-01-01',
+      effectiveTo: '',
+      revision: 1,
+      sourceRevision: 'SYN-REFSET-1',
+      status: 'ACTIVE',
+    },
+  ];
+}
+
 function ledgerTransactions() {
   const rows = baseItems.map(
     ([itemId, _name, _aliases, _category, _area, _handling, _unit, opening], index) => ({
@@ -272,6 +369,10 @@ export function createSeedState() {
     demoToday: '2026-07-11',
     previewMode: true,
     backendMode: 'mock',
+    compositeRequestsEnabled: true,
+    foodRequestsEnabled: true,
+    materialsRequestsEnabled: true,
+    venueEquipmentRequestsEnabled: true,
     revisions: { inventory: 1, requests: 1, lending: 1, receipts: 1, quotes: 1, tasks: 1 },
     counters: {
       'TXN-2026': 131,
@@ -289,6 +390,8 @@ export function createSeedState() {
     eventSeries: structuredClone(eventSeries),
     events: structuredClone(demoEvents),
     inventoryItems: inventoryItems(),
+    venueEquipmentReferences: venueEquipmentReferences(),
+    venueEquipmentRoutes: venueEquipmentRoutes(),
     ledgerTransactions: ledgerTransactions(),
     reservations: [
       {
@@ -352,6 +455,8 @@ export function createSeedState() {
         createdAt: '2026-07-09T02:00:00.000Z',
       },
     ],
+    compositeRequests: [],
+    compositeComponents: [],
     requestLines: [
       {
         id: 'RL-0001',
@@ -478,26 +583,28 @@ export function createSeedState() {
     ],
     restockRequests: [
       {
-        id: 'RRQ-0001',
+        id: 'RRQ-RL-0004',
         requestId: 'REQ-2026-00003',
         requestLineId: 'RL-0004',
         itemId: 'ITM-0002',
         quantityOrdered: 10,
         status: 'PARTIALLY_RECEIVED',
+        workflowRevision: 2,
       },
       {
-        id: 'RRQ-0002',
+        id: 'RRQ-RL-0005',
         requestId: 'REQ-2026-00003',
         requestLineId: 'RL-0005',
         itemId: 'ITM-0008',
         quantityOrdered: 3,
         status: 'TO_BE_PROCURED',
+        workflowRevision: 1,
       },
     ],
     restockReceipts: [
       {
         id: 'RRCP-2026-00000',
-        relatedId: 'RRQ-0001',
+        relatedId: 'RRQ-RL-0004',
         quantityReceived: 4,
         quantityDamaged: 0,
         quantityRejected: 0,

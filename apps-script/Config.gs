@@ -1,14 +1,28 @@
 var HAU_RUNTIME_PROPERTIES = Object.freeze({
   ENVIRONMENT: 'HAU_ENVIRONMENT',
   SPREADSHEET_ID: 'HAU_SPREADSHEET_ID',
-  BACKUP_SPREADSHEET_ID: 'HAU_BACKUP_SPREADSHEET_ID'
+  BACKUP_SPREADSHEET_ID: 'HAU_BACKUP_SPREADSHEET_ID',
+  BOOTSTRAP_CONTRACT_VERSION: 'HAU_BOOTSTRAP_CONTRACT_VERSION',
+  AUTHORIZATION_CONTRACT_VERSION: 'HAU_AUTHORIZATION_CONTRACT_VERSION',
+  PRIVATE_ROSTER_SOURCE_ID: 'HAU_PRIVATE_ROSTER_SOURCE_ID',
+  ROSTER_FRESHNESS_MINUTES: 'HAU_ROSTER_FRESHNESS_MINUTES',
+  ROSTER_SYNC_DISABLED: 'HAU_ROSTER_SYNC_DISABLED',
+  ROSTER_SYNC_APPROVED: 'HAU_ROSTER_SYNC_APPROVED',
+  ROSTER_EMERGENCY_DENY: 'HAU_ROSTER_EMERGENCY_DENY',
+  COMPOSITE_REQUESTS_ENABLED: 'HAU_COMPOSITE_REQUESTS_ENABLED',
+  FOOD_REQUESTS_ENABLED: 'HAU_FOOD_REQUESTS_ENABLED',
+  MATERIALS_REQUESTS_ENABLED: 'HAU_MATERIALS_REQUESTS_ENABLED',
+  VENUE_EQUIPMENT_REQUESTS_ENABLED: 'HAU_VENUE_EQUIPMENT_REQUESTS_ENABLED',
+  REFERENCE_ADMIN_WRITES_ENABLED: 'HAU_REFERENCE_ADMIN_WRITES_ENABLED',
+  RESTOCK_WORKFLOW_ENABLED: 'HAU_RESTOCK_WORKFLOW_ENABLED',
+  NEAR_LIVE_REFRESH_ENABLED: 'HAU_NEAR_LIVE_REFRESH_ENABLED'
 });
 
 var HAU_ALLOWED_ENVIRONMENTS = Object.freeze(['STAGING', 'PRODUCTION']);
 
 var HAU_CONFIG = Object.freeze({
-  APP_VERSION: '0.4.0',
-  SCHEMA_VERSION: '1.0.0',
+  APP_VERSION: '0.5.0',
+  SCHEMA_VERSION: '1.6.0',
   TIMEZONE: 'Asia/Manila',
   LOCK_TIMEOUT_MS: 25000,
   MAX_UPLOAD_BYTES: 10 * 1024 * 1024,
@@ -45,6 +59,67 @@ function requireGoogleResourceId_(properties, key) {
   return value;
 }
 
+function resolveBootstrapContractVersion_(properties) {
+  var raw = String(properties.getProperty(HAU_RUNTIME_PROPERTIES.BOOTSTRAP_CONTRACT_VERSION) || '1').trim();
+  var version = raw === '' ? 1 : Number(raw);
+  if (![1, 2].includes(version) || Math.floor(version) !== version) {
+    throw appError_('CONFIGURATION_INVALID', 'HAU_BOOTSTRAP_CONTRACT_VERSION must be 1 or 2.', false, {
+      key: HAU_RUNTIME_PROPERTIES.BOOTSTRAP_CONTRACT_VERSION,
+      allowed: [1, 2]
+    });
+  }
+  return version;
+}
+
+function resolveAuthorizationContractVersion_(properties) {
+  var raw = String(properties.getProperty(HAU_RUNTIME_PROPERTIES.AUTHORIZATION_CONTRACT_VERSION) || '1').trim();
+  var version = raw === '' ? 1 : Number(raw);
+  if (![1, 2].includes(version) || Math.floor(version) !== version) {
+    throw appError_('CONFIGURATION_INVALID', 'HAU_AUTHORIZATION_CONTRACT_VERSION must be 1 or 2.', false, {
+      key: HAU_RUNTIME_PROPERTIES.AUTHORIZATION_CONTRACT_VERSION,
+      allowed: [1, 2]
+    });
+  }
+  return version;
+}
+
+function resolveBooleanRuntimeProperty_(properties, key, fallback) {
+  var raw = properties.getProperty(key);
+  if (raw == null || String(raw).trim() === '') return Boolean(fallback);
+  var normalized = String(raw).trim().toLowerCase();
+  if (['true', '1', 'yes', 'on'].indexOf(normalized) >= 0) return true;
+  if (['false', '0', 'no', 'off'].indexOf(normalized) >= 0) return false;
+  throw appError_('CONFIGURATION_INVALID', key + ' must be a boolean value.', false, { key: key, allowed: ['true', 'false'] });
+}
+
+function resolveCompositeRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.COMPOSITE_REQUESTS_ENABLED, false);
+}
+
+function resolveFoodRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.FOOD_REQUESTS_ENABLED, false);
+}
+
+function resolveMaterialsRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.MATERIALS_REQUESTS_ENABLED, false);
+}
+
+function resolveVenueEquipmentRequestsEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.VENUE_EQUIPMENT_REQUESTS_ENABLED, false);
+}
+
+function resolveReferenceAdminWritesEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.REFERENCE_ADMIN_WRITES_ENABLED, false);
+}
+
+function resolveRestockWorkflowEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.RESTOCK_WORKFLOW_ENABLED, false);
+}
+
+function resolveNearLiveRefreshEnabled_(properties) {
+  return resolveBooleanRuntimeProperty_(properties || PropertiesService.getScriptProperties(), HAU_RUNTIME_PROPERTIES.NEAR_LIVE_REFRESH_ENABLED, false);
+}
+
 function resolveRuntimeConfig_() {
   var properties = PropertiesService.getScriptProperties();
   var environment = requireRuntimeProperty_(properties, HAU_RUNTIME_PROPERTIES.ENVIRONMENT).toUpperCase();
@@ -64,7 +139,15 @@ function resolveRuntimeConfig_() {
   return {
     environment: environment,
     spreadsheetId: spreadsheetId,
-    backupSpreadsheetId: backupSpreadsheetId
+    backupSpreadsheetId: backupSpreadsheetId,
+    bootstrapContractVersion: resolveBootstrapContractVersion_(properties),
+    authorizationContractVersion: resolveAuthorizationContractVersion_(properties),
+    compositeRequestsEnabled: resolveCompositeRequestsEnabled_(properties),
+    foodRequestsEnabled: resolveFoodRequestsEnabled_(properties),
+    materialsRequestsEnabled: resolveMaterialsRequestsEnabled_(properties),
+    venueEquipmentRequestsEnabled: resolveVenueEquipmentRequestsEnabled_(properties),
+    referenceAdminWritesEnabled: resolveReferenceAdminWritesEnabled_(properties),
+    nearLiveRefreshEnabled: resolveNearLiveRefreshEnabled_(properties)
   };
 }
 
@@ -74,14 +157,17 @@ var HAU_SHEETS = Object.freeze({
   RELEASES: '07_RELEASES', RESTOCK: '08_RESTOCK', DELIVERABLES: '09_DELIVERABLES',
   CANVASS: '10_CANVASS', SUPPLIERS: '11_SUPPLIERS', EVIDENCE: '12_EVIDENCE', EVENTS: '13_EVENTS',
   USERS: '14_USERS_ACCESS', HISTORY: '15_STATUS_HISTORY', AUDIT: '16_AUDIT_LOG', CONFIG: '17_CONFIG',
-  ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP'
+  ERRORS: '18_ERROR_LOG', MIGRATION: '19_MIGRATION_MAP', USER_COMMITTEE_SCOPE: '20_USER_COMMITTEE_SCOPE',
+  ACCESS_SYNC_RUNS: '21_ACCESS_SYNC_RUNS', ACCESS_SYNC_SNAPSHOT: '22_ACCESS_SYNC_SNAPSHOT', MEMBERSHIP_SYNC_SNAPSHOT: '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT', COMPOSITE_REQUESTS: '24_COMPOSITE_REQUESTS',
+  VENUE_EQUIPMENT_REFERENCES: '25_VENUE_EQUIPMENT_REFERENCES', VENUE_EQUIPMENT_ROUTES: '26_VENUE_EQUIPMENT_ROUTES',
+  REFERENCE_ADMIN_RECORDS: '27_REFERENCE_ADMIN_RECORDS', REFERENCE_ADMIN_CHANGES: '28_REFERENCE_ADMIN_CHANGES'
 });
 
 var HAU_HEADERS = Object.freeze({
-  '01_ITEM_MASTER': ['Item_ID','Item_Name','Aliases','Category','Stock_Area','Handling','Unit','Opening_Qty','Reserved_Qty','Available_To_Promise','Status','Legacy_Source_Sheet','Legacy_Source_Row','Legacy_Source_Block','Verification_Note','_Helper_Name','_Helper_Qty','_Helper_Unit','_Helper_Row','_Helper_Block'],
+  '01_ITEM_MASTER': ['Item_ID','Item_Name','Aliases','Category','Stock_Area','Handling','Unit','Opening_Qty','Reserved_Qty','Available_To_Promise','Status','Legacy_Source_Sheet','Legacy_Source_Row','Legacy_Source_Block','Verification_Note','_Helper_Name','_Helper_Qty','_Helper_Unit','_Helper_Row','_Helper_Block','Catalog_Type','Storage_Location','Reorder_Threshold','Lending_Audience','Default_Loan_Days','Maximum_Loan_Qty','Approval_Required','Updated_At','Updated_By','Notes'],
   '02_LEDGER': ['Transaction_ID','Created_At','Type','Direction','Item_ID','Event_Item_ID','Quantity','Unit','Signed_Qty','Related_Entity_Type','Related_Entity_ID','Request_ID','Event_ID','Actor_User_ID','Idempotency_Key','Notes','Reversal_Of','Status'],
   '03_REQUESTS': ['Request_ID','Created_At','Updated_At','Request_Type','Request_Stage','Parent_Request_ID','Additional_Sequence','Event_Series_ID','Event_ID','Catalog_Type','Requester_Name','Requester_Email','Department','Priority','Purpose','Status','Created_By','Client_Request_ID','Archived_At','Notes'],
-  '04_REQUEST_LINES': ['Request_Line_ID','Request_ID','Event_ID','Item_ID','Event_Item_ID','Description','Specification','Category','Requested_Qty','Unit','Fulfillment_Source','Split_Group_ID','Needed_At','Return_Due','Lead_Time_Rule','Suggested_Supplier','Released_Qty','Received_Qty','Status','Created_At','Updated_At','Created_By','Client_Line_ID','Notes'],
+  '04_REQUEST_LINES': ['Request_Line_ID','Request_ID','Event_ID','Item_ID','Event_Item_ID','Description','Specification','Category','Requested_Qty','Unit','Fulfillment_Source','Split_Group_ID','Needed_At','Return_Due','Lead_Time_Rule','Suggested_Supplier','Released_Qty','Received_Qty','Status','Created_At','Updated_At','Created_By','Client_Line_ID','Notes','Workflow_Revision'],
   '05_RESERVATIONS': ['Reservation_ID','Created_At','Updated_At','Item_ID','Quantity','Unit','Request_Line_ID','Lending_Ticket_ID','Status','Created_By','Cleared_At','Clear_Reason','Idempotency_Key','Notes'],
   '06_LENDING': ['Lending_Ticket_ID','Created_At','Updated_At','Student_ID_Number','Borrower_Name','Borrower_Type','Department_Organization','Contact','Item_ID','Quantity','Unit','Purpose','Due_At','Ticket_Type','Status','Approved_By','Approved_At','Released_By','Released_At','Returned_At','Created_By','Notes'],
   '07_RELEASES': ['Release_ID','Created_At','Request_ID','Event_ID','Lending_Ticket_ID','Recipient_Name','Recipient_Role','Department','Released_By','Released_At','Status','Evidence_ID','Confirmation_Label','Notes','Client_Request_ID','Request_Line_IDs_JSON','Quantities_JSON','Units_JSON','Idempotency_Key','Reversed_By'],
@@ -91,12 +177,21 @@ var HAU_HEADERS = Object.freeze({
   '11_SUPPLIERS': ['Supplier_ID','Created_At','Updated_At','Supplier_Name','Normalized_Name','Location','Contact_Name','Contact_Number','Email','Supplier_TIN','Receipt_Capability','Reliability','Active','Created_By','Last_Canvassed_At','Notes','Archive_Reason','Archived_At'],
   '12_EVIDENCE': ['Evidence_ID','Created_At','Evidence_Type','Evidence_Label','Original_File_Name','Normalized_File_Name','Mime_Type','Size_Bytes','SHA256','Drive_File_ID','Drive_Folder_ID','Drive_URL','Related_Entity_Type','Related_Entity_ID','Request_ID','Request_Line_ID','Event_ID','Item_ID','Event_Item_ID','Supplier_ID','Uploaded_By','Upload_Status','Duplicate_Of','Notes'],
   '13_EVENTS': ['Event_ID','Event_Series_ID','Series_Code','Event_Series_Name','Event_Name','Start_At','End_At','Venue','Owner_Committee','Department','Status','Created_At','Updated_At','Created_By','Archived_At','Notes','External_Reference','Active'],
-  '14_USERS_ACCESS': ['User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes'],
+  '14_USERS_ACCESS': ['User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes','Can_Manage_Catalog','Role_ID','Committee_IDs_JSON','Authorization_Overrides_JSON','Authorization_Status','Authorization_Revision','Access_Source','Access_Source_Revision','Access_Sync_Run_ID','Access_Last_Seen_At','Roster_Managed','Admin_Revision'],
   '15_STATUS_HISTORY': ['History_ID','Entity_Type','Entity_ID','Previous_Status','New_Status','Changed_At','Changed_By','Reason','Request_ID','Event_ID','Idempotency_Key','Metadata_JSON'],
   '16_AUDIT_LOG': ['Audit_ID','Created_At','Action','Entity_Type','Entity_ID','Actor_User_ID','Actor_Email','Request_ID','Event_ID','Before_JSON','After_JSON','IP_or_Client','Correlation_ID','Notes'],
   '17_CONFIG': ['Key','Value','Environment','Description','Secret','Updated_At','Updated_By','Validation_Status'],
   '18_ERROR_LOG': ['Error_ID','Created_At','Severity','Operation','User_ID','User_Email','Entity_Type','Entity_ID','Correlation_ID','Client_Request_ID','Message','Stack_Trace','Resolved','Resolution_Notes'],
-  '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes']
+  '19_MIGRATION_MAP': ['Migration_ID','Legacy_Sheet','Legacy_Row','Legacy_Block','Legacy_Item_Name','Legacy_Qty','Legacy_Unit','New_Item_ID','Normalized_Name','Migration_Status','Verification_Status','Duplicate_Group','Imported_At','Imported_By','Reconciled_At','Notes'],
+  '20_USER_COMMITTEE_SCOPE': ['Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes'],
+  '21_ACCESS_SYNC_RUNS': ['Sync_Run_ID','Started_At','Completed_At','Source_Revision','Source_Row_Count','Active_Row_Count','Inactive_Row_Count','Conflict_Count','Unknown_Role_Count','Unknown_Committee_Count','Invalid_Type_Count','Changed_Grant_Count','Revocation_Count','Validation_Status','Activation_Status','Freshness_Expires_At','Emergency_Deny_Active','Failure_Code','Activated_At','Activated_By','Previous_Run_ID','Notes'],
+  '22_ACCESS_SYNC_SNAPSHOT': ['Snapshot_Run_ID','User_ID','Email','Display_Name','Role','Committee','Active','Can_Review','Can_Release','Can_Receive','Can_Admin','Created_At','Updated_At','Last_Login_At','Notes','Can_Manage_Catalog','Role_ID','Committee_IDs_JSON','Authorization_Overrides_JSON','Authorization_Status','Authorization_Revision','Access_Source','Access_Source_Revision','Access_Sync_Run_ID','Access_Last_Seen_At','Roster_Managed'],
+  '23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT': ['Snapshot_Run_ID','Membership_ID','User_ID','Committee_ID','Membership_Type','Active','Starts_At','Ends_At','Source','Source_Revision','Created_At','Updated_At','Notes'],
+  '24_COMPOSITE_REQUESTS': ['Record_ID','Record_Type','Request_ID','Component_ID','Relationship_Type','Relationship_Version','Component_Type','Label','Requester_Name','Requester_Email','Department','Event_Series_ID','Event_ID','Event_Name','Event_Start_At','Event_End_At','Priority','Purpose','Component_Payload_JSON','Lifecycle_Status','Owner_Committee_ID','Owner_User_ID','Due_At','Attention_Flags_JSON','Progress_JSON','Revision','Created_At','Updated_At','Created_By','Client_Request_ID','Client_Component_ID','Idempotency_Key','Archived_At','Notes'],
+  '25_VENUE_EQUIPMENT_REFERENCES': ['Reference_ID','Reference_Type','Category_ID','Display_Name','Aliases_JSON','Location_Label','Unit','Requestability','Contact_Role','Route_ID','Return_Required','Effective_From','Effective_To','Revision','Source_Revision','Status','Created_At','Updated_At','Archived_At','Notes'],
+  '26_VENUE_EQUIPMENT_ROUTES': ['Route_ID','Match_Kind','Reference_ID','Reference_Type','Category_ID','Owner_Committee_ID','Owner_User_ID','Responsible_Office_ID','Approving_Authority_ID','Lead_Time_Business_Days','Instructions','Effective_From','Effective_To','Revision','Status','Created_At','Updated_At','Archived_At','Notes'],
+  '27_REFERENCE_ADMIN_RECORDS': ['Record_ID','Domain','Stable_ID','Revision','Status','Payload_JSON','Effective_From','Effective_To','Created_At','Updated_At','Created_By','Source_Change_ID','Archived_At'],
+  '28_REFERENCE_ADMIN_CHANGES': ['Change_ID','Domain','Action','Target_ID','Expected_Revision','Before_JSON','After_JSON','Changed_Fields_JSON','Risk','Review_Status','Requested_By','Requested_At','Reviewed_By','Reviewed_At','Idempotency_Key','Correlation_ID','Notes']
 });
 
 var HAU_DATABASE_CACHE_ = null;

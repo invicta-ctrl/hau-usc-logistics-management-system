@@ -1,5 +1,22 @@
 # Work Continuation
 
+## Current resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; authoritative v0.6 continuity checkout.
+- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; starting HEAD `bfe729d3f9eb8c2d08de0ba32a66f0a3f085c312`; tracks `origin/chore/v0.6-codex-continuity-bootstrap`; exact v0.5 source candidate `12cdfd4de73120bfeedf49582c83e1861ae36b99` is being merged without modifying `main` or merging PR #7.
+- **Current phase/stage:** `PHASE_1_SOL_HIGH_BASELINE_INTEGRATION`; repository reconciliation is complete and the history-preserving baseline merge is in progress.
+- **Accepted scope:** Phase 1 repository baseline closure, architecture/security lock, authentication and first-login onboarding foundation, shared authorization/session contracts, focused tests, and the manual Phase 2 handoff.
+- **Completed work:** verified the continuity branch and preserved predecessor; fetched current remote state; verified PR #7 and all three checks; identified `12cdfd4` as the exact v0.5 candidate; merged its history into the continuity branch and reconciled governance-document conflicts.
+- **Files changed by purpose:** the integration merge preserves v0.5 source/tests/artifacts; `.codex` and status documents reconcile v0.6 authority; `.gitignore` preserves local runtime evidence outside Git.
+- **Tests verified at current SHA:** PR #7 at `12cdfd4` passes `validate`, `verify`, and `browser-smoke`; merged-tree governance verification is being rerun after continuation reconciliation; final Phase 1 gates remain pending.
+- **Generated artifacts:** inherited v0.5 artifacts come from exact candidate `12cdfd4`; no generated artifact is being hand-edited; deterministic rebuild/parity will be verified at the final Phase 1 gate.
+- **External actions:** Git fetch and GitHub PR/check reads only; no Apps Script push/deployment, operational Sheet/Drive write, migration, access seeding, trigger change, production action, `main` update, or PR merge.
+- **Rollback:** preserved predecessor `81efe82618048b79a821f93bd95a0be00eaeff43`; pre-merge continuity head `bfe729d3f9eb8c2d08de0ba32a66f0a3f085c312`; v0.5 candidate remains independently preserved at `origin/integration/v0.5-baseline` and PR #7.
+- **Blocker:** none for repository-side Phase 1; external Slice 13 identities and staging acceptance remain separate and are not bypassed by v0.6 work.
+- **Next three actions:** finish and verify the baseline merge; lock v0.6 architecture/security contracts and implement authentication/onboarding; run final gates and advance `.codex/CURRENT.md` to the manual Phase 2 model-switch boundary.
+- **Resume commands:** `git status --short --branch`; `git rev-list --left-right --count 'HEAD...@{upstream}'`; `npm run check`; `npm run test:e2e`.
+- **Prohibited actions:** no production promotion, operational institutional-data writes, migration application, destructive history rewrite, secret/private identifier commit, Phase 2 implementation, or bypass of authorization and separation-of-duties controls.
+
 ## Latest checkpoint — v0.6 account-portable Codex continuity bootstrap
 
 - Date: `2026-07-21` (`Asia/Manila`)
@@ -106,6 +123,230 @@ Then:
 - Do not begin Phase 2 until Phase 1 produces a verified handoff and advances `.codex/CURRENT.md`.
 
 ---
+
+## Integrated v0.5 baseline continuation evidence
+
+## Current resume block
+
+- **Repository/worktree:** `D:\Documents\HAU-USC Logistics\active\hau-usc-logistics-management-system`; single authoritative checkout.
+- **Branch/HEAD/upstream:** `integration/v0.5-baseline`; source checkpoint `24ef0b9d435eca1522e9b72dc449167453266618` is pushed at parity and PR #7 checks are green.
+- **Current phase/stage:** `SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED`; Gates A-D pass and Gate E remains partial.
+- **Accepted scope:** owner-approved Gate B-F execution against the named private current demo; production, PR merge, hosting, and database remain outside this slice.
+- **Completed work:** private authorization through Gate F; read-only preflight; launch backup; schema/Drive/migration-dry-run/reconciliation/triggers; exact source push/pull; isolated Version 26; safe synthetic access seed; duplicate-ID repair; revocation proof; canonical authorization v2 activation; trace/privacy/performance/private-owner load acceptance; six-width live compatibility; bounded near-live rollback; and one namespaced request submitted for review with no stock movement.
+- **Files changed by purpose:** the progressive bootstrap read DTO applies the established fail-closed legacy handling/lending mapping; the runtime extension contains the mobile Reference Administration decoration/header at 320 px; focused regressions cover both. Private IDs, contacts, configs, and evidence remain outside Git.
+- **Tests verified at current SHA:** source checkpoint `24ef0b9` passes `npm run check` with 39 Vitest files / 323 tests, build, 33 Apps Script sources / 55 functions, deterministic generated parity, standalone verification, guided demo, seven module shareables, and full Playwright. PR #7 `validate`, `verify`, and `browser-smoke` pass.
+- **Generated artifacts:** `dist/index.html` is 411,309 bytes / SHA-256 `461efc9cfa504e9f94134863e1c13488203bea829ca7cebe12fc1a58e930acca`; Apps Script `AppStyles.html` is 30,203 bytes / SHA-256 `c65128770015110c1bc894386cab61337659bbb0b3af6ccea6dcbea8ca8458d0`; Apps Script client remains SHA-256 `4c5cc56134c30a1b746c44b5a4fd33bb80b862e22925fc8cf92cb9b52878abe2`.
+- **Remote evidence:** 39/39 exact pull-back parity, owner-only manifest, isolated repair Version 26, accepted current demo recovered to Version 13, distinct verified backup Version 12, five reconciled access rows, zero duplicate IDs, four mapped active rows, and one inactive synthetic row. All six exact widths pass in the in-app browser; two near-live sessions were restored to manual-only; exact sync latency, multi-browser, and manual accessibility rows remain unsigned. Version 18 is retained as incident evidence only.
+- **External actions:** staging-only actions above occurred. No operational review/reservation/receipt/release/lending/evidence-upload after the blocker; the accepted pointer moved only for documented recovery from Version 18 to Version 13; no production, merge, `main`, hosting, or database action.
+- **Preservation:** accepted Phase 3.5 archive tags and verified full-ref bundle remain unchanged; no private configuration entered Git; immutable audit/history rows are retained.
+- **Rollback:** accepted Version 13 is current and immutable Version 12 is the separately verified backup. Stop writes and preserve all append-only rows; do not delete the synthetic request, audit, history, access, or Version 18 incident evidence.
+- **Blocker:** one authenticated `ADMINISTRATOR` cannot satisfy operational reviewer capabilities or approve its own permission expansion. Obtain a distinct signed-in institutional DOL operational test identity and a distinct access-review identity; do not bypass self-escalation or separation of duties.
+- **Windows note:** private staging candidate files remain outside Git under the consolidated `private-config` root; do not copy or print their values. The obsolete `D:\Documents\DOL Website GitHub` compatibility shell is unrelated.
+- **Next three actions:** add the two distinct institutional test identities; rerun AUTH-01/FUNC-01 and the remaining Gate E rows on isolated Version 26 while keeping near-live manual-only; promote the candidate only after every must-pass row is signed.
+- **Resume commands:** `git status --short --untracked-files=all`; `git rev-list --left-right --count 'HEAD...@{upstream}'`; `gh pr checks 7`; validate the private authorization package; resume from the private Gate E checkpoint without repeating Gates B-D.
+- **Prohibited actions:** no self-role override, direct capability grant, reviewer impersonation, deletion of append-only evidence, non-recovery accepted-pointer move before Gate E/F, PR merge, history rewrite, production, hosting, or database action.
+
+## Current checkpoint - Slice 6 committed, pushed, and CI verified
+
+- Date: `2026-07-15` (`Asia/Manila`)
+- Repository root: `D:\Documents\DOL Website GitHub`; branch: `feat/live-sync-lending-search-catalog-controls`; approved starting checkpoint: `6548ca23f5d46b5afe40e592a3833de548b18574`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; rollback tag: `hau-usc-slice6-start-6548ca2`.
+- Current stage: `SLICE_6_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. Implementation commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` is pushed; local, upstream, and PR #6 heads matched; local/upstream count was `0 0`; and the worktree was clean before this documentation checkpoint.
+- Scope delivered: feature-flagged Composite Event Logistics request foundation only - Food, Materials, and Venue & Equipment parent/child hierarchy, validation, duplicate consolidation, atomic/idempotent creation, independent lifecycle, parent derivation, cancellation/reopen/amend/add-section, assignment/escalation boundaries, history, audit, and requester-scoped reads. Slice 7 specialization and all later slices remain gated.
+- Local evidence: lint passed; Vitest passed with 24 files / 203 tests; `npm run verify` passed with 29 Apps Script sources / 47 required functions; full Playwright passed 61 / 101 intentional skips / 0 failed across 162 cases; focused composite browser smoke passed; and `git diff --check` passed. Independent implementation review is PASS after the mock concurrent-mutation repair.
+- Generated evidence: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are 293,406 bytes each / SHA-256 `f9592c86f6e63377b82d656333b64188dea0c4284f2b23108cecb2dfd0866558`; `apps-script/Index.html` is 766 bytes / SHA-256 `9615ba949ac8479ed6b8057c6561370eedcdda0db997f238ef4c631b727a47de`; split outputs pass deterministic parity.
+- Remote evidence: Apps Script static check run `29377313232` passed `validate`; CI run `29377313250` passed `verify` and `browser-smoke`; PR #6 remained open and draft at the exact implementation head.
+- Privacy/external boundary: changed additions contain no newly introduced credentials, `.clasp` content, private Google identifiers, roster/student records, private contacts, supplier TINs, or evidence links/files. No Sheet/Drive/Apps Script external write, Script Property change, migration, or deployment occurred. `clasp status` and `clasp push --dry-run` remain unrun because no staging script is configured.
+- Owner-confirmed Phase 2 `.codex` configuration files were preserved at `D:\Documents\DOL Website GitHub Backups\HAU_USC_CODEX_PHASE2_PRESERVATION_20260715-074959`; each archived SHA-256 matched its source before the untracked originals were removed. They were not included in Slice 6.
+- Rollback: disable `HAU_COMPOSITE_REQUESTS_ENABLED` for new submissions; retain created records for read continuity; if code rollback is required, use a focused revert to `hau-usc-slice6-start-6548ca2` without resetting or discarding unrelated work.
+- Next action: manager review of pushed commit `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a` and its green CI evidence. Do not deploy, migrate, change external configuration, begin Phase 2, or start Slice 7 before acceptance.
+
+## Current checkpoint - Slice 5 committed, pushed, and CI verified
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved Slice 5 starting checkpoint: `89a7accdf0bcd3e3d080bcde5ad2e8874ba7d03e`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count at scope lock and after push: `0 0`; remote head and PR #6 head match implementation commit `a1784f15bc6a160ebf3c2405e9776b6517ce52e5`.
+- Current stage: `SLICE_5_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. The worktree was clean after the implementation commit; this documentation checkpoint records the required handoff files only.
+- Scope delivered: one server-scoped capability-aware Committee Main Hub, active committee context, bounded queue/count/detail projections, safe history/audit activity, recent completions, quick links, freshness/manual refresh state, and canonical active-context propagation to existing inventory-family module reads.
+- Queue defaults recorded for this repository slice: due soon 7 days, upcoming needs 14 days, recent completions 30 days, and at most 100 returned record identifiers per queue. Exact owner queue definitions, institutional timezone boundary samples, and safe staff-display policy remain later staging inputs.
+- Local evidence: `npm run check` passed with 22 Vitest files / 183 tests, build, Apps Script validation (28 source files / 38 required functions), generated parity, and standalone verification; `npm run verify` passed; full Playwright passed 56 with 100 skipped and 0 failures across 156 cases; `git diff --check` passed; the changed-source sensitive scan passed with zero matches across all protected categories; independent review was PASS.
+- Generated evidence: standalone HTML artifacts are 282,306 bytes each / SHA-256 `fe937a21807ee12dad4317b0ac3945d7a5ecf0a1389a6b307226a655db0f248d`; `apps-script/Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`; the split Apps Script bundle passed deterministic parity.
+- Implementation commit: `a1784f15bc6a160ebf3c2405e9776b6517ce52e5` (`feat: add committee main hub dashboard`); pushed with PR #6 `validate`, `verify`, and `browser-smoke` green. Local rollback tag: `hau-usc-slice5-start-89a7acc`.
+- No deployment, Script Property change, trigger activation, Sheet/Drive write, migration, private operational-data access, or production change occurred. `clasp status` and `clasp push --dry-run` were intentionally not run because no staging script is configured. The accepted Phase E staging state remains the prior dependency baseline; Slice 6 is gated on manager review.
+
+## Current checkpoint - Slice 4 committed and CI verified
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved Slice 4 starting checkpoint: `a3fffb91eee5d06b3a41acc0876bf0f7f227c891`; upstream: `origin/feat/live-sync-lending-search-catalog-controls`; local/upstream count at scope lock was `0 0`; remote head matched the starting checkpoint.
+- Current stage: `SLICE_4_COMMITTED_PUSHED_CI_GREEN_PENDING_MANAGER_REVIEW`. The worktree is clean and contains the bounded Slice 4 implementation, tests, and required documentation updates.
+- Implementation commit: `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` (`feat: add private roster sync and access freshness`); pushed to the feature branch with local/upstream count `0 0`.
+- Phase D compatibility-mode acceptance passed on immutable staging Version 17 with bootstrap contract v1 and authorization contract v1/absent. Version 13 is the preserved rollback target. The reviewed 32-file package matched remotely, the web-app manifest was preserved, the existing staging deployment served Version 17, and non-target deployments were unchanged. A fresh timestamped staging backup was verified before the push.
+- Live v1 checks passed for the diagnostic route, authorized internal workspace, request-only portal, desktop cold/warm startup, mobile startup, and legacy v1 endpoint. Request-only content remained sanitized and empty of internal operational lists; no operational mutation was performed.
+- Accepted Phase E evidence reports immutable Version 18 with `HAU_BOOTSTRAP_CONTRACT_VERSION=2`, authorization contract v1/absent, a ready v2 internal workspace, and passing diagnostic/request-only privacy checks. The former approximately 40-second read-only module callback exceeded the old 30-second client deadline; `api_getBootstrapModule` now uses a bounded 60-second deadline while mutations and all other calls remain at 30 seconds.
+- The staging handoff reports 32-file pull-back parity and preservation of the owner-only web-app manifest. Version 13 remains the rollback target. The live staging evidence was accepted from the supplied handoff and was not re-fetched in this session because the local Chrome bridge was unavailable.
+- Local gates after the fix passed: `npm run check` (20 Vitest files / 164 tests), `npm run verify`, full Playwright (50 passed / 100 skipped / 0 failed across 150 cases), `git diff --check`, generated parity, and the sensitive-value scan. Independent review was reported as PASS.
+- Slice 4 adds the exact private-roster source boundary, safe source validation, explicit approval/disable/freshness controls, access and committee-membership last-known-good snapshots, emergency deny, safe health output, and zero source reads during ordinary startup. The private source ID and all source contents remain external Script Property/Sheet state and are not present here.
+- Local evidence: `npm run check` passes with 21 Vitest files / 177 tests, build, Apps Script validation, generated parity, and standalone verification; `npm run verify` passes; full Playwright passes 50 with 100 intentional skips and 0 failures across 150 cases; `npm run lint`, `git diff --check`, and the changed-scope sensitive scan pass. Independent implementation review found no blocking issue. Commit `113b6002eb7b4e713b518c4e4fd5afa6c2aca1df` is pushed and PR #6 CI is green.
+- No schema migration, trigger activation, deployment, Google Sheets/Drive write, private operational-data access, or production change was performed. Rollback checkpoint: local tag `hau-usc-slice4-start-a3fffb9`.
+- PR #6 `validate`, `verify`, and `browser-smoke` checks are green for the implementation commit; the only annotation is the repository’s non-blocking Node.js deprecation warning. Manager review of the exact diff and evidence is the next gate before Slice 5.
+- Safe rollback remains: set the bootstrap contract back to its effective v1 setting and, if needed, point the existing deployment to immutable Version 13; preserve all versions and the backup.
+
+## Historical checkpoint - Slice 3 canonical roles, committee scopes, and authorization contract
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `23c4f61e5f1b113d4b77c2955f1716139a03c121`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Current stage: `PENDING_MANAGER_REVIEW`; the bounded Slice 3 implementation is committed, pushed, and the worktree is clean.
+- Handshake: fetch completed, local/upstream count was `0 0`, remote head matched the starting commit, and no competing writer or repository lock was found.
+- Implementation commit: `5107afc57904dccc5214fcafc20aba65c0622632` (`feat: add canonical authorization contract`); rollback tags `hau-usc-slice2-checkpoint-23c4f61` and `hau-usc-slice3-checkpoint-5107afc` are present.
+- Remote/CI evidence: branch and PR #6 head match the implementation commit; `validate`, `verify`, and `browser-smoke` pass; local/upstream count is `0 0`; `git status --short` is empty.
+
+### Delivered locally
+
+- Added the canonical server authorization registry, six role IDs, exactly three committee IDs, capability/scope decisions, safe denial reasons, and fail-closed mapping status.
+- Added additive access and membership schema fields, a versioned authorization rollout property, mapping dry-run reporting, and an explicit approval-gated additive apply path.
+- Added sanitized authorization metadata to essential/bootstrap current-user DTOs, strict browser validation, server-capability client projection, and catalog-control integration.
+- Regenerated visual/standalone artifacts through the repository generator and build path; no generated file was hand-edited.
+
+### Evidence and boundary
+
+- Owner-auto-accepted defaults and the reconciliation contract are recorded in `docs/AUTHORIZATION_CONTRACT.md`.
+- `npm run lint`, full Vitest (20 files / 151 tests), `npm run build`, and `npm run check:apps-script` pass.
+- Final local evidence is green: `npm run check` passes with ESLint, 20 Vitest files / 161 tests, production build, Apps Script validation (26 source files / 32 required functions), generated parity, and standalone verification; `npm run verify` passes; full Chromium passes 49 with 95 intentionally skipped and 0 failed across 144 cases; and `git diff --check` passes.
+- The sensitive-value scan passes with no `.clasp` files, credentials, private Google identifiers, non-placeholder contacts, private supplier-TIN values, evidence links, roster rows, or operational records in the changed scope; regenerated standalone files retain only the pre-existing fictional preview baseline. Initial independent-review findings were repaired and covered by focused tests; the implementation-validator found no blocking issue; no re-review PASS is claimed because the second reviewer did not return before handoff.
+- Generated parity: standalone artifacts are 274,038 bytes each / SHA-256 `3646b8b799cecc954c3226580ca0a173da1b2cd61e94740b485597ebaaf11fa9`; Apps Script `Index.html` is 681 bytes / `342dd291abea325d54a69646ea717abd5942397504302b780042574cfd7a1af8`, and `AppScript.html` is 214,742 bytes / `986b0e4e5148172936ad5e680c0dd8400f5b13ff19c694e2187a7863b4bb8a2e`.
+- No roster import, committee UI, composite request, catalog, restock, polling/live-update, hosting, database, migration, deployment, staging/production, Google Sheets/Drive write, or private operational-data work was performed.
+
+### Rollback and next stage
+
+- Local rollback tag: `hau-usc-slice2-checkpoint-23c4f61` at `23c4f61e5f1b113d4b77c2955f1716139a03c121`.
+- Preserve the current worktree; after commit use a focused revert if rollback is required. Do not reset or discard work.
+- The focused implementation unit is verified remotely. Obtain manager acceptance before beginning Slice 4; do not repeat the commit, local gates, or push.
+
+## Current checkpoint - Slice 2 essential bootstrap and lazy module contracts
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `8b40f60a48323065ad69517e37915a33f32a51d2`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Current stage: `PENDING_MANAGER_REVIEW`; implementation, repairs, final local gates, push, and PR CI are complete.
+- Handshake: worktree clean, local/upstream `0 0`, remote head is `576393f1be28687d984ea7632a2501aa8d3fc30d`, and no competing writer was found.
+
+### Slice 2 implementation
+
+- Added the versioned `essential-bootstrap` and `bootstrap-module` contracts with strict allowlists, JSON-safety checks, sensitive-field rejection, pagination bounds, request-only enforcement, and legacy-compatible state merging.
+- Added Apps Script essential/module APIs beside the existing bootstrap endpoint. Repository reads are deduplicated within one request, and the browser controller deduplicates in-flight reads, cancels stale responses, and caches only bounded public-reference projections.
+- Added the reversible runtime flag and generated-runtime path: `HAU_BOOTSTRAP_CONTRACT_VERSION` defaults to v1 and explicit v2 loads essential bootstrap followed by the active module; version 1 retains the compatibility endpoint.
+- Added final UTF-8 payload-byte measurement with a 100 KiB server bound, bounded page/filter handling across module collections, and fail-closed explicit entity-scope filtering for committee-scoped sessions.
+- Added synthetic contract, cache, cancellation, adapter, Apps Script VM, and packaged Chromium coverage. Generated outputs were rebuilt through the repository generator/build path.
+
+### Scope and external boundary
+
+- No committee, roster, composite-request, catalog, restock, polling/live-update, hosting, database, migration, deployment, staging/production, Google Sheets/Drive/Apps Script external write, or private operational-data work was performed.
+- `clasp status` and `clasp push --dry-run` remain unrun because no staging script was configured for this local checkpoint.
+
+### Current evidence and next transition
+
+- `npm run check` passed with 18 Vitest files / 143 tests; `npm run verify` passed; focused packaging passed 15/15; full Playwright passed 49 with 95 intentionally scoped skips and 0 failures across 144 cases. Initial independent-review FAIL findings were repaired. A current-snapshot re-review returned WARN/incomplete, so no re-review PASS is claimed.
+- Sensitive scan and generated parity pass. The focused implementation commit is `576393f1be28687d984ea7632a2501aa8d3fc30d`; draft PR #6 is open and `validate`, `verify`, and `browser-smoke` pass. Obtain manager acceptance before any new milestone; do not deploy or broaden the scope.
+
+## Latest checkpoint — P0 Production Bootstrap Diagnosis and Recovery
+
+- Date: `2026-07-14` (`Asia/Manila`)
+- Repository branch: `feat/live-sync-lending-search-catalog-controls`
+- Approved starting commit: `2a9ac342ca584257e0bbf6ea09ffb9d4f892a7c7`
+- Upstream: `origin/feat/live-sync-lending-search-catalog-controls`
+- Ending commit: this focused P0 implementation commit; exact SHA is reported after commit
+- Worktree policy: the accepted planning-document commit was the only ahead commit at start; no push was performed
+
+### Delivered
+
+- Contained the complete read-only bootstrap startup sequence inside one controller boundary with explicit request, response validation, normalization, static options, extensions, bindings, first render, post-render, and ready stages.
+- Added supported-envelope validation before normalization, safe synthetic fixtures, server-side JSON-safe serialization coverage, client stage timings/counts, an eight-second slow state, one active attempt, Retry reset, and obsolete callback protection.
+- Added an accessible loading failure surface with plain-language copy, safe support code, live-region semantics, keyboard focus on Retry, and an idempotent success/failure finalizer.
+- Regenerated the visual runtime and additive loading styles from the preserved legacy baseline. No generated HTML was hand-edited.
+
+### Local evidence
+
+- `npm ci`: passed.
+- `npm run check`: passed; full Vitest 15 files / 118 tests, Apps Script package/static checks, generated parity, and standalone verification passed.
+- Focused packaged Apps Script Chromium suite: 14 passed at 390 px, including slow-state and rapid Retry coverage.
+- Complete Playwright matrix: 138 cases across 320, 390, 768, 1024, 1366, and 1440 px projects; 48 passed, 90 scoped skips, 0 failed.
+- Synthetic local static shell measurement: visible in 81 ms at 390x844; this does not establish staging or production p95.
+- No `clasp` command, push, deployment, Sheet/Drive write, or other external action was performed.
+
+### Remaining unknowns and rollback
+
+- Live Apps Script timing, HTML Service behavior, deployment response shape, and production-volume behavior remain unverified because staging and production were not touched.
+- If this commit is later integrated, revert the single focused implementation commit. If later deployed under separate authorization, move only the deployment pointer back to the preceding immutable version; no external records require rollback from this checkpoint.
+
+### Next action
+
+Manager review of the exact diff and local evidence. Do not push or begin another milestone until separately authorized.
+
+## Latest working checkpoint — Version 0.5.0 live sync, lending search, and catalog controls
+
+- Date: `2026-07-13` (`Asia/Manila`)
+- Repository: `invicta-ctrl/hau-usc-logistics-management-system`
+- Branch: `feat/live-sync-lending-search-catalog-controls`
+- Starting commit: `81efe82618048b79a821f93bd95a0be00eaeff43`
+- Ending commit: this handoff commit; exact SHA is reported after commit and push
+- Base pull request: draft PR #2 remains open and unmodified by this milestone
+- Current staging deployment: immutable version 9 on the existing deployment ID
+- Production state: untouched
+
+### Repository behavior prepared
+
+- Apps Script mutations now require a successful authoritative bootstrap reload before the browser renders success. The mutation is never automatically resubmitted if that read fails; the UI reports that the action was recorded, includes a correlation ID when available, and offers a safe Refresh action.
+- Internal clients poll the compact `api_getDataRevision` endpoint every five seconds only while visible, online, and not already checking. Visibility restoration, focus, reconnect, and manual Refresh cause immediate checks. Repeated failures use bounded backoff. This is polling, not WebSockets.
+- `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` in `17_CONFIG` form a monotonic shared revision. A successful non-replay mutation advances it exactly once; read-only bootstrap/search/health/diagnostic calls do not.
+- `handleOperationalSheetEdit(e)` advances the revision for relevant direct edits to the configured operational spreadsheet. `setupOperationalEditTrigger()` is idempotent and must be run explicitly in each environment after review.
+- Dirty forms, request drafts, pending uploads, and open modal workflows defer background reload and show “New operational data is available” with Refresh now and Continue editing choices.
+- The Lending Hub uses an accessible predictive search instead of the hundreds-item select. Typed but unselected text cannot submit, and unavailable, out-of-stock, VERIFY, staff-only, non-circulating, quantity-limited, and no-match states remain distinguishable.
+- Handling and audience are separate. `CONSUMABLE` completes on handoff without a return due date; `LOANABLE` and `REUSABLE_ASSET` require a future due date and return workflow; `NON_CIRCULATING` is blocked. Audience is `NOT_AVAILABLE_FOR_LENDING`, `USC_STAFF_ONLY`, `STUDENTS_AND_STAFF`, or future-ready `DOL_INTERNAL_ONLY`.
+- Website catalog controls call server APIs for item lookup, creation, metadata/storage editing, archive, and restore. Server authorization, lock, idempotency, server IDs, before/after audit, status history, and append-only quantity rules remain authoritative.
+- Unit changes are blocked when historical or active ledger, reservation, lending, request, restock, or release records depend on the item. Archive requires zero on-hand, zero active reservation, and no open lending/request dependency. Restore preserves history and returns verification-marked items to `VERIFY`.
+- `Can_Manage_Catalog` is appended to `14_USERS_ACCESS`. Blank cells retain catalog permission only for ADMIN and DOL_DIRECTOR; other roles require explicit true.
+
+### Additive schema preparation
+
+- `01_ITEM_MASTER` appends `Catalog_Type`, `Storage_Location`, `Reorder_Threshold`, `Lending_Audience`, `Default_Loan_Days`, `Maximum_Loan_Qty`, `Approval_Required`, `Updated_At`, `Updated_By`, and `Notes` after all prior columns.
+- `14_USERS_ACCESS` appends `Can_Manage_Catalog`.
+- `17_CONFIG` receives `DATA_REVISION` and `DATA_REVISION_UPDATED_AT` rows when missing.
+- Repeated `setupDatabase()` runs add only missing columns/rows and preserve existing values, legacy tabs, Drive configuration, users, audit history, and operational data.
+- Blank legacy defaults fail closed: active circulating items become staff-only unless explicitly reviewed; VERIFY, inactive, archived, and non-circulating items remain unavailable; returnable items default to three loan days; maximum ticket quantity defaults to one; approval defaults to true.
+
+### Repository verification
+
+- `npm ci`: passed.
+- ESLint: passed.
+- Vitest: 12 files / 93 tests passed.
+- Focused 0.5.0 Chromium suite at 390 px: 4 passed.
+- `npm run check`: passed, including a 22-module Vite build, Apps Script validation across 24 source files and 27 required entry points, generated-file parity, and standalone verification.
+- `npm run verify`: passed.
+- Complete Playwright/browser matrix at 320, 390, 768, 1024, 1366, and 1440 px: 38 passed, 40 intentionally scoped skips, 0 failed.
+- A second build was byte-deterministic: both 238,891-byte standalone artifacts retained SHA-256 `8192ddff053f9776ba41f74be4eadf9c627b6db638db0cf7f8b6cf03d410ed8f`; the 615-byte Apps Script shell retained SHA-256 `e31ed283e193703ec5a403e3b9d40ba504d17f57a3dc2eb02424741f1aa73495`.
+
+### External actions
+
+- No `clasp push` was run.
+- No immutable Apps Script version was created.
+- No deployment was updated.
+- No Google Sheet or Drive write was performed.
+- No live trigger was created, changed, or removed.
+- Production was not touched.
+- PR #2 was not modified, merged, or deleted.
+
+### Deployment handoff after separate authorization
+
+Staging order: verify the reviewed commit and full checks; create a staging schema backup; compare/push the reviewed package; run additive `setupDatabase()`; run idempotent `setupOperationalEditTrigger()`; validate schema, Drive, permissions, and revision rows; run functional and privacy acceptance; then create an immutable staging version and update the existing deployment ID. Production order: obtain owner approval; create a fresh production backup; push the exact accepted commit; run the additive schema migration and edit-trigger setup before activating the web version; validate schema/Drive/access; create and activate an immutable production version; then run bounded acceptance.
+
+Rollback changes only the deployment pointer to the preceding immutable version. Do not delete the appended columns, revision rows, audit/history/ledger records, or migrated metadata. The additive schema remains backward-compatible with Version 9. If the edit trigger itself is implicated, stop writes, preserve evidence, and remove or disable it only with explicit owner authorization.
+
+### Next action
+
+Review the pushed handoff commit and CI state, then obtain manager approval before any staging work or new milestone. Do not deploy, migrate a live Sheet, install a live trigger, or start a new milestone without separate explicit authorization.
 
 ## Historical checkpoint — Version 9 live privacy acceptance and runtime-truthfulness repair
 

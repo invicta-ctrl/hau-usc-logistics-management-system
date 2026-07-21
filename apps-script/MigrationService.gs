@@ -55,9 +55,12 @@ function applyApprovedMigration() {
     return withScriptLock_(function() {
       var user = requirePermission_('Can_Admin'), version = getConfigValue_('MIGRATION_VERSION', false);
       if (version) throw appError_('MIGRATION_ALREADY_FROZEN', 'An applied migration version already exists.', false, { version: version });
-      var approved = readObjects_(HAU_SHEETS.MIGRATION).filter(function(row) { return String(row.Migration_Status) === 'APPROVED'; }), applied = [];
-      approved.forEach(function(mapping) {
-        var item = findOne_(HAU_SHEETS.ITEMS, 'Item_ID', mapping.New_Item_ID); if (!item) return;
+      var approved = readObjects_(HAU_SHEETS.MIGRATION).filter(function(row) { return String(row.Migration_Status) === 'APPROVED'; });
+      var work = approved.map(function(mapping) { return { mapping:mapping, item:findOne_(HAU_SHEETS.ITEMS, 'Item_ID', mapping.New_Item_ID) }; }).filter(function(entry) { return Boolean(entry.item); });
+      if (!work.length) return { migrationVersion:'', appliedCount:0, itemIds:[], reconciliation:migrationDryRun_(), noChanges:true };
+      var applied = [];
+      work.forEach(function(entry) {
+        var mapping = entry.mapping, item = entry.item;
         var patch = { Aliases: mapping.Normalized_Name && mapping.Normalized_Name !== item.Item_Name ? mapping.Normalized_Name : item.Aliases, Status: String(mapping.Verification_Status) === 'VERIFIED' ? 'ACTIVE' : item.Status, Verification_Note: [item.Verification_Note, mapping.Notes].filter(Boolean).join(' | ') };
         updateObject_(HAU_SHEETS.ITEMS, item._row, patch);
         updateObject_(HAU_SHEETS.MIGRATION, mapping._row, { Migration_Status: 'APPLIED', Imported_At: nowIso_(), Imported_By: user.User_ID, Reconciled_At: nowIso_() });
@@ -69,7 +72,8 @@ function applyApprovedMigration() {
       setConfigValue_('MIGRATION_ITEM_COUNT', String(dryRun.itemMasterRecords), 'ALL', 'Launch item-master count', 'VALID', user);
       setConfigValue_('MIGRATION_VERIFY_COUNT', String(dryRun.verifyItems.length), 'ALL', 'Launch VERIFY count', 'VALID', user);
       audit_('FREEZE_MIGRATION_BASELINE', 'MIGRATION', migrationVersion, user, correlationId, { after: { itemMasterRecords: dryRun.itemMasterRecords, verifyCount: dryRun.verifyItems.length, appliedCount: applied.length } });
-      return { migrationVersion: migrationVersion, appliedCount: applied.length, itemIds: applied, reconciliation: dryRun };
+      var dataRevision = touchDataRevision_(user);
+      return { migrationVersion: migrationVersion, appliedCount: applied.length, itemIds: applied, reconciliation: dryRun, dataRevision:dataRevision };
     });
   });
 }
