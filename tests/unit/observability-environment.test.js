@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../../src/server/environment.js';
 import { redactLogDetails, structuredLog } from '../../src/server/observability.js';
 import { validateEnvironmentSeparation } from '../../scripts/cloudflare-environment-preflight.mjs';
+import { createConfigPair } from '../../scripts/create-private-cloudflare-configs.mjs';
 
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
@@ -41,5 +42,19 @@ describe('v0.7 environment and observability foundation', () => {
     const invalid = validateEnvironmentSeparation(staging, production, { expectedSha: 'a'.repeat(40) });
     expect(invalid.valid).toBe(false);
     expect(invalid.issues).toEqual(expect.arrayContaining(['Staging and production D1 database IDs must be distinct', 'Staging and production R2 buckets must be distinct']));
+  });
+
+  it('creates distinct private configuration objects without exposing provider values to Git', () => {
+    const pair = createConfigPair(
+      { main: 'C:/repo/src/worker/index.js', compatibility_date: '2026-07-22', assets: { directory: 'C:/repo/dist', binding: 'ASSETS' } },
+      [
+        { name: 'hau-usc-logistics-staging', uuid: 'staging-private-id' },
+        { name: 'hau-usc-logistics-production', uuid: 'production-private-id' },
+      ],
+      'a'.repeat(40),
+    );
+    expect(pair.staging).toMatchObject({ name: 'hau-usc-logistics-staging', vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.0' }, r2_buckets: [{ binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' }] });
+    expect(pair.production).toMatchObject({ name: 'hau-usc-logistics-production', vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.0' }, r2_buckets: [{ binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' }] });
+    expect(pair.staging.d1_databases[0].database_id).not.toBe(pair.production.d1_databases[0].database_id);
   });
 });
