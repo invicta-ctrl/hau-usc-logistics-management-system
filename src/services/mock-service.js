@@ -4,7 +4,7 @@ import { buildInventoryIndexes } from '../domain/inventory.js';
 import { routingDecision, deriveRequestStatus } from '../domain/requests.js';
 import { reserveStock, consumeReservation } from '../domain/reservations.js';
 import { validateReceipt, receiptTotals, receivingStatus } from '../domain/receiving.js';
-import { validateRelease } from '../domain/release.js';
+import { requireRecipientConfirmation, validateRelease } from '../domain/release.js';
 import { validateTransfer } from '../domain/transfers.js';
 import { restorableReturnQuantity, derivedLendingStatus } from '../domain/lending.js';
 import { assertTransition } from '../domain/transitions.js';
@@ -1619,6 +1619,7 @@ export class MockService {
       'CONFIRM_RELEASE',
       async (state, tx) => {
         requirePermission(state, 'release');
+        requireRecipientConfirmation(command.recipientConfirmed);
         const line = state.requestLines.find((row) => row.id === command.requestLineId);
         if (!line || !['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(line.status))
           throw new AppError('INVALID_TRANSITION', 'This line is not available for release.');
@@ -1679,6 +1680,8 @@ export class MockService {
             ? requiredText(command.partialReason, 'partialReason', 'Partial release reason')
             : '',
           evidenceId: command.evidenceId || null,
+          recipientConfirmed: true,
+          confirmationLabel: `Release Confirmation | ${releaseId} | ${request.id}`,
           transactionId,
           idempotencyKey: tx.key,
         });

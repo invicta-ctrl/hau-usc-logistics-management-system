@@ -298,7 +298,7 @@ function bootstrapLendingDto_(row) {
 }
 
 function bootstrapReleaseDto_(row) {
-  return { id: row.Release_ID, requestId: row.Request_ID, eventId: row.Event_ID, lendingTicketId: row.Lending_Ticket_ID, recipientRole: row.Recipient_Role, department: row.Department, releasedAt: row.Released_At, status: row.Status, createdAt: row.Created_At };
+  return releaseDto_(row);
 }
 
 function bootstrapRestockDto_(row) {
@@ -310,7 +310,7 @@ function bootstrapDeliverableDto_(row) {
 }
 
 function bootstrapCanvassDto_(row) {
-  return { id: row.Canvass_ID, linkedLineIds: row.Linked_Request_Line_ID ? [row.Linked_Request_Line_ID] : [], supplierId: row.Supplier_ID, supplierName: row.Supplier_Name, location: row.Location, itemSpec: row.Item_Spec, price: Number(row.Price || 0), unit: row.Unit, receiptStatus: row.Receipt_Status, reliability: row.Reliability, checkedAt: row.Checked_At, status: row.Status };
+  return canvassDto_(row);
 }
 
 function bootstrapRowsForItems_(command, session, includeBalances) {

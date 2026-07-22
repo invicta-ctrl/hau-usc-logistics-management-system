@@ -199,4 +199,32 @@ describe('Apps Script essential bootstrap recovery contract', () => {
     expect(response.data.events[0].name).toBe('Synthetic Event');
     expect(response.metrics.payloadBytes).toBeLessThanOrEqual(100 * 1024);
   });
+
+  it('keeps Release and Canvass evidence fields in internal module DTOs', () => {
+    const context = gasContext();
+    expect(context.bootstrapReleaseDto_({
+      Release_ID: 'SYN-REL-1', Request_ID: 'SYN-REQ-1', Event_ID: 'SYN-EVENT-1',
+      Recipient_Name: 'Synthetic Recipient', Recipient_Role: 'Representative',
+      Department: 'Synthetic Department', Released_By: 'SYN-RELEASER',
+      Released_At: '2026-07-22T10:00:00+08:00', Status: 'PARTIAL',
+      Evidence_ID: 'SYN-EVIDENCE-1',
+      Confirmation_Label: 'Release Confirmation | SYN-REL-1 | Recipient confirmed',
+      Request_Line_IDs_JSON: '["SYN-LINE-1"]', Quantities_JSON: '[4]', Units_JSON: '["piece"]',
+    })).toMatchObject({
+      recipientName: 'Synthetic Recipient', recipientConfirmed: true,
+      evidenceId: 'SYN-EVIDENCE-1',
+      lineReleases: [{ requestLineId: 'SYN-LINE-1', quantity: 4, unit: 'piece' }],
+    });
+    expect(context.bootstrapCanvassDto_({
+      Canvass_ID: 'SYN-CAN-1', Linked_Request_Line_ID: 'SYN-LINE-1',
+      Supplier_ID: 'SYN-SUP-1', Supplier_Name: 'Synthetic Supplier',
+      Item_Spec: 'Synthetic Item', Price: 12, Unit: 'piece',
+      Checked_At: '2026-07-01T00:00:00Z', Source_URL: 'https://example.invalid/quote',
+      Evidence_ID: 'SYN-EVIDENCE-2', Preferred: true, Status: 'ACTIVE', Notes: 'Synthetic note',
+      Price_History_JSON: '[{"price":12,"checkedAt":"2026-07-01T00:00:00Z"}]',
+    })).toMatchObject({
+      sourceUrl: 'https://example.invalid/quote', evidenceId: 'SYN-EVIDENCE-2',
+      preferred: true, notes: 'Synthetic note',
+    });
+  });
 });

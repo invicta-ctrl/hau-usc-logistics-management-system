@@ -288,3 +288,13 @@ body:not(.request-mode) .secondary {
   body:not(.request-mode) .grid-4,
   body:not(.request-mode) .grid-3 { grid-template-columns: 1fr 1fr; }
 }
+
+.release-recipient-confirmation { margin: 14px 0; padding: 12px; border: 1px solid #cfb276; border-radius: 12px; background: #fffaf0; }
+.canvass-quality { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+.canvass-quality-indicator, .canvass-evidence-link { display: inline-flex; align-items: center; min-height: 24px; padding: 4px 8px; border-radius: 999px; font-size: 9px; font-weight: 850; line-height: 1; }
+.canvass-quality-indicator.is-warning { color: #754b00; background: #fff0c2; }
+.canvass-quality-indicator.is-danger { color: #8c1d18; background: #ffe1dc; }
+.canvass-evidence-link { color: #154c79; background: #e4f1fb; text-decoration: underline; text-underline-offset: 2px; }
+.canvass-evidence-link:focus-visible { outline: 3px solid rgba(21, 76, 121, .28); outline-offset: 2px; }
+.deliverable-cumulative-summary { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid #d8c39a; border-radius: 11px; color: #654f4b; background: #fffaf0; font-size: 10px; }
+.deliverable-cumulative-summary strong { color: #5e0b10; }

@@ -168,3 +168,14 @@ describe('Apps Script production ID allocation', () => {
     expect(inId).toMatch(/^TXN-2026-0002$/);
   });
 });
+
+describe('Apps Script deliverable receiving workflow', () => {
+  const procurement = gasContext(['Config.gs', 'Validation.gs', 'ProcurementService.gs']);
+  it('receives only after procurement and allows cumulative partial receiving', () => {
+    expect(procurement.validateDeliverableReceiptState_('PROCURED')).toBe('PROCURED');
+    expect(procurement.validateDeliverableReceiptState_('PARTIALLY_RECEIVED')).toBe('PARTIALLY_RECEIVED');
+    expect(() => procurement.validateDeliverableReceiptState_('TO_BE_PROCURED')).toThrowError(
+      expect.objectContaining({ code: 'INVALID_TRANSITION' }),
+    );
+  });
+});

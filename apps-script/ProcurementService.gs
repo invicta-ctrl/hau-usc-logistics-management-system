@@ -29,6 +29,14 @@ var DELIVERABLE_TRANSITIONS_ = Object.freeze({
   PARTIALLY_RELEASED: ['COMPLETED']
 });
 
+function validateDeliverableReceiptState_(status) {
+  var current = String(status || '').toUpperCase();
+  if (['PROCURED', 'PARTIALLY_RECEIVED'].indexOf(current) < 0) {
+    throw appError_('INVALID_TRANSITION', 'Only procured or partially received deliverables can be received.', false);
+  }
+  return current;
+}
+
 function transitionDeliverable_(command, correlationId) {
   return withScriptLock_(function() {
     var user = requirePermission_('Can_Receive'), key = requireIdempotency_(command), replay = idempotencyReplay_(key);
@@ -51,6 +59,7 @@ function receiveDeliverable_(command, correlationId) {
     if (replay) return Object.assign({ idempotentReplay: true }, replay);
     var deliverable = findOne_(HAU_SHEETS.DELIVERABLES, 'Deliverable_ID', requireText_(command.deliverableId, 'deliverableId'));
     if (!deliverable) throw appError_('DELIVERABLE_NOT_FOUND', 'Deliverable was not found.', false);
+    validateDeliverableReceiptState_(deliverable.Status);
     var receivedNow = positiveNumber_(command.quantity || command.quantityReceivedNow, 'quantity');
     var receivedTotal = Number(deliverable.Quantity_Received || 0) + receivedNow, required = Number(deliverable.Quantity_Requested || 0);
     if (receivedTotal > required && !command.authorizedAmendment) throw appError_('OVER_RECEIPT', 'Receipt exceeds the approved deliverable quantity.', false, { required: required, received: receivedTotal });

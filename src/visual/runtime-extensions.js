@@ -41,6 +41,7 @@ import {
   filterReferenceAdminRecords,
   previewReferenceAdminChange,
 } from '../domain/reference-administration.js';
+import { canvassEvidenceLinks, canvassQualityIndicators } from '../domain/canvass-quality.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -352,6 +353,10 @@ export function createRuntimeExtensions(options) {
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
   let lendingApprovalRoot = null;
+  let releaseConfirmationInstalled = false;
+  let releaseFormObserver = null;
+  let deliverableReceivingInstalled = false;
+  const canvassObservedRoots = new WeakSet();
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
 
@@ -426,6 +431,247 @@ export function createRuntimeExtensions(options) {
       },
       true,
     );
+  };
+
+  const enhanceReleaseConfirmationForm = () => {
+    const form = document.querySelector('#eventReleaseForm');
+    if (!form || form.querySelector('[name="recipientConfirmed"]')) return;
+    const confirmation = document.createElement('label');
+    confirmation.className = 'checkbox release-recipient-confirmation';
+    confirmation.innerHTML =
+      '<input name="recipientConfirmed" type="checkbox" value="true" required> Recipient confirms the selected quantities were physically received in the condition described above.';
+    const uploader = form.querySelector('#releaseUploader');
+    if (uploader) uploader.before(confirmation);
+    else form.querySelector('[type="submit"]')?.before(confirmation);
+  };
+
+  const installReleaseConfirmation = () => {
+    if (!releaseConfirmationInstalled && typeof services.confirmRelease === 'function') {
+      const originalConfirmRelease = services.confirmRelease.bind(services);
+      services.confirmRelease = async (payload = {}) => {
+        const formConfirmed = document.querySelector(
+          '#eventReleaseForm [name="recipientConfirmed"]',
+        )?.checked;
+        const explicitlyConfirmed =
+          payload.recipientConfirmed === true ||
+          String(payload.recipientConfirmed ?? '')
+            .trim()
+            .toLowerCase() === 'true' ||
+          formConfirmed === true;
+        if (!explicitlyConfirmed) {
+          const error = new Error('The recipient must confirm the physical handoff before release.');
+          error.code = 'RECIPIENT_CONFIRMATION_REQUIRED';
+          throw error;
+        }
+        const result = await originalConfirmRelease({ ...payload, recipientConfirmed: true });
+        if (backendMode === 'mock' && result && typeof result === 'object') {
+          result.recipientConfirmed = true;
+          result.confirmationLabel ??= `Release Confirmation | ${result.id ?? result.releaseId ?? 'RECORDED'}`;
+        }
+        return result;
+      };
+      releaseConfirmationInstalled = true;
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('[data-release-action="event"]'))
+          queueMicrotask(enhanceReleaseConfirmationForm);
+      });
+    }
+    const modal = document.querySelector('#modal');
+    if (modal && !releaseFormObserver) {
+      releaseFormObserver = new MutationObserver(enhanceReleaseConfirmationForm);
+      releaseFormObserver.observe(modal, { childList: true, subtree: true });
+    }
+    enhanceReleaseConfirmationForm();
+  };
+
+  const expectedCanvassUnits = (quote, state) => {
+    const linkedIds = quote?.linkedLineIds ?? [];
+    const units = [];
+    linkedIds.forEach((lineId) => {
+      const line = (state.requestLines ?? []).find((entry) => entry.id === lineId);
+      const deliverable = (state.deliverables ?? []).find((entry) => entry.requestLineId === lineId);
+      const restock = (state.restockRequests ?? []).find((entry) => entry.requestLineId === lineId);
+      [line?.unit, deliverable?.unit, restock?.unit].filter(Boolean).forEach((unit) => units.push(unit));
+    });
+    return [...new Set(units)];
+  };
+
+  const canvassQualityMarkup = (quote, state) => {
+    const indicators = canvassQualityIndicators(quote, {
+      expectedUnits: expectedCanvassUnits(quote, state),
+    });
+    const evidence = (state.evidenceFiles ?? []).find((entry) => entry.id === quote.evidenceId);
+    const links = canvassEvidenceLinks(quote, evidence);
+    return {
+      fingerprint: JSON.stringify({ indicators, links }),
+      html: `${indicators
+        .map(
+          (indicator) =>
+            `<span class="canvass-quality-indicator is-${esc(indicator.tone)}">${esc(indicator.label)}</span>`,
+        )
+        .join('')}${links
+        .map(
+          (link) =>
+            `<a class="canvass-evidence-link" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.label)}</a>`,
+        )
+        .join('')}`,
+    };
+  };
+
+  const decorateCanvassHost = (host, quote, state) => {
+    if (!host || !quote) return;
+    const target = host.matches('tr') ? host.cells[4] : (host.querySelector(':scope > div') ?? host);
+    const markup = canvassQualityMarkup(quote, state);
+    let quality = target.querySelector(':scope > .canvass-quality');
+    if (!markup.html) {
+      quality?.remove();
+      return;
+    }
+    if (quality?.dataset.fingerprint === markup.fingerprint) return;
+    if (!quality) {
+      quality = document.createElement('div');
+      quality.className = 'canvass-quality';
+      target.append(quality);
+    }
+    quality.dataset.fingerprint = markup.fingerprint;
+    quality.innerHTML = markup.html;
+  };
+
+  const renderCanvassQuality = () => {
+    const state = getState() ?? {};
+    const byId = new Map((state.canvassReferences ?? []).map((quote) => [quote.id, quote]));
+    document.querySelectorAll('[data-canvass-details]').forEach((button) => {
+      decorateCanvassHost(
+        button.closest('tr, article.data-card'),
+        byId.get(button.dataset.canvassDetails),
+        state,
+      );
+    });
+    document.querySelectorAll('[data-prefer-canvass]').forEach((button) => {
+      decorateCanvassHost(
+        button.closest('article.request-line'),
+        byId.get(button.dataset.preferCanvass),
+        state,
+      );
+    });
+  };
+
+  const installCanvassQuality = () => {
+    ['#canvassLibrary', '#quoteComparison'].forEach((selector) => {
+      const root = document.querySelector(selector);
+      if (!root || canvassObservedRoots.has(root)) return;
+      canvassObservedRoots.add(root);
+      new MutationObserver(renderCanvassQuality).observe(root, { childList: true, subtree: true });
+    });
+    renderCanvassQuality();
+  };
+
+  const syncDeliverableReceiving = () => {
+    const select = document.querySelector('#receiveDeliverable');
+    const form = document.querySelector('#deliverableReceiveForm');
+    if (!select || !form) return;
+    const state = getState() ?? {};
+    const eligible = (state.deliverables ?? []).filter((entry) =>
+      ['PROCURED', 'PARTIALLY_RECEIVED'].includes(entry.status),
+    );
+    const fingerprint = JSON.stringify(
+      eligible.map((entry) => [entry.id, entry.status, entry.quantityReceived, entry.quantity]),
+    );
+    const current = select.value;
+    if (select.dataset.cumulativeFingerprint !== fingerprint) {
+      select.innerHTML = `<option value="">Select a procured deliverable</option>${eligible
+        .map(
+          (entry) =>
+            `<option value="${esc(entry.id)}">${esc(entry.id)} &mdash; ${esc(entry.itemSpec)} &mdash; ${esc(entry.quantityReceived ?? 0)}/${esc(entry.quantity)} received</option>`,
+        )
+        .join('')}`;
+      select.dataset.cumulativeFingerprint = fingerprint;
+      if (eligible.some((entry) => entry.id === current)) select.value = current;
+    }
+    const deliverable = eligible.find((entry) => entry.id === select.value);
+    const input = form.elements.quantity;
+    const label = input?.closest('label');
+    const labelText = label && [...label.childNodes].find((node) => node.nodeType === Node.TEXT_NODE);
+    if (labelText) labelText.textContent = 'Quantity received now';
+    let summary = form.querySelector('#deliverableCumulativeSummary');
+    if (!summary) {
+      summary = document.createElement('div');
+      summary.id = 'deliverableCumulativeSummary';
+      summary.className = 'deliverable-cumulative-summary span-2';
+      input?.closest('.form-grid')?.append(summary);
+    }
+    if (!deliverable) {
+      summary.textContent = 'Select a procured deliverable to see received and remaining totals.';
+      if (input) input.removeAttribute('max');
+      return;
+    }
+    const total = Number(deliverable.quantity || 0);
+    const received = Number(deliverable.quantityReceived || 0);
+    const remaining = Math.max(0, total - received);
+    summary.innerHTML = `<strong>Cumulative receiving</strong><span>${esc(received)} received &middot; ${esc(remaining)} remaining &middot; ${esc(total)} total ${esc(deliverable.unit)}</span>`;
+    if (input) {
+      input.max = String(remaining);
+      input.value = String(remaining);
+    }
+  };
+
+  const installDeliverableReceiving = () => {
+    if (!deliverableReceivingInstalled && typeof services.receiveDeliverable === 'function') {
+      const originalReceiveDeliverable = services.receiveDeliverable.bind(services);
+      services.receiveDeliverable = async (payload = {}) => {
+        const deliverable = (getState()?.deliverables ?? []).find(
+          (entry) => entry.id === payload.deliverableId,
+        );
+        if (backendMode === 'mock' && deliverable) {
+          if (!['PROCURED', 'PARTIALLY_RECEIVED'].includes(deliverable.status)) {
+            const error = new Error(
+              'Only procured or partially received deliverables can be received.',
+            );
+            error.code = 'INVALID_TRANSITION';
+            throw error;
+          }
+          const receivedBefore = Number(deliverable.quantityReceived || 0);
+          const receivedNow = Number(payload.quantity || payload.quantityReceivedNow);
+          const required = Number(deliverable.quantity || 0);
+          if (!(receivedNow > 0) || receivedBefore + receivedNow > required) {
+            const error = new Error('Receipt exceeds the approved deliverable quantity.');
+            error.code = 'OVER_RECEIPT';
+            throw error;
+          }
+          const result = await originalReceiveDeliverable({ ...payload, quantity: receivedNow });
+          const receivedTotal = receivedBefore + receivedNow;
+          const next = receivedTotal >= required ? 'READY_TO_RELEASE' : 'PARTIALLY_RECEIVED';
+          result.quantityReceived = receivedTotal;
+          result.status = next;
+          result.procurementStatus = next;
+          const latest = result.statusHistory?.at(-1);
+          if (latest) {
+            latest.status = next;
+            latest.note = `Received ${receivedNow}; cumulative total ${receivedTotal} of ${required}`;
+          }
+          const line = (getState()?.requestLines ?? []).find(
+            (entry) => entry.id === result.requestLineId,
+          );
+          if (line) {
+            line.receivedQuantity = receivedTotal;
+            line.status = next;
+            const lineLatest = line.statusHistory?.at(-1);
+            if (lineLatest) {
+              lineLatest.status = next;
+              lineLatest.note = `Received ${receivedNow}; cumulative total ${receivedTotal} of ${required}`;
+            }
+          }
+          result.receivedTotal = receivedTotal;
+          return result;
+        }
+        return originalReceiveDeliverable(payload);
+      };
+      deliverableReceivingInstalled = true;
+      document.querySelector('#receiveDeliverable')?.addEventListener('change', () =>
+        queueMicrotask(syncDeliverableReceiving),
+      );
+    }
+    syncDeliverableReceiving();
   };
 
   const referenceAdminAllowed = () => {
@@ -2581,6 +2827,9 @@ export function createRuntimeExtensions(options) {
     installRoleExperience();
     renderRoleExperience();
     installSharedMobileNav();
+    installReleaseConfirmation();
+    installCanvassQuality();
+    installDeliverableReceiving();
     if (!isRequestOnly()) {
       lending = createLendingController({ markFormClean });
       installLendingApproval();
@@ -2644,6 +2893,9 @@ export function createRuntimeExtensions(options) {
     renderFoodQueue();
     renderMaterialsQueue();
     renderVenueEquipmentQueue();
+    installReleaseConfirmation();
+    installCanvassQuality();
+    installDeliverableReceiving();
     if (document.querySelector('#referenceAdminWorkspace')?.closest('.view.active')) {
       installReferenceAdminWorkspace();
       void refreshReferenceAdminWorkspace();
