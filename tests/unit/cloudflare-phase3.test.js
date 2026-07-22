@@ -169,6 +169,8 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
     expect(sql).toContain('access_id_reservations_no_delete');
     expect(sql).toContain('reservation_consumption_guard');
     expect(sql).toContain('inventory_nonnegative_guard');
+    expect(sql).toContain('uq_accounts_verified_profile_email');
+    expect(sql).toContain('HAVING COUNT(*) = 1');
     expect(sql).toContain('Google Sheet imports are blocked after D1 cutover');
     expect(sql).toContain('owner_committee_id');
     expect(sql).toContain('assigned_committee_id');
