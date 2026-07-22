@@ -1,5 +1,14 @@
 # Project Status
 
+## v0.6 Phase 2 active - Gate 5 Request Center and Lending Hub checkpointed
+
+- Phase/stage: `PHASE_2_GATE_5_REQUEST_LENDING_CHECKPOINTED` at code commit `09315fbb68119aa55e16bba26b4926b60b3dfba9`.
+- Delivered: the Request Center retains Event Logistics and Catalog Restock, same-event original-request selection, combined dates, predictive item search, explicit Issue/Canvass/Split presentation, and review-only submission with no stock deduction. Event Step 4 exposes Food, Materials, and Venue & Equipment together and omits every untouched child.
+- Lending: new tickets accept only one to eight Student ID digits at both client and Apps Script service boundaries. Approval requires an authorized reviewer to attest the approved active USC source for officers/staff or the approved Angelite/student identity rule; domain-only approval is explicitly insufficient and the source/reviewer are retained in history/audit metadata.
+- Boundaries: form/ticket separation, loan and consumable lifecycles, inventory eligibility, server stock revalidation, reservations, idempotency, duplicate handoff/return prevention, authentication, authorization, and append-only ledger rules remain unchanged. No schema migration or external-system action was needed.
+- Verification: `npm run check` passes with 46 Vitest files / 348 tests, deterministic build/parity/package verification, and Apps Script validation. Focused Request/Lending/composite Playwright passes 29 / 31 intentional skips across configured viewports. `dist/index.html` is 448,084 bytes with SHA-256 `a4698f75f7c2b2bb4129be0f7c655945ed40d0d9c8c9f8540a8401de876e839c`.
+- Next action: push and verify this checkpoint and PR #9 CI, then complete only Gate 6 operational workflow acceptance.
+
 ## v0.6 Phase 2 active - Materials & Documentation experience checkpointed
 
 - Phase/stage: `PHASE_2_MATERIALS_DOCUMENTATION_EXPERIENCE_CHECKPOINTED` at code commit `67c542263431c813cb5ae6488cbdacf38e74fbae`.

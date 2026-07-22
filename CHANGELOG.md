@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Gate 5 Request Center and Lending Hub (2026-07-22)
+
+### Added
+
+- Explicit Event Step 4 presentation for Food, Materials, and Venue & Equipment together, with focused proof that one, two, or all sections may be completed and untouched sections create no child.
+- A shared borrower-identity policy for one-to-eight digit Student IDs and borrower-specific approved-source requirements.
+- A reviewer confirmation step that records the approved identity source and authorized reviewer without storing a new free-text identity record.
+
+### Changed
+
+- Enforced digits-only Student IDs in the maintained browser layer and Apps Script service boundary.
+- Required approved active USC source verification for officers/staff and the approved Angelite/student identity rule before a ticket can move from `FOR_REVIEW` to `READY_TO_CLAIM`; email domain alone is not accepted.
+
+### Verified
+
+- `npm run check` passes with 46 Vitest files / 348 tests, deterministic build/parity, Apps Script validation, and standalone verification. Focused Request Center, Lending Hub, and composite browser proof passes 29 / 31 intentional skips across configured viewports.
+- Request submission leaves ledger movements and reservations unchanged; existing server-side transition, duplicate handoff/return, authentication, authorization, and ledger protections remain intact.
+
 ## Unreleased - v0.6 Phase 2 Materials & Documentation experience (2026-07-22)
 
 ### Added
