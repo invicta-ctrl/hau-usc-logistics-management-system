@@ -42,6 +42,33 @@ describe('v0.6 authentication cryptography', () => {
     );
   });
 
+  it('keeps the production work factor inside the Cloudflare Workers PBKDF2 limit', async () => {
+    const maximumIterations = 100_000;
+    const cloudflareCompatibleCrypto = {
+      getRandomValues: webcrypto.getRandomValues.bind(webcrypto),
+      subtle: {
+        importKey: webcrypto.subtle.importKey.bind(webcrypto.subtle),
+        deriveBits(algorithm, key, length) {
+          if (algorithm.iterations > maximumIterations) {
+            throw new DOMException(
+              `iteration counts above ${maximumIterations} are not supported`,
+              'NotSupportedError',
+            );
+          }
+          return webcrypto.subtle.deriveBits(algorithm, key, length);
+        },
+      },
+    };
+    const kdf = createPasswordKdf({
+      cryptoProvider: cloudflareCompatibleCrypto,
+      timingSafeEqual,
+    });
+
+    expect(PASSWORD_KDF.productionIterations).toBe(maximumIterations);
+    const credential = await kdf.hash('Cloudflare!Password9472');
+    await expect(kdf.verify('Cloudflare!Password9472', credential)).resolves.toBe(true);
+  });
+
   it('creates opaque tokens and validates their digest with a timing-safe comparison', async () => {
     const tokenCrypto = createTokenCrypto({ cryptoProvider: webcrypto, timingSafeEqual });
     const token = tokenCrypto.createToken();

@@ -70,6 +70,7 @@ Password reset uses a short-lived, one-time, server-stored token hash. Completin
 
 - Passwords use PBKDF2-HMAC-SHA-256 with a per-credential random 128-bit salt, a configurable work factor, and a 256-bit derived value.
 - Production accepts credentials only at or above the configured minimum work factor. Synthetic tests may explicitly lower that bound.
+- The Cloudflare Worker adapter uses the runtime-supported PBKDF2 maximum of 100,000 iterations; increasing it requires a verified platform capability change or a reviewed replacement KDF adapter.
 - Verification derives the candidate value and uses an injected timing-safe comparator. The Cloudflare runtime supplies `crypto.subtle.timingSafeEqual`; tests use the platform crypto adapter.
 - Raw passwords, temporary passwords, reset tokens, session tokens, and CSRF tokens are never logged or stored.
 - Session and reset tokens use at least 256 bits of cryptographic randomness. Only SHA-256 token digests are stored.

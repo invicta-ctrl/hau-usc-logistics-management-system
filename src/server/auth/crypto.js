@@ -5,7 +5,8 @@ export const PASSWORD_KDF = Object.freeze({
   hash: 'SHA-256',
   saltBytes: 16,
   derivedBytes: 32,
-  productionIterations: 310_000,
+  // Cloudflare Workers rejects PBKDF2 calls above 100,000 iterations.
+  productionIterations: 100_000,
 });
 
 function requireCrypto(cryptoProvider) {
