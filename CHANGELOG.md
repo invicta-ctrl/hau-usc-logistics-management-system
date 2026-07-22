@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 3 Task 3 staging authentication/access repair (2026-07-22)
+
+### Added
+
+- Administrator-only Access Management with a safe account directory, governed account actions, two-step Access ID changes, session revocation, and append-only history/reservations.
+- Ordered D1 migration `0008_access_management.sql`, a deployed staging auth/access smoke gate, and fail-closed production authorization tooling.
+
+### Fixed
+
+- Invalid unknown-account login no longer violates the non-null audit entity constraint or renders a generic service-unavailable error.
+- Authentication errors no longer remount/refocus the Access ID field; standard username/current-password autocomplete remains supported.
+- Access Management remains reachable when the unrelated legacy Reference Administration endpoint is unavailable.
+
+### Verified
+
+- Deployed staging candidate `a5a942eaa14a2639d7eeaee5b7f5cbbe276ffc68` reports STAGING, schema 8, migration 0008, and ready true.
+- `npm run check`: 55 Vitest files / 382 tests; full Playwright: 91 passed / 209 intentional skips / 0 failures; fresh local workerd/D1: 14 / 14; deployed auth/access smoke: 1 / 1.
+
+### Boundary
+
+- Production is NO-GO. Gate E authorization, full live acceptance, rollback rehearsal, final reviews, production authorization, production actions, PR merge, and production promotion remain incomplete or prohibited.
+
 ## Unreleased - v0.6 Phase 3 local Cloudflare/D1 staging candidate (2026-07-22)
 
 ### Added
