@@ -208,7 +208,9 @@ test('deployed staging authentication and Access Management remain operational',
 
     await search.fill(renamedTargetAccessId);
     await expect(page.locator('[data-access-results] .access-account-row')).toHaveCount(1);
-    await page.locator('[data-access-action="history"]').click();
+    const historyButton = page.locator('[data-access-action="history"]');
+    await expect(historyButton).toHaveAttribute('data-access-id', renamedTargetAccessId);
+    await historyButton.click();
     await expect(page.getByRole('heading', { name: /Access ID history/u })).toBeVisible();
     await expect(page.locator('#modal')).toContainText('ACCESS_ID_CHANGED');
     await page.locator('[data-close-modal]').click();
