@@ -104,8 +104,16 @@ describe('v0.6 authentication and onboarding service', () => {
     const account = repository.inspect().accounts[0];
     expect(account.passwordCredential).not.toHaveProperty('password');
     expect(account.temporaryCredential.consumedAt).toBeTruthy();
+    expect(account.profileEmailVerifiedAt).toBeTruthy();
     expect(account.roleId).toBe('DOL_STAFF');
     expect(account.committeeIds).toEqual([COMMITTEES.FOOD]);
+    await expect(
+      service.login({
+        accessId: 'hau-admin-001@example.test',
+        password: 'Activated!Password9472',
+        networkKey: 'verified-email-network',
+      }),
+    ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
   });
 
   it('rejects wrong passwords, expired temporary passwords, and activation replay', async () => {

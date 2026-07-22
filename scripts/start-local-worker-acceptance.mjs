@@ -6,11 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const wrangler = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const privateRoot = await mkdtemp(path.join(tmpdir(), 'hau-usc-local-worker-'));
 const state = path.join(privateRoot, 'state');
 const seed = path.join(privateRoot, 'seed.sql');
 const shared = { cwd: repoRoot, stdio: 'inherit', windowsHide: true };
 
+execFileSync(process.execPath, [vite, 'build', '--mode', 'staging'], shared);
 execFileSync(process.execPath, [path.join(repoRoot, 'scripts', 'd1', 'create-local-seed.mjs'), '--output', seed], shared);
 execFileSync(process.execPath, [wrangler, 'd1', 'migrations', 'apply', 'DB', '--local', '--persist-to', state], shared);
 execFileSync(process.execPath, [wrangler, 'd1', 'execute', 'DB', '--local', '--persist-to', state, '--file', seed], shared);

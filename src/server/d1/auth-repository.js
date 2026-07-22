@@ -40,6 +40,7 @@ async function accountFromRow(db, row) {
     temporaryCredential: parseJson(row.temporary_credential_json),
     credentialVersion: row.credential_version,
     onboardingCompletedAt: row.onboarding_completed_at,
+    profileEmailVerifiedAt: row.profile_email_verified_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     lockedAt: row.locked_at ?? null,
@@ -63,6 +64,7 @@ function accountStatement(db, account) {
     account.temporaryCredential ? JSON.stringify(account.temporaryCredential) : null,
     account.credentialVersion,
     account.onboardingCompletedAt ?? null,
+    account.profileEmailVerifiedAt ?? null,
     account.createdAt,
     account.updatedAt,
     account.lendingEligible ? 1 : 0,
@@ -74,8 +76,9 @@ function accountStatement(db, account) {
          id, access_id_normalized, status, role_id, default_committee_id,
          profile_full_name, profile_mobile_number, profile_email,
          password_credential_json, temporary_credential_json, credential_version,
-         onboarding_completed_at, created_at, updated_at, lending_eligible, institution_id
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
+         onboarding_completed_at, profile_email_verified_at, created_at, updated_at,
+         lending_eligible, institution_id
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)
        ON CONFLICT(id) DO UPDATE SET
          access_id_normalized = excluded.access_id_normalized,
          status = excluded.status,
@@ -88,6 +91,7 @@ function accountStatement(db, account) {
          temporary_credential_json = excluded.temporary_credential_json,
          credential_version = excluded.credential_version,
          onboarding_completed_at = excluded.onboarding_completed_at,
+         profile_email_verified_at = excluded.profile_email_verified_at,
          updated_at = excluded.updated_at,
          lending_eligible = excluded.lending_eligible,
          institution_id = excluded.institution_id
@@ -110,6 +114,20 @@ export function createD1AuthRepository(db) {
         await db
           .prepare('SELECT * FROM accounts WHERE access_id_normalized = ?1')
           .bind(accessIdNormalized)
+          .first(),
+      );
+    },
+    async getAccountByLoginIdentifier(identifier) {
+      return accountFromRow(
+        db,
+        await db
+          .prepare(
+            `SELECT * FROM accounts
+             WHERE access_id_normalized = ?1
+                OR (profile_email_verified_at IS NOT NULL AND lower(profile_email) = ?1)
+             LIMIT 1`,
+          )
+          .bind(identifier)
           .first(),
       );
     },

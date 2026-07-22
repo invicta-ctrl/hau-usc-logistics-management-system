@@ -66,23 +66,83 @@ function fieldError(error, field) {
   return escapeHtml(error?.details?.fieldErrors?.[field] ?? '');
 }
 
+const EYE_ICON = `
+  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  </svg>`;
+
+const EYE_OFF_ICON = `
+  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+    <path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.5 3.1M6.2 6.3A15.7 15.7 0 0 0 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3-.5M9.9 9.8a3 3 0 0 0 4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>`;
+
+function passwordControl({ id, name, autocomplete, label = 'Password', describedBy = '', minlength = '' }) {
+  return `
+    <label for="${id}">${escapeHtml(label)}</label>
+    <div class="auth-password-control">
+      <input id="${id}" name="${name}" type="password" autocomplete="${autocomplete}" required ${minlength ? `minlength="${minlength}"` : ''} maxlength="128" ${describedBy ? `aria-describedby="${describedBy}"` : ''}>
+      <button class="auth-password-toggle" type="button" data-password-toggle="${id}" aria-label="Show password" aria-pressed="false">${EYE_ICON}<span>Show</span></button>
+    </div>`;
+}
+
+function attachPasswordControls(container) {
+  container.querySelectorAll('[data-password-toggle]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const input = container.querySelector(`#${button.dataset.passwordToggle}`);
+      if (!input) return;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const reveal = input.type === 'password';
+      input.type = reveal ? 'text' : 'password';
+      button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
+      button.setAttribute('aria-pressed', String(reveal));
+      button.innerHTML = `${reveal ? EYE_OFF_ICON : EYE_ICON}<span>${reveal ? 'Hide' : 'Show'}</span>`;
+      input.focus({ preventScroll: true });
+      if (start !== null && end !== null) input.setSelectionRange(start, end);
+    });
+  });
+}
+
+function attachRecoveryHelp(container) {
+  const button = container.querySelector('[data-auth-forgot]');
+  const panel = container.querySelector('#authRecoveryHelp');
+  if (!button || !panel) return;
+  button.addEventListener('click', () => {
+    const expanded = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-expanded', String(!expanded));
+    panel.hidden = expanded;
+    if (!expanded) panel.focus();
+  });
+}
+
 function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
   const message = error ? escapeHtml(error.message) : '';
   return `
     <section class="auth-card" aria-labelledby="authTitle">
-      <p class="eyebrow">Holy Angel University · University Student Council</p>
-      <h1 id="authTitle">${portal ? 'Office Lending' : requestPortal ? 'Request Center' : 'Logistics Operations'}</h1>
+      <div class="auth-brand-lockup" aria-label="Holy Angel University University Student Council Department of Logistics">
+        <span class="auth-brand-mark" aria-hidden="true">HAU</span>
+        <span><strong>University Student Council</strong><small>Department of Logistics</small></span>
+      </div>
+      <p class="eyebrow">Holy Angel University</p>
+      <h1 id="authTitle">${portal ? 'Office Lending' : requestPortal ? 'Request Center' : 'Staff sign in'}</h1>
       <p class="auth-intro">${portal ? 'Sign in with your institution-approved Access ID to submit and track your own lending requests.' : requestPortal ? 'Sign in with your requester Access ID to submit and track your own logistics requests.' : 'Sign in with the Access ID issued by the Department of Logistics.'}</p>
       <div class="auth-alert" role="alert" data-auth-login-error ${error ? '' : 'hidden'}>${message}</div>
       <form id="authLoginForm" class="auth-form" autocomplete="on">
-        <label for="authAccessId">Access ID</label>
+        <label for="authAccessId">Access ID or verified HAU-USC email</label>
         <input id="authAccessId" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" required maxlength="64" spellcheck="false">
-        <label for="authPassword">Password</label>
-        <input id="authPassword" name="password" type="password" autocomplete="current-password" required maxlength="128">
+        ${passwordControl({ id: 'authPassword', name: 'password', autocomplete: 'current-password' })}
+        <div class="auth-form-actions">
+          <button class="auth-text-button" type="button" data-auth-forgot aria-expanded="false" aria-controls="authRecoveryHelp">Forgot password?</button>
+        </div>
         <button class="primary" type="submit">Sign in</button>
       </form>
+      <div id="authRecoveryHelp" class="auth-recovery-help" tabindex="-1" hidden>
+        <strong>Recover staff access</strong>
+        <p>Contact an authorized Administrator to revoke active sessions and issue a one-time temporary password. Your role and committee scope cannot be changed from this page.</p>
+      </div>
       <p class="auth-help">${portal ? 'Borrower eligibility is assigned by the server. This portal never provides internal staff access.' : requestPortal ? 'This portal shows only your own requests. Roles and committee access are assigned by the server.' : 'Roles and committee access are assigned by the server. They cannot be selected here.'}</p>
-      <p class="auth-help">${portal ? '<a href="/request">Submit or track a logistics request</a>' : '<a href="/request">Submit or track a logistics request</a> · <a href="/lending">Office Lending</a>'}</p>
+      <nav class="auth-portal-links" aria-label="Public logistics portals">${portal ? '<a href="/request">Request Center</a>' : '<a href="/request">Request Center</a> <span aria-hidden="true">·</span> <a href="/lending">Lending Center</a>'}</nav>
     </section>`;
 }
 
@@ -112,11 +172,9 @@ function activationMarkup(error) {
         <label for="authEmail">Email address</label>
         <input id="authEmail" name="email" type="email" autocomplete="email" required maxlength="254" aria-describedby="authEmailError">
         <small id="authEmailError" class="auth-field-error">${fieldError(error, 'email')}</small>
-        <label for="authNewPassword">New password</label>
-        <input id="authNewPassword" name="password" type="password" autocomplete="new-password" required minlength="12" maxlength="128" aria-describedby="authPasswordHelp">
+        ${passwordControl({ id: 'authNewPassword', name: 'password', autocomplete: 'new-password', label: 'New password', describedBy: 'authPasswordHelp', minlength: '12' })}
         <small id="authPasswordHelp">Use 12–128 characters and at least three character types.</small>
-        <label for="authConfirmPassword">Confirm password</label>
-        <input id="authConfirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128" aria-describedby="authConfirmError">
+        ${passwordControl({ id: 'authConfirmPassword', name: 'confirmPassword', autocomplete: 'new-password', label: 'Confirm password', describedBy: 'authConfirmError', minlength: '12' })}
         <small id="authConfirmError" class="auth-field-error">${fieldError(error, 'confirmPassword')}</small>
         <button class="primary" type="submit">Activate account</button>
       </form>
@@ -213,6 +271,8 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
     if (!form) {
       root.innerHTML = loginMarkup(error, { portal: lendingPortal, requestPortal: requesterPortal });
       form = root.querySelector('#authLoginForm');
+      attachPasswordControls(root);
+      attachRecoveryHelp(root);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const values = new FormData(form);
@@ -238,6 +298,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
 
   const renderActivation = (error) => {
     root.innerHTML = activationMarkup(error);
+    attachPasswordControls(root);
     const form = root.querySelector('#authActivationForm');
     form.addEventListener('submit', async (event) => {
       event.preventDefault();

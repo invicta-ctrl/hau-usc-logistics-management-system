@@ -5,6 +5,7 @@ function clone(value) {
 export function createInMemoryAuthRepository(seedAccounts = []) {
   const accounts = new Map();
   const accessIndex = new Map();
+  const verifiedEmailIndex = new Map();
   const sessions = new Map();
   const resetTokens = new Map();
   const auditEvents = [];
@@ -14,6 +15,15 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
     const prior = accounts.get(next.id);
     if (prior?.accessIdNormalized && prior.accessIdNormalized !== next.accessIdNormalized) {
       accessIndex.delete(prior.accessIdNormalized);
+    }
+    if (prior?.profileEmailVerifiedAt && prior.profile?.email) {
+      verifiedEmailIndex.delete(prior.profile.email.toLowerCase());
+    }
+    if (next.profileEmailVerifiedAt && next.profile?.email) {
+      const email = next.profile.email.toLowerCase();
+      const assigned = verifiedEmailIndex.get(email);
+      if (assigned && assigned !== next.id) throw new Error('Verified email is already assigned.');
+      verifiedEmailIndex.set(email, next.id);
     }
     accounts.set(next.id, next);
     accessIndex.set(next.accessIdNormalized, next.id);
@@ -26,6 +36,10 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
     },
     async getAccountByAccessId(accessIdNormalized) {
       const id = accessIndex.get(accessIdNormalized);
+      return clone(id ? accounts.get(id) : undefined);
+    },
+    async getAccountByLoginIdentifier(identifier) {
+      const id = accessIndex.get(identifier) ?? verifiedEmailIndex.get(identifier);
       return clone(id ? accounts.get(id) : undefined);
     },
     async getAccountById(accountId) {
@@ -81,6 +95,9 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
   for (const account of seedAccounts) {
     accounts.set(account.id, clone(account));
     accessIndex.set(account.accessIdNormalized, account.id);
+    if (account.profileEmailVerifiedAt && account.profile?.email) {
+      verifiedEmailIndex.set(account.profile.email.toLowerCase(), account.id);
+    }
   }
   return repository;
 }

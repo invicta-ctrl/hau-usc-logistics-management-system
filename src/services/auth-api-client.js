@@ -35,7 +35,7 @@ export class AuthApiClient {
     try {
       return await this.request(AUTH_API_ROUTES.session, { method: 'GET' });
     } catch (error) {
-      if (['SESSION_REQUIRED', 'SESSION_INVALID'].includes(error.code)) return null;
+      if (error.code === 'SESSION_REQUIRED') return null;
       throw error;
     }
   }

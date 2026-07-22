@@ -61,11 +61,11 @@ test('generates inherited login and onboarding previews', async ({ page }, testI
   );
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Logistics Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
   await capture(page, '01-login-desktop-1366.png', page.locator('#authGateway'));
 
   await page.getByLabel('Access ID').fill('SYNTHETIC-PREVIEW-001');
-  await page.getByLabel('Password').fill('Synthetic!Preview9472');
+  await page.getByLabel('Password', { exact: true }).fill('Synthetic!Preview9472');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: 'Secure your account' })).toBeVisible();
   await capture(page, '02-onboarding-desktop-1366.png', page.locator('#authGateway'));

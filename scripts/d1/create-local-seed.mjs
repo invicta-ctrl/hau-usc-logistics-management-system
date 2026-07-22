@@ -57,7 +57,7 @@ async function main() {
         `INSERT OR REPLACE INTO accounts (` +
           `id, access_id_normalized, status, role_id, default_committee_id, profile_full_name, ` +
           `profile_mobile_number, profile_email, password_credential_json, temporary_credential_json, ` +
-          `credential_version, onboarding_completed_at, created_at, updated_at` +
+          `credential_version, onboarding_completed_at, profile_email_verified_at, created_at, updated_at` +
           `) VALUES (` +
           [
             id,
@@ -71,6 +71,7 @@ async function main() {
             JSON.stringify(credential),
             null,
             1,
+            createdAt,
             createdAt,
             createdAt,
             createdAt,
@@ -101,7 +102,7 @@ async function main() {
     `INSERT OR REPLACE INTO accounts (` +
       `id, access_id_normalized, status, role_id, default_committee_id, profile_full_name, ` +
       `profile_mobile_number, profile_email, password_credential_json, temporary_credential_json, ` +
-      `credential_version, onboarding_completed_at, created_at, updated_at` +
+      `credential_version, onboarding_completed_at, profile_email_verified_at, created_at, updated_at` +
       `) VALUES (` +
       [
         'LOCAL-STARTER',
@@ -119,6 +120,7 @@ async function main() {
           consumedAt: null,
         }),
         1,
+        null,
         null,
         createdAt,
         createdAt,

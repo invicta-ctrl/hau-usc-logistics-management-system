@@ -61,8 +61,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '9',
-        latestMigration: '0009_public_portal_entitlements.sql',
+        schemaVersion: '10',
+        latestMigration: '0010_verified_login_email.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -73,7 +73,7 @@ test('deployed staging authentication and Access Management remain operational',
 
     await page.goto('/app/admin');
     const accessInput = page.getByLabel('Access ID');
-    const passwordInput = page.getByLabel('Password');
+    const passwordInput = page.getByLabel('Password', { exact: true });
     await expect(accessInput).toBeVisible();
     await expect(accessInput).not.toBeFocused();
     await expect(accessInput).toHaveAttribute('name', 'username');

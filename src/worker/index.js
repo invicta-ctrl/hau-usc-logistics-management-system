@@ -20,6 +20,29 @@ const API_SECURITY_HEADERS = Object.freeze({
   'cross-origin-resource-policy': 'same-origin',
 });
 
+const LOGIN_BACKGROUND_KEY = 'brand/login-background';
+
+async function brandAsset(request, env) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    return new Response(null, { status: 405, headers: { allow: 'GET, HEAD' } });
+  }
+  const asset = await env.BRAND_ASSETS?.get(LOGIN_BACKGROUND_KEY);
+  if (!asset) {
+    return new Response(null, {
+      status: 404,
+      headers: { 'cache-control': 'public, max-age=60', 'x-content-type-options': 'nosniff' },
+    });
+  }
+  const headers = new Headers({
+    'cache-control': 'public, max-age=300, stale-while-revalidate=86400',
+    'content-type': asset.httpMetadata?.contentType ?? 'application/octet-stream',
+    'x-content-type-options': 'nosniff',
+    'content-security-policy': "default-src 'none'",
+  });
+  if (asset.httpEtag) headers.set('etag', asset.httpEtag);
+  return new Response(request.method === 'HEAD' ? null : asset.body, { headers });
+}
+
 const GROUP_MODULE = Object.freeze({
   requests: 'request',
   lending: 'lending',
@@ -424,6 +447,7 @@ async function handleApi(request, env, requestId) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/brand/login-background') return brandAsset(request, env);
     if (url.pathname.startsWith('/api/')) {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();

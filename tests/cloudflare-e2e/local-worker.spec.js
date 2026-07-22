@@ -38,11 +38,11 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '9' },
+    database: { connected: true, schemaVersion: '10' },
   });
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Logistics Operations' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
   await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
 });
 
@@ -95,7 +95,7 @@ for (const [accessId, experience] of roles) {
   test(`${accessId} receives only the server-routed ${experience} experience`, async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Access ID').fill(accessId);
-    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page.locator('.app-shell')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
@@ -110,7 +110,7 @@ test('Administrator reaches Access Management when the legacy reference endpoint
 }) => {
   await page.goto('/app/admin');
   await page.getByLabel('Access ID').fill('LOCAL.ADMIN');
-  await page.getByLabel('Password').fill(PASSWORD);
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.locator('.app-shell')).toBeVisible();
 
@@ -124,7 +124,7 @@ test('Administrator reaches Access Management when the legacy reference endpoint
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Access ID').fill('LOCAL.STARTER');
-  await page.getByLabel('Password').fill(TEMPORARY_PASSWORD);
+  await page.getByLabel('Password', { exact: true }).fill(TEMPORARY_PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page.getByRole('heading', { name: 'Secure your account' })).toBeVisible();
 

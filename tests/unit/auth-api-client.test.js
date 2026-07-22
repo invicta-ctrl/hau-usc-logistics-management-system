@@ -41,4 +41,20 @@ describe('authentication API client', () => {
     );
     await expect(new AuthApiClient().getSession()).resolves.toBeNull();
   });
+
+  it('preserves the expired-session state so the login can explain why reauthentication is required', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            code: 'SESSION_INVALID',
+            message: 'Your session is invalid or expired. Sign in again.',
+          }),
+          { status: 401, headers: { 'content-type': 'application/json' } },
+        ),
+      ),
+    );
+    await expect(new AuthApiClient().getSession()).rejects.toMatchObject({ code: 'SESSION_INVALID' });
+  });
 });

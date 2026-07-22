@@ -49,6 +49,13 @@ export function normalizeAccessId(value) {
   return /^[A-Z0-9][A-Z0-9._-]{3,63}$/u.test(normalized) ? normalized : '';
 }
 
+export function normalizeVerifiedEmail(value) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalized) && normalized.length <= 254
+    ? normalized
+    : '';
+}
+
 export function normalizeCommitteeIds(values) {
   return [...new Set((Array.isArray(values) ? values : []).map(canonicalCommitteeId).filter(Boolean))].slice(
     0,

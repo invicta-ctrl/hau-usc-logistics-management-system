@@ -4,6 +4,7 @@ import {
   accountAuthorization,
   normalizeAccessId,
   normalizeCommitteeIds,
+  normalizeVerifiedEmail,
   SESSION_KIND,
   sessionUserDto,
   validateOnboardingProfile,
@@ -197,11 +198,14 @@ export function createAuthService({
   }
 
   async function login({ accessId, password, networkKey } = {}) {
-    const accessIdNormalized = normalizeAccessId(accessId);
-    const limiterKey = `${accessIdNormalized || 'invalid'}:${safeNetworkKey(networkKey)}`;
+    const loginIdentifier = normalizeAccessId(accessId) || normalizeVerifiedEmail(accessId);
+    const limiterKey = `${loginIdentifier || 'invalid'}:${safeNetworkKey(networkKey)}`;
     const limit = await rateLimiter.consume(limiterKey, clock.now());
     assert(limit.allowed, 'AUTHENTICATION_THROTTLED', { retryAfterMs: limit.retryAfterMs });
-    const account = accessIdNormalized ? await repository.getAccountByAccessId(accessIdNormalized) : null;
+    const account = loginIdentifier
+      ? await (repository.getAccountByLoginIdentifier?.(loginIdentifier) ??
+          repository.getAccountByAccessId(loginIdentifier))
+      : null;
     const credential =
       account?.status === ACCOUNT_STATUS.STARTER ? account.temporaryCredential : account?.passwordCredential;
     const verified = await passwordKdf.verify(password, credential ?? (await dummyCredential()));
@@ -268,6 +272,7 @@ export function createAuthService({
         temporaryCredential: { ...fresh.temporaryCredential, consumedAt: activatedAt },
         credentialVersion: fresh.credentialVersion + 1,
         onboardingCompletedAt: activatedAt,
+        profileEmailVerifiedAt: activatedAt,
         updatedAt: activatedAt,
       };
       await transaction.saveAccount(next);

@@ -70,15 +70,15 @@ test('HTTP mode requires Access ID login and starter activation without role sel
 
   await page.goto('/');
   expect(await page.evaluate(() => globalThis.__HAU_RUNTIME_CONFIG__?.backendMode)).toBe('rest');
-  await expect(page.getByRole('heading', { name: 'Logistics Operations' })).toBeVisible();
-  await expect(page.getByLabel('Access ID')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await expect(page.getByLabel('Access ID or verified HAU-USC email')).toBeVisible();
   await expect(page.locator('.app-shell')).toBeHidden();
   await expect(page.getByRole('button', { name: 'Reset Demo Data' })).toHaveCount(0);
   await expect(page.getByText(/roles and committee access are assigned by the server/i)).toBeVisible();
   await expect(page.locator('#authGateway select')).toHaveCount(0);
 
   await page.getByLabel('Access ID').fill('HAU-FOOD-001');
-  await page.getByLabel('Password').fill('Temporary!Password9472');
+  await page.getByLabel('Password', { exact: true }).fill('Temporary!Password9472');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
   await expect(page.getByRole('heading', { name: 'Secure your account' })).toBeVisible();
@@ -171,7 +171,7 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await page.goto('/');
   const form = page.locator('#authLoginForm');
   const accessId = page.getByLabel('Access ID');
-  const password = page.getByLabel('Password');
+  const password = page.getByLabel('Password', { exact: true });
   await expect(form).toHaveAttribute('autocomplete', 'on');
   await expect(accessId).toHaveAttribute('name', 'username');
   await expect(accessId).toHaveAttribute('type', 'text');
@@ -198,5 +198,41 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await accessId.press('Tab');
   await expect(password).toBeFocused();
   await password.press('Tab');
+  await expect(page.getByRole('button', { name: 'Show password' })).toBeFocused();
+  await page.getByRole('button', { name: 'Show password' }).press('Tab');
+  await expect(page.getByRole('button', { name: 'Forgot password?' })).toBeFocused();
+  await page.getByRole('button', { name: 'Forgot password?' }).press('Tab');
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
+});
+
+test('staff login provides accessible password visibility and recovery controls', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One focused browser proves the Phase 2 controls.');
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
+  });
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SESSION_INVALID', message: 'Your session is invalid or expired. Sign in again.' }),
+    }),
+  );
+
+  await page.goto('/login');
+  await expect(page.getByRole('alert')).toContainText('session is invalid or expired');
+  const password = page.getByLabel('Password', { exact: true });
+  const toggle = page.getByRole('button', { name: 'Show password' });
+  await password.fill('Retain!Cursor9472');
+  await password.evaluate((element) => element.setSelectionRange(3, 9));
+  await toggle.click();
+  await expect(password).toHaveAttribute('type', 'text');
+  await expect(password).toHaveValue('Retain!Cursor9472');
+  await expect(page.getByRole('button', { name: 'Hide password' })).toHaveAttribute('aria-pressed', 'true');
+  expect(await password.evaluate((element) => [element.selectionStart, element.selectionEnd])).toEqual([3, 9]);
+
+  await page.getByRole('button', { name: 'Forgot password?' }).click();
+  await expect(page.getByText('Recover staff access')).toBeVisible();
+  await expect(page.getByText(/authorized Administrator.*one-time temporary password/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
+  await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
 });

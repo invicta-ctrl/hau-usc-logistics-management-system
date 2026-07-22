@@ -15,7 +15,7 @@ export default defineConfig({
   webServer: {
     command: 'node scripts/start-local-worker-acceptance.mjs',
     url: 'http://127.0.0.1:8787/api/health',
-    reuseExistingServer: false,
+    reuseExistingServer: process.env.HAU_CLOUDFLARE_REUSE_SERVER === '1',
     timeout: 60_000,
   },
 });
