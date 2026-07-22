@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.6
 Phase: Phase 2 — TERRA
 Required model: GPT-5.6 Terra
-Status: ACTIVE
+Status: COMPLETE — READY FOR MANUAL PHASE 3 MODEL SWITCH
 
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
@@ -14,6 +14,7 @@ Latest verified Phase 1 implementation checkpoint:
 The next Codex task must fetch and verify the actual branch HEAD, upstream parity, working tree, and PR #9 checks. The checkpoint above identifies the verified Phase 1 implementation; the Phase 1 handoff commit follows it.
 
 Preserved rollback checkpoints:
+
 - v0.6 pre-authentication merge: `aeb05c71937b8479f66d08a9a64800b005343784`
 - exact integrated v0.5 candidate: `12cdfd4de73120bfeedf49582c83e1861ae36b99`
 - preserved launch-readiness predecessor: `81efe82618048b79a821f93bd95a0be00eaeff43`
@@ -24,10 +25,15 @@ Mandatory workflow/context policy:
 Active specification:
 `.codex/specs/v0.6-phase-2-terra.md`
 
-Later specification:
+Completion handoff:
+`.codex/PHASE_2_TERRA_HANDOFF.md`
+
+Next specification (not active until the manual model switch and fresh handshake):
+
 - `.codex/specs/v0.6-phase-3-sol-high.md`
 
 Phase 1 result:
+
 - reconciled and merged the exact v0.5 baseline without changing `main` or merging PR #7;
 - locked the v0.6 architecture, identity, role/scope, experience-routing, threat-model, migration, and rollback contracts;
 - implemented portable authentication, activation, session, CSRF, password-reset, account-status, authorization, HTTP, cookie, and repository/service foundations;
@@ -36,6 +42,7 @@ Phase 1 result:
 - pushed implementation checkpoint `c07e6e6` to draft PR #9; remote `validate`, `verify`, and `browser-smoke` checks all pass.
 
 Phase 2 shared-shell milestone (verified for checkpoint):
+
 - Verified the Phase 1 handoff at `d8af7bb4a5e986fc4dfd166ae664f5758c46a1fd`, clean and synchronized with `origin`; draft PR #9 remains open and its `validate`, `verify`, and `browser-smoke` checks are successful.
 - Read S0003 once and created `.codex/DESIGN_REFERENCE_DIGEST.md` with its SHA-256, source hierarchy, shared tokens, role accents, interaction grammar, mobile rules, prohibitions, and role placeholders.
 - Implemented the S0003 shared shell through the non-generated runtime extension: role-scoped accents, a compact mobile header, five primary mobile destinations, and an overflow panel for all remaining existing destinations. The mobile controls delegate to existing navigation and do not change authorization.
@@ -50,11 +57,15 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 - Gate 5 verification passes: `npm run check` completed with 46 Vitest files / 348 tests, deterministic build/parity, Apps Script validation, and standalone verification; the focused Request/Lending/composite browser suite passed 29 / 31 intentional skips across configured viewports. Gate 5 is complete and checkpointed locally; the next bounded slice is Gate 6 operational workflow acceptance after this checkpoint is pushed and PR #9 CI is verified.
 - Gate 6 shared operational workflows checkpoint: code milestone `478c2feef3040469c820f356ec8a329a32fbc606` is pushed and matches draft PR #9. Release Desk now requires explicit recipient confirmation and preflights every selected line before mutation; Inventory/Restocking preserve ledger truth and cumulative line-level receiving; Canvass exposes stale/missing-unit/mismatch and safe evidence/source signals; Procurement receiving is gated to Procured/Partially Received and presents received-now plus cumulative totals.
 - Gate 6 verification passes: `npm run check` completed with 49 Vitest files / 356 tests; focused Gate 6 Playwright passed 6 / 6 at 390px and 1366px; full Playwright passed 90 / 186 intentional skips / 0 failures. PR #9 `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` are green at the exact code milestone.
+- Phase 2 final delivery checkpoint: `de194f5c37cadf2eb2983cfe3450a1c99ceed735` is pushed and matches draft PR #9. It adds the required tracked experience previews and operator/role guides, repairs the Administrator hero contrast defect found during final visual review, and isolates preview generation from routine browser tests.
+- Phase 2 final acceptance passes: `npm run check` completed with 49 Vitest files / 356 tests; the opt-in preview generator passed 3 / 3 with 3 intentional project skips; the normal complete Playwright matrix passed 90 / 204 intentional skips / 0 failures without rewriting tracked PNGs. `dist/index.html` is 455,779 bytes / SHA-256 `369ef83f8cdfe520049ae26fc853e70072ed54f9196a2899adff09dbd93ea8ed`. PR #9 `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` all pass at the exact delivery checkpoint.
 
 Smallest safe next action:
-- Create and visually inspect the required deterministic Phase 2 previews, then complete the minimum authoritative guides and final Phase 2 handoff. Keep Phase 2 active and do not begin Phase 3.
+
+- Manually switch to GPT-5.6 Sol High in a fresh task, perform the full Git/PR/CI handshake, read `.codex/PHASE_2_TERRA_HANDOFF.md`, and only then read the Phase 3 specification. Do not begin Phase 3 implementation, migration, deployment, or production work before that fresh start-state report.
 
 Reference bundle verified present on 2026-07-21:
+
 - `ADMIN.html`
 - `DIRECTOR.html`
 - `Food.html`
@@ -64,6 +75,7 @@ Reference bundle verified present on 2026-07-21:
 - `HAU-USC_Logistics_S0003_Design_Direction_Preview.html`
 
 Hard boundaries:
+
 - do not resume this completed Phase 1 task;
 - do not begin Phase 3, Cloudflare/D1 migration, production promotion, Apps Script deployment, operational institutional-data writes, or PR merge;
 - do not alter authentication/session architecture, canonical role/capability semantics, ledger/atomicity invariants, or rollback rules without the escalation required by the Phase 2 specification;

@@ -1,5 +1,14 @@
 # Project Status
 
+## v0.6 Phase 2 complete - ready for manual Phase 3 model switch
+
+- Phase/stage: `PHASE_2_TERRA_COMPLETE` at exact delivery checkpoint `de194f5c37cadf2eb2983cfe3450a1c99ceed735`; durable handoff: `.codex/PHASE_2_TERRA_HANDOFF.md`.
+- Delivered: one shared shell; Administrator, Director, Food, Inventory & Pantry, and Materials experiences; Request Center; Lending Hub; Release Desk; Inventory/Restocking; Canvass; Procurement/Deliverables; inherited login/onboarding; responsive mobile behavior; 13 tracked previews; and focused operator/role guides.
+- Final acceptance: `npm run check` passes with 49 Vitest files / 356 tests and deterministic build/package validation. Opt-in preview generation passes 3 / 3 with 3 intentional project skips. Normal complete Playwright passes 90 / 204 intentional project/viewport skips / 0 failures without changing tracked preview hashes. `dist/index.html` is 455,779 bytes / SHA-256 `369ef83f8cdfe520049ae26fc853e70072ed54f9196a2899adff09dbd93ea8ed`.
+- Remote: draft PR #9 is open and mergeable at exact head `de194f5`; `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` all pass. No manual deployment, production promotion, institutional write, `main` update, or PR merge occurred.
+- Remaining gates: Phase 3 still owns Worker/D1 persistence, distributed controls, migration/reconciliation, integration hardening, and final program acceptance. Venue/Equipment activation still requires an approved external reference/routing list. Production remains gated.
+- Next action: manually switch to GPT-5.6 Sol High in a fresh task and perform the repository/PR/CI start handshake before reading and executing the Phase 3 specification.
+
 ## v0.6 Phase 2 active - Gate 6 shared operational workflows checkpointed
 
 - Phase/stage: `PHASE_2_GATE_6_OPERATIONAL_WORKFLOWS_CHECKPOINTED` at code commit `478c2feef3040469c820f356ec8a329a32fbc606`.

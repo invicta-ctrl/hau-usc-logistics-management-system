@@ -28,7 +28,13 @@ The accepted model-routed implementation specifications are:
 
 See `.codex/specs/README.md` for the phase split.
 
-The active pointer currently starts at **Phase 1 — Sol High** for baseline reconciliation, architecture, authentication, and security contracts.
+The active pointer records **Phase 2 — TERRA complete** at exact delivery checkpoint
+`de194f5c37cadf2eb2983cfe3450a1c99ceed735`. The next action is a manual switch to
+**Phase 3 — Sol High** followed by a fresh repository/PR/CI handshake. Phase 3 is not active
+and production remains gated until that handoff is verified.
+
+Phase 2 system and role guidance is in `docs/V0_6_SYSTEM_GUIDE.md`; its exact completion
+evidence and remaining gates are in `.codex/PHASE_2_TERRA_HANDOFF.md`.
 
 ## Preserved launch-readiness history
 
@@ -48,7 +54,7 @@ Historical PR #2 is closed and was not merged. Older documentation mentioning an
 - Generated Apps Script builds use the Apps Script adapter and explicit environment Script Properties.
 - The accepted staging demo is immutable Version 13; immutable Version 12 is the verified rollback, and isolated Version 26 remains a non-accepted Gate E candidate.
 - Production promotion has not been performed.
-- Phase 1 repository work does not authorize Apps Script pushes, operational Sheet/Drive writes, migrations, access seeding, trigger changes, or production actions.
+- Phase 2 repository completion does not authorize Apps Script pushes, operational Sheet/Drive writes, Worker/D1 migration, access seeding, trigger changes, PR merge, or production actions.
 
 Follow `docs/LAUNCH_RUNBOOK.md` for any explicitly authorized staging/production action.
 
@@ -115,11 +121,11 @@ For v0.6, follow the accepted source-grounded visual specification referenced by
 
 ## Runtime boundaries in the preserved implementation
 
-| Mode | Use | Authority |
-|---|---|---|
-| `mock` | Local demo/shareable prototype | Browser-only fictional state |
-| `apps-script` | Existing staging/pilot boundary | Server authorization, Google Sheets, Drive |
-| `rest` | Future hosted frontend/API boundary | Reserved/transition path |
+| Mode          | Use                                 | Authority                                  |
+| ------------- | ----------------------------------- | ------------------------------------------ |
+| `mock`        | Local demo/shareable prototype      | Browser-only fictional state               |
+| `apps-script` | Existing staging/pilot boundary     | Server authorization, Google Sheets, Drive |
+| `rest`        | Future hosted frontend/API boundary | Reserved/transition path                   |
 
 Feature code calls service adapters; it does not read Google Sheets or `google.script.run` directly. While Apps Script remains active, `src/services/apps-script-adapter.js` is the browser-to-Apps-Script gateway.
 
@@ -182,8 +188,9 @@ Do **not** begin feature implementation immediately.
 2. Start a fresh task.
 3. Read `AGENTS.md` and `.codex/CURRENT.md`.
 4. Perform the required Git handshake and fetch/prune.
-5. Read the active Phase 1 spec.
-6. Reconcile current remote state with the preserved launch-readiness history.
-7. Report whether implementation is authorized before editing application code.
+5. Read `.codex/PHASE_2_TERRA_HANDOFF.md`.
+6. Manually switch to GPT-5.6 Sol High before reading the Phase 3 specification.
+7. Reconcile local HEAD, upstream, worktrees, draft PR #9 head, and CI with the exact Phase 2 delivery checkpoint.
+8. Report whether the Phase 3 start condition is satisfied before editing application code, migrating data, deploying, or promoting production.
 
 The account/session is replaceable; the repository continuity chain is not.

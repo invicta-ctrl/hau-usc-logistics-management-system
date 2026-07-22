@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 TERRA complete (2026-07-22)
+
+### Added
+
+- Thirteen tracked fixed-clock previews covering inherited login/onboarding, all five internal experiences, Request Center, Lending Hub, Release Desk, and representative 390 px adaptations.
+- System/role, Request Center, Lending Hub, Administrator/Director, and demo guidance plus the durable `.codex/PHASE_2_TERRA_HANDOFF.md`.
+- Opt-in preview generation so routine browser and CI runs do not rewrite tracked review artifacts.
+
+### Fixed
+
+- Restored the Administrator control-desk hero gradient and white-heading contrast by removing a conflicting generic panel surface; added a browser regression assertion and regenerated all derived HTML through `npm run build`.
+
+### Verified
+
+- Final delivery checkpoint `de194f5c37cadf2eb2983cfe3450a1c99ceed735` is pushed and matches draft PR #9.
+- `npm run check` passes with 49 Vitest files / 356 tests; opt-in preview generation passes 3 / 3 with 3 intentional project skips; normal complete Playwright passes 90 / 204 intentional project/viewport skips / 0 failures without changing preview hashes.
+- `dist/index.html` is 455,779 bytes / SHA-256 `369ef83f8cdfe520049ae26fc853e70072ed54f9196a2899adff09dbd93ea8ed`.
+- Remote `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` pass at the exact delivery checkpoint. No manual deployment, production promotion, institutional write, `main` update, or PR merge occurred.
+
 ## Unreleased - v0.6 Phase 2 Gate 6 shared operational workflows (2026-07-22)
 
 ### Added
