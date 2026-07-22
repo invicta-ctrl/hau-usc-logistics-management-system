@@ -5,6 +5,16 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
+export function decodeJsonBuffer(buffer) {
+  if (buffer[0] === 0xff && buffer[1] === 0xfe) return buffer.subarray(2).toString('utf16le');
+  if (buffer[0] === 0xfe && buffer[1] === 0xff) {
+    const swapped = Buffer.from(buffer.subarray(2));
+    swapped.swap16();
+    return swapped.toString('utf16le');
+  }
+  return buffer.toString('utf8').replace(/^\uFEFF/u, '');
+}
+
 function baseConfig(source, { name, environment, candidateSha, d1, r2Bucket }) {
   return {
     name,
@@ -66,8 +76,8 @@ async function run() {
     throw new Error('Usage: node scripts/create-private-cloudflare-configs.mjs <absolute-staging-base> <absolute-d1-inventory-json> <absolute-output-directory>');
   }
   const [source, databases] = await Promise.all([
-    readFile(stagingBasePath, 'utf8').then(JSON.parse),
-    readFile(d1InventoryPath, 'utf8').then(JSON.parse),
+    readFile(stagingBasePath).then(decodeJsonBuffer).then(JSON.parse),
+    readFile(d1InventoryPath).then(decodeJsonBuffer).then(JSON.parse),
   ]);
   const candidateSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const pair = createConfigPair(source, databases, candidateSha);
