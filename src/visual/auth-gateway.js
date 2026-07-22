@@ -56,7 +56,6 @@ function fieldError(error, field) {
 function loginMarkup(error) {
   return `
     <section class="auth-card" aria-labelledby="authTitle">
-      <div class="auth-brand" aria-hidden="true"><span>DOL</span><span>USC</span></div>
       <p class="eyebrow">Holy Angel University · University Student Council</p>
       <h1 id="authTitle">Logistics Operations</h1>
       <p class="auth-intro">Sign in with the Access ID issued by the Department of Logistics.</p>

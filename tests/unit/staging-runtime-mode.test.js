@@ -24,6 +24,7 @@ describe('staging runtime mode boundary', () => {
 
   it('hides the workspace until authentication and routes a session to its server-assigned workspace', async () => {
     const gateway = await read('src/visual/auth-gateway.js');
+    expect(gateway).not.toContain('class="auth-brand"');
     expect(gateway).toContain("administrator: '/app/admin'");
     expect(gateway).toContain("'inventory-pantry': '/app/inventory'");
     expect(gateway).toContain('routeAuthorizedWorkspace(result.user);');
