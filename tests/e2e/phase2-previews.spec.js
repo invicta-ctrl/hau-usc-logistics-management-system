@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test';
 import { navigateToAdminView, navigateToView } from './navigation.js';
 
 const previewRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/previews/v0.6-phase-2');
+const generatePreviews = process.env.HAU_GENERATE_PHASE2_PREVIEWS === '1';
 
 const capture = async (page, filename, focus) => {
   if (focus) {
@@ -30,6 +31,7 @@ test.beforeAll(() => {
 });
 
 test('generates inherited login and onboarding previews', async ({ page }, testInfo) => {
+  test.skip(!generatePreviews, 'Set HAU_GENERATE_PHASE2_PREVIEWS=1 to write tracked previews.');
   test.skip(testInfo.project.name !== 'chromium-1366', 'Desktop preview generation is sufficient.');
 
   await page.addInitScript(() => {
@@ -72,6 +74,7 @@ test('generates inherited login and onboarding previews', async ({ page }, testI
 test('generates the seven required desktop experience previews and Release Desk', async ({
   page,
 }, testInfo) => {
+  test.skip(!generatePreviews, 'Set HAU_GENERATE_PHASE2_PREVIEWS=1 to write tracked previews.');
   test.skip(testInfo.project.name !== 'chromium-1366', 'Desktop preview generation is sufficient.');
   await openFixedPreview(page);
 
@@ -102,6 +105,7 @@ test('generates the seven required desktop experience previews and Release Desk'
 });
 
 test('generates representative mobile workflow previews', async ({ page }, testInfo) => {
+  test.skip(!generatePreviews, 'Set HAU_GENERATE_PHASE2_PREVIEWS=1 to write tracked previews.');
   test.skip(testInfo.project.name !== 'chromium-390', 'The required mobile preview width is 390 px.');
   await openFixedPreview(page);
 

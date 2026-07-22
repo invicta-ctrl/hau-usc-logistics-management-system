@@ -28,12 +28,16 @@ evidence of a staging or production deployment.
 Run from the repository root after installing dependencies and Playwright Chromium:
 
 ```powershell
+$env:HAU_GENERATE_PHASE2_PREVIEWS = '1'
 npx playwright test tests/e2e/phase2-previews.spec.js `
   --project=chromium-1366 --project=chromium-390
+Remove-Item Env:HAU_GENERATE_PHASE2_PREVIEWS
 ```
 
-The test generates only the PNG files in this directory. Application HTML remains generated
-through `npm run build`; do not edit generated HTML directly.
+The opt-in environment variable prevents the normal test matrix from rewriting tracked
+review artifacts. The focused command generates only the PNG files in this directory.
+Application HTML remains generated through `npm run build`; do not edit generated HTML
+directly.
 
 ## Safety boundary
 
