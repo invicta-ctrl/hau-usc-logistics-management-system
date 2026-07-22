@@ -336,6 +336,7 @@ export function createRuntimeExtensions(options) {
   let referenceAdminDomain = 'VENUES';
   let sharedMobileNav = null;
   let sharedMobileMore = null;
+  let roleExperienceObserver = null;
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
 
@@ -2079,6 +2080,114 @@ export function createRuntimeExtensions(options) {
     syncSharedMobileNav();
   };
 
+  const normalizedExperience = () => {
+    const value = String(document.body.dataset.experience ?? '').trim().toLowerCase();
+    return {
+      admin: 'administrator',
+      inventory: 'inventory-pantry',
+    }[value] ?? value;
+  };
+
+  const roleExperienceDefinitions = {
+    director: {
+      label: 'Director workspace',
+      heading: 'Decisions, readiness, and cross-committee blockers',
+      description:
+        'Lead from the shared operational picture: review exceptions, compare committee progress, and open the existing request, procurement, release, lending, or inventory workspace for the governed next action.',
+      boundaryTitle: 'Bounded Management & Access',
+      boundary:
+        'Director visibility supports event structure and leadership decisions. Access, configuration, and environment changes remain in the existing server-authorized administration boundary.',
+      actions: [
+        ['request', 'Review cross-committee requests', 'Requests awaiting review and committee routing'],
+        ['procurement', 'Resolve procurement blockers', 'Canvassing, budget, receiving, and deliverables'],
+        ['release', 'Check release readiness', 'Controlled handoffs and recipient confirmation'],
+        ['lending', 'Review lending exceptions', 'For-review, overdue, handoff, and return context'],
+        ['inventory', 'Inspect inventory attention', 'Low stock, reservations, and movement history'],
+      ],
+    },
+  };
+
+  const countStatuses = (rows, statuses) =>
+    (rows ?? []).filter((row) => statuses.has(String(row?.status ?? '').toUpperCase())).length;
+
+  const directorMetrics = (state) => {
+    const activeSeries = (state.eventSeries ?? []).filter(
+      (series) => !['COMPLETED', 'ARCHIVED', 'CANCELLED'].includes(String(series?.status ?? '').toUpperCase()),
+    ).length;
+    const decisions =
+      countStatuses(state.requests, new Set(['FOR_REVIEW', 'NEEDS_INFORMATION'])) +
+      countStatuses(state.deliverables, new Set(['FOR_REVIEW']));
+    const blockers =
+      countStatuses(state.requests, new Set(['BLOCKED', 'WAITING_FOR_BUDGET', 'NEEDS_INFORMATION'])) +
+      countStatuses(state.deliverables, new Set(['BLOCKED', 'WAITING_FOR_BUDGET'])) +
+      countStatuses(state.lendingTickets, new Set(['OVERDUE']));
+    const readyToRelease =
+      countStatuses(state.requestLines, new Set(['READY_TO_RELEASE'])) +
+      countStatuses(state.deliverables, new Set(['READY_TO_RELEASE']));
+    return [
+      ['Active event series', activeSeries, 'Readiness and upcoming deadlines'],
+      ['Leadership decisions', decisions, 'Review or missing-information items'],
+      ['Cross-workflow blockers', blockers, 'Budget, information, and overdue exceptions'],
+      ['Ready to release', readyToRelease, 'Items eligible for controlled handoff'],
+    ];
+  };
+
+  const installRoleExperience = () => {
+    if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
+    const overviewHero = document.querySelector('#overview > .hero');
+    if (!overviewHero) return;
+    const panel = document.createElement('section');
+    panel.id = 'roleExperiencePanel';
+    panel.className = 'role-experience panel section-gap';
+    panel.hidden = true;
+    panel.setAttribute('aria-live', 'polite');
+    overviewHero.after(panel);
+    if (!roleExperienceObserver) {
+      roleExperienceObserver = new MutationObserver(() => renderRoleExperience());
+      roleExperienceObserver.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['data-experience'],
+      });
+    }
+  };
+
+  const renderRoleExperience = () => {
+    installRoleExperience();
+    const panel = document.querySelector('#roleExperiencePanel');
+    if (!panel) return;
+    const experience = normalizedExperience();
+    const definition = roleExperienceDefinitions[experience];
+    panel.hidden = !definition;
+    if (!definition) return;
+    const state = getState() ?? {};
+    const metrics = experience === 'director' ? directorMetrics(state) : [];
+    panel.dataset.roleExperience = experience;
+    panel.innerHTML = `<div class="role-experience-head">
+      <div>
+        <p class="role-experience-kicker">${esc(definition.label)} &middot; source-grounded role view</p>
+        <h2 id="roleExperienceTitle">${esc(definition.heading)}</h2>
+        <p>${esc(definition.description)}</p>
+      </div>
+      <span class="role-experience-badge">Role-scoped overview</span>
+    </div>
+    <div class="role-experience-metrics">
+      ${metrics.map(([label, value, note]) => `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
+    </div>
+    <div class="role-experience-layout">
+      <section aria-labelledby="roleExperienceActionsTitle">
+        <div class="section-kicker" id="roleExperienceActionsTitle">Leadership action map</div>
+        <div class="role-experience-actions">
+          ${definition.actions.map(([view, title, detail]) => `<button type="button" data-go="${esc(view)}"><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
+        </div>
+      </section>
+      <aside class="role-experience-boundary" aria-label="${esc(definition.boundaryTitle)}">
+        <span>Authority boundary</span>
+        <h3>${esc(definition.boundaryTitle)}</h3>
+        <p>${esc(definition.boundary)}</p>
+      </aside>
+    </div>`;
+  };
+
   const install = () => {
     installLocalFoodServices();
     installLocalMaterialsServices();
@@ -2088,6 +2197,8 @@ export function createRuntimeExtensions(options) {
     installMaterialsWorkflow();
     installVenueEquipmentWorkflow();
     installReferenceAdminWorkspace();
+    installRoleExperience();
+    renderRoleExperience();
     installSharedMobileNav();
     if (!isRequestOnly()) lending = createLendingController({ markFormClean });
     mountSyncUi();
@@ -2125,6 +2236,7 @@ export function createRuntimeExtensions(options) {
 
   const afterRender = () => {
     syncSharedMobileNav();
+    renderRoleExperience();
     lending?.setItems(getState()?.inventoryItems ?? []);
     const catalogButton = document.querySelector('#adminCatalogException');
     if (catalogButton) {

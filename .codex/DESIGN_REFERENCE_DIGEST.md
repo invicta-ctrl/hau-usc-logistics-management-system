@@ -79,7 +79,7 @@ authorization.
   identity read-only, keep permission and cross-office routing changes subject
   to distinct review, show audit/system information without secrets, and
   preserve cross-role visibility as observation rather than execution authority.
-- Director: pending extraction from `DIRECTOR.html`.
+- Director (`DIRECTOR.html`, SHA-256 `e2bb882de9bd53598b8a4b5d3886183a37e5731175b4615e8772521a8990b072`): use a decision-first leadership overview for event-series readiness, cross-committee progress, blockers, and release readiness. Keep request, procurement, release, lending, and inventory records connected through the existing shared workspaces and identities. Present only leadership-scale signals and governed next actions; retain detailed operational work in each committee workspace. Keep Management & Access bounded to approved event structure and leadership decisions, while access, configuration, and environment changes remain inside the existing server-authorized administration boundary.
 - Food: pending extraction from `Food.html`.
 - Inventory & Pantry: pending extraction from `INVENTORY.html`.
 - Materials: pending extraction from `MATERIALS.html`.
