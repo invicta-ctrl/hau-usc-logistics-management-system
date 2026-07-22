@@ -44,6 +44,9 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 - Administrator checkpoint: code milestone `658410b24b6556131d11901551911d553a1832b7` is pushed to the active branch. It read only `ADMIN.html` (SHA-256 `88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`), appended its durable decisions to the digest, and added the Administrator control desk to the existing server-authorized Reference Administration workspace. Its four control areas only select existing domains; no authorization, service, transaction, or ledger contract changed. Focused reference-admin proof passed 6 / 24 intentional skips, and `npm run check` passed with 45 Vitest files / 341 tests.
 - Next bounded slice is not started. Do not ingest another role reference until explicitly authorized.
 
+Smallest safe next action:
+- Obtain Earl's explicit authorization to begin only the Director role checkpoint; do not read `DIRECTOR.html` or implement another role before that authorization.
+
 Reference bundle verified present on 2026-07-21:
 - `ADMIN.html`
 - `DIRECTOR.html`
