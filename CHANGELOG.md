@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Gate 6 shared operational workflows (2026-07-22)
+
+### Added
+
+- Explicit required recipient attestation in the Release Desk, with durable confirmation metadata and responsive UI proof for partial physical handoffs.
+- Canvass stale-quote, missing-unit, linked-unit-mismatch, and safe evidence/source-link presentation in the library and quote comparison.
+- Cumulative deliverable receiving presentation for quantity received now, total received, quantity remaining, and approved total.
+
+### Changed
+
+- Moved Release recipient/scope/line/balance/reservation validation ahead of stock and ledger mutation, rejected duplicate or mixed-scope release lines, and retained the existing lock/idempotency/audit/append-only contracts.
+- Limited event-deliverable receiving to `PROCURED` or `PARTIALLY_RECEIVED` and kept subsequent partial receipts selectable until the approved quantity is complete.
+- Returned complete internal Release and Canvass DTO fields needed for line history, recipient confirmation, evidence links, source links, preferred quote, notes, and price history.
+
+### Verified
+
+- `npm run check` passes with 49 Vitest files / 356 tests and `npm run test:e2e` passes 90 / 186 intentional skips / 0 failures.
+- Focused Gate 6 Playwright passes 6 / 6 at 390px and 1366px; draft PR #9 checks `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` pass at `478c2feef3040469c820f356ec8a329a32fbc606`.
+
 ## Unreleased - v0.6 Phase 2 Gate 5 Request Center and Lending Hub (2026-07-22)
 
 ### Added

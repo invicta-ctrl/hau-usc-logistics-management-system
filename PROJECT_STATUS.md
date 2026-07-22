@@ -1,5 +1,15 @@
 # Project Status
 
+## v0.6 Phase 2 active - Gate 6 shared operational workflows checkpointed
+
+- Phase/stage: `PHASE_2_GATE_6_OPERATIONAL_WORKFLOWS_CHECKPOINTED` at code commit `478c2feef3040469c820f356ec8a329a32fbc606`.
+- Release Desk: exact selected-line quantities, recipient identity/role/department, notes, releasing staff/time, explicit recipient attestation, and optional photo capture are retained in one traceable confirmation. Server preflight now validates every selected line and aggregate balance before mutation while preserving the lock, idempotency, authorization, audit, reservation, and append-only ledger contracts.
+- Inventory/Restocking: on-hand, reserved, and available-to-promise remain ledger-derived and separate; existing aliases, predictive search, provenance, movement history, archive/restore, accepted restock statuses, revision checks, preferred-quote gates, immutable receipts, and line-isolated cumulative receiving are verified unchanged.
+- Canvass/Procurement: large-list search/filter/pagination, comparison, preferred quotes, price history, safe evidence/source links, and explicit stale/missing-unit/mismatch indicators are present. Deliverable receiving is limited to `PROCURED`/`PARTIALLY_RECEIVED`, labels each entry as received now, and exposes cumulative received/remaining/total values without changing domain invariants.
+- Verification: `npm run check` passes with 49 Vitest files / 356 tests, deterministic build/parity/package verification, Apps Script validation, and standalone verification. Focused Gate 6 Playwright passes 6 / 6 at 390px and 1366px; full Playwright passes 90 / 186 intentional skips / 0 failures. `dist/index.html` is 455,785 bytes with SHA-256 `1fc85c15b361136824ab9c8156b67b30607dcb2157a3bbfc21a4155fd02240e8`.
+- Remote: draft PR #9 head matches `478c2fe`; `validate`, `verify`, `build`, `report-build-status`, automatic `deploy`, and `browser-smoke` all pass. No manual deployment, production promotion, institutional write, `main` update, or PR merge occurred.
+- Next action: prepare and inspect the deterministic Phase 2 experience previews, then complete the minimum authoritative guides and final Phase 2 handoff.
+
 ## v0.6 Phase 2 active - Gate 5 Request Center and Lending Hub checkpointed
 
 - Phase/stage: `PHASE_2_GATE_5_REQUEST_LENDING_CHECKPOINTED` at code commit `09315fbb68119aa55e16bba26b4926b60b3dfba9`.
