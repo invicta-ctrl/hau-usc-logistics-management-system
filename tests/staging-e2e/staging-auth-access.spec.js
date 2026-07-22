@@ -243,7 +243,8 @@ test('deployed staging authentication and Access Management remain operational',
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByLabel('Access ID')).toBeVisible();
     await page.goto('/request');
-    await expect(page.getByLabel('Access ID')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+    await expect(page.getByLabel('Access ID')).toHaveCount(0);
     await expect(page.locator('.app-shell')).toBeHidden();
     await page.goto('/lending');
     await expect(page.getByLabel('Access ID')).toBeVisible();
