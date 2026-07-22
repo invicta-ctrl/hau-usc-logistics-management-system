@@ -2,13 +2,13 @@
 
 ## v0.7.0 continuous launch resume block
 
-- **Status:** Phase 1 staging foundation accepted; Phase 2 active; production NO-GO.
-- **Repository/runtime:** branch `chore/v0.6-codex-continuity-bootstrap`; deployed staging runtime `8b4af047642e6db6f0314ce70bfb611ed8c7679d`; test-only follow-up `1ddfb9a8a67d201d98af7cbc622e9067f4e3b93f`.
+- **Status:** Phase 2 staging accepted; Phase 3 active; production NO-GO.
+- **Repository/runtime:** branch `chore/v0.6-codex-continuity-bootstrap`; deployed staging runtime `edf6dcb361a8ade04f43ff06a774f6672305aa9a`; D1 schema 10 / migration 0010.
 - **Infrastructure:** staging/production D1 and R2 are distinct; the production Worker is not uploaded. Private config preflight passes. Staging has R2, protected secrets, Logs, sampled Traces, redacted request logs, correlation IDs, and safe health/readiness/version.
-- **Verification:** complete repository gate passed with 56 Vitest files / 389 tests; fresh local Worker/D1 15 / 15; live staging auth/Access Management 1 / 1.
+- **Verification:** `npm run check` passed with 57 Vitest files / 392 tests; full Playwright 92 passed / 214 intentional skips; local Worker/D1 15 / 15 plus one later transient navigation rerun; live staging auth/Access Management/email login 1 / 1.
 - **Recovery:** pre-deploy rollback input exists privately with SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52`; rehearsal is still mandatory in Phase 24.
 - **External data:** Google source and seven Drive mappings are readable; canonical inventory has one item; governed events and branding tables are empty.
-- **Resume:** verify Git/upstream/PR CI and cache-busted live SHA, then follow `.codex/CURRENT.md` and `.codex/specs/v0.7.0-production-master.md`. Continue Phase 2 without weakening authentication boundaries.
+- **Resume:** verify Git/upstream/PR CI and cache-busted live SHA, then follow `.codex/CURRENT.md`, `.codex/V0_7_PHASE_2_LOGIN_HANDOFF.md`, and the master specification. Continue Phase 3 without weakening internal authentication boundaries.
 - **Still prohibited:** production Worker upload/deploy, production data writes, merge/tag/release, and production smoke before their explicit master-prompt gates pass.
 
 ## Current Phase 3 resume block

@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 2 staff login accepted on staging — Phase 3 active
+
+- Exact staging runtime `edf6dcb361a8ade04f43ff06a774f6672305aa9a` is healthy and ready on schema 10 / migration `0010_verified_login_email.sql`.
+- Delivered the HAU-inspired staff login, governed R2 background slot, accessible password visibility, recovery/state UX, and unique verified-email sign-in without weakening server authorization.
+- Reconciliation preserved all accounts and produced zero verified-email collisions; ambiguous legacy duplicates remain safely Access-ID-only.
+- Verification: `npm run check` passed with 57 Vitest files / 392 tests; full Playwright passed 92 / 306 scheduled with 214 intentional skips; deployed staging smoke passed 1 / 1.
+- Production remains NO-GO. Phase 3 now owns the genuinely no-login `/request` flow and private tracking boundary.
+
 ## v0.7.0 Phase 1 staging foundation accepted — Phase 2 active
 
 - Active specification: `.codex/specs/v0.7.0-production-master.md`; Phase 1 runtime `8b4af047642e6db6f0314ce70bfb611ed8c7679d` is deployed to staging.

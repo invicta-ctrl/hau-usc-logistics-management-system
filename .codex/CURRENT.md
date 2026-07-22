@@ -1,14 +1,13 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 2 — Modern HAU-inspired staff login
+Phase: Phase 3 — Public Request Center without login
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 1 STAGING FOUNDATION ACCEPTED; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 2 STAGING ACCEPTED; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
-Phase 1 deployed runtime: `8b4af047642e6db6f0314ce70bfb611ed8c7679d`
-Phase 1 test-only follow-up: `1ddfb9a8a67d201d98af7cbc622e9067f4e3b93f`
+Phase 2 deployed runtime: `edf6dcb361a8ade04f43ff06a774f6672305aa9a`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -42,10 +41,21 @@ The v0.7.0 master prompt supersedes the earlier v0.6 phase-stop and production-g
 - `npm run check` passed with 56 Vitest files / 389 tests. The corrected fresh local Worker suite passed 15 / 15. Deployed auth/Access Management smoke passed 1 / 1 after a cache-race regression fix in the test harness.
 - Current PR CI for the test-only follow-up was still running when this checkpoint was prepared; verify the documentation checkpoint head before relying on remote acceptance.
 
+## Phase 2 completion
+
+- `/login` now presents the accepted HAU-inspired cream/oxblood/gold staff sign-in hierarchy with a governed R2 `brand.login_background` delivery slot and safe gradient fallback; no third-party background is hotlinked.
+- The form accepts Access ID or a unique activated profile email. Migration `0010_verified_login_email.sql` verifies only unique existing emails; ambiguous legacy duplicates remain safely Access-ID-only.
+- Accessible eye/eye-off controls preserve value and selection, retain keyboard behavior, never submit the form, and cover login and activation passwords.
+- Forgot-password recovery routes staff to the existing Administrator-governed one-time temporary-password flow without exposing account existence or changing role/scope.
+- Session-expired, account-unavailable/locked, throttled, activation, and service-unavailable states retain safe server messages and security boundaries.
+- `npm run check` passed with 57 Vitest files / 392 tests; full Playwright passed 92 / 306 scheduled with 214 intentional skips; fresh local Worker/D1 passed 15 / 15, with one later transient navigation timeout passing on focused rerun.
+- Staging migration 0010 preserved all accounts, produced zero verified-email collisions, and left ambiguous duplicates unverified. Cache-busted health/readiness/version and deployed authentication/Access Management/email-login smoke passed at exact runtime `edf6dcb`.
+- Durable evidence: `.codex/V0_7_PHASE_2_LOGIN_HANDOFF.md`.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
 
-One smallest safe next action: complete Phase 2 staff-login visual and functional acceptance against the deployed v0.7 staging foundation without changing authentication/authorization invariants.
+One smallest safe next action: implement Phase 3 `/request` as a genuinely no-login public submission and private-tracking surface while preserving server authorization for every internal route.
 
 Durable evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 2 secure staff login (2026-07-22)
+
+### Added
+
+- HAU-inspired `Staff sign in`, governed R2 background delivery, accessible password visibility, safe recovery guidance, and explicit session/account/service states.
+- Unique verified profile-email login with additive migration `0010_verified_login_email.sql`.
+
+### Verified
+
+- `npm run check`: 57 Vitest files / 392 tests; full Playwright: 92 passed / 214 intentional skips / 0 failures.
+- Staging auth/Access Management/email-login smoke passed at exact runtime `edf6dcb`, schema 10.
+- Duplicate legacy emails remain unverified and Access-ID-only; zero verified-email collisions exist.
+
+### Boundary
+
+- Public no-login request/lending, remaining workspaces/operations, final staging/rollback gates, and all production actions remain incomplete.
+
 ## Unreleased - v0.7.0 Phase 1 Cloudflare operations foundation (2026-07-22)
 
 ### Added

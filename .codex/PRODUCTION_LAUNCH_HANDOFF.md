@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASE 1 STAGING FOUNDATION ACCEPTED**
+Decision: **PRODUCTION NO-GO — PHASE 2 STAGING ACCEPTED; PHASE 3 ACTIVE**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASE 1 STAGING FOUNDATION ACCEPTED**
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PENDING |
-| 6. Migrations | PENDING |
+| 5. Backup | PARTIAL — pre-0010 staging SQL export retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging 0010 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS FOR PHASE 1 runtime `8b4af04` |
+| 8. Staging deployment | PASS THROUGH PHASE 2 runtime `edf6dcb` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -55,8 +55,16 @@ Decision: **PRODUCTION NO-GO — PHASE 1 STAGING FOUNDATION ACCEPTED**
 - Health/readiness/version: HTTP 200, exact runtime, release 0.7.0, R2/protected configuration/D1 ready, correlation headers present.
 - Pre-deploy immutable rollback input hash: `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52`.
 
+## Phase 2 evidence
+
+- Secure HAU-inspired staff login, governed R2 background slot, accessible password controls, safe recovery guidance, and explicit authentication-state presentation are deployed.
+- D1 migration 0010 adds unique verified-email login. Duplicate legacy emails remain unverified and Access-ID-only.
+- `npm run check` passed with 57 Vitest files / 392 tests. Full Playwright passed 92 / 306 scheduled with 214 intentional skips.
+- Cache-busted live identity and the deployed auth/Access Management/email-login smoke passed at exact runtime `edf6dcb`, schema 10.
+- Durable handoff: `.codex/V0_7_PHASE_2_LOGIN_HANDOFF.md`.
+
 ## Immediate repair target
 
-Complete Phase 2 staff-login acceptance and continue into the public no-login Request and Lending surfaces. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Complete Phase 3 public no-login Request Center and continue into the public Lending Center. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.
