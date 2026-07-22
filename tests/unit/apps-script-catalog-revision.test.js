@@ -172,10 +172,12 @@ describe('data revision mutation guard', () => {
       metrics: { revisionReads: 1, moduleReads: 0, requestCount: 1 },
     });
     expect(ctx.api_getScopedRevision({ scope: 'request' })).toMatchObject({
-      ok: false, code: 'FORBIDDEN',
+      ok: false,
+      code: 'FORBIDDEN',
     });
     expect(ctx.api_getScopedRevision({ scope: 'unknown' })).toMatchObject({
-      ok: false, code: 'REVISION_SCOPE_INVALID',
+      ok: false,
+      code: 'REVISION_SCOPE_INVALID',
     });
   });
 
@@ -195,12 +197,16 @@ describe('data revision mutation guard', () => {
     const writes = [];
     ctx.ensureDataRevisionConfig_ = () => ({});
     ctx.getDataRevision_ = () => ({ revision: 5, updatedAt: 'before', environment: 'STAGING' });
-    ctx.revisionScopeMap_ = () => Object.fromEntries(
-      ['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory']
-        .map((scope) => [scope, { token: 5, updatedAt: 'before' }]),
-    );
+    ctx.revisionScopeMap_ = () =>
+      Object.fromEntries(
+        ['overview', 'request', 'lending', 'release', 'restocking', 'procurement', 'inventory'].map(
+          (scope) => [scope, { token: 5, updatedAt: 'before' }],
+        ),
+      );
     ctx.nowIso_ = () => 'after';
-    ctx.writeRevisionConfig_ = (key, value) => { writes.push({ key, value }); };
+    ctx.writeRevisionConfig_ = (key, value) => {
+      writes.push({ key, value });
+    };
     const result = ctx.touchDataRevision_({ User_ID: 'USR-1' }, ['inventory']);
     expect(result).toMatchObject({ revision: 6, scopes: { inventory: 6 } });
     const scopeWrite = writes.find((write) => write.key === 'DATA_SCOPE_REVISIONS_JSON');
@@ -229,6 +235,29 @@ describe('server lending policy', () => {
   };
   ctx.availableToPromise_ = () => 5;
   ctx.onHand_ = () => 5;
+
+  it('rejects non-digit or oversized Student IDs and requires approved-source identity evidence', () => {
+    expect(ctx.validateStudentIdNumber_('20260999')).toBe('20260999');
+    expect(() => ctx.validateStudentIdNumber_('2026-0999')).toThrow(
+      expect.objectContaining({ code: 'INVALID_STUDENT_ID' }),
+    );
+    expect(() => ctx.validateStudentIdNumber_('202609999')).toThrow(
+      expect.objectContaining({ code: 'INVALID_STUDENT_ID' }),
+    );
+    const staffTicket = { Borrower_Type: 'USC_STAFF' };
+    expect(() =>
+      ctx.validateLendingIdentityApproval_(staffTicket, {
+        identityVerified: true,
+        identityVerificationSource: 'APPROVED_ANGELITE_IDENTITY_RULE',
+      }),
+    ).toThrow(expect.objectContaining({ code: 'BORROWER_IDENTITY_NOT_VERIFIED' }));
+    expect(
+      ctx.validateLendingIdentityApproval_(staffTicket, {
+        identityVerified: true,
+        identityVerificationSource: 'APPROVED_ACTIVE_USC_SOURCE',
+      }),
+    ).toMatchObject({ borrowerType: 'USC_STAFF', source: 'APPROVED_ACTIVE_USC_SOURCE' });
+  });
 
   it('enforces audience, quantity, verification, and due-date rules with stable codes', () => {
     expect(() =>

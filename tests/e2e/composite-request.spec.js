@@ -1,6 +1,36 @@
 import { test, expect } from '@playwright/test';
 import { navigateToView } from './navigation.js';
 
+test('Event Step 4 exposes all sections together and omits untouched children', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One focused omission workflow is sufficient.');
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await navigateToView(page, 'request');
+
+  const panel = page.locator('#compositeRequestPanel');
+  await expect(panel).toContainText('04 · Event logistics sections');
+  await expect(panel.locator('[data-composite-section="FOOD"]')).toBeVisible();
+  await expect(panel.locator('[data-composite-section="MATERIALS"]')).toBeVisible();
+  await expect(panel.locator('[data-composite-section="VENUE_EQUIPMENT"]')).toBeVisible();
+  await panel.locator('#compositeEvent').selectOption({ index: 1 });
+  await panel.locator('[data-composite-toggle][value="MATERIALS"]').check();
+  await panel.locator('[name="materialsLine"]').fill('Synthetic directional signs');
+  await panel.locator('[name="materialsMaterialCategory"]').selectOption('PRINTING_SIGNAGE');
+  await panel.locator('[name="materialsRequiredBy"]').fill('2026-08-08');
+  await panel.locator('[name="materialsSpecification"]').fill('A3 signs with approved event wording');
+  await panel.locator('[name="materialsUsagePurpose"]').fill('Synthetic wayfinding');
+  await panel.getByRole('button', { name: 'Review composite request' }).click();
+  await expect(panel.locator('#compositeRequestResult')).toContainText('MATERIALS');
+
+  const stored = await page.evaluate(() => {
+    const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
+    return state.compositeComponents.map((child) => child.componentType);
+  });
+  expect(stored).toEqual(['MATERIALS']);
+});
+
 test('submits selected composite sections as one visible parent hierarchy', async ({ page }, testInfo) => {
   test.skip(
     testInfo.project.use.viewport.width < 390,
@@ -65,8 +95,7 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   });
   const storedMaterials = await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
-    return state.compositeComponents.find((child) => child.componentType === 'MATERIALS')?.payload
-      ?.materials;
+    return state.compositeComponents.find((child) => child.componentType === 'MATERIALS')?.payload?.materials;
   });
   expect(storedMaterials).toMatchObject({
     version: 1,
@@ -78,8 +107,8 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   });
   const storedVenueEquipment = await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
-    return state.compositeComponents.find((child) => child.componentType === 'VENUE_EQUIPMENT')
-      ?.payload?.venueEquipment;
+    return state.compositeComponents.find((child) => child.componentType === 'VENUE_EQUIPMENT')?.payload
+      ?.venueEquipment;
   });
   expect(storedVenueEquipment).toMatchObject({
     version: 1,
@@ -143,15 +172,11 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   await expect(venueEquipmentWorkflow).toBeVisible();
   await venueEquipmentWorkflow.locator('[name="confirmationStatus"]').selectOption('CONFIRMED');
   await venueEquipmentWorkflow.locator('[name="confirmationReference"]').fill('SYN-CONFIRM-UI');
-  await venueEquipmentWorkflow
-    .getByRole('button', { name: 'Save Venue & Equipment Workflow' })
-    .click();
+  await venueEquipmentWorkflow.getByRole('button', { name: 'Save Venue & Equipment Workflow' }).click();
   await expect(venueEquipmentWorkflow).toBeHidden();
   const updatedVenueEquipment = await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
-    const child = state.compositeComponents.find(
-      (entry) => entry.componentType === 'VENUE_EQUIPMENT',
-    );
+    const child = state.compositeComponents.find((entry) => entry.componentType === 'VENUE_EQUIPMENT');
     return { revision: child.revision, venueEquipment: child.payload?.venueEquipment };
   });
   expect(updatedVenueEquipment).toMatchObject({

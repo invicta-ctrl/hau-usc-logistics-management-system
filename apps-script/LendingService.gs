@@ -6,6 +6,41 @@ function borrowerEligibleForAudience_(audience, borrowerType, user) {
   return false;
 }
 
+function validateStudentIdNumber_(value) {
+  var normalized = String(value == null ? '' : value).trim();
+  if (!/^[0-9]{1,8}$/.test(normalized)) {
+    throw appError_('INVALID_STUDENT_ID', 'Student ID Number must contain only digits and must not exceed 8 digits.', false);
+  }
+  return normalized;
+}
+
+function lendingIdentityRequirement_(borrowerType) {
+  if (normalizeBorrowerType_(borrowerType) === 'USC_STAFF') {
+    return {
+      borrowerType: 'USC_STAFF',
+      source: 'APPROVED_ACTIVE_USC_SOURCE',
+      label: 'approved active USC officer/staff source'
+    };
+  }
+  return {
+    borrowerType: 'ANGELITE',
+    source: 'APPROVED_ANGELITE_IDENTITY_RULE',
+    label: 'approved Angelite/student identity rule'
+  };
+}
+
+function validateLendingIdentityApproval_(ticket, command) {
+  var requirement = lendingIdentityRequirement_(ticket.Borrower_Type);
+  var verified = command.identityVerified === true || String(command.identityVerified || '').toLowerCase() === 'true';
+  if (!verified || String(command.identityVerificationSource || '') !== requirement.source) {
+    throw appError_('BORROWER_IDENTITY_NOT_VERIFIED', 'The borrower must be checked against the ' + requirement.label + ' before approval.', false, {
+      borrowerType: requirement.borrowerType,
+      requiredSource: requirement.source
+    });
+  }
+  return requirement;
+}
+
 function validateLendingPolicy_(item, input, user, availabilityMode) {
   if (!item) throw appError_('ITEM_NOT_FOUND', 'Inventory item was not found.', false);
   var status = String(item.Status || '').toUpperCase();
@@ -46,7 +81,7 @@ function createLendingTicket_(command, correlationId) {
     var policy = validateLendingPolicy_(item, { borrowerType:command.borrowerType || command.borrowerGroup || 'ANGELITE', quantity:command.quantity, dueAt:command.dueAt }, user, 'AVAILABLE_TO_PROMISE');
     var id = allocateId_('LND'), row = {
       Lending_Ticket_ID: id, Created_At: nowIso_(), Updated_At: nowIso_(),
-      Student_ID_Number: requireText_(command.studentIdNumber || command.studentId, 'studentIdNumber'),
+      Student_ID_Number: validateStudentIdNumber_(command.studentIdNumber || command.studentId),
       Borrower_Name: requireText_(command.borrowerName, 'borrowerName'),
       Borrower_Type: policy.borrowerType,
       Department_Organization: requireText_(command.department, 'department'), Contact: command.contact || '',
@@ -70,13 +105,20 @@ function approveLendingTicket_(command, correlationId) {
     var ticket = findOne_(HAU_SHEETS.LENDING, 'Lending_Ticket_ID', requireText_(command.ticketId, 'ticketId'));
     if (!ticket) throw appError_('TICKET_NOT_FOUND', 'Lending ticket was not found.', false);
     if (String(ticket.Status) !== 'FOR_REVIEW') throw appError_('INVALID_TRANSITION', 'Only FOR_REVIEW tickets may be approved.', false);
+    var identity = validateLendingIdentityApproval_(ticket, command);
     var item = itemById_(ticket.Item_ID);
     validateLendingPolicy_(item, { borrowerType:ticket.Borrower_Type, quantity:ticket.Quantity, dueAt:ticket.Due_At }, user, 'AVAILABLE_TO_PROMISE');
     createReservation_({ itemId: ticket.Item_ID, quantity: ticket.Quantity, lendingTicketId: ticket.Lending_Ticket_ID }, user, key);
     updateObject_(HAU_SHEETS.LENDING, ticket._row, { Status: 'READY_TO_CLAIM', Approved_By: user.User_ID, Approved_At: nowIso_(), Updated_At: nowIso_() });
-    history_('LENDING', ticket.Lending_Ticket_ID, ticket.Status, 'READY_TO_CLAIM', user, 'Approved and reserved', { idempotencyKey: key });
-    audit_('APPROVE_LENDING', 'LENDING', ticket.Lending_Ticket_ID, user, correlationId, { before: ticket });
-    return recordIdempotency_(key, { ticketId: ticket.Lending_Ticket_ID, status: 'READY_TO_CLAIM' }, user, correlationId);
+    history_('LENDING', ticket.Lending_Ticket_ID, ticket.Status, 'READY_TO_CLAIM', user, 'Approved and reserved', {
+      idempotencyKey: key,
+      identityVerification: { source: identity.source, verifiedBy: user.User_ID, verifiedAt: nowIso_() }
+    });
+    audit_('APPROVE_LENDING', 'LENDING', ticket.Lending_Ticket_ID, user, correlationId, {
+      before: ticket,
+      identityVerification: { source: identity.source, verifiedBy: user.User_ID }
+    });
+    return recordIdempotency_(key, { ticketId: ticket.Lending_Ticket_ID, status: 'READY_TO_CLAIM', identityVerificationSource: identity.source }, user, correlationId);
   });
 }
 

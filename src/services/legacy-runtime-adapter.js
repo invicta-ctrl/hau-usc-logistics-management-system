@@ -228,9 +228,11 @@ export function createLegacyRuntimeAdapter(mockServices) {
       );
       return { id: result.ticketId, status: 'FOR_REVIEW', ...result };
     },
-    async approveLendingTicket(ticketId) {
-      const result = await mutationRequests.run('approve-lending', { ticketId }, (command) =>
-        remote.approveLendingTicket(command),
+    async approveLendingTicket(ticketId, identityVerification = {}) {
+      const result = await mutationRequests.run(
+        'approve-lending',
+        { ticketId, ...identityVerification },
+        (command) => remote.approveLendingTicket(command),
       );
       return { id: result.ticketId, ...result };
     },

@@ -8,6 +8,12 @@ import {
   validateLendingSelection,
 } from '../domain/circulation-policy.js';
 import {
+  borrowerIdentityRequirement,
+  studentIdInputValue,
+  validateBorrowerIdentityApproval,
+  validateStudentIdNumber,
+} from '../domain/borrower-identity.js';
+import {
   buildCatalogUpdateCommand,
   canManageCatalog,
   validateCatalogDraft,
@@ -87,6 +93,7 @@ function createLendingController({ markFormClean }) {
   const listbox = document.querySelector('#lendingAutocomplete');
   const summary = document.querySelector('#lendingSelectedItem');
   const clearButton = document.querySelector('#clearLendingItem');
+  const studentId = form.elements.studentIdNumber;
   let items = [];
   let results = [];
   let activeIndex = -1;
@@ -185,6 +192,11 @@ function createLendingController({ markFormClean }) {
     if (!eligibility.returnable) due.value = '';
   };
 
+  studentId.addEventListener('input', () => {
+    const next = studentIdInputValue(studentId.value);
+    if (studentId.value !== next) studentId.value = next;
+  });
+
   input.addEventListener('input', () => {
     if (hidden.value && input.value !== selectedName) clear({ keepQuery: true });
     renderResults();
@@ -244,6 +256,8 @@ function createLendingController({ markFormClean }) {
     selectedItem,
     renderAvailability,
     validate() {
+      const identity = validateStudentIdNumber(studentId.value);
+      if (!identity.valid) return identity;
       return validateLendingSelection(selectedItem(), {
         borrowerType: borrowerType(),
         quantity: quantity(),
@@ -337,12 +351,82 @@ export function createRuntimeExtensions(options) {
   let sharedMobileNav = null;
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
+  let lendingApprovalRoot = null;
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
   const venueEquipmentRequestsEnabled = config.venueEquipmentRequestsEnabled === true;
+
+  const openLendingApproval = (ticketId) => {
+    const ticket = (getState()?.lendingTickets ?? []).find((entry) => entry.id === ticketId);
+    if (!ticket) {
+      toast('Ticket not found.', true);
+      return;
+    }
+    const requirement = borrowerIdentityRequirement(ticket.borrowerType);
+    openModal(
+      `Approve ${ticket.id}`,
+      `<form id="lendingApprovalForm"><div class="mode-note"><strong>${esc(requirement.label)}</strong><br>${esc(requirement.instruction)}</div><label class="checkbox section-gap"><input name="identityVerified" type="checkbox" value="true" required> I completed this approved-source identity check for ${esc(ticket.borrowerName)}.</label><button class="primary" type="submit">Verify Identity and Approve</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#lendingApprovalForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const identityVerification = {
+            identityVerified: new FormData(form).get('identityVerified'),
+            identityVerificationSource: requirement.source,
+          };
+          const validation = validateBorrowerIdentityApproval({
+            borrowerType: ticket.borrowerType,
+            ...identityVerification,
+          });
+          if (!validation.valid) {
+            toast(validation.message, true);
+            return;
+          }
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          button.textContent = 'Approvingâ€¦';
+          try {
+            const result = await services.approveLendingTicket(ticket.id, identityVerification);
+            if (backendMode === 'mock') {
+              result.identityVerification = {
+                source: requirement.source,
+                verifiedAt: new Date().toISOString(),
+                verifiedBy: getState()?.currentUser?.id ?? 'LOCAL-PREVIEW',
+              };
+            }
+            markFormClean(form);
+            closeModal();
+            await commit(`Ticket ${ticket.id} is ready to claim.`, 'success', result);
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+            button.textContent = 'Verify Identity and Approve';
+          }
+        });
+      },
+    );
+  };
+
+  const installLendingApproval = () => {
+    const root = document.querySelector('#lendingTickets');
+    if (!root || root === lendingApprovalRoot) return;
+    lendingApprovalRoot = root;
+    root.addEventListener(
+      'click',
+      (event) => {
+        const button = event.target.closest('[data-loan-action="approve"]');
+        if (!button) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        openLendingApproval(button.dataset.ticketId);
+      },
+      true,
+    );
+  };
 
   const referenceAdminAllowed = () => {
     const user = getState()?.currentUser;
@@ -390,24 +474,42 @@ export function createRuntimeExtensions(options) {
       }));
     if (domain === 'PERMISSIONS') {
       const user = state.currentUser ?? {};
-      return [{
-        id: user.id ?? 'PREVIEW-USER',
-        domain,
-        revision: Number(user.authorization?.revision ?? 1),
-        status: user.authorization?.active === false ? 'ARCHIVED' : 'ACTIVE',
-        payload: {
-          roleId: user.authorization?.roleId ?? user.role ?? 'REQUESTER',
-          committeeIds: user.authorization?.committeeIds ?? user.scopes?.committee ?? [],
-          active: user.authorization?.active !== false,
+      return [
+        {
+          id: user.id ?? 'PREVIEW-USER',
+          domain,
+          revision: Number(user.authorization?.revision ?? 1),
+          status: user.authorization?.active === false ? 'ARCHIVED' : 'ACTIVE',
+          payload: {
+            roleId: user.authorization?.roleId ?? user.role ?? 'REQUESTER',
+            committeeIds: user.authorization?.committeeIds ?? user.scopes?.committee ?? [],
+            active: user.authorization?.active !== false,
+          },
         },
-      }];
+      ];
     }
     if (domain === 'PEOPLE_MEMBERSHIPS') {
       const user = state.currentUser ?? {};
-      return [{ id: user.id ?? 'PREVIEW-USER', domain, revision: 1, status: 'ACTIVE', payload: { displayName: user.displayName ?? 'Preview user', rosterManaged: true } }];
+      return [
+        {
+          id: user.id ?? 'PREVIEW-USER',
+          domain,
+          revision: 1,
+          status: 'ACTIVE',
+          payload: { displayName: user.displayName ?? 'Preview user', rosterManaged: true },
+        },
+      ];
     }
     if (domain === 'SYNC_HEALTH')
-      return [{ id: 'PREVIEW-SYNC', domain, revision: 1, status: 'ACTIVE', payload: { validationStatus: 'PREVIEW_ONLY', conflictCount: 0, revocationCount: 0 } }];
+      return [
+        {
+          id: 'PREVIEW-SYNC',
+          domain,
+          revision: 1,
+          status: 'ACTIVE',
+          payload: { validationStatus: 'PREVIEW_ONLY', conflictCount: 0, revocationCount: 0 },
+        },
+      ];
     return (state.referenceAdminRecords ?? []).filter((entry) => entry.domain === domain);
   };
 
@@ -421,7 +523,8 @@ export function createRuntimeExtensions(options) {
       const currentById = new Map();
       localReferenceAdminRecords(domain).forEach((record) => {
         const current = currentById.get(record.id);
-        if (!current || Number(record.revision) > Number(current.revision)) currentById.set(record.id, record);
+        if (!current || Number(record.revision) > Number(current.revision))
+          currentById.set(record.id, record);
       });
       return {
         contract: 'reference-administration',
@@ -429,23 +532,46 @@ export function createRuntimeExtensions(options) {
         domain,
         writesEnabled: true,
         items: filterReferenceAdminRecords([...currentById.values()], command),
-        pendingChanges: state.referenceAdminChanges.filter((entry) => entry.domain === domain && entry.reviewStatus === 'PENDING_REVIEW'),
-        fieldOwnership: { peopleMemberships: 'AUTHORITATIVE_ROSTER_READ_ONLY', permissions: 'REVIEW_GATED', routing: 'REVIEW_GATED' },
-        actor: { id: state.currentUser?.id ?? 'PREVIEW-ADMIN', role: state.currentUser?.role ?? 'ADMINISTRATOR' },
+        pendingChanges: state.referenceAdminChanges.filter(
+          (entry) => entry.domain === domain && entry.reviewStatus === 'PENDING_REVIEW',
+        ),
+        fieldOwnership: {
+          peopleMemberships: 'AUTHORITATIVE_ROSTER_READ_ONLY',
+          permissions: 'REVIEW_GATED',
+          routing: 'REVIEW_GATED',
+        },
+        actor: {
+          id: state.currentUser?.id ?? 'PREVIEW-ADMIN',
+          role: state.currentUser?.role ?? 'ADMINISTRATOR',
+        },
       };
     };
-    services.previewReferenceAdminChange ??= async (command) => previewReferenceAdminChange(command, {
-      current: localReferenceAdminRecords(command.domain)
-        .filter((entry) => entry.id === command.targetId)
-        .sort((left, right) => Number(right.revision) - Number(left.revision))[0],
-      actorId: state.currentUser?.id ?? 'PREVIEW-ADMIN',
-      dependencies: [],
-    });
+    services.previewReferenceAdminChange ??= async (command) =>
+      previewReferenceAdminChange(command, {
+        current: localReferenceAdminRecords(command.domain)
+          .filter((entry) => entry.id === command.targetId)
+          .sort((left, right) => Number(right.revision) - Number(left.revision))[0],
+        actorId: state.currentUser?.id ?? 'PREVIEW-ADMIN',
+        dependencies: [],
+      });
     services.submitReferenceAdminChange ??= async (command) => {
       const preview = await services.previewReferenceAdminChange(command);
       const changeId = `PREVIEW-CHANGE-${state.referenceAdminChanges.length + 1}`;
       if (preview.requiresReview) {
-        state.referenceAdminChanges.push({ changeId, domain: preview.domain, action: preview.action, targetId: preview.targetId, expectedRevision: preview.expectedRevision, risk: preview.risk, requestedAt: new Date().toISOString(), requestedBy: state.currentUser?.id ?? 'PREVIEW-ADMIN', reviewStatus: 'PENDING_REVIEW', before: preview.before, after: preview.after, changedFields: preview.changedFields });
+        state.referenceAdminChanges.push({
+          changeId,
+          domain: preview.domain,
+          action: preview.action,
+          targetId: preview.targetId,
+          expectedRevision: preview.expectedRevision,
+          risk: preview.risk,
+          requestedAt: new Date().toISOString(),
+          requestedBy: state.currentUser?.id ?? 'PREVIEW-ADMIN',
+          reviewStatus: 'PENDING_REVIEW',
+          before: preview.before,
+          after: preview.after,
+          changedFields: preview.changedFields,
+        });
         return { changeId, reviewStatus: 'PENDING_REVIEW', applied: false, preview };
       }
       const updatedAt = new Date().toISOString();
@@ -484,25 +610,37 @@ export function createRuntimeExtensions(options) {
       return { changeId, reviewStatus: 'APPLIED', applied: true, preview };
     };
     services.reviewReferenceAdminChange ??= async () => {
-      throw new Error('Preview review requires a different administrator session to demonstrate separation of duties.');
+      throw new Error(
+        'Preview review requires a different administrator session to demonstrate separation of duties.',
+      );
     };
   };
 
   const referenceAdminFields = (domain, record = {}) => {
     const payload = record.payload ?? {};
     const common = `<label>Display name<input name="displayName" maxlength="160" value="${esc(payload.displayName ?? '')}"></label><label>Aliases<input name="aliases" maxlength="500" value="${esc((payload.aliases ?? []).join(' | '))}"></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
-    if (domain === 'VENUES' || domain === 'EQUIPMENT') return `${common}<label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}" required></label><label>Location<input name="location" maxlength="160" value="${esc(payload.location ?? '')}"></label><label>Unit<select name="unit">${['service', 'piece', 'set', 'unit'].map((value) => option(value, value, payload.unit)).join('')}</select></label><label>Requestability<select name="requestability">${option('REQUESTABLE', 'Requestable - confirmation required', payload.requestability)}${option('NOT_REQUESTABLE', 'Not requestable', payload.requestability)}</select></label><label>Contact role<input name="contactRole" maxlength="120" value="${esc(payload.contactRole ?? '')}"></label><label>Route ID<input name="routeId" maxlength="100" value="${esc(payload.routeId ?? '')}" required></label>${domain === 'EQUIPMENT' ? `<label class="checkbox"><input name="returnRequired" type="checkbox" ${payload.returnRequired ? 'checked' : ''}> Return required</label>` : ''}<label class="span-2">Notes<textarea name="notes" maxlength="500">${esc(payload.notes ?? '')}</textarea></label>`;
-    if (domain === 'ROUTING') return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, value, payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, value.replaceAll('_', ' '), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
-    if (domain === 'PERMISSIONS') return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
+    if (domain === 'VENUES' || domain === 'EQUIPMENT')
+      return `${common}<label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}" required></label><label>Location<input name="location" maxlength="160" value="${esc(payload.location ?? '')}"></label><label>Unit<select name="unit">${['service', 'piece', 'set', 'unit'].map((value) => option(value, value, payload.unit)).join('')}</select></label><label>Requestability<select name="requestability">${option('REQUESTABLE', 'Requestable - confirmation required', payload.requestability)}${option('NOT_REQUESTABLE', 'Not requestable', payload.requestability)}</select></label><label>Contact role<input name="contactRole" maxlength="120" value="${esc(payload.contactRole ?? '')}"></label><label>Route ID<input name="routeId" maxlength="100" value="${esc(payload.routeId ?? '')}" required></label>${domain === 'EQUIPMENT' ? `<label class="checkbox"><input name="returnRequired" type="checkbox" ${payload.returnRequired ? 'checked' : ''}> Return required</label>` : ''}<label class="span-2">Notes<textarea name="notes" maxlength="500">${esc(payload.notes ?? '')}</textarea></label>`;
+    if (domain === 'ROUTING')
+      return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, value, payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, value.replaceAll('_', ' '), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
+    if (domain === 'PERMISSIONS')
+      return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
     return `${common}<label class="span-2">Description<textarea name="description" maxlength="500">${esc(payload.description ?? '')}</textarea></label>`;
   };
 
   const referenceAdminPatchFromForm = (domain, form) => {
     const values = Object.fromEntries(new FormData(form).entries());
     delete values.targetId;
-    if (Object.prototype.hasOwnProperty.call(values, 'aliases')) values.aliases = values.aliases.split(/[|,]/).map((entry) => entry.trim()).filter(Boolean);
+    if (Object.prototype.hasOwnProperty.call(values, 'aliases'))
+      values.aliases = values.aliases
+        .split(/[|,]/)
+        .map((entry) => entry.trim())
+        .filter(Boolean);
     if (domain === 'PERMISSIONS') {
-      values.committeeIds = String(values.committeeIds ?? '').split(/[|,]/).map((entry) => entry.trim()).filter(Boolean);
+      values.committeeIds = String(values.committeeIds ?? '')
+        .split(/[|,]/)
+        .map((entry) => entry.trim())
+        .filter(Boolean);
       values.active = form.elements.active.checked;
       values.emergencyRevocation = form.elements.emergencyRevocation.checked;
     }
@@ -518,12 +656,18 @@ export function createRuntimeExtensions(options) {
     if (!force && referenceAdminWorkspace?.domain === referenceAdminDomain) return;
     const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
     const status = root.querySelector('[name="referenceAdminStatus"]')?.value ?? 'ALL';
-    referenceAdminPromise = services.getReferenceAdminWorkspace({ domain: referenceAdminDomain, query, status, limit: 50 });
+    referenceAdminPromise = services.getReferenceAdminWorkspace({
+      domain: referenceAdminDomain,
+      query,
+      status,
+      limit: 50,
+    });
     try {
       referenceAdminWorkspace = await referenceAdminPromise;
       renderReferenceAdminWorkspace();
     } catch (error) {
-      root.querySelector('[data-reference-admin-results]').innerHTML = `<div class="alert error">${esc(error.message)}</div>`;
+      root.querySelector('[data-reference-admin-results]').innerHTML =
+        `<div class="alert error">${esc(error.message)}</div>`;
     } finally {
       referenceAdminPromise = null;
     }
@@ -544,27 +688,43 @@ export function createRuntimeExtensions(options) {
             action,
             targetId: form.elements.targetId.value,
             expectedRevision: Number(record?.revision ?? 0),
-            patch: action === 'ADD' || action === 'UPDATE' ? referenceAdminPatchFromForm(referenceAdminDomain, form) : {},
+            patch:
+              action === 'ADD' || action === 'UPDATE'
+                ? referenceAdminPatchFromForm(referenceAdminDomain, form)
+                : {},
             reason: form.elements.reason?.value ?? '',
           };
           try {
             const preview = await services.previewReferenceAdminChange(command);
-            openModal('Confirm administrative change', `<div class="mode-note"><strong>${esc(preview.risk)}</strong> &middot; ${preview.requiresReview ? 'Separate review required' : 'Applies after confirmation'} &middot; Revision ${esc(preview.expectedRevision)} to ${esc(preview.after.revision)}</div><div class="comparison-grid section-gap"><article class="card"><h3>Before</h3><pre>${esc(JSON.stringify(preview.before, null, 2))}</pre></article><article class="card"><h3>After</h3><pre>${esc(JSON.stringify(preview.after, null, 2))}</pre></article></div><button class="primary" type="button" data-reference-admin-confirm>Confirm ${preview.requiresReview ? 'review request' : 'change'}</button>`, (confirmation) => {
-              confirmation.querySelector('[data-reference-admin-confirm]').addEventListener('click', async (confirmEvent) => {
-                const button = confirmEvent.currentTarget;
-                button.disabled = true;
-                try {
-                  const result = await services.submitReferenceAdminChange({ ...command, idempotencyKey: `reference-admin-${globalThis.crypto?.randomUUID?.() ?? Date.now()}` });
-                  closeModal();
-                  referenceAdminWorkspace = null;
-                  await refreshReferenceAdminWorkspace({ force: true });
-                  toast(result.applied ? 'Administrative change applied and audited.' : 'Administrative change queued for separate review.');
-                } catch (error) {
-                  toast(error.message, true);
-                  button.disabled = false;
-                }
-              });
-            });
+            openModal(
+              'Confirm administrative change',
+              `<div class="mode-note"><strong>${esc(preview.risk)}</strong> &middot; ${preview.requiresReview ? 'Separate review required' : 'Applies after confirmation'} &middot; Revision ${esc(preview.expectedRevision)} to ${esc(preview.after.revision)}</div><div class="comparison-grid section-gap"><article class="card"><h3>Before</h3><pre>${esc(JSON.stringify(preview.before, null, 2))}</pre></article><article class="card"><h3>After</h3><pre>${esc(JSON.stringify(preview.after, null, 2))}</pre></article></div><button class="primary" type="button" data-reference-admin-confirm>Confirm ${preview.requiresReview ? 'review request' : 'change'}</button>`,
+              (confirmation) => {
+                confirmation
+                  .querySelector('[data-reference-admin-confirm]')
+                  .addEventListener('click', async (confirmEvent) => {
+                    const button = confirmEvent.currentTarget;
+                    button.disabled = true;
+                    try {
+                      const result = await services.submitReferenceAdminChange({
+                        ...command,
+                        idempotencyKey: `reference-admin-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                      });
+                      closeModal();
+                      referenceAdminWorkspace = null;
+                      await refreshReferenceAdminWorkspace({ force: true });
+                      toast(
+                        result.applied
+                          ? 'Administrative change applied and audited.'
+                          : 'Administrative change queued for separate review.',
+                      );
+                    } catch (error) {
+                      toast(error.message, true);
+                      button.disabled = false;
+                    }
+                  });
+              },
+            );
           } catch (error) {
             toast(error.message, true);
           }
@@ -595,7 +755,11 @@ export function createRuntimeExtensions(options) {
             closeModal();
             referenceAdminWorkspace = null;
             await refreshReferenceAdminWorkspace({ force: true });
-            toast(result.applied ? 'Administrative change approved, applied, and audited.' : 'Administrative change rejected and audited.');
+            toast(
+              result.applied
+                ? 'Administrative change approved, applied, and audited.'
+                : 'Administrative change rejected and audited.',
+            );
           } catch (error) {
             toast(error.message, true);
             button.disabled = false;
@@ -612,7 +776,9 @@ export function createRuntimeExtensions(options) {
     root.hidden = !allowed;
     if (!allowed) return;
     const workspace = referenceAdminWorkspace;
-    root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled ? 'Controlled writes enabled' : 'Read-only / kill switch active';
+    root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled
+      ? 'Controlled writes enabled'
+      : 'Read-only / kill switch active';
     const results = root.querySelector('[data-reference-admin-results]');
     const readOnly = ['PEOPLE_MEMBERSHIPS', 'SYNC_HEALTH'].includes(referenceAdminDomain);
     root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
@@ -621,18 +787,28 @@ export function createRuntimeExtensions(options) {
       control.setAttribute('aria-pressed', String(active));
     });
     root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
-    results.innerHTML = (workspace?.items ?? []).map((record) => `<div class="request-line"><div><strong>${esc(record.payload?.displayName ?? record.payload?.roleId ?? record.payload?.instructions ?? record.id)}</strong><small>${esc(record.id)} &middot; revision ${esc(record.revision)} &middot; ${esc(record.status)}</small></div><div class="request-line-actions">${readOnly ? '<span class="pill">Read only</span>' : `<button class="secondary mini" type="button" data-reference-admin-edit="${esc(record.id)}">View / edit</button><button class="${record.status === 'ARCHIVED' ? 'secondary' : 'danger'} mini" type="button" data-reference-admin-lifecycle="${esc(record.id)}" data-reference-admin-action="${record.status === 'ARCHIVED' ? 'RESTORE' : 'ARCHIVE'}">${record.status === 'ARCHIVED' ? 'Restore' : 'Archive'}</button>`}</div></div>`).join('') || '<div class="empty">No records match the current controlled filters.</div>';
+    results.innerHTML =
+      (workspace?.items ?? [])
+        .map(
+          (record) =>
+            `<div class="request-line"><div><strong>${esc(record.payload?.displayName ?? record.payload?.roleId ?? record.payload?.instructions ?? record.id)}</strong><small>${esc(record.id)} &middot; revision ${esc(record.revision)} &middot; ${esc(record.status)}</small></div><div class="request-line-actions">${readOnly ? '<span class="pill">Read only</span>' : `<button class="secondary mini" type="button" data-reference-admin-edit="${esc(record.id)}">View / edit</button><button class="${record.status === 'ARCHIVED' ? 'secondary' : 'danger'} mini" type="button" data-reference-admin-lifecycle="${esc(record.id)}" data-reference-admin-action="${record.status === 'ARCHIVED' ? 'RESTORE' : 'ARCHIVE'}">${record.status === 'ARCHIVED' ? 'Restore' : 'Archive'}</button>`}</div></div>`,
+        )
+        .join('') || '<div class="empty">No records match the current controlled filters.</div>';
     const pending = root.querySelector('[data-reference-admin-pending]');
-    pending.innerHTML = (workspace?.pendingChanges ?? []).map((change) => {
-      const applying = change.reviewStatus === 'APPLYING';
-      const canReview = !applying && workspace?.writesEnabled && change.requestedBy !== workspace?.actor?.id;
-      const action = applying
-        ? '<span class="pill">Reconciliation required</span>'
-        : canReview
-          ? `<div class="request-line-actions"><button class="secondary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="REJECT">Reject</button><button class="primary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="APPROVE">Review and approve</button></div>`
-          : '<span class="pill">Different administrator required</span>';
-      return `<div class="request-line"><div><strong>${esc(change.action)} ${esc(change.targetId)}</strong><small>${esc(change.risk)} &middot; requested by ${esc(change.requestedBy)} &middot; ${esc(change.requestedAt ?? '')}</small></div>${action}</div>`;
-    }).join('') || '<div class="empty">No pending second-review changes in this domain.</div>';
+    pending.innerHTML =
+      (workspace?.pendingChanges ?? [])
+        .map((change) => {
+          const applying = change.reviewStatus === 'APPLYING';
+          const canReview =
+            !applying && workspace?.writesEnabled && change.requestedBy !== workspace?.actor?.id;
+          const action = applying
+            ? '<span class="pill">Reconciliation required</span>'
+            : canReview
+              ? `<div class="request-line-actions"><button class="secondary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="REJECT">Reject</button><button class="primary mini" type="button" data-reference-admin-review="${esc(change.changeId)}" data-reference-admin-decision="APPROVE">Review and approve</button></div>`
+              : '<span class="pill">Different administrator required</span>';
+          return `<div class="request-line"><div><strong>${esc(change.action)} ${esc(change.targetId)}</strong><small>${esc(change.risk)} &middot; requested by ${esc(change.requestedBy)} &middot; ${esc(change.requestedAt ?? '')}</small></div>${action}</div>`;
+        })
+        .join('') || '<div class="empty">No pending second-review changes in this domain.</div>';
   };
 
   const installReferenceAdminWorkspace = () => {
@@ -646,8 +822,12 @@ export function createRuntimeExtensions(options) {
       navigation.disabled = !allowed;
       navigation.setAttribute('aria-hidden', String(!allowed));
       navigation.addEventListener('click', () => {
-        document.querySelectorAll('.view').forEach((view) => view.classList.toggle('active', view.id === 'referenceAdmin'));
-        document.querySelectorAll('#primaryNav button').forEach((button) => button.classList.toggle('active', button === navigation));
+        document
+          .querySelectorAll('.view')
+          .forEach((view) => view.classList.toggle('active', view.id === 'referenceAdmin'));
+        document
+          .querySelectorAll('#primaryNav button')
+          .forEach((button) => button.classList.toggle('active', button === navigation));
         const title = document.querySelector('#pageTitle');
         if (title) title.textContent = 'Reference Administration';
         document.querySelector('#referenceAdmin')?.scrollIntoView({ block: 'start' });
@@ -676,16 +856,31 @@ export function createRuntimeExtensions(options) {
         void refreshReferenceAdminWorkspace({ force: true });
       });
     });
-    root.querySelector('[data-reference-admin-refresh]').addEventListener('click', () => void refreshReferenceAdminWorkspace({ force: true }));
-    root.querySelector('[data-reference-admin-add]').addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));
+    root
+      .querySelector('[data-reference-admin-refresh]')
+      .addEventListener('click', () => void refreshReferenceAdminWorkspace({ force: true }));
+    root
+      .querySelector('[data-reference-admin-add]')
+      .addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));
     root.addEventListener('click', (event) => {
       const edit = event.target.closest('[data-reference-admin-edit]');
-      if (edit) openReferenceAdminChange(referenceAdminWorkspace?.items.find((record) => record.id === edit.dataset.referenceAdminEdit));
+      if (edit)
+        openReferenceAdminChange(
+          referenceAdminWorkspace?.items.find((record) => record.id === edit.dataset.referenceAdminEdit),
+        );
       const lifecycle = event.target.closest('[data-reference-admin-lifecycle]');
-      if (lifecycle) openReferenceAdminChange(referenceAdminWorkspace?.items.find((record) => record.id === lifecycle.dataset.referenceAdminLifecycle), lifecycle.dataset.referenceAdminAction);
+      if (lifecycle)
+        openReferenceAdminChange(
+          referenceAdminWorkspace?.items.find(
+            (record) => record.id === lifecycle.dataset.referenceAdminLifecycle,
+          ),
+          lifecycle.dataset.referenceAdminAction,
+        );
       const review = event.target.closest('[data-reference-admin-review]');
       if (review) {
-        const change = referenceAdminWorkspace?.pendingChanges.find((entry) => entry.changeId === review.dataset.referenceAdminReview);
+        const change = referenceAdminWorkspace?.pendingChanges.find(
+          (entry) => entry.changeId === review.dataset.referenceAdminReview,
+        );
         if (change) openReferenceAdminReview(change, review.dataset.referenceAdminDecision);
       }
     });
@@ -1042,8 +1237,7 @@ export function createRuntimeExtensions(options) {
             evidence.id === materials.fulfillmentEvidenceId &&
             (evidence.evidenceType ?? evidence.metadata?.evidenceType ?? evidence.folderType) ===
               requiredEvidenceType &&
-            (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) ===
-              'COMPOSITE_COMPONENT' &&
+            (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) === 'COMPOSITE_COMPONENT' &&
             (evidence.relatedEntityId ?? evidence.relatedId ?? evidence.metadata?.relatedEntityId) ===
               child.componentId,
         );
@@ -1066,11 +1260,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const refreshMaterialsQueue = async ({ force = false } = {}) => {
-    if (
-      !materialsQueue ||
-      !canAccessMaterialsQueue() ||
-      typeof services.getMaterialsWorkQueue !== 'function'
-    )
+    if (!materialsQueue || !canAccessMaterialsQueue() || typeof services.getMaterialsWorkQueue !== 'function')
       return;
     if (materialsQueuePromise) return materialsQueuePromise;
     if (!force && materialsQueueItems !== null) return;
@@ -1120,9 +1310,7 @@ export function createRuntimeExtensions(options) {
                 throw new Error('Choose a fulfillment path before uploading evidence.');
               const evidence = await services.uploadEvidenceFile(file, {
                 evidenceType:
-                  values.fulfillmentPath === 'STOCK_ISSUE'
-                    ? 'MATERIALS_ISSUE_PROOF'
-                    : 'DELIVERABLE_RECEIPT',
+                  values.fulfillmentPath === 'STOCK_ISSUE' ? 'MATERIALS_ISSUE_PROOF' : 'DELIVERABLE_RECEIPT',
                 relatedEntityType: 'COMPOSITE_COMPONENT',
                 relatedEntityId: item.componentId,
                 requestId: item.requestId,
@@ -1188,8 +1376,7 @@ export function createRuntimeExtensions(options) {
       const sectionDraft = enriched.sections?.find((entry) => entry.type === 'MATERIALS');
       let normalizedMaterials = null;
       if (sectionDraft) {
-        if (!materialsRequestsEnabled)
-          throw new Error('Materials request specialization is not enabled.');
+        if (!materialsRequestsEnabled) throw new Error('Materials request specialization is not enabled.');
         sectionDraft.materials = materialsFormPayload();
         sectionDraft.lines = (sectionDraft.lines ?? []).map((line) => ({
           ...line,
@@ -1257,7 +1444,9 @@ export function createRuntimeExtensions(options) {
   const venueEquipmentEffectiveAt = (record, at) => {
     const date = String(at ?? '').slice(0, 10);
     return (
-      String(record.status ?? '').trim().toUpperCase() === 'ACTIVE' &&
+      String(record.status ?? '')
+        .trim()
+        .toUpperCase() === 'ACTIVE' &&
       (!record.effectiveFrom || date >= record.effectiveFrom) &&
       (!record.effectiveTo || date <= record.effectiveTo)
     );
@@ -1289,9 +1478,7 @@ export function createRuntimeExtensions(options) {
     resolveVenueEquipmentOtherRoute: (effectiveAt = at) => {
       const effective = (getState()?.venueEquipmentRoutes ?? []).filter(
         (route) =>
-          route.matchKind === 'OTHER' &&
-          !route.archivedAt &&
-          venueEquipmentEffectiveAt(route, effectiveAt),
+          route.matchKind === 'OTHER' && !route.archivedAt && venueEquipmentEffectiveAt(route, effectiveAt),
       );
       if (effective.length > 1)
         throw new Error('Controlled Other must resolve to exactly one active approved route.');
@@ -1305,10 +1492,7 @@ export function createRuntimeExtensions(options) {
       (state?.compositeRequests ?? []).map((parent) => [parent.requestId ?? parent.id, parent]),
     );
     return (state?.compositeComponents ?? [])
-      .filter(
-        (child) =>
-          child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId,
-      )
+      .filter((child) => child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId)
       .map((child) => {
         const parent = parents.get(child.requestId) ?? {};
         return buildVenueEquipmentQueueItem(
@@ -1354,31 +1538,24 @@ export function createRuntimeExtensions(options) {
         throw new Error('Terminal Venue and Equipment components cannot be updated.');
       if (Number(command.expectedRevision) !== Number(child.revision ?? 1))
         throw new Error('Venue and Equipment component changed; refresh before updating.');
-      const venueEquipment = updateVenueEquipmentWorkflow(
-        child.payload?.venueEquipment,
-        command.patch ?? {},
-      );
+      const venueEquipment = updateVenueEquipmentWorkflow(child.payload?.venueEquipment, command.patch ?? {});
       if (venueEquipment.fulfillmentEvidenceId) {
-        const evidenceUploaded = (getState()?.evidenceFiles ?? []).some(
-          (evidence) => {
-            const evidenceType =
-              evidence.evidenceType ?? evidence.metadata?.evidenceType ?? evidence.folderType;
-            const uploadStatus =
-              evidence.uploadStatus ??
-              evidence.metadata?.uploadStatus ??
-              (evidence.driveFileId ? 'UPLOADED' : '');
-            return (
-              evidence.id === venueEquipment.fulfillmentEvidenceId &&
-              evidenceType === 'VENUE_EQUIPMENT_CONFIRMATION' &&
-              uploadStatus === 'UPLOADED' &&
-              (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) ===
-                'COMPOSITE_COMPONENT' &&
-              (evidence.relatedEntityId ??
-                evidence.relatedId ??
-                evidence.metadata?.relatedEntityId) === child.componentId
-            );
-          },
-        );
+        const evidenceUploaded = (getState()?.evidenceFiles ?? []).some((evidence) => {
+          const evidenceType =
+            evidence.evidenceType ?? evidence.metadata?.evidenceType ?? evidence.folderType;
+          const uploadStatus =
+            evidence.uploadStatus ??
+            evidence.metadata?.uploadStatus ??
+            (evidence.driveFileId ? 'UPLOADED' : '');
+          return (
+            evidence.id === venueEquipment.fulfillmentEvidenceId &&
+            evidenceType === 'VENUE_EQUIPMENT_CONFIRMATION' &&
+            uploadStatus === 'UPLOADED' &&
+            (evidence.relatedEntityType ?? evidence.metadata?.relatedEntityType) === 'COMPOSITE_COMPONENT' &&
+            (evidence.relatedEntityId ?? evidence.relatedId ?? evidence.metadata?.relatedEntityId) ===
+              child.componentId
+          );
+        });
         if (!evidenceUploaded)
           throw new Error('Venue and Equipment evidence must be uploaded and linked to this component.');
       }
@@ -1473,14 +1650,17 @@ export function createRuntimeExtensions(options) {
       purposeDetail: form.elements.venueEquipmentPurposeDetail?.value,
       scheduleStartAt:
         toManilaIso(form.elements.venueEquipmentScheduleStartAt?.value) || event?.startAt || '',
-      scheduleEndAt:
-        toManilaIso(form.elements.venueEquipmentScheduleEndAt?.value) || event?.endAt || '',
+      scheduleEndAt: toManilaIso(form.elements.venueEquipmentScheduleEndAt?.value) || event?.endAt || '',
     };
   };
 
   const refreshVenueEquipmentQueue = async ({ force = false } = {}) => {
     const committeeIds = venueEquipmentCommitteeIds();
-    if (!venueEquipmentQueue || !committeeIds.length || typeof services.getVenueEquipmentWorkQueue !== 'function')
+    if (
+      !venueEquipmentQueue ||
+      !committeeIds.length ||
+      typeof services.getVenueEquipmentWorkQueue !== 'function'
+    )
       return;
     if (venueEquipmentQueuePromise) return venueEquipmentQueuePromise;
     if (!force && venueEquipmentQueueItems !== null) return;
@@ -1508,12 +1688,15 @@ export function createRuntimeExtensions(options) {
   const renderVenueEquipmentQueue = (error = '') => {
     if (!venueEquipmentQueue) return;
     const items = venueEquipmentQueueItems ?? [];
-    venueEquipmentQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Effective-dated routing</p><h3 id="venueEquipmentQueueTitle">Scoped Venue &amp; Equipment work queue</h3><p>Requestability permits review; it never promises a booking, stock, or approval.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items
-      .map(
-        (item) =>
-          `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.ownerCommitteeId)} &middot; ${esc(item.venueEquipment?.confirmationStatus || 'PENDING_CONFIRMATION')} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
-      )
-      .join('') || '<div class="empty">No Venue &amp; Equipment work is in the current authorized scope.</div>'}</div>`;
+    venueEquipmentQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Effective-dated routing</p><h3 id="venueEquipmentQueueTitle">Scoped Venue &amp; Equipment work queue</h3><p>Requestability permits review; it never promises a booking, stock, or approval.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${
+      items
+        .map(
+          (item) =>
+            `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.ownerCommitteeId)} &middot; ${esc(item.venueEquipment?.confirmationStatus || 'PENDING_CONFIRMATION')} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
+        )
+        .join('') ||
+      '<div class="empty">No Venue &amp; Equipment work is in the current authorized scope.</div>'
+    }</div>`;
   };
 
   const openVenueEquipmentWorkflow = (componentId) => {
@@ -1553,8 +1736,10 @@ export function createRuntimeExtensions(options) {
               patch: {
                 confirmationStatus: values.confirmationStatus,
                 confirmationReference: values.confirmationReference,
-                otherTriageStatus: details.otherTriageStatus === 'NOT_REQUIRED' ? 'NOT_REQUIRED' : values.otherTriageStatus,
-                otherTriageReason: details.otherTriageStatus === 'NOT_REQUIRED' ? '' : values.otherTriageReason,
+                otherTriageStatus:
+                  details.otherTriageStatus === 'NOT_REQUIRED' ? 'NOT_REQUIRED' : values.otherTriageStatus,
+                otherTriageReason:
+                  details.otherTriageStatus === 'NOT_REQUIRED' ? '' : values.otherTriageReason,
                 blockerStatus: values.blockerStatus,
                 blockerReason: values.blockerReason,
                 returnStatus: details.returnRequired ? values.returnStatus : 'NOT_REQUIRED',
@@ -1768,9 +1953,10 @@ export function createRuntimeExtensions(options) {
     if (updatedAt) lastUpdatedAt = updatedAt;
     syncIndicator.dataset.syncStatus = status;
     const timestamp = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
-    const suffix = timestamp && !Number.isNaN(timestamp.getTime())
-      ? ` · ${timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      : '';
+    const suffix =
+      timestamp && !Number.isNaN(timestamp.getTime())
+        ? ` · ${timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : '';
     syncIndicator.textContent = `${statusText[status] ?? statusText.delayed}${suffix}`;
     syncIndicator.title = lastUpdatedAt
       ? `Last successful update: ${lastUpdatedAt}`
@@ -2033,8 +2219,8 @@ export function createRuntimeExtensions(options) {
     sharedMobileNav.dataset.sharedMobileNav = '';
     sharedMobileNav.setAttribute('aria-label', 'Primary navigation');
     sharedMobileNav.innerHTML = views
-      .map(
-        ([view, label, icon]) => view === 'more'
+      .map(([view, label, icon]) =>
+        view === 'more'
           ? `<button type="button" data-shared-mobile-more aria-expanded="false" aria-controls="sharedMobileMore"><span aria-hidden="true">${icon}</span><small>${label}</small></button>`
           : `<button type="button" data-shared-mobile-view="${view}" aria-label="Open ${label}"><span aria-hidden="true">${icon}</span><small>${label}</small></button>`,
       )
@@ -2081,11 +2267,15 @@ export function createRuntimeExtensions(options) {
   };
 
   const normalizedExperience = () => {
-    const value = String(document.body.dataset.experience ?? '').trim().toLowerCase();
-    return {
-      admin: 'administrator',
-      inventory: 'inventory-pantry',
-    }[value] ?? value;
+    const value = String(document.body.dataset.experience ?? '')
+      .trim()
+      .toLowerCase();
+    return (
+      {
+        admin: 'administrator',
+        inventory: 'inventory-pantry',
+      }[value] ?? value
+    );
   };
 
   const roleExperienceDefinitions = {
@@ -2114,7 +2304,11 @@ export function createRuntimeExtensions(options) {
       boundary:
         'Food ownership scopes the queue and context. Procurement, receiving, evidence, and Release Desk actions remain available only through existing capabilities and server-side validation.',
       actions: [
-        ['request', 'Open the food request queue', 'Food requirements, quantities, purpose, and event deadlines'],
+        [
+          'request',
+          'Open the food request queue',
+          'Food requirements, quantities, purpose, and event deadlines',
+        ],
         ['procurement', 'Review food sourcing', 'Canvassing, supplier references, budgets, and receiving'],
         ['release', 'Open controlled distribution', 'Recipient confirmation and approved release evidence'],
         ['inventory', 'Check stock context', 'Available stock and movement history before fulfillment'],
@@ -2129,9 +2323,21 @@ export function createRuntimeExtensions(options) {
       boundary:
         'Catalog ownership scopes stock operations. Reservations, receipts, loans, returns, releases, transfers, and corrections remain capability-bound, revalidated against current state, and recorded through the existing ledger-aware workflows.',
       actions: [
-        ['inventory', 'Open stock control', 'Search catalog, on-hand, reserved, ATP, provenance, and movements'],
-        ['lending', 'Review circulation exceptions', 'For-review, ready-to-claim, on-loan, overdue, and returned tickets'],
-        ['restocking', 'Work the replenishment queue', 'Review, canvass, procure, and receive without conflating request and receipt'],
+        [
+          'inventory',
+          'Open stock control',
+          'Search catalog, on-hand, reserved, ATP, provenance, and movements',
+        ],
+        [
+          'lending',
+          'Review circulation exceptions',
+          'For-review, ready-to-claim, on-loan, overdue, and returned tickets',
+        ],
+        [
+          'restocking',
+          'Work the replenishment queue',
+          'Review, canvass, procure, and receive without conflating request and receipt',
+        ],
         ['release', 'Open controlled handoff', 'Re-check reservations and physical balance before release'],
       ],
     },
@@ -2144,10 +2350,26 @@ export function createRuntimeExtensions(options) {
       boundary:
         'Materials ownership scopes the queue and fulfillment context. Quote preference, budget, procurement, receiving, evidence, stock transfer, and Release Desk actions remain available only through existing capabilities and server-side validation.',
       actions: [
-        ['request', 'Open the materials queue', 'Exact requirements, quantities, specifications, purpose, and deadlines'],
-        ['procurement', 'Compare sourcing and budget', 'Current quotes, stale references, purchasing stages, and cumulative receipts'],
-        ['release', 'Open controlled fulfillment', 'Requested, received, and released quantities with recipient evidence'],
-        ['inventory', 'Review stock and provenance', 'Availability, event-item identity, transfers, and movement history'],
+        [
+          'request',
+          'Open the materials queue',
+          'Exact requirements, quantities, specifications, purpose, and deadlines',
+        ],
+        [
+          'procurement',
+          'Compare sourcing and budget',
+          'Current quotes, stale references, purchasing stages, and cumulative receipts',
+        ],
+        [
+          'release',
+          'Open controlled fulfillment',
+          'Requested, received, and released quantities with recipient evidence',
+        ],
+        [
+          'inventory',
+          'Review stock and provenance',
+          'Availability, event-item identity, transfers, and movement history',
+        ],
       ],
     },
   };
@@ -2157,7 +2379,8 @@ export function createRuntimeExtensions(options) {
 
   const directorMetrics = (state) => {
     const activeSeries = (state.eventSeries ?? []).filter(
-      (series) => !['COMPLETED', 'ARCHIVED', 'CANCELLED'].includes(String(series?.status ?? '').toUpperCase()),
+      (series) =>
+        !['COMPLETED', 'ARCHIVED', 'CANCELLED'].includes(String(series?.status ?? '').toUpperCase()),
     ).length;
     const decisions =
       countStatuses(state.requests, new Set(['FOR_REVIEW', 'NEEDS_INFORMATION'])) +
@@ -2189,7 +2412,8 @@ export function createRuntimeExtensions(options) {
       ...(state.requests ?? []),
     ].filter(foodOwned);
     const active = rows.filter(
-      (row) => !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
+      (row) =>
+        !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
     );
     const sourcing = countStatuses(
       active,
@@ -2212,7 +2436,8 @@ export function createRuntimeExtensions(options) {
         .filter((movement) => movement?.itemId === item.id)
         .reduce(
           (total, movement) =>
-            total + (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
+            total +
+            (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
           Number(item?.openingOnHand ?? 0),
         );
       const reserved = (state.reservations ?? [])
@@ -2257,19 +2482,36 @@ export function createRuntimeExtensions(options) {
         !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
     );
     return [
-      ['For canvassing', countStatuses(active, new Set(['FOR_CANVASSING'])), 'Current comparable quotes required'],
-      ['Waiting for budget', countStatuses(active, new Set(['WAITING_FOR_BUDGET'])), 'Approved needs blocked before purchase'],
-      ['To be procured', countStatuses(active, new Set(['TO_BE_PROCURED'])), 'Preferred sourcing ready for purchasing'],
-      ['Ready to release', countStatuses(active, new Set(['READY_TO_RELEASE'])), 'Received deliverables awaiting handoff'],
+      [
+        'For canvassing',
+        countStatuses(active, new Set(['FOR_CANVASSING'])),
+        'Current comparable quotes required',
+      ],
+      [
+        'Waiting for budget',
+        countStatuses(active, new Set(['WAITING_FOR_BUDGET'])),
+        'Approved needs blocked before purchase',
+      ],
+      [
+        'To be procured',
+        countStatuses(active, new Set(['TO_BE_PROCURED'])),
+        'Preferred sourcing ready for purchasing',
+      ],
+      [
+        'Ready to release',
+        countStatuses(active, new Set(['READY_TO_RELEASE'])),
+        'Received deliverables awaiting handoff',
+      ],
     ];
   };
 
-  const metricsForExperience = (experience, state) => ({
-    director: directorMetrics,
-    food: foodMetrics,
-    'inventory-pantry': inventoryMetrics,
-    materials: materialsMetrics,
-  }[experience]?.(state) ?? []);
+  const metricsForExperience = (experience, state) =>
+    ({
+      director: directorMetrics,
+      food: foodMetrics,
+      'inventory-pantry': inventoryMetrics,
+      materials: materialsMetrics,
+    })[experience]?.(state) ?? [];
 
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
@@ -2339,7 +2581,10 @@ export function createRuntimeExtensions(options) {
     installRoleExperience();
     renderRoleExperience();
     installSharedMobileNav();
-    if (!isRequestOnly()) lending = createLendingController({ markFormClean });
+    if (!isRequestOnly()) {
+      lending = createLendingController({ markFormClean });
+      installLendingApproval();
+    }
     mountSyncUi();
     const statusFilter = document.querySelector('#inventoryStatusFilter');
     if (statusFilter && !statusFilter.querySelector('[value="ARCHIVED"]'))
@@ -2368,7 +2613,13 @@ export function createRuntimeExtensions(options) {
     );
     document.addEventListener('reset', (event) => setTimeout(() => markFormClean(event.target), 0), true);
     ['pointerdown', 'keydown'].forEach((eventName) => {
-      document.addEventListener(eventName, () => { lastActiveAt = Date.now(); }, { passive: true });
+      document.addEventListener(
+        eventName,
+        () => {
+          lastActiveAt = Date.now();
+        },
+        { passive: true },
+      );
     });
     afterRender();
   };
@@ -2377,6 +2628,12 @@ export function createRuntimeExtensions(options) {
     syncSharedMobileNav();
     renderRoleExperience();
     lending?.setItems(getState()?.inventoryItems ?? []);
+    document.querySelectorAll('#lendingTickets .ticket p').forEach((row) => {
+      row.childNodes.forEach((node) => {
+        if (node.nodeType === Node.TEXT_NODE)
+          node.textContent = node.textContent.replaceAll('Angelite/Non-USC', 'Angelite/Student');
+      });
+    });
     const catalogButton = document.querySelector('#adminCatalogException');
     if (catalogButton) {
       const allowed = canManageCatalog(getState()?.currentUser);
@@ -2443,17 +2700,20 @@ export function createRuntimeExtensions(options) {
       const scope = getActiveModule();
       const token = Number(result?.dataScopeRevisions?.[scope]);
       const revision = Number.isFinite(token)
-        ? normalizeScopedRevisionPayload({
-          contract: 'scoped-revision',
-          contractVersion: 1,
-          enabled: true,
-          scope,
-          token,
-          globalRevision: result.dataRevision,
-          updatedAt: result.dataRevisionUpdatedAt,
-          environment: getState()?.environment,
-          metrics: {},
-        }, scope)
+        ? normalizeScopedRevisionPayload(
+            {
+              contract: 'scoped-revision',
+              contractVersion: 1,
+              enabled: true,
+              scope,
+              token,
+              globalRevision: result.dataRevision,
+              updatedAt: result.dataRevisionUpdatedAt,
+              environment: getState()?.environment,
+              metrics: {},
+            },
+            scope,
+          )
         : null;
       return refreshAuthoritative('mutation', revision);
     },
