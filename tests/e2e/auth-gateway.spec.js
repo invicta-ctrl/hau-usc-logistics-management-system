@@ -72,6 +72,8 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   expect(await page.evaluate(() => globalThis.__HAU_RUNTIME_CONFIG__?.backendMode)).toBe('rest');
   await expect(page.getByRole('heading', { name: 'Logistics Operations' })).toBeVisible();
   await expect(page.getByLabel('Access ID')).toBeVisible();
+  await expect(page.locator('.app-shell')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Reset Demo Data' })).toHaveCount(0);
   await expect(page.getByText(/roles and committee access are assigned by the server/i)).toBeVisible();
   await expect(page.locator('#authGateway select')).toHaveCount(0);
 
@@ -92,6 +94,8 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
+  await expect(page).toHaveURL(/\/app\/food$/);
+  await expect(page.locator('#authGateway')).toHaveCount(0);
   expect(submitted[0]).toEqual({ accessId: 'HAU-FOOD-001', password: 'Temporary!Password9472' });
   expect(submitted[1]).not.toHaveProperty('roleId');
   expect(submitted[1]).not.toHaveProperty('committeeIds');

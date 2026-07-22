@@ -24,7 +24,7 @@ export function createModuleShareable(standalone, module) {
   );
   html = replaceRequired(
     html,
-    '<title>HAU-USC Logistics Prototype</title>',
+    '<title>HAU-USC Logistics</title>',
     `<title>HAU-USC Logistics - ${module.title}</title>`,
     'document title',
   );

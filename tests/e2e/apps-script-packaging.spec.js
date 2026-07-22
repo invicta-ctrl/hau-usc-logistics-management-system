@@ -66,11 +66,7 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
     appEnvironment,
   );
 
-  const resetDemo = page.locator('#resetDemo');
-  await expect(resetDemo).toBeHidden();
-  await expect(resetDemo).toBeDisabled();
-  await expect(resetDemo).toHaveAttribute('tabindex', '-1');
-  await expect(resetDemo).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('#resetDemo')).toHaveCount(0);
 
   const expectedEnvironmentLabel =
     `\u25CF Apps Script \u00B7 ${appEnvironment.toLowerCase()}`;
@@ -84,11 +80,11 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
     await page.waitForTimeout(50);
     await expect.poll(() => page.evaluate(() => globalThis.__appsScriptApiCalls.length)).toBe(2);
     await expect(
-      page.locator('.portal-header .preview-badge'),
+      page.locator('.portal-header [data-runtime-status]'),
     ).toHaveText(expectedEnvironmentLabel);
   } else {
     await expect(
-      page.locator('.app-header .preview-badge'),
+      page.locator('.app-header [data-runtime-status]'),
     ).toHaveText(expectedEnvironmentLabel);
   }
   const visibleText = await page.locator('body').innerText();

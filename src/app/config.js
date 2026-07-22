@@ -1,4 +1,6 @@
 const runtime = globalThis.__HAU_RUNTIME_CONFIG__ ?? {};
+const buildMode = String(import.meta.env?.MODE ?? 'development').trim().toLowerCase();
+const isCloudflareBuild = buildMode === 'staging' || buildMode === 'production';
 
 export function booleanFlag(value, fallback = false) {
   if (typeof value === 'boolean') return value;
@@ -10,16 +12,19 @@ export function booleanFlag(value, fallback = false) {
   return fallback;
 }
 
-const configuredBackendMode = runtime.backendMode ?? import.meta.env?.VITE_BACKEND_MODE ?? 'mock';
+const requestedBackendMode = runtime.backendMode ?? import.meta.env?.VITE_BACKEND_MODE;
+const configuredBackendMode = requestedBackendMode ?? (isCloudflareBuild ? 'rest' : 'mock');
+const backendMode =
+  isCloudflareBuild && configuredBackendMode === 'mock' ? 'unconfigured' : configuredBackendMode;
 
 export const config = Object.freeze({
   appVersion: '0.6.0',
   schemaVersion: 3,
-  previewMode: configuredBackendMode === 'mock',
-  backendMode: configuredBackendMode,
-  appEnvironment: runtime.appEnvironment ?? import.meta.env?.VITE_APP_ENV ?? 'development',
+  previewMode: backendMode === 'mock',
+  backendMode,
+  appEnvironment: runtime.appEnvironment ?? import.meta.env?.VITE_APP_ENV ?? (isCloudflareBuild ? buildMode : 'development'),
   bootstrapContractVersion: Number(
-    runtime.bootstrapContractVersion ?? import.meta.env?.VITE_BOOTSTRAP_CONTRACT_VERSION ?? 1,
+    runtime.bootstrapContractVersion ?? import.meta.env?.VITE_BOOTSTRAP_CONTRACT_VERSION ?? (isCloudflareBuild ? 2 : 1),
   ),
   compositeRequestsEnabled: booleanFlag(
     runtime.compositeRequestsEnabled ?? import.meta.env?.VITE_COMPOSITE_REQUESTS_ENABLED,

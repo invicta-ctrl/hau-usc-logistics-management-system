@@ -128,7 +128,7 @@ export function createGuidedDemoShareable(standalone) {
   );
   html = replaceRequired(
     html,
-    '<title>HAU-USC Logistics Prototype</title>',
+    '<title>HAU-USC Logistics</title>',
     '<title>HAU-USC Logistics - Guided Demo</title>',
     'document title',
   );

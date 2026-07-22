@@ -2768,7 +2768,7 @@ export function createRuntimeExtensions(options) {
     panel.className = 'role-experience panel section-gap';
     panel.hidden = true;
     panel.setAttribute('aria-live', 'polite');
-    overviewHero.after(panel);
+    overviewHero.before(panel);
     if (!roleExperienceObserver) {
       roleExperienceObserver = new MutationObserver(() => renderRoleExperience());
       roleExperienceObserver.observe(document.body, {

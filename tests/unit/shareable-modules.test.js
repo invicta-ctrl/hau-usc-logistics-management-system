@@ -4,7 +4,7 @@ import { shareableModules } from '../../scripts/shareable-module-registry.mjs';
 
 const fixture = `<!doctype html>
 <html lang="en">
-<head><title>HAU-USC Logistics Prototype</title></head>
+<head><title>HAU-USC Logistics</title></head>
 <body>
 <button class="active" data-view="overview">Overview</button>
 <button data-view="request">Request</button>

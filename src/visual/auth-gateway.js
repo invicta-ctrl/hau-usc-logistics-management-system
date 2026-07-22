@@ -22,6 +22,25 @@ function gatewayRoot() {
   return root;
 }
 
+const WORKSPACE_PATHS = Object.freeze({
+  administrator: '/app/admin',
+  director: '/app/director',
+  food: '/app/food',
+  'inventory-pantry': '/app/inventory',
+  materials: '/app/materials',
+});
+
+function authorizedWorkspacePath(user) {
+  return WORKSPACE_PATHS[user?.experienceId] ?? '/app/admin';
+}
+
+function routeAuthorizedWorkspace(user) {
+  const target = authorizedWorkspacePath(user);
+  if (location.pathname === '/login' || location.pathname === '/' || location.pathname.startsWith('/app/')) {
+    history.replaceState(null, '', target);
+  }
+}
+
 function setWorkspaceVisibility(authenticated) {
   document.querySelector('.app-shell')?.toggleAttribute('hidden', !authenticated);
   const loading = document.getElementById('loading');
@@ -50,6 +69,15 @@ function loginMarkup(error) {
         <button class="primary" type="submit">Sign in</button>
       </form>
       <p class="auth-help">Roles and committee access are assigned by the server. They cannot be selected here.</p>
+    </section>`;
+}
+
+function configurationMarkup() {
+  return `
+    <section class="auth-card" aria-labelledby="authTitle">
+      <p class="eyebrow">HAU-USC Logistics</p>
+      <h1 id="authTitle">Secure service unavailable</h1>
+      <p class="auth-intro">This deployment has no approved server runtime configuration. No local or preview data has been loaded.</p>
     </section>`;
 }
 
@@ -121,6 +149,13 @@ function attachSessionControls(client) {
 }
 
 export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestOnly, start }) {
+  document.body.dataset.runtimeMode = backendMode;
+  if (backendMode === 'unconfigured') {
+    const root = gatewayRoot();
+    setWorkspaceVisibility(false);
+    root.innerHTML = configurationMarkup();
+    return;
+  }
   if (backendMode !== 'rest' || requestOnly) {
     start();
     return;
@@ -132,6 +167,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const authenticated = (result) => {
     setAuthSession({ csrfToken: result.csrfToken, user: result.user });
     document.body.dataset.experience = result.user?.experienceId ?? '';
+    routeAuthorizedWorkspace(result.user);
     root.remove();
     setWorkspaceVisibility(true);
     start();

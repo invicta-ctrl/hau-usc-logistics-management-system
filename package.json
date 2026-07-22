@@ -6,7 +6,7 @@
   "scripts": {
     "extract:visual": "node scripts/extract-visual-baseline.mjs",
     "dev": "vite",
-    "build": "vite build && node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
+    "build": "vite build --mode preview && node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
     "build:cloudflare": "vite build --mode staging",
     "build:share": "node scripts/create-shareable.mjs",
     "verify:dist": "node scripts/verify-dist.mjs",

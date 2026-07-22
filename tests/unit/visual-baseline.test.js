@@ -50,16 +50,19 @@ describe('authoritative visual extraction', () => {
     expect(withoutGeneratedNotice(`<!-- unrelated -->\n${markup}`)).toBe(`<!-- unrelated -->\n${markup}`);
   });
 
-  it('preserves the original body markup across shell and view modules', async () => {
+  it('preserves immutable operational views while allowing a server-authorized shell', async () => {
     const source = await read('legacy/HAU-USC_Logistics-Prototype.original.html');
     const originalBody = source.match(/<body>([\s\S]*?)<\/body>/i)[1];
-    const originalMarkup = originalBody.replace(/\s*<script>[\s\S]*?<\/script>\s*$/i, '');
-    const fragments = await Promise.all([
+    const [shell, ...views] = await Promise.all([
       read('src/visual/shell-before.html'),
       ...viewIds.map((id) => read(`src/visual/views/${id}.html`)),
-      read('src/visual/shell-after.html'),
     ]);
-    expect(compact(fragments.map(withoutGeneratedNotice).join(''))).toBe(compact(originalMarkup));
+    for (const view of views) {
+      expect(compact(originalBody)).toContain(compact(withoutGeneratedNotice(view)));
+    }
+    expect(shell).toContain('data-runtime-label');
+    expect(shell).not.toContain('Front-end preview');
+    expect(shell).not.toContain('Reset Demo Data');
   });
 
   it('preserves the original CSS cascade across ordered modules', async () => {
@@ -108,9 +111,8 @@ describe('authoritative visual extraction', () => {
     expect(runtime).toContain('BOOTSTRAP_STAGES.ACTIVE_MODULE');
     expect(runtime).toContain('function renderActiveModule()');
     expect(runtime).toContain('Reset Demo Data is available only in local preview mode.');
-    expect(runtime).toContain('reset.hidden=true;reset.disabled=true;reset.tabIndex=-1');
     expect(runtime).toContain(
-      "if(backendMode==='mock')byId('resetDemo').addEventListener('click',resetDemoData)",
+      "if(backendMode==='mock')byId('resetDemo')?.addEventListener('click',resetDemoData)",
     );
     expect(runtime).toContain('state.catalogAvailabilityProtected||item.availabilityProtected');
     expect(runtime).toContain("fulfillmentSource:'PENDING_REVIEW'");
