@@ -236,3 +236,64 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
   await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
 });
+
+test('public Request Center opens without login and returns private tracking details', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One mobile browser proves the Phase 3 public boundary.');
+  let authCalls = 0;
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
+  });
+  await page.route('**/api/auth/**', (route) => {
+    authCalls += 1;
+    return route.abort();
+  });
+  await page.route('**/api/public/request/options', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        categories: ['Inventory Item', 'Food', 'Materials', 'Venue / Facility', 'Logistics / Equipment', 'Other'],
+        items: [{ id: 'ITM-SYNTHETIC', name: 'Synthetic Supply', category: 'Office', unit: 'piece' }],
+        events: [{ id: 'EVT-SYNTHETIC', name: 'Synthetic Approved Event' }],
+        references: [],
+      }),
+    }),
+  );
+  await page.route('**/api/public/request', async (route) => {
+    const command = await route.request().postDataJSON();
+    expect(command.lines).toHaveLength(1);
+    expect(command.lines[0]).toMatchObject({ itemId: 'ITM-SYNTHETIC', quantity: 2 });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        requestId: 'REQ-SYNTHETIC-PUBLIC',
+        trackingCode: 'synthetic-private-tracking-code-9472',
+        status: 'FOR_REVIEW',
+      }),
+    });
+  });
+
+  await page.goto('/request');
+  await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+  await expect(page.getByLabel('Access ID')).toHaveCount(0);
+  expect(authCalls).toBe(0);
+  const requestForm = page.locator('#publicRequestForm');
+  await requestForm.getByLabel('Full name').fill('Synthetic Public Requester');
+  await requestForm.getByLabel('Organization / department').fill('Synthetic Organization');
+  await requestForm.getByLabel('Contact number').fill('+63 917 000 0010');
+  await requestForm.getByLabel('Email address').fill('public@example.invalid');
+  await requestForm.getByLabel('Approved event / sub-event').selectOption('EVT-SYNTHETIC');
+  await requestForm.getByLabel('Purpose / justification').fill('Synthetic browser submission proof.');
+  await requestForm.getByLabel('Approved inventory item').selectOption('ITM-SYNTHETIC');
+  await requestForm.getByLabel('Quantity').fill('2');
+  await requestForm.getByRole('button', { name: 'Add to requested items' }).click();
+  await expect(requestForm.locator('.public-request-line')).toContainText('Synthetic Supply');
+  await expect(requestForm.locator('.public-request-line')).toContainText('2 piece');
+  await requestForm.getByRole('button', { name: 'Submit request for review' }).click();
+  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
+  await expect(page.getByText('REQ-SYNTHETIC-PUBLIC')).toBeVisible();
+  await expect(page.getByText('synthetic-private-tracking-code-9472')).toBeVisible();
+});

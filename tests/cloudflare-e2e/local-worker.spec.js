@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '10' },
+    database: { connected: true, schemaVersion: '11' },
   });
 
   await page.goto('/');
@@ -89,6 +89,100 @@ test('unknown credentials return the safe authentication error instead of a serv
     code: 'AUTHENTICATION_FAILED',
     message: 'The Access ID or password is incorrect.',
   });
+});
+
+test('public Request Center submits and tracks one private request without staff credentials', async ({
+  request,
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  await login(admin, 'LOCAL.ADMIN');
+  const options = await request.get('/api/public/request/options');
+  expect(options.status()).toBe(200);
+  const optionData = await options.json();
+  expect(optionData.categories).toEqual([
+    'Inventory Item',
+    'Food',
+    'Materials',
+    'Venue / Facility',
+    'Logistics / Equipment',
+    'Other',
+  ]);
+  expect(optionData.items[0]).not.toHaveProperty('availableToPromise');
+  expect(optionData.items[0]).not.toHaveProperty('storageLocation');
+  const inventoryBefore = await (await admin.get('/api/inventory')).json();
+  const balanceBefore = inventoryBefore.data.inventoryItems.find(
+    (item) => item.id === optionData.items[0].id,
+  ).onHand;
+
+  const crossOrigin = await request.post('/api/public/request', {
+    headers: { origin: 'https://cross-origin.example.invalid' },
+    data: { clientRequestId: `cross-origin-${crypto.randomUUID()}` },
+  });
+  expect(crossOrigin.status()).toBe(403);
+
+  const clientRequestId = `public-request-${crypto.randomUUID()}`;
+  const command = {
+    requesterName: 'Synthetic Public Requester',
+    organization: 'Synthetic Organization',
+    contactNumber: '+63 917 000 0010',
+    email: `public-${crypto.randomUUID()}@example.invalid`,
+    eventId: optionData.events[0]?.id ?? '',
+    startDate: '2026-08-01',
+    endDate: '2026-08-02',
+    purpose: 'Synthetic public request acceptance proof.',
+    lines: [
+      {
+        category: 'Inventory Item',
+        itemId: optionData.items[0].id,
+        quantity: 2,
+        specification: 'Synthetic request only; no stock movement.',
+      },
+      { category: 'Other', description: 'Synthetic custom support', quantity: 1, unit: 'service' },
+    ],
+    clientRequestId,
+  };
+  const submitted = await request.post('/api/public/request', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: command,
+  });
+  expect(submitted.status()).toBe(200);
+  const receipt = await submitted.json();
+  expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
+  expect(receipt.requestId).toMatch(/^REQ-/u);
+  expect(receipt.trackingCode.length).toBeGreaterThan(32);
+
+  const replay = await request.post('/api/public/request', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: command,
+  });
+  await expect(replay.json()).resolves.toMatchObject({
+    requestId: receipt.requestId,
+    trackingCode: receipt.trackingCode,
+    replayed: true,
+  });
+
+  const tracked = await request.post('/api/public/request/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
+  });
+  expect(tracked.status()).toBe(200);
+  const tracking = await tracked.json();
+  expect(tracking.request).toMatchObject({ id: receipt.requestId, status: 'FOR_REVIEW' });
+  expect(tracking.request.lines).toHaveLength(2);
+  expect(tracking.request).not.toHaveProperty('requesterEmail');
+  const inventoryAfter = await (await admin.get('/api/inventory')).json();
+  expect(
+    inventoryAfter.data.inventoryItems.find((item) => item.id === optionData.items[0].id).onHand,
+  ).toBe(balanceBefore);
+
+  const denied = await request.post('/api/public/request/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: receipt.requestId, trackingCode: 'invalid-private-code' },
+  });
+  expect(denied.status()).toBe(404);
+  expect((await request.get('/api/requests')).status()).toBe(401);
+  await admin.dispose();
 });
 
 for (const [accessId, experience] of roles) {

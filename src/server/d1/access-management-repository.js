@@ -121,7 +121,7 @@ export function createD1AccessManagementRepository(db) {
     },
 
     async listAccounts({ query, role, committee, status, sort, direction, page, pageSize }) {
-      const conditions = [];
+      const conditions = ["a.id NOT LIKE 'SYSTEM-%'"];
       const bindings = [];
       const bind = (value) => {
         bindings.push(value);

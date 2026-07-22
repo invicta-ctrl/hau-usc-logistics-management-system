@@ -14,6 +14,7 @@ const SAFE_MESSAGES = Object.freeze({
   ADMINISTRATOR_REQUIRED: 'Administrator access is required.',
   LAST_ACTIVE_ADMIN_PROTECTED: 'The last active Administrator cannot be disabled or reset.',
   SELF_ACCESS_CHANGE_BLOCKED: 'You cannot disable or reset your own account.',
+  SYSTEM_ACCOUNT_PROTECTED: 'System-managed accounts cannot be changed through Access Management.',
   STARTER_ASSIGNMENT_INVALID: 'The starter account role or committee assignment is invalid.',
   TEMPORARY_PASSWORD_INVALID: 'The temporary password does not meet the password policy.',
 });
@@ -99,6 +100,7 @@ export function createAccessManagementService({
     const accessId = normalizeAccessId(value);
     const account = accessId ? await repository.getAccountByAccessId(accessId) : null;
     if (!account) fail('ACCESS_ACCOUNT_NOT_FOUND', 404);
+    if (String(account.id).startsWith('SYSTEM-')) fail('SYSTEM_ACCOUNT_PROTECTED', 403);
     return account;
   }
 

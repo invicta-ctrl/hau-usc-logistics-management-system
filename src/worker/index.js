@@ -9,6 +9,7 @@ import { createD1AccessManagementRepository } from '../server/d1/access-manageme
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
+import { createPublicRequestService } from '../server/public-request-service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -104,6 +105,20 @@ async function body(request) {
   }
 }
 
+function assertPublicMutationOrigin(request) {
+  const url = new URL(request.url);
+  const origin = request.headers.get('origin');
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if ((origin && origin !== url.origin) || fetchSite === 'cross-site') {
+    throw new ApiError('PUBLIC_ORIGIN_REJECTED', 'The public request origin is not allowed.', {
+      status: 403,
+    });
+  }
+  if (!String(request.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) {
+    throw new ApiError('INVALID_CONTENT_TYPE', 'Public requests require JSON.', { status: 415 });
+  }
+}
+
 function json(value, status = 200, additionalHeaders = {}) {
   return new Response(JSON.stringify(value), {
     status,
@@ -135,7 +150,15 @@ function services(env) {
     appVersion: env.APP_VERSION ?? '0.6.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
   });
-  return { access, auth, operations };
+  const publicRequests = createPublicRequestService({
+    db: env.DB,
+    trackingSecret:
+      env.TRACKING_LINK_SECRET ??
+      (String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase() === 'DEVELOPMENT'
+        ? 'development-only-public-tracking-secret-9472'
+        : ''),
+  });
+  return { access, auth, operations, publicRequests };
 }
 
 async function authorize(request, auth, capability, { mutation = false } = {}) {
@@ -189,7 +212,7 @@ async function health(env, requestId, readiness = false) {
 
 async function handleApi(request, env, requestId) {
   const url = new URL(request.url);
-  const { access, auth, operations } = services(env);
+  const { access, auth, operations, publicRequests } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
     if (url.pathname === '/api/readiness' && request.method === 'GET') {
@@ -197,6 +220,29 @@ async function handleApi(request, env, requestId) {
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
+    }
+    if (url.pathname === '/api/public/request/options' && request.method === 'GET') {
+      return json({ ...(await publicRequests.options()), correlationId: requestId });
+    }
+    if (url.pathname === '/api/public/request' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.submit({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
     }
     if (url.pathname === '/api/session') {
       const alias = new Request(new URL('/api/auth/session', url), {

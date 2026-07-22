@@ -159,4 +159,26 @@ describe('access management service', () => {
     });
     expect(repository.listAccounts).not.toHaveBeenCalled();
   });
+
+  it('blocks changes to system-managed accounts', async () => {
+    const target = account({
+      id: 'SYSTEM-PUBLIC-REQUEST',
+      accessIdNormalized: 'SYSTEM.PUBLIC.REQUEST',
+      status: ACCOUNT_STATUS.REVOKED,
+    });
+    const { service, repository } = context({ accounts: [target] });
+
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          status: ACCOUNT_STATUS.ACTIVE,
+          reason: 'Synthetic attempt to activate a protected system account.',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'SYSTEM_ACCOUNT_PROTECTED', status: 403 });
+    expect(repository.setAccountStatus).not.toHaveBeenCalled();
+  });
 });

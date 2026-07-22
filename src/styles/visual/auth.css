@@ -196,11 +196,57 @@
 .borrower-ticket div { display: grid; gap: 0.35rem; }
 .borrower-ticket small { color: #655854; }
 
+.public-request-portal { min-height: 100vh; padding: clamp(1rem, 3vw, 2.5rem); color: #382725; }
+.public-portal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 auto 1rem;
+  padding: 1.25rem 1.4rem;
+  max-width: 86rem;
+  border: 1px solid rgba(119, 80, 13, 0.22);
+  border-radius: 1.25rem;
+  background: #fffdf8;
+  box-shadow: 0 1rem 2.5rem rgba(32, 5, 7, 0.16);
+}
+.public-portal-header h1 { margin: 0.2rem 0; color: #5e0d12; font-family: Georgia, 'Times New Roman', serif; }
+.public-portal-header p { margin: 0; }
+.public-portal-header nav { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.public-request-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.7fr); gap: 1rem; max-width: 86rem; margin: auto; align-items: start; }
+.public-request-form, .public-request-aside { display: grid; gap: 1rem; }
+.public-request-aside { position: sticky; top: 1rem; }
+.public-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+.public-form-grid label, .public-composer > label, [data-line-fields] > label, .public-line-pair label { display: grid; gap: 0.35rem; font-weight: 700; }
+.public-form-grid .span-2 { grid-column: 1 / -1; }
+.public-composer, .public-request-lines { display: grid; gap: 0.8rem; padding: 1rem; border: 1px solid #e4d6bd; border-radius: 0.8rem; background: #fffaf2; }
+[data-line-fields] { display: grid; gap: 0.75rem; }
+.public-line-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.public-reference-choices { display: grid; gap: 0.55rem; margin: 0; padding: 0.8rem; border: 1px solid #d8c49f; border-radius: 0.7rem; }
+.public-check { display: flex; align-items: start; gap: 0.65rem; padding: 0.65rem; border: 1px solid #e4d6bd; border-radius: 0.6rem; background: #fff; cursor: pointer; }
+.public-check input { width: 1.2rem; height: 1.2rem; margin: 0.1rem 0 0; accent-color: #78151b; }
+.public-check span { display: grid; gap: 0.1rem; }
+.public-check small { color: #655854; }
+.public-request-line { display: flex; align-items: start; justify-content: space-between; gap: 0.75rem; padding: 0.75rem; border-bottom: 1px solid #eadfc9; }
+.public-request-line span { display: grid; gap: 0.2rem; }
+.public-request-line small { color: #655854; }
+.public-tracking-receipt { margin: 1rem auto; padding: 1.25rem; max-width: 86rem; border: 2px solid #c69a3d; border-radius: 1rem; background: #fffdf8; box-shadow: 0 1rem 2rem rgba(32, 5, 7, 0.16); }
+.public-tracking-receipt p { display: grid; gap: 0.25rem; }
+.public-tracking-receipt code { overflow-wrap: anywhere; padding: 0.5rem; border-radius: 0.4rem; background: #f4e9d8; }
+.public-track-result { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e4d6bd; }
+.public-track-result ul { padding-left: 1.2rem; }
+.public-privacy-note p { margin-bottom: 0; }
+
 @media (max-width: 760px) {
   .borrower-portal { padding: 0.85rem; }
   .borrower-portal-header, .borrower-ticket { display: grid; }
   .borrower-profile { justify-items: start; text-align: left; }
   .borrower-grid { grid-template-columns: 1fr; }
+  .public-request-portal { padding: 0.75rem; }
+  .public-portal-header { display: grid; }
+  .public-request-layout, .public-form-grid { grid-template-columns: 1fr; }
+  .public-form-grid .span-2 { grid-column: auto; }
+  .public-request-aside { position: static; }
 }
 
 @media (max-width: 640px) {

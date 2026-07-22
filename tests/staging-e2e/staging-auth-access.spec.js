@@ -62,8 +62,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '10',
-        latestMigration: '0010_verified_login_email.sql',
+        schemaVersion: '11',
+        latestMigration: '0011_public_request_tracking.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -274,5 +274,71 @@ test('deployed staging authentication and Access Management remain operational',
       }
     }
     await Promise.all([targetRequest.dispose(), freshTargetRequest.dispose(), anonymousRequest.dispose()]);
+  }
+});
+
+test('deployed staging public Request Center submits and privately tracks without login', async ({
+  page,
+  baseURL,
+}) => {
+  const owner = await ownerCredential();
+  const publicRequest = await apiRequest.newContext({ baseURL });
+  const adminRequest = await apiRequest.newContext({ baseURL });
+  try {
+    await login(adminRequest, owner.accessId, owner.password);
+    const optionsResponse = await publicRequest.get('/api/public/request/options');
+    expect(optionsResponse.status()).toBe(200);
+    const options = await optionsResponse.json();
+    expect(options.items.length).toBeGreaterThan(0);
+    expect(options.items[0]).not.toHaveProperty('onHand');
+    expect(options.items[0]).not.toHaveProperty('storageLocation');
+
+    const item = options.items[0];
+    const before = await (await adminRequest.get('/api/inventory')).json();
+    const balanceBefore = before.data.inventoryItems.find((entry) => entry.id === item.id).onHand;
+    const unique = `${Date.now().toString(36)}-${randomBytes(5).toString('hex')}`;
+    const submitted = await publicRequest.post('/api/public/request', {
+      headers: { origin: new URL(baseURL).origin },
+      data: {
+        requesterName: 'Authorized Synthetic Public Requester',
+        organization: 'Authorized Synthetic Staging Proof',
+        contactNumber: '+63 917 000 0010',
+        email: `public-${unique}@example.invalid`,
+        purpose: 'Authorized synthetic no-login request and private tracking staging proof.',
+        lines: [
+          {
+            category: 'Inventory Item',
+            itemId: item.id,
+            quantity: 1,
+            specification: 'Synthetic staging proof; no physical stock movement.',
+          },
+        ],
+        clientRequestId: `staging-public-request-${unique}`,
+      },
+    });
+    expect(submitted.status()).toBe(200);
+    const receipt = await submitted.json();
+    expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
+    expect(receipt.trackingCode.length).toBeGreaterThan(32);
+
+    const tracked = await publicRequest.post('/api/public/request/track', {
+      headers: { origin: new URL(baseURL).origin },
+      data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
+    });
+    expect(tracked.status()).toBe(200);
+    const tracking = await tracked.json();
+    expect(tracking.request).toMatchObject({ id: receipt.requestId, status: 'FOR_REVIEW' });
+    expect(tracking.request).not.toHaveProperty('requesterEmail');
+    expect(tracking.request).not.toHaveProperty('contactNumber');
+
+    const after = await (await adminRequest.get('/api/inventory')).json();
+    expect(after.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
+
+    await page.goto('/request');
+    await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+    await expect(page.getByLabel('Access ID')).toHaveCount(0);
+    await expect(page.locator('.app-shell')).toBeHidden();
+  } finally {
+    await Promise.all([publicRequest.dispose(), adminRequest.dispose()]);
   }
 });
