@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Food experience (2026-07-22)
+
+### Added
+
+- A deadline-first Food layer inside the shared overview, with food-line, sourcing/budget, cumulative receiving, and controlled-distribution signals derived from current runtime state.
+- Governed Food action links into the existing Request Center, Procurement & Deliverables, Release Desk, and Inventory workspaces.
+- Food-specific digest decisions and focused unit/mobile/desktop browser coverage.
+
+### Verified
+
+- Focused role unit tests pass 2 / 2; Food responsive browser proof passes 2 / 4 intentional skips at 390px and 1366px; `npm run check` passes with 46 Vitest files / 343 tests, deterministic build/parity, Apps Script validation, and standalone verification.
+
 ## Unreleased - v0.6 Phase 2 Director experience (2026-07-22)
 
 ### Added

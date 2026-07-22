@@ -2,6 +2,11 @@
 
 ## Current resume block
 
+- **Food checkpoint:** code milestone `a6bcd7e3be934479496ce6fc05e43903989420a0` implements the S0002 Food experience inside the shared role layer. `Food.html` was read at SHA-256 `0f15dd3c493b471572d3ad417edca6356b691c6d8247e624314871ffbc6f2390` and its durable decisions were appended to `.codex/DESIGN_REFERENCE_DIGEST.md`.
+- **Food scope and boundaries:** deadline-first food requirements, sourcing/budget, cumulative receiving, and release-readiness signals lead to existing shared workspaces. The orange accent and Food ownership grant no authority; procurement, receiving, evidence, and controlled distribution remain server-owned.
+- **Food verification:** focused role unit tests pass 2 / 2; Food responsive browser proof passes 2 / 4 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with governance, lint, 46 Vitest files / 343 tests, deterministic build/parity, Apps Script validation, and standalone verification. `dist/index.html` is 440,545 bytes / SHA-256 `cfa862f01e0f3b437836533dd337b6593b3ca8287b466c399ae6fa9c31f0946f`.
+- **Next action:** push the Food checkpoint and verify PR #9 CI, then read only `INVENTORY.html` and begin the authorized Inventory & Pantry role slice.
+
 - **Director checkpoint:** code milestone `c54d68af372865be272eda0331f8258b7d84858f` implements the S0002 Director experience inside the existing shared shell. `DIRECTOR.html` was read at SHA-256 `e2bb882de9bd53598b8a4b5d3886183a37e5731175b4615e8772521a8990b072` and its durable decisions were appended to `.codex/DESIGN_REFERENCE_DIGEST.md`.
 - **Director scope and boundaries:** server-derived event-series, leadership-decision, blocker, and release-readiness signals lead to existing shared workspaces. The bounded Management & Access explanation creates no client authorization, configuration, service, transaction, ledger, or environment path.
 - **Director verification:** focused role unit tests pass 2 / 2; `tests/e2e/role-experiences.spec.js` passes 2 / 4 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with governance, lint, 46 Vitest files / 342 tests, deterministic build/parity, Apps Script validation, and standalone verification. `dist/index.html` is 438,742 bytes / SHA-256 `5ac5b62cb5852000a14e0b4630dece6142e81cbad55b90332835bb6d38d9f3de`.

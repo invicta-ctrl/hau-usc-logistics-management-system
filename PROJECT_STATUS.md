@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 2 active - Food experience checkpointed
+
+- Phase/stage: `PHASE_2_FOOD_EXPERIENCE_CHECKPOINTED` at code commit `a6bcd7e3be934479496ce6fc05e43903989420a0`.
+- Delivered: the S0002 Food reference was read in isolation and recorded in `.codex/DESIGN_REFERENCE_DIGEST.md`; the shared role layer now presents deadline-first food requirements, sourcing/budget, cumulative receiving, and controlled-distribution signals with links into existing shared workspaces.
+- Boundaries: the orange accent and Food ownership communicate scope only. Procurement, receiving, evidence, and Release Desk authority remain capability-bound and server-validated; no service, transaction, ledger, or authorization contract changed.
+- Verification: focused role unit tests pass 2 / 2; Food responsive browser proof passes 2 / 4 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with 46 Vitest files / 343 tests, build/parity/package verification, and Apps Script validation.
+- Next action: push and verify this checkpoint, then begin only the authorized Inventory & Pantry role slice.
+
 ## v0.6 Phase 2 active - Director experience checkpointed
 
 - Phase/stage: `PHASE_2_DIRECTOR_EXPERIENCE_CHECKPOINTED` at code commit `c54d68af372865be272eda0331f8258b7d84858f`.
