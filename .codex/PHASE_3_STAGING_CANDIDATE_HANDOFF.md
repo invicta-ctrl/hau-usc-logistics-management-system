@@ -7,8 +7,9 @@ This is a partial Phase 3 handoff. It is not the Phase 3 completion handoff and 
 - Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 - Branch: `chore/v0.6-codex-continuity-bootstrap`
 - Verified Phase 2 predecessor/handoff: `38a86069039ef18081aaa0e1c1fe2c25acde6613`
-- Phase 3 candidate commit: pending exact freeze commit
-- Pull request: draft PR #9; final candidate head and CI must be verified after push
+- Phase 3 candidate commit: `62abc6d1e1d6b3079e8508381b7c336c636080e5`
+- Exact implementation range: `38a86069039ef18081aaa0e1c1fe2c25acde6613..62abc6d1e1d6b3079e8508381b7c336c636080e5`
+- Pull request: draft PR #9 was open and mergeable at the exact candidate head on 2026-07-22; `validate` (24s), `verify` (36s), `build` (40s), `report-build-status` (3s), automatic `deploy` (9s), and `browser-smoke` (3m14s) all passed
 
 ## Completed repository/local scope
 
@@ -18,7 +19,7 @@ This is a partial Phase 3 handoff. It is not the Phase 3 completion handoff and 
 - Local Cloudflare proof: same-origin SPA/API/readiness under workerd, first-login activation/logout, request-only sanitization, D1 reads/writes, five real Chromium role routes, privileged-family denial, cross-committee denial/filtering, fail-closed evidence behavior, and fictional outside-Git migration dry run.
 - Documentation: Cloudflare architecture, Google sidecar, D1 migration/rollback, local acceptance, launch gates, canonical pointers, and private authorization tooling.
 
-## Candidate evidence before commit
+## Frozen candidate evidence
 
 - Repository acceptance: `npm run check` passed with 52 Vitest files / 369 tests and the complete build, Apps Script, standalone, Cloudflare type, and dry-run gates.
 - Browser acceptance: local workerd/D1 10 / 10; complete repository Playwright 90 passed / 204 intentional skips / 0 failed.
@@ -36,7 +37,7 @@ This is a partial Phase 3 handoff. It is not the Phase 3 completion handoff and 
 
 ## Smallest safe next action
 
-After the exact candidate is committed, pushed, and green in PR #9, create the outside-Git package:
+Create the outside-Git package bound to exact candidate `62abc6d1e1d6b3079e8508381b7c336c636080e5`:
 
 ```powershell
 npm run phase3:authorization:init -- <absolute-private-json-path>

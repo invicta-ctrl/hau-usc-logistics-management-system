@@ -11,7 +11,13 @@ Active branch:
 Latest verified Phase 2 handoff checkpoint:
 `38a86069039ef18081aaa0e1c1fe2c25acde6613`
 
-The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, and the exact candidate named by the Phase 3 candidate handoff. Never infer remote deployment or Google migration from repository completion.
+Exact pushed Phase 3 repository/local candidate:
+`62abc6d1e1d6b3079e8508381b7c336c636080e5`
+
+Exact Phase 3 implementation range:
+`38a86069039ef18081aaa0e1c1fe2c25acde6613..62abc6d1e1d6b3079e8508381b7c336c636080e5`
+
+The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, and the exact candidate named by the Phase 3 candidate handoff. The candidate commit is pushed and all six PR checks passed on 2026-07-22. Never infer remote deployment or Google migration from repository completion.
 
 Preserved rollback checkpoints:
 
@@ -71,7 +77,7 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 
 Smallest safe next action:
 
-- After the exact local candidate is committed, pushed, and green in PR #9, create and approve the required outside-Git Phase 3 authorization package bound to that commit and its artifact/migration hashes. Validate Gate B before the first remote Cloudflare or Google read.
+- Create and approve the required outside-Git Phase 3 authorization package bound to `62abc6d1e1d6b3079e8508381b7c336c636080e5` and its artifact/migration hashes. Validate Gate B before the first remote Cloudflare or Google read.
 
 Reference bundle verified present on 2026-07-21:
 

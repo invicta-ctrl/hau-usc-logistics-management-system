@@ -22,6 +22,7 @@
 - `npm run check`: 52 Vitest files / 369 tests with all repository, generated-artifact, Apps Script, Cloudflare type, and dry-run gates passing.
 - Local workerd/D1 Chromium: 10 / 10; full repository Playwright: 90 passed / 204 intentional skips / 0 failed.
 - `dist/index.html`: 455,685 bytes / SHA-256 `d78f4fc3c741e67349b60d8fe3615767767db0ef55d98acf58243d4aaa5e1782`.
+- Frozen code candidate `62abc6d1e1d6b3079e8508381b7c336c636080e5` is pushed and matched draft PR #9; all six remote checks passed on 2026-07-22.
 
 ### Boundary
 

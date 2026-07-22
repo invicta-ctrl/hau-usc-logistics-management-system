@@ -5,8 +5,9 @@
 - Phase/stage: `PHASE_3_LOCAL_CANDIDATE_VERIFIED_PRIVATE_GATE_REQUIRED`; Phase 2 predecessor/handoff is `38a86069039ef18081aaa0e1c1fe2c25acde6613`; partial handoff: `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`.
 - Delivered locally: Workers Static Assets and same-origin API routing; D1 authentication, activation, sessions, logout, distributed rate limiting, operations, migrations, guards, scope, idempotency, import/reconciliation; read-only Sheet exporter; private authorization tooling; Cloudflare/Google/D1/rollback documentation.
 - Local evidence: workerd/D1 Chromium acceptance passes 10/10 across request-only privacy, all five role experiences, split allocation/release/lending, canvass/procurement/cumulative receiving, restock receiving, duplicate guards, and fail-closed evidence; repository acceptance passes with 52 Vitest files / 369 tests and full Playwright passes 90 / 204 intentional skips / 0 failures; a fictional outside-Git export imported twice and reconciled without duplication.
+- Frozen repository candidate: `62abc6d1e1d6b3079e8508381b7c336c636080e5`, exact range `38a86069039ef18081aaa0e1c1fe2c25acde6613..62abc6d1e1d6b3079e8508381b7c336c636080e5`; pushed at local/upstream/PR-head parity. Draft PR #9 was open and mergeable and all six checks passed on 2026-07-22.
 - External boundary: no Cloudflare/Google identity or target read, remote D1 access, deployment, approved Sheet export/import, Drive/evidence operation, staging workflow mutation, rollback rehearsal, production action, `main` update, or PR merge occurred.
-- Remaining gate: freeze/push/CI the exact candidate, then provide a valid outside-Git package matching its branch/SHA/artifact/migration hashes and approving Gate B. Until then Phase 3 and the working staging website remain incomplete.
+- Remaining gate: provide a valid outside-Git package matching the frozen candidate's branch/SHA/artifact/Worker/mapping/migration hashes and approving Gate B. Until then Phase 3 and the working staging website remain incomplete.
 
 ## v0.6 Phase 2 complete - ready for manual Phase 3 model switch
 
