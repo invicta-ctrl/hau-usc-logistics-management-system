@@ -45,6 +45,7 @@ test('deployed staging authentication and Access Management remain operational',
   const anonymousRequest = await apiRequest.newContext({ baseURL });
   const originalTargetAccessId = syntheticAccessId('A');
   const renamedTargetAccessId = originalTargetAccessId.replace(/\.A$/u, '.B');
+  const targetEmail = `${originalTargetAccessId.toLowerCase().replaceAll('.', '-')}@example.invalid`;
   const temporaryPassword = syntheticPassword('Temporary');
   const activatedPassword = syntheticPassword('Activated');
   let ownerCsrf = '';
@@ -146,7 +147,7 @@ test('deployed staging authentication and Access Management remain operational',
         profile: {
           fullName: 'Authorized Synthetic Staging Operator',
           mobileNumber: '+63 917 000 0002',
-          email: 'authorized-staging-smoke@example.invalid',
+          email: targetEmail,
         },
         password: activatedPassword,
         confirmPassword: activatedPassword,
@@ -154,6 +155,9 @@ test('deployed staging authentication and Access Management remain operational',
     });
     expect(activated.status()).toBe(200);
     expect((await targetRequest.get('/api/requests')).status()).toBe(200);
+    await expect(login(anonymousRequest, targetEmail, activatedPassword)).resolves.toMatchObject({
+      state: 'AUTHENTICATED',
+    });
 
     const search = page.locator('[name="accessSearch"]');
     await search.fill(originalTargetAccessId);
