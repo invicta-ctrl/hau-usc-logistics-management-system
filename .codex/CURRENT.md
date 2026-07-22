@@ -1,13 +1,14 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 1 — Cloudflare operations foundation
+Phase: Phase 2 — Modern HAU-inspired staff login
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 0 RECONCILED; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 1 STAGING FOUNDATION ACCEPTED; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
-Reconciled starting HEAD: `a3059a8264aa74bc1f5ec0113cc59826a62cf2ff`
+Phase 1 deployed runtime: `8b4af047642e6db6f0314ce70bfb611ed8c7679d`
+Phase 1 test-only follow-up: `1ddfb9a8a67d201d98af7cbc622e9067f4e3b93f`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -31,10 +32,20 @@ The v0.7.0 master prompt supersedes the earlier v0.6 phase-stop and production-g
 - The five supplied role HTML files exactly match `.codex/DESIGN_REFERENCE_DIGEST.md`; their large contents were not reread.
 - A verified all-ref preservation bundle exists outside Git at `%USERPROFILE%\.hau-usc-private\v0.7.0-launch\pre-v0.7.0-all-refs.bundle`, SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93`.
 
+## Phase 1 completion
+
+- Distinct staging and production D1 databases and R2 buckets exist. The production Worker name/configuration is reserved but no production code/version/traffic was uploaded.
+- Private v0.7 staging and production Wrangler configs pass the fail-closed separation preflight outside Git.
+- Staging has three protected secrets applied; the distinct production secret package exists outside Git but is not applied before the production Worker exists.
+- The staging Worker is deployed with R2 `BRAND_ASSETS`, Workers Logs, sampled Traces, structured redacted correlation logging, protected password pepper support, and safe health/readiness/version endpoints.
+- Live staging reports application/release `0.7.0`, exact runtime `8b4af04`, D1 schema 9/migration 0009, R2 ready, protected configuration ready, and correlation headers.
+- `npm run check` passed with 56 Vitest files / 389 tests. The corrected fresh local Worker suite passed 15 / 15. Deployed auth/Access Management smoke passed 1 / 1 after a cache-race regression fix in the test harness.
+- Current PR CI for the test-only follow-up was still running when this checkpoint was prepared; verify the documentation checkpoint head before relying on remote acceptance.
+
 ## Current blockers and next action
 
-Production remains NO-GO. Phase 1 must create and prove strict staging/production separation, R2, observability, redacted correlation logging, safe version/readiness identity, required secret handling, and recovery preflight. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
+Production remains NO-GO. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
 
-One smallest safe next action: implement and test the Phase 1 repository foundation and fail-closed environment preflight, then configure the staging-only resources and verify them before any production resource mutation.
+One smallest safe next action: complete Phase 2 staff-login visual and functional acceptance against the deployed v0.7 staging foundation without changing authentication/authorization invariants.
 
 Durable evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

@@ -1,5 +1,14 @@
 # Project Status
 
+## v0.7.0 Phase 1 staging foundation accepted — Phase 2 active
+
+- Active specification: `.codex/specs/v0.7.0-production-master.md`; Phase 1 runtime `8b4af047642e6db6f0314ce70bfb611ed8c7679d` is deployed to staging.
+- Infrastructure: distinct staging/production D1 and R2 resources exist; the production Worker remains intentionally unuploaded. Private config separation passes; staging protected secrets, Logs, Traces, R2, correlation logging, and health/readiness/version are operational.
+- Verification: `npm run check` passes 56 Vitest files / 389 tests; fresh local Worker/D1 passes 15 / 15; deployed auth/Access Management passes 1 / 1.
+- Production remains NO-GO. Full product phases, staging operations acceptance, backup/rollback rehearsal, branch consolidation, final freeze, production authorization, merge/tag/release, production deployment, and smoke remain incomplete.
+- Approved inventory currently contains one canonical item. Approved future events and brand-asset registry rows are empty; event values must be obtained before final freeze rather than invented.
+- Next action: Phase 2 HAU-inspired staff-login acceptance, then continuous public Request/Lending and workspace completion.
+
 ## v0.6 Phase 3 active - local Cloudflare/D1 candidate verified; remote staging authorization required
 
 - Phase/stage: `PHASE_3_LOCAL_CANDIDATE_VERIFIED_PRIVATE_GATE_REQUIRED`; Phase 2 predecessor/handoff is `38a86069039ef18081aaa0e1c1fe2c25acde6613`; partial handoff: `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`.

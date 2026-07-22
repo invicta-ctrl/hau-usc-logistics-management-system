@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASE 1 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASE 1 STAGING FOUNDATION ACCEPTED**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -15,18 +15,22 @@ Decision: **PRODUCTION NO-GO — PHASE 1 ACTIVE**
 | Branch/PR inventory | `.codex/V0_7_BRANCH_INVENTORY.md` | INITIAL CLASSIFICATION COMPLETE |
 | Cloudflare auth | bundled Wrangler read-only inventory | PASS |
 | Staging Worker/D1 | provider inventory and live health | PRESENT / HEALTHY |
-| Production Worker/D1 | provider inventory | MISSING |
-| Staging/production R2 | provider inventory | MISSING |
-| Workers Logs/Traces | current private staging configuration | DISABLED |
-| Protected Cloudflare secrets | staging secret inventory | MISSING |
+| Production Worker/D1 | provider inventory | D1 PRESENT; Worker reserved/not uploaded |
+| Staging/production R2 | provider inventory | BOTH PRESENT AND DISTINCT |
+| Workers Logs/Traces | deployed staging configuration | ENABLED; live event sampling deferred to Phase 22 |
+| Protected Cloudflare secrets | staging provider inventory | 3 / 3 PRESENT; production package private/unapplied |
 | Google workbook | connector metadata read | 36 sheets readable |
 | Drive mappings | connector metadata read | 7 / 7 readable |
 | Canonical inventory | `01_ITEM_MASTER` bounded read | 1 approved item |
 | Upcoming events | `13_EVENTS`, requests, composite requests | 0 approved rows — owner values required before freeze |
 | Brand asset registry | `21_BRANDING` | 0 rows |
 | Five role visual references | hashes match `.codex/DESIGN_REFERENCE_DIGEST.md` | PASS; large files not reread |
-| Phase 1 implementation/tests | pending | UNRUN |
-| v0.7 staging deployment/acceptance | pending | UNRUN |
+| Phase 1 repository acceptance | `npm run check` | PASS — 56 Vitest files / 389 tests plus all repository gates |
+| Fresh local Worker/D1 | self-managed Playwright config | PASS — 15 / 15 |
+| v0.7 Phase 1 staging deployment | runtime `8b4af047642e6db6f0314ce70bfb611ed8c7679d` | DEPLOYED / HEALTHY |
+| Staging health/readiness/version | cache-busted live probes | PASS — release 0.7.0, exact runtime, schema 9, R2 and protected config ready |
+| Staging auth/Access Management | deployed Playwright | PASS — 1 / 1 |
+| Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
 

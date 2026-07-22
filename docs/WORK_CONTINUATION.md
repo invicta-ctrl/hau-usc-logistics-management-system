@@ -1,5 +1,16 @@
 # Work Continuation
 
+## v0.7.0 continuous launch resume block
+
+- **Status:** Phase 1 staging foundation accepted; Phase 2 active; production NO-GO.
+- **Repository/runtime:** branch `chore/v0.6-codex-continuity-bootstrap`; deployed staging runtime `8b4af047642e6db6f0314ce70bfb611ed8c7679d`; test-only follow-up `1ddfb9a8a67d201d98af7cbc622e9067f4e3b93f`.
+- **Infrastructure:** staging/production D1 and R2 are distinct; the production Worker is not uploaded. Private config preflight passes. Staging has R2, protected secrets, Logs, sampled Traces, redacted request logs, correlation IDs, and safe health/readiness/version.
+- **Verification:** complete repository gate passed with 56 Vitest files / 389 tests; fresh local Worker/D1 15 / 15; live staging auth/Access Management 1 / 1.
+- **Recovery:** pre-deploy rollback input exists privately with SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52`; rehearsal is still mandatory in Phase 24.
+- **External data:** Google source and seven Drive mappings are readable; canonical inventory has one item; governed events and branding tables are empty.
+- **Resume:** verify Git/upstream/PR CI and cache-busted live SHA, then follow `.codex/CURRENT.md` and `.codex/specs/v0.7.0-production-master.md`. Continue Phase 2 without weakening authentication boundaries.
+- **Still prohibited:** production Worker upload/deploy, production data writes, merge/tag/release, and production smoke before their explicit master-prompt gates pass.
+
 ## Current Phase 3 resume block
 
 - **Status:** `PHASE_3_LOCAL_CANDIDATE_VERIFIED_PRIVATE_GATE_REQUIRED`; Phase 2 handoff `38a86069039ef18081aaa0e1c1fe2c25acde6613` remains the verified predecessor. This is not Phase 3 completion.

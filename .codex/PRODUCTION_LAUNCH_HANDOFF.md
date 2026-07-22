@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — CONTINUOUS REPAIR ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASE 1 STAGING FOUNDATION ACCEPTED**
 
 ## Phase 0 repository and remote truth
 
@@ -13,9 +13,9 @@ Decision: **PRODUCTION NO-GO — CONTINUOUS REPAIR ACTIVE**
 ## Provider and data truth
 
 - Cloudflare operator authentication is valid.
-- Existing: staging Worker and staging D1 only.
-- Missing: production Worker, production D1, staging R2, production R2.
-- Disabled/missing: Workers Logs, Traces, and protected environment secrets.
+- Existing: staging Worker; distinct staging/production D1 databases; distinct staging/production R2 buckets.
+- Production Worker: reserved in the validated private configuration; intentionally not uploaded or deployed before the final merged release exists.
+- Staging Workers Logs and sampled Traces are enabled. Three protected staging secrets are applied; a distinct production package is retained privately and unapplied.
 - Google workbook and seven governed Drive mappings are readable.
 - Approved item master: one canonical item.
 - Approved events: zero rows. Approved brand assets: zero rows.
@@ -34,21 +34,29 @@ Decision: **PRODUCTION NO-GO — CONTINUOUS REPAIR ACTIVE**
 | Milestone | State |
 | --- | --- |
 | 1. Git/PR/CI verified | PASS |
-| 2. Private v0.7 configs | IN PROGRESS |
-| 3. Cloudflare staging/production resources | BLOCKED ON IMPLEMENTATION |
+| 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
+| 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
 | 5. Backup | PENDING |
 | 6. Migrations | PENDING |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PENDING FOR v0.7 |
+| 8. Staging deployment | PASS FOR PHASE 1 runtime `8b4af04` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
 | 13. Production smoke | PENDING |
 
+## Phase 1 evidence
+
+- Repository gate: 56 Vitest files / 389 tests plus governance, lint, builds, generated parity, Apps Script verification, Cloudflare types, and dry-run passed.
+- Fresh local Worker/D1: 15 / 15 passed.
+- Live staging auth/Access Management smoke: 1 / 1 passed.
+- Health/readiness/version: HTTP 200, exact runtime, release 0.7.0, R2/protected configuration/D1 ready, correlation headers present.
+- Pre-deploy immutable rollback input hash: `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52`.
+
 ## Immediate repair target
 
-Implement Phase 1: strict resource-separation preflight, supported observability config, structured redacted correlation logging, R2 integration foundation, protected secrets, safe `/api/version`, and recovery evidence tooling. Configure staging first and prove no production binding before creating production resources.
+Complete Phase 2 staff-login acceptance and continue into the public no-login Request and Lending surfaces. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

@@ -13,6 +13,6 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 1 — Cloudflare operations foundation, observability, environment separation, R2, safe health/version identity, protected configuration, and recovery preflight.
+Phase 2 — modern HAU-inspired internal staff login, governed R2 background slot, accessible password visibility, activation/reset/session states, and preserved server-side authentication security.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

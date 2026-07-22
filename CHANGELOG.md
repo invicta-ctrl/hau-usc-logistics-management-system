@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 1 Cloudflare operations foundation (2026-07-22)
+
+### Added
+
+- Durable v0.7.0 production-completion specification, branch/PR inventory, and all-ref preservation evidence.
+- Distinct staging/production D1 and R2 resources, fail-closed private config separation, protected secret packages, R2 `BRAND_ASSETS`, Workers Logs, sampled Traces, redacted structured request logs, correlation headers, and `/api/version`.
+- Versioned password-pepper support that keeps explicit legacy hashes verifiable while all new protected hashes use the secret-managed pepper.
+- Self-contained fresh local Worker/D1 acceptance launcher.
+
+### Verified
+
+- `npm run check`: 56 Vitest files / 389 tests and every repository gate passed.
+- Fresh local Worker/D1 Playwright: 15 / 15 passed.
+- Live staging auth/Access Management: 1 / 1 passed.
+- Deployed runtime `8b4af04` reports STAGING, release 0.7.0, schema 9/migration 0009, D1/R2/protected configuration ready, and safe correlation IDs.
+
+### Boundary
+
+- Production Worker upload/deployment, production migrations/data, merge/tag/release, and production smoke remain gated by later phases.
+- The governed event source is empty; approved future event values are required once before final freeze and will not be invented.
+
 ## Unreleased - v0.6 Phase 3 Task 3 staging authentication/access repair (2026-07-22)
 
 ### Added
