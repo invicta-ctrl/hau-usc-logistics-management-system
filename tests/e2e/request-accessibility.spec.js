@@ -1,10 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { navigateToView } from './navigation.js';
 
 test('creates a request with keyboard autocomplete', async ({ page }, testInfo) => {
   test.skip(testInfo.project.use.viewport.width < 390, 'Run the full form once at practical mobile and desktop widths.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="request"]').click();
+  await navigateToView(page, 'request');
   const input = page.locator('#requestItemInput');
   await input.fill('ballpen');
   await expect(page.locator('#requestAutocomplete [role="option"]').first()).toBeVisible();
@@ -26,7 +27,7 @@ test('creates a request with keyboard autocomplete', async ({ page }, testInfo) 
 test('modal traps focus and restores it to the trigger', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="release"]').click();
+  await navigateToView(page, 'release');
   const trigger = page.getByRole('button', { name: 'Open Ticket' }).first();
   await trigger.focus();
   await trigger.click();
@@ -41,7 +42,7 @@ test('mobile inventory actions open an accessible ledger drawer', async ({ page 
   test.skip(testInfo.project.use.viewport.width >= 768, 'Mobile-specific behavior.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="inventory"]').click();
+  await navigateToView(page, 'inventory');
   const ledger = page.locator('.mobile-cards [data-inventory-action="history"]').first();
   await ledger.click();
   await expect(page.locator('#drawer[role="dialog"]')).toBeVisible();

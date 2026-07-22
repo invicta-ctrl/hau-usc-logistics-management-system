@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.6
 Phase: Phase 2 — TERRA
 Required model: GPT-5.6 Terra
-Status: READY FOR MANUAL MODEL SWITCH
+Status: ACTIVE
 
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
@@ -35,12 +35,13 @@ Phase 1 result:
 - verified governance, lint, 44 Vitest files / 340 tests, deterministic builds and generated parity, sensitive-file/token scans, and full Playwright with 73 passes / 143 intentional skips / 0 failures;
 - pushed implementation checkpoint `c07e6e6` to draft PR #9; remote `validate`, `verify`, and `browser-smoke` checks all pass.
 
-Phase 2 first bounded task:
-1. Start a new Codex task with GPT-5.6 Terra.
-2. Read `AGENTS.md`, this file, `.codex/PHASE_AND_CONTEXT_POLICY.md`, and the active Phase 2 specification.
-3. Perform the Git handshake and verify PR #9 at the actual remote head.
-4. Read the S0003 design-direction preview in full and create `.codex/DESIGN_REFERENCE_DIGEST.md`.
-5. Begin only the shared-shell/design-system work authorized by the Phase 2 specification. Read a role HTML reference only when implementing that role.
+Phase 2 shared-shell milestone (verified for checkpoint):
+- Verified the Phase 1 handoff at `d8af7bb4a5e986fc4dfd166ae664f5758c46a1fd`, clean and synchronized with `origin`; draft PR #9 remains open and its `validate`, `verify`, and `browser-smoke` checks are successful.
+- Read S0003 once and created `.codex/DESIGN_REFERENCE_DIGEST.md` with its SHA-256, source hierarchy, shared tokens, role accents, interaction grammar, mobile rules, prohibitions, and role placeholders.
+- Implemented the S0003 shared shell through the non-generated runtime extension: role-scoped accents, a compact mobile header, five primary mobile destinations, and an overflow panel for all remaining existing destinations. The mobile controls delegate to existing navigation and do not change authorization.
+- Preserved the immutable generated visual baseline and Phase 1 authentication, authorization, ledger, transaction, and rollback contracts. Rebuilt all derived artifacts through `npm run build`.
+- Verification: `npm run check` passed with 45 Vitest files / 341 tests; the complete `npx playwright test --reporter=dot` gate completed with `status: passed` (216 tests scheduled, no failed tests); `git diff --check` passed.
+- Next bounded slice: read only `ADMIN.html`, append Administrator-specific durable decisions to the digest, then implement only the Administrator experience within this shared system.
 
 Reference bundle verified present on 2026-07-21:
 - `ADMIN.html`

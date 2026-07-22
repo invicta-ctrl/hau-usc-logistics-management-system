@@ -334,6 +334,8 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let sharedMobileNav = null;
+  let sharedMobileMore = null;
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
 
@@ -1985,6 +1987,85 @@ export function createRuntimeExtensions(options) {
     setSyncStatus(navigator.onLine ? 'synced' : 'offline');
   };
 
+  const syncSharedMobileNav = () => {
+    if (!sharedMobileNav) return;
+    const activeView = document.querySelector('#primaryNav [data-view].active')?.dataset.view;
+    sharedMobileNav.querySelectorAll('[data-shared-mobile-view]').forEach((button) => {
+      const active = button.dataset.sharedMobileView === activeView;
+      button.classList.toggle('active', active);
+      button.toggleAttribute('aria-current', active);
+    });
+  };
+
+  const closeSharedMobileMore = () => {
+    if (!sharedMobileMore) return;
+    sharedMobileMore.hidden = true;
+    sharedMobileNav?.querySelector('[data-shared-mobile-more]')?.setAttribute('aria-expanded', 'false');
+  };
+
+  const installSharedMobileNav = () => {
+    if (isRequestOnly() || sharedMobileNav || document.querySelector('[data-shared-mobile-nav]')) return;
+    const primaryNav = document.querySelector('#primaryNav');
+    if (!primaryNav) return;
+    const views = [
+      ['overview', 'Overview', '⌂'],
+      ['request', 'Request', '+'],
+      ['lending', 'Lending', '⇄'],
+      ['release', 'Release', '✓'],
+      ['more', 'More', '•••'],
+    ];
+    sharedMobileNav = document.createElement('nav');
+    sharedMobileNav.className = 'shared-mobile-nav';
+    sharedMobileNav.dataset.sharedMobileNav = '';
+    sharedMobileNav.setAttribute('aria-label', 'Primary navigation');
+    sharedMobileNav.innerHTML = views
+      .map(
+        ([view, label, icon]) => view === 'more'
+          ? `<button type="button" data-shared-mobile-more aria-expanded="false" aria-controls="sharedMobileMore"><span aria-hidden="true">${icon}</span><small>${label}</small></button>`
+          : `<button type="button" data-shared-mobile-view="${view}" aria-label="Open ${label}"><span aria-hidden="true">${icon}</span><small>${label}</small></button>`,
+      )
+      .join('');
+    const primaryViews = new Set(views.map(([view]) => view));
+    const moreItems = [...primaryNav.querySelectorAll('button')]
+      .filter((button) => !primaryViews.has(button.dataset.view))
+      .map((button) => {
+        const view = button.dataset.view;
+        const adminView = button.dataset.adminView;
+        const label = button.querySelector('.nav-copy')?.textContent?.trim() || button.textContent.trim();
+        return `<button type="button" ${view ? `data-shared-more-view="${view}"` : ''} ${adminView ? `data-shared-more-admin="${adminView}"` : ''}>${label}</button>`;
+      })
+      .join('');
+    sharedMobileMore = document.createElement('section');
+    sharedMobileMore.id = 'sharedMobileMore';
+    sharedMobileMore.className = 'shared-mobile-more';
+    sharedMobileMore.hidden = true;
+    sharedMobileMore.setAttribute('aria-label', 'More logistics modules');
+    sharedMobileMore.innerHTML = `<div class="shared-mobile-more-head"><strong>More logistics modules</strong><button type="button" class="icon-button" data-shared-mobile-close aria-label="Close more navigation">×</button></div>${moreItems}`;
+    sharedMobileNav.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-shared-mobile-view]');
+      if (!button) return;
+      primaryNav.querySelector(`[data-view="${button.dataset.sharedMobileView}"]`)?.click();
+    });
+    sharedMobileNav.querySelector('[data-shared-mobile-more]').addEventListener('click', () => {
+      sharedMobileMore.hidden = false;
+      sharedMobileNav.querySelector('[data-shared-mobile-more]').setAttribute('aria-expanded', 'true');
+      sharedMobileMore.querySelector('button:not([data-shared-mobile-close])')?.focus();
+    });
+    sharedMobileMore.addEventListener('click', (event) => {
+      const close = event.target.closest('[data-shared-mobile-close]');
+      if (close) return closeSharedMobileMore();
+      const button = event.target.closest('[data-shared-more-view], [data-shared-more-admin]');
+      if (!button) return;
+      if (button.dataset.sharedMoreView)
+        primaryNav.querySelector(`[data-view="${button.dataset.sharedMoreView}"]`)?.click();
+      if (button.dataset.sharedMoreAdmin)
+        primaryNav.querySelector(`[data-admin-view="${button.dataset.sharedMoreAdmin}"]`)?.click();
+      closeSharedMobileMore();
+    });
+    document.body.append(sharedMobileNav, sharedMobileMore);
+    syncSharedMobileNav();
+  };
+
   const install = () => {
     installLocalFoodServices();
     installLocalMaterialsServices();
@@ -1994,6 +2075,7 @@ export function createRuntimeExtensions(options) {
     installMaterialsWorkflow();
     installVenueEquipmentWorkflow();
     installReferenceAdminWorkspace();
+    installSharedMobileNav();
     if (!isRequestOnly()) lending = createLendingController({ markFormClean });
     mountSyncUi();
     const statusFilter = document.querySelector('#inventoryStatusFilter');
@@ -2029,6 +2111,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const afterRender = () => {
+    syncSharedMobileNav();
     lending?.setItems(getState()?.inventoryItems ?? []);
     const catalogButton = document.querySelector('#adminCatalogException');
     if (catalogButton) {

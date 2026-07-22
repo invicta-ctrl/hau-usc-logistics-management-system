@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 shared shell and design system (2026-07-22)
+
+### Added
+
+- `.codex/DESIGN_REFERENCE_DIGEST.md`, recording the one-time S0003 source hash, source hierarchy, visual tokens, role accents, responsive rules, interaction grammar, prohibited patterns, and role-specific extraction placeholders.
+- A shared, accessible mobile navigation surface with primary destinations and a More panel that delegates to the existing role-scoped navigation rather than creating a separate application or permission path.
+- Focused unit and responsive E2E coverage for the shared shell and breakpoint-aware navigation.
+
+### Changed
+
+- Updated the non-generated visual runtime extension with the S0003 maroon/gold/paper system, role accent variables, compact mobile header, shared cards/status/actions, and safe bottom spacing for actionable content.
+- Regenerated the all-in-one, guided-demo, seven module-shareable, and Apps Script package artifacts through the documented build pipeline.
+
+### Verified
+
+- `npm run check` passed with 45 Vitest files / 341 tests, and `npx playwright test --reporter=dot` completed with `status: passed` (216 scheduled; no failed tests). Focused responsive proofs at 390, 768, and 1366px also pass; no deployment, migration, institutional-data write, access seed, PR merge, or production action occurred.
+
 ## Unreleased - v0.6 Phase 1 authentication and security foundation (2026-07-21)
 
 ### Added

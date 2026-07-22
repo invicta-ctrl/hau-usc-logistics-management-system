@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { navigateToAdminView } from './navigation.js';
 
 test('reference administration stays within the 320 px viewport', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-320', 'The smallest supported viewport is the regression target.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('[data-admin-view="referenceAdmin"]').click();
+  await navigateToAdminView(page, 'referenceAdmin');
   await expect(page.locator('#referenceAdmin')).toHaveClass(/active/);
   await expect.poll(
     () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
@@ -16,9 +17,7 @@ test('authorized administrator uses controlled reference workspace with before-a
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
 
-  const navigation = page.locator('[data-admin-view="referenceAdmin"]');
-  await expect(navigation).toBeVisible();
-  await navigation.click();
+  await navigateToAdminView(page, 'referenceAdmin');
   await expect(page.locator('#referenceAdmin')).toHaveClass(/active/);
   await expect(page.locator('#referenceAdminWorkspace')).toBeVisible();
   await expect(page.locator('[data-reference-admin-write-state]')).toContainText('Controlled writes enabled');
@@ -44,7 +43,7 @@ test('read-only roster ownership and second-review routing are visible', async (
   test.skip(testInfo.project.name !== 'chromium-390', 'One mobile policy proof is sufficient.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('[data-admin-view="referenceAdmin"]').click();
+  await navigateToAdminView(page, 'referenceAdmin');
   await page.locator('[name="referenceAdminDomain"]').selectOption('PEOPLE_MEMBERSHIPS');
   await expect(page.locator('[data-reference-admin-add]')).toBeHidden();
   await expect(page.locator('[data-reference-admin-results]')).toContainText('Read only');
@@ -85,7 +84,7 @@ test('distinct administrator receives an actionable before-after review', async 
   });
   await page.reload();
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('[data-admin-view="referenceAdmin"]').click();
+  await navigateToAdminView(page, 'referenceAdmin');
   await page.locator('[name="referenceAdminDomain"]').selectOption('ROUTING');
   await expect(page.locator('[data-reference-admin-review][data-reference-admin-decision="APPROVE"]')).toBeVisible();
   await page.locator('[data-reference-admin-review][data-reference-admin-decision="APPROVE"]').click();

@@ -1,18 +1,22 @@
 # Current Task
 
-INTENT: SOFTWARE_FEATURE_HANDOFF
-MODE: stop
-TARGET: HAU-USC Logistics v0.6 Phase 1 on `chore/v0.6-codex-continuity-bootstrap`
-AUTHORITY: `.codex/specs/v0.6-phase-1-sol-high.md`; `AGENTS.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`
-RISK: high
-DELIVERABLE: complete
-VERIFICATION: implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`; local `npm run check`; full Playwright; diff/privacy review; pushed draft PR #9 and remote checks
-STOP CONDITION: Phase 1 is complete; stop this task for the required manual model switch
+INTENT: SOFTWARE_FEATURE / UI_UX_IMPLEMENTATION
+MODE: execute
+TARGET: HAU-USC Logistics v0.6 Phase 2 shared shell on `chore/v0.6-codex-continuity-bootstrap`
+AUTHORITY: `.codex/specs/v0.6-phase-2-terra.md`; `AGENTS.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`; `.codex/DESIGN_REFERENCE_DIGEST.md`
+RISK: medium
+DELIVERABLE: complete S0003-backed shared shell and shared design-system slice
+VERIFICATION: focused source checks, build/parity checks, and desktop/mobile browser checks for the shell
+STOP CONDITION: shared-shell slice is complete; do not begin Administrator work until the next bounded slice is explicitly started
 
-## Completed bounded unit
+## Active bounded unit
 
-Phase 1 is complete. The exact v0.5 baseline was integrated without changing `main`; v0.6 architecture/security contracts and the portable authentication/onboarding foundation are implemented and verified. Production, migration, operational institutional data, Apps Script deployment, and Phase 2 design implementation were not touched.
+Phase 1 remains complete and locked at `c07e6e6ad5777710a68bef4d1d2aa553b964c108`.
+This slice ingested S0003 once, recorded `.codex/DESIGN_REFERENCE_DIGEST.md`,
+and implemented the shared shell and component/design-system foundations. The
+S0003 source hash is `89d7741b25146806c2ffed8c0bcf85dd58cdba1d84144c6dd65c54ada0318429`.
 
-## Next task
-
-Start a new Codex task using GPT-5.6 Terra and follow `.codex/CURRENT.md` plus `.codex/specs/v0.6-phase-2-terra.md`. The first Phase 2 task is the S0003-first design-reference digest and bounded shared-shell work. Do not continue Phase 2 in this task.
+Next bounded slice: Administrator only. Do not ingest another role-specific
+S0002 HTML reference until that role becomes active. Do not alter authentication/session architecture,
+authorization semantics, ledger/atomicity contracts, production configuration,
+or generated visual-baseline files.

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { navigateToView } from './navigation.js';
 
 test('submits selected composite sections as one visible parent hierarchy', async ({ page }, testInfo) => {
   test.skip(
@@ -7,7 +8,7 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
   );
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="request"]').click();
+  await navigateToView(page, 'request');
 
   const panel = page.locator('#compositeRequestPanel');
   await expect(panel).toBeVisible();

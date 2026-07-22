@@ -1,16 +1,23 @@
 import { test, expect } from '@playwright/test';
+import { navigateToView } from './navigation.js';
 
-test('navigates every approved module without page-level overflow', async ({ page }) => {
+test('navigates every approved module without page-level overflow', async ({ page }, testInfo) => {
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
   await expect(
     page.locator('.app-header .preview-badge'),
   ).toHaveText('● Preview mode · local data');
-  await expect(page.locator('#resetDemo')).toBeVisible();
-  await expect(page.locator('#resetDemo')).toBeEnabled();
+  if (testInfo.project.use.viewport.width <= 820) {
+    await expect(page.locator('[data-shared-mobile-nav]')).toBeVisible();
+    await expect(page.locator('#resetDemo')).toBeHidden();
+  } else {
+    await expect(page.locator('[data-shared-mobile-nav]')).toBeHidden();
+    await expect(page.locator('#resetDemo')).toBeVisible();
+    await expect(page.locator('#resetDemo')).toBeEnabled();
+  }
 
   for (const view of ['request', 'lending', 'release', 'restocking', 'procurement', 'inventory', 'overview']) {
-    await page.locator(`#primaryNav [data-view="${view}"]`).click();
+    await navigateToView(page, view);
     await expect(page.locator(`section#${view}`)).toHaveClass(/active/);
   }
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);

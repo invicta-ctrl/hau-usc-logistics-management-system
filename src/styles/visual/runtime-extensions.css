@@ -61,3 +61,180 @@
 }
 .reference-admin-toolbar{align-items:end}.reference-admin-toolbar label{min-width:180px}.comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.comparison-grid pre{max-height:360px;overflow:auto;white-space:pre-wrap;word-break:break-word;font-size:11px}.hero-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}@media(max-width:768px){.comparison-grid{grid-template-columns:1fr}.reference-admin-toolbar label{min-width:100%}}
 @media(max-width:640px){body{min-width:0}.app-header{flex-direction:column}.hero:after{right:0;bottom:-90px;width:180px;height:180px;border-width:45px}}
+
+/* Phase 2 S0003 shared shell. The generated legacy visual baseline remains intact. */
+:root {
+  --role-accent: #b77917;
+  --role-accent-soft: #fff2c5;
+  --role-accent-ink: #6f4507;
+  --shell-paper: #fffdf8;
+  --shell-shadow: 0 18px 56px rgba(53, 5, 7, 0.12);
+}
+
+body[data-experience='food'] {
+  --role-accent: #c65f1c;
+  --role-accent-soft: #fff0df;
+  --role-accent-ink: #79370d;
+}
+
+body[data-experience='inventory'] {
+  --role-accent: #d59a18;
+  --role-accent-soft: #fff2b9;
+  --role-accent-ink: #805107;
+}
+
+body[data-experience='materials'] {
+  --role-accent: #356a88;
+  --role-accent-soft: #e8f2f7;
+  --role-accent-ink: #244e66;
+}
+
+body[data-experience='admin'],
+body[data-experience='director'] {
+  --role-accent: #b77917;
+  --role-accent-soft: #fff2c5;
+  --role-accent-ink: #6f4507;
+}
+
+body:not(.request-mode) .sidebar {
+  background:
+    radial-gradient(circle at 15% 5%, rgba(240, 200, 59, 0.15), transparent 22%),
+    linear-gradient(165deg, #350507, #5e0b10 55%, #240204);
+}
+
+body:not(.request-mode) .sidebar:after {
+  background: linear-gradient(90deg, #b77917, #f0c83b, #b77917);
+}
+
+body:not(.request-mode) .nav button.active {
+  border-color: var(--role-accent);
+  background: linear-gradient(135deg, #f7db72, #f0c83b);
+}
+
+body:not(.request-mode) .nav button.active .nav-icon,
+body:not(.request-mode) .header-tools .preview-badge {
+  color: var(--role-accent-ink);
+  background: var(--role-accent-soft);
+}
+
+body:not(.request-mode) .main {
+  background: radial-gradient(circle at 95% 0, rgba(240, 200, 59, 0.14), transparent 25%);
+}
+
+body:not(.request-mode) .app-header {
+  min-height: 64px;
+  padding-bottom: 12px;
+}
+
+body:not(.request-mode) .panel,
+body:not(.request-mode) .card {
+  border-color: #e4d6bd;
+  background: rgba(255, 253, 248, 0.95);
+  box-shadow: 0 10px 28px rgba(53, 5, 7, 0.055);
+}
+
+body:not(.request-mode) .status {
+  border: 1px solid transparent;
+}
+
+body:not(.request-mode) .primary {
+  background: linear-gradient(135deg, #5e0b10, #8d151b);
+}
+
+body:not(.request-mode) .secondary {
+  border-color: #cfb276;
+  background: #fffaf0;
+}
+
+.shared-mobile-nav { display: none; }
+
+@media (max-width: 820px) {
+  body:not(.request-mode) { padding-bottom: 82px; }
+  body:not(.request-mode) .app-shell { display: block; }
+  body:not(.request-mode) .sidebar { display: none; }
+  body:not(.request-mode) .main { padding: 0 10px 104px; }
+  body:not(.request-mode) .app-header {
+    position: sticky;
+    z-index: 35;
+    top: 0;
+    align-items: center;
+    min-height: 58px;
+    margin: 0 -10px 14px;
+    padding: 8px 11px;
+    border-bottom: 1px solid #e4d6bd;
+    background: rgba(255, 253, 248, 0.96);
+    backdrop-filter: blur(14px);
+  }
+  body:not(.request-mode) .app-header:after { display: none; }
+  body:not(.request-mode) .app-header h1 { font-size: 22px; }
+  body:not(.request-mode) .app-header .eyebrow { margin-bottom: 2px; font-size: 8px; }
+  body:not(.request-mode) .header-tools { display: none; }
+  body:not(.request-mode) .header-tools:has([data-auth-logout]),
+  body:not(.request-mode) .header-tools:has(#refreshOperationalData) { display: flex; }
+  body:not(.request-mode) .header-tools .auth-identity { display: none; }
+  body:not(.request-mode) .header-tools [data-auth-logout] { min-height: 40px; padding: 8px 10px; }
+  body:not(.request-mode) .grid-4,
+  body:not(.request-mode) .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .shared-mobile-nav {
+    position: fixed;
+    z-index: 70;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+    border: 1px solid #cfb276;
+    border-radius: 17px;
+    background: rgba(255, 253, 248, 0.97);
+    box-shadow: var(--shell-shadow);
+    backdrop-filter: blur(14px);
+  }
+  .shared-mobile-nav button {
+    display: grid;
+    min-width: 0;
+    min-height: 50px;
+    place-items: center;
+    gap: 2px;
+    padding: 4px 2px;
+    border: 0;
+    border-radius: 11px;
+    color: #705853;
+    background: transparent;
+    font-size: 8px;
+    font-weight: 850;
+  }
+  .shared-mobile-nav button > span { font-size: 15px; line-height: 1; }
+  .shared-mobile-nav button > small { overflow: hidden; max-width: 100%; text-overflow: ellipsis; white-space: nowrap; }
+  .shared-mobile-nav button.active {
+    color: var(--role-accent-ink);
+    background: var(--role-accent-soft);
+  }
+  .shared-mobile-more {
+    position: fixed;
+    z-index: 69;
+    right: 8px;
+    bottom: 76px;
+    left: 8px;
+    display: grid;
+    gap: 6px;
+    max-height: min(58vh, 430px);
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid #cfb276;
+    border-radius: 17px;
+    background: rgba(255, 253, 248, 0.98);
+    box-shadow: var(--shell-shadow);
+  }
+  .shared-mobile-more[hidden] { display: none; }
+  .shared-mobile-more-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 2px 7px; color: #350507; font-family: Georgia, "Times New Roman", serif; }
+  .shared-mobile-more .icon-button { min-width: 34px; min-height: 34px; }
+  .shared-mobile-more > button:not(.icon-button) { min-height: 42px; padding: 9px 11px; border: 1px solid #e4d6bd; border-radius: 10px; color: #351719; background: #fffaf0; text-align: left; font-size: 11px; font-weight: 800; }
+}
+
+@media (max-width: 430px) {
+  body:not(.request-mode) .app-header h1 { font-size: 20px; }
+  body:not(.request-mode) .grid-4,
+  body:not(.request-mode) .grid-3 { grid-template-columns: 1fr 1fr; }
+}

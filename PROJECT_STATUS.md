@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 2 active - shared shell/design-system milestone verified
+
+- Phase/stage: `PHASE_2_SHARED_SHELL_CHECKPOINTED`.
+- Branch/PR: `chore/v0.6-codex-continuity-bootstrap`; draft PR #9 remains open at remote handoff `d8af7bb4a5e986fc4dfd166ae664f5758c46a1fd`, cleanly mergeable with successful `validate`, `verify`, and `browser-smoke` checks.
+- Delivered: S0003 was ingested once and condensed into `.codex/DESIGN_REFERENCE_DIGEST.md`; the shared internal shell now has durable visual tokens, role-scoped accents, shared panel/status/action grammar, a compact mobile header, five primary mobile destinations, and a More panel for remaining existing destinations.
+- Boundaries: all navigation delegates to existing handlers; no authorization, session, ledger, transaction, deployment, data, or external-system behavior changed. The generated legacy visual baseline remains untouched and derived artifacts were rebuilt.
+- Verification: `npm run check` passes with 45 Vitest files / 341 tests, and the complete `npx playwright test --reporter=dot` gate completed with `status: passed` (216 tests scheduled; no failed tests). Build/parity/package verification and responsive browser proofs at 390, 768, and 1366px also pass. The next bounded action is Administrator-only S0002 ingestion and experience work.
+
 ## v0.6 Phase 1 complete - ready for manual Phase 2 model switch
 
 - Phase/stage: `PHASE_1_COMPLETE_READY_FOR_MANUAL_MODEL_SWITCH`.

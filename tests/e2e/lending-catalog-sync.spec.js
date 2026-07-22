@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigateToView } from './navigation.js';
 import {
   assembleAppsScriptTemplate,
   createAppsScriptBundleFromProject,
@@ -29,7 +30,7 @@ const internalBootstrap = ({ revision = 1, manageCatalog = false, tickets = [] }
 test('lending predictive suggestions stay inside every configured viewport', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="lending"]').click();
+  await navigateToView(page, 'lending');
   await expect(page.locator('label[for="lendingItemSearch"]')).toHaveText('Item');
   await page.locator('#lendingItemSearch').fill('ballpen');
   await expect(page.locator('#lendingAutocomplete [role="option"]').first()).toBeVisible();
@@ -44,7 +45,7 @@ test('predictive lending enforces selection, borrower, stock, and immediate tick
   test.skip(testInfo.project.name !== 'chromium-390', 'One complete lending workflow is sufficient.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="lending"]').click();
+  await navigateToView(page, 'lending');
 
   const form = page.locator('#lendingForm');
   await form.locator('[name="studentIdNumber"]').fill('2026-99999');
@@ -75,7 +76,7 @@ test('predictive lending enforces selection, borrower, stock, and immediate tick
   await expect(page.locator('#toast')).toContainText(/Ticket LND-.* created for review/);
   await expect(page.locator('#lendingTickets')).toContainText('Playwright Borrower');
   await expect(page.locator('#loanMetrics')).toContainText('For Review');
-  await page.locator('#primaryNav [data-view="overview"]').click();
+  await navigateToView(page, 'overview');
   await expect(page.locator('#overviewMetrics')).toContainText('Open lending tickets');
 });
 
@@ -83,7 +84,7 @@ test('catalog administrator edits an item and the change survives reload', async
   test.skip(testInfo.project.name !== 'chromium-390', 'One persistence workflow is sufficient.');
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="inventory"]').click();
+  await navigateToView(page, 'inventory');
   await page.locator('.mobile-cards [data-inventory-action="edit"]').first().click();
   const form = page.locator('#catalogItemForm');
   const original = await form.locator('[name="itemName"]').inputValue();
@@ -94,7 +95,7 @@ test('catalog administrator edits an item and the change survives reload', async
   await expect(page.locator('#inventoryTable')).toContainText(changed);
   await page.reload();
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="inventory"]').click();
+  await navigateToView(page, 'inventory');
   await expect(page.locator('#inventoryTable')).toContainText(changed);
 });
 
@@ -252,7 +253,7 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
   }, internalBootstrap({ manageCatalog: false }));
   await page.setContent(assembled, { waitUntil: 'load' });
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('#primaryNav [data-view="lending"]').click();
+  await navigateToView(page, 'lending');
   const form = page.locator('#lendingForm');
   await form.locator('[name="studentIdNumber"]').fill('2026-09999');
   await form.locator('[name="borrowerName"]').fill('Remote Borrower');
@@ -316,10 +317,10 @@ test('Apps Script mutation refresh failure never repeats the write and safe refr
   await expect(page.locator('#syncUpdateBanner')).toBeHidden();
 
   await expect(page.locator('#adminCatalogException')).toBeHidden();
-  await page.locator('#primaryNav [data-view="inventory"]').click();
+  await navigateToView(page, 'inventory');
   await expect(page.locator('[data-inventory-action="edit"]')).toHaveCount(0);
 
-  await page.locator('#primaryNav [data-view="lending"]').click();
+  await navigateToView(page, 'lending');
   await form.locator('[name="borrowerName"]').fill('Unsaved input');
   await page.evaluate(() => {
     globalThis.__server.revision += 1;

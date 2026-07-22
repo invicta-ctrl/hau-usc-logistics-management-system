@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { navigateToView } from './navigation.js';
 
 test('restock review authorizes and receives exactly one linked line', async ({ page }, testInfo) => {
   test.skip(
@@ -7,7 +8,7 @@ test('restock review authorizes and receives exactly one linked line', async ({ 
   );
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await page.locator('[data-view="restocking"]').click();
+  await navigateToView(page, 'restocking');
   await expect(page.locator('#restocking')).toHaveClass(/active/);
 
   const queue = page.locator('#restockRequestsTable');
