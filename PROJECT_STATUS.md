@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 2 active - Director experience checkpointed
+
+- Phase/stage: `PHASE_2_DIRECTOR_EXPERIENCE_CHECKPOINTED` at code commit `c54d68af372865be272eda0331f8258b7d84858f`.
+- Delivered: the S0002 Director reference was read in isolation and recorded in `.codex/DESIGN_REFERENCE_DIGEST.md`; the shared overview now adds server-derived event-series, leadership-decision, blocker, and release-readiness signals plus governed links to the existing request, procurement, release, lending, and inventory workspaces.
+- Boundaries: the Director experience remains one shared application. Its Management & Access explanation grants no role, capability, configuration, environment, service, or ledger path; existing server authorization remains authoritative.
+- Verification: focused role unit tests pass 2 / 2; responsive browser proof passes 2 / 4 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with 46 Vitest files / 342 tests, build/parity/package verification, and Apps Script validation.
+- Next action: push and verify this checkpoint, then begin only the already-authorized Food role slice.
+
 ## v0.6 Phase 2 active - Administrator control desk checkpointed
 
 - Phase/stage: `PHASE_2_ADMINISTRATOR_CONTROL_DESK_CHECKPOINTED` at code commit `658410b24b6556131d11901551911d553a1832b7`.

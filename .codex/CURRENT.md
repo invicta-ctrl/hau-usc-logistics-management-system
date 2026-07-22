@@ -42,10 +42,11 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 - Preserved the immutable generated visual baseline and Phase 1 authentication, authorization, ledger, transaction, and rollback contracts. Rebuilt all derived artifacts through `npm run build`.
 - Verification: `npm run check` passed with 45 Vitest files / 341 tests; the complete `npx playwright test --reporter=dot` gate completed with `status: passed` (216 tests scheduled, no failed tests); `git diff --check` passed.
 - Administrator checkpoint: code milestone `658410b24b6556131d11901551911d553a1832b7` is pushed to the active branch. It read only `ADMIN.html` (SHA-256 `88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`), appended its durable decisions to the digest, and added the Administrator control desk to the existing server-authorized Reference Administration workspace. Its four control areas only select existing domains; no authorization, service, transaction, or ledger contract changed. Focused reference-admin proof passed 6 / 24 intentional skips, and `npm run check` passed with 45 Vitest files / 341 tests.
-- Next bounded slice is not started. Do not ingest another role reference until explicitly authorized.
+- Director checkpoint: code milestone `c54d68af372865be272eda0331f8258b7d84858f` implements the S0002 decision-first leadership view inside the shared shell. It reads current server-derived state for event-series readiness, leadership decisions, cross-workflow blockers, and release readiness; its action map delegates to the existing request, procurement, release, lending, and inventory workspaces. The bounded Management & Access explanation creates no access or configuration path. Focused role proof passed at 390px and 1366px, and `npm run check` passed with 46 Vitest files / 342 tests.
+- The next bounded slice is Food and is authorized but not started. Do not ingest `Food.html` until the Director checkpoint is pushed and remote CI is verified.
 
 Smallest safe next action:
-- Obtain Earl's explicit authorization to begin only the Director role checkpoint; do not read `DIRECTOR.html` or implement another role before that authorization.
+- Push and verify the Director checkpoint, then begin only the Food role checkpoint from `Food.html`.
 
 Reference bundle verified present on 2026-07-21:
 - `ADMIN.html`

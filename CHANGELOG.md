@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Director experience (2026-07-22)
+
+### Added
+
+- A decision-first Director layer inside the existing shared overview, with event-series, decision, cross-workflow blocker, and release-readiness signals derived from current runtime state.
+- Governed Director action links into the existing Request Center, Procurement & Deliverables, Release Desk, Lending Hub, and Inventory workspaces, plus a bounded Management & Access explanation.
+- Director-specific digest decisions and focused unit/mobile/desktop browser coverage.
+
+### Changed
+
+- Recognize the canonical Phase 1 `administrator` and `inventory-pantry` experience IDs in shared role-accent styling while preserving legacy aliases.
+
+### Verified
+
+- Focused role unit tests pass 2 / 2; focused responsive browser proof passes 2 / 4 intentional skips at 390px and 1366px; `npm run check` passes with 46 Vitest files / 342 tests, deterministic build/parity, Apps Script validation, and standalone verification.
+
 ## Unreleased - v0.6 Phase 2 Administrator control desk (2026-07-22)
 
 ### Added
