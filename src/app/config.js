@@ -13,9 +13,9 @@ export function booleanFlag(value, fallback = false) {
 const configuredBackendMode = runtime.backendMode ?? import.meta.env?.VITE_BACKEND_MODE ?? 'mock';
 
 export const config = Object.freeze({
-  appVersion: '0.5.0',
+  appVersion: '0.6.0',
   schemaVersion: 3,
-  previewMode: true,
+  previewMode: configuredBackendMode === 'mock',
   backendMode: configuredBackendMode,
   appEnvironment: runtime.appEnvironment ?? import.meta.env?.VITE_APP_ENV ?? 'development',
   bootstrapContractVersion: Number(

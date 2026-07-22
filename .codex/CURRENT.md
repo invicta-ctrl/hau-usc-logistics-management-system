@@ -1,17 +1,17 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.6
-Phase: Phase 2 — TERRA
-Required model: GPT-5.6 Terra
-Status: COMPLETE — READY FOR MANUAL PHASE 3 MODEL SWITCH
+Phase: Phase 3 — SOL High
+Required model: GPT-5.6 Sol — High
+Status: ACTIVE — LOCAL CANDIDATE VERIFIED; PRIVATE STAGING AUTHORIZATION REQUIRED
 
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
 
-Latest verified Phase 1 implementation checkpoint:
-`c07e6e6ad5777710a68bef4d1d2aa553b964c108`
+Latest verified Phase 2 handoff checkpoint:
+`38a86069039ef18081aaa0e1c1fe2c25acde6613`
 
-The next Codex task must fetch and verify the actual branch HEAD, upstream parity, working tree, and PR #9 checks. The checkpoint above identifies the verified Phase 1 implementation; the Phase 1 handoff commit follows it.
+The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, and the exact candidate named by the Phase 3 candidate handoff. Never infer remote deployment or Google migration from repository completion.
 
 Preserved rollback checkpoints:
 
@@ -23,14 +23,23 @@ Mandatory workflow/context policy:
 `.codex/PHASE_AND_CONTEXT_POLICY.md`
 
 Active specification:
-`.codex/specs/v0.6-phase-2-terra.md`
+`.codex/specs/v0.6-phase-3-sol-high.md`
 
-Completion handoff:
+Required predecessor handoff:
 `.codex/PHASE_2_TERRA_HANDOFF.md`
 
-Next specification (not active until the manual model switch and fresh handshake):
+Active partial handoff (not a Phase 3 completion handoff):
 
-- `.codex/specs/v0.6-phase-3-sol-high.md`
+- `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`
+
+Phase 3 local candidate result:
+
+- implemented a Cloudflare Worker serving `dist/`, protected API routes, D1-backed authentication/session/rate limiting, scoped operational reads/mutations, correlation IDs, and safe errors;
+- added ordered D1 migrations, append-only and inventory/receiving guards, entity committee scope, deterministic Google Sheet export/mapping/import/reconciliation tooling, and private authorization tooling;
+- verified the real local workerd runtime and D1 with 10/10 Chromium cases: same-origin bootstrap, activation/logout, request-only privacy, five server-routed role experiences, split request/allocation/release/lending, canvass/procurement/cumulative receiving, cross-committee denial, duplicate guards, fail-closed evidence, and a fictional outside-Git migration dry run;
+- passed repository acceptance with 52 Vitest files / 369 tests and full Playwright with 90 passes / 204 intentional skips / 0 failures;
+- documented Cloudflare architecture, Google sidecar boundaries, D1 migration/rollback, and local acceptance;
+- no Cloudflare/Google account access, remote D1 mutation, deployment, approved Sheet export/import, evidence bridge, or rollback rehearsal occurred because no valid private Phase 3 staging authorization package was supplied.
 
 Phase 1 result:
 
@@ -62,7 +71,7 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 
 Smallest safe next action:
 
-- Manually switch to GPT-5.6 Sol High in a fresh task, perform the full Git/PR/CI handshake, read `.codex/PHASE_2_TERRA_HANDOFF.md`, and only then read the Phase 3 specification. Do not begin Phase 3 implementation, migration, deployment, or production work before that fresh start-state report.
+- After the exact local candidate is committed, pushed, and green in PR #9, create and approve the required outside-Git Phase 3 authorization package bound to that commit and its artifact/migration hashes. Validate Gate B before the first remote Cloudflare or Google read.
 
 Reference bundle verified present on 2026-07-21:
 
@@ -76,8 +85,9 @@ Reference bundle verified present on 2026-07-21:
 
 Hard boundaries:
 
-- do not resume this completed Phase 1 task;
-- do not begin Phase 3, Cloudflare/D1 migration, production promotion, Apps Script deployment, operational institutional-data writes, or PR merge;
+- do not claim Phase 3 or the working Cloudflare staging site complete;
+- do not access Cloudflare or Google remotely without the exact private package and next-gate approval;
+- do not perform production promotion, production binding, operational institutional-data writes, `main` update, or PR merge;
 - do not alter authentication/session architecture, canonical role/capability semantics, ledger/atomicity invariants, or rollback rules without the escalation required by the Phase 2 specification;
 - do not reset, clean, force-push, or discard unknown work.
 

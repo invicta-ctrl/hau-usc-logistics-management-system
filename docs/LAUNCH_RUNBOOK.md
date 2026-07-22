@@ -1,5 +1,21 @@
 # Launch Runbook
 
+## v0.6 Cloudflare/D1 staging candidate
+
+The v0.6 Worker/D1 candidate is governed separately from the preserved Apps Script staging runtime below. Repository/local completion does not authorize account access or deployment.
+
+1. Freeze the exact commit and run `npm run check`, `npm run test:e2e`, the local workerd browser suite, audit checks, sensitive scans, and `git diff --check`.
+2. Push the candidate branch and verify the draft PR head and all required CI at that exact commit.
+3. Create the private package outside Git with `npm run phase3:authorization:init -- <absolute-private-json-path>`. Complete it privately with the exact Cloudflare account, staging Worker/D1/route, Google operator/workbook/Drive mapping, rollback, fixture, time-window, stop-authority, and evidence labels.
+4. Require `npm run phase3:authorization:check -- <absolute-private-json-path>` to validate the candidate hashes and approve Gate B before the first `wrangler whoami` or Google read.
+5. Perform only the read-only target/identity/capacity/source/rollback preflight authorized at Gate B. Stop on any drift or production binding.
+6. Require Gate C before backup, secret setup, Sheet export, D1 migration, or import. Follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and keep all exports, SQL, rejections, configs, backups, IDs, and evidence outside Git.
+7. Require Gate D before deploying the exact candidate to the separately named staging Worker and route.
+8. Require Gate E before synthetic workflow writes, evidence uploads, or rollback rehearsal. Run every row in the external prompt's staging acceptance matrix and stop on privacy, authorization, inventory, ledger, evidence, idempotency, or rollback failure.
+9. Require Gate F before cleanup or retention changes. Record only safe labels, counts, hashes, commit, URL, and check results in public repository evidence.
+
+Never target production, merge PR #9, update `main`, expose a private identifier, or claim Phase 3 complete until the externally reachable staging site, approved Sheet import, reconciliation, rollback rehearsal, final repository acceptance, commit/push, remote head, and CI all pass.
+
 ## Staging
 
 Complete Gate A in `STAGING_OPERATIONAL_ACCEPTANCE.md` before step 1. An old

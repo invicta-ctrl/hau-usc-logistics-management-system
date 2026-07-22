@@ -7,8 +7,6 @@ export class RestService {
     this.mode = 'rest';
   }
   async _post(path, command) {
-    if (!this.baseUrl)
-      throw new AppError('BACKEND_UNAVAILABLE', 'REST mode is not configured in this preview.');
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: {
@@ -45,11 +43,14 @@ for (const method of [
   'addCompositeSection',
   'assignCompositeComponent',
   'escalateCompositeComponent',
-  'acceptRequest',
+  'reviewRequest',
+  'reserveStock',
   'createLendingTicket',
   'approveLendingTicket',
   'confirmLendingHandoff',
-  'confirmLendingReturn',
+  'confirmReturn',
+  'saveCanvassReference',
+  'selectPreferredCanvass',
   'receiveDeliverable',
   'transitionDeliverable',
   'getRestockDetail',

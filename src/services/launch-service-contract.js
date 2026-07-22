@@ -1,5 +1,7 @@
 export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'getBootstrapData',
+  'getEssentialBootstrapData',
+  'getBootstrapModule',
   'getCurrentUser',
   'getDataRevision',
   'getScopedRevision',

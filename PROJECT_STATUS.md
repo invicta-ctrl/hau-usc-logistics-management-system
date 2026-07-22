@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 3 active - local Cloudflare/D1 candidate verified; remote staging authorization required
+
+- Phase/stage: `PHASE_3_LOCAL_CANDIDATE_VERIFIED_PRIVATE_GATE_REQUIRED`; Phase 2 predecessor/handoff is `38a86069039ef18081aaa0e1c1fe2c25acde6613`; partial handoff: `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`.
+- Delivered locally: Workers Static Assets and same-origin API routing; D1 authentication, activation, sessions, logout, distributed rate limiting, operations, migrations, guards, scope, idempotency, import/reconciliation; read-only Sheet exporter; private authorization tooling; Cloudflare/Google/D1/rollback documentation.
+- Local evidence: workerd/D1 Chromium acceptance passes 10/10 across request-only privacy, all five role experiences, split allocation/release/lending, canvass/procurement/cumulative receiving, restock receiving, duplicate guards, and fail-closed evidence; repository acceptance passes with 52 Vitest files / 369 tests and full Playwright passes 90 / 204 intentional skips / 0 failures; a fictional outside-Git export imported twice and reconciled without duplication.
+- External boundary: no Cloudflare/Google identity or target read, remote D1 access, deployment, approved Sheet export/import, Drive/evidence operation, staging workflow mutation, rollback rehearsal, production action, `main` update, or PR merge occurred.
+- Remaining gate: freeze/push/CI the exact candidate, then provide a valid outside-Git package matching its branch/SHA/artifact/migration hashes and approving Gate B. Until then Phase 3 and the working staging website remain incomplete.
+
 ## v0.6 Phase 2 complete - ready for manual Phase 3 model switch
 
 - Phase/stage: `PHASE_2_TERRA_COMPLETE` at exact delivery checkpoint `de194f5c37cadf2eb2983cfe3450a1c99ceed735`; durable handoff: `.codex/PHASE_2_TERRA_HANDOFF.md`.

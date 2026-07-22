@@ -6,8 +6,13 @@ test-results/
 .env
 .env.*
 !.env.example
+!src/.env.staging
 .clasp.json
 .clasprc.json
 .claspignore
 *.log
 .codex/runtime/
+.wrangler/
+migration-private/
+*.private.sql
+*.private.ndjson

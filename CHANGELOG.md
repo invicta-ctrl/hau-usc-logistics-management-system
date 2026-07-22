@@ -1,5 +1,32 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 3 local Cloudflare/D1 staging candidate (2026-07-22)
+
+### Added
+
+- Cloudflare Worker with Static Assets, API routing, health/readiness, D1 authentication/session/rate-limit repositories, scoped operational services, safe logging/errors, and security headers.
+- Seven ordered D1 migrations covering the operational domain, authorization, rate limiting, revisions, import boundary, transaction guards, and target-entity committee scope.
+- Deterministic read-only Google Sheet export, explicit Sheet-to-D1 mapping, validation/import/reconciliation tooling, fictional local seed/proof, and exact-candidate private staging authorization tooling.
+- Local workerd Chromium acceptance for all five role routes plus Cloudflare architecture, Google sidecar, D1 migration/rollback, and local acceptance guidance.
+- Real D1 canvass, preferred-quote, deliverable transition, split routing, restock detail/transition, cumulative receiving, and fail-closed evidence-reference boundaries.
+
+### Changed
+
+- Enabled the complete frontend for REST/Worker bootstrap while preserving request-only privacy and action-driven refresh.
+- Added explicit recipient confirmation to the REST adapter and persistent server-side capability/entity-scope checks for operational and privileged API families.
+- Added a distinct local HTTP authentication cookie name; deployed HTTPS continues to use secure `__Host-` cookies.
+- Repaired same-origin HTTP bootstrap so the staging SPA calls its co-located Worker when no separate API base URL is configured.
+
+### Verified
+
+- `npm run check`: 52 Vitest files / 369 tests with all repository, generated-artifact, Apps Script, Cloudflare type, and dry-run gates passing.
+- Local workerd/D1 Chromium: 10 / 10; full repository Playwright: 90 passed / 204 intentional skips / 0 failed.
+- `dist/index.html`: 455,685 bytes / SHA-256 `d78f4fc3c741e67349b60d8fe3615767767db0ef55d98acf58243d4aaa5e1782`.
+
+### Boundary
+
+- This is not a completed Phase 3 or deployed staging system. Remote Cloudflare/Google access, approved Sheet migration, Drive/evidence integration, rollback rehearsal, production promotion, `main` update, and PR merge remain blocked.
+
 ## Unreleased - v0.6 Phase 2 TERRA complete (2026-07-22)
 
 ### Added

@@ -198,7 +198,7 @@ export function createAuthService({
   async function login({ accessId, password, networkKey } = {}) {
     const accessIdNormalized = normalizeAccessId(accessId);
     const limiterKey = `${accessIdNormalized || 'invalid'}:${safeNetworkKey(networkKey)}`;
-    const limit = rateLimiter.consume(limiterKey, clock.now());
+    const limit = await rateLimiter.consume(limiterKey, clock.now());
     assert(limit.allowed, 'AUTHENTICATION_THROTTLED', { retryAfterMs: limit.retryAfterMs });
     const account = accessIdNormalized ? await repository.getAccountByAccessId(accessIdNormalized) : null;
     const credential =
@@ -220,7 +220,7 @@ export function createAuthService({
         throw new AuthError('AUTHENTICATION_FAILED');
       }
       const issued = await issueSession(account, SESSION_KIND.ACTIVATION, settings.activationSessionMs);
-      rateLimiter.reset(limiterKey);
+      await rateLimiter.reset(limiterKey);
       await audit('STARTER_LOGIN_VERIFIED', account.id);
       return {
         state: 'ACTIVATION_REQUIRED',
@@ -231,7 +231,7 @@ export function createAuthService({
     }
     assert(account.status === ACCOUNT_STATUS.ACTIVE && account.onboardingCompletedAt, 'ACCOUNT_UNAVAILABLE');
     const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
-    rateLimiter.reset(limiterKey);
+    await rateLimiter.reset(limiterKey);
     await audit('LOGIN_SUCCEEDED', account.id);
     return {
       state: 'AUTHENTICATED',
@@ -292,6 +292,15 @@ export function createAuthService({
     const session = { ...current.session, csrfDigest: await tokenCrypto.digest(csrfToken) };
     await repository.saveSession(session);
     return { state: 'AUTHENTICATED', csrfToken, user: sessionUserDto(current.account, session) };
+  }
+
+  async function authenticate({ sessionToken } = {}) {
+    const current = await readSession(sessionToken);
+    return {
+      account: current.account,
+      session: current.session,
+      authorization: accountAuthorization(current.account),
+    };
   }
 
   async function authorize({ sessionToken, csrfToken, capability, resource = {}, mutation = true } = {}) {
@@ -407,6 +416,7 @@ export function createAuthService({
     createStarterAccount,
     login,
     activateStarter,
+    authenticate,
     getSession,
     authorize,
     logout,

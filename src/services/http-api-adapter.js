@@ -8,7 +8,6 @@ export class HttpApiAdapter {
     this.baseUrl = String(baseUrl ?? '').replace(/\/$/, '');
   }
   async _call(method, command = {}) {
-    if (!this.baseUrl) throw new AppError('BACKEND_UNAVAILABLE', 'HTTP API mode is not configured.');
     const csrfToken = getCsrfToken();
     const response = await fetch(`${this.baseUrl}/api/${method}`, {
       method: 'POST',

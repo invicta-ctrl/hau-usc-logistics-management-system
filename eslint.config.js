@@ -5,6 +5,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      '.wrangler/**',
       'legacy/**',
       'node_modules/**',
       'playwright-report/**',

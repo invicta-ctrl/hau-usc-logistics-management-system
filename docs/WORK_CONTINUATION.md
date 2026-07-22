@@ -1,5 +1,15 @@
 # Work Continuation
 
+## Current Phase 3 resume block
+
+- **Status:** `PHASE_3_LOCAL_CANDIDATE_VERIFIED_PRIVATE_GATE_REQUIRED`; Phase 2 handoff `38a86069039ef18081aaa0e1c1fe2c25acde6613` remains the verified predecessor. This is not Phase 3 completion.
+- **Repository/local scope:** Workers Static Assets, Worker API, D1 auth/session/rate limiting/operations, seven migrations and guards, server-owned capability/entity scope, deterministic read-only Sheet export/import/reconciliation, private authorization validation, and staging/rollback documentation are implemented.
+- **Local proof:** real workerd/D1 Chromium acceptance passes 10/10 for same-origin bootstrap, activation/logout, request-only privacy, all five role experiences, split request routing/allocation/release/lending, canvass/procurement/cumulative receiving, restock receiving, denial, idempotency, and fail-closed evidence. `npm run check` passes with 52 Vitest files / 369 tests; full Playwright passes 90 / 204 intentional skips / 0 failures. A fictional outside-Git snapshot imported twice without duplication.
+- **External boundary:** no Cloudflare or Google remote access occurred. No remote D1 migration, approved Sheet export/import, deployment, evidence/Drive bridge, staging acceptance writes, performance proof, or rollback rehearsal occurred.
+- **Resume:** fetch and verify branch/HEAD/upstream/worktree/PR #9 and read `.codex/CURRENT.md`, the Phase 3 specification, and `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`. Confirm the candidate commit and CI rather than trusting this prose.
+- **Smallest safe next action:** after the exact candidate is committed/pushed/green, create and approve an outside-Git Phase 3 authorization package bound to its SHA/artifact/Worker/migration hashes. Validate Gate B before the first `wrangler whoami` or Google read. Never print private values.
+- **Prohibited:** no production target or promotion, no PR merge or `main` update, no operational-data improvisation, no remote action outside the approved package/gate, and no claim that Phase 3 or the working Cloudflare staging site is complete.
+
 ## Current resume block
 
 - **Phase 2 status:** COMPLETE — READY FOR MANUAL PHASE 3 MODEL SWITCH. Exact delivery checkpoint `de194f5c37cadf2eb2983cfe3450a1c99ceed735`; exact Phase 2 range `d8af7bb4a5e986fc4dfd166ae664f5758c46a1fd..de194f5c37cadf2eb2983cfe3450a1c99ceed735`; durable handoff `.codex/PHASE_2_TERRA_HANDOFF.md`.

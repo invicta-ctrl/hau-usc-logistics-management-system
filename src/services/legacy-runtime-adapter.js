@@ -199,7 +199,10 @@ export function createLegacyRuntimeAdapter(mockServices) {
       return result.reservationId;
     },
     async confirmRelease(payload) {
-      const command = await evidencePayload(payload, 'RELEASE_CONFIRMATION_PHOTO');
+      const command = {
+        ...(await evidencePayload(payload, 'RELEASE_CONFIRMATION_PHOTO')),
+        recipientConfirmed: true,
+      };
       const result = await mutationRequests.run('release', command, (tracked) =>
         remote.confirmRelease(tracked),
       );

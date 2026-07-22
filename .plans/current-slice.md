@@ -2,6 +2,8 @@
 
 > v0.6 authority update (2026-07-21): Phase 1 is complete at implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`. The active cross-version pointer is `.codex/CURRENT.md`; this file preserves the v0.5 Slice 13 staging record and does not authorize bypassing its distinct-identity acceptance blocker.
 
+> v0.6 Phase 3 update (2026-07-22): the Worker/D1/Google migration repository candidate is locally verified but remains blocked before the first remote Cloudflare or Google access by the missing exact private Phase 3 staging authorization package. Follow `.codex/CURRENT.md` and `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`. This does not alter or clear the distinct v0.5 Slice 13 acceptance blocker below.
+
 CURRENT SLICE: Slice 13 - Full staging operational acceptance
 CURRENT STAGE: SLICE_13_GATE_E_PARTIAL_DISTINCT_TEST_IDENTITIES_REQUIRED
 LAST UPDATED: 2026-07-18 (Asia/Manila)

@@ -1,5 +1,5 @@
 import { AUTH_API_ROUTES } from '../../auth/http-contract.js';
-import { AUTH_COOKIE, serializeAuthCookie } from './cookies.js';
+import { authCookieNames, serializeAuthCookie } from './cookies.js';
 import { AuthError } from './service.js';
 
 function cookies(request) {
@@ -33,7 +33,7 @@ function json(value, { status = 200, cookieHeaders = [] } = {}) {
   return new Response(JSON.stringify(value), { status, headers });
 }
 
-function statusFor(error) {
+export function statusForAuthError(error) {
   if (error.code === 'AUTHENTICATION_THROTTLED') return 429;
   if (
     [
@@ -68,13 +68,14 @@ function publicResult(result, tokenField) {
 
 export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
   if (!service) throw new Error('Authentication service is required.');
+  const cookieNames = authCookieNames({ secure: secureCookies });
   return async function handleAuthRequest(request) {
     const url = new URL(request.url);
     const cookieValues = cookies(request);
     const csrfToken = request.headers.get('x-csrf-token') ?? '';
     try {
       if (url.pathname === AUTH_API_ROUTES.session && request.method === 'GET') {
-        return json(await service.getSession({ sessionToken: cookieValues[AUTH_COOKIE.session] }));
+        return json(await service.getSession({ sessionToken: cookieValues[cookieNames.session] }));
       }
       if (url.pathname === AUTH_API_ROUTES.login && request.method === 'POST') {
         const body = await jsonBody(request);
@@ -86,7 +87,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
         if (result.state === 'ACTIVATION_REQUIRED') {
           return json(publicResult(result, 'activationToken'), {
             cookieHeaders: [
-              serializeAuthCookie(AUTH_COOKIE.activation, result.activationToken, {
+              serializeAuthCookie(cookieNames.activation, result.activationToken, {
                 secure: secureCookies,
                 maxAgeSeconds: Math.max(
                   1,
@@ -98,14 +99,14 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
         }
         return json(publicResult(result, 'sessionToken'), {
           cookieHeaders: [
-            serializeAuthCookie(AUTH_COOKIE.session, result.sessionToken, { secure: secureCookies }),
+            serializeAuthCookie(cookieNames.session, result.sessionToken, { secure: secureCookies }),
           ],
         });
       }
       if (url.pathname === AUTH_API_ROUTES.activate && request.method === 'POST') {
         const body = await jsonBody(request);
         const result = await service.activateStarter({
-          activationToken: cookieValues[AUTH_COOKIE.activation],
+          activationToken: cookieValues[cookieNames.activation],
           csrfToken,
           profile: body.profile,
           password: body.password,
@@ -113,16 +114,16 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
         });
         return json(publicResult(result, 'sessionToken'), {
           cookieHeaders: [
-            serializeAuthCookie(AUTH_COOKIE.activation, '', { secure: secureCookies, clear: true }),
-            serializeAuthCookie(AUTH_COOKIE.session, result.sessionToken, { secure: secureCookies }),
+            serializeAuthCookie(cookieNames.activation, '', { secure: secureCookies, clear: true }),
+            serializeAuthCookie(cookieNames.session, result.sessionToken, { secure: secureCookies }),
           ],
         });
       }
       if (url.pathname === AUTH_API_ROUTES.logout && request.method === 'POST') {
-        const result = await service.logout({ sessionToken: cookieValues[AUTH_COOKIE.session], csrfToken });
+        const result = await service.logout({ sessionToken: cookieValues[cookieNames.session], csrfToken });
         return json(result, {
           cookieHeaders: [
-            serializeAuthCookie(AUTH_COOKIE.session, '', { secure: secureCookies, clear: true }),
+            serializeAuthCookie(cookieNames.session, '', { secure: secureCookies, clear: true }),
           ],
         });
       }
@@ -140,7 +141,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
             ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
             ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}),
           },
-          { status: statusFor(error) },
+          { status: statusForAuthError(error) },
         );
       }
       return json(
