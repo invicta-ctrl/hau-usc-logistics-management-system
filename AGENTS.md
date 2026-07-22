@@ -49,6 +49,12 @@ If repository/GitHub state contradicts stale status text, preserve both facts, t
 - The parent agent is the only writer by default. Use at most two concurrent read-only subagents with one delegation level, only for bounded large-input mapping, log triage, independent review, or genuinely independent read-only investigations requested by the task or an applicable skill.
 - Do not repeat expensive tests, reviews, builds, migrations, or deployments when the commit and relevant artifacts are unchanged and the prior evidence is recorded.
 
+## Compatibility policy
+
+Do not consider backward compatibility. Ignore legacy code/libraries.
+
+Apply this to implementation choices: do not retain obsolete APIs, libraries, adapters, or duplicated architecture solely to preserve backward compatibility. This does not authorize deleting or disregarding explicitly preserved reference artifacts, immutable migration evidence, accepted specifications, ledger/history records, security boundaries, data invariants, backups, or rollback evidence. The preserved legacy prototype may remain a reference artifact, but legacy implementation details should not constrain a newly accepted architecture unless the accepted specification explicitly requires that constraint.
+
 ## Required start-of-task handshake
 
 1. Report repository root, current branch, current `HEAD`, upstream branch, and `git status --short`.
