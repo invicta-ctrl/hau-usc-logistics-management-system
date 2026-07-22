@@ -74,6 +74,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
     for (const route of [
       '/api/health',
       '/api/readiness',
+      '/api/version',
       '/api/session',
       '/api/auth/',
       '/api/bootstrap',
@@ -113,7 +114,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
 
   it('defines the complete operational model and database-enforced append-only guards', async () => {
     const migrations = await Promise.all(
-      [1, 2, 3, 4, 5, 6, 7, 8].map(async (number) => {
+      [1, 2, 3, 4, 5, 6, 7, 8, 9].map(async (number) => {
         const files = {
           1: '0001_operational_schema.sql',
           2: '0002_authorization_registry.sql',

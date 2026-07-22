@@ -1,6 +1,6 @@
 {
   "name": "hau-usc-logistics-management-system",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
     "phase3:authorization:check": "node scripts/phase3-staging-authorization.mjs check",
     "production:authorization:init": "node scripts/production-authorization.mjs init",
     "production:authorization:check": "node scripts/production-authorization.mjs check",
+    "cloudflare:preflight": "node scripts/cloudflare-environment-preflight.mjs",
     "cloudflare:types": "wrangler types && prettier --write worker-configuration.d.ts",
     "cloudflare:dry-run": "npm run build:cloudflare && wrangler deploy --dry-run --env= --outdir .wrangler/dry-run",
     "check:cloudflare": "npm run cloudflare:types && npm run cloudflare:dry-run",

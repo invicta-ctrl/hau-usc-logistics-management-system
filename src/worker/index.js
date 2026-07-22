@@ -7,6 +7,8 @@ import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
+import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
+import { createCorrelationId, structuredLog } from '../server/observability.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -52,13 +54,6 @@ function constantTimeEqual(left, right) {
   return difference === 0;
 }
 
-function correlationId(request) {
-  const ray = String(request.headers.get('cf-ray') ?? '')
-    .replace(/[^A-Za-z0-9_-]/gu, '')
-    .slice(0, 32);
-  return ray ? `REQ_${ray}` : `REQ_${crypto.randomUUID().replaceAll('-', '')}`;
-}
-
 function cookies(request) {
   return Object.fromEntries(
     String(request.headers.get('cookie') ?? '')
@@ -95,7 +90,10 @@ function json(value, status = 200, additionalHeaders = {}) {
 
 function services(env) {
   const repository = createD1AuthRepository(env.DB);
-  const passwordKdf = createPasswordKdf({ timingSafeEqual: constantTimeEqual });
+  const passwordKdf = createPasswordKdf({
+    timingSafeEqual: constantTimeEqual,
+    pepper: env.PASSWORD_PEPPER ?? '',
+  });
   const tokenCrypto = createTokenCrypto({ timingSafeEqual: constantTimeEqual });
   const auth = createAuthService({
     repository,
@@ -137,50 +135,45 @@ async function health(env, requestId, readiness = false) {
   const migration = await env.DB.prepare(
     'SELECT name, applied_at FROM d1_migrations ORDER BY id DESC LIMIT 1',
   ).first();
+  const runtimeIssues = environmentReadinessIssues(env);
   const unresolved =
     !schema ||
     !migration ||
+    runtimeIssues.length > 0 ||
     (String(env.ENVIRONMENT).toUpperCase() === 'STAGING' &&
       String(env.CANDIDATE_SHA ?? '').startsWith('REPLACE_'));
   return json(
     {
       ok: readiness ? !unresolved : true,
       correlationId: requestId,
-      service: 'hau-usc-logistics-worker',
-      environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-      appVersion: env.APP_VERSION ?? '0.6.0',
-      candidateSha: env.CANDIDATE_SHA ?? 'UNKNOWN',
+      ...safeReleaseIdentity(env),
       database: {
         connected: Boolean(schema),
         schemaVersion: schema?.value ?? '0',
         latestMigration: migration?.name ?? '',
       },
-      ...(readiness ? { ready: !unresolved } : {}),
+      dependencies: {
+        d1: Boolean(schema),
+        staticAssets: Boolean(env.ASSETS),
+        brandAssets: Boolean(env.BRAND_ASSETS),
+        protectedConfiguration: !runtimeIssues.some((issue) => issue.endsWith('_MISSING')),
+      },
+      ...(readiness ? { ready: !unresolved, checks: runtimeIssues.length ? ['CONFIGURATION_INCOMPLETE'] : [] } : {}),
     },
     readiness && unresolved ? 503 : 200,
   );
 }
 
-function safeLog(level, event, requestId, details = {}) {
-  const record = {
-    level,
-    event,
-    correlationId: requestId,
-    ...Object.fromEntries(
-      Object.entries(details).filter(([key]) => !/secret|token|password|cookie|authorization/iu.test(key)),
-    ),
-  };
-  console[level === 'error' ? 'error' : 'log'](JSON.stringify(record));
-}
-
-async function handleApi(request, env) {
-  const requestId = correlationId(request);
+async function handleApi(request, env, requestId) {
   const url = new URL(request.url);
   const { access, auth, operations } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
     if (url.pathname === '/api/readiness' && request.method === 'GET') {
       return health(env, requestId, true);
+    }
+    if (url.pathname === '/api/version' && request.method === 'GET') {
+      return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
     }
     if (url.pathname === '/api/session') {
       const alias = new Request(new URL('/api/auth/session', url), {
@@ -403,9 +396,17 @@ async function handleApi(request, env) {
         : error instanceof AuthError
           ? statusForAuthError(error)
           : 500;
-    safeLog(known ? 'log' : 'error', known ? error.code : 'UNHANDLED_API_ERROR', requestId, {
-      path: url.pathname,
-      method: request.method,
+    structuredLog({
+      level: known ? 'info' : 'error',
+      event: 'API_REQUEST_FAILED',
+      correlationId: requestId,
+      env,
+      details: {
+        result: 'FAILED',
+        errorCode: known ? error.code : 'UNHANDLED_API_ERROR',
+        path: url.pathname,
+        method: request.method,
+      },
     });
     return json(
       {
@@ -423,7 +424,25 @@ async function handleApi(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname.startsWith('/api/')) return handleApi(request, env);
+    if (url.pathname.startsWith('/api/')) {
+      const requestId = createCorrelationId(request);
+      const startedAt = Date.now();
+      const response = await handleApi(request, env, requestId);
+      response.headers.set('x-correlation-id', requestId);
+      structuredLog({
+        event: 'API_REQUEST_COMPLETED',
+        correlationId: requestId,
+        env,
+        details: {
+          result: response.ok ? 'SUCCESS' : 'FAILED',
+          status: response.status,
+          method: request.method,
+          path: url.pathname,
+          latencyMs: Date.now() - startedAt,
+        },
+      });
+      return response;
+    }
     return env.ASSETS.fetch(request);
   },
 };

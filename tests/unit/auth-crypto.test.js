@@ -7,7 +7,7 @@ import {
   validateNewPassword,
 } from '../../src/server/auth/crypto.js';
 
-describe('v0.6 authentication cryptography', () => {
+describe('authentication cryptography', () => {
   it('hashes with a unique salt and verifies through the timing-safe adapter', async () => {
     const compare = vi.fn((actual, expected) => timingSafeEqual(actual, expected));
     const kdf = createPasswordKdf({
@@ -40,6 +40,30 @@ describe('v0.6 authentication cryptography', () => {
     await expect(kdf.verify('Strong!Password9472', { algorithm: 'PLAINTEXT', hash: 'secret' })).resolves.toBe(
       false,
     );
+  });
+
+  it('uses the protected pepper for new hashes while preserving explicit legacy hash verification', async () => {
+    const legacy = createPasswordKdf({
+      cryptoProvider: webcrypto,
+      timingSafeEqual,
+      defaultIterations: 1_000,
+      minimumIterations: 1_000,
+    });
+    const protectedKdf = createPasswordKdf({
+      cryptoProvider: webcrypto,
+      timingSafeEqual,
+      defaultIterations: 1_000,
+      minimumIterations: 1_000,
+      pepper: 'staging-private-pepper-value',
+    });
+    const legacyCredential = await legacy.hash('Legacy!Password9472');
+    const protectedCredential = await protectedKdf.hash('Protected!Password9472');
+
+    expect(legacyCredential.peppered).toBe(false);
+    expect(protectedCredential.peppered).toBe(true);
+    await expect(protectedKdf.verify('Legacy!Password9472', legacyCredential)).resolves.toBe(true);
+    await expect(protectedKdf.verify('Protected!Password9472', protectedCredential)).resolves.toBe(true);
+    await expect(legacy.verify('Protected!Password9472', protectedCredential)).resolves.toBe(false);
   });
 
   it('keeps the production work factor inside the Cloudflare Workers PBKDF2 limit', async () => {

@@ -81,6 +81,7 @@ export function createPasswordKdf({
   timingSafeEqual,
   defaultIterations = PASSWORD_KDF.productionIterations,
   minimumIterations = PASSWORD_KDF.productionIterations,
+  pepper = '',
 } = {}) {
   const cryptoValue = requireCrypto(cryptoProvider);
   if (typeof timingSafeEqual !== 'function') {
@@ -95,12 +96,19 @@ export function createPasswordKdf({
       const policy = validateNewPassword(password);
       if (!policy.valid) throw Object.assign(new Error(policy.message), { code: policy.code });
       const salt = randomBytes(cryptoValue, PASSWORD_KDF.saltBytes);
-      const hash = await derivePassword(cryptoValue, String(password), salt, defaultIterations);
+      const peppered = Boolean(pepper);
+      const hash = await derivePassword(
+        cryptoValue,
+        `${String(password)}${peppered ? String(pepper) : ''}`,
+        salt,
+        defaultIterations,
+      );
       return Object.freeze({
         algorithm: PASSWORD_KDF.algorithm,
         iterations: defaultIterations,
         salt: bytesToBase64Url(salt),
         hash: bytesToBase64Url(hash),
+        peppered,
       });
     },
     async verify(password, credential) {
@@ -109,7 +117,7 @@ export function createPasswordKdf({
       const expected = base64UrlToBytes(credential.hash);
       const actual = await derivePassword(
         cryptoValue,
-        value,
+        `${value}${credential.peppered ? String(pepper) : ''}`,
         base64UrlToBytes(credential.salt),
         credential.iterations,
       );
