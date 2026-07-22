@@ -2120,6 +2120,21 @@ export function createRuntimeExtensions(options) {
         ['inventory', 'Check stock context', 'Available stock and movement history before fulfillment'],
       ],
     },
+    'inventory-pantry': {
+      label: 'Inventory & Pantry workspace',
+      heading: 'Keep stock accurate, available, and traceable',
+      description:
+        'Start with exceptions, then work through catalog balances, pantry stock, lending, replenishment, controlled release, and append-only movement history without collapsing physical, reserved, and available-to-promise quantities.',
+      boundaryTitle: 'Inventory authority boundary',
+      boundary:
+        'Catalog ownership scopes stock operations. Reservations, receipts, loans, returns, releases, transfers, and corrections remain capability-bound, revalidated against current state, and recorded through the existing ledger-aware workflows.',
+      actions: [
+        ['inventory', 'Open stock control', 'Search catalog, on-hand, reserved, ATP, provenance, and movements'],
+        ['lending', 'Review circulation exceptions', 'For-review, ready-to-claim, on-loan, overdue, and returned tickets'],
+        ['restocking', 'Work the replenishment queue', 'Review, canvass, procure, and receive without conflating request and receipt'],
+        ['release', 'Open controlled handoff', 'Re-check reservations and physical balance before release'],
+      ],
+    },
   };
 
   const countStatuses = (rows, statuses) =>
@@ -2175,9 +2190,46 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
+  const inventoryMetrics = (state) => {
+    const activeItems = (state.inventoryItems ?? []).filter((item) => item?.status !== 'ARCHIVED');
+    const itemBalance = (item) => {
+      const onHand = (state.ledgerTransactions ?? [])
+        .filter((movement) => movement?.itemId === item.id)
+        .reduce(
+          (total, movement) =>
+            total + (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
+          Number(item?.openingOnHand ?? 0),
+        );
+      const reserved = (state.reservations ?? [])
+        .filter((reservation) => reservation?.itemId === item.id && reservation?.status === 'ACTIVE')
+        .reduce((total, reservation) => total + Number(reservation?.quantity ?? 0), 0);
+      return { onHand, availableToPromise: onHand - reserved };
+    };
+    const stockAttention = activeItems.filter((item) => {
+      const balance = itemBalance(item);
+      return item?.status === 'VERIFY' || balance.availableToPromise <= Number(item?.reorderThreshold ?? 0);
+    }).length;
+    const activeCirculation = countStatuses(
+      state.lendingTickets,
+      new Set(['FOR_REVIEW', 'READY_TO_CLAIM', 'ON_LOAN', 'OVERDUE']),
+    );
+    const readyStockRelease = (state.requestLines ?? []).filter(
+      (line) =>
+        line?.fulfillmentSource === 'ISSUE_FROM_STOCK' &&
+        ['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(String(line?.status ?? '').toUpperCase()),
+    ).length;
+    return [
+      ['Active catalog items', activeItems.length, 'Inventory and pantry records'],
+      ['Stock attention', stockAttention, 'Low, unavailable, or verification-required ATP'],
+      ['Active circulation', activeCirculation, 'Review, handoff, loan, and overdue tickets'],
+      ['Ready stock releases', readyStockRelease, 'Reserved lines awaiting controlled handoff'],
+    ];
+  };
+
   const metricsForExperience = (experience, state) => ({
     director: directorMetrics,
     food: foodMetrics,
+    'inventory-pantry': inventoryMetrics,
   }[experience]?.(state) ?? []);
 
   const installRoleExperience = () => {

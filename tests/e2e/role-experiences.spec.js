@@ -52,3 +52,31 @@ test('Food receives a deadline-first orange-accent shared-shell experience', asy
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('Inventory & Pantry receives an exception-first amber shared-shell experience', async ({ page }, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop role proof are sufficient.',
+  );
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await page.evaluate(() => {
+    document.body.dataset.experience = 'inventory-pantry';
+  });
+
+  const panel = page.locator('#roleExperiencePanel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute('data-role-experience', 'inventory-pantry');
+  await expect(
+    panel.getByRole('heading', { name: 'Keep stock accurate, available, and traceable' }),
+  ).toBeVisible();
+  await expect(panel.getByText('Inventory authority boundary', { exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /Open stock control/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /Review circulation exceptions/ })).toBeVisible();
+  expect(
+    await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
+  ).toBe('#d59a18');
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});

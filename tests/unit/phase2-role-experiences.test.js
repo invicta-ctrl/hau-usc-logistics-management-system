@@ -36,4 +36,19 @@ describe('Phase 2 role experiences', () => {
     expect(runtime).toContain('foodMetrics');
     expect(css).toContain("body[data-experience='food']");
   });
+
+  it('keeps Inventory stock semantics and ledger boundary in the shared experience layer', async () => {
+    const [digest, runtime, css] = await Promise.all([
+      read('.codex/DESIGN_REFERENCE_DIGEST.md'),
+      read('src/visual/runtime-extensions.js'),
+      read('src/styles/visual/runtime-extensions.css'),
+    ]);
+
+    expect(digest).toContain('107f447e9aef8d3b9a377b5d059a745807e744833272e02d55150c5ed30fbf19');
+    expect(digest).toContain('exception-first stock workspace');
+    expect(runtime).toContain('Keep stock accurate, available, and traceable');
+    expect(runtime).toContain('Inventory authority boundary');
+    expect(runtime).toContain('inventoryMetrics');
+    expect(css).toContain("body[data-experience='inventory-pantry']");
+  });
 });
