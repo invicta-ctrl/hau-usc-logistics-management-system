@@ -3,6 +3,7 @@ import { environmentReadinessIssues, safeReleaseIdentity } from '../../src/serve
 import { redactLogDetails, structuredLog } from '../../src/server/observability.js';
 import { validateEnvironmentSeparation } from '../../scripts/cloudflare-environment-preflight.mjs';
 import { createConfigPair, decodeJsonBuffer } from '../../scripts/create-private-cloudflare-configs.mjs';
+import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs';
 
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
@@ -62,5 +63,17 @@ describe('v0.7 environment and observability foundation', () => {
     const value = JSON.stringify([{ name: 'safe-resource-label' }]);
     expect(JSON.parse(decodeJsonBuffer(Buffer.from(value, 'utf8')))).toEqual([{ name: 'safe-resource-label' }]);
     expect(JSON.parse(decodeJsonBuffer(Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(value, 'utf16le')])))).toEqual([{ name: 'safe-resource-label' }]);
+  });
+
+  it('creates complete distinct protected secret packages without repository values', () => {
+    let marker = 0;
+    const fakeRandom = () => Buffer.alloc(48, (marker += 1));
+    const staging = createSecretPackage('staging', fakeRandom);
+    const production = createSecretPackage('production', fakeRandom);
+    expect(staging.environment).toBe('STAGING');
+    expect(production.environment).toBe('PRODUCTION');
+    expect(Object.keys(staging.secrets).sort()).toEqual(['PASSWORD_PEPPER', 'PROTECTED_PROFILE_ENCRYPTION_KEY', 'TRACKING_LINK_SECRET']);
+    expect(Object.values(staging.secrets).every((value) => value.length >= 64)).toBe(true);
+    expect(staging.secrets.PASSWORD_PEPPER).not.toBe(production.secrets.PASSWORD_PEPPER);
   });
 });

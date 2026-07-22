@@ -22,6 +22,7 @@
     "production:authorization:check": "node scripts/production-authorization.mjs check",
     "cloudflare:preflight": "node scripts/cloudflare-environment-preflight.mjs",
     "cloudflare:private-configs:init": "node scripts/create-private-cloudflare-configs.mjs",
+    "cloudflare:secrets": "node scripts/cloudflare-secret-package.mjs",
     "cloudflare:types": "wrangler types && prettier --write worker-configuration.d.ts",
     "cloudflare:dry-run": "npm run build:cloudflare && wrangler deploy --dry-run --env= --outdir .wrangler/dry-run",
     "check:cloudflare": "npm run cloudflare:types && npm run cloudflare:dry-run",
