@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 2 active - Inventory & Pantry experience checkpointed
+
+- Phase/stage: `PHASE_2_INVENTORY_PANTRY_EXPERIENCE_CHECKPOINTED` at code commit `bf350fe1f1bbd06c547cdcf8bbf71fa66b5035c6`.
+- Delivered: the S0002 Inventory reference was read in isolation and recorded in `.codex/DESIGN_REFERENCE_DIGEST.md`; the shared role layer now presents exception-first catalog attention, circulation, and release-readiness signals with governed links into the existing Inventory, Lending, Restocking, and Release workspaces.
+- Boundaries: on-hand, reserved, and available-to-promise remain distinct. The amber accent and Inventory ownership communicate scope only; reservations, receipts, loans, returns, releases, transfers, and corrections remain capability-bound, revalidated, and ledger-aware.
+- Verification: focused role unit tests pass 3 / 3; the combined role browser proof passes 6 / 12 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with 46 Vitest files / 344 tests, build/parity/package verification, and Apps Script validation.
+- Next action: push and verify this checkpoint, then begin only the authorized Materials & Documentation role slice.
+
 ## v0.6 Phase 2 active - Food experience checkpointed
 
 - Phase/stage: `PHASE_2_FOOD_EXPERIENCE_CHECKPOINTED` at code commit `a6bcd7e3be934479496ce6fc05e43903989420a0`.

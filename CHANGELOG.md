@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Inventory & Pantry experience (2026-07-22)
+
+### Added
+
+- An exception-first Inventory & Pantry layer inside the shared overview, with catalog-attention, circulation, and stock-release signals derived from current runtime state.
+- Governed action links into the existing Inventory, Lending, Restocking, and Release workspaces while retaining distinct on-hand, reserved, and available-to-promise semantics.
+- Inventory-specific digest decisions and focused unit/mobile/desktop browser coverage.
+
+### Verified
+
+- Focused role unit tests pass 3 / 3; the combined role browser proof passes 6 / 12 intentional skips at 390px and 1366px; `npm run check` passes with 46 Vitest files / 344 tests, deterministic build/parity, Apps Script validation, and standalone verification.
+
 ## Unreleased - v0.6 Phase 2 Food experience (2026-07-22)
 
 ### Added
