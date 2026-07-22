@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Materials & Documentation experience (2026-07-22)
+
+### Added
+
+- A traceable Materials & Documentation layer inside the shared overview, with canvassing, budget, procurement, and release-readiness signals derived from current runtime state.
+- Governed action links into the existing Request Center, Procurement & Deliverables, Release Desk, and Inventory workspaces while retaining exact specification, quote-evidence, cumulative-receiving, and provenance context.
+- Materials-specific digest decisions and focused unit/mobile/desktop browser coverage.
+
+### Verified
+
+- Focused role unit tests pass 4 / 4; the combined role browser proof passes 8 / 16 intentional skips at 390px and 1366px; `npm run check` passes with 46 Vitest files / 345 tests, deterministic build/parity, Apps Script validation, and standalone verification.
+
 ## Unreleased - v0.6 Phase 2 Inventory & Pantry experience (2026-07-22)
 
 ### Added

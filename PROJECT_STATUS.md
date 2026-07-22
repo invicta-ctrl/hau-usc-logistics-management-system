@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.6 Phase 2 active - Materials & Documentation experience checkpointed
+
+- Phase/stage: `PHASE_2_MATERIALS_DOCUMENTATION_EXPERIENCE_CHECKPOINTED` at code commit `67c542263431c813cb5ae6488cbdacf38e74fbae`.
+- Delivered: the supplied S0002 `MATERIALS.html` reference was read in isolation and recorded in `.codex/DESIGN_REFERENCE_DIGEST.md`; the shared role layer now presents canvassing, budget, procurement, and release-readiness signals with governed links into the existing Request Center, Procurement & Deliverables, Release Desk, and Inventory workspaces.
+- Boundaries: exact specification, event/request identity, quote freshness/evidence, cumulative receiving, deliverable quantities, and provenance remain connected. The blue accent and Materials ownership communicate scope only; quote preference, purchase, receipt, stock transfer, and release remain capability-bound and server-validated.
+- Verification: focused role unit tests pass 4 / 4; the combined role browser proof passes 8 / 16 intentional skips at 390px and 1366px with no horizontal overflow; `npm run check` passes with 46 Vitest files / 345 tests, build/parity/package verification, and Apps Script validation.
+- Next action: push and verify this checkpoint, then audit and complete only Gate 5 Request Center and Office Lending Hub acceptance.
+
 ## v0.6 Phase 2 active - Inventory & Pantry experience checkpointed
 
 - Phase/stage: `PHASE_2_INVENTORY_PANTRY_EXPERIENCE_CHECKPOINTED` at code commit `bf350fe1f1bbd06c547cdcf8bbf71fa66b5035c6`.
