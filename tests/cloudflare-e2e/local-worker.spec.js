@@ -1,4 +1,5 @@
 import { expect, request as apiRequest, test } from '@playwright/test';
+import { navigateToAdminView } from '../e2e/navigation.js';
 
 const PASSWORD = `LocalOnly${String.fromCharCode(33)}Pass2026`;
 const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
@@ -103,6 +104,22 @@ for (const [accessId, experience] of roles) {
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
   });
 }
+
+test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
+  page,
+}) => {
+  await page.goto('/app/admin');
+  await page.getByLabel('Access ID').fill('LOCAL.ADMIN');
+  await page.getByLabel('Password').fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.app-shell')).toBeVisible();
+
+  await navigateToAdminView(page, 'referenceAdmin');
+  await expect(page.locator('#referenceAdminWorkspace')).toBeVisible();
+  await page.getByRole('button', { name: /Access Management/u }).click();
+  await expect(page.locator('[data-access-management]')).toBeVisible();
+  await expect(page.locator('[data-access-results] .access-account-row').first()).toBeVisible();
+});
 
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
   await page.goto('/');

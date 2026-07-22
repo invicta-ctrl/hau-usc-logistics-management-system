@@ -1170,8 +1170,8 @@ export function createRuntimeExtensions(options) {
   const refreshReferenceAdminWorkspace = async ({ force = false } = {}) => {
     const root = document.querySelector('#referenceAdminWorkspace');
     if (!root || !referenceAdminAllowed()) return;
+    renderReferenceAdminWorkspace();
     if (referenceAdminDomain === 'PERMISSIONS') {
-      renderReferenceAdminWorkspace();
       return refreshAccessDirectory({ force });
     }
     if (referenceAdminPromise) return referenceAdminPromise;
