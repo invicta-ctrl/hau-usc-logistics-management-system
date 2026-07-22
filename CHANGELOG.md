@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 3 public Request Center (2026-07-22)
+
+### Added
+
+- Direct no-login `/request` with one unified category-aware composer, governed reference choices, and private request tracking.
+- HMAC-digest tracking, same-origin JSON enforcement, D1 attempt limits, and additive migration `0011_public_request_tracking.sql`.
+
+### Verified
+
+- `npm run check`: 57 Vitest files / 393 tests; local Worker/D1: 16 / 16; full Playwright: 93 passed / 219 intentional skips / zero failures.
+- Staging migration/reconciliation and deployed acceptance passed at exact runtime `6fbf377`, schema 11 / migration 0011; inventory balance remained unchanged.
+
+### Boundary
+
+- Public no-login lending, remaining workspaces/operations, final staging/rollback gates, and all production actions remain incomplete.
+
 ## Unreleased - v0.7.0 Phase 2 secure staff login (2026-07-22)
 
 ### Added

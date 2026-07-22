@@ -1,13 +1,13 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 3 — Public Request Center without login
+Phase: Phase 4 — Public Lending Center without login
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 2 STAGING ACCEPTED; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 3 STAGING ACCEPTED; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
-Phase 2 deployed runtime: `edf6dcb361a8ade04f43ff06a774f6672305aa9a`
+Phase 3 deployed runtime: `6fbf377bb96f9e5123a24c8e1d81726ae5769532`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -52,10 +52,21 @@ The v0.7.0 master prompt supersedes the earlier v0.6 phase-stop and production-g
 - Staging migration 0010 preserved all accounts, produced zero verified-email collisions, and left ambiguous duplicates unverified. Cache-busted health/readiness/version and deployed authentication/Access Management/email-login smoke passed at exact runtime `edf6dcb`.
 - Durable evidence: `.codex/V0_7_PHASE_2_LOGIN_HANDOFF.md`.
 
+## Phase 3 completion
+
+- `/request` opens directly without a staff session and uses one shared-information form, one category-aware item composer, and one requested-items list.
+- Public choices come from active, requestable governed references and omit stock balances, storage, other requesters, internal reasons, and internal workspaces.
+- Submission creates one `FOR_REVIEW` parent with normal request lines, does not reserve or reduce stock, and returns a private tracking code whose digest alone is stored.
+- Same-origin JSON enforcement, HMAC-protected tracking, privacy-safe not-found behavior, and distributed D1 attempt limits protect the public boundary.
+- Migration `0011_public_request_tracking.sql` created the tracking/rate-limit tables and one revoked credential-less system actor that is hidden and immutable in Access Management.
+- `npm run check` passed with 57 Vitest files / 393 tests; fresh local Worker/D1 passed 16 / 16; full Playwright passed 93 / 312 scheduled with 219 intentional skips.
+- Staging migration/reconciliation, exact-SHA deployment, cache-busted health/readiness/version, and deployed authentication/public-request acceptance passed at runtime `6fbf377bb96f9e5123a24c8e1d81726ae5769532`, schema 11, migration 0011.
+- Durable evidence: `.codex/V0_7_PHASE_3_PUBLIC_REQUEST_HANDOFF.md`.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
 
-One smallest safe next action: implement Phase 3 `/request` as a genuinely no-login public submission and private-tracking surface while preserving server authorization for every internal route.
+One smallest safe next action: implement Phase 4 `/lending` as a genuinely no-login, borrower-safe catalog, submission, and private-tracking surface while preserving internal lending authorization and stock invariants.
 
 Durable evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

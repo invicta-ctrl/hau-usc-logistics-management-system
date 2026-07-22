@@ -1,5 +1,12 @@
 # Project Status
 
+## v0.7.0 Phase 3 public Request Center accepted on staging — Phase 4 active
+
+- Exact staging runtime `6fbf377bb96f9e5123a24c8e1d81726ae5769532` is healthy and ready on schema 11 / migration `0011_public_request_tracking.sql`.
+- `/request` is a direct no-login, unified composer with governed choices, idempotent `FOR_REVIEW` submission, private HMAC-backed tracking, distributed attempt limiting, and no stock movement.
+- Verification: `npm run check` passed with 57 Vitest files / 393 tests; local Worker/D1 passed 16 / 16; full Playwright passed 93 / 312 scheduled with 219 intentional skips; deployed staging acceptance passed 2 / 2.
+- Production remains NO-GO. Phase 4 now owns the genuinely no-login `/lending` catalog, borrowing request, and private tracking boundary.
+
 ## v0.7.0 Phase 2 staff login accepted on staging — Phase 3 active
 
 - Exact staging runtime `edf6dcb361a8ade04f43ff06a774f6672305aa9a` is healthy and ready on schema 10 / migration `0010_verified_login_email.sql`.

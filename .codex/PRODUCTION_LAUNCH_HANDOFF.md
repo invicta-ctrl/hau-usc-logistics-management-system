@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASE 2 STAGING ACCEPTED; PHASE 3 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASE 2 STAGING ACCEPTED; PHASE 3 ACTIVE**
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 staging SQL export retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging 0010 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — pre-0010 and pre-0011 staging SQL exports retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0011 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 2 runtime `edf6dcb` |
+| 8. Staging deployment | PASS THROUGH PHASE 3 runtime `6fbf377` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -63,8 +63,17 @@ Decision: **PRODUCTION NO-GO — PHASE 2 STAGING ACCEPTED; PHASE 3 ACTIVE**
 - Cache-busted live identity and the deployed auth/Access Management/email-login smoke passed at exact runtime `edf6dcb`, schema 10.
 - Durable handoff: `.codex/V0_7_PHASE_2_LOGIN_HANDOFF.md`.
 
+## Phase 3 evidence
+
+- `/request` opens without login and provides one unified request/item flow with governed public-safe choices.
+- Submission is idempotent, creates `FOR_REVIEW`, returns private HMAC-backed tracking, and produces no stock movement.
+- Migration 0011 added public tracking/rate-limit persistence plus one protected revoked credential-less system actor.
+- `npm run check` passed with 57 Vitest files / 393 tests; fresh local Worker/D1 passed 16 / 16; full Playwright passed 93 / 312 scheduled with 219 intentional skips.
+- Cache-busted live identity and deployed auth/public-request smoke passed 2 / 2 at exact runtime `6fbf377`, schema 11.
+- Durable handoff: `.codex/V0_7_PHASE_3_PUBLIC_REQUEST_HANDOFF.md`.
+
 ## Immediate repair target
 
-Complete Phase 3 public no-login Request Center and continue into the public Lending Center. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Complete Phase 4 public no-login Lending Center. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

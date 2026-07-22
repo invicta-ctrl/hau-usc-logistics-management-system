@@ -13,6 +13,6 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 3 — public `/request` without login: unified parent/request-line composer, governed event/reference choices, private tracking code, fail-closed public API boundary, and preserved internal authorization.
+Phase 4 — public `/lending` without login: borrower-safe catalog before identity collection, validated external-borrower request, `FOR_REVIEW` routing, private tracking, responsibility acknowledgment, and preserved internal lending authorization/stock controls.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.
