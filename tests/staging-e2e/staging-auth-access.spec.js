@@ -51,7 +51,9 @@ test('deployed staging authentication and Access Management remain operational',
   let cleanupAccessId = '';
 
   try {
-    const health = await anonymousRequest.get('/api/health');
+    const health = await anonymousRequest.get(`/api/health?candidate=${candidateSha}`, {
+      headers: { 'cache-control': 'no-cache' },
+    });
     expect(health.status()).toBe(200);
     await expect(health.json()).resolves.toMatchObject({
       environment: 'STAGING',
@@ -62,7 +64,9 @@ test('deployed staging authentication and Access Management remain operational',
         latestMigration: '0009_public_portal_entitlements.sql',
       },
     });
-    const readiness = await anonymousRequest.get('/api/readiness');
+    const readiness = await anonymousRequest.get(`/api/readiness?candidate=${candidateSha}`, {
+      headers: { 'cache-control': 'no-cache' },
+    });
     expect(readiness.status()).toBe(200);
     await expect(readiness.json()).resolves.toMatchObject({ ok: true, ready: true, candidateSha });
 
