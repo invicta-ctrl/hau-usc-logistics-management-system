@@ -2105,6 +2105,21 @@ export function createRuntimeExtensions(options) {
         ['inventory', 'Inspect inventory attention', 'Low stock, reservations, and movement history'],
       ],
     },
+    food: {
+      label: 'Food Committee workspace',
+      heading: 'Keep every meal, deadline, and handoff on time',
+      description:
+        'Work deadline-first across food requests, canvassing and procurement context, cumulative receiving, and controlled release while keeping event and distribution timing visible.',
+      boundaryTitle: 'Food capability boundary',
+      boundary:
+        'Food ownership scopes the queue and context. Procurement, receiving, evidence, and Release Desk actions remain available only through existing capabilities and server-side validation.',
+      actions: [
+        ['request', 'Open the food request queue', 'Food requirements, quantities, purpose, and event deadlines'],
+        ['procurement', 'Review food sourcing', 'Canvassing, supplier references, budgets, and receiving'],
+        ['release', 'Open controlled distribution', 'Recipient confirmation and approved release evidence'],
+        ['inventory', 'Check stock context', 'Available stock and movement history before fulfillment'],
+      ],
+    },
   };
 
   const countStatuses = (rows, statuses) =>
@@ -2131,6 +2146,39 @@ export function createRuntimeExtensions(options) {
       ['Ready to release', readyToRelease, 'Items eligible for controlled handoff'],
     ];
   };
+
+  const foodMetrics = (state) => {
+    const foodOwned = (row) =>
+      [row?.ownerCommitteeId, row?.assignedCommittee, row?.committeeId, row?.committee]
+        .filter(Boolean)
+        .some((value) => String(value).toUpperCase().includes('FOOD')) ||
+      String(row?.componentType ?? row?.type ?? '').toUpperCase() === 'FOOD';
+    const rows = [
+      ...(state.compositeComponents ?? []),
+      ...(state.deliverables ?? []),
+      ...(state.requests ?? []),
+    ].filter(foodOwned);
+    const active = rows.filter(
+      (row) => !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
+    );
+    const sourcing = countStatuses(
+      active,
+      new Set(['FOR_CANVASSING', 'WAITING_FOR_BUDGET', 'TO_BE_PROCURED', 'PROCURED']),
+    );
+    const receiving = countStatuses(active, new Set(['RECEIVING', 'PARTIALLY_RECEIVED']));
+    const ready = countStatuses(active, new Set(['READY_TO_RELEASE']));
+    return [
+      ['Active food lines', active.length, 'All current food requirements'],
+      ['Sourcing and budget', sourcing, 'Canvassing through procurement'],
+      ['Receiving attention', receiving, 'Cumulative quantity and evidence checks'],
+      ['Ready to distribute', ready, 'Capability-bound Release Desk handoffs'],
+    ];
+  };
+
+  const metricsForExperience = (experience, state) => ({
+    director: directorMetrics,
+    food: foodMetrics,
+  }[experience]?.(state) ?? []);
 
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
@@ -2160,7 +2208,7 @@ export function createRuntimeExtensions(options) {
     panel.hidden = !definition;
     if (!definition) return;
     const state = getState() ?? {};
-    const metrics = experience === 'director' ? directorMetrics(state) : [];
+    const metrics = metricsForExperience(experience, state);
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
       <div>
