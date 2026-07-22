@@ -1,12 +1,12 @@
 # Project Status
 
-## v0.6 Phase 2 active - Administrator control desk complete locally
+## v0.6 Phase 2 active - Administrator control desk checkpointed
 
-- Phase/stage: `PHASE_2_ADMINISTRATOR_CONTROL_DESK_READY_TO_CHECKPOINT`.
+- Phase/stage: `PHASE_2_ADMINISTRATOR_CONTROL_DESK_CHECKPOINTED` at code commit `658410b24b6556131d11901551911d553a1832b7`.
 - Delivered: the S0002 Administrator reference was read in isolation and recorded in `.codex/DESIGN_REFERENCE_DIGEST.md`; the existing authorized Reference Administration workspace now leads with exception-first governance context and four explicit control areas: Access Management, Reference Data, Link Registry, and Audit & System.
 - Boundaries: each control card selects an existing server-authorized domain only. It cannot grant a role or capability, alter a service, bypass second review, mutate a ledger, or expose protected configuration. Roster-owned and Sync Health domains remain read-only.
 - Verification: focused Administrator unit tests pass 10 / 10; focused browser proof passes 6 / 24 intentional skips; `npm run check` passes with 45 Vitest files / 341 tests, build/parity/package verification, and Apps Script validation.
-- Next action: checkpoint this bounded Administrator slice, then stop pending a new explicitly authorized role slice.
+- Next action: stop pending a new explicitly authorized role slice; do not ingest another role reference automatically.
 
 ## v0.6 Phase 2 active - shared shell/design-system milestone verified
 

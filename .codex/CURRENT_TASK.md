@@ -12,7 +12,8 @@ STOP CONDITION: Administrator slice complete; do not ingest or implement another
 ## Active bounded unit
 
 Phase 1 remains complete and locked at `c07e6e6ad5777710a68bef4d1d2aa553b964c108`.
-The S0003 shared-shell checkpoint is pushed as `feaccf7ed1256085d5950b315fd8d7ce2afbc773`.
+The S0003 shared-shell checkpoint is pushed as `feaccf7ed1256085d5950b315fd8d7ce2afbc773`;
+the Administrator code checkpoint is pushed as `658410b24b6556131d11901551911d553a1832b7`.
 This Administrator-only slice read `ADMIN.html` at SHA-256
 `88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`,
 appended its durable decisions to the digest, and adapted only the existing
