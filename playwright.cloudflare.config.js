@@ -12,4 +12,10 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
+  webServer: {
+    command: 'node scripts/start-local-worker-acceptance.mjs',
+    url: 'http://127.0.0.1:8787/api/health',
+    reuseExistingServer: false,
+    timeout: 60_000,
+  },
 });
