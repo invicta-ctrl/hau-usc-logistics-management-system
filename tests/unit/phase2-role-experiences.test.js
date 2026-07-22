@@ -51,4 +51,19 @@ describe('Phase 2 role experiences', () => {
     expect(runtime).toContain('inventoryMetrics');
     expect(css).toContain("body[data-experience='inventory-pantry']");
   });
+
+  it('keeps Materials fulfillment traceability and authority boundaries in the shared experience layer', async () => {
+    const [digest, runtime, css] = await Promise.all([
+      read('.codex/DESIGN_REFERENCE_DIGEST.md'),
+      read('src/visual/runtime-extensions.js'),
+      read('src/styles/visual/runtime-extensions.css'),
+    ]);
+
+    expect(digest).toContain('0c7b82d130470772c1045dc53a3c1810155b15274cf173c3453fbbb6d1bd09e5');
+    expect(digest).toContain('process-oriented fulfillment workspace');
+    expect(runtime).toContain('Move materials from request to release without losing context');
+    expect(runtime).toContain('Materials capability boundary');
+    expect(runtime).toContain('materialsMetrics');
+    expect(css).toContain("body[data-experience='materials']");
+  });
 });

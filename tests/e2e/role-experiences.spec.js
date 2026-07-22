@@ -80,3 +80,31 @@ test('Inventory & Pantry receives an exception-first amber shared-shell experien
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
+
+test('Materials receives a traceable blue-accent shared-shell experience', async ({ page }, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop role proof are sufficient.',
+  );
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await page.evaluate(() => {
+    document.body.dataset.experience = 'materials';
+  });
+
+  const panel = page.locator('#roleExperiencePanel');
+  await expect(panel).toBeVisible();
+  await expect(panel).toHaveAttribute('data-role-experience', 'materials');
+  await expect(
+    panel.getByRole('heading', { name: 'Move materials from request to release without losing context' }),
+  ).toBeVisible();
+  await expect(panel.getByText('Materials capability boundary', { exact: true })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /Open the materials queue/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /Compare sourcing and budget/ })).toBeVisible();
+  expect(
+    await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
+  ).toBe('#356a88');
+
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(overflow).toBeLessThanOrEqual(1);
+});

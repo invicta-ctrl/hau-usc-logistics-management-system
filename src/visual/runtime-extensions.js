@@ -2135,6 +2135,21 @@ export function createRuntimeExtensions(options) {
         ['release', 'Open controlled handoff', 'Re-check reservations and physical balance before release'],
       ],
     },
+    materials: {
+      label: 'Materials & Documentation workspace',
+      heading: 'Move materials from request to release without losing context',
+      description:
+        'Keep event identity, exact specifications, canvass evidence, quote freshness, budget state, procurement, cumulative receiving, deliverables, and controlled release connected through one traceable fulfillment pipeline.',
+      boundaryTitle: 'Materials capability boundary',
+      boundary:
+        'Materials ownership scopes the queue and fulfillment context. Quote preference, budget, procurement, receiving, evidence, stock transfer, and Release Desk actions remain available only through existing capabilities and server-side validation.',
+      actions: [
+        ['request', 'Open the materials queue', 'Exact requirements, quantities, specifications, purpose, and deadlines'],
+        ['procurement', 'Compare sourcing and budget', 'Current quotes, stale references, purchasing stages, and cumulative receipts'],
+        ['release', 'Open controlled fulfillment', 'Requested, received, and released quantities with recipient evidence'],
+        ['inventory', 'Review stock and provenance', 'Availability, event-item identity, transfers, and movement history'],
+      ],
+    },
   };
 
   const countStatuses = (rows, statuses) =>
@@ -2226,10 +2241,34 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
+  const materialsMetrics = (state) => {
+    const materialsOwned = (row) =>
+      [row?.ownerCommitteeId, row?.assignedCommittee, row?.committeeId, row?.committee]
+        .filter(Boolean)
+        .some((value) => String(value).toUpperCase().includes('MATERIAL')) ||
+      String(row?.componentType ?? row?.type ?? '').toUpperCase() === 'MATERIALS';
+    const active = [
+      ...(state.compositeComponents ?? []),
+      ...(state.deliverables ?? []),
+      ...(state.requests ?? []),
+    ].filter(
+      (row) =>
+        materialsOwned(row) &&
+        !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
+    );
+    return [
+      ['For canvassing', countStatuses(active, new Set(['FOR_CANVASSING'])), 'Current comparable quotes required'],
+      ['Waiting for budget', countStatuses(active, new Set(['WAITING_FOR_BUDGET'])), 'Approved needs blocked before purchase'],
+      ['To be procured', countStatuses(active, new Set(['TO_BE_PROCURED'])), 'Preferred sourcing ready for purchasing'],
+      ['Ready to release', countStatuses(active, new Set(['READY_TO_RELEASE'])), 'Received deliverables awaiting handoff'],
+    ];
+  };
+
   const metricsForExperience = (experience, state) => ({
     director: directorMetrics,
     food: foodMetrics,
     'inventory-pantry': inventoryMetrics,
+    materials: materialsMetrics,
   }[experience]?.(state) ?? []);
 
   const installRoleExperience = () => {
