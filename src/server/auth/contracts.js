@@ -98,7 +98,11 @@ export function accountAuthorization(account) {
 export function validateStarterAssignment({ roleId, committeeIds, defaultCommitteeId } = {}) {
   const canonicalRole = canonicalRoleId(roleId);
   const canonicalCommittees = normalizeCommitteeIds(committeeIds);
-  if (![ROLES.ADMINISTRATOR, ROLES.DIRECTOR, ROLES.DOL_STAFF, ROLES.COMMITTEE_HEAD].includes(canonicalRole)) {
+  if (
+    ![ROLES.ADMINISTRATOR, ROLES.DIRECTOR, ROLES.DOL_STAFF, ROLES.COMMITTEE_HEAD, ROLES.REQUESTER].includes(
+      canonicalRole,
+    )
+  ) {
     return { valid: false, code: 'ROLE_ASSIGNMENT_INVALID' };
   }
   if ([ROLES.DOL_STAFF, ROLES.COMMITTEE_HEAD].includes(canonicalRole) && canonicalCommittees.length === 0) {
@@ -126,6 +130,7 @@ export function sessionUserDto(account, session) {
     accountStatus: account.status,
     onboardingComplete: Boolean(account.onboardingCompletedAt),
     authorization,
+    lendingEligible: account.lendingEligible === true,
     experienceId: resolveExperience(account),
     sessionExpiresAt: session.expiresAt,
   });

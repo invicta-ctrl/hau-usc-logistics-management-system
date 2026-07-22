@@ -56,7 +56,11 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(health.json()).resolves.toMatchObject({
       environment: 'STAGING',
       candidateSha,
-      database: { connected: true, schemaVersion: '8', latestMigration: '0008_access_management.sql' },
+      database: {
+        connected: true,
+        schemaVersion: '9',
+        latestMigration: '0009_public_portal_entitlements.sql',
+      },
     });
     const readiness = await anonymousRequest.get('/api/readiness');
     expect(readiness.status()).toBe(200);

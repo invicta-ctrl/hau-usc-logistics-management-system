@@ -98,7 +98,10 @@ const requiredText = (value, field, max = 240) => {
   return result;
 };
 
-const optionalText = (value, max = 500) => String(value ?? '').trim().slice(0, max);
+const optionalText = (value, max = 500) =>
+  String(value ?? '')
+    .trim()
+    .slice(0, max);
 
 const positiveNumber = (value, field = 'quantity') => {
   const result = Number(value);
@@ -255,6 +258,30 @@ function ownerCommitteeId(account, requestedCommitteeId = '') {
   return selected;
 }
 
+function assertBorrowerPortalAccount(account) {
+  const authorization = assertCapability(account, CAPABILITIES.LENDING_CREATE);
+  if (authorization.roleId !== 'REQUESTER' || account.lendingEligible !== true || !account.institutionId) {
+    throw new ApiError(
+      'LENDING_ELIGIBILITY_REQUIRED',
+      'This account is not eligible to use Office Lending.',
+      {
+        status: 403,
+      },
+    );
+  }
+  return authorization;
+}
+
+function assertRequesterPortalAccount(account) {
+  const authorization = assertCapability(account, CAPABILITIES.REQUEST_CREATE);
+  if (authorization.roleId !== 'REQUESTER') {
+    throw new ApiError('REQUESTER_PORTAL_REQUIRED', 'This account cannot use the requester portal.', {
+      status: 403,
+    });
+  }
+  return authorization;
+}
+
 function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
   const scope = entityScope(account);
   const prefix = alias ? `${alias}.` : '';
@@ -308,7 +335,10 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
     );
 }
 
-function historyStatement(db, { entityType, entityId, previousStatus = '', newStatus, accountId, idempotencyKey, reason = '' }) {
+function historyStatement(
+  db,
+  { entityType, entityId, previousStatus = '', newStatus, accountId, idempotencyKey, reason = '' },
+) {
   return db
     .prepare(
       `INSERT INTO status_history (
@@ -366,14 +396,7 @@ function idempotencyStatement(db, scope, replayState, actorId, result) {
          scope, idempotency_key, actor_account_id, request_fingerprint, result_json, created_at
        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
     )
-    .bind(
-      scope,
-      replayState.key,
-      actorId,
-      replayState.fingerprint,
-      JSON.stringify(result),
-      nowIso(),
-    );
+    .bind(scope, replayState.key, actorId, replayState.fingerprint, JSON.stringify(result), nowIso());
 }
 
 function pageInput(command = {}) {
@@ -383,7 +406,8 @@ function pageInput(command = {}) {
 }
 
 async function rows(db, sql, bindings = []) {
-  return (await db.prepare(sql).bind(...bindings).all()).results;
+  const statement = db.prepare(sql);
+  return (await (bindings.length ? statement.bind(...bindings) : statement).all()).results;
 }
 
 const itemDto = (row, requestOnly = false) => ({
@@ -450,11 +474,19 @@ const lineDto = (row) => ({
 });
 
 async function revision(db, scope = 'global') {
-  const value = await db.prepare('SELECT revision, updated_at FROM data_revisions WHERE scope = ?1').bind(scope).first();
+  const value = await db
+    .prepare('SELECT revision, updated_at FROM data_revisions WHERE scope = ?1')
+    .bind(scope)
+    .first();
   return { revision: Number(value?.revision ?? 0), updatedAt: value?.updated_at ?? '' };
 }
 
-export function createD1OperationalService({ db, environment = 'DEVELOPMENT', appVersion = '0.6.0', schemaVersion = '1.0.0' }) {
+export function createD1OperationalService({
+  db,
+  environment = 'DEVELOPMENT',
+  appVersion = '0.6.0',
+  schemaVersion = '1.0.0',
+}) {
   if (!db) throw new Error('D1 database binding is required.');
 
   async function essential({ account, requestOnly = false, correlationId }) {
@@ -714,7 +746,10 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         };
       }
     }
-    const totalRow = await db.prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1').bind('ACTIVE').first();
+    const totalRow = await db
+      .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
+      .bind('ACTIVE')
+      .first();
     const globalRevision = await revision(db);
     const scopeRevision = requestOnly ? null : await revision(db, module);
     return {
@@ -747,10 +782,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
   }
 
   async function canvassLinkContext(command) {
-    let linkedRequestLineId = optionalText(
-      command.linkedRequestLineId ?? command.linkedLineId,
-      80,
-    );
+    let linkedRequestLineId = optionalText(command.linkedRequestLineId ?? command.linkedLineId, 80);
     let linkedDeliverableId = optionalText(command.linkedDeliverableId, 80);
     let linkedRestockId = optionalText(command.linkedRestockId, 80);
     let record;
@@ -870,20 +902,19 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
       ownerAccountId: link.record.owner_account_id,
     });
     const evidenceId = await requireStoredEvidence(command);
-    const mutation = await replay(
-      db,
-      'saveCanvassReference',
-      command.clientRequestId,
-      account.id,
-      command,
-    );
+    const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const supplierName = requiredText(command.supplierName, 'supplierName', 160);
     const normalizedName = supplierName.toLowerCase().replace(/\s+/gu, ' ');
     let supplier = command.supplierId
-      ? await db.prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1').bind(command.supplierId).first()
+      ? await db
+          .prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1')
+          .bind(command.supplierId)
+          .first()
       : await db
-          .prepare('SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1')
+          .prepare(
+            'SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1',
+          )
           .bind(normalizedName)
           .first();
     if (command.supplierId && !supplier) {
@@ -1004,13 +1035,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
       ownerAccountId: canvass.owner_account_id,
     });
     const rationale = requiredText(command.rationale, 'rationale', 500);
-    const mutation = await replay(
-      db,
-      'selectPreferredCanvass',
-      command.clientRequestId,
-      account.id,
-      command,
-    );
+    const mutation = await replay(db, 'selectPreferredCanvass', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const timestamp = nowIso();
     const result = {
@@ -1046,12 +1071,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
             `UPDATE deliverables SET preferred_canvass_id = ?1, updated_at = ?4
              WHERE (?2 IS NOT NULL AND id = ?2) OR (?3 IS NOT NULL AND request_line_id = ?3)`,
           )
-          .bind(
-            canvassId,
-            canvass.linked_deliverable_id,
-            canvass.linked_request_line_id,
-            timestamp,
-          ),
+          .bind(canvassId, canvass.linked_deliverable_id, canvass.linked_request_line_id, timestamp),
       );
     }
     statements.push(
@@ -1106,13 +1126,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         { status: 409 },
       );
     }
-    const mutation = await replay(
-      db,
-      'transitionDeliverable',
-      command.clientRequestId,
-      account.id,
-      command,
-    );
+    const mutation = await replay(db, 'transitionDeliverable', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const timestamp = nowIso();
     const result = { deliverableId, id: deliverableId, status: target, correlationId };
@@ -1253,11 +1267,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
 
   async function transitionRestock({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.transitionRestock);
-    const restockId = requiredText(
-      command.restockRequestId ?? command.restockId,
-      'restockRequestId',
-      80,
-    );
+    const restockId = requiredText(command.restockRequestId ?? command.restockId, 'restockRequestId', 80);
     const action = requiredText(command.action, 'action', 40).toUpperCase();
     const rule = RESTOCK_TRANSITIONS[action];
     if (!rule) throw new ApiError('RESTOCK_ACTION_INVALID', 'Choose an approved restock action.');
@@ -1289,11 +1299,9 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     });
     const currentStatus = restock.line_status ?? restock.status;
     if (!rule.from.includes(currentStatus)) {
-      throw new ApiError(
-        'INVALID_TRANSITION',
-        `The restock action is not allowed from ${currentStatus}.`,
-        { status: 409 },
-      );
+      throw new ApiError('INVALID_TRANSITION', `The restock action is not allowed from ${currentStatus}.`, {
+        status: 409,
+      });
     }
     const expectedRevision = Number(command.expectedRevision);
     const currentRevision = Number(restock.workflow_revision ?? 1);
@@ -1311,19 +1319,11 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
       .bind(restock.id, restock.source_request_line_id)
       .first();
     if (rule.requiresPreferred && Number(preferred?.count ?? 0) !== 1) {
-      throw new ApiError(
-        'PREFERRED_QUOTE_REQUIRED',
-        'Select exactly one active preferred quote first.',
-        { status: 409 },
-      );
+      throw new ApiError('PREFERRED_QUOTE_REQUIRED', 'Select exactly one active preferred quote first.', {
+        status: 409,
+      });
     }
-    const mutation = await replay(
-      db,
-      'transitionRestock',
-      command.clientRequestId,
-      account.id,
-      command,
-    );
+    const mutation = await replay(db, 'transitionRestock', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const timestamp = nowIso();
     const nextRevision = currentRevision + 1;
@@ -1350,7 +1350,9 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
            WHERE id = ?1 AND workflow_revision = ?5`,
         )
         .bind(restock.source_request_line_id, rule.to, nextRevision, timestamp, currentRevision),
-      db.prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1').bind(restock.source_request_id, timestamp),
+      db
+        .prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1')
+        .bind(restock.source_request_id, timestamp),
       historyStatement(db, {
         entityType: 'REQUEST_LINE',
         entityId: restock.source_request_line_id,
@@ -1470,6 +1472,152 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     return result;
   }
 
+  async function requesterRequestPortal({ account, correlationId }) {
+    assertRequesterPortalAccount(account);
+    const items = await rows(
+      db,
+      `SELECT id, name, category, unit
+       FROM inventory_items
+       WHERE status = 'ACTIVE'
+       ORDER BY name`,
+    );
+    const requests = await rows(
+      db,
+      `SELECT request.id, request.request_type, request.purpose, request.status,
+              request.created_at, request.updated_at,
+              COUNT(line.id) AS line_count
+       FROM requests request
+       LEFT JOIN request_lines line ON line.request_id = request.id
+       WHERE request.requester_account_id = ?1
+       GROUP BY request.id
+       ORDER BY request.updated_at DESC`,
+      [account.id],
+    );
+    const history = await rows(
+      db,
+      `SELECT entity_id, new_status, changed_at, reason
+       FROM status_history
+       WHERE entity_type = 'REQUEST' AND entity_id IN (
+         SELECT id FROM requests WHERE requester_account_id = ?1
+       )
+       ORDER BY changed_at DESC LIMIT 200`,
+      [account.id],
+    );
+    return {
+      ok: true,
+      correlationId,
+      profile: { displayName: account.profile?.fullName ?? '' },
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        unit: item.unit,
+      })),
+      requests: requests.map((request) => ({
+        id: request.id,
+        type: request.request_type,
+        purpose: request.purpose,
+        status: request.status,
+        lineCount: Number(request.line_count),
+        createdAt: request.created_at,
+        updatedAt: request.updated_at,
+      })),
+      history: history.map((entry) => ({
+        requestId: entry.entity_id,
+        status: entry.new_status,
+        at: entry.changed_at,
+        note: entry.reason || '',
+      })),
+    };
+  }
+
+  async function submitRequesterRequest({ account, command, correlationId }) {
+    assertRequesterPortalAccount(account);
+    const item = await db
+      .prepare("SELECT id, name, category, unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
+      .bind(requiredText(command.itemId, 'itemId', 80))
+      .first();
+    if (!item) {
+      throw new ApiError('REQUEST_ITEM_UNAVAILABLE', 'That catalog item is not available for a request.', {
+        status: 404,
+      });
+    }
+    return submitRequest({
+      account,
+      correlationId,
+      command: {
+        ...command,
+        requesterName: account.profile?.fullName ?? '',
+        requesterEmail: account.profile?.email ?? '',
+        ownerCommitteeId: '',
+        requestType: 'EVENT_LOGISTICS',
+        lines: [
+          {
+            itemId: item.id,
+            description: item.name,
+            category: item.category,
+            unit: item.unit,
+            quantity: command.quantity,
+            fulfillmentSource: 'FOR_CANVASSING',
+            clientLineId: 'requester-portal-line-1',
+          },
+        ],
+      },
+    });
+  }
+
+  async function cancelRequesterRequest({ account, command, correlationId }) {
+    assertRequesterPortalAccount(account);
+    const requestId = requiredText(command.requestId, 'requestId', 80);
+    const mutation = await replay(db, 'cancelRequesterRequest', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const request = await db
+      .prepare('SELECT status, requester_account_id FROM requests WHERE id = ?1')
+      .bind(requestId)
+      .first();
+    if (!request || request.requester_account_id !== account.id) {
+      throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
+    }
+    if (request.status !== 'FOR_REVIEW') {
+      throw new ApiError('REQUEST_CANCELLATION_NOT_ALLOWED', 'This request can no longer be cancelled.', {
+        status: 409,
+      });
+    }
+    const timestamp = nowIso();
+    const result = { id: requestId, requestId, status: 'CANCELLED', correlationId };
+    await db.batch([
+      db
+        .prepare(
+          "UPDATE requests SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'FOR_REVIEW'",
+        )
+        .bind(requestId, timestamp),
+      db
+        .prepare(
+          "UPDATE request_lines SET status = 'CANCELLED', updated_at = ?2 WHERE request_id = ?1 AND status = 'FOR_REVIEW'",
+        )
+        .bind(requestId, timestamp),
+      historyStatement(db, {
+        entityType: 'REQUEST',
+        entityId: requestId,
+        previousStatus: 'FOR_REVIEW',
+        newStatus: 'CANCELLED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: 'Cancelled by requester.',
+      }),
+      auditStatement(db, {
+        action: 'REQUEST_CANCELLED_BY_REQUESTER',
+        entityType: 'REQUEST',
+        entityId: requestId,
+        accountId: account.id,
+        correlationId,
+      }),
+      idempotencyStatement(db, 'cancelRequesterRequest', mutation, account.id, result),
+      ...revisionStatements(db, ['request']),
+    ]);
+    return result;
+  }
+
   async function reserveStock({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.reserveStock);
     const itemId = requiredText(command.itemId, 'itemId', 80);
@@ -1489,7 +1637,8 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         )
         .bind(requestLineId)
         .first();
-      if (!requestScope) throw new ApiError('REQUEST_LINE_NOT_FOUND', 'The request line was not found.', { status: 404 });
+      if (!requestScope)
+        throw new ApiError('REQUEST_LINE_NOT_FOUND', 'The request line was not found.', { status: 404 });
       assertEntityScope(account, {
         committeeId: requestScope.owner_committee_id,
         ownerAccountId: requestScope.requester_account_id,
@@ -1497,7 +1646,10 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     }
     const mutation = await replay(db, 'reserveStock', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
-    const item = await db.prepare('SELECT unit FROM inventory_items WHERE id = ?1 AND status = ?2').bind(itemId, 'ACTIVE').first();
+    const item = await db
+      .prepare('SELECT unit FROM inventory_items WHERE id = ?1 AND status = ?2')
+      .bind(itemId, 'ACTIVE')
+      .first();
     if (!item) throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
     const reservationId = createId('RSV');
     const result = { reservationId, id: reservationId, itemId, quantity, status: 'ACTIVE', correlationId };
@@ -1529,7 +1681,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
              SET status = 'READY_TO_RELEASE', updated_at = ?2
              WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
           )
-            .bind(requestLineId, nowIso()),
+          .bind(requestLineId, nowIso()),
         idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
         ...revisionStatements(db, ['inventory', 'request']),
       ]);
@@ -1568,10 +1720,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
       32,
     );
     if (!/^\d{1,8}$/u.test(borrowerReference)) {
-      throw new ApiError(
-        'BORROWER_REFERENCE_INVALID',
-        'The student ID must contain one to eight digits.',
-      );
+      throw new ApiError('BORROWER_REFERENCE_INVALID', 'The student ID must contain one to eight digits.');
     }
     await db.batch([
       db
@@ -1621,16 +1770,194 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     return result;
   }
 
+  async function borrowerLendingPortal({ account, correlationId }) {
+    assertBorrowerPortalAccount(account);
+    const items = await rows(
+      db,
+      `SELECT id, name, category, unit, lending_audience, default_loan_days, maximum_loan_quantity
+       FROM inventory_items
+       WHERE status = 'ACTIVE' AND lending_audience IN ('STUDENTS_AND_STAFF', 'USC_STAFF_ONLY')
+       ORDER BY name`,
+    );
+    const tickets = await rows(
+      db,
+      `SELECT ticket.id, ticket.quantity, ticket.unit, ticket.purpose, ticket.due_at, ticket.ticket_type,
+              ticket.status, ticket.created_at, ticket.updated_at, item.name AS item_name
+       FROM lending_tickets ticket
+       LEFT JOIN inventory_items item ON item.id = ticket.item_id
+       WHERE ticket.created_by = ?1
+       ORDER BY ticket.updated_at DESC`,
+      [account.id],
+    );
+    const history = await rows(
+      db,
+      `SELECT entity_id, new_status, changed_at, reason
+       FROM status_history
+       WHERE entity_type = 'LENDING' AND entity_id IN (
+         SELECT id FROM lending_tickets WHERE created_by = ?1
+       )
+       ORDER BY changed_at DESC LIMIT 200`,
+      [account.id],
+    );
+    return {
+      ok: true,
+      correlationId,
+      profile: {
+        displayName: account.profile?.fullName ?? '',
+        institutionId: account.institutionId,
+      },
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        unit: item.unit,
+        audience: item.lending_audience,
+        maximumQuantity: Number(item.maximum_loan_quantity ?? 1) || 1,
+        defaultLoanDays: Number(item.default_loan_days ?? 0),
+        availability: 'Availability confirmed during staff review.',
+      })),
+      tickets: tickets.map((ticket) => ({
+        id: ticket.id,
+        itemName: ticket.item_name ?? 'Requested item',
+        quantity: Number(ticket.quantity),
+        unit: ticket.unit,
+        purpose: ticket.purpose,
+        dueAt: ticket.due_at,
+        type: ticket.ticket_type,
+        status:
+          ticket.status === 'ON_LOAN' && ticket.due_at && ticket.due_at < nowIso()
+            ? 'OVERDUE'
+            : ticket.status,
+        createdAt: ticket.created_at,
+        updatedAt: ticket.updated_at,
+      })),
+      history: history.map((entry) => ({
+        ticketId: entry.entity_id,
+        status: entry.new_status,
+        at: entry.changed_at,
+        note: entry.reason || '',
+      })),
+    };
+  }
+
+  async function submitBorrowerLendingRequest({ account, command, correlationId }) {
+    assertBorrowerPortalAccount(account);
+    const item = await db
+      .prepare(
+        `SELECT id, unit, lending_audience, maximum_loan_quantity, default_loan_days
+         FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'`,
+      )
+      .bind(requiredText(command.itemId, 'itemId', 80))
+      .first();
+    if (!item || !['STUDENTS_AND_STAFF', 'USC_STAFF_ONLY'].includes(item.lending_audience)) {
+      throw new ApiError('LENDING_ITEM_UNAVAILABLE', 'That item is not available through Office Lending.', {
+        status: 404,
+      });
+    }
+    const quantity = positiveNumber(command.quantity);
+    if (item.maximum_loan_quantity && quantity > Number(item.maximum_loan_quantity)) {
+      throw new ApiError(
+        'LENDING_QUANTITY_EXCEEDED',
+        'The requested quantity exceeds the approved lending limit.',
+      );
+    }
+    const ticketType = requiredText(command.ticketType ?? 'LOAN', 'ticketType', 24).toUpperCase();
+    if (!['LOAN', 'CONSUMABLE'].includes(ticketType)) {
+      throw new ApiError('LENDING_TYPE_INVALID', 'Choose a loan or consumable request.');
+    }
+    const dueAt = optionalText(command.dueAt, 64);
+    if (
+      ticketType === 'LOAN' &&
+      (!dueAt || Number.isNaN(Date.parse(dueAt)) || Date.parse(dueAt) <= Date.now())
+    ) {
+      throw new ApiError('LENDING_DUE_DATE_INVALID', 'A future requested due date is required for a loan.');
+    }
+    return createLendingTicket({
+      account,
+      correlationId,
+      command: {
+        ...command,
+        borrowerReference: account.institutionId,
+        borrowerName: account.profile?.fullName ?? '',
+        borrowerType: 'INSTITUTION_APPROVED',
+        contact: '',
+        unit: item.unit,
+        ticketType,
+        dueAt: ticketType === 'LOAN' ? dueAt : '',
+      },
+    });
+  }
+
+  async function cancelBorrowerLendingRequest({ account, command, correlationId }) {
+    assertBorrowerPortalAccount(account);
+    const ticketId = requiredText(command.ticketId, 'ticketId', 80);
+    const mutation = await replay(
+      db,
+      'cancelBorrowerLendingRequest',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const ticket = await db
+      .prepare('SELECT status, created_by FROM lending_tickets WHERE id = ?1')
+      .bind(ticketId)
+      .first();
+    if (!ticket || ticket.created_by !== account.id) {
+      throw new ApiError('LENDING_NOT_FOUND', 'The lending request was not found.', { status: 404 });
+    }
+    if (ticket.status !== 'FOR_REVIEW') {
+      throw new ApiError(
+        'LENDING_CANCELLATION_NOT_ALLOWED',
+        'This lending request can no longer be cancelled.',
+        { status: 409 },
+      );
+    }
+    const result = { id: ticketId, ticketId, status: 'CANCELLED', correlationId };
+    await db.batch([
+      db
+        .prepare(
+          "UPDATE lending_tickets SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'FOR_REVIEW'",
+        )
+        .bind(ticketId, nowIso()),
+      historyStatement(db, {
+        entityType: 'LENDING',
+        entityId: ticketId,
+        previousStatus: 'FOR_REVIEW',
+        newStatus: 'CANCELLED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: 'Cancelled by borrower.',
+      }),
+      auditStatement(db, {
+        action: 'LENDING_CANCELLED_BY_BORROWER',
+        entityType: 'LENDING',
+        entityId: ticketId,
+        accountId: account.id,
+        correlationId,
+      }),
+      idempotencyStatement(db, 'cancelBorrowerLendingRequest', mutation, account.id, result),
+      ...revisionStatements(db, ['lending']),
+    ]);
+    return result;
+  }
+
   async function approveLendingTicket({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.approveLendingTicket);
     const ticketId = requiredText(command.ticketId, 'ticketId', 80);
     const key = command.clientRequestId ?? `approve-${ticketId}`;
     const ticket = await db.prepare('SELECT * FROM lending_tickets WHERE id = ?1').bind(ticketId).first();
-    if (!ticket) throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
+    if (!ticket)
+      throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
     assertEntityScope(account, { committeeId: ticket.owner_committee_id, ownerAccountId: ticket.created_by });
     const mutation = await replay(db, 'approveLendingTicket', key, account.id, command);
     if (mutation.replayed) return mutation.value;
-    if (ticket.status !== 'FOR_REVIEW') throw new ApiError('LENDING_STATE_CONFLICT', 'The lending ticket cannot be approved from its current state.', { status: 409 });
+    if (ticket.status !== 'FOR_REVIEW')
+      throw new ApiError(
+        'LENDING_STATE_CONFLICT',
+        'The lending ticket cannot be approved from its current state.',
+        { status: 409 },
+      );
     const reservationId = createId('RSV');
     const result = { ticketId, id: ticketId, status: 'READY_TO_CLAIM', correlationId };
     const timestamp = nowIso();
@@ -1643,25 +1970,40 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
                created_at, updated_at, created_by
              ) VALUES (?1, ?2, ?3, ?4, ?5, 'ACTIVE', ?6, ?7, ?7, ?8)`,
           )
-          .bind(reservationId, ticket.item_id, ticket.quantity, ticket.unit, ticketId, mutation.key, timestamp, account.id),
-      db
-        .prepare(
-          `UPDATE lending_tickets SET status = 'READY_TO_CLAIM', approved_by = ?2,
+          .bind(
+            reservationId,
+            ticket.item_id,
+            ticket.quantity,
+            ticket.unit,
+            ticketId,
+            mutation.key,
+            timestamp,
+            account.id,
+          ),
+        db
+          .prepare(
+            `UPDATE lending_tickets SET status = 'READY_TO_CLAIM', approved_by = ?2,
              approved_at = ?3, updated_at = ?3
            WHERE id = ?1 AND status = 'FOR_REVIEW'
              AND EXISTS (SELECT 1 FROM reservations WHERE id = ?4)`,
-        )
-        .bind(ticketId, account.id, timestamp, reservationId),
-      idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
-      historyStatement(db, {
-        entityType: 'LENDING', entityId: ticketId, previousStatus: 'FOR_REVIEW',
-        newStatus: 'READY_TO_CLAIM', accountId: account.id, idempotencyKey: mutation.key,
-      }),
+          )
+          .bind(ticketId, account.id, timestamp, reservationId),
+        idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
+        historyStatement(db, {
+          entityType: 'LENDING',
+          entityId: ticketId,
+          previousStatus: 'FOR_REVIEW',
+          newStatus: 'READY_TO_CLAIM',
+          accountId: account.id,
+          idempotencyKey: mutation.key,
+        }),
         ...revisionStatements(db, ['lending', 'inventory']),
       ]);
     } catch (error) {
       if (String(error?.message ?? '').includes('insufficient available-to-promise')) {
-        throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this lending ticket.', { status: 409 });
+        throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this lending ticket.', {
+          status: 409,
+        });
       }
       throw error;
     }
@@ -1673,27 +2015,72 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     const ticketId = requiredText(command.ticketId, 'ticketId', 80);
     const key = command.clientRequestId ?? `handoff-${ticketId}`;
     const ticket = await db.prepare('SELECT * FROM lending_tickets WHERE id = ?1').bind(ticketId).first();
-    if (!ticket) throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
+    if (!ticket)
+      throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
     assertEntityScope(account, { committeeId: ticket.owner_committee_id, ownerAccountId: ticket.created_by });
     const mutation = await replay(db, 'confirmLendingHandoff', key, account.id, command);
     if (mutation.replayed) return mutation.value;
-    if (ticket.status !== 'READY_TO_CLAIM') throw new ApiError('DUPLICATE_HANDOFF', 'The lending handoff has already been completed or is not ready.', { status: 409 });
+    if (ticket.status !== 'READY_TO_CLAIM')
+      throw new ApiError(
+        'DUPLICATE_HANDOFF',
+        'The lending handoff has already been completed or is not ready.',
+        { status: 409 },
+      );
     const timestamp = nowIso();
     const handoffId = createId('HND');
     const result = { ticketId, id: ticketId, handoffId, status: 'ON_LOAN', correlationId };
     await db.batch([
-      db.prepare(`INSERT INTO lending_handoffs (id, lending_ticket_id, released_by, released_at, idempotency_key, notes)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).bind(handoffId, ticketId, account.id, timestamp, mutation.key, optionalText(command.notes, 500)),
-      db.prepare(`INSERT INTO inventory_ledger (
+      db
+        .prepare(
+          `INSERT INTO lending_handoffs (id, lending_ticket_id, released_by, released_at, idempotency_key, notes)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+        )
+        .bind(handoffId, ticketId, account.id, timestamp, mutation.key, optionalText(command.notes, 500)),
+      db
+        .prepare(
+          `INSERT INTO inventory_ledger (
         id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity,
         related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes
-      ) VALUES (?1, ?2, 'LOAN_OUT', 'OUT', ?3, ?4, ?5, ?6, 'LENDING', ?7, ?8, ?9, 'POSTED', ?10)`)
-        .bind(createId('LED'), timestamp, ticket.item_id, ticket.quantity, ticket.unit, -Number(ticket.quantity), ticketId, account.id, mutation.key, optionalText(command.notes, 500)),
-      db.prepare(`UPDATE reservations SET status = 'RELEASED', cleared_at = ?2, clear_reason = 'LENDING_HANDOFF', updated_at = ?2
-        WHERE lending_ticket_id = ?1 AND status = 'ACTIVE'`).bind(ticketId, timestamp),
-      db.prepare(`UPDATE lending_tickets SET status = 'ON_LOAN', updated_at = ?2 WHERE id = ?1 AND status = 'READY_TO_CLAIM'`).bind(ticketId, timestamp),
-      historyStatement(db, { entityType: 'LENDING', entityId: ticketId, previousStatus: 'READY_TO_CLAIM', newStatus: 'ON_LOAN', accountId: account.id, idempotencyKey: mutation.key }),
-      auditStatement(db, { action: 'LENDING_HANDOFF_CONFIRMED', entityType: 'LENDING', entityId: ticketId, accountId: account.id, correlationId }),
+      ) VALUES (?1, ?2, 'LOAN_OUT', 'OUT', ?3, ?4, ?5, ?6, 'LENDING', ?7, ?8, ?9, 'POSTED', ?10)`,
+        )
+        .bind(
+          createId('LED'),
+          timestamp,
+          ticket.item_id,
+          ticket.quantity,
+          ticket.unit,
+          -Number(ticket.quantity),
+          ticketId,
+          account.id,
+          mutation.key,
+          optionalText(command.notes, 500),
+        ),
+      db
+        .prepare(
+          `UPDATE reservations SET status = 'RELEASED', cleared_at = ?2, clear_reason = 'LENDING_HANDOFF', updated_at = ?2
+        WHERE lending_ticket_id = ?1 AND status = 'ACTIVE'`,
+        )
+        .bind(ticketId, timestamp),
+      db
+        .prepare(
+          `UPDATE lending_tickets SET status = 'ON_LOAN', updated_at = ?2 WHERE id = ?1 AND status = 'READY_TO_CLAIM'`,
+        )
+        .bind(ticketId, timestamp),
+      historyStatement(db, {
+        entityType: 'LENDING',
+        entityId: ticketId,
+        previousStatus: 'READY_TO_CLAIM',
+        newStatus: 'ON_LOAN',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: 'LENDING_HANDOFF_CONFIRMED',
+        entityType: 'LENDING',
+        entityId: ticketId,
+        accountId: account.id,
+        correlationId,
+      }),
       idempotencyStatement(db, 'confirmLendingHandoff', mutation, account.id, result),
       ...revisionStatements(db, ['lending', 'inventory']),
     ]);
@@ -1705,27 +2092,76 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     const ticketId = requiredText(command.ticketId, 'ticketId', 80);
     const key = command.clientRequestId ?? `return-${ticketId}`;
     const ticket = await db.prepare('SELECT * FROM lending_tickets WHERE id = ?1').bind(ticketId).first();
-    if (!ticket) throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
+    if (!ticket)
+      throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
     assertEntityScope(account, { committeeId: ticket.owner_committee_id, ownerAccountId: ticket.created_by });
     const evidenceId = await requireStoredEvidence(command);
     const mutation = await replay(db, 'confirmReturn', key, account.id, command);
     if (mutation.replayed) return mutation.value;
-    if (ticket.status !== 'ON_LOAN') throw new ApiError('DUPLICATE_RETURN', 'The lending return has already been completed or is not on loan.', { status: 409 });
+    if (ticket.status !== 'ON_LOAN')
+      throw new ApiError(
+        'DUPLICATE_RETURN',
+        'The lending return has already been completed or is not on loan.',
+        { status: 409 },
+      );
     const timestamp = nowIso();
     const returnId = createId('RTN');
     const result = { ticketId, id: ticketId, returnId, status: 'RETURNED', correlationId };
     await db.batch([
-      db.prepare(`INSERT INTO lending_returns (
+      db
+        .prepare(
+          `INSERT INTO lending_returns (
         id, lending_ticket_id, returned_by, returned_at, condition_label, evidence_id, idempotency_key, notes
-      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`).bind(returnId, ticketId, account.id, timestamp, optionalText(command.conditionLabel, 80), evidenceId, mutation.key, optionalText(command.notes, 500)),
-      db.prepare(`INSERT INTO inventory_ledger (
+      ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+        )
+        .bind(
+          returnId,
+          ticketId,
+          account.id,
+          timestamp,
+          optionalText(command.conditionLabel, 80),
+          evidenceId,
+          mutation.key,
+          optionalText(command.notes, 500),
+        ),
+      db
+        .prepare(
+          `INSERT INTO inventory_ledger (
         id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity,
         related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes
-      ) VALUES (?1, ?2, 'LOAN_RETURN', 'IN', ?3, ?4, ?5, ?4, 'LENDING', ?6, ?7, ?8, 'POSTED', ?9)`)
-        .bind(createId('LED'), timestamp, ticket.item_id, ticket.quantity, ticket.unit, ticketId, account.id, mutation.key, optionalText(command.notes, 500)),
-      db.prepare(`UPDATE lending_tickets SET status = 'RETURNED', updated_at = ?2 WHERE id = ?1 AND status = 'ON_LOAN'`).bind(ticketId, timestamp),
-      historyStatement(db, { entityType: 'LENDING', entityId: ticketId, previousStatus: 'ON_LOAN', newStatus: 'RETURNED', accountId: account.id, idempotencyKey: mutation.key }),
-      auditStatement(db, { action: 'LENDING_RETURN_CONFIRMED', entityType: 'LENDING', entityId: ticketId, accountId: account.id, correlationId }),
+      ) VALUES (?1, ?2, 'LOAN_RETURN', 'IN', ?3, ?4, ?5, ?4, 'LENDING', ?6, ?7, ?8, 'POSTED', ?9)`,
+        )
+        .bind(
+          createId('LED'),
+          timestamp,
+          ticket.item_id,
+          ticket.quantity,
+          ticket.unit,
+          ticketId,
+          account.id,
+          mutation.key,
+          optionalText(command.notes, 500),
+        ),
+      db
+        .prepare(
+          `UPDATE lending_tickets SET status = 'RETURNED', updated_at = ?2 WHERE id = ?1 AND status = 'ON_LOAN'`,
+        )
+        .bind(ticketId, timestamp),
+      historyStatement(db, {
+        entityType: 'LENDING',
+        entityId: ticketId,
+        previousStatus: 'ON_LOAN',
+        newStatus: 'RETURNED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: 'LENDING_RETURN_CONFIRMED',
+        entityType: 'LENDING',
+        entityId: ticketId,
+        accountId: account.id,
+        correlationId,
+      }),
       idempotencyStatement(db, 'confirmReturn', mutation, account.id, result),
       ...revisionStatements(db, ['lending', 'inventory']),
     ]);
@@ -1925,26 +2361,20 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         );
       }
       if (!['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(line.status)) {
-        throw new ApiError(
-          'RELEASE_STATE_CONFLICT',
-          'A release line is not ready for physical handoff.',
-          { status: 409 },
-        );
+        throw new ApiError('RELEASE_STATE_CONFLICT', 'A release line is not ready for physical handoff.', {
+          status: 409,
+        });
       }
       const remaining = Number(line.requested_quantity) - Number(line.released_quantity);
       if (quantity > remaining) {
-        throw new ApiError(
-          'OVER_RELEASE',
-          'Release quantity exceeds the remaining approved quantity.',
-          { status: 409 },
-        );
+        throw new ApiError('OVER_RELEASE', 'Release quantity exceeds the remaining approved quantity.', {
+          status: 409,
+        });
       }
       if (!line.item_id) {
-        throw new ApiError(
-          'EVENT_ITEM_NOT_READY',
-          'The release line has no authoritative inventory item.',
-          { status: 409 },
-        );
+        throw new ApiError('EVENT_ITEM_NOT_READY', 'The release line has no authoritative inventory item.', {
+          status: 409,
+        });
       }
       const reservationRows = await rows(
         db,
@@ -1986,11 +2416,9 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         uncovered -= consumed;
       }
       if (uncovered > 0) {
-        throw new ApiError(
-          'RESERVATION_CONFLICT',
-          'The active reservation no longer covers this release.',
-          { status: 409 },
-        );
+        throw new ApiError('RESERVATION_CONFLICT', 'The active reservation no longer covers this release.', {
+          status: 409,
+        });
       }
       const lineReleaseId = lines.length === 1 ? releaseId : `${releaseId}-${index + 1}`;
       const transactionId = createId('LED');
@@ -2108,18 +2536,12 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     } catch (error) {
       const message = String(error?.message ?? '');
       if (message.includes('reservation coverage')) {
-        throw new ApiError(
-          'RESERVATION_CONFLICT',
-          'The active reservation changed before release.',
-          { status: 409 },
-        );
+        throw new ApiError('RESERVATION_CONFLICT', 'The active reservation changed before release.', {
+          status: 409,
+        });
       }
       if (message.includes('on-hand negative')) {
-        throw new ApiError(
-          'INSUFFICIENT_STOCK',
-          'Physical stock changed before release.',
-          { status: 409 },
-        );
+        throw new ApiError('INSUFFICIENT_STOCK', 'Physical stock changed before release.', { status: 409 });
       }
       throw error;
     }
@@ -2130,7 +2552,7 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     const method = kind === 'RESTOCK' ? 'receiveRestock' : 'receiveDeliverable';
     assertCapability(account, METHOD_CAPABILITIES[method]);
     const entityId = requiredText(
-      kind === 'RESTOCK' ? command.restockId ?? command.restockRequestId : command.deliverableId,
+      kind === 'RESTOCK' ? (command.restockId ?? command.restockRequestId) : command.deliverableId,
       kind === 'RESTOCK' ? 'restockId' : 'deliverableId',
       80,
     );
@@ -2173,18 +2595,12 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     const evidenceId = await requireStoredEvidence(command);
     const mutation = await replay(db, method, command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
-    const requested = Number(
-      kind === 'RESTOCK' ? entity.requested_quantity : entity.quantity_requested,
-    );
-    const received = Number(
-      kind === 'RESTOCK' ? entity.received_quantity : entity.quantity_received,
-    );
+    const requested = Number(kind === 'RESTOCK' ? entity.requested_quantity : entity.quantity_requested);
+    const received = Number(kind === 'RESTOCK' ? entity.received_quantity : entity.quantity_received);
     if (received + quantity > requested) {
-      throw new ApiError(
-        'OVER_RECEIVING',
-        'The receipt exceeds the approved cumulative quantity.',
-        { status: 409 },
-      );
+      throw new ApiError('OVER_RECEIVING', 'The receipt exceeds the approved cumulative quantity.', {
+        status: 409,
+      });
     }
     const itemId = kind === 'RESTOCK' ? entity.item_id : entity.inventory_match_id;
     const unit = requiredText(command.unit ?? entity.unit, 'unit', 40);
@@ -2313,20 +2729,15 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
         after: { quantity, cumulativeReceived: nextReceived },
       }),
       idempotencyStatement(db, method, mutation, account.id, result),
-      ...revisionStatements(db, [
-        kind === 'RESTOCK' ? 'restocking' : 'procurement',
-        'inventory',
-      ]),
+      ...revisionStatements(db, [kind === 'RESTOCK' ? 'restocking' : 'procurement', 'inventory']),
     );
     try {
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('exceeds approved quantity')) {
-        throw new ApiError(
-          'OVER_RECEIVING',
-          'Concurrent receiving exhausted the approved quantity.',
-          { status: 409 },
-        );
+        throw new ApiError('OVER_RECEIVING', 'Concurrent receiving exhausted the approved quantity.', {
+          status: 409,
+        });
       }
       throw error;
     }
@@ -2406,8 +2817,14 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
   async function migrationStatus({ account, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.getMigrationStatus);
     const migrations = await rows(db, 'SELECT name, applied_at FROM d1_migrations ORDER BY id');
-    const schema = await db.prepare("SELECT value, updated_at FROM app_metadata WHERE key = 'operational_schema_version'").first();
-    const latest = await db.prepare('SELECT id, source_snapshot_hash, status, source_row_count, imported_row_count, rejected_row_count, reconciled_at FROM import_batches ORDER BY created_at DESC LIMIT 1').first();
+    const schema = await db
+      .prepare("SELECT value, updated_at FROM app_metadata WHERE key = 'operational_schema_version'")
+      .first();
+    const latest = await db
+      .prepare(
+        'SELECT id, source_snapshot_hash, status, source_row_count, imported_row_count, rejected_row_count, reconciled_at FROM import_batches ORDER BY created_at DESC LIMIT 1',
+      )
+      .first();
     return {
       ok: true,
       correlationId,
@@ -2420,6 +2837,9 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
 
   const mutationHandlers = {
     submitRequest,
+    requesterRequestPortal,
+    submitRequesterRequest,
+    cancelRequesterRequest,
     reviewRequest,
     reserveStock,
     saveCanvassReference,
@@ -2440,6 +2860,12 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
   return Object.freeze({
     essential,
     bootstrapModule,
+    requesterRequestPortal,
+    submitRequesterRequest,
+    cancelRequesterRequest,
+    borrowerLendingPortal,
+    submitBorrowerLendingRequest,
+    cancelBorrowerLendingRequest,
     migrationStatus,
     capabilityForMethod(method) {
       return METHOD_CAPABILITIES[method] ?? null;
@@ -2447,9 +2873,13 @@ export function createD1OperationalService({ db, environment = 'DEVELOPMENT', ap
     async call(method, context) {
       const handler = mutationHandlers[method];
       if (!handler) {
-        throw new ApiError('OPERATION_NOT_IMPLEMENTED', 'This operation is not available in the D1 staging service.', {
-          status: 501,
-        });
+        throw new ApiError(
+          'OPERATION_NOT_IMPLEMENTED',
+          'This operation is not available in the D1 staging service.',
+          {
+            status: 501,
+          },
+        );
       }
       return handler(context);
     },

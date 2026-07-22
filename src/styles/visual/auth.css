@@ -94,6 +94,45 @@
   font-size: 0.82rem;
 }
 
+.borrower-portal {
+  width: min(100%, 76rem);
+  min-height: 100vh;
+  padding: clamp(1rem, 4vw, 3rem);
+  color: #382725;
+}
+.borrower-portal-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid rgba(119, 80, 13, 0.22);
+  border-radius: 1.25rem;
+  background: #fffdf8;
+  box-shadow: 0 1rem 2.5rem rgba(32, 5, 7, 0.16);
+}
+.borrower-portal-header h1 { margin: 0.2rem 0; color: #5e0d12; }
+.borrower-portal-header p { margin: 0; color: #655854; }
+.borrower-profile { display: grid; justify-items: end; gap: 0.4rem; text-align: right; }
+.borrower-profile small { color: #655854; }
+.borrower-grid { display: grid; grid-template-columns: minmax(18rem, 0.9fr) minmax(24rem, 1.1fr); gap: 1rem; align-items: start; }
+.borrower-form { display: grid; gap: 0.8rem; }
+.borrower-form label { display: grid; gap: 0.35rem; font-weight: 700; }
+.borrower-form textarea { min-height: 6rem; resize: vertical; }
+.borrower-form-message { min-height: 1.2rem; margin: 0; color: #655854; }
+.borrower-ticket-list { display: grid; gap: 0.65rem; }
+.borrower-ticket { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding: 0.85rem; border: 1px solid #e4d6bd; border-radius: 0.75rem; background: #fffdf8; }
+.borrower-ticket div { display: grid; gap: 0.35rem; }
+.borrower-ticket small { color: #655854; }
+
+@media (max-width: 760px) {
+  .borrower-portal { padding: 0.85rem; }
+  .borrower-portal-header, .borrower-ticket { display: grid; }
+  .borrower-profile { justify-items: start; text-align: left; }
+  .borrower-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
   .auth-gateway {
     align-items: start;

@@ -48,6 +48,8 @@ async function accountFromRow(db, row) {
     lockedAt: row.locked_at ?? null,
     lastAccessIdChangedAt: row.last_access_id_changed_at ?? '',
     lastSuccessfulLogin: row.last_successful_login ?? '',
+    lendingEligible: row.lending_eligible === 1,
+    institutionId: row.institution_id ?? '',
   };
 }
 
@@ -189,6 +191,7 @@ export function createD1AccessManagementRepository(db) {
           createdAt: account.createdAt,
           lastSuccessfulLogin: account.lastSuccessfulLogin,
           lastAccessIdChange: account.lastAccessIdChangedAt,
+          lendingEligible: account.lendingEligible,
         });
       }
       return {
@@ -344,8 +347,8 @@ export function createD1AccessManagementRepository(db) {
                profile_full_name, profile_mobile_number, profile_email,
                password_credential_json, temporary_credential_json, credential_version,
                onboarding_completed_at, created_at, updated_at, locked_at,
-               last_access_id_changed_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, NULL, NULL, NULL, ?6, 1, NULL, ?7, ?7, NULL, NULL)`,
+               last_access_id_changed_at, lending_eligible, institution_id
+             ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, NULL, NULL, NULL, ?6, 1, NULL, ?7, ?7, NULL, NULL, ?8, ?9)`,
           )
           .bind(
             account.id,
@@ -355,6 +358,8 @@ export function createD1AccessManagementRepository(db) {
             account.defaultCommitteeId || null,
             JSON.stringify(account.temporaryCredential),
             account.createdAt,
+            account.lendingEligible ? 1 : 0,
+            account.institutionId ?? '',
           ),
         db
           .prepare(

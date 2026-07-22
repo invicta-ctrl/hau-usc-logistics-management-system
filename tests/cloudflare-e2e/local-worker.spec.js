@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '8' },
+    database: { connected: true, schemaVersion: '9' },
   });
 
   await page.goto('/');
@@ -426,6 +426,120 @@ test('Administrator Access Management governs the staging account lifecycle and 
     );
   } finally {
     await Promise.all([admin.dispose(), managed.dispose(), anonymous.dispose()]);
+  }
+});
+
+test('requester portals keep request and lending records self-scoped', async () => {
+  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const admin = await apiRequest.newContext({ baseURL });
+  const requester = await apiRequest.newContext({ baseURL });
+  const suffix = String(Date.now()).slice(-8);
+  const requesterAccessId = `LOCAL.REQUESTER.${suffix}`;
+  try {
+    const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const created = await admin.post('/api/admin/access/create-account', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        accessId: requesterAccessId,
+        temporaryPassword: 'Requester!Portal9472',
+        roleId: 'REQUESTER',
+        committeeIds: [],
+        defaultCommitteeId: '',
+        lendingEligible: true,
+        institutionId: suffix,
+        reason: 'Synthetic requester portal regression coverage.',
+        confirmed: true,
+      },
+    });
+    expect(created.status()).toBe(200);
+    await expect(created.json()).resolves.toMatchObject({
+      account: { accessId: requesterAccessId, roleId: 'REQUESTER', lendingEligible: true },
+    });
+    const starter = await requester.post('/api/auth/login', {
+      data: { accessId: requesterAccessId, password: 'Requester!Portal9472' },
+    });
+    expect(starter.status()).toBe(200);
+    const activation = await starter.json();
+    const activated = await requester.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': activation.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Synthetic Portal Requester',
+          mobileNumber: '+63 917 000 0002',
+          email: 'local-requester-portal@example.invalid',
+        },
+        password: 'Requester!Activated9472',
+        confirmPassword: 'Requester!Activated9472',
+      },
+    });
+    expect(activated.status()).toBe(200);
+    const authenticated = await activated.json();
+    expect(authenticated.user).toMatchObject({
+      lendingEligible: true,
+      authorization: { roleId: 'REQUESTER' },
+    });
+    const csrfToken = authenticated.csrfToken;
+
+    const requestPortal = await requester.get('/api/portal/request');
+    expect(requestPortal.status()).toBe(200);
+    await expect(requestPortal.json()).resolves.toMatchObject({ ok: true, requests: [] });
+    const submittedRequest = await requester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': csrfToken },
+      data: {
+        itemId: 'ITM-LOCAL-001',
+        quantity: 1,
+        department: 'Synthetic Department',
+        purpose: 'Synthetic requester portal request',
+        clientRequestId: `local-requester-portal-request-${suffix}`,
+      },
+    });
+    expect(submittedRequest.status()).toBe(200);
+    const requestResult = await submittedRequest.json();
+    const requestHistory = await requester.get('/api/portal/request');
+    await expect(requestHistory.json()).resolves.toMatchObject({
+      requests: [expect.objectContaining({ id: requestResult.requestId, status: 'FOR_REVIEW' })],
+    });
+    expect(
+      (
+        await requester.post('/api/portal/request/cancel', {
+          headers: { 'x-csrf-token': csrfToken },
+          data: {
+            requestId: requestResult.requestId,
+            clientRequestId: `local-requester-portal-cancel-${suffix}`,
+          },
+        })
+      ).status(),
+    ).toBe(200);
+
+    const lendingPortal = await requester.get('/api/portal/lending');
+    expect(lendingPortal.status()).toBe(200);
+    const submittedLending = await requester.post('/api/portal/lending', {
+      headers: { 'x-csrf-token': csrfToken },
+      data: {
+        itemId: 'ITM-LOCAL-001',
+        quantity: 1,
+        department: 'Synthetic Department',
+        purpose: 'Synthetic borrower portal loan',
+        dueAt: '2027-07-30',
+        ticketType: 'LOAN',
+        clientRequestId: `local-requester-portal-lending-${suffix}`,
+      },
+    });
+    expect(submittedLending.status()).toBe(200);
+    const lendingResult = await submittedLending.json();
+    expect(
+      (
+        await requester.post('/api/portal/lending/cancel', {
+          headers: { 'x-csrf-token': csrfToken },
+          data: {
+            ticketId: lendingResult.ticketId,
+            clientRequestId: `local-requester-portal-lending-cancel-${suffix}`,
+          },
+        })
+      ).status(),
+    ).toBe(200);
+  } finally {
+    await Promise.all([admin.dispose(), requester.dispose()]);
   }
 });
 

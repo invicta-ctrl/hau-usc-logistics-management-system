@@ -199,6 +199,60 @@ async function handleApi(request, env) {
       })(request);
     }
 
+    if (url.pathname === '/api/portal/request' && request.method === 'GET') {
+      const actor = await authorize(request, auth, CAPABILITIES.REQUEST_CREATE, { mutation: false });
+      return json(
+        await operations.requesterRequestPortal({ account: actor.account, correlationId: requestId }),
+      );
+    }
+    if (url.pathname === '/api/portal/request' && request.method === 'POST') {
+      const actor = await authorize(request, auth, CAPABILITIES.REQUEST_CREATE, { mutation: true });
+      return json(
+        await operations.submitRequesterRequest({
+          account: actor.account,
+          command: await body(request),
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/portal/request/cancel' && request.method === 'POST') {
+      const actor = await authorize(request, auth, CAPABILITIES.REQUEST_CREATE, { mutation: true });
+      return json(
+        await operations.cancelRequesterRequest({
+          account: actor.account,
+          command: await body(request),
+          correlationId: requestId,
+        }),
+      );
+    }
+
+    if (url.pathname === '/api/portal/lending' && request.method === 'GET') {
+      const actor = await authorize(request, auth, CAPABILITIES.LENDING_CREATE, { mutation: false });
+      return json(
+        await operations.borrowerLendingPortal({ account: actor.account, correlationId: requestId }),
+      );
+    }
+    if (url.pathname === '/api/portal/lending' && request.method === 'POST') {
+      const actor = await authorize(request, auth, CAPABILITIES.LENDING_CREATE, { mutation: true });
+      return json(
+        await operations.submitBorrowerLendingRequest({
+          account: actor.account,
+          command: await body(request),
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/portal/lending/cancel' && request.method === 'POST') {
+      const actor = await authorize(request, auth, CAPABILITIES.LENDING_CREATE, { mutation: true });
+      return json(
+        await operations.cancelBorrowerLendingRequest({
+          account: actor.account,
+          command: await body(request),
+          correlationId: requestId,
+        }),
+      );
+    }
+
     if (url.pathname.startsWith('/api/admin/access/') && request.method === 'POST') {
       const actor = (await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: true })).account;
       const command = await body(request);

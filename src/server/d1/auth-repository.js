@@ -44,6 +44,8 @@ async function accountFromRow(db, row) {
     updatedAt: row.updated_at,
     lockedAt: row.locked_at ?? null,
     lastAccessIdChangedAt: row.last_access_id_changed_at ?? '',
+    lendingEligible: row.lending_eligible === 1,
+    institutionId: row.institution_id ?? '',
   };
 }
 
@@ -63,6 +65,8 @@ function accountStatement(db, account) {
     account.onboardingCompletedAt ?? null,
     account.createdAt,
     account.updatedAt,
+    account.lendingEligible ? 1 : 0,
+    account.institutionId ?? '',
   ];
   return db
     .prepare(
@@ -70,8 +74,8 @@ function accountStatement(db, account) {
          id, access_id_normalized, status, role_id, default_committee_id,
          profile_full_name, profile_mobile_number, profile_email,
          password_credential_json, temporary_credential_json, credential_version,
-         onboarding_completed_at, created_at, updated_at
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)
+         onboarding_completed_at, created_at, updated_at, lending_eligible, institution_id
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
        ON CONFLICT(id) DO UPDATE SET
          access_id_normalized = excluded.access_id_normalized,
          status = excluded.status,
@@ -84,7 +88,9 @@ function accountStatement(db, account) {
          temporary_credential_json = excluded.temporary_credential_json,
          credential_version = excluded.credential_version,
          onboarding_completed_at = excluded.onboarding_completed_at,
-         updated_at = excluded.updated_at
+         updated_at = excluded.updated_at,
+         lending_eligible = excluded.lending_eligible,
+         institution_id = excluded.institution_id
        WHERE accounts.credential_version = excluded.credential_version - 1`,
     )
     .bind(...values);
@@ -114,7 +120,10 @@ export function createD1AuthRepository(db) {
       );
     },
     async saveAccount(account) {
-      const existing = await db.prepare('SELECT credential_version FROM accounts WHERE id = ?1').bind(account.id).first();
+      const existing = await db
+        .prepare('SELECT credential_version FROM accounts WHERE id = ?1')
+        .bind(account.id)
+        .first();
       const statements = [accountStatement(db, account)];
       if (!existing) {
         for (const committeeId of account.committeeIds ?? []) {
@@ -144,7 +153,9 @@ export function createD1AuthRepository(db) {
       }
       const results = await db.batch(statements);
       if (existing && Number(results[0]?.meta?.changes ?? 0) !== 1) {
-        throw Object.assign(new Error('Concurrent account update rejected.'), { code: 'ACCOUNT_WRITE_CONFLICT' });
+        throw Object.assign(new Error('Concurrent account update rejected.'), {
+          code: 'ACCOUNT_WRITE_CONFLICT',
+        });
       }
       return repository.getAccountById(account.id);
     },
@@ -169,7 +180,10 @@ export function createD1AuthRepository(db) {
       return session;
     },
     async getSession(tokenDigest) {
-      const row = await db.prepare('SELECT * FROM sessions WHERE token_digest = ?1').bind(tokenDigest).first();
+      const row = await db
+        .prepare('SELECT * FROM sessions WHERE token_digest = ?1')
+        .bind(tokenDigest)
+        .first();
       return row
         ? {
             id: row.id,
@@ -290,13 +304,9 @@ export function createD1RateLimiter(db, { limit = 5, windowMs = 15 * 60 * 1000 }
         };
       }
       await db.batch([
+        db.prepare('DELETE FROM auth_rate_limit_events WHERE attempted_at <= ?1').bind(cutoff),
         db
-          .prepare('DELETE FROM auth_rate_limit_events WHERE attempted_at <= ?1')
-          .bind(cutoff),
-        db
-          .prepare(
-            'INSERT INTO auth_rate_limit_events (id, limiter_key, attempted_at) VALUES (?1, ?2, ?3)',
-          )
+          .prepare('INSERT INTO auth_rate_limit_events (id, limiter_key, attempted_at) VALUES (?1, ?2, ?3)')
           .bind(crypto.randomUUID(), key, nowMs),
       ]);
       return { allowed: true, remaining: Math.max(0, limit - attempts - 1) };

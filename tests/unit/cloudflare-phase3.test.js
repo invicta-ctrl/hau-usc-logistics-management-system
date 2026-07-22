@@ -63,9 +63,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
     });
     expect(config.env.staging.name).toBe('hau-usc-logistics-staging');
     expect(config.env.staging.d1_databases[0]).toMatchObject({ binding: 'DB' });
-    expect(config.env.staging.d1_databases[0].database_id).toBe(
-      '00000000-0000-0000-0000-000000000000',
-    );
+    expect(config.env.staging.d1_databases[0].database_id).toBe('00000000-0000-0000-0000-000000000000');
   });
 
   it('implements the required API families and keeps HTTP refresh action-driven', async () => {
@@ -125,6 +123,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
           6: '0006_transaction_guards.sql',
           7: '0007_entity_committee_scope.sql',
           8: '0008_access_management.sql',
+          9: '0009_public_portal_entitlements.sql',
         };
         return read(`migrations/${files[number]}`);
       }),
@@ -183,7 +182,9 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
     expect(operations).toContain("'ENTITY_SCOPE_REQUIRED'");
     expect(operations).toContain("'OUT_OF_SCOPE'");
     expect(operations).toContain('request.owner_committee_id');
-    expect(operations).toContain("!capabilities.includes(CAPABILITIES.VIEW_INTERNAL) ? 'request' : 'overview'");
+    expect(operations).toContain(
+      "!capabilities.includes(CAPABILITIES.VIEW_INTERNAL) ? 'request' : 'overview'",
+    );
   });
 
   it('validates deterministic redacted exports and rejects restricted source values', async () => {

@@ -347,7 +347,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
      7. Application setup, navigation, and common UI
      ========================================================= */
   document.addEventListener('DOMContentLoaded',()=>{
-    const requestOnly=document.body.dataset.requestOnly==='true'||location.pathname==='/request'||new URLSearchParams(location.search).get('request')==='1';
+    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
     void startAuthenticatedRuntime({backendMode,baseUrl:config.httpApiBaseUrl,requestOnly,start:init});
   });
   function sanitizeRequestOnlyState(source){const copy=typeof structuredClone==='function'?structuredClone(source):JSON.parse(JSON.stringify(source));copy.inventoryItems=copy.inventoryItems.map(item=>{const safe={...item,openingOnHand:Math.max(0,Number(item.openingOnHand||0)+copy.ledgerTransactions.filter(tx=>tx.itemId===item.id).reduce((sum,tx)=>sum+(tx.direction==='IN'?1:-1)*Number(tx.quantity||0),0)-copy.reservations.filter(r=>r.itemId===item.id&&r.status==='ACTIVE').reduce((sum,r)=>sum+Number(r.quantity||0),0))};['lendingAudience','maximumLoanQuantity','defaultLoanDays','approvalRequired','reorderThreshold','storageLocation','notes','verificationNote','legacy'].forEach(name=>delete safe[name]);return safe;});['requests','requestLines','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','compositeRequests','compositeComponents','statusHistory','auditLog','roadmapMilestones'].forEach(name=>copy[name]=[]);return copy;}
@@ -358,7 +358,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   async function loadActiveModule(requestOnly){if(!useEssentialBootstrap)return state;const module=activeModuleName();const pageSize=Number(state.moduleConfig?.defaultPageSize||10);const params={requestOnly:requestOnly||document.body.classList.contains('request-mode'),page:1,pageSize,committeeId:ui.activeCommitteeId};const result=await moduleDataController.load(module,params);state=mergeBootstrapModule(state,result,{backendMode});normalizeStateRecords();runtimeExtensions?.acceptModuleRevision(module,result.scopeRevision);return state;}
   async function loadAuthoritativeState(requestOnly){if(!useEssentialBootstrap)return services.loadBootstrapData({requestOnly});const essential=await services.loadEssentialBootstrap({requestOnly});const next=createStateFromEssentialBootstrap(essential,{requestOnly});moduleDataController?.clear();const module=requestOnly?'request':activeModuleName();const params={requestOnly:requestOnly||document.body.classList.contains('request-mode'),page:1,pageSize:Number(next.moduleConfig?.defaultPageSize||10),committeeId:ui.activeCommitteeId};const moduleValue=await moduleDataController.load(module,params);return mergeBootstrapModule(next,moduleValue,{backendMode});}
   async function init(){
-    const requestOnly=document.body.dataset.requestOnly==='true'||location.pathname==='/request'||new URLSearchParams(location.search).get('request')==='1';
+    const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
     const loadingUi=createBootstrapUi();
     let controller;
     loadingUi.retryButton.onclick=()=>{loadingUi.reset();controller?.start();};

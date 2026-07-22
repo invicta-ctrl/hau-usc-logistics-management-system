@@ -73,6 +73,7 @@ function safeAccount(account) {
     createdAt: account.createdAt,
     lastSuccessfulLogin: account.lastSuccessfulLogin ?? '',
     lastAccessIdChange: account.lastAccessIdChangedAt ?? '',
+    lendingEligible: account.lendingEligible === true,
   };
 }
 
@@ -234,6 +235,12 @@ export function createAccessManagementService({
       const available = await ensureAvailableAccessId(command.accessId);
       const assignment = validateStarterAssignment(command);
       if (!assignment.valid) fail('STARTER_ASSIGNMENT_INVALID');
+      const lendingEligible = command.lendingEligible === true;
+      const institutionId = String(command.institutionId ?? '').trim();
+      if (assignment.roleId !== ROLES.REQUESTER && (lendingEligible || institutionId)) {
+        fail('STARTER_ASSIGNMENT_INVALID');
+      }
+      if (lendingEligible && !/^\d{1,8}$/u.test(institutionId)) fail('STARTER_ASSIGNMENT_INVALID');
       let credential;
       try {
         credential = await passwordKdf.hash(command.temporaryPassword);
@@ -261,6 +268,8 @@ export function createAccessManagementService({
         updatedAt: createdAt,
         lockedAt: null,
         lastAccessIdChangedAt: null,
+        lendingEligible,
+        institutionId,
       };
       await repository.createStarterAccount({
         account,

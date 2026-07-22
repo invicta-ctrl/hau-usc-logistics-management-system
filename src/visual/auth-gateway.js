@@ -1,6 +1,8 @@
 import { AUTH_STATE } from '../auth/http-contract.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
+import { mountBorrowerLendingPortal } from './borrower-lending-portal.js';
+import { mountRequesterPortal } from './requester-portal.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -35,6 +37,17 @@ function authorizedWorkspacePath(user) {
 }
 
 function routeAuthorizedWorkspace(user) {
+  if (user?.authorization?.roleId === 'REQUESTER') {
+    const target = user.lendingEligible && location.pathname === '/lending' ? '/lending' : '/request';
+    if (
+      location.pathname === '/login' ||
+      location.pathname === '/' ||
+      location.pathname.startsWith('/app/')
+    ) {
+      history.replaceState(null, '', target);
+    }
+    return;
+  }
   const target = authorizedWorkspacePath(user);
   if (location.pathname === '/login' || location.pathname === '/' || location.pathname.startsWith('/app/')) {
     history.replaceState(null, '', target);
@@ -53,13 +66,13 @@ function fieldError(error, field) {
   return escapeHtml(error?.details?.fieldErrors?.[field] ?? '');
 }
 
-function loginMarkup(error) {
+function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
   const message = error ? escapeHtml(error.message) : '';
   return `
     <section class="auth-card" aria-labelledby="authTitle">
       <p class="eyebrow">Holy Angel University · University Student Council</p>
-      <h1 id="authTitle">Logistics Operations</h1>
-      <p class="auth-intro">Sign in with the Access ID issued by the Department of Logistics.</p>
+      <h1 id="authTitle">${portal ? 'Office Lending' : requestPortal ? 'Request Center' : 'Logistics Operations'}</h1>
+      <p class="auth-intro">${portal ? 'Sign in with your institution-approved Access ID to submit and track your own lending requests.' : requestPortal ? 'Sign in with your requester Access ID to submit and track your own logistics requests.' : 'Sign in with the Access ID issued by the Department of Logistics.'}</p>
       <div class="auth-alert" role="alert" data-auth-login-error ${error ? '' : 'hidden'}>${message}</div>
       <form id="authLoginForm" class="auth-form" autocomplete="on">
         <label for="authAccessId">Access ID</label>
@@ -68,7 +81,8 @@ function loginMarkup(error) {
         <input id="authPassword" name="password" type="password" autocomplete="current-password" required maxlength="128">
         <button class="primary" type="submit">Sign in</button>
       </form>
-      <p class="auth-help">Roles and committee access are assigned by the server. They cannot be selected here.</p>
+      <p class="auth-help">${portal ? 'Borrower eligibility is assigned by the server. This portal never provides internal staff access.' : requestPortal ? 'This portal shows only your own requests. Roles and committee access are assigned by the server.' : 'Roles and committee access are assigned by the server. They cannot be selected here.'}</p>
+      <p class="auth-help">${portal ? '<a href="/request">Submit or track a logistics request</a>' : '<a href="/request">Submit or track a logistics request</a> · <a href="/lending">Office Lending</a>'}</p>
     </section>`;
 }
 
@@ -156,6 +170,8 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
     root.innerHTML = configurationMarkup();
     return;
   }
+  const lendingPortal = location.pathname === '/lending';
+  const requesterPortal = location.pathname === '/request';
   if (backendMode !== 'rest' || requestOnly) {
     start();
     return;
@@ -166,6 +182,24 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
 
   const authenticated = (result) => {
     setAuthSession({ csrfToken: result.csrfToken, user: result.user });
+    if (lendingPortal || requesterPortal) {
+      setWorkspaceVisibility(false);
+      const mount = lendingPortal ? mountBorrowerLendingPortal : mountRequesterPortal;
+      void mount({
+        root,
+        client,
+        session: result,
+        onLogout: async () => {
+          try {
+            await client.logout(getAuthSession().csrfToken);
+          } finally {
+            clearAuthSession();
+            location.reload();
+          }
+        },
+      });
+      return;
+    }
     document.body.dataset.experience = result.user?.experienceId ?? '';
     routeAuthorizedWorkspace(result.user);
     root.remove();
@@ -177,7 +211,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const renderLogin = (error) => {
     let form = root.querySelector('#authLoginForm');
     if (!form) {
-      root.innerHTML = loginMarkup(error);
+      root.innerHTML = loginMarkup(error, { portal: lendingPortal, requestPortal: requesterPortal });
       form = root.querySelector('#authLoginForm');
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
