@@ -9,6 +9,7 @@ import { createD1AccessManagementRepository } from '../server/d1/access-manageme
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
+import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
@@ -158,7 +159,15 @@ function services(env) {
         ? 'development-only-public-tracking-secret-9472'
         : ''),
   });
-  return { access, auth, operations, publicRequests };
+  const publicLending = createPublicLendingService({
+    db: env.DB,
+    trackingSecret:
+      env.TRACKING_LINK_SECRET ??
+      (String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase() === 'DEVELOPMENT'
+        ? 'development-only-public-tracking-secret-9472'
+        : ''),
+  });
+  return { access, auth, operations, publicLending, publicRequests };
 }
 
 async function authorize(request, auth, capability, { mutation = false } = {}) {
@@ -212,7 +221,7 @@ async function health(env, requestId, readiness = false) {
 
 async function handleApi(request, env, requestId) {
   const url = new URL(request.url);
-  const { access, auth, operations, publicRequests } = services(env);
+  const { access, auth, operations, publicLending, publicRequests } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
     if (url.pathname === '/api/readiness' && request.method === 'GET') {
@@ -238,6 +247,29 @@ async function handleApi(request, env, requestId) {
       assertPublicMutationOrigin(request);
       return json(
         await publicRequests.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
+      return json({ ...(await publicLending.catalog()), correlationId: requestId });
+    }
+    if (url.pathname === '/api/public/lending' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicLending.submit({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/lending/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicLending.track({
           command: await body(request),
           networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
           correlationId: requestId,

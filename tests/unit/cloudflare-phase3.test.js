@@ -114,7 +114,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
 
   it('defines the complete operational model and database-enforced append-only guards', async () => {
     const migrations = await Promise.all(
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(async (number) => {
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(async (number) => {
         const files = {
           1: '0001_operational_schema.sql',
           2: '0002_authorization_registry.sql',
@@ -127,6 +127,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
           9: '0009_public_portal_entitlements.sql',
           10: '0010_verified_login_email.sql',
           11: '0011_public_request_tracking.sql',
+          12: '0012_public_lending_tracking.sql',
         };
         return read(`migrations/${files[number]}`);
       }),
@@ -174,6 +175,9 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
     expect(sql).toContain('HAVING COUNT(*) = 1');
     expect(sql).toContain('public_request_access');
     expect(sql).toContain('public_request_rate_limit_events');
+    expect(sql).toContain('public_lending_requests');
+    expect(sql).toContain('public_lending_request_tickets');
+    expect(sql).toContain('public_lending_rate_limit_events');
     expect(sql).toContain('Google Sheet imports are blocked after D1 cutover');
     expect(sql).toContain('owner_committee_id');
     expect(sql).toContain('assigned_committee_id');

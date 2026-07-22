@@ -1,7 +1,7 @@
 import { AUTH_STATE } from '../auth/http-contract.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
-import { mountBorrowerLendingPortal } from './borrower-lending-portal.js';
+import { mountPublicLendingPortal } from './public-lending-portal.js';
 import { mountPublicRequesterPortal } from './public-requester-portal.js';
 
 function escapeHtml(value) {
@@ -241,26 +241,13 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
     await mountPublicRequesterPortal({ root, client });
     return;
   }
+  if (lendingPortal) {
+    await mountPublicLendingPortal({ root, client });
+    return;
+  }
 
   const authenticated = (result) => {
     setAuthSession({ csrfToken: result.csrfToken, user: result.user });
-    if (lendingPortal) {
-      setWorkspaceVisibility(false);
-      void mountBorrowerLendingPortal({
-        root,
-        client,
-        session: result,
-        onLogout: async () => {
-          try {
-            await client.logout(getAuthSession().csrfToken);
-          } finally {
-            clearAuthSession();
-            location.reload();
-          }
-        },
-      });
-      return;
-    }
     document.body.dataset.experience = result.user?.experienceId ?? '';
     routeAuthorizedWorkspace(result.user);
     root.remove();
@@ -272,7 +259,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const renderLogin = (error) => {
     let form = root.querySelector('#authLoginForm');
     if (!form) {
-      root.innerHTML = loginMarkup(error, { portal: lendingPortal, requestPortal: false });
+      root.innerHTML = loginMarkup(error, { portal: false, requestPortal: false });
       form = root.querySelector('#authLoginForm');
       attachPasswordControls(root);
       attachRecoveryHelp(root);

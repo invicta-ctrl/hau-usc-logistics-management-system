@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '11' },
+    database: { connected: true, schemaVersion: '12' },
   });
 
   await page.goto('/');
@@ -182,6 +182,87 @@ test('public Request Center submits and tracks one private request without staff
   });
   expect(denied.status()).toBe(404);
   expect((await request.get('/api/requests')).status()).toBe(401);
+  await admin.dispose();
+});
+
+test('public Lending Center browses, submits, and privately tracks without stock movement', async ({
+  request,
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  await login(admin, 'LOCAL.ADMIN');
+  const catalogResponse = await request.get('/api/public/lending/catalog');
+  expect(catalogResponse.status()).toBe(200);
+  const catalog = await catalogResponse.json();
+  expect(catalog.departments).toEqual(['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS']);
+  const item = catalog.items.find((entry) => entry.availability === 'AVAILABLE');
+  expect(item).toBeTruthy();
+  expect(item).not.toHaveProperty('availableToPromise');
+  expect(item).not.toHaveProperty('onHand');
+  expect(item).not.toHaveProperty('storageLocation');
+  const inventoryBefore = await (await admin.get('/api/inventory')).json();
+  const balanceBefore = inventoryBefore.data.inventoryItems.find((entry) => entry.id === item.id).onHand;
+
+  const crossOrigin = await request.post('/api/public/lending', {
+    headers: { origin: 'https://cross-origin.example.invalid' },
+    data: { clientRequestId: `cross-origin-lending-${crypto.randomUUID()}` },
+  });
+  expect(crossOrigin.status()).toBe(403);
+
+  const clientRequestId = `public-lending-${crypto.randomUUID()}`;
+  const command = {
+    borrowerName: 'Synthetic Angelite Borrower',
+    studentId: '12345678',
+    courseYear: 'BSIT 2',
+    department: 'SEA',
+    contactNumber: '+63 917 000 0010',
+    email: `lending-${crypto.randomUUID()}@gmail.com`,
+    purpose: 'Synthetic public lending acceptance proof.',
+    pickupDate: '2026-08-03',
+    dueDate: '2026-08-10',
+    responsibilityAcknowledged: true,
+    lines: [{ itemId: item.id, quantity: 1 }],
+    clientRequestId,
+  };
+  const submitted = await request.post('/api/public/lending', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: command,
+  });
+  expect(submitted.status()).toBe(200);
+  const receipt = await submitted.json();
+  expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
+  expect(receipt.ticketId).toMatch(/^LBR-/u);
+  expect(receipt.trackingCode.length).toBeGreaterThan(32);
+
+  const replay = await request.post('/api/public/lending', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: command,
+  });
+  await expect(replay.json()).resolves.toMatchObject({
+    ticketId: receipt.ticketId,
+    trackingCode: receipt.trackingCode,
+    replayed: true,
+  });
+
+  const tracked = await request.post('/api/public/lending/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { ticketId: receipt.ticketId, trackingCode: receipt.trackingCode },
+  });
+  expect(tracked.status()).toBe(200);
+  const tracking = await tracked.json();
+  expect(tracking.request).toMatchObject({ id: receipt.ticketId, status: 'FOR_REVIEW' });
+  expect(tracking.request.tickets).toHaveLength(1);
+  expect(tracking.request).not.toHaveProperty('email');
+  expect(tracking.request).not.toHaveProperty('contactNumber');
+  expect(tracking.request).not.toHaveProperty('studentId');
+
+  const inventoryAfter = await (await admin.get('/api/inventory')).json();
+  expect(inventoryAfter.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
+  const denied = await request.post('/api/public/lending/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { ticketId: receipt.ticketId, trackingCode: 'invalid-private-code' },
+  });
+  expect(denied.status()).toBe(404);
   await admin.dispose();
 });
 

@@ -297,3 +297,68 @@ test('public Request Center opens without login and returns private tracking det
   await expect(page.getByText('REQ-SYNTHETIC-PUBLIC')).toBeVisible();
   await expect(page.getByText('synthetic-private-tracking-code-9472')).toBeVisible();
 });
+
+test('public Lending Center opens catalog-first without login and returns private tracking details', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One mobile browser proves the Phase 4 public boundary.');
+  let authCalls = 0;
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
+  });
+  await page.route('**/api/auth/**', (route) => {
+    authCalls += 1;
+    return route.abort();
+  });
+  await page.route('**/api/public/lending/catalog', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        departments: ['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS'],
+        items: [{ id: 'ITM-LEND-SYNTHETIC', name: 'Synthetic Projector', category: 'Equipment', unit: 'piece', type: 'REUSABLE', availability: 'AVAILABLE', maximumQuantity: 2, defaultLoanDays: 7 }],
+        process: ['Submit for review.', 'Wait for pickup instructions.'],
+      }),
+    }),
+  );
+  await page.route('**/api/public/lending', async (route) => {
+    const command = await route.request().postDataJSON();
+    expect(command).toMatchObject({
+      studentId: '12345678',
+      department: 'SEA',
+      responsibilityAcknowledged: true,
+      lines: [{ itemId: 'ITM-LEND-SYNTHETIC', quantity: 1 }],
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ticketId: 'LBR-SYNTHETIC-PUBLIC',
+        trackingCode: 'synthetic-private-lending-code-9472',
+        status: 'FOR_REVIEW',
+      }),
+    });
+  });
+
+  await page.goto('/lending');
+  await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
+  await expect(page.getByLabel('Access ID')).toHaveCount(0);
+  expect(authCalls).toBe(0);
+  await page.getByRole('button', { name: 'Add item' }).click();
+  const form = page.locator('#publicLendingForm');
+  await form.getByLabel('Full name').fill('Synthetic Angelite Borrower');
+  await form.getByLabel('Student ID').fill('12345678');
+  await form.getByLabel('Course and Year').fill('BSIT 2');
+  await form.getByLabel('Department').selectOption('SEA');
+  await form.getByLabel('Contact number').fill('+63 917 000 0010');
+  await form.getByLabel('Email address').fill('synthetic@gmail.com');
+  await form.getByLabel('Requested pickup date').fill('2026-08-03');
+  await form.getByLabel('Requested due date').fill('2026-08-10');
+  await form.getByLabel('Purpose').fill('Synthetic public lending browser proof.');
+  await form.getByLabel('Responsibility acknowledgment').check();
+  await form.getByRole('button', { name: 'Submit borrowing request for review' }).click();
+  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
+  await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
+  await expect(page.getByText('synthetic-private-lending-code-9472')).toBeVisible();
+});

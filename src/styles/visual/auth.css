@@ -236,6 +236,19 @@
 .public-track-result { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e4d6bd; }
 .public-track-result ul { padding-left: 1.2rem; }
 .public-privacy-note p { margin-bottom: 0; }
+.public-catalog { display: grid; gap: 1rem; max-width: 86rem; margin: 0 auto 1rem; }
+.public-catalog-filters { display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.public-catalog-filters label { display: grid; gap: 0.35rem; font-weight: 700; }
+.public-catalog-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.public-catalog-card { display: flex; flex-direction: column; justify-content: space-between; gap: 1rem; min-height: 12rem; padding: 1rem; border: 1px solid #e4d6bd; border-radius: 0.8rem; background: #fffaf2; }
+.public-catalog-card h3 { margin: 0.7rem 0 0.25rem; color: #5e0d12; }
+.public-catalog-card p { margin: 0 0 0.35rem; }
+.public-catalog-card small { color: #655854; }
+.public-lending-layout { grid-template-columns: minmax(0, 1.5fr) minmax(18rem, 0.7fr); }
+.public-lending-quantity { display: flex; align-items: end; gap: 0.5rem; }
+.public-lending-quantity label { display: grid; gap: 0.25rem; font-size: 0.8rem; }
+.public-lending-quantity input { width: 5.5rem; }
+.public-request-aside ol { display: grid; gap: 0.6rem; padding-left: 1.2rem; }
 
 @media (max-width: 760px) {
   .borrower-portal { padding: 0.85rem; }
@@ -245,6 +258,7 @@
   .public-request-portal { padding: 0.75rem; }
   .public-portal-header { display: grid; }
   .public-request-layout, .public-form-grid { grid-template-columns: 1fr; }
+  .public-catalog-filters, .public-catalog-grid { grid-template-columns: 1fr; }
   .public-form-grid .span-2 { grid-column: auto; }
   .public-request-aside { position: static; }
 }

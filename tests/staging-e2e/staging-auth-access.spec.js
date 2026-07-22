@@ -62,8 +62,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '11',
-        latestMigration: '0011_public_request_tracking.sql',
+        schemaVersion: '12',
+        latestMigration: '0012_public_lending_tracking.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -247,7 +247,8 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.getByLabel('Access ID')).toHaveCount(0);
     await expect(page.locator('.app-shell')).toBeHidden();
     await page.goto('/lending');
-    await expect(page.getByLabel('Access ID')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
+    await expect(page.getByLabel('Access ID')).toHaveCount(0);
     await expect(page.locator('.app-shell')).toBeHidden();
   } finally {
     if (cleanupAccessId) {
@@ -337,6 +338,76 @@ test('deployed staging public Request Center submits and privately tracks withou
 
     await page.goto('/request');
     await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+    await expect(page.getByLabel('Access ID')).toHaveCount(0);
+    await expect(page.locator('.app-shell')).toBeHidden();
+  } finally {
+    await Promise.all([publicRequest.dispose(), adminRequest.dispose()]);
+  }
+});
+
+test('deployed staging public Lending Center submits and privately tracks without login', async ({
+  page,
+  baseURL,
+}) => {
+  const owner = await ownerCredential();
+  const publicRequest = await apiRequest.newContext({ baseURL });
+  const adminRequest = await apiRequest.newContext({ baseURL });
+  try {
+    await login(adminRequest, owner.accessId, owner.password);
+    const catalogResponse = await publicRequest.get('/api/public/lending/catalog');
+    expect(catalogResponse.status()).toBe(200);
+    const catalog = await catalogResponse.json();
+    const item = catalog.items.find((entry) => entry.availability === 'AVAILABLE');
+    expect(item).toBeTruthy();
+    expect(item).not.toHaveProperty('onHand');
+    expect(item).not.toHaveProperty('availableToPromise');
+    expect(item).not.toHaveProperty('storageLocation');
+
+    const before = await (await adminRequest.get('/api/inventory')).json();
+    const balanceBefore = before.data.inventoryItems.find((entry) => entry.id === item.id).onHand;
+    const unique = `${Date.now().toString(36)}-${randomBytes(5).toString('hex')}`;
+    const pickup = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const due = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const submitted = await publicRequest.post('/api/public/lending', {
+      headers: { origin: new URL(baseURL).origin },
+      data: {
+        borrowerName: 'Authorized Synthetic Angelite Borrower',
+        studentId: '12345678',
+        courseYear: 'BSIT 2',
+        department: 'SEA',
+        contactNumber: '+63 917 000 0010',
+        email: `lending-${unique}@gmail.com`,
+        purpose: 'Authorized synthetic no-login lending and private tracking staging proof.',
+        pickupDate: pickup,
+        dueDate: due,
+        responsibilityAcknowledged: true,
+        lines: [{ itemId: item.id, quantity: 1 }],
+        clientRequestId: `staging-public-lending-${unique}`,
+      },
+    });
+    expect(submitted.status()).toBe(200);
+    const receipt = await submitted.json();
+    expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
+    expect(receipt.trackingCode.length).toBeGreaterThan(32);
+
+    const tracked = await publicRequest.post('/api/public/lending/track', {
+      headers: { origin: new URL(baseURL).origin },
+      data: { ticketId: receipt.ticketId, trackingCode: receipt.trackingCode },
+    });
+    expect(tracked.status()).toBe(200);
+    const tracking = await tracked.json();
+    expect(tracking.request).toMatchObject({ id: receipt.ticketId, status: 'FOR_REVIEW' });
+    expect(tracking.request.tickets).toHaveLength(1);
+    expect(tracking.request).not.toHaveProperty('email');
+    expect(tracking.request).not.toHaveProperty('contactNumber');
+    expect(tracking.request).not.toHaveProperty('studentId');
+
+    const after = await (await adminRequest.get('/api/inventory')).json();
+    expect(after.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
+
+    await page.goto('/lending');
+    await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
     await expect(page.getByLabel('Access ID')).toHaveCount(0);
     await expect(page.locator('.app-shell')).toBeHidden();
   } finally {
