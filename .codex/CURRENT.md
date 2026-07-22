@@ -2,8 +2,8 @@
 
 Program: HAU-USC Logistics v0.6
 Phase: Phase 3 — SOL High
-Required model: GPT-5.6 Sol — High
-Status: ACTIVE — LOCAL CANDIDATE VERIFIED; PRIVATE STAGING AUTHORIZATION REQUIRED
+Required model: GPT-5.6 Terra — High
+Status: ACTIVE — TASK 1 LIVE STAGING COMPLETE; TASK 2 ACCEPTANCE REQUIRED
 
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
@@ -11,13 +11,13 @@ Active branch:
 Latest verified Phase 2 handoff checkpoint:
 `38a86069039ef18081aaa0e1c1fe2c25acde6613`
 
-Exact pushed Phase 3 repository/local candidate:
-`62abc6d1e1d6b3079e8508381b7c336c636080e5`
+Exact deployed Phase 3 Task 1 candidate:
+`af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`
 
 Exact Phase 3 implementation range:
-`38a86069039ef18081aaa0e1c1fe2c25acde6613..62abc6d1e1d6b3079e8508381b7c336c636080e5`
+`38a86069039ef18081aaa0e1c1fe2c25acde6613..af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`
 
-The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, and the exact candidate named by the Phase 3 candidate handoff. The candidate commit is pushed and all six PR checks passed on 2026-07-22. Never infer remote deployment or Google migration from repository completion.
+The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, deployed candidate, staging URL, and the Task 1 handoff. Task 1 live staging is verified; never infer Task 2 workflow, rollback, accessibility, performance, or evidence acceptance from that basic smoke.
 
 Preserved rollback checkpoints:
 
@@ -34,7 +34,11 @@ Active specification:
 Required predecessor handoff:
 `.codex/PHASE_2_TERRA_HANDOFF.md`
 
-Active partial handoff (not a Phase 3 completion handoff):
+Active Task 1 staging handoff (not a Phase 3 completion handoff):
+
+- `.codex/PHASE_3_TASK_1_STAGING_HANDOFF.md`
+
+Pre-deployment candidate handoff:
 
 - `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`
 
@@ -43,9 +47,9 @@ Phase 3 local candidate result:
 - implemented a Cloudflare Worker serving `dist/`, protected API routes, D1-backed authentication/session/rate limiting, scoped operational reads/mutations, correlation IDs, and safe errors;
 - added ordered D1 migrations, append-only and inventory/receiving guards, entity committee scope, deterministic Google Sheet export/mapping/import/reconciliation tooling, and private authorization tooling;
 - verified the real local workerd runtime and D1 with 10/10 Chromium cases: same-origin bootstrap, activation/logout, request-only privacy, five server-routed role experiences, split request/allocation/release/lending, canvass/procurement/cumulative receiving, cross-committee denial, duplicate guards, fail-closed evidence, and a fictional outside-Git migration dry run;
-- passed repository acceptance with 52 Vitest files / 369 tests and full Playwright with 90 passes / 204 intentional skips / 0 failures;
+- passed repository acceptance with 52 Vitest files / 370 tests and full Playwright with 90 passes / 204 intentional skips / 0 failures;
 - documented Cloudflare architecture, Google sidecar boundaries, D1 migration/rollback, and local acceptance;
-- no Cloudflare/Google account access, remote D1 mutation, deployment, approved Sheet export/import, evidence bridge, or rollback rehearsal occurred because no valid private Phase 3 staging authorization package was supplied.
+- completed Task 1 Cloudflare/Google discovery, redacted Sheet export, D1 migration/import/reconciliation, staging deployment, five-role authentication, and basic live privacy smoke under validated private authorization; full Task 2 acceptance, evidence bridge, and rollback rehearsal remain pending.
 
 Phase 1 result:
 
@@ -77,7 +81,7 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 
 Smallest safe next action:
 
-- Create and approve the required outside-Git Phase 3 authorization package bound to `62abc6d1e1d6b3079e8508381b7c336c636080e5` and its artifact/migration hashes. Validate Gate B before the first remote Cloudflare or Google read.
+- Start a fresh Terra High task for Task 2 live staging acceptance and repair against `https://hau-usc-logistics-staging.earllawrence-adriano-ce.workers.dev` at deployed candidate `af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`. Preserve all production, merge, private-ID, rollback, and authorization gates.
 
 Reference bundle verified present on 2026-07-21:
 
@@ -91,8 +95,8 @@ Reference bundle verified present on 2026-07-21:
 
 Hard boundaries:
 
-- do not claim Phase 3 or the working Cloudflare staging site complete;
-- do not access Cloudflare or Google remotely without the exact private package and next-gate approval;
+- do not claim Phase 3 complete; only Task 1 live staging is complete;
+- do not run Task 2 workflow/evidence/rollback writes without the exact private package and next-gate approval;
 - do not perform production promotion, production binding, operational institutional-data writes, `main` update, or PR merge;
 - do not alter authentication/session architecture, canonical role/capability semantics, ledger/atomicity invariants, or rollback rules without the escalation required by the Phase 2 specification;
 - do not reset, clean, force-push, or discard unknown work.
