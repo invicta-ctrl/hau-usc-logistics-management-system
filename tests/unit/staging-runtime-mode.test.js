@@ -30,5 +30,9 @@ describe('staging runtime mode boundary', () => {
     expect(gateway).toContain('routeAuthorizedWorkspace(result.user);');
     expect(gateway).toContain("backendMode === 'unconfigured'");
     expect(gateway).toContain('No local or preview data has been loaded.');
+    const roleRuntime = await read('src/visual/runtime-extensions.js');
+    const roleStyles = await read('src/styles/visual/runtime-extensions.css');
+    expect(roleRuntime).toContain('administrator: {');
+    expect(roleStyles).toContain("body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }");
   });
 });

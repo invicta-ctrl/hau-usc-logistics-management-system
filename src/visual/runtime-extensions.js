@@ -2525,6 +2525,21 @@ export function createRuntimeExtensions(options) {
   };
 
   const roleExperienceDefinitions = {
+    administrator: {
+      label: 'Administrator workspace',
+      heading: 'Control the operational picture and governed reference data',
+      description:
+        'Start with the queue, release readiness, stock attention, and the controlled administration boundary. Open the existing workspace that owns the next action; this overview does not grant or alter authority.',
+      boundaryTitle: 'Administrator control boundary',
+      boundary:
+        'Reference changes, account access, and environment controls remain subject to their existing server authorization, separation-of-duties, and audit requirements.',
+      actions: [
+        ['request', 'Review requests', 'Requests, routing context, and required follow-up'],
+        ['release', 'Check controlled handoffs', 'Release readiness and recipient-confirmed fulfillment'],
+        ['inventory', 'Inspect stock attention', 'Catalog availability, reservations, and movement history'],
+        ['reference-admin', 'Open reference administration', 'Controlled data and access governance'],
+      ],
+    },
     director: {
       label: 'Director workspace',
       heading: 'Decisions, readiness, and cross-committee blockers',
@@ -2622,6 +2637,22 @@ export function createRuntimeExtensions(options) {
 
   const countStatuses = (rows, statuses) =>
     (rows ?? []).filter((row) => statuses.has(String(row?.status ?? '').toUpperCase())).length;
+
+  const administratorMetrics = (state) => {
+    const requestsForReview = countStatuses(state.requests, new Set(['FOR_REVIEW', 'NEEDS_INFORMATION']));
+    const releaseReady =
+      countStatuses(state.requestLines, new Set(['READY_TO_RELEASE', 'PARTIALLY_RELEASED'])) +
+      countStatuses(state.deliverables, new Set(['READY_TO_RELEASE', 'PARTIALLY_RELEASED']));
+    const stockAttention = (state.inventoryItems ?? []).filter(
+      (item) => item?.status === 'VERIFY' || Number(item?.openingOnHand ?? 0) <= Number(item?.reorderThreshold ?? 0),
+    ).length;
+    return [
+      ['Requests needing review', requestsForReview, 'Server-routed queue requiring follow-up'],
+      ['Release readiness', releaseReady, 'Controlled handoff records to inspect'],
+      ['Stock attention', stockAttention, 'Low or verification-required catalog records'],
+      ['Governed reference areas', 4, 'Events, catalog, accounts, and access controls'],
+    ];
+  };
 
   const directorMetrics = (state) => {
     const activeSeries = (state.eventSeries ?? []).filter(
@@ -2753,6 +2784,7 @@ export function createRuntimeExtensions(options) {
 
   const metricsForExperience = (experience, state) =>
     ({
+      administrator: administratorMetrics,
       director: directorMetrics,
       food: foodMetrics,
       'inventory-pantry': inventoryMetrics,
