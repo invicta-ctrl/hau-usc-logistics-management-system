@@ -70,7 +70,15 @@ authorization.
 
 ## Role-specific decisions (append only when its bounded slice begins)
 
-- Administrator: pending extraction from `ADMIN.html`.
+- Administrator (`ADMIN.html`, SHA-256 `88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`): use an exception-first control overview that
+  prioritizes access decisions, configuration/reference warnings, cross-workflow
+  operational visibility, and the next governed action. Present four explicit
+  control areas—Access Management, Reference Data, Link Registry, and Audit &
+  System—inside the shared shell. They are entry points into existing
+  server-authorized domains, not a client-side permission switch. Keep roster
+  identity read-only, keep permission and cross-office routing changes subject
+  to distinct review, show audit/system information without secrets, and
+  preserve cross-role visibility as observation rather than execution authority.
 - Director: pending extraction from `DIRECTOR.html`.
 - Food: pending extraction from `Food.html`.
 - Inventory & Pantry: pending extraction from `INVENTORY.html`.

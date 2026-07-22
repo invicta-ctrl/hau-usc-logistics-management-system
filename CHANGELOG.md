@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased - v0.6 Phase 2 Administrator control desk (2026-07-22)
+
+### Added
+
+- An exception-first Administrator control desk in the existing authorized Reference Administration workspace, with explicit Access Management, Reference Data, Link Registry, and Audit & System entry points.
+- Administrator-specific digest decisions and focused browser coverage proving that control cards select existing domains and preserve the read-only system-health boundary.
+
+### Changed
+
+- Elevated the existing server-authorized reference workspace with explicit governance language, durable control-area states, and responsive control cards; no capability, service, transaction, or ledger behavior changed.
+
+### Verified
+
+- Focused Administrator unit tests pass 10 / 10; focused browser proof passes 6 / 24 intentional skips; `npm run check` passes with 45 Vitest files / 341 tests, build/parity, and Apps Script validation.
+
 ## Unreleased - v0.6 Phase 2 shared shell and design system (2026-07-22)
 
 ### Added

@@ -1,22 +1,25 @@
 # Current Task
 
 INTENT: SOFTWARE_FEATURE / UI_UX_IMPLEMENTATION
-MODE: execute
-TARGET: HAU-USC Logistics v0.6 Phase 2 shared shell on `chore/v0.6-codex-continuity-bootstrap`
-AUTHORITY: `.codex/specs/v0.6-phase-2-terra.md`; `AGENTS.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`; `.codex/DESIGN_REFERENCE_DIGEST.md`
+MODE: stop
+TARGET: HAU-USC Logistics v0.6 Phase 2 Administrator experience on `chore/v0.6-codex-continuity-bootstrap`
+AUTHORITY: `.codex/specs/v0.6-phase-2-terra.md`; `AGENTS.md`; `.codex/PHASE_AND_CONTEXT_POLICY.md`; `.codex/DESIGN_REFERENCE_DIGEST.md`; `ADMIN.html`
 RISK: medium
-DELIVERABLE: complete S0003-backed shared shell and shared design-system slice
-VERIFICATION: focused source checks, build/parity checks, and desktop/mobile browser checks for the shell
-STOP CONDITION: shared-shell slice is complete; do not begin Administrator work until the next bounded slice is explicitly started
+DELIVERABLE: complete Administrator control-desk presentation within the shared shell, using existing server-authorized administration controls
+VERIFICATION: focused reference-administration tests, relevant browser/responsive checks, build/parity checks, and complete milestone gate
+STOP CONDITION: Administrator slice complete; do not ingest or implement another role without a new bounded task
 
 ## Active bounded unit
 
 Phase 1 remains complete and locked at `c07e6e6ad5777710a68bef4d1d2aa553b964c108`.
-This slice ingested S0003 once, recorded `.codex/DESIGN_REFERENCE_DIGEST.md`,
-and implemented the shared shell and component/design-system foundations. The
-S0003 source hash is `89d7741b25146806c2ffed8c0bcf85dd58cdba1d84144c6dd65c54ada0318429`.
+The S0003 shared-shell checkpoint is pushed as `feaccf7ed1256085d5950b315fd8d7ce2afbc773`.
+This Administrator-only slice read `ADMIN.html` at SHA-256
+`88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`,
+appended its durable decisions to the digest, and adapted only the existing
+Reference Administration workspace. The control desk selects existing domains
+only; it does not alter authorization semantics or backend services.
 
-Next bounded slice: Administrator only. Do not ingest another role-specific
-S0002 HTML reference until that role becomes active. Do not alter authentication/session architecture,
-authorization semantics, ledger/atomicity contracts, production configuration,
-or generated visual-baseline files.
+Verification passed: focused unit tests 10 / 10; focused Reference Administration
+browser proof 6 passed / 24 intentional skips; `npm run check` with 45 Vitest
+files / 341 tests, build/parity, and Apps Script validation. Do not ingest
+another role-specific S0002 HTML reference until a new bounded task starts.

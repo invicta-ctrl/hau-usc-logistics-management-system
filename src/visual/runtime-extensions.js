@@ -614,6 +614,11 @@ export function createRuntimeExtensions(options) {
     root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled ? 'Controlled writes enabled' : 'Read-only / kill switch active';
     const results = root.querySelector('[data-reference-admin-results]');
     const readOnly = ['PEOPLE_MEMBERSHIPS', 'SYNC_HEALTH'].includes(referenceAdminDomain);
+    root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
+      const active = control.dataset.referenceAdminControlDomain === referenceAdminDomain;
+      control.classList.toggle('active', active);
+      control.setAttribute('aria-pressed', String(active));
+    });
     root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
     results.innerHTML = (workspace?.items ?? []).map((record) => `<div class="request-line"><div><strong>${esc(record.payload?.displayName ?? record.payload?.roleId ?? record.payload?.instructions ?? record.id)}</strong><small>${esc(record.id)} &middot; revision ${esc(record.revision)} &middot; ${esc(record.status)}</small></div><div class="request-line-actions">${readOnly ? '<span class="pill">Read only</span>' : `<button class="secondary mini" type="button" data-reference-admin-edit="${esc(record.id)}">View / edit</button><button class="${record.status === 'ARCHIVED' ? 'secondary' : 'danger'} mini" type="button" data-reference-admin-lifecycle="${esc(record.id)}" data-reference-admin-action="${record.status === 'ARCHIVED' ? 'RESTORE' : 'ARCHIVE'}">${record.status === 'ARCHIVED' ? 'Restore' : 'Archive'}</button>`}</div></div>`).join('') || '<div class="empty">No records match the current controlled filters.</div>';
     const pending = root.querySelector('[data-reference-admin-pending]');
@@ -661,6 +666,14 @@ export function createRuntimeExtensions(options) {
     root.querySelector('[name="referenceAdminStatus"]').addEventListener('change', () => {
       referenceAdminWorkspace = null;
       void refreshReferenceAdminWorkspace({ force: true });
+    });
+    root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
+      control.addEventListener('click', () => {
+        referenceAdminDomain = control.dataset.referenceAdminControlDomain;
+        root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
+        referenceAdminWorkspace = null;
+        void refreshReferenceAdminWorkspace({ force: true });
+      });
     });
     root.querySelector('[data-reference-admin-refresh]').addEventListener('click', () => void refreshReferenceAdminWorkspace({ force: true }));
     root.querySelector('[data-reference-admin-add]').addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));

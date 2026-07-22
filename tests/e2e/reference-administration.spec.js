@@ -39,6 +39,24 @@ test('authorized administrator uses controlled reference workspace with before-a
   await expect(page.locator('[data-reference-admin-results]')).toContainText('Synthetic Assembly Room Revised');
 });
 
+test('administrator control desk exposes only existing governed domains', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One practical mobile control-desk proof is sufficient.');
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await navigateToAdminView(page, 'referenceAdmin');
+  await expect(page.getByRole('heading', { name: 'Governed control areas' })).toBeVisible();
+  await expect(page.locator('.admin-governance-note')).toContainText('does not grant access');
+
+  await page.getByRole('button', { name: /Access Management/ }).click();
+  await expect(page.locator('[name="referenceAdminDomain"]')).toHaveValue('PERMISSIONS');
+  await expect(page.getByRole('button', { name: /Access Management/ })).toHaveAttribute('aria-pressed', 'true');
+
+  await page.getByRole('button', { name: /Audit & System/ }).click();
+  await expect(page.locator('[name="referenceAdminDomain"]')).toHaveValue('SYNC_HEALTH');
+  await expect(page.locator('[data-reference-admin-add]')).toBeHidden();
+  await expect(page.locator('[data-reference-admin-results]')).toContainText('Read only');
+});
+
 test('read-only roster ownership and second-review routing are visible', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One mobile policy proof is sufficient.');
   await page.goto('/');

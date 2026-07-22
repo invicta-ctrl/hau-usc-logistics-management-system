@@ -2,14 +2,31 @@
   <div id="referenceAdminWorkspace" class="view-stack" hidden>
     <article class="hero panel">
       <div>
-        <p class="eyebrow">Authorized administration</p>
-        <h2>Reference and access change control</h2>
-        <p>Manage versioned operational references without editing raw sheets. Roster-owned identity remains read-only; permission and cross-office routing changes require a separate reviewer.</p>
+        <p class="eyebrow">Authorized administration · governed control desk</p>
+        <h2>Resolve exceptions without widening access.</h2>
+        <p>Start with the change, warning, or review that needs attention. Every control below delegates to the existing server-authorized reference workspace; changing a view never grants permission.</p>
       </div>
       <div class="hero-actions">
         <span class="pill" data-reference-admin-write-state>Checking write controls</span>
         <button class="secondary" type="button" data-reference-admin-refresh>Refresh</button>
       </div>
+    </article>
+
+    <section class="admin-control-section" aria-labelledby="adminControlAreasTitle">
+      <div class="section-head">
+        <div><p class="eyebrow">System control</p><h2 id="adminControlAreasTitle">Governed control areas</h2><p>Authorized visibility across the system, with no client-side authority change.</p></div>
+      </div>
+      <div class="admin-control-grid">
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="PERMISSIONS"><span class="admin-control-kicker">Access Management</span><strong>Accounts, roles, and scope</strong><small>Permission changes remain review-gated and cannot self-escalate.</small><span class="admin-control-action">Open controlled permissions</span></button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES"><span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong><small>Manage approved references without editing raw operational sources.</small><span class="admin-control-action">Open reference data</span></button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="ROUTING"><span class="admin-control-kicker">Link Registry</span><strong>Routes and canonical ownership</strong><small>Cross-office routing remains a separate-review decision.</small><span class="admin-control-action">Open controlled routing</span></button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
+      </div>
+    </section>
+
+    <article class="admin-governance-note" aria-label="Administrator authority boundary">
+      <strong>Authority boundary</strong>
+      <span>Operational work remains in its role workspace. This control desk surfaces authorized context and invokes existing server checks; it does not grant access, bypass review, or mutate ledger records.</span>
     </article>
 
     <article class="panel">

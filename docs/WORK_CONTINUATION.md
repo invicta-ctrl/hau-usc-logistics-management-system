@@ -2,6 +2,11 @@
 
 ## Current resume block
 
+- **Administrator checkpoint:** local Administrator-only slice is ready to commit. It read only `ADMIN.html` (SHA-256 `88e13f1e34cb9175d943f362444655f0f10d4bc6179f9e4af2be825ef2e6c5a3`), appended durable decisions to `.codex/DESIGN_REFERENCE_DIGEST.md`, and added the exception-first control desk to `src/visual/views/reference-admin.html`.
+- **Scope and boundaries:** Access Management, Reference Data, Link Registry, and Audit & System are presentation entry points that select the existing `PERMISSIONS`, `VENUES`, `ROUTING`, and `SYNC_HEALTH` domains. They never grant a role/capability, bypass server authorization or distinct review, mutate ledger truth, or expose protected configuration. Sync health and roster ownership remain read-only.
+- **Administrator verification:** focused unit tests pass 10 / 10; `tests/e2e/reference-administration.spec.js` passes 6 / 24 intentional skips; `npm run check` passes with governance, lint, 45 Vitest files / 341 tests, deterministic build/parity, and Apps Script validation. Generated artifacts are rebuilt through the documented pipeline.
+- **Next action:** commit and push only this Administrator checkpoint, verify the remote PR/CI state, then stop pending an explicitly authorized next role slice. Do not read a non-Administrator role reference.
+
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; authoritative v0.6 continuity checkout.
 - **Branch/HEAD/upstream:** local work remains on `chore/v0.6-codex-continuity-bootstrap` over verified remote handoff `d8af7bb4a5e986fc4dfd166ae664f5758c46a1fd`; it tracks `origin/chore/v0.6-codex-continuity-bootstrap`; draft PR #9 is unchanged. Fetch and inspect the local worktree before continuing.
 - **Current phase/stage:** `PHASE_2_SHARED_SHELL_CHECKPOINTED`; `.codex/CURRENT.md` is `ACTIVE` for Phase 2 / GPT-5.6 Terra.
