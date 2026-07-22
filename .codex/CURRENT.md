@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.6
 Phase: Phase 3 — SOL High
 Required model: GPT-5.6 Terra — High
-Status: ACTIVE — TASK 1 LIVE STAGING COMPLETE; TASK 2 ACCEPTANCE REQUIRED
+Status: ACTIVE — TASK 2A STAGING ROUTING/RUNTIME/VISUAL CORRECTION DEPLOYED; TASK 2 GATE E REMAINS REQUIRED
 
 Active branch:
 `chore/v0.6-codex-continuity-bootstrap`
@@ -11,13 +11,13 @@ Active branch:
 Latest verified Phase 2 handoff checkpoint:
 `38a86069039ef18081aaa0e1c1fe2c25acde6613`
 
-Exact deployed Phase 3 Task 1 candidate:
-`af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`
+Exact deployed Phase 3 Task 2A candidate:
+`d6085d867ba775f5f3e5c9b51f54754487167eb5`
 
 Exact Phase 3 implementation range:
-`38a86069039ef18081aaa0e1c1fe2c25acde6613..af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`
+`38a86069039ef18081aaa0e1c1fe2c25acde6613..d6085d867ba775f5f3e5c9b51f54754487167eb5`
 
-The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, deployed candidate, staging URL, and the Task 1 handoff. Task 1 live staging is verified; never infer Task 2 workflow, rollback, accessibility, performance, or evidence acceptance from that basic smoke.
+The next task must fetch and verify the actual branch HEAD, upstream parity, working tree, PR #9 head/checks, deployed candidate, staging URL, Task 1 handoff, and Task 2A evidence index. Task 2A fixes the live runtime and routing presentation only; never infer Task 2 workflow, rollback, accessibility, performance, or evidence acceptance from it.
 
 Preserved rollback checkpoints:
 
@@ -37,6 +37,11 @@ Required predecessor handoff:
 Active Task 1 staging handoff (not a Phase 3 completion handoff):
 
 - `.codex/PHASE_3_TASK_1_STAGING_HANDOFF.md`
+
+Active Task 2A correction handoff and evidence index:
+
+- `.codex/PRODUCTION_LAUNCH_HANDOFF.md`
+- `.codex/LAUNCH_EVIDENCE_INDEX.md`
 
 Pre-deployment candidate handoff:
 
@@ -81,7 +86,7 @@ Phase 2 shared-shell milestone (verified for checkpoint):
 
 Smallest safe next action:
 
-- Start a fresh Terra High task for Task 2 live staging acceptance and repair against `https://hau-usc-logistics-staging.earllawrence-adriano-ce.workers.dev` at deployed candidate `af0e82b0cf33862a1b4274bd6e8a20bcd75f7df1`. Preserve all production, merge, private-ID, rollback, and authorization gates.
+- Obtain an updated private authorization package that explicitly approves Gate E before attempting Task 2 synthetic workflow writes, evidence uploads, rollback rehearsal, or cleanup/retention. A separate accepted scope and capability contract is required before creating a public lending portal; the current `/lending` path intentionally remains a safe unauthenticated denial.
 
 Reference bundle verified present on 2026-07-21:
 
