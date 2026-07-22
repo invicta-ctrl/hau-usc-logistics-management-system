@@ -115,7 +115,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
 
   it('defines the complete operational model and database-enforced append-only guards', async () => {
     const migrations = await Promise.all(
-      [1, 2, 3, 4, 5, 6, 7].map(async (number) => {
+      [1, 2, 3, 4, 5, 6, 7, 8].map(async (number) => {
         const files = {
           1: '0001_operational_schema.sql',
           2: '0002_authorization_registry.sql',
@@ -124,6 +124,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
           5: '0005_import_boundary.sql',
           6: '0006_transaction_guards.sql',
           7: '0007_entity_committee_scope.sql',
+          8: '0008_access_management.sql',
         };
         return read(`migrations/${files[number]}`);
       }),
@@ -155,12 +156,16 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
       'import_batches',
       'imported_source_rows',
       'reporting_outbox',
+      'access_id_reservations',
+      'access_id_history',
     ]) {
       expect(sql).toContain(`CREATE TABLE ${table}`);
     }
     expect(sql).toContain('inventory_ledger_no_update');
     expect(sql).toContain('status_history_no_delete');
     expect(sql).toContain('audit_log_no_update');
+    expect(sql).toContain('access_id_history_no_update');
+    expect(sql).toContain('access_id_reservations_no_delete');
     expect(sql).toContain('reservation_consumption_guard');
     expect(sql).toContain('inventory_nonnegative_guard');
     expect(sql).toContain('Google Sheet imports are blocked after D1 cutover');

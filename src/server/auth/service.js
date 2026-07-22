@@ -133,7 +133,8 @@ export function createAuthService({
     if (
       !account ||
       account.status !== allowedStatus ||
-      account.credentialVersion !== session.credentialVersion
+      account.credentialVersion !== session.credentialVersion ||
+      account.lockedAt
     ) {
       await repository.deleteSession(session.tokenDigest);
       throw new AuthError(
@@ -208,8 +209,8 @@ export function createAuthService({
       await audit('LOGIN_FAILED', account?.id, { reason: 'INVALID_CREDENTIAL' });
       throw new AuthError('AUTHENTICATION_FAILED');
     }
-    if ([ACCOUNT_STATUS.DISABLED, ACCOUNT_STATUS.REVOKED].includes(account.status)) {
-      await audit('LOGIN_BLOCKED', account.id, { reason: account.status });
+    if ([ACCOUNT_STATUS.DISABLED, ACCOUNT_STATUS.REVOKED].includes(account.status) || account.lockedAt) {
+      await audit('LOGIN_BLOCKED', account.id, { reason: account.lockedAt ? 'LOCKED' : account.status });
       throw new AuthError('ACCOUNT_UNAVAILABLE');
     }
     if (account.status === ACCOUNT_STATUS.STARTER) {

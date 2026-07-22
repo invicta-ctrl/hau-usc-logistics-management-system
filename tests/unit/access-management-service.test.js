@@ -1,0 +1,162 @@
+import { describe, expect, it, vi } from 'vitest';
+import { ROLES } from '../../src/domain/constants.js';
+import { ACCOUNT_STATUS } from '../../src/server/auth/contracts.js';
+import { accessIdCollisionKey, createAccessManagementService } from '../../src/server/access/service.js';
+
+function account(overrides = {}) {
+  return {
+    id: 'ACCOUNT-001',
+    accessIdNormalized: 'HAU.FOOD.001',
+    status: ACCOUNT_STATUS.ACTIVE,
+    roleId: ROLES.DOL_STAFF,
+    committeeIds: ['COM_FOOD'],
+    defaultCommitteeId: 'COM_FOOD',
+    profile: { fullName: 'Synthetic Food Operator' },
+    passwordCredential: { algorithm: 'PBKDF2-SHA-256' },
+    temporaryCredential: null,
+    credentialVersion: 1,
+    onboardingCompletedAt: '2026-07-22T00:00:00.000Z',
+    createdAt: '2026-07-22T00:00:00.000Z',
+    updatedAt: '2026-07-22T00:00:00.000Z',
+    lockedAt: null,
+    lastAccessIdChangedAt: '',
+    ...overrides,
+  };
+}
+
+function context({ accounts = [], activeAdministrators = 1 } = {}) {
+  const byAccessId = new Map(accounts.map((entry) => [entry.accessIdNormalized, entry]));
+  const reservations = new Map(
+    accounts.map((entry) => [accessIdCollisionKey(entry.accessIdNormalized), { accountId: entry.id }]),
+  );
+  const history = new Map();
+  const changes = [];
+  const repository = {
+    getAccountByAccessId: vi.fn(async (accessId) => byAccessId.get(accessId)),
+    getAccessIdReservation: vi.fn(async (key) => reservations.get(key)),
+    countActiveAdministrators: vi.fn(async () => activeAdministrators),
+    listAccounts: vi.fn(async () => ({ items: [], pagination: { page: 1, totalPages: 1, total: 0 } })),
+    listAccessIdHistory: vi.fn(async () => []),
+    listAccountAuditHistory: vi.fn(async () => []),
+    getAccessIdHistoryByIdempotency: vi.fn(async (key) => history.get(key)),
+    changeAccessId: vi.fn(async (command) => {
+      byAccessId.delete(command.account.accessIdNormalized);
+      byAccessId.set(command.newAccessId, {
+        ...command.account,
+        accessIdNormalized: command.newAccessId,
+        credentialVersion: command.account.credentialVersion + 1,
+      });
+      reservations.set(command.collisionKey, { accountId: command.account.id });
+      history.set(command.idempotencyKey, {
+        accountId: command.account.id,
+        oldAccessId: command.account.accessIdNormalized,
+        newAccessId: command.newAccessId,
+      });
+      changes.push(command);
+    }),
+    createStarterAccount: vi.fn(),
+    resetTemporaryPassword: vi.fn(),
+    setAccountStatus: vi.fn(),
+    revokeSessions: vi.fn(),
+    unlockAccount: vi.fn(),
+  };
+  let id = 0;
+  const service = createAccessManagementService({
+    repository,
+    passwordKdf: { hash: vi.fn(async () => ({ algorithm: 'PBKDF2-SHA-256', iterations: 100_000 })) },
+    environment: 'STAGING',
+    clock: { now: () => Date.parse('2026-07-22T08:00:00.000Z') },
+    createId: () => `ID-${++id}`,
+  });
+  return { service, repository, changes };
+}
+
+const actor = account({
+  id: 'ADMIN-001',
+  accessIdNormalized: 'HAU.ADMIN.001',
+  roleId: ROLES.ADMINISTRATOR,
+  committeeIds: [],
+  defaultCommitteeId: '',
+  profile: { fullName: 'Synthetic Administrator' },
+});
+
+describe('access management service', () => {
+  it('uses a punctuation-insensitive collision key for login aliases', () => {
+    expect(accessIdCollisionKey(' hau.food-001 ')).toBe('HAUFOOD001');
+    expect(accessIdCollisionKey('HAU_FOOD.001')).toBe('HAUFOOD001');
+  });
+
+  it('changes only the mutable Access ID, revokes sessions, and safely replays one history event', async () => {
+    const target = account();
+    const { service, repository, changes } = context({ accounts: [target] });
+    const command = {
+      currentAccessId: target.accessIdNormalized,
+      confirmCurrentAccessId: target.accessIdNormalized,
+      proposedAccessId: 'HAU.FOOD.009',
+      reason: 'Correct the synthetic operator login identifier.',
+      idempotencyKey: 'access-id-change-00000001',
+    };
+
+    const first = await service.changeAccessId({ actor, command, correlationId: 'REQ-SYNTHETIC' });
+    const replay = await service.changeAccessId({ actor, command, correlationId: 'REQ-SYNTHETIC' });
+
+    expect(first).toMatchObject({ changed: true, replayed: false, sessionsRevoked: true });
+    expect(replay).toMatchObject({ changed: true, replayed: true, sessionsRevoked: true });
+    expect(repository.changeAccessId).toHaveBeenCalledTimes(1);
+    expect(changes[0]).toMatchObject({
+      account: { id: target.id, roleId: target.roleId },
+      actor: { id: actor.id },
+      newAccessId: 'HAU.FOOD.009',
+      environment: 'STAGING',
+    });
+  });
+
+  it('rejects normalization collisions without disclosing the conflicting account', async () => {
+    const target = account();
+    const other = account({ id: 'ACCOUNT-002', accessIdNormalized: 'HAU-OTHER-001' });
+    const { service } = context({ accounts: [target, other] });
+
+    await expect(
+      service.previewAccessIdChange({
+        actor,
+        command: {
+          currentAccessId: other.accessIdNormalized,
+          confirmCurrentAccessId: other.accessIdNormalized,
+          proposedAccessId: 'HAU_FOOD-001',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_ID_COLLISION', status: 409 });
+  });
+
+  it('protects the last active Administrator from a consequential status change', async () => {
+    const target = account({
+      id: 'ADMIN-LAST',
+      accessIdNormalized: 'HAU.ADMIN.LAST',
+      roleId: ROLES.ADMINISTRATOR,
+      committeeIds: [],
+    });
+    const { service, repository } = context({ accounts: [target], activeAdministrators: 1 });
+
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          status: ACCOUNT_STATUS.DISABLED,
+          reason: 'Synthetic last administrator protection test.',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'LAST_ACTIVE_ADMIN_PROTECTED', status: 409 });
+    expect(repository.setAccountStatus).not.toHaveBeenCalled();
+  });
+
+  it('requires an active Administrator for account enumeration', async () => {
+    const { service, repository } = context();
+    await expect(service.listAccounts({ actor: account({ roleId: ROLES.DIRECTOR }) })).rejects.toMatchObject({
+      code: 'ADMINISTRATOR_REQUIRED',
+      status: 403,
+    });
+    expect(repository.listAccounts).not.toHaveBeenCalled();
+  });
+});

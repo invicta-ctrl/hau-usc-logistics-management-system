@@ -16,11 +16,18 @@ export class RestService {
       body: JSON.stringify(command),
       credentials: 'include',
     });
+    const result = await response.json().catch(() => null);
     if (!response.ok)
-      throw new AppError('REST_ERROR', `Backend returned ${response.status}.`, {
-        retryable: response.status >= 500,
-      });
-    return response.json();
+      throw new AppError(
+        result?.code ?? 'REST_ERROR',
+        result?.message ?? `Backend returned ${response.status}.`,
+        {
+          correlationId: result?.correlationId,
+          retryable: response.status >= 500,
+          details: result?.details,
+        },
+      );
+    return result;
   }
 }
 
@@ -65,3 +72,19 @@ for (const method of [
   RestService.prototype[method] = function post(command) {
     return this._post(`/api/${method}`, command);
   };
+
+for (const [method, path] of Object.entries({
+  listAccessAccounts: '/api/admin/access/directory',
+  getAccessIdHistory: '/api/admin/access/history',
+  previewAccessIdChange: '/api/admin/access/preview-access-id',
+  changeAccessId: '/api/admin/access/change-access-id',
+  createAccessAccount: '/api/admin/access/create-account',
+  resetAccessPassword: '/api/admin/access/reset-password',
+  setAccessAccountStatus: '/api/admin/access/status',
+  revokeAccessSessions: '/api/admin/access/revoke-sessions',
+  unlockAccessAccount: '/api/admin/access/unlock',
+})) {
+  RestService.prototype[method] = function post(command) {
+    return this._post(path, command);
+  };
+}

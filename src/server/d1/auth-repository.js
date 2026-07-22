@@ -42,6 +42,8 @@ async function accountFromRow(db, row) {
     onboardingCompletedAt: row.onboarding_completed_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    lockedAt: row.locked_at ?? null,
+    lastAccessIdChangedAt: row.last_access_id_changed_at ?? '',
   };
 }
 
@@ -246,6 +248,7 @@ export function createD1AuthRepository(db) {
       return Number(result.meta?.changes ?? 0) === 1;
     },
     async appendAudit(event) {
+      const entityId = event.accountId || 'AUTHENTICATION';
       await db
         .prepare(
           `INSERT INTO audit_log (
@@ -257,7 +260,7 @@ export function createD1AuthRepository(db) {
           event.id,
           event.occurredAt,
           event.event,
-          event.accountId || null,
+          entityId,
           JSON.stringify(event.details ?? {}),
           `AUTH_${String(event.id).replaceAll('-', '').slice(0, 24)}`,
         )

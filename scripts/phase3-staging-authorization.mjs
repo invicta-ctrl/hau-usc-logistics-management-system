@@ -28,22 +28,33 @@ async function candidateEvidence() {
   const migrationNames = (await readdir(path.join(repoRoot, 'migrations')))
     .filter((name) => name.endsWith('.sql'))
     .sort();
+  async function sourceFiles(directory) {
+    const entries = await readdir(directory, { withFileTypes: true });
+    const files = [];
+    for (const entry of entries) {
+      const resolved = path.join(directory, entry.name);
+      if (entry.isDirectory()) files.push(...(await sourceFiles(resolved)));
+      else if (entry.isFile() && /\.(?:js|json)$/u.test(entry.name)) files.push(resolved);
+    }
+    return files;
+  }
   const workerFiles = [
-    'src/worker/index.js',
-    'src/server/d1/auth-repository.js',
-    'src/server/d1/operational-service.js',
-    'wrangler.jsonc',
-    'migration/google-sheets-to-d1.v1.json',
-    ...migrationNames.map((name) => `migrations/${name}`),
+    ...(await sourceFiles(path.join(repoRoot, 'src', 'domain'))),
+    ...(await sourceFiles(path.join(repoRoot, 'src', 'server'))),
+    ...(await sourceFiles(path.join(repoRoot, 'src', 'worker'))),
+    path.join(repoRoot, 'wrangler.jsonc'),
+    path.join(repoRoot, 'migration', 'google-sheets-to-d1.v1.json'),
+    ...migrationNames.map((name) => path.join(repoRoot, 'migrations', name)),
   ];
-  const workerSource = (
-    await Promise.all(workerFiles.map((file) => readFile(path.join(repoRoot, file))))
-  ).map((value) => value.toString('utf8')).join('\n--FILE--\n');
+  const workerSource = (await Promise.all(workerFiles.sort().map((file) => readFile(file))))
+    .map((value) => value.toString('utf8'))
+    .join('\n--FILE--\n');
   return {
     branch: execFileSync('git', ['branch', '--show-current'], { cwd: repoRoot, encoding: 'utf8' }).trim(),
     sha: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim(),
     distSha256: await fileSha256(path.join(repoRoot, 'dist', 'index.html')),
     workerSourceSha256: sha256(workerSource),
+    googleMappingSha256: await fileSha256(path.join(repoRoot, 'migration', 'google-sheets-to-d1.v1.json')),
     migrationHashes: Object.fromEntries(
       await Promise.all(
         migrationNames.map(async (name) => [name, await fileSha256(path.join(repoRoot, 'migrations', name))]),

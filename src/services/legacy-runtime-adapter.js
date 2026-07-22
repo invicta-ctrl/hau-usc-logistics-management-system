@@ -152,6 +152,41 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.reviewReferenceAdminChange(command),
       );
     },
+    listAccessAccounts(payload = {}) {
+      return remote.listAccessAccounts(payload);
+    },
+    getAccessIdHistory(payload = {}) {
+      return remote.getAccessIdHistory(payload);
+    },
+    previewAccessIdChange(payload = {}) {
+      return remote.previewAccessIdChange(payload);
+    },
+    changeAccessId(payload) {
+      return mutationRequests.run('access-id-change', payload, (command) => remote.changeAccessId(command));
+    },
+    createAccessAccount(payload) {
+      return mutationRequests.run('access-account-create', payload, (command) =>
+        remote.createAccessAccount(command),
+      );
+    },
+    resetAccessPassword(payload) {
+      return mutationRequests.run('access-password-reset', payload, (command) =>
+        remote.resetAccessPassword(command),
+      );
+    },
+    setAccessAccountStatus(payload) {
+      return mutationRequests.run('access-status', payload, (command) =>
+        remote.setAccessAccountStatus(command),
+      );
+    },
+    revokeAccessSessions(payload) {
+      return mutationRequests.run('access-session-revoke', payload, (command) =>
+        remote.revokeAccessSessions(command),
+      );
+    },
+    unlockAccessAccount(payload) {
+      return mutationRequests.run('access-unlock', payload, (command) => remote.unlockAccessAccount(command));
+    },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>
         remote.transitionCompositeComponent(command),

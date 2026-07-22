@@ -76,6 +76,9 @@ test('administrator control desk exposes only existing governed domains', async 
     'aria-pressed',
     'true',
   );
+  await expect(page.locator('[data-access-management]')).toBeVisible();
+  await expect(page.locator('[data-access-results] .access-account-row')).toHaveCount(1);
+  await expect(page.locator('[data-access-results]')).toContainText('ADMINISTRATOR');
 
   await page.getByRole('button', { name: /Audit & System/ }).click();
   await expect(page.locator('[name="referenceAdminDomain"]')).toHaveValue('SYNC_HEALTH');

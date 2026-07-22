@@ -29,7 +29,27 @@
       <span>Operational work remains in its role workspace. This control desk surfaces authorized context and invokes existing server checks; it does not grant access, bypass review, or mutate ledger records.</span>
     </article>
 
-    <article class="panel">
+    <article class="panel" data-access-management hidden>
+      <div class="panel-head">
+        <div><h2>Access Management</h2><p>Search governed accounts, inspect Access ID history, and perform confirmed account actions.</p></div>
+        <button class="primary" type="button" data-access-create>Create staging account</button>
+      </div>
+      <div class="toolbar access-management-toolbar">
+        <label>Search<input name="accessSearch" maxlength="120" placeholder="Access ID or display name"></label>
+        <label>Role<select name="accessRole"><option value="">All roles</option><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option><option value="READ_ONLY_AUDITOR">Read-only auditor</option></select></label>
+        <label>Status<select name="accessStatus"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="DISABLED">Disabled</option><option value="REVOKED">Revoked</option><option value="LOCKED">Locked</option><option value="PENDING_FIRST_LOGIN">Pending first login</option></select></label>
+        <label>Committee<select name="accessCommittee"><option value="">All committees</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label>
+        <label>Sort<select name="accessSort"><option value="accessId">Identifier</option><option value="role">Role</option><option value="status">Status</option><option value="lastLogin">Last login</option></select></label>
+      </div>
+      <div class="line-list section-gap" data-access-results><div class="empty">Open Access Management to load authorized accounts.</div></div>
+      <div class="access-pagination section-gap" data-access-pagination hidden>
+        <button class="secondary mini" type="button" data-access-page="previous">Previous</button>
+        <span data-access-page-summary></span>
+        <button class="secondary mini" type="button" data-access-page="next">Next</button>
+      </div>
+    </article>
+
+    <article class="panel" data-reference-admin-generic>
       <div class="panel-head">
         <div><h2>Controlled domain workspace</h2><p>Search, inspect, add, version, archive, or restore through server-authorized forms.</p></div>
         <button class="primary" type="button" data-reference-admin-add>Add record</button>
@@ -52,7 +72,7 @@
       <div class="line-list section-gap" data-reference-admin-results><div class="empty">Loading authorized references…</div></div>
     </article>
 
-    <article class="panel">
+    <article class="panel" data-reference-admin-pending-panel>
       <div class="panel-head"><div><h2>Pending second review</h2><p>Permission escalation and cross-office routing remain unapplied until a different authorized administrator reviews them.</p></div></div>
       <div class="line-list" data-reference-admin-pending><div class="empty">Loading review queue…</div></div>
     </article>

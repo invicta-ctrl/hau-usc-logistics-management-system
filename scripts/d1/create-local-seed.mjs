@@ -79,6 +79,13 @@ async function main() {
             .join(', ') +
           `);`,
       );
+      statements.push(
+        `INSERT OR IGNORE INTO access_id_reservations (` +
+          `collision_key, account_id, access_id_snapshot, reserved_at, reservation_reason` +
+          `) VALUES (` +
+          `${sql(accessId.replace(/[._-]/gu, ''))}, ${sql(id)}, ${sql(accessId)}, ${sql(createdAt)}, ` +
+          `'LOCAL_SYNTHETIC_SEED');`,
+      );
       statements.push(`DELETE FROM account_committees WHERE account_id = ${sql(id)};`);
       if (committeeId) {
         statements.push(
@@ -119,6 +126,10 @@ async function main() {
         .map(sql)
         .join(', ') +
       `);`,
+    `INSERT OR IGNORE INTO access_id_reservations (` +
+      `collision_key, account_id, access_id_snapshot, reserved_at, reservation_reason` +
+      `) VALUES ('LOCALSTARTER', 'LOCAL-STARTER', 'LOCAL.STARTER', ${sql(createdAt)}, ` +
+      `'LOCAL_SYNTHETIC_SEED');`,
     `DELETE FROM account_committees WHERE account_id = 'LOCAL-STARTER';`,
     `INSERT INTO account_committees (` +
       `account_id, committee_id, membership_type, active, source` +

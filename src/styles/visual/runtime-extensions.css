@@ -306,3 +306,45 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
 [data-runtime-status] { display: inline-flex; align-items: center; min-height: 30px; padding: 6px 10px; border: 1px solid #cfb276; border-radius: 999px; color: #5b3710; background: #fffaf0; font-size: 10px; font-weight: 800; }
 .app-shell[hidden],
 #loading[hidden] { display: none !important; }
+
+.access-management-toolbar {
+  align-items: end;
+}
+
+.access-account-row {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.access-account-row > div:first-child {
+  min-width: 0;
+}
+
+.access-account-row small {
+  display: block;
+  margin-top: 4px;
+}
+
+.access-account-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.access-pagination {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .access-account-row,
+  .access-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .access-account-actions {
+    justify-content: flex-start;
+  }
+}

@@ -1,9 +1,11 @@
 import { CAPABILITIES } from '../domain/permissions.js';
+import { AccessManagementError, createAccessManagementService } from '../server/access/service.js';
 import { createPasswordKdf, createTokenCrypto } from '../server/auth/crypto.js';
 import { AUTH_COOKIE, DEVELOPMENT_AUTH_COOKIE } from '../server/auth/cookies.js';
 import { createAuthHttpHandler, statusForAuthError } from '../server/auth/http-handler.js';
 import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
+import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
@@ -101,13 +103,18 @@ function services(env) {
     tokenCrypto,
     rateLimiter: createD1RateLimiter(env.DB),
   });
+  const access = createAccessManagementService({
+    repository: createD1AccessManagementRepository(env.DB),
+    passwordKdf,
+    environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
+  });
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
     appVersion: env.APP_VERSION ?? '0.6.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
   });
-  return { auth, operations };
+  return { access, auth, operations };
 }
 
 async function authorize(request, auth, capability, { mutation = false } = {}) {
@@ -127,7 +134,9 @@ async function health(env, requestId, readiness = false) {
   const schema = await env.DB.prepare(
     "SELECT value, updated_at FROM app_metadata WHERE key = 'operational_schema_version'",
   ).first();
-  const migration = await env.DB.prepare('SELECT name, applied_at FROM d1_migrations ORDER BY id DESC LIMIT 1').first();
+  const migration = await env.DB.prepare(
+    'SELECT name, applied_at FROM d1_migrations ORDER BY id DESC LIMIT 1',
+  ).first();
   const unresolved =
     !schema ||
     !migration ||
@@ -167,7 +176,7 @@ function safeLog(level, event, requestId, details = {}) {
 async function handleApi(request, env) {
   const requestId = correlationId(request);
   const url = new URL(request.url);
-  const { auth, operations } = services(env);
+  const { access, auth, operations } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
     if (url.pathname === '/api/readiness' && request.method === 'GET') {
@@ -190,10 +199,49 @@ async function handleApi(request, env) {
       })(request);
     }
 
+    if (url.pathname.startsWith('/api/admin/access/') && request.method === 'POST') {
+      const actor = (await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: true })).account;
+      const command = await body(request);
+      const context = { actor, command, correlationId: requestId };
+      if (url.pathname === '/api/admin/access/directory') {
+        return json({ ok: true, ...(await access.listAccounts(context)) });
+      }
+      if (url.pathname === '/api/admin/access/history') {
+        return json({
+          ok: true,
+          ...(await access.getAccessIdHistory({
+            actor,
+            currentAccessId: command.currentAccessId,
+            limit: command.limit,
+          })),
+        });
+      }
+      if (url.pathname === '/api/admin/access/preview-access-id') {
+        return json({ ok: true, ...(await access.previewAccessIdChange(context)) });
+      }
+      if (url.pathname === '/api/admin/access/change-access-id') {
+        return json({ ok: true, ...(await access.changeAccessId(context)) });
+      }
+      if (url.pathname === '/api/admin/access/create-account') {
+        return json({ ok: true, ...(await access.createStarterAccount(context)) });
+      }
+      if (url.pathname === '/api/admin/access/reset-password') {
+        return json({ ok: true, ...(await access.resetTemporaryPassword(context)) });
+      }
+      if (url.pathname === '/api/admin/access/status') {
+        return json({ ok: true, ...(await access.setAccountStatus(context)) });
+      }
+      if (url.pathname === '/api/admin/access/revoke-sessions') {
+        return json({ ok: true, ...(await access.revokeSessions(context)) });
+      }
+      if (url.pathname === '/api/admin/access/unlock') {
+        return json({ ok: true, ...(await access.unlockAccount(context)) });
+      }
+      throw new AccessManagementError('ACCESS_ACCOUNT_NOT_FOUND', { status: 404 });
+    }
+
     if (
-      ['/api/bootstrap', '/api/getEssentialBootstrapData', '/api/getBootstrapData'].includes(
-        url.pathname,
-      )
+      ['/api/bootstrap', '/api/getEssentialBootstrapData', '/api/getBootstrapData'].includes(url.pathname)
     ) {
       const command = request.method === 'GET' ? Object.fromEntries(url.searchParams) : await body(request);
       const requestOnly = command.requestOnly === true || command.requestOnly === 'true';
@@ -293,9 +341,14 @@ async function handleApi(request, env) {
       404,
     );
   } catch (error) {
-    const known = error instanceof ApiError || error instanceof AuthError;
+    const known =
+      error instanceof ApiError || error instanceof AuthError || error instanceof AccessManagementError;
     const status =
-      error instanceof ApiError ? error.status : error instanceof AuthError ? statusForAuthError(error) : 500;
+      error instanceof ApiError || error instanceof AccessManagementError
+        ? error.status
+        : error instanceof AuthError
+          ? statusForAuthError(error)
+          : 500;
     safeLog(known ? 'log' : 'error', known ? error.code : 'UNHANDLED_API_ERROR', requestId, {
       path: url.pathname,
       method: request.method,

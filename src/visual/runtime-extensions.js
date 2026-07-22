@@ -349,6 +349,10 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let accessDirectory = null;
+  let accessDirectoryPromise = null;
+  let accessDirectoryPage = 1;
+  let accessSearchTimer = null;
   let sharedMobileNav = null;
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
@@ -679,6 +683,8 @@ export function createRuntimeExtensions(options) {
     return can(user, 'manage_reference');
   };
 
+  const accessManagementAllowed = () => can(getState()?.currentUser, 'admin_access');
+
   const localReferenceAdminRecords = (domain) => {
     const state = getState() ?? {};
     if (domain === 'VENUES' || domain === 'EQUIPMENT')
@@ -860,6 +866,272 @@ export function createRuntimeExtensions(options) {
         'Preview review requires a different administrator session to demonstrate separation of duties.',
       );
     };
+    services.listAccessAccounts ??= async (command = {}) => {
+      const user = state.currentUser ?? {};
+      const item = {
+        accessId: user.accessId ?? user.id ?? 'PREVIEW.ADMIN',
+        displayName: user.displayName ?? 'Preview Administrator',
+        roleId: user.authorization?.roleId ?? user.role ?? 'ADMINISTRATOR',
+        committeeIds: user.authorization?.committeeIds ?? user.scopes?.committee ?? [],
+        status: user.authorization?.active === false ? 'DISABLED' : 'ACTIVE',
+        firstLoginPending: false,
+        locked: false,
+        createdAt: '',
+        lastSuccessfulLogin: '',
+        lastAccessIdChange: '',
+      };
+      const query = String(command.query ?? '').toLowerCase();
+      const items =
+        query && !`${item.accessId} ${item.displayName}`.toLowerCase().includes(query) ? [] : [item];
+      return { ok: true, items, pagination: { page: 1, pageSize: 20, total: items.length, totalPages: 1 } };
+    };
+    services.getAccessIdHistory ??= async (command = {}) => ({
+      ok: true,
+      account: { accessId: command.currentAccessId },
+      history: [],
+    });
+  };
+
+  const accessDate = (value) => (value ? new Date(value).toLocaleString('en-PH') : 'Not recorded');
+
+  const renderAccessDirectory = () => {
+    const root = document.querySelector('[data-access-management]');
+    if (!root || root.hidden) return;
+    const results = root.querySelector('[data-access-results]');
+    const items = accessDirectory?.items ?? [];
+    results.innerHTML =
+      items
+        .map((account) => {
+          const stateLabels = [
+            account.status,
+            account.firstLoginPending ? 'Pending first login' : 'Onboarding complete',
+            account.locked ? 'Locked' : '',
+          ].filter(Boolean);
+          const lifecycleAction =
+            account.status === 'ACTIVE' ? 'disable' : account.status === 'DISABLED' ? 'enable' : '';
+          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong><small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction ? `<button class="${lifecycleAction === 'disable' ? 'danger' : 'secondary'} mini" type="button" data-access-action="${lifecycleAction}" data-access-id="${esc(account.accessId)}">${lifecycleAction === 'disable' ? 'Disable' : 'Enable'}</button>` : ''}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
+        })
+        .join('') || '<div class="empty">No accounts match the authorized filters.</div>';
+    const pagination = accessDirectory?.pagination ?? { page: 1, totalPages: 1, total: items.length };
+    const pager = root.querySelector('[data-access-pagination]');
+    pager.hidden = pagination.totalPages <= 1;
+    pager.querySelector('[data-access-page-summary]').textContent =
+      `Page ${pagination.page} of ${pagination.totalPages} · ${pagination.total} accounts`;
+    pager.querySelector('[data-access-page="previous"]').disabled = pagination.page <= 1;
+    pager.querySelector('[data-access-page="next"]').disabled = pagination.page >= pagination.totalPages;
+  };
+
+  const refreshAccessDirectory = async ({ force = false } = {}) => {
+    const root = document.querySelector('[data-access-management]');
+    if (!root || !accessManagementAllowed()) return;
+    if (accessDirectoryPromise) return accessDirectoryPromise;
+    if (!force && accessDirectory?.pagination?.page === accessDirectoryPage) return;
+    root.querySelector('[data-access-results]').innerHTML =
+      '<div class="empty">Loading authorized accounts…</div>';
+    accessDirectoryPromise = services.listAccessAccounts({
+      query: root.querySelector('[name="accessSearch"]')?.value ?? '',
+      role: root.querySelector('[name="accessRole"]')?.value ?? '',
+      committee: root.querySelector('[name="accessCommittee"]')?.value ?? '',
+      status: root.querySelector('[name="accessStatus"]')?.value ?? 'ALL',
+      sort: root.querySelector('[name="accessSort"]')?.value ?? 'accessId',
+      direction: 'asc',
+      page: accessDirectoryPage,
+      pageSize: 20,
+    });
+    try {
+      accessDirectory = await accessDirectoryPromise;
+      renderAccessDirectory();
+    } catch (error) {
+      root.querySelector('[data-access-results]').innerHTML =
+        `<div class="alert error">${esc(error.message)}</div>`;
+    } finally {
+      accessDirectoryPromise = null;
+    }
+  };
+
+  const accessAccount = (accessId) =>
+    (accessDirectory?.items ?? []).find((account) => account.accessId === accessId);
+
+  const openAccessHistory = async (account) => {
+    openModal('Access ID history', '<div class="empty">Loading append-only history…</div>');
+    try {
+      const result = await services.getAccessIdHistory({ currentAccessId: account.accessId, limit: 100 });
+      openModal(
+        `Access ID history · ${account.accessId}`,
+        `<h3>Append-only Access ID history</h3><div class="line-list">${
+          (result.history ?? [])
+            .map(
+              (entry) =>
+                `<div class="request-line"><div><strong>${esc(entry.oldAccessId)} → ${esc(entry.newAccessId)}</strong><small>${esc(accessDate(entry.changedAt))} · ${esc(entry.environment)} · actor ${esc(entry.actorAccessId)}</small><small>${esc(entry.reason)}</small></div></div>`,
+            )
+            .join('') || '<div class="empty">No Access ID changes have been recorded.</div>'
+        }</div><h3 class="section-gap">Safe account audit history</h3><div class="line-list">${
+          (result.auditHistory ?? [])
+            .map(
+              (entry) =>
+                `<div class="request-line"><div><strong>${esc(entry.action)}</strong><small>${esc(accessDate(entry.changedAt))} · ${esc(entry.correlationId || 'No correlation ID')}</small><small>${esc(entry.reason || 'No reason recorded')}</small></div></div>`,
+            )
+            .join('') || '<div class="empty">No account-management actions have been recorded.</div>'
+        }</div>`,
+      );
+    } catch (error) {
+      openModal('Access ID history', `<div class="alert error">${esc(error.message)}</div>`);
+    }
+  };
+
+  const openAccessIdChange = (account) => {
+    openModal(
+      `Change Access ID · ${account.accessId}`,
+      `<form id="accessIdChangeForm"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#accessIdChangeForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const command = Object.fromEntries(new FormData(form).entries());
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const preview = await services.previewAccessIdChange(command);
+            openModal(
+              'Confirm Access ID change',
+              `<div class="mode-note"><strong>${esc(account.accessId)} → ${esc(preview.normalizationPreview)}</strong><br>All active sessions will be revoked. The previous Access ID remains reserved and cannot be reused. Role, capability, and historical ownership links are unchanged.</div><button class="danger section-gap" type="button" data-access-confirm-change>Confirm and revoke sessions</button>`,
+              (confirmModal) => {
+                confirmModal
+                  .querySelector('[data-access-confirm-change]')
+                  .addEventListener('click', async (confirmEvent) => {
+                    confirmEvent.currentTarget.disabled = true;
+                    try {
+                      await services.changeAccessId({
+                        ...command,
+                        proposedAccessId: preview.proposedAccessId,
+                        idempotencyKey: `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                      });
+                      closeModal();
+                      accessDirectory = null;
+                      await refreshAccessDirectory({ force: true });
+                      toast('Access ID changed; prior sessions were revoked and history was appended.');
+                    } catch (error) {
+                      toast(error.message, true);
+                      confirmEvent.currentTarget.disabled = false;
+                    }
+                  });
+              },
+            );
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openAccessReasonAction = (account, action) => {
+    const definitions = {
+      disable: { title: 'Disable account', button: 'Disable and revoke sessions', status: 'DISABLED' },
+      enable: { title: 'Enable account', button: 'Enable account', status: 'ACTIVE' },
+      'revoke-sessions': { title: 'Revoke all sessions', button: 'Revoke all sessions' },
+      unlock: { title: 'Unlock account', button: 'Unlock account' },
+    };
+    const definition = definitions[action];
+    openModal(
+      `${definition.title} · ${account.accessId}`,
+      `<form id="accessReasonActionForm"><div class="mode-note">This is a consequential account action and will be recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${action === 'disable' ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#accessReasonActionForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const command = { currentAccessId: account.accessId, ...values };
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            if (definition.status)
+              await services.setAccessAccountStatus({ ...command, status: definition.status });
+            else if (action === 'unlock') await services.unlockAccessAccount(command);
+            else await services.revokeAccessSessions(command);
+            closeModal();
+            accessDirectory = null;
+            await refreshAccessDirectory({ force: true });
+            toast(`${definition.title} completed.`);
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openAccessPasswordReset = (account) => {
+    openModal(
+      `Reset temporary password · ${account.accessId}`,
+      `<form id="accessPasswordResetForm"><div class="mode-note">The account will return to first-login activation and all existing sessions will be revoked.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label>Temporary password<input name="temporaryPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Reset and revoke sessions</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#accessPasswordResetForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            await services.resetAccessPassword({
+              currentAccessId: account.accessId,
+              ...Object.fromEntries(new FormData(form).entries()),
+            });
+            form.reset();
+            closeModal();
+            accessDirectory = null;
+            await refreshAccessDirectory({ force: true });
+            toast('Temporary password reset; prior sessions were revoked.');
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openAccessAccountCreate = () => {
+    openModal(
+      'Create staging account',
+      `<form id="accessAccountCreateForm"><div class="mode-note">Creates one governed starter account. Role and committee scope are validated by the server.</div><div class="form-grid section-gap"><label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label><label>Temporary password<input name="temporaryPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Role<select name="roleId"><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option></select></label><label>Committee scope<select name="committeeId"><option value="">None / all</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this staging-only account assignment.</label></div><button class="primary" type="submit">Create starter account</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#accessAccountCreateForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const committeeIds = values.committeeId ? [values.committeeId] : [];
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            await services.createAccessAccount({
+              accessId: values.accessId,
+              temporaryPassword: values.temporaryPassword,
+              roleId: values.roleId,
+              committeeIds,
+              defaultCommitteeId: committeeIds[0] ?? '',
+              reason: values.reason,
+              confirmed: form.elements.confirmed.checked,
+            });
+            form.reset();
+            closeModal();
+            accessDirectory = null;
+            await refreshAccessDirectory({ force: true });
+            toast(
+              'Starter account created. Deliver the temporary credential through an approved private channel.',
+            );
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
   };
 
   const referenceAdminFields = (domain, record = {}) => {
@@ -898,6 +1170,10 @@ export function createRuntimeExtensions(options) {
   const refreshReferenceAdminWorkspace = async ({ force = false } = {}) => {
     const root = document.querySelector('#referenceAdminWorkspace');
     if (!root || !referenceAdminAllowed()) return;
+    if (referenceAdminDomain === 'PERMISSIONS') {
+      renderReferenceAdminWorkspace();
+      return refreshAccessDirectory({ force });
+    }
     if (referenceAdminPromise) return referenceAdminPromise;
     if (!force && referenceAdminWorkspace?.domain === referenceAdminDomain) return;
     const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
@@ -1021,6 +1297,16 @@ export function createRuntimeExtensions(options) {
     const allowed = referenceAdminAllowed();
     root.hidden = !allowed;
     if (!allowed) return;
+    const accessMode = referenceAdminDomain === 'PERMISSIONS';
+    const accessRoot = root.querySelector('[data-access-management]');
+    accessRoot.hidden = !accessMode || !accessManagementAllowed();
+    root.querySelector('[data-reference-admin-generic]').hidden = accessMode;
+    root.querySelector('[data-reference-admin-pending-panel]').hidden = accessMode;
+    const accessControl = root.querySelector('[data-reference-admin-control-domain="PERMISSIONS"]');
+    if (accessControl) {
+      accessControl.hidden = !accessManagementAllowed();
+      accessControl.disabled = !accessManagementAllowed();
+    }
     const workspace = referenceAdminWorkspace;
     root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled
       ? 'Controlled writes enabled'
@@ -1032,6 +1318,10 @@ export function createRuntimeExtensions(options) {
       control.classList.toggle('active', active);
       control.setAttribute('aria-pressed', String(active));
     });
+    if (accessMode) {
+      renderAccessDirectory();
+      return;
+    }
     root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
     results.innerHTML =
       (workspace?.items ?? [])
@@ -1108,6 +1398,40 @@ export function createRuntimeExtensions(options) {
     root
       .querySelector('[data-reference-admin-add]')
       .addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));
+    root.querySelector('[data-access-create]').addEventListener('click', openAccessAccountCreate);
+    ['accessRole', 'accessStatus', 'accessCommittee', 'accessSort'].forEach((name) => {
+      root.querySelector(`[name="${name}"]`).addEventListener('change', () => {
+        accessDirectoryPage = 1;
+        accessDirectory = null;
+        void refreshAccessDirectory({ force: true });
+      });
+    });
+    root.querySelector('[name="accessSearch"]').addEventListener('input', () => {
+      clearTimeout(accessSearchTimer);
+      accessSearchTimer = setTimeout(() => {
+        accessDirectoryPage = 1;
+        accessDirectory = null;
+        void refreshAccessDirectory({ force: true });
+      }, 180);
+    });
+    root.querySelector('[data-access-pagination]').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-access-page]');
+      if (!button) return;
+      accessDirectoryPage += button.dataset.accessPage === 'previous' ? -1 : 1;
+      accessDirectoryPage = Math.max(1, accessDirectoryPage);
+      accessDirectory = null;
+      void refreshAccessDirectory({ force: true });
+    });
+    root.querySelector('[data-access-results]').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-access-action]');
+      if (!button) return;
+      const account = accessAccount(button.dataset.accessId);
+      if (!account) return;
+      if (button.dataset.accessAction === 'history') void openAccessHistory(account);
+      else if (button.dataset.accessAction === 'rename') openAccessIdChange(account);
+      else if (button.dataset.accessAction === 'reset') openAccessPasswordReset(account);
+      else openAccessReasonAction(account, button.dataset.accessAction);
+    });
     root.addEventListener('click', (event) => {
       const edit = event.target.closest('[data-reference-admin-edit]');
       if (edit)

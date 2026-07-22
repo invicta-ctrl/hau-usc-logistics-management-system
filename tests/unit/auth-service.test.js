@@ -184,6 +184,23 @@ describe('v0.6 authentication and onboarding service', () => {
     ).rejects.toMatchObject({ code: 'ACCOUNT_UNAVAILABLE' });
   });
 
+  it('fails closed for a locked account and invalidates its existing session', async () => {
+    const { service, repository } = context;
+    const active = await activate(service);
+    const account = repository.inspect().accounts[0];
+    await repository.saveAccount({
+      ...account,
+      lockedAt: '2026-07-21T08:05:00.000Z',
+    });
+
+    await expect(service.getSession({ sessionToken: active.activated.sessionToken })).rejects.toMatchObject({
+      code: 'SESSION_INVALID',
+    });
+    await expect(
+      service.login({ accessId: 'HAU-ADMIN-001', password: 'Activated!Password9472' }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_UNAVAILABLE' });
+  });
+
   it('requires a valid session, CSRF token, capability, and committee scope', async () => {
     const { service } = context;
     const food = await activate(service, {

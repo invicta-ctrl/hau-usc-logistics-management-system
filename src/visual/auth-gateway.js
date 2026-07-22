@@ -54,15 +54,16 @@ function fieldError(error, field) {
 }
 
 function loginMarkup(error) {
+  const message = error ? escapeHtml(error.message) : '';
   return `
     <section class="auth-card" aria-labelledby="authTitle">
       <p class="eyebrow">Holy Angel University · University Student Council</p>
       <h1 id="authTitle">Logistics Operations</h1>
       <p class="auth-intro">Sign in with the Access ID issued by the Department of Logistics.</p>
-      ${error ? `<div class="auth-alert" role="alert">${escapeHtml(error.message)}</div>` : ''}
-      <form id="authLoginForm" class="auth-form">
+      <div class="auth-alert" role="alert" data-auth-login-error ${error ? '' : 'hidden'}>${message}</div>
+      <form id="authLoginForm" class="auth-form" autocomplete="on">
         <label for="authAccessId">Access ID</label>
-        <input id="authAccessId" name="accessId" autocomplete="username" required maxlength="64" spellcheck="false">
+        <input id="authAccessId" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" required maxlength="64" spellcheck="false">
         <label for="authPassword">Password</label>
         <input id="authPassword" name="password" type="password" autocomplete="current-password" required maxlength="128">
         <button class="primary" type="submit">Sign in</button>
@@ -174,25 +175,31 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   };
 
   const renderLogin = (error) => {
-    root.innerHTML = loginMarkup(error);
-    const form = root.querySelector('#authLoginForm');
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const values = new FormData(form);
-      setBusy(form, true);
-      try {
-        const result = await client.login(values.get('accessId'), values.get('password'));
-        if (result.state === AUTH_STATE.ACTIVATION_REQUIRED) {
-          setAuthSession({ csrfToken: result.csrfToken, user: null });
-          renderActivation();
-        } else {
-          authenticated(result);
+    let form = root.querySelector('#authLoginForm');
+    if (!form) {
+      root.innerHTML = loginMarkup(error);
+      form = root.querySelector('#authLoginForm');
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const values = new FormData(form);
+        setBusy(form, true);
+        try {
+          const result = await client.login(values.get('username'), values.get('password'));
+          if (result.state === AUTH_STATE.ACTIVATION_REQUIRED) {
+            setAuthSession({ csrfToken: result.csrfToken, user: null });
+            renderActivation();
+          } else {
+            authenticated(result);
+          }
+        } catch (nextError) {
+          renderLogin(nextError);
         }
-      } catch (nextError) {
-        renderLogin(nextError);
-      }
-    });
-    root.querySelector('#authAccessId')?.focus();
+      });
+    }
+    const alert = root.querySelector('[data-auth-login-error]');
+    alert.textContent = error?.message ?? '';
+    alert.hidden = !error;
+    setBusy(form, false);
   };
 
   const renderActivation = (error) => {
