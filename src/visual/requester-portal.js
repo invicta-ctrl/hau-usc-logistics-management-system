@@ -11,6 +11,7 @@ function escapeHtml(value) {
 
 const requestKey = (scope) => `${scope}:${crypto.randomUUID()}`;
 const displayStatus = (value) => String(value ?? '').replaceAll('_', ' ');
+const autocompleteThreshold = 8;
 const formatDate = (value) =>
   value
     ? new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
@@ -204,8 +205,10 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
             </div>
             <div class="panel-head section-gap"><div><p class="eyebrow">Step 3</p><h2>Event and Sub-event</h2><p>Only approved, active source records are available.</p></div></div>
             <div class="public-form-grid">
-              <label>Event<select name="eventSeriesId" required><option value="">Select Event</option>${portal.eventSeries.map((event) => option(event.id, event.name)).join('')}</select></label>
-              <label>Sub-event<select name="eventId" required disabled><option value="">Select Event first</option></select></label>
+              <label data-event-series-autocomplete-wrap hidden>Event autocomplete<input type="search" data-event-series-autocomplete list="requestEventSeriesSuggestions" autocomplete="off" aria-autocomplete="list" aria-controls="requestEventSeries"><small>Type an approved Event name, then confirm it in the Event selector.</small><datalist id="requestEventSeriesSuggestions">${portal.eventSeries.map((event) => `<option value="${escapeHtml(event.name)}"></option>`).join('')}</datalist></label>
+              <label>Event<select id="requestEventSeries" name="eventSeriesId" required><option value="">Select Event</option>${portal.eventSeries.map((event) => option(event.id, event.name)).join('')}</select></label>
+              <label data-event-autocomplete-wrap hidden>Sub-event autocomplete<input type="search" data-event-autocomplete list="requestEventSuggestions" autocomplete="off" aria-autocomplete="list" aria-controls="requestEvent"><small>Type an approved Sub-event name, then confirm it in the Sub-event selector.</small><datalist id="requestEventSuggestions"></datalist></label>
+              <label>Sub-event<select id="requestEvent" name="eventId" required disabled><option value="">Select Event first</option></select></label>
             </div>
             <div class="panel-head section-gap"><div><p class="eyebrow">Step 4</p><h2>Requested venues, logistics, and equipment</h2><p>Every item begins For Review. Availability is non-binding and submission makes no reservation or stock movement.</p></div></div>
             <div class="public-form-grid request-line-composer">
@@ -244,6 +247,11 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
     const parentWrap = form.querySelector('[data-parent-wrap]');
     const seriesSelect = form.elements.eventSeriesId;
     const eventSelect = form.elements.eventId;
+    const seriesAutocompleteWrap = form.querySelector('[data-event-series-autocomplete-wrap]');
+    const seriesAutocomplete = form.querySelector('[data-event-series-autocomplete]');
+    const eventAutocompleteWrap = form.querySelector('[data-event-autocomplete-wrap]');
+    const eventAutocomplete = form.querySelector('[data-event-autocomplete]');
+    const eventSuggestions = form.querySelector('#requestEventSuggestions');
     const categorySelect = form.elements.lineCategory;
     const choiceSelect = form.elements.lineChoice;
     const customWrap = form.querySelector('[data-custom-name]');
@@ -257,12 +265,44 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
     requestTypeInputs.forEach((input) => input.addEventListener('change', syncRequestType));
     syncRequestType();
 
+    seriesAutocompleteWrap.hidden = portal.eventSeries.length <= autocompleteThreshold;
+
+    const selectAutocompleteMatch = (input, select, records) => {
+      const normalized = input.value.trim().toLocaleLowerCase();
+      const match = records.find(
+        (record) =>
+          record.name.toLocaleLowerCase() === normalized ||
+          record.id.toLocaleLowerCase() === normalized,
+      );
+      if (!match) return;
+      select.value = match.id;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
     const syncEvents = () => {
       const available = portal.events.filter((event) => event.seriesId === seriesSelect.value);
       eventSelect.innerHTML = `<option value="">${available.length ? 'Select Sub-event' : 'No approved Sub-events'}</option>${available.map((event) => option(event.id, event.name)).join('')}`;
       eventSelect.disabled = !available.length;
+      eventSuggestions.innerHTML = available
+        .map((event) => `<option value="${escapeHtml(event.name)}"></option>`)
+        .join('');
+      eventAutocompleteWrap.hidden = available.length <= autocompleteThreshold;
+      eventAutocomplete.value = '';
+      seriesAutocomplete.value = seriesSelect.selectedOptions[0]?.textContent ?? '';
     };
     seriesSelect.addEventListener('change', syncEvents);
+    eventSelect.addEventListener('change', () => {
+      eventAutocomplete.value = eventSelect.selectedOptions[0]?.value
+        ? eventSelect.selectedOptions[0].textContent
+        : '';
+    });
+    seriesAutocomplete.addEventListener('input', () =>
+      selectAutocompleteMatch(seriesAutocomplete, seriesSelect, portal.eventSeries),
+    );
+    eventAutocomplete.addEventListener('input', () => {
+      const available = portal.events.filter((event) => event.seriesId === seriesSelect.value);
+      selectAutocompleteMatch(eventAutocomplete, eventSelect, available);
+    });
 
     const syncChoices = () => {
       const custom = categorySelect.value === 'Other';

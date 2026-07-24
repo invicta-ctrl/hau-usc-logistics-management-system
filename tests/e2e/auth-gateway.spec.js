@@ -289,7 +289,14 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
       departmentId: 'USC-DEPT-DOL',
       displayName: 'Department of Logistics',
     },
-    eventSeries: [{ id: 'SER-SYNTHETIC', code: 'SYN', name: 'Synthetic Approved Event' }],
+    eventSeries: [
+      { id: 'SER-SYNTHETIC', code: 'SYN', name: 'Synthetic Approved Event' },
+      ...Array.from({ length: 8 }, (_, index) => ({
+        id: `SER-AUTOCOMPLETE-${index + 1}`,
+        code: `AC${index + 1}`,
+        name: `Approved Event ${index + 1}`,
+      })),
+    ],
     events: [
       {
         id: 'EVT-SYNTHETIC',
@@ -299,6 +306,14 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
         endsAt: '2026-08-01T12:00:00.000Z',
         venue: 'University Theater',
       },
+      ...Array.from({ length: 8 }, (_, index) => ({
+        id: `EVT-AUTOCOMPLETE-${index + 1}`,
+        seriesId: 'SER-SYNTHETIC',
+        name: `Approved Sub-event ${index + 1}`,
+        startsAt: '2026-08-01T08:00:00.000Z',
+        endsAt: '2026-08-01T12:00:00.000Z',
+        venue: 'University Theater',
+      })),
     ],
     choices: {
       'Venue / Facility': ['University Theater'],
@@ -389,8 +404,14 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   const requestForm = page.locator('#requesterRequestForm');
   await expect(requestForm.getByLabel('Department')).toHaveValue('Department of Logistics');
   await expect(requestForm.getByLabel('Department')).toHaveAttribute('readonly', '');
-  await requestForm.locator('[name="eventSeriesId"]').selectOption('SER-SYNTHETIC');
-  await requestForm.locator('[name="eventId"]').selectOption('EVT-SYNTHETIC');
+  const eventAutocomplete = requestForm.locator('[data-event-series-autocomplete]');
+  await expect(eventAutocomplete).toBeVisible();
+  await eventAutocomplete.fill('Synthetic Approved Event');
+  await expect(requestForm.locator('[name="eventSeriesId"]')).toHaveValue('SER-SYNTHETIC');
+  const subEventAutocomplete = requestForm.locator('[data-event-autocomplete]');
+  await expect(subEventAutocomplete).toBeVisible();
+  await subEventAutocomplete.fill('Synthetic Approved Sub-event');
+  await expect(requestForm.locator('[name="eventId"]')).toHaveValue('EVT-SYNTHETIC');
   await requestForm.locator('[name="purpose"]').fill('Synthetic authenticated request proof.');
   await requestForm.locator('[name="lineCategory"]').selectOption('Venue / Facility');
   await requestForm.locator('[name="lineChoice"]').selectOption('University Theater');
