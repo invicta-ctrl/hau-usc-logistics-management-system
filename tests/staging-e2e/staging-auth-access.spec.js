@@ -44,12 +44,13 @@ test('deployed staging serves the governed login background and official brand s
 
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
-  await expect(page.locator('.brand-media')).toHaveCount(2);
+  const visibleBrandMedia = page.locator('.brand-media:visible');
+  await expect(visibleBrandMedia).toHaveCount(2);
   await expect
     .poll(() =>
-      page
-        .locator('.brand-media')
-        .evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0)),
+      visibleBrandMedia.evaluateAll((images) =>
+        images.every((image) => image.complete && image.naturalWidth > 0),
+      ),
     )
     .toBe(true);
   const backgroundImage = await page
