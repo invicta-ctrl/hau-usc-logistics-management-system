@@ -2,9 +2,9 @@
 
 ## Summary
 
-Repair the CI-only pointer interception race in the existing 390px Request
-Center accessibility scenario. Preserve product behavior and exercise the same
-form submission through its keyboard-accessible path.
+Repair the CI-only pointer interception race in both existing 390px Request
+Center accessibility scenarios. Preserve product behavior and exercise the
+same form submission through its keyboard-accessible path.
 
 ## Type
 
@@ -35,14 +35,15 @@ In Progress
 ## Context
 
 The form and button are valid. In the slower two-worker Linux CI run,
-Playwright's pointer click repeatedly auto-scrolls the button beneath fixed
+Playwright's pointer clicks repeatedly auto-scroll the buttons beneath fixed
 header/mobile-nav geometry or the transient toast, while the same suite passes
 locally. This is a test interaction race, not a server or form failure.
 
 ## Current State
 
-`tests/e2e/request-accessibility.spec.js` submits the mobile form with a pointer
-click. CI reports pointer interception until the 30-second test timeout.
+`tests/e2e/request-accessibility.spec.js` submits both mobile form scenarios
+with pointer clicks. CI reports pointer interception until the 30-second test
+timeout.
 
 ## Desired State
 
@@ -68,7 +69,7 @@ reused.
 
 ### Files to modify
 
-- `tests/e2e/request-accessibility.spec.js` — replace the flaky pointer click
+- `tests/e2e/request-accessibility.spec.js` — replace both flaky pointer clicks
   with focus plus Enter.
 
 ### Files to create
@@ -91,8 +92,8 @@ Use the exact GitHub Actions log and preserve the failure URL/snippet.
 
 ### Step 2: Repair the interaction
 
-Focus the existing `Submit for DOL Review` button and press Enter. Do not alter
-application code or bypass form validation/submission.
+Focus each existing `Submit for DOL Review` button and press Enter. Do not
+alter application code or bypass form validation/submission.
 
 ### Step 3: Verify
 
@@ -105,7 +106,7 @@ PR checks on the exact new head.
 
 ## REMOVAL SPECIFICATION
 
-No product code is removed. Replace only the single pointer-click statement.
+No product code is removed. Replace only the two pointer-click statements.
 
 Removal checklist:
 
