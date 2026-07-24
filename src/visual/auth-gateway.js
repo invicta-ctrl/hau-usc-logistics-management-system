@@ -2,7 +2,7 @@ import { AUTH_STATE } from '../auth/http-contract.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
-import { mountPublicRequesterPortal } from './public-requester-portal.js';
+import { mountRequesterPortal } from './requester-portal.js';
 import { brandLockupMarkup } from './brand-assets.js';
 
 function escapeHtml(value) {
@@ -244,10 +244,6 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const client = new AuthApiClient(baseUrl);
   const root = gatewayRoot();
   setWorkspaceVisibility(false);
-  if (requesterPortal) {
-    await mountPublicRequesterPortal({ root, client });
-    return;
-  }
   if (lendingPortal) {
     await mountPublicLendingPortal({ root, client });
     return;
@@ -257,6 +253,22 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
     setAuthSession({ csrfToken: result.csrfToken, user: result.user });
     document.body.dataset.experience = result.user?.experienceId ?? '';
     routeAuthorizedWorkspace(result.user);
+    if (requesterPortal) {
+      void mountRequesterPortal({
+        root,
+        client,
+        session: getAuthSession(),
+        onLogout: async () => {
+          try {
+            await client.logout(getAuthSession().csrfToken);
+          } finally {
+            clearAuthSession();
+            location.reload();
+          }
+        },
+      });
+      return;
+    }
     root.remove();
     setWorkspaceVisibility(true);
     start();
@@ -266,7 +278,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const renderLogin = (error) => {
     let form = root.querySelector('#authLoginForm');
     if (!form) {
-      root.innerHTML = loginMarkup(error, { portal: false, requestPortal: false });
+      root.innerHTML = loginMarkup(error, { portal: false, requestPortal: requesterPortal });
       form = root.querySelector('#authLoginForm');
       attachPasswordControls(root);
       attachRecoveryHelp(root);

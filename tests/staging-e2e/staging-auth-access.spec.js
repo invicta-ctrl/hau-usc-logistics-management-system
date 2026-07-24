@@ -23,6 +23,18 @@ async function ownerCredential() {
   return { accessId: String(parsed.accessId), password: String(parsed.password) };
 }
 
+async function departmentTestCredential() {
+  const credentialPath = process.env.HAU_DEPARTMENT_TEST_CREDENTIAL_FILE;
+  if (!credentialPath || !path.isAbsolute(credentialPath)) {
+    throw new Error('HAU_DEPARTMENT_TEST_CREDENTIAL_FILE must be an absolute private path.');
+  }
+  const parsed = JSON.parse(await readFile(credentialPath, 'utf8'));
+  if (!parsed?.accessId || !parsed?.password) {
+    throw new Error('The private department test credential file is incomplete.');
+  }
+  return { accessId: String(parsed.accessId), password: String(parsed.password) };
+}
+
 async function login(context, accessId, password) {
   const response = await context.post('/api/auth/login', { data: { accessId, password } });
   expect(response.status()).toBe(200);
@@ -91,8 +103,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '17',
-        latestMigration: '0017_department_requester_accounts.sql',
+        schemaVersion: '18',
+        latestMigration: '0018_authenticated_request_center.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -277,7 +289,7 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.getByLabel('Access ID')).toBeVisible();
     await page.goto('/request');
     await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
-    await expect(page.getByLabel('Access ID')).toHaveCount(0);
+    await expect(page.getByLabel('Access ID')).toBeVisible();
     await expect(page.locator('.app-shell')).toBeHidden();
     await page.goto('/lending');
     await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
@@ -312,74 +324,157 @@ test('deployed staging authentication and Access Management remain operational',
   }
 });
 
-test('deployed staging public Request Center submits and privately tracks without login', async ({
+test('deployed staging authenticated Request Center submits New and Additional requests with scoped tracking and PDF', async ({
   page,
   baseURL,
 }) => {
-  const owner = await ownerCredential();
-  const publicRequest = await apiRequest.newContext({ baseURL });
-  const adminRequest = await apiRequest.newContext({ baseURL });
+  const credential = await departmentTestCredential();
+  const requester = await apiRequest.newContext({ baseURL });
+  const anonymous = await apiRequest.newContext({ baseURL });
+  const activatedPassword = syntheticPassword('DepartmentActivated');
   try {
-    await login(adminRequest, owner.accessId, owner.password);
-    const optionsResponse = await publicRequest.get('/api/public/request/options');
-    expect(optionsResponse.status()).toBe(200);
-    const options = await optionsResponse.json();
-    expect(options.items.length).toBeGreaterThan(0);
-    expect(options.items[0]).not.toHaveProperty('onHand');
-    expect(options.items[0]).not.toHaveProperty('storageLocation');
-    expect(options).not.toHaveProperty('requestReferences');
+    expect((await anonymous.get('/api/public/request/options')).status()).toBe(401);
+    expect((await anonymous.get('/api/portal/request')).status()).toBe(401);
 
-    const item = options.items[0];
-    const before = await (await adminRequest.get('/api/inventory')).json();
-    const balanceBefore = before.data.inventoryItems.find((entry) => entry.id === item.id).onHand;
-    const unique = `${Date.now().toString(36)}-${randomBytes(5).toString('hex')}`;
-    const submitted = await publicRequest.post('/api/public/request', {
-      headers: { origin: new URL(baseURL).origin },
+    const starter = await requester.post('/api/auth/login', {
+      data: { accessId: credential.accessId, password: credential.password },
+    });
+    expect(starter.status()).toBe(200);
+    const starterResult = await starter.json();
+    expect(starterResult.state).toBe('ACTIVATION_REQUIRED');
+    const activation = await requester.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': starterResult.csrfToken },
       data: {
-        requestType: 'CATALOG_RESTOCK',
-        requesterName: 'Authorized Synthetic Public Requester',
-        requesterType: 'HAU office / department',
-        organization: 'Authorized Synthetic Staging Proof',
-        contactNumber: '+63 917 000 0010',
-        email: `public-${unique}@example.invalid`,
-        stockArea: options.stockAreas[0],
-        neededDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        purpose: 'Authorized synthetic no-login request and private tracking staging proof.',
-        lines: [
-          {
-            category: 'Inventory Item',
-            itemId: item.id,
-            quantity: 1,
-            specification: 'Synthetic staging proof; no physical stock movement.',
-          },
-        ],
-        clientRequestId: `staging-public-request-${unique}`,
+        profile: {
+          fullName: 'Authorized Department Logistics Staging Requester',
+          mobileNumber: '+63 917 000 0020',
+          email: `department-staging-${Date.now()}@example.invalid`,
+        },
+        password: activatedPassword,
+        confirmPassword: activatedPassword,
       },
     });
-    expect(submitted.status()).toBe(200);
-    const receipt = await submitted.json();
-    expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
-    expect(receipt.trackingCode.length).toBeGreaterThan(32);
-
-    const tracked = await publicRequest.post('/api/public/request/track', {
-      headers: { origin: new URL(baseURL).origin },
-      data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
+    expect(activation.status()).toBe(200);
+    const activationResult = await activation.json();
+    expect(activationResult.user).toMatchObject({
+      displayName: 'Department of Logistics',
+      authorization: { roleId: 'REQUESTER', scopeMode: 'SELF' },
+      requesterDepartment: {
+        id: 'USC-DEPT-DOL',
+        displayName: 'Department of Logistics',
+      },
     });
-    expect(tracked.status()).toBe(200);
-    const tracking = await tracked.json();
-    expect(tracking.request).toMatchObject({ id: receipt.requestId, status: 'FOR_REVIEW' });
-    expect(tracking.request).not.toHaveProperty('requesterEmail');
-    expect(tracking.request).not.toHaveProperty('contactNumber');
-
-    const after = await (await adminRequest.get('/api/inventory')).json();
-    expect(after.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
+    const csrfToken = activationResult.csrfToken;
 
     await page.goto('/request');
     await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
-    await expect(page.getByLabel('Access ID')).toHaveCount(0);
-    await expect(page.locator('.app-shell')).toBeHidden();
+    await page.getByLabel('Access ID').fill(credential.accessId);
+    await page.getByLabel('Password', { exact: true }).fill(activatedPassword);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    const form = page.locator('#requesterRequestForm');
+    await expect(form.getByLabel('Department')).toHaveValue('Department of Logistics');
+    await form.locator('[name="eventSeriesId"]').selectOption('SER-STAGING-REQUEST-ACCEPTANCE');
+    await form.locator('[name="eventId"]').selectOption('EVT-STAGING-REQUEST-ACCEPTANCE');
+    await form
+      .locator('[name="purpose"]')
+      .fill('Authorized atomic authenticated Request Center staging acceptance.');
+    await form.locator('[name="lineCategory"]').selectOption('Venue / Facility');
+    await form.locator('[name="lineChoice"]').selectOption('University Theater');
+    await form.locator('[name="lineQuantity"]').fill('1');
+    await form.locator('[name="lineUnit"]').selectOption('facility');
+    await form
+      .locator('[name="lineSpecification"]')
+      .fill('Authorized reversible acceptance fixture; no reservation or stock movement.');
+    await form.getByRole('button', { name: 'Add requested item' }).click();
+    await form.getByRole('button', { name: 'Submit request' }).click();
+    await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
+    const requestId = await page.locator('.request-success code').textContent();
+    expect(requestId).toMatch(/^REQ-/u);
+    await expect(page.locator('[name="trackingCode"]')).toHaveCount(0);
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Save PDF Receipt' }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe(`${requestId}-request-receipt.pdf`);
+    const downloadPath = await download.path();
+    expect((await readFile(downloadPath)).subarray(0, 8).toString()).toBe('%PDF-1.4');
+
+    await page.getByRole('button', { name: 'View Request Status' }).click();
+    await expect(page.getByRole('heading', { name: 'Track Existing Request' })).toBeVisible();
+    await expect(page.locator('[data-tracking-results]')).toContainText('University Theater');
+
+    const duplicate = await requester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': csrfToken },
+      data: {
+        requestType: 'NEW',
+        eventSeriesId: 'SER-STAGING-REQUEST-ACCEPTANCE',
+        eventId: 'EVT-STAGING-REQUEST-ACCEPTANCE',
+        purpose: 'Duplicate detection proof.',
+        lines: [
+          {
+            category: 'Equipment',
+            description: 'Projector',
+            quantity: 1,
+            unit: 'unit',
+            specification: '',
+          },
+        ],
+        clientRequestId: `staging-request-duplicate-${crypto.randomUUID()}`,
+      },
+    });
+    expect(duplicate.status()).toBe(409);
+    await expect(duplicate.json()).resolves.toMatchObject({ code: 'REQUEST_ALREADY_EXISTS' });
+
+    const additionalCommand = {
+      requestType: 'ADDITIONAL',
+      parentRequestId: requestId,
+      eventSeriesId: 'SER-STAGING-REQUEST-ACCEPTANCE',
+      eventId: 'EVT-STAGING-REQUEST-ACCEPTANCE',
+      purpose: 'Authorized Additional request staging acceptance.',
+      lines: [
+        {
+          category: 'Other',
+          description: 'Synthetic custom wayfinding sign',
+          custom: true,
+          quantity: 2,
+          unit: 'piece',
+          specification: 'Custom request only; never create a catalog record.',
+        },
+      ],
+      clientRequestId: `staging-request-additional-${crypto.randomUUID()}`,
+    };
+    const additional = await requester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': csrfToken },
+      data: additionalCommand,
+    });
+    expect(additional.status()).toBe(200);
+    await expect(additional.json()).resolves.toMatchObject({
+      requestType: 'ADDITIONAL',
+      parentRequestId: requestId,
+      department: 'Department of Logistics',
+      status: 'FOR_REVIEW',
+    });
+    const replay = await requester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': csrfToken },
+      data: additionalCommand,
+    });
+    await expect(replay.json()).resolves.toMatchObject({
+      parentRequestId: requestId,
+      replayed: true,
+    });
+
+    const scoped = await (await requester.get('/api/portal/request')).json();
+    expect(scoped.requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: requestId, department: 'Department of Logistics' }),
+        expect.objectContaining({ requestType: 'ADDITIONAL', parentRequestId: requestId }),
+      ]),
+    );
+    expect(JSON.stringify(scoped)).not.toContain('trackingCode');
+    expect(JSON.stringify(scoped)).not.toContain('storageLocation');
+    expect(JSON.stringify(scoped)).not.toContain('audit_log');
   } finally {
-    await Promise.all([publicRequest.dispose(), adminRequest.dispose()]);
+    await Promise.all([requester.dispose(), anonymous.dispose()]);
   }
 });
 

@@ -244,97 +244,173 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
 });
 
-test('public Request Center opens without login and returns private tracking details', async ({
+test('authenticated department Request Center submits, tracks, and saves a PDF receipt', async ({
   page,
 }, testInfo) => {
   test.skip(
     testInfo.project.name !== 'chromium-390',
-    'One mobile browser proves the Phase 3 public boundary.',
+    'One mobile browser proves the authenticated Request Center boundary.',
   );
-  let authCalls = 0;
+  let authenticated = false;
+  let submitted = false;
   await page.addInitScript(() => {
     globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
   });
-  await page.route('**/api/auth/**', (route) => {
-    authCalls += 1;
-    return route.abort();
-  });
-  await page.route('**/api/public/request/options', (route) =>
-    route.fulfill({
+  await page.route('**/api/auth/**', async (route) => {
+    const pathname = new URL(route.request().url()).pathname;
+    if (pathname === '/api/auth/session' && !authenticated) {
+      return route.fulfill({
+        status: 401,
+        contentType: 'application/json',
+        body: JSON.stringify({ code: 'SESSION_REQUIRED', message: 'Sign in.' }),
+      });
+    }
+    if (pathname === '/api/auth/login') authenticated = true;
+    return route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        categories: [
-          'Inventory Item',
-          'Food',
-          'Materials',
-          'Venue / Facility',
-          'Logistics / Equipment',
-          'Other',
-        ],
-        requesterTypes: ['HAU student / Angelite', 'HAU office / department'],
-        items: [{ id: 'ITM-SYNTHETIC', name: 'Synthetic Supply', category: 'Office', unit: 'piece' }],
-        eventSeries: [{ id: 'SER-SYNTHETIC', name: 'Synthetic Approved Series', status: 'ACTIVE' }],
-        events: [
-          {
-            id: 'EVT-SYNTHETIC',
-            seriesId: 'SER-SYNTHETIC',
-            name: 'Synthetic Approved Event',
-            venue: 'Synthetic Venue',
-            startAt: '2026-08-01T08:00:00.000Z',
-            endAt: '2026-08-01T12:00:00.000Z',
+        state: 'AUTHENTICATED',
+        csrfToken: 'csrf-requester',
+        user: {
+          displayName: 'Department of Logistics',
+          authorization: { roleId: 'REQUESTER', roleLabel: 'Requester', scopeMode: 'SELF' },
+          requesterDepartment: {
+            id: 'USC-DEPT-DOL',
+            displayName: 'Department of Logistics',
           },
-        ],
-        requestReferences: [],
-        stockAreas: ['Inventory'],
-        references: [],
+        },
       }),
-    }),
-  );
-  await page.route('**/api/public/request', async (route) => {
+    });
+  });
+  const portalPayload = () => ({
+    ok: true,
+    profile: {
+      departmentId: 'USC-DEPT-DOL',
+      displayName: 'Department of Logistics',
+    },
+    eventSeries: [{ id: 'SER-SYNTHETIC', code: 'SYN', name: 'Synthetic Approved Event' }],
+    events: [
+      {
+        id: 'EVT-SYNTHETIC',
+        seriesId: 'SER-SYNTHETIC',
+        name: 'Synthetic Approved Sub-event',
+        startsAt: '2026-08-01T08:00:00.000Z',
+        endsAt: '2026-08-01T12:00:00.000Z',
+        venue: 'University Theater',
+      },
+    ],
+    choices: {
+      'Venue / Facility': ['University Theater'],
+      Logistics: ['Monoblock Chairs'],
+      Equipment: ['Projector'],
+    },
+    units: ['piece', 'unit', 'chair', 'facility'],
+    requests: submitted
+      ? [
+          {
+            id: 'REQ-SYNTHETIC-DEPARTMENT',
+            requestType: 'NEW',
+            parentRequestId: '',
+            eventSeriesId: 'SER-SYNTHETIC',
+            eventId: 'EVT-SYNTHETIC',
+            event: 'Synthetic Approved Event',
+            subEvent: 'Synthetic Approved Sub-event',
+            department: 'Department of Logistics',
+            purpose: 'Synthetic authenticated request proof.',
+            status: 'FOR_REVIEW',
+            createdAt: '2026-07-24T06:45:00.000Z',
+            updatedAt: '2026-07-24T06:45:00.000Z',
+            lines: [
+              {
+                description: 'University Theater',
+                specification: 'Accessible seating',
+                category: 'Venue / Facility',
+                quantity: 1,
+                unit: 'facility',
+                status: 'FOR_REVIEW',
+              },
+            ],
+            history: [{ status: 'FOR_REVIEW', at: '2026-07-24T06:45:00.000Z' }],
+          },
+        ]
+      : [],
+  });
+  await page.route('**/api/portal/request', async (route) => {
+    if (route.request().method() === 'GET') {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(portalPayload()),
+      });
+    }
     const command = await route.request().postDataJSON();
-    expect(command.lines).toHaveLength(1);
-    expect(command.lines[0]).toMatchObject({ itemId: 'ITM-SYNTHETIC', quantity: 2 });
-    await route.fulfill({
+    expect(command).toMatchObject({
+      requestType: 'NEW',
+      eventSeriesId: 'SER-SYNTHETIC',
+      eventId: 'EVT-SYNTHETIC',
+      purpose: 'Synthetic authenticated request proof.',
+    });
+    expect(command).not.toHaveProperty('department');
+    expect(command.lines).toEqual([
+      expect.objectContaining({
+        category: 'Venue / Facility',
+        description: 'University Theater',
+        quantity: 1,
+        unit: 'facility',
+      }),
+    ]);
+    submitted = true;
+    return route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        requestId: 'REQ-SYNTHETIC-PUBLIC',
-        trackingCode: 'synthetic-private-tracking-code-9472',
+        requestId: 'REQ-SYNTHETIC-DEPARTMENT',
+        requestType: 'NEW',
+        parentRequestId: '',
+        department: 'Department of Logistics',
+        event: 'Synthetic Approved Event',
+        subEvent: 'Synthetic Approved Sub-event',
+        submittedAt: '2026-07-24T06:45:00.000Z',
         status: 'FOR_REVIEW',
+        lines: command.lines,
       }),
     });
   });
 
   await page.goto('/request');
   await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
-  await expect(page.getByLabel('Access ID')).toHaveCount(0);
+  await expect(page.getByLabel('Access ID')).toBeVisible();
+  await page.getByLabel('Access ID').fill('DOL_2026');
+  await page.getByLabel('Password', { exact: true }).fill('Synthetic!Password9472');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('Department of Logistics').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Track Existing Request' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Track Existing Request' })).toBeHidden();
-  expect(authCalls).toBe(0);
-  const requestForm = page.locator('#publicRequestForm');
-  await requestForm.getByRole('button', { name: 'Continue' }).click();
-  await requestForm.getByLabel('Full name').fill('Synthetic Public Requester');
-  await requestForm.getByLabel('Requester type').selectOption('HAU student / Angelite');
-  await requestForm.getByLabel('Organization / department / office').fill('Synthetic Organization');
-  await requestForm.getByLabel('Contact number').fill('+63 917 000 0010');
-  await requestForm.getByLabel('Email address').fill('public@example.invalid');
-  await requestForm.getByRole('button', { name: 'Continue' }).click();
+  const requestForm = page.locator('#requesterRequestForm');
+  await expect(requestForm.getByLabel('Department')).toHaveValue('Department of Logistics');
+  await expect(requestForm.getByLabel('Department')).toHaveAttribute('readonly', '');
   await requestForm.locator('[name="eventSeriesId"]').selectOption('SER-SYNTHETIC');
   await requestForm.locator('[name="eventId"]').selectOption('EVT-SYNTHETIC');
-  await requestForm.locator('[name="eventPurpose"]').fill('Synthetic browser submission proof.');
-  await requestForm.getByRole('button', { name: 'Continue' }).click();
-  await requestForm.getByLabel('Approved inventory item').selectOption('ITM-SYNTHETIC');
-  await requestForm.getByLabel('Quantity').fill('2');
-  await requestForm.getByRole('button', { name: 'Add to requested items' }).click();
-  await expect(requestForm.locator('.public-request-line')).toContainText('Synthetic Supply');
-  await expect(requestForm.locator('.public-request-line')).toContainText('2 piece');
-  await requestForm.getByRole('button', { name: 'Continue' }).click();
-  await requestForm.getByLabel('Review acknowledgment').check();
-  await requestForm.getByRole('button', { name: 'Submit request for review' }).click();
-  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
-  await expect(page.getByText('REQ-SYNTHETIC-PUBLIC')).toBeVisible();
-  await expect(page.getByText('synthetic-private-tracking-code-9472')).toBeVisible();
+  await requestForm.locator('[name="purpose"]').fill('Synthetic authenticated request proof.');
+  await requestForm.locator('[name="lineCategory"]').selectOption('Venue / Facility');
+  await requestForm.locator('[name="lineChoice"]').selectOption('University Theater');
+  await requestForm.locator('[name="lineQuantity"]').fill('1');
+  await requestForm.locator('[name="lineUnit"]').selectOption('facility');
+  await requestForm.locator('[name="lineSpecification"]').fill('Accessible seating');
+  await requestForm.getByRole('button', { name: 'Add requested item' }).click();
+  await expect(requestForm.locator('.request-center-draft')).toContainText('University Theater');
+  await requestForm.getByRole('button', { name: 'Submit request' }).click();
+  await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
+  await expect(page.getByText('REQ-SYNTHETIC-DEPARTMENT', { exact: true })).toBeVisible();
+  await expect(page.locator('[name="trackingCode"]')).toHaveCount(0);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Save PDF Receipt' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('REQ-SYNTHETIC-DEPARTMENT-request-receipt.pdf');
+  await page.getByRole('button', { name: 'View Request Status' }).click();
+  await expect(page.getByRole('heading', { name: 'Track Existing Request' })).toBeVisible();
+  await expect(page.locator('[data-tracking-results]')).toContainText('University Theater');
+  await expect(page.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
 });
 
 test('public Lending Center classifies borrowers and submits without public tracking', async ({

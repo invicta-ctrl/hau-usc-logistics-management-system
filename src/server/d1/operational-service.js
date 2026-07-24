@@ -1,6 +1,12 @@
 import { accountAuthorization } from '../auth/contracts.js';
 import { CAPABILITIES } from '../../domain/permissions.js';
 import { validateBorrowerIdentityApproval } from '../../domain/borrower-identity.js';
+import {
+  isApprovedRequestCenterChoice,
+  REQUEST_CENTER_CATEGORIES,
+  REQUEST_CENTER_CHOICES,
+  REQUEST_CENTER_UNITS,
+} from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
 
 const MODULES = Object.freeze([
@@ -278,7 +284,11 @@ function assertBorrowerPortalAccount(account) {
 
 function assertRequesterPortalAccount(account) {
   const authorization = assertCapability(account, CAPABILITIES.REQUEST_CREATE);
-  if (authorization.roleId !== 'REQUESTER') {
+  if (
+    authorization.roleId !== 'REQUESTER' ||
+    !account.departmentId ||
+    !account.departmentDisplayName
+  ) {
     throw new ApiError('REQUESTER_PORTAL_REQUIRED', 'This account cannot use the requester portal.', {
       status: 403,
     });
@@ -523,7 +533,7 @@ async function revision(db, scope = 'global') {
 export function createD1OperationalService({
   db,
   environment = 'DEVELOPMENT',
-  appVersion = '0.6.0',
+  appVersion = '0.7.0',
   schemaVersion = '1.0.0',
 }) {
   if (!db) throw new Error('D1 database binding is required.');
@@ -1610,96 +1620,339 @@ export function createD1OperationalService({
 
   async function requesterRequestPortal({ account, correlationId }) {
     assertRequesterPortalAccount(account);
-    const items = await rows(
+    const eventSeries = await rows(
       db,
-      `SELECT id, name, category, unit
-       FROM inventory_items
+      `SELECT id, code, name
+       FROM event_series
        WHERE status = 'ACTIVE'
        ORDER BY name`,
     );
+    const events = await rows(
+      db,
+      `SELECT id, event_series_id, name, starts_at, ends_at, venue
+       FROM events
+       WHERE active = 1 AND status NOT IN ('COMPLETED', 'CANCELLED')
+       ORDER BY starts_at, name`,
+    );
     const requests = await rows(
       db,
-      `SELECT request.id, request.request_type, request.purpose, request.status,
-              request.created_at, request.updated_at,
-              COUNT(line.id) AS line_count
+      `SELECT request.id, request.request_type, request.request_stage,
+              request.parent_request_id, request.additional_sequence,
+              request.event_series_id, request.event_id, request.purpose,
+              request.status, request.created_at, request.updated_at,
+              series.name AS event_name, event.name AS sub_event_name
        FROM requests request
-       LEFT JOIN request_lines line ON line.request_id = request.id
+       LEFT JOIN event_series series ON series.id = request.event_series_id
+       LEFT JOIN events event ON event.id = request.event_id
        WHERE request.requester_account_id = ?1
-       GROUP BY request.id
+         AND request.requester_department_id = ?2
+         AND request.archived_at IS NULL
        ORDER BY request.updated_at DESC`,
-      [account.id],
+      [account.id, account.departmentId],
+    );
+    const requestLines = await rows(
+      db,
+      `SELECT line.request_id, line.description, line.specification, line.category,
+              line.requested_quantity, line.unit, line.status
+       FROM request_lines line
+       JOIN requests request ON request.id = line.request_id
+       WHERE request.requester_account_id = ?1
+         AND request.requester_department_id = ?2
+       ORDER BY line.created_at, line.id`,
+      [account.id, account.departmentId],
     );
     const history = await rows(
       db,
-      `SELECT entity_id, new_status, changed_at, reason
+      `SELECT entity_id, new_status, changed_at
        FROM status_history
        WHERE entity_type = 'REQUEST' AND entity_id IN (
-         SELECT id FROM requests WHERE requester_account_id = ?1
+         SELECT id FROM requests
+         WHERE requester_account_id = ?1 AND requester_department_id = ?2
        )
        ORDER BY changed_at DESC LIMIT 200`,
-      [account.id],
+      [account.id, account.departmentId],
     );
     return {
       ok: true,
       correlationId,
-      profile: { displayName: account.profile?.fullName ?? '' },
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        unit: item.unit,
+      profile: {
+        displayName: account.departmentDisplayName,
+        departmentId: account.departmentId,
+      },
+      eventSeries: eventSeries.map((series) => ({
+        id: series.id,
+        code: series.code,
+        name: series.name,
       })),
+      events: events.map((event) => ({
+        id: event.id,
+        seriesId: event.event_series_id,
+        name: event.name,
+        startsAt: event.starts_at,
+        endsAt: event.ends_at,
+        venue: event.venue,
+      })),
+      choices: REQUEST_CENTER_CHOICES,
+      units: REQUEST_CENTER_UNITS,
       requests: requests.map((request) => ({
         id: request.id,
         type: request.request_type,
+        requestType: request.request_stage === 'ADDITIONAL' ? 'ADDITIONAL' : 'NEW',
+        parentRequestId: request.parent_request_id ?? '',
+        additionalSequence: Number(request.additional_sequence ?? 0),
+        eventSeriesId: request.event_series_id ?? '',
+        eventId: request.event_id ?? '',
+        event: request.event_name ?? '',
+        subEvent: request.sub_event_name ?? '',
+        department: account.departmentDisplayName,
         purpose: request.purpose,
         status: request.status,
-        lineCount: Number(request.line_count),
         createdAt: request.created_at,
         updatedAt: request.updated_at,
-      })),
-      history: history.map((entry) => ({
-        requestId: entry.entity_id,
-        status: entry.new_status,
-        at: entry.changed_at,
-        note: entry.reason || '',
+        lines: requestLines
+          .filter((line) => line.request_id === request.id)
+          .map((line) => ({
+            description: line.description,
+            specification: line.specification,
+            category: line.category,
+            quantity: Number(line.requested_quantity),
+            unit: line.unit,
+            status: line.status,
+          })),
+        history: history
+          .filter((entry) => entry.entity_id === request.id)
+          .map((entry) => ({ status: entry.new_status, at: entry.changed_at })),
       })),
     };
   }
 
   async function submitRequesterRequest({ account, command, correlationId }) {
     assertRequesterPortalAccount(account);
-    const item = await db
-      .prepare("SELECT id, name, category, unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
-      .bind(requiredText(command.itemId, 'itemId', 80))
+    const mutation = await replay(db, 'submitRequesterRequest', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return { ...mutation.value, replayed: true };
+    const requestType = requiredText(command.requestType, 'requestType', 20).toUpperCase();
+    if (!['NEW', 'ADDITIONAL'].includes(requestType)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose New or Additional.', { status: 422 });
+    }
+    const eventSeriesId = requiredText(command.eventSeriesId, 'eventSeriesId', 80);
+    const eventId = requiredText(command.eventId, 'eventId', 80);
+    const event = await db
+      .prepare(
+        `SELECT event.id, event.name, series.name AS event_name
+         FROM events event
+         JOIN event_series series ON series.id = event.event_series_id
+         WHERE event.id = ?1 AND event.event_series_id = ?2
+           AND event.active = 1 AND event.status NOT IN ('COMPLETED', 'CANCELLED')
+           AND series.status = 'ACTIVE'`,
+      )
+      .bind(eventId, eventSeriesId)
       .first();
-    if (!item) {
-      throw new ApiError('REQUEST_ITEM_UNAVAILABLE', 'That catalog item is not available for a request.', {
-        status: 404,
+    if (!event) {
+      throw new ApiError('REQUEST_EVENT_UNAVAILABLE', 'The selected Event or Sub-event is unavailable.', {
+        status: 409,
       });
     }
-    return submitRequest({
-      account,
+    let parent = null;
+    let additionalSequence = 0;
+    if (requestType === 'NEW') {
+      const duplicate = await db
+        .prepare(
+          `SELECT id FROM requests
+           WHERE requester_department_id = ?1 AND event_series_id = ?2 AND event_id = ?3
+             AND request_stage = 'INITIAL' AND archived_at IS NULL
+             AND status NOT IN ('CANCELLED', 'REJECTED', 'COMPLETED')
+           ORDER BY created_at LIMIT 1`,
+        )
+        .bind(account.departmentId, eventSeriesId, eventId)
+        .first();
+      if (duplicate) {
+        throw new ApiError(
+          'REQUEST_ALREADY_EXISTS',
+          `Active request ${duplicate.id} already exists for this department, Event, and Sub-event. Open it and submit an Additional request instead.`,
+          { status: 409 },
+        );
+      }
+    } else {
+      const parentRequestId = requiredText(command.parentRequestId, 'parentRequestId', 80);
+      parent = await db
+        .prepare(
+          `SELECT id, status FROM requests
+           WHERE id = ?1 AND requester_account_id = ?2 AND requester_department_id = ?3
+             AND event_series_id = ?4 AND event_id = ?5 AND archived_at IS NULL
+             AND status NOT IN ('CANCELLED', 'REJECTED')`,
+        )
+        .bind(parentRequestId, account.id, account.departmentId, eventSeriesId, eventId)
+        .first();
+      if (!parent) {
+        throw new ApiError(
+          'REQUEST_PARENT_UNAVAILABLE',
+          'The selected parent request is not available to this department for the chosen Event and Sub-event.',
+          { status: 404 },
+        );
+      }
+      const sequence = await db
+        .prepare(
+          `SELECT COALESCE(MAX(additional_sequence), 0) + 1 AS next_sequence
+           FROM requests WHERE parent_request_id = ?1`,
+        )
+        .bind(parent.id)
+        .first();
+      additionalSequence = Number(sequence?.next_sequence ?? 1);
+    }
+
+    const sourceLines = Array.isArray(command.lines) ? command.lines : [];
+    if (!sourceLines.length || sourceLines.length > 50) {
+      throw new ApiError('VALIDATION_FAILED', 'Add between 1 and 50 requested items.', { status: 422 });
+    }
+    const lines = [];
+    const duplicateKeys = new Set();
+    for (const [index, source] of sourceLines.entries()) {
+      const category = requiredText(source.category, `lines[${index}].category`, 40);
+      if (!Object.values(REQUEST_CENTER_CATEGORIES).includes(category)) {
+        throw new ApiError('VALIDATION_FAILED', `lines[${index}].category is invalid.`, { status: 422 });
+      }
+      const description = requiredText(source.description, `lines[${index}].description`, 240);
+      const custom = source.custom === true || category === REQUEST_CENTER_CATEGORIES.OTHER;
+      if (!custom && !isApprovedRequestCenterChoice(category, description)) {
+        throw new ApiError('VALIDATION_FAILED', `lines[${index}] is not an approved choice.`, { status: 422 });
+      }
+      const unit = requiredText(source.unit, `lines[${index}].unit`, 40).toLowerCase();
+      if (!REQUEST_CENTER_UNITS.includes(unit)) {
+        throw new ApiError('VALIDATION_FAILED', `lines[${index}].unit is invalid.`, { status: 422 });
+      }
+      const duplicateKey = `${category}:${description}`.toLocaleLowerCase('en-US');
+      if (duplicateKeys.has(duplicateKey)) {
+        throw new ApiError('VALIDATION_FAILED', `Duplicate requested item: ${description}.`, { status: 422 });
+      }
+      duplicateKeys.add(duplicateKey);
+      lines.push({
+        category,
+        description,
+        quantity: positiveNumber(source.quantity, `lines[${index}].quantity`),
+        unit,
+        specification: optionalText(source.specification, 1000),
+      });
+    }
+
+    const purpose = requiredText(command.purpose, 'purpose', 500);
+    const timestamp = nowIso();
+    const requestId = createId('REQ');
+    const result = {
+      ok: true,
+      id: requestId,
+      requestId,
+      requestType,
+      parentRequestId: parent?.id ?? '',
+      department: account.departmentDisplayName,
+      event: event.event_name,
+      subEvent: event.name,
+      submittedAt: timestamp,
+      status: 'FOR_REVIEW',
+      lines,
+      replayed: false,
       correlationId,
-      command: {
-        ...command,
-        requesterName: account.profile?.fullName ?? '',
-        requesterEmail: account.profile?.email ?? '',
-        ownerCommitteeId: '',
-        requestType: 'EVENT_LOGISTICS',
-        lines: [
-          {
-            itemId: item.id,
-            description: item.name,
-            category: item.category,
-            unit: item.unit,
-            quantity: command.quantity,
-            fulfillmentSource: 'FOR_CANVASSING',
-            clientLineId: 'requester-portal-line-1',
-          },
-        ],
-      },
+    };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO requests (
+             id, request_type, request_stage, parent_request_id, additional_sequence,
+             event_series_id, event_id, catalog_type, requester_account_id,
+             requester_name, requester_email, department, priority, owner_committee_id,
+             purpose, status, client_request_id, notes, created_at, updated_at,
+             created_by, requester_department_id
+           ) VALUES (?1, 'EVENT_LOGISTICS', ?2, ?3, ?4, ?5, ?6, '', ?7,
+             ?8, ?9, ?10, 'NORMAL', NULL, ?11, 'FOR_REVIEW', ?12, '', ?13, ?13,
+             ?7, ?14)`,
+        )
+        .bind(
+          requestId,
+          requestType === 'ADDITIONAL' ? 'ADDITIONAL' : 'INITIAL',
+          parent?.id ?? null,
+          additionalSequence,
+          eventSeriesId,
+          eventId,
+          account.id,
+          account.departmentDisplayName,
+          account.profile?.email ?? '',
+          account.departmentDisplayName,
+          purpose,
+          mutation.key,
+          timestamp,
+          account.departmentId,
+        ),
+    ];
+    lines.forEach((line, index) => {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO request_lines (
+               id, request_id, event_id, item_id, description, specification, category,
+               requested_quantity, unit, fulfillment_source, status, client_line_id,
+               created_at, updated_at, created_by
+             ) VALUES (?1, ?2, ?3, NULL, ?4, ?5, ?6, ?7, ?8,
+               'PENDING_REVIEW', 'FOR_REVIEW', ?9, ?10, ?10, ?11)`,
+          )
+          .bind(
+            createId('LIN'),
+            requestId,
+            eventId,
+            line.description,
+            line.specification,
+            line.category,
+            line.quantity,
+            line.unit,
+            `request-center-line-${index + 1}`,
+            timestamp,
+            account.id,
+          ),
+      );
     });
+    statements.push(
+      historyStatement(db, {
+        entityType: 'REQUEST',
+        entityId: requestId,
+        newStatus: 'FOR_REVIEW',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: 'Authenticated department request submitted; no stock movement posted.',
+      }),
+      auditStatement(db, {
+        action: requestType === 'ADDITIONAL' ? 'REQUEST_ADDITIONAL_SUBMITTED' : 'REQUEST_SUBMITTED',
+        entityType: 'REQUEST',
+        entityId: requestId,
+        accountId: account.id,
+        correlationId,
+        after: {
+          status: 'FOR_REVIEW',
+          requestType,
+          parentRequestId: parent?.id ?? '',
+          departmentId: account.departmentId,
+          lineCount: lines.length,
+        },
+      }),
+      idempotencyStatement(db, 'submitRequesterRequest', mutation, account.id, result),
+      ...revisionStatements(db, ['request'], timestamp),
+    );
+    try {
+      await db.batch(statements);
+    } catch (error) {
+      if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
+        const replayed = await replay(
+          db,
+          'submitRequesterRequest',
+          command.clientRequestId,
+          account.id,
+          command,
+        );
+        if (replayed.replayed) return { ...replayed.value, replayed: true };
+        throw new ApiError('REQUEST_CONFLICT', 'This request is already being processed.', {
+          status: 409,
+        });
+      }
+      throw error;
+    }
+    return result;
   }
 
   async function cancelRequesterRequest({ account, command, correlationId }) {

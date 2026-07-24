@@ -36,7 +36,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '17' },
+    database: { connected: true, schemaVersion: '18' },
   });
 
   await page.goto('/');
@@ -89,113 +89,18 @@ test('unknown credentials return the safe authentication error instead of a serv
   });
 });
 
-test('public Request Center submits and tracks one private request without staff credentials', async ({
-  request,
-  baseURL,
-}) => {
-  const admin = await apiRequest.newContext({ baseURL });
-  await login(admin, 'LOCAL.ADMIN');
-  const options = await request.get('/api/public/request/options');
-  expect(options.status()).toBe(200);
-  const optionData = await options.json();
-  expect(optionData.categories).toEqual([
-    'Inventory Item',
-    'Food',
-    'Materials',
-    'Venue / Facility',
-    'Logistics / Equipment',
-    'Other',
-  ]);
-  expect(optionData.items[0]).not.toHaveProperty('availableToPromise');
-  expect(optionData.items[0]).not.toHaveProperty('storageLocation');
-  expect(optionData).not.toHaveProperty('requestReferences');
-  const inventoryBefore = await (await admin.get('/api/inventory')).json();
-  const balanceBefore = inventoryBefore.data.inventoryItems.find(
-    (item) => item.id === optionData.items[0].id,
-  ).onHand;
-
-  const crossOrigin = await request.post('/api/public/request', {
-    headers: { origin: 'https://cross-origin.example.invalid' },
-    data: { clientRequestId: `cross-origin-${crypto.randomUUID()}` },
-  });
-  expect(crossOrigin.status()).toBe(403);
-
-  const clientRequestId = `public-request-${crypto.randomUUID()}`;
-  const command = {
-    requestType: 'CATALOG_RESTOCK',
-    requesterName: 'Synthetic Public Requester',
-    requesterType: 'HAU office / department',
-    organization: 'Synthetic Organization',
-    contactNumber: '+63 917 000 0010',
-    email: `public-${crypto.randomUUID()}@example.invalid`,
-    stockArea: optionData.stockAreas[0],
-    neededDate: '2026-08-02',
-    purpose: 'Synthetic public request acceptance proof.',
-    lines: [
-      {
-        category: 'Inventory Item',
-        itemId: optionData.items[0].id,
-        quantity: 2,
-        specification: 'Synthetic request only; no stock movement.',
-      },
-      { category: 'Other', description: 'Synthetic custom support', quantity: 1, unit: 'service' },
-    ],
-    clientRequestId,
-  };
-  const submitted = await request.post('/api/public/request', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: command,
-  });
-  expect(submitted.status()).toBe(200);
-  const receipt = await submitted.json();
-  expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
-  expect(receipt.requestId).toMatch(/^REQ-/u);
-  expect(receipt.trackingCode.length).toBeGreaterThan(32);
-
-  const replay = await request.post('/api/public/request', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: command,
-  });
-  await expect(replay.json()).resolves.toMatchObject({
-    requestId: receipt.requestId,
-    trackingCode: receipt.trackingCode,
-    replayed: true,
-  });
-
-  const tracked = await request.post('/api/public/request/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
-  });
-  expect(tracked.status()).toBe(200);
-  const tracking = await tracked.json();
-  expect(tracking.request).toMatchObject({ id: receipt.requestId, status: 'FOR_REVIEW' });
-  expect(tracking.request.lines).toHaveLength(2);
-  expect(tracking.request).not.toHaveProperty('requesterEmail');
-  const related = await request.post('/api/public/request/related', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
-  });
-  expect(related.status()).toBe(200);
-  await expect(related.json()).resolves.toMatchObject({
-    reference: {
-      id: receipt.requestId,
-      requestType: 'CATALOG_RESTOCK',
-      stockArea: command.stockArea,
-      status: 'FOR_REVIEW',
-    },
-  });
-  const inventoryAfter = await (await admin.get('/api/inventory')).json();
-  expect(inventoryAfter.data.inventoryItems.find((item) => item.id === optionData.items[0].id).onHand).toBe(
-    balanceBefore,
-  );
-
-  const denied = await request.post('/api/public/request/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: { requestId: receipt.requestId, trackingCode: 'invalid-private-code' },
-  });
-  expect(denied.status()).toBe(404);
-  expect((await request.get('/api/requests')).status()).toBe(401);
-  await admin.dispose();
+test('Request Center public APIs require an authenticated department session', async ({ request }) => {
+  for (const [method, route] of [
+    ['get', '/api/public/request/options'],
+    ['post', '/api/public/request'],
+    ['post', '/api/public/request/track'],
+    ['post', '/api/public/request/related'],
+  ]) {
+    const response = await request[method](route, method === 'post' ? { data: {} } : undefined);
+    expect(response.status()).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({ code: 'SESSION_REQUIRED' });
+  }
+  expect((await request.get('/api/portal/request')).status()).toBe(401);
 });
 
 test('public Lending Center submits both borrower types without exposing public tracking', async ({
@@ -975,11 +880,176 @@ test('Administrator UI shows department identity and a one-time server-generated
 test('requester portals keep request and lending records self-scoped', async () => {
   const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
   const admin = await apiRequest.newContext({ baseURL });
-  const requester = await apiRequest.newContext({ baseURL });
+  const departmentRequester = await apiRequest.newContext({ baseURL });
+  const lendingRequester = await apiRequest.newContext({ baseURL });
   const suffix = String(Date.now()).slice(-8);
   const requesterAccessId = `LOCAL.REQUESTER.${suffix}`;
   try {
     const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const departmentReset = await admin.post('/api/admin/access/reset-password', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'DOL_2026',
+        confirmCurrentAccessId: 'DOL_2026',
+        reason: 'Prepare the governed department account for authenticated Request Center coverage.',
+      },
+    });
+    expect(departmentReset.status()).toBe(200);
+    const departmentCredential = (await departmentReset.json()).credential;
+    const departmentStarter = await departmentRequester.post('/api/auth/login', {
+      data: {
+        accessId: departmentCredential.accessId,
+        password: departmentCredential.temporaryPassword,
+      },
+    });
+    expect(departmentStarter.status()).toBe(200);
+    const departmentActivation = await departmentStarter.json();
+    const departmentActivated = await departmentRequester.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': departmentActivation.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Synthetic Department Logistics Requester',
+          mobileNumber: '+63 917 000 0002',
+          email: `local-department-requester-${suffix}@example.invalid`,
+        },
+        password: 'Department!Activated9472',
+        confirmPassword: 'Department!Activated9472',
+      },
+    });
+    expect(departmentActivated.status()).toBe(200);
+    const departmentSession = await departmentActivated.json();
+    expect(departmentSession.user).toMatchObject({
+      displayName: 'Department of Logistics',
+      authorization: { roleId: 'REQUESTER', scopeMode: 'SELF' },
+      requesterDepartment: {
+        id: 'USC-DEPT-DOL',
+        displayName: 'Department of Logistics',
+      },
+    });
+    const departmentCsrf = departmentSession.csrfToken;
+
+    const requestPortal = await departmentRequester.get('/api/portal/request');
+    expect(requestPortal.status()).toBe(200);
+    await expect(requestPortal.json()).resolves.toMatchObject({
+      ok: true,
+      profile: {
+        departmentId: 'USC-DEPT-DOL',
+        displayName: 'Department of Logistics',
+      },
+      requests: [],
+      choices: {
+        'Venue / Facility': expect.arrayContaining(['University Theater']),
+        Logistics: expect.arrayContaining(['Monoblock Chairs']),
+        Equipment: expect.arrayContaining(['Projector']),
+      },
+    });
+    const newCommand = {
+      requestType: 'NEW',
+      eventSeriesId: 'SER-LOCAL',
+      eventId: 'EVT-LOCAL',
+      purpose: 'Synthetic authenticated department request',
+      lines: [
+        {
+          category: 'Venue / Facility',
+          description: 'University Theater',
+          quantity: 1,
+          unit: 'facility',
+          specification: 'Accessible seating arrangement requested.',
+        },
+        {
+          category: 'Other',
+          description: 'Synthetic custom marshal sign',
+          custom: true,
+          quantity: 2,
+          unit: 'piece',
+          specification: 'Custom request only; do not create a catalog record.',
+        },
+      ],
+      clientRequestId: `local-department-request-${suffix}`,
+    };
+    const submittedRequest = await departmentRequester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': departmentCsrf },
+      data: newCommand,
+    });
+    expect(submittedRequest.status()).toBe(200);
+    const requestResult = await submittedRequest.json();
+    expect(requestResult).toMatchObject({
+      requestType: 'NEW',
+      department: 'Department of Logistics',
+      event: 'Local Synthetic Series',
+      subEvent: 'Local Synthetic Event',
+      status: 'FOR_REVIEW',
+      lines: expect.arrayContaining([
+        expect.objectContaining({ description: 'University Theater', category: 'Venue / Facility' }),
+      ]),
+    });
+    expect(requestResult).not.toHaveProperty('trackingCode');
+
+    const replay = await departmentRequester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': departmentCsrf },
+      data: newCommand,
+    });
+    expect(replay.status()).toBe(200);
+    await expect(replay.json()).resolves.toMatchObject({
+      requestId: requestResult.requestId,
+      replayed: true,
+    });
+
+    const duplicate = await departmentRequester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': departmentCsrf },
+      data: { ...newCommand, clientRequestId: `local-department-duplicate-${suffix}` },
+    });
+    expect(duplicate.status()).toBe(409);
+    await expect(duplicate.json()).resolves.toMatchObject({ code: 'REQUEST_ALREADY_EXISTS' });
+
+    const additional = await departmentRequester.post('/api/portal/request', {
+      headers: { 'x-csrf-token': departmentCsrf },
+      data: {
+        ...newCommand,
+        requestType: 'ADDITIONAL',
+        parentRequestId: requestResult.requestId,
+        lines: [
+          {
+            category: 'Equipment',
+            description: 'Projector',
+            quantity: 1,
+            unit: 'unit',
+            specification: '',
+          },
+        ],
+        clientRequestId: `local-department-additional-${suffix}`,
+      },
+    });
+    expect(additional.status()).toBe(200);
+    await expect(additional.json()).resolves.toMatchObject({
+      requestType: 'ADDITIONAL',
+      parentRequestId: requestResult.requestId,
+      status: 'FOR_REVIEW',
+    });
+
+    const requestHistory = await departmentRequester.get('/api/portal/request');
+    const scopedPortal = await requestHistory.json();
+    expect(scopedPortal.requests).toHaveLength(2);
+    expect(scopedPortal.requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: requestResult.requestId,
+          department: 'Department of Logistics',
+          lines: expect.arrayContaining([
+            expect.objectContaining({ description: 'University Theater', status: 'FOR_REVIEW' }),
+          ]),
+          history: [expect.objectContaining({ status: 'FOR_REVIEW' })],
+        }),
+        expect.objectContaining({
+          requestType: 'ADDITIONAL',
+          parentRequestId: requestResult.requestId,
+        }),
+      ]),
+    );
+    expect(JSON.stringify(scopedPortal)).not.toContain('tracking');
+    expect(JSON.stringify(scopedPortal)).not.toContain('storage_location');
+    expect(JSON.stringify(scopedPortal)).not.toContain('audit');
+
     const created = await admin.post('/api/admin/access/create-account', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
@@ -998,7 +1068,7 @@ test('requester portals keep request and lending records self-scoped', async () 
     expect(requesterCreated).toMatchObject({
       account: { accessId: requesterAccessId, roleId: 'REQUESTER', lendingEligible: true },
     });
-    const starter = await requester.post('/api/auth/login', {
+    const starter = await lendingRequester.post('/api/auth/login', {
       data: {
         accessId: requesterAccessId,
         password: requesterCreated.credential.temporaryPassword,
@@ -1006,7 +1076,7 @@ test('requester portals keep request and lending records self-scoped', async () 
     });
     expect(starter.status()).toBe(200);
     const activation = await starter.json();
-    const activated = await requester.post('/api/auth/activate', {
+    const activated = await lendingRequester.post('/api/auth/activate', {
       headers: { 'x-csrf-token': activation.csrfToken },
       data: {
         profile: {
@@ -1025,41 +1095,10 @@ test('requester portals keep request and lending records self-scoped', async () 
       authorization: { roleId: 'REQUESTER' },
     });
     const csrfToken = authenticated.csrfToken;
-
-    const requestPortal = await requester.get('/api/portal/request');
-    expect(requestPortal.status()).toBe(200);
-    await expect(requestPortal.json()).resolves.toMatchObject({ ok: true, requests: [] });
-    const submittedRequest = await requester.post('/api/portal/request', {
-      headers: { 'x-csrf-token': csrfToken },
-      data: {
-        itemId: 'ITM-LOCAL-001',
-        quantity: 1,
-        department: 'Synthetic Department',
-        purpose: 'Synthetic requester portal request',
-        clientRequestId: `local-requester-portal-request-${suffix}`,
-      },
-    });
-    expect(submittedRequest.status()).toBe(200);
-    const requestResult = await submittedRequest.json();
-    const requestHistory = await requester.get('/api/portal/request');
-    await expect(requestHistory.json()).resolves.toMatchObject({
-      requests: [expect.objectContaining({ id: requestResult.requestId, status: 'FOR_REVIEW' })],
-    });
-    expect(
-      (
-        await requester.post('/api/portal/request/cancel', {
-          headers: { 'x-csrf-token': csrfToken },
-          data: {
-            requestId: requestResult.requestId,
-            clientRequestId: `local-requester-portal-cancel-${suffix}`,
-          },
-        })
-      ).status(),
-    ).toBe(200);
-
-    const lendingPortal = await requester.get('/api/portal/lending');
+    expect((await lendingRequester.get('/api/portal/request')).status()).toBe(403);
+    const lendingPortal = await lendingRequester.get('/api/portal/lending');
     expect(lendingPortal.status()).toBe(200);
-    const submittedLending = await requester.post('/api/portal/lending', {
+    const submittedLending = await lendingRequester.post('/api/portal/lending', {
       headers: { 'x-csrf-token': csrfToken },
       data: {
         itemId: 'ITM-LOCAL-001',
@@ -1075,7 +1114,7 @@ test('requester portals keep request and lending records self-scoped', async () 
     const lendingResult = await submittedLending.json();
     expect(
       (
-        await requester.post('/api/portal/lending/cancel', {
+        await lendingRequester.post('/api/portal/lending/cancel', {
           headers: { 'x-csrf-token': csrfToken },
           data: {
             ticketId: lendingResult.ticketId,
@@ -1085,7 +1124,7 @@ test('requester portals keep request and lending records self-scoped', async () 
       ).status(),
     ).toBe(200);
   } finally {
-    await Promise.all([admin.dispose(), requester.dispose()]);
+    await Promise.all([admin.dispose(), departmentRequester.dispose(), lendingRequester.dispose()]);
   }
 });
 

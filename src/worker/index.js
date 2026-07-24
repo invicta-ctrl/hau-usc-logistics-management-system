@@ -162,7 +162,7 @@ function services(env) {
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-    appVersion: env.APP_VERSION ?? '0.6.0',
+    appVersion: env.APP_VERSION ?? '0.7.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
   });
   const publicRequests = createPublicRequestService({
@@ -263,7 +263,6 @@ async function handleApi(request, env, requestId) {
     operations,
     publicAdvertisements,
     publicLending,
-    publicRequests,
   } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
@@ -273,37 +272,14 @@ async function handleApi(request, env, requestId) {
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
     }
-    if (url.pathname === '/api/public/request/options' && request.method === 'GET') {
-      return json({ ...(await publicRequests.options()), correlationId: requestId });
-    }
-    if (url.pathname === '/api/public/request' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
+    if (url.pathname.startsWith('/api/public/request')) {
       return json(
-        await publicRequests.submit({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+        {
+          code: 'SESSION_REQUIRED',
+          message: 'Sign in with a department requester account to use the Request Center.',
           correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/request/track' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicRequests.track({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
-      );
-    }
-    if (url.pathname === '/api/public/request/related' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
-      return json(
-        await publicRequests.related({
-          command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
-          correlationId: requestId,
-        }),
+        },
+        401,
       );
     }
     if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
