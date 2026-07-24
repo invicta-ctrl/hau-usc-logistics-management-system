@@ -8,11 +8,11 @@ const MANAGED_TEMPORARY_PASSWORD = `Managed${String.fromCharCode(33)}Temporary94
 const MANAGED_ACTIVATED_PASSWORD = `Managed${String.fromCharCode(33)}Activated9472`;
 const MANAGED_RESET_PASSWORD = `Managed${String.fromCharCode(33)}Reset9472`;
 const roles = [
-  ['LOCAL.ADMIN', 'administrator'],
-  ['LOCAL.DIRECTOR', 'director'],
-  ['LOCAL.FOOD', 'food'],
-  ['LOCAL.INVENTORY', 'inventory-pantry'],
-  ['LOCAL.MATERIALS', 'materials'],
+  ['LOCAL.ADMIN', 'administrator', 'admin'],
+  ['LOCAL.DIRECTOR', 'director', 'director'],
+  ['LOCAL.FOOD', 'food', 'food'],
+  ['LOCAL.INVENTORY', 'inventory-pantry', 'inventory'],
+  ['LOCAL.MATERIALS', 'materials', 'materials'],
 ];
 
 async function login(request, accessId, password = PASSWORD) {
@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '12' },
+    database: { connected: true, schemaVersion: '13' },
   });
 
   await page.goto('/');
@@ -110,6 +110,7 @@ test('public Request Center submits and tracks one private request without staff
   ]);
   expect(optionData.items[0]).not.toHaveProperty('availableToPromise');
   expect(optionData.items[0]).not.toHaveProperty('storageLocation');
+  expect(optionData).not.toHaveProperty('requestReferences');
   const inventoryBefore = await (await admin.get('/api/inventory')).json();
   const balanceBefore = inventoryBefore.data.inventoryItems.find(
     (item) => item.id === optionData.items[0].id,
@@ -123,13 +124,14 @@ test('public Request Center submits and tracks one private request without staff
 
   const clientRequestId = `public-request-${crypto.randomUUID()}`;
   const command = {
+    requestType: 'CATALOG_RESTOCK',
     requesterName: 'Synthetic Public Requester',
+    requesterType: 'HAU office / department',
     organization: 'Synthetic Organization',
     contactNumber: '+63 917 000 0010',
     email: `public-${crypto.randomUUID()}@example.invalid`,
-    eventId: optionData.events[0]?.id ?? '',
-    startDate: '2026-08-01',
-    endDate: '2026-08-02',
+    stockArea: optionData.stockAreas[0],
+    neededDate: '2026-08-02',
     purpose: 'Synthetic public request acceptance proof.',
     lines: [
       {
@@ -171,10 +173,23 @@ test('public Request Center submits and tracks one private request without staff
   expect(tracking.request).toMatchObject({ id: receipt.requestId, status: 'FOR_REVIEW' });
   expect(tracking.request.lines).toHaveLength(2);
   expect(tracking.request).not.toHaveProperty('requesterEmail');
+  const related = await request.post('/api/public/request/related', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: receipt.requestId, trackingCode: receipt.trackingCode },
+  });
+  expect(related.status()).toBe(200);
+  await expect(related.json()).resolves.toMatchObject({
+    reference: {
+      id: receipt.requestId,
+      requestType: 'CATALOG_RESTOCK',
+      stockArea: command.stockArea,
+      status: 'FOR_REVIEW',
+    },
+  });
   const inventoryAfter = await (await admin.get('/api/inventory')).json();
-  expect(
-    inventoryAfter.data.inventoryItems.find((item) => item.id === optionData.items[0].id).onHand,
-  ).toBe(balanceBefore);
+  expect(inventoryAfter.data.inventoryItems.find((item) => item.id === optionData.items[0].id).onHand).toBe(
+    balanceBefore,
+  );
 
   const denied = await request.post('/api/public/request/track', {
     headers: { origin: 'http://127.0.0.1:8787' },
@@ -266,7 +281,7 @@ test('public Lending Center browses, submits, and privately tracks without stock
   await admin.dispose();
 });
 
-for (const [accessId, experience] of roles) {
+for (const [accessId, experience, workspace] of roles) {
   test(`${accessId} receives only the server-routed ${experience} experience`, async ({ page }) => {
     await page.goto('/');
     await page.getByLabel('Access ID').fill(accessId);
@@ -277,6 +292,9 @@ for (const [accessId, experience] of roles) {
     await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
     await expect(page.locator('#loading')).not.toHaveAttribute('data-state', 'error');
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    await page.goto(`/app/${workspace}/requests`);
+    await expect(page.locator('#request')).toBeVisible();
+    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
   });
 }
 

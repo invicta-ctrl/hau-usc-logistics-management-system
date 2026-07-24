@@ -29,6 +29,35 @@ async function login(context, accessId, password) {
   return response.json();
 }
 
+test('deployed staging serves the governed login background and official brand slots', async ({
+  page,
+  request,
+}) => {
+  for (const path of ['/brand/login-background', '/brand/dol-logo', '/brand/usc-logo', '/brand/favicon']) {
+    const response = await request.get(path, {
+      headers: { 'cache-control': 'no-cache, no-store', pragma: 'no-cache' },
+    });
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toBe('image/png');
+    expect((await response.body()).byteLength).toBeGreaterThan(1000);
+  }
+
+  await page.goto('/login');
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await expect(page.locator('.brand-media')).toHaveCount(2);
+  await expect
+    .poll(() =>
+      page
+        .locator('.brand-media')
+        .evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0)),
+    )
+    .toBe(true);
+  const backgroundImage = await page
+    .locator('body')
+    .evaluate((body) => getComputedStyle(body).backgroundImage);
+  expect(backgroundImage).toContain('/brand/login-background');
+});
+
 test('deployed staging authentication and Access Management remain operational', async ({
   page,
   baseURL,
@@ -62,8 +91,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '12',
-        latestMigration: '0012_public_lending_tracking.sql',
+        schemaVersion: '13',
+        latestMigration: '0013_public_request_guidance.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -294,6 +323,7 @@ test('deployed staging public Request Center submits and privately tracks withou
     expect(options.items.length).toBeGreaterThan(0);
     expect(options.items[0]).not.toHaveProperty('onHand');
     expect(options.items[0]).not.toHaveProperty('storageLocation');
+    expect(options).not.toHaveProperty('requestReferences');
 
     const item = options.items[0];
     const before = await (await adminRequest.get('/api/inventory')).json();
@@ -302,10 +332,14 @@ test('deployed staging public Request Center submits and privately tracks withou
     const submitted = await publicRequest.post('/api/public/request', {
       headers: { origin: new URL(baseURL).origin },
       data: {
+        requestType: 'CATALOG_RESTOCK',
         requesterName: 'Authorized Synthetic Public Requester',
+        requesterType: 'HAU office / department',
         organization: 'Authorized Synthetic Staging Proof',
         contactNumber: '+63 917 000 0010',
         email: `public-${unique}@example.invalid`,
+        stockArea: options.stockAreas[0],
+        neededDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
         purpose: 'Authorized synthetic no-login request and private tracking staging proof.',
         lines: [
           {

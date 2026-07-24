@@ -9,17 +9,24 @@ function environment(asset) {
   };
 }
 
-describe('governed login background delivery', () => {
-  it('serves only the fixed owner-governed R2 slot with safe response headers', async () => {
+describe('governed brand asset delivery', () => {
+  it.each([
+    ['/brand/login-background', 'brand/login-background'],
+    ['/brand/usc-logo', 'brand/usc-logo'],
+    ['/brand/dol-logo', 'brand/dol-logo'],
+    ['/brand/combined-lockup', 'brand/combined-lockup'],
+    ['/brand/favicon', 'brand/favicon'],
+    ['/brand/default-item-image', 'brand/default-item-image'],
+  ])('serves the approved %s R2 slot with safe response headers', async (path, key) => {
     const env = environment({
       body: 'synthetic-image-body',
       httpEtag: '"synthetic-etag"',
       httpMetadata: { contentType: 'image/webp' },
     });
 
-    const response = await worker.fetch(new Request('https://example.test/brand/login-background'), env);
+    const response = await worker.fetch(new Request(`https://example.test${path}`), env);
 
-    expect(env.BRAND_ASSETS.get).toHaveBeenCalledWith('brand/login-background');
+    expect(env.BRAND_ASSETS.get).toHaveBeenCalledWith(key);
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toBe('image/webp');
     expect(response.headers.get('x-content-type-options')).toBe('nosniff');

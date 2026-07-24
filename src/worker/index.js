@@ -22,13 +22,20 @@ const API_SECURITY_HEADERS = Object.freeze({
   'cross-origin-resource-policy': 'same-origin',
 });
 
-const LOGIN_BACKGROUND_KEY = 'brand/login-background';
+const BRAND_ASSET_KEYS = Object.freeze({
+  '/brand/login-background': 'brand/login-background',
+  '/brand/usc-logo': 'brand/usc-logo',
+  '/brand/dol-logo': 'brand/dol-logo',
+  '/brand/combined-lockup': 'brand/combined-lockup',
+  '/brand/favicon': 'brand/favicon',
+  '/brand/default-item-image': 'brand/default-item-image',
+});
 
-async function brandAsset(request, env) {
+async function brandAsset(request, env, key) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response(null, { status: 405, headers: { allow: 'GET, HEAD' } });
   }
-  const asset = await env.BRAND_ASSETS?.get(LOGIN_BACKGROUND_KEY);
+  const asset = await env.BRAND_ASSETS?.get(key);
   if (!asset) {
     return new Response(null, {
       status: 404,
@@ -115,7 +122,11 @@ function assertPublicMutationOrigin(request) {
       status: 403,
     });
   }
-  if (!String(request.headers.get('content-type') ?? '').toLowerCase().startsWith('application/json')) {
+  if (
+    !String(request.headers.get('content-type') ?? '')
+      .toLowerCase()
+      .startsWith('application/json')
+  ) {
     throw new ApiError('INVALID_CONTENT_TYPE', 'Public requests require JSON.', { status: 415 });
   }
 }
@@ -213,7 +224,9 @@ async function health(env, requestId, readiness = false) {
         brandAssets: Boolean(env.BRAND_ASSETS),
         protectedConfiguration: !runtimeIssues.some((issue) => issue.endsWith('_MISSING')),
       },
-      ...(readiness ? { ready: !unresolved, checks: runtimeIssues.length ? ['CONFIGURATION_INCOMPLETE'] : [] } : {}),
+      ...(readiness
+        ? { ready: !unresolved, checks: runtimeIssues.length ? ['CONFIGURATION_INCOMPLETE'] : [] }
+        : {}),
     },
     readiness && unresolved ? 503 : 200,
   );
@@ -247,6 +260,16 @@ async function handleApi(request, env, requestId) {
       assertPublicMutationOrigin(request);
       return json(
         await publicRequests.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/related' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.related({
           command: await body(request),
           networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
           correlationId: requestId,
@@ -525,7 +548,8 @@ async function handleApi(request, env, requestId) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname === '/brand/login-background') return brandAsset(request, env);
+    const brandKey = BRAND_ASSET_KEYS[url.pathname];
+    if (brandKey) return brandAsset(request, env, brandKey);
     if (url.pathname.startsWith('/api/')) {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();

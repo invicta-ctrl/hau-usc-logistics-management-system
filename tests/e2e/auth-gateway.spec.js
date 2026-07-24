@@ -205,7 +205,9 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
 });
 
-test('staff login provides accessible password visibility and recovery controls', async ({ page }, testInfo) => {
+test('staff login provides accessible password visibility and recovery controls', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One focused browser proves the Phase 2 controls.');
   await page.addInitScript(() => {
     globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
@@ -214,7 +216,10 @@ test('staff login provides accessible password visibility and recovery controls'
     route.fulfill({
       status: 401,
       contentType: 'application/json',
-      body: JSON.stringify({ code: 'SESSION_INVALID', message: 'Your session is invalid or expired. Sign in again.' }),
+      body: JSON.stringify({
+        code: 'SESSION_INVALID',
+        message: 'Your session is invalid or expired. Sign in again.',
+      }),
     }),
   );
 
@@ -228,7 +233,9 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(password).toHaveAttribute('type', 'text');
   await expect(password).toHaveValue('Retain!Cursor9472');
   await expect(page.getByRole('button', { name: 'Hide password' })).toHaveAttribute('aria-pressed', 'true');
-  expect(await password.evaluate((element) => [element.selectionStart, element.selectionEnd])).toEqual([3, 9]);
+  expect(await password.evaluate((element) => [element.selectionStart, element.selectionEnd])).toEqual([
+    3, 9,
+  ]);
 
   await page.getByRole('button', { name: 'Forgot password?' }).click();
   await expect(page.getByText('Recover staff access')).toBeVisible();
@@ -240,7 +247,10 @@ test('staff login provides accessible password visibility and recovery controls'
 test('public Request Center opens without login and returns private tracking details', async ({
   page,
 }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-390', 'One mobile browser proves the Phase 3 public boundary.');
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'One mobile browser proves the Phase 3 public boundary.',
+  );
   let authCalls = 0;
   await page.addInitScript(() => {
     globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
@@ -254,9 +264,29 @@ test('public Request Center opens without login and returns private tracking det
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        categories: ['Inventory Item', 'Food', 'Materials', 'Venue / Facility', 'Logistics / Equipment', 'Other'],
+        categories: [
+          'Inventory Item',
+          'Food',
+          'Materials',
+          'Venue / Facility',
+          'Logistics / Equipment',
+          'Other',
+        ],
+        requesterTypes: ['HAU student / Angelite', 'HAU office / department'],
         items: [{ id: 'ITM-SYNTHETIC', name: 'Synthetic Supply', category: 'Office', unit: 'piece' }],
-        events: [{ id: 'EVT-SYNTHETIC', name: 'Synthetic Approved Event' }],
+        eventSeries: [{ id: 'SER-SYNTHETIC', name: 'Synthetic Approved Series', status: 'ACTIVE' }],
+        events: [
+          {
+            id: 'EVT-SYNTHETIC',
+            seriesId: 'SER-SYNTHETIC',
+            name: 'Synthetic Approved Event',
+            venue: 'Synthetic Venue',
+            startAt: '2026-08-01T08:00:00.000Z',
+            endAt: '2026-08-01T12:00:00.000Z',
+          },
+        ],
+        requestReferences: [],
+        stockAreas: ['Inventory'],
         references: [],
       }),
     }),
@@ -279,19 +309,28 @@ test('public Request Center opens without login and returns private tracking det
   await page.goto('/request');
   await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
   await expect(page.getByLabel('Access ID')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Track Existing Request' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Track Existing Request' })).toBeHidden();
   expect(authCalls).toBe(0);
   const requestForm = page.locator('#publicRequestForm');
+  await requestForm.getByRole('button', { name: 'Continue' }).click();
   await requestForm.getByLabel('Full name').fill('Synthetic Public Requester');
-  await requestForm.getByLabel('Organization / department').fill('Synthetic Organization');
+  await requestForm.getByLabel('Requester type').selectOption('HAU student / Angelite');
+  await requestForm.getByLabel('Organization / department / office').fill('Synthetic Organization');
   await requestForm.getByLabel('Contact number').fill('+63 917 000 0010');
   await requestForm.getByLabel('Email address').fill('public@example.invalid');
-  await requestForm.getByLabel('Approved event / sub-event').selectOption('EVT-SYNTHETIC');
-  await requestForm.getByLabel('Purpose / justification').fill('Synthetic browser submission proof.');
+  await requestForm.getByRole('button', { name: 'Continue' }).click();
+  await requestForm.locator('[name="eventSeriesId"]').selectOption('SER-SYNTHETIC');
+  await requestForm.locator('[name="eventId"]').selectOption('EVT-SYNTHETIC');
+  await requestForm.locator('[name="eventPurpose"]').fill('Synthetic browser submission proof.');
+  await requestForm.getByRole('button', { name: 'Continue' }).click();
   await requestForm.getByLabel('Approved inventory item').selectOption('ITM-SYNTHETIC');
   await requestForm.getByLabel('Quantity').fill('2');
   await requestForm.getByRole('button', { name: 'Add to requested items' }).click();
   await expect(requestForm.locator('.public-request-line')).toContainText('Synthetic Supply');
   await expect(requestForm.locator('.public-request-line')).toContainText('2 piece');
+  await requestForm.getByRole('button', { name: 'Continue' }).click();
+  await requestForm.getByLabel('Review acknowledgment').check();
   await requestForm.getByRole('button', { name: 'Submit request for review' }).click();
   await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
   await expect(page.getByText('REQ-SYNTHETIC-PUBLIC')).toBeVisible();
@@ -301,7 +340,10 @@ test('public Request Center opens without login and returns private tracking det
 test('public Lending Center opens catalog-first without login and returns private tracking details', async ({
   page,
 }, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-390', 'One mobile browser proves the Phase 4 public boundary.');
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'One mobile browser proves the Phase 4 public boundary.',
+  );
   let authCalls = 0;
   await page.addInitScript(() => {
     globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
@@ -316,7 +358,18 @@ test('public Lending Center opens catalog-first without login and returns privat
       contentType: 'application/json',
       body: JSON.stringify({
         departments: ['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS'],
-        items: [{ id: 'ITM-LEND-SYNTHETIC', name: 'Synthetic Projector', category: 'Equipment', unit: 'piece', type: 'REUSABLE', availability: 'AVAILABLE', maximumQuantity: 2, defaultLoanDays: 7 }],
+        items: [
+          {
+            id: 'ITM-LEND-SYNTHETIC',
+            name: 'Synthetic Projector',
+            category: 'Equipment',
+            unit: 'piece',
+            type: 'REUSABLE',
+            availability: 'AVAILABLE',
+            maximumQuantity: 2,
+            defaultLoanDays: 7,
+          },
+        ],
         process: ['Submit for review.', 'Wait for pickup instructions.'],
       }),
     }),

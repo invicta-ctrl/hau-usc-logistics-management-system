@@ -9,17 +9,29 @@ const CATEGORIES = Object.freeze([
   'Logistics / Equipment',
   'Other',
 ]);
+const REQUEST_TYPES = Object.freeze(['EVENT_LOGISTICS', 'CATALOG_RESTOCK']);
+const REQUESTER_TYPES = Object.freeze([
+  'HAU student / Angelite',
+  'HAU office / department',
+  'USC officer / committee',
+  'External partner',
+]);
 const encoder = new TextEncoder();
 
 const requiredText = (value, field, max) => {
-  const result = String(value ?? '').trim().replace(/\s+/gu, ' ');
+  const result = String(value ?? '')
+    .trim()
+    .replace(/\s+/gu, ' ');
   if (!result || result.length > max) {
     throw new ApiError('VALIDATION_FAILED', `${field} is required.`, { status: 422, details: { field } });
   }
   return result;
 };
 
-const optionalText = (value, max) => String(value ?? '').trim().slice(0, max);
+const optionalText = (value, max) =>
+  String(value ?? '')
+    .trim()
+    .slice(0, max);
 
 const positiveNumber = (value, field) => {
   const result = Number(value);
@@ -89,7 +101,14 @@ function parseReference(row) {
     if (payload.requestability !== 'REQUESTABLE') return null;
     return {
       id: row.stable_id,
-      group: row.domain === 'VENUES' ? 'Venues / Facilities' : 'Equipment',
+      group:
+        row.domain === 'VENUES'
+          ? 'Venues / Facilities'
+          : String(payload.group ?? payload.category ?? '')
+                .toLowerCase()
+                .includes('logistics')
+            ? 'Logistics'
+            : 'Equipment',
       name: String(payload.displayName ?? row.stable_id),
       category: String(payload.category ?? ''),
       unit: String(payload.unit ?? 'service'),
@@ -140,7 +159,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
   }
 
   async function options() {
-    const [items, events, references] = await Promise.all([
+    const [items, eventSeries, events, references, stockAreas] = await Promise.all([
       rows(
         db,
         `SELECT id, name, category, unit FROM inventory_items
@@ -148,7 +167,12 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       ),
       rows(
         db,
-        `SELECT id, event_series_id, name, starts_at, ends_at, status FROM events
+        `SELECT id, code, name, status FROM event_series
+         WHERE status = 'ACTIVE' ORDER BY name LIMIT 100`,
+      ),
+      rows(
+        db,
+        `SELECT id, event_series_id, name, starts_at, ends_at, venue, status FROM events
          WHERE active = 1 AND status NOT IN ('COMPLETED', 'CANCELLED')
          ORDER BY starts_at LIMIT 200`,
       ),
@@ -158,20 +182,41 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
          WHERE domain IN ('VENUES', 'EQUIPMENT') AND status = 'ACTIVE' AND archived_at IS NULL
          ORDER BY domain, stable_id LIMIT 500`,
       ),
+      rows(
+        db,
+        `SELECT DISTINCT stock_area FROM inventory_items
+         WHERE status = 'ACTIVE' AND TRIM(stock_area) <> ''
+         ORDER BY stock_area`,
+      ),
     ]);
     return {
       ok: true,
+      requestTypes: REQUEST_TYPES,
+      requesterTypes: REQUESTER_TYPES,
       categories: CATEGORIES,
-      items: items.map((item) => ({ id: item.id, name: item.name, category: item.category, unit: item.unit })),
+      items: items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        unit: item.unit,
+      })),
+      eventSeries: eventSeries.map((series) => ({
+        id: series.id,
+        code: series.code,
+        name: series.name,
+        status: series.status,
+      })),
       events: events.map((event) => ({
         id: event.id,
         seriesId: event.event_series_id,
         name: event.name,
         startAt: event.starts_at,
         endAt: event.ends_at,
+        venue: event.venue,
         status: event.status,
       })),
       references: references.map(parseReference).filter(Boolean),
+      stockAreas: stockAreas.map((row) => row.stock_area),
     };
   }
 
@@ -191,7 +236,10 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           .prepare("SELECT id, name, category, unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
           .bind(requiredText(source.itemId, `lines[${index}].itemId`, 80))
           .first();
-        if (!item) throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected item is unavailable.', { status: 409 });
+        if (!item)
+          throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected item is unavailable.', {
+            status: 409,
+          });
         normalized.push({
           itemId: item.id,
           description: item.name,
@@ -214,7 +262,9 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           .first();
         const safeReference = reference ? parseReference(reference) : null;
         if (!safeReference) {
-          throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected reference is unavailable.', { status: 409 });
+          throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected reference is unavailable.', {
+            status: 409,
+          });
         }
         normalized.push({
           itemId: null,
@@ -260,9 +310,24 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     }
     const requesterName = requiredText(command.requesterName, 'requesterName', 120);
     const organization = requiredText(command.organization, 'organization', 120);
+    const requesterType = requiredText(command.requesterType, 'requesterType', 80);
+    if (!REQUESTER_TYPES.includes(requesterType)) {
+      throw new ApiError('VALIDATION_FAILED', 'requesterType is invalid.', {
+        status: 422,
+        details: { field: 'requesterType' },
+      });
+    }
     const requesterEmail = email(command.email);
     const contactNumber = phone(command.contactNumber);
     const purpose = requiredText(command.purpose, 'purpose', 500);
+    const requestType = requiredText(command.requestType, 'requestType', 40);
+    if (!REQUEST_TYPES.includes(requestType)) {
+      throw new ApiError('VALIDATION_FAILED', 'requestType is invalid.', {
+        status: 422,
+        details: { field: 'requestType' },
+      });
+    }
+    const isEvent = requestType === 'EVENT_LOGISTICS';
     const startDate = dateOnly(command.startDate, 'startDate');
     const endDate = dateOnly(command.endDate, 'endDate');
     if (startDate && endDate && endDate < startDate) {
@@ -271,13 +336,75 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         details: { field: 'endDate' },
       });
     }
-    const eventId = optionalText(command.eventId, 80);
-    if (eventId) {
+    const eventSeriesId = isEvent ? requiredText(command.eventSeriesId, 'eventSeriesId', 80) : '';
+    const eventId = isEvent ? requiredText(command.eventId, 'eventId', 80) : '';
+    const location = isEvent ? optionalText(command.location, 160) : '';
+    const stockArea = isEvent ? '' : requiredText(command.stockArea, 'stockArea', 120);
+    const neededDate = isEvent ? '' : dateOnly(command.neededDate, 'neededDate', { required: true });
+    if (isEvent) {
       const event = await db
-        .prepare("SELECT id FROM events WHERE id = ?1 AND active = 1 AND status NOT IN ('COMPLETED', 'CANCELLED')")
-        .bind(eventId)
+        .prepare(
+          `SELECT id FROM events
+           WHERE id = ?1 AND event_series_id = ?2 AND active = 1
+             AND status NOT IN ('COMPLETED', 'CANCELLED')`,
+        )
+        .bind(eventId, eventSeriesId)
         .first();
-      if (!event) throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'The selected event is unavailable.', { status: 409 });
+      if (!event)
+        throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'The selected event is unavailable.', {
+          status: 409,
+        });
+    } else {
+      const area = await db
+        .prepare(
+          `SELECT stock_area FROM inventory_items
+           WHERE status = 'ACTIVE' AND stock_area = ?1 LIMIT 1`,
+        )
+        .bind(stockArea)
+        .first();
+      if (!area) {
+        throw new ApiError(
+          'PUBLIC_REFERENCE_UNAVAILABLE',
+          'The selected inventory or pantry area is unavailable.',
+          {
+            status: 409,
+          },
+        );
+      }
+    }
+    const parentRequestId = optionalText(isEvent ? command.originalRequestId : command.relatedRequestId, 80);
+    let additionalSequence = 0;
+    if (parentRequestId) {
+      const parent = await db
+        .prepare(
+          `SELECT id, request_type, event_series_id, event_id, catalog_type
+           FROM requests
+           WHERE id = ?1 AND archived_at IS NULL AND status NOT IN ('CANCELLED', 'REJECTED')`,
+        )
+        .bind(parentRequestId)
+        .first();
+      const matchesContext =
+        parent &&
+        (isEvent
+          ? parent.event_series_id === eventSeriesId && parent.event_id === eventId
+          : parent.request_type === 'CATALOG_RESTOCK' && parent.catalog_type === stockArea);
+      if (!matchesContext) {
+        throw new ApiError(
+          'PUBLIC_REFERENCE_UNAVAILABLE',
+          'The related request is unavailable for this context.',
+          {
+            status: 409,
+          },
+        );
+      }
+      const sequence = await db
+        .prepare(
+          `SELECT COALESCE(MAX(additional_sequence), 0) + 1 AS next_sequence
+           FROM requests WHERE parent_request_id = ?1 OR id = ?1`,
+        )
+        .bind(parentRequestId)
+        .first();
+      additionalSequence = Number(sequence?.next_sequence ?? 1);
     }
     const lines = await normalizeLines(command.lines);
     const requestId = createId('REQ');
@@ -288,14 +415,21 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       db
         .prepare(
           `INSERT INTO requests (
-             id, request_type, request_stage, event_id, requester_name, requester_email,
+             id, request_type, request_stage, parent_request_id, additional_sequence,
+             event_series_id, event_id, catalog_type, requester_name, requester_email,
              department, priority, purpose, status, client_request_id, created_at, updated_at, created_by
-           ) VALUES (?1, 'PUBLIC_LOGISTICS', 'REVIEW', ?2, ?3, ?4, ?5, 'NORMAL', ?6,
-             'FOR_REVIEW', ?7, ?8, ?8, ?9)`,
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'NORMAL', ?12,
+             'FOR_REVIEW', ?13, ?14, ?14, ?15)`,
         )
         .bind(
           requestId,
+          requestType,
+          parentRequestId ? 'ADDITIONAL' : 'INITIAL',
+          parentRequestId || null,
+          additionalSequence,
+          eventSeriesId || null,
           eventId || null,
+          stockArea,
           requesterName,
           requesterEmail,
           organization,
@@ -307,10 +441,22 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       db
         .prepare(
           `INSERT INTO public_request_access (
-             request_id, tracking_digest, contact_number, requested_start_date, requested_end_date, created_at
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+             request_id, tracking_digest, contact_number, requested_start_date, requested_end_date,
+             requester_type, location, stock_area, needed_date, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
         )
-        .bind(requestId, trackingDigest, contactNumber, startDate || null, endDate || null, timestamp),
+        .bind(
+          requestId,
+          trackingDigest,
+          contactNumber,
+          startDate || null,
+          endDate || null,
+          requesterType,
+          location,
+          stockArea,
+          neededDate || null,
+          timestamp,
+        ),
     ];
     lines.forEach((line, index) => {
       statements.push(
@@ -321,7 +467,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
                requested_quantity, unit, fulfillment_source, status, client_line_id,
                created_at, updated_at, created_by
              ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9,
-               'PENDING_REVIEW', 'FOR_REVIEW', ?10, ?11, ?11, ?12)`,
+               ?10, 'FOR_REVIEW', ?11, ?12, ?12, ?13)`,
           )
           .bind(
             createId('LIN'),
@@ -333,6 +479,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
             line.category,
             line.quantity,
             line.unit,
+            requestType === 'CATALOG_RESTOCK' ? 'RESTOCK' : 'PENDING_REVIEW',
             `public-line-${index + 1}`,
             timestamp,
             PUBLIC_ACTOR_ID,
@@ -365,13 +512,19 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           JSON.stringify({ status: 'FOR_REVIEW', lineCount: lines.length }),
           correlationId,
         ),
-      db.prepare("UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request')").bind(timestamp),
+      db
+        .prepare(
+          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request')",
+        )
+        .bind(timestamp),
     );
     try {
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('PUBLIC_REQUEST_CONFLICT', 'This submission is already being processed.', { status: 409 });
+        throw new ApiError('PUBLIC_REQUEST_CONFLICT', 'This submission is already being processed.', {
+          status: 409,
+        });
       }
       throw error;
     }
@@ -393,7 +546,9 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       .bind(requestId, digest)
       .first();
     if (!access) {
-      throw new ApiError('PUBLIC_REQUEST_NOT_FOUND', 'The request or tracking code is invalid.', { status: 404 });
+      throw new ApiError('PUBLIC_REQUEST_NOT_FOUND', 'The request or tracking code is invalid.', {
+        status: 404,
+      });
     }
     const [lines, history] = await Promise.all([
       rows(
@@ -429,5 +584,33 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     };
   }
 
-  return Object.freeze({ options, submit, track });
+  async function related({ command = {}, networkKey = '', correlationId = '' } = {}) {
+    const verified = await track({ command, networkKey, correlationId });
+    const reference = await db
+      .prepare(
+        `SELECT id, request_type, event_series_id, event_id, catalog_type, status
+         FROM requests WHERE id = ?1 AND archived_at IS NULL`,
+      )
+      .bind(verified.request.id)
+      .first();
+    if (!reference) {
+      throw new ApiError('PUBLIC_REQUEST_NOT_FOUND', 'The related request is unavailable.', {
+        status: 404,
+      });
+    }
+    return {
+      ok: true,
+      correlationId,
+      reference: {
+        id: reference.id,
+        requestType: reference.request_type,
+        seriesId: reference.event_series_id,
+        eventId: reference.event_id,
+        stockArea: reference.catalog_type,
+        status: reference.status,
+      },
+    };
+  }
+
+  return Object.freeze({ options, related, submit, track });
 }

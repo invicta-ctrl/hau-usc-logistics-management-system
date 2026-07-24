@@ -1,3 +1,5 @@
+import { brandLockupMarkup } from './brand-assets.js';
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -64,7 +66,7 @@ export async function mountBorrowerLendingPortal({ root, client, session, onLogo
     root.innerHTML = `
       <main class="borrower-portal" aria-labelledby="borrowerPortalTitle">
         <header class="borrower-portal-header">
-          <div><p class="eyebrow">HAU-USC Logistics</p><h1 id="borrowerPortalTitle">Office Lending</h1><p>Institution-approved borrower portal</p></div>
+          <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="borrowerPortalTitle">Office Lending</h1><p>Institution-approved borrower portal</p></div></div>
           <div class="borrower-profile"><strong>${escapeHtml(portal.profile.displayName)}</strong><small>Institution ID verified</small><button class="secondary" type="button" data-borrower-logout>Sign out</button></div>
         </header>
         <section class="borrower-grid">

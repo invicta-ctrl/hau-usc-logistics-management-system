@@ -3,6 +3,7 @@ import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/sessio
 import { AuthApiClient } from '../services/auth-api-client.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
 import { mountPublicRequesterPortal } from './public-requester-portal.js';
+import { brandLockupMarkup } from './brand-assets.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -49,7 +50,13 @@ function routeAuthorizedWorkspace(user) {
     return;
   }
   const target = authorizedWorkspacePath(user);
-  if (location.pathname === '/login' || location.pathname === '/' || location.pathname.startsWith('/app/')) {
+  const alreadyInAuthorizedWorkspace =
+    location.pathname === target || location.pathname.startsWith(`${target}/`);
+  if (
+    location.pathname === '/login' ||
+    location.pathname === '/' ||
+    (location.pathname.startsWith('/app/') && !alreadyInAuthorizedWorkspace)
+  ) {
     history.replaceState(null, '', target);
   }
 }
@@ -120,8 +127,8 @@ function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
   const message = error ? escapeHtml(error.message) : '';
   return `
     <section class="auth-card" aria-labelledby="authTitle">
-      <div class="auth-brand-lockup" aria-label="Holy Angel University University Student Council Department of Logistics">
-        <span class="auth-brand-mark" aria-hidden="true">HAU</span>
+      <div class="auth-brand-lockup">
+        ${brandLockupMarkup({ compact: true })}
         <span><strong>University Student Council</strong><small>Department of Logistics</small></span>
       </div>
       <p class="eyebrow">Holy Angel University</p>

@@ -1,3 +1,5 @@
+import { brandLockupMarkup } from './brand-assets.js';
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -53,7 +55,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
     root.innerHTML = `
       <main class="borrower-portal requester-portal" aria-labelledby="requesterPortalTitle">
         <header class="borrower-portal-header">
-          <div><p class="eyebrow">HAU-USC Logistics</p><h1 id="requesterPortalTitle">Request Center</h1><p>Submit and track only your own logistics requests.</p></div>
+          <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="requesterPortalTitle">Request Center</h1><p>Submit and track only your own logistics requests.</p></div></div>
           <div class="borrower-profile"><strong>${escapeHtml(portal.profile.displayName)}</strong><small>Requester workspace</small><button class="secondary" type="button" data-requester-logout>Sign out</button></div>
         </header>
         <section class="borrower-grid">

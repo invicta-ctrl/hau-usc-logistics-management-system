@@ -1,5 +1,12 @@
+import { brandLockupMarkup } from './brand-assets.js';
+
 function escapeHtml(value) {
-  return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 const clientRequestId = () => `public-lending:${crypto.randomUUID()}`;
@@ -19,7 +26,7 @@ export async function mountPublicLendingPortal({ root, client }) {
   root.innerHTML = `
     <main class="public-request-portal public-lending-portal" aria-labelledby="publicLendingTitle">
       <header class="public-portal-header">
-        <div><p class="eyebrow">HAU-USC Logistics</p><h1 id="publicLendingTitle">Lending Center</h1><p>Browse the borrower-safe catalog before providing personal information. Every request starts For Review.</p></div>
+        <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="publicLendingTitle">Lending Center</h1><p>Browse the borrower-safe catalog before providing personal information. Every request starts For Review.</p></div></div>
         <nav aria-label="Logistics portal links"><a href="/request">Request Center</a><a href="/login">Staff sign in</a></nav>
       </header>
       <section class="panel public-catalog" aria-labelledby="publicCatalogTitle">
@@ -75,35 +82,66 @@ export async function mountPublicLendingPortal({ root, client }) {
   const renderSelected = () => {
     selectedCount.textContent = `${selected.size} item${selected.size === 1 ? '' : 's'}`;
     selectedRoot.innerHTML = selected.size
-      ? [...selected.values()].map((line) => `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`).join('')
+      ? [...selected.values()]
+          .map(
+            (line) =>
+              `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`,
+          )
+          .join('')
       : '<p class="empty">Choose an available catalog item.</p>';
-    selectedRoot.querySelectorAll('[data-lending-quantity]').forEach((input) => input.addEventListener('change', () => {
-      selected.get(input.dataset.lendingQuantity).quantity = Number(input.value);
-    }));
-    selectedRoot.querySelectorAll('[data-remove-lending]').forEach((button) => button.addEventListener('click', () => {
-      selected.delete(button.dataset.removeLending);
-      renderSelected();
-      renderCatalog();
-    }));
+    selectedRoot.querySelectorAll('[data-lending-quantity]').forEach((input) =>
+      input.addEventListener('change', () => {
+        selected.get(input.dataset.lendingQuantity).quantity = Number(input.value);
+      }),
+    );
+    selectedRoot.querySelectorAll('[data-remove-lending]').forEach((button) =>
+      button.addEventListener('click', () => {
+        selected.delete(button.dataset.removeLending);
+        renderSelected();
+        renderCatalog();
+      }),
+    );
   };
 
   const renderCatalog = () => {
     const query = search.value.trim().toLowerCase();
-    const visible = catalog.items.filter((item) => (!query || `${item.name} ${item.category}`.toLowerCase().includes(query)) && (category.value === 'ALL' || item.category === category.value) && (availability.value === 'ALL' || item.availability === availability.value) && (type.value === 'ALL' || item.type === type.value));
+    const visible = catalog.items.filter(
+      (item) =>
+        (!query || `${item.name} ${item.category}`.toLowerCase().includes(query)) &&
+        (category.value === 'ALL' || item.category === category.value) &&
+        (availability.value === 'ALL' || item.availability === availability.value) &&
+        (type.value === 'ALL' || item.type === type.value),
+    );
     count.textContent = `${visible.length} item${visible.length === 1 ? '' : 's'}`;
     catalogRoot.innerHTML = visible.length
-      ? visible.map((item) => `<article class="public-catalog-card"><div><span class="status ${item.availability === 'AVAILABLE' ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p><small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Standard loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small></div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${item.availability !== 'AVAILABLE' ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Add item'}</button></article>`).join('')
+      ? visible
+          .map(
+            (item) =>
+              `<article class="public-catalog-card"><div><span class="status ${item.availability === 'AVAILABLE' ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p><small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Standard loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small></div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${item.availability !== 'AVAILABLE' ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Add item'}</button></article>`,
+          )
+          .join('')
       : '<p class="empty">No catalog items match these filters.</p>';
-    catalogRoot.querySelectorAll('[data-select-lending]').forEach((button) => button.addEventListener('click', () => {
-      const item = catalog.items.find((entry) => entry.id === button.dataset.selectLending);
-      if (!item || selected.has(item.id)) return;
-      selected.set(item.id, { itemId: item.id, name: item.name, type: item.type, unit: item.unit, maximumQuantity: item.maximumQuantity, quantity: 1 });
-      renderSelected();
-      renderCatalog();
-    }));
+    catalogRoot.querySelectorAll('[data-select-lending]').forEach((button) =>
+      button.addEventListener('click', () => {
+        const item = catalog.items.find((entry) => entry.id === button.dataset.selectLending);
+        if (!item || selected.has(item.id)) return;
+        selected.set(item.id, {
+          itemId: item.id,
+          name: item.name,
+          type: item.type,
+          unit: item.unit,
+          maximumQuantity: item.maximumQuantity,
+          quantity: 1,
+        });
+        renderSelected();
+        renderCatalog();
+      }),
+    );
   };
 
-  [search, category, availability, type].forEach((control) => control.addEventListener('input', renderCatalog));
+  [search, category, availability, type].forEach((control) =>
+    control.addEventListener('input', renderCatalog),
+  );
   renderCatalog();
   renderSelected();
 
@@ -119,9 +157,18 @@ export async function mountPublicLendingPortal({ root, client }) {
     const submit = event.submitter ?? form.querySelector('[type="submit"]');
     submit.disabled = true;
     try {
-      const result = await client.request('/api/public/lending', { body: { ...values, responsibilityAcknowledged: form.elements.responsibilityAcknowledged.checked, lines: [...selected.values()].map(({ itemId, quantity }) => ({ itemId, quantity })), clientRequestId: clientRequestId() } });
+      const result = await client.request('/api/public/lending', {
+        body: {
+          ...values,
+          responsibilityAcknowledged: form.elements.responsibilityAcknowledged.checked,
+          lines: [...selected.values()].map(({ itemId, quantity }) => ({ itemId, quantity })),
+          clientRequestId: clientRequestId(),
+        },
+      });
       message.textContent = '';
-      form.querySelectorAll('input, select, textarea, button').forEach((control) => { control.disabled = true; });
+      form.querySelectorAll('input, select, textarea, button').forEach((control) => {
+        control.disabled = true;
+      });
       const receipt = document.createElement('section');
       receipt.className = 'public-tracking-receipt';
       receipt.setAttribute('role', 'status');
@@ -142,7 +189,9 @@ export async function mountPublicLendingPortal({ root, client }) {
     const submit = event.submitter ?? trackForm.querySelector('[type="submit"]');
     submit.disabled = true;
     try {
-      const result = await client.request('/api/public/lending/track', { body: Object.fromEntries(new FormData(trackForm)) });
+      const result = await client.request('/api/public/lending/track', {
+        body: Object.fromEntries(new FormData(trackForm)),
+      });
       message.textContent = '';
       resultRoot.innerHTML = `<article class="public-track-result"><span class="status blue">${escapeHtml(result.request.status.replaceAll('_', ' '))}</span><h3>${escapeHtml(result.request.id)}</h3><p>Pickup requested: ${escapeHtml(result.request.pickupDate)} · Due requested: ${escapeHtml(result.request.dueDate)}</p><ul>${result.request.tickets.map((ticket) => `<li>${escapeHtml(ticket.itemName)} · ${escapeHtml(ticket.quantity)} ${escapeHtml(ticket.unit)} · ${escapeHtml(ticket.status.replaceAll('_', ' '))}</li>`).join('')}</ul><small>Last updated ${escapeHtml(new Date(result.request.updatedAt).toLocaleString('en-PH'))}</small></article>`;
     } catch (error) {

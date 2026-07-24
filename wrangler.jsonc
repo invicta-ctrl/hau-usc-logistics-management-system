@@ -14,7 +14,7 @@
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": ["/api/*", "/brand/*"]
   },
   "d1_databases": [
     {
@@ -25,9 +25,7 @@
       "migrations_table": "d1_migrations"
     }
   ],
-  "r2_buckets": [
-    { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-local-assets" }
-  ],
+  "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-local-assets" }],
   "vars": {
     "ENVIRONMENT": "DEVELOPMENT",
     "APP_VERSION": "0.7.0",
@@ -54,9 +52,7 @@
           "migrations_table": "d1_migrations"
         }
       ],
-      "r2_buckets": [
-        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-staging-assets" }
-      ],
+      "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-staging-assets" }],
       "vars": {
         "ENVIRONMENT": "STAGING",
         "APP_VERSION": "0.7.0",
@@ -83,9 +79,7 @@
           "migrations_table": "d1_migrations"
         }
       ],
-      "r2_buckets": [
-        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-production-assets" }
-      ],
+      "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-production-assets" }],
       "vars": {
         "ENVIRONMENT": "PRODUCTION",
         "APP_VERSION": "0.7.0",

@@ -59,7 +59,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
       directory: './dist',
       binding: 'ASSETS',
       not_found_handling: 'single-page-application',
-      run_worker_first: ['/api/*'],
+      run_worker_first: ['/api/*', '/brand/*'],
     });
     expect(config.env.staging.name).toBe('hau-usc-logistics-staging');
     expect(config.env.staging.d1_databases[0]).toMatchObject({ binding: 'DB' });
@@ -114,7 +114,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
 
   it('defines the complete operational model and database-enforced append-only guards', async () => {
     const migrations = await Promise.all(
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(async (number) => {
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].map(async (number) => {
         const files = {
           1: '0001_operational_schema.sql',
           2: '0002_authorization_registry.sql',
@@ -128,6 +128,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
           10: '0010_verified_login_email.sql',
           11: '0011_public_request_tracking.sql',
           12: '0012_public_lending_tracking.sql',
+          13: '0013_public_request_guidance.sql',
         };
         return read(`migrations/${files[number]}`);
       }),
