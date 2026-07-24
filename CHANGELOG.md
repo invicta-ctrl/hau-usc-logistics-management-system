@@ -1,5 +1,37 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 2/3 targeted correction (2026-07-24)
+
+### Added
+
+- Governed R2-backed login background, DOL logo, HAU-USC logo, and favicon routes with responsive shared lockups.
+- Source-grounded guided public Request Center with distinct creation and private-tracking flows plus verified related-request linking.
+- Additive migration `0013_public_request_guidance.sql`.
+
+### Verified locally
+
+- `npm run check`: 57 Vitest files / 398 tests; local Worker/D1: 17 / 17; full Playwright: 94 passed / 224 intentional skips / zero failures.
+
+### Boundary
+
+- Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` is not yet accepted on staging. The Phase 4 Lending Center backend is preserved; production remains NO-GO.
+
+## Unreleased - v0.7.0 Phase 4 public Lending Center (2026-07-22)
+
+### Added
+
+- Direct no-login `/lending` with borrower-safe catalog filters, validated external-borrower multi-item submission, and private group tracking.
+- Canonical `FOR_REVIEW` ticket routing, HMAC-digest tracking, D1 attempt limits, and additive migration `0012_public_lending_tracking.sql`.
+
+### Verified
+
+- `npm run check`: 57 Vitest files / 393 tests; local Worker/D1: 17 / 17; full Playwright: 94 passed / 224 intentional skips / zero failures.
+- Staging migration/reconciliation and three deployed scenarios passed at exact runtime `8e5c25d`, schema 12 / migration 0012; zero reservations and unchanged real inventory.
+
+### Boundary
+
+- No email verification is claimed. The real public-lending catalog remains empty pending Phase 5 governance; the synthetic smoke fixture is archived. Production actions remain incomplete.
+
 ## Unreleased - v0.7.0 Phase 3 public Request Center (2026-07-22)
 
 ### Added

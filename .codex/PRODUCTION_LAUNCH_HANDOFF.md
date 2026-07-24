@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 and pre-0011 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0011 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — pre-0010 through pre-0012 staging SQL exports retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0012 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 3 runtime `6fbf377` |
+| 8. Staging deployment | PASS THROUGH PHASE 4 runtime `8e5c25d` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -72,8 +72,20 @@ Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
 - Cache-busted live identity and deployed auth/public-request smoke passed 2 / 2 at exact runtime `6fbf377`, schema 11.
 - Durable handoff: `.codex/V0_7_PHASE_3_PUBLIC_REQUEST_HANDOFF.md`.
 
+## Phase 4 evidence
+
+- `/lending` opens without login and provides a borrower-safe catalog before validated external-borrower identity collection.
+- Multi-item submission creates canonical committee-routed `FOR_REVIEW` tickets with private group tracking and no reservation or stock movement.
+- Migration 0012 adds only public lending profile/tracking/link/rate-limit state and the service-actor committee route.
+- `npm run check` passed with 57 Vitest files / 393 tests; local Worker/D1 passed 17 / 17; full Playwright passed 94 / 318 scheduled with 224 intentional skips.
+- Cache-busted identity and three deployed smoke scenarios passed at exact runtime `8e5c25d`, schema 12.
+- The real staging public catalog is empty. The audited synthetic acceptance fixture is archived; Phase 5 must supply the complete governed canonical catalog contract.
+- Durable handoff: `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md`.
+
 ## Immediate repair target
 
-Complete Phase 4 public no-login Lending Center. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Correction candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` is locally accepted with `npm run check` (398 tests), local Worker/D1 17 / 17, and full Playwright 94 passed / 224 intentional skips / zero failures. It restores live Worker routing for governed Brand & Media slots, responsive official logo lockups, the source-grounded guided Request Center, separate private tracking, and secure related-request verification. Migration 0013 is additive. The accepted Phase 4 Lending Center backend remains intact.
+
+Push the candidate, back up staging D1, apply migration 0013, deploy the exact SHA, and run live correction acceptance. Resume Phase 5 only after that acceptance is durable. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

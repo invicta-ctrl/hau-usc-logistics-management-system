@@ -1,5 +1,20 @@
 # Project Status
 
+## v0.7.0 Phase 2/3 targeted correction committed — staging acceptance pending
+
+- Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` corrects live governed brand routing/login presentation and restores the guided source-grounded Request Center with separate private tracking.
+- Local acceptance passed: `npm run check` with 398 tests, local Worker/D1 17 / 17, and full Playwright 94 passed / 224 intentional skips / zero failures.
+- Official DOL/HAU-USC assets and the campus background were uploaded to the governed staging R2 slots without replacing an existing object and were hash-verified.
+- Migration 0013, exact-SHA staging deployment, and live acceptance remain pending. The accepted Phase 4 Lending Center backend is preserved. Production remains NO-GO.
+
+## v0.7.0 Phase 4 public Lending Center accepted on staging — Phase 5 active
+
+- Exact staging runtime `8e5c25df3e498b6627b5ebc88db0c8cf9b71c849` is healthy and ready on schema 12 / migration `0012_public_lending_tracking.sql`.
+- `/lending` is direct no-login, catalog-first, validates external borrowers, routes multi-item submissions into canonical internal `FOR_REVIEW` tickets, privately tracks them, and creates no reservation or stock movement.
+- Verification: `npm run check` passed with 57 Vitest files / 393 tests; local Worker/D1 passed 17 / 17; full Playwright passed 94 / 318 scheduled with 224 intentional skips; deployed staging acceptance passed 3 / 3.
+- The only technical smoke item was synthetic/audited and is archived. Real public-lending eligibility remains empty; Phase 5 must complete the governed canonical catalog without inventing policy.
+- Production remains NO-GO.
+
 ## v0.7.0 Phase 3 public Request Center accepted on staging — Phase 4 active
 
 - Exact staging runtime `6fbf377bb96f9e5123a24c8e1d81726ae5769532` is healthy and ready on schema 11 / migration `0011_public_request_tracking.sql`.

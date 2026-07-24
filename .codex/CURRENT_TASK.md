@@ -13,6 +13,6 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 4 — public `/lending` without login: borrower-safe catalog before identity collection, validated external-borrower request, `FOR_REVIEW` routing, private tracking, responsibility acknowledgment, and preserved internal lending authorization/stock controls.
+Phase 2/3 targeted correction only: make the governed login background and DOL/HAU-USC brand slots live; restore the source-grounded guided Request Center and keep private tracking separate from creation. Preserve the accepted Phase 4 Lending Center backend. Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` awaits push, staging migration 0013, exact-SHA deployment, and live acceptance.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

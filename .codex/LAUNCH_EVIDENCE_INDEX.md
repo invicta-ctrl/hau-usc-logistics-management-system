@@ -1,14 +1,14 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 3 runtime `6fbf377`, upstream parity before status checkpoint | PASS |
+| Git handshake | exact pushed Phase 4 runtime `8e5c25d`, upstream parity before status checkpoint | PASS |
 | PR #9 / CI | exact head `a3059a8`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `6fbf377`, D1 connected, schema 11, migration 0011 |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `8e5c25d`, D1 connected, schema 12, migration 0012 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -38,6 +38,15 @@ Decision: **PRODUCTION NO-GO — PHASE 3 STAGING ACCEPTED; PHASE 4 ACTIVE**
 | Public-request migration | private pre-export, migration 0011, aggregate reconciliation | PASS — protected system actor, two public tables, inventory unchanged |
 | Phase 3 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 393 unit tests; 16 / 16 Worker; 93 browser passes / 219 intentional skips |
 | Phase 3 staging smoke | deployed Playwright at `6fbf377` | PASS — 2 / 2 auth/access and public submit/private track |
+| Phase 4 public Lending Center | `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md` | PASS ON STAGING |
+| Public-lending migration | private pre-export, migration 0012, aggregate reconciliation | PASS — three tables, committee route, inventory unchanged |
+| Phase 4 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 393 unit tests; 17 / 17 Worker; 94 browser passes / 224 intentional skips |
+| Phase 4 staging smoke | deployed Playwright at `8e5c25d` | PASS — 3 / 3 auth/access, request, and lending |
+| Real public-lending catalog | governed staging aggregate | 0 approved items — Phase 5 policy/data input required; synthetic smoke fixture archived |
+| Phase 2/3 correction candidate | `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` | COMMITTED LOCALLY — push and staging acceptance pending |
+| Governed Brand & Media slots | login background, USC logo, DOL logo, favicon uploaded to staging R2 and hash-verified | R2 PASS; live Worker routing pending exact-SHA deploy |
+| Corrected Request Center | guided source-grounded creation, separate private tracking, verified related-request lookup | LOCAL PASS — 398 unit tests, 17 / 17 Worker, 94 / 318 browser with 224 intentional skips |
+| Migration 0013 | `0013_public_request_guidance.sql` | LOCAL PASS; staging application/reconciliation pending |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

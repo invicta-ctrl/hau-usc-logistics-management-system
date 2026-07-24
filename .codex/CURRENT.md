@@ -1,13 +1,14 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 4 — Public Lending Center without login
+Phase: Phase 2/3 targeted live correction
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 3 STAGING ACCEPTED; PRODUCTION NO-GO
+Status: ACTIVE — CORRECTION COMMITTED; STAGING ACCEPTANCE PENDING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
-Phase 3 deployed runtime: `6fbf377bb96f9e5123a24c8e1d81726ae5769532`
+Phase 4 deployed runtime: `8e5c25df3e498b6627b5ebc88db0c8cf9b71c849`
+Correction candidate: `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -63,10 +64,24 @@ The v0.7.0 master prompt supersedes the earlier v0.6 phase-stop and production-g
 - Staging migration/reconciliation, exact-SHA deployment, cache-busted health/readiness/version, and deployed authentication/public-request acceptance passed at runtime `6fbf377bb96f9e5123a24c8e1d81726ae5769532`, schema 11, migration 0011.
 - Durable evidence: `.codex/V0_7_PHASE_3_PUBLIC_REQUEST_HANDOFF.md`.
 
+## Phase 4 completion
+
+- `/lending` opens directly without a staff session and presents a borrower-safe searchable/filterable catalog before identity collection.
+- External Angelite borrowers can submit validated multi-item requests with Student ID, course/year, approved department, contact/email, pickup/due dates, purpose, and responsibility acknowledgment.
+- Each selected canonical item becomes an existing internal `FOR_REVIEW` lending ticket routed to Inventory & Pantry; submission creates no reservation, ledger entry, or stock movement.
+- Private HMAC-backed group tracking exposes only safe ticket/item/status/date information and is protected by same-origin JSON checks and D1 attempt limits.
+- Migration `0012_public_lending_tracking.sql` adds only public lending tracking/profile/link/rate-limit state and routes the revoked credential-less service actor to the owning committee.
+- `npm run check` passed with 57 Vitest files / 393 tests; fresh local Worker/D1 passed 17 / 17; full Playwright passed 94 / 318 scheduled with 224 intentional skips.
+- Staging migration/reconciliation, exact-SHA deployment, cache-busted health/readiness/version, and deployed staff/request/lending acceptance passed 3 / 3 at runtime `8e5c25df3e498b6627b5ebc88db0c8cf9b71c849`, schema 12, migration 0012.
+- The real staging catalog has zero approved `STUDENTS_AND_STAFF` items. One audited synthetic fixture proved the workflow and was archived immediately; Phase 5 must complete governed catalog fields and activation without inventing institutional policy.
+- Durable evidence: `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md`.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
 
-One smallest safe next action: implement Phase 4 `/lending` as a genuinely no-login, borrower-safe catalog, submission, and private-tracking surface while preserving internal lending authorization and stock invariants.
+The accepted Phase 4 Lending Center backend remains preserved. Phase 2 is reopened only for the live governed login background and official DOL/HAU-USC brand slots. Phase 3 is reopened only for the source-grounded guided Request Center, separate private tracking flow, and secure related-request lookup.
+
+One smallest safe next action: push correction candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab`, apply migration 0013 to staging after a private backup, deploy that exact SHA, and run live correction acceptance before resuming Phase 5.
 
 Durable evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
