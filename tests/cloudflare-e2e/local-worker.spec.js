@@ -4,9 +4,7 @@ import { navigateToAdminView } from '../e2e/navigation.js';
 const PASSWORD = `LocalOnly${String.fromCharCode(33)}Pass2026`;
 const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
 const ACTIVATED_PASSWORD = `Activated${String.fromCharCode(33)}Local9472`;
-const MANAGED_TEMPORARY_PASSWORD = `Managed${String.fromCharCode(33)}Temporary9472`;
 const MANAGED_ACTIVATED_PASSWORD = `Managed${String.fromCharCode(33)}Activated9472`;
-const MANAGED_RESET_PASSWORD = `Managed${String.fromCharCode(33)}Reset9472`;
 const roles = [
   ['LOCAL.ADMIN', 'administrator', 'admin'],
   ['LOCAL.DIRECTOR', 'director', 'director'],
@@ -38,7 +36,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '16' },
+    database: { connected: true, schemaVersion: '17' },
   });
 
   await page.goto('/');
@@ -598,7 +596,6 @@ test('Administrator Access Management governs the staging account lifecycle and 
       headers: { 'x-csrf-token': adminCsrf },
       data: {
         accessId: 'LOCAL.ACCESS.ACTIONS',
-        temporaryPassword: MANAGED_TEMPORARY_PASSWORD,
         roleId: 'DOL_STAFF',
         committeeIds: ['COM_MATERIALS'],
         defaultCommitteeId: 'COM_MATERIALS',
@@ -607,7 +604,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(created.status()).toBe(200);
-    await expect(created.json()).resolves.toMatchObject({
+    const createdResult = await created.json();
+    expect(createdResult).toMatchObject({
       created: true,
       account: {
         accessId: 'LOCAL.ACCESS.ACTIONS',
@@ -616,9 +614,10 @@ test('Administrator Access Management governs the staging account lifecycle and 
         firstLoginPending: true,
       },
     });
+    const generatedTemporaryPassword = createdResult.credential.temporaryPassword;
 
     const starterLogin = await managed.post('/api/auth/login', {
-      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_TEMPORARY_PASSWORD },
+      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: generatedTemporaryPassword },
     });
     expect(starterLogin.status()).toBe(200);
     const starterResult = await starterLogin.json();
@@ -703,16 +702,17 @@ test('Administrator Access Management governs the staging account lifecycle and 
       data: {
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
-        temporaryPassword: MANAGED_RESET_PASSWORD,
         reason: 'Synthetic temporary password reset lifecycle proof.',
       },
     });
     expect(reset.status()).toBe(200);
-    await expect(reset.json()).resolves.toMatchObject({
+    const resetResult = await reset.json();
+    expect(resetResult).toMatchObject({
       reset: true,
       status: 'STARTER',
       sessionsRevoked: true,
     });
+    const generatedResetPassword = resetResult.credential.temporaryPassword;
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const wrong = await anonymous.post('/api/auth/login', {
@@ -721,7 +721,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       expect(wrong.status()).toBe(401);
     }
     const throttled = await anonymous.post('/api/auth/login', {
-      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_RESET_PASSWORD },
+      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: generatedResetPassword },
     });
     expect(throttled.status()).toBe(429);
 
@@ -735,7 +735,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
     });
     expect(unlocked.status()).toBe(200);
     const resetLogin = await managed.post('/api/auth/login', {
-      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_RESET_PASSWORD },
+      data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: generatedResetPassword },
     });
     expect(resetLogin.status()).toBe(200);
     expect((await resetLogin.json()).state).toBe('ACTIVATION_REQUIRED');
@@ -760,6 +760,218 @@ test('Administrator Access Management governs the staging account lifecycle and 
   }
 });
 
+test('Administrator atomically initializes, revokes, restores, and resets department requester accounts', async () => {
+  const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
+  const admin = await apiRequest.newContext({ baseURL });
+  const requester = await apiRequest.newContext({ baseURL });
+  const anonymous = await apiRequest.newContext({ baseURL });
+  try {
+    const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const denied = await anonymous.post('/api/admin/access/seed-departments', {
+      data: {
+        confirmed: true,
+        reason: 'Unauthorized synthetic department seed attempt.',
+      },
+    });
+    expect(denied.status()).toBe(401);
+
+    const seeded = await admin.post('/api/admin/access/seed-departments', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        confirmed: true,
+        reason: 'Initialize the exact owner-approved department requester accounts.',
+      },
+    });
+    expect(seeded.status()).toBe(200);
+    const seedResult = await seeded.json();
+    expect(seedResult).toMatchObject({ seeded: true, accounts: 10 });
+    expect(seedResult.credentials).toHaveLength(10);
+    expect(new Set(seedResult.credentials.map((entry) => entry.temporaryPassword)).size).toBe(10);
+    expect(seedResult.credentials.map((entry) => entry.accessId)).toEqual([
+      'DOL_2026',
+      'DOF_2026',
+      'DPC_2026',
+      'DEM_2026',
+      'DBR_2026',
+      'OP_2026',
+      'OVP_2026',
+      'OSG_2026',
+      'DHR_2026',
+      'DCES_2026',
+    ]);
+    expect(JSON.stringify(seedResult)).not.toContain('passwordCredential');
+
+    const replay = await admin.post('/api/admin/access/seed-departments', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        confirmed: true,
+        reason: 'Verify the completed department initialization is not duplicated.',
+      },
+    });
+    expect(replay.status()).toBe(200);
+    await expect(replay.json()).resolves.toMatchObject({
+      seeded: false,
+      accounts: 10,
+      credentials: [],
+    });
+
+    const dolCredential = seedResult.credentials[0];
+    const starter = await requester.post('/api/auth/login', {
+      data: {
+        accessId: dolCredential.accessId,
+        password: dolCredential.temporaryPassword,
+      },
+    });
+    expect(starter.status()).toBe(200);
+    const starterResult = await starter.json();
+    expect(starterResult.state).toBe('ACTIVATION_REQUIRED');
+    const departmentPassword = 'Department!Activated9472';
+    const activated = await requester.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': starterResult.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Authorized Department Logistics Requester',
+          mobileNumber: '+63 917 000 0020',
+          email: 'department-logistics@example.invalid',
+        },
+        password: departmentPassword,
+        confirmPassword: departmentPassword,
+      },
+    });
+    expect(activated.status()).toBe(200);
+    const activatedResult = await activated.json();
+    expect(activatedResult.user).toMatchObject({
+      displayName: 'Department of Logistics',
+      authorization: { roleId: 'REQUESTER', scopeMode: 'SELF' },
+      requesterDepartment: {
+        id: 'USC-DEPT-DOL',
+        displayName: 'Department of Logistics',
+      },
+    });
+
+    const directory = await admin.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: { query: 'Department of Logistics', role: 'REQUESTER', page: 1, pageSize: 20 },
+    });
+    expect(directory.status()).toBe(200);
+    const directoryResult = await directory.json();
+    expect(directoryResult.items).toEqual([
+      expect.objectContaining({
+        accessId: 'DOL_2026',
+        departmentId: 'USC-DEPT-DOL',
+        departmentDisplayName: 'Department of Logistics',
+        passwordChangedAt: expect.any(String),
+      }),
+    ]);
+    expect(JSON.stringify(directoryResult)).not.toContain(dolCredential.temporaryPassword);
+
+    const revoked = await admin.post('/api/admin/access/status', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'DOL_2026',
+        confirmCurrentAccessId: 'DOL_2026',
+        status: 'REVOKED',
+        reason: 'Verify immediate department account revocation.',
+      },
+    });
+    expect(revoked.status()).toBe(200);
+    expect((await requester.get('/api/requests')).status()).toBe(401);
+    expect(
+      (
+        await anonymous.post('/api/auth/login', {
+          data: { accessId: 'DOL_2026', password: departmentPassword },
+        })
+      ).status(),
+    ).toBe(403);
+
+    const restored = await admin.post('/api/admin/access/status', {
+      headers: { 'x-cs-token': adminCsrf },
+      data: {
+        currentAccessId: 'DOL_2026',
+        confirmCurrentAccessId: 'DOL_2026',
+        status: 'ACTIVE',
+        reason: 'Verify governed department account restoration.',
+      },
+    });
+    expect(restored.status()).toBe(403);
+    const restoredWithCsrf = await admin.post('/api/admin/access/status', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'DOL_2026',
+        confirmCurrentAccessId: 'DOL_2026',
+        status: 'ACTIVE',
+        reason: 'Verify governed department account restoration.',
+      },
+    });
+    expect(restoredWithCsrf.status()).toBe(200);
+    await expect(login(requester, 'DOL_2026', departmentPassword)).resolves.toBeTruthy();
+
+    const reset = await admin.post('/api/admin/access/reset-password', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'DOL_2026',
+        confirmCurrentAccessId: 'DOL_2026',
+        reason: 'Generate one governed replacement department credential.',
+      },
+    });
+    expect(reset.status()).toBe(200);
+    const resetResult = await reset.json();
+    expect(resetResult.credential.temporaryPassword).toMatch(/^Hau!9/u);
+    expect(
+      (
+        await anonymous.post('/api/auth/login', {
+          data: { accessId: 'DOL_2026', password: departmentPassword },
+        })
+      ).status(),
+    ).toBe(401);
+    const resetLogin = await requester.post('/api/auth/login', {
+      data: {
+        accessId: 'DOL_2026',
+        password: resetResult.credential.temporaryPassword,
+      },
+    });
+    expect(resetLogin.status()).toBe(200);
+    expect((await resetLogin.json()).state).toBe('ACTIVATION_REQUIRED');
+  } finally {
+    await Promise.all([admin.dispose(), requester.dispose(), anonymous.dispose()]);
+  }
+});
+
+test('Administrator UI shows department identity and a one-time server-generated reset export', async ({
+  page,
+}) => {
+  await page.goto('/app/admin');
+  await page.getByLabel('Access ID').fill('LOCAL.ADMIN');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.app-shell')).toBeVisible();
+
+  await navigateToAdminView(page, 'referenceAdmin');
+  await page.getByRole('button', { name: /Access Management/u }).click();
+  const access = page.locator('[data-access-management]');
+  await expect(access).toBeVisible();
+  await access.getByLabel('Search').fill('DOL_2026');
+  const row = access.locator('[data-access-results] .access-account-row');
+  await expect(row).toHaveCount(1);
+  await expect(row).toContainText('Department of Logistics');
+  await expect(row).toContainText('USC-DEPT-DOL');
+
+  await row.getByRole('button', { name: 'Reset password' }).click();
+  const resetForm = page.locator('#accessPasswordResetForm');
+  await expect(resetForm.getByLabel('Temporary password')).toHaveCount(0);
+  await resetForm.getByLabel('Confirm current Access ID').fill('DOL_2026');
+  await resetForm
+    .getByLabel('Reason')
+    .fill('Verify the one-time server-generated credential handoff interface.');
+  await resetForm
+    .getByRole('button', { name: 'Generate reset credential and revoke sessions' })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Temporary password generated' })).toBeVisible();
+  await expect(page.locator('.credential-handoff')).toContainText('Access ID: DOL_2026');
+  await expect(page.locator('.credential-handoff')).toContainText('Initial password: Hau!9');
+  await expect(page.getByRole('button', { name: 'Download access codes' })).toBeVisible();
+});
+
 test('requester portals keep request and lending records self-scoped', async () => {
   const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
   const admin = await apiRequest.newContext({ baseURL });
@@ -772,7 +984,6 @@ test('requester portals keep request and lending records self-scoped', async () 
       headers: { 'x-csrf-token': adminCsrf },
       data: {
         accessId: requesterAccessId,
-        temporaryPassword: 'Requester!Portal9472',
         roleId: 'REQUESTER',
         committeeIds: [],
         defaultCommitteeId: '',
@@ -783,11 +994,15 @@ test('requester portals keep request and lending records self-scoped', async () 
       },
     });
     expect(created.status()).toBe(200);
-    await expect(created.json()).resolves.toMatchObject({
+    const requesterCreated = await created.json();
+    expect(requesterCreated).toMatchObject({
       account: { accessId: requesterAccessId, roleId: 'REQUESTER', lendingEligible: true },
     });
     const starter = await requester.post('/api/auth/login', {
-      data: { accessId: requesterAccessId, password: 'Requester!Portal9472' },
+      data: {
+        accessId: requesterAccessId,
+        password: requesterCreated.credential.temporaryPassword,
+      },
     });
     expect(starter.status()).toBe(200);
     const activation = await starter.json();

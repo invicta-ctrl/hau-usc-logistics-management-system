@@ -466,6 +466,9 @@ async function handleApi(request, env, requestId) {
       if (url.pathname === '/api/admin/access/create-account') {
         return json({ ok: true, ...(await access.createStarterAccount(context)) });
       }
+      if (url.pathname === '/api/admin/access/seed-departments') {
+        return json({ ok: true, ...(await access.seedDepartmentAccounts(context)) });
+      }
       if (url.pathname === '/api/admin/access/reset-password') {
         return json({ ok: true, ...(await access.resetTemporaryPassword(context)) });
       }

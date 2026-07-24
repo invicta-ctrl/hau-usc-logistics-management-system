@@ -1,20 +1,10 @@
 import { ApiError } from './d1/operational-service.js';
 import { loadLendingCatalog } from './lending-catalog-service.js';
+import { USC_DEPARTMENT_NAMES } from '../domain/usc-departments.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
-export const USC_DEPARTMENTS = Object.freeze([
-  'Department of Logistics',
-  'Department of Finance',
-  'Department of Public Communications',
-  'Department of Events Management',
-  'Department of Business Relations',
-  'Office of the President',
-  'Office of the Vice President',
-  'Office of the Secretary General',
-  'Department of Human Resources',
-  'Department of Community Extensions Services',
-]);
+export const USC_DEPARTMENTS = USC_DEPARTMENT_NAMES;
 const encoder = new TextEncoder();
 
 const requiredText = (value, field, max) => {

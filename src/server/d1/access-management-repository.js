@@ -25,6 +25,12 @@ async function committeeIds(db, accountId) {
 
 async function accountFromRow(db, row) {
   if (!row) return undefined;
+  const department = row.department_id
+    ? await db
+        .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
+        .bind(row.department_id)
+        .first()
+    : null;
   return {
     id: row.id,
     accessIdNormalized: row.access_id_normalized,
@@ -50,6 +56,10 @@ async function accountFromRow(db, row) {
     lastSuccessfulLogin: row.last_successful_login ?? '',
     lendingEligible: row.lending_eligible === 1,
     institutionId: row.institution_id ?? '',
+    departmentId: row.department_id ?? '',
+    departmentDisplayName: department?.display_name ?? '',
+    passwordChangedAt: row.password_changed_at ?? '',
+    lastPasswordResetAt: row.last_password_reset_at ?? '',
   };
 }
 
@@ -130,7 +140,13 @@ export function createD1AccessManagementRepository(db) {
       if (query) {
         const parameter = bind(`%${escapeLike(query)}%`);
         conditions.push(
-          `(a.access_id_normalized LIKE ${parameter} ESCAPE '\\' OR COALESCE(a.profile_full_name, '') LIKE ${parameter} ESCAPE '\\')`,
+          `(a.access_id_normalized LIKE ${parameter} ESCAPE '\\'
+            OR COALESCE(a.profile_full_name, '') LIKE ${parameter} ESCAPE '\\'
+            OR EXISTS (
+              SELECT 1 FROM requester_departments department
+              WHERE department.id = a.department_id
+                AND department.display_name LIKE ${parameter} ESCAPE '\\'
+            ))`,
         );
       }
       if (role) conditions.push(`a.role_id = ${bind(role)}`);
@@ -150,6 +166,8 @@ export function createD1AccessManagementRepository(db) {
       const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
       const sortColumns = {
         accessId: 'a.access_id_normalized',
+        department:
+          "(SELECT department.display_name FROM requester_departments department WHERE department.id = a.department_id)",
         role: 'a.role_id',
         status: 'a.status',
         lastLogin: 'last_successful_login',
@@ -191,6 +209,10 @@ export function createD1AccessManagementRepository(db) {
           createdAt: account.createdAt,
           lastSuccessfulLogin: account.lastSuccessfulLogin,
           lastAccessIdChange: account.lastAccessIdChangedAt,
+          passwordChangedAt: account.passwordChangedAt,
+          lastPasswordResetAt: account.lastPasswordResetAt,
+          departmentId: account.departmentId,
+          departmentDisplayName: account.departmentDisplayName,
           lendingEligible: account.lendingEligible,
         });
       }
@@ -347,8 +369,10 @@ export function createD1AccessManagementRepository(db) {
                profile_full_name, profile_mobile_number, profile_email,
                password_credential_json, temporary_credential_json, credential_version,
                onboarding_completed_at, created_at, updated_at, locked_at,
-               last_access_id_changed_at, lending_eligible, institution_id
-             ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, NULL, NULL, NULL, ?6, 1, NULL, ?7, ?7, NULL, NULL, ?8, ?9)`,
+               last_access_id_changed_at, lending_eligible, institution_id,
+               department_id, password_changed_at, last_password_reset_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, NULL, NULL, NULL, ?6, 1, NULL,
+               ?7, ?7, NULL, NULL, ?8, ?9, ?10, NULL, NULL)`,
           )
           .bind(
             account.id,
@@ -360,6 +384,7 @@ export function createD1AccessManagementRepository(db) {
             account.createdAt,
             account.lendingEligible ? 1 : 0,
             account.institutionId ?? '',
+            account.departmentId || null,
           ),
         db
           .prepare(
@@ -392,12 +417,106 @@ export function createD1AccessManagementRepository(db) {
             accessId: account.accessIdNormalized,
             roleId: account.roleId,
             committeeIds: account.committeeIds,
+            departmentId: account.departmentId || '',
             status: account.status,
           },
           correlationId,
           notes: reason,
         }),
       );
+      await db.batch(statements);
+    },
+
+    async listRequesterDepartments() {
+      const result = await db
+        .prepare(
+          `SELECT id, code, display_name, recommended_access_id, active
+           FROM requester_departments
+           ORDER BY id`,
+        )
+        .all();
+      return result.results.map((row) => ({
+        id: row.id,
+        code: row.code,
+        displayName: row.display_name,
+        recommendedAccessId: row.recommended_access_id,
+        active: row.active === 1,
+      }));
+    },
+
+    async listDepartmentAccountStates() {
+      const result = await db
+        .prepare(
+          `SELECT department.id AS department_id, account.id AS account_id,
+                  account.access_id_normalized, account.role_id, account.status
+           FROM requester_departments department
+           LEFT JOIN accounts account ON account.department_id = department.id
+           WHERE department.active = 1
+           ORDER BY department.id`,
+        )
+        .all();
+      return result.results.map((row) => ({
+        departmentId: row.department_id,
+        accountId: row.account_id ?? '',
+        accessId: row.access_id_normalized ?? '',
+        roleId: row.role_id ?? '',
+        status: row.status ?? '',
+      }));
+    },
+
+    async seedDepartmentAccounts({ accounts, actor, reason, correlationId, auditIds }) {
+      const statements = [];
+      accounts.forEach((account, index) => {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO accounts (
+                 id, access_id_normalized, status, role_id, default_committee_id,
+                 profile_full_name, profile_mobile_number, profile_email,
+                 password_credential_json, temporary_credential_json, credential_version,
+                 onboarding_completed_at, created_at, updated_at, locked_at,
+                 last_access_id_changed_at, lending_eligible, institution_id,
+                 department_id, password_changed_at, last_password_reset_at
+               ) VALUES (?1, ?2, 'STARTER', 'REQUESTER', NULL, NULL, NULL, NULL,
+                 NULL, ?3, 1, NULL, ?4, ?4, NULL, NULL, 0, '', ?5, NULL, NULL)`,
+            )
+            .bind(
+              account.id,
+              account.accessIdNormalized,
+              JSON.stringify(account.temporaryCredential),
+              account.createdAt,
+              account.departmentId,
+            ),
+          db
+            .prepare(
+              `INSERT INTO access_id_reservations (
+                 collision_key, account_id, access_id_snapshot, reserved_at, reservation_reason
+               ) VALUES (?1, ?2, ?3, ?4, 'DEPARTMENT_ACCOUNT_CREATED')`,
+            )
+            .bind(
+              account.accessIdNormalized.replace(/[._-]/gu, ''),
+              account.id,
+              account.accessIdNormalized,
+              account.createdAt,
+            ),
+          auditStatement(db, {
+            id: auditIds[index],
+            createdAt: account.createdAt,
+            action: 'DEPARTMENT_ACCOUNT_CREATED',
+            accountId: account.id,
+            actorId: actor.id,
+            before: {},
+            after: {
+              accessId: account.accessIdNormalized,
+              roleId: account.roleId,
+              departmentId: account.departmentId,
+              status: account.status,
+            },
+            correlationId,
+            notes: reason,
+          }),
+        );
+      });
       await db.batch(statements);
     },
 
@@ -417,7 +536,8 @@ export function createD1AccessManagementRepository(db) {
              SET status = CASE WHEN credential_version = ?4 THEN 'STARTER' ELSE NULL END,
                  temporary_credential_json = ?1,
                  credential_version = credential_version + 1,
-                 onboarding_completed_at = NULL, locked_at = NULL, updated_at = ?2
+                 onboarding_completed_at = NULL, locked_at = NULL,
+                 last_password_reset_at = ?2, updated_at = ?2
              WHERE id = ?3`,
           )
           .bind(JSON.stringify(temporaryCredential), resetAt, account.id, account.credentialVersion),

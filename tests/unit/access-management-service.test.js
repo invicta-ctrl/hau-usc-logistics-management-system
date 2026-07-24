@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ROLES } from '../../src/domain/constants.js';
+import { USC_DEPARTMENT_REGISTRY } from '../../src/domain/usc-departments.js';
 import { ACCOUNT_STATUS } from '../../src/server/auth/contracts.js';
 import { accessIdCollisionKey, createAccessManagementService } from '../../src/server/access/service.js';
 
@@ -55,18 +56,39 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
       changes.push(command);
     }),
     createStarterAccount: vi.fn(),
+    listRequesterDepartments: vi.fn(async () =>
+      USC_DEPARTMENT_REGISTRY.map((department) => ({
+        id: department.id,
+        code: department.code,
+        displayName: department.displayName,
+        recommendedAccessId: department.recommendedAccessId,
+        active: true,
+      })),
+    ),
+    listDepartmentAccountStates: vi.fn(async () =>
+      USC_DEPARTMENT_REGISTRY.map((department) => ({
+        departmentId: department.id,
+        accountId: '',
+        accessId: '',
+        roleId: '',
+        status: '',
+      })),
+    ),
+    seedDepartmentAccounts: vi.fn(),
     resetTemporaryPassword: vi.fn(),
     setAccountStatus: vi.fn(),
     revokeSessions: vi.fn(),
     unlockAccount: vi.fn(),
   };
   let id = 0;
+  let password = 0;
   const service = createAccessManagementService({
     repository,
     passwordKdf: { hash: vi.fn(async () => ({ algorithm: 'PBKDF2-SHA-256', iterations: 100_000 })) },
     environment: 'STAGING',
     clock: { now: () => Date.parse('2026-07-22T08:00:00.000Z') },
     createId: () => `ID-${++id}`,
+    createTemporaryPassword: () => `Generated!Password${++password}9472`,
   });
   return { service, repository, changes };
 }
@@ -151,6 +173,41 @@ describe('access management service', () => {
     expect(repository.setAccountStatus).not.toHaveBeenCalled();
   });
 
+  it('restores an unactivated revoked department account to STARTER', async () => {
+    const target = account({
+      id: 'ACCOUNT-DEPT-DOL',
+      accessIdNormalized: 'HAU.USC.DOL',
+      status: ACCOUNT_STATUS.REVOKED,
+      roleId: ROLES.REQUESTER,
+      committeeIds: [],
+      defaultCommitteeId: '',
+      passwordCredential: null,
+      temporaryCredential: { algorithm: 'PBKDF2-SHA-256' },
+      onboardingCompletedAt: null,
+      departmentId: 'DEPT_DOL',
+    });
+    const { service, repository } = context({ accounts: [target] });
+
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          status: ACCOUNT_STATUS.ACTIVE,
+          reason: 'Restore the unactivated department account.',
+        },
+      }),
+    ).resolves.toMatchObject({
+      changed: true,
+      status: ACCOUNT_STATUS.STARTER,
+      sessionsRevoked: true,
+    });
+    expect(repository.setAccountStatus).toHaveBeenCalledWith(
+      expect.objectContaining({ nextStatus: ACCOUNT_STATUS.STARTER }),
+    );
+  });
+
   it('requires an active Administrator for account enumeration', async () => {
     const { service, repository } = context();
     await expect(service.listAccounts({ actor: account({ roleId: ROLES.DIRECTOR }) })).rejects.toMatchObject({
@@ -180,5 +237,65 @@ describe('access management service', () => {
       }),
     ).rejects.toMatchObject({ code: 'SYSTEM_ACCOUNT_PROTECTED', status: 403 });
     expect(repository.setAccountStatus).not.toHaveBeenCalled();
+  });
+
+  it('atomically prepares the ten governed department starter accounts and returns one-time credentials', async () => {
+    const { service, repository } = context();
+    const result = await service.seedDepartmentAccounts({
+      actor,
+      command: {
+        confirmed: true,
+        reason: 'Initialize the owner-approved department requester accounts.',
+      },
+      correlationId: 'REQ-DEPARTMENT-SEED',
+    });
+
+    expect(result).toMatchObject({ seeded: true, accounts: 10 });
+    expect(result.credentials).toHaveLength(10);
+    expect(result.credentials.map((entry) => entry.accessId)).toEqual(
+      USC_DEPARTMENT_REGISTRY.map((department) => department.recommendedAccessId),
+    );
+    expect(new Set(result.credentials.map((entry) => entry.temporaryPassword)).size).toBe(10);
+    expect(repository.seedDepartmentAccounts).toHaveBeenCalledOnce();
+    expect(repository.seedDepartmentAccounts.mock.calls[0][0].accounts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'ACC-USC-DEPT-DOL',
+          departmentId: 'USC-DEPT-DOL',
+          roleId: ROLES.REQUESTER,
+          status: ACCOUNT_STATUS.STARTER,
+        }),
+      ]),
+    );
+    expect(JSON.stringify(repository.seedDepartmentAccounts.mock.calls[0][0])).not.toContain(
+      result.credentials[0].temporaryPassword,
+    );
+  });
+
+  it('generates a one-time reset credential server-side and never requires plaintext input', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const result = await service.resetTemporaryPassword({
+      actor,
+      command: {
+        currentAccessId: target.accessIdNormalized,
+        confirmCurrentAccessId: target.accessIdNormalized,
+        reason: 'Authorized synthetic credential reset for acceptance.',
+      },
+    });
+
+    expect(result).toMatchObject({
+      reset: true,
+      status: ACCOUNT_STATUS.STARTER,
+      sessionsRevoked: true,
+      credential: {
+        accessId: target.accessIdNormalized,
+        temporaryPassword: 'Generated!Password19472',
+      },
+    });
+    expect(repository.resetTemporaryPassword).toHaveBeenCalledOnce();
+    expect(JSON.stringify(repository.resetTemporaryPassword.mock.calls[0][0])).not.toContain(
+      result.credential.temporaryPassword,
+    );
   });
 });

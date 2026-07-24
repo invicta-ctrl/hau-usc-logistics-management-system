@@ -1,4 +1,8 @@
 import { ROLES } from '../../domain/constants.js';
+import {
+  USC_DEPARTMENT_REGISTRY,
+  uscDepartmentById,
+} from '../../domain/usc-departments.js';
 import { ACCOUNT_STATUS, normalizeAccessId, validateStarterAssignment } from '../auth/contracts.js';
 
 const SAFE_MESSAGES = Object.freeze({
@@ -12,6 +16,9 @@ const SAFE_MESSAGES = Object.freeze({
   ACCESS_WRITE_CONFLICT: 'The account changed before this request completed. Refresh and try again.',
   ACCOUNT_STATUS_INVALID: 'The requested account status is not supported.',
   ADMINISTRATOR_REQUIRED: 'Administrator access is required.',
+  DEPARTMENT_ACCOUNT_SEED_CONFLICT:
+    'Department accounts are partially initialized or conflict with governed identifiers.',
+  DEPARTMENT_REGISTRY_INVALID: 'The governed department registry is unavailable or inconsistent.',
   LAST_ACTIVE_ADMIN_PROTECTED: 'The last active Administrator cannot be disabled or reset.',
   SELF_ACCESS_CHANGE_BLOCKED: 'You cannot disable or reset your own account.',
   SYSTEM_ACCOUNT_PROTECTED: 'System-managed accounts cannot be changed through Access Management.',
@@ -19,7 +26,7 @@ const SAFE_MESSAGES = Object.freeze({
   TEMPORARY_PASSWORD_INVALID: 'The temporary password does not meet the password policy.',
 });
 
-const DIRECTORY_SORTS = new Set(['accessId', 'role', 'status', 'lastLogin']);
+const DIRECTORY_SORTS = new Set(['accessId', 'department', 'role', 'status', 'lastLogin']);
 const DIRECTORY_DIRECTIONS = new Set(['asc', 'desc']);
 const DIRECTORY_STATUSES = new Set([
   'ALL',
@@ -62,6 +69,14 @@ function assertAdministrator(actor) {
   return actor;
 }
 
+function secureTemporaryPassword() {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(24));
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  const random = btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/u, '');
+  return `Hau!9${random}`;
+}
+
 function safeAccount(account) {
   return {
     accessId: account.accessIdNormalized,
@@ -74,7 +89,22 @@ function safeAccount(account) {
     createdAt: account.createdAt,
     lastSuccessfulLogin: account.lastSuccessfulLogin ?? '',
     lastAccessIdChange: account.lastAccessIdChangedAt ?? '',
+    passwordChangedAt: account.passwordChangedAt ?? '',
+    lastPasswordResetAt: account.lastPasswordResetAt ?? '',
+    departmentId: account.departmentId ?? '',
+    departmentDisplayName: account.departmentDisplayName ?? '',
     lendingEligible: account.lendingEligible === true,
+  };
+}
+
+function oneTimeCredential(account, temporaryPassword, generatedAt) {
+  return {
+    departmentId: account.departmentId ?? '',
+    department: account.departmentDisplayName ?? '',
+    accessId: account.accessIdNormalized,
+    temporaryPassword,
+    generatedAt,
+    status: account.status,
   };
 }
 
@@ -89,6 +119,7 @@ export function createAccessManagementService({
   environment = 'DEVELOPMENT',
   clock = Date,
   createId = () => globalThis.crypto.randomUUID(),
+  createTemporaryPassword = secureTemporaryPassword,
 } = {}) {
   if (!repository || !passwordKdf) {
     throw new Error('Access-management repository and password KDF are required.');
@@ -239,13 +270,18 @@ export function createAccessManagementService({
       if (!assignment.valid) fail('STARTER_ASSIGNMENT_INVALID');
       const lendingEligible = command.lendingEligible === true;
       const institutionId = String(command.institutionId ?? '').trim();
+      const department = command.departmentId ? uscDepartmentById(command.departmentId) : null;
       if (assignment.roleId !== ROLES.REQUESTER && (lendingEligible || institutionId)) {
         fail('STARTER_ASSIGNMENT_INVALID');
       }
+      if (command.departmentId && (!department || assignment.roleId !== ROLES.REQUESTER)) {
+        fail('STARTER_ASSIGNMENT_INVALID');
+      }
       if (lendingEligible && !/^\d{1,8}$/u.test(institutionId)) fail('STARTER_ASSIGNMENT_INVALID');
+      const temporaryPassword = createTemporaryPassword();
       let credential;
       try {
-        credential = await passwordKdf.hash(command.temporaryPassword);
+        credential = await passwordKdf.hash(temporaryPassword);
       } catch {
         fail('TEMPORARY_PASSWORD_INVALID');
       }
@@ -272,6 +308,10 @@ export function createAccessManagementService({
         lastAccessIdChangedAt: null,
         lendingEligible,
         institutionId,
+        departmentId: department?.id ?? '',
+        departmentDisplayName: department?.displayName ?? '',
+        passwordChangedAt: null,
+        lastPasswordResetAt: null,
       };
       await repository.createStarterAccount({
         account,
@@ -281,7 +321,101 @@ export function createAccessManagementService({
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
       });
-      return { created: true, account: safeAccount(account) };
+      return {
+        created: true,
+        account: safeAccount(account),
+        credential: oneTimeCredential(account, temporaryPassword, createdAt),
+      };
+    },
+
+    async seedDepartmentAccounts({ actor, command = {}, correlationId = '' } = {}) {
+      assertAdministrator(actor);
+      const reason = requiredReason(command.reason);
+      if (command.confirmed !== true) fail('ACCESS_CONFIRMATION_REQUIRED');
+      const registry = await repository.listRequesterDepartments();
+      const registryMatches =
+        registry.length === USC_DEPARTMENT_REGISTRY.length &&
+        USC_DEPARTMENT_REGISTRY.every((expected) => {
+          const actual = registry.find((entry) => entry.id === expected.id);
+          return (
+            actual?.code === expected.code &&
+            actual?.displayName === expected.displayName &&
+            actual?.recommendedAccessId === expected.recommendedAccessId &&
+            actual?.active === true
+          );
+        });
+      if (!registryMatches) fail('DEPARTMENT_REGISTRY_INVALID', 409);
+
+      const states = await repository.listDepartmentAccountStates();
+      const existing = states.filter((state) => state.accountId);
+      if (existing.length === USC_DEPARTMENT_REGISTRY.length) {
+        const complete = USC_DEPARTMENT_REGISTRY.every((expected) => {
+          const state = states.find((entry) => entry.departmentId === expected.id);
+          return (
+            state?.accountId === expected.accountId &&
+            state?.accessId === expected.recommendedAccessId &&
+            state?.roleId === ROLES.REQUESTER
+          );
+        });
+        if (!complete) fail('DEPARTMENT_ACCOUNT_SEED_CONFLICT', 409);
+        return { seeded: false, accounts: existing.length, credentials: [] };
+      }
+      if (existing.length) fail('DEPARTMENT_ACCOUNT_SEED_CONFLICT', 409);
+
+      for (const department of USC_DEPARTMENT_REGISTRY) {
+        await ensureAvailableAccessId(department.recommendedAccessId);
+      }
+
+      const createdAt = nowIso();
+      const accounts = [];
+      const credentials = [];
+      for (const department of USC_DEPARTMENT_REGISTRY) {
+        const temporaryPassword = createTemporaryPassword();
+        let temporaryCredential;
+        try {
+          temporaryCredential = await passwordKdf.hash(temporaryPassword);
+        } catch {
+          fail('TEMPORARY_PASSWORD_INVALID');
+        }
+        const account = {
+          id: department.accountId,
+          accessIdNormalized: department.recommendedAccessId,
+          status: ACCOUNT_STATUS.STARTER,
+          roleId: ROLES.REQUESTER,
+          committeeIds: [],
+          defaultCommitteeId: '',
+          profile: null,
+          passwordCredential: null,
+          temporaryCredential: {
+            ...temporaryCredential,
+            expiresAt: new Date(clock.now() + 72 * 60 * 60 * 1000).toISOString(),
+            consumedAt: null,
+          },
+          credentialVersion: 1,
+          onboardingCompletedAt: null,
+          createdAt,
+          updatedAt: createdAt,
+          lockedAt: null,
+          lastAccessIdChangedAt: null,
+          lendingEligible: false,
+          institutionId: '',
+          departmentId: department.id,
+          departmentDisplayName: department.displayName,
+          passwordChangedAt: null,
+          lastPasswordResetAt: null,
+        };
+        accounts.push(account);
+        credentials.push(oneTimeCredential(account, temporaryPassword, createdAt));
+      }
+
+      await repository.seedDepartmentAccounts({
+        accounts,
+        actor,
+        reason,
+        correlationId: String(correlationId || `ACCESS_${createId()}`),
+        auditIds: accounts.map(() => createId()),
+      });
+      return { seeded: true, accounts: accounts.length, credentials };
     },
 
     async resetTemporaryPassword({ actor, command = {}, correlationId = '' } = {}) {
@@ -292,9 +426,10 @@ export function createAccessManagementService({
       if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
         fail('ACCESS_CONFIRMATION_REQUIRED');
       }
+      const temporaryPassword = createTemporaryPassword();
       let credential;
       try {
-        credential = await passwordKdf.hash(command.temporaryPassword);
+        credential = await passwordKdf.hash(temporaryPassword);
       } catch {
         fail('TEMPORARY_PASSWORD_INVALID');
       }
@@ -312,7 +447,17 @@ export function createAccessManagementService({
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
       });
-      return { reset: true, status: ACCOUNT_STATUS.STARTER, sessionsRevoked: true };
+      const resetAccount = {
+        ...account,
+        status: ACCOUNT_STATUS.STARTER,
+        lastPasswordResetAt: resetAt,
+      };
+      return {
+        reset: true,
+        status: ACCOUNT_STATUS.STARTER,
+        sessionsRevoked: true,
+        credential: oneTimeCredential(resetAccount, temporaryPassword, resetAt),
+      };
     },
 
     async setAccountStatus({ actor, command = {}, correlationId = '' } = {}) {
@@ -327,24 +472,30 @@ export function createAccessManagementService({
       }
       const reason = requiredReason(command.reason);
       if (nextStatus !== ACCOUNT_STATUS.ACTIVE) await protectAdministrator(actor, account);
-      if (
+      const restoredStatus =
         nextStatus === ACCOUNT_STATUS.ACTIVE &&
+        (!account.passwordCredential || !account.onboardingCompletedAt) &&
+        account.temporaryCredential
+          ? ACCOUNT_STATUS.STARTER
+          : nextStatus;
+      if (
+        restoredStatus === ACCOUNT_STATUS.ACTIVE &&
         (!account.passwordCredential || !account.onboardingCompletedAt)
       ) {
         fail('ACCOUNT_STATUS_INVALID');
       }
-      if (nextStatus === account.status)
-        return { changed: false, status: nextStatus, sessionsRevoked: false };
+      if (restoredStatus === account.status)
+        return { changed: false, status: restoredStatus, sessionsRevoked: false };
       await repository.setAccountStatus({
         account,
         actor,
-        nextStatus,
+        nextStatus: restoredStatus,
         changedAt: nowIso(),
         reason,
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
       });
-      return { changed: true, status: nextStatus, sessionsRevoked: true };
+      return { changed: true, status: restoredStatus, sessionsRevoked: true };
     },
 
     async revokeSessions({ actor, command = {}, correlationId = '' } = {}) {

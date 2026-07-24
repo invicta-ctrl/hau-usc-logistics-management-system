@@ -169,6 +169,11 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.createAccessAccount(command),
       );
     },
+    seedDepartmentAccessAccounts(payload) {
+      return mutationRequests.run('department-account-seed', payload, (command) =>
+        remote.seedDepartmentAccessAccounts(command),
+      );
+    },
     resetAccessPassword(payload) {
       return mutationRequests.run('access-password-reset', payload, (command) =>
         remote.resetAccessPassword(command),

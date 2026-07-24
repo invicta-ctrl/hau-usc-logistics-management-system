@@ -16,3 +16,4 @@ test-results/
 migration-private/
 *.private.sql
 *.private.ndjson
+Logistics Website Access codes.txt

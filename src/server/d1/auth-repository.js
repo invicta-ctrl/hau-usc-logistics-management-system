@@ -22,6 +22,12 @@ async function committeeIds(db, accountId) {
 
 async function accountFromRow(db, row) {
   if (!row) return undefined;
+  const department = row.department_id
+    ? await db
+        .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
+        .bind(row.department_id)
+        .first()
+    : null;
   return {
     id: row.id,
     accessIdNormalized: row.access_id_normalized,
@@ -47,6 +53,10 @@ async function accountFromRow(db, row) {
     lastAccessIdChangedAt: row.last_access_id_changed_at ?? '',
     lendingEligible: row.lending_eligible === 1,
     institutionId: row.institution_id ?? '',
+    departmentId: row.department_id ?? '',
+    departmentDisplayName: department?.display_name ?? '',
+    passwordChangedAt: row.password_changed_at ?? '',
+    lastPasswordResetAt: row.last_password_reset_at ?? '',
   };
 }
 
@@ -69,6 +79,9 @@ function accountStatement(db, account) {
     account.updatedAt,
     account.lendingEligible ? 1 : 0,
     account.institutionId ?? '',
+    account.departmentId || null,
+    account.passwordChangedAt || null,
+    account.lastPasswordResetAt || null,
   ];
   return db
     .prepare(
@@ -77,8 +90,10 @@ function accountStatement(db, account) {
          profile_full_name, profile_mobile_number, profile_email,
          password_credential_json, temporary_credential_json, credential_version,
          onboarding_completed_at, profile_email_verified_at, created_at, updated_at,
-         lending_eligible, institution_id
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)
+         lending_eligible, institution_id, department_id, password_changed_at,
+         last_password_reset_at
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
+         ?14, ?15, ?16, ?17, ?18, ?19, ?20)
        ON CONFLICT(id) DO UPDATE SET
          access_id_normalized = excluded.access_id_normalized,
          status = excluded.status,
@@ -94,7 +109,10 @@ function accountStatement(db, account) {
          profile_email_verified_at = excluded.profile_email_verified_at,
          updated_at = excluded.updated_at,
          lending_eligible = excluded.lending_eligible,
-         institution_id = excluded.institution_id
+         institution_id = excluded.institution_id,
+         department_id = excluded.department_id,
+         password_changed_at = excluded.password_changed_at,
+         last_password_reset_at = excluded.last_password_reset_at
        WHERE accounts.credential_version = excluded.credential_version - 1`,
     )
     .bind(...values);

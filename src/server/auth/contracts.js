@@ -129,15 +129,23 @@ export function validateStarterAssignment({ roleId, committeeIds, defaultCommitt
 
 export function sessionUserDto(account, session) {
   const authorization = accountAuthorization(account);
+  const requesterDepartment =
+    authorization.roleId === ROLES.REQUESTER && account.departmentId
+      ? Object.freeze({
+          id: account.departmentId,
+          displayName: account.departmentDisplayName ?? '',
+        })
+      : null;
   return Object.freeze({
     contract: 'hau-authenticated-session',
     contractVersion: 1,
     accountId: account.id,
-    displayName: account.profile?.fullName ?? '',
+    displayName: requesterDepartment?.displayName || account.profile?.fullName || '',
     accountStatus: account.status,
     onboardingComplete: Boolean(account.onboardingCompletedAt),
     authorization,
     lendingEligible: account.lendingEligible === true,
+    requesterDepartment,
     experienceId: resolveExperience(account),
     sessionExpiresAt: session.expiresAt,
   });

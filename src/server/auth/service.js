@@ -273,6 +273,7 @@ export function createAuthService({
         credentialVersion: fresh.credentialVersion + 1,
         onboardingCompletedAt: activatedAt,
         profileEmailVerifiedAt: activatedAt,
+        passwordChangedAt: activatedAt,
         updatedAt: activatedAt,
       };
       await transaction.saveAccount(next);
@@ -386,6 +387,7 @@ export function createAuthService({
         ...fresh,
         passwordCredential,
         credentialVersion: fresh.credentialVersion + 1,
+        passwordChangedAt: resetAt,
         updatedAt: resetAt,
       };
       await transaction.saveAccount(next);

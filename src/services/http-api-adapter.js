@@ -39,6 +39,7 @@ for (const [method, path] of Object.entries({
   previewAccessIdChange: '/api/admin/access/preview-access-id',
   changeAccessId: '/api/admin/access/change-access-id',
   createAccessAccount: '/api/admin/access/create-account',
+  seedDepartmentAccessAccounts: '/api/admin/access/seed-departments',
   resetAccessPassword: '/api/admin/access/reset-password',
   setAccessAccountStatus: '/api/admin/access/status',
   revokeAccessSessions: '/api/admin/access/revoke-sessions',

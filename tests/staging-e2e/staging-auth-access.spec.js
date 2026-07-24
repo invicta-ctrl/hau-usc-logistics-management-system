@@ -76,7 +76,6 @@ test('deployed staging authentication and Access Management remain operational',
   const originalTargetAccessId = syntheticAccessId('A');
   const renamedTargetAccessId = originalTargetAccessId.replace(/\.A$/u, '.B');
   const targetEmail = `${originalTargetAccessId.toLowerCase().replaceAll('.', '-')}@example.invalid`;
-  const temporaryPassword = syntheticPassword('Temporary');
   const activatedPassword = syntheticPassword('Activated');
   let ownerCsrf = '';
   let cleanupAccessId = '';
@@ -92,8 +91,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '16',
-        latestMigration: '0016_public_lending_profiles_and_advertisements.sql',
+        schemaVersion: '17',
+        latestMigration: '0017_department_requester_accounts.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -158,7 +157,6 @@ test('deployed staging authentication and Access Management remain operational',
       headers: { 'x-csrf-token': ownerCsrf },
       data: {
         accessId: originalTargetAccessId,
-        temporaryPassword,
         roleId: 'DOL_STAFF',
         committeeIds: ['COM_MATERIALS'],
         defaultCommitteeId: 'COM_MATERIALS',
@@ -167,9 +165,14 @@ test('deployed staging authentication and Access Management remain operational',
       },
     });
     expect(created.status()).toBe(200);
+    const createdResult = await created.json();
     cleanupAccessId = originalTargetAccessId;
 
-    const starterLogin = await login(targetRequest, originalTargetAccessId, temporaryPassword);
+    const starterLogin = await login(
+      targetRequest,
+      originalTargetAccessId,
+      createdResult.credential.temporaryPassword,
+    );
     expect(starterLogin.state).toBe('ACTIVATION_REQUIRED');
     const activated = await targetRequest.post('/api/auth/activate', {
       headers: { 'x-csrf-token': starterLogin.csrfToken },

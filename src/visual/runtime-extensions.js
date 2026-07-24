@@ -37,6 +37,7 @@ import {
   venueEquipmentAttentionFlags,
 } from '../domain/venue-equipment-workflow.js';
 import { can } from '../domain/permissions.js';
+import { USC_DEPARTMENT_REGISTRY } from '../domain/usc-departments.js';
 import {
   filterReferenceAdminRecords,
   previewReferenceAdminChange,
@@ -1167,6 +1168,12 @@ export function createRuntimeExtensions(options) {
       account: { accessId: command.currentAccessId },
       history: [],
     });
+    services.seedDepartmentAccessAccounts ??= async () => ({
+      ok: true,
+      seeded: false,
+      accounts: 10,
+      credentials: [],
+    });
     state.publicAdvertisements ??= [];
     services.listAdvertisements ??= async () => ({
       ok: true,
@@ -1367,9 +1374,16 @@ export function createRuntimeExtensions(options) {
             account.firstLoginPending ? 'Pending first login' : 'Onboarding complete',
             account.locked ? 'Locked' : '',
           ].filter(Boolean);
+          const departmentLine = account.departmentId
+            ? `<small>${esc(account.departmentDisplayName)} &middot; ${esc(account.departmentId)}</small>`
+            : '';
           const lifecycleAction =
-            account.status === 'ACTIVE' ? 'disable' : account.status === 'DISABLED' ? 'enable' : '';
-          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong><small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction ? `<button class="${lifecycleAction === 'disable' ? 'danger' : 'secondary'} mini" type="button" data-access-action="${lifecycleAction}" data-access-id="${esc(account.accessId)}">${lifecycleAction === 'disable' ? 'Disable' : 'Enable'}</button>` : ''}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
+            account.status === 'ACTIVE'
+              ? `<button class="danger mini" type="button" data-access-action="revoke" data-access-id="${esc(account.accessId)}">Revoke</button>`
+              : ['DISABLED', 'REVOKED'].includes(account.status)
+                ? `<button class="secondary mini" type="button" data-access-action="restore" data-access-id="${esc(account.accessId)}">Restore</button>`
+                : '';
+          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
         })
         .join('') || '<div class="empty">No accounts match the authorized filters.</div>';
     const pagination = accessDirectory?.pagination ?? { page: 1, totalPages: 1, total: items.length };
@@ -1491,6 +1505,8 @@ export function createRuntimeExtensions(options) {
     const definitions = {
       disable: { title: 'Disable account', button: 'Disable and revoke sessions', status: 'DISABLED' },
       enable: { title: 'Enable account', button: 'Enable account', status: 'ACTIVE' },
+      revoke: { title: 'Revoke account', button: 'Revoke account and sessions', status: 'REVOKED' },
+      restore: { title: 'Restore account', button: 'Restore account', status: 'ACTIVE' },
       'revoke-sessions': { title: 'Revoke all sessions', button: 'Revoke all sessions' },
       unlock: { title: 'Unlock account', button: 'Unlock account' },
     };
@@ -1525,10 +1541,47 @@ export function createRuntimeExtensions(options) {
     );
   };
 
+  const credentialsText = (credentials) =>
+    [
+      'HAU-USC Logistics Department Access Codes',
+      `Generated: ${credentials[0]?.generatedAt ?? new Date().toISOString()}`,
+      '',
+      ...credentials.flatMap((credential) => [
+        `Department: ${credential.department || 'Not mapped'}`,
+        `Access ID: ${credential.accessId}`,
+        `Initial password: ${credential.temporaryPassword}`,
+        `Account status: ${credential.status}`,
+        '',
+      ]),
+      'These one-time credentials must be delivered through an approved private channel.',
+    ].join('\r\n');
+
+  const openOneTimeCredentialHandoff = (title, credentials) => {
+    const text = credentialsText(credentials);
+    openModal(
+      title,
+      `<div class="alert warning"><strong>One-time credential display.</strong> Save this export now. Passwords are not stored in plaintext and cannot be reconstructed after this dialog closes.</div><pre class="credential-handoff section-gap">${esc(text)}</pre><div class="button-row section-gap"><button class="secondary" type="button" data-copy-credentials>Copy access codes</button><button class="primary" type="button" data-download-credentials>Download access codes</button></div>`,
+      (modal) => {
+        modal.querySelector('[data-copy-credentials]').addEventListener('click', async () => {
+          await navigator.clipboard.writeText(text);
+          toast('One-time access codes copied.');
+        });
+        modal.querySelector('[data-download-credentials]').addEventListener('click', () => {
+          const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = 'HAU-USC Department Access Codes.txt';
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(url), 0);
+        });
+      },
+    );
+  };
+
   const openAccessPasswordReset = (account) => {
     openModal(
       `Reset temporary password · ${account.accessId}`,
-      `<form id="accessPasswordResetForm"><div class="mode-note">The account will return to first-login activation and all existing sessions will be revoked.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label>Temporary password<input name="temporaryPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Reset and revoke sessions</button></form>`,
+      `<form id="accessPasswordResetForm"><div class="mode-note">The server will generate a cryptographically secure one-time password. The account will return to first-login activation and all existing sessions will be revoked.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Generate reset credential and revoke sessions</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessPasswordResetForm');
         form.addEventListener('submit', async (event) => {
@@ -1537,15 +1590,14 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
-            await services.resetAccessPassword({
+            const result = await services.resetAccessPassword({
               currentAccessId: account.accessId,
               ...Object.fromEntries(new FormData(form).entries()),
             });
             form.reset();
-            closeModal();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
-            toast('Temporary password reset; prior sessions were revoked.');
+            openOneTimeCredentialHandoff('Temporary password generated', [result.credential]);
           } catch (error) {
             toast(error.message, true);
             button.disabled = false;
@@ -1558,7 +1610,7 @@ export function createRuntimeExtensions(options) {
   const openAccessAccountCreate = () => {
     openModal(
       'Create staging account',
-      `<form id="accessAccountCreateForm"><div class="mode-note">Creates one governed starter account. Role and committee scope are validated by the server.</div><div class="form-grid section-gap"><label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label><label>Temporary password<input name="temporaryPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Role<select name="roleId"><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option></select></label><label>Committee scope<select name="committeeId"><option value="">None / all</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this staging-only account assignment.</label></div><button class="primary" type="submit">Create starter account</button></form>`,
+      `<form id="accessAccountCreateForm"><div class="mode-note">Creates one governed starter account with a server-generated one-time password. Role, committee scope, and optional department identity are validated by the server.</div><div class="form-grid section-gap"><label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label><label>Role<select name="roleId"><option value="REQUESTER">Department requester</option><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option></select></label><label>Department<select name="departmentId"><option value="">Not mapped</option>${USC_DEPARTMENT_REGISTRY.map((department) => option(department.id, department.displayName)).join('')}</select></label><label>Committee scope<select name="committeeId"><option value="">None / all</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this account assignment.</label></div><button class="primary" type="submit">Create starter account</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessAccountCreateForm');
         form.addEventListener('submit', async (event) => {
@@ -1569,22 +1621,52 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
-            await services.createAccessAccount({
+            const result = await services.createAccessAccount({
               accessId: values.accessId,
-              temporaryPassword: values.temporaryPassword,
               roleId: values.roleId,
+              departmentId: values.departmentId,
               committeeIds,
               defaultCommitteeId: committeeIds[0] ?? '',
               reason: values.reason,
               confirmed: form.elements.confirmed.checked,
             });
             form.reset();
-            closeModal();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
-            toast(
-              'Starter account created. Deliver the temporary credential through an approved private channel.',
-            );
+            openOneTimeCredentialHandoff('Starter account created', [result.credential]);
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openDepartmentAccountSeed = () => {
+    openModal(
+      'Initialize department requester accounts',
+      `<form id="departmentAccountSeedForm"><div class="alert warning">This creates the exact ten owner-approved department accounts in one atomic server operation. Initial passwords are shown only in the successful response.</div><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><label class="checkbox section-gap"><input name="confirmed" type="checkbox" required> I confirm the governed ten-department initialization.</label><button class="primary" type="submit">Generate and initialize accounts</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#departmentAccountSeedForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const result = await services.seedDepartmentAccessAccounts({
+              reason: form.elements.reason.value,
+              confirmed: form.elements.confirmed.checked,
+            });
+            accessDirectory = null;
+            await refreshAccessDirectory({ force: true });
+            if (result.credentials?.length) {
+              openOneTimeCredentialHandoff('Department access codes generated', result.credentials);
+            } else {
+              closeModal();
+              toast('All ten governed department accounts are already initialized.');
+            }
           } catch (error) {
             toast(error.message, true);
             button.disabled = false;
@@ -1938,6 +2020,9 @@ export function createRuntimeExtensions(options) {
       .querySelector('[data-reference-admin-add]')
       .addEventListener('click', () => openReferenceAdminChange(null, 'ADD'));
     root.querySelector('[data-access-create]').addEventListener('click', openAccessAccountCreate);
+    root
+      .querySelector('[data-access-seed-departments]')
+      .addEventListener('click', openDepartmentAccountSeed);
     ['accessRole', 'accessStatus', 'accessCommittee', 'accessSort'].forEach((name) => {
       root.querySelector(`[name="${name}"]`).addEventListener('change', () => {
         accessDirectoryPage = 1;

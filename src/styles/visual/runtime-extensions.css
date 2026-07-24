@@ -374,6 +374,14 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
   justify-content: flex-end;
 }
 
+.credential-handoff {
+  max-height: min(55vh, 32rem);
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 @media (max-width: 640px) {
   .access-account-row,
   .access-pagination {
