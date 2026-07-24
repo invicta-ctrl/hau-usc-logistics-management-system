@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -38,9 +38,9 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON 
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0017 applied/reconciled; later and production migrations pending |
+| 6. Migrations | PARTIAL — staging through 0018 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH AMENDMENT SLICE 2 runtime `5cc171a` |
+| 8. Staging deployment | PASS THROUGH AMENDMENT SLICE 3 runtime `ef4c74c` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -132,11 +132,34 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON 
 - Durable handoff:
   `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`.
 
+## Phase 6 / Follow-Up Amendment Slice 3 evidence
+
+- The Request Center now requires a mapped department session and derives
+  requester identity server-side.
+- New/Additional requests, department-scoped Tracking, governed choices,
+  atomic `FOR_REVIEW` submission, confirmed success, and private-safe PDF
+  receipts are implemented and accepted.
+- Migration 0018 is applied and reconciled on staging after a private export
+  with SHA-256
+  `2154d88cc1791b37f0c9e972c090c39ca5d09ff87dddf109123af9aac29472d9`.
+- Repository acceptance passed: 406 unit tests, 21 local Worker tests,
+  94 browser passes / 224 intentional skips, and the complete repository gate.
+- Deployed staging acceptance passed 4 / 4 at exact runtime `ef4c74c`,
+  schema 18.
+- Reconciliation proved zero request-time reservations/ledger movements.
+  Acceptance requests are archived with history/audit retained; fixtures are
+  inactive and the public lending catalog is truthfully empty.
+- DOL is restored to `STARTER` and the outside-Git credential handoff is
+  refreshed and owner-restricted.
+- PR #9 exact-head checks passed 6 / 6.
+- Durable handoff:
+  `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Follow-Up Amendment Slice 3 authenticated Request Center. Do not
+Complete Follow-Up Amendment Slice 4 consolidated staging acceptance. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

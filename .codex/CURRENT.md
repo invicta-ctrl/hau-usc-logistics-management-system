@@ -1,15 +1,16 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 6 — Follow-Up Amendment Slice 3: Authenticated Request Center
+Phase: Phase 6 — Follow-Up Amendment Slice 4: Full Staging Acceptance
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICES 1–2 ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
 Phase 5 deployed runtime: `fc9ef1ccc5fef9018d37157a13078773c9018a13`
 Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
 Amendment Slice 2 deployed runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`
+Amendment Slice 3 deployed runtime: `ef4c74c06b85449c3b806d0ba490bb4d4578ed39`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -42,6 +43,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`
+- `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -83,12 +85,31 @@ Durable handoffs:
 - The exact outside-Git credential handoff was created and owner-restricted.
 - PR #9 exact-head checks passed 6 / 6.
 
+## Amendment Slice 3 final evidence
+
+- Candidate and deployed staging runtime:
+  `ef4c74c06b85449c3b806d0ba490bb4d4578ed39`.
+- Migration 0018 applied after a private export with SHA-256
+  `2154d88cc1791b37f0c9e972c090c39ca5d09ff87dddf109123af9aac29472d9`;
+  staging is healthy on schema 18.
+- Repository acceptance passed: 406 unit tests, 21 local Worker tests,
+  94 browser passes / 224 intentional skips, and the complete repository gate.
+- Authenticated server-owned department identity, New/Additional submission,
+  scoped Tracking, governed choices, atomic `FOR_REVIEW` persistence,
+  confirmed success, and private-safe PDF receipt passed live staging.
+- Reconciliation proved zero request-time reservations or inventory-ledger
+  movements. Acceptance requests were archived with history/audit preserved;
+  temporary event/lending fixtures were restored.
+- DOL is back in `STARTER` and the owner-restricted outside-Git handoff was
+  refreshed without exposing credentials.
+- PR #9 exact-head checks passed 6 / 6.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: implement Amendment Slice 3 authenticated
-Request Center identity and the New/Additional/Tracking workflow, followed by
-atomic submission, confirmed success, and private-safe PDF receipt acceptance.
+One smallest safe next action: execute Amendment Slice 4 consolidated
+58-case staging acceptance, review the complete amendment diff and governed
+data truth, then resume the next unfinished master-prompt phase.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

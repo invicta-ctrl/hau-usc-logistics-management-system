@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–2 ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -66,6 +66,12 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–2 ACCEPTE
 | Outside-Git credential handoff | `D:\Documents\Logistics Website Access codes.txt` | PASS — atomic, exact path, owner-restricted, untracked |
 | Slice 2 deployed acceptance | health, API, session, revocation/restoration, staging Playwright | PASS — exact `5cc171a`; reversible fixture restored; public catalog count 0 |
 | Slice 2 PR/CI | PR #9 exact head `5cc171a` | PASS — open draft, 6 / 6 checks |
+| Phase 6 / Amendment Slice 3 | `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`; exact runtime `ef4c74c` | PASS ON STAGING |
+| Slice 3 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 406 unit tests; 21 / 21 Worker; 94 browser passes / 224 intentional skips |
+| Migration 0018 | private pre-export SHA-256 `2154d88cc1791b37f0c9e972c090c39ca5d09ff87dddf109123af9aac29472d9`; schema 18 | PASS — department request foreign key/backfill and reconciled migration ledger |
+| Slice 3 deployed acceptance | health, staging Playwright, D1 reconciliation | PASS — exact `ef4c74c`; 4 / 4 suite; New + Additional + scoped Tracking + PDF; zero request-time stock movement |
+| Slice 3 cleanup | D1, public APIs, private handoff | PASS — requests archived with audit/history retained; fixtures inactive; public catalog 0; DOL `STARTER` |
+| Slice 3 PR/CI | PR #9 exact head `ef4c74c` | PASS — open draft, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
