@@ -3,9 +3,9 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 4 code/staging runtime `8e5c25df3e498b6627b5ebc88db0c8cf9b71c849`; tracks the same origin branch.
-- **Current phase/stage:** Phase 4 preserved; Phase 2/3 targeted correction committed at `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab`; staging acceptance pending; production NO-GO.
-- **Accepted scope:** reopen Phase 2 only for live governed login/brand correction and Phase 3 only for the source-grounded guided Request Center with separate private tracking; preserve Phase 4.
+- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; correction staging runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`; tracks the same origin branch.
+- **Current phase/stage:** Phase 2/3 targeted correction and Phase 4 accepted on staging; Phase 5 active; production NO-GO.
+- **Accepted scope:** Phase 5 of `.codex/specs/v0.7.0-production-master.md` under `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`.
 - **Completed work:** direct no-login `/request` and `/lending`, canonical `FOR_REVIEW` routing, private HMAC-digest tracking, D1 attempt limits, and no submission-time stock movement.
 - **Files changed by purpose:** Phase 4 public lending UI/service/Worker/migration/tests/generated artifacts plus `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md` and canonical status records.
 - **Tests verified at current SHA:** code SHA passed `npm run check` (57 files / 393 tests), local Worker/D1 17 / 17, full Playwright 94 / 224 intentional skips, remote CI 6 / 6, deployed staging 3 / 3, and cache-busted health/readiness/version.
@@ -13,7 +13,7 @@
 - **External actions:** staging migration 0012 and exact-SHA Worker deployment completed; one audited synthetic lending fixture was used and archived; production and Google sources were untouched.
 - **Rollback:** private pre-0012 export SHA-256 `f093988ff5a0063ffcf8d7dc8abcdc7fa31da9da675f413efc45b7b2db7fe68b`; prior immutable Worker retained; formal rehearsal remains Phase 24.
 - **Blocker:** none for Phase 5 implementation; real public-lending eligibility and approved event values remain absent and must not be invented.
-- **Next three actions:** push the correction candidate; back up/migrate/deploy exact SHA to staging; complete live correction acceptance and durable handoff before resuming Phase 5.
+- **Next three actions:** extend the canonical inventory with governed lending fields; implement authoritative availability and reusable assets; prove borrower-safe/staff catalog separation locally and on staging.
 - **Resume commands:** `git fetch origin --prune`; `git status --short --branch`; `git rev-list --left-right --count 'HEAD...@{upstream}'`; verify PR #9 and live `/api/version` before mutation.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master-prompt gates pass.
 

@@ -13,6 +13,6 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 2/3 targeted correction only: make the governed login background and DOL/HAU-USC brand slots live; restore the source-grounded guided Request Center and keep private tracking separate from creation. Preserve the accepted Phase 4 Lending Center backend. Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` awaits push, staging migration 0013, exact-SHA deployment, and live acceptance.
+Phase 5 — complete the canonical lendable Inventory Management catalog: governed lending fields, borrower-safe descriptions/images/restrictions, staff-only balances/return signals, reusable asset instances, condition/maintenance history, and one authoritative server-side availability function.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

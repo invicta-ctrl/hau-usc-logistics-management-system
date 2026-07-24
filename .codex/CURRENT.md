@@ -1,14 +1,13 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 2/3 targeted live correction
+Phase: Phase 5 — Complete lendable inventory catalog
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — CORRECTION COMMITTED; STAGING ACCEPTANCE PENDING; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPTED; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
-Phase 4 deployed runtime: `8e5c25df3e498b6627b5ebc88db0c8cf9b71c849`
-Correction candidate: `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab`
+Correction deployed runtime: `6c4cff601b04b64d9327ac1308d2cc2cab59e584`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -80,8 +79,8 @@ The v0.7.0 master prompt supersedes the earlier v0.6 phase-stop and production-g
 
 Production remains NO-GO. Approved upcoming-event values are absent and must be obtained once before final production freeze; do not invent them.
 
-The accepted Phase 4 Lending Center backend remains preserved. Phase 2 is reopened only for the live governed login background and official DOL/HAU-USC brand slots. Phase 3 is reopened only for the source-grounded guided Request Center, separate private tracking flow, and secure related-request lookup.
+The targeted Phase 2/3 correction passed live staging acceptance and the accepted Phase 4 Lending Center backend remains preserved. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-One smallest safe next action: push correction candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab`, apply migration 0013 to staging after a private backup, deploy that exact SHA, and run live correction acceptance before resuming Phase 5.
+One smallest safe next action: implement the additive Phase 5 governed lending fields and authoritative availability model on the canonical Inventory Management catalog, without creating a second inventory or activating unapproved institutional items.
 
 Durable evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

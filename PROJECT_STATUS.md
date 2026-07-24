@@ -1,11 +1,11 @@
 # Project Status
 
-## v0.7.0 Phase 2/3 targeted correction committed — staging acceptance pending
+## v0.7.0 Phase 2/3 targeted correction accepted on staging — Phase 5 active
 
-- Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` corrects live governed brand routing/login presentation and restores the guided source-grounded Request Center with separate private tracking.
+- Exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584` corrects live governed brand routing/login presentation and restores the guided source-grounded Request Center with separate private tracking.
 - Local acceptance passed: `npm run check` with 398 tests, local Worker/D1 17 / 17, and full Playwright 94 passed / 224 intentional skips / zero failures.
-- Official DOL/HAU-USC assets and the campus background were uploaded to the governed staging R2 slots without replacing an existing object and were hash-verified.
-- Migration 0013, exact-SHA staging deployment, and live acceptance remain pending. The accepted Phase 4 Lending Center backend is preserved. Production remains NO-GO.
+- Official DOL/HAU-USC assets and the campus background passed live MIME and source-hash verification; responsive login checks passed at 1366, 820, and 390 pixels.
+- Migration 0013 and four deployed acceptance scenarios passed. The synthetic lending fixture is re-archived, the accepted Phase 4 backend is preserved, and production remains NO-GO.
 
 ## v0.7.0 Phase 4 public Lending Center accepted on staging — Phase 5 active
 

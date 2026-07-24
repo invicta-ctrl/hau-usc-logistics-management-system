@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS STAGING**
+Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPTED; PHASE 5 ACTIVE**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -43,10 +43,10 @@ Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS 
 | Phase 4 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 393 unit tests; 17 / 17 Worker; 94 browser passes / 224 intentional skips |
 | Phase 4 staging smoke | deployed Playwright at `8e5c25d` | PASS — 3 / 3 auth/access, request, and lending |
 | Real public-lending catalog | governed staging aggregate | 0 approved items — Phase 5 policy/data input required; synthetic smoke fixture archived |
-| Phase 2/3 correction candidate | `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` | COMMITTED LOCALLY — push and staging acceptance pending |
-| Governed Brand & Media slots | login background, USC logo, DOL logo, favicon uploaded to staging R2 and hash-verified | R2 PASS; live Worker routing pending exact-SHA deploy |
-| Corrected Request Center | guided source-grounded creation, separate private tracking, verified related-request lookup | LOCAL PASS — 398 unit tests, 17 / 17 Worker, 94 / 318 browser with 224 intentional skips |
-| Migration 0013 | `0013_public_request_guidance.sql` | LOCAL PASS; staging application/reconciliation pending |
+| Phase 2/3 correction | `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`; exact runtime `6c4cff6` | PASS ON STAGING |
+| Governed Brand & Media slots | login background, USC logo, DOL logo, favicon | PASS — 200 image/png and source-hash parity |
+| Corrected Request Center | guided source-grounded creation, separate private tracking, verified related-request lookup | PASS — 398 unit tests, 17 / 17 Worker, 94 / 318 browser, deployed smoke |
+| Migration 0013 | `0013_public_request_guidance.sql` | PASS — schema 13, four guidance columns, reconciled |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

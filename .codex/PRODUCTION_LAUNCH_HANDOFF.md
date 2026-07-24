@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS STAGING**
+Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPTED; PHASE 5 ACTIVE**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS 
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 through pre-0012 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0012 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — pre-0010 through pre-0013 staging SQL exports retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0013 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 4 runtime `8e5c25d` |
+| 8. Staging deployment | PASS THROUGH TARGETED CORRECTION runtime `6c4cff6` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -84,8 +84,8 @@ Decision: **PRODUCTION NO-GO — PHASE 4 PRESERVED; PHASE 2/3 CORRECTION AWAITS 
 
 ## Immediate repair target
 
-Correction candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` is locally accepted with `npm run check` (398 tests), local Worker/D1 17 / 17, and full Playwright 94 passed / 224 intentional skips / zero failures. It restores live Worker routing for governed Brand & Media slots, responsive official logo lockups, the source-grounded guided Request Center, separate private tracking, and secure related-request verification. Migration 0013 is additive. The accepted Phase 4 Lending Center backend remains intact.
+The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Push the candidate, back up staging D1, apply migration 0013, deploy the exact SHA, and run live correction acceptance. Resume Phase 5 only after that acceptance is durable. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Complete Phase 5 governed canonical lending catalog and authoritative availability/asset model. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

@@ -8,13 +8,14 @@
 - Source-grounded guided public Request Center with distinct creation and private-tracking flows plus verified related-request linking.
 - Additive migration `0013_public_request_guidance.sql`.
 
-### Verified locally
+### Verified
 
 - `npm run check`: 57 Vitest files / 398 tests; local Worker/D1: 17 / 17; full Playwright: 94 passed / 224 intentional skips / zero failures.
+- Staging migration 0013, exact-SHA deployment, governed asset hash checks, three responsive login checks, and four deployed acceptance scenarios passed at runtime `6c4cff6`.
 
 ### Boundary
 
-- Candidate `db74a7d30ec05bf8c0bdc23b6c3c0362ba06cdab` is not yet accepted on staging. The Phase 4 Lending Center backend is preserved; production remains NO-GO.
+- The Phase 4 Lending Center backend is preserved. The synthetic lending smoke fixture is archived, real public eligibility remains empty, and production remains NO-GO.
 
 ## Unreleased - v0.7.0 Phase 4 public Lending Center (2026-07-22)
 
