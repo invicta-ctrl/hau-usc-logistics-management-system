@@ -108,7 +108,9 @@ test('Phase 2 Request Center preserves event context, routing presentation, and 
   await form.locator('[name="department"]').fill('Synthetic Department');
   await form.locator('[name="purpose"]').fill('Gate 5 acceptance evidence');
   await page.locator('#requestConsent').check();
-  await form.getByRole('button', { name: 'Submit for DOL Review' }).click();
+  const submit = form.getByRole('button', { name: 'Submit for DOL Review' });
+  await submit.focus();
+  await submit.press('Enter');
   await expect(page.locator('#drawerTitle')).toHaveText('Request submitted');
   const after = await page.evaluate(() => {
     const state = JSON.parse(localStorage.getItem('hau-usc-logistics-prototype:v1.0.0'));
