@@ -59,7 +59,7 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
       directory: './dist',
       binding: 'ASSETS',
       not_found_handling: 'single-page-application',
-      run_worker_first: ['/api/*', '/brand/*'],
+      run_worker_first: ['/api/*', '/brand/*', '/media/*'],
     });
     expect(config.env.staging.name).toBe('hau-usc-logistics-staging');
     expect(config.env.staging.d1_databases[0]).toMatchObject({ binding: 'DB' });

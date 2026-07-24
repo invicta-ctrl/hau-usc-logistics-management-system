@@ -187,6 +187,27 @@ export function createLegacyRuntimeAdapter(mockServices) {
     unlockAccessAccount(payload) {
       return mutationRequests.run('access-unlock', payload, (command) => remote.unlockAccessAccount(command));
     },
+    getLendingUsage(payload = {}) {
+      return remote.getLendingUsage(payload);
+    },
+    listAdvertisements(payload = {}) {
+      return remote.listAdvertisements(payload);
+    },
+    saveAdvertisement(payload) {
+      return mutationRequests.run('advertisement-save', payload, (command) =>
+        remote.saveAdvertisement(command),
+      );
+    },
+    uploadAdvertisementMedia(payload) {
+      return mutationRequests.run('advertisement-upload', payload, (command) =>
+        remote.uploadAdvertisementMedia(command),
+      );
+    },
+    archiveAdvertisement(payload) {
+      return mutationRequests.run('advertisement-archive', payload, (command) =>
+        remote.archiveAdvertisement(command),
+      );
+    },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>
         remote.transitionCompositeComponent(command),
@@ -274,14 +295,15 @@ export function createLegacyRuntimeAdapter(mockServices) {
       );
       return { id: result.ticketId, ...result };
     },
-    async confirmLoanHandoff(ticketId) {
-      const result = await mutationRequests.run('lending-handoff', { ticketId }, (command) =>
+    async confirmLoanHandoff(ticketId, details = {}) {
+      const result = await mutationRequests.run('lending-handoff', { ticketId, ...details }, (command) =>
         remote.confirmLendingHandoff(command),
       );
       return { id: result.ticketId, ...result };
     },
-    async confirmReturn(ticketId, notes = '') {
-      const result = await mutationRequests.run('lending-return', { ticketId, notes }, (command) =>
+    async confirmReturn(ticketId, details = {}) {
+      const payload = typeof details === 'string' ? { notes: details } : details;
+      const result = await mutationRequests.run('lending-return', { ticketId, ...payload }, (command) =>
         remote.confirmReturn(command),
       );
       return { id: result.ticketId, ...result };

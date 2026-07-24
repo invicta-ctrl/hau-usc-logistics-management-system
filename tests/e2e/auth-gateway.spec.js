@@ -337,7 +337,7 @@ test('public Request Center opens without login and returns private tracking det
   await expect(page.getByText('synthetic-private-tracking-code-9472')).toBeVisible();
 });
 
-test('public Lending Center opens catalog-first without login and returns private tracking details', async ({
+test('public Lending Center classifies borrowers and submits without public tracking', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -357,7 +357,7 @@ test('public Lending Center opens catalog-first without login and returns privat
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        departments: ['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS'],
+        uscDepartments: ['Department of Logistics', 'Office of the President'],
         items: [
           {
             id: 'ITM-LEND-SYNTHETIC',
@@ -369,6 +369,7 @@ test('public Lending Center opens catalog-first without login and returns privat
             maximumQuantity: 2,
             defaultLoanDays: 7,
             productId: 'ITM-LEND-SYNTHETIC',
+            aliases: ['presentation projector', 'av display'],
             dueDateRequired: true,
             acknowledgmentRequired: true,
             eligibility: 'HAU students and authorized USC staff',
@@ -383,11 +384,44 @@ test('public Lending Center opens catalog-first without login and returns privat
       }),
     }),
   );
+  await page.route('**/api/public/advertisements', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        items: [
+          {
+            id: 'ADV-SYNTHETIC-ONE',
+            title: 'Synthetic announcement one',
+            description: 'First governed announcement.',
+            altText: 'Synthetic announcement artwork one.',
+            callToAction: 'View announcement',
+            destinationUrl: 'https://example.invalid/one',
+            imageUrl: '/media/advertisements/ADV-SYNTHETIC-ONE',
+          },
+          {
+            id: 'ADV-SYNTHETIC-TWO',
+            title: 'Synthetic announcement two',
+            description: 'Second governed announcement.',
+            altText: 'Synthetic announcement artwork two.',
+            callToAction: 'View announcement',
+            destinationUrl: 'https://example.invalid/two',
+            imageUrl: '/media/advertisements/ADV-SYNTHETIC-TWO',
+          },
+        ],
+      }),
+    }),
+  );
+  await page.route('**/media/advertisements/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'image/png', body: '' }),
+  );
   await page.route('**/api/public/lending', async (route) => {
     const command = await route.request().postDataJSON();
     expect(command).toMatchObject({
+      borrowerType: 'ANGELITE',
       studentId: '12345678',
-      department: 'SEA',
+      courseYear: 'BSIT 2',
+      academicDepartment: 'School of Computing',
       responsibilityAcknowledged: true,
       lines: [{ itemId: 'ITM-LEND-SYNTHETIC', quantity: 1 }],
     });
@@ -395,8 +429,7 @@ test('public Lending Center opens catalog-first without login and returns privat
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        ticketId: 'LBR-SYNTHETIC-PUBLIC',
-        trackingCode: 'synthetic-private-lending-code-9472',
+        submissionId: 'LBR-SYNTHETIC-PUBLIC',
         status: 'FOR_REVIEW',
       }),
     });
@@ -407,20 +440,29 @@ test('public Lending Center opens catalog-first without login and returns privat
   await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
   await expect(page.getByLabel('Access ID')).toHaveCount(0);
   expect(authCalls).toBe(0);
-  await page.getByRole('button', { name: 'Request item' }).click();
+  const portal = page.locator('.public-lending-portal');
+  await portal.getByRole('searchbox', { name: 'Search' }).fill('presentation');
+  await expect(portal.getByRole('option', { name: /Synthetic Projector/u })).toBeVisible();
+  await portal.getByRole('option', { name: /Synthetic Projector/u }).click();
+  await portal.getByRole('button', { name: 'Request item' }).click();
   const form = page.locator('#publicLendingForm');
+  await form.getByLabel('Angelite Student').check();
   await form.getByLabel('Full name').fill('Synthetic Angelite Borrower');
   await form.getByLabel('Student ID').fill('12345678');
-  await form.getByLabel('Course and Year').fill('BSIT 2');
-  await form.getByLabel('Department').selectOption('SEA');
+  await form.getByLabel('Course and year').fill('BSIT 2');
+  await form.getByLabel('College, school, or academic department').fill('School of Computing');
   await form.getByLabel('Contact number').fill('+63 917 000 0010');
   await form.getByLabel('Email address').fill('synthetic@gmail.com');
   await form.getByLabel('Requested pickup date').fill('2026-08-03');
   await form.getByLabel('Requested due date').fill('2026-08-10');
   await form.getByLabel('Purpose').fill('Synthetic public lending browser proof.');
   await form.getByLabel('Responsibility acknowledgment').check();
+  await expect(page.getByRole('heading', { name: 'USC Announcements' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Synthetic announcement one' })).toBeVisible();
+  await page.getByRole('button', { name: 'Next announcement' }).click();
+  await expect(page.getByRole('heading', { name: 'Synthetic announcement two' })).toBeVisible();
   await form.getByRole('button', { name: 'Submit borrowing request for review' }).click();
-  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
   await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
-  await expect(page.getByText('synthetic-private-lending-code-9472')).toBeVisible();
+  await expect(page.getByText('private tracking', { exact: false })).toHaveCount(0);
 });

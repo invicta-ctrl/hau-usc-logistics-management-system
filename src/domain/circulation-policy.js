@@ -19,8 +19,12 @@ export function normalizeLendingAudience(value) {
 
 export function normalizeBorrowerType(value) {
   const normalized = token(value);
-  if (['USC_STAFF', 'USC_OFFICER', 'STAFF'].includes(normalized)) return 'USC_STAFF';
-  if (['ANGELITE', 'STUDENT', 'HAU_STUDENT'].includes(normalized)) return 'ANGELITE';
+  if (['USC_STAFF', 'USC_OFFICER', 'STAFF', 'PUBLIC_USC_STAFF'].includes(normalized)) {
+    return 'USC_STAFF';
+  }
+  if (['ANGELITE', 'STUDENT', 'HAU_STUDENT', 'PUBLIC_ANGELITE'].includes(normalized)) {
+    return 'ANGELITE';
+  }
   return normalized;
 }
 

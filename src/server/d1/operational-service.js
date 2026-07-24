@@ -1,5 +1,6 @@
 import { accountAuthorization } from '../auth/contracts.js';
 import { CAPABILITIES } from '../../domain/permissions.js';
+import { validateBorrowerIdentityApproval } from '../../domain/borrower-identity.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
 
 const MODULES = Object.freeze([
@@ -340,14 +341,23 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
 
 function historyStatement(
   db,
-  { entityType, entityId, previousStatus = '', newStatus, accountId, idempotencyKey, reason = '' },
+  {
+    entityType,
+    entityId,
+    previousStatus = '',
+    newStatus,
+    accountId,
+    idempotencyKey,
+    reason = '',
+    metadata = {},
+  },
 ) {
   return db
     .prepare(
       `INSERT INTO status_history (
          id, entity_type, entity_id, previous_status, new_status, changed_at,
          changed_by, reason, idempotency_key, metadata_json
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '{}')`,
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
     )
     .bind(
       createId('HIS'),
@@ -359,6 +369,7 @@ function historyStatement(
       accountId,
       reason,
       idempotencyKey,
+      JSON.stringify(metadata),
     );
 }
 
@@ -634,27 +645,94 @@ export function createD1OperationalService({
       const scope = scopedWhere(account, {
         committeeColumn: 'owner_committee_id',
         ownerColumn: 'created_by',
+        alias: 'ticket',
       });
       const limitIndex = scope.values.length + 1;
       const tickets = await rows(
         db,
-        `SELECT * FROM lending_tickets WHERE ${scope.sql}
-         ORDER BY updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
+        `SELECT ticket.*,
+                COALESCE(submission.course_year, public_request.course_year, '') AS course_year,
+                COALESCE(submission.email, public_request.email, '') AS borrower_email,
+                COALESCE(submission.contact_number, public_request.contact_number, ticket.contact) AS contact_number,
+                COALESCE(submission.position_role, '') AS position_role
+         FROM lending_tickets ticket
+         LEFT JOIN public_lending_submission_tickets submission_link
+           ON submission_link.lending_ticket_id = ticket.id
+         LEFT JOIN public_lending_submissions submission
+           ON submission.id = submission_link.public_lending_submission_id
+         LEFT JOIN public_lending_request_tickets public_link
+           ON public_link.lending_ticket_id = ticket.id
+         LEFT JOIN public_lending_requests public_request
+           ON public_request.id = public_link.public_lending_request_id
+         WHERE ${scope.sql}
+         ORDER BY ticket.updated_at DESC LIMIT ?${limitIndex} OFFSET ?${limitIndex + 1}`,
         [...scope.values, page.pageSize, page.offset],
+      );
+      const availableAssets = await rows(
+        db,
+        `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status
+         FROM inventory_asset_instances
+         WHERE lifecycle_status = 'AVAILABLE' AND current_lending_ticket_id IS NULL
+         ORDER BY item_id, asset_tag, id`,
+      );
+      const ticketHistory = await rows(
+        db,
+        `SELECT history.entity_id, history.previous_status, history.new_status,
+                history.changed_at, history.changed_by, history.reason, history.metadata_json
+         FROM status_history history
+         JOIN lending_tickets ticket ON ticket.id = history.entity_id
+         WHERE history.entity_type = 'LENDING' AND ${scope.sql}
+         ORDER BY history.changed_at, history.id`,
+        scope.values,
       );
       data = {
         inventoryItems: itemRows.map((row) => itemDto(row)),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,
+          requestedItemId: row.requested_item_id ?? row.item_id,
           quantity: Number(row.quantity),
+          requestedQuantity: Number(row.requested_quantity ?? row.quantity),
           unit: row.unit,
+          studentIdNumber: row.borrower_reference,
+          borrowerName: row.borrower_name,
           borrowerType: row.borrower_type,
           department: row.department_organization,
+          contact: row.contact_number || row.contact,
+          email: row.borrower_email || '',
+          courseYear: row.course_year || '',
+          positionRole: row.position_role || '',
           purpose: row.purpose,
           dueAt: row.due_at,
+          requestedStartAt: row.requested_start_at,
+          requestedEndAt: row.requested_end_at,
           ticketType: row.ticket_type,
           status: row.status,
+          reviewDecision: row.review_decision,
+          reviewNotes: row.review_notes,
+          rejectionReason: row.rejection_reason,
+          substitutionNote: row.substitution_note,
+          eligibilitySource: row.eligibility_source,
+          eligibilityReviewedBy: row.eligibility_reviewed_by,
+          eligibilityReviewedAt: row.eligibility_reviewed_at,
+          assetOptions: availableAssets.map((asset) => ({
+              id: asset.id,
+              itemId: asset.item_id,
+              assetTag: asset.asset_tag,
+              serialNumber: asset.serial_number,
+              condition: asset.condition_label,
+              status: asset.lifecycle_status,
+            })),
+          history: ticketHistory
+            .filter((entry) => entry.entity_id === row.id)
+            .map((entry) => ({
+              previousStatus: entry.previous_status,
+              newStatus: entry.new_status,
+              changedAt: entry.changed_at,
+              changedBy: entry.changed_by,
+              reason: entry.reason,
+              metadata: JSON.parse(entry.metadata_json || '{}'),
+            })),
           createdAt: row.created_at,
           updatedAt: row.updated_at,
         })),
@@ -1786,10 +1864,10 @@ export function createD1OperationalService({
           `INSERT INTO lending_tickets (
              id, borrower_reference, borrower_name, borrower_type, department_organization,
              contact, item_id, quantity, unit, purpose, due_at, ticket_type, status,
-             requested_start_at, requested_end_at, owner_committee_id,
-             created_by, notes, created_at, updated_at
+             requested_item_id, requested_quantity, requested_start_at, requested_end_at,
+             owner_committee_id, created_by, notes, created_at, updated_at
            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-             'FOR_REVIEW', ?13, ?14, ?15, ?16, ?17, ?18, ?18)`,
+             'FOR_REVIEW', ?7, ?8, ?13, ?14, ?15, ?16, ?17, ?18, ?18)`,
         )
         .bind(
           ticketId,
@@ -2229,16 +2307,157 @@ export function createD1OperationalService({
     if (ticket.status !== 'FOR_REVIEW')
       throw new ApiError(
         'LENDING_STATE_CONFLICT',
-        'The lending ticket cannot be approved from its current state.',
+        'The lending ticket cannot be reviewed from its current state.',
         { status: 409 },
       );
+    const decision = requiredText(command.decision ?? 'APPROVE', 'decision', 40).toUpperCase();
+    if (!['APPROVE', 'PARTIAL_APPROVE', 'SUBSTITUTE', 'REJECT'].includes(decision)) {
+      throw new ApiError('LENDING_REVIEW_DECISION_INVALID', 'Choose an allowed lending review decision.');
+    }
+    const reviewNotes = optionalText(command.reviewNotes ?? command.notes, 500);
+    const reviewReason = optionalText(
+      command.reviewReason ?? command.rejectionReason ?? command.substitutionNote,
+      500,
+    );
+    if (decision !== 'APPROVE' && !reviewReason) {
+      throw new ApiError(
+        'LENDING_REVIEW_REASON_REQUIRED',
+        'Record a reason for partial approval, substitution, or rejection.',
+      );
+    }
+    const timestamp = nowIso();
+    if (decision === 'REJECT') {
+      const result = {
+        ticketId,
+        id: ticketId,
+        status: 'REJECTED',
+        decision,
+        correlationId,
+      };
+      await db.batch([
+        db
+          .prepare(
+            `UPDATE lending_tickets
+             SET status = 'REJECTED', review_decision = 'REJECT',
+                 review_notes = ?2, rejection_reason = ?3,
+                 approved_by = ?4, approved_at = ?5, updated_at = ?5
+             WHERE id = ?1 AND status = 'FOR_REVIEW'`,
+          )
+          .bind(ticketId, reviewNotes, reviewReason, account.id, timestamp),
+        historyStatement(db, {
+          entityType: 'LENDING',
+          entityId: ticketId,
+          previousStatus: 'FOR_REVIEW',
+          newStatus: 'REJECTED',
+          accountId: account.id,
+          idempotencyKey: mutation.key,
+          reason: reviewReason,
+          metadata: { decision, reviewNotes },
+        }),
+        auditStatement(db, {
+          action: 'LENDING_REVIEWED',
+          entityType: 'LENDING',
+          entityId: ticketId,
+          accountId: account.id,
+          correlationId,
+          after: { decision, reason: reviewReason },
+        }),
+        idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
+        ...revisionStatements(db, ['lending']),
+      ]);
+      return result;
+    }
+    const identityReview = validateBorrowerIdentityApproval({
+      borrowerType: ticket.borrower_type,
+      identityVerified: command.identityVerified,
+      identityVerificationSource: command.identityVerificationSource,
+    });
+    if (!identityReview.valid) {
+      throw new ApiError(identityReview.code, identityReview.message, {
+        status: 422,
+        details: { requiredSource: identityReview.requirement.source },
+      });
+    }
+    const requestedQuantity = Number(ticket.requested_quantity ?? ticket.quantity);
+    const approvedQuantity =
+      command.approvedQuantity == null ? requestedQuantity : positiveNumber(command.approvedQuantity);
+    if (approvedQuantity > requestedQuantity) {
+      throw new ApiError(
+        'LENDING_APPROVED_QUANTITY_INVALID',
+        'The approved quantity cannot exceed the requested quantity.',
+      );
+    }
+    if (decision === 'PARTIAL_APPROVE' && approvedQuantity >= requestedQuantity) {
+      throw new ApiError(
+        'LENDING_PARTIAL_QUANTITY_REQUIRED',
+        'A partial approval must be less than the requested quantity.',
+      );
+    }
+    if (decision === 'APPROVE' && approvedQuantity !== requestedQuantity) {
+      throw new ApiError(
+        'LENDING_REVIEW_DECISION_INVALID',
+        'Use Partial Approve when approving less than the requested quantity.',
+      );
+    }
+    const approvedItemId =
+      decision === 'SUBSTITUTE'
+        ? requiredText(command.substitutionItemId, 'substitutionItemId', 80)
+        : ticket.item_id;
+    if (decision === 'SUBSTITUTE' && approvedItemId === ticket.item_id) {
+      throw new ApiError(
+        'LENDING_SUBSTITUTION_REQUIRED',
+        'Choose a different canonical item for substitution.',
+      );
+    }
+    const approvedItem = await db
+      .prepare(
+        `SELECT item.*, availability.available_to_promise
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE item.id = ?1`,
+      )
+      .bind(approvedItemId)
+      .first();
+    if (
+      !approvedItem ||
+      approvedItem.status !== 'ACTIVE' ||
+      approvedItem.is_lendable !== 1 ||
+      approvedItem.lending_status !== 'ACTIVE'
+    ) {
+      throw new ApiError(
+        'LENDING_SUBSTITUTION_UNAVAILABLE',
+        'The approved catalog item is not currently lendable.',
+        { status: 409 },
+      );
+    }
+    const staffBorrower = identityReview.requirement.borrowerType === 'USC_STAFF';
+    if (approvedItem.lending_audience === 'USC_STAFF_ONLY' && !staffBorrower) {
+      throw new ApiError(
+        'LENDING_ELIGIBILITY_MISMATCH',
+        'The borrower is not eligible for the approved catalog item.',
+        { status: 409 },
+      );
+    }
+    const maximumQuantity = Number(
+      approvedItem.maximum_loan_quantity ?? approvedItem.available_to_promise,
+    );
+    if (
+      approvedQuantity > Number(approvedItem.available_to_promise) ||
+      (Number.isFinite(maximumQuantity) && approvedQuantity > maximumQuantity)
+    ) {
+      throw new ApiError(
+        'INSUFFICIENT_STOCK',
+        'Available stock or the governed lending limit is insufficient for this approval.',
+        { status: 409 },
+      );
+    }
     const traceable = await db
       .prepare(
         `SELECT COUNT(*) AS count
          FROM inventory_asset_instances
          WHERE item_id = ?1 AND lifecycle_status <> 'ARCHIVED'`,
       )
-      .bind(ticket.item_id)
+      .bind(approvedItemId)
       .first();
     const assetIds = Array.isArray(command.assetIds)
       ? command.assetIds.map((value, index) => requiredText(value, `assetIds[${index}]`, 80))
@@ -2247,7 +2466,7 @@ export function createD1OperationalService({
       throw new ApiError('ASSET_ASSIGNMENT_DUPLICATE', 'Each asset instance may be assigned once.');
     }
     if (Number(traceable?.count ?? 0) > 0) {
-      if (!Number.isSafeInteger(Number(ticket.quantity)) || assetIds.length !== Number(ticket.quantity)) {
+      if (!Number.isSafeInteger(approvedQuantity) || assetIds.length !== approvedQuantity) {
         throw new ApiError(
           'ASSET_ASSIGNMENT_REQUIRED',
           'Assign one available asset instance for each approved reusable unit.',
@@ -2260,7 +2479,7 @@ export function createD1OperationalService({
         `SELECT id FROM inventory_asset_instances
          WHERE item_id = ?1 AND lifecycle_status = 'AVAILABLE'
            AND current_lending_ticket_id IS NULL AND id IN (${placeholders})`,
-        [ticket.item_id, ...assetIds],
+        [approvedItemId, ...assetIds],
       );
       if (availableAssets.length !== assetIds.length) {
         throw new ApiError(
@@ -2281,10 +2500,14 @@ export function createD1OperationalService({
       ticketId,
       id: ticketId,
       status: 'READY_TO_CLAIM',
+      decision,
+      approvedItemId,
+      approvedQuantity,
       assetIds,
       correlationId,
     };
-    const timestamp = nowIso();
+    const approvedUnit = approvedItem.lending_unit || approvedItem.unit;
+    const approvedTicketType = approvedItem.lending_kind === 'REUSABLE' ? 'LOAN' : 'CONSUMABLE';
     const statements = [
       db
         .prepare(
@@ -2295,9 +2518,9 @@ export function createD1OperationalService({
         )
         .bind(
           reservationId,
-          ticket.item_id,
-          ticket.quantity,
-          ticket.unit,
+          approvedItemId,
+          approvedQuantity,
+          approvedUnit,
           ticketId,
           mutation.key,
           ticket.requested_start_at,
@@ -2337,12 +2560,30 @@ export function createD1OperationalService({
     statements.push(
       db
         .prepare(
-          `UPDATE lending_tickets SET status = 'READY_TO_CLAIM', approved_by = ?2,
-           approved_at = ?3, updated_at = ?3
-         WHERE id = ?1 AND status = 'FOR_REVIEW'
-           AND EXISTS (SELECT 1 FROM reservations WHERE id = ?4)`,
+          `UPDATE lending_tickets
+           SET item_id = ?2, quantity = ?3, unit = ?4, ticket_type = ?5,
+               status = 'READY_TO_CLAIM', review_decision = ?6, review_notes = ?7,
+               rejection_reason = '', substitution_note = ?8,
+               eligibility_source = ?9, eligibility_reviewed_by = ?10,
+               eligibility_reviewed_at = ?11, approved_by = ?10,
+               approved_at = ?11, updated_at = ?11
+           WHERE id = ?1 AND status = 'FOR_REVIEW'
+             AND EXISTS (SELECT 1 FROM reservations WHERE id = ?12)`,
         )
-        .bind(ticketId, account.id, timestamp, reservationId),
+        .bind(
+          ticketId,
+          approvedItemId,
+          approvedQuantity,
+          approvedUnit,
+          approvedTicketType,
+          decision,
+          reviewNotes,
+          decision === 'SUBSTITUTE' ? reviewReason : '',
+          identityReview.requirement.source,
+          account.id,
+          timestamp,
+          reservationId,
+        ),
       idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
       historyStatement(db, {
         entityType: 'LENDING',
@@ -2351,6 +2592,30 @@ export function createD1OperationalService({
         newStatus: 'READY_TO_CLAIM',
         accountId: account.id,
         idempotencyKey: mutation.key,
+        reason: reviewReason,
+        metadata: {
+          decision,
+          requestedItemId: ticket.requested_item_id ?? ticket.item_id,
+          requestedQuantity,
+          approvedItemId,
+          approvedQuantity,
+          eligibilitySource: identityReview.requirement.source,
+          assetIds,
+          reviewNotes,
+        },
+      }),
+      auditStatement(db, {
+        action: 'LENDING_REVIEWED',
+        entityType: 'LENDING',
+        entityId: ticketId,
+        accountId: account.id,
+        correlationId,
+        after: {
+          decision,
+          approvedItemId,
+          approvedQuantity,
+          eligibilitySource: identityReview.requirement.source,
+        },
       }),
       ...revisionStatements(db, ['lending', 'inventory']),
     );
@@ -2392,6 +2657,8 @@ export function createD1OperationalService({
       );
     const timestamp = nowIso();
     const handoffId = createId('HND');
+    const consumableIssue = ticket.ticket_type === 'CONSUMABLE';
+    const completedStatus = consumableIssue ? 'COMPLETED' : 'ON_LOAN';
     const assignedAssets = await rows(
       db,
       `SELECT asset_id FROM lending_ticket_assets
@@ -2437,7 +2704,7 @@ export function createD1OperationalService({
       id: ticketId,
       handoffId,
       assetIds: assignedAssets.map((asset) => asset.asset_id),
-      status: 'ON_LOAN',
+      status: completedStatus,
       correlationId,
     };
     await db.batch([
@@ -2452,11 +2719,12 @@ export function createD1OperationalService({
           `INSERT INTO inventory_ledger (
         id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity,
         related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes
-      ) VALUES (?1, ?2, 'LOAN_OUT', 'OUT', ?3, ?4, ?5, ?6, 'LENDING', ?7, ?8, ?9, 'POSTED', ?10)`,
+      ) VALUES (?1, ?2, ?3, 'OUT', ?4, ?5, ?6, ?7, 'LENDING', ?8, ?9, ?10, 'POSTED', ?11)`,
         )
         .bind(
           createId('LED'),
           timestamp,
+          consumableIssue ? 'ISSUE' : 'LOAN_OUT',
           ticket.item_id,
           ticket.quantity,
           ticket.unit,
@@ -2474,20 +2742,26 @@ export function createD1OperationalService({
         .bind(ticketId, timestamp),
       db
         .prepare(
-          `UPDATE lending_tickets SET status = 'ON_LOAN', updated_at = ?2 WHERE id = ?1 AND status = 'READY_TO_CLAIM'`,
+          `UPDATE lending_tickets SET status = ?2, updated_at = ?3
+           WHERE id = ?1 AND status = 'READY_TO_CLAIM'`,
         )
-        .bind(ticketId, timestamp),
+        .bind(ticketId, completedStatus, timestamp),
       ...assetStatements,
       historyStatement(db, {
         entityType: 'LENDING',
         entityId: ticketId,
         previousStatus: 'READY_TO_CLAIM',
-        newStatus: 'ON_LOAN',
+        newStatus: completedStatus,
         accountId: account.id,
         idempotencyKey: mutation.key,
+        reason: consumableIssue ? 'Consumable issue completed.' : 'Reusable item handed off.',
+        metadata: {
+          transactionType: consumableIssue ? 'ISSUE' : 'LOAN_OUT',
+          assetIds: assignedAssets.map((asset) => asset.asset_id),
+        },
       }),
       auditStatement(db, {
-        action: 'LENDING_HANDOFF_CONFIRMED',
+        action: consumableIssue ? 'CONSUMABLE_ISSUE_CONFIRMED' : 'LENDING_HANDOFF_CONFIRMED',
         entityType: 'LENDING',
         entityId: ticketId,
         accountId: account.id,
@@ -2518,7 +2792,33 @@ export function createD1OperationalService({
       );
     const timestamp = nowIso();
     const returnId = createId('RTN');
-    const returnCondition = optionalText(command.conditionLabel, 80).toUpperCase();
+    const returnCondition = requiredText(command.conditionLabel, 'conditionLabel', 80).toUpperCase();
+    const ticketQuantity = Number(ticket.quantity);
+    const lostQuantity = nonNegativeNumber(
+      command.lostQuantity ?? (returnCondition.includes('LOST') ? ticketQuantity : 0),
+      'lostQuantity',
+    );
+    const damagedBeyondUseQuantity = nonNegativeNumber(
+      command.damagedBeyondUseQuantity ??
+        (returnCondition.includes('DAMAGED_BEYOND_USE') ? ticketQuantity : 0),
+      'damagedBeyondUseQuantity',
+    );
+    const returnedQuantity = nonNegativeNumber(
+      command.returnedQuantity ?? ticketQuantity - lostQuantity - damagedBeyondUseQuantity,
+      'returnedQuantity',
+    );
+    if (Math.abs(returnedQuantity + lostQuantity + damagedBeyondUseQuantity - ticketQuantity) > 0.000001) {
+      throw new ApiError(
+        'LENDING_RETURN_QUANTITY_MISMATCH',
+        'Returned, lost, and damaged-beyond-use quantities must equal the quantity on loan.',
+      );
+    }
+    if ((lostQuantity > 0 || damagedBeyondUseQuantity > 0) && !optionalText(command.notes, 500)) {
+      throw new ApiError(
+        'LENDING_RETURN_EXCEPTION_NOTE_REQUIRED',
+        'Record an inspection note for lost or damaged-beyond-use quantities.',
+      );
+    }
     const nextAssetStatus = returnCondition.includes('LOST')
       ? 'LOST'
       : returnCondition.includes('DAMAGED')
@@ -2635,10 +2935,13 @@ export function createD1OperationalService({
       id: ticketId,
       returnId,
       assetIds: assignedAssets.map((asset) => asset.asset_id),
+      returnedQuantity,
+      lostQuantity,
+      damagedBeyondUseQuantity,
       status: 'RETURNED',
       correlationId,
     };
-    await db.batch([
+    const returnStatements = [
       db
         .prepare(
           `INSERT INTO lending_returns (
@@ -2657,24 +2960,6 @@ export function createD1OperationalService({
         ),
       db
         .prepare(
-          `INSERT INTO inventory_ledger (
-        id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity,
-        related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes
-      ) VALUES (?1, ?2, 'LOAN_RETURN', 'IN', ?3, ?4, ?5, ?4, 'LENDING', ?6, ?7, ?8, 'POSTED', ?9)`,
-        )
-        .bind(
-          createId('LED'),
-          timestamp,
-          ticket.item_id,
-          ticket.quantity,
-          ticket.unit,
-          ticketId,
-          account.id,
-          mutation.key,
-          optionalText(command.notes, 500),
-        ),
-      db
-        .prepare(
           `UPDATE lending_tickets SET status = 'RETURNED', updated_at = ?2 WHERE id = ?1 AND status = 'ON_LOAN'`,
         )
         .bind(ticketId, timestamp),
@@ -2686,6 +2971,14 @@ export function createD1OperationalService({
         newStatus: 'RETURNED',
         accountId: account.id,
         idempotencyKey: mutation.key,
+        reason: optionalText(command.notes, 500),
+        metadata: {
+          condition: returnCondition,
+          returnedQuantity,
+          lostQuantity,
+          damagedBeyondUseQuantity,
+          assetIds: assignedAssets.map((asset) => asset.asset_id),
+        },
       }),
       auditStatement(db, {
         action: 'LENDING_RETURN_CONFIRMED',
@@ -2693,10 +2986,36 @@ export function createD1OperationalService({
         entityId: ticketId,
         accountId: account.id,
         correlationId,
+        after: { returnCondition, returnedQuantity, lostQuantity, damagedBeyondUseQuantity },
       }),
       idempotencyStatement(db, 'confirmReturn', mutation, account.id, result),
       ...revisionStatements(db, ['lending', 'inventory']),
-    ]);
+    ];
+    if (returnedQuantity > 0) {
+      returnStatements.splice(
+        1,
+        0,
+        db
+          .prepare(
+            `INSERT INTO inventory_ledger (
+          id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity,
+          related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes
+        ) VALUES (?1, ?2, 'LOAN_RETURN', 'IN', ?3, ?4, ?5, ?4, 'LENDING', ?6, ?7, ?8, 'POSTED', ?9)`,
+          )
+          .bind(
+            createId('LED'),
+            timestamp,
+            ticket.item_id,
+            returnedQuantity,
+            ticket.unit,
+            ticketId,
+            account.id,
+            mutation.key,
+            optionalText(command.notes, 500),
+          ),
+      );
+    }
+    await db.batch(returnStatements);
     return result;
   }
 

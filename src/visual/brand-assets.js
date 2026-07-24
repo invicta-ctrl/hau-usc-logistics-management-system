@@ -6,10 +6,10 @@ const BRAND_PATHS = Object.freeze({
 export function brandLockupMarkup({ compact = false, decorative = false } = {}) {
   const label = 'Holy Angel University University Student Council Department of Logistics';
   return `<span class="brand-media-lockup${compact ? ' brand-media-lockup-compact' : ''}"${
-    decorative ? ' aria-hidden="true"' : ` role="img" aria-label="${label}"`
+    decorative ? ' aria-hidden="true"' : ` role="group" aria-label="${label}"`
   }>
-    <img class="brand-media brand-media-usc" src="${BRAND_PATHS.usc}" alt="" decoding="async">
-    <img class="brand-media brand-media-dol" src="${BRAND_PATHS.dol}" alt="" decoding="async">
+    <a class="brand-mark brand-media-link" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer" aria-label="Visit the HAU-USC official Facebook page"${decorative ? ' tabindex="-1"' : ''}><img class="brand-media brand-media-usc" src="${BRAND_PATHS.usc}" alt="" decoding="async"></a>
+    <span class="brand-mark"><img class="brand-media brand-media-dol" src="${BRAND_PATHS.dol}" alt="" decoding="async"></span>
   </span>`;
 }
 

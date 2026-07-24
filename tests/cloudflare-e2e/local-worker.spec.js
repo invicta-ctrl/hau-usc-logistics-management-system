@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '14' },
+    database: { connected: true, schemaVersion: '16' },
   });
 
   await page.goto('/');
@@ -200,7 +200,7 @@ test('public Request Center submits and tracks one private request without staff
   await admin.dispose();
 });
 
-test('public Lending Center browses, submits, and privately tracks without stock movement', async ({
+test('public Lending Center submits both borrower types without exposing public tracking', async ({
   request,
   baseURL,
 }) => {
@@ -209,7 +209,18 @@ test('public Lending Center browses, submits, and privately tracks without stock
   const catalogResponse = await request.get('/api/public/lending/catalog');
   expect(catalogResponse.status()).toBe(200);
   const catalog = await catalogResponse.json();
-  expect(catalog.departments).toEqual(['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS']);
+  expect(catalog.uscDepartments).toEqual([
+    'Department of Logistics',
+    'Department of Finance',
+    'Department of Public Communications',
+    'Department of Events Management',
+    'Department of Business Relations',
+    'Office of the President',
+    'Office of the Vice President',
+    'Office of the Secretary General',
+    'Department of Human Resources',
+    'Department of Community Extensions Services',
+  ]);
   const item = catalog.items.find((entry) =>
     ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(entry.availability),
   );
@@ -218,6 +229,7 @@ test('public Lending Center browses, submits, and privately tracks without stock
     expect.objectContaining({
       productId: item.id,
       type: expect.stringMatching(/^(REUSABLE|CONSUMABLE)$/u),
+      aliases: expect.any(Array),
       dueDateRequired: expect.any(Boolean),
       acknowledgmentRequired: expect.any(Boolean),
       conditionTracked: expect.any(Boolean),
@@ -239,10 +251,11 @@ test('public Lending Center browses, submits, and privately tracks without stock
 
   const clientRequestId = `public-lending-${crypto.randomUUID()}`;
   const command = {
+    borrowerType: 'ANGELITE',
     borrowerName: 'Synthetic Angelite Borrower',
     studentId: '12345678',
     courseYear: 'BSIT 2',
-    department: 'SEA',
+    academicDepartment: 'School of Computing',
     contactNumber: '+63 917 000 0010',
     email: `lending-${crypto.randomUUID()}@gmail.com`,
     purpose: 'Synthetic public lending acceptance proof.',
@@ -259,39 +272,151 @@ test('public Lending Center browses, submits, and privately tracks without stock
   expect(submitted.status()).toBe(200);
   const receipt = await submitted.json();
   expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
-  expect(receipt.ticketId).toMatch(/^LBR-/u);
-  expect(receipt.trackingCode.length).toBeGreaterThan(32);
+  expect(receipt.submissionId).toMatch(/^LBR-/u);
+  expect(receipt).not.toHaveProperty('trackingCode');
+  expect(receipt).not.toHaveProperty('ticketId');
 
   const replay = await request.post('/api/public/lending', {
     headers: { origin: 'http://127.0.0.1:8787' },
     data: command,
   });
   await expect(replay.json()).resolves.toMatchObject({
-    ticketId: receipt.ticketId,
-    trackingCode: receipt.trackingCode,
+    submissionId: receipt.submissionId,
     replayed: true,
   });
 
-  const tracked = await request.post('/api/public/lending/track', {
+  const trackingRoute = await request.post('/api/public/lending/track', {
     headers: { origin: 'http://127.0.0.1:8787' },
-    data: { ticketId: receipt.ticketId, trackingCode: receipt.trackingCode },
+    data: { submissionId: receipt.submissionId, trackingCode: 'not-issued' },
   });
-  expect(tracked.status()).toBe(200);
-  const tracking = await tracked.json();
-  expect(tracking.request).toMatchObject({ id: receipt.ticketId, status: 'FOR_REVIEW' });
-  expect(tracking.request.tickets).toHaveLength(1);
-  expect(tracking.request).not.toHaveProperty('email');
-  expect(tracking.request).not.toHaveProperty('contactNumber');
-  expect(tracking.request).not.toHaveProperty('studentId');
+  expect(trackingRoute.status()).toBe(404);
+
+  const staffSubmitted = await request.post('/api/public/lending', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: {
+      ...command,
+      borrowerType: 'USC_STAFF',
+      borrowerName: 'Synthetic USC Staff Borrower',
+      courseYear: undefined,
+      academicDepartment: undefined,
+      uscDepartment: 'Department of Logistics',
+      positionRole: 'Synthetic Committee Officer',
+      email: `staff-lending-${crypto.randomUUID()}@example.invalid`,
+      clientRequestId: `public-lending-staff-${crypto.randomUUID()}`,
+    },
+  });
+  expect(staffSubmitted.status()).toBe(200);
+  await expect(staffSubmitted.json()).resolves.toMatchObject({
+    status: 'FOR_REVIEW',
+    replayed: false,
+  });
 
   const inventoryAfter = await (await admin.get('/api/inventory')).json();
   expect(inventoryAfter.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
-  const denied = await request.post('/api/public/lending/track', {
-    headers: { origin: 'http://127.0.0.1:8787' },
-    data: { ticketId: receipt.ticketId, trackingCode: 'invalid-private-code' },
-  });
-  expect(denied.status()).toBe(404);
   await admin.dispose();
+});
+
+test('Lending Usage and advertisement management enforce role and media boundaries', async ({
+  request,
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  const director = await apiRequest.newContext({ baseURL });
+  const inventory = await apiRequest.newContext({ baseURL });
+  const food = await apiRequest.newContext({ baseURL });
+  const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+  await login(director, 'LOCAL.DIRECTOR');
+  await login(inventory, 'LOCAL.INVENTORY');
+  await login(food, 'LOCAL.FOOD');
+
+  expect((await admin.post('/api/lending/usage', { data: {} })).status()).toBe(200);
+  expect((await director.post('/api/lending/usage', { data: {} })).status()).toBe(200);
+  expect((await inventory.post('/api/lending/usage', { data: {} })).status()).toBe(200);
+  expect((await food.post('/api/lending/usage', { data: {} })).status()).toBe(403);
+  expect((await director.post('/api/admin/advertisements/list', { data: {} })).status()).toBe(403);
+
+  const advertisementId = `ADV-LOCAL-${crypto.randomUUID().replaceAll('-', '').slice(0, 12)}`.toUpperCase();
+  const draft = await admin.post('/api/admin/advertisements/save', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: {
+      id: advertisementId,
+      title: 'Synthetic governed announcement',
+      description: 'Local acceptance only.',
+      altText: 'Synthetic governed announcement artwork.',
+      callToAction: 'View announcement',
+      destinationUrl: 'https://example.invalid/announcement',
+      status: 'DRAFT',
+      displayOrder: 99,
+      clientRequestId: `advertisement-save-${crypto.randomUUID()}`,
+    },
+  });
+  expect(draft.status()).toBe(200);
+
+  const invalidMedia = await admin.post('/api/admin/advertisements/upload', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: {
+      id: advertisementId,
+      contentType: 'image/png',
+      base64: Buffer.alloc(40, 1).toString('base64'),
+      clientRequestId: `advertisement-invalid-media-${crypto.randomUUID()}`,
+    },
+  });
+  expect(invalidMedia.status()).toBe(422);
+
+  const pngBytes = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    Buffer.alloc(40, 0),
+  ]);
+  const uploaded = await admin.post('/api/admin/advertisements/upload', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: {
+      id: advertisementId,
+      contentType: 'image/png',
+      base64: pngBytes.toString('base64'),
+      clientRequestId: `advertisement-media-${crypto.randomUUID()}`,
+    },
+  });
+  expect(uploaded.status()).toBe(200);
+
+  const activateCommand = {
+    id: advertisementId,
+    title: 'Synthetic governed announcement',
+    description: 'Local acceptance only.',
+    altText: 'Synthetic governed announcement artwork.',
+    callToAction: 'View announcement',
+    destinationUrl: 'https://example.invalid/announcement',
+    status: 'ACTIVE',
+    displayOrder: 99,
+    clientRequestId: `advertisement-activate-${crypto.randomUUID()}`,
+  };
+  const activated = await admin.post('/api/admin/advertisements/save', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: activateCommand,
+  });
+  expect(activated.status()).toBe(200);
+  const publicAdvertisements = await (await request.get('/api/public/advertisements')).json();
+  expect(publicAdvertisements.items.find((item) => item.id === advertisementId)).toEqual(
+    expect.objectContaining({
+      title: activateCommand.title,
+      imageUrl: `/media/advertisements/${advertisementId}`,
+    }),
+  );
+  const publicMedia = await request.get(`/media/advertisements/${advertisementId}`);
+  expect(publicMedia.status()).toBe(200);
+  expect(publicMedia.headers()['content-type']).toBe('image/png');
+
+  const archived = await admin.post('/api/admin/advertisements/archive', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: {
+      id: advertisementId,
+      clientRequestId: `advertisement-archive-${crypto.randomUUID()}`,
+    },
+  });
+  expect(archived.status()).toBe(200);
+  const publicAfterArchive = await (await request.get('/api/public/advertisements')).json();
+  expect(publicAfterArchive.items.some((item) => item.id === advertisementId)).toBe(false);
+
+  await Promise.all([admin.dispose(), director.dispose(), inventory.dispose(), food.dispose()]);
 });
 
 for (const [accessId, experience, workspace] of roles) {
@@ -856,6 +981,8 @@ test('D1 request split, allocation, release, and lending lifecycle preserve retr
     (
       await mutate(request, csrfToken, 'approveLendingTicket', {
         ticketId,
+        identityVerified: true,
+        identityVerificationSource: 'APPROVED_ANGELITE_IDENTITY_RULE',
         clientRequestId: 'local-e2e-lending-approve',
       })
     ).status(),
@@ -1025,6 +1152,8 @@ test('traceable reusable assets preserve assignment, condition, and maintenance 
 
   const missingAssignment = await mutate(request, csrfToken, 'approveLendingTicket', {
     ticketId,
+    identityVerified: true,
+    identityVerificationSource: 'APPROVED_ANGELITE_IDENTITY_RULE',
     clientRequestId: 'local-phase5-lending-approve-missing-asset',
   });
   expect(missingAssignment.status()).toBe(409);
@@ -1033,6 +1162,8 @@ test('traceable reusable assets preserve assignment, condition, and maintenance 
   const approved = await mutate(request, csrfToken, 'approveLendingTicket', {
     ticketId,
     assetIds: [assetId],
+    identityVerified: true,
+    identityVerificationSource: 'APPROVED_ANGELITE_IDENTITY_RULE',
     clientRequestId: 'local-phase5-lending-approve',
   });
   expect(approved.status()).toBe(200);

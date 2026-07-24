@@ -3,7 +3,18 @@ import { loadLendingCatalog } from './lending-catalog-service.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
-const DEPARTMENTS = Object.freeze(['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS']);
+export const USC_DEPARTMENTS = Object.freeze([
+  'Department of Logistics',
+  'Department of Finance',
+  'Department of Public Communications',
+  'Department of Events Management',
+  'Department of Business Relations',
+  'Office of the President',
+  'Office of the Vice President',
+  'Office of the Secretary General',
+  'Department of Human Resources',
+  'Department of Community Extensions Services',
+]);
 const encoder = new TextEncoder();
 
 const requiredText = (value, field, max) => {
@@ -11,10 +22,19 @@ const requiredText = (value, field, max) => {
     .trim()
     .replace(/\s+/gu, ' ');
   if (!result || result.length > max) {
-    throw new ApiError('VALIDATION_FAILED', `${field} is required.`, { status: 422, details: { field } });
+    throw new ApiError('VALIDATION_FAILED', `${field} is required.`, {
+      status: 422,
+      details: { field },
+    });
   }
   return result;
 };
+
+const optionalText = (value, max) =>
+  String(value ?? '')
+    .trim()
+    .replace(/\s+/gu, ' ')
+    .slice(0, max);
 
 function email(value) {
   const result = requiredText(value, 'email', 254).toLowerCase();
@@ -85,31 +105,26 @@ async function hmac(secret, value) {
   return base64Url(await crypto.subtle.sign('HMAC', key, encoder.encode(value)));
 }
 
-async function rows(db, sql, values = []) {
-  let statement = db.prepare(sql);
-  if (values.length) statement = statement.bind(...values);
-  return (await statement.all()).results ?? [];
-}
-
 export function createPublicLendingService({ db, trackingSecret, clock = Date } = {}) {
   if (!db) throw new Error('D1 database binding is required.');
-  if (String(trackingSecret ?? '').length < 32) throw new Error('A protected tracking secret is required.');
+  if (String(trackingSecret ?? '').length < 32) {
+    throw new Error('A protected public-submission secret is required.');
+  }
   const nowIso = () => new Date(clock.now()).toISOString();
   const createId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
 
-  async function rateLimit(networkKey, action) {
+  async function rateLimit(networkKey) {
     const now = clock.now();
     const windowMs = 60 * 60 * 1000;
-    const limit = action === 'SUBMIT' ? 10 : 60;
-    const limiterKey = await hmac(trackingSecret, `${action}:lending:${String(networkKey || 'untrusted')}`);
+    const limiterKey = await hmac(trackingSecret, `SUBMIT:lending:${String(networkKey || 'untrusted')}`);
     const recent = await db
       .prepare(
         `SELECT COUNT(*) AS count FROM public_lending_rate_limit_events
-         WHERE limiter_key = ?1 AND action = ?2 AND attempted_at > ?3`,
+         WHERE limiter_key = ?1 AND action = 'SUBMIT' AND attempted_at > ?2`,
       )
-      .bind(limiterKey, action, now - windowMs)
+      .bind(limiterKey, now - windowMs)
       .first();
-    if (Number(recent?.count ?? 0) >= limit) {
+    if (Number(recent?.count ?? 0) >= 10) {
       throw new ApiError('PUBLIC_RATE_LIMITED', 'Too many requests. Try again later.', { status: 429 });
     }
     await db.batch([
@@ -119,16 +134,16 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       db
         .prepare(
           `INSERT INTO public_lending_rate_limit_events (id, limiter_key, action, attempted_at)
-           VALUES (?1, ?2, ?3, ?4)`,
+           VALUES (?1, ?2, 'SUBMIT', ?3)`,
         )
-        .bind(createId('LRL'), limiterKey, action, now),
+        .bind(createId('LRL'), limiterKey, now),
     ]);
   }
 
   async function catalog() {
     return {
       ok: true,
-      departments: DEPARTMENTS,
+      uscDepartments: USC_DEPARTMENTS,
       items: await loadLendingCatalog(db, { publicOnly: true }),
       process: [
         'Submit a borrowing request for staff review.',
@@ -141,30 +156,30 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
 
   async function normalizeLines(lines) {
     if (!Array.isArray(lines) || lines.length < 1 || lines.length > 12) {
-      throw new ApiError('VALIDATION_FAILED', 'Select between 1 and 12 lending items.', { status: 422 });
+      throw new ApiError('VALIDATION_FAILED', 'Select between 1 and 12 lending items.', {
+        status: 422,
+      });
     }
     const seen = new Set();
     const normalized = [];
     for (const [index, line] of lines.entries()) {
       const itemId = requiredText(line.itemId, `lines[${index}].itemId`, 80);
       if (seen.has(itemId)) {
-        throw new ApiError('VALIDATION_FAILED', 'Each lending item may be selected once.', { status: 422 });
+        throw new ApiError('VALIDATION_FAILED', 'Each lending item may be selected once.', {
+          status: 422,
+        });
       }
       seen.add(itemId);
-      const [item] = await loadLendingCatalog(db, {
-        publicOnly: true,
-        itemId,
-        staff: true,
-      });
-      if (!item)
+      const [item] = await loadLendingCatalog(db, { publicOnly: true, itemId, staff: true });
+      if (!item) {
         throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected lending item is unavailable.', {
           status: 409,
         });
+      }
       const quantity = positiveInteger(line.quantity, `lines[${index}].quantity`);
-      const maximum = item.maximumQuantity;
       if (
         !['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability) ||
-        quantity > maximum ||
+        quantity > item.maximumQuantity ||
         quantity > item.lendableAvailable
       ) {
         throw new ApiError(
@@ -187,21 +202,28 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
   }
 
   async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
-    await rateLimit(networkKey, 'SUBMIT');
+    await rateLimit(networkKey);
     const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
     const existing = await db
-      .prepare('SELECT id FROM public_lending_requests WHERE client_request_id = ?1')
+      .prepare('SELECT id FROM public_lending_submissions WHERE client_request_id = ?1')
       .bind(clientRequestId)
       .first();
     if (existing) {
       return {
         ok: true,
-        ticketId: existing.id,
+        submissionId: existing.id,
         status: 'FOR_REVIEW',
-        trackingCode: await hmac(trackingSecret, `lending-code:${existing.id}:${clientRequestId}`),
         replayed: true,
         correlationId,
       };
+    }
+
+    const borrowerType = requiredText(command.borrowerType, 'borrowerType', 20).toUpperCase();
+    if (!['USC_STAFF', 'ANGELITE'].includes(borrowerType)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose USC Staff/Officer or Angelite Student.', {
+        status: 422,
+        details: { field: 'borrowerType' },
+      });
     }
     const borrowerName = requiredText(command.borrowerName, 'borrowerName', 120);
     const studentId = requiredText(command.studentId, 'studentId', 8);
@@ -211,11 +233,22 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         details: { field: 'studentId' },
       });
     }
-    const courseYear = requiredText(command.courseYear, 'courseYear', 80);
-    const department = requiredText(command.department, 'department', 12).toUpperCase();
-    if (!DEPARTMENTS.includes(department)) {
-      throw new ApiError('VALIDATION_FAILED', 'Choose an approved department.', { status: 422 });
+    const courseYear =
+      borrowerType === 'ANGELITE' ? requiredText(command.courseYear, 'courseYear', 80) : '';
+    const academicDepartment =
+      borrowerType === 'ANGELITE'
+        ? requiredText(command.academicDepartment, 'academicDepartment', 120)
+        : '';
+    const uscDepartment =
+      borrowerType === 'USC_STAFF' ? requiredText(command.uscDepartment, 'uscDepartment', 120) : '';
+    if (borrowerType === 'USC_STAFF' && !USC_DEPARTMENTS.includes(uscDepartment)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved USC department or office.', {
+        status: 422,
+        details: { field: 'uscDepartment' },
+      });
     }
+    const positionRole =
+      borrowerType === 'USC_STAFF' ? optionalText(command.positionRole, 120) : '';
     const contactNumber = phone(command.contactNumber);
     const borrowerEmail = email(command.email);
     const purpose = requiredText(command.purpose, 'purpose', 500);
@@ -231,44 +264,53 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       throw new ApiError(
         'VALIDATION_FAILED',
         'Pickup must be current or future and due date cannot precede pickup.',
-        {
-          status: 422,
-          details: { field: pickupDate < today ? 'pickupDate' : 'dueDate' },
-        },
+        { status: 422, details: { field: pickupDate < today ? 'pickupDate' : 'dueDate' } },
       );
     }
-    if (lines.some((line) => line.acknowledgmentRequired) && command.responsibilityAcknowledged !== true) {
+    if (
+      lines.some((line) => line.acknowledgmentRequired) &&
+      command.responsibilityAcknowledged !== true
+    ) {
       throw new ApiError('VALIDATION_FAILED', 'Responsibility acknowledgment is required.', {
         status: 422,
         details: { field: 'responsibilityAcknowledged' },
       });
     }
-    const publicId = createId('LBR');
-    const trackingCode = await hmac(trackingSecret, `lending-code:${publicId}:${clientRequestId}`);
-    const trackingDigest = await hmac(trackingSecret, `lending-digest:${trackingCode}`);
+
+    const submissionId = createId('LBR');
     const timestamp = nowIso();
+    const receiptDigest = await hmac(
+      trackingSecret,
+      `lending-receipt:${submissionId}:${clientRequestId}:${timestamp}`,
+    );
+    const department = borrowerType === 'USC_STAFF' ? uscDepartment : academicDepartment;
     const statements = [
       db
         .prepare(
-          `INSERT INTO public_lending_requests (
-             id, tracking_digest, borrower_name, student_id, course_year, department,
-             contact_number, email, purpose, requested_pickup_date, requested_due_date,
-             responsibility_acknowledged_at, client_request_id, created_at, updated_at, created_by
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?12, ?12, ?14)`,
+          `INSERT INTO public_lending_submissions (
+             id, borrower_type, borrower_name, student_id, course_year, academic_department,
+             usc_department, position_role, contact_number, email, purpose,
+             requested_pickup_date, requested_due_date, responsibility_acknowledged_at,
+             receipt_digest, client_request_id, created_at, updated_at, created_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
+             ?14, ?15, ?16, ?14, ?14, ?17)`,
         )
         .bind(
-          publicId,
-          trackingDigest,
+          submissionId,
+          borrowerType,
           borrowerName,
           studentId,
           courseYear,
-          department,
+          academicDepartment,
+          uscDepartment,
+          positionRole,
           contactNumber,
           borrowerEmail,
           purpose,
           pickupDate,
           dueDate,
           timestamp,
+          receiptDigest,
           clientRequestId,
           PUBLIC_ACTOR_ID,
         ),
@@ -281,15 +323,17 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
             `INSERT INTO lending_tickets (
                id, borrower_reference, borrower_name, borrower_type, department_organization,
                contact, item_id, quantity, unit, purpose, due_at, ticket_type, status,
-               requested_start_at, requested_end_at,
+               requested_item_id, requested_quantity, requested_start_at, requested_end_at,
                owner_committee_id, created_by, notes, created_at, updated_at
-             ) VALUES (?1, ?2, ?3, 'PUBLIC_ANGELITE', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11,
-               'FOR_REVIEW', ?12, ?13, ?14, ?15, 'Public responsibility acknowledgment recorded.', ?16, ?16)`,
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
+               'FOR_REVIEW', ?7, ?8, ?13, ?14, ?15, ?16,
+               'Public responsibility acknowledgment recorded.', ?17, ?17)`,
           )
           .bind(
             ticketId,
             studentId,
             borrowerName,
+            borrowerType === 'USC_STAFF' ? 'PUBLIC_USC_STAFF' : 'PUBLIC_ANGELITE',
             department,
             contactNumber,
             line.itemId,
@@ -306,33 +350,40 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
           ),
         db
           .prepare(
-            `INSERT INTO public_lending_request_tickets (public_lending_request_id, lending_ticket_id)
-             VALUES (?1, ?2)`,
+            `INSERT INTO public_lending_submission_tickets (
+               public_lending_submission_id, lending_ticket_id
+             ) VALUES (?1, ?2)`,
           )
-          .bind(publicId, ticketId),
+          .bind(submissionId, ticketId),
         db
           .prepare(
             `INSERT INTO status_history (
                id, entity_type, entity_id, new_status, changed_at, changed_by,
                reason, idempotency_key, metadata_json
              ) VALUES (?1, 'LENDING', ?2, 'FOR_REVIEW', ?3, ?4,
-               'Public lending request submitted; no reservation or stock movement.', ?5, '{}')`,
+               'Public lending request submitted; no reservation or stock movement.', ?5, ?6)`,
           )
-          .bind(createId('HIS'), ticketId, timestamp, PUBLIC_ACTOR_ID, `${clientRequestId}:${index + 1}`),
+          .bind(
+            createId('HIS'),
+            ticketId,
+            timestamp,
+            PUBLIC_ACTOR_ID,
+            `${clientRequestId}:${index + 1}`,
+            JSON.stringify({ submissionId, borrowerType }),
+          ),
         db
           .prepare(
             `INSERT INTO audit_log (
                id, created_at, action, entity_type, entity_id, actor_account_id,
                after_json, correlation_id
-             ) VALUES (?1, ?2, 'PUBLIC_LENDING_SUBMITTED', 'LENDING', ?3, ?4,
-               ?5, ?6)`,
+             ) VALUES (?1, ?2, 'PUBLIC_LENDING_SUBMITTED', 'LENDING', ?3, ?4, ?5, ?6)`,
           )
           .bind(
             createId('AUD'),
             timestamp,
             ticketId,
             PUBLIC_ACTOR_ID,
-            JSON.stringify({ publicRequestId: publicId, status: 'FOR_REVIEW' }),
+            JSON.stringify({ submissionId, borrowerType, status: 'FOR_REVIEW' }),
             correlationId,
           ),
       );
@@ -356,67 +407,13 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     }
     return {
       ok: true,
-      ticketId: publicId,
+      submissionId,
       status: 'FOR_REVIEW',
-      trackingCode,
+      submittedAt: timestamp,
       replayed: false,
       correlationId,
     };
   }
 
-  async function track({ command = {}, networkKey = '', correlationId = '' } = {}) {
-    await rateLimit(networkKey, 'TRACK');
-    const ticketId = requiredText(command.ticketId, 'ticketId', 80);
-    const trackingCode = requiredText(command.trackingCode, 'trackingCode', 128);
-    const digest = await hmac(trackingSecret, `lending-digest:${trackingCode}`);
-    const request = await db
-      .prepare(
-        `SELECT id, requested_pickup_date, requested_due_date, created_at, updated_at
-         FROM public_lending_requests WHERE id = ?1 AND tracking_digest = ?2`,
-      )
-      .bind(ticketId, digest)
-      .first();
-    if (!request) {
-      throw new ApiError('PUBLIC_LENDING_NOT_FOUND', 'The lending ticket or tracking code is invalid.', {
-        status: 404,
-      });
-    }
-    const tickets = await rows(
-      db,
-      `SELECT ticket.id, item.name AS item_name, ticket.quantity, ticket.unit,
-              ticket.ticket_type, ticket.status, ticket.created_at, ticket.updated_at
-       FROM public_lending_request_tickets link
-       JOIN lending_tickets ticket ON ticket.id = link.lending_ticket_id
-       JOIN inventory_items item ON item.id = ticket.item_id
-       WHERE link.public_lending_request_id = ?1
-       ORDER BY ticket.created_at, ticket.id`,
-      [ticketId],
-    );
-    const statuses = new Set(tickets.map((ticket) => ticket.status));
-    return {
-      ok: true,
-      correlationId,
-      request: {
-        id: request.id,
-        status: statuses.size === 1 ? (tickets[0]?.status ?? 'FOR_REVIEW') : 'IN_PROGRESS',
-        pickupDate: request.requested_pickup_date,
-        dueDate: request.requested_due_date,
-        createdAt: request.created_at,
-        updatedAt: tickets.reduce(
-          (latest, ticket) => (ticket.updated_at > latest ? ticket.updated_at : latest),
-          request.updated_at,
-        ),
-        tickets: tickets.map((ticket) => ({
-          id: ticket.id,
-          itemName: ticket.item_name,
-          quantity: Number(ticket.quantity),
-          unit: ticket.unit,
-          type: ticket.ticket_type,
-          status: ticket.status,
-        })),
-      },
-    };
-  }
-
-  return Object.freeze({ catalog, submit, track });
+  return Object.freeze({ catalog, submit });
 }

@@ -43,6 +43,11 @@ for (const [method, path] of Object.entries({
   setAccessAccountStatus: '/api/admin/access/status',
   revokeAccessSessions: '/api/admin/access/revoke-sessions',
   unlockAccessAccount: '/api/admin/access/unlock',
+  getLendingUsage: '/api/lending/usage',
+  listAdvertisements: '/api/admin/advertisements/list',
+  saveAdvertisement: '/api/admin/advertisements/save',
+  uploadAdvertisementMedia: '/api/admin/advertisements/upload',
+  archiveAdvertisement: '/api/admin/advertisements/archive',
 })) {
   HttpApiAdapter.prototype[method] = function call(command) {
     return this._callPath(path, command);

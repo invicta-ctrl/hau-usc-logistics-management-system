@@ -9,6 +9,9 @@ import { createD1AccessManagementRepository } from '../server/d1/access-manageme
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
+import { createPublicAdvertisementService } from '../server/public-advertisement-service.js';
+import { createAdvertisementAdminService } from '../server/advertisement-admin-service.js';
+import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
 
@@ -103,7 +106,7 @@ function cookies(request) {
 
 async function body(request) {
   const length = Number(request.headers.get('content-length') ?? 0);
-  if (length > 1_000_000) {
+  if (length > 1_100_000) {
     throw new ApiError('PAYLOAD_TOO_LARGE', 'The request body is too large.', { status: 413 });
   }
   try {
@@ -178,7 +181,25 @@ function services(env) {
         ? 'development-only-public-tracking-secret-9472'
         : ''),
   });
-  return { access, auth, operations, publicLending, publicRequests };
+  const publicAdvertisements = createPublicAdvertisementService({
+    db: env.DB,
+    bucket: env.BRAND_ASSETS,
+  });
+  const advertisementAdmin = createAdvertisementAdminService({
+    db: env.DB,
+    bucket: env.BRAND_ASSETS,
+  });
+  const lendingUsage = createLendingUsageService({ db: env.DB });
+  return {
+    access,
+    advertisementAdmin,
+    auth,
+    lendingUsage,
+    operations,
+    publicAdvertisements,
+    publicLending,
+    publicRequests,
+  };
 }
 
 async function authorize(request, auth, capability, { mutation = false } = {}) {
@@ -234,7 +255,16 @@ async function health(env, requestId, readiness = false) {
 
 async function handleApi(request, env, requestId) {
   const url = new URL(request.url);
-  const { access, auth, operations, publicLending, publicRequests } = services(env);
+  const {
+    access,
+    advertisementAdmin,
+    auth,
+    lendingUsage,
+    operations,
+    publicAdvertisements,
+    publicLending,
+    publicRequests,
+  } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
     if (url.pathname === '/api/readiness' && request.method === 'GET') {
@@ -279,6 +309,9 @@ async function handleApi(request, env, requestId) {
     if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
       return json({ ...(await publicLending.catalog()), correlationId: requestId });
     }
+    if (url.pathname === '/api/public/advertisements' && request.method === 'GET') {
+      return json({ ...(await publicAdvertisements.list()), correlationId: requestId });
+    }
     if (url.pathname === '/api/public/lending' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
       return json(
@@ -289,15 +322,52 @@ async function handleApi(request, env, requestId) {
         }),
       );
     }
-    if (url.pathname === '/api/public/lending/track' && request.method === 'POST') {
-      assertPublicMutationOrigin(request);
+    if (url.pathname === '/api/lending/usage' && request.method === 'POST') {
+      const actor = await authorize(request, auth, CAPABILITIES.LENDING_USAGE_VIEW);
       return json(
-        await publicLending.track({
+        await lendingUsage.report({
+          account: actor.account,
           command: await body(request),
-          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
           correlationId: requestId,
         }),
       );
+    }
+    if (url.pathname === '/api/lending/usage.csv' && request.method === 'GET') {
+      const actor = await authorize(request, auth, CAPABILITIES.LENDING_USAGE_VIEW);
+      const csv = await lendingUsage.csv({
+        account: actor.account,
+        command: Object.fromEntries(url.searchParams),
+        correlationId: requestId,
+      });
+      return new Response(csv, {
+        headers: {
+          'cache-control': 'no-store',
+          'content-disposition': 'attachment; filename="hau-usc-lending-usage.csv"',
+          'content-type': 'text/csv; charset=utf-8',
+          'x-content-type-options': 'nosniff',
+        },
+      });
+    }
+    if (url.pathname.startsWith('/api/admin/advertisements/') && request.method === 'POST') {
+      const mutation = url.pathname !== '/api/admin/advertisements/list';
+      const actor = await authorize(request, auth, CAPABILITIES.ADVERTISEMENT_MANAGE, { mutation });
+      const context = {
+        account: actor.account,
+        command: await body(request),
+        correlationId: requestId,
+      };
+      if (url.pathname === '/api/admin/advertisements/list') {
+        return json(await advertisementAdmin.list(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/save') {
+        return json(await advertisementAdmin.save(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/upload') {
+        return json(await advertisementAdmin.upload(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/archive') {
+        return json(await advertisementAdmin.archive(context));
+      }
     }
     if (url.pathname === '/api/session') {
       const alias = new Request(new URL('/api/auth/session', url), {
@@ -530,6 +600,9 @@ async function handleApi(request, env, requestId) {
         errorCode: known ? error.code : 'UNHANDLED_API_ERROR',
         path: url.pathname,
         method: request.method,
+        ...(String(env.ENVIRONMENT).toUpperCase() === 'DEVELOPMENT'
+          ? { exception: String(error?.message ?? '') }
+          : {}),
       },
     });
     return json(
@@ -561,6 +634,24 @@ export default {
         return new Response(null, { status: 404 });
       }
       return brandAsset(request, env, `catalog/${assetKey}`);
+    }
+    if (url.pathname.startsWith('/media/advertisements/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return new Response(null, { status: 405, headers: { allow: 'GET, HEAD' } });
+      }
+      let advertisementId = '';
+      try {
+        advertisementId = decodeURIComponent(url.pathname.slice('/media/advertisements/'.length));
+        const response = await services(env).publicAdvertisements.image(advertisementId);
+        return request.method === 'HEAD'
+          ? new Response(null, { status: response.status, headers: response.headers })
+          : response;
+      } catch {
+        return new Response(null, {
+          status: 404,
+          headers: { 'cache-control': 'public, max-age=60', 'x-content-type-options': 'nosniff' },
+        });
+      }
     }
     if (url.pathname.startsWith('/api/')) {
       const requestId = createCorrelationId(request);

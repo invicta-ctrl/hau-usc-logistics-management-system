@@ -26,6 +26,14 @@ export function lendingCatalogDto(row, { staff = false } = {}) {
     id: row.id,
     productId: row.id,
     name: row.name,
+    aliases: (() => {
+      try {
+        const parsed = JSON.parse(row.aliases_json || '[]');
+        return Array.isArray(parsed) ? parsed.filter((value) => typeof value === 'string') : [];
+      } catch {
+        return [];
+      }
+    })(),
     category: row.category,
     type: row.lending_kind,
     availability: safeLendingAvailability(row),
@@ -76,7 +84,13 @@ export async function loadLendingCatalog(db, { publicOnly = false, itemId = '', 
   }
   const result = await rows(
     db,
-    `SELECT item.*, availability.on_hand, availability.reserved,
+    `SELECT item.*,
+            COALESCE((
+              SELECT json_group_array(alias.display_alias)
+              FROM item_aliases alias
+              WHERE alias.item_id = item.id
+            ), '[]') AS aliases_json,
+            availability.on_hand, availability.reserved,
             availability.available_to_promise, availability.ready_to_claim,
             availability.on_loan, availability.overdue, availability.expected_return_at,
             availability.traceable_assets, availability.available_assets,

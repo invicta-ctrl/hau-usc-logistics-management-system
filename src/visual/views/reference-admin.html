@@ -21,6 +21,7 @@
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES"><span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong><small>Manage approved references without editing raw operational sources.</small><span class="admin-control-action">Open reference data</span></button>
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="ROUTING"><span class="admin-control-kicker">Link Registry</span><strong>Routes and canonical ownership</strong><small>Cross-office routing remains a separate-review decision.</small><span class="admin-control-action">Open controlled routing</span></button>
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
+        <button class="admin-control-card" type="button" data-advertisement-admin-control><span class="admin-control-kicker">USC Announcements</span><strong>Public advertisement rotation</strong><small>Create, preview, schedule, reorder, and archive governed public media.</small><span class="admin-control-action">Manage advertisements</span></button>
       </div>
     </section>
 
@@ -75,6 +76,24 @@
     <article class="panel" data-reference-admin-pending-panel>
       <div class="panel-head"><div><h2>Pending second review</h2><p>Permission escalation and cross-office routing remain unapplied until a different authorized administrator reviews them.</p></div></div>
       <div class="line-list" data-reference-admin-pending><div class="empty">Loading review queue…</div></div>
+    </article>
+
+    <article class="panel" data-advertisement-admin hidden>
+      <div class="panel-head">
+        <div><h2>USC Announcements</h2><p>Administrator-only public advertisement media and rotation.</p></div>
+        <button class="primary" type="button" data-advertisement-create>Create advertisement</button>
+      </div>
+      <div class="toolbar">
+        <label>Search<input name="advertisementSearch" maxlength="120" placeholder="Stable ID or title"></label>
+        <label>Status<select name="advertisementStatus"><option value="ALL">All statuses</option><option value="DRAFT">Draft</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option><option value="ARCHIVED">Archived</option></select></label>
+        <button class="secondary" type="button" data-advertisement-refresh>Refresh</button>
+      </div>
+      <div class="line-list section-gap" data-advertisement-results><div class="empty">Open USC Announcements to load authorized records.</div></div>
+      <div class="access-pagination section-gap" data-advertisement-pagination hidden>
+        <button class="secondary mini" type="button" data-advertisement-page="previous">Previous</button>
+        <span data-advertisement-page-summary></span>
+        <button class="secondary mini" type="button" data-advertisement-page="next">Next</button>
+      </div>
     </article>
   </div>
 </section>

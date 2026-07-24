@@ -353,6 +353,11 @@ export function createRuntimeExtensions(options) {
   let accessDirectoryPromise = null;
   let accessDirectoryPage = 1;
   let accessSearchTimer = null;
+  let advertisementAdminOpen = false;
+  let advertisementDirectory = null;
+  let advertisementPage = 1;
+  let advertisementSearchTimer = null;
+  let lendingUsageReport = null;
   let sharedMobileNav = null;
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
@@ -420,6 +425,261 @@ export function createRuntimeExtensions(options) {
     );
   };
 
+  void openLendingApproval;
+
+  const lendingApplicantHtml = (ticket) => `
+    <dl class="data-card lending-review-applicant">
+      <div><strong>Full name</strong><p>${esc(ticket.borrowerName || 'Not supplied')}</p></div>
+      <div><strong>Student ID</strong><p>${esc(ticket.studentIdNumber || 'Not supplied')}</p></div>
+      <div><strong>Course / year</strong><p>${esc(ticket.courseYear || 'Not applicable')}</p></div>
+      <div><strong>Department</strong><p>${esc(ticket.department || 'Not supplied')}</p></div>
+      <div><strong>Contact</strong><p>${esc(ticket.contact || 'Not supplied')}</p></div>
+      <div><strong>Email</strong><p>${esc(ticket.email || 'Not supplied')}</p></div>
+      <div><strong>Requested dates</strong><p>${esc(ticket.requestedStartAt || 'Not supplied')} to ${esc(ticket.requestedEndAt || ticket.dueAt || 'Not supplied')}</p></div>
+      <div><strong>Purpose</strong><p>${esc(ticket.purpose || 'Not supplied')}</p></div>
+    </dl>`;
+
+  const openLendingReview = (ticketId, initialDecision = 'APPROVE') => {
+    const ticket = (getState()?.lendingTickets ?? []).find((entry) => entry.id === ticketId);
+    if (!ticket) return toast('Ticket not found.', true);
+    const requirement = borrowerIdentityRequirement(ticket.borrowerType);
+    const inventoryItems = (getState()?.inventoryItems ?? []).filter(
+      (item) =>
+        item.status !== 'ARCHIVED' &&
+        item.isLendable !== false &&
+        !['NOT_LENDABLE', 'PAUSED', 'MAINTENANCE'].includes(item.lendingStatus),
+    );
+    const itemOptions = inventoryItems
+      .map(
+        (item) =>
+          `<option value="${esc(item.id)}" ${item.id === ticket.itemId ? 'selected' : ''}>${esc(item.name)} (${esc(item.id)})</option>`,
+      )
+      .join('');
+    openModal(
+      `Review ${ticket.id}`,
+      `<form id="lendingReviewForm">
+        ${lendingApplicantHtml(ticket)}
+        <div class="form-grid section-gap">
+          <label>Decision<select name="decision">
+            <option value="APPROVE">Approve requested item and quantity</option>
+            <option value="PARTIAL_APPROVE">Partially approve</option>
+            <option value="SUBSTITUTE">Approve a substitute</option>
+            <option value="REJECT">Reject</option>
+          </select></label>
+          <label>Approved quantity<input name="approvedQuantity" type="number" min="0.01" max="${esc(ticket.requestedQuantity || ticket.quantity)}" step="0.01" value="${esc(ticket.requestedQuantity || ticket.quantity)}"></label>
+          <label class="span-2" data-substitution-wrap>Substitute item<select name="substitutionItemId">${itemOptions}</select></label>
+          <label class="span-2" data-review-reason-wrap>Decision reason<textarea name="reviewReason" maxlength="500"></textarea></label>
+          <label class="span-2">Internal review note<textarea name="reviewNotes" maxlength="500"></textarea></label>
+        </div>
+        <div class="mode-note" data-identity-review><strong>${esc(requirement.label)}</strong><br>${esc(requirement.instruction)}
+          <label class="checkbox section-gap"><input name="identityVerified" type="checkbox" value="true"> I completed this approved-source identity check for ${esc(ticket.borrowerName)}.</label>
+        </div>
+        <fieldset class="section-gap" data-asset-assignment><legend>Traceable asset assignment</legend><div data-asset-options class="line-list"></div></fieldset>
+        <button class="primary" type="submit">Record Review Decision</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#lendingReviewForm');
+        form.elements.decision.value = initialDecision;
+        const decisionInput = form.elements.decision;
+        const quantityInput = form.elements.approvedQuantity;
+        const substitutionWrap = form.querySelector('[data-substitution-wrap]');
+        const substitutionInput = form.elements.substitutionItemId;
+        const reasonWrap = form.querySelector('[data-review-reason-wrap]');
+        const reasonInput = form.elements.reviewReason;
+        const identityReview = form.querySelector('[data-identity-review]');
+        const identityInput = form.elements.identityVerified;
+        const assetAssignment = form.querySelector('[data-asset-assignment]');
+        const assetOptions = form.querySelector('[data-asset-options]');
+        const renderAssets = () => {
+          const itemId =
+            decisionInput.value === 'SUBSTITUTE' ? substitutionInput.value : ticket.itemId;
+          const options = (ticket.assetOptions ?? []).filter((asset) => asset.itemId === itemId);
+          assetAssignment.hidden = options.length === 0 || decisionInput.value === 'REJECT';
+          assetOptions.innerHTML =
+            options
+              .map(
+                (asset) =>
+                  `<label class="checkbox"><input name="assetIds" type="checkbox" value="${esc(asset.id)}"> <span><strong>${esc(asset.assetTag || asset.id)}</strong>${asset.serialNumber ? ` · ${esc(asset.serialNumber)}` : ''} · ${esc(asset.condition || 'Condition not recorded')}</span></label>`,
+              )
+              .join('') || '<div class="empty">No traceable asset assignment is required.</div>';
+        };
+        const syncDecision = () => {
+          const decision = decisionInput.value;
+          const rejecting = decision === 'REJECT';
+          const substituting = decision === 'SUBSTITUTE';
+          substitutionWrap.hidden = !substituting;
+          substitutionInput.disabled = !substituting;
+          reasonWrap.hidden = decision === 'APPROVE';
+          reasonInput.disabled = decision === 'APPROVE';
+          reasonInput.required = decision !== 'APPROVE';
+          quantityInput.disabled = rejecting;
+          quantityInput.required = !rejecting;
+          identityReview.hidden = rejecting;
+          identityInput.disabled = rejecting;
+          identityInput.required = !rejecting;
+          renderAssets();
+        };
+        decisionInput.addEventListener('change', syncDecision);
+        substitutionInput.addEventListener('change', renderAssets);
+        syncDecision();
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = new FormData(form);
+          const decision = values.get('decision');
+          const identityVerification = {
+            identityVerified: values.get('identityVerified'),
+            identityVerificationSource: requirement.source,
+          };
+          if (decision !== 'REJECT') {
+            const validation = validateBorrowerIdentityApproval({
+              borrowerType: ticket.borrowerType,
+              ...identityVerification,
+            });
+            if (!validation.valid) return toast(validation.message, true);
+          }
+          const command = {
+            decision,
+            approvedQuantity:
+              decision === 'REJECT' ? undefined : Number(values.get('approvedQuantity')),
+            substitutionItemId:
+              decision === 'SUBSTITUTE' ? values.get('substitutionItemId') : undefined,
+            reviewReason: values.get('reviewReason') || '',
+            reviewNotes: values.get('reviewNotes') || '',
+            assetIds: values.getAll('assetIds'),
+            ...(decision === 'REJECT' ? {} : identityVerification),
+          };
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          button.textContent = 'Recording…';
+          try {
+            const result = await services.approveLendingTicket(ticket.id, command);
+            markFormClean(form);
+            closeModal();
+            await commit(
+              decision === 'REJECT'
+                ? `Ticket ${ticket.id} was rejected.`
+                : `Ticket ${ticket.id} is ready to claim.`,
+              'success',
+              result,
+            );
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+            button.textContent = 'Record Review Decision';
+          }
+        });
+      },
+    );
+  };
+
+  const openLendingHandoff = (ticketId) => {
+    const ticket = (getState()?.lendingTickets ?? []).find((entry) => entry.id === ticketId);
+    if (!ticket) return toast('Ticket not found.', true);
+    const consumable = ticket.ticketType === 'CONSUMABLE';
+    openModal(
+      `${consumable ? 'Issue' : 'Handoff'} ${ticket.id}`,
+      `<form id="lendingHandoffForm">
+        ${lendingApplicantHtml(ticket)}
+        <div class="form-grid section-gap">
+          <label>Condition at handoff<select name="conditionLabel"><option>GOOD</option><option>FAIR</option><option>AS_IS</option></select></label>
+          <label class="span-2">Handoff note<textarea name="notes" maxlength="500" required>${consumable ? 'Consumable issue confirmed with recipient.' : 'Reusable item handed off to the named borrower.'}</textarea></label>
+        </div>
+        <button class="primary" type="submit">${consumable ? 'Confirm Consumable Issue' : 'Confirm Controlled Handoff'}</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#lendingHandoffForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const result = await services.confirmLoanHandoff(ticket.id, values);
+            markFormClean(form);
+            closeModal();
+            await commit(
+              consumable ? `Consumable issue ${ticket.id} completed.` : `Handoff ${ticket.id} confirmed.`,
+              'success',
+              result,
+            );
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openLendingReturn = (ticketId) => {
+    const ticket = (getState()?.lendingTickets ?? []).find((entry) => entry.id === ticketId);
+    if (!ticket) return toast('Ticket not found.', true);
+    openModal(
+      `Inspect Return ${ticket.id}`,
+      `<form id="lendingReturnForm">
+        <div class="mode-note"><strong>${esc(ticket.quantity)} ${esc(ticket.unit)}</strong> must be fully reconciled as returned, lost, or damaged beyond use.</div>
+        <div class="form-grid section-gap">
+          <label>Inspection condition<select name="conditionLabel"><option>GOOD</option><option>FAIR</option><option>POOR</option><option>DAMAGED</option><option>MAINTENANCE</option><option>LOST</option><option>DAMAGED_BEYOND_USE</option></select></label>
+          <label>Returned quantity<input name="returnedQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="${esc(ticket.quantity)}" required></label>
+          <label>Lost quantity<input name="lostQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
+          <label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
+          <label class="span-2">Inspection note<textarea name="notes" maxlength="500" required>Return inspected and reconciled.</textarea></label>
+          <label class="span-2">Governed evidence asset key, when already uploaded<input name="assetEvidenceKey" maxlength="160"></label>
+        </div>
+        <button class="primary" type="submit">Confirm Return Inspection</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#lendingReturnForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const reconciled =
+            Number(values.returnedQuantity) +
+            Number(values.lostQuantity) +
+            Number(values.damagedBeyondUseQuantity);
+          if (Math.abs(reconciled - Number(ticket.quantity)) > 0.000001) {
+            return toast(
+              'Returned, lost, and damaged-beyond-use quantities must equal the quantity on loan.',
+              true,
+            );
+          }
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const result = await services.confirmReturn(ticket.id, values);
+            markFormClean(form);
+            closeModal();
+            await commit(`Return ${ticket.id} inspected and recorded.`, 'success', result);
+          } catch (error) {
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openLendingDetails = (ticketId) => {
+    const ticket = (getState()?.lendingTickets ?? []).find((entry) => entry.id === ticketId);
+    if (!ticket) return toast('Ticket not found.', true);
+    const history = (ticket.history ?? [])
+      .map(
+        (entry) =>
+          `<article class="request-line"><div><strong>${esc(entry.newStatus)}</strong><small>${esc(entry.changedAt)} · ${esc(entry.changedBy)}</small>${entry.reason ? `<small>${esc(entry.reason)}</small>` : ''}</div></article>`,
+      )
+      .join('');
+    openModal(
+      `${ticket.id} · ${ticket.borrowerName}`,
+      `${lendingApplicantHtml(ticket)}
+       <div class="mode-note section-gap"><strong>Requested</strong><br>${esc(ticket.requestedQuantity || ticket.quantity)} of ${esc(ticket.requestedItemId || ticket.itemId)}<br><strong>Current approved line</strong><br>${esc(ticket.quantity)} of ${esc(ticket.itemId)} · ${esc(ticket.status)}</div>
+       <div class="section-kicker section-gap">Review and status history</div>
+       <div class="line-list">${history || '<div class="empty">No status history is available.</div>'}</div>`,
+    );
+  };
+
   const installLendingApproval = () => {
     const root = document.querySelector('#lendingTickets');
     if (!root || root === lendingApprovalRoot) return;
@@ -427,11 +687,17 @@ export function createRuntimeExtensions(options) {
     root.addEventListener(
       'click',
       (event) => {
-        const button = event.target.closest('[data-loan-action="approve"]');
+        const button = event.target.closest('[data-loan-action]');
         if (!button) return;
+        const action = button.dataset.loanAction;
+        if (!['approve', 'reject', 'handoff', 'return', 'details'].includes(action)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        openLendingApproval(button.dataset.ticketId);
+        if (action === 'approve') openLendingReview(button.dataset.ticketId);
+        if (action === 'reject') openLendingReview(button.dataset.ticketId, 'REJECT');
+        if (action === 'handoff') openLendingHandoff(button.dataset.ticketId);
+        if (action === 'return') openLendingReturn(button.dataset.ticketId);
+        if (action === 'details') openLendingDetails(button.dataset.ticketId);
       },
       true,
     );
@@ -684,6 +950,17 @@ export function createRuntimeExtensions(options) {
   };
 
   const accessManagementAllowed = () => can(getState()?.currentUser, 'admin_access');
+  const advertisementManagementAllowed = () =>
+    can(getState()?.currentUser, 'manage_advertisements');
+
+  const lendingUsageAllowed = () => {
+    const authorization = getState()?.currentUser?.authorization;
+    if (!can(getState()?.currentUser, 'view_lending_usage')) return false;
+    return (
+      ['DIRECTOR', 'ADMINISTRATOR'].includes(authorization?.roleId) ||
+      authorization?.committeeIds?.includes('COM_INVENTORY_PANTRY')
+    );
+  };
 
   const localReferenceAdminRecords = (domain) => {
     const state = getState() ?? {};
@@ -890,9 +1167,192 @@ export function createRuntimeExtensions(options) {
       account: { accessId: command.currentAccessId },
       history: [],
     });
+    state.publicAdvertisements ??= [];
+    services.listAdvertisements ??= async () => ({
+      ok: true,
+      items: state.publicAdvertisements,
+      pagination: {
+        page: 1,
+        pageSize: 20,
+        total: state.publicAdvertisements.length,
+        totalPages: 1,
+      },
+    });
+    services.saveAdvertisement ??= async (command) => {
+      const current = state.publicAdvertisements.find((item) => item.id === command.id);
+      const record = {
+        ...current,
+        ...command,
+        alt_text: command.altText,
+        call_to_action: command.callToAction,
+        destination_url: command.destinationUrl,
+        display_order: Number(command.displayOrder ?? 0),
+        publish_at: command.publishAt,
+        expire_at: command.expireAt,
+        status: command.status ?? 'DRAFT',
+        updated_at: new Date().toISOString(),
+      };
+      if (current) Object.assign(current, record);
+      else state.publicAdvertisements.push(record);
+      return { ok: true, id: command.id, status: record.status };
+    };
+    services.uploadAdvertisementMedia ??= async (command) => ({
+      ok: true,
+      id: command.id,
+      imageUrl: '',
+    });
+    services.archiveAdvertisement ??= async (command) => {
+      const current = state.publicAdvertisements.find((item) => item.id === command.id);
+      if (current) current.status = 'ARCHIVED';
+      return { ok: true, id: command.id, status: 'ARCHIVED' };
+    };
+    services.getLendingUsage ??= async () => {
+      const activity = [...new Map(
+        (state.lendingTickets ?? []).map((ticket) => [
+          `${ticket.borrowerName}:${ticket.department}`,
+          {
+            staff_name: ticket.borrowerName,
+            department: ticket.department,
+            request_count: 1,
+            consumable_requests: ticket.ticketType === 'CONSUMABLE' ? 1 : 0,
+            consumable_quantity: ticket.ticketType === 'CONSUMABLE' ? Number(ticket.quantity) : 0,
+            reusable_borrowed: ticket.ticketType !== 'CONSUMABLE' ? Number(ticket.quantity) : 0,
+            reusable_outstanding: ticket.status === 'ON_LOAN' ? Number(ticket.quantity) : 0,
+            reusable_overdue: 0,
+            first_request_at: ticket.createdAt,
+            latest_request_at: ticket.createdAt,
+          },
+        ]),
+      ).values()];
+      return {
+        ok: true,
+        generatedAt: new Date().toISOString(),
+        activity,
+        frequentItems: [],
+        options: {
+          departments: [...new Set(activity.map((row) => row.department))].filter(Boolean),
+          staff: [...new Set(activity.map((row) => row.staff_name))].filter(Boolean),
+          items: (state.inventoryItems ?? []).map((item) => ({ id: item.id, name: item.name })),
+        },
+      };
+    };
   };
 
   const accessDate = (value) => (value ? new Date(value).toLocaleString('en-PH') : 'Not recorded');
+
+  const fileBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => resolve(String(reader.result).split(',')[1] ?? ''));
+      reader.addEventListener('error', () => reject(reader.error));
+      reader.readAsDataURL(file);
+    });
+
+  const renderAdvertisementDirectory = () => {
+    const root = document.querySelector('[data-advertisement-admin]');
+    if (!root || root.hidden) return;
+    const items = advertisementDirectory?.items ?? [];
+    root.querySelector('[data-advertisement-results]').innerHTML =
+      items
+        .map(
+          (item) =>
+            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(item.status)} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
+        )
+        .join('') || '<div class="empty">No advertisements match these filters.</div>';
+    const pagination = advertisementDirectory?.pagination ?? {
+      page: 1,
+      totalPages: 1,
+      total: items.length,
+    };
+    const pager = root.querySelector('[data-advertisement-pagination]');
+    pager.hidden = pagination.totalPages <= 1;
+    pager.querySelector('[data-advertisement-page-summary]').textContent =
+      `Page ${pagination.page} of ${pagination.totalPages} Â· ${pagination.total} records`;
+    pager.querySelector('[data-advertisement-page="previous"]').disabled = pagination.page <= 1;
+    pager.querySelector('[data-advertisement-page="next"]').disabled =
+      pagination.page >= pagination.totalPages;
+  };
+
+  const refreshAdvertisementDirectory = async ({ force = false } = {}) => {
+    const root = document.querySelector('[data-advertisement-admin]');
+    if (!root || !advertisementManagementAllowed()) return;
+    if (!force && advertisementDirectory?.pagination?.page === advertisementPage) return;
+    root.querySelector('[data-advertisement-results]').innerHTML =
+      '<div class="empty">Loading authorized advertisementsâ€¦</div>';
+    try {
+      advertisementDirectory = await services.listAdvertisements({
+        query: root.querySelector('[name="advertisementSearch"]')?.value ?? '',
+        status: root.querySelector('[name="advertisementStatus"]')?.value ?? 'ALL',
+        page: advertisementPage,
+        pageSize: 20,
+      });
+      renderAdvertisementDirectory();
+    } catch (error) {
+      root.querySelector('[data-advertisement-results]').innerHTML =
+        `<div class="alert error">${esc(error.message)}</div>`;
+    }
+  };
+
+  const openAdvertisementForm = (item = null) => {
+    openModal(
+      item ? `Edit ${item.id}` : 'Create advertisement',
+      `<form id="advertisementForm"><div class="form-grid">
+        <label>Stable ID<input name="id" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,79}" value="${esc(item?.id ?? '')}" ${item ? 'readonly' : ''} required></label>
+        <label>Title<input name="title" maxlength="160" value="${esc(item?.title ?? '')}" required></label>
+        <label class="span-2">Description<textarea name="description" maxlength="500">${esc(item?.description ?? '')}</textarea></label>
+        <label class="span-2">Alternative text<input name="altText" maxlength="240" value="${esc(item?.alt_text ?? '')}" required></label>
+        <label>Call to action<input name="callToAction" maxlength="80" value="${esc(item?.call_to_action ?? '')}"></label>
+        <label>HTTPS destination<input name="destinationUrl" type="url" value="${esc(item?.destination_url ?? '')}"></label>
+        <label>Status<select name="status">${['DRAFT', 'ACTIVE', 'INACTIVE'].map((status) => option(status, status, item?.status ?? 'DRAFT')).join('')}</select></label>
+        <label>Display order<input name="displayOrder" type="number" step="1" value="${esc(item?.display_order ?? 0)}"></label>
+        <label>Publish at<input name="publishAt" type="datetime-local" value="${esc(item?.publish_at?.slice(0, 16) ?? '')}"></label>
+        <label>Expire at<input name="expireAt" type="datetime-local" value="${esc(item?.expire_at?.slice(0, 16) ?? '')}"></label>
+        <label class="span-2">JPEG, PNG, or WebP media<input name="media" type="file" accept="image/jpeg,image/png,image/webp"><small>Maximum 750 KB. Full artwork is shown without cropping.</small></label>
+      </div><button class="primary" type="submit">${item ? 'Save changes' : 'Create advertisement'}</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#advertisementForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const media = form.elements.media.files[0];
+          delete values.media;
+          try {
+            const requestedStatus = values.status;
+            const initialValues = {
+              ...values,
+              displayOrder: Number(values.displayOrder),
+              ...(!item && media && requestedStatus === 'ACTIVE' ? { status: 'DRAFT' } : {}),
+            };
+            await services.saveAdvertisement(initialValues);
+            if (media) {
+              if (media.size > 750_000) throw new Error('Advertisement media exceeds 750 KB.');
+              await services.uploadAdvertisementMedia({
+                id: values.id,
+                contentType: media.type,
+                base64: await fileBase64(media),
+              });
+            }
+            if (!item && media && requestedStatus === 'ACTIVE') {
+              await services.saveAdvertisement({
+                ...values,
+                displayOrder: Number(values.displayOrder),
+              });
+            }
+            closeModal();
+            advertisementDirectory = null;
+            await refreshAdvertisementDirectory({ force: true });
+            toast('Advertisement saved and audited.');
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
 
   const renderAccessDirectory = () => {
     const root = document.querySelector('[data-access-management]');
@@ -1299,9 +1759,16 @@ export function createRuntimeExtensions(options) {
     if (!allowed) return;
     const accessMode = referenceAdminDomain === 'PERMISSIONS';
     const accessRoot = root.querySelector('[data-access-management]');
-    accessRoot.hidden = !accessMode || !accessManagementAllowed();
-    root.querySelector('[data-reference-admin-generic]').hidden = accessMode;
-    root.querySelector('[data-reference-admin-pending-panel]').hidden = accessMode;
+    accessRoot.hidden = advertisementAdminOpen || !accessMode || !accessManagementAllowed();
+    root.querySelector('[data-reference-admin-generic]').hidden = advertisementAdminOpen || accessMode;
+    root.querySelector('[data-reference-admin-pending-panel]').hidden = advertisementAdminOpen || accessMode;
+    const advertisementRoot = root.querySelector('[data-advertisement-admin]');
+    advertisementRoot.hidden = !advertisementAdminOpen || !advertisementManagementAllowed();
+    const advertisementControl = root.querySelector('[data-advertisement-admin-control]');
+    advertisementControl.hidden = !advertisementManagementAllowed();
+    advertisementControl.disabled = !advertisementManagementAllowed();
+    advertisementControl.classList.toggle('active', advertisementAdminOpen);
+    advertisementControl.setAttribute('aria-pressed', String(advertisementAdminOpen));
     const accessControl = root.querySelector('[data-reference-admin-control-domain="PERMISSIONS"]');
     if (accessControl) {
       accessControl.hidden = !accessManagementAllowed();
@@ -1318,6 +1785,10 @@ export function createRuntimeExtensions(options) {
       control.classList.toggle('active', active);
       control.setAttribute('aria-pressed', String(active));
     });
+    if (advertisementAdminOpen) {
+      renderAdvertisementDirectory();
+      return;
+    }
     if (accessMode) {
       renderAccessDirectory();
       return;
@@ -1372,6 +1843,7 @@ export function createRuntimeExtensions(options) {
     }
     root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
     root.querySelector('[name="referenceAdminDomain"]').addEventListener('change', (event) => {
+      advertisementAdminOpen = false;
       referenceAdminDomain = event.target.value;
       referenceAdminWorkspace = null;
       void refreshReferenceAdminWorkspace({ force: true });
@@ -1386,11 +1858,78 @@ export function createRuntimeExtensions(options) {
     });
     root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
       control.addEventListener('click', () => {
+        advertisementAdminOpen = false;
         referenceAdminDomain = control.dataset.referenceAdminControlDomain;
         root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
         referenceAdminWorkspace = null;
         void refreshReferenceAdminWorkspace({ force: true });
       });
+    });
+    root.querySelector('[data-advertisement-admin-control]').addEventListener('click', () => {
+      if (!advertisementManagementAllowed()) return;
+      advertisementAdminOpen = true;
+      renderReferenceAdminWorkspace();
+      void refreshAdvertisementDirectory({ force: true });
+    });
+    root.querySelector('[data-advertisement-create]').addEventListener('click', () =>
+      openAdvertisementForm(),
+    );
+    root.querySelector('[data-advertisement-refresh]').addEventListener('click', () =>
+      refreshAdvertisementDirectory({ force: true }),
+    );
+    root.querySelector('[name="advertisementStatus"]').addEventListener('change', () => {
+      advertisementPage = 1;
+      advertisementDirectory = null;
+      void refreshAdvertisementDirectory({ force: true });
+    });
+    root.querySelector('[name="advertisementSearch"]').addEventListener('input', () => {
+      clearTimeout(advertisementSearchTimer);
+      advertisementSearchTimer = setTimeout(() => {
+        advertisementPage = 1;
+        advertisementDirectory = null;
+        void refreshAdvertisementDirectory({ force: true });
+      }, 180);
+    });
+    root.querySelector('[data-advertisement-pagination]').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-advertisement-page]');
+      if (!button) return;
+      advertisementPage += button.dataset.advertisementPage === 'previous' ? -1 : 1;
+      advertisementPage = Math.max(1, advertisementPage);
+      advertisementDirectory = null;
+      void refreshAdvertisementDirectory({ force: true });
+    });
+    root.querySelector('[data-advertisement-results]').addEventListener('click', (event) => {
+      const edit = event.target.closest('[data-advertisement-edit]');
+      if (edit) {
+        openAdvertisementForm(
+          advertisementDirectory?.items.find((item) => item.id === edit.dataset.advertisementEdit),
+        );
+      }
+      const archive = event.target.closest('[data-advertisement-archive]');
+      if (archive) {
+        const id = archive.dataset.advertisementArchive;
+        openModal(
+          `Archive ${id}`,
+          '<p>This removes the advertisement from public rotation while preserving its audit history.</p><button class="danger" type="button" data-confirm-advertisement-archive>Archive advertisement</button>',
+          (modal) => {
+            modal
+              .querySelector('[data-confirm-advertisement-archive]')
+              .addEventListener('click', async (confirmEvent) => {
+                confirmEvent.currentTarget.disabled = true;
+                try {
+                  await services.archiveAdvertisement({ id });
+                  closeModal();
+                  advertisementDirectory = null;
+                  await refreshAdvertisementDirectory({ force: true });
+                  toast('Advertisement archived and audited.');
+                } catch (error) {
+                  toast(error.message, true);
+                  confirmEvent.currentTarget.disabled = false;
+                }
+              });
+          },
+        );
+      }
     });
     root
       .querySelector('[data-reference-admin-refresh]')
@@ -1455,6 +1994,162 @@ export function createRuntimeExtensions(options) {
       }
     });
   };
+
+  const renderLendingUsage = () => {
+    const root = document.querySelector('[data-lending-usage]');
+    if (!root || root.hidden || !lendingUsageReport) return;
+    const activity = lendingUsageReport.activity ?? [];
+    const sum = (field) =>
+      activity.reduce((total, row) => total + Number(row[field] ?? 0), 0);
+    root.querySelector('[data-lending-usage-metrics]').innerHTML = [
+      ['Requests', sum('request_count'), 'Distinct Lending Hub requests'],
+      ['Consumables', sum('consumable_quantity'), 'Issued or requested quantity'],
+      ['Reusable outstanding', sum('reusable_outstanding'), 'Currently on loan'],
+      ['Reusable overdue', sum('reusable_overdue'), 'Past the approved due date'],
+    ]
+      .map(
+        ([label, value, detail]) =>
+          `<article class="card metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(detail)}</small></article>`,
+      )
+      .join('');
+    root.querySelector('[data-lending-usage-results]').innerHTML =
+      activity.length > 0
+        ? `<table><thead><tr><th>Staff / officer</th><th>Department</th><th>Requests</th><th>Consumables</th><th>Reusable borrowed</th><th>Outstanding</th><th>Overdue</th><th>First / latest</th></tr></thead><tbody>${activity
+            .map(
+              (row) =>
+                `<tr><td>${esc(row.staff_name)}</td><td>${esc(row.department)}</td><td>${esc(row.request_count)}</td><td>${esc(row.consumable_requests)} requests &middot; ${esc(row.consumable_quantity)} quantity</td><td>${esc(row.reusable_borrowed)}</td><td>${esc(row.reusable_outstanding)}</td><td>${esc(row.reusable_overdue)}</td><td>${esc(accessDate(row.first_request_at))}<br>${esc(accessDate(row.latest_request_at))}</td></tr>`,
+            )
+            .join('')}</tbody></table>`
+        : '<div class="empty">No Lending Hub activity matches these filters.</div>';
+    root.querySelector('[data-lending-usage-items]').innerHTML = `<h3>Frequent items</h3>${
+      (lendingUsageReport.frequentItems ?? [])
+        .map(
+          (item) =>
+            `<div class="request-line"><span><strong>${esc(item.item_name)}</strong><small>${esc(item.item_id)} &middot; ${esc(item.item_type)}</small></span><span>${esc(item.request_count)} requests &middot; ${esc(item.quantity)} quantity</span></div>`,
+        )
+        .join('') || '<div class="empty">No item activity matches these filters.</div>'
+    }`;
+  };
+
+  const loadLendingUsage = async () => {
+    const root = document.querySelector('[data-lending-usage]');
+    if (!root || !lendingUsageAllowed()) return;
+    const form = root.querySelector('[data-lending-usage-filters]');
+    root.querySelector('[data-lending-usage-results]').innerHTML =
+      '<div class="empty">Loading authorized Lending Hub activityâ€¦</div>';
+    try {
+      lendingUsageReport = await services.getLendingUsage(
+        Object.fromEntries(new FormData(form).entries()),
+      );
+      const department = form.elements.department.value;
+      const itemId = form.elements.itemId.value;
+      form.elements.department.innerHTML = `<option value="">All departments</option>${(
+        lendingUsageReport.options?.departments ?? []
+      )
+        .map((value) => option(value, value, department))
+        .join('')}`;
+      form.elements.itemId.innerHTML = `<option value="">All items</option>${(
+        lendingUsageReport.options?.items ?? []
+      )
+        .map((item) => option(item.id, `${item.name} (${item.id})`, itemId))
+        .join('')}`;
+      root.querySelector('#lendingUsageStaff').innerHTML = (
+        lendingUsageReport.options?.staff ?? []
+      )
+        .map((value) => `<option value="${esc(value)}"></option>`)
+        .join('');
+      renderLendingUsage();
+    } catch (error) {
+      root.querySelector('[data-lending-usage-results]').innerHTML =
+        `<div class="alert error">${esc(error.message)}</div>`;
+    }
+  };
+
+  const exportLendingUsage = () => {
+    const activity = lendingUsageReport?.activity ?? [];
+    const cells = (values) =>
+      values
+        .map((value) => {
+          const text = String(value ?? '');
+          return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+        })
+        .join(',');
+    const csv = [
+      cells([
+        'Staff or officer',
+        'Department',
+        'Request count',
+        'Consumable requests',
+        'Consumable quantity',
+        'Reusable borrowed',
+        'Reusable outstanding',
+        'Reusable overdue',
+        'First request',
+        'Latest request',
+      ]),
+      ...activity.map((row) =>
+        cells([
+          row.staff_name,
+          row.department,
+          row.request_count,
+          row.consumable_requests,
+          row.consumable_quantity,
+          row.reusable_borrowed,
+          row.reusable_outstanding,
+          row.reusable_overdue,
+          row.first_request_at,
+          row.latest_request_at,
+        ]),
+      ),
+    ].join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'hau-usc-lending-usage.csv';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const installLendingUsage = () => {
+    const lendingView = document.querySelector('#lending');
+    if (lendingView && !lendingView.querySelector('[data-lending-usage]')) {
+      lendingView.insertAdjacentHTML(
+        'beforeend',
+        `<article class="panel section-gap" data-lending-usage hidden>
+          <div class="panel-head"><div><h2>Lending Usage</h2><p>Authorized Lending Hub activity only. Consumable and reusable use remain separated.</p></div><button class="secondary" type="button" data-lending-usage-export>Export CSV</button></div>
+          <form class="toolbar lending-usage-toolbar" data-lending-usage-filters>
+            <label>From<input name="from" type="date"></label>
+            <label>To<input name="to" type="date"></label>
+            <label>Department<select name="department"><option value="">All departments</option></select></label>
+            <label>Staff or officer<input name="staff" list="lendingUsageStaff" placeholder="Name"></label>
+            <datalist id="lendingUsageStaff"></datalist>
+            <label>Item<select name="itemId"><option value="">All items</option></select></label>
+            <button class="primary" type="submit">Apply filters</button>
+          </form>
+          <div class="grid-4 section-gap" data-lending-usage-metrics></div>
+          <div class="table-wrap section-gap" data-lending-usage-results><div class="empty">Open Lending Usage to load authorized activity.</div></div>
+          <div class="section-gap" data-lending-usage-items></div>
+        </article>`,
+      );
+    }
+    const root = lendingView?.querySelector('[data-lending-usage]');
+    if (!root) return;
+    const allowed = lendingUsageAllowed();
+    root.hidden = !allowed;
+    if (!allowed || root.dataset.bound === 'true') return;
+    root.dataset.bound = 'true';
+    root
+      .querySelector('[data-lending-usage-filters]')
+      .addEventListener('submit', (event) => {
+        event.preventDefault();
+        void loadLendingUsage();
+      });
+    root
+      .querySelector('[data-lending-usage-export]')
+      .addEventListener('click', exportLendingUsage);
+    void loadLendingUsage();
+  };
+
   const foodFormPayload = () => {
     const form = document.querySelector('#compositeRequestForm');
     if (!form) return null;
@@ -3180,12 +3875,14 @@ export function createRuntimeExtensions(options) {
     installMaterialsWorkflow();
     installVenueEquipmentWorkflow();
     installReferenceAdminWorkspace();
+    installLendingUsage();
     installRoleExperience();
     renderRoleExperience();
     installSharedMobileNav();
     installReleaseConfirmation();
     installCanvassQuality();
     installDeliverableReceiving();
+    installLendingUsage();
     if (!isRequestOnly()) {
       lending = createLendingController({ markFormClean });
       installLendingApproval();

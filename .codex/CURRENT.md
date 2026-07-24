@@ -1,7 +1,7 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 6 — Complete Office Lending Hub
+Phase: Phase 6 — Follow-Up Amendment Slice 1: Lending, Media, and Internal Hub
 Required model: GPT-5.6 Sol — High
 Status: ACTIVE — PHASES 0–5 ACCEPTED ON STAGING; PRODUCTION NO-GO
 
@@ -13,11 +13,13 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 ## Active accepted specification
 
 - `.codex/specs/v0.7.0-production-master.md`
+- `.codex/specs/v0.7.0-follow-up-amendment.md`
 - `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`
 - Master prompt source SHA-256: `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067`.
 - Shared contract source SHA-256: `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67`.
+- Follow-up amendment source SHA-256: `4087844f5f32786c45ccde3d31cb55d66e4c259a556276295500032e036389c5`.
 
-The v0.7.0 master prompt supersedes earlier phase-stop prompts for this continuous owner-authorized launch program. Safety, privacy, recovery, fail-closed authorization, truthful evidence, and the master-prompt production gates remain mandatory.
+The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
 ## Accepted completion through Phase 5
 
@@ -52,6 +54,6 @@ Durable handoffs:
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: implement Phase 6 internal Office Lending Hub acceptance on top of the Phase 4 backend and Phase 5 catalog, including review, partial approval/rejection/substitution, reservation, handoff, return, damaged/lost handling, consumable issue, applicant details, eligibility evidence, and audit history without weakening server authorization or ledger invariants.
+One smallest safe next action: finish the known uncommitted Phase 6 internal-lending review/issue/return slice, then execute Amendment Slice 1 catalog diagnosis, borrower classification, public tracking removal, advertisement system, balanced/clickable logos, and role-protected Lending Usage without weakening server authorization or ledger invariants.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

@@ -92,8 +92,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '14',
-        latestMigration: '0014_lending_catalog_assets.sql',
+        schemaVersion: '16',
+        latestMigration: '0016_public_lending_profiles_and_advertisements.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -380,7 +380,7 @@ test('deployed staging public Request Center submits and privately tracks withou
   }
 });
 
-test('deployed staging public Lending Center submits and privately tracks without login', async ({
+test('deployed staging public Lending Center submits both borrower classes without tracking', async ({
   page,
   baseURL,
 }) => {
@@ -392,6 +392,7 @@ test('deployed staging public Lending Center submits and privately tracks withou
     const catalogResponse = await publicRequest.get('/api/public/lending/catalog');
     expect(catalogResponse.status()).toBe(200);
     const catalog = await catalogResponse.json();
+    expect(catalog.uscDepartments).toContain('Department of Logistics');
     const item = catalog.items.find((entry) =>
       ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(entry.availability),
     );
@@ -399,6 +400,7 @@ test('deployed staging public Lending Center submits and privately tracks withou
     expect(item).toEqual(
       expect.objectContaining({
         productId: item.id,
+        aliases: expect.any(Array),
         type: expect.stringMatching(/^(REUSABLE|CONSUMABLE)$/u),
         dueDateRequired: expect.any(Boolean),
         acknowledgmentRequired: expect.any(Boolean),
@@ -419,13 +421,14 @@ test('deployed staging public Lending Center submits and privately tracks withou
     const submitted = await publicRequest.post('/api/public/lending', {
       headers: { origin: new URL(baseURL).origin },
       data: {
+        borrowerType: 'ANGELITE',
         borrowerName: 'Authorized Synthetic Angelite Borrower',
         studentId: '12345678',
         courseYear: 'BSIT 2',
-        department: 'SEA',
+        academicDepartment: 'School of Computing',
         contactNumber: '+63 917 000 0010',
         email: `lending-${unique}@gmail.com`,
-        purpose: 'Authorized synthetic no-login lending and private tracking staging proof.',
+        purpose: 'Authorized synthetic no-login lending submission staging proof.',
         pickupDate: pickup,
         dueDate: due,
         responsibilityAcknowledged: true,
@@ -436,19 +439,35 @@ test('deployed staging public Lending Center submits and privately tracks withou
     expect(submitted.status()).toBe(200);
     const receipt = await submitted.json();
     expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
-    expect(receipt.trackingCode.length).toBeGreaterThan(32);
+    expect(receipt.submissionId).toMatch(/^LBR-/u);
+    expect(receipt).not.toHaveProperty('trackingCode');
 
-    const tracked = await publicRequest.post('/api/public/lending/track', {
+    const removedTracking = await publicRequest.post('/api/public/lending/track', {
       headers: { origin: new URL(baseURL).origin },
-      data: { ticketId: receipt.ticketId, trackingCode: receipt.trackingCode },
+      data: { submissionId: receipt.submissionId, trackingCode: 'not-issued' },
     });
-    expect(tracked.status()).toBe(200);
-    const tracking = await tracked.json();
-    expect(tracking.request).toMatchObject({ id: receipt.ticketId, status: 'FOR_REVIEW' });
-    expect(tracking.request.tickets).toHaveLength(1);
-    expect(tracking.request).not.toHaveProperty('email');
-    expect(tracking.request).not.toHaveProperty('contactNumber');
-    expect(tracking.request).not.toHaveProperty('studentId');
+    expect(removedTracking.status()).toBe(404);
+
+    const staffSubmission = await publicRequest.post('/api/public/lending', {
+      headers: { origin: new URL(baseURL).origin },
+      data: {
+        borrowerType: 'USC_STAFF',
+        borrowerName: 'Authorized Synthetic USC Staff Borrower',
+        studentId: '12345678',
+        uscDepartment: 'Department of Logistics',
+        positionRole: 'Synthetic Acceptance Officer',
+        contactNumber: '+63 917 000 0010',
+        email: `staff-lending-${unique}@example.invalid`,
+        purpose: 'Authorized synthetic USC staff lending submission staging proof.',
+        pickupDate: pickup,
+        dueDate: due,
+        responsibilityAcknowledged: true,
+        lines: [{ itemId: item.id, quantity: 1 }],
+        clientRequestId: `staging-public-lending-staff-${unique}`,
+      },
+    });
+    expect(staffSubmission.status()).toBe(200);
+    await expect(staffSubmission.json()).resolves.toMatchObject({ status: 'FOR_REVIEW' });
 
     const after = await (await adminRequest.get('/api/inventory')).json();
     expect(after.data.inventoryItems.find((entry) => entry.id === item.id).onHand).toBe(balanceBefore);
@@ -456,6 +475,7 @@ test('deployed staging public Lending Center submits and privately tracks withou
     await page.goto('/lending');
     await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'USC Announcements' })).toBeVisible();
     await expect(page.getByLabel('Access ID')).toHaveCount(0);
     await expect(page.locator('.app-shell')).toBeHidden();
   } finally {

@@ -112,8 +112,8 @@ const AUTHORIZATION_CAPABILITIES = new Set([
   'request.create', 'request.review', 'request.missing_information', 'request.reject', 'request.reopen',
   'workflow.assign_committee', 'workflow.assign_staff', 'workflow.escalate',
   'fulfillment.canvass', 'fulfillment.procure', 'fulfillment.reserve', 'fulfillment.receive', 'fulfillment.release',
-  'lending.create', 'lending.approve', 'lending.handoff', 'lending.return', 'inventory.merge_event_item', 'inventory.adjust',
-  'reference.catalog.manage', 'reference.manage', 'access.admin', 'system.admin', 'system.diagnostics', 'evidence.upload',
+  'lending.create', 'lending.approve', 'lending.handoff', 'lending.return', 'lending.usage.view', 'inventory.merge_event_item', 'inventory.adjust',
+  'reference.catalog.manage', 'reference.manage', 'advertisement.manage', 'access.admin', 'system.admin', 'system.diagnostics', 'evidence.upload',
 ]);
 const SENSITIVE_KEYS = new Set([
   'email',
