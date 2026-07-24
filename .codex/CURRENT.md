@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 6 — Follow-Up Amendment Slice 4: Full Staging Acceptance
+Phase: Phase 7 — Shared Internal Shell, Routing, and Real Workspace Implementation
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -11,6 +11,7 @@ Phase 5 deployed runtime: `fc9ef1ccc5fef9018d37157a13078773c9018a13`
 Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
 Amendment Slice 2 deployed runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`
 Amendment Slice 3 deployed runtime: `ef4c74c06b85449c3b806d0ba490bb4d4578ed39`
+Final amendment deployed runtime: `afe9204828cd51f66ffabf46d0b7a69017c77c65`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -44,6 +45,8 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`
+- `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md`
+- `.codex/V0_7_AMENDMENT_58_CASE_ACCEPTANCE_MATRIX.md`
 
 ## Phase 5 final evidence
 
@@ -104,12 +107,33 @@ Durable handoffs:
   refreshed without exposing credentials.
 - PR #9 exact-head checks passed 6 / 6.
 
+## Amendment Slice 4 and Phase 6 final evidence
+
+- Final product/evidence commit: `60a0138cee1188a0393318594cdd95363d163aab`.
+- Final accepted candidate and deployed staging identity:
+  `afe9204828cd51f66ffabf46d0b7a69017c77c65`.
+- The consolidated review repaired long-list Event/Sub-event autocomplete and
+  strengthened catalog state, borrower-field clearing, and Lending Usage
+  coverage.
+- Repository acceptance passed: 60 Vitest files / 409 tests and full
+  Playwright 95 passed / 229 intentional skips / zero failed.
+- The final functional deployed suite passed 4 / 4 at `60a0138`. Exact
+  `afe9204` then passed cache-busted health/readiness, protected-binding
+  verification, governed brand/login smoke, and all 6 / 6 PR checks.
+- The governed-source readback remains one non-lendable inventory item and
+  zero approved events.
+- All 58 amendment cases pass. Cleanup reconciled zero visible fixture
+  requests, zero request reservations/ledger rows, zero public catalog items,
+  inactive fixtures, and DOL restored to `STARTER`.
+- Master Phase 6 is accepted because Amendment Slice 1 covers the complete
+  Internal Office Lending Hub contract.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: execute Amendment Slice 4 consolidated
-58-case staging acceptance, review the complete amendment diff and governed
-data truth, then resume the next unfinished master-prompt phase.
+One smallest safe next action: audit and complete Phase 7 shared internal shell,
+server-routed navigation, responsive workspace switching, and real role
+workspace implementation against the accepted visual references.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

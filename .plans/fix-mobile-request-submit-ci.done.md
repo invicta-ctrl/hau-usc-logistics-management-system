@@ -30,7 +30,7 @@ Coverage check: 6 / 6 requirements mapped.
 
 ## Status
 
-In Progress
+Done
 
 ## Context
 
@@ -134,5 +134,5 @@ Removal checklist:
 - [x] Focused 390px scenario passes
 - [x] Full Playwright passes
 - [x] `git diff --check` passes
-- [ ] Exact-head PR checks pass 6 / 6
+- [x] Exact-head PR checks pass 6 / 6
 - [x] Production remains untouched

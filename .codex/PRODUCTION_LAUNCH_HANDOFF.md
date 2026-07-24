@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -40,8 +40,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTE
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
 | 6. Migrations | PARTIAL — staging through 0018 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH AMENDMENT SLICE 3 runtime `ef4c74c` |
-| 9. Staging acceptance | PENDING |
+| 8. Staging deployment | PASS THROUGH FINAL AMENDMENT runtime `afe9204` |
+| 9. Staging acceptance | PASS FOR FOLLOW-UP AMENDMENT; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -155,11 +155,32 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–3 ACCEPTE
 - Durable handoff:
   `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`.
 
+## Phase 6 / Follow-Up Amendment Slice 4 evidence
+
+- The complete amendment diff was reviewed. Long-list Event/Sub-event
+  autocomplete was the only discovered product gap and was repaired.
+- Final repository acceptance passed: 60 Vitest files / 409 tests, full
+  Playwright 95 / 229 intentional skips, and every repository gate.
+- Read-only governed-source verification confirmed one active inventory item
+  that is explicitly not available for lending and zero approved event rows.
+- Final functional staging runtime `60a0138`, schema 18, passed 4 / 4 deployed
+  scenarios.
+- Final accepted candidate `afe9204` preserved identical product code, passed
+  cache-busted health and governed brand/login smoke, retained all protected
+  bindings, and passed exact-head PR checks 6 / 6.
+- The complete 58-case amendment matrix passed.
+- Cleanup returned DOL to `STARTER`, archived all acceptance requests, retained
+  history/audit, inactivated fixtures, and reconciled zero public catalog
+  items, reservations, or inventory-ledger movements.
+- Phase 6 is accepted on staging.
+- Durable handoff:
+  `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Follow-Up Amendment Slice 4 consolidated staging acceptance. Do not
+Complete Phase 7 shared internal shell and real workspace implementation. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

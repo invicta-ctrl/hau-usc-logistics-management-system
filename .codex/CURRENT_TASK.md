@@ -13,17 +13,17 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 6 / Follow-Up Amendment Slice 4 — consolidate all 58 amendment acceptance
-cases on live staging, review the complete amendment diff and governed data
-truth, reconcile temporary evidence, and resume the next unfinished
-master-prompt phase.
+Phase 7 — audit and complete the shared internal shell, server-routed
+navigation, responsive workspace switching, and real role workspaces against
+the accepted detailed visual references.
 
-Slice 3 is accepted on staging at exact runtime `ef4c74c`, schema 18.
-Authenticated server-owned department identity, New/Additional/scoped
-Tracking, atomic `FOR_REVIEW` submission, confirmed success/PDF, repository
-gates, deployed checks, cleanup reconciliation, and six exact-head CI checks
+The complete follow-up amendment and master Phase 6 are accepted on staging at
+exact runtime `afe9204`, schema 18. The 58-case matrix, 409 unit tests,
+95 browser passes, functional deployed 4 / 4 at `60a0138`, exact-head
+health/brand smoke, 6 / 6 CI, governed-source truth, and cleanup reconciliation
 passed.
 Durable evidence:
-`.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`.
+`.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md` and
+`.codex/V0_7_AMENDMENT_58_CASE_ACCEPTANCE_MATRIX.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.
