@@ -13,10 +13,15 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 6 / Follow-Up Amendment Slice 2 — create and manage the exact ten
-department requester accounts using the accepted authentication foundation,
-server-owned department identity, secure initial/reset credentials,
-revocation/restoration, Administrator-only controls, audit history, and the
-atomic outside-Git access-code handoff.
+Phase 6 / Follow-Up Amendment Slice 3 — require authenticated department access
+for the Request Center, derive requester identity from the server session, and
+implement New/Additional/scoped Tracking, approved choices, atomic submission,
+confirmed success, and a private-safe branded PDF receipt.
+
+Slice 2 is accepted on staging at exact runtime `5cc171a`, schema 17. The ten
+governed department accounts, revocation/restoration, private credential
+handoff, repository gates, deployed checks, and six exact-head CI checks passed.
+Durable evidence:
+`.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

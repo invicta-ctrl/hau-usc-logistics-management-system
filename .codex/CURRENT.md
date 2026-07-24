@@ -1,14 +1,15 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 6 — Follow-Up Amendment Slice 2: Department Authentication and Account Handoff
+Phase: Phase 6 — Follow-Up Amendment Slice 3: Authenticated Request Center
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICES 1–2 ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
 Phase 5 deployed runtime: `fc9ef1ccc5fef9018d37157a13078773c9018a13`
 Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
+Amendment Slice 2 deployed runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -40,6 +41,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`
 - `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`
+- `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -68,14 +70,25 @@ Durable handoffs:
   lending fixture is archived/`NOT_LENDABLE`, and the real governed public
   lending catalog is truthfully empty.
 
+## Amendment Slice 2 final evidence
+
+- Candidate and deployed staging runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`.
+- Migration 0017 applied after a private export with SHA-256
+  `8b2a39ced6450fd78837585bcdd2d4d8d8a4afe6cd2ba056034a5858e50a48d7`.
+- Repository acceptance passed: 404 unit tests, 21 local Worker tests,
+  94 browser passes / 224 intentional skips, and the complete repository gate.
+- Live staging has exactly ten mapped `REQUESTER` accounts in `STARTER`;
+  revocation/restoration, activation gating, seed replay, server-owned identity,
+  and credential privacy passed.
+- The exact outside-Git credential handoff was created and owner-restricted.
+- PR #9 exact-head checks passed 6 / 6.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: implement Amendment Slice 2 department
-authentication and account management for the exact ten approved departments,
-including server-owned department identity, secure initial/reset credentials,
-revocation/restoration, Administrator controls, audit history, and the atomic
-outside-Git access-code handoff.
+One smallest safe next action: implement Amendment Slice 3 authenticated
+Request Center identity and the New/Additional/Tracking workflow, followed by
+atomic submission, confirmed success, and private-safe PDF receipt acceptance.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

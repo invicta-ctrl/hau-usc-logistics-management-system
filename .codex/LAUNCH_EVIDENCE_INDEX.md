@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICES 1–2 ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -59,6 +59,13 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON 
 | Approved advertisement media | staging public media round-trip | PASS — 139,336 bytes; source SHA-256 `1efd6ac8b69c408656b58c27c1b946d6bd8280ee3e4bf9b53aebe34b66490f30` |
 | Slice 1 cleanup/reconciliation | D1 and public APIs | PASS — temporary ad archived; fixture archived/`NOT_LENDABLE`; governed public catalog count 0 |
 | Slice 1 PR/CI | PR #9 exact head `fb94a1f` | PASS — open draft, clean/mergeable, 6 / 6 checks |
+| Phase 6 / Amendment Slice 2 | `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_2_HANDOFF.md`; exact runtime `5cc171a` | PASS ON STAGING |
+| Slice 2 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 404 unit tests; 21 / 21 Worker; 94 browser passes / 224 intentional skips |
+| Migration 0017 | private pre-export SHA-256 `8b2a39ced6450fd78837585bcdd2d4d8d8a4afe6cd2ba056034a5858e50a48d7`; schema 17 | PASS — ten governed departments and account identity/timestamp fields |
+| Department account seed | live staging D1/API reconciliation | PASS — 10 / 10 mapped `REQUESTER` accounts; all `STARTER`; replay returned no credentials |
+| Outside-Git credential handoff | `D:\Documents\Logistics Website Access codes.txt` | PASS — atomic, exact path, owner-restricted, untracked |
+| Slice 2 deployed acceptance | health, API, session, revocation/restoration, staging Playwright | PASS — exact `5cc171a`; reversible fixture restored; public catalog count 0 |
+| Slice 2 PR/CI | PR #9 exact head `5cc171a` | PASS — open draft, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
