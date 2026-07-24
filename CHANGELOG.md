@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 5 canonical lendable catalog (2026-07-24)
+
+### Added
+
+- Governed lending fields on the canonical Inventory Management catalog, borrower-safe and staff-only projections, and one authoritative availability model.
+- Reusable asset instances, ticket assignment, condition/photos, maintenance, append-only movements, and bounded R2 catalog-image delivery.
+- Additive migration `0014_lending_catalog_assets.sql`.
+
+### Verified
+
+- `npm run check`: 58 Vitest files / 401 tests; local Worker/D1: 18 / 18; full Playwright: 94 passed / 224 intentional skips / zero failures.
+- Staging migration/reconciliation, exact-SHA deployment, four deployed scenarios, post-smoke cleanup, and six PR checks passed at runtime `fc9ef1c`.
+
+### Boundary
+
+- The real public catalog remains empty, the synthetic fixture is archived and `NOT_LENDABLE`, and production remains NO-GO.
+
 ## Unreleased - v0.7.0 Phase 2/3 targeted correction (2026-07-24)
 
 ### Added

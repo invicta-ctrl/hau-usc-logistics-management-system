@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 5 canonical lendable catalog accepted on staging — Phase 6 active
+
+- Exact staging runtime `fc9ef1ccc5fef9018d37157a13078773c9018a13` is healthy and ready on schema 14 / migration `0014_lending_catalog_assets.sql`.
+- The canonical Inventory Management catalog now owns governed lending fields, borrower-safe presentation, staff-only availability/return signals, reusable asset instances, condition/maintenance history, and one authoritative availability model.
+- Verification: `npm run check` passed with 58 Vitest files / 401 tests; local Worker/D1 passed 18 / 18; full Playwright passed 94 / 318 scheduled with 224 intentional skips; deployed staging acceptance passed 4 / 4; PR #9 passed 6 / 6 checks.
+- The audited synthetic item is archived and `NOT_LENDABLE`; zero real public catalog items and zero reservations remain. No institutional item policy was invented.
+- Production remains NO-GO. Phase 6 now owns the complete internal Office Lending Hub.
+
 ## v0.7.0 Phase 2/3 targeted correction accepted on staging — Phase 5 active
 
 - Exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584` corrects live governed brand routing/login presentation and restores the guided source-grounded Request Center with separate private tracking.

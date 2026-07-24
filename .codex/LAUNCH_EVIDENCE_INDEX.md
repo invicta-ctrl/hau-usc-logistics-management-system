@@ -1,14 +1,14 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPTED; PHASE 5 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIVE**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 4 runtime `8e5c25d`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact head `a3059a8`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `8e5c25d`, D1 connected, schema 12, migration 0012 |
+| Git handshake | exact pushed Phase 5 runtime `fc9ef1c`, upstream parity before status checkpoint | PASS |
+| PR #9 / CI | exact head `fc9ef1c`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `fc9ef1c`, D1 connected, schema 14, migration 0014 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -47,6 +47,10 @@ Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPT
 | Governed Brand & Media slots | login background, USC logo, DOL logo, favicon | PASS — 200 image/png and source-hash parity |
 | Corrected Request Center | guided source-grounded creation, separate private tracking, verified related-request lookup | PASS — 398 unit tests, 17 / 17 Worker, 94 / 318 browser, deployed smoke |
 | Migration 0013 | `0013_public_request_guidance.sql` | PASS — schema 13, four guidance columns, reconciled |
+| Phase 5 canonical lending catalog | `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`; exact runtime `fc9ef1c` | PASS ON STAGING |
+| Phase 5 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 401 unit tests; 18 / 18 Worker; 94 browser passes / 224 intentional skips |
+| Migration 0014 | `0014_lending_catalog_assets.sql`; private pre-export SHA-256 `27a724b944b7846606af6faefe762245e3840ddab80411197d0a766b7d6b68cc` | PASS — schema 14, governed fields, five asset tables, authoritative availability view |
+| Phase 5 staging smoke | deployed Playwright at `fc9ef1c` | PASS — 4 / 4 brand, auth/access, request, and lending; fixture archived; zero reservations |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

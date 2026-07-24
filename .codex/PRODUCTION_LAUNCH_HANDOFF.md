@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPTED; PHASE 5 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIVE**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPT
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 through pre-0013 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0013 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — pre-0010 through pre-0014 staging SQL exports retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0014 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH TARGETED CORRECTION runtime `6c4cff6` |
+| 8. Staging deployment | PASS THROUGH PHASE 5 runtime `fc9ef1c` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -82,10 +82,20 @@ Decision: **PRODUCTION NO-GO — PHASE 2/3 CORRECTION AND PHASE 4 STAGING ACCEPT
 - The real staging public catalog is empty. The audited synthetic acceptance fixture is archived; Phase 5 must supply the complete governed canonical catalog contract.
 - Durable handoff: `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md`.
 
-## Immediate repair target
+## Phase 5 evidence
+
+- The canonical Inventory Management catalog now owns governed lending fields, borrower-safe presentation, staff metrics, and reusable asset instances; no second inventory exists.
+- One authoritative availability view/service is used for public listing and server-side lending validation.
+- Traceable asset reservation, handoff, return, condition, photo, maintenance, and append-only movement contracts are implemented.
+- Migration 0014 is applied and reconciled on staging; all pre-existing data is preserved.
+- `npm run check` passed with 58 Vitest files / 401 tests; local Worker/D1 passed 18 / 18; full Playwright passed 94 / 318 scheduled with 224 intentional skips.
+- Cache-busted identity and four deployed scenarios passed at exact runtime `fc9ef1c`, schema 14. The audited fixture is archived, with zero active public items and zero reservations.
+- Durable handoff: `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`.
+
+## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 5 governed canonical lending catalog and authoritative availability/asset model. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Complete Phase 6 internal Office Lending Hub acceptance on the Phase 4 backend and Phase 5 catalog. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

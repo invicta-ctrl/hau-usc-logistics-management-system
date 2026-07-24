@@ -1,7 +1,7 @@
 # Current Task
 
 INTENT: DEPLOYMENT
-SECONDARY INTENTS: SOFTWARE_FEATURE, BUG_FIX, SECURITY, MIGRATION, TESTING, REPOSITORY_MAINTENANCE
+SECONDARY INTENTS: SOFTWARE_FEATURE, SECURITY, MIGRATION, TESTING, REPOSITORY_MAINTENANCE
 MODE: execute
 TARGET: HAU-USC Logistics v0.7.0 staging acceptance, branch consolidation, and production launch
 SKILLS: github, cloudflare-deploy, google-drive, google-sheets, control-chrome
@@ -13,6 +13,6 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 5 — complete the canonical lendable Inventory Management catalog: governed lending fields, borrower-safe descriptions/images/restrictions, staff-only balances/return signals, reusable asset instances, condition/maintenance history, and one authoritative server-side availability function.
+Phase 6 — complete the internal Office Lending Hub using the accepted public-lending backend and canonical Phase 5 catalog: For Review, Ready, On Loan, Overdue, Returned, consumable issue, applicant and eligibility review, partial approval/rejection/substitution, reservation, controlled handoff/return, damaged/lost handling, and complete audit history.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.
