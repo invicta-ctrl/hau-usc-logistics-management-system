@@ -563,3 +563,89 @@ test('public Lending Center classifies borrowers and submits without public trac
   await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
   await expect(page.getByText('private tracking', { exact: false })).toHaveCount(0);
 });
+
+test('public Lending Center distinguishes service failure from true-empty and clears inactive borrower fields', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'One mobile browser proves the public catalog state and borrower-field boundaries.',
+  );
+  let catalogMode = 'error';
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = { backendMode: 'rest', httpApiBaseUrl: '' };
+  });
+  await page.route('**/api/public/advertisements', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"items":[]}' }),
+  );
+  await page.route('**/api/public/lending/catalog', (route) => {
+    if (catalogMode === 'error') {
+      return route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: '{"message":"Synthetic catalog outage."}',
+      });
+    }
+    const items =
+      catalogMode === 'empty'
+        ? []
+        : [
+            {
+              id: 'ITM-LEND-STATE',
+              name: 'Synthetic Projector',
+              category: 'Equipment',
+              unit: 'piece',
+              type: 'REUSABLE',
+              availability: 'AVAILABLE',
+              maximumQuantity: 2,
+              productId: 'ITM-LEND-STATE',
+              aliases: ['presentation projector'],
+              dueDateRequired: true,
+              acknowledgmentRequired: true,
+              conditionTracked: true,
+            },
+          ];
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uscDepartments: ['Department of Logistics', 'Office of the President'],
+        items,
+        process: ['Submit for review.'],
+      }),
+    });
+  });
+
+  await page.goto('/lending');
+  await expect(page.getByRole('heading', { name: 'Catalog service unavailable' })).toBeVisible();
+  await expect(page.getByText('This is a service error, not an empty catalog.')).toBeVisible();
+
+  catalogMode = 'empty';
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.getByText('No approved lending items are published.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Catalog service unavailable' })).toHaveCount(0);
+
+  catalogMode = 'items';
+  await page.reload();
+  const portal = page.locator('.public-lending-portal');
+  await portal.getByRole('searchbox', { name: 'Search' }).fill('presentation');
+  await expect(portal.getByRole('option', { name: /Synthetic Projector/u })).toBeVisible();
+  await portal.getByRole('option', { name: /Synthetic Projector/u }).click();
+  await portal.getByRole('button', { name: 'Request item' }).click();
+
+  const form = page.locator('#publicLendingForm');
+  await form.getByLabel('Angelite Student').check();
+  await form.getByLabel('Course and year').fill('BSIT 2');
+  await form.getByLabel('College, school, or academic department').fill('School of Computing');
+  await form.getByLabel('USC Staff/Officer').check();
+  await expect(form.getByLabel('Course and year')).toBeDisabled();
+  await expect(form.getByLabel('Course and year')).toHaveValue('');
+  await expect(form.getByLabel('College, school, or academic department')).toHaveValue('');
+  await form.getByLabel('USC department').selectOption('Department of Logistics');
+  await form.getByLabel('Position or role').fill('Committee Officer');
+  await form.getByLabel('Angelite Student').check();
+  await expect(form.getByLabel('USC department')).toBeDisabled();
+  await expect(form.getByLabel('USC department')).toHaveValue('');
+  await expect(form.getByLabel('Position or role')).toHaveValue('');
+  await expect(page.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
+});
