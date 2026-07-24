@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -37,10 +37,10 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIV
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 through pre-0014 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0014 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0016 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 5 runtime `fc9ef1c` |
+| 8. Staging deployment | PASS THROUGH AMENDMENT SLICE 1 runtime `fb94a1f` |
 | 9. Staging acceptance | PENDING |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
@@ -92,10 +92,34 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIV
 - Cache-busted identity and four deployed scenarios passed at exact runtime `fc9ef1c`, schema 14. The audited fixture is archived, with zero active public items and zero reservations.
 - Durable handoff: `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`.
 
+## Phase 6 / Follow-Up Amendment Slice 1 evidence
+
+- Internal lending review/issue/return, borrower classification, removal of
+  public lending tracking, governed advertisements, balanced/clickable branding,
+  and role-protected Lending Usage are implemented.
+- Migrations 0015 and 0016 are applied and reconciled on staging after a
+  private pre-migration export.
+- Repository acceptance passed: 401 unit tests, 19 local Worker tests,
+  94 browser passes / 224 intentional skips, and the complete repository gate.
+- Deployed staging acceptance passed 4 / 4 at exact runtime `fb94a1f`,
+  schema 16.
+- Live amendment checks passed for the approved poster hash, two-ad rotation
+  and controls, pause/reduced-motion behavior, mobile layout, logo link, and
+  Lending Usage authorization.
+- Temporary acceptance data is reconciled: the second ad is archived, the
+  synthetic lending item is archived/`NOT_LENDABLE`, and the governed public
+  catalog is truthfully empty.
+- PR #9 exact head is clean/mergeable with 6 / 6 checks passed.
+- Durable handoff:
+  `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 6 internal Office Lending Hub acceptance on the Phase 4 backend and Phase 5 catalog. Do not upload or deploy a production Worker before final freeze, merge, and production authorization validation.
+Complete Follow-Up Amendment Slice 2 department authentication, account
+management, and outside-Git credential handoff. Do not upload or deploy a
+production Worker before final freeze, merge, and production authorization
+validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.

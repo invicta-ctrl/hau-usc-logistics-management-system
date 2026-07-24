@@ -1,13 +1,14 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 6 — Follow-Up Amendment Slice 1: Lending, Media, and Internal Hub
+Phase: Phase 6 — Follow-Up Amendment Slice 2: Department Authentication and Account Handoff
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–5 ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
 Phase 5 deployed runtime: `fc9ef1ccc5fef9018d37157a13078773c9018a13`
+Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -38,6 +39,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_4_PUBLIC_LENDING_HANDOFF.md`
 - `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`
 - `.codex/V0_7_PHASE_5_LENDING_CATALOG_HANDOFF.md`
+- `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -50,10 +52,30 @@ Durable handoffs:
 - PR #9 exact head: open draft, clean/mergeable, 6 / 6 checks passed.
 - Cleanup: synthetic lending item archived and `NOT_LENDABLE`; zero active public catalog items and zero reservations.
 
+## Amendment Slice 1 final evidence
+
+- Candidate commit and live staging runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`.
+- D1 migrations 0015 and 0016 applied after a verified private backup; staging
+  is healthy on schema 16.
+- Repository gates passed: 401 Vitest tests, 19 local Worker tests, 94 browser
+  passes with 224 intentional skips, and the complete `npm run check`.
+- Deployed staging suite passed 4 / 4.
+- Advertisement rotation, pause, controls, reduced motion, mobile layout,
+  source-hash media, balanced/clickable branding, and authorization were
+  accepted live.
+- PR #9 exact head is open draft, clean/mergeable, with 6 / 6 checks passed.
+- Temporary acceptance data was reconciled: the second ad is archived, the
+  lending fixture is archived/`NOT_LENDABLE`, and the real governed public
+  lending catalog is truthfully empty.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: finish the known uncommitted Phase 6 internal-lending review/issue/return slice, then execute Amendment Slice 1 catalog diagnosis, borrower classification, public tracking removal, advertisement system, balanced/clickable logos, and role-protected Lending Usage without weakening server authorization or ledger invariants.
+One smallest safe next action: implement Amendment Slice 2 department
+authentication and account management for the exact ten approved departments,
+including server-owned department identity, secure initial/reset credentials,
+revocation/restoration, Administrator controls, audit history, and the atomic
+outside-Git access-code handoff.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

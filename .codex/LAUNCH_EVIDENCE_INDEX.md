@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–5 AND AMENDMENT SLICE 1 ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -51,6 +51,14 @@ Decision: **PRODUCTION NO-GO — PHASES 0–5 ACCEPTED ON STAGING; PHASE 6 ACTIV
 | Phase 5 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 401 unit tests; 18 / 18 Worker; 94 browser passes / 224 intentional skips |
 | Migration 0014 | `0014_lending_catalog_assets.sql`; private pre-export SHA-256 `27a724b944b7846606af6faefe762245e3840ddab80411197d0a766b7d6b68cc` | PASS — schema 14, governed fields, five asset tables, authoritative availability view |
 | Phase 5 staging smoke | deployed Playwright at `fc9ef1c` | PASS — 4 / 4 brand, auth/access, request, and lending; fixture archived; zero reservations |
+| Follow-up amendment | `.codex/specs/v0.7.0-follow-up-amendment.md`; source SHA-256 `4087844f5f32786c45ccde3d31cb55d66e4c259a556276295500032e036389c5` | ADOPTED |
+| Phase 6 / Amendment Slice 1 | `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_1_HANDOFF.md`; exact runtime `fb94a1f` | PASS ON STAGING |
+| Slice 1 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 401 unit tests; 19 / 19 Worker; 94 browser passes / 224 intentional skips |
+| Migrations 0015–0016 | private pre-export SHA-256 `580aee95bda06388d5a46026b839141309881633eddb488a59637e31ab17c65d`; schema 16 | PASS — internal review fields, classified submissions, advertisements, idempotency |
+| Slice 1 deployed acceptance | staging Playwright and live browser/API proof at `fb94a1f` | PASS — 4 / 4 suite; rotation, controls, pause, reduced motion, mobile, logo link, authorization |
+| Approved advertisement media | staging public media round-trip | PASS — 139,336 bytes; source SHA-256 `1efd6ac8b69c408656b58c27c1b946d6bd8280ee3e4bf9b53aebe34b66490f30` |
+| Slice 1 cleanup/reconciliation | D1 and public APIs | PASS — temporary ad archived; fixture archived/`NOT_LENDABLE`; governed public catalog count 0 |
+| Slice 1 PR/CI | PR #9 exact head `fb94a1f` | PASS — open draft, clean/mergeable, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

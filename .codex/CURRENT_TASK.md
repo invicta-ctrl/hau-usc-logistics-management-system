@@ -13,6 +13,10 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 6 / Follow-Up Amendment Slice 1 — preserve the accepted backend and catalog while completing internal lending review/issue/return, diagnosing public catalog truth, adding borrower classification, removing public lending tracking, adding governed advertisements and balanced/clickable branding, and adding role-protected Lending Usage.
+Phase 6 / Follow-Up Amendment Slice 2 — create and manage the exact ten
+department requester accounts using the accepted authentication foundation,
+server-owned department identity, secure initial/reset credentials,
+revocation/restoration, Administrator-only controls, audit history, and the
+atomic outside-Git access-code handoff.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.
