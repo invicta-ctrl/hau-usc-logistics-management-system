@@ -147,16 +147,17 @@ END;
 
 CREATE TRIGGER lending_ticket_asset_assignment_guard
 BEFORE INSERT ON lending_ticket_assets
+WHEN NOT EXISTS (
+  SELECT 1
+  FROM inventory_asset_instances asset
+  JOIN lending_tickets ticket ON ticket.id = NEW.lending_ticket_id
+  WHERE asset.id = NEW.asset_id
+    AND asset.item_id = ticket.item_id
+    AND asset.lifecycle_status = 'AVAILABLE'
+    AND asset.current_lending_ticket_id IS NULL
+)
 BEGIN
-  SELECT CASE WHEN NOT EXISTS (
-    SELECT 1
-    FROM inventory_asset_instances asset
-    JOIN lending_tickets ticket ON ticket.id = NEW.lending_ticket_id
-    WHERE asset.id = NEW.asset_id
-      AND asset.item_id = ticket.item_id
-      AND asset.lifecycle_status = 'AVAILABLE'
-      AND asset.current_lending_ticket_id IS NULL
-  ) THEN RAISE(ABORT, 'asset is not available for this lending ticket') END;
+  SELECT RAISE(ABORT, 'asset is not available for this lending ticket');
 END;
 
 CREATE TRIGGER inventory_asset_maintenance_no_delete
