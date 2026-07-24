@@ -368,6 +368,15 @@ test('public Lending Center opens catalog-first without login and returns privat
             availability: 'AVAILABLE',
             maximumQuantity: 2,
             defaultLoanDays: 7,
+            productId: 'ITM-LEND-SYNTHETIC',
+            dueDateRequired: true,
+            acknowledgmentRequired: true,
+            eligibility: 'HAU students and authorized USC staff',
+            description: 'Borrower-safe synthetic projector.',
+            restrictions: 'Return after use.',
+            handlingNotes: 'Keep dry.',
+            imageUrl: '',
+            conditionTracked: true,
           },
         ],
         process: ['Submit for review.', 'Wait for pickup instructions.'],
@@ -398,7 +407,7 @@ test('public Lending Center opens catalog-first without login and returns privat
   await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
   await expect(page.getByLabel('Access ID')).toHaveCount(0);
   expect(authCalls).toBe(0);
-  await page.getByRole('button', { name: 'Add item' }).click();
+  await page.getByRole('button', { name: 'Request item' }).click();
   const form = page.locator('#publicLendingForm');
   await form.getByLabel('Full name').fill('Synthetic Angelite Borrower');
   await form.getByLabel('Student ID').fill('12345678');

@@ -1,5 +1,6 @@
 import { accountAuthorization } from '../auth/contracts.js';
 import { CAPABILITIES } from '../../domain/permissions.js';
+import { loadLendingCatalog } from '../lending-catalog-service.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -31,6 +32,8 @@ const METHOD_CAPABILITIES = Object.freeze({
   getRestockDetail: CAPABILITIES.VIEW_INVENTORY,
   transitionRestock: CAPABILITIES.FULFILL_PROCURE,
   createLendingTicket: CAPABILITIES.LENDING_CREATE,
+  registerInventoryAsset: CAPABILITIES.LENDING_APPROVE,
+  recordAssetMaintenance: CAPABILITIES.LENDING_RETURN,
   approveLendingTicket: CAPABILITIES.LENDING_APPROVE,
   confirmLendingHandoff: CAPABILITIES.LENDING_HANDOFF,
   confirmReturn: CAPABILITIES.LENDING_RETURN,
@@ -430,9 +433,34 @@ const itemDto = (row, requestOnly = false) => ({
   status: row.status,
   catalogType: row.catalog_type,
   lendingAudience: row.lending_audience,
+  isLendable: row.is_lendable === 1,
+  lendingKind: row.lending_kind,
+  lendingStatus: row.lending_status,
+  lendingUnit: row.lending_unit || row.unit,
   defaultLoanDays: row.default_loan_days,
   maximumLoanQuantity: row.maximum_loan_quantity,
+  dueDateRequired: row.due_date_required === 1,
+  acknowledgmentRequired: row.acknowledgment_required === 1,
+  eligibilityRule: row.eligibility_rule,
+  lendingHandlingNotes: row.lending_handling_notes,
+  borrowerSafeDescription: row.borrower_safe_description,
+  borrowerSafeRestrictions: row.borrower_safe_restrictions,
+  imageUrl: row.image_asset_key ? `/brand/catalog/${encodeURIComponent(row.image_asset_key)}` : '',
+  conditionTracked: row.condition_tracking === 1,
   approvalRequired: row.approval_required === 1,
+  ...(requestOnly
+    ? {}
+    : {
+        readyToClaim: Number(row.ready_to_claim ?? 0),
+        onLoan: Number(row.on_loan ?? 0),
+        overdue: Number(row.overdue ?? 0),
+        damaged: Number(row.damaged_assets ?? 0),
+        maintenance: Number(row.maintenance_assets ?? 0),
+        expectedReturnAt: row.expected_return_at ?? null,
+        traceableAssets: Number(row.traceable_assets ?? 0),
+        availableAssets: Number(row.available_assets ?? 0),
+        lendableAvailable: Number(row.lendable_available ?? 0),
+      }),
 });
 
 const requestDto = (row) => ({
@@ -540,9 +568,14 @@ export function createD1OperationalService({
     }
     if (!requestOnly) assertCapability(account, MODULE_CAPABILITIES[module]);
     const page = pageInput(command);
-    const itemSql = `SELECT item.*, balance.on_hand, balance.reserved, balance.available_to_promise,
+    const itemSql = `SELECT item.*, availability.on_hand, availability.reserved,
+      availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+      availability.overdue, availability.expected_return_at, availability.traceable_assets,
+      availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+      availability.lendable_available,
       (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias WHERE alias.item_id = item.id) AS aliases
-      FROM inventory_items item JOIN inventory_balances balance ON balance.item_id = item.id
+      FROM inventory_items item
+      JOIN lending_catalog_availability availability ON availability.item_id = item.id
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
     const itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
@@ -571,7 +604,32 @@ export function createD1OperationalService({
         inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
       };
     } else if (module === 'inventory') {
-      data = { inventoryItems: itemRows.map((row) => itemDto(row)) };
+      data = {
+        inventoryItems: itemRows.map((row) => itemDto(row)),
+        inventoryAssets: await rows(
+          db,
+          `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
+                  current_lending_ticket_id, expected_return_at, handoff_condition, return_condition,
+                  created_at, updated_at
+           FROM inventory_asset_instances
+           ORDER BY item_id, asset_tag LIMIT 500`,
+        ),
+        assetMaintenanceHistory: await rows(
+          db,
+          `SELECT id, asset_id, event_type, condition_label, evidence_asset_key,
+                  occurred_at, recorded_by, notes
+           FROM inventory_asset_maintenance
+           ORDER BY occurred_at DESC LIMIT 500`,
+        ),
+        assetMovementHistory: await rows(
+          db,
+          `SELECT id, asset_id, movement_type, previous_status, new_status,
+                  lending_ticket_id, condition_label, evidence_asset_key,
+                  occurred_at, recorded_by, notes
+           FROM inventory_asset_movements
+           ORDER BY occurred_at DESC LIMIT 500`,
+        ),
+      };
     } else if (module === 'lending') {
       const scope = scopedWhere(account, {
         committeeColumn: 'owner_committee_id',
@@ -1727,10 +1785,11 @@ export function createD1OperationalService({
         .prepare(
           `INSERT INTO lending_tickets (
              id, borrower_reference, borrower_name, borrower_type, department_organization,
-             contact, item_id, quantity, unit, purpose, due_at, ticket_type, status, owner_committee_id,
+             contact, item_id, quantity, unit, purpose, due_at, ticket_type, status,
+             requested_start_at, requested_end_at, owner_committee_id,
              created_by, notes, created_at, updated_at
            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-             'FOR_REVIEW', ?13, ?14, ?15, ?16, ?16)`,
+             'FOR_REVIEW', ?13, ?14, ?15, ?16, ?17, ?18, ?18)`,
         )
         .bind(
           ticketId,
@@ -1745,6 +1804,8 @@ export function createD1OperationalService({
           requiredText(command.purpose, 'purpose', 500),
           optionalText(command.dueAt, 64) || null,
           requiredText(command.ticketType ?? 'LOAN', 'ticketType', 40),
+          optionalText(command.requestedStartAt ?? command.pickupDate, 64) || null,
+          optionalText(command.requestedEndAt ?? command.dueAt, 64) || null,
           committeeId,
           account.id,
           optionalText(command.notes, 500),
@@ -1772,13 +1833,7 @@ export function createD1OperationalService({
 
   async function borrowerLendingPortal({ account, correlationId }) {
     assertBorrowerPortalAccount(account);
-    const items = await rows(
-      db,
-      `SELECT id, name, category, unit, lending_audience, default_loan_days, maximum_loan_quantity
-       FROM inventory_items
-       WHERE status = 'ACTIVE' AND lending_audience IN ('STUDENTS_AND_STAFF', 'USC_STAFF_ONLY')
-       ORDER BY name`,
-    );
+    const items = await loadLendingCatalog(db);
     const tickets = await rows(
       db,
       `SELECT ticket.id, ticket.quantity, ticket.unit, ticket.purpose, ticket.due_at, ticket.ticket_type,
@@ -1806,16 +1861,7 @@ export function createD1OperationalService({
         displayName: account.profile?.fullName ?? '',
         institutionId: account.institutionId,
       },
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        unit: item.unit,
-        audience: item.lending_audience,
-        maximumQuantity: Number(item.maximum_loan_quantity ?? 1) || 1,
-        defaultLoanDays: Number(item.default_loan_days ?? 0),
-        availability: 'Availability confirmed during staff review.',
-      })),
+      items,
       tickets: tickets.map((ticket) => ({
         id: ticket.id,
         itemName: ticket.item_name ?? 'Requested item',
@@ -1844,12 +1890,18 @@ export function createD1OperationalService({
     assertBorrowerPortalAccount(account);
     const item = await db
       .prepare(
-        `SELECT id, unit, lending_audience, maximum_loan_quantity, default_loan_days
+        `SELECT id, unit, lending_unit, lending_audience, lending_kind, lending_status,
+                is_lendable, maximum_loan_quantity, default_loan_days, due_date_required
          FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'`,
       )
       .bind(requiredText(command.itemId, 'itemId', 80))
       .first();
-    if (!item || !['STUDENTS_AND_STAFF', 'USC_STAFF_ONLY'].includes(item.lending_audience)) {
+    if (
+      !item ||
+      item.is_lendable !== 1 ||
+      item.lending_status !== 'ACTIVE' ||
+      !['STUDENTS_AND_STAFF', 'USC_STAFF_ONLY'].includes(item.lending_audience)
+    ) {
       throw new ApiError('LENDING_ITEM_UNAVAILABLE', 'That item is not available through Office Lending.', {
         status: 404,
       });
@@ -1861,13 +1913,13 @@ export function createD1OperationalService({
         'The requested quantity exceeds the approved lending limit.',
       );
     }
-    const ticketType = requiredText(command.ticketType ?? 'LOAN', 'ticketType', 24).toUpperCase();
+    const ticketType = item.lending_kind === 'REUSABLE' ? 'LOAN' : 'CONSUMABLE';
     if (!['LOAN', 'CONSUMABLE'].includes(ticketType)) {
       throw new ApiError('LENDING_TYPE_INVALID', 'Choose a loan or consumable request.');
     }
     const dueAt = optionalText(command.dueAt, 64);
     if (
-      ticketType === 'LOAN' &&
+      item.due_date_required === 1 &&
       (!dueAt || Number.isNaN(Date.parse(dueAt)) || Date.parse(dueAt) <= Date.now())
     ) {
       throw new ApiError('LENDING_DUE_DATE_INVALID', 'A future requested due date is required for a loan.');
@@ -1881,9 +1933,11 @@ export function createD1OperationalService({
         borrowerName: account.profile?.fullName ?? '',
         borrowerType: 'INSTITUTION_APPROVED',
         contact: '',
-        unit: item.unit,
+        unit: item.lending_unit || item.unit,
         ticketType,
         dueAt: ticketType === 'LOAN' ? dueAt : '',
+        requestedStartAt: optionalText(command.pickupDate, 64),
+        requestedEndAt: ticketType === 'LOAN' ? dueAt : '',
       },
     });
   }
@@ -1942,6 +1996,226 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function registerInventoryAsset({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.registerInventoryAsset);
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const item = await db
+      .prepare(
+        `SELECT id, lending_kind, condition_tracking
+         FROM inventory_items
+         WHERE id = ?1 AND status = 'ACTIVE' AND is_lendable = 1`,
+      )
+      .bind(itemId)
+      .first();
+    if (!item || item.lending_kind !== 'REUSABLE' || item.condition_tracking !== 1) {
+      throw new ApiError(
+        'ASSET_ITEM_NOT_TRACEABLE',
+        'Asset instances may be registered only for condition-tracked reusable items.',
+        { status: 409 },
+      );
+    }
+    const assetTag = requiredText(command.assetTag, 'assetTag', 80).toUpperCase();
+    const condition = requiredText(command.conditionLabel ?? 'GOOD', 'conditionLabel', 24).toUpperCase();
+    if (!['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED'].includes(condition)) {
+      throw new ApiError('ASSET_CONDITION_INVALID', 'Choose an approved asset condition.');
+    }
+    const mutation = await replay(db, 'registerInventoryAsset', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const assetId = createId('AST');
+    const timestamp = nowIso();
+    const photoKey = optionalText(command.photoAssetKey, 160);
+    if (photoKey && !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}$/u.test(photoKey)) {
+      throw new ApiError('ASSET_KEY_INVALID', 'The governed asset key is invalid.');
+    }
+    const result = {
+      id: assetId,
+      assetId,
+      itemId,
+      assetTag,
+      status: condition === 'DAMAGED' ? 'DAMAGED' : 'AVAILABLE',
+      correlationId,
+    };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO inventory_asset_instances (
+             id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
+             created_at, updated_at, created_by, updated_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, ?8, ?8)`,
+        )
+        .bind(
+          assetId,
+          itemId,
+          assetTag,
+          optionalText(command.serialNumber, 120),
+          condition,
+          result.status,
+          timestamp,
+          account.id,
+        ),
+      db
+        .prepare(
+          `INSERT INTO inventory_asset_movements (
+             id, asset_id, movement_type, new_status, condition_label,
+             occurred_at, recorded_by, notes
+           ) VALUES (?1, ?2, 'REGISTERED', ?3, ?4, ?5, ?6, ?7)`,
+        )
+        .bind(
+          createId('AMV'),
+          assetId,
+          result.status,
+          condition,
+          timestamp,
+          account.id,
+          optionalText(command.notes, 500),
+        ),
+      auditStatement(db, {
+        action: 'INVENTORY_ASSET_REGISTERED',
+        entityType: 'INVENTORY_ASSET',
+        entityId: assetId,
+        accountId: account.id,
+        correlationId,
+        after: { itemId, assetTag, status: result.status },
+      }),
+      idempotencyStatement(db, 'registerInventoryAsset', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ];
+    if (photoKey) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_photos (
+               id, asset_id, asset_key, photo_type, captured_at, recorded_by, notes
+             ) VALUES (?1, ?2, ?3, 'CATALOG', ?4, ?5, ?6)`,
+          )
+          .bind(createId('APH'), assetId, photoKey, timestamp, account.id, optionalText(command.notes, 500)),
+      );
+    }
+    try {
+      await db.batch(statements);
+    } catch (error) {
+      if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
+        throw new ApiError('ASSET_TAG_CONFLICT', 'That asset tag is already registered.', {
+          status: 409,
+        });
+      }
+      throw error;
+    }
+    return result;
+  }
+
+  async function recordAssetMaintenance({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.recordAssetMaintenance);
+    const assetId = requiredText(command.assetId, 'assetId', 80);
+    const eventType = requiredText(command.eventType, 'eventType', 32).toUpperCase();
+    if (!['OPENED', 'INSPECTED', 'REPAIRED', 'COMPLETED', 'DECLARED_DAMAGED'].includes(eventType)) {
+      throw new ApiError('ASSET_MAINTENANCE_EVENT_INVALID', 'Choose an approved maintenance event.');
+    }
+    const asset = await db
+      .prepare(
+        `SELECT id, lifecycle_status, current_lending_ticket_id
+         FROM inventory_asset_instances WHERE id = ?1`,
+      )
+      .bind(assetId)
+      .first();
+    if (!asset) throw new ApiError('ASSET_NOT_FOUND', 'The asset instance was not found.', { status: 404 });
+    if (asset.current_lending_ticket_id || ['ON_LOAN', 'RESERVED'].includes(asset.lifecycle_status)) {
+      throw new ApiError(
+        'ASSET_CURRENTLY_ASSIGNED',
+        'Complete the active lending workflow before changing maintenance state.',
+        { status: 409 },
+      );
+    }
+    const mutation = await replay(db, 'recordAssetMaintenance', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const nextStatus =
+      eventType === 'COMPLETED' ? 'AVAILABLE' : eventType === 'DECLARED_DAMAGED' ? 'DAMAGED' : 'MAINTENANCE';
+    const condition = optionalText(command.conditionLabel, 24).toUpperCase();
+    const evidenceKey = optionalText(command.evidenceAssetKey, 160);
+    if (evidenceKey && !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}$/u.test(evidenceKey)) {
+      throw new ApiError('ASSET_KEY_INVALID', 'The governed evidence asset key is invalid.');
+    }
+    const timestamp = nowIso();
+    const result = { id: assetId, assetId, status: nextStatus, eventType, correlationId };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO inventory_asset_maintenance (
+             id, asset_id, event_type, condition_label, evidence_asset_key,
+             occurred_at, recorded_by, notes
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+        )
+        .bind(
+          createId('AMT'),
+          assetId,
+          eventType,
+          condition,
+          evidenceKey,
+          timestamp,
+          account.id,
+          optionalText(command.notes, 500),
+        ),
+      db
+        .prepare(
+          `INSERT INTO inventory_asset_movements (
+             id, asset_id, movement_type, previous_status, new_status, condition_label,
+             evidence_asset_key, occurred_at, recorded_by, notes
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
+        )
+        .bind(
+          createId('AMV'),
+          assetId,
+          eventType === 'COMPLETED' ? 'RESTORED' : 'MAINTENANCE',
+          asset.lifecycle_status,
+          nextStatus,
+          condition,
+          evidenceKey,
+          timestamp,
+          account.id,
+          optionalText(command.notes, 500),
+        ),
+      db
+        .prepare(
+          `UPDATE inventory_asset_instances
+           SET lifecycle_status = ?2,
+               condition_label = CASE WHEN ?3 = '' THEN condition_label ELSE ?3 END,
+               updated_at = ?4, updated_by = ?5
+           WHERE id = ?1`,
+        )
+        .bind(assetId, nextStatus, condition, timestamp, account.id),
+      auditStatement(db, {
+        action: 'INVENTORY_ASSET_MAINTENANCE_RECORDED',
+        entityType: 'INVENTORY_ASSET',
+        entityId: assetId,
+        accountId: account.id,
+        correlationId,
+        after: { eventType, status: nextStatus },
+      }),
+      idempotencyStatement(db, 'recordAssetMaintenance', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ];
+    if (evidenceKey) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_photos (
+               id, asset_id, asset_key, photo_type, captured_at, recorded_by, notes
+             ) VALUES (?1, ?2, ?3, 'MAINTENANCE', ?4, ?5, ?6)`,
+          )
+          .bind(
+            createId('APH'),
+            assetId,
+            evidenceKey,
+            timestamp,
+            account.id,
+            optionalText(command.notes, 500),
+          ),
+      );
+    }
+    await db.batch(statements);
+    return result;
+  }
+
   async function approveLendingTicket({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.approveLendingTicket);
     const ticketId = requiredText(command.ticketId, 'ticketId', 80);
@@ -1958,52 +2232,142 @@ export function createD1OperationalService({
         'The lending ticket cannot be approved from its current state.',
         { status: 409 },
       );
+    const traceable = await db
+      .prepare(
+        `SELECT COUNT(*) AS count
+         FROM inventory_asset_instances
+         WHERE item_id = ?1 AND lifecycle_status <> 'ARCHIVED'`,
+      )
+      .bind(ticket.item_id)
+      .first();
+    const assetIds = Array.isArray(command.assetIds)
+      ? command.assetIds.map((value, index) => requiredText(value, `assetIds[${index}]`, 80))
+      : [];
+    if (new Set(assetIds).size !== assetIds.length) {
+      throw new ApiError('ASSET_ASSIGNMENT_DUPLICATE', 'Each asset instance may be assigned once.');
+    }
+    if (Number(traceable?.count ?? 0) > 0) {
+      if (!Number.isSafeInteger(Number(ticket.quantity)) || assetIds.length !== Number(ticket.quantity)) {
+        throw new ApiError(
+          'ASSET_ASSIGNMENT_REQUIRED',
+          'Assign one available asset instance for each approved reusable unit.',
+          { status: 409 },
+        );
+      }
+      const placeholders = assetIds.map((_, index) => `?${index + 2}`).join(', ');
+      const availableAssets = await rows(
+        db,
+        `SELECT id FROM inventory_asset_instances
+         WHERE item_id = ?1 AND lifecycle_status = 'AVAILABLE'
+           AND current_lending_ticket_id IS NULL AND id IN (${placeholders})`,
+        [ticket.item_id, ...assetIds],
+      );
+      if (availableAssets.length !== assetIds.length) {
+        throw new ApiError(
+          'ASSET_ASSIGNMENT_UNAVAILABLE',
+          'One or more selected asset instances are no longer available.',
+          { status: 409 },
+        );
+      }
+    } else if (assetIds.length) {
+      throw new ApiError(
+        'ASSET_ASSIGNMENT_UNAVAILABLE',
+        'This item does not have registered asset instances.',
+        { status: 409 },
+      );
+    }
     const reservationId = createId('RSV');
-    const result = { ticketId, id: ticketId, status: 'READY_TO_CLAIM', correlationId };
+    const result = {
+      ticketId,
+      id: ticketId,
+      status: 'READY_TO_CLAIM',
+      assetIds,
+      correlationId,
+    };
     const timestamp = nowIso();
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO reservations (
+             id, item_id, quantity, unit, lending_ticket_id, status, idempotency_key,
+             reserved_from, reserved_until, created_at, updated_at, created_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, 'ACTIVE', ?6, ?7, ?8, ?9, ?9, ?10)`,
+        )
+        .bind(
+          reservationId,
+          ticket.item_id,
+          ticket.quantity,
+          ticket.unit,
+          ticketId,
+          mutation.key,
+          ticket.requested_start_at,
+          ticket.requested_end_at,
+          timestamp,
+          account.id,
+        ),
+    ];
+    for (const assetId of assetIds) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO lending_ticket_assets (
+               lending_ticket_id, asset_id, assigned_at, assigned_by
+             ) VALUES (?1, ?2, ?3, ?4)`,
+          )
+          .bind(ticketId, assetId, timestamp, account.id),
+        db
+          .prepare(
+            `UPDATE inventory_asset_instances
+             SET lifecycle_status = 'RESERVED', current_lending_ticket_id = ?2,
+                 expected_return_at = ?3, updated_at = ?4, updated_by = ?5
+             WHERE id = ?1 AND lifecycle_status = 'AVAILABLE'
+               AND current_lending_ticket_id IS NULL`,
+          )
+          .bind(assetId, ticketId, ticket.requested_end_at ?? ticket.due_at, timestamp, account.id),
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_movements (
+               id, asset_id, movement_type, previous_status, new_status,
+               lending_ticket_id, occurred_at, recorded_by, notes
+             ) VALUES (?1, ?2, 'RESERVED', 'AVAILABLE', 'RESERVED', ?3, ?4, ?5, ?6)`,
+          )
+          .bind(createId('AMV'), assetId, ticketId, timestamp, account.id, optionalText(command.notes, 500)),
+      );
+    }
+    statements.push(
+      db
+        .prepare(
+          `UPDATE lending_tickets SET status = 'READY_TO_CLAIM', approved_by = ?2,
+           approved_at = ?3, updated_at = ?3
+         WHERE id = ?1 AND status = 'FOR_REVIEW'
+           AND EXISTS (SELECT 1 FROM reservations WHERE id = ?4)`,
+        )
+        .bind(ticketId, account.id, timestamp, reservationId),
+      idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
+      historyStatement(db, {
+        entityType: 'LENDING',
+        entityId: ticketId,
+        previousStatus: 'FOR_REVIEW',
+        newStatus: 'READY_TO_CLAIM',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+      }),
+      ...revisionStatements(db, ['lending', 'inventory']),
+    );
     try {
-      await db.batch([
-        db
-          .prepare(
-            `INSERT INTO reservations (
-               id, item_id, quantity, unit, lending_ticket_id, status, idempotency_key,
-               created_at, updated_at, created_by
-             ) VALUES (?1, ?2, ?3, ?4, ?5, 'ACTIVE', ?6, ?7, ?7, ?8)`,
-          )
-          .bind(
-            reservationId,
-            ticket.item_id,
-            ticket.quantity,
-            ticket.unit,
-            ticketId,
-            mutation.key,
-            timestamp,
-            account.id,
-          ),
-        db
-          .prepare(
-            `UPDATE lending_tickets SET status = 'READY_TO_CLAIM', approved_by = ?2,
-             approved_at = ?3, updated_at = ?3
-           WHERE id = ?1 AND status = 'FOR_REVIEW'
-             AND EXISTS (SELECT 1 FROM reservations WHERE id = ?4)`,
-          )
-          .bind(ticketId, account.id, timestamp, reservationId),
-        idempotencyStatement(db, 'approveLendingTicket', mutation, account.id, result),
-        historyStatement(db, {
-          entityType: 'LENDING',
-          entityId: ticketId,
-          previousStatus: 'FOR_REVIEW',
-          newStatus: 'READY_TO_CLAIM',
-          accountId: account.id,
-          idempotencyKey: mutation.key,
-        }),
-        ...revisionStatements(db, ['lending', 'inventory']),
-      ]);
+      await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('insufficient available-to-promise')) {
         throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this lending ticket.', {
           status: 409,
         });
+      }
+      if (String(error?.message ?? '').includes('asset is not available')) {
+        throw new ApiError(
+          'ASSET_ASSIGNMENT_UNAVAILABLE',
+          'One or more selected asset instances are no longer available.',
+          { status: 409 },
+        );
       }
       throw error;
     }
@@ -2028,7 +2392,54 @@ export function createD1OperationalService({
       );
     const timestamp = nowIso();
     const handoffId = createId('HND');
-    const result = { ticketId, id: ticketId, handoffId, status: 'ON_LOAN', correlationId };
+    const assignedAssets = await rows(
+      db,
+      `SELECT asset_id FROM lending_ticket_assets
+       WHERE lending_ticket_id = ?1 ORDER BY assigned_at, asset_id`,
+      [ticketId],
+    );
+    const handoffCondition = optionalText(command.conditionLabel, 80).toUpperCase();
+    const assetStatements = assignedAssets.flatMap(({ asset_id: assetId }) => [
+      db
+        .prepare(
+          `UPDATE lending_ticket_assets
+           SET released_at = ?3, handoff_condition = ?4
+           WHERE lending_ticket_id = ?1 AND asset_id = ?2 AND released_at IS NULL`,
+        )
+        .bind(ticketId, assetId, timestamp, handoffCondition),
+      db
+        .prepare(
+          `UPDATE inventory_asset_instances
+           SET lifecycle_status = 'ON_LOAN', handoff_condition = ?3,
+               updated_at = ?4, updated_by = ?5
+           WHERE id = ?1 AND current_lending_ticket_id = ?2 AND lifecycle_status = 'RESERVED'`,
+        )
+        .bind(assetId, ticketId, handoffCondition, timestamp, account.id),
+      db
+        .prepare(
+          `INSERT INTO inventory_asset_movements (
+             id, asset_id, movement_type, previous_status, new_status,
+             lending_ticket_id, condition_label, occurred_at, recorded_by, notes
+           ) VALUES (?1, ?2, 'HANDOFF', 'RESERVED', 'ON_LOAN', ?3, ?4, ?5, ?6, ?7)`,
+        )
+        .bind(
+          createId('AMV'),
+          assetId,
+          ticketId,
+          handoffCondition,
+          timestamp,
+          account.id,
+          optionalText(command.notes, 500),
+        ),
+    ]);
+    const result = {
+      ticketId,
+      id: ticketId,
+      handoffId,
+      assetIds: assignedAssets.map((asset) => asset.asset_id),
+      status: 'ON_LOAN',
+      correlationId,
+    };
     await db.batch([
       db
         .prepare(
@@ -2066,6 +2477,7 @@ export function createD1OperationalService({
           `UPDATE lending_tickets SET status = 'ON_LOAN', updated_at = ?2 WHERE id = ?1 AND status = 'READY_TO_CLAIM'`,
         )
         .bind(ticketId, timestamp),
+      ...assetStatements,
       historyStatement(db, {
         entityType: 'LENDING',
         entityId: ticketId,
@@ -2106,7 +2518,126 @@ export function createD1OperationalService({
       );
     const timestamp = nowIso();
     const returnId = createId('RTN');
-    const result = { ticketId, id: ticketId, returnId, status: 'RETURNED', correlationId };
+    const returnCondition = optionalText(command.conditionLabel, 80).toUpperCase();
+    const nextAssetStatus = returnCondition.includes('LOST')
+      ? 'LOST'
+      : returnCondition.includes('DAMAGED')
+        ? 'DAMAGED'
+        : returnCondition.includes('POOR') ||
+            returnCondition.includes('MAINTENANCE') ||
+            returnCondition.includes('QUARANTINE')
+          ? 'MAINTENANCE'
+          : 'AVAILABLE';
+    const evidenceAssetKey = optionalText(command.assetEvidenceKey, 160);
+    if (evidenceAssetKey && !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}$/u.test(evidenceAssetKey)) {
+      throw new ApiError('ASSET_KEY_INVALID', 'The governed evidence asset key is invalid.');
+    }
+    const assignedAssets = await rows(
+      db,
+      `SELECT asset_id FROM lending_ticket_assets
+       WHERE lending_ticket_id = ?1 ORDER BY assigned_at, asset_id`,
+      [ticketId],
+    );
+    const assetStatements = assignedAssets.flatMap(({ asset_id: assetId }) => {
+      const statements = [
+        db
+          .prepare(
+            `UPDATE lending_ticket_assets
+             SET returned_at = ?3, return_condition = ?4
+             WHERE lending_ticket_id = ?1 AND asset_id = ?2 AND returned_at IS NULL`,
+          )
+          .bind(ticketId, assetId, timestamp, returnCondition),
+        db
+          .prepare(
+            `UPDATE inventory_asset_instances
+             SET lifecycle_status = ?3, current_lending_ticket_id = NULL,
+                 expected_return_at = NULL, return_condition = ?4,
+                 condition_label = CASE
+                   WHEN ?3 = 'DAMAGED' THEN 'DAMAGED'
+                   WHEN ?5 = '' THEN condition_label
+                   ELSE ?5
+                 END,
+                 updated_at = ?6, updated_by = ?7
+             WHERE id = ?1 AND current_lending_ticket_id = ?2 AND lifecycle_status = 'ON_LOAN'`,
+          )
+          .bind(
+            assetId,
+            ticketId,
+            nextAssetStatus,
+            returnCondition,
+            ['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED'].includes(returnCondition) ? returnCondition : '',
+            timestamp,
+            account.id,
+          ),
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_movements (
+               id, asset_id, movement_type, previous_status, new_status,
+               lending_ticket_id, condition_label, evidence_asset_key,
+               occurred_at, recorded_by, notes
+             ) VALUES (?1, ?2, 'RETURN', 'ON_LOAN', ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+          )
+          .bind(
+            createId('AMV'),
+            assetId,
+            nextAssetStatus,
+            ticketId,
+            returnCondition,
+            evidenceAssetKey,
+            timestamp,
+            account.id,
+            optionalText(command.notes, 500),
+          ),
+      ];
+      if (nextAssetStatus !== 'AVAILABLE') {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO inventory_asset_maintenance (
+                 id, asset_id, event_type, condition_label, evidence_asset_key,
+                 occurred_at, recorded_by, notes
+               ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`,
+            )
+            .bind(
+              createId('AMT'),
+              assetId,
+              nextAssetStatus === 'DAMAGED' || nextAssetStatus === 'LOST' ? 'DECLARED_DAMAGED' : 'OPENED',
+              returnCondition,
+              evidenceAssetKey,
+              timestamp,
+              account.id,
+              optionalText(command.notes, 500),
+            ),
+        );
+      }
+      if (evidenceAssetKey) {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO inventory_asset_photos (
+                 id, asset_id, asset_key, photo_type, captured_at, recorded_by, notes
+               ) VALUES (?1, ?2, ?3, 'RETURN', ?4, ?5, ?6)`,
+            )
+            .bind(
+              createId('APH'),
+              assetId,
+              evidenceAssetKey,
+              timestamp,
+              account.id,
+              optionalText(command.notes, 500),
+            ),
+        );
+      }
+      return statements;
+    });
+    const result = {
+      ticketId,
+      id: ticketId,
+      returnId,
+      assetIds: assignedAssets.map((asset) => asset.asset_id),
+      status: 'RETURNED',
+      correlationId,
+    };
     await db.batch([
       db
         .prepare(
@@ -2147,6 +2678,7 @@ export function createD1OperationalService({
           `UPDATE lending_tickets SET status = 'RETURNED', updated_at = ?2 WHERE id = ?1 AND status = 'ON_LOAN'`,
         )
         .bind(ticketId, timestamp),
+      ...assetStatements,
       historyStatement(db, {
         entityType: 'LENDING',
         entityId: ticketId,
@@ -2848,6 +3380,8 @@ export function createD1OperationalService({
     getRestockDetail,
     transitionRestock,
     createLendingTicket,
+    registerInventoryAsset,
+    recordAssetMaintenance,
     approveLendingTicket,
     confirmLendingHandoff,
     confirmReturn,

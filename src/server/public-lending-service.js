@@ -1,4 +1,5 @@
 import { ApiError } from './d1/operational-service.js';
+import { loadLendingCatalog } from './lending-catalog-service.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
@@ -6,7 +7,9 @@ const DEPARTMENTS = Object.freeze(['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', '
 const encoder = new TextEncoder();
 
 const requiredText = (value, field, max) => {
-  const result = String(value ?? '').trim().replace(/\s+/gu, ' ');
+  const result = String(value ?? '')
+    .trim()
+    .replace(/\s+/gu, ' ');
   if (!result || result.length > max) {
     throw new ApiError('VALIDATION_FAILED', `${field} is required.`, { status: 422, details: { field } });
   }
@@ -88,10 +91,6 @@ async function rows(db, sql, values = []) {
   return (await statement.all()).results ?? [];
 }
 
-function itemType(handling) {
-  return /LOAN|REUSABLE/iu.test(String(handling ?? '')) ? 'REUSABLE' : 'CONSUMABLE';
-}
-
 export function createPublicLendingService({ db, trackingSecret, clock = Date } = {}) {
   if (!db) throw new Error('D1 database binding is required.');
   if (String(trackingSecret ?? '').length < 32) throw new Error('A protected tracking secret is required.');
@@ -127,29 +126,10 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
   }
 
   async function catalog() {
-    const items = await rows(
-      db,
-      `SELECT item.id, item.name, item.category, item.unit, item.handling,
-              item.default_loan_days, item.maximum_loan_quantity,
-              balance.available_to_promise
-       FROM inventory_items item
-       JOIN inventory_balances balance ON balance.item_id = item.id
-       WHERE item.status = 'ACTIVE' AND item.lending_audience = 'STUDENTS_AND_STAFF'
-       ORDER BY item.name LIMIT 500`,
-    );
     return {
       ok: true,
       departments: DEPARTMENTS,
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        unit: item.unit,
-        type: itemType(item.handling),
-        availability: Number(item.available_to_promise) > 0 ? 'AVAILABLE' : 'CURRENTLY_UNAVAILABLE',
-        maximumQuantity: Math.max(1, Number(item.maximum_loan_quantity ?? 1) || 1),
-        defaultLoanDays: Math.max(0, Number(item.default_loan_days ?? 0) || 0),
-      })),
+      items: await loadLendingCatalog(db, { publicOnly: true }),
       process: [
         'Submit a borrowing request for staff review.',
         'Wait for Ready to Claim instructions before pickup.',
@@ -171,29 +151,36 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         throw new ApiError('VALIDATION_FAILED', 'Each lending item may be selected once.', { status: 422 });
       }
       seen.add(itemId);
-      const item = await db
-        .prepare(
-          `SELECT item.id, item.name, item.category, item.unit, item.handling,
-                  item.maximum_loan_quantity, balance.available_to_promise
-           FROM inventory_items item
-           JOIN inventory_balances balance ON balance.item_id = item.id
-           WHERE item.id = ?1 AND item.status = 'ACTIVE'
-             AND item.lending_audience = 'STUDENTS_AND_STAFF'`,
-        )
-        .bind(itemId)
-        .first();
-      if (!item) throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected lending item is unavailable.', { status: 409 });
+      const [item] = await loadLendingCatalog(db, {
+        publicOnly: true,
+        itemId,
+        staff: true,
+      });
+      if (!item)
+        throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected lending item is unavailable.', {
+          status: 409,
+        });
       const quantity = positiveInteger(line.quantity, `lines[${index}].quantity`);
-      const maximum = Math.max(1, Number(item.maximum_loan_quantity ?? 1) || 1);
-      if (quantity > maximum || quantity > Number(item.available_to_promise)) {
-        throw new ApiError('LENDING_QUANTITY_UNAVAILABLE', 'A selected quantity is not currently available.', { status: 409 });
+      const maximum = item.maximumQuantity;
+      if (
+        !['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability) ||
+        quantity > maximum ||
+        quantity > item.lendableAvailable
+      ) {
+        throw new ApiError(
+          'LENDING_QUANTITY_UNAVAILABLE',
+          'A selected quantity is not currently available.',
+          { status: 409 },
+        );
       }
       normalized.push({
         itemId: item.id,
         itemName: item.name,
         quantity,
         unit: item.unit,
-        ticketType: itemType(item.handling) === 'REUSABLE' ? 'LOAN' : 'CONSUMABLE',
+        ticketType: item.type === 'REUSABLE' ? 'LOAN' : 'CONSUMABLE',
+        dueDateRequired: item.dueDateRequired,
+        acknowledgmentRequired: item.acknowledgmentRequired,
       });
     }
     return normalized;
@@ -233,21 +220,29 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     const borrowerEmail = email(command.email);
     const purpose = requiredText(command.purpose, 'purpose', 500);
     const pickupDate = dateOnly(command.pickupDate, 'pickupDate');
-    const dueDate = dateOnly(command.dueDate, 'dueDate');
+    const lines = await normalizeLines(command.lines);
+    const dueDate = command.dueDate ? dateOnly(command.dueDate, 'dueDate') : '';
     const today = nowIso().slice(0, 10);
-    if (pickupDate < today || dueDate < pickupDate) {
-      throw new ApiError('VALIDATION_FAILED', 'Pickup must be current or future and due date cannot precede pickup.', {
-        status: 422,
-        details: { field: dueDate < pickupDate ? 'dueDate' : 'pickupDate' },
-      });
+    if (
+      pickupDate < today ||
+      (dueDate && dueDate < pickupDate) ||
+      (lines.some((line) => line.dueDateRequired) && !dueDate)
+    ) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Pickup must be current or future and due date cannot precede pickup.',
+        {
+          status: 422,
+          details: { field: pickupDate < today ? 'pickupDate' : 'dueDate' },
+        },
+      );
     }
-    if (command.responsibilityAcknowledged !== true) {
+    if (lines.some((line) => line.acknowledgmentRequired) && command.responsibilityAcknowledged !== true) {
       throw new ApiError('VALIDATION_FAILED', 'Responsibility acknowledgment is required.', {
         status: 422,
         details: { field: 'responsibilityAcknowledged' },
       });
     }
-    const lines = await normalizeLines(command.lines);
     const publicId = createId('LBR');
     const trackingCode = await hmac(trackingSecret, `lending-code:${publicId}:${clientRequestId}`);
     const trackingDigest = await hmac(trackingSecret, `lending-digest:${trackingCode}`);
@@ -286,9 +281,10 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
             `INSERT INTO lending_tickets (
                id, borrower_reference, borrower_name, borrower_type, department_organization,
                contact, item_id, quantity, unit, purpose, due_at, ticket_type, status,
+               requested_start_at, requested_end_at,
                owner_committee_id, created_by, notes, created_at, updated_at
              ) VALUES (?1, ?2, ?3, 'PUBLIC_ANGELITE', ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11,
-               'FOR_REVIEW', ?12, ?13, 'Public responsibility acknowledgment recorded.', ?14, ?14)`,
+               'FOR_REVIEW', ?12, ?13, ?14, ?15, 'Public responsibility acknowledgment recorded.', ?16, ?16)`,
           )
           .bind(
             ticketId,
@@ -302,6 +298,8 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
             purpose,
             line.ticketType === 'LOAN' ? dueDate : null,
             line.ticketType,
+            pickupDate,
+            dueDate || null,
             OWNER_COMMITTEE_ID,
             PUBLIC_ACTOR_ID,
             timestamp,
@@ -340,17 +338,30 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       );
     });
     statements.push(
-      db.prepare("UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'lending')").bind(timestamp),
+      db
+        .prepare(
+          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'lending')",
+        )
+        .bind(timestamp),
     );
     try {
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('PUBLIC_LENDING_CONFLICT', 'This submission is already being processed.', { status: 409 });
+        throw new ApiError('PUBLIC_LENDING_CONFLICT', 'This submission is already being processed.', {
+          status: 409,
+        });
       }
       throw error;
     }
-    return { ok: true, ticketId: publicId, status: 'FOR_REVIEW', trackingCode, replayed: false, correlationId };
+    return {
+      ok: true,
+      ticketId: publicId,
+      status: 'FOR_REVIEW',
+      trackingCode,
+      replayed: false,
+      correlationId,
+    };
   }
 
   async function track({ command = {}, networkKey = '', correlationId = '' } = {}) {
@@ -366,7 +377,9 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       .bind(ticketId, digest)
       .first();
     if (!request) {
-      throw new ApiError('PUBLIC_LENDING_NOT_FOUND', 'The lending ticket or tracking code is invalid.', { status: 404 });
+      throw new ApiError('PUBLIC_LENDING_NOT_FOUND', 'The lending ticket or tracking code is invalid.', {
+        status: 404,
+      });
     }
     const tickets = await rows(
       db,
@@ -385,7 +398,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       correlationId,
       request: {
         id: request.id,
-        status: statuses.size === 1 ? tickets[0]?.status ?? 'FOR_REVIEW' : 'IN_PROGRESS',
+        status: statuses.size === 1 ? (tickets[0]?.status ?? 'FOR_REVIEW') : 'IN_PROGRESS',
         pickupDate: request.requested_pickup_date,
         dueDate: request.requested_due_date,
         createdAt: request.created_at,

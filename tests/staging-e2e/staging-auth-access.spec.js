@@ -92,8 +92,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '13',
-        latestMigration: '0013_public_request_guidance.sql',
+        schemaVersion: '14',
+        latestMigration: '0014_lending_catalog_assets.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -392,10 +392,23 @@ test('deployed staging public Lending Center submits and privately tracks withou
     const catalogResponse = await publicRequest.get('/api/public/lending/catalog');
     expect(catalogResponse.status()).toBe(200);
     const catalog = await catalogResponse.json();
-    const item = catalog.items.find((entry) => entry.availability === 'AVAILABLE');
+    const item = catalog.items.find((entry) =>
+      ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(entry.availability),
+    );
     expect(item).toBeTruthy();
+    expect(item).toEqual(
+      expect.objectContaining({
+        productId: item.id,
+        type: expect.stringMatching(/^(REUSABLE|CONSUMABLE)$/u),
+        dueDateRequired: expect.any(Boolean),
+        acknowledgmentRequired: expect.any(Boolean),
+        conditionTracked: expect.any(Boolean),
+      }),
+    );
     expect(item).not.toHaveProperty('onHand');
     expect(item).not.toHaveProperty('availableToPromise');
+    expect(item).not.toHaveProperty('reserved');
+    expect(item).not.toHaveProperty('onLoan');
     expect(item).not.toHaveProperty('storageLocation');
 
     const before = await (await adminRequest.get('/api/inventory')).json();

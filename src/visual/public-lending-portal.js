@@ -34,7 +34,15 @@ export async function mountPublicLendingPortal({ root, client }) {
         <div class="public-catalog-filters">
           <label>Search<input type="search" data-catalog-search placeholder="Search item name or category"></label>
           <label>Category<select data-catalog-category><option value="ALL">All categories</option>${categories.map((value) => `<option>${escapeHtml(value)}</option>`).join('')}</select></label>
-          <label>Availability<select data-catalog-availability><option value="AVAILABLE">Available now</option><option value="ALL">All availability</option><option value="CURRENTLY_UNAVAILABLE">Currently unavailable</option></select></label>
+          <label>Availability<select data-catalog-availability><option value="REQUESTABLE">Requestable now</option><option value="ALL">All availability</option>${[
+            ...new Set(catalog.items.map((item) => item.availability)),
+          ]
+            .sort()
+            .map(
+              (value) =>
+                `<option value="${escapeHtml(value)}">${escapeHtml(value.replaceAll('_', ' '))}</option>`,
+            )
+            .join('')}</select></label>
           <label>Item type<select data-catalog-type><option value="ALL">Reusable and consumable</option><option value="REUSABLE">Reusable</option><option value="CONSUMABLE">Consumable</option></select></label>
         </div>
         <div class="public-catalog-grid" data-catalog-items></div>
@@ -54,9 +62,9 @@ export async function mountPublicLendingPortal({ root, client }) {
             <label>Contact number<input name="contactNumber" autocomplete="tel" maxlength="24" required></label>
             <label>Email address<input name="email" type="email" autocomplete="email" maxlength="254" aria-describedby="lendingEmailHelp" required><small id="lendingEmailHelp">HAU Outlook/Microsoft and Gmail addresses are accepted.</small></label>
             <label>Requested pickup date<input name="pickupDate" type="date" min="${today}" required></label>
-            <label>Requested due date<input name="dueDate" type="date" min="${today}" required></label>
+            <label>Requested due date<input name="dueDate" type="date" min="${today}" data-lending-due><small data-lending-due-help>Required when a selected item has a governed due-date rule.</small></label>
             <label class="span-2">Purpose<textarea name="purpose" maxlength="500" required></textarea></label>
-            <label class="public-check span-2"><input name="responsibilityAcknowledged" type="checkbox" required><span><strong>Responsibility acknowledgment</strong><small>I will present the approved borrower identity, follow pickup instructions, care for reusable items, and return them by the approved due date.</small></span></label>
+            <label class="public-check span-2"><input name="responsibilityAcknowledged" type="checkbox" data-lending-acknowledgment><span><strong>Responsibility acknowledgment</strong><small data-lending-acknowledgment-help>Required when a selected item has a governed acknowledgment rule.</small></span></label>
           </div>
           <p class="borrower-form-message" role="status" aria-live="polite"></p>
           <button class="primary" type="submit">Submit borrowing request for review</button>
@@ -78,14 +86,28 @@ export async function mountPublicLendingPortal({ root, client }) {
   const form = root.querySelector('#publicLendingForm');
   const selectedRoot = root.querySelector('[data-selected-items]');
   const selectedCount = root.querySelector('[data-selected-count]');
+  const dueDate = root.querySelector('[data-lending-due]');
+  const dueHelp = root.querySelector('[data-lending-due-help]');
+  const acknowledgment = root.querySelector('[data-lending-acknowledgment]');
+  const acknowledgmentHelp = root.querySelector('[data-lending-acknowledgment-help]');
 
   const renderSelected = () => {
+    const requiresDueDate = [...selected.values()].some((line) => line.dueDateRequired);
+    const requiresAcknowledgment = [...selected.values()].some((line) => line.acknowledgmentRequired);
+    dueDate.required = requiresDueDate;
+    acknowledgment.required = requiresAcknowledgment;
+    dueHelp.textContent = requiresDueDate
+      ? 'Required for the selected reusable item.'
+      : 'Optional for the current selection.';
+    acknowledgmentHelp.textContent = requiresAcknowledgment
+      ? 'Required for the current selection.'
+      : 'Optional for the current selection.';
     selectedCount.textContent = `${selected.size} item${selected.size === 1 ? '' : 's'}`;
     selectedRoot.innerHTML = selected.size
       ? [...selected.values()]
           .map(
             (line) =>
-              `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`,
+              `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}${line.restrictions ? ` · ${escapeHtml(line.restrictions)}` : ''}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`,
           )
           .join('')
       : '<p class="empty">Choose an available catalog item.</p>';
@@ -109,7 +131,10 @@ export async function mountPublicLendingPortal({ root, client }) {
       (item) =>
         (!query || `${item.name} ${item.category}`.toLowerCase().includes(query)) &&
         (category.value === 'ALL' || item.category === category.value) &&
-        (availability.value === 'ALL' || item.availability === availability.value) &&
+        (availability.value === 'ALL' ||
+          item.availability === availability.value ||
+          (availability.value === 'REQUESTABLE' &&
+            ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability))) &&
         (type.value === 'ALL' || item.type === type.value),
     );
     count.textContent = `${visible.length} item${visible.length === 1 ? '' : 's'}`;
@@ -117,7 +142,7 @@ export async function mountPublicLendingPortal({ root, client }) {
       ? visible
           .map(
             (item) =>
-              `<article class="public-catalog-card"><div><span class="status ${item.availability === 'AVAILABLE' ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p><small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Standard loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small></div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${item.availability !== 'AVAILABLE' ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Add item'}</button></article>`,
+              `<article class="public-catalog-card"><div class="public-catalog-image">${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async">` : '<span aria-hidden="true">Image pending</span>'}</div><div><span class="status ${['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability) ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><p class="eyebrow">Product ID ${escapeHtml(item.productId)}</p><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Normal loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small>${item.eligibility ? `<small><strong>Eligibility:</strong> ${escapeHtml(item.eligibility)}</small>` : ''}${item.restrictions ? `<small><strong>Restrictions:</strong> ${escapeHtml(item.restrictions)}</small>` : ''}${item.handlingNotes ? `<small><strong>Handling:</strong> ${escapeHtml(item.handlingNotes)}</small>` : ''}</div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${!['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability) ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Request item'}</button></article>`,
           )
           .join('')
       : '<p class="empty">No catalog items match these filters.</p>';
@@ -131,6 +156,9 @@ export async function mountPublicLendingPortal({ root, client }) {
           type: item.type,
           unit: item.unit,
           maximumQuantity: item.maximumQuantity,
+          dueDateRequired: item.dueDateRequired,
+          acknowledgmentRequired: item.acknowledgmentRequired,
+          restrictions: item.restrictions,
           quantity: 1,
         });
         renderSelected();

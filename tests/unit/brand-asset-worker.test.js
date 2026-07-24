@@ -46,4 +46,23 @@ describe('governed brand asset delivery', () => {
     expect(mutation.status).toBe(405);
     expect(mutation.headers.get('allow')).toBe('GET, HEAD');
   });
+
+  it('serves only bounded governed catalog image keys', async () => {
+    const env = environment({
+      body: 'synthetic-catalog-image',
+      httpMetadata: { contentType: 'image/png' },
+    });
+    const served = await worker.fetch(
+      new Request('https://example.test/brand/catalog/item-photo-01.png'),
+      env,
+    );
+    const rejected = await worker.fetch(
+      new Request('https://example.test/brand/catalog/%2e%2e%2fprivate'),
+      env,
+    );
+
+    expect(env.BRAND_ASSETS.get).toHaveBeenCalledWith('catalog/item-photo-01.png');
+    expect(served.status).toBe(200);
+    expect(rejected.status).toBe(404);
+  });
 });

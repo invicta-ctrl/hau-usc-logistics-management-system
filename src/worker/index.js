@@ -550,6 +550,18 @@ export default {
     const url = new URL(request.url);
     const brandKey = BRAND_ASSET_KEYS[url.pathname];
     if (brandKey) return brandAsset(request, env, brandKey);
+    if (url.pathname.startsWith('/brand/catalog/')) {
+      let assetKey = '';
+      try {
+        assetKey = decodeURIComponent(url.pathname.slice('/brand/catalog/'.length));
+      } catch {
+        return new Response(null, { status: 404 });
+      }
+      if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,159}$/u.test(assetKey)) {
+        return new Response(null, { status: 404 });
+      }
+      return brandAsset(request, env, `catalog/${assetKey}`);
+    }
     if (url.pathname.startsWith('/api/')) {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();

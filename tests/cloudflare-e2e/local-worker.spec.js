@@ -38,7 +38,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '13' },
+    database: { connected: true, schemaVersion: '14' },
   });
 
   await page.goto('/');
@@ -210,10 +210,23 @@ test('public Lending Center browses, submits, and privately tracks without stock
   expect(catalogResponse.status()).toBe(200);
   const catalog = await catalogResponse.json();
   expect(catalog.departments).toEqual(['SEA', 'SBA', 'CCJEF', 'SAS', 'SED', 'SOC', 'SNAMS']);
-  const item = catalog.items.find((entry) => entry.availability === 'AVAILABLE');
+  const item = catalog.items.find((entry) =>
+    ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(entry.availability),
+  );
   expect(item).toBeTruthy();
+  expect(item).toEqual(
+    expect.objectContaining({
+      productId: item.id,
+      type: expect.stringMatching(/^(REUSABLE|CONSUMABLE)$/u),
+      dueDateRequired: expect.any(Boolean),
+      acknowledgmentRequired: expect.any(Boolean),
+      conditionTracked: expect.any(Boolean),
+    }),
+  );
   expect(item).not.toHaveProperty('availableToPromise');
   expect(item).not.toHaveProperty('onHand');
+  expect(item).not.toHaveProperty('reserved');
+  expect(item).not.toHaveProperty('onLoan');
   expect(item).not.toHaveProperty('storageLocation');
   const inventoryBefore = await (await admin.get('/api/inventory')).json();
   const balanceBefore = inventoryBefore.data.inventoryItems.find((entry) => entry.id === item.id).onHand;
@@ -977,4 +990,102 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     remaining: 0,
     status: 'RECEIVED',
   });
+});
+
+test('traceable reusable assets preserve assignment, condition, and maintenance history', async ({
+  request,
+}) => {
+  const csrfToken = await login(request, 'LOCAL.DIRECTOR');
+  const registered = await mutate(request, csrfToken, 'registerInventoryAsset', {
+    itemId: 'ITM-LOCAL-001',
+    assetTag: 'LOCAL-CHAIR-0001',
+    serialNumber: 'SYNTHETIC-SERIAL-0001',
+    conditionLabel: 'GOOD',
+    notes: 'Synthetic Phase 5 asset lifecycle proof.',
+    clientRequestId: 'local-phase5-asset-register',
+  });
+  expect(registered.status()).toBe(200);
+  const assetId = (await registered.json()).assetId;
+
+  const lending = await mutate(request, csrfToken, 'createLendingTicket', {
+    clientRequestId: 'local-phase5-lending-create',
+    borrowerReference: '12345678',
+    borrowerName: 'Synthetic Asset Borrower',
+    borrowerType: 'STUDENT',
+    itemId: 'ITM-LOCAL-001',
+    quantity: 1,
+    unit: 'piece',
+    purpose: 'Synthetic traceable asset lifecycle',
+    pickupDate: '2026-08-03',
+    dueAt: '2026-08-10T12:00:00+08:00',
+    ticketType: 'LOAN',
+  });
+  expect(lending.status()).toBe(200);
+  const ticketId = (await lending.json()).ticketId;
+
+  const missingAssignment = await mutate(request, csrfToken, 'approveLendingTicket', {
+    ticketId,
+    clientRequestId: 'local-phase5-lending-approve-missing-asset',
+  });
+  expect(missingAssignment.status()).toBe(409);
+  await expect(missingAssignment.json()).resolves.toMatchObject({ code: 'ASSET_ASSIGNMENT_REQUIRED' });
+
+  const approved = await mutate(request, csrfToken, 'approveLendingTicket', {
+    ticketId,
+    assetIds: [assetId],
+    clientRequestId: 'local-phase5-lending-approve',
+  });
+  expect(approved.status()).toBe(200);
+  await expect(approved.json()).resolves.toMatchObject({
+    status: 'READY_TO_CLAIM',
+    assetIds: [assetId],
+  });
+
+  const handedOff = await mutate(request, csrfToken, 'confirmLendingHandoff', {
+    ticketId,
+    conditionLabel: 'GOOD',
+    notes: 'Synthetic handoff condition.',
+    clientRequestId: 'local-phase5-lending-handoff',
+  });
+  expect(handedOff.status()).toBe(200);
+  await expect(handedOff.json()).resolves.toMatchObject({ status: 'ON_LOAN', assetIds: [assetId] });
+
+  const returned = await mutate(request, csrfToken, 'confirmReturn', {
+    ticketId,
+    conditionLabel: 'DAMAGED',
+    notes: 'Synthetic damaged return requiring maintenance.',
+    clientRequestId: 'local-phase5-lending-return',
+  });
+  expect(returned.status()).toBe(200);
+  await expect(returned.json()).resolves.toMatchObject({ status: 'RETURNED', assetIds: [assetId] });
+
+  const damagedInventory = await (await request.get('/api/inventory')).json();
+  expect(damagedInventory.data.inventoryAssets.find((asset) => asset.id === assetId)).toMatchObject({
+    asset_tag: 'LOCAL-CHAIR-0001',
+    lifecycle_status: 'DAMAGED',
+    return_condition: 'DAMAGED',
+  });
+  expect(
+    damagedInventory.data.assetMovementHistory.some(
+      (movement) =>
+        movement.asset_id === assetId &&
+        movement.movement_type === 'RETURN' &&
+        movement.new_status === 'DAMAGED',
+    ),
+  ).toBe(true);
+  expect(
+    damagedInventory.data.assetMaintenanceHistory.some(
+      (event) => event.asset_id === assetId && event.event_type === 'DECLARED_DAMAGED',
+    ),
+  ).toBe(true);
+
+  const restored = await mutate(request, csrfToken, 'recordAssetMaintenance', {
+    assetId,
+    eventType: 'COMPLETED',
+    conditionLabel: 'FAIR',
+    notes: 'Synthetic repair completed.',
+    clientRequestId: 'local-phase5-asset-maintenance-complete',
+  });
+  expect(restored.status()).toBe(200);
+  await expect(restored.json()).resolves.toMatchObject({ status: 'AVAILABLE' });
 });

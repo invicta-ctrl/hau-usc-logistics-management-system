@@ -138,78 +138,84 @@ async function main() {
       `) VALUES ('LOCAL-STARTER', 'COM_FOOD', 'ASSIGNED', 1, 'LOCAL_SYNTHETIC');`,
   );
   if (!starterOnly) {
-  statements.push(
-    `INSERT OR REPLACE INTO event_series (id, code, name, status, created_at, updated_at) VALUES (` +
-      `'SER-LOCAL', 'LOCAL', 'Local Synthetic Series', 'ACTIVE', ${sql(createdAt)}, ${sql(createdAt)});`,
-    `INSERT OR REPLACE INTO events (` +
-      `id, event_series_id, name, starts_at, ends_at, venue, owner_committee_id, department, status, active, created_at, updated_at` +
-      `) VALUES (` +
-      `'EVT-LOCAL', 'SER-LOCAL', 'Local Synthetic Event', '2026-08-01T08:00:00+08:00', ` +
-      `'2026-08-01T17:00:00+08:00', 'Synthetic Venue', 'COM_INVENTORY_PANTRY', ` +
-      `'Department of Logistics', 'ACTIVE', 1, ${sql(createdAt)}, ${sql(createdAt)});`,
-    `INSERT OR REPLACE INTO inventory_items (` +
-      `id, name, category, stock_area, handling, unit, opening_quantity, status, catalog_type, ` +
-      `storage_location, reorder_threshold, lending_audience, default_loan_days, maximum_loan_quantity, ` +
-      `approval_required, created_at, updated_at, updated_by` +
-      `) VALUES (` +
-      `'ITM-LOCAL-001', 'Synthetic Folding Chair', 'Equipment', 'Office Inventory', 'LOANABLE', ` +
-      `'piece', 20, 'ACTIVE', 'OFFICE_INVENTORY', 'Synthetic Storage', 5, ` +
-      `'STUDENTS_AND_STAFF', 3, 5, 1, ${sql(createdAt)}, ${sql(createdAt)}, 'LOCAL-SEED');`,
-    `INSERT OR REPLACE INTO item_aliases (item_id, normalized_alias, display_alias) VALUES (` +
-      `'ITM-LOCAL-001', 'CHAIR', 'Chair');`,
-    `INSERT OR IGNORE INTO requests (` +
-      `id, request_type, request_stage, event_series_id, event_id, requester_name, requester_email, ` +
-      `department, priority, purpose, status, client_request_id, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'REQ-LOCAL-RECEIVING', 'CATALOG_RESTOCK', 'PROCUREMENT', 'SER-LOCAL', 'EVT-LOCAL', ` +
-      `'Synthetic Requester', '', 'Department of Logistics', 'NORMAL', 'Synthetic receiving seed', ` +
-      `'ACCEPTED', 'LOCAL-RECEIVING-SEED', ${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
-    `INSERT OR IGNORE INTO request_lines (` +
-      `id, request_id, event_id, item_id, description, specification, category, requested_quantity, ` +
-      `unit, fulfillment_source, released_quantity, received_quantity, status, client_line_id, ` +
-      `workflow_revision, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'LIN-LOCAL-RECEIVING', 'REQ-LOCAL-RECEIVING', 'EVT-LOCAL', 'ITM-LOCAL-001', ` +
-      `'Synthetic Folding Chair', 'Synthetic receiving fixture', 'Equipment', 10, 'piece', ` +
-      `'FOR_CANVASSING', 0, 0, 'PROCURED', 'LOCAL-RECEIVING-LINE', 1, ` +
-      `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
-    `INSERT OR IGNORE INTO restock_requests (` +
-      `id, source_request_id, source_request_line_id, item_id, requested_quantity, received_quantity, ` +
-      `unit, supplier_name, status, assigned_committee_id, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'RST-LOCAL-001', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-RECEIVING', 'ITM-LOCAL-001', ` +
-      `10, 0, 'piece', 'Synthetic Supplier', 'PROCURED', 'COM_INVENTORY_PANTRY', ` +
-      `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
-    `INSERT OR IGNORE INTO deliverables (` +
-      `id, request_id, request_line_id, event_series_id, event_id, inventory_match_id, item_spec, ` +
-      `quantity_requested, quantity_received, quantity_released, unit, fulfillment_source, ` +
-      `assigned_committee_id, status, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'DEL-LOCAL-001', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-RECEIVING', 'SER-LOCAL', 'EVT-LOCAL', ` +
-      `'ITM-LOCAL-001', 'Synthetic Folding Chair', 10, 0, 0, 'piece', 'FOR_CANVASSING', ` +
-      `'COM_MATERIALS', 'PROCURED', ${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
-    `INSERT OR IGNORE INTO request_lines (` +
-      `id, request_id, event_id, description, specification, category, requested_quantity, ` +
-      `unit, fulfillment_source, released_quantity, received_quantity, status, client_line_id, ` +
-      `workflow_revision, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'LIN-LOCAL-CANVASS', 'REQ-LOCAL-RECEIVING', 'EVT-LOCAL', 'Synthetic Procurement Item', ` +
-      `'Synthetic canvass fixture', 'Event Materials', 4, 'set', 'PROCUREMENT', 0, 0, ` +
-      `'FOR_CANVASSING', 'LOCAL-CANVASS-LINE', 1, ${sql(createdAt)}, ${sql(createdAt)}, ` +
-      `'SYSTEM-IMPORT');`,
-    `INSERT OR IGNORE INTO deliverables (` +
-      `id, request_id, request_line_id, event_series_id, event_id, item_spec, quantity_requested, ` +
-      `quantity_received, quantity_released, unit, fulfillment_source, assigned_committee_id, ` +
-      `budget_status, procurement_status, receipt_status, status, created_at, updated_at, created_by` +
-      `) VALUES (` +
-      `'DEL-LOCAL-CANVASS', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-CANVASS', 'SER-LOCAL', ` +
-      `'EVT-LOCAL', 'Synthetic Procurement Item', 4, 0, 0, 'set', 'PROCUREMENT', ` +
-      `'COM_MATERIALS', 'NOT_STARTED', 'FOR_CANVASSING', 'MISSING', 'FOR_CANVASSING', ` +
-      `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
-    `INSERT OR REPLACE INTO app_metadata (key, value, updated_at) VALUES (` +
-      `'local_seed', 'SYNTHETIC_V1', ${sql(createdAt)});`,
-    'COMMIT;',
-  );
+    statements.push(
+      `INSERT OR REPLACE INTO event_series (id, code, name, status, created_at, updated_at) VALUES (` +
+        `'SER-LOCAL', 'LOCAL', 'Local Synthetic Series', 'ACTIVE', ${sql(createdAt)}, ${sql(createdAt)});`,
+      `INSERT OR REPLACE INTO events (` +
+        `id, event_series_id, name, starts_at, ends_at, venue, owner_committee_id, department, status, active, created_at, updated_at` +
+        `) VALUES (` +
+        `'EVT-LOCAL', 'SER-LOCAL', 'Local Synthetic Event', '2026-08-01T08:00:00+08:00', ` +
+        `'2026-08-01T17:00:00+08:00', 'Synthetic Venue', 'COM_INVENTORY_PANTRY', ` +
+        `'Department of Logistics', 'ACTIVE', 1, ${sql(createdAt)}, ${sql(createdAt)});`,
+      `INSERT OR REPLACE INTO inventory_items (` +
+        `id, name, category, stock_area, handling, unit, opening_quantity, status, catalog_type, ` +
+        `storage_location, reorder_threshold, lending_audience, default_loan_days, maximum_loan_quantity, ` +
+        `approval_required, is_lendable, lending_kind, lending_status, lending_unit, due_date_required, ` +
+        `acknowledgment_required, eligibility_rule, lending_handling_notes, borrower_safe_description, ` +
+        `borrower_safe_restrictions, image_asset_key, condition_tracking, created_at, updated_at, updated_by` +
+        `) VALUES (` +
+        `'ITM-LOCAL-001', 'Synthetic Folding Chair', 'Equipment', 'Office Inventory', 'LOANABLE', ` +
+        `'piece', 20, 'ACTIVE', 'OFFICE_INVENTORY', 'Synthetic Storage', 5, ` +
+        `'STUDENTS_AND_STAFF', 3, 5, 1, 1, 'REUSABLE', 'ACTIVE', 'piece', 1, 1, ` +
+        `'HAU students and authorized USC staff', 'Keep dry and return after use.', ` +
+        `'A portable folding chair for approved university activities.', ` +
+        `'Subject to staff review and approved event use.', '', 1, ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'LOCAL-SEED');`,
+      `INSERT OR REPLACE INTO item_aliases (item_id, normalized_alias, display_alias) VALUES (` +
+        `'ITM-LOCAL-001', 'CHAIR', 'Chair');`,
+      `INSERT OR IGNORE INTO requests (` +
+        `id, request_type, request_stage, event_series_id, event_id, requester_name, requester_email, ` +
+        `department, priority, purpose, status, client_request_id, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'REQ-LOCAL-RECEIVING', 'CATALOG_RESTOCK', 'PROCUREMENT', 'SER-LOCAL', 'EVT-LOCAL', ` +
+        `'Synthetic Requester', '', 'Department of Logistics', 'NORMAL', 'Synthetic receiving seed', ` +
+        `'ACCEPTED', 'LOCAL-RECEIVING-SEED', ${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
+      `INSERT OR IGNORE INTO request_lines (` +
+        `id, request_id, event_id, item_id, description, specification, category, requested_quantity, ` +
+        `unit, fulfillment_source, released_quantity, received_quantity, status, client_line_id, ` +
+        `workflow_revision, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'LIN-LOCAL-RECEIVING', 'REQ-LOCAL-RECEIVING', 'EVT-LOCAL', 'ITM-LOCAL-001', ` +
+        `'Synthetic Folding Chair', 'Synthetic receiving fixture', 'Equipment', 10, 'piece', ` +
+        `'FOR_CANVASSING', 0, 0, 'PROCURED', 'LOCAL-RECEIVING-LINE', 1, ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
+      `INSERT OR IGNORE INTO restock_requests (` +
+        `id, source_request_id, source_request_line_id, item_id, requested_quantity, received_quantity, ` +
+        `unit, supplier_name, status, assigned_committee_id, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'RST-LOCAL-001', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-RECEIVING', 'ITM-LOCAL-001', ` +
+        `10, 0, 'piece', 'Synthetic Supplier', 'PROCURED', 'COM_INVENTORY_PANTRY', ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
+      `INSERT OR IGNORE INTO deliverables (` +
+        `id, request_id, request_line_id, event_series_id, event_id, inventory_match_id, item_spec, ` +
+        `quantity_requested, quantity_received, quantity_released, unit, fulfillment_source, ` +
+        `assigned_committee_id, status, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'DEL-LOCAL-001', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-RECEIVING', 'SER-LOCAL', 'EVT-LOCAL', ` +
+        `'ITM-LOCAL-001', 'Synthetic Folding Chair', 10, 0, 0, 'piece', 'FOR_CANVASSING', ` +
+        `'COM_MATERIALS', 'PROCURED', ${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
+      `INSERT OR IGNORE INTO request_lines (` +
+        `id, request_id, event_id, description, specification, category, requested_quantity, ` +
+        `unit, fulfillment_source, released_quantity, received_quantity, status, client_line_id, ` +
+        `workflow_revision, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'LIN-LOCAL-CANVASS', 'REQ-LOCAL-RECEIVING', 'EVT-LOCAL', 'Synthetic Procurement Item', ` +
+        `'Synthetic canvass fixture', 'Event Materials', 4, 'set', 'PROCUREMENT', 0, 0, ` +
+        `'FOR_CANVASSING', 'LOCAL-CANVASS-LINE', 1, ${sql(createdAt)}, ${sql(createdAt)}, ` +
+        `'SYSTEM-IMPORT');`,
+      `INSERT OR IGNORE INTO deliverables (` +
+        `id, request_id, request_line_id, event_series_id, event_id, item_spec, quantity_requested, ` +
+        `quantity_received, quantity_released, unit, fulfillment_source, assigned_committee_id, ` +
+        `budget_status, procurement_status, receipt_status, status, created_at, updated_at, created_by` +
+        `) VALUES (` +
+        `'DEL-LOCAL-CANVASS', 'REQ-LOCAL-RECEIVING', 'LIN-LOCAL-CANVASS', 'SER-LOCAL', ` +
+        `'EVT-LOCAL', 'Synthetic Procurement Item', 4, 0, 0, 'set', 'PROCUREMENT', ` +
+        `'COM_MATERIALS', 'NOT_STARTED', 'FOR_CANVASSING', 'MISSING', 'FOR_CANVASSING', ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
+      `INSERT OR REPLACE INTO app_metadata (key, value, updated_at) VALUES (` +
+        `'local_seed', 'SYNTHETIC_V1', ${sql(createdAt)});`,
+      'COMMIT;',
+    );
   } else {
     statements.push('COMMIT;');
   }

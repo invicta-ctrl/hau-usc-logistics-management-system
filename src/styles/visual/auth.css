@@ -512,6 +512,25 @@
   border-radius: 0.8rem;
   background: #fffaf2;
 }
+.public-catalog-image {
+  display: grid;
+  place-items: center;
+  min-height: 8rem;
+  overflow: hidden;
+  border: 1px solid #e4d6bd;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, #f6ead7, #fffdf8);
+  color: #7b6a63;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.public-catalog-image img {
+  width: 100%;
+  height: 10rem;
+  object-fit: contain;
+}
 .public-catalog-card h3 {
   margin: 0.7rem 0 0.25rem;
   color: #5e0d12;
@@ -520,6 +539,8 @@
   margin: 0 0 0.35rem;
 }
 .public-catalog-card small {
+  display: block;
+  margin-top: 0.3rem;
   color: #655854;
 }
 .public-lending-layout {
