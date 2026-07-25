@@ -2607,24 +2607,27 @@ export function createRuntimeExtensions(options) {
       const result = await services.getFoodWorkQueue();
       foodQueueItems = Array.isArray(result?.items) ? result.items : [];
       renderFoodQueue();
+      renderRoleExperience();
     })();
     try {
       await foodQueuePromise;
     } catch (error) {
       foodQueueItems = [];
       renderFoodQueue(error.message);
+      renderRoleExperience();
     } finally {
       foodQueuePromise = null;
     }
   };
 
-  const renderFoodQueue = () => {
+  const renderFoodQueue = (errorMessage = '') => {
     if (!foodQueue) return;
     const items = foodQueueItems ?? [];
-    foodQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Food Committee</p><h3 id="foodCommitteeQueueTitle">Scoped Food work queue</h3><p>Food children only; sibling payloads are not projected here.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div><div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.food?.serviceClass || 'Food')} · ${esc(item.food?.requiredServings || 0)} servings · ${esc(item.food?.sourcingStatus || 'PENDING')}</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-food-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Food work is in the current authorized scope.</div>'}</div>`;
+    foodQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Food Committee</p><h3 id="foodCommitteeQueueTitle">Food Work Queue</h3><p>Deadline-first, event-grouped Food children only; sibling payloads and person-level dietary data are not projected here.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${errorMessage ? `<div class="alert error">${esc(errorMessage)}</div>` : ''}<div class="food-work-queue">${foodQueueGroupsMarkup(items)}</div>`;
   };
 
   const openFoodWorkflow = (componentId) => {
+    if (!canAccessFoodQueue()) return;
     const item = (foodQueueItems ?? []).find((entry) => entry.componentId === componentId);
     if (!item) return;
     openModal(
@@ -4157,21 +4160,19 @@ export function createRuntimeExtensions(options) {
     },
     food: {
       label: 'Food Committee workspace',
-      heading: 'Keep every meal, deadline, and handoff on time',
+      heading: 'Food Overview',
       description:
-        'Work deadline-first across food requests, canvassing and procurement context, cumulative receiving, and controlled release while keeping event and distribution timing visible.',
+        'Work from governed event deadlines first: validate aggregate quantities and dietary attention, compare current quotes, track budget and ordering, receive deliveries, then complete controlled distribution.',
       boundaryTitle: 'Food capability boundary',
       boundary:
         'Food ownership scopes the queue and context. Procurement, receiving, evidence, and Release Desk actions remain available only through existing capabilities and server-side validation.',
       actions: [
-        [
-          'request',
-          'Open the food request queue',
-          'Food requirements, quantities, purpose, and event deadlines',
-        ],
-        ['procurement', 'Review food sourcing', 'Canvassing, supplier references, budgets, and receiving'],
-        ['release', 'Open controlled distribution', 'Recipient confirmation and approved release evidence'],
-        ['inventory', 'Check stock context', 'Available stock and movement history before fulfillment'],
+        ['request', 'Food Work Queue', 'Every scoped food requirement grouped by event and deadline', 'food-work-queue'],
+        ['procurement', 'Suppliers & Quotes', 'Current canvass evidence and explicitly historical references', 'food-suppliers-quotes'],
+        ['procurement', 'Procurement', 'Budget, preferred quote, ordering, and delivery stages', 'food-procurement'],
+        ['procurement', 'Receiving', 'Cumulative physical intake, condition, handling, and evidence', 'food-receiving'],
+        ['release', 'Release Desk', 'Shared recipient-confirmed controlled distribution', 'food-release'],
+        ['overview', 'Workflow Reference', 'Lead-time, privacy, sourcing, handling, and evidence rules', 'food-workflow-reference'],
       ],
     },
     'inventory-pantry': {
@@ -4312,32 +4313,143 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
-  const foodMetrics = (state) => {
-    const foodOwned = (row) =>
-      [row?.ownerCommitteeId, row?.assignedCommittee, row?.committeeId, row?.committee]
-        .filter(Boolean)
-        .some((value) => String(value).toUpperCase().includes('FOOD')) ||
-      String(row?.componentType ?? row?.type ?? '').toUpperCase() === 'FOOD';
-    const rows = [
-      ...(state.compositeComponents ?? []),
-      ...(state.deliverables ?? []),
-      ...(state.requests ?? []),
-    ].filter(foodOwned);
-    const active = rows.filter(
+  const foodOwned = (row) =>
+    [row?.ownerCommitteeId, row?.assignedCommittee, row?.committeeId, row?.committee]
+      .filter(Boolean)
+      .some((value) => String(value).toUpperCase().includes('FOOD')) ||
+    String(row?.componentType ?? row?.type ?? '').toUpperCase() === 'FOOD';
+
+  const foodRowsFromState = (state) => {
+    if (Array.isArray(foodQueueItems)) return foodQueueItems;
+    const parents = new Map(
+      (state.compositeRequests ?? []).map((parent) => [parent.requestId ?? parent.id, parent]),
+    );
+    return (state.compositeComponents ?? [])
+      .filter(foodOwned)
+      .map((child) => {
+        const parent = parents.get(child.requestId) ?? {};
+        return {
+          requestId: child.requestId,
+          componentId: child.componentId ?? child.id,
+          status: child.status,
+          dueAt: child.dueAt ?? child.payload?.food?.serviceStartAt ?? '',
+          revision: Number(child.revision ?? 1),
+          parent: {
+            eventId: parent.eventId ?? parent.event?.id ?? '',
+            eventName: parent.eventName ?? parent.event?.name ?? '',
+            eventStartAt: parent.eventStartAt ?? parent.event?.startAt ?? '',
+            priority: parent.priority ?? 'ROUTINE',
+            purpose: parent.purpose ?? '',
+            department: parent.department ?? parent.requester?.department ?? '',
+          },
+          food: child.payload?.food,
+          attentionFlags: child.attentionFlags ?? [],
+        };
+      });
+  };
+
+  const activeFoodRows = (state) =>
+    foodRowsFromState(state).filter(
       (row) =>
-        !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status ?? '').toUpperCase()),
+        !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(
+          String(row?.status ?? '').toUpperCase(),
+        ),
     );
-    const sourcing = countStatuses(
-      active,
-      new Set(['FOR_CANVASSING', 'WAITING_FOR_BUDGET', 'TO_BE_PROCURED', 'PROCURED']),
-    );
+
+  const foodDateLabel = (value) => {
+    const date = new Date(value ?? '');
+    if (!Number.isFinite(date.getTime())) return 'Deadline not recorded';
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date);
+  };
+
+  const foodStatusLabel = (value) =>
+    String(value ?? 'FOR_REVIEW')
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .replace(/^./u, (character) => character.toUpperCase());
+
+  const foodDietaryLabel = (food = {}) => {
+    if (food.dietarySummary === 'ATTENTION_REQUIRED')
+      return `${Number(food.dietaryAttentionServings ?? 0)} dietary-attention servings`;
+    if (food.dietarySummary === 'PENDING_CONFIRMATION') return 'Dietary/allergen confirmation pending';
+    return 'No aggregate dietary attention reported';
+  };
+
+  const foodLeadTimeLabel = (food = {}) => {
+    if (food.leadTime?.status === 'SHORT') return 'Lead time short';
+    if (food.leadTime?.status === 'MET') return 'Lead time met';
+    return 'Lead time unknown';
+  };
+
+  const foodQueueGroupsMarkup = (rows, { allowManage = true } = {}) => {
+    const groups = new Map();
+    [...rows]
+      .sort(
+        (left, right) =>
+          new Date(left.dueAt || left.food?.serviceStartAt || left.parent?.eventStartAt || 0) -
+          new Date(right.dueAt || right.food?.serviceStartAt || right.parent?.eventStartAt || 0),
+      )
+      .forEach((row) => {
+        const key = row.parent?.eventId || row.parent?.eventName || 'NON_EVENT';
+        const group = groups.get(key) ?? {
+          label: row.parent?.eventName || row.parent?.eventId || 'Non-event food operations',
+          rows: [],
+        };
+        group.rows.push(row);
+        groups.set(key, group);
+      });
+    if (!groups.size) return '<div class="empty">No Food work is in the current authorized scope.</div>';
+    return [...groups.values()]
+      .map(
+        (group) => `<section class="food-event-group"><div class="food-event-group-head"><h4>${esc(group.label)}</h4><span class="pill">${group.rows.length} line${group.rows.length === 1 ? '' : 's'}</span></div><div class="line-list">${group.rows
+          .map((item) => {
+            const food = item.food ?? {};
+            const terminal = ['COMPLETED', 'REJECTED', 'CANCELLED'].includes(
+              String(item.status ?? '').toUpperCase(),
+            );
+            const deadline = item.dueAt || food.serviceStartAt || item.parent?.eventStartAt;
+            return `<article class="request-line food-work-line"><div><strong>${esc(item.parent?.purpose || item.componentId || 'Food requirement')}</strong><small>${esc(item.componentId)}${item.parent?.department ? ` · ${esc(item.parent.department)}` : ''} · ${esc(foodDateLabel(deadline))}</small><small>${esc(food.expectedHeadcount ?? '—')} headcount · ${esc(food.requiredServings ?? '—')} servings · ${esc(foodDietaryLabel(food))}</small><small>${esc(foodLeadTimeLabel(food))} · ${esc(foodStatusLabel(food.sourcingStatus || item.status))}${food.sourceReference ? ` · Source ${esc(food.sourceReference)}` : ''}</small></div><div class="request-line-actions"><span class="pill">${esc(foodStatusLabel(item.status))}</span>${allowManage && !terminal ? `<button class="secondary mini" type="button" data-food-manage="${esc(item.componentId)}">Manage</button>` : ''}</div></article>`;
+          })
+          .join('')}</div></section>`,
+      )
+      .join('');
+  };
+
+  const foodMetrics = (state) => {
+    const active = activeFoodRows(state);
+    const now = Date.now();
+    const deadlineAttention = active.filter((row) => {
+      const due = new Date(row.dueAt || row.food?.serviceStartAt || row.parent?.eventStartAt || 0).getTime();
+      return Number.isFinite(due) && due >= now && due <= now + 14 * 86_400_000;
+    }).length;
+    const leadTimeRisk = active.filter((row) =>
+      ['SHORT', 'UNKNOWN'].includes(String(row.food?.leadTime?.status ?? '').toUpperCase()),
+    ).length;
+    const dietaryAttention = active.filter((row) =>
+      ['ATTENTION_REQUIRED', 'PENDING_CONFIRMATION'].includes(row.food?.dietarySummary),
+    ).length;
+    const sourcing = active.filter(
+      (row) =>
+        row.food?.sourcingStatus !== 'CONFIRMED' ||
+        ['WAITING_FOR_BUDGET', 'TO_BE_PROCURED', 'PROCURED'].includes(String(row.status).toUpperCase()),
+    ).length;
     const receiving = countStatuses(active, new Set(['RECEIVING', 'PARTIALLY_RECEIVED']));
-    const ready = countStatuses(active, new Set(['READY_TO_RELEASE']));
+    const ready = countStatuses(active, new Set(['READY_FOR_HANDOFF', 'READY_TO_RELEASE']));
     return [
-      ['Active food lines', active.length, 'All current food requirements'],
-      ['Sourcing and budget', sourcing, 'Canvassing through procurement'],
-      ['Receiving attention', receiving, 'Cumulative quantity and evidence checks'],
-      ['Ready to distribute', ready, 'Capability-bound Release Desk handoffs'],
+      ['Active food lines', active.length, 'All current scoped requirements', 'food-work-queue'],
+      ['Upcoming deadlines', deadlineAttention, 'Due within fourteen days', 'food-work-queue'],
+      ['Lead-time attention', leadTimeRisk, 'Short or unknown governed lead time', 'food-workflow-reference'],
+      ['Dietary attention', dietaryAttention, 'Aggregate confirmation or accommodation', 'food-work-queue'],
+      ['Sourcing and budget', sourcing, 'Canvassing through procurement', 'food-suppliers-quotes'],
+      ['Receiving attention', receiving, 'Cumulative quantity and evidence checks', 'food-receiving'],
+      ['Ready to distribute', ready, 'Capability-bound shared handoffs', 'food-release'],
     ];
   };
 
@@ -4593,6 +4705,54 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const FOOD_DESTINATION_CAPABILITIES = Object.freeze({
+    'food-work-queue': 'request.review',
+    'food-suppliers-quotes': 'fulfillment.canvass',
+    'food-procurement': 'fulfillment.procure',
+    'food-receiving': 'fulfillment.receive',
+    'food-release': 'fulfillment.release',
+  });
+
+  const foodDestinationAllowed = (destination) => {
+    const capability = FOOD_DESTINATION_CAPABILITIES[destination];
+    return !capability || can(getState()?.currentUser, capability);
+  };
+
+  const openFoodDestination = (destination) => {
+    if (!foodDestinationAllowed(destination)) return;
+    const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
+    if (destination === 'food-work-queue') {
+      openView('request');
+      foodQueue?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (destination === 'food-suppliers-quotes') {
+      openView('procurement');
+      document.querySelector('[data-proc-tab="canvass"]')?.click();
+      return;
+    }
+    if (destination === 'food-procurement') {
+      openView('procurement');
+      document.querySelector('[data-proc-tab="deliverables"]')?.click();
+      return;
+    }
+    if (destination === 'food-receiving') {
+      openView('procurement');
+      document.querySelector('[data-proc-tab="receiving"]')?.click();
+      return;
+    }
+    if (destination === 'food-release') {
+      openView('release');
+      return;
+    }
+    if (destination === 'food-workflow-reference') {
+      const reference = document.querySelector('[data-food-workflow-reference]');
+      reference?.removeAttribute('hidden');
+      reference?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      reference?.focus({ preventScroll: true });
+    }
+  };
+
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
     const overviewHero = document.querySelector('#overview > .hero');
@@ -4608,6 +4768,10 @@ export function createRuntimeExtensions(options) {
       const directorDestination = event.target.closest('[data-director-destination]')?.dataset
         .directorDestination;
       if (directorDestination) openDirectorDestination(directorDestination);
+      const foodDestination = event.target.closest('[data-food-destination]')?.dataset.foodDestination;
+      if (foodDestination) openFoodDestination(foodDestination);
+      const foodManage = event.target.closest('[data-food-manage]')?.dataset.foodManage;
+      if (foodManage) openFoodWorkflow(foodManage);
     });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
@@ -4636,7 +4800,13 @@ export function createRuntimeExtensions(options) {
     const destinationAttribute = (destination) =>
       experience === 'administrator'
         ? `data-admin-destination="${esc(destination)}"`
-        : `data-director-destination="${esc(destination)}"`;
+        : experience === 'director'
+          ? `data-director-destination="${esc(destination)}"`
+          : `data-food-destination="${esc(destination)}"`;
+    const destinationEnabled = (destination) =>
+      experience !== 'food' || foodDestinationAllowed(destination);
+    const destinationAttributes = (destination) =>
+      `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available in the current server capability projection"'}`;
     const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
     const directorAdministrationBoundary = hasSystemAdministration
       ? '<strong>Administration stays in its own workspace</strong><small>Your server-authorized System Owner access is preserved, but the Director workspace does not expose the Administrator control center.</small>'
@@ -4644,6 +4814,15 @@ export function createRuntimeExtensions(options) {
     const directorManagement =
       experience === 'director'
         ? `<div class="director-management-projection" data-director-management-access tabindex="-1"><dl><div><dt>Role</dt><dd>${esc(authorization.roleLabel ?? authorization.roleId ?? 'Director')}</dd></div><div><dt>Operational scope</dt><dd>${esc(currentScopeLabel())}</dd></div><div><dt>Committee access</dt><dd>${esc((authorization.committees ?? []).map((entry) => entry.name).join(', ') || 'Server-authorized global summary')}</dd></div><div><dt>Capabilities</dt><dd>${esc((authorization.capabilities ?? []).length)} server-projected</dd></div></dl>${directorAdministrationBoundary}</div>`
+        : '';
+    const foodRows = experience === 'food' ? activeFoodRows(state) : [];
+    const foodOverview =
+      experience === 'food'
+        ? `<section class="food-overview-detail" data-food-overview aria-labelledby="foodReadinessTitle"><div class="panel-head"><div><p class="eyebrow">Deadline-first operating picture</p><h3 id="foodReadinessTitle">Event food readiness</h3><p>Grouped by governed event and sub-event context. Headcount and servings remain distinct; dietary and allergen information stays aggregate-only.</p></div><span class="pill">${foodRows.length} active line${foodRows.length === 1 ? '' : 's'}</span></div>${foodQueueGroupsMarkup(foodRows, { allowManage: foodDestinationAllowed('food-work-queue') })}</section>`
+        : '';
+    const foodWorkflowReference =
+      experience === 'food'
+        ? `<section class="food-workflow-reference panel" data-food-workflow-reference tabindex="-1" aria-labelledby="foodWorkflowReferenceTitle" hidden><div class="panel-head"><div><p class="eyebrow">Governed operating rules</p><h3 id="foodWorkflowReferenceTitle">Food Workflow Reference</h3><p>Live status remains in the owning workflow; this reference never grants an action.</p></div><span class="pill">Asia/Manila</span></div><div class="food-reference-grid"><article><strong>10 business days</strong><span>Bulk, non-perishable, or catering</span><small>Allow time for review, canvassing, budget, supplier confirmation, and ordering.</small></article><article><strong>5 business days</strong><span>Perishable food</span><small>Short or unknown lead time is an attention signal, not an approval.</small></article><article><strong>Historical prices are reference only</strong><span>Current evidence governs</span><small>Compare normalized units, freshness, receipts, lead time, terms, and supplier reliability.</small></article><article><strong>Aggregate dietary and allergen counts only</strong><span>Privacy boundary</span><small>Never store names, diagnoses, medical narratives, contacts, TINs, or payment details.</small></article><article><strong>Receiving is cumulative</strong><span>Physical intake and evidence</span><small>Record quantity, condition, handling or expiry context, supplier provenance, and receipt evidence.</small></article><article><strong>Shared Release Desk</strong><span>Controlled distribution</span><small>Authorized handoff remains recipient-confirmed, audited, and server-validated.</small></article></div></section>`
         : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
@@ -4655,13 +4834,13 @@ export function createRuntimeExtensions(options) {
       <span class="role-experience-badge">Role-scoped overview</span>
     </div>
     <div class="role-experience-metrics">
-      ${metrics.map(([label, value, note, destination]) => destination ? `<button type="button" ${destinationAttribute(destination)}><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
+      ${metrics.map(([label, value, note, destination]) => destination ? `<button type="button" ${destinationAttributes(destination)}><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
     </div>
     <div class="role-experience-layout">
       <section aria-labelledby="roleExperienceActionsTitle">
-        <div class="section-kicker" id="roleExperienceActionsTitle">Leadership action map</div>
+        <div class="section-kicker" id="roleExperienceActionsTitle">${experience === 'food' ? 'Food operations' : 'Leadership action map'}</div>
         <div class="role-experience-actions">
-          ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? destinationAttribute(destination) : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
+          ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? destinationAttributes(destination) : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
         </div>
       </section>
       <aside class="role-experience-boundary" aria-label="${esc(definition.boundaryTitle)}">
@@ -4671,6 +4850,8 @@ export function createRuntimeExtensions(options) {
         ${directorManagement}
       </aside>
     </div>
+    ${foodOverview}
+    ${foodWorkflowReference}
     ${experience === 'director' ? '<section class="director-detail panel" data-director-detail tabindex="-1" aria-labelledby="directorDetailTitle" hidden></section>' : ''}`;
   };
 

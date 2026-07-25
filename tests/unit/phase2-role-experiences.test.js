@@ -32,7 +32,8 @@ describe('Phase 2 role experiences', () => {
 
     expect(digest).toContain('0f15dd3c493b471572d3ad417edca6356b691c6d8247e624314871ffbc6f2390');
     expect(digest).toContain('deadline-first Food workspace');
-    expect(runtime).toContain('Keep every meal, deadline, and handoff on time');
+    expect(runtime).toContain("heading: 'Food Overview'");
+    expect(runtime).toContain("'Food Work Queue'");
     expect(runtime).toContain('Food capability boundary');
     expect(runtime).toContain('foodMetrics');
     expect(css).toContain("body[data-experience='food']");

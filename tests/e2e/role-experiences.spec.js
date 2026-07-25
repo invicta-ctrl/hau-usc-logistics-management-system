@@ -81,12 +81,10 @@ test('Food receives a deadline-first orange-accent shared-shell experience', asy
   const panel = page.locator('#roleExperiencePanel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-role-experience', 'food');
-  await expect(
-    panel.getByRole('heading', { name: 'Keep every meal, deadline, and handoff on time' }),
-  ).toBeVisible();
+  await expect(panel.getByRole('heading', { name: 'Food Overview' })).toBeVisible();
   await expect(panel.getByText('Food capability boundary', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Open the food request queue/ })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Open controlled distribution/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Food Work Queue/u })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Release Desk/u })).toBeVisible();
   expect(
     await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
   ).toBe('#c65f1c');

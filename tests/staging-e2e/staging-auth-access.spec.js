@@ -247,6 +247,47 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(directorManagement).toContainText('System Owner');
     await expect(directorManagement).toContainText('Administration stays in its own workspace');
 
+    await shell.getByLabel('Workspace').selectOption('food');
+    await expect(page).toHaveURL(/\/app\/food\?scope=COMMITTEE%3ACOM_FOOD$/u);
+    const foodSessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.reload();
+    ownerCsrf = (await (await foodSessionResponse).json()).csrfToken;
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    const foodWorkspace = page.locator('#roleExperiencePanel[data-role-experience="food"]');
+    await expect(foodWorkspace.getByRole('heading', { name: 'Food Overview' })).toBeVisible();
+    for (const [destination, name] of [
+      ['food-work-queue', 'Food Work Queue'],
+      ['food-suppliers-quotes', 'Suppliers & Quotes'],
+      ['food-procurement', 'Procurement'],
+      ['food-receiving', 'Receiving'],
+      ['food-release', 'Release Desk'],
+      ['food-workflow-reference', 'Workflow Reference'],
+    ]) {
+      await expect(
+        foodWorkspace.locator(`.role-experience-actions [data-food-destination="${destination}"]`),
+      ).toContainText(name);
+    }
+    await foodWorkspace
+      .locator('[data-food-destination="food-workflow-reference"]')
+      .last()
+      .click();
+    const foodReference = foodWorkspace.locator('[data-food-workflow-reference]');
+    await expect(foodReference).toContainText('10 business days');
+    await expect(foodReference).toContainText('5 business days');
+    await expect(foodReference).toContainText('Historical prices are reference only');
+    await expect(foodReference).toContainText('Aggregate dietary and allergen counts only');
+    await foodWorkspace.locator('[data-food-destination="food-suppliers-quotes"]').last().click();
+    await expect(page.locator('[data-proc-tab="canvass"]')).toHaveClass(/active/u);
+    await expect(page.getByRole('heading', { name: 'Canvass Library' })).toBeVisible();
+    await foodWorkspace.locator('[data-food-destination="food-receiving"]').last().click();
+    await expect(page.locator('[data-proc-tab="receiving"]')).toHaveClass(/active/u);
+    await foodWorkspace.locator('[data-food-destination="food-release"]').last().click();
+    await expect(page.locator('#release')).toHaveClass(/active/u);
+
     await shell.getByLabel('Workspace').selectOption('administrator');
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
     await page.locator('[data-admin-view="referenceAdmin"]').click();
