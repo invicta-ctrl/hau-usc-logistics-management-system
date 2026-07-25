@@ -283,8 +283,18 @@ test('deployed staging authentication and Access Management remain operational',
     await foodWorkspace.locator('[data-food-destination="food-suppliers-quotes"]').last().click();
     await expect(page.locator('[data-proc-tab="canvass"]')).toHaveClass(/active/u);
     await expect(page.getByRole('heading', { name: 'Canvass Library' })).toBeVisible();
+    await page.goto('/app/food?scope=COMMITTEE%3ACOM_FOOD');
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
     await foodWorkspace.locator('[data-food-destination="food-receiving"]').last().click();
     await expect(page.locator('[data-proc-tab="receiving"]')).toHaveClass(/active/u);
+    const foodReleaseSessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.goto('/app/food?scope=COMMITTEE%3ACOM_FOOD');
+    ownerCsrf = (await (await foodReleaseSessionResponse).json()).csrfToken;
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
     await foodWorkspace.locator('[data-food-destination="food-release"]').last().click();
     await expect(page.locator('#release')).toHaveClass(/active/u);
 

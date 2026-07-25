@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–11 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -40,8 +40,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
 | 6. Migrations | PARTIAL — staging through 0019 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 9 runtime `e3d3c76` |
-| 9. Staging acceptance | PASS THROUGH PHASE 9; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 11 runtime `7994734` |
+| 9. Staging acceptance | PASS THROUGH PHASE 11; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -240,11 +240,27 @@ Decision: **PRODUCTION NO-GO — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED 
 - PR #9 at `b789fab` passed all 6 / 6 exact-head checks.
 - Durable handoff: `.codex/V0_7_PHASE_10_DIRECTOR_WORKSPACE_HANDOFF.md`.
 
+## Phase 11 Food workspace evidence
+
+- The Food Overview and Work Queue are deadline-first and grouped by governed
+  event/sub-event context, with headcount and servings kept distinct and
+  dietary/allergen information aggregate-only.
+- All six required Food destinations are working over the shared sourcing,
+  procurement, receiving, and Release Desk services. The governed Workflow
+  Reference preserves lead-time, historical-price, privacy, receiving, and
+  controlled-distribution boundaries.
+- Repository acceptance passed 416 unit tests and 113 browser tests. Live
+  governed brand plus the owner-authenticated refreshed Food route, identity,
+  six destinations, shared workflows, Admin return, and Access Management
+  scenario passed 2 / 2 at exact runtime `7994734`, schema 19.
+- PR #9 at `7994734` passed all 6 / 6 exact-head checks.
+- Durable handoff: `.codex/V0_7_PHASE_11_FOOD_WORKSPACE_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 11 Food workspace. Do not
+Complete Phase 12 Inventory & Pantry workspace. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

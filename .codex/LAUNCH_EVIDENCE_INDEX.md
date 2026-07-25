@@ -103,6 +103,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | Director Executive Overview | eight actionable leadership metrics; ten complete destinations; governed progressive detail; bounded Management & Access | PASS |
 | Phase 10 deployed acceptance | governed brand plus owner-authenticated refreshed Director route, identity/boundary, Admin return, and Access lifecycle | PASS — 2 / 2 at exact `b789fab`, schema 19 |
 | Phase 10 PR/CI | PR #9 exact head `b789fab` | PASS — open draft, clean/mergeable, 6 / 6 checks |
+| Phase 11 Food workspace | `.codex/V0_7_PHASE_11_FOOD_WORKSPACE_HANDOFF.md`; exact runtime `7994734` | PASS ON STAGING |
+| Phase 11 repository acceptance | `npm run check`; full Playwright | PASS — 61 files / 416 unit tests; 113 browser passes / 271 intentional skips |
+| Food operations workspace | deadline-first event grouping; quantities; aggregate dietary context; sourcing/procurement/receiving/release; governed reference | PASS |
+| Phase 11 deployed acceptance | governed brand plus owner-authenticated refreshed Food route, six destinations, identity, shared workflows, Admin return, and Access lifecycle | PASS — 2 / 2 at exact `7994734`, schema 19 |
+| Phase 11 PR/CI | PR #9 exact head `7994734` | PASS — open draft, clean/mergeable, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
