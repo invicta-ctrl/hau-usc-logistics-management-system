@@ -298,8 +298,100 @@ test('deployed staging authentication and Access Management remain operational',
     await foodWorkspace.locator('[data-food-destination="food-release"]').last().click();
     await expect(page.locator('#release')).toHaveClass(/active/u);
 
+    await shell.getByLabel('Operational scope').selectOption('COMMITTEE:COM_INVENTORY_PANTRY');
+    await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_INVENTORY_PANTRY/u);
+    await shell.getByLabel('Workspace').selectOption('inventory-pantry');
+    await expect(page).toHaveURL(/\/app\/inventory\?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY$/u);
+    const inventorySessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.reload();
+    ownerCsrf = (await (await inventorySessionResponse).json()).csrfToken;
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    await expect(page.locator('body')).toHaveAttribute('data-experience', 'inventory-pantry');
+    const inventoryWorkspace = page.locator(
+      '#roleExperiencePanel[data-role-experience="inventory-pantry"]',
+    );
+    await expect(
+      inventoryWorkspace.getByRole('heading', { name: 'Inventory Overview' }),
+    ).toBeVisible();
+    for (const [destination, name] of [
+      ['inventory-management', 'Inventory Management'],
+      ['inventory-pantry-stock', 'Pantry'],
+      ['inventory-restocking', 'Restocking'],
+      ['inventory-lending', 'Lending Operations'],
+      ['inventory-receiving', 'Receiving'],
+      ['inventory-release', 'Release Desk'],
+      ['inventory-movement-history', 'Movement History'],
+      ['inventory-alerts', 'Condition & Stock Alerts'],
+    ]) {
+      await expect(
+        inventoryWorkspace.locator(
+          `.role-experience-actions [data-inventory-destination="${destination}"]`,
+        ),
+      ).toContainText(name);
+    }
+    const inventoryModuleResponse = await ownerRequest.post('/api/getBootstrapModule', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        module: 'inventory',
+        operationalScope: 'COMMITTEE:COM_INVENTORY_PANTRY',
+        page: 1,
+        pageSize: 10,
+      },
+    });
+    expect(inventoryModuleResponse.status()).toBe(200);
+    const inventoryModule = await inventoryModuleResponse.json();
+    expect(inventoryModule.data).toMatchObject({
+      inventoryItems: expect.any(Array),
+      ledgerTransactions: expect.any(Array),
+      inventoryAssets: expect.any(Array),
+      assetMaintenanceHistory: expect.any(Array),
+      assetMovementHistory: expect.any(Array),
+    });
+    expect(inventoryModule.data.ledgerTransactions.length).toBeLessThanOrEqual(100);
+    expect(inventoryModule.data.inventoryAssets.length).toBeLessThanOrEqual(100);
+    const inventoryItem = inventoryModule.data.inventoryItems[0];
+    expect(inventoryItem).toEqual(
+      expect.objectContaining({
+        onHand: expect.any(Number),
+        reserved: expect.any(Number),
+        availableToPromise: expect.any(Number),
+      }),
+    );
+    await inventoryWorkspace
+      .locator('[data-inventory-destination="inventory-management"]')
+      .last()
+      .click();
+    await expect(page.locator('#inventory')).toHaveClass(/active/u);
+    await expect(page.locator('#inventoryTable')).toContainText(inventoryItem.id);
+    await expect(page.locator('#inventoryTable')).toContainText(
+      `On hand ${inventoryItem.onHand} · Reserved ${inventoryItem.reserved} · ATP ${inventoryItem.availableToPromise} ${inventoryItem.unit}`,
+    );
+    await page.goto('/app/inventory?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY');
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+    await inventoryWorkspace
+      .locator('[data-inventory-destination="inventory-movement-history"]')
+      .last()
+      .click();
+    await expect(page.getByRole('heading', { name: 'Movement History' })).toBeVisible();
+    await page.goto('/app/inventory?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY');
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+    await inventoryWorkspace.locator('[data-inventory-destination="inventory-alerts"]').last().click();
+    await expect(page.getByRole('heading', { name: 'Condition & Stock Alerts' })).toBeVisible();
+
+    await shell.getByLabel('Operational scope').selectOption('COMMITTEE:COM_FOOD');
     await shell.getByLabel('Workspace').selectOption('administrator');
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
+    const adminSessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.reload();
+    ownerCsrf = (await (await adminSessionResponse).json()).csrfToken;
     await page.locator('[data-admin-view="referenceAdmin"]').click();
     await page.getByRole('button', { name: /Access Management/u }).click();
     const accessManagement = page.locator('[data-access-management]');

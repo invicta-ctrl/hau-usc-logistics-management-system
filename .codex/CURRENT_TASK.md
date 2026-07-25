@@ -13,17 +13,18 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 12 — audit and complete the real Inventory & Pantry workspace as the next bounded
+Phase 13 — audit and complete the real Materials & Documentation workspace as the next bounded
 master-prompt vertical slice.
 
-Phase 11 is accepted on staging at exact candidate `7994734`, schema 19.
-Repository acceptance passed 416 unit tests and 113 browser tests; the live
-governed brand and complete owner-authenticated Food Overview, six Food
-destinations, governed workflow reference, shared canvass/receiving/release,
-Admin return, Access Management, and shell-isolation scenarios passed;
+Phase 12 is accepted on staging at exact candidate `f37671c`, schema 19.
+Repository acceptance passed 417 unit tests, 118 browser tests, and 26 local
+Worker/D1 tests; the live governed brand and complete owner-authenticated
+Inventory Overview, eight destinations, exact D1 balance parity, bounded
+movement/condition projections, Admin return, Access Management, and
+shell-isolation scenarios passed;
 and PR #9 exact-head checks passed 6 / 6.
 
 Durable evidence:
-`.codex/V0_7_PHASE_11_FOOD_WORKSPACE_HANDOFF.md`.
+`.codex/V0_7_PHASE_12_INVENTORY_PANTRY_WORKSPACE_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

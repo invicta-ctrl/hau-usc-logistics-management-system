@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–11 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–12 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -40,8 +40,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–11 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
 | 6. Migrations | PARTIAL — staging through 0019 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 11 runtime `7994734` |
-| 9. Staging acceptance | PASS THROUGH PHASE 11; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 12 runtime `f37671c` |
+| 9. Staging acceptance | PASS THROUGH PHASE 12; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -256,11 +256,28 @@ Decision: **PRODUCTION NO-GO — PHASES 0–11 AND FOLLOW-UP AMENDMENT ACCEPTED 
 - PR #9 at `7994734` passed all 6 / 6 exact-head checks.
 - Durable handoff: `.codex/V0_7_PHASE_11_FOOD_WORKSPACE_HANDOFF.md`.
 
+## Phase 12 Inventory & Pantry workspace evidence
+
+- Inventory & Pantry is the exception-first primary stock-truth and circulation
+  workspace with eight complete destinations over the canonical shared
+  inventory, restocking, lending, receiving, release, and asset services.
+- Essential-bootstrap now preserves authoritative D1 on-hand, reserved, and ATP
+  balances and accepts bounded ledger, reusable-asset, maintenance, and movement
+  projections without inventing local state.
+- Repository acceptance passed 417 unit tests, 118 browser tests, and 26 local
+  Worker/D1 tests. Live governed brand plus the owner-authenticated refreshed
+  Inventory route, exact D1/UI balance parity, eight destinations, movement and
+  alert surfaces, Admin return, Access Management, and cleanup passed 2 / 2 at
+  exact runtime `f37671c`, schema 19.
+- PR #9 at `f37671c` passed all 6 / 6 exact-head checks.
+- Durable handoff:
+  `.codex/V0_7_PHASE_12_INVENTORY_PANTRY_WORKSPACE_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 12 Inventory & Pantry workspace. Do not
+Complete Phase 13 Materials & Documentation workspace. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 
