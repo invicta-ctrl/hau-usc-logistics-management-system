@@ -16,7 +16,8 @@ describe('Phase 2 role experiences', () => {
     expect(digest).toContain('e2bb882de9bd53598b8a4b5d3886183a37e5731175b4615e8772521a8990b072');
     expect(digest).toContain('decision-first leadership overview');
     expect(runtime).toContain('director: {');
-    expect(runtime).toContain('Decisions, readiness, and cross-committee blockers');
+    expect(runtime).toContain("heading: 'Executive Overview'");
+    expect(runtime).toContain("['overview', 'Decision Queue'");
     expect(runtime).toContain('renderRoleExperience();');
     expect(css).toContain("body[data-experience='administrator']");
     expect(css).toContain("body[data-experience='inventory-pantry']");

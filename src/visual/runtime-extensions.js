@@ -4136,18 +4136,23 @@ export function createRuntimeExtensions(options) {
     },
     director: {
       label: 'Director workspace',
-      heading: 'Decisions, readiness, and cross-committee blockers',
+      heading: 'Executive Overview',
       description:
-        'Lead from the shared operational picture: review exceptions, compare committee progress, and open the existing request, procurement, release, lending, or inventory workspace for the governed next action.',
+        'Lead from decisions, blockers, deadlines, committee readiness, event progress, and exceptions. Progressive detail stays connected to the existing server-authorized owner workflow.',
       boundaryTitle: 'Bounded Management & Access',
       boundary:
         'Director visibility supports event structure and leadership decisions. Access, configuration, and environment changes remain in the existing server-authorized administration boundary.',
       actions: [
-        ['request', 'Review cross-committee requests', 'Requests awaiting review and committee routing'],
-        ['procurement', 'Resolve procurement blockers', 'Canvassing, budget, receiving, and deliverables'],
-        ['release', 'Check release readiness', 'Controlled handoffs and recipient confirmation'],
-        ['lending', 'Review lending exceptions', 'For-review, overdue, handoff, and return context'],
-        ['inventory', 'Inspect inventory attention', 'Low stock, reservations, and movement history'],
+        ['overview', 'Decision Queue', 'Requests and deliverables awaiting a leadership decision', 'decision-queue'],
+        ['overview', 'Event Planning', 'Upcoming approved events, deadlines, and ownership', 'event-planning'],
+        ['overview', 'Event Series & Sub-events', 'Approved hierarchy and active event progress', 'event-series'],
+        ['overview', 'Committee Readiness', 'Cross-committee blockers and readiness signals', 'committee-readiness'],
+        ['overview', 'Request Progress', 'New, review, blocked, and routed request progress', 'request-progress'],
+        ['procurement', 'Procurement Progress', 'Canvassing, budget, purchasing, and receiving'],
+        ['release', 'Release Readiness', 'Controlled handoffs and recipient confirmation'],
+        ['lending', 'Lending Status', 'Review, overdue, handoff, and return context', 'lending-status'],
+        ['inventory', 'Inventory Alerts', 'Low stock, verification, reservations, and movement history', 'inventory-alerts'],
+        ['overview', 'Management & Access', 'Server-projected role, scope, and bounded capabilities', 'management-access'],
       ],
     },
     food: {
@@ -4262,11 +4267,48 @@ export function createRuntimeExtensions(options) {
     const readyToRelease =
       countStatuses(state.requestLines, new Set(['READY_TO_RELEASE'])) +
       countStatuses(state.deliverables, new Set(['READY_TO_RELEASE']));
+    const now = Date.now();
+    const upcomingDeadlines = (state.events ?? []).filter((event) => {
+      const start = new Date(event?.startAt ?? 0).getTime();
+      return Number.isFinite(start) && start >= now && start <= now + 14 * 86_400_000;
+    }).length;
+    const lendingExceptions = countStatuses(
+      state.lendingTickets,
+      new Set(['FOR_REVIEW', 'OVERDUE', 'DAMAGED', 'LOST']),
+    );
+    const inventoryAlerts = (state.inventoryItems ?? []).filter(
+      (item) =>
+        String(item?.status ?? '').toUpperCase() === 'VERIFY' ||
+        Number(item?.openingOnHand ?? 0) <= Number(item?.reorderThreshold ?? 0),
+    ).length;
+    const committeeIds = ['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'];
+    const blockedCommittees = new Set(
+      [...(state.requests ?? []), ...(state.deliverables ?? [])]
+        .filter((row) =>
+          ['BLOCKED', 'WAITING_FOR_BUDGET', 'NEEDS_INFORMATION'].includes(
+            String(row?.status ?? '').toUpperCase(),
+          ),
+        )
+        .map((row) => row?.assignedCommittee ?? row?.ownerCommitteeId ?? row?.committeeId)
+        .filter((id) => committeeIds.includes(id)),
+    );
+    const projectedCommittees = new Set(
+      [...(state.requests ?? []), ...(state.deliverables ?? [])]
+        .flatMap((row) => [row?.assignedCommittee, row?.ownerCommitteeId, row?.committeeId])
+        .filter((id) => committeeIds.includes(id)),
+    );
+    const committeeReadiness = projectedCommittees.size
+      ? `${projectedCommittees.size - blockedCommittees.size}/${projectedCommittees.size}`
+      : 'No data';
     return [
-      ['Active event series', activeSeries, 'Readiness and upcoming deadlines'],
-      ['Leadership decisions', decisions, 'Review or missing-information items'],
-      ['Cross-workflow blockers', blockers, 'Budget, information, and overdue exceptions'],
-      ['Ready to release', readyToRelease, 'Items eligible for controlled handoff'],
+      ['Leadership decisions', decisions, 'Review or missing-information items', 'decision-queue'],
+      ['Cross-workflow blockers', blockers, 'Budget, information, and overdue exceptions', 'cross-workflow-blockers'],
+      ['Upcoming deadlines', upcomingDeadlines, 'Approved events starting within fourteen days', 'event-planning'],
+      ['Committee readiness', committeeReadiness, 'Committees without a projected blocking exception', 'committee-readiness'],
+      ['Event progress', activeSeries, 'Active event series and sub-event hierarchy', 'event-series'],
+      ['Release readiness', readyToRelease, 'Items eligible for controlled handoff', 'release-readiness'],
+      ['Lending exceptions', lendingExceptions, 'Review, overdue, damage, and loss attention', 'lending-status'],
+      ['Inventory alerts', inventoryAlerts, 'Verification and reorder-threshold attention', 'inventory-alerts'],
     ];
   };
 
@@ -4444,6 +4486,113 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const renderDirectorDetail = (destination) => {
+    const panel = document.querySelector('#roleExperiencePanel[data-role-experience="director"]');
+    const detail = panel?.querySelector('[data-director-detail]');
+    if (!detail) return;
+    const state = getState() ?? {};
+    const status = (row) => String(row?.status ?? '').toUpperCase();
+    let title = 'Leadership detail';
+    let note = 'Server-authorized records in the current operational scope.';
+    let rows = [];
+    if (destination === 'decision-queue') {
+      title = 'Decision Queue';
+      rows = [...(state.requests ?? []), ...(state.deliverables ?? [])].filter((row) =>
+        ['FOR_REVIEW', 'NEEDS_INFORMATION'].includes(status(row)),
+      );
+    } else if (destination === 'cross-workflow-blockers') {
+      title = 'Cross-workflow blockers';
+      rows = [
+        ...(state.requests ?? []),
+        ...(state.deliverables ?? []),
+        ...(state.lendingTickets ?? []),
+      ].filter((row) =>
+        ['BLOCKED', 'WAITING_FOR_BUDGET', 'NEEDS_INFORMATION', 'OVERDUE'].includes(status(row)),
+      );
+    } else if (destination === 'event-planning') {
+      title = 'Event Planning';
+      rows = (state.events ?? [])
+        .filter((event) => new Date(event?.endAt ?? 0).getTime() >= Date.now())
+        .sort((left, right) => new Date(left.startAt) - new Date(right.startAt));
+      note = 'Approved upcoming event rows only; no event truth is invented.';
+    } else if (destination === 'event-series') {
+      title = 'Event Series & Sub-events';
+      rows = (state.eventSeries ?? []).filter(
+        (series) => !['COMPLETED', 'ARCHIVED', 'CANCELLED'].includes(status(series)),
+      );
+    } else if (destination === 'committee-readiness') {
+      title = 'Committee Readiness';
+      const committees = [
+        ['COM_FOOD', 'Food Committee'],
+        ['COM_INVENTORY_PANTRY', 'Inventory & Pantry Committee'],
+        ['COM_MATERIALS', 'Materials Committee'],
+      ];
+      const operational = [...(state.requests ?? []), ...(state.deliverables ?? [])];
+      rows = committees.map(([id, name]) => {
+        const owned = operational.filter((row) =>
+          [row?.assignedCommittee, row?.ownerCommitteeId, row?.committeeId].includes(id),
+        );
+        const blockers = owned.filter((row) =>
+          ['BLOCKED', 'WAITING_FOR_BUDGET', 'NEEDS_INFORMATION'].includes(status(row)),
+        );
+        return {
+          id,
+          name,
+          status: owned.length ? (blockers.length ? 'ATTENTION' : 'NO_BLOCKER_PROJECTED') : 'NO_DATA',
+          detail: owned.length
+            ? `${blockers.length} blocker${blockers.length === 1 ? '' : 's'} across ${owned.length} governed record${owned.length === 1 ? '' : 's'}`
+            : 'No governed committee records are projected in this scope',
+        };
+      });
+      note = 'Readiness is derived from governed records; NO DATA is not treated as ready.';
+    } else if (destination === 'request-progress') {
+      title = 'Request Progress';
+      rows = (state.requests ?? []).filter(
+        (row) => !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(status(row)),
+      );
+    }
+    detail.hidden = false;
+    detail.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Progressive operational detail</p><h3 id="directorDetailTitle">${esc(title)}</h3><p>${esc(note)}</p></div><span class="pill">${esc(rows.length)} record${rows.length === 1 ? '' : 's'}</span></div><div class="line-list section-gap">${rows
+      .slice(0, 50)
+      .map(
+        (row) =>
+          `<div class="request-line"><div><strong>${esc(row.name ?? row.itemSpec ?? row.purpose ?? row.id ?? 'Governed record')}</strong><small>${esc(row.id ?? '')}${row.detail ? ` &middot; ${esc(row.detail)}` : ''}</small></div><span class="pill">${esc(row.status ?? 'ACTIVE')}</span></div>`,
+      )
+      .join('') || '<div class="empty">No governed records match this leadership view.</div>'}</div>`;
+    detail.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    detail.focus({ preventScroll: true });
+  };
+
+  const openDirectorDestination = (destination) => {
+    const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
+    if (
+      ['decision-queue', 'cross-workflow-blockers', 'event-planning', 'event-series', 'committee-readiness', 'request-progress'].includes(
+        destination,
+      )
+    )
+      return renderDirectorDetail(destination);
+    if (destination === 'release-readiness') return openView('release');
+    if (destination === 'lending-status') {
+      openView('lending');
+      document.querySelector('[data-loan-tab="FOR_REVIEW"]')?.click();
+      return;
+    }
+    if (destination === 'inventory-alerts') {
+      openView('inventory');
+      const filter = document.querySelector('#inventoryStatusFilter');
+      if (filter) {
+        filter.value = 'VERIFY';
+        filter.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+    if (destination === 'management-access') {
+      const management = document.querySelector('[data-director-management-access]');
+      management?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      management?.focus({ preventScroll: true });
+    }
+  };
+
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
     const overviewHero = document.querySelector('#overview > .hero');
@@ -4456,6 +4605,9 @@ export function createRuntimeExtensions(options) {
     panel.addEventListener('click', (event) => {
       const destination = event.target.closest('[data-admin-destination]')?.dataset.adminDestination;
       if (destination) openAdminDestination(destination);
+      const directorDestination = event.target.closest('[data-director-destination]')?.dataset
+        .directorDestination;
+      if (directorDestination) openDirectorDestination(directorDestination);
     });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
@@ -4480,6 +4632,19 @@ export function createRuntimeExtensions(options) {
     if (!definition) return;
     const state = getState() ?? {};
     const metrics = metricsForExperience(experience, state);
+    const authorization = state.currentUser?.authorization ?? {};
+    const destinationAttribute = (destination) =>
+      experience === 'administrator'
+        ? `data-admin-destination="${esc(destination)}"`
+        : `data-director-destination="${esc(destination)}"`;
+    const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
+    const directorAdministrationBoundary = hasSystemAdministration
+      ? '<strong>Administration stays in its own workspace</strong><small>Your server-authorized System Owner access is preserved, but the Director workspace does not expose the Administrator control center.</small>'
+      : '<strong>No system administration</strong><small>Account, configuration, provider, and environment controls remain unavailable unless separately granted by the server.</small>';
+    const directorManagement =
+      experience === 'director'
+        ? `<div class="director-management-projection" data-director-management-access tabindex="-1"><dl><div><dt>Role</dt><dd>${esc(authorization.roleLabel ?? authorization.roleId ?? 'Director')}</dd></div><div><dt>Operational scope</dt><dd>${esc(currentScopeLabel())}</dd></div><div><dt>Committee access</dt><dd>${esc((authorization.committees ?? []).map((entry) => entry.name).join(', ') || 'Server-authorized global summary')}</dd></div><div><dt>Capabilities</dt><dd>${esc((authorization.capabilities ?? []).length)} server-projected</dd></div></dl>${directorAdministrationBoundary}</div>`
+        : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
       <div>
@@ -4490,21 +4655,23 @@ export function createRuntimeExtensions(options) {
       <span class="role-experience-badge">Role-scoped overview</span>
     </div>
     <div class="role-experience-metrics">
-      ${metrics.map(([label, value, note, destination]) => destination ? `<button type="button" data-admin-destination="${esc(destination)}"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
+      ${metrics.map(([label, value, note, destination]) => destination ? `<button type="button" ${destinationAttribute(destination)}><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
     </div>
     <div class="role-experience-layout">
       <section aria-labelledby="roleExperienceActionsTitle">
         <div class="section-kicker" id="roleExperienceActionsTitle">Leadership action map</div>
         <div class="role-experience-actions">
-          ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? `data-admin-destination="${esc(destination)}"` : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
+          ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? destinationAttribute(destination) : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
         </div>
       </section>
       <aside class="role-experience-boundary" aria-label="${esc(definition.boundaryTitle)}">
         <span>Authority boundary</span>
         <h3>${esc(definition.boundaryTitle)}</h3>
         <p>${esc(definition.boundary)}</p>
+        ${directorManagement}
       </aside>
-    </div>`;
+    </div>
+    ${experience === 'director' ? '<section class="director-detail panel" data-director-detail tabindex="-1" aria-labelledby="directorDetailTitle" hidden></section>' : ''}`;
   };
 
   const install = () => {

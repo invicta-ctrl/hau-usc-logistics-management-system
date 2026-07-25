@@ -58,12 +58,10 @@ test('Director receives a decision-first shared-shell experience', async ({ page
   const panel = page.locator('#roleExperiencePanel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-role-experience', 'director');
-  await expect(
-    panel.getByRole('heading', { name: 'Decisions, readiness, and cross-committee blockers' }),
-  ).toBeVisible();
+  await expect(panel.getByRole('heading', { name: 'Executive Overview' })).toBeVisible();
   await expect(panel.getByText('Bounded Management & Access', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Review cross-committee requests/ })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Check release readiness/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Decision Queue/u })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Release Readiness/u })).toBeVisible();
 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   expect(overflow).toBeLessThanOrEqual(1);

@@ -211,6 +211,44 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.locator('[data-admin-operational-health]')).toBeVisible();
     await page.getByRole('button', { name: /Brand Assets/u }).click();
     await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(4);
+
+    await shell.getByLabel('Workspace').selectOption('director');
+    await expect(page).toHaveURL(/\/app\/director\?scope=COMMITTEE%3ACOM_FOOD$/u);
+    const directorSessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.reload();
+    ownerCsrf = (await (await directorSessionResponse).json()).csrfToken;
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    const directorWorkspace = page.locator(
+      '#roleExperiencePanel[data-role-experience="director"]',
+    );
+    await expect(
+      directorWorkspace.getByRole('heading', { name: 'Executive Overview' }),
+    ).toBeVisible();
+    for (const name of [
+      'Decision Queue',
+      'Event Planning',
+      'Event Series & Sub-events',
+      'Committee Readiness',
+      'Request Progress',
+      'Procurement Progress',
+      'Release Readiness',
+      'Lending Status',
+      'Inventory Alerts',
+      'Management & Access',
+    ]) {
+      await expect(directorWorkspace.getByRole('button', { name: new RegExp(name, 'u') })).toBeVisible();
+    }
+    await directorWorkspace.getByRole('button', { name: /^Management & Access/u }).click();
+    const directorManagement = directorWorkspace.locator('[data-director-management-access]');
+    await expect(directorManagement).toContainText('System Owner');
+    await expect(directorManagement).toContainText('Administration stays in its own workspace');
+
+    await shell.getByLabel('Workspace').selectOption('administrator');
+    await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
     await page.getByRole('button', { name: /Access Management/u }).click();
     const accessManagement = page.locator('[data-access-management]');
     await expect(accessManagement).toBeVisible();
