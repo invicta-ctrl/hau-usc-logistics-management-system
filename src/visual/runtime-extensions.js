@@ -1400,7 +1400,11 @@ export function createRuntimeExtensions(options) {
   const refreshAccessDirectory = async ({ force = false } = {}) => {
     const root = document.querySelector('[data-access-management]');
     if (!root || !accessManagementAllowed()) return;
-    if (accessDirectoryPromise) return accessDirectoryPromise;
+    if (accessDirectoryPromise) {
+      if (!force) return accessDirectoryPromise;
+      await accessDirectoryPromise;
+      return refreshAccessDirectory({ force: true });
+    }
     if (!force && accessDirectory?.pagination?.page === accessDirectoryPage) return;
     root.querySelector('[data-access-results]').innerHTML =
       '<div class="empty">Loading authorized accounts…</div>';

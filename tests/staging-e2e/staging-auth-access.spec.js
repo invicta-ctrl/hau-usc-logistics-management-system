@@ -179,13 +179,27 @@ test('deployed staging authentication and Access Management remain operational',
     const accessManagement = page.locator('[data-access-management]');
     await expect(accessManagement).toBeVisible();
     const departmentSearch = accessManagement.getByLabel('Search');
-    await departmentSearch.fill('DOL_2026');
-    const departmentRow = page.locator('[data-access-results] .access-account-row');
-    await expect(departmentRow).toHaveCount(1);
-    await expect(departmentRow).toContainText('DOL_2026');
-    await expect(departmentRow).toContainText('Department of Logistics');
-    await expect(departmentRow).toContainText('ACTIVE');
-    await expect(departmentRow.getByRole('button', { name: 'Reset password' })).toBeVisible();
+    const expectedDepartmentAccounts = [
+      ['DOL_2026', 'Department of Logistics'],
+      ['DOF_2026', 'Department of Finance'],
+      ['DPC_2026', 'Department of Public Communications'],
+      ['DEM_2026', 'Department of Events Management'],
+      ['DBR_2026', 'Department of Business Relations'],
+      ['OP_2026', 'Office of the President'],
+      ['OVP_2026', 'Office of the Vice President'],
+      ['OSG_2026', 'Office of the Secretary General'],
+      ['DHR_2026', 'Department of Human Resources'],
+      ['DCES_2026', 'Department of Community Extensions Services'],
+    ];
+    for (const [accessId, department] of expectedDepartmentAccounts) {
+      await departmentSearch.fill(accessId);
+      const departmentRow = page.locator('[data-access-results] .access-account-row');
+      await expect(departmentRow).toHaveCount(1);
+      await expect(departmentRow).toContainText(accessId);
+      await expect(departmentRow).toContainText(department);
+      await expect(departmentRow).toContainText('ACTIVE');
+      await expect(departmentRow.getByRole('button', { name: 'Reset password' })).toBeVisible();
+    }
     await departmentSearch.fill('');
     await expect(page.locator('[data-access-results] .access-account-row').first()).toBeVisible();
 
