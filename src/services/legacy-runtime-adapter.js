@@ -12,6 +12,15 @@ export const venueEquipmentRequestsEnabled = config.venueEquipmentRequestsEnable
 const clientRequestId = (prefix) =>
   `${prefix}-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
 
+const mutationOperationalContext = () => {
+  if (typeof globalThis.location === 'undefined') return {};
+  const match = globalThis.location.pathname.match(/^\/app\/(admin|director|food|inventory|materials)(?:\/|$)/u);
+  return {
+    activeWorkspace: match?.[1] ?? '',
+    operationalScope: new URL(globalThis.location.href).searchParams.get('scope') ?? '',
+  };
+};
+
 const stableMutationValue = (value) => {
   if (Array.isArray(value)) return value.map(stableMutationValue);
   if (value && typeof value === 'object') {
@@ -29,7 +38,7 @@ export function createMutationRequestTracker({ createId = clientRequestId } = {}
   const pending = new Map();
   return {
     async run(prefix, payload, invoke) {
-      const command = payload ?? {};
+      const command = { ...(payload ?? {}), ...mutationOperationalContext() };
       const fingerprint = `${prefix}:${JSON.stringify(stableMutationValue(command))}`;
       const requestId = command.clientRequestId ?? pending.get(fingerprint) ?? createId(prefix);
       pending.set(fingerprint, requestId);

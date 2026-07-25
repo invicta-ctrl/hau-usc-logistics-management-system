@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   authorizationDenialMessage,
+  CAPABILITIES,
+  capabilitiesFor,
   can,
   canonicalCommitteeId,
   canonicalRoleId,
@@ -34,6 +36,8 @@ describe('canonical authorization projection', () => {
   });
 
   it('separates operational, reference, and system capabilities by role', () => {
+    expect(capabilitiesFor('SYSTEM_OWNER')).toEqual(expect.arrayContaining(Object.values(CAPABILITIES)));
+    expect(capabilitiesFor('SYSTEM_OWNER')).toHaveLength(Object.values(CAPABILITIES).length);
     expect(can('DOL_STAFF', 'release')).toBe(true);
     expect(can('COMMITTEE_HEAD', 'release')).toBe(false);
     expect(can('COMMITTEE_HEAD', 'merge_event_item')).toBe(true);
@@ -43,6 +47,13 @@ describe('canonical authorization projection', () => {
     expect(can('ADMINISTRATOR', 'release')).toBe(false);
     expect(can('READ_ONLY_AUDITOR', 'view.audit')).toBe(true);
     expect(permissionsFor('ADMINISTRATOR').diagnostics).toBe(true);
+  });
+
+  it('maps the System Owner explicitly without treating ordinary Administrators as owners', () => {
+    expect(canonicalRoleId('System Owner')).toBe('SYSTEM_OWNER');
+    expect(canonicalRoleId('Administrator')).toBe('ADMINISTRATOR');
+    expect(can('SYSTEM_OWNER', 'release')).toBe(true);
+    expect(can('ADMINISTRATOR', 'release')).toBe(false);
   });
 
   it('uses server capabilities and mapping state instead of trusting the client role', () => {

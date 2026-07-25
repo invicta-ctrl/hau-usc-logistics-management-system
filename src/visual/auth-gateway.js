@@ -37,6 +37,17 @@ function authorizedWorkspacePath(user) {
   return WORKSPACE_PATHS[user?.experienceId] ?? '/app/admin';
 }
 
+function routedExperience(user) {
+  const administrator = ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(user?.authorization?.roleId);
+  if (administrator) {
+    const route = Object.entries(WORKSPACE_PATHS).find(
+      ([, path]) => location.pathname === path || location.pathname.startsWith(`${path}/`),
+    );
+    if (route) return route[0];
+  }
+  return user?.experienceId ?? '';
+}
+
 function routeAuthorizedWorkspace(user) {
   if (user?.authorization?.roleId === 'REQUESTER') {
     const target = user.lendingEligible && location.pathname === '/lending' ? '/lending' : '/request';
@@ -50,7 +61,7 @@ function routeAuthorizedWorkspace(user) {
     return;
   }
   const target = authorizedWorkspacePath(user);
-  const administrator = user?.authorization?.roleId === 'ADMINISTRATOR';
+  const administrator = ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(user?.authorization?.roleId);
   const validInternalWorkspace = Object.values(WORKSPACE_PATHS).some(
     (path) => location.pathname === path || location.pathname.startsWith(`${path}/`),
   );
@@ -256,8 +267,8 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
 
   const authenticated = (result) => {
     setAuthSession({ csrfToken: result.csrfToken, user: result.user });
-    document.body.dataset.experience = result.user?.experienceId ?? '';
     routeAuthorizedWorkspace(result.user);
+    document.body.dataset.experience = routedExperience(result.user);
     if (requesterPortal) {
       void mountRequesterPortal({
         root,

@@ -116,6 +116,16 @@ describe('v0.6 authentication and onboarding service', () => {
     ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
   });
 
+  it('does not allow ordinary starter-account creation to assign System Owner', async () => {
+    await expect(
+      context.service.createStarterAccount({
+        accessId: 'HAU-OWNER-001',
+        temporaryPassword: 'Starter!Password9472',
+        roleId: 'SYSTEM_OWNER',
+      }),
+    ).rejects.toMatchObject({ code: 'STARTER_ASSIGNMENT_INVALID' });
+  });
+
   it('rejects wrong passwords, expired temporary passwords, and activation replay', async () => {
     const { service, clock } = context;
     await service.createStarterAccount({

@@ -54,8 +54,8 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
   if (!requestOnly) await expect(page.locator('#committeeDashboardPanel')).toBeHidden();
   expect(await page.evaluate(() => globalThis.__appsScriptApiCalls.map(({ method, payload }) => ({ method, payload })))).toEqual([
-    { method: 'api_getEssentialBootstrapData', payload: { requestOnly } },
-    { method: 'api_getBootstrapModule', payload: { requestOnly, page: 1, pageSize: 10, query: '', filter: '', committeeId: '', module: requestOnly ? 'request' : 'overview' } },
+    { method: 'api_getEssentialBootstrapData', payload: { requestOnly, operationalScope: '' } },
+    { method: 'api_getBootstrapModule', payload: { requestOnly, page: 1, pageSize: 10, query: '', filter: '', committeeId: '', operationalScope: '', module: requestOnly ? 'request' : 'overview' } },
   ]);
   await expect(page.locator('body')).toHaveAttribute(
     'data-request-only',

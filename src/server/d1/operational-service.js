@@ -1,5 +1,5 @@
 import { accountAuthorization } from '../auth/contracts.js';
-import { CAPABILITIES } from '../../domain/permissions.js';
+import { CAPABILITIES, COMMITTEES } from '../../domain/permissions.js';
 import { validateBorrowerIdentityApproval } from '../../domain/borrower-identity.js';
 import {
   isApprovedRequestCenterChoice,
@@ -214,6 +214,137 @@ function publicUser() {
   };
 }
 
+const operationalOption = (kind, id, label, purpose = '') => ({
+  value: `${kind}:${String(id).toUpperCase().replace(/[^A-Z0-9_.-]+/gu, '_')}`,
+  kind,
+  id: String(id),
+  label: String(label),
+  purpose: String(purpose),
+  available: true,
+});
+
+function publicOperationalContext() {
+  const selected = operationalOption('SELF', 'CURRENT', 'My own records', 'Authenticated requester scope');
+  return { selected, options: [selected] };
+}
+
+async function resolveOperationalContext(db, account, requestedValue = '') {
+  const authorization = accountAuthorization(account);
+  if (authorization.scopeMode === 'SELF') return publicOperationalContext();
+
+  const [committeeRows, locationRows, seriesRows, eventRows] = await Promise.all([
+    rows(db, 'SELECT id, name FROM committees WHERE active = 1 ORDER BY name LIMIT 50'),
+    rows(
+      db,
+      `SELECT DISTINCT storage_location AS id
+       FROM inventory_items
+       WHERE status = 'ACTIVE' AND trim(storage_location) <> ''
+       ORDER BY storage_location LIMIT 50`,
+    ),
+    rows(db, "SELECT id, name FROM event_series WHERE status = 'ACTIVE' ORDER BY name LIMIT 50"),
+    rows(
+      db,
+      `SELECT id, event_series_id, name, owner_committee_id
+       FROM events WHERE active = 1 ORDER BY starts_at, name LIMIT 100`,
+    ),
+  ]);
+  const allScope = authorization.scopeMode === 'ALL';
+  const allowedCommitteeIds = new Set(
+    allScope ? committeeRows.map((entry) => entry.id) : authorization.committeeIds,
+  );
+  const visibleCommittees = committeeRows.filter((entry) => allowedCommitteeIds.has(entry.id));
+  const visibleEvents = allScope
+    ? eventRows
+    : eventRows.filter((entry) => allowedCommitteeIds.has(entry.owner_committee_id));
+  const visibleSeriesIds = new Set(visibleEvents.map((entry) => entry.event_series_id).filter(Boolean));
+  const visibleSeries = allScope
+    ? seriesRows
+    : seriesRows.filter((entry) => visibleSeriesIds.has(entry.id));
+  const locationAllowed = allScope || allowedCommitteeIds.has(COMMITTEES.INVENTORY_PANTRY);
+  const options = [
+    ...(allScope
+      ? [
+          operationalOption('ALL', 'AUTHORIZED', 'All authorized operations', 'Global authorized view'),
+          operationalOption('OFFICE', 'NON_EVENT', 'Office / non-event operations', 'Requests outside an event'),
+        ]
+      : []),
+    ...visibleCommittees.map((entry) =>
+      operationalOption('COMMITTEE', entry.id, entry.name, 'Committee-owned operations'),
+    ),
+    ...(locationAllowed
+      ? locationRows.map((entry) =>
+          operationalOption('LOCATION', entry.id, entry.id, 'Inventory storage location'),
+        )
+      : []),
+    ...visibleSeries.map((entry) =>
+      operationalOption('EVENT_SERIES', entry.id, entry.name, 'Approved event series'),
+    ),
+    ...visibleEvents.map((entry) =>
+      operationalOption('EVENT', entry.id, entry.name, 'Approved sub-event'),
+    ),
+  ];
+  const fallback =
+    options.find((entry) => entry.kind === 'ALL') ??
+    options.find((entry) => entry.kind === 'COMMITTEE' && entry.id === account.defaultCommitteeId) ??
+    options[0];
+  if (!fallback) {
+    throw new ApiError('OPERATIONAL_SCOPE_UNAVAILABLE', 'No authorized operational scope is available.', {
+      status: 403,
+    });
+  }
+  const requested = String(requestedValue ?? '').trim();
+  const selected = requested && requested.toLowerCase() !== 'current'
+    ? options.find((entry) => entry.value === requested)
+    : fallback;
+  if (!selected) {
+    throw new ApiError('OPERATIONAL_SCOPE_INVALID', 'The selected operational scope is not authorized.', {
+      status: 403,
+    });
+  }
+  return { selected, options };
+}
+
+function filterOperationalData(data, selected) {
+  if (!selected || ['ALL', 'COMMITTEE', 'SELF'].includes(selected.kind)) return data;
+  const next = { ...data };
+  if (selected.kind === 'LOCATION') {
+    next.inventoryItems = (next.inventoryItems ?? []).filter(
+      (entry) => String(entry.storageLocation ?? '') === selected.id,
+    );
+    const itemIds = new Set(next.inventoryItems.map((entry) => entry.id));
+    ['inventoryAssets', 'inventoryAssetInstances'].forEach((key) => {
+      if (Array.isArray(next[key])) next[key] = next[key].filter((entry) => itemIds.has(entry.item_id ?? entry.itemId));
+    });
+  }
+  if (selected.kind === 'EVENT_SERIES') {
+    next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
+    next.events = (next.events ?? []).filter((entry) => entry.seriesId === selected.id);
+    const eventIds = new Set(next.events.map((entry) => entry.id));
+    next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
+    next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
+    next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
+  }
+  if (selected.kind === 'EVENT') {
+    next.events = (next.events ?? []).filter((entry) => entry.id === selected.id);
+    const seriesIds = new Set(next.events.map((entry) => entry.seriesId));
+    next.eventSeries = (next.eventSeries ?? []).filter((entry) => seriesIds.has(entry.id));
+    next.requests = (next.requests ?? []).filter((entry) => entry.eventId === selected.id);
+    next.requestLines = (next.requestLines ?? []).filter((entry) => entry.eventId === selected.id);
+    next.deliverables = (next.deliverables ?? []).filter((entry) => entry.eventId === selected.id);
+  }
+  if (selected.kind === 'OFFICE') {
+    next.eventSeries = [];
+    next.events = [];
+    next.requests = (next.requests ?? []).filter(
+      (entry) => !entry.eventId && !entry.eventSeriesId,
+    );
+    const requestIds = new Set(next.requests.map((entry) => entry.id));
+    next.requestLines = (next.requestLines ?? []).filter((entry) => requestIds.has(entry.requestId));
+    next.deliverables = (next.deliverables ?? []).filter((entry) => requestIds.has(entry.requestId));
+  }
+  return next;
+}
+
 function assertCapability(account, capability) {
   const authorization = accountAuthorization(account);
   if (
@@ -228,6 +359,10 @@ function assertCapability(account, capability) {
 
 function entityScope(account) {
   const authorization = accountAuthorization(account);
+  const selected = account?.operationalContext?.selected;
+  if (selected?.kind === 'COMMITTEE') {
+    return { mode: 'COMMITTEE', committeeIds: [selected.id], accountId: account.id };
+  }
   return {
     mode: authorization.scopeMode,
     committeeIds: authorization.committeeIds,
@@ -329,7 +464,23 @@ function multiScopeWhere(account, { committeeColumns = [], ownerColumns = [] } =
   };
 }
 
+const operationalAuditContexts = new Map();
+
+export function enrichOperationalAuditAfter(after, operationalContext, timestamp, correlationId) {
+  if (!operationalContext) return after;
+  return {
+    ...after,
+    operationalContext: {
+      ...operationalContext,
+      timestamp,
+      correlationId,
+    },
+  };
+}
+
 function auditStatement(db, { action, entityType, entityId, accountId, correlationId, after = {} }) {
+  const timestamp = nowIso();
+  const operationalContext = operationalAuditContexts.get(correlationId);
   return db
     .prepare(
       `INSERT INTO audit_log (
@@ -339,12 +490,12 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
     )
     .bind(
       createId('AUD'),
-      nowIso(),
+      timestamp,
       action,
       entityType,
       entityId,
       accountId,
-      JSON.stringify(after),
+      JSON.stringify(enrichOperationalAuditAfter(after, operationalContext, timestamp, correlationId)),
       correlationId,
     );
 }
@@ -538,8 +689,11 @@ export function createD1OperationalService({
 }) {
   if (!db) throw new Error('D1 database binding is required.');
 
-  async function essential({ account, requestOnly = false, correlationId }) {
+  async function essential({ account, requestOnly = false, command = {}, correlationId }) {
     const user = requestOnly ? publicUser() : currentUser(account);
+    const operationalContext = requestOnly
+      ? publicOperationalContext()
+      : await resolveOperationalContext(db, account, command.operationalScope);
     const capabilities = user.authorization.capabilities;
     const activeModule =
       requestOnly || !capabilities.includes(CAPABILITIES.VIEW_INTERNAL) ? 'request' : 'overview';
@@ -568,6 +722,7 @@ export function createD1OperationalService({
       requestOnly,
       activeModule,
       currentUser: user,
+      operationalContext,
       navigation,
       moduleConfig: {
         maxPageSize: 50,
@@ -588,6 +743,10 @@ export function createD1OperationalService({
       });
     }
     if (!requestOnly) assertCapability(account, MODULE_CAPABILITIES[module]);
+    const operationalContext = requestOnly
+      ? publicOperationalContext()
+      : await resolveOperationalContext(db, account, command.operationalScope);
+    if (!requestOnly) account = { ...account, operationalContext };
     const page = pageInput(command);
     const itemSql = `SELECT item.*, availability.on_hand, availability.reserved,
       availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
@@ -892,6 +1051,7 @@ export function createD1OperationalService({
         };
       }
     }
+    data = filterOperationalData(data, operationalContext.selected);
     const totalRow = await db
       .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
       .bind('ACTIVE')
@@ -3987,7 +4147,48 @@ export function createD1OperationalService({
           },
         );
       }
-      return handler(context);
+      const operationalContext = await resolveOperationalContext(
+        db,
+        context.account,
+        context.command?.operationalScope,
+      );
+      const authorization = accountAuthorization(context.account);
+      const activeWorkspace = String(context.command?.activeWorkspace ?? '').trim().toLowerCase();
+      if (activeWorkspace && !['admin', 'director', 'food', 'inventory', 'materials'].includes(activeWorkspace)) {
+        throw new ApiError('OPERATIONAL_WORKSPACE_INVALID', 'The active workspace is not recognized.', {
+          status: 400,
+        });
+      }
+      const selected = operationalContext.selected;
+      const reason = String(
+        context.command?.reason ??
+          context.command?.note ??
+          context.command?.notes ??
+          context.command?.purpose ??
+          method,
+      )
+        .trim()
+        .slice(0, 500);
+      operationalAuditContexts.set(context.correlationId, {
+        actorAccountId: context.account.id,
+        actorRole: authorization.roleId,
+        activeWorkspace: activeWorkspace || 'server-api',
+        committeeScope: selected.kind === 'COMMITTEE' ? selected.id : '',
+        locationScope: selected.kind === 'LOCATION' ? selected.id : '',
+        eventScope: ['EVENT_SERIES', 'EVENT'].includes(selected.kind)
+          ? { kind: selected.kind, id: selected.id }
+          : null,
+        selectedScope: selected.value,
+        reason,
+      });
+      try {
+        return await handler({
+          ...context,
+          account: { ...context.account, operationalContext },
+        });
+      } finally {
+        operationalAuditContexts.delete(context.correlationId);
+      }
     },
     revision: (scope) => revision(db, scope),
   });

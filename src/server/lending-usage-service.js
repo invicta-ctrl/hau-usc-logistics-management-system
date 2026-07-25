@@ -1,7 +1,7 @@
 import { accountAuthorization } from './auth/contracts.js';
 import { ApiError } from './d1/operational-service.js';
 
-const ALLOWED_ROLES = new Set(['DIRECTOR', 'ADMINISTRATOR']);
+const ALLOWED_ROLES = new Set(['DIRECTOR', 'ADMINISTRATOR', 'SYSTEM_OWNER']);
 const INVENTORY_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
 
 const optionalText = (value, max = 120) =>

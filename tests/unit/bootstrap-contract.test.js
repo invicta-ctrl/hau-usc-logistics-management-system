@@ -31,6 +31,43 @@ describe('essential bootstrap contract', () => {
     );
   });
 
+  it('accepts the explicit System Owner authorization projection', () => {
+    const fixture = createEssentialBootstrapFixture();
+    fixture.currentUser.role = 'SYSTEM_OWNER';
+    fixture.currentUser.authorization.roleId = 'SYSTEM_OWNER';
+    fixture.currentUser.authorization.roleLabel = 'System Owner';
+    expect(validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toBe(fixture);
+  });
+
+  it('accepts only a bounded operational context whose selected option is available', () => {
+    const fixture = createEssentialBootstrapFixture();
+    fixture.operationalContext = {
+      selected: {
+        value: 'COMMITTEE:COM_FOOD',
+        kind: 'COMMITTEE',
+        id: 'COM_FOOD',
+        label: 'Food Committee',
+      },
+      options: [
+        {
+          value: 'COMMITTEE:COM_FOOD',
+          kind: 'COMMITTEE',
+          id: 'COM_FOOD',
+          label: 'Food Committee',
+          purpose: 'Committee-owned operations',
+          available: true,
+        },
+      ],
+    };
+    expect(createStateFromEssentialBootstrap(fixture).operationalContext).toEqual(
+      fixture.operationalContext,
+    );
+    fixture.operationalContext.selected.value = 'COMMITTEE:COM_MATERIALS';
+    expect(() => validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toThrowError(
+      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
+    );
+  });
+
   it.each([
     ['unknown top-level field', (value) => { value.privateStudentRecords = []; }],
     ['missing schema version', (value) => { delete value.schemaVersion; }],

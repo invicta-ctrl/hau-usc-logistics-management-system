@@ -34,7 +34,9 @@ function normalizeRequest(module, params, maxPageSize) {
   if (filter.length > 80) throw controllerError('MODULE_QUERY_INVALID', 'Module filter is too long.');
   const committeeId = params.committeeId === undefined ? '' : String(params.committeeId).trim();
   if (committeeId.length > 40 || (committeeId && !/^[A-Z0-9_]+$/i.test(committeeId))) throw controllerError('MODULE_QUERY_INVALID', 'The committee context is invalid.');
-  return { page, pageSize, query, filter, committeeId, requestOnly: params.requestOnly === true };
+  const operationalScope = params.operationalScope === undefined ? '' : String(params.operationalScope).trim();
+  if (operationalScope.length > 120 || (operationalScope && !/^[A-Z0-9_.:-]+$/i.test(operationalScope))) throw controllerError('MODULE_QUERY_INVALID', 'The operational context is invalid.');
+  return { page, pageSize, query, filter, committeeId, operationalScope, requestOnly: params.requestOnly === true };
 }
 
 function cacheKey(module, request) {

@@ -469,7 +469,12 @@ async function handleApi(request, env, requestId) {
         ? null
         : (await authorize(request, auth, CAPABILITIES.VIEW_REQUEST)).account;
       if (url.pathname === '/api/getBootstrapData') {
-        const essential = await operations.essential({ account, requestOnly, correlationId: requestId });
+        const essential = await operations.essential({
+          account,
+          requestOnly,
+          command,
+          correlationId: requestId,
+        });
         const module = await operations.bootstrapModule({
           account,
           requestOnly,
@@ -478,7 +483,7 @@ async function handleApi(request, env, requestId) {
         });
         return json({ ...essential, ...module.data });
       }
-      return json(await operations.essential({ account, requestOnly, correlationId: requestId }));
+      return json(await operations.essential({ account, requestOnly, command, correlationId: requestId }));
     }
 
     if (url.pathname === '/api/getBootstrapModule' || url.pathname.startsWith('/api/bootstrap/')) {

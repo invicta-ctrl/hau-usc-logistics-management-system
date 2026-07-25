@@ -40,7 +40,7 @@ describe('staging runtime mode boundary', () => {
     expect(roleRuntime).toContain('data-internal-shell-context');
     expect(roleRuntime).toContain('Scope is enforced by server authorization.');
     expect(roleRuntime).toContain('history.pushState');
-    expect(roleRuntime).toContain('preserving your authenticated Administrator identity');
+    expect(roleRuntime).toContain('preserving your authenticated ${authorization.roleLabel');
     expect(roleRuntime).toContain('document.title = `${workspace.label}');
     expect(roleRuntime).toContain("backendMode !== 'rest'");
     expect(roleStyles).toContain('.internal-shell-context');

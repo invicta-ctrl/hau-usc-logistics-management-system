@@ -353,6 +353,29 @@ describe('revision polling controller', () => {
 });
 
 describe('mutation request tracking', () => {
+  it('attaches the current server-validated workspace and operational scope to mutations', async () => {
+    const originalLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
+    Object.defineProperty(globalThis, 'location', {
+      configurable: true,
+      value: new URL('https://example.test/app/inventory?scope=LOCATION%3AMain.Cabinet'),
+    });
+    const tracker = createMutationRequestTracker({ createId: () => 'mutation-1' });
+    let observed;
+
+    await tracker.run('inventory-adjustment', { reason: 'Verified count' }, async (command) => {
+      observed = command;
+      return { ok: true };
+    });
+
+    expect(observed).toMatchObject({
+      activeWorkspace: 'inventory',
+      operationalScope: 'LOCATION:Main.Cabinet',
+      clientRequestId: 'mutation-1',
+    });
+    if (originalLocation) Object.defineProperty(globalThis, 'location', originalLocation);
+    else delete globalThis.location;
+  });
+
   it('reuses one id after an ambiguous retryable failure and rotates it after success', async () => {
     let sequence = 0;
     const tracker = createMutationRequestTracker({ createId: (prefix) => `${prefix}-${++sequence}` });

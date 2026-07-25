@@ -76,6 +76,7 @@ const ESSENTIAL_KEYS = new Set([
   'requestOnly',
   'activeModule',
   'currentUser',
+  'operationalContext',
   'navigation',
   'moduleConfig',
   'revision',
@@ -103,7 +104,7 @@ const MODULE_KEYS = new Set([
 
 const PERMISSION_KEYS = new Set(['review', 'release', 'receive', 'admin', 'manageCatalog']);
 const SCOPE_KEYS = new Set(['committee', 'organization']);
-const AUTHORIZATION_ROLES = new Set(['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR']);
+const AUTHORIZATION_ROLES = new Set(['SYSTEM_OWNER', 'REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR']);
 const AUTHORIZATION_COMMITTEES = new Set(['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS']);
 const AUTHORIZATION_SCOPE_MODES = new Set(['SELF', 'COMMITTEE', 'ALL', 'DENY']);
 const AUTHORIZATION_MAPPING_STATUSES = new Set(['MAPPED', 'INACTIVE', 'NEEDS_REVIEW', 'UNKNOWN_ROLE']);
@@ -303,6 +304,28 @@ function assertNavigation(value) {
   });
 }
 
+function assertOperationalContext(value) {
+  if (!isPlainObject(value)) fail();
+  assertAllowedKeys(value, new Set(['selected', 'options']));
+  if (!isPlainObject(value.selected)) fail();
+  assertAllowedKeys(value.selected, new Set(['value', 'kind', 'id', 'label', 'purpose', 'available']));
+  ['value', 'kind', 'id', 'label'].forEach((key) =>
+    assertSafeText(value.selected[key], { required: true, max: key === 'label' ? 160 : 120 }),
+  );
+  if (value.selected.purpose !== undefined) assertSafeText(value.selected.purpose, { max: 200 });
+  if (value.selected.available !== undefined) assertBoolean(value.selected.available);
+  if (!Array.isArray(value.options) || value.options.length < 1 || value.options.length > 200) fail();
+  value.options.forEach((entry) => {
+    if (!isPlainObject(entry)) fail();
+    assertAllowedKeys(entry, new Set(['value', 'kind', 'id', 'label', 'purpose', 'available']));
+    ['value', 'kind', 'id', 'label', 'purpose'].forEach((key) =>
+      assertSafeText(entry[key], { required: key !== 'purpose', max: key === 'purpose' ? 200 : 160 }),
+    );
+    assertBoolean(entry.available);
+  });
+  if (!value.options.some((entry) => entry.value === value.selected.value && entry.available)) fail();
+}
+
 function assertModuleConfig(value) {
   if (!isPlainObject(value)) fail();
   assertAllowedKeys(value, new Set(['maxPageSize', 'defaultPageSize', 'legacyEndpointAvailable', 'activeModuleOnly']));
@@ -327,6 +350,7 @@ export function validateEssentialBootstrap(value, { backendMode = 'mock' } = {})
   assertBoolean(value.requestOnly);
   if (!BOOTSTRAP_MODULES.includes(value.activeModule)) fail();
   assertCurrentUser(value.currentUser, { requireAuthorization: true });
+  if (value.operationalContext !== undefined) assertOperationalContext(value.operationalContext);
   assertNavigation(value.navigation);
   assertModuleConfig(value.moduleConfig);
   assertRevision(value.revision);
@@ -406,6 +430,7 @@ export function createStateFromEssentialBootstrap(value, { requestOnly = value?.
     backendMode: value.backendMode,
     environment: value.environment,
     currentUser: value.currentUser,
+    operationalContext: value.operationalContext ?? null,
     catalogAvailabilityProtected: Boolean(requestOnly),
     dataRevision: value.revision?.revision ?? null,
     dataRevisionUpdatedAt: value.revision?.updatedAt ?? '',

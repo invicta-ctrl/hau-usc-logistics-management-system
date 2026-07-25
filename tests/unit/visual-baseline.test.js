@@ -98,7 +98,7 @@ describe('authoritative visual extraction', () => {
     expect(runtime).toContain('import { createModuleDataController }');
     expect(runtime).toContain('import { createRuntimeExtensions }');
     expect(runtime).toContain(
-      'if(useEssentialBootstrap)return services.loadEssentialBootstrap({requestOnly})',
+      'if(useEssentialBootstrap)return services.loadEssentialBootstrap({requestOnly,operationalScope:operationalScopeValue()})',
     );
     expect(runtime).toContain(
       "return backendMode==='mock'?loadState():services.loadBootstrapData({requestOnly})",

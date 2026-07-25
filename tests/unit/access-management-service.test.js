@@ -102,7 +102,40 @@ const actor = account({
   profile: { fullName: 'Synthetic Administrator' },
 });
 
+const ownerActor = account({
+  id: 'OWNER-001',
+  accessIdNormalized: 'HAU.OWNER.001',
+  roleId: ROLES.SYSTEM_OWNER,
+  committeeIds: [],
+  defaultCommitteeId: '',
+  profile: { fullName: 'Synthetic System Owner' },
+});
+
 describe('access management service', () => {
+  it('allows the System Owner to administer ordinary accounts but protects the owner account', async () => {
+    const ownerTarget = account({
+      id: ownerActor.id,
+      accessIdNormalized: ownerActor.accessIdNormalized,
+      roleId: ROLES.SYSTEM_OWNER,
+    });
+    const { service, repository } = context({ accounts: [ownerTarget] });
+
+    await expect(service.listAccounts({ actor: ownerActor })).resolves.toMatchObject({
+      items: [],
+    });
+    await expect(
+      service.previewAccessIdChange({
+        actor: ownerActor,
+        command: {
+          currentAccessId: ownerTarget.accessIdNormalized,
+          confirmCurrentAccessId: ownerTarget.accessIdNormalized,
+          proposedAccessId: 'HAU.OWNER.002',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'SYSTEM_ACCOUNT_PROTECTED' });
+    expect(repository.listAccounts).toHaveBeenCalledOnce();
+  });
+
   it('uses a punctuation-insensitive collision key for login aliases', () => {
     expect(accessIdCollisionKey(' hau.food-001 ')).toBe('HAUFOOD001');
     expect(accessIdCollisionKey('HAU_FOOD.001')).toBe('HAUFOOD001');

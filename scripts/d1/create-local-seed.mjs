@@ -42,6 +42,7 @@ async function main() {
     timingSafeEqual: () => false,
   });
   const definitions = [
+    ['LOCAL-OWNER', 'LOCAL.OWNER', 'Local System Owner', 'SYSTEM_OWNER', null],
     ['LOCAL-ADMIN', 'LOCAL.ADMIN', 'Local Administrator', 'ADMINISTRATOR', null],
     ['LOCAL-DIRECTOR', 'LOCAL.DIRECTOR', 'Local Director', 'DIRECTOR', null],
     ['LOCAL-FOOD', 'LOCAL.FOOD', 'Local Food Operator', 'DOL_STAFF', 'COM_FOOD'],
@@ -222,7 +223,7 @@ async function main() {
   await writeFile(resolved, `${statements.join('\n')}\n`, { flag: 'wx', mode: 0o600 });
   console.log('Synthetic local-only D1 seed created outside the repository.');
   if (!starterOnly) {
-    console.log('Access IDs: LOCAL.ADMIN, LOCAL.DIRECTOR, LOCAL.FOOD, LOCAL.INVENTORY, LOCAL.MATERIALS');
+    console.log('Access IDs: LOCAL.OWNER, LOCAL.ADMIN, LOCAL.DIRECTOR, LOCAL.FOOD, LOCAL.INVENTORY, LOCAL.MATERIALS');
     console.log('Active-account password label: repository-documented synthetic local credential only.');
   }
   console.log('Starter Access ID: LOCAL.STARTER');

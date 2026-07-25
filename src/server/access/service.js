@@ -63,7 +63,10 @@ function requiredIdempotencyKey(value) {
 }
 
 function assertAdministrator(actor) {
-  if (actor?.roleId !== ROLES.ADMINISTRATOR || actor?.status !== ACCOUNT_STATUS.ACTIVE) {
+  if (
+    ![ROLES.ADMINISTRATOR, ROLES.SYSTEM_OWNER].includes(actor?.roleId) ||
+    actor?.status !== ACCOUNT_STATUS.ACTIVE
+  ) {
     fail('ADMINISTRATOR_REQUIRED', 403);
   }
   return actor;
@@ -131,7 +134,9 @@ export function createAccessManagementService({
     const accessId = normalizeAccessId(value);
     const account = accessId ? await repository.getAccountByAccessId(accessId) : null;
     if (!account) fail('ACCESS_ACCOUNT_NOT_FOUND', 404);
-    if (String(account.id).startsWith('SYSTEM-')) fail('SYSTEM_ACCOUNT_PROTECTED', 403);
+    if (String(account.id).startsWith('SYSTEM-') || account.roleId === ROLES.SYSTEM_OWNER) {
+      fail('SYSTEM_ACCOUNT_PROTECTED', 403);
+    }
     return account;
   }
 

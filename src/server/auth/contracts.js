@@ -28,6 +28,7 @@ export const EXPERIENCE = Object.freeze({
 });
 
 const ROLE_LABELS = Object.freeze({
+  [ROLES.SYSTEM_OWNER]: 'System Owner',
   [ROLES.ADMINISTRATOR]: 'Administrator',
   [ROLES.DIRECTOR]: 'Director',
   [ROLES.DOL_STAFF]: 'DOL Staff',
@@ -65,7 +66,7 @@ export function normalizeCommitteeIds(values) {
 
 export function resolveExperience(account) {
   const roleId = canonicalRoleId(account?.roleId);
-  if (roleId === ROLES.ADMINISTRATOR) return EXPERIENCE.ADMINISTRATOR;
+  if ([ROLES.ADMINISTRATOR, ROLES.SYSTEM_OWNER].includes(roleId)) return EXPERIENCE.ADMINISTRATOR;
   if (roleId === ROLES.DIRECTOR) return EXPERIENCE.DIRECTOR;
   const committeeIds = normalizeCommitteeIds(account?.committeeIds);
   const defaultCommitteeId = canonicalCommitteeId(account?.defaultCommitteeId);

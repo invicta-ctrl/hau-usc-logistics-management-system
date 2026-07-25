@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { createEmptyBootstrapFixture } from '../fixtures/bootstrap-fixtures.js';
+import { navigateToView } from './navigation.js';
 
 test('HTTP mode requires Access ID login and starter activation without role selection', async ({
   page,
@@ -186,7 +187,7 @@ test('authenticated Administrator switches real workspace routes without changin
   await page.goto('/app/food');
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page).toHaveURL(/\/app\/food$/u);
-  await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+  await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell.getByLabel('Workspace')).toHaveValue('food');
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
@@ -209,17 +210,92 @@ test('authenticated Administrator switches real workspace routes without changin
   );
   expect(sessionCalls).toBe(1);
 
-  for (const [path, workspace] of [
-    ['/app/admin', 'administrator'],
-    ['/app/director', 'director'],
-    ['/app/inventory', 'inventory-pantry'],
+  for (const [path, workspace, experience] of [
+    ['/app/admin', 'administrator', 'administrator'],
+    ['/app/director', 'director', 'director'],
+    ['/app/inventory', 'inventory-pantry', 'inventory-pantry'],
   ]) {
     await page.goto(path);
     await expect(page.locator('.app-shell')).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${path}$`, 'u'));
-    await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
     await expect(page.locator('#shellWorkspaceSelect')).toHaveValue(workspace);
   }
+});
+
+test('authenticated System Owner keeps owner identity across every workspace and Release Desk', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'One mobile System Owner route and module proof is sufficient.',
+  );
+  const bootstrap = createEmptyBootstrapFixture({ backendMode: 'rest' });
+  bootstrap.currentUser = {
+    ...bootstrap.currentUser,
+    id: 'SYNTHETIC-SYSTEM-OWNER',
+    displayName: 'Authorized System Owner',
+    role: 'SYSTEM_OWNER',
+    permissions: { review: true, release: true, receive: true, admin: true, manageCatalog: true },
+    authorization: {
+      ...bootstrap.currentUser.authorization,
+      roleId: 'SYSTEM_OWNER',
+      roleLabel: 'System Owner',
+      scopeMode: 'ALL',
+      committeeIds: [],
+      committees: [],
+      capabilities: ['view.request', 'view.internal', 'fulfillment.release', 'system.admin'],
+      mappingStatus: 'MAPPED',
+      active: true,
+    },
+  };
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = {
+      backendMode: 'rest',
+      httpApiBaseUrl: '',
+      appEnvironment: 'staging',
+    };
+  });
+  await page.route('**/api/auth/session', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        state: 'AUTHENTICATED',
+        csrfToken: 'owner-csrf',
+        user: {
+          accountId: 'SYNTHETIC-SYSTEM-OWNER',
+          displayName: 'Authorized System Owner',
+          experienceId: 'administrator',
+          authorization: bootstrap.currentUser.authorization,
+        },
+      }),
+    }),
+  );
+  await page.route('**/api/getBootstrapData', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, data: bootstrap }),
+    }),
+  );
+
+  await page.goto('/app/materials');
+  const shell = page.locator('[data-internal-shell-context]');
+  await expect(shell).toBeVisible();
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
+  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+
+  for (const workspace of ['administrator', 'director', 'food', 'inventory-pantry', 'materials']) {
+    await shell.getByLabel('Workspace').selectOption(workspace);
+    await expect(shell.getByLabel('Workspace')).toHaveValue(workspace);
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  }
+
+  await navigateToView(page, 'release');
+  await expect(page.locator('#release')).toHaveClass(/active/u);
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
 });
 
 test('request-only HTTP mode remains outside the internal authentication gate', async ({

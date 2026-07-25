@@ -6,6 +6,7 @@ const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
 const ACTIVATED_PASSWORD = `Activated${String.fromCharCode(33)}Local9472`;
 const MANAGED_ACTIVATED_PASSWORD = `Managed${String.fromCharCode(33)}Activated9472`;
 const roles = [
+  ['LOCAL.OWNER', 'administrator', 'admin'],
   ['LOCAL.ADMIN', 'administrator', 'admin'],
   ['LOCAL.DIRECTOR', 'director', 'director'],
   ['LOCAL.FOOD', 'food', 'food'],
@@ -36,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '18' },
+    database: { connected: true, schemaVersion: '19' },
   });
 
   await page.goto('/');
@@ -87,6 +88,99 @@ test('unknown credentials return the safe authentication error instead of a serv
     code: 'AUTHENTICATION_FAILED',
     message: 'The Access ID or password is incorrect.',
   });
+});
+
+test('System Owner receives every module and a server-validated operational scope catalog', async ({
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  const admin = await apiRequest.newContext({ baseURL });
+  const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+  await login(admin, 'LOCAL.ADMIN');
+
+  const essential = await owner.post('/api/getEssentialBootstrapData', {
+    data: { operationalScope: 'COMMITTEE:COM_FOOD' },
+  });
+  expect(essential.status()).toBe(200);
+  await expect(essential.json()).resolves.toMatchObject({
+    currentUser: {
+      role: 'SYSTEM_OWNER',
+      authorization: { roleId: 'SYSTEM_OWNER', scopeMode: 'ALL' },
+    },
+    navigation: expect.arrayContaining([
+      expect.objectContaining({ id: 'release', enabled: true }),
+    ]),
+    operationalContext: {
+      selected: { value: 'COMMITTEE:COM_FOOD', kind: 'COMMITTEE', id: 'COM_FOOD' },
+    },
+  });
+  const invalid = await owner.post('/api/getEssentialBootstrapData', {
+    data: { operationalScope: 'COMMITTEE:NOT_AUTHORIZED' },
+  });
+  expect(invalid.status()).toBe(403);
+  await expect(invalid.json()).resolves.toMatchObject({ code: 'OPERATIONAL_SCOPE_INVALID' });
+
+  expect(
+    (
+      await owner.post('/api/getBootstrapModule', {
+        data: {
+          module: 'release',
+          operationalScope: 'COMMITTEE:COM_FOOD',
+          page: 1,
+          pageSize: 10,
+        },
+      })
+    ).status(),
+  ).toBe(200);
+  expect(
+    (
+      await admin.post('/api/getBootstrapModule', {
+        data: { module: 'release', page: 1, pageSize: 10 },
+      })
+    ).status(),
+  ).toBe(403);
+  const locationModule = await owner.post('/api/getBootstrapModule', {
+    data: {
+      module: 'inventory',
+      operationalScope: 'LOCATION:SYNTHETIC_STORAGE',
+      page: 1,
+      pageSize: 10,
+    },
+  });
+  expect(locationModule.status()).toBe(200);
+  const locationData = await locationModule.json();
+  expect(locationData.data.inventoryItems.length).toBeGreaterThan(0);
+  expect(
+    locationData.data.inventoryItems.every((item) => item.storageLocation === 'Synthetic Storage'),
+  ).toBe(true);
+  const eventModule = await owner.post('/api/getBootstrapModule', {
+    data: {
+      module: 'request',
+      operationalScope: 'EVENT:EVT-LOCAL',
+      page: 1,
+      pageSize: 10,
+    },
+  });
+  expect(eventModule.status()).toBe(200);
+  const eventData = await eventModule.json();
+  expect(eventData.data.events).toEqual([expect.objectContaining({ id: 'EVT-LOCAL' })]);
+  expect(eventData.data.requestLines.every((line) => line.eventId === 'EVT-LOCAL')).toBe(true);
+  const contextualMutation = await mutate(owner, ownerCsrf, 'createLendingTicket', {
+    clientRequestId: `owner-context-${crypto.randomUUID()}`,
+    borrowerReference: '12345678',
+    borrowerName: 'Synthetic Owner Context Borrower',
+    borrowerType: 'STUDENT',
+    itemId: 'ITM-LOCAL-001',
+    quantity: 1,
+    unit: 'piece',
+    purpose: 'System Owner operational-context audit proof',
+    dueAt: '2026-08-10T12:00:00+08:00',
+    ticketType: 'LOAN',
+    operationalScope: 'COMMITTEE:COM_FOOD',
+    activeWorkspace: 'inventory',
+  });
+  expect(contextualMutation.status()).toBe(200);
+  await Promise.all([owner.dispose(), admin.dispose()]);
 });
 
 test('Request Center public APIs require an authenticated department session', async ({ request }) => {
@@ -332,12 +426,71 @@ for (const [accessId, experience, workspace] of roles) {
     await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
     await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
     await expect(page.locator('#loading')).not.toHaveAttribute('data-state', 'error');
-    await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+    const shell = page.locator('[data-internal-shell-context]');
+    await shell.locator('.shell-account > summary').click();
+    await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
     await page.goto(`/app/${workspace}/requests`);
     await expect(page.locator('#request')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
   });
 }
+
+test('System Owner changes governed operational scope without losing identity or workspace routing', async ({
+  page,
+}) => {
+  await page.goto('/app/admin');
+  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  const shell = page.locator('[data-internal-shell-context]');
+  const workspace = shell.getByLabel('Workspace');
+  const scope = shell.getByLabel('Operational scope');
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await expect(workspace.locator('option').first()).toContainText('Control Center');
+  await expect(workspace.locator('option').nth(1)).toContainText('Department oversight');
+  await expect(scope.locator('option')).not.toHaveCount(1);
+  await scope.selectOption('COMMITTEE:COM_FOOD');
+  await expect(scope).toHaveValue('COMMITTEE:COM_FOOD');
+  await expect(scope).toBeFocused();
+  await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_FOOD/u);
+  await expect(shell.locator('[data-shell-context-announcement]')).toHaveText(
+    'Operational scope changed to Food Committee.',
+  );
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+
+  await workspace.selectOption('materials');
+  await expect(page).toHaveURL(/\/app\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(
+    'Viewing: Materials & Documentation',
+  );
+});
+
+test('System Owner opens and refreshes every real workspace without impersonation', async ({ page }) => {
+  await page.goto('/app/admin');
+  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  for (const [path, workspace, experience, label] of [
+    ['/app/admin', 'administrator', 'administrator', 'Administrator'],
+    ['/app/director', 'director', 'director', 'Director'],
+    ['/app/food', 'food', 'food', 'Food Committee'],
+    ['/app/inventory', 'inventory-pantry', 'inventory-pantry', 'Inventory & Pantry'],
+    ['/app/materials', 'materials', 'materials', 'Materials & Documentation'],
+  ]) {
+    await page.goto(path);
+    const shell = page.locator('[data-internal-shell-context]');
+    await expect(shell.getByLabel('Workspace')).toHaveValue(workspace);
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(`Viewing: ${label}`);
+    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
+    await page.reload();
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
+  }
+});
 
 test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
   page,
@@ -372,7 +525,9 @@ test('starter activation rotates into a normal session and logout revokes it', a
 
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  const shell = page.locator('[data-internal-shell-context]');
+  await shell.locator('.shell-account > summary').click();
+  await shell.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByLabel('Access ID')).toBeVisible();
 });
 

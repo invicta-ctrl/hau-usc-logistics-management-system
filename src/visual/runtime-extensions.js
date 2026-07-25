@@ -327,6 +327,7 @@ export function createRuntimeExtensions(options) {
     hasUnsavedRuntimeState = () => false,
     getActiveModule = () => 'overview',
     refreshActiveModule = null,
+    changeOperationalScope = null,
   } = options;
   const dirtyForms = new Set();
   const acceptedRevisions = new Map();
@@ -3560,17 +3561,19 @@ export function createRuntimeExtensions(options) {
   };
 
   const workspaceDefinitions = Object.freeze({
-    administrator: { label: 'Administrator', path: '/app/admin' },
-    director: { label: 'Director', path: '/app/director' },
-    food: { label: 'Food Committee', path: '/app/food' },
-    'inventory-pantry': { label: 'Inventory & Pantry', path: '/app/inventory' },
-    materials: { label: 'Materials & Documentation', path: '/app/materials' },
+    administrator: { initial: 'A', label: 'Administrator', purpose: 'Control Center', path: '/app/admin' },
+    director: { initial: 'D', label: 'Director', purpose: 'Department oversight', path: '/app/director' },
+    food: { initial: 'F', label: 'Food Committee', purpose: 'Food operations', path: '/app/food' },
+    'inventory-pantry': { initial: 'I', label: 'Inventory & Pantry', purpose: 'Stock and lending', path: '/app/inventory' },
+    materials: { initial: 'M', label: 'Materials & Documentation', purpose: 'Procurement and evidence', path: '/app/materials' },
   });
 
   const isAdministrator = () =>
-    String(
-      getState()?.currentUser?.authorization?.roleId ?? getState()?.currentUser?.role ?? '',
-    ).toUpperCase() === 'ADMINISTRATOR';
+    ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(
+      String(
+        getState()?.currentUser?.authorization?.roleId ?? getState()?.currentUser?.role ?? '',
+      ).toUpperCase(),
+    );
 
   const workspaceFromPath = () =>
     Object.entries(workspaceDefinitions).find(
@@ -3585,7 +3588,7 @@ export function createRuntimeExtensions(options) {
     if (workspaceDefinitions[experience]) return experience;
     const user = getState()?.currentUser ?? {};
     const roleId = String(user.authorization?.roleId ?? user.role ?? '').toUpperCase();
-    if (roleId === 'ADMINISTRATOR') return 'administrator';
+    if (['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(roleId)) return 'administrator';
     if (roleId === 'DIRECTOR') return 'director';
     const committeeIds = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
     if (committeeIds.includes('COM_FOOD')) return 'food';
@@ -3594,7 +3597,16 @@ export function createRuntimeExtensions(options) {
     return 'administrator';
   };
 
+  const syncRoutedExperience = () => {
+    const workspace = workspaceFromPath();
+    if (isAdministrator() && workspaceDefinitions[workspace]) {
+      document.body.dataset.experience = workspace;
+    }
+  };
+
   const currentScopeLabel = () => {
+    const selected = getState()?.operationalContext?.selected;
+    if (selected?.label) return selected.label;
     const authorization = getState()?.currentUser?.authorization ?? {};
     if (authorization.scopeMode === 'ALL') return 'All authorized operations';
     if (authorization.scopeMode === 'SELF') return 'My own records';
@@ -3649,16 +3661,25 @@ export function createRuntimeExtensions(options) {
       .map(([id, definition]) => {
         const selected = id === workspaceId ? ' selected' : '';
         const unavailable = !administrator && id !== workspaceId;
-        return `<option value="${esc(id)}"${selected}${unavailable ? ' disabled' : ''}>${esc(definition.label)}${unavailable ? ' — unavailable for this account' : ''}</option>`;
+        const stateLabel = id === workspaceId ? 'current workspace' : unavailable ? 'unavailable' : 'view and operate';
+        return `<option value="${esc(id)}"${selected}${unavailable ? ' disabled' : ''}>${esc(definition.initial)} · ${esc(definition.label)} — ${esc(definition.purpose)} — ${esc(stateLabel)}</option>`;
       })
       .join('');
     internalShellBar.querySelector('#shellWorkspaceHelp').textContent = administrator
-      ? 'Switches the active workspace while preserving your authenticated Administrator identity.'
+      ? `Switches the active workspace while preserving your authenticated ${authorization.roleLabel || 'Administrator'} identity.`
       : 'Workspace access is assigned by the server.';
     document.body.dataset.workspace = workspaceId;
     const scopeLabel = currentScopeLabel();
     const scopeSelect = internalShellBar.querySelector('#shellScopeSelect');
-    scopeSelect.innerHTML = `<option value="current">${esc(scopeLabel)}</option>`;
+    const operationalContext = state.operationalContext;
+    scopeSelect.innerHTML = operationalContext?.options?.length
+      ? operationalContext.options
+          .map(
+            (entry) =>
+              `<option value="${esc(entry.value)}"${entry.value === operationalContext.selected?.value ? ' selected' : ''}${entry.available ? '' : ' disabled'}>${esc(entry.label)}${entry.purpose ? ` — ${esc(entry.purpose)}` : ''}</option>`,
+          )
+          .join('')
+      : `<option value="current">${esc(scopeLabel)}</option>`;
     internalShellBar.querySelector('[data-shell-workspace-crumb]').textContent = workspace.label;
     internalShellBar.querySelector('[data-shell-module-crumb]').textContent = currentModuleLabel();
     if (backendMode === 'rest') {
@@ -3682,6 +3703,7 @@ export function createRuntimeExtensions(options) {
         element.textContent = displayName;
       });
     internalShellBar.querySelector('[data-shell-account-role]').textContent = roleLabel;
+    internalShellBar.querySelector('[data-shell-account-viewing]').textContent = `Viewing: ${workspace.label}`;
     internalShellBar.querySelector('[data-shell-account-scope]').textContent = scopeLabel;
     internalShellBar.querySelector('[data-shell-account-initial]').textContent =
       displayName.trim().charAt(0).toUpperCase() || 'A';
@@ -3748,6 +3770,7 @@ export function createRuntimeExtensions(options) {
             <select id="shellScopeSelect" aria-describedby="shellScopeHelp"></select>
           </label>
           <small id="shellScopeHelp">Scope is enforced by server authorization.</small>
+          <span class="sr-only" data-shell-context-announcement aria-live="polite"></span>
         </div>
       </div>
       <div class="internal-shell-context-meta">
@@ -3760,6 +3783,7 @@ export function createRuntimeExtensions(options) {
           <div class="shell-account-menu">
             <strong data-shell-account-name>Authenticated staff</strong>
             <span data-shell-account-role>Authorized</span>
+            <small data-shell-account-viewing>Viewing: Assigned workspace</small>
             <small data-shell-account-scope>Server-assigned scope</small>
             <div data-shell-account-actions></div>
           </div>
@@ -3768,15 +3792,42 @@ export function createRuntimeExtensions(options) {
     header.before(internalShellBar);
     internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', (event) => {
       if (isAdministrator() && workspaceDefinitions[event.target.value]) {
-        history.pushState(history.state, '', workspaceDefinitions[event.target.value].path);
+        const target = new URL(workspaceDefinitions[event.target.value].path, location.origin);
+        target.search = location.search;
+        history.pushState(history.state, '', `${target.pathname}${target.search}`);
+        syncRoutedExperience();
         renderRoleExperience();
         renderInternalShell();
         return;
       }
       event.target.value = workspaceForCurrentUser();
     });
-    internalShellBar.querySelector('#shellScopeSelect').addEventListener('change', (event) => {
-      event.target.value = 'current';
+    internalShellBar.querySelector('#shellScopeSelect').addEventListener('change', async (event) => {
+      const select = event.target;
+      const previous = getState()?.operationalContext?.selected?.value ?? 'current';
+      if (!changeOperationalScope) {
+        select.value = previous;
+        return;
+      }
+      if (hasUnsavedRuntimeState()) {
+        select.value = previous;
+        toast('Finish or clear the current draft before changing operational scope.', true);
+        return;
+      }
+      select.disabled = true;
+      try {
+        await changeOperationalScope(select.value);
+        const label = getState()?.operationalContext?.selected?.label ?? currentScopeLabel();
+        internalShellBar.querySelector('[data-shell-context-announcement]').textContent =
+          `Operational scope changed to ${label}.`;
+        renderInternalShell();
+      } catch (error) {
+        select.value = previous;
+        toast(error.message, true);
+      } finally {
+        select.disabled = false;
+        select.focus({ preventScroll: true });
+      }
     });
     document.addEventListener('click', (event) => {
       if (
@@ -3793,6 +3844,7 @@ export function createRuntimeExtensions(options) {
       accountControlObserver.observe(tools, { childList: true });
     }
     addEventListener('popstate', () => {
+      syncRoutedExperience();
       renderRoleExperience();
       renderInternalShell();
     });
