@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 10 — Complete Director Workspace
+Phase: Phase 11 — Complete Food Workspace
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–9 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -15,6 +15,7 @@ Final amendment deployed runtime: `afe9204828cd51f66ffabf46d0b7a69017c77c65`
 Phase 7 accepted staging runtime: `6c1906ad299edfb878de7f86615287370eca90a8`
 Phase 8 accepted staging runtime: `ffe71817583518ac396d33554820bb1407fce756`
 Phase 9 accepted staging runtime: `e3d3c761369f09807d90982576818a6c8406e637`
+Phase 10 accepted staging runtime: `b789fabb397965af986010a02d8477f6f22da4af`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -28,7 +29,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 9
+## Accepted completion through Phase 10
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -40,6 +41,7 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
 - Phase 7: one real authenticated internal shell, five direct role-workspace routes, safe Administrator workspace switching, governed scope/context controls, and activated department accounts accepted.
 - Phase 8: protected System Owner role, every existing capability/workspace, governed operational scope filtering, and enriched consequential audit context accepted.
 - Phase 9: exception-first Administrator Control Center, complete control/operations destinations, filtered attention signals, and real health/evidence/brand surfaces accepted.
+- Phase 10: decision-first Director Executive Overview, complete leadership destinations, governed progressive detail, and bounded Management & Access accepted.
 - Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
 
 Durable handoffs:
@@ -57,6 +59,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`
 - `.codex/V0_7_PHASE_8_SYSTEM_OWNER_HANDOFF.md`
 - `.codex/V0_7_PHASE_9_ADMIN_WORKSPACE_HANDOFF.md`
+- `.codex/V0_7_PHASE_10_DIRECTOR_WORKSPACE_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -142,8 +145,8 @@ Durable handoffs:
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: audit the real Director workspace against Phase
-10 and complete only its missing leadership, readiness, exception, and
-cross-committee decision workflows.
+One smallest safe next action: audit the real Food workspace against Phase 11
+and complete only its missing deadline-first queue, sourcing, receiving,
+controlled release, and workflow-reference behavior.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

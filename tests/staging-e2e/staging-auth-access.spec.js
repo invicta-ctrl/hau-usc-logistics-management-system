@@ -249,6 +249,7 @@ test('deployed staging authentication and Access Management remain operational',
 
     await shell.getByLabel('Workspace').selectOption('administrator');
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
+    await page.locator('[data-admin-view="referenceAdmin"]').click();
     await page.getByRole('button', { name: /Access Management/u }).click();
     const accessManagement = page.locator('[data-access-management]');
     await expect(accessManagement).toBeVisible();

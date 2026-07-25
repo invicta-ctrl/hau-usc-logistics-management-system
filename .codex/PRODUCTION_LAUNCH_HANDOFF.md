@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–9 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–10 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -223,11 +223,28 @@ Decision: **PRODUCTION NO-GO — PHASES 0–9 AND FOLLOW-UP AMENDMENT ACCEPTED O
 - PR #9 at `e3d3c76` passed all 6 / 6 exact-head checks.
 - Durable handoff: `.codex/V0_7_PHASE_9_ADMIN_WORKSPACE_HANDOFF.md`.
 
+## Phase 10 Director workspace evidence
+
+- The Director Executive Overview now prioritizes decisions, blockers,
+  deadlines, committee readiness, event progress, release readiness, lending
+  exceptions, and inventory alerts over governed operational records.
+- All ten required leadership destinations are working, and progressive detail
+  reports no-data conditions truthfully rather than inventing readiness.
+- Bounded Management & Access projects the real server role, operational scope,
+  committees, and capabilities while keeping administration in its own
+  workspace.
+- Repository acceptance passed 416 unit tests and 108 browser tests. Live
+  governed brand plus the owner-authenticated refreshed Director route,
+  identity/boundary, Admin return, and Access Management scenario passed 2 / 2
+  at exact runtime `b789fab`, schema 19.
+- PR #9 at `b789fab` passed all 6 / 6 exact-head checks.
+- Durable handoff: `.codex/V0_7_PHASE_10_DIRECTOR_WORKSPACE_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 10 Director workspace. Do not
+Complete Phase 11 Food workspace. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

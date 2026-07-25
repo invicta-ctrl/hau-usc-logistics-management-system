@@ -57,6 +57,6 @@ Coverage: 9 / 9 Phase 10 requirement groups mapped.
 - [x] Mobile navigation, keyboard focus, and no-overflow tests
 - [x] `npm run check`
 - [x] Full Playwright
-- [ ] Exact staging health/readiness and live Phase 10 smoke
-- [ ] Exact-head PR checks
-- [ ] Production remains untouched
+- [x] Exact staging health/readiness and live Phase 10 smoke
+- [x] Exact-head PR checks
+- [x] Production remains untouched
