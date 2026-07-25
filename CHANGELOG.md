@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 9 Administrator workspace (2026-07-26)
+
+### Added
+
+- Exception-first Administrator Control Center with nine actionable access, evidence, reference, inventory, request, lending, release, environment, and cross-workspace signals.
+- Complete Operations destination map, including distinct Release Desk, validated Receiving, and Evidence status paths.
+- Real read-only Operational Health, Evidence status, and governed Brand Asset surfaces inside the existing authorized control desk.
+
+### Fixed
+
+- System Owner can see Lending Usage when its server capability projection includes `lending.usage.view`.
+
+### Verified
+
+- `npm run check`: 61 Vitest files / 416 tests; full Playwright 104 passed / 250 intentional skips.
+- Exact staging runtime `e3d3c76`, schema 19, passed governed brand and complete owner-authenticated Administrator/Access Management acceptance; PR #9 passed 6 / 6 checks.
+
+### Boundary
+
+- No migration or production action occurred. Advanced access, brand lifecycle, and owner operational-health mutations remain in their later master phases. Production remains NO-GO; Phase 10 is active.
+
 ## Unreleased - v0.7.0 Phase 8 System Owner and operational scope (2026-07-26)
 
 ### Added

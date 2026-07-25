@@ -186,7 +186,31 @@ test('deployed staging authentication and Access Management remain operational',
     await shell.getByLabel('Workspace').selectOption('administrator');
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
 
-    await page.locator('[data-admin-view="referenceAdmin"]').click();
+    const adminControlCenter = page.locator(
+      '#roleExperiencePanel[data-role-experience="administrator"]',
+    );
+    await expect(adminControlCenter).toBeVisible();
+    await expect(
+      adminControlCenter.getByRole('heading', { name: 'Administrator Control Center' }),
+    ).toBeVisible();
+    for (const name of [
+      'All Request Queues',
+      'Internal Lending Hub',
+      'Release Desk',
+      'Restocking',
+      'Procurement & Deliverables',
+      'Inventory Management',
+      'Receiving',
+      'Evidence status',
+    ]) {
+      await expect(
+        adminControlCenter.getByRole('button', { name: new RegExp(name, 'u') }),
+      ).toBeVisible();
+    }
+    await adminControlCenter.getByRole('button', { name: /Environment health/u }).click();
+    await expect(page.locator('[data-admin-operational-health]')).toBeVisible();
+    await page.getByRole('button', { name: /Brand Assets/u }).click();
+    await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(4);
     await page.getByRole('button', { name: /Access Management/u }).click();
     const accessManagement = page.locator('[data-access-management]');
     await expect(accessManagement).toBeVisible();

@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 9 Administrator workspace accepted on staging — Phase 10 active
+
+- Exact runtime `e3d3c761369f09807d90982576818a6c8406e637` is healthy and ready on schema 19 / migration `0019_system_owner_operational_scope.sql`.
+- The Administrator Control Center now prioritizes nine actionable exception signals and opens the relevant existing workflow. All required Operations destinations are present, including a distinct Release Desk, validated Receiving, and Evidence status.
+- Access Management, Reference Data, Link Registry, Audit & System, Operational Health, and governed Brand Assets are real control destinations; later advanced lifecycle phases remain separate.
+- Verification: `npm run check` passed with 61 Vitest files / 416 tests; full Playwright passed 104 / 250 intentional skips; deployed brand and owner-authenticated Control Center/Access acceptance passed 2 / 2; PR #9 passed 6 / 6 checks.
+- Production remains NO-GO. Phase 10 owns completion of the Director workspace.
+
 ## v0.7.0 Phase 8 System Owner accepted on staging — Phase 9 active
 
 - Exact product/runtime `ffe71817583518ac396d33554820bb1407fce756` is healthy and ready on schema 19 / migration `0019_system_owner_operational_scope.sql`.

@@ -59,6 +59,6 @@ Coverage: 8 / 8 Phase 9 requirement groups mapped.
 - [x] Existing reference/access/role regressions
 - [x] `npm run check`
 - [x] Full Playwright (104 passed / 250 intentionally skipped)
-- [ ] Exact staging health/readiness and live Phase 9 smoke
-- [ ] Exact-head PR checks
-- [ ] Production remains untouched
+- [x] Exact staging health/readiness and live Phase 9 smoke
+- [x] Exact-head PR checks
+- [x] Production remains untouched
