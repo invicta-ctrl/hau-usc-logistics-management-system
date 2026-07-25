@@ -13,17 +13,16 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 8 — audit and complete System Owner global access, governed workspace
-switching, and operational scope without impersonation or client-side
-authorization expansion.
+Phase 9 — audit and complete the real Administrator workspace as the next
+bounded master-prompt vertical slice.
 
-Phase 7 is accepted on staging at exact product/test candidate `6c1906a`,
-schema 18. Repository acceptance passed 409 unit tests and 99 browser tests;
-the live governed brand and full authentication/Access Management scenarios
-passed; all ten approved department accounts are active and verified; and PR
-#9 exact-head checks passed 6 / 6.
+Phase 8 is accepted on staging at exact product/runtime candidate `ffe7181`,
+schema 19. Repository acceptance passed 416 unit tests, 25 local Worker tests,
+and 100 browser tests; live governed brand and System Owner authentication,
+scope, route recovery, Access Management, and fail-closed checks passed; and
+PR #9 exact-head checks passed 6 / 6.
 
 Durable evidence:
-`.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`.
+`.codex/V0_7_PHASE_8_SYSTEM_OWNER_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

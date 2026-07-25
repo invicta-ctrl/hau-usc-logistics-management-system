@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–8 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -38,10 +38,10 @@ Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED O
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0018 applied/reconciled; later and production migrations pending |
+| 6. Migrations | PARTIAL — staging through 0019 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 7 runtime `6c1906a` |
-| 9. Staging acceptance | PASS THROUGH PHASE 7; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 8 runtime `ffe7181` |
+| 9. Staging acceptance | PASS THROUGH PHASE 8; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -192,12 +192,28 @@ Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED O
 - PR #9 at `6c1906a` passed all 6 / 6 exact-head checks.
 - Durable handoff: `.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`.
 
+## Phase 8 System Owner and operational scope evidence
+
+- A protected `SYSTEM_OWNER` role owns every existing capability, all five real
+  workspaces, and Release Desk without creating an impersonation path.
+- Committee, location, event, and office context is projected from governed
+  references, validated and filtered server-side, recovered through direct
+  routes, and recorded on consequential audit events. Scope never grants a
+  capability; invalid context fails closed.
+- Migration 0019 followed a private staging export, then reconciled schema 19,
+  exactly one active private owner assignment, revoked pre-promotion sessions,
+  and a durable owner audit row.
+- Repository acceptance passed 416 unit tests, 25 local Worker tests, and 100
+  browser tests. Live governed brand and complete owner/auth/scope/Access
+  Management scenarios passed at exact runtime `ffe7181`.
+- PR #9 at `ffe7181` passed all 6 / 6 exact-head checks.
+- Durable handoff: `.codex/V0_7_PHASE_8_SYSTEM_OWNER_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 8 System Owner global access, workspace switching, and governed
-operational scope. Do not
+Complete Phase 9 Administrator workspace. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

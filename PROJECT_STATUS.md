@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 8 System Owner accepted on staging — Phase 9 active
+
+- Exact product/runtime `ffe71817583518ac396d33554820bb1407fce756` is healthy and ready on schema 19 / migration `0019_system_owner_operational_scope.sql`.
+- One protected System Owner can enter every real workspace and Release Desk without impersonation. Governed committee, location, event, and office scopes filter server reads, reject invalid context, and never grant authority.
+- Consequential operational audits capture the real actor/role, active workspace, selected scope, reason, time, and correlation identifier. Normal Administrator permissions remain capability-bound.
+- Verification: `npm run check` passed with 61 Vitest files / 416 tests; local Worker passed 25 / 25; full Playwright passed 100 / 242 intentional skips; deployed brand and complete owner/auth/Access Management acceptance passed 2 / 2; PR #9 passed 6 / 6 checks.
+- Production remains NO-GO. Phase 9 owns completion of the Administrator workspace.
+
 ## v0.7.0 Phase 7 shared internal shell accepted on staging — Phase 8 active
 
 - Exact product/test runtime `6c1906ad299edfb878de7f86615287370eca90a8` is healthy and ready on schema 18 / migration `0018_authenticated_request_center.sql`.

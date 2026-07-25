@@ -3,6 +3,20 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
+- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 8 product/runtime `ffe71817583518ac396d33554820bb1407fce756`; upstream parity verified.
+- **Current phase/stage:** Phases 0–8 and the complete amendment accepted on staging; Phase 9 active; production NO-GO.
+- **Accepted scope:** Phase 9 of `.codex/specs/v0.7.0-production-master.md` under the accepted follow-up amendment and shared efficiency contract.
+- **Completed work:** protected System Owner role/capability registry, every real workspace and Release Desk, governed operational-scope catalogs/filtering/URL recovery, invalid-scope denial, and enriched consequential audit context.
+- **Tests verified:** `npm run check` (61 files / 416 tests), local Worker 25 / 25, full Playwright 100 / 242 intentional skips, deployed Phase 8 2 / 2, and remote CI 6 / 6.
+- **External actions:** private pre-0019 export, staging migration 0019, one approved private owner promotion, session revocation, audited reconciliation, and exact-SHA staging deployment. Production and Google sources were untouched.
+- **Rollback:** private pre-Phase 8 export SHA-256 `3332b991c9c36f16d837584e4363db9375809bbf2ad8a574685a9d7e609cbc45`; prior immutable Worker versions retained; formal rehearsal remains Phase 24.
+- **Blocker:** none for Phase 9 implementation; real lendable policy/data and approved upcoming-event values remain absent and must not be invented.
+- **Next action:** audit the existing Administrator workspace against Phase 9 and implement only the missing coherent workflow slice.
+- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
+
+## Prior Phase 7 resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 7 product/test runtime `6c1906ad299edfb878de7f86615287370eca90a8`; upstream parity verified.
 - **Current phase/stage:** Phases 0–7 and the complete amendment accepted on staging; Phase 8 active; production NO-GO.
 - **Accepted scope:** Phase 8 of `.codex/specs/v0.7.0-production-master.md` under the accepted follow-up amendment and shared efficiency contract.

@@ -1,14 +1,14 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–8 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 7 product/test candidate `6c1906a`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact head `6c1906a`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `6c1906a`, D1 connected, schema 18, migration 0018 |
+| Git handshake | exact pushed Phase 8 product/runtime candidate `ffe7181`, upstream parity before status checkpoint | PASS |
+| PR #9 / CI | exact head `ffe7181`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `ffe7181`, D1 connected, schema 19, migration 0019 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -86,6 +86,13 @@ Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED O
 | Department account activation | live fresh login/session reconciliation and Admin Accounts UI | PASS — 10 / 10 ACTIVE REQUESTER mappings; reset controls visible |
 | Phase 7 deployed acceptance | governed R2 brand scenario; full auth/workspace/Access Management scenario | PASS — 2 / 2 at exact `6c1906a`, schema 18 |
 | Phase 7 private backup | outside-Git pre-activation export SHA-256 `ddbdd9aefdde2b6013dcd8baf1702346bda89e68af180fbd19892e7e33011cb8` | CAPTURED |
+| Phase 8 System Owner and operational scope | `.codex/V0_7_PHASE_8_SYSTEM_OWNER_HANDOFF.md`; exact runtime `ffe7181` | PASS ON STAGING |
+| Phase 8 repository acceptance | `npm run check`; local Worker; full Playwright | PASS — 61 files / 416 unit tests; 25 / 25 Worker; 100 browser passes / 242 intentional skips |
+| Migration 0019 | `0019_system_owner_operational_scope.sql`; private pre-export SHA-256 `3332b991c9c36f16d837584e4363db9375809bbf2ad8a574685a9d7e609cbc45` | PASS — schema 19, protected owner role/capabilities, reconciled migration ledger |
+| Owner assignment and session boundary | private approved credential; D1 role/session reconciliation | PASS — exactly one ACTIVE owner; zero active pre-promotion sessions; no credential disclosed |
+| Governed operational scope | committee/location/event/office catalogs, URL recovery, server filtering, invalid-scope denial, enriched audit context | PASS |
+| Phase 8 deployed acceptance | governed brand plus owner auth/scope/route/Access Management lifecycle | PASS — 2 / 2 at exact `ffe7181`, schema 19 |
+| Phase 8 PR/CI | PR #9 exact head `ffe7181` | PASS — open draft, clean/mergeable, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

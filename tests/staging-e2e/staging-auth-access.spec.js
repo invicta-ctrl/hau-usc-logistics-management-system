@@ -103,8 +103,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '18',
-        latestMigration: '0018_authenticated_request_center.sql',
+        schemaVersion: '19',
+        latestMigration: '0019_system_owner_operational_scope.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -155,6 +155,7 @@ test('deployed staging authentication and Access Management remain operational',
     expect(ownerLogin.status()).toBe(200);
     const ownerLoginResult = await ownerLogin.json();
     expect(ownerLoginResult.state).toBe('AUTHENTICATED');
+    expect(ownerLoginResult.user.authorization.roleId).toBe('SYSTEM_OWNER');
     ownerCsrf = ownerLoginResult.csrfToken;
     await expect(page.locator('.app-shell')).toBeVisible();
     await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
@@ -164,15 +165,26 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(shell).toBeVisible();
     await expect(shell.getByLabel('Workspace')).toHaveValue('administrator');
     await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
-    await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
+    await expect(shell.getByLabel('Operational scope')).toHaveValue('ALL:AUTHORIZED');
     await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.0/u);
-    await expect(shell.locator('[data-shell-account-role]')).toHaveText(/ADMINISTRATOR|Administrator/u);
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    await shell.getByLabel('Operational scope').selectOption('COMMITTEE:COM_FOOD');
+    await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_FOOD/u);
     await shell.getByLabel('Workspace').selectOption('food');
-    await expect(page).toHaveURL(/\/app\/food$/u);
-    await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+    await expect(page).toHaveURL(/\/app\/food\?scope=COMMITTEE%3ACOM_FOOD$/u);
+    await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
     await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
+    const refreshedSessionResponse = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'GET' &&
+        new URL(response.url()).pathname === '/api/auth/session',
+    );
+    await page.reload();
+    ownerCsrf = (await (await refreshedSessionResponse).json()).csrfToken;
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+    await expect(shell.getByLabel('Operational scope')).toHaveValue('COMMITTEE:COM_FOOD');
     await shell.getByLabel('Workspace').selectOption('administrator');
-    await expect(page).toHaveURL(/\/app\/admin$/u);
+    await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
 
     await page.locator('[data-admin-view="referenceAdmin"]').click();
     await page.getByRole('button', { name: /Access Management/u }).click();
@@ -214,8 +226,8 @@ test('deployed staging authentication and Access Management remain operational',
         confirmed: true,
       },
     });
-    expect(created.status()).toBe(200);
     const createdResult = await created.json();
+    expect(created.status(), JSON.stringify(createdResult)).toBe(200);
     cleanupAccessId = originalTargetAccessId;
 
     const starterLogin = await login(

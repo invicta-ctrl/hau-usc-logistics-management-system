@@ -31,8 +31,7 @@ Coverage: 8 / 8 Phase 8 requirement groups mapped.
 
 ## Status
 
-Local implementation and acceptance passed; staging migration, owner assignment,
-deployment, and live acceptance remain pending.
+Accepted on staging. Phase 9 is active.
 
 ## Vertical slices
 
@@ -70,8 +69,8 @@ deployment, and live acceptance remain pending.
 - [x] Focused desktop/mobile workspace and scope tests
 - [x] `npm run check`
 - [x] Full Playwright (100 passed / 242 intentionally skipped)
-- [ ] Private pre-0019 staging export and hash
-- [ ] Migration 0019 and owner assignment reconciliation
-- [ ] Exact staging health/readiness and live Phase 8 smoke
-- [ ] Exact-head PR checks
-- [ ] Production remains untouched
+- [x] Private pre-0019 staging export and hash
+- [x] Migration 0019 and owner assignment reconciliation
+- [x] Exact staging health/readiness and live Phase 8 smoke
+- [x] Exact-head PR checks
+- [x] Production remains untouched

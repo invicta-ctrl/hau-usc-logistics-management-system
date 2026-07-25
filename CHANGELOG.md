@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 8 System Owner and operational scope (2026-07-26)
+
+### Added
+
+- Protected `SYSTEM_OWNER` authorization with every existing capability and access to all five real workspaces plus Release Desk.
+- Server-governed committee, location, event, and office scope catalogs with URL recovery, read filtering, fail-closed validation, and consequential audit context.
+- Migration 0019 and local/deployed owner, scope, route, filtering, audit, and Access Management regression coverage.
+
+### Verified
+
+- `npm run check`: 61 Vitest files / 416 tests; local Worker 25 / 25; full Playwright 100 passed / 242 intentional skips.
+- Exact staging runtime `ffe7181`, schema 19, passed governed brand and complete System Owner/authentication/scope/Access Management acceptance; PR #9 passed 6 / 6 checks.
+
+### Boundary
+
+- One approved staging credential was promoted privately and its sessions revoked; no secret entered Git. No production mutation occurred. Production remains NO-GO; Phase 9 is active.
+
 ## Unreleased - v0.7.0 Phase 7 shared internal shell (2026-07-26)
 
 ### Added
