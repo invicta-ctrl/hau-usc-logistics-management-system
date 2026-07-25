@@ -323,7 +323,8 @@ test('deployed staging authentication and Access Management remain operational',
     expect(disabled.status()).toBe(200);
     cleanupAccessId = '';
 
-    await page.getByRole('button', { name: 'Sign out' }).click();
+    await shell.locator('.shell-account > summary').click();
+    await shell.getByRole('button', { name: 'Sign out' }).click();
     await expect(page.getByLabel('Access ID')).toBeVisible();
     await page.goto('/request');
     await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
