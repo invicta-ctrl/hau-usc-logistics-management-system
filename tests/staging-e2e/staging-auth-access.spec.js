@@ -160,9 +160,33 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
     expect(new URL(page.url()).pathname).toBe('/app/admin');
 
+    const shell = page.locator('[data-internal-shell-context]');
+    await expect(shell).toBeVisible();
+    await expect(shell.getByLabel('Workspace')).toHaveValue('administrator');
+    await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+    await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
+    await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.0/u);
+    await expect(shell.locator('[data-shell-account-role]')).toHaveText(/ADMINISTRATOR|Administrator/u);
+    await shell.getByLabel('Workspace').selectOption('food');
+    await expect(page).toHaveURL(/\/app\/food$/u);
+    await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+    await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
+    await shell.getByLabel('Workspace').selectOption('administrator');
+    await expect(page).toHaveURL(/\/app\/admin$/u);
+
     await page.locator('[data-admin-view="referenceAdmin"]').click();
     await page.getByRole('button', { name: /Access Management/u }).click();
-    await expect(page.locator('[data-access-management]')).toBeVisible();
+    const accessManagement = page.locator('[data-access-management]');
+    await expect(accessManagement).toBeVisible();
+    const departmentSearch = accessManagement.getByLabel('Search');
+    await departmentSearch.fill('DOL_2026');
+    const departmentRow = page.locator('[data-access-results] .access-account-row');
+    await expect(departmentRow).toHaveCount(1);
+    await expect(departmentRow).toContainText('DOL_2026');
+    await expect(departmentRow).toContainText('Department of Logistics');
+    await expect(departmentRow).toContainText('ACTIVE');
+    await expect(departmentRow.getByRole('button', { name: 'Reset password' })).toBeVisible();
+    await departmentSearch.fill('');
     await expect(page.locator('[data-access-results] .access-account-row').first()).toBeVisible();
 
     const created = await ownerRequest.post('/api/admin/access/create-account', {

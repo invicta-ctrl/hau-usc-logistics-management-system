@@ -362,6 +362,8 @@ export function createRuntimeExtensions(options) {
   let sharedMobileNav = null;
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
+  let internalShellBar = null;
+  let accountControlObserver = null;
   let lendingApprovalRoot = null;
   let releaseConfirmationInstalled = false;
   let releaseFormObserver = null;
@@ -3553,6 +3555,247 @@ export function createRuntimeExtensions(options) {
     sharedMobileNav?.querySelector('[data-shared-mobile-more]')?.setAttribute('aria-expanded', 'false');
   };
 
+  const workspaceDefinitions = Object.freeze({
+    administrator: { label: 'Administrator', path: '/app/admin' },
+    director: { label: 'Director', path: '/app/director' },
+    food: { label: 'Food Committee', path: '/app/food' },
+    'inventory-pantry': { label: 'Inventory & Pantry', path: '/app/inventory' },
+    materials: { label: 'Materials & Documentation', path: '/app/materials' },
+  });
+
+  const isAdministrator = () =>
+    String(
+      getState()?.currentUser?.authorization?.roleId ?? getState()?.currentUser?.role ?? '',
+    ).toUpperCase() === 'ADMINISTRATOR';
+
+  const workspaceFromPath = () =>
+    Object.entries(workspaceDefinitions).find(
+      ([, definition]) =>
+        location.pathname === definition.path || location.pathname.startsWith(`${definition.path}/`),
+    )?.[0] ?? '';
+
+  const workspaceForCurrentUser = () => {
+    const routedWorkspace = workspaceFromPath();
+    if (isAdministrator() && workspaceDefinitions[routedWorkspace]) return routedWorkspace;
+    const experience = normalizedExperience();
+    if (workspaceDefinitions[experience]) return experience;
+    const user = getState()?.currentUser ?? {};
+    const roleId = String(user.authorization?.roleId ?? user.role ?? '').toUpperCase();
+    if (roleId === 'ADMINISTRATOR') return 'administrator';
+    if (roleId === 'DIRECTOR') return 'director';
+    const committeeIds = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
+    if (committeeIds.includes('COM_FOOD')) return 'food';
+    if (committeeIds.includes('COM_INVENTORY_PANTRY')) return 'inventory-pantry';
+    if (committeeIds.includes('COM_MATERIALS')) return 'materials';
+    return 'administrator';
+  };
+
+  const currentScopeLabel = () => {
+    const authorization = getState()?.currentUser?.authorization ?? {};
+    if (authorization.scopeMode === 'ALL') return 'All authorized operations';
+    if (authorization.scopeMode === 'SELF') return 'My own records';
+    const committees = authorization.committees ?? [];
+    if (committees.length) return committees.map((committee) => committee.name).join(', ');
+    return 'Server-assigned scope';
+  };
+
+  const currentModuleLabel = () => {
+    const active = document.querySelector('#primaryNav [data-view].active');
+    const copy = active?.querySelector('.nav-copy');
+    const label = copy?.childNodes?.[0]?.textContent?.trim();
+    return label || document.querySelector('#pageTitle')?.textContent?.trim() || 'Operations Overview';
+  };
+
+  const operationalAttentionCount = () => {
+    const state = getState() ?? {};
+    const statusIn = (row, values) => values.has(String(row?.status ?? '').toUpperCase());
+    const requestAttention = (state.requests ?? []).filter((row) =>
+      statusIn(row, new Set(['FOR_REVIEW', 'NEEDS_INFORMATION', 'BLOCKED', 'WAITING_FOR_BUDGET'])),
+    ).length;
+    const lendingAttention = (state.lendingTickets ?? []).filter((row) =>
+      statusIn(row, new Set(['FOR_REVIEW', 'OVERDUE', 'DAMAGED', 'LOST'])),
+    ).length;
+    const inventoryAttention = (state.inventoryItems ?? []).filter(
+      (item) =>
+        item?.status === 'VERIFY' ||
+        Number(item?.openingOnHand ?? 0) <= Number(item?.reorderThreshold ?? 0),
+    ).length;
+    return requestAttention + lendingAttention + inventoryAttention;
+  };
+
+  const adoptAccountControls = () => {
+    if (!internalShellBar) return;
+    const actions = internalShellBar.querySelector('[data-shell-account-actions]');
+    const tools = document.querySelector('.app-header .header-tools');
+    const logout = tools?.querySelector('[data-auth-logout]');
+    if (logout && actions && !actions.contains(logout)) actions.append(logout);
+    tools?.querySelector('.auth-session-label')?.remove();
+  };
+
+  const renderInternalShell = () => {
+    if (!internalShellBar || isRequestOnly()) return;
+    const state = getState() ?? {};
+    const user = state.currentUser ?? {};
+    const authorization = user.authorization ?? {};
+    const workspaceId = workspaceForCurrentUser();
+    const workspace = workspaceDefinitions[workspaceId] ?? workspaceDefinitions.administrator;
+    const workspaceSelect = internalShellBar.querySelector('#shellWorkspaceSelect');
+    const administrator = isAdministrator();
+    workspaceSelect.innerHTML = Object.entries(workspaceDefinitions)
+      .map(([id, definition]) => {
+        const selected = id === workspaceId ? ' selected' : '';
+        const unavailable = !administrator && id !== workspaceId;
+        return `<option value="${esc(id)}"${selected}${unavailable ? ' disabled' : ''}>${esc(definition.label)}${unavailable ? ' — unavailable for this account' : ''}</option>`;
+      })
+      .join('');
+    internalShellBar.querySelector('#shellWorkspaceHelp').textContent = administrator
+      ? 'Switches the active workspace while preserving your authenticated Administrator identity.'
+      : 'Workspace access is assigned by the server.';
+    document.body.dataset.workspace = workspaceId;
+    const scopeLabel = currentScopeLabel();
+    const scopeSelect = internalShellBar.querySelector('#shellScopeSelect');
+    scopeSelect.innerHTML = `<option value="current">${esc(scopeLabel)}</option>`;
+    internalShellBar.querySelector('[data-shell-workspace-crumb]').textContent = workspace.label;
+    internalShellBar.querySelector('[data-shell-module-crumb]').textContent = currentModuleLabel();
+    if (backendMode === 'rest') {
+      document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
+    }
+    const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
+    const version = String(state.appVersion ?? '0.7.0');
+    internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
+    const attention = operationalAttentionCount();
+    const attentionButton = internalShellBar.querySelector('[data-shell-attention]');
+    attentionButton.querySelector('strong').textContent = String(attention);
+    attentionButton.setAttribute(
+      'aria-label',
+      `${attention} operational item${attention === 1 ? '' : 's'} need attention. Open overview.`,
+    );
+    const displayName = user.displayName || 'Authenticated staff';
+    const roleLabel = authorization.roleLabel || authorization.roleId || user.role || 'Authorized';
+    internalShellBar
+      .querySelectorAll('[data-shell-account-name]')
+      .forEach((element) => {
+        element.textContent = displayName;
+      });
+    internalShellBar.querySelector('[data-shell-account-role]').textContent = roleLabel;
+    internalShellBar.querySelector('[data-shell-account-scope]').textContent = scopeLabel;
+    internalShellBar.querySelector('[data-shell-account-initial]').textContent =
+      displayName.trim().charAt(0).toUpperCase() || 'A';
+    adoptAccountControls();
+  };
+
+  const applyProductionShellCopy = () => {
+    if (backendMode !== 'rest' || isRequestOnly()) return;
+    const user = getState()?.currentUser ?? {};
+    const replacements = new Map([
+      ['compositeRequesterName', user.displayName || ''],
+      [
+        'compositeDepartment',
+        user.committee || user.authorization?.roleLabel || user.authorization?.roleId || '',
+      ],
+      ['compositePurpose', ''],
+    ]);
+    replacements.forEach((value, name) => {
+      const input = document.querySelector(`[name="${name}"]`);
+      if (!input || !/preview/iu.test(input.value)) return;
+      input.value = value;
+      input.defaultValue = value;
+    });
+    const freshness = document.querySelector('#dashboardFreshness');
+    if (freshness?.textContent.includes('local preview calculation')) {
+      freshness.textContent = freshness.textContent.replace(
+        'local preview calculation',
+        'server-authorized operational data',
+      );
+    }
+    document.querySelectorAll('#overviewMetrics small').forEach((summary) => {
+      if (summary.textContent.trim() === 'Mock Drive metadata retained') {
+        summary.textContent = 'Evidence metadata available to authorized staff';
+      }
+    });
+    const upcomingEmptyState = document.querySelector('#upcomingEvents .empty');
+    if (upcomingEmptyState?.textContent.trim() === 'No upcoming events in demo data.') {
+      upcomingEmptyState.textContent = 'No approved upcoming events are available.';
+    }
+    document.querySelectorAll('.preview-badge').forEach((badge) => badge.remove());
+  };
+
+  const installInternalShell = () => {
+    if (isRequestOnly() || internalShellBar || document.querySelector('[data-internal-shell-context]'))
+      return;
+    const header = document.querySelector('.app-header');
+    if (!header) return;
+    internalShellBar = document.createElement('section');
+    internalShellBar.className = 'internal-shell-context';
+    internalShellBar.dataset.internalShellContext = '';
+    internalShellBar.setAttribute('aria-label', 'Current logistics workspace context');
+    internalShellBar.innerHTML = `
+      <div class="internal-shell-context-primary">
+        <nav class="shell-breadcrumbs" aria-label="Breadcrumb">
+          <span data-shell-workspace-crumb></span><span aria-hidden="true">/</span>
+          <strong data-shell-module-crumb aria-current="page"></strong>
+        </nav>
+        <div class="shell-context-controls">
+          <label for="shellWorkspaceSelect">Workspace
+            <select id="shellWorkspaceSelect" aria-describedby="shellWorkspaceHelp"></select>
+          </label>
+          <small id="shellWorkspaceHelp">Workspace access is assigned by the server.</small>
+          <label for="shellScopeSelect">Operational scope
+            <select id="shellScopeSelect" aria-describedby="shellScopeHelp"></select>
+          </label>
+          <small id="shellScopeHelp">Scope is enforced by server authorization.</small>
+        </div>
+      </div>
+      <div class="internal-shell-context-meta">
+        <span class="shell-release-indicator" data-shell-release role="status"></span>
+        <button class="shell-attention" type="button" data-shell-attention data-go="overview">
+          <span>Attention</span><strong>0</strong>
+        </button>
+        <details class="shell-account">
+          <summary><span class="shell-account-initial" data-shell-account-initial aria-hidden="true">A</span><span data-shell-account-name>Authenticated staff</span></summary>
+          <div class="shell-account-menu">
+            <strong data-shell-account-name>Authenticated staff</strong>
+            <span data-shell-account-role>Authorized</span>
+            <small data-shell-account-scope>Server-assigned scope</small>
+            <div data-shell-account-actions></div>
+          </div>
+        </details>
+      </div>`;
+    header.before(internalShellBar);
+    internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', (event) => {
+      if (isAdministrator() && workspaceDefinitions[event.target.value]) {
+        history.pushState(history.state, '', workspaceDefinitions[event.target.value].path);
+        renderRoleExperience();
+        renderInternalShell();
+        return;
+      }
+      event.target.value = workspaceForCurrentUser();
+    });
+    internalShellBar.querySelector('#shellScopeSelect').addEventListener('change', (event) => {
+      event.target.value = 'current';
+    });
+    document.addEventListener('click', (event) => {
+      if (
+        event.target.closest(
+          '#primaryNav [data-view], [data-go], [data-shared-mobile-view], [data-shared-more-view]',
+        )
+      ) {
+        queueMicrotask(() => renderInternalShell());
+      }
+    });
+    const tools = document.querySelector('.app-header .header-tools');
+    if (tools && !accountControlObserver) {
+      accountControlObserver = new MutationObserver(() => adoptAccountControls());
+      accountControlObserver.observe(tools, { childList: true });
+    }
+    addEventListener('popstate', () => {
+      renderRoleExperience();
+      renderInternalShell();
+    });
+    renderInternalShell();
+    applyProductionShellCopy();
+  };
+
   const installSharedMobileNav = () => {
     if (isRequestOnly() || sharedMobileNav || document.querySelector('[data-shared-mobile-nav]')) return;
     const primaryNav = document.querySelector('#primaryNav');
@@ -3617,6 +3860,8 @@ export function createRuntimeExtensions(options) {
   };
 
   const normalizedExperience = () => {
+    const routedWorkspace = workspaceFromPath();
+    if (isAdministrator() && workspaceDefinitions[routedWorkspace]) return routedWorkspace;
     const value = String(document.body.dataset.experience ?? '')
       .trim()
       .toLowerCase();
@@ -3906,7 +4151,10 @@ export function createRuntimeExtensions(options) {
     panel.setAttribute('aria-live', 'polite');
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
-      roleExperienceObserver = new MutationObserver(() => renderRoleExperience());
+      roleExperienceObserver = new MutationObserver(() => {
+        renderRoleExperience();
+        renderInternalShell();
+      });
       roleExperienceObserver.observe(document.body, {
         attributes: true,
         attributeFilter: ['data-experience'],
@@ -3963,6 +4211,7 @@ export function createRuntimeExtensions(options) {
     installLendingUsage();
     installRoleExperience();
     renderRoleExperience();
+    installInternalShell();
     installSharedMobileNav();
     installReleaseConfirmation();
     installCanvassQuality();
@@ -4014,6 +4263,9 @@ export function createRuntimeExtensions(options) {
   const afterRender = () => {
     syncSharedMobileNav();
     renderRoleExperience();
+    installInternalShell();
+    renderInternalShell();
+    applyProductionShellCopy();
     lending?.setItems(getState()?.inventoryItems ?? []);
     document.querySelectorAll('#lendingTickets .ticket p').forEach((row) => {
       row.childNodes.forEach((node) => {

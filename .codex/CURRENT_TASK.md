@@ -17,6 +17,12 @@ Phase 7 — audit and complete the shared internal shell, server-routed
 navigation, responsive workspace switching, and real role workspaces against
 the accepted detailed visual references.
 
+Priority follow-up: activate and verify the ten governed staging department
+accounts from the owner-restricted credential handoff, verify their Admin
+Accounts rows and reset controls, and finish real Administrator workspace
+switching without changing identity, impersonating another role, or bypassing
+server authorization.
+
 The complete follow-up amendment and master Phase 6 are accepted on staging at
 exact runtime `afe9204`, schema 18. The 58-case matrix, 409 unit tests,
 95 browser passes, functional deployed 4 / 4 at `60a0138`, exact-head

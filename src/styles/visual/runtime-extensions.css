@@ -71,20 +71,23 @@
   --shell-shadow: 0 18px 56px rgba(53, 5, 7, 0.12);
 }
 
-body[data-experience='food'] {
+body[data-experience='food'],
+body[data-workspace='food'] {
   --role-accent: #c65f1c;
   --role-accent-soft: #fff0df;
   --role-accent-ink: #79370d;
 }
 
 body[data-experience='inventory'],
-body[data-experience='inventory-pantry'] {
+body[data-experience='inventory-pantry'],
+body[data-workspace='inventory-pantry'] {
   --role-accent: #d59a18;
   --role-accent-soft: #fff2b9;
   --role-accent-ink: #805107;
 }
 
-body[data-experience='materials'] {
+body[data-experience='materials'],
+body[data-workspace='materials'] {
   --role-accent: #356a88;
   --role-accent-soft: #e8f2f7;
   --role-accent-ink: #244e66;
@@ -92,7 +95,9 @@ body[data-experience='materials'] {
 
 body[data-experience='admin'],
 body[data-experience='administrator'],
-body[data-experience='director'] {
+body[data-experience='director'],
+body[data-workspace='administrator'],
+body[data-workspace='director'] {
   --role-accent: #b77917;
   --role-accent-soft: #fff2c5;
   --role-accent-ink: #6f4507;
@@ -391,5 +396,266 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
 
   .access-account-actions {
     justify-content: flex-start;
+  }
+}
+
+/* Phase 7: one truthful, server-scoped context bar across all internal workspaces. */
+.internal-shell-context {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  margin: -2px 0 22px;
+  padding: 12px 14px;
+  border: 1px solid #e4d6bd;
+  border-radius: 16px;
+  background: rgba(255, 253, 248, .96);
+  box-shadow: 0 10px 30px rgba(53, 5, 7, .07);
+}
+
+.internal-shell-context-primary,
+.internal-shell-context-meta,
+.shell-context-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.internal-shell-context-primary {
+  flex-wrap: wrap;
+}
+
+.shell-breadcrumbs {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #735f5c;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.shell-breadcrumbs strong {
+  overflow: hidden;
+  color: #350507;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-context-controls {
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.shell-context-controls label {
+  display: grid;
+  gap: 4px;
+  color: #735f5c;
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.shell-context-controls select {
+  min-width: 170px;
+  min-height: 38px;
+  padding: 7px 30px 7px 10px;
+  border-color: #d8c39a;
+  color: #351719;
+  background-color: #fffdf8;
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: none;
+}
+
+.shell-context-controls small {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.internal-shell-context-meta {
+  justify-content: flex-end;
+}
+
+.shell-release-indicator {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid #cfb276;
+  border-radius: 999px;
+  color: #654106;
+  background: #fff8df;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+
+.shell-attention {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--role-accent) 45%, #d8c39a);
+  border-radius: 11px;
+  color: #351719;
+  background: var(--role-accent-soft);
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.shell-attention strong {
+  display: grid;
+  min-width: 22px;
+  min-height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  background: var(--role-accent-ink);
+  font-size: 10px;
+}
+
+.shell-account {
+  position: relative;
+}
+
+.shell-account > summary {
+  display: flex;
+  min-height: 38px;
+  max-width: 210px;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 9px 5px 5px;
+  border: 1px solid #d8c39a;
+  border-radius: 12px;
+  color: #351719;
+  background: #fffdf8;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 800;
+  list-style: none;
+}
+
+.shell-account > summary::-webkit-details-marker {
+  display: none;
+}
+
+.shell-account > summary > span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shell-account-initial {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9px;
+  color: #fff;
+  background: #5e0b10;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.shell-account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  min-width: 250px;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #d8c39a;
+  border-radius: 14px;
+  background: #fffdf8;
+  box-shadow: 0 18px 50px rgba(53, 5, 7, .16);
+}
+
+.shell-account:not([open]) .shell-account-menu {
+  display: none;
+}
+
+.shell-account-menu > span,
+.shell-account-menu > small {
+  color: #735f5c;
+  font-size: 10px;
+}
+
+.shell-account-menu [data-shell-account-actions] {
+  display: grid;
+  margin-top: 7px;
+}
+
+.shell-account-menu [data-auth-logout] {
+  width: 100%;
+}
+
+@media (max-width: 1050px) {
+  .internal-shell-context {
+    grid-template-columns: 1fr;
+  }
+
+  .internal-shell-context-meta {
+    justify-content: flex-start;
+  }
+
+  .shell-context-controls {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .internal-shell-context {
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 11px;
+    border-radius: 14px;
+  }
+
+  .internal-shell-context-primary,
+  .shell-context-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .shell-breadcrumbs {
+    width: 100%;
+  }
+
+  .shell-context-controls select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .internal-shell-context-meta {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .shell-release-indicator,
+  .shell-attention {
+    justify-content: center;
+  }
+
+  .shell-account > summary {
+    max-width: none;
+  }
+
+  .shell-account-menu {
+    right: 0;
+    width: min(280px, calc(100vw - 44px));
+    min-width: 0;
   }
 }

@@ -9,6 +9,23 @@ test('HTTP mode requires Access ID login and starter activation without role sel
     'One focused browser proves the Phase 1 authentication gate.',
   );
   const bootstrap = createEmptyBootstrapFixture({ backendMode: 'rest' });
+  bootstrap.currentUser = {
+    id: 'SYNTHETIC-USER-001',
+    displayName: 'Synthetic Operator',
+    role: 'DOL_STAFF',
+    committee: 'Food Committee',
+    permissions: {},
+    scopes: { committee: ['COM_FOOD'], organization: [] },
+    authorization: {
+      roleId: 'DOL_STAFF',
+      roleLabel: 'DOL Staff',
+      scopeMode: 'COMMITTEE',
+      committeeIds: ['COM_FOOD'],
+      committees: [{ id: 'COM_FOOD', name: 'Food Committee' }],
+      capabilities: [],
+      active: true,
+    },
+  };
   const submitted = [];
 
   await page.addInitScript(() => {
@@ -68,7 +85,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
     }),
   );
 
-  await page.goto('/');
+  await page.goto('/app/admin');
   expect(await page.evaluate(() => globalThis.__HAU_RUNTIME_CONFIG__?.backendMode)).toBe('rest');
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
   await expect(page.getByLabel('Access ID or verified HAU-USC email')).toBeVisible();
@@ -92,13 +109,117 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await activationForm.getByRole('button', { name: 'Activate account' }).click();
 
   await expect(page.locator('.app-shell')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(page.locator('[data-auth-logout]')).toHaveCount(1);
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
   await expect(page).toHaveURL(/\/app\/food$/);
   await expect(page.locator('#authGateway')).toHaveCount(0);
+  const shell = page.locator('[data-internal-shell-context]');
+  await expect(shell).toBeVisible();
+  await expect(shell.getByLabel('Workspace')).toHaveValue('food');
+  await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
+  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
+  await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
+  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.0/u);
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Food Committee',
+  );
+  await shell.locator('.shell-account > summary').click();
+  await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
+  await expect(shell).not.toContainText(
+    /Role-resolved preview account|No writes|Synthetic data|Suite preview/u,
+  );
+  await expect(page.locator('.app-shell')).not.toContainText(
+    /Mock Drive metadata retained|No upcoming events in demo data|Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
+  );
   expect(submitted[0]).toEqual({ accessId: 'HAU-FOOD-001', password: 'Temporary!Password9472' });
   expect(submitted[1]).not.toHaveProperty('roleId');
   expect(submitted[1]).not.toHaveProperty('committeeIds');
+});
+
+test('authenticated Administrator switches real workspace routes without changing identity', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop route-recovery proof are sufficient.',
+  );
+  const bootstrap = createEmptyBootstrapFixture({ backendMode: 'rest' });
+  let sessionCalls = 0;
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = {
+      backendMode: 'rest',
+      httpApiBaseUrl: '',
+      appEnvironment: 'staging',
+    };
+  });
+  await page.route('**/api/auth/session', (route) => {
+    sessionCalls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        state: 'AUTHENTICATED',
+        csrfToken: 'administrator-csrf',
+        user: {
+          accountId: 'SYNTHETIC-ADMINISTRATOR',
+          displayName: 'Authorized Administrator',
+          experienceId: 'administrator',
+          authorization: {
+            roleId: 'ADMINISTRATOR',
+            roleLabel: 'Administrator',
+            scopeMode: 'ALL',
+            committeeIds: [],
+            capabilities: ['admin_access'],
+          },
+        },
+      }),
+    });
+  });
+  await page.route('**/api/getBootstrapData', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, data: bootstrap }),
+    }),
+  );
+
+  await page.goto('/app/food');
+  await expect(page.locator('.app-shell')).toBeVisible();
+  await expect(page).toHaveURL(/\/app\/food$/u);
+  await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+  const shell = page.locator('[data-internal-shell-context]');
+  await expect(shell.getByLabel('Workspace')).toHaveValue('food');
+  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText(/ADMINISTRATOR|Administrator/u);
+  await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
+
+  await shell.getByLabel('Workspace').selectOption('materials');
+  await expect(page).toHaveURL(/\/app\/materials$/u);
+  await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
+  await expect(page).toHaveTitle(/Materials & Documentation.*HAU-USC Logistics/u);
+  await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText(
+    'Materials & Documentation',
+  );
+  await expect(page.locator('#roleExperiencePanel')).toHaveAttribute(
+    'data-role-experience',
+    'materials',
+  );
+  await expect(page.locator('.app-shell')).not.toContainText(
+    /Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
+  );
+  expect(sessionCalls).toBe(1);
+
+  for (const [path, workspace] of [
+    ['/app/admin', 'administrator'],
+    ['/app/director', 'director'],
+    ['/app/inventory', 'inventory-pantry'],
+  ]) {
+    await page.goto(path);
+    await expect(page.locator('.app-shell')).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${path}$`, 'u'));
+    await expect(page.locator('body')).toHaveAttribute('data-experience', 'administrator');
+    await expect(page.locator('#shellWorkspaceSelect')).toHaveValue(workspace);
+  }
 });
 
 test('request-only HTTP mode remains outside the internal authentication gate', async ({

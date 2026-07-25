@@ -50,6 +50,11 @@ function routeAuthorizedWorkspace(user) {
     return;
   }
   const target = authorizedWorkspacePath(user);
+  const administrator = user?.authorization?.roleId === 'ADMINISTRATOR';
+  const validInternalWorkspace = Object.values(WORKSPACE_PATHS).some(
+    (path) => location.pathname === path || location.pathname.startsWith(`${path}/`),
+  );
+  if (administrator && validInternalWorkspace) return;
   const alreadyInAuthorizedWorkspace =
     location.pathname === target || location.pathname.startsWith(`${target}/`);
   if (

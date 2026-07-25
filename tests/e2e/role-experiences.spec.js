@@ -1,4 +1,48 @@
 import { test, expect } from '@playwright/test';
+import { navigateToView } from './navigation.js';
+
+test('shared internal context bar stays truthful, accessible, and responsive', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop shell proof are sufficient.',
+  );
+  await page.goto('/app/admin');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+
+  const shell = page.locator('[data-internal-shell-context]');
+  await expect(shell).toBeVisible();
+  await expect(shell.getByLabel('Workspace')).toHaveValue('administrator');
+  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+  await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Administrator',
+  );
+  await expect(shell.locator('[data-shell-release]')).toContainText(/v0\.7\.0/u);
+  await expect(shell.getByRole('button', { name: /operational items? need attention/u })).toBeVisible();
+  await shell.locator('.shell-account > summary').click();
+  await expect(shell.locator('[data-shell-account-role]')).toContainText(/ADMIN|Administrator/u);
+
+  await shell.getByLabel('Workspace').selectOption('food');
+  await expect(page).toHaveURL(/\/app\/food$/u);
+  await expect(page.locator('body')).toHaveAttribute('data-workspace', 'food');
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Food Committee',
+  );
+  await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
+  expect(
+    await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
+  ).toBe('#c65f1c');
+  await expect(shell.locator('[data-shell-account-role]')).toContainText(/ADMIN|Administrator/u);
+
+  await navigateToView(page, 'inventory');
+  await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Inventory Management');
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(1);
+});
 
 test('Director receives a decision-first shared-shell experience', async ({ page }, testInfo) => {
   test.skip(
