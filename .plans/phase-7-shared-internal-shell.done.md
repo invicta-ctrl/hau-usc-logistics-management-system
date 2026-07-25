@@ -30,7 +30,7 @@ Coverage: 8 / 8 Phase 7 requirement groups mapped.
 
 ## Status
 
-In Progress
+Complete
 
 ## Existing Accepted Foundation
 
@@ -92,6 +92,6 @@ In Progress
 - [x] No page-level overflow
 - [x] `npm run check` passes
 - [x] Full Playwright passes
-- [ ] Exact staging health and live shell smoke pass
-- [ ] Exact-head PR checks pass
+- [x] Exact staging health and live shell smoke pass
+- [x] Exact-head PR checks pass
 - [x] Production remains untouched

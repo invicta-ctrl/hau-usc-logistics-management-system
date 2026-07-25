@@ -13,23 +13,17 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 7 — audit and complete the shared internal shell, server-routed
-navigation, responsive workspace switching, and real role workspaces against
-the accepted detailed visual references.
+Phase 8 — audit and complete System Owner global access, governed workspace
+switching, and operational scope without impersonation or client-side
+authorization expansion.
 
-Priority follow-up: activate and verify the ten governed staging department
-accounts from the owner-restricted credential handoff, verify their Admin
-Accounts rows and reset controls, and finish real Administrator workspace
-switching without changing identity, impersonating another role, or bypassing
-server authorization.
+Phase 7 is accepted on staging at exact product/test candidate `6c1906a`,
+schema 18. Repository acceptance passed 409 unit tests and 99 browser tests;
+the live governed brand and full authentication/Access Management scenarios
+passed; all ten approved department accounts are active and verified; and PR
+#9 exact-head checks passed 6 / 6.
 
-The complete follow-up amendment and master Phase 6 are accepted on staging at
-exact runtime `afe9204`, schema 18. The 58-case matrix, 409 unit tests,
-95 browser passes, functional deployed 4 / 4 at `60a0138`, exact-head
-health/brand smoke, 6 / 6 CI, governed-source truth, and cleanup reconciliation
-passed.
 Durable evidence:
-`.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md` and
-`.codex/V0_7_AMENDMENT_58_CASE_ACCEPTANCE_MATRIX.md`.
+`.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

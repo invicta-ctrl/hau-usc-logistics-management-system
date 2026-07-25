@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 7 — Shared Internal Shell, Routing, and Real Workspace Implementation
+Phase: Phase 8 — System Owner Global Access, Workspace Switching, and Operational Scope
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -12,6 +12,7 @@ Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
 Amendment Slice 2 deployed runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`
 Amendment Slice 3 deployed runtime: `ef4c74c06b85449c3b806d0ba490bb4d4578ed39`
 Final amendment deployed runtime: `afe9204828cd51f66ffabf46d0b7a69017c77c65`
+Phase 7 accepted staging runtime: `6c1906ad299edfb878de7f86615287370eca90a8`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -25,7 +26,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 5
+## Accepted completion through Phase 7
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -33,6 +34,8 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
 - Phase 3: source-grounded guided public Request Center with separate HMAC-backed private tracking accepted.
 - Phase 4: public borrower-safe Lending Center, canonical `FOR_REVIEW` tickets, and private tracking accepted without submission-time reservation or stock movement.
 - Phase 5: canonical governed lending catalog, one authoritative availability model, reusable assets, asset condition/maintenance/movement history, and public/staff data separation accepted.
+- Phase 6: complete Internal Office Lending Hub and the 58-case follow-up amendment accepted.
+- Phase 7: one real authenticated internal shell, five direct role-workspace routes, safe Administrator workspace switching, governed scope/context controls, and activated department accounts accepted.
 - Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
 
 Durable handoffs:
@@ -47,6 +50,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_3_HANDOFF.md`
 - `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md`
 - `.codex/V0_7_AMENDMENT_58_CASE_ACCEPTANCE_MATRIX.md`
+- `.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -132,8 +136,8 @@ Durable handoffs:
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: audit and complete Phase 7 shared internal shell,
-server-routed navigation, responsive workspace switching, and real role
-workspace implementation against the accepted visual references.
+One smallest safe next action: audit and complete Phase 8 System Owner global
+access, governed workspace switching, and operational scope against the
+accepted server-authorization boundary.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

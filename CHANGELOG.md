@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 7 shared internal shell (2026-07-26)
+
+### Added
+
+- One authenticated context bar for five real internal routes with responsive workspace switching, governed operational scope, breadcrumb, environment/release, attention, and account controls.
+- Safe Administrator route switching that preserves the authenticated actor and server capability projection.
+- Live acceptance coverage for all ten approved department accounts and their Access Management rows/reset controls.
+
+### Fixed
+
+- Queue an Admin account-directory search entered while the initial directory request is still loading.
+- Open the shared-shell account menu before the deployed sign-out assertion.
+
+### Verified
+
+- `npm run check`: 60 Vitest files / 409 tests; full Playwright: 99 passed / 237 intentional skips / zero failures.
+- Exact staging runtime `6c1906a`, schema 18, passed governed branding, full authentication/Access Management, five-workspace switching, 10 / 10 account login/identity reconciliation, and 6 / 6 PR checks.
+
+### Boundary
+
+- No migration or production action occurred. Production remains NO-GO; Phase 8 is active.
+
 ## Unreleased - v0.7.0 Phase 5 canonical lendable catalog (2026-07-24)
 
 ### Added

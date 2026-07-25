@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 7 shared internal shell accepted on staging — Phase 8 active
+
+- Exact product/test runtime `6c1906ad299edfb878de7f86615287370eca90a8` is healthy and ready on schema 18 / migration `0018_authenticated_request_center.sql`.
+- One authenticated internal shell now owns all five real workspace routes, responsive navigation, safe Administrator workspace switching, governed scope/context, breadcrumbs, release/attention identity, and the account menu without impersonation or permission expansion.
+- The ten approved department accounts are active and freshly verified 10 / 10; every Admin Accounts row shows the correct department/status and reset control. Plaintext credentials remain outside Git.
+- Verification: `npm run check` passed with 60 Vitest files / 409 tests; full Playwright passed 99 / 237 intentional skips; deployed brand and auth/Access Management passed 2 / 2; PR #9 passed 6 / 6 checks.
+- Production remains NO-GO. Phase 8 owns System Owner global access and governed operational scope.
+
 ## v0.7.0 Phase 5 canonical lendable catalog accepted on staging — Phase 6 active
 
 - Exact staging runtime `fc9ef1ccc5fef9018d37157a13078773c9018a13` is healthy and ready on schema 14 / migration `0014_lending_catalog_assets.sql`.

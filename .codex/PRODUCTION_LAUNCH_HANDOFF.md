@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -40,8 +40,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED O
 | 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
 | 6. Migrations | PARTIAL — staging through 0018 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH FINAL AMENDMENT runtime `afe9204` |
-| 9. Staging acceptance | PASS FOR FOLLOW-UP AMENDMENT; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 7 runtime `6c1906a` |
+| 9. Staging acceptance | PASS THROUGH PHASE 7; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -176,11 +176,28 @@ Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED O
 - Durable handoff:
   `.codex/V0_7_PHASE_6_AMENDMENT_SLICE_4_HANDOFF.md`.
 
+## Phase 7 shared internal shell evidence
+
+- The five direct internal routes now use one authenticated shell with a
+  URL-backed workspace selector, server-governed scope, breadcrumb, release,
+  attention, and account context.
+- Administrator switching preserves identity/capabilities; unauthorized direct
+  routes fail closed and public/request-only surfaces cannot enter the shell.
+- The ten governed department accounts are active, onboarding-complete, and
+  freshly verified. Their Admin rows show the correct department/status and
+  password-reset controls; plaintext credentials remain outside Git.
+- Repository acceptance passed 409 unit tests and 99 browser tests. Live brand
+  and complete auth/Access Management staging scenarios passed at exact
+  product/test runtime `6c1906a`, schema 18.
+- PR #9 at `6c1906a` passed all 6 / 6 exact-head checks.
+- Durable handoff: `.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 7 shared internal shell and real workspace implementation. Do not
+Complete Phase 8 System Owner global access, workspace switching, and governed
+operational scope. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

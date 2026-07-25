@@ -1,14 +1,14 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–7 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed final amendment candidate `afe9204`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact head `afe9204`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `afe9204`, D1 connected, schema 18, migration 0018 |
+| Git handshake | exact pushed Phase 7 product/test candidate `6c1906a`, upstream parity before status checkpoint | PASS |
+| PR #9 / CI | exact head `6c1906a`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `6c1906a`, D1 connected, schema 18, migration 0018 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -80,6 +80,12 @@ Decision: **PRODUCTION NO-GO — PHASES 0–6 AND FOLLOW-UP AMENDMENT ACCEPTED O
 | Final amendment exact-head deployment/CI | exact candidate `afe9204`; Worker `c5863d69-e8fa-4b56-8760-e9ea21c9ed1f`; cache-busted health; governed brand/login smoke; PR checks | PASS — protected bindings present, schema 18 / migration 0018, 1 / 1 live smoke, 6 / 6 CI |
 | Final amendment cleanup | D1/public API/private handoff reconciliation | PASS — catalog 0; visible fixture requests 0; request reservations/ledger 0; fixtures inactive; DOL `STARTER` |
 | Phase 6 Internal Office Lending Hub | Slice 1 implementation plus final amendment matrix | PASS ON STAGING |
+| Phase 7 shared internal shell | `.codex/V0_7_PHASE_7_SHARED_INTERNAL_SHELL_HANDOFF.md`; exact product/test runtime `6c1906a` | PASS ON STAGING |
+| Phase 7 repository acceptance | `npm run check`; full Playwright | PASS — 60 files / 409 unit tests; 99 browser passes / 237 intentional skips |
+| Five real internal routes | direct route/refresh, workspace URL/title/breadcrumb/accent/context, fail-closed unauthorized route tests | PASS |
+| Department account activation | live fresh login/session reconciliation and Admin Accounts UI | PASS — 10 / 10 ACTIVE REQUESTER mappings; reset controls visible |
+| Phase 7 deployed acceptance | governed R2 brand scenario; full auth/workspace/Access Management scenario | PASS — 2 / 2 at exact `6c1906a`, schema 18 |
+| Phase 7 private backup | outside-Git pre-activation export SHA-256 `ddbdd9aefdde2b6013dcd8baf1702346bda89e68af180fbd19892e7e33011cb8` | CAPTURED |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

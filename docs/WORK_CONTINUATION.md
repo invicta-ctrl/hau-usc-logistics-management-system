@@ -3,6 +3,20 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
+- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 7 product/test runtime `6c1906ad299edfb878de7f86615287370eca90a8`; upstream parity verified.
+- **Current phase/stage:** Phases 0–7 and the complete amendment accepted on staging; Phase 8 active; production NO-GO.
+- **Accepted scope:** Phase 8 of `.codex/specs/v0.7.0-production-master.md` under the accepted follow-up amendment and shared efficiency contract.
+- **Completed work:** one real shared internal shell, all five direct workspace routes, safe Administrator switching, governed context/scope/account controls, active department accounts, and live Access Management acceptance.
+- **Tests verified:** `npm run check` (60 files / 409 tests), full Playwright 99 / 237 intentional skips, deployed Phase 7 2 / 2, fresh account identity 10 / 10, and remote CI 6 / 6.
+- **External actions:** exact-SHA staging Worker deployment and ten approved staging account activations completed after a private D1 export; production and Google sources were untouched.
+- **Rollback:** private pre-activation export SHA-256 `ddbdd9aefdde2b6013dcd8baf1702346bda89e68af180fbd19892e7e33011cb8`; prior immutable Worker versions retained; formal rehearsal remains Phase 24.
+- **Blocker:** none for Phase 8 implementation; real lendable policy/data and approved upcoming-event values remain absent and must not be invented.
+- **Next action:** audit the existing owner authorization model and implement the smallest Phase 8 System Owner global-access/scope slice with server-side tests.
+- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
+
+## Prior Phase 5 resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 5 staging runtime `fc9ef1ccc5fef9018d37157a13078773c9018a13`; tracks the same origin branch.
 - **Current phase/stage:** Phases 0–5 accepted on staging; Phase 6 active; production NO-GO.
 - **Accepted scope:** Phase 6 of `.codex/specs/v0.7.0-production-master.md` under `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`.
