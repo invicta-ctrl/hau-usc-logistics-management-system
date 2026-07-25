@@ -492,6 +492,55 @@ test('System Owner opens and refreshes every real workspace without impersonatio
   }
 });
 
+test('Inventory operator receives authoritative D1 balances and bounded movement projections in the real workspace', async ({
+  page,
+  request,
+}) => {
+  await login(request, 'LOCAL.INVENTORY');
+  const moduleResponse = await request.post('/api/getBootstrapModule', {
+    data: { module: 'inventory', page: 1, pageSize: 10 },
+  });
+  expect(moduleResponse.status()).toBe(200);
+  const moduleData = await moduleResponse.json();
+  expect(moduleData).toMatchObject({
+    ok: true,
+    module: 'inventory',
+    data: {
+      inventoryItems: expect.any(Array),
+      ledgerTransactions: expect.any(Array),
+      inventoryAssets: expect.any(Array),
+      assetMaintenanceHistory: expect.any(Array),
+      assetMovementHistory: expect.any(Array),
+    },
+  });
+  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.inventoryAssets.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.assetMaintenanceHistory.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.assetMovementHistory.length).toBeLessThanOrEqual(100);
+  const authoritative = moduleData.data.inventoryItems.find((item) => item.id === 'ITM-LOCAL-001');
+  expect(authoritative).toEqual(
+    expect.objectContaining({
+      onHand: expect.any(Number),
+      reserved: expect.any(Number),
+      availableToPromise: expect.any(Number),
+    }),
+  );
+
+  await page.goto('/app/inventory');
+  await page.getByLabel('Access ID').fill('LOCAL.INVENTORY');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+  await expect(page.locator('body')).toHaveAttribute('data-experience', 'inventory-pantry');
+  const panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
+  await expect(panel.getByRole('heading', { name: 'Inventory Overview' })).toBeVisible();
+  await panel.locator('.role-experience-actions [data-inventory-destination="inventory-management"]').click();
+  await expect(page.locator('#inventoryTable')).toContainText('ITM-LOCAL-001');
+  await expect(page.locator('#inventoryTable')).toContainText(
+    `On hand ${authoritative.onHand} · Reserved ${authoritative.reserved} · ATP ${authoritative.availableToPromise} ${authoritative.unit}`,
+  );
+});
+
 test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
   page,
 }) => {

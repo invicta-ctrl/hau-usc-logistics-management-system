@@ -315,6 +315,21 @@ function filterOperationalData(data, selected) {
     ['inventoryAssets', 'inventoryAssetInstances'].forEach((key) => {
       if (Array.isArray(next[key])) next[key] = next[key].filter((entry) => itemIds.has(entry.item_id ?? entry.itemId));
     });
+    const assetIds = new Set(
+      (next.inventoryAssets ?? next.inventoryAssetInstances ?? []).map((entry) => entry.id),
+    );
+    if (Array.isArray(next.assetMaintenanceHistory))
+      next.assetMaintenanceHistory = next.assetMaintenanceHistory.filter((entry) =>
+        assetIds.has(entry.asset_id ?? entry.assetId),
+      );
+    if (Array.isArray(next.assetMovementHistory))
+      next.assetMovementHistory = next.assetMovementHistory.filter((entry) =>
+        assetIds.has(entry.asset_id ?? entry.assetId),
+      );
+    if (Array.isArray(next.ledgerTransactions))
+      next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
+        itemIds.has(entry.itemId ?? entry.item_id),
+      );
   }
   if (selected.kind === 'EVENT_SERIES') {
     next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
@@ -323,6 +338,10 @@ function filterOperationalData(data, selected) {
     next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
     next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
+    if (Array.isArray(next.ledgerTransactions))
+      next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
+        eventIds.has(entry.eventId ?? entry.event_id),
+      );
   }
   if (selected.kind === 'EVENT') {
     next.events = (next.events ?? []).filter((entry) => entry.id === selected.id);
@@ -331,6 +350,10 @@ function filterOperationalData(data, selected) {
     next.requests = (next.requests ?? []).filter((entry) => entry.eventId === selected.id);
     next.requestLines = (next.requestLines ?? []).filter((entry) => entry.eventId === selected.id);
     next.deliverables = (next.deliverables ?? []).filter((entry) => entry.eventId === selected.id);
+    if (Array.isArray(next.ledgerTransactions))
+      next.ledgerTransactions = next.ledgerTransactions.filter(
+        (entry) => (entry.eventId ?? entry.event_id) === selected.id,
+      );
   }
   if (selected.kind === 'OFFICE') {
     next.eventSeries = [];
@@ -341,6 +364,10 @@ function filterOperationalData(data, selected) {
     const requestIds = new Set(next.requests.map((entry) => entry.id));
     next.requestLines = (next.requestLines ?? []).filter((entry) => requestIds.has(entry.requestId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => requestIds.has(entry.requestId));
+    if (Array.isArray(next.ledgerTransactions))
+      next.ledgerTransactions = next.ledgerTransactions.filter(
+        (entry) => !(entry.eventId ?? entry.event_id),
+      );
   }
   return next;
 }
@@ -792,14 +819,14 @@ export function createD1OperationalService({
                   current_lending_ticket_id, expected_return_at, handoff_condition, return_condition,
                   created_at, updated_at
            FROM inventory_asset_instances
-           ORDER BY item_id, asset_tag LIMIT 500`,
+           ORDER BY item_id, asset_tag LIMIT 100`,
         ),
         assetMaintenanceHistory: await rows(
           db,
           `SELECT id, asset_id, event_type, condition_label, evidence_asset_key,
                   occurred_at, recorded_by, notes
            FROM inventory_asset_maintenance
-           ORDER BY occurred_at DESC LIMIT 500`,
+           ORDER BY occurred_at DESC LIMIT 100`,
         ),
         assetMovementHistory: await rows(
           db,
@@ -807,8 +834,35 @@ export function createD1OperationalService({
                   lending_ticket_id, condition_label, evidence_asset_key,
                   occurred_at, recorded_by, notes
            FROM inventory_asset_movements
-           ORDER BY occurred_at DESC LIMIT 500`,
-        ),
+           ORDER BY occurred_at DESC LIMIT 100`,
+         ),
+        ledgerTransactions: (
+          await rows(
+            db,
+            `SELECT id, transaction_type, direction, item_id, event_item_id, quantity, unit,
+                    related_entity_type, related_entity_id, request_id, event_id, reversal_of,
+                    status, notes, created_at
+             FROM inventory_ledger
+             ORDER BY created_at DESC, id DESC LIMIT 100`,
+          )
+        ).map((row) => ({
+          id: row.id,
+          type: row.transaction_type,
+          transactionType: row.transaction_type,
+          direction: row.direction,
+          itemId: row.item_id,
+          eventItemId: row.event_item_id,
+          quantity: Number(row.quantity),
+          unit: row.unit,
+          relatedEntityType: row.related_entity_type,
+          relatedId: row.related_entity_id,
+          requestId: row.request_id,
+          eventId: row.event_id,
+          reversalOf: row.reversal_of,
+          status: row.status,
+          notes: row.notes,
+          createdAt: row.created_at,
+        })),
       };
     } else if (module === 'lending') {
       const scope = scopedWhere(account, {

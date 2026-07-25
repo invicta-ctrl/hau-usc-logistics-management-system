@@ -93,7 +93,13 @@ export function createBootstrapModuleFixture({ backendMode = 'mock', environment
     release: { eventSeries: [], events: [], requests: [], requestLines: [], lendingTickets: [], releaseConfirmations: [] },
     restocking: { inventoryItems: items, restockRequests: [], restockRecords: [], canvassReferences: [] },
     procurement: { eventSeries: [], events, requests: [], requestLines: [], deliverables: [], canvassReferences: [] },
-    inventory: { inventoryItems: items },
+    inventory: {
+      inventoryItems: items,
+      ledgerTransactions: [],
+      inventoryAssets: [],
+      assetMaintenanceHistory: [],
+      assetMovementHistory: [],
+    },
   };
   return {
     ok: true,

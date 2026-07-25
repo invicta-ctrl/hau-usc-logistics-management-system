@@ -364,6 +364,7 @@ export function createRuntimeExtensions(options) {
   let sharedMobileNav = null;
   let sharedMobileMore = null;
   let roleExperienceObserver = null;
+  let inventoryWorkspaceSurface = '';
   let internalShellBar = null;
   let accountControlObserver = null;
   let lendingApprovalRoot = null;
@@ -4177,29 +4178,21 @@ export function createRuntimeExtensions(options) {
     },
     'inventory-pantry': {
       label: 'Inventory & Pantry workspace',
-      heading: 'Keep stock accurate, available, and traceable',
+      heading: 'Inventory Overview',
       description:
         'Start with exceptions, then work through catalog balances, pantry stock, lending, replenishment, controlled release, and append-only movement history without collapsing physical, reserved, and available-to-promise quantities.',
       boundaryTitle: 'Inventory authority boundary',
       boundary:
         'Catalog ownership scopes stock operations. Reservations, receipts, loans, returns, releases, transfers, and corrections remain capability-bound, revalidated against current state, and recorded through the existing ledger-aware workflows.',
       actions: [
-        [
-          'inventory',
-          'Open stock control',
-          'Search catalog, on-hand, reserved, ATP, provenance, and movements',
-        ],
-        [
-          'lending',
-          'Review circulation exceptions',
-          'For-review, ready-to-claim, on-loan, overdue, and returned tickets',
-        ],
-        [
-          'restocking',
-          'Work the replenishment queue',
-          'Review, canvass, procure, and receive without conflating request and receipt',
-        ],
-        ['release', 'Open controlled handoff', 'Re-check reservations and physical balance before release'],
+        ['inventory', 'Inventory Management', 'Catalog, on-hand, reserved, ATP, provenance, and item history', 'inventory-management'],
+        ['inventory', 'Pantry', 'Non-perishable stock inside the same canonical catalog', 'inventory-pantry-stock'],
+        ['restocking', 'Restocking', 'Review and replenish without conflating request and receipt', 'inventory-restocking'],
+        ['lending', 'Lending Operations', 'For-review, claim, on-loan, overdue, return, damage, and loss', 'inventory-lending'],
+        ['restocking', 'Receiving', 'Validated physical intake and immutable purchase receipts', 'inventory-receiving'],
+        ['release', 'Release Desk', 'Shared partial/full recipient-confirmed controlled handoff', 'inventory-release'],
+        ['inventory', 'Movement History', 'Append-only item and reusable-asset movements', 'inventory-movement-history'],
+        ['inventory', 'Condition & Stock Alerts', 'Low, unavailable, verify, damage, and maintenance attention', 'inventory-alerts'],
       ],
     },
     materials: {
@@ -4453,40 +4446,87 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
+  const inventoryBalance = (state, item) => {
+    const suppliedOnHand = Number(item?.onHand);
+    const suppliedReserved = Number(item?.reserved);
+    const suppliedAvailable = Number(item?.availableToPromise);
+    if (
+      Number.isFinite(suppliedOnHand) &&
+      Number.isFinite(suppliedReserved) &&
+      Number.isFinite(suppliedAvailable)
+    )
+      return { onHand: suppliedOnHand, reserved: suppliedReserved, availableToPromise: suppliedAvailable };
+    const onHand = (state.ledgerTransactions ?? [])
+      .filter((movement) => movement?.itemId === item.id)
+      .reduce(
+        (total, movement) =>
+          total +
+          (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
+        Number(item?.openingOnHand ?? 0),
+      );
+    const reserved = (state.reservations ?? [])
+      .filter((reservation) => reservation?.itemId === item.id && reservation?.status === 'ACTIVE')
+      .reduce((total, reservation) => total + Number(reservation?.quantity ?? 0), 0);
+    return { onHand, reserved, availableToPromise: onHand - reserved };
+  };
+
+  const inventoryHealth = (state, item) => {
+    if (String(item?.status).toUpperCase() === 'VERIFY') return 'VERIFY';
+    const balance = inventoryBalance(state, item);
+    if (balance.onHand <= 0 || balance.availableToPromise <= 0) return 'OUT_OF_STOCK';
+    if (balance.availableToPromise <= Number(item?.reorderThreshold ?? 0)) return 'LOW_STOCK';
+    return 'IN_STOCK';
+  };
+
+  const inventoryActiveItems = (state) =>
+    (state.inventoryItems ?? []).filter((item) => String(item?.status).toUpperCase() !== 'ARCHIVED');
+
+  const inventoryStockAlerts = (state) =>
+    inventoryActiveItems(state).filter((item) => inventoryHealth(state, item) !== 'IN_STOCK');
+
+  const inventoryConditionAlerts = (state) => {
+    const itemSignals = inventoryActiveItems(state).filter(
+      (item) => Number(item?.damaged ?? 0) > 0 || Number(item?.maintenance ?? 0) > 0,
+    );
+    const assetSignals = (state.inventoryAssets ?? []).filter((asset) =>
+      ['DAMAGED', 'MAINTENANCE', 'REPAIR', 'LOST', 'RETIRED'].some((signal) =>
+        `${asset?.conditionLabel ?? asset?.condition_label ?? ''} ${asset?.lifecycleStatus ?? asset?.lifecycle_status ?? ''}`
+          .toUpperCase()
+          .includes(signal),
+      ),
+    );
+    return { itemSignals, assetSignals };
+  };
+
   const inventoryMetrics = (state) => {
-    const activeItems = (state.inventoryItems ?? []).filter((item) => item?.status !== 'ARCHIVED');
-    const itemBalance = (item) => {
-      const onHand = (state.ledgerTransactions ?? [])
-        .filter((movement) => movement?.itemId === item.id)
-        .reduce(
-          (total, movement) =>
-            total +
-            (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
-          Number(item?.openingOnHand ?? 0),
-        );
-      const reserved = (state.reservations ?? [])
-        .filter((reservation) => reservation?.itemId === item.id && reservation?.status === 'ACTIVE')
-        .reduce((total, reservation) => total + Number(reservation?.quantity ?? 0), 0);
-      return { onHand, availableToPromise: onHand - reserved };
-    };
-    const stockAttention = activeItems.filter((item) => {
-      const balance = itemBalance(item);
-      return item?.status === 'VERIFY' || balance.availableToPromise <= Number(item?.reorderThreshold ?? 0);
-    }).length;
+    const activeItems = inventoryActiveItems(state);
+    const stockAttention = inventoryStockAlerts(state).length;
+    const condition = inventoryConditionAlerts(state);
     const activeCirculation = countStatuses(
       state.lendingTickets,
       new Set(['FOR_REVIEW', 'READY_TO_CLAIM', 'ON_LOAN', 'OVERDUE']),
-    );
+    ) || activeItems.reduce((total, item) => total + Number(item?.onLoan ?? 0), 0);
+    const overdue = countStatuses(state.lendingTickets, new Set(['OVERDUE'])) ||
+      activeItems.reduce((total, item) => total + Number(item?.overdue ?? 0), 0);
+    const openRestocking = (state.restockRequests ?? []).filter(
+      (row) => !['RESTOCKED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(String(row?.status).toUpperCase()),
+    ).length;
+    const receiving = countStatuses(state.restockRequests, new Set(['PROCURED', 'PARTIALLY_RECEIVED']));
     const readyStockRelease = (state.requestLines ?? []).filter(
       (line) =>
         line?.fulfillmentSource === 'ISSUE_FROM_STOCK' &&
         ['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(String(line?.status ?? '').toUpperCase()),
     ).length;
     return [
-      ['Active catalog items', activeItems.length, 'Inventory and pantry records'],
-      ['Stock attention', stockAttention, 'Low, unavailable, or verification-required ATP'],
-      ['Active circulation', activeCirculation, 'Review, handoff, loan, and overdue tickets'],
-      ['Ready stock releases', readyStockRelease, 'Reserved lines awaiting controlled handoff'],
+      ['Active catalog items', activeItems.length, 'Inventory and pantry records', 'inventory-management'],
+      ['Pantry items', activeItems.filter((item) => item?.catalogType === 'PANTRY' || item?.stockArea === 'Pantry').length, 'Canonical non-perishable stock', 'inventory-pantry-stock'],
+      ['Stock alerts', stockAttention, 'Low, unavailable, or verification-required ATP', 'inventory-alerts'],
+      ['Condition alerts', condition.itemSignals.length + condition.assetSignals.length, 'Damage and maintenance attention', 'inventory-alerts'],
+      ['Active circulation', activeCirculation, 'Review, claim, loan, and return work', 'inventory-lending'],
+      ['Overdue', overdue, 'Current-time circulation exceptions', 'inventory-lending'],
+      ['Open restocking', openRestocking, 'Review through cumulative receipt', 'inventory-restocking'],
+      ['Receiving attention', receiving, 'Procured or partially received lines', 'inventory-receiving'],
+      ['Ready stock releases', readyStockRelease, 'Reserved lines awaiting controlled handoff', 'inventory-release'],
     ];
   };
 
@@ -4753,6 +4793,120 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const INVENTORY_DESTINATION_CAPABILITIES = Object.freeze({
+    'inventory-management': 'view.inventory',
+    'inventory-pantry-stock': 'view.inventory',
+    'inventory-restocking': 'view.inventory',
+    'inventory-lending': 'view.internal',
+    'inventory-receiving': 'fulfillment.receive',
+    'inventory-release': 'fulfillment.release',
+    'inventory-movement-history': 'view.inventory',
+    'inventory-alerts': 'view.inventory',
+  });
+
+  const inventoryDestinationAllowed = (destination) => {
+    const capability = INVENTORY_DESTINATION_CAPABILITIES[destination];
+    return !capability || can(getState()?.currentUser, capability);
+  };
+
+  const installInventoryWorkspaceSupplement = () => {
+    const host = document.querySelector('#inventory');
+    if (!host || host.querySelector('[data-inventory-workspace-supplement]')) return;
+    const supplement = document.createElement('article');
+    supplement.className = 'panel section-gap inventory-workspace-supplement';
+    supplement.dataset.inventoryWorkspaceSupplement = '';
+    supplement.tabIndex = -1;
+    supplement.hidden = true;
+    host.append(supplement);
+  };
+
+  const renderInventoryWorkspaceSupplement = () => {
+    installInventoryWorkspaceSupplement();
+    const root = document.querySelector('[data-inventory-workspace-supplement]');
+    if (!root) return;
+    root.hidden = !inventoryWorkspaceSurface;
+    if (!inventoryWorkspaceSurface) return;
+    const state = getState() ?? {};
+    if (inventoryWorkspaceSurface === 'movement') {
+      const itemMovements = (state.ledgerTransactions ?? []).map((movement) => ({
+        id: movement.id,
+        type: movement.type ?? movement.transactionType ?? 'MOVEMENT',
+        subject: movement.itemId ?? movement.eventItemId ?? 'No item ID',
+        quantity: `${String(movement.direction).toUpperCase() === 'IN' ? '+' : String(movement.direction).toUpperCase() === 'OUT' ? '−' : ''}${Number(movement.quantity ?? 0)} ${movement.unit ?? ''}`.trim(),
+        related: movement.relatedId ?? movement.relatedEntityId ?? movement.requestId ?? '',
+        at: movement.createdAt ?? movement.timestamp ?? '',
+      }));
+      const assetMovements = (state.assetMovementHistory ?? []).map((movement) => ({
+        id: movement.id,
+        type: movement.movementType ?? movement.movement_type ?? 'ASSET_MOVEMENT',
+        subject: movement.assetId ?? movement.asset_id ?? 'No asset ID',
+        quantity: movement.conditionLabel ?? movement.condition_label ?? movement.newStatus ?? movement.new_status ?? '',
+        related: movement.lendingTicketId ?? movement.lending_ticket_id ?? '',
+        at: movement.occurredAt ?? movement.occurred_at ?? '',
+      }));
+      const rows = [...itemMovements, ...assetMovements]
+        .sort((left, right) => new Date(right.at || 0) - new Date(left.at || 0))
+        .slice(0, 100);
+      root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Append-only traceability</p><h2>Movement History</h2><p>Posted item and reusable-asset movements remain stable. Corrections are new governed movements, never silent edits.</p></div><span class="pill">${rows.length} movement${rows.length === 1 ? '' : 's'}</span></div><div class="line-list">${rows
+        .map(
+          (row) => `<div class="request-line inventory-movement-line"><div><strong>${esc(row.type)} &middot; ${esc(row.subject)}</strong><small>${esc(row.id)}${row.related ? ` &middot; Related ${esc(row.related)}` : ''}</small><small>${esc(row.at || 'Time not reported')}</small></div><span class="pill">${esc(row.quantity || 'Recorded')}</span></div>`,
+        )
+        .join('') || '<div class="empty">No movement rows are in the current authorized projection.</div>'}</div>`;
+      return;
+    }
+    const stock = inventoryStockAlerts(state);
+    const condition = inventoryConditionAlerts(state);
+    const alertRows = [
+      ...stock
+      .map((item) => {
+        const balance = inventoryBalance(state, item);
+        return `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+      }),
+      ...condition.itemSignals.map(
+        (item) => `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(Number(item.damaged ?? 0))} damaged &middot; ${esc(Number(item.maintenance ?? 0))} maintenance</small></div><span class="pill">CONDITION</span></div>`,
+      ),
+      ...condition.assetSignals.map(
+        (asset) => `<div class="request-line"><div><strong>${esc(asset.assetTag ?? asset.asset_tag ?? asset.id)}</strong><small>${esc(asset.id)} &middot; ${esc(asset.conditionLabel ?? asset.condition_label ?? 'Condition not reported')}</small></div><span class="pill">${esc(asset.lifecycleStatus ?? asset.lifecycle_status ?? 'ATTENTION')}</span></div>`,
+      ),
+    ].join('');
+    root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Exception-first stock control</p><h2>Condition &amp; Stock Alerts</h2><p>Low, unavailable, verification-required, damaged, and maintenance signals are derived from current server-projected truth.</p></div><span class="pill">${stock.length + condition.itemSignals.length + condition.assetSignals.length} alert${stock.length + condition.itemSignals.length + condition.assetSignals.length === 1 ? '' : 's'}</span></div><div class="line-list">${alertRows || '<div class="empty">No condition or stock alerts are in the current authorized projection.</div>'}</div>`;
+  };
+
+  const openInventoryDestination = (destination) => {
+    if (!inventoryDestinationAllowed(destination)) return;
+    const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
+    if (destination === 'inventory-management' || destination === 'inventory-pantry-stock') {
+      inventoryWorkspaceSurface = '';
+      openView('inventory');
+      const area = document.querySelector('#inventoryAreaFilter');
+      if (area) {
+        area.value = destination === 'inventory-pantry-stock' ? 'Pantry' : 'ALL';
+        area.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+    if (destination === 'inventory-restocking' || destination === 'inventory-receiving') {
+      openView('restocking');
+      if (destination === 'inventory-receiving')
+        document.querySelector('#restockReceiveForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (destination === 'inventory-lending') {
+      openView('lending');
+      document.querySelector('[data-loan-tab="FOR_REVIEW"]')?.click();
+      return;
+    }
+    if (destination === 'inventory-release') return openView('release');
+    if (['inventory-movement-history', 'inventory-alerts'].includes(destination)) {
+      inventoryWorkspaceSurface = destination === 'inventory-movement-history' ? 'movement' : 'alerts';
+      openView('inventory');
+      renderInventoryWorkspaceSupplement();
+      const supplement = document.querySelector('[data-inventory-workspace-supplement]');
+      supplement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      supplement?.focus({ preventScroll: true });
+    }
+  };
+
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
     const overviewHero = document.querySelector('#overview > .hero');
@@ -4772,6 +4926,9 @@ export function createRuntimeExtensions(options) {
       if (foodDestination) openFoodDestination(foodDestination);
       const foodManage = event.target.closest('[data-food-manage]')?.dataset.foodManage;
       if (foodManage) openFoodWorkflow(foodManage);
+      const inventoryDestination = event.target.closest('[data-inventory-destination]')?.dataset
+        .inventoryDestination;
+      if (inventoryDestination) openInventoryDestination(inventoryDestination);
     });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
@@ -4802,9 +4959,15 @@ export function createRuntimeExtensions(options) {
         ? `data-admin-destination="${esc(destination)}"`
         : experience === 'director'
           ? `data-director-destination="${esc(destination)}"`
-          : `data-food-destination="${esc(destination)}"`;
+          : experience === 'food'
+            ? `data-food-destination="${esc(destination)}"`
+            : `data-inventory-destination="${esc(destination)}"`;
     const destinationEnabled = (destination) =>
-      experience !== 'food' || foodDestinationAllowed(destination);
+      experience === 'food'
+        ? foodDestinationAllowed(destination)
+        : experience === 'inventory-pantry'
+          ? inventoryDestinationAllowed(destination)
+          : true;
     const destinationAttributes = (destination) =>
       `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available in the current server capability projection"'}`;
     const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
@@ -4824,6 +4987,18 @@ export function createRuntimeExtensions(options) {
       experience === 'food'
         ? `<section class="food-workflow-reference panel" data-food-workflow-reference tabindex="-1" aria-labelledby="foodWorkflowReferenceTitle" hidden><div class="panel-head"><div><p class="eyebrow">Governed operating rules</p><h3 id="foodWorkflowReferenceTitle">Food Workflow Reference</h3><p>Live status remains in the owning workflow; this reference never grants an action.</p></div><span class="pill">Asia/Manila</span></div><div class="food-reference-grid"><article><strong>10 business days</strong><span>Bulk, non-perishable, or catering</span><small>Allow time for review, canvassing, budget, supplier confirmation, and ordering.</small></article><article><strong>5 business days</strong><span>Perishable food</span><small>Short or unknown lead time is an attention signal, not an approval.</small></article><article><strong>Historical prices are reference only</strong><span>Current evidence governs</span><small>Compare normalized units, freshness, receipts, lead time, terms, and supplier reliability.</small></article><article><strong>Aggregate dietary and allergen counts only</strong><span>Privacy boundary</span><small>Never store names, diagnoses, medical narratives, contacts, TINs, or payment details.</small></article><article><strong>Receiving is cumulative</strong><span>Physical intake and evidence</span><small>Record quantity, condition, handling or expiry context, supplier provenance, and receipt evidence.</small></article><article><strong>Shared Release Desk</strong><span>Controlled distribution</span><small>Authorized handoff remains recipient-confirmed, audited, and server-validated.</small></article></div></section>`
         : '';
+    const inventoryItems = experience === 'inventory-pantry' ? inventoryActiveItems(state) : [];
+    const inventoryAlerts = experience === 'inventory-pantry' ? inventoryStockAlerts(state) : [];
+    const inventoryOverview =
+      experience === 'inventory-pantry'
+        ? `<section class="inventory-overview-detail" data-inventory-overview aria-labelledby="inventoryAttentionTitle"><div class="panel-head"><div><p class="eyebrow">Exception-first stock truth</p><h3 id="inventoryAttentionTitle">Inventory attention</h3><p>On-hand, reserved, and available-to-promise remain visibly distinct. Low, unavailable, and verification-required items lead this view.</p></div><span class="pill">${inventoryItems.length} active item${inventoryItems.length === 1 ? '' : 's'}</span></div><div class="line-list">${inventoryAlerts
+            .slice(0, 12)
+            .map((item) => {
+              const balance = inventoryBalance(state, item);
+              return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(item.handling ?? item.handlingCode ?? 'Handling not reported')}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+            })
+            .join('') || '<div class="empty">No stock exceptions are in the current authorized projection.</div>'}</div></section>`
+        : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
       <div>
@@ -4838,7 +5013,7 @@ export function createRuntimeExtensions(options) {
     </div>
     <div class="role-experience-layout">
       <section aria-labelledby="roleExperienceActionsTitle">
-        <div class="section-kicker" id="roleExperienceActionsTitle">${experience === 'food' ? 'Food operations' : 'Leadership action map'}</div>
+        <div class="section-kicker" id="roleExperienceActionsTitle">${experience === 'food' ? 'Food operations' : experience === 'inventory-pantry' ? 'Inventory operations' : 'Leadership action map'}</div>
         <div class="role-experience-actions">
           ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? destinationAttributes(destination) : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
         </div>
@@ -4852,6 +5027,7 @@ export function createRuntimeExtensions(options) {
     </div>
     ${foodOverview}
     ${foodWorkflowReference}
+    ${inventoryOverview}
     ${experience === 'director' ? '<section class="director-detail panel" data-director-detail tabindex="-1" aria-labelledby="directorDetailTitle" hidden></section>' : ''}`;
   };
 
@@ -4866,6 +5042,7 @@ export function createRuntimeExtensions(options) {
     installReferenceAdminWorkspace();
     installLendingUsage();
     installRoleExperience();
+    installInventoryWorkspaceSupplement();
     renderRoleExperience();
     installInternalShell();
     installSharedMobileNav();
@@ -4939,6 +5116,7 @@ export function createRuntimeExtensions(options) {
     renderFoodQueue();
     renderMaterialsQueue();
     renderVenueEquipmentQueue();
+    renderInventoryWorkspaceSupplement();
     installReleaseConfirmation();
     installCanvassQuality();
     installDeliverableReceiving();
@@ -5045,7 +5223,8 @@ export function createRuntimeExtensions(options) {
       );
     },
     inventoryActions(item) {
-      const allowed = canManageCatalog(getState()?.currentUser);
+      const user = getState()?.currentUser;
+      const allowed = canManageCatalog(user);
       const catalog =
         allowed && item.status !== 'ARCHIVED'
           ? `<button class="secondary mini" data-inventory-action="edit" data-item-id="${esc(item.id)}">View / Edit</button>`
@@ -5055,11 +5234,13 @@ export function createRuntimeExtensions(options) {
           ? `<button class="secondary mini" data-inventory-action="restore" data-item-id="${esc(item.id)}">Restore Item</button>`
           : `<button class="danger mini" data-inventory-action="archive" data-item-id="${esc(item.id)}">Archive</button>`
         : '';
-      const operational =
-        item.status === 'ARCHIVED'
-          ? ''
-          : `<button class="ghost mini" data-inventory-action="restock" data-item-id="${esc(item.id)}">Restock</button><button class="ghost mini" data-inventory-action="context" data-item-id="${esc(item.id)}">Reserve / Release</button><button class="ghost mini" data-inventory-action="transfer" data-item-id="${esc(item.id)}">Transfer</button>`;
-      return `${catalog}<button class="secondary mini" data-inventory-action="history" data-item-id="${esc(item.id)}">Ledger</button>${operational}${lifecycle}`;
+      const operational = item.status === 'ARCHIVED'
+        ? ''
+        : `${can(user, 'request.create') ? `<button class="ghost mini" data-inventory-action="restock" data-item-id="${esc(item.id)}">Restock</button>` : ''}${can(user, 'fulfillment.reserve') ? `<button class="ghost mini" data-inventory-action="context" data-item-id="${esc(item.id)}">Reserve / Release</button>` : ''}${allowed ? `<button class="ghost mini" data-inventory-action="transfer" data-item-id="${esc(item.id)}">Transfer</button>` : ''}`;
+      const history = can(user, 'view.inventory')
+        ? `<button class="secondary mini" data-inventory-action="history" data-item-id="${esc(item.id)}">Ledger</button>`
+        : '';
+      return `${catalog}${history}${operational}${lifecycle}`;
     },
     openCatalogItem(itemId) {
       const item = getState().inventoryItems.find((candidate) => candidate.id === itemId);

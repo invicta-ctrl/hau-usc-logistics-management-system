@@ -115,6 +115,33 @@ describe('essential bootstrap contract', () => {
     expect(validateBootstrapModule(internal, { backendMode: 'mock', module: 'lending' })).toBe(internal);
   });
 
+  it('accepts the bounded Inventory stock, ledger, asset, condition, and movement projection', () => {
+    const inventory = createBootstrapModuleFixture({ module: 'inventory', cacheSafe: false });
+    inventory.data.inventoryItems[0] = {
+      ...inventory.data.inventoryItems[0],
+      onHand: 12,
+      reserved: 3,
+      availableToPromise: 9,
+    };
+    inventory.data.ledgerTransactions = [
+      { id: 'SYNTHETIC-TXN-001', itemId: 'SYNTHETIC-ITEM-001', direction: 'IN', quantity: 12 },
+    ];
+    inventory.data.inventoryAssets = [
+      { id: 'SYNTHETIC-ASSET-001', item_id: 'SYNTHETIC-ITEM-001', lifecycle_status: 'AVAILABLE' },
+    ];
+    inventory.data.assetMaintenanceHistory = [];
+    inventory.data.assetMovementHistory = [];
+
+    expect(validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' })).toBe(
+      inventory,
+    );
+    const merged = mergeBootstrapModule(createStateFromEssentialBootstrap(createEssentialBootstrapFixture()), inventory, {
+      backendMode: 'mock',
+    });
+    expect(merged.inventoryAssets).toHaveLength(1);
+    expect(merged.ledgerTransactions).toHaveLength(1);
+  });
+
   it.each(['1.3.0', '1.6.0'])('accepts additive schema %s and the overview dashboard projections', (schemaVersion) => {
     const overview = createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
     overview.schemaVersion = schemaVersion;

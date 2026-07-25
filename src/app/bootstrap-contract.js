@@ -37,6 +37,9 @@ const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'dashboardStaffWorkload',
   'dashboardActivity',
   'dashboardLinks',
+  'inventoryAssets',
+  'assetMaintenanceHistory',
+  'assetMovementHistory',
 ]);
 
 const MODULE_DATA_KEYS = Object.freeze({
@@ -61,7 +64,13 @@ const MODULE_DATA_KEYS = Object.freeze({
   release: Object.freeze(['eventSeries', 'events', 'requests', 'requestLines', 'lendingTickets', 'releaseConfirmations']),
   restocking: Object.freeze(['inventoryItems', 'restockRequests', 'restockRecords', 'canvassReferences']),
   procurement: Object.freeze(['eventSeries', 'events', 'requests', 'requestLines', 'deliverables', 'canvassReferences']),
-  inventory: Object.freeze(['inventoryItems']),
+  inventory: Object.freeze([
+    'inventoryItems',
+    'ledgerTransactions',
+    'inventoryAssets',
+    'assetMaintenanceHistory',
+    'assetMovementHistory',
+  ]),
 });
 
 const ESSENTIAL_KEYS = new Set([

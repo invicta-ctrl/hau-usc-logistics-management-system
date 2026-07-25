@@ -48,7 +48,7 @@ describe('Phase 2 role experiences', () => {
 
     expect(digest).toContain('107f447e9aef8d3b9a377b5d059a745807e744833272e02d55150c5ed30fbf19');
     expect(digest).toContain('exception-first stock workspace');
-    expect(runtime).toContain('Keep stock accurate, available, and traceable');
+    expect(runtime).toContain("heading: 'Inventory Overview'");
     expect(runtime).toContain('Inventory authority boundary');
     expect(runtime).toContain('inventoryMetrics');
     expect(css).toContain("body[data-experience='inventory-pantry']");

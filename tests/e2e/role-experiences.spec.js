@@ -107,12 +107,10 @@ test('Inventory & Pantry receives an exception-first amber shared-shell experien
   const panel = page.locator('#roleExperiencePanel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-role-experience', 'inventory-pantry');
-  await expect(
-    panel.getByRole('heading', { name: 'Keep stock accurate, available, and traceable' }),
-  ).toBeVisible();
+  await expect(panel.getByRole('heading', { name: 'Inventory Overview' })).toBeVisible();
   await expect(panel.getByText('Inventory authority boundary', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Open stock control/ })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Review circulation exceptions/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Inventory Management/u })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Lending Operations/u })).toBeVisible();
   expect(
     await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
   ).toBe('#d59a18');

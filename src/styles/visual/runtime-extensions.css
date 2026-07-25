@@ -217,6 +217,13 @@ body:not(.request-mode) .secondary {
 .food-reference-grid strong { color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; line-height: 1.15; }
 .food-reference-grid span { color: var(--role-accent-ink); font-size: 10px; font-weight: 850; letter-spacing: .06em; text-transform: uppercase; }
 .food-reference-grid small { color: #735f5c; line-height: 1.45; }
+.inventory-overview-detail { display: grid; gap: 13px; padding-top: 2px; scroll-margin-top: 18px; }
+.inventory-workspace-supplement { scroll-margin-top: 18px; }
+.inventory-workspace-supplement[hidden] { display: none; }
+.inventory-workspace-supplement:focus-visible { outline: 3px solid color-mix(in srgb, var(--role-accent) 35%, transparent); outline-offset: 3px; }
+.inventory-attention-line, .inventory-movement-line { align-items: flex-start; }
+.inventory-attention-line > div:first-child, .inventory-movement-line > div:first-child { display: grid; gap: 4px; min-width: 0; }
+.inventory-attention-line small, .inventory-movement-line small { overflow-wrap: anywhere; }
 .admin-brand-slot-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .admin-brand-slot { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 15px; border: 1px solid #e4d6bd; border-radius: 15px; background: #fffdf8; }
 .admin-brand-slot strong { color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; }
