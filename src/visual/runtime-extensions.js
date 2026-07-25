@@ -351,6 +351,7 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let adminControlSurface = 'reference';
   let accessDirectory = null;
   let accessDirectoryPromise = null;
   let accessDirectoryPage = 1;
@@ -961,7 +962,7 @@ export function createRuntimeExtensions(options) {
     const authorization = getState()?.currentUser?.authorization;
     if (!can(getState()?.currentUser, 'view_lending_usage')) return false;
     return (
-      ['DIRECTOR', 'ADMINISTRATOR'].includes(authorization?.roleId) ||
+      ['DIRECTOR', 'ADMINISTRATOR', 'SYSTEM_OWNER'].includes(authorization?.roleId) ||
       authorization?.committeeIds?.includes('COM_INVENTORY_PANTRY')
     );
   };
@@ -1840,17 +1841,175 @@ export function createRuntimeExtensions(options) {
     );
   };
 
+  const adminExceptionCounts = (state = getState() ?? {}) => {
+    const statusIn = (row, values) => values.has(String(row?.status ?? '').toUpperCase());
+    const requestBlockers = (state.requests ?? []).filter((row) =>
+      statusIn(row, new Set(['FOR_REVIEW', 'BLOCKED', 'WAITING_FOR_BUDGET', 'NEEDS_INFORMATION'])),
+    ).length;
+    const lendingBlockers = (state.lendingTickets ?? []).filter((row) =>
+      statusIn(row, new Set(['FOR_REVIEW', 'OVERDUE', 'DAMAGED', 'LOST'])),
+    ).length;
+    const releaseBlockers = [...(state.requestLines ?? []), ...(state.deliverables ?? [])].filter(
+      (row) => statusIn(row, new Set(['BLOCKED', 'NEEDS_INFORMATION', 'PARTIALLY_RELEASED'])),
+    ).length;
+    const inventoryDiscrepancies = (state.inventoryItems ?? []).filter(
+      (item) =>
+        String(item?.status ?? '').toUpperCase() === 'VERIFY' ||
+        Number(item?.openingOnHand ?? 0) <= Number(item?.reorderThreshold ?? 0),
+    ).length;
+    const failedEvidence = (state.evidenceFiles ?? []).filter((row) =>
+      statusIn(row, new Set(['FAILED', 'REJECTED', 'CORRUPT', 'UNAVAILABLE'])),
+    ).length;
+    const accessChanges = (state.referenceAdminChanges ?? []).filter((row) =>
+      statusIn(row, new Set(['PENDING_REVIEW', 'APPLYING', 'FAILED'])),
+    ).length;
+    const referenceErrors = (state.referenceAdminRecords ?? []).filter(
+      (row) =>
+        row?.domain === 'SYNC_HEALTH' &&
+        statusIn(row, new Set(['ERROR', 'FAILED', 'STALE', 'CONFLICT', 'VERIFY'])),
+    ).length;
+    const environment = String(state.environment ?? config.appEnvironment ?? '').toUpperCase();
+    const environmentIssues = ['DEVELOPMENT', 'STAGING', 'PRODUCTION'].includes(environment) ? 0 : 1;
+    return {
+      accessChanges,
+      failedEvidence,
+      referenceErrors,
+      inventoryDiscrepancies,
+      requestBlockers,
+      lendingBlockers,
+      releaseBlockers,
+      environmentIssues,
+      total:
+        accessChanges +
+        failedEvidence +
+        referenceErrors +
+        inventoryDiscrepancies +
+        requestBlockers +
+        lendingBlockers +
+        releaseBlockers +
+        environmentIssues,
+    };
+  };
+
+  const renderAdminOperationalHealth = () => {
+    const root = document.querySelector('[data-admin-operational-health]');
+    if (!root) return;
+    const state = getState() ?? {};
+    const counts = adminExceptionCounts(state);
+    const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
+    const revision = state.dataRevision ?? 'Not reported';
+    const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
+    const metrics = [
+      ['Environment', environment, 'Server-reported deployment identity'],
+      ['Release', `v${state.appVersion ?? '0.7.0'}`, 'Authenticated application release'],
+      ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
+      ['Attention', counts.total, 'Cross-workspace exception total'],
+    ];
+    root.querySelector('[data-admin-health-metrics]').innerHTML = metrics
+      .map(
+        ([label, value, note]) =>
+          `<article class="card metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`,
+      )
+      .join('');
+    root.querySelector('[data-admin-health-attention]').innerHTML = `
+      <div class="request-line"><div><strong>Operational data revision</strong><small>${esc(revision)} &middot; ${esc(updatedAt ? accessDate(updatedAt) : 'Last update not reported')}</small></div><span class="pill">Read only</span></div>
+      <div class="request-line"><div><strong>Authorization boundary</strong><small>Visibility and navigation do not grant a capability; every action remains server-authorized.</small></div><span class="pill">Fail closed</span></div>
+      <div class="request-line"><div><strong>Cross-workspace attention</strong><small>${esc(counts.requestBlockers)} request &middot; ${esc(counts.lendingBlockers)} lending &middot; ${esc(counts.releaseBlockers)} release &middot; ${esc(counts.inventoryDiscrepancies)} inventory</small></div><button class="secondary mini" type="button" data-admin-destination="cross-workspace-attention">Open attention</button></div>`;
+  };
+
+  const renderAdminBrandAssets = () => {
+    const root = document.querySelector('[data-admin-brand-assets]');
+    if (!root) return;
+    const slots = [
+      ['USC logo', '/brand/usc-logo', 'Official council identity'],
+      ['DOL logo', '/brand/dol-logo', 'Department identity'],
+      ['Login background', '/brand/login-background', 'Governed staff sign-in background'],
+      ['Favicon', '/brand/favicon', 'Browser and compact identity'],
+    ];
+    root.querySelector('[data-admin-brand-slots]').innerHTML = slots
+      .map(
+        ([label, path, note]) =>
+          `<article class="admin-brand-slot" data-brand-slot="${esc(path)}"><div class="admin-brand-preview"><img src="${esc(path)}" alt="" loading="lazy" decoding="async"></div><strong>${esc(label)}</strong><small>${esc(note)}</small><code>${esc(path)}</code><span class="pill">Governed route</span></article>`,
+      )
+      .join('');
+  };
+
+  const renderAdminEvidenceStatus = () => {
+    const root = document.querySelector('[data-admin-evidence-status]');
+    if (!root) return;
+    const state = getState() ?? {};
+    const evidence = state.evidenceFiles ?? [];
+    const failed = evidence.filter((row) =>
+      new Set(['FAILED', 'REJECTED', 'CORRUPT', 'UNAVAILABLE']).has(
+        String(row?.status ?? '').toUpperCase(),
+      ),
+    );
+    const openDeliverables = (state.deliverables ?? []).filter(
+      (row) =>
+        !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(
+          String(row?.status ?? '').toUpperCase(),
+        ) && !row?.evidenceId,
+    );
+    const metrics = [
+      ['Evidence records', evidence.length, 'Authorized metadata records'],
+      ['Failed or unavailable', failed.length, 'File records requiring follow-up'],
+      ['Open deliverables missing evidence', openDeliverables.length, 'Owning workflow remains authoritative'],
+      ['Governed storage', 'R2 / Drive', 'Provider identifiers remain private'],
+    ];
+    root.querySelector('[data-admin-evidence-metrics]').innerHTML = metrics
+      .map(
+        ([label, value, note]) =>
+          `<article class="card metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`,
+      )
+      .join('');
+    const exceptions = [
+      ...failed.map((row) => ({
+        id: row.id,
+        label: row.name || row.id,
+        note: `Evidence ${row.status}`,
+      })),
+      ...openDeliverables.map((row) => ({
+        id: row.id,
+        label: row.itemSpec || row.id,
+        note: 'Open deliverable has no linked evidence',
+      })),
+    ];
+    root.querySelector('[data-admin-evidence-results]').innerHTML =
+      exceptions
+        .map(
+          (row) =>
+            `<div class="request-line"><div><strong>${esc(row.label)}</strong><small>${esc(row.id)} &middot; ${esc(row.note)}</small></div><button class="secondary mini" type="button" data-admin-destination="procurement-evidence">Open owner workflow</button></div>`,
+        )
+        .join('') ||
+      '<div class="empty">No failed evidence or open deliverable evidence exceptions are currently projected.</div>';
+  };
+
+  const renderAdminControlSurface = () => {
+    if (adminControlSurface === 'operational-health') renderAdminOperationalHealth();
+    if (adminControlSurface === 'brand-assets') renderAdminBrandAssets();
+    if (adminControlSurface === 'evidence-status') renderAdminEvidenceStatus();
+  };
+
   const renderReferenceAdminWorkspace = () => {
     const root = document.querySelector('#referenceAdminWorkspace');
     if (!root) return;
     const allowed = referenceAdminAllowed();
     root.hidden = !allowed;
     if (!allowed) return;
-    const accessMode = referenceAdminDomain === 'PERMISSIONS';
+    const customSurface = ['operational-health', 'brand-assets', 'evidence-status'].includes(
+      adminControlSurface,
+    );
+    const accessMode = !customSurface && referenceAdminDomain === 'PERMISSIONS';
     const accessRoot = root.querySelector('[data-access-management]');
-    accessRoot.hidden = advertisementAdminOpen || !accessMode || !accessManagementAllowed();
-    root.querySelector('[data-reference-admin-generic]').hidden = advertisementAdminOpen || accessMode;
-    root.querySelector('[data-reference-admin-pending-panel]').hidden = advertisementAdminOpen || accessMode;
+    accessRoot.hidden = advertisementAdminOpen || customSurface || !accessMode || !accessManagementAllowed();
+    root.querySelector('[data-reference-admin-generic]').hidden =
+      advertisementAdminOpen || customSurface || accessMode;
+    root.querySelector('[data-reference-admin-pending-panel]').hidden =
+      advertisementAdminOpen || customSurface || accessMode;
+    root.querySelector('[data-admin-operational-health]').hidden =
+      adminControlSurface !== 'operational-health';
+    root.querySelector('[data-admin-brand-assets]').hidden = adminControlSurface !== 'brand-assets';
+    root.querySelector('[data-admin-evidence-status]').hidden = adminControlSurface !== 'evidence-status';
     const advertisementRoot = root.querySelector('[data-advertisement-admin]');
     advertisementRoot.hidden = !advertisementAdminOpen || !advertisementManagementAllowed();
     const advertisementControl = root.querySelector('[data-advertisement-admin-control]');
@@ -1870,7 +2029,14 @@ export function createRuntimeExtensions(options) {
     const results = root.querySelector('[data-reference-admin-results]');
     const readOnly = ['PEOPLE_MEMBERSHIPS', 'SYNC_HEALTH'].includes(referenceAdminDomain);
     root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
-      const active = control.dataset.referenceAdminControlDomain === referenceAdminDomain;
+      const active =
+        adminControlSurface === 'reference' &&
+        control.dataset.referenceAdminControlDomain === referenceAdminDomain;
+      control.classList.toggle('active', active);
+      control.setAttribute('aria-pressed', String(active));
+    });
+    root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
+      const active = control.dataset.adminControlSurface === adminControlSurface;
       control.classList.toggle('active', active);
       control.setAttribute('aria-pressed', String(active));
     });
@@ -1880,6 +2046,10 @@ export function createRuntimeExtensions(options) {
     }
     if (accessMode) {
       renderAccessDirectory();
+      return;
+    }
+    if (customSurface) {
+      renderAdminControlSurface();
       return;
     }
     root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
@@ -1933,6 +2103,7 @@ export function createRuntimeExtensions(options) {
     root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
     root.querySelector('[name="referenceAdminDomain"]').addEventListener('change', (event) => {
       advertisementAdminOpen = false;
+      adminControlSurface = 'reference';
       referenceAdminDomain = event.target.value;
       referenceAdminWorkspace = null;
       void refreshReferenceAdminWorkspace({ force: true });
@@ -1948,14 +2119,23 @@ export function createRuntimeExtensions(options) {
     root.querySelectorAll('[data-reference-admin-control-domain]').forEach((control) => {
       control.addEventListener('click', () => {
         advertisementAdminOpen = false;
+        adminControlSurface = 'reference';
         referenceAdminDomain = control.dataset.referenceAdminControlDomain;
         root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
         referenceAdminWorkspace = null;
         void refreshReferenceAdminWorkspace({ force: true });
       });
     });
+    root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
+      control.addEventListener('click', () => {
+        advertisementAdminOpen = false;
+        adminControlSurface = control.dataset.adminControlSurface;
+        renderReferenceAdminWorkspace();
+      });
+    });
     root.querySelector('[data-advertisement-admin-control]').addEventListener('click', () => {
       if (!advertisementManagementAllowed()) return;
+      adminControlSurface = 'reference';
       advertisementAdminOpen = true;
       renderReferenceAdminWorkspace();
       void refreshAdvertisementDirectory({ force: true });
@@ -2064,6 +2244,11 @@ export function createRuntimeExtensions(options) {
       else openAccessReasonAction(account, button.dataset.accessAction);
     });
     root.addEventListener('click', (event) => {
+      const destination = event.target.closest('[data-admin-destination]')?.dataset.adminDestination;
+      if (destination) {
+        openAdminDestination(destination);
+        return;
+      }
       const edit = event.target.closest('[data-reference-admin-edit]');
       if (edit)
         openReferenceAdminChange(
@@ -3932,17 +4117,21 @@ export function createRuntimeExtensions(options) {
   const roleExperienceDefinitions = {
     administrator: {
       label: 'Administrator workspace',
-      heading: 'Control the operational picture and governed reference data',
+      heading: 'Administrator Control Center',
       description:
-        'Start with the queue, release readiness, stock attention, and the controlled administration boundary. Open the existing workspace that owns the next action; this overview does not grant or alter authority.',
+        'Start with system exceptions, access changes, evidence failures, reference errors, inventory discrepancies, and blocked request, lending, or release work. Every signal opens the existing server-authorized owner workflow.',
       boundaryTitle: 'Administrator control boundary',
       boundary:
         'Reference changes, account access, and environment controls remain subject to their existing server authorization, separation-of-duties, and audit requirements.',
       actions: [
-        ['request', 'Review requests', 'Requests, routing context, and required follow-up'],
-        ['release', 'Check controlled handoffs', 'Release readiness and recipient-confirmed fulfillment'],
-        ['inventory', 'Inspect stock attention', 'Catalog availability, reservations, and movement history'],
-        ['reference-admin', 'Open reference administration', 'Controlled data and access governance'],
+        ['overview', 'All Request Queues', 'Server-scoped new, review, blocked, and committee queues', 'all-request-queues'],
+        ['lending', 'Internal Lending Hub', 'Review, handoff, active loan, overdue, and return workflows'],
+        ['release', 'Release Desk', 'Distinct recipient-confirmed physical handoff workspace'],
+        ['restocking', 'Restocking', 'Replenishment review, procurement, and cumulative receiving'],
+        ['procurement', 'Procurement & Deliverables', 'Canvassing, budget, purchasing, and deliverable status'],
+        ['inventory', 'Inventory Management', 'Catalog, balances, reservations, ATP, and movement history'],
+        ['procurement', 'Receiving', 'Validated receiving and automatic event-item registration', 'receiving'],
+        ['referenceAdmin', 'Evidence status', 'Cross-workspace evidence exceptions and missing records', 'evidence-status'],
       ],
     },
     director: {
@@ -4044,18 +4233,17 @@ export function createRuntimeExtensions(options) {
     (rows ?? []).filter((row) => statuses.has(String(row?.status ?? '').toUpperCase())).length;
 
   const administratorMetrics = (state) => {
-    const requestsForReview = countStatuses(state.requests, new Set(['FOR_REVIEW', 'NEEDS_INFORMATION']));
-    const releaseReady =
-      countStatuses(state.requestLines, new Set(['READY_TO_RELEASE', 'PARTIALLY_RELEASED'])) +
-      countStatuses(state.deliverables, new Set(['READY_TO_RELEASE', 'PARTIALLY_RELEASED']));
-    const stockAttention = (state.inventoryItems ?? []).filter(
-      (item) => item?.status === 'VERIFY' || Number(item?.openingOnHand ?? 0) <= Number(item?.reorderThreshold ?? 0),
-    ).length;
+    const counts = adminExceptionCounts(state);
     return [
-      ['Requests needing review', requestsForReview, 'Server-routed queue requiring follow-up'],
-      ['Release readiness', releaseReady, 'Controlled handoff records to inspect'],
-      ['Stock attention', stockAttention, 'Low or verification-required catalog records'],
-      ['Governed reference areas', 4, 'Events, catalog, accounts, and access controls'],
+      ['Access changes', counts.accessChanges, 'Pending, applying, or failed access governance', 'access-changes'],
+      ['Failed evidence', counts.failedEvidence, 'Rejected, corrupt, unavailable, or failed records', 'failed-evidence'],
+      ['Reference-data errors', counts.referenceErrors, 'Stale, conflicting, or failed governed references', 'reference-errors'],
+      ['Inventory discrepancies', counts.inventoryDiscrepancies, 'Verification and reorder-threshold exceptions', 'inventory-discrepancies'],
+      ['Request blockers', counts.requestBlockers, 'Review, information, budget, and blocked requests', 'request-blockers'],
+      ['Lending blockers', counts.lendingBlockers, 'Review, overdue, damage, and loss exceptions', 'lending-blockers'],
+      ['Release blockers', counts.releaseBlockers, 'Blocked, incomplete, or partial handoff records', 'release-blockers'],
+      ['Environment health', counts.environmentIssues, 'Server-reported environment identity and freshness', 'environment-health'],
+      ['Cross-workspace attention', counts.total, 'Combined operational exceptions requiring review', 'cross-workspace-attention'],
     ];
   };
 
@@ -4196,6 +4384,66 @@ export function createRuntimeExtensions(options) {
       materials: materialsMetrics,
     })[experience]?.(state) ?? [];
 
+  const openAdminReferenceDestination = ({ surface = 'reference', domain = '' } = {}) => {
+    adminControlSurface = surface;
+    advertisementAdminOpen = false;
+    if (domain) referenceAdminDomain = domain;
+    const navigation = document.querySelector('[data-admin-view="referenceAdmin"]');
+    navigation?.click();
+    const root = document.querySelector('#referenceAdminWorkspace');
+    if (domain && root?.querySelector('[name="referenceAdminDomain"]')) {
+      root.querySelector('[name="referenceAdminDomain"]').value = domain;
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
+    }
+    renderReferenceAdminWorkspace();
+  };
+
+  const openAdminDestination = (destination) => {
+    const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
+    if (destination === 'access-changes')
+      return openAdminReferenceDestination({ domain: 'PERMISSIONS' });
+    if (destination === 'failed-evidence' || destination === 'evidence-status')
+      return openAdminReferenceDestination({ surface: 'evidence-status' });
+    if (destination === 'reference-errors')
+      return openAdminReferenceDestination({ domain: 'SYNC_HEALTH' });
+    if (destination === 'environment-health')
+      return openAdminReferenceDestination({ surface: 'operational-health' });
+    if (destination === 'inventory-discrepancies') {
+      openView('inventory');
+      const filter = document.querySelector('#inventoryStatusFilter');
+      if (filter) {
+        filter.value = 'VERIFY';
+        filter.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      return;
+    }
+    if (destination === 'lending-blockers') {
+      openView('lending');
+      document.querySelector('[data-loan-tab="OVERDUE"]')?.click();
+      return;
+    }
+    if (destination === 'release-blockers') return openView('release');
+    if (destination === 'receiving' || destination === 'procurement-evidence') {
+      openView('procurement');
+      document.querySelector('[data-proc-tab="receiving"]')?.click();
+      return;
+    }
+    if (destination === 'all-request-queues' || destination === 'cross-workspace-attention') {
+      openView('overview');
+      const target =
+        destination === 'all-request-queues'
+          ? document.querySelector('#committeeDashboardPanel')
+          : document.querySelector('#operationalPulse');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (destination === 'request-blockers') {
+      openView('overview');
+      document.querySelector('[data-dashboard-queue="blocked"]')?.click();
+    }
+  };
+
   const installRoleExperience = () => {
     if (isRequestOnly() || document.querySelector('#roleExperiencePanel')) return;
     const overviewHero = document.querySelector('#overview > .hero');
@@ -4205,6 +4453,10 @@ export function createRuntimeExtensions(options) {
     panel.className = 'role-experience panel section-gap';
     panel.hidden = true;
     panel.setAttribute('aria-live', 'polite');
+    panel.addEventListener('click', (event) => {
+      const destination = event.target.closest('[data-admin-destination]')?.dataset.adminDestination;
+      if (destination) openAdminDestination(destination);
+    });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
       roleExperienceObserver = new MutationObserver(() => {
@@ -4238,13 +4490,13 @@ export function createRuntimeExtensions(options) {
       <span class="role-experience-badge">Role-scoped overview</span>
     </div>
     <div class="role-experience-metrics">
-      ${metrics.map(([label, value, note]) => `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
+      ${metrics.map(([label, value, note, destination]) => destination ? `<button type="button" data-admin-destination="${esc(destination)}"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`).join('')}
     </div>
     <div class="role-experience-layout">
       <section aria-labelledby="roleExperienceActionsTitle">
         <div class="section-kicker" id="roleExperienceActionsTitle">Leadership action map</div>
         <div class="role-experience-actions">
-          ${definition.actions.map(([view, title, detail]) => `<button type="button" data-go="${esc(view)}"><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
+          ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? `data-admin-destination="${esc(destination)}"` : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
         </div>
       </section>
       <aside class="role-experience-boundary" aria-label="${esc(definition.boundaryTitle)}">

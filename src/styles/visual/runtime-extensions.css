@@ -175,7 +175,8 @@ body:not(.request-mode) .secondary {
 .role-experience-kicker, .role-experience-boundary > span { color: var(--role-accent-ink); font-size: 10px; font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
 .role-experience-badge { flex: 0 0 auto; padding: 7px 10px; border: 1px solid var(--role-accent); border-radius: 999px; color: var(--role-accent-ink); background: var(--role-accent-soft); font-size: 10px; font-weight: 850; }
 .role-experience-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-.role-experience-metrics article { display: grid; gap: 6px; min-height: 116px; padding: 15px; border: 1px solid #e4d6bd; border-radius: 15px; background: #fffdf8; box-shadow: 0 8px 22px rgba(53, 5, 7, .045); }
+.role-experience-metrics article, .role-experience-metrics button { display: grid; gap: 6px; min-height: 116px; padding: 15px; border: 1px solid #e4d6bd; border-radius: 15px; background: #fffdf8; box-shadow: 0 8px 22px rgba(53, 5, 7, .045); text-align: left; font: inherit; }
+.role-experience-metrics button:hover, .role-experience-metrics button:focus-visible { border-color: var(--role-accent); background: var(--role-accent-soft); box-shadow: var(--shell-shadow); }
 .role-experience-metrics span { color: #735f5c; font-size: 11px; font-weight: 750; }
 .role-experience-metrics strong { color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; font-size: 30px; line-height: 1; }
 .role-experience-metrics small { color: #735f5c; font-size: 10px; line-height: 1.4; }
@@ -189,6 +190,13 @@ body:not(.request-mode) .secondary {
 .role-experience-boundary { padding: 16px; border: 1px solid #cfb276; border-radius: 15px; background: #fffaf0; }
 .role-experience-boundary h3 { margin: 7px 0; color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; }
 .role-experience-boundary p { margin: 0; color: #735f5c; font-size: 12px; line-height: 1.55; }
+.admin-brand-slot-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.admin-brand-slot { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 15px; border: 1px solid #e4d6bd; border-radius: 15px; background: #fffdf8; }
+.admin-brand-slot strong { color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; }
+.admin-brand-slot small { color: #735f5c; line-height: 1.4; }
+.admin-brand-slot code { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
+.admin-brand-preview { display: grid; place-items: center; min-height: 92px; overflow: hidden; border-radius: 12px; background: linear-gradient(145deg, #f7f0e1, #fffdf8); }
+.admin-brand-preview img { display: block; width: auto; max-width: 100%; height: auto; max-height: 92px; object-fit: contain; }
 
 @media (max-width: 820px) {
   body:not(.request-mode) { padding-bottom: 82px; }
@@ -219,6 +227,7 @@ body:not(.request-mode) .secondary {
   body:not(.request-mode) .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-control-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .role-experience-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-brand-slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .role-experience-layout { grid-template-columns: 1fr; }
   .shared-mobile-nav {
     position: fixed;
@@ -286,6 +295,7 @@ body:not(.request-mode) .secondary {
   .role-experience-head { display: grid; }
   .role-experience-badge { justify-self: start; }
   .role-experience-metrics, .role-experience-actions { grid-template-columns: 1fr; }
+  .admin-brand-slot-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 430px) {

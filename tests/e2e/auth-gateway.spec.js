@@ -244,7 +244,13 @@ test('authenticated System Owner keeps owner identity across every workspace and
       scopeMode: 'ALL',
       committeeIds: [],
       committees: [],
-      capabilities: ['view.request', 'view.internal', 'fulfillment.release', 'system.admin'],
+      capabilities: [
+        'view.request',
+        'view.internal',
+        'fulfillment.release',
+        'lending.usage.view',
+        'system.admin',
+      ],
       mappingStatus: 'MAPPED',
       active: true,
     },
@@ -296,6 +302,8 @@ test('authenticated System Owner keeps owner identity across every workspace and
   await navigateToView(page, 'release');
   await expect(page.locator('#release')).toHaveClass(/active/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await navigateToView(page, 'lending');
+  await expect(page.locator('[data-lending-usage]')).toBeVisible();
 });
 
 test('request-only HTTP mode remains outside the internal authentication gate', async ({

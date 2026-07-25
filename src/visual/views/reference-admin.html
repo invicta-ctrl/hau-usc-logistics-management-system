@@ -21,6 +21,8 @@
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES"><span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong><small>Manage approved references without editing raw operational sources.</small><span class="admin-control-action">Open reference data</span></button>
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="ROUTING"><span class="admin-control-kicker">Link Registry</span><strong>Routes and canonical ownership</strong><small>Cross-office routing remains a separate-review decision.</small><span class="admin-control-action">Open controlled routing</span></button>
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="operational-health"><span class="admin-control-kicker">Operational Health</span><strong>Environment and workflow readiness</strong><small>Inspect server-reported identity, freshness, and cross-workspace attention without exposing secrets.</small><span class="admin-control-action">Open operational health</span></button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets"><span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong><small>Inspect the active R2-backed DOL, USC, login-background, and favicon routes.</small><span class="admin-control-action">Open governed assets</span></button>
         <button class="admin-control-card" type="button" data-advertisement-admin-control><span class="admin-control-kicker">USC Announcements</span><strong>Public advertisement rotation</strong><small>Create, preview, schedule, reorder, and archive governed public media.</small><span class="admin-control-action">Manage advertisements</span></button>
       </div>
     </section>
@@ -28,6 +30,23 @@
     <article class="admin-governance-note" aria-label="Administrator authority boundary">
       <strong>Authority boundary</strong>
       <span>Operational work remains in its role workspace. This control desk surfaces authorized context and invokes existing server checks; it does not grant access, bypass review, or mutate ledger records.</span>
+    </article>
+
+    <article class="panel" data-admin-operational-health hidden>
+      <div class="panel-head"><div><h2>Operational Health</h2><p>Server-reported environment identity, data freshness, and operational exceptions. Secret values and provider identifiers are intentionally omitted.</p></div><span class="pill">Read only</span></div>
+      <div class="grid-4 section-gap" data-admin-health-metrics></div>
+      <div class="line-list section-gap" data-admin-health-attention></div>
+    </article>
+
+    <article class="panel" data-admin-brand-assets hidden>
+      <div class="panel-head"><div><h2>Brand Assets</h2><p>Current governed media routes used throughout the application. Replacement lifecycle remains separately authorized.</p></div><span class="pill">Governed R2 slots</span></div>
+      <div class="admin-brand-slot-grid section-gap" data-admin-brand-slots></div>
+    </article>
+
+    <article class="panel" data-admin-evidence-status hidden>
+      <div class="panel-head"><div><h2>Evidence status</h2><p>Cross-workspace evidence exceptions and records requiring follow-up. Files remain governed by their owning workflow.</p></div><span class="pill">Read only</span></div>
+      <div class="grid-4 section-gap" data-admin-evidence-metrics></div>
+      <div class="line-list section-gap" data-admin-evidence-results></div>
     </article>
 
     <article class="panel" data-access-management hidden>
