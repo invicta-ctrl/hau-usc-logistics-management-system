@@ -158,6 +158,20 @@ export function createD1IdentityRosterRepository(db) {
       const statements = [
         db
           .prepare(
+            `SELECT CASE
+               WHEN EXISTS (
+                 SELECT 1
+                 FROM identity_roster_sync_runs
+                 WHERE id = ?1
+                   AND apply_status = 'PREVIEWED'
+                   AND validation_status IN ('VALID', 'VALID_WITH_REJECTIONS')
+               ) THEN 1
+               ELSE json_extract('INVALID_IDENTITY_ROSTER_APPLY_STATE', '$')
+             END AS allowed`,
+          )
+          .bind(run.id),
+        db
+          .prepare(
             `INSERT INTO identity_roster_rollback_snapshots (
                run_id, protected_snapshot_envelope, entry_count, created_at, created_by_account_id
              ) VALUES (?1, ?2, ?3, ?4, ?5)`,
@@ -169,7 +183,9 @@ export function createD1IdentityRosterRepository(db) {
           .prepare(
             `UPDATE identity_roster_sync_runs
              SET apply_status = 'APPLIED', applied_at = ?1
-             WHERE id = ?2 AND apply_status = 'PREVIEWED' AND validation_status = 'VALID'`,
+             WHERE id = ?2
+               AND apply_status = 'PREVIEWED'
+               AND validation_status IN ('VALID', 'VALID_WITH_REJECTIONS')`,
           )
           .bind(appliedAt, run.id),
         auditStatement(db, {
@@ -191,7 +207,7 @@ export function createD1IdentityRosterRepository(db) {
         }),
       ];
       const results = await db.batch(statements);
-      const updateResult = results[2 + entries.length];
+      const updateResult = results[3 + entries.length];
       if (Number(updateResult?.meta?.changes ?? 0) !== 1) {
         throw new Error('Identity roster sync write conflict.');
       }
@@ -206,6 +222,22 @@ export function createD1IdentityRosterRepository(db) {
         .first();
       if (!snapshot) return { snapshotEnvelope: '' };
       const statements = [
+        db
+          .prepare(
+            `SELECT CASE
+               WHEN EXISTS (
+                 SELECT 1
+                 FROM identity_roster_sync_runs
+                 WHERE id = ?1 AND apply_status = 'APPLIED'
+               ) AND EXISTS (
+                 SELECT 1
+                 FROM identity_roster_rollback_snapshots
+                 WHERE run_id = ?1
+               ) THEN 1
+               ELSE json_extract('INVALID_IDENTITY_ROSTER_ROLLBACK_STATE', '$')
+             END AS allowed`,
+          )
+          .bind(run.id),
         db.prepare('DELETE FROM identity_roster_entries'),
         ...entries.map((entry) => insertEntryStatement(db, entry)),
         db
@@ -228,7 +260,7 @@ export function createD1IdentityRosterRepository(db) {
         }),
       ];
       const results = await db.batch(statements);
-      const updateResult = results[1 + entries.length];
+      const updateResult = results[2 + entries.length];
       if (Number(updateResult?.meta?.changes ?? 0) !== 1) {
         throw new Error('Identity roster rollback write conflict.');
       }

@@ -65,12 +65,12 @@ const run = {
   sourceFingerprint: 'SHA256-SYNTHETIC-001',
   sourceRowCount: 1,
   acceptedCount: 1,
-  rejectionCount: 0,
+  rejectionCount: 1,
   addCount: 1,
   changeCount: 0,
   removalCount: 0,
   unchangedCount: 0,
-  validationStatus: 'VALID',
+  validationStatus: 'VALID_WITH_REJECTIONS',
   protectedSourceEnvelope: 'v1.synthetic.source',
   protectedRejectionsEnvelope: 'v1.synthetic.rejections',
   createdByAccountId: 'OWNER-SYNTHETIC',
@@ -136,5 +136,57 @@ describe('D1 identity roster repository', () => {
         .bind(run.id)
         .run(),
     ).rejects.toThrow(/append-only/iu);
+  });
+
+  it('rejects a stale apply before changing entries, snapshots, or audit history', async () => {
+    const { db, repository } = await context();
+    await repository.createPreview(run);
+    await db
+      .prepare("UPDATE identity_roster_sync_runs SET apply_status = 'APPLIED' WHERE id = ?1")
+      .bind(run.id)
+      .run();
+    await db
+      .prepare(
+        `INSERT INTO identity_roster_entries (
+           identity_key, protected_profile_envelope, active, source_fingerprint,
+           source_run_id, updated_at
+         ) VALUES (?1, ?2, 1, ?3, ?4, ?5)`,
+      )
+      .bind(
+        'IDN-SYNTHETIC-BASELINE',
+        'v1.synthetic.baseline',
+        run.sourceFingerprint,
+        run.id,
+        '2026-07-26T10:00:30.000Z',
+      )
+      .run();
+
+    await expect(
+      repository.applyRun({
+        run: { ...run, currentEntryCount: 1 },
+        entries: [
+          {
+            identityKey: 'IDN-SYNTHETIC-REPLACEMENT',
+            protectedProfileEnvelope: 'v1.synthetic.replacement',
+            active: true,
+            sourceFingerprint: run.sourceFingerprint,
+            sourceRunId: run.id,
+            updatedAt: '2026-07-26T10:01:00.000Z',
+          },
+        ],
+        snapshotEnvelope: 'v1.synthetic.snapshot',
+        actor: { id: 'OWNER-SYNTHETIC' },
+        appliedAt: '2026-07-26T10:01:00.000Z',
+        correlationId: 'COR-SYNTHETIC-STALE',
+        auditId: 'AUD-SYNTHETIC-STALE',
+        reason: 'Reject the stale synthetic D1 write.',
+      }),
+    ).rejects.toThrow();
+    await expect(repository.listEntries()).resolves.toMatchObject([
+      { identityKey: 'IDN-SYNTHETIC-BASELINE' },
+    ]);
+    await expect(repository.getSnapshotEnvelope(run.id)).resolves.toBe('');
+    const audits = await db.prepare('SELECT COUNT(*) AS total FROM audit_log').first();
+    expect(Number(audits.total)).toBe(0);
   });
 });
