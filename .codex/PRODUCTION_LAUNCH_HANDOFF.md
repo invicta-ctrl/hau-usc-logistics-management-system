@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–12 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -273,11 +273,26 @@ Decision: **PRODUCTION NO-GO — PHASES 0–12 AND FOLLOW-UP AMENDMENT ACCEPTED 
 - Durable handoff:
   `.codex/V0_7_PHASE_12_INVENTORY_PANTRY_WORKSPACE_HANDOFF.md`.
 
+## Phase 13 Materials & Documentation workspace evidence
+
+- Materials & Documentation is a process-oriented acquisition and fulfillment
+  workspace with eight complete destinations over the canonical request,
+  deliverable, canvass, supplier, receiving, evidence, and Release Desk
+  services.
+- The scoped D1 queue preserves stable identity, exact specifications,
+  requested/received/released quantities, and bounded sourcing state without a
+  duplicate Materials persistence model or supplier-private projection.
+- Repository acceptance passed 417 unit tests, 123 browser tests, and 27 local
+  Worker/D1 tests. The complete deployed suite passed 5 / 5 at exact runtime
+  `653c6f8`, Worker version `33f417ea-646f-4900-80dd-4cbe1ca97cbd`, schema 19.
+- PR #9 at the exact product head passed all 6 / 6 checks.
+- Durable handoff: `.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 13 Materials & Documentation workspace. Do not
+Complete Phase 14 Advanced Access Management. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 

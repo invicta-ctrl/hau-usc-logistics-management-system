@@ -13,18 +13,18 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 13 — audit and complete the real Materials & Documentation workspace as the next bounded
+Phase 14 — audit and complete Advanced Access Management as the next bounded
 master-prompt vertical slice.
 
-Phase 12 is accepted on staging at exact candidate `f37671c`, schema 19.
-Repository acceptance passed 417 unit tests, 118 browser tests, and 26 local
-Worker/D1 tests; the live governed brand and complete owner-authenticated
-Inventory Overview, eight destinations, exact D1 balance parity, bounded
-movement/condition projections, Admin return, Access Management, and
-shell-isolation scenarios passed;
-and PR #9 exact-head checks passed 6 / 6.
+Phase 13 is accepted on staging at exact candidate `653c6f8`, Worker version
+`33f417ea-646f-4900-80dd-4cbe1ca97cbd`, schema 19. Repository acceptance
+passed 417 unit tests, 123 browser tests, and 27 local Worker/D1 tests; the
+complete deployed suite passed 5 / 5, including the canonical Materials queue,
+eight destinations, shared workflows, authentication/Access Management,
+requester privacy, borrower-safe public behavior, and cleanup. PR #9 exact
+product-head checks passed 6 / 6.
 
 Durable evidence:
-`.codex/V0_7_PHASE_12_INVENTORY_PANTRY_WORKSPACE_HANDOFF.md`.
+`.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

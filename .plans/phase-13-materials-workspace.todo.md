@@ -55,12 +55,12 @@ Coverage: 11 / 11 Phase 13 requirement groups mapped.
 
 ## Validation
 
-- [ ] D1 Materials queue authorization/scope/projection regression
-- [ ] Materials destination and acquisition-exception tests
-- [ ] Capability-bound shared-workflow regression
-- [ ] Mobile navigation, keyboard focus, and no-overflow tests
-- [ ] `npm run check`
-- [ ] Full Playwright and local Worker/D1 acceptance
-- [ ] Exact staging health/readiness and live Phase 13 smoke
-- [ ] Exact-head PR checks
-- [ ] Production remains untouched
+- [x] D1 Materials queue authorization/scope/projection regression
+- [x] Materials destination and acquisition-exception tests
+- [x] Capability-bound shared-workflow regression
+- [x] Mobile navigation, keyboard focus, and no-overflow tests
+- [x] `npm run check`
+- [x] Full Playwright and local Worker/D1 acceptance
+- [x] Exact staging health/readiness and live Phase 13 smoke
+- [x] Exact-head PR checks
+- [x] Production remains untouched

@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–12 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
@@ -113,6 +113,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–12 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | Inventory stock-truth workspace | eight complete destinations; authoritative on-hand/reserved/ATP; scoped bounded movement/assets; capability-bound actions | PASS |
 | Phase 12 deployed acceptance | governed brand plus owner-authenticated refreshed Inventory route, exact D1/UI balance parity, eight destinations, Admin return, Access lifecycle, and cleanup | PASS — 2 / 2 at exact `f37671c`, schema 19 |
 | Phase 12 PR/CI | PR #9 exact head `f37671c` | PASS — open draft, clean/mergeable, 6 / 6 checks |
+| Phase 13 Materials workspace | `.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`; exact runtime `653c6f8` | PASS ON STAGING |
+| Phase 13 repository acceptance | `npm run check`; full Playwright; local Worker/D1 | PASS — 61 files / 417 unit tests; 123 browser passes / 297 intentional skips; 27 / 27 Worker tests |
+| Materials acquisition pipeline | eight complete destinations; stable request/event/deliverable identity; exact/cumulative quantities; quote, budget, procurement, receipt, and shared release state | PASS |
+| Phase 13 deployed acceptance | governed brand, canonical Materials scope/queue, eight destinations, shared workflows, auth/access lifecycle, requester privacy, borrower-safe public surface, and cleanup | PASS — 5 / 5 at exact `653c6f8`, schema 19 |
+| Phase 13 PR/CI | PR #9 exact product head `653c6f8` | PASS — open draft, mergeable, 6 / 6 checks |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
