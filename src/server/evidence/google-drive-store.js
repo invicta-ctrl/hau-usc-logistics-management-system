@@ -79,6 +79,26 @@ async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvide
   return payload.access_token;
 }
 
+async function oauthRefreshToken({ clientId, clientSecret, refreshToken, fetchImpl }) {
+  const response = await fetchImpl('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || typeof payload.access_token !== 'string') {
+    throw Object.assign(new Error('The approved private evidence store could not be authorized.'), {
+      code: 'EVIDENCE_STORE_AUTHORIZATION_FAILED',
+    });
+  }
+  return payload.access_token;
+}
+
 function decodeBase64(value) {
   const base64 = String(value ?? '').replace(/^data:[^;]+;base64,/u, '');
   if (!base64) throw Object.assign(new Error('The uploaded file is empty.'), {
@@ -152,6 +172,9 @@ function multipartBody({ metadata, bytes, mimeType, boundary }) {
 
 export function createGoogleDriveEvidenceStore({
   folderIds = {},
+  oauthClientId,
+  oauthClientSecret,
+  oauthRefreshToken: refreshToken,
   serviceAccountEmail,
   serviceAccountPrivateKey,
   fetchImpl = globalThis.fetch,
@@ -164,14 +187,41 @@ export function createGoogleDriveEvidenceStore({
         Object.entries(folderIds).map(([key, value]) => [key, String(value ?? '').trim()]),
       ),
     ),
+    oauthClientId: String(oauthClientId ?? '').trim(),
+    oauthClientSecret: String(oauthClientSecret ?? ''),
+    oauthRefreshToken: String(refreshToken ?? ''),
     serviceAccountEmail: String(serviceAccountEmail ?? '').trim(),
     serviceAccountPrivateKey: String(serviceAccountPrivateKey ?? ''),
   });
+  const hasOAuthConfiguration = Boolean(
+    configuration.oauthClientId &&
+      configuration.oauthClientSecret &&
+      configuration.oauthRefreshToken,
+  );
+  const hasServiceAccountConfiguration = Boolean(
+    configuration.serviceAccountEmail && configuration.serviceAccountPrivateKey,
+  );
+  const configuredCredentials = hasOAuthConfiguration || hasServiceAccountConfiguration;
 
   const folderFor = (evidenceType) => {
     const definition = EVIDENCE_TYPES[evidenceType];
     return definition ? configuration.folderIds[definition.folderKey] ?? '' : '';
   };
+  const accessToken = () =>
+    hasOAuthConfiguration
+      ? oauthRefreshToken({
+          clientId: configuration.oauthClientId,
+          clientSecret: configuration.oauthClientSecret,
+          refreshToken: configuration.oauthRefreshToken,
+          fetchImpl,
+        })
+      : serviceAccountToken({
+          email: configuration.serviceAccountEmail,
+          privateKey: configuration.serviceAccountPrivateKey,
+          fetchImpl,
+          cryptoProvider,
+          now: () => clock.now(),
+        });
 
   return Object.freeze({
     status(evidenceType) {
@@ -179,8 +229,7 @@ export function createGoogleDriveEvidenceStore({
         configured: Boolean(
           EVIDENCE_TYPES[evidenceType] &&
             folderFor(evidenceType) &&
-            configuration.serviceAccountEmail &&
-            configuration.serviceAccountPrivateKey,
+            configuredCredentials,
         ),
       };
     },
@@ -226,11 +275,7 @@ export function createGoogleDriveEvidenceStore({
         });
       }
       const folderId = folderFor(evidenceType);
-      if (
-        !folderId ||
-        !configuration.serviceAccountEmail ||
-        !configuration.serviceAccountPrivateKey
-      ) {
+      if (!folderId || !configuredCredentials) {
         throw Object.assign(new Error('The approved private evidence store is not configured.'), {
           code: 'EVIDENCE_STORE_NOT_CONFIGURED',
         });
@@ -262,20 +307,14 @@ export function createGoogleDriveEvidenceStore({
     },
 
     async upload(prepared) {
-      const accessToken = await serviceAccountToken({
-        email: configuration.serviceAccountEmail,
-        privateKey: configuration.serviceAccountPrivateKey,
-        fetchImpl,
-        cryptoProvider,
-        now: () => clock.now(),
-      });
+      const providerAccessToken = await accessToken();
       const boundary = `hau-usc-${cryptoProvider.randomUUID?.() ?? String(clock.now())}`;
       const response = await fetchImpl(
         'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
         {
           method: 'POST',
           headers: {
-            authorization: `Bearer ${accessToken}`,
+            authorization: `Bearer ${providerAccessToken}`,
             'content-type': `multipart/related; boundary=${boundary}`,
           },
           body: multipartBody({
@@ -301,16 +340,10 @@ export function createGoogleDriveEvidenceStore({
 
     async remove(privateStorageReference) {
       if (!privateStorageReference) return false;
-      const accessToken = await serviceAccountToken({
-        email: configuration.serviceAccountEmail,
-        privateKey: configuration.serviceAccountPrivateKey,
-        fetchImpl,
-        cryptoProvider,
-        now: () => clock.now(),
-      });
+      const providerAccessToken = await accessToken();
       const response = await fetchImpl(
         `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(privateStorageReference)}`,
-        { method: 'DELETE', headers: { authorization: `Bearer ${accessToken}` } },
+        { method: 'DELETE', headers: { authorization: `Bearer ${providerAccessToken}` } },
       );
       return response.ok || response.status === 404;
     },

@@ -396,7 +396,9 @@ test('deployed staging authentication and Access Management remain operational',
     await shell.getByLabel('Operational scope').selectOption('COMMITTEE:COM_INVENTORY_PANTRY');
     await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_INVENTORY_PANTRY/u);
     await shell.getByLabel('Workspace').selectOption('inventory-pantry');
-    await expect(page).toHaveURL(/\/app\/inventory\?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY$/u);
+    await expect(page).toHaveURL(
+      /\/app\/inventory\/release\?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY$/u,
+    );
     const inventorySessionResponse = page.waitForResponse(
       (response) =>
         response.request().method() === 'GET' &&
@@ -406,6 +408,9 @@ test('deployed staging authentication and Access Management remain operational',
     ownerCsrf = (await (await inventorySessionResponse).json()).csrfToken;
     await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
     await expect(page.locator('body')).toHaveAttribute('data-experience', 'inventory-pantry');
+    await expect(page.locator('#release')).toHaveClass(/active/u);
+    await page.goto('/app/inventory?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY');
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
     const inventoryWorkspace = page.locator(
       '#roleExperiencePanel[data-role-experience="inventory-pantry"]',
     );

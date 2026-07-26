@@ -186,6 +186,9 @@ function services(env) {
         RELEASE: env.GOOGLE_DRIVE_RELEASE_FOLDER_ID,
         LENDING: env.GOOGLE_DRIVE_LENDING_FOLDER_ID,
       },
+      oauthClientId: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_ID,
+      oauthClientSecret: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET,
+      oauthRefreshToken: env.GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN,
       serviceAccountEmail:
         env.GOOGLE_EVIDENCE_SERVICE_ACCOUNT_EMAIL ?? env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
       serviceAccountPrivateKey:
