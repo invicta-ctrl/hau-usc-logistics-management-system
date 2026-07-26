@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -37,11 +37,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — staging pre-migration SQL exports retained through pre-0020; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0020 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — staging pre-migration SQL exports retained through pre-0021; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0021 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 14 runtime `eca00e6` |
-| 9. Staging acceptance | PASS THROUGH PHASE 14; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 15 runtime `07b5dd0` |
+| 9. Staging acceptance | PASS THROUGH PHASE 15; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -307,31 +307,48 @@ Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED 
 - Durable handoff:
   `.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`.
 
+## Phase 15 USC Officer and Staff Directory evidence
+
+- A dedicated restricted Google source is shared Viewer-only to a dedicated
+  reader and accessed only through the read-only Sheets scope. Provider
+  identifiers, credentials, and roster values remain outside Git.
+- The source adapter imports only Student Number, institutional email, and full
+  name. Duplicate or incomplete rows are quarantined; valid rows can populate
+  the encrypted D1 projection without importing unrelated private columns.
+- Migration 0021 followed a private staging export with SHA-256
+  `ff2c2dce5e0b81a7acd74c0829be82f73666b6c45c0eacbc3b3d85c49c64804f`.
+- A first live apply exposed a transaction-guard defect. Writes were stopped,
+  the affected run was reconciled through the normal rollback API, transaction
+  guards and a Miniflare regression were added, and the complete live gate was
+  rerun from an empty projection.
+- Final acceptance covered stale/superseded rejection, apply, replay, no-op
+  rejection, rollback, re-apply, owner/non-owner authorization, self-profile
+  privacy, and D1 reconciliation.
+- Final staging has 37 active protected directory entries, one current source
+  fingerprint, and zero inconsistent sync runs. The approved source had 127
+  rows, of which 90 were quarantined without exposing their values.
+- Repository acceptance passed 65 Vitest files / 437 tests. Exact-candidate
+  deployed Chromium acceptance passed 6 / 6 at `07b5dd0`, schema 21.
+- Durable handoff:
+  `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 15 Owner-Protected Identity Roster. Do not
+Complete Phase 16 Shared Release Desk and Global Owner Access. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.
 
-## Phase 15 implementation checkpoint
+## Phase 16 starting checkpoint
 
-- Exact product checkpoint `49f3dfd` implements the encrypted owner-protected
-  D1 identity directory, explicit least-privilege Google preview, strict
-  validation, opaque source fingerprint, reconciliation, owner-only
-  apply/rollback, and normal-user self-profile boundary.
-- Repository acceptance passed 433 unit tests, 126 browser tests, and 30 fresh
-  local Worker/D1 tests.
-- Migration 0021 is not applied to staging and no Phase 15 Worker is deployed.
-  The accepted staging runtime remains Phase 14 `eca00e6`, schema 20.
-- Live Phase 15 is blocked because the available private configuration has no
-  separate approved identity roster Sheet or Viewer-only Google
-  service-account credential. The legacy operational workbook cannot be
-  substituted and protected roster values cannot be invented.
-- Durable checkpoint:
-  `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`.
-- Outside-Git source template/setup checkpoint:
-  `D:\Documents\Codex\private-config\hau-usc-logistics-v0.7-phase15-20260726`.
+- Preserve the Phase 15 approved source, private configuration, encrypted
+  projection, transaction guards, and staging evidence.
+- Read only the Phase 16 master-specification section and directly relevant
+  Release Desk routes, capabilities, source, and focused tests before changing
+  code.
+- Implement one shared Release Desk over authoritative fulfillment/release
+  services and prove global System Owner access without impersonation or
+  capability bypass.

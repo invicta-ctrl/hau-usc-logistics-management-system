@@ -1,14 +1,14 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 14 candidate `eca00e6`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact product head `eca00e6`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `eca00e6`, D1 connected, schema 20, migration 0020 |
+| Git handshake | exact pushed Phase 15 candidate `07b5dd0`, upstream parity before status checkpoint | PASS |
+| PR #9 / CI | exact product head `07b5dd0`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `07b5dd0`, D1 connected, schema 21, migration 0021 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -18,7 +18,7 @@ Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | Production Worker/D1 | provider inventory | D1 PRESENT; Worker reserved/not uploaded |
 | Staging/production R2 | provider inventory | BOTH PRESENT AND DISTINCT |
 | Workers Logs/Traces | deployed staging configuration | ENABLED; live event sampling deferred to Phase 22 |
-| Protected Cloudflare secrets | staging provider inventory | 3 / 3 PRESENT; production package private/unapplied |
+| Protected Cloudflare secrets | staging provider inventory | 5 / 5 PRESENT; production package private/unapplied |
 | Google workbook | connector metadata read | 36 sheets readable |
 | Drive mappings | connector metadata read | 7 / 7 readable |
 | Canonical inventory | `01_ITEM_MASTER` bounded read | 1 approved item |
@@ -124,11 +124,12 @@ Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | Effective access and account lifecycle | generated IDs, presets, governed scopes, preview/apply, direct-route enforcement, session revocation, one-time credentials, disable/archive/no delete | PASS |
 | Phase 14 deployed acceptance | exact candidate, governed brand, Materials preservation, auth/access, advanced policy, requester privacy, borrower-safe public surface, reconciliation | PASS — 6 / 6; zero active Phase 14 or `SMOKE.%` synthetic accounts |
 | Phase 14 PR/CI | PR #9 exact product head `eca00e6` | PASS — open draft, mergeable, 6 / 6 checks |
-| Phase 15 protected identity roster implementation | `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`; product commit `49f3dfd` | IMPLEMENTED; LIVE GATE BLOCKED |
-| Phase 15 repository acceptance | `npm run check`; full Playwright; local Worker/D1 | PASS — 65 files / 433 unit tests; 126 browser passes / 306 intentional skips; 30 / 30 Worker tests |
-| Migration 0021 | `0021_owner_protected_identity_roster.sql` | UNAPPLIED TO STAGING — protected projection, sync metadata, immutable rollback snapshots implemented locally |
-| Approved private identity roster source | outside-Git template/setup checkpoint | BLOCKED — separate approved Sheet and Viewer-only service-account credential absent; no values invented |
-| Phase 15 deployed preview/apply/rollback | staging Worker/D1/Google | UNRUN — awaits approved private source; Phase 14 staging remains accepted |
+| Phase 15 USC Officer and Staff Directory | `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`; source-flow `2bfb393`; atomicity repair `973a028c`; candidate `07b5dd0` | PASS ON STAGING |
+| Phase 15 repository acceptance | `npm run check`; focused source/service/D1 tests; local Worker/browser | PASS — 65 files / 437 unit tests; 10 / 10 focused tests; 1 / 1 focused mobile Worker/browser |
+| Migration 0021 | `0021_owner_protected_identity_roster.sql`; private pre-export SHA-256 `ff2c2dce5e0b81a7acd74c0829be82f73666b6c45c0eacbc3b3d85c49c64804f` | PASS — schema 21, encrypted directory projection, sync metadata, immutable rollback snapshots |
+| Approved private identity roster source | restricted outside-Git source; dedicated Viewer-only reader | PASS — 127 source rows; 37 accepted; 90 quarantined; no row values or provider identifiers recorded |
+| Phase 15 deployed preview/apply/rollback | exact `07b5dd0`; staging Worker/D1/Google; deployed Chromium | PASS — stale/no-op fail closed; apply/replay/rollback/re-apply reconciled; final 37 active, one current fingerprint, zero inconsistent runs; 6 / 6 deployed scenarios |
+| Phase 15 repaired atomicity regression | first live apply recovery plus Miniflare regression | PASS — affected run reconciled through normal rollback, transaction guards added, final live gate rerun from empty projection |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

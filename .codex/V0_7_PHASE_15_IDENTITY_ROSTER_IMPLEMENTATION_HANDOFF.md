@@ -1,104 +1,116 @@
-# v0.7.0 Phase 15 — Owner-Protected Identity Roster Implementation Checkpoint
+# v0.7.0 Phase 15 — USC Officer and Staff Directory Handoff
 
-Status: IMPLEMENTATION COMPLETE; LIVE STAGING GATE BLOCKED BY ABSENT APPROVED PRIVATE SOURCE
-
-Production remains NO-GO.
+Status: ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 ## Exact checkpoint
 
 - Branch: `chore/v0.6-codex-continuity-bootstrap`
-- Product commit: `49f3dfd98b033b6f4240dc22390bee5206d25c54`
+- Source-flow commit: `2bfb393c564671d26b802c47adbe41978652aefa`
+- Atomicity repair: `973a028c8c8940414d2baf9f64b4059ae453d9e0`
+- Accepted staging candidate:
+  `07b5dd006656e370cc2bf7df4ced785be61a2604`
 - PR: draft #9
-- Last accepted staging runtime remains Phase 14 candidate `eca00e606054e896d9559e0249aaff8de0e0b750`.
-- Last accepted staging database remains schema 20 / migration `0020_advanced_access_management.sql`.
-- Migration 0021 has not been applied to staging.
-- No Phase 15 Worker has been deployed.
+- Staging database: schema 21 /
+  `0021_owner_protected_identity_roster.sql`
+- Production remains untouched and NO-GO.
 
-## Implemented boundary
+## Accepted product boundary
 
-- Migration 0021 adds the protected identity directory, sync-run metadata, and
-  immutable pre-apply rollback snapshots.
+- The System Owner surface is named **USC Officer and Staff Directory**.
+- The approved Google source is private, restricted, shared Viewer-only to a
+  dedicated reader identity, and read through the read-only Sheets scope.
+- The source adapter maps only Student Number, institutional email, and full
+  name into the canonical roster projection. Unrelated source columns are not
+  imported.
 - Student ID, institutional email, display name, verification result, and
   review notes are AES-GCM encrypted before D1 storage.
 - Institutional email matching uses a keyed HMAC identity key; plaintext email
   is not indexed in D1.
-- The Google reader uses service-account OAuth with the read-only Sheets scope
-  and reads only during an explicit System Owner preview.
-- Exact schema, types, duplicates, verification values, and empty-source rules
-  fail closed. Any rejection blocks apply.
-- Preview records an opaque fingerprint and add/change/removal/unchanged/
-  rejection reconciliation counts.
-- Apply requires exact fingerprint confirmation and a reason, replaces the D1
-  projection atomically, appends audit evidence, and verifies count/fingerprint
-  parity.
+- Explicit owner preview validates required identity values and quarantines all
+  occurrences of duplicate or incomplete rows. Valid rows can apply while
+  quarantined rows remain outside the projection.
+- Preview records an opaque exact-source fingerprint and add/change/removal/
+  unchanged/rejection reconciliation counts.
+- Apply requires the current fingerprint and a reason, is transaction-guarded,
+  appends audit evidence, and verifies projection parity.
 - Only the latest applied run can be rolled back. Rollback restores the exact
   encrypted pre-apply snapshot and reconciles the restored projection.
-- Full directory, preview, apply, and rollback require the exact
-  `SYSTEM_OWNER` role server-side. General Administrator capabilities do not
-  qualify.
-- Normal users receive only their allowed self-profile projection from D1;
-  login and self-profile never query Google.
-- The shared internal Admin workspace exposes the sync surface only to the
-  System Owner. Non-owner controls and the protected panel are hidden, while
-  the server remains authoritative.
-- The legacy Apps Script access roster is explicitly non-authoritative after
-  Worker/D1 cutover and cannot alter the Phase 15 identity projection.
+- Full directory, preview, apply, and rollback require `SYSTEM_OWNER`
+  server-side. Normal staff receive only their permitted self-profile
+  projection; login and self-profile never query Google.
+- Privacy-safe rejection output exposes row numbers and validation codes, not
+  Student IDs, emails, or private row values.
+- The shared internal surface includes reusable `?` and `!` contextual help
+  cues without weakening server authorization.
 
-## Verification actually run
+No private source identifier, service-account identity, private key, credential,
+provider identifier, or roster value is recorded in Git.
 
+## Migration, backup, and live staging
+
+- A private pre-migration export was captured before applying migration 0021.
+- Export SHA-256:
+  `ff2c2dce5e0b81a7acd74c0829be82f73666b6c45c0eacbc3b3d85c49c64804f`
+- Migration 0021 applied successfully and staging reports schema 21.
+- Cache-busted health/readiness/version verification reports STAGING, exact
+  candidate `07b5dd0`, schema 21, migration 0021, healthy and ready.
+- The approved source returned 127 rows: 37 accepted and 90 quarantined.
+- Final staging projection:
+  - 37 directory entries;
+  - 37 active entries;
+  - one current source fingerprint;
+  - 37 entries matching the latest fingerprint;
+  - zero inconsistent sync runs.
+
+## Repaired staging acceptance defect
+
+The first live apply exposed a D1 repository defect: the projection and audit
+batch committed for a validation result with quarantined rows, but the sync-run
+status update rejected that result and the API returned 500.
+
+Writes were stopped immediately. The single affected run and its 37 entries
+were reconciled, then reverted through the normal owner rollback API. Database
+guard statements were added at the start of apply and rollback batches, the
+accepted validation state was handled consistently, and a Miniflare regression
+test proved the repair.
+
+The full live acceptance was then rerun from an empty projection and passed:
+
+- anonymous owner endpoint: 401;
+- authenticated non-owner owner endpoint and full directory: 403;
+- permitted non-owner self-profile: 200 with no unauthorized directory data;
+- stale or superseded apply: 409 with zero projection change;
+- apply: 200 and reconciled to 37 entries;
+- exact replay: 200 with replay evidence;
+- no-op apply: 409 with the projection unchanged;
+- rollback: 200 and reconciled to zero entries;
+- re-apply: 200 and reconciled to the final 37 entries.
+
+## Verification
+
+- Focused Google source, service, and D1 repository tests: 10 / 10 passed.
+- Focused local Worker/browser identity-roster scenario: 1 / 1 passed at the
+  mobile viewport.
 - `npm run check`: PASS
-  - governance and continuation checks passed;
-  - ESLint passed;
-  - 65 Vitest files / 433 tests passed;
-  - build and every generated artifact matched its source pipeline;
-  - Apps Script checks passed;
-  - Cloudflare types and deploy dry-run passed.
-- `npm run test:e2e`: PASS — 126 passed / 306 intentional skips / 0 failed
-  across the accepted six Chromium viewports.
-- `npm run test:e2e:cloudflare:local`: PASS — 30 / 30 against a fresh local
-  Worker/D1 with migration 0021.
-- Focused Google reader, encryption/privacy, validation, D1 repository,
-  owner-role, fail-closed source, no-login-query, and shared-shell visibility
-  cases passed.
-- `git diff --check`: PASS before the product commit.
+  - governance and continuation checks;
+  - ESLint;
+  - 65 Vitest files / 437 tests;
+  - build and generated-artifact parity;
+  - Apps Script checks;
+  - distribution verification;
+  - Cloudflare types and deploy dry-run.
+- Exact-candidate deployed Chromium acceptance: 6 / 6 passed, covering governed
+  branding/login, Materials, authentication and Access Management, Advanced
+  Access Management, Request Center privacy, and Lending Center privacy.
+- Live UI verification confirmed one governed directory control, the approved
+  product name, and both contextual help cues.
+- PR #9 exact-head CI passed 6 / 6.
 
-One invalid command selected the nonexistent Playwright project `chromium`.
-It was a command-selection error, not a test failure; the accepted full
-`npm run test:e2e` command then passed.
+No roster screenshot, trace, or video was captured. Production was not
+deployed, migrated, promoted, merged, tagged, or released.
 
-## External state and exact blocker
+## Next accepted action
 
-The existing private Google configuration points to the legacy operational
-workbook and exposes no separate approved identity roster. No local private
-configuration contains `HAU_PRIVATE_ROSTER_SOURCE_ID`, a Phase 15 workbook,
-or a Viewer-only service-account credential. The accepted master specification
-requires a separate approved private Google Sheet and forbids inventing
-Student IDs, institutional emails, verification results, or review notes.
-
-A header-only template and private setup checklist were created outside Git:
-
-`D:\Documents\Codex\private-config\hau-usc-logistics-v0.7-phase15-20260726`
-
-No roster values, spreadsheet identifier, service-account identity, or secret
-was created or recorded in Git.
-
-## Mandatory unrun live checks
-
-- approved private Sheet read and source fingerprint;
-- owner preview with real approved rows;
-- validation/rejection review and owner approval;
-- staging backup before migration 0021;
-- staging migration 0021 and schema reconciliation;
-- exact-candidate staging deploy and readiness/version verification;
-- owner directory/apply/self-profile privacy acceptance;
-- real staging rollback and re-apply rehearsal for the roster projection;
-- post-write D1/audit reconciliation;
-- exact-head deployed browser acceptance and CI after the final checkpoint.
-
-## Smallest safe next action
-
-The owner must provide or approve one separate private Google Sheet populated
-with the exact six Phase 15 headers and approved identity rows, plus a
-Viewer-only Google service-account credential shared to that workbook. Then
-configure the private staging bindings/secrets and resume at source preview;
-do not deploy or migrate staging before that source authority exists.
+Proceed to Phase 16 — Shared Release Desk and Global Owner Access — using the
+accepted master specification. Preserve the protected roster source,
+encryption, privacy, atomicity, and live staging evidence.
