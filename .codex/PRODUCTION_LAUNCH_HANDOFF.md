@@ -316,3 +316,22 @@ upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.
+
+## Phase 15 implementation checkpoint
+
+- Exact product checkpoint `49f3dfd` implements the encrypted owner-protected
+  D1 identity directory, explicit least-privilege Google preview, strict
+  validation, opaque source fingerprint, reconciliation, owner-only
+  apply/rollback, and normal-user self-profile boundary.
+- Repository acceptance passed 433 unit tests, 126 browser tests, and 30 fresh
+  local Worker/D1 tests.
+- Migration 0021 is not applied to staging and no Phase 15 Worker is deployed.
+  The accepted staging runtime remains Phase 14 `eca00e6`, schema 20.
+- Live Phase 15 is blocked because the available private configuration has no
+  separate approved identity roster Sheet or Viewer-only Google
+  service-account credential. The legacy operational workbook cannot be
+  substituted and protected roster values cannot be invented.
+- Durable checkpoint:
+  `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`.
+- Outside-Git source template/setup checkpoint:
+  `D:\Documents\Codex\private-config\hau-usc-logistics-v0.7-phase15-20260726`.

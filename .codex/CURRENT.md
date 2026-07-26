@@ -157,9 +157,29 @@ Durable handoffs:
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: verify the approved private Google Sheet and
-private spreadsheet-identifier configuration required for the Phase 15
-Owner-only identity-roster sync, then implement the fingerprinted preview and
-validation slice without exposing roster data or querying Google on login.
+## Phase 15 implementation checkpoint
+
+- Exact product commit: `49f3dfd98b033b6f4240dc22390bee5206d25c54`.
+- The encrypted D1 roster, explicit read-only Google preview, strict
+  validation, opaque fingerprint, adds/changes/removals/rejections,
+  owner-only directory/apply/rollback, self-profile projection, reconciliation,
+  and shared-shell workflow are implemented.
+- Repository acceptance passed 65 Vitest files / 433 tests, 126 browser passes
+  / 306 intentional skips, and 30 / 30 fresh local Worker/D1 tests.
+- Phase 15 is not accepted on staging. Migration 0021 is unapplied and the
+  last accepted staging identity remains Phase 14 at `eca00e6`, schema 20.
+- No separate approved private identity roster Sheet or Viewer-only Google
+  service-account credential exists in the available private configuration.
+  The legacy operational workbook is not an acceptable substitute.
+- Outside-Git template/setup path:
+  `D:\Documents\Codex\private-config\hau-usc-logistics-v0.7-phase15-20260726`.
+- Durable checkpoint:
+  `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`.
+
+One smallest safe next action: obtain owner approval for one separate private
+Google Sheet containing the exact six Phase 15 headers and approved identity
+rows, plus a Viewer-only service-account credential; then configure the
+private staging values and resume with source preview before any staging
+migration or deployment.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

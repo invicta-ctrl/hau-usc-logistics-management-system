@@ -124,6 +124,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | Effective access and account lifecycle | generated IDs, presets, governed scopes, preview/apply, direct-route enforcement, session revocation, one-time credentials, disable/archive/no delete | PASS |
 | Phase 14 deployed acceptance | exact candidate, governed brand, Materials preservation, auth/access, advanced policy, requester privacy, borrower-safe public surface, reconciliation | PASS — 6 / 6; zero active Phase 14 or `SMOKE.%` synthetic accounts |
 | Phase 14 PR/CI | PR #9 exact product head `eca00e6` | PASS — open draft, mergeable, 6 / 6 checks |
+| Phase 15 protected identity roster implementation | `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`; product commit `49f3dfd` | IMPLEMENTED; LIVE GATE BLOCKED |
+| Phase 15 repository acceptance | `npm run check`; full Playwright; local Worker/D1 | PASS — 65 files / 433 unit tests; 126 browser passes / 306 intentional skips; 30 / 30 Worker tests |
+| Migration 0021 | `0021_owner_protected_identity_roster.sql` | UNAPPLIED TO STAGING — protected projection, sync metadata, immutable rollback snapshots implemented locally |
+| Approved private identity roster source | outside-Git template/setup checkpoint | BLOCKED — separate approved Sheet and Viewer-only service-account credential absent; no values invented |
+| Phase 15 deployed preview/apply/rollback | staging Worker/D1/Google | UNRUN — awaits approved private source; Phase 14 staging remains accepted |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |
