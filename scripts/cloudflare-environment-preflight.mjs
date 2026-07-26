@@ -15,8 +15,8 @@ const PROTECTED_NAMES = new Set([
   'SESSION_SIGNING_SECRET',
 ]);
 
-function parseJsonc(value) {
-  return JSON.parse(value.replace(/^\s*\/\/.*$/gmu, '').replace(/\/\*[\s\S]*?\*\//gu, ''));
+export function parseJsonConfig(value) {
+  return JSON.parse(value);
 }
 
 function binding(config, collection, name) {
@@ -79,8 +79,8 @@ async function run() {
       'Usage: node scripts/cloudflare-environment-preflight.mjs <absolute-staging-config> <absolute-production-config>',
     );
   const [staging, production] = await Promise.all([
-    readFile(stagingPath, 'utf8').then(parseJsonc),
-    readFile(productionPath, 'utf8').then(parseJsonc),
+    readFile(stagingPath, 'utf8').then(parseJsonConfig),
+    readFile(productionPath, 'utf8').then(parseJsonConfig),
   ]);
   const expectedSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const result = validateEnvironmentSeparation(staging, production, { expectedSha });

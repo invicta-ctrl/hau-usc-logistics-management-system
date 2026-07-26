@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../../src/server/environment.js';
 import { redactLogDetails, structuredLog } from '../../src/server/observability.js';
-import { validateEnvironmentSeparation } from '../../scripts/cloudflare-environment-preflight.mjs';
+import {
+  parseJsonConfig,
+  validateEnvironmentSeparation,
+} from '../../scripts/cloudflare-environment-preflight.mjs';
 import { createConfigPair, decodeJsonBuffer } from '../../scripts/create-private-cloudflare-configs.mjs';
 import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs';
 
@@ -106,6 +109,23 @@ describe('v0.7 environment and observability foundation', () => {
         'Staging and production evidence R2 buckets must be distinct',
       ]),
     );
+  });
+
+  it('preserves route glob strings while parsing strict private configuration JSON', () => {
+    const config = parseJsonConfig(
+      JSON.stringify({
+        assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
+        vars: { ENVIRONMENT: 'STAGING', CANDIDATE_SHA: 'a'.repeat(40) },
+        r2_buckets: [
+          { binding: 'BRAND_ASSETS', bucket_name: 'staging-assets' },
+          { binding: 'EVIDENCE_ASSETS', bucket_name: 'staging-evidence' },
+        ],
+      }),
+    );
+
+    expect(config.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
+    expect(config.vars.ENVIRONMENT).toBe('STAGING');
+    expect(config.r2_buckets).toHaveLength(2);
   });
 
   it('creates distinct private configuration objects without exposing provider values to Git', () => {
