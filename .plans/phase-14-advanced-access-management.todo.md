@@ -36,13 +36,13 @@ session revocation, audit, last-owner, and last-Administrator protections.
 
 ## Validation
 
-- [ ] Policy normalization/effective-access unit coverage
-- [ ] D1 migration and Access Management API coverage
-- [ ] Direct-route and server-action fail-closed coverage
-- [ ] Owner/Administrator responsive UI coverage
-- [ ] Credential one-time/copy/download coverage
-- [ ] `npm run check`
-- [ ] Full Playwright and local Worker/D1 acceptance
-- [ ] Exact staging health/readiness and live Phase 14 smoke
-- [ ] Exact-head PR checks
-- [ ] Production remains untouched
+- [x] Policy normalization/effective-access unit coverage
+- [x] D1 migration and Access Management API coverage
+- [x] Direct-route and server-action fail-closed coverage
+- [x] Owner/Administrator responsive UI coverage
+- [x] Credential one-time/copy/download coverage
+- [x] `npm run check`
+- [x] Full Playwright and local Worker/D1 acceptance
+- [x] Exact staging health/readiness and live Phase 14 smoke
+- [x] Exact-head PR checks
+- [x] Production remains untouched

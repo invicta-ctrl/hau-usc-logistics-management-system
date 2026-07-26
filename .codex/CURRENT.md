@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 14 — Advanced Access Management
+Phase: Phase 15 — Owner-Protected Identity Roster
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -19,6 +19,7 @@ Phase 10 accepted staging runtime: `b789fabb397965af986010a02d8477f6f22da4af`
 Phase 11 accepted staging runtime: `7994734f28478c2ece80cbcf1017f6f5a0fba0d1`
 Phase 12 accepted staging runtime: `f37671ce63087bc0b90a2775e5a3f1b15a15b25d`
 Phase 13 accepted staging runtime: `653c6f846fc219f0c01ece83726583d8a7c80188`
+Phase 14 accepted staging runtime: `eca00e606054e896d9559e0249aaff8de0e0b750`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -32,7 +33,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 13
+## Accepted completion through Phase 14
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -48,6 +49,7 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
 - Phase 11: deadline-first Food Overview and Work Queue, complete sourcing/procurement/receiving/release destinations, aggregate dietary handling, and governed Workflow Reference accepted.
 - Phase 12: exception-first Inventory Overview, complete canonical stock/pantry/circulation/receiving/release destinations, authoritative D1 balances, bounded append-only movement and condition projections, and capability-bound actions accepted.
 - Phase 13: process-oriented Materials Overview, canonical scoped D1 queue, complete sourcing/procurement/receiving/deliverables/release destinations, stable identity, cumulative quantities, bounded quote evidence, and capability-bound actions accepted.
+- Phase 14: governed access presets, workspace/default/committee/location/event scopes, effective-access preview, bounded overrides, generated credentials, session revocation, direct-route enforcement, audited lifecycle, and archive-without-delete accepted.
 - Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
 
 Durable handoffs:
@@ -69,6 +71,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_11_FOOD_WORKSPACE_HANDOFF.md`
 - `.codex/V0_7_PHASE_12_INVENTORY_PANTRY_WORKSPACE_HANDOFF.md`
 - `.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`
+- `.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -154,9 +157,9 @@ Durable handoffs:
 
 Production remains NO-GO. Approved upcoming-event values and approved real public-lending item policy/data are absent and must not be invented.
 
-One smallest safe next action: audit the existing Access Management contracts
-against Phase 14 and implement the smallest coherent slice for governed
-workspace/scope assignment and effective-access preview without weakening
-last-owner, last-Administrator, session-revocation, or audit protections.
+One smallest safe next action: verify the approved private Google Sheet and
+private spreadsheet-identifier configuration required for the Phase 15
+Owner-only identity-roster sync, then implement the fingerprinted preview and
+validation slice without exposing roster data or querying Google on login.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.

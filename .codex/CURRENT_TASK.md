@@ -13,18 +13,18 @@ STOP CONDITIONS: unidentified or unowned production target; invalid fail-closed 
 
 ## Active slice
 
-Phase 14 — audit and complete Advanced Access Management as the next bounded
+Phase 15 — implement the Owner-Protected Identity Roster as the next bounded
 master-prompt vertical slice.
 
-Phase 13 is accepted on staging at exact candidate `653c6f8`, Worker version
-`33f417ea-646f-4900-80dd-4cbe1ca97cbd`, schema 19. Repository acceptance
-passed 417 unit tests, 123 browser tests, and 27 local Worker/D1 tests; the
-complete deployed suite passed 5 / 5, including the canonical Materials queue,
-eight destinations, shared workflows, authentication/Access Management,
-requester privacy, borrower-safe public behavior, and cleanup. PR #9 exact
+Phase 14 is accepted on staging at exact candidate `eca00e6`, Worker version
+`c6a222c8-d2ff-400c-9c69-369b7286ed91`, schema 20 / migration 0020.
+Repository acceptance passed 426 unit tests, 126 browser tests, and 28 local
+Worker/D1 tests; the complete deployed suite passed 6 / 6, including generated
+accounts, effective policy preview/apply, route and scope enforcement, session
+revocation, audited archive, privacy boundaries, and cleanup. PR #9 exact
 product-head checks passed 6 / 6.
 
 Durable evidence:
-`.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`.
+`.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`.
 
 The primary agent is the only writer, browser operator, credential handler, provider mutator, migration executor, deployer, merger, tagger, release manager, and rollback operator.

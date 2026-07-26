@@ -198,8 +198,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '19',
-        latestMigration: '0019_system_owner_operational_scope.sql',
+        schemaVersion: '20',
+        latestMigration: '0020_advanced_access_management.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -673,6 +673,228 @@ test('deployed staging authentication and Access Management remain operational',
       }
     }
     await Promise.all([targetRequest.dispose(), freshTargetRequest.dispose(), anonymousRequest.dispose()]);
+  }
+});
+
+test('deployed staging Advanced Access Management assigns and enforces effective policy', async ({
+  page,
+  baseURL,
+}) => {
+  const owner = await ownerCredential();
+  const targetRequest = await apiRequest.newContext({ baseURL });
+  const anonymousRequest = await apiRequest.newContext({ baseURL });
+  const activatedPassword = syntheticPassword('Phase14Activated');
+  let targetAccessId = '';
+
+  try {
+    const ownerLogin = await login(page.context().request, owner.accessId, owner.password);
+    const ownerCsrf = ownerLogin.csrfToken;
+    const options = await page.context().request.post('/api/admin/access/options', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {},
+    });
+    expect(options.status()).toBe(200);
+    await expect(options.json()).resolves.toMatchObject({
+      workspaces: expect.arrayContaining([expect.objectContaining({ id: 'food' })]),
+      presets: expect.arrayContaining([
+        expect.objectContaining({ id: 'FOOD_OPERATOR' }),
+        expect.objectContaining({ id: 'CUSTOM' }),
+      ]),
+    });
+
+    const created = await page.context().request.post('/api/admin/access/create-account', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        generateAccessId: true,
+        presetId: 'MATERIALS_OPERATOR',
+        roleId: 'DOL_STAFF',
+        committeeIds: ['COM_MATERIALS'],
+        defaultCommitteeId: 'COM_MATERIALS',
+        workspaceIds: ['materials'],
+        defaultWorkspaceId: 'materials',
+        status: 'STARTER',
+        temporaryPasswordHours: 72,
+        reason: 'Authorized live Phase 14 generated-account acceptance proof.',
+        confirmed: true,
+      },
+    });
+    expect(created.status()).toBe(200);
+    const createdResult = await created.json();
+    targetAccessId = createdResult.account.accessId;
+    expect(targetAccessId).toMatch(/^DOL-2026-\d{4}$/u);
+    expect(createdResult).toMatchObject({
+      account: {
+        status: 'STARTER',
+        accessProfile: {
+          presetId: 'MATERIALS_OPERATOR',
+          workspaceIds: ['materials'],
+          defaultWorkspaceId: 'materials',
+        },
+      },
+      credential: { accessId: targetAccessId, temporaryPassword: expect.stringMatching(/^Hau!9/u) },
+    });
+
+    const starter = await login(
+      targetRequest,
+      targetAccessId,
+      createdResult.credential.temporaryPassword,
+    );
+    expect(starter.state).toBe('ACTIVATION_REQUIRED');
+    const activated = await targetRequest.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': starter.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Authorized Phase 14 Staging Operator',
+          mobileNumber: '+63 917 000 0014',
+          email: `${targetAccessId.toLowerCase()}@example.invalid`,
+        },
+        password: activatedPassword,
+        confirmPassword: activatedPassword,
+      },
+    });
+    expect(activated.status()).toBe(200);
+
+    const policyCommand = {
+      currentAccessId: targetAccessId,
+      confirmCurrentAccessId: targetAccessId,
+      presetId: 'FOOD_OPERATOR',
+      roleId: 'DOL_STAFF',
+      committeeIds: ['COM_FOOD'],
+      defaultCommitteeId: 'COM_FOOD',
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
+      locationScopeIds: [],
+      eventSeriesScopeIds: [],
+      eventScopeIds: [],
+      capabilityGrants: [],
+      capabilityDenies: ['lending.usage.view'],
+      reason: 'Move the live Phase 14 operator to bounded Food access.',
+    };
+    const preview = await page.context().request.post('/api/admin/access/preview-policy', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: policyCommand,
+    });
+    expect(preview.status()).toBe(200);
+    await expect(preview.json()).resolves.toMatchObject({
+      presetId: 'FOOD_OPERATOR',
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
+      committeeIds: ['COM_FOOD'],
+      explicitDenies: ['lending.usage.view'],
+      sessionImpact: 'ALL_ACTIVE_SESSIONS_REVOKED',
+    });
+    const updated = await page.context().request.post('/api/admin/access/update-policy', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        ...policyCommand,
+        idempotencyKey: `staging-phase14-${randomBytes(18).toString('hex')}`,
+      },
+    });
+    expect(updated.status()).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      changed: true,
+      replayed: false,
+      sessionsRevoked: true,
+    });
+    expect((await targetRequest.get('/api/requests')).status()).toBe(401);
+
+    const relogin = await login(targetRequest, targetAccessId, activatedPassword);
+    expect(relogin).toMatchObject({
+      state: 'AUTHENTICATED',
+      user: {
+        experienceId: 'food',
+        authorization: {
+          workspaceIds: ['food'],
+          defaultWorkspaceId: 'food',
+          committeeIds: ['COM_FOOD'],
+          explicitDenies: ['lending.usage.view'],
+        },
+      },
+    });
+
+    await page.goto('/app/admin');
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+    await page.locator('[data-admin-view="referenceAdmin"]').click();
+    await page.getByRole('button', { name: /Access Management/u }).click();
+    const access = page.locator('[data-access-management]');
+    await access.getByLabel('Search').fill(targetAccessId);
+    const row = access.locator('[data-access-results] .access-account-row');
+    await expect(row).toHaveCount(1);
+    await expect(row).toContainText('FOOD_OPERATOR');
+    await expect(row).toContainText('food; default food');
+    await expect(row.getByRole('button', { name: 'Disable' })).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Archive' })).toBeVisible();
+    await expect(row.getByRole('button', { name: /delete/i })).toHaveCount(0);
+
+    await page.context().clearCookies();
+    await page.goto('/app/materials');
+    await page.getByLabel('Access ID').fill(targetAccessId);
+    await page.getByLabel('Password', { exact: true }).fill(activatedPassword);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page).toHaveURL(/\/app\/food$/u);
+    const shell = page.locator('[data-internal-shell-context]');
+    await expect(shell.getByLabel('Workspace')).toHaveValue('food');
+    await expect(shell.getByLabel('Workspace').locator('option:not(:disabled)')).toHaveCount(1);
+
+    const cleanup = await apiRequest.newContext({ baseURL });
+    try {
+      const cleanupLogin = await login(cleanup, owner.accessId, owner.password);
+      const archived = await cleanup.post('/api/admin/access/status', {
+        headers: { 'x-csrf-token': cleanupLogin.csrfToken },
+        data: {
+          currentAccessId: targetAccessId,
+          confirmCurrentAccessId: targetAccessId,
+          status: 'REVOKED',
+          lifecycleAction: 'ARCHIVE',
+          reason: 'Archive the live Phase 14 synthetic operator without deleting history.',
+        },
+      });
+      expect(archived.status()).toBe(200);
+      await expect(archived.json()).resolves.toMatchObject({ archived: true, status: 'REVOKED' });
+      const history = await cleanup.post('/api/admin/access/history', {
+        headers: { 'x-csrf-token': cleanupLogin.csrfToken },
+        data: { currentAccessId: targetAccessId, limit: 20 },
+      });
+      expect(history.status()).toBe(200);
+      expect((await history.json()).auditHistory).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ action: 'ACCESS_POLICY_CHANGED' }),
+          expect.objectContaining({ action: 'ACCOUNT_ARCHIVED' }),
+        ]),
+      );
+      targetAccessId = '';
+    } finally {
+      await cleanup.dispose();
+    }
+    const archivedLogin = await anonymousRequest.post('/api/auth/login', {
+      data: { accessId: createdResult.account.accessId, password: activatedPassword },
+    });
+    expect(archivedLogin.status()).toBe(403);
+  } finally {
+    if (targetAccessId) {
+      const cleanup = await apiRequest.newContext({ baseURL });
+      try {
+        const cleanupLogin = await cleanup.post('/api/auth/login', {
+          data: { accessId: owner.accessId, password: owner.password },
+        });
+        if (cleanupLogin.status() === 200) {
+          const cleanupCsrf = (await cleanupLogin.json()).csrfToken;
+          await cleanup.post('/api/admin/access/status', {
+            headers: { 'x-csrf-token': cleanupCsrf },
+            data: {
+              currentAccessId: targetAccessId,
+              confirmCurrentAccessId: targetAccessId,
+              status: 'REVOKED',
+              lifecycleAction: 'ARCHIVE',
+              reason: 'Fail-safe archive for the live Phase 14 synthetic operator.',
+            },
+          });
+        }
+      } finally {
+        await cleanup.dispose();
+      }
+    }
+    await Promise.all([targetRequest.dispose(), anonymousRequest.dispose()]);
   }
 });
 

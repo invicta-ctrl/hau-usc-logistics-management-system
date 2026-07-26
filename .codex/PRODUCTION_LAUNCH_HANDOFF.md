@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–14 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
 
 ## Phase 0 repository and remote truth
 
@@ -37,11 +37,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
 | 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — pre-0010 through pre-0016 staging SQL exports retained; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0019 applied/reconciled; later and production migrations pending |
+| 5. Backup | PARTIAL — staging pre-migration SQL exports retained through pre-0020; formal rehearsal pending |
+| 6. Migrations | PARTIAL — staging through 0020 applied/reconciled; later and production migrations pending |
 | 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 12 runtime `f37671c` |
-| 9. Staging acceptance | PASS THROUGH PHASE 12; full master Phase 22 pending |
+| 8. Staging deployment | PASS THROUGH PHASE 14 runtime `eca00e6` |
+| 9. Staging acceptance | PASS THROUGH PHASE 14; full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
@@ -288,11 +288,30 @@ Decision: **PRODUCTION NO-GO — PHASES 0–13 AND FOLLOW-UP AMENDMENT ACCEPTED 
 - PR #9 at the exact product head passed all 6 / 6 checks.
 - Durable handoff: `.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`.
 
+## Phase 14 Advanced Access Management evidence
+
+- Durable D1 access profiles and append-only policy history now govern
+  workspace/default/committee/location/event scope plus bounded grants and
+  denies; material changes revoke sessions and update canonical authorization.
+- Owner/Administrator forms provide presets, generated account IDs, one-time
+  credentials, effective-access preview, responsive lifecycle actions, and no
+  normal permanent deletion. Sensitive grants and Administrator assignment are
+  owner-only; System Owner creation remains unavailable.
+- Migration 0020 followed an outside-Git export with SHA-256
+  `f94aa249e64851c637351328f21098c85bc3585bef289a654bec6533b9ca3301`.
+- Repository acceptance passed 426 unit tests, 126 browser tests, and 28 local
+  Worker/D1 tests. Live staging acceptance passed 6 / 6 at exact candidate
+  `eca00e6`, Worker `c6a222c8-d2ff-400c-9c69-369b7286ed91`, schema 20.
+- Exact product-head PR checks passed 6 / 6. Reconciliation found zero active
+  Phase 14 or `SMOKE.%` synthetic accounts.
+- Durable handoff:
+  `.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`.
+
 ## Immediate accepted target
 
 The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
 
-Complete Phase 14 Advanced Access Management. Do not
+Complete Phase 15 Owner-Protected Identity Roster. Do not
 upload or deploy a production Worker before final freeze, merge, and production
 authorization validation.
 
