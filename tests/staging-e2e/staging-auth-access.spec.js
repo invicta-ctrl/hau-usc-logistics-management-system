@@ -198,8 +198,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '20',
-        latestMigration: '0020_advanced_access_management.sql',
+        schemaVersion: '21',
+        latestMigration: '0021_owner_protected_identity_roster.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
