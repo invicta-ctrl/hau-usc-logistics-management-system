@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '20' },
+    database: { connected: true, schemaVersion: '21' },
   });
 
   await page.goto('/');
@@ -181,6 +181,87 @@ test('System Owner receives every module and a server-validated operational scop
   });
   expect(contextualMutation.status()).toBe(200);
   await Promise.all([owner.dispose(), admin.dispose()]);
+});
+
+test('identity roster is owner-only, metadata-safe, explicit-preview-only, and absent from login reads', async ({
+  baseURL,
+}) => {
+  const ownerContext = await apiRequest.newContext({ baseURL });
+  const adminContext = await apiRequest.newContext({ baseURL });
+  const staffContext = await apiRequest.newContext({ baseURL });
+  try {
+    const ownerCsrf = await login(ownerContext, 'LOCAL.OWNER');
+    const adminCsrf = await login(adminContext, 'LOCAL.ADMIN');
+    await login(staffContext, 'LOCAL.FOOD');
+
+    const status = await ownerContext.post('/api/owner/identity-roster/status', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {},
+    });
+    expect(status.status()).toBe(200);
+    const statusResult = await status.json();
+    expect(statusResult).toMatchObject({
+      source: {
+        configured: false,
+        missingConfiguration: expect.arrayContaining([
+          'GOOGLE_ROSTER_SPREADSHEET_ID',
+          'GOOGLE_ROSTER_RANGE',
+          'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
+          'GOOGLE_ROSTER_PRIVATE_KEY',
+        ]),
+      },
+      directory: { total: 0, active: 0 },
+    });
+    expect(JSON.stringify(statusResult)).not.toMatch(/spreadsheetId|privateKey|serviceAccountEmail/iu);
+
+    const adminDenied = await adminContext.post('/api/owner/identity-roster/status', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {},
+    });
+    expect(adminDenied.status()).toBe(403);
+    await expect(adminDenied.json()).resolves.toMatchObject({ code: 'ROSTER_OWNER_REQUIRED' });
+
+    const preview = await ownerContext.post('/api/owner/identity-roster/preview', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {},
+    });
+    expect(preview.status()).toBe(503);
+    await expect(preview.json()).resolves.toMatchObject({ code: 'ROSTER_SOURCE_NOT_CONFIGURED' });
+
+    const self = await staffContext.post('/api/identity-roster/self', { data: {} });
+    expect(self.status()).toBe(200);
+    await expect(self.json()).resolves.toMatchObject({ linked: false, profile: null });
+  } finally {
+    await Promise.all([ownerContext.dispose(), adminContext.dispose(), staffContext.dispose()]);
+  }
+});
+
+test('shared shell exposes the protected roster surface only to the System Owner', async ({
+  browser,
+  baseURL,
+}) => {
+  const ownerPage = await browser.newPage();
+  await ownerPage.goto(`${baseURL}/app/admin`);
+  await ownerPage.getByLabel('Access ID').fill('LOCAL.OWNER');
+  await ownerPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await ownerPage.getByRole('button', { name: 'Sign in' }).click();
+  await navigateToAdminView(ownerPage, 'referenceAdmin');
+  const rosterControl = ownerPage.getByRole('button', { name: /Identity roster/iu });
+  await expect(rosterControl).toBeVisible();
+  await rosterControl.click();
+  await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
+  await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
+
+  const adminPage = await browser.newPage();
+  await adminPage.goto(`${baseURL}/app/admin`);
+  await adminPage.getByLabel('Access ID').fill('LOCAL.ADMIN');
+  await adminPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await adminPage.getByRole('button', { name: 'Sign in' }).click();
+  await navigateToAdminView(adminPage, 'referenceAdmin');
+  await expect(adminPage.getByRole('button', { name: /Identity roster/iu })).toBeHidden();
+  await expect(adminPage.locator('[data-identity-roster]')).toBeHidden();
+
+  await Promise.all([ownerPage.close(), adminPage.close()]);
 });
 
 test('Request Center public APIs require an authenticated department session', async ({ request }) => {

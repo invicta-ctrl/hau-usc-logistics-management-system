@@ -5,6 +5,7 @@ export const REQUIRED_PROTECTED_ENV = Object.freeze([
   'PASSWORD_PEPPER',
   'TRACKING_LINK_SECRET',
   'PROTECTED_PROFILE_ENCRYPTION_KEY',
+  'ROSTER_DATA_ENCRYPTION_KEY',
 ]);
 
 export function safeReleaseIdentity(env) {

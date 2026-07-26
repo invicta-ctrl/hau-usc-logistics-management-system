@@ -11,6 +11,21 @@
   font-weight: 900;
 }
 
+[data-identity-roster] .metric strong,
+[data-identity-roster] dd,
+[data-roster-history] small {
+  overflow-wrap: anywhere;
+}
+
+[data-identity-roster] [data-roster-preview-result]:empty {
+  display: none;
+}
+
+[data-admin-control-surface][hidden],
+[data-identity-roster][hidden] {
+  display: none !important;
+}
+
 .sync-indicator[data-sync-status="synced"] { color: #245b43; }
 .sync-indicator[data-sync-status="offline"],
 .sync-indicator[data-sync-status="delayed"],

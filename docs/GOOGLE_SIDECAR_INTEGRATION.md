@@ -52,4 +52,52 @@ If reporting export is authorized later, it must be asynchronous and one-way fro
 - tolerate retries idempotently;
 - never accept a Sheet row as a silent operational write-back.
 
-The current candidate does not configure, deploy, or exercise a real Google/Drive bridge. That external work remains gated by the private authorization package.
+## Owner-protected identity roster
+
+Phase 15 adds a separate, read-only Google Sheets integration for the approved
+private identity roster. It is not an operational workflow write-back and it
+does not reuse the legacy Apps Script access sync.
+
+The Cloudflare Worker reads the configured range only when the authenticated
+System Owner requests **Preview sync**. It uses a least-privilege service
+account with `spreadsheets.readonly`, validates the exact six-column roster
+schema, computes an opaque source fingerprint, and stores protected values in
+D1 only after an explicit fingerprint-confirmed apply. Ordinary login and
+self-profile reads use only the last applied D1 projection and never query
+Google.
+
+Private configuration and secrets:
+
+- `GOOGLE_ROSTER_SPREADSHEET_ID`
+- `GOOGLE_ROSTER_RANGE`
+- `GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_ROSTER_PRIVATE_KEY` (Cloudflare secret)
+- `ROSTER_DATA_ENCRYPTION_KEY` (Cloudflare secret)
+
+The spreadsheet identifier, service-account identity, private key, roster
+rows, Student IDs, institutional email addresses, verification results,
+review notes, and protected snapshot values must never appear in Git, logs, or
+redacted launch evidence. The application reports only missing configuration
+key names outside the owner workflow.
+
+Exact source headers, in order:
+
+```text
+Student_ID
+Institutional_Email
+Display_Name
+Verification_Result
+Active
+Review_Notes
+```
+
+Accepted verification values are `VERIFIED`, `PENDING`, `NOT_VERIFIED`, and
+`REJECTED`. `Active` must be a boolean or exact `TRUE`/`FALSE`. Any invalid or
+duplicate Student ID/email rejects the complete preview from apply.
+
+Each apply creates an encrypted, immutable pre-apply D1 snapshot. Only the
+latest applied run can be rolled back, with exact fingerprint confirmation and
+an audited reason. A post-write count/fingerprint reconciliation is mandatory.
+
+The separate reporting/Drive bridge still remains gated by its private
+authorization package.

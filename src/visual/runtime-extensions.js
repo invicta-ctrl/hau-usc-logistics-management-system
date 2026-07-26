@@ -357,6 +357,11 @@ export function createRuntimeExtensions(options) {
   let accessDirectoryPage = 1;
   let accessPolicyOptions = null;
   let accessSearchTimer = null;
+  let identityRosterStatus = null;
+  let identityRosterDirectory = null;
+  let identityRosterPreview = null;
+  let identityRosterPage = 1;
+  let identityRosterSearchTimer = null;
   let advertisementAdminOpen = false;
   let advertisementDirectory = null;
   let advertisementPage = 1;
@@ -957,6 +962,10 @@ export function createRuntimeExtensions(options) {
   };
 
   const accessManagementAllowed = () => can(getState()?.currentUser, 'admin_access');
+  const identityRosterAllowed = () =>
+    String(
+      getState()?.currentUser?.authorization?.roleId ?? getState()?.currentUser?.role ?? '',
+    ).toUpperCase() === 'SYSTEM_OWNER';
   const advertisementManagementAllowed = () =>
     can(getState()?.currentUser, 'manage_advertisements');
 
@@ -1309,6 +1318,33 @@ export function createRuntimeExtensions(options) {
         },
       };
     };
+    services.getIdentityRosterStatus ??= async () => ({
+      ok: true,
+      source: {
+        configured: false,
+        missingConfiguration: ['GOOGLE_ROSTER_SPREADSHEET_ID'],
+      },
+      latestRun: null,
+      runs: [],
+      directory: { total: 0, active: 0 },
+    });
+    services.listIdentityRoster ??= async () => ({
+      ok: true,
+      items: [],
+      pagination: { page: 1, pageSize: 25, total: 0, totalPages: 1 },
+    });
+    services.previewIdentityRosterSync ??= async () => {
+      const error = new Error('The approved private roster source is not configured.');
+      error.code = 'ROSTER_SOURCE_NOT_CONFIGURED';
+      throw error;
+    };
+    services.applyIdentityRosterSync ??= async () => ({ ok: true, applied: true });
+    services.rollbackIdentityRosterSync ??= async () => ({ ok: true, rolledBack: true });
+    services.getIdentityRosterSelfProfile ??= async () => ({
+      ok: true,
+      linked: false,
+      profile: null,
+    });
   };
 
   const accessDate = (value) => (value ? new Date(value).toLocaleString('en-PH') : 'Not recorded');
@@ -2273,10 +2309,169 @@ export function createRuntimeExtensions(options) {
       '<div class="empty">No failed evidence or open deliverable evidence exceptions are currently projected.</div>';
   };
 
+  const renderIdentityRoster = () => {
+    const root = document.querySelector('[data-identity-roster]');
+    if (!root || root.hidden || !identityRosterAllowed()) return;
+    const sourceState = root.querySelector('[data-roster-source-state]');
+    const source = identityRosterStatus?.source;
+    if (source?.configured) {
+      sourceState.className = 'alert success';
+      sourceState.textContent =
+        'The approved private source and least-privilege reader are configured. A source read occurs only when the System Owner requests a preview.';
+    } else {
+      sourceState.className = 'alert warning';
+      sourceState.textContent = `Sync remains fail-closed. Missing private configuration: ${(source?.missingConfiguration ?? []).join(', ') || 'status unavailable'}.`;
+    }
+    const latest = identityRosterStatus?.latestRun;
+    const directory = identityRosterStatus?.directory ?? { total: 0, active: 0 };
+    root.querySelector('[data-roster-metrics]').innerHTML = [
+      ['Protected identities', directory.total, 'Owner directory only'],
+      ['Active identities', directory.active, 'D1 last-known projection'],
+      ['Last sync', latest?.appliedAt ? accessDate(latest.appliedAt) : 'Not applied', latest?.applyStatus ?? 'No run'],
+      ['Source fingerprint', latest?.sourceFingerprint ?? 'Not recorded', 'Opaque content fingerprint'],
+    ]
+      .map(
+        ([label, value, note]) =>
+          `<article class="card metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`,
+      )
+      .join('');
+
+    const previewRoot = root.querySelector('[data-roster-preview-result]');
+    if (!identityRosterPreview) previewRoot.innerHTML = '';
+    else {
+      const preview = identityRosterPreview;
+      const rejected = preview.validationStatus !== 'VALID' || preview.rejectionCount > 0;
+      previewRoot.innerHTML = `<article class="mode-note"><strong>Sync preview ${esc(preview.id)}</strong><dl class="access-effective-preview section-gap"><div><dt>Source fingerprint</dt><dd>${esc(preview.sourceFingerprint)}</dd></div><div><dt>Rows</dt><dd>${esc(preview.sourceRowCount)}</dd></div><div><dt>Adds</dt><dd>${esc(preview.addCount)}</dd></div><div><dt>Changes</dt><dd>${esc(preview.changeCount)}</dd></div><div><dt>Removals</dt><dd>${esc(preview.removalCount)}</dd></div><div><dt>Unchanged</dt><dd>${esc(preview.unchangedCount)}</dd></div><div><dt>Rejections</dt><dd>${esc(preview.rejectionCount)}</dd></div><div><dt>Validation</dt><dd>${esc(preview.validationStatus)}</dd></div></dl>${(preview.rejections ?? []).length ? `<div class="alert error section-gap"><strong>Rejected source rows</strong>${preview.rejections.map((entry) => `<p>Row ${esc(entry.rowNumber)} &middot; ${esc(entry.studentId || 'No Student ID')} &middot; ${esc(entry.institutionalEmail || 'No institutional email')} &middot; ${esc(entry.codes.join(', '))}</p>`).join('')}</div>` : ''}${rejected ? '<div class="alert warning section-gap">This preview cannot be applied. Correct the private source and create a new preview.</div>' : `<form data-roster-apply class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(preview.id)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="danger" type="submit">Apply reconciled roster</button></form>`}</article>`;
+      const applyForm = previewRoot.querySelector('[data-roster-apply]');
+      applyForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!applyForm.reportValidity()) return;
+        const button = applyForm.querySelector('[type="submit"]');
+        button.disabled = true;
+        try {
+          await services.applyIdentityRosterSync(Object.fromEntries(new FormData(applyForm).entries()));
+          identityRosterPreview = null;
+          toast('Identity roster applied and reconciled.');
+          await refreshIdentityRoster({ force: true });
+        } catch (error) {
+          toast(error.message, true);
+          button.disabled = false;
+        }
+      });
+    }
+
+    const items = identityRosterDirectory?.items ?? [];
+    root.querySelector('[data-roster-directory]').innerHTML =
+      items
+        .map(
+          (entry) =>
+            `<div class="request-line"><div><strong>${esc(entry.displayName)}</strong><small>${esc(entry.studentId)} &middot; ${esc(entry.institutionalEmail)}</small><small>${esc(entry.verificationResult)} &middot; ${entry.active ? 'Active' : 'Inactive'} &middot; updated ${esc(accessDate(entry.updatedAt))}</small>${entry.reviewNotes ? `<small>Review: ${esc(entry.reviewNotes)}</small>` : ''}</div><span class="pill">${entry.active ? 'Active' : 'Inactive'}</span></div>`,
+        )
+        .join('') || '<div class="empty">No protected identities match this search.</div>';
+    const pagination = identityRosterDirectory?.pagination ?? {
+      page: 1,
+      totalPages: 1,
+      total: items.length,
+    };
+    const pager = root.querySelector('[data-roster-pagination]');
+    pager.hidden = pagination.totalPages <= 1;
+    pager.querySelector('[data-roster-page-summary]').textContent =
+      `Page ${pagination.page} of ${pagination.totalPages} · ${pagination.total} identities`;
+    pager.querySelector('[data-roster-page="previous"]').disabled = pagination.page <= 1;
+    pager.querySelector('[data-roster-page="next"]').disabled =
+      pagination.page >= pagination.totalPages;
+
+    const latestApplied = (identityRosterStatus?.runs ?? []).find(
+      (run) => run.applyStatus === 'APPLIED',
+    );
+    root.querySelector('[data-roster-history]').innerHTML =
+      (identityRosterStatus?.runs ?? [])
+        .map(
+          (run) =>
+            `<div class="request-line"><div><strong>${esc(run.applyStatus)} &middot; ${esc(run.id)}</strong><small>${esc(accessDate(run.createdAt))} &middot; ${esc(run.validationStatus)} &middot; fingerprint ${esc(run.sourceFingerprint)}</small><small>${esc(run.addCount)} add &middot; ${esc(run.changeCount)} change &middot; ${esc(run.removalCount)} removal &middot; ${esc(run.rejectionCount)} rejection</small></div>${latestApplied?.id === run.id ? `<button class="danger mini" type="button" data-roster-rollback="${esc(run.id)}" data-roster-fingerprint="${esc(run.sourceFingerprint)}">Roll back latest sync</button>` : ''}</div>`,
+        )
+        .join('') || '<div class="empty">No identity roster sync has been previewed.</div>';
+  };
+
+  const refreshIdentityRoster = async ({ force = false } = {}) => {
+    if (!identityRosterAllowed()) return;
+    const root = document.querySelector('[data-identity-roster]');
+    if (!root || root.hidden) return;
+    if (!force && identityRosterStatus && identityRosterDirectory) {
+      renderIdentityRoster();
+      return;
+    }
+    root.querySelector('[data-roster-directory]').innerHTML =
+      '<div class="empty">Loading the owner-protected D1 directory…</div>';
+    try {
+      [identityRosterStatus, identityRosterDirectory] = await Promise.all([
+        services.getIdentityRosterStatus({}),
+        services.listIdentityRoster({
+          query: root.querySelector('[name="identityRosterSearch"]')?.value ?? '',
+          page: identityRosterPage,
+          pageSize: 25,
+        }),
+      ]);
+      renderIdentityRoster();
+    } catch (error) {
+      root.querySelector('[data-roster-directory]').innerHTML =
+        `<div class="alert error">${esc(error.message)}</div>`;
+    }
+  };
+
+  const previewIdentityRoster = async () => {
+    const button = document.querySelector('[data-roster-preview]');
+    if (!button || !identityRosterAllowed()) return;
+    button.disabled = true;
+    try {
+      identityRosterPreview = await services.previewIdentityRosterSync({});
+      identityRosterStatus = null;
+      identityRosterDirectory = null;
+      await refreshIdentityRoster({ force: true });
+      toast('Identity roster source preview completed.');
+    } catch (error) {
+      toast(error.message, true);
+    } finally {
+      button.disabled = false;
+    }
+  };
+
+  const openIdentityRosterRollback = (runId, sourceFingerprint) => {
+    openModal(
+      'Roll back latest identity roster sync',
+      `<form data-roster-rollback-form><div class="alert warning">Rollback restores the protected pre-apply D1 snapshot. It does not change the private Google Sheet.</div><div class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(runId)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Restore protected snapshot</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('[data-roster-rollback-form]');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          if (form.elements.confirmSourceFingerprint.value !== sourceFingerprint) {
+            toast('The source fingerprint confirmation does not match.', true);
+            return;
+          }
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            await services.rollbackIdentityRosterSync(Object.fromEntries(new FormData(form).entries()));
+            closeModal();
+            identityRosterStatus = null;
+            identityRosterDirectory = null;
+            await refreshIdentityRoster({ force: true });
+            toast('The latest identity roster sync was rolled back and reconciled.');
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
   const renderAdminControlSurface = () => {
     if (adminControlSurface === 'operational-health') renderAdminOperationalHealth();
     if (adminControlSurface === 'brand-assets') renderAdminBrandAssets();
     if (adminControlSurface === 'evidence-status') renderAdminEvidenceStatus();
+    if (adminControlSurface === 'identity-roster') renderIdentityRoster();
   };
 
   const renderReferenceAdminWorkspace = () => {
@@ -2285,9 +2480,12 @@ export function createRuntimeExtensions(options) {
     const allowed = referenceAdminAllowed();
     root.hidden = !allowed;
     if (!allowed) return;
-    const customSurface = ['operational-health', 'brand-assets', 'evidence-status'].includes(
-      adminControlSurface,
-    );
+    const customSurface = [
+      'operational-health',
+      'brand-assets',
+      'evidence-status',
+      'identity-roster',
+    ].includes(adminControlSurface);
     const accessMode = !customSurface && referenceAdminDomain === 'PERMISSIONS';
     const accessRoot = root.querySelector('[data-access-management]');
     accessRoot.hidden = advertisementAdminOpen || customSurface || !accessMode || !accessManagementAllowed();
@@ -2299,6 +2497,8 @@ export function createRuntimeExtensions(options) {
       adminControlSurface !== 'operational-health';
     root.querySelector('[data-admin-brand-assets]').hidden = adminControlSurface !== 'brand-assets';
     root.querySelector('[data-admin-evidence-status]').hidden = adminControlSurface !== 'evidence-status';
+    root.querySelector('[data-identity-roster]').hidden =
+      adminControlSurface !== 'identity-roster' || !identityRosterAllowed();
     const advertisementRoot = root.querySelector('[data-advertisement-admin]');
     advertisementRoot.hidden = !advertisementAdminOpen || !advertisementManagementAllowed();
     const advertisementControl = root.querySelector('[data-advertisement-admin-control]');
@@ -2310,6 +2510,11 @@ export function createRuntimeExtensions(options) {
     if (accessControl) {
       accessControl.hidden = !accessManagementAllowed();
       accessControl.disabled = !accessManagementAllowed();
+    }
+    const rosterControl = root.querySelector('[data-admin-control-surface="identity-roster"]');
+    if (rosterControl) {
+      rosterControl.hidden = !identityRosterAllowed();
+      rosterControl.disabled = !identityRosterAllowed();
     }
     const workspace = referenceAdminWorkspace;
     root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled
@@ -2417,10 +2622,45 @@ export function createRuntimeExtensions(options) {
     });
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       control.addEventListener('click', () => {
+        if (control.dataset.adminControlSurface === 'identity-roster' && !identityRosterAllowed())
+          return;
         advertisementAdminOpen = false;
         adminControlSurface = control.dataset.adminControlSurface;
         renderReferenceAdminWorkspace();
+        if (adminControlSurface === 'identity-roster') void refreshIdentityRoster({ force: true });
       });
+    });
+    root.querySelector('[data-roster-refresh]').addEventListener('click', () => {
+      identityRosterStatus = null;
+      identityRosterDirectory = null;
+      void refreshIdentityRoster({ force: true });
+    });
+    root.querySelector('[data-roster-preview]').addEventListener('click', () =>
+      previewIdentityRoster(),
+    );
+    root.querySelector('[name="identityRosterSearch"]').addEventListener('input', () => {
+      clearTimeout(identityRosterSearchTimer);
+      identityRosterSearchTimer = setTimeout(() => {
+        identityRosterPage = 1;
+        identityRosterDirectory = null;
+        void refreshIdentityRoster({ force: true });
+      }, 180);
+    });
+    root.querySelector('[data-roster-pagination]').addEventListener('click', (event) => {
+      const control = event.target.closest('[data-roster-page]');
+      if (!control) return;
+      identityRosterPage += control.dataset.rosterPage === 'next' ? 1 : -1;
+      identityRosterPage = Math.max(1, identityRosterPage);
+      identityRosterDirectory = null;
+      void refreshIdentityRoster({ force: true });
+    });
+    root.querySelector('[data-roster-history]').addEventListener('click', (event) => {
+      const control = event.target.closest('[data-roster-rollback]');
+      if (control)
+        openIdentityRosterRollback(
+          control.dataset.rosterRollback,
+          control.dataset.rosterFingerprint,
+        );
     });
     root.querySelector('[data-advertisement-admin-control]').addEventListener('click', () => {
       if (!advertisementManagementAllowed()) return;

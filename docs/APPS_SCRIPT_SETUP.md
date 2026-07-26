@@ -39,6 +39,13 @@ Private access synchronization is an explicit, admin-controlled boundary. The so
 
 The first source tab must have exactly these five headers, in this order: `Institutional_Email`, `Display_Name`, `Active`, `Role_ID`, and `Committee_IDs`. `Active` is a strict boolean/`TRUE`/`FALSE`; `Role_ID` must resolve to a canonical role; and `Committee_IDs` is a JSON array of canonical committee IDs. Normalized email duplicates, unknown roles or committees, invalid types, and missing scope are rejected without activation. The source is read only by an explicit sync or the scheduled handler; ordinary bootstrap and login never open it.
 
+This Apps Script access-sync path is retained only for the preserved legacy
+package. It is not the v0.7.0 live identity-roster authority and must not be
+used to change Worker/D1 roles or permissions after cutover. The Phase 15
+owner-protected D1 identity roster is documented in
+`docs/GOOGLE_SIDECAR_INTEGRATION.md` and deliberately does not mutate access
+policy.
+
 Run `setupDatabase()` before a first sync so the additive `21_ACCESS_SYNC_RUNS`, `22_ACCESS_SYNC_SNAPSHOT`, and `23_ACCESS_SYNC_MEMBERSHIP_SNAPSHOT` tabs and roster access columns exist. Use `api_runRosterSync({clientRequestId: '...', activate: false})` for an admin dry run. Activation additionally requires `HAU_ROSTER_SYNC_APPROVED=TRUE`, a valid source, a clean local conflict report, a local last-known-good snapshot, and a reviewed rollback checkpoint. Committee memberships are updated in `20_USER_COMMITTEE_SCOPE` only for roster-managed rows; a manual membership conflict blocks activation. Use `api_getRosterSyncHealth()` for bounded admin metadata only. Use `api_setRosterEmergencyDeny({clientRequestId: '...', disabled: true, reason: '...'})` when immediate fail-closed access is required; the reason is not returned or copied into audit metadata.
 
 `setupRosterSyncTrigger({clientRequestId: '...'})` installs at most one hourly trigger and is itself locked, administrator-authorized, and idempotent; it does not run during repository tests or build commands. Do not activate it until the staging owner has separately reviewed the private Script Properties, backup, schema, and rollback plan. A failed or stale sync leaves the last-known-good snapshot in force until its freshness window expires; after expiry or emergency deny, roster-managed accounts are denied while manual access rows are never silently granted roster permissions.

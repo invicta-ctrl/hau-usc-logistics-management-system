@@ -23,6 +23,7 @@
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
         <button class="admin-control-card" type="button" data-admin-control-surface="operational-health"><span class="admin-control-kicker">Operational Health</span><strong>Environment and workflow readiness</strong><small>Inspect server-reported identity, freshness, and cross-workspace attention without exposing secrets.</small><span class="admin-control-action">Open operational health</span></button>
         <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets"><span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong><small>Inspect the active R2-backed DOL, USC, login-background, and favicon routes.</small><span class="admin-control-action">Open governed assets</span></button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster"><span class="admin-control-kicker">System Owner only</span><strong>Identity roster</strong><small>Preview, reconcile, apply, and roll back the protected private-Sheet identity projection.</small><span class="admin-control-action">Sync identity roster</span></button>
         <button class="admin-control-card" type="button" data-advertisement-admin-control><span class="admin-control-kicker">USC Announcements</span><strong>Public advertisement rotation</strong><small>Create, preview, schedule, reorder, and archive governed public media.</small><span class="admin-control-action">Manage advertisements</span></button>
       </div>
     </section>
@@ -47,6 +48,26 @@
       <div class="panel-head"><div><h2>Evidence status</h2><p>Cross-workspace evidence exceptions and records requiring follow-up. Files remain governed by their owning workflow.</p></div><span class="pill">Read only</span></div>
       <div class="grid-4 section-gap" data-admin-evidence-metrics></div>
       <div class="line-list section-gap" data-admin-evidence-results></div>
+    </article>
+
+    <article class="panel" data-identity-roster hidden>
+      <div class="panel-head">
+        <div><h2>Owner-Protected Identity Roster</h2><p>The private Google Sheet is read only during an explicit preview. Protected values are encrypted in D1 and never queried from Google during login.</p></div>
+        <div class="button-row"><button class="secondary" type="button" data-roster-refresh>Refresh</button><button class="primary" type="button" data-roster-preview>Preview sync</button></div>
+      </div>
+      <div class="alert warning" data-roster-source-state>Checking the private roster source configuration.</div>
+      <div class="grid-4 section-gap" data-roster-metrics></div>
+      <div class="section-gap" data-roster-preview-result></div>
+      <div class="toolbar section-gap">
+        <label>Search protected directory<input name="identityRosterSearch" maxlength="160" placeholder="Student ID, institutional email, name, or verification"></label>
+      </div>
+      <div class="line-list section-gap" data-roster-directory><div class="empty">Open Identity Roster to load the owner-protected directory.</div></div>
+      <div class="access-pagination section-gap" data-roster-pagination hidden>
+        <button class="secondary mini" type="button" data-roster-page="previous">Previous</button>
+        <span data-roster-page-summary></span>
+        <button class="secondary mini" type="button" data-roster-page="next">Next</button>
+      </div>
+      <details class="section-gap"><summary>Sync and rollback history</summary><div class="line-list section-gap" data-roster-history><div class="empty">No sync history loaded.</div></div></details>
     </article>
 
     <article class="panel" data-access-management hidden>

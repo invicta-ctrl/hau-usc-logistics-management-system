@@ -5,7 +5,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const SECRET_NAMES = Object.freeze(['PASSWORD_PEPPER', 'TRACKING_LINK_SECRET', 'PROTECTED_PROFILE_ENCRYPTION_KEY']);
+const SECRET_NAMES = Object.freeze([
+  'PASSWORD_PEPPER',
+  'TRACKING_LINK_SECRET',
+  'PROTECTED_PROFILE_ENCRYPTION_KEY',
+  'ROSTER_DATA_ENCRYPTION_KEY',
+]);
 
 export function createSecretPackage(environment, random = randomBytes) {
   const normalized = String(environment ?? '').toUpperCase();

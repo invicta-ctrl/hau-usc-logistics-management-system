@@ -6,7 +6,14 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
 const SHA = /^[0-9a-f]{40}$/iu;
-const PROTECTED_NAMES = new Set(['PASSWORD_PEPPER', 'TRACKING_LINK_SECRET', 'PROTECTED_PROFILE_ENCRYPTION_KEY', 'SESSION_SIGNING_SECRET']);
+const PROTECTED_NAMES = new Set([
+  'PASSWORD_PEPPER',
+  'TRACKING_LINK_SECRET',
+  'PROTECTED_PROFILE_ENCRYPTION_KEY',
+  'ROSTER_DATA_ENCRYPTION_KEY',
+  'GOOGLE_ROSTER_PRIVATE_KEY',
+  'SESSION_SIGNING_SECRET',
+]);
 
 function parseJsonc(value) {
   return JSON.parse(value.replace(/^\s*\/\/.*$/gmu, '').replace(/\/\*[\s\S]*?\*\//gu, ''));

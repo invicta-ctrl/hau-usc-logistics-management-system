@@ -44,6 +44,9 @@ function baseConfig(source, { name, environment, candidateSha, d1, r2Bucket }) {
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
+      GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
+      GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
+      GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
     },
   };
 }

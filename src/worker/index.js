@@ -6,6 +6,7 @@ import { createAuthHttpHandler, statusForAuthError } from '../server/auth/http-h
 import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
+import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
@@ -14,6 +15,12 @@ import { createAdvertisementAdminService } from '../server/advertisement-admin-s
 import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
+import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
+import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
+import {
+  createIdentityRosterService,
+  IdentityRosterError,
+} from '../server/identity-roster/service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -190,11 +197,28 @@ function services(env) {
     bucket: env.BRAND_ASSETS,
   });
   const lendingUsage = createLendingUsageService({ db: env.DB });
+  const identityRoster = createIdentityRosterService({
+    repository: createD1IdentityRosterRepository(env.DB),
+    source: createGoogleSheetsRosterSource({
+      spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
+      range: env.GOOGLE_ROSTER_RANGE,
+      serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+      serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
+    }),
+    crypto: createIdentityRosterCrypto({
+      secret:
+        env.ROSTER_DATA_ENCRYPTION_KEY ??
+        (String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase() === 'DEVELOPMENT'
+          ? 'development-only-roster-data-encryption-key-9472'
+          : ''),
+    }),
+  });
   return {
     access,
     advertisementAdmin,
     auth,
     lendingUsage,
+    identityRoster,
     operations,
     publicAdvertisements,
     publicLending,
@@ -260,6 +284,7 @@ async function handleApi(request, env, requestId) {
     advertisementAdmin,
     auth,
     lendingUsage,
+    identityRoster,
     operations,
     publicAdvertisements,
     publicLending,
@@ -469,6 +494,33 @@ async function handleApi(request, env, requestId) {
       throw new AccessManagementError('ACCESS_ACCOUNT_NOT_FOUND', { status: 404 });
     }
 
+    if (url.pathname.startsWith('/api/owner/identity-roster/') && request.method === 'POST') {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true })).account;
+      const command = await body(request);
+      const context = { actor, command, correlationId: requestId };
+      if (url.pathname === '/api/owner/identity-roster/status') {
+        return json({ ok: true, ...(await identityRoster.status(context)) });
+      }
+      if (url.pathname === '/api/owner/identity-roster/preview') {
+        return json({ ok: true, ...(await identityRoster.preview(context)) });
+      }
+      if (url.pathname === '/api/owner/identity-roster/directory') {
+        return json({ ok: true, ...(await identityRoster.directory(context)) });
+      }
+      if (url.pathname === '/api/owner/identity-roster/apply') {
+        return json({ ok: true, ...(await identityRoster.apply(context)) });
+      }
+      if (url.pathname === '/api/owner/identity-roster/rollback') {
+        return json({ ok: true, ...(await identityRoster.rollback(context)) });
+      }
+      throw new IdentityRosterError('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
+    }
+
+    if (url.pathname === '/api/identity-roster/self' && request.method === 'POST') {
+      const actor = (await authorize(request, auth, CAPABILITIES.VIEW_REQUEST)).account;
+      return json({ ok: true, ...(await identityRoster.selfProfile({ actor })) });
+    }
+
     if (
       ['/api/bootstrap', '/api/getEssentialBootstrapData', '/api/getBootstrapData'].includes(url.pathname)
     ) {
@@ -576,9 +628,14 @@ async function handleApi(request, env, requestId) {
     );
   } catch (error) {
     const known =
-      error instanceof ApiError || error instanceof AuthError || error instanceof AccessManagementError;
+      error instanceof ApiError ||
+      error instanceof AuthError ||
+      error instanceof AccessManagementError ||
+      error instanceof IdentityRosterError;
     const status =
-      error instanceof ApiError || error instanceof AccessManagementError
+      error instanceof ApiError ||
+      error instanceof AccessManagementError ||
+      error instanceof IdentityRosterError
         ? error.status
         : error instanceof AuthError
           ? statusForAuthError(error)

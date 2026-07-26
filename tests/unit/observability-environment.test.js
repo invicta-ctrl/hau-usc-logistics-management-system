@@ -30,7 +30,7 @@ describe('v0.7 environment and observability foundation', () => {
 
   it('fails runtime readiness when a protected staging binding or secret is absent', () => {
     const issues = environmentReadinessIssues({ ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.0', CANDIDATE_SHA: 'a'.repeat(40), DB: { prepare() {} }, ASSETS: { fetch() {} } });
-    expect(issues).toEqual(expect.arrayContaining(['R2_BRAND_ASSETS_BINDING_MISSING', 'PASSWORD_PEPPER_MISSING', 'TRACKING_LINK_SECRET_MISSING', 'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING']));
+    expect(issues).toEqual(expect.arrayContaining(['R2_BRAND_ASSETS_BINDING_MISSING', 'PASSWORD_PEPPER_MISSING', 'TRACKING_LINK_SECRET_MISSING', 'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING', 'ROSTER_DATA_ENCRYPTION_KEY_MISSING']));
     expect(safeReleaseIdentity({ ENVIRONMENT: 'production', APP_VERSION: '0.7.0', CANDIDATE_SHA: 'b' })).toMatchObject({ environment: 'PRODUCTION', releaseVersion: '0.7.0' });
   });
 
@@ -72,7 +72,7 @@ describe('v0.7 environment and observability foundation', () => {
     const production = createSecretPackage('production', fakeRandom);
     expect(staging.environment).toBe('STAGING');
     expect(production.environment).toBe('PRODUCTION');
-    expect(Object.keys(staging.secrets).sort()).toEqual(['PASSWORD_PEPPER', 'PROTECTED_PROFILE_ENCRYPTION_KEY', 'TRACKING_LINK_SECRET']);
+    expect(Object.keys(staging.secrets).sort()).toEqual(['PASSWORD_PEPPER', 'PROTECTED_PROFILE_ENCRYPTION_KEY', 'ROSTER_DATA_ENCRYPTION_KEY', 'TRACKING_LINK_SECRET']);
     expect(Object.values(staging.secrets).every((value) => value.length >= 64)).toBe(true);
     expect(staging.secrets.PASSWORD_PEPPER).not.toBe(production.secrets.PASSWORD_PEPPER);
   });
