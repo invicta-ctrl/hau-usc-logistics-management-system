@@ -420,6 +420,9 @@ async function handleApi(request, env, requestId) {
       const actor = (await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: true })).account;
       const command = await body(request);
       const context = { actor, command, correlationId: requestId };
+      if (url.pathname === '/api/admin/access/options') {
+        return json({ ok: true, ...(await access.getAccessPolicyOptions(context)) });
+      }
       if (url.pathname === '/api/admin/access/directory') {
         return json({ ok: true, ...(await access.listAccounts(context)) });
       }
@@ -438,6 +441,12 @@ async function handleApi(request, env, requestId) {
       }
       if (url.pathname === '/api/admin/access/change-access-id') {
         return json({ ok: true, ...(await access.changeAccessId(context)) });
+      }
+      if (url.pathname === '/api/admin/access/preview-policy') {
+        return json({ ok: true, ...(await access.previewAccessPolicy(context)) });
+      }
+      if (url.pathname === '/api/admin/access/update-policy') {
+        return json({ ok: true, ...(await access.updateAccessPolicy(context)) });
       }
       if (url.pathname === '/api/admin/access/create-account') {
         return json({ ok: true, ...(await access.createStarterAccount(context)) });

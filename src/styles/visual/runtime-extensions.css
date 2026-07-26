@@ -442,6 +442,55 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
   user-select: all;
 }
 
+.access-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+
+.access-choice-grid .checkbox {
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.access-advanced-settings {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffdf8;
+}
+
+.access-advanced-settings summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.access-effective-preview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.access-effective-preview div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+}
+
+.access-effective-preview dt {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.access-effective-preview dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 640px) {
   .access-account-row,
   .access-pagination {
@@ -451,6 +500,11 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
 
   .access-account-actions {
     justify-content: flex-start;
+  }
+
+  .access-choice-grid,
+  .access-effective-preview {
+    grid-template-columns: 1fr;
   }
 }
 

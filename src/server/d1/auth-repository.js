@@ -20,6 +20,25 @@ async function committeeIds(db, accountId) {
   return result.results.map((row) => row.committee_id);
 }
 
+async function accessProfile(db, accountId) {
+  const row = await db
+    .prepare('SELECT * FROM account_access_profiles WHERE account_id = ?1')
+    .bind(accountId)
+    .first();
+  return row
+    ? {
+        presetId: row.preset_id,
+        workspaceIds: parseJson(row.workspace_ids_json, []),
+        defaultWorkspaceId: row.default_workspace_id ?? '',
+        locationScopeIds: parseJson(row.location_scope_ids_json, []),
+        eventSeriesScopeIds: parseJson(row.event_series_scope_ids_json, []),
+        eventScopeIds: parseJson(row.event_scope_ids_json, []),
+        capabilityGrants: parseJson(row.capability_grants_json, []),
+        capabilityDenies: parseJson(row.capability_denies_json, []),
+      }
+    : null;
+}
+
 async function accountFromRow(db, row) {
   if (!row) return undefined;
   const department = row.department_id
@@ -34,6 +53,7 @@ async function accountFromRow(db, row) {
     status: row.status,
     roleId: row.role_id,
     committeeIds: await committeeIds(db, row.id),
+    accessProfile: await accessProfile(db, row.id),
     defaultCommitteeId: row.default_committee_id ?? '',
     profile: row.profile_full_name
       ? {

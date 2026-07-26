@@ -355,6 +355,7 @@ export function createRuntimeExtensions(options) {
   let accessDirectory = null;
   let accessDirectoryPromise = null;
   let accessDirectoryPage = 1;
+  let accessPolicyOptions = null;
   let accessSearchTimer = null;
   let advertisementAdminOpen = false;
   let advertisementDirectory = null;
@@ -1162,6 +1163,17 @@ export function createRuntimeExtensions(options) {
         createdAt: '',
         lastSuccessfulLogin: '',
         lastAccessIdChange: '',
+        defaultCommitteeId: user.authorization?.committeeIds?.[0] ?? '',
+        accessProfile: {
+          presetId: 'CUSTOM',
+          workspaceIds: user.authorization?.workspaceIds ?? ['administrator'],
+          defaultWorkspaceId: user.authorization?.defaultWorkspaceId ?? 'administrator',
+          locationScopeIds: user.authorization?.locationScopeIds ?? [],
+          eventSeriesScopeIds: user.authorization?.eventSeriesScopeIds ?? [],
+          eventScopeIds: user.authorization?.eventScopeIds ?? [],
+          capabilityGrants: [],
+          capabilityDenies: user.authorization?.explicitDenies ?? [],
+        },
       };
       const query = String(command.query ?? '').toLowerCase();
       const items =
@@ -1172,6 +1184,55 @@ export function createRuntimeExtensions(options) {
       ok: true,
       account: { accessId: command.currentAccessId },
       history: [],
+    });
+    services.getAccessPolicyOptions ??= async () => ({
+      ok: true,
+      workspaces: [
+        { id: 'administrator', label: 'Admin' },
+        { id: 'director', label: 'Director' },
+        { id: 'food', label: 'Food' },
+        { id: 'inventory-pantry', label: 'Inventory & Pantry' },
+        { id: 'materials', label: 'Materials' },
+      ],
+      presets: [
+        { id: 'ADMINISTRATOR', label: 'Administrator', roleId: 'ADMINISTRATOR', workspaceIds: ['administrator', 'director', 'food', 'inventory-pantry', 'materials'] },
+        { id: 'DIRECTOR', label: 'Director', roleId: 'DIRECTOR', workspaceIds: ['director'] },
+        { id: 'FOOD_OPERATOR', label: 'Food Operator', roleId: 'DOL_STAFF', workspaceIds: ['food'], committeeIds: ['COM_FOOD'] },
+        { id: 'INVENTORY_OPERATOR', label: 'Inventory & Pantry Operator', roleId: 'DOL_STAFF', workspaceIds: ['inventory-pantry'], committeeIds: ['COM_INVENTORY_PANTRY'] },
+        { id: 'MATERIALS_OPERATOR', label: 'Materials Operator', roleId: 'DOL_STAFF', workspaceIds: ['materials'], committeeIds: ['COM_MATERIALS'] },
+        { id: 'REQUEST_REVIEWER', label: 'Request Reviewer', roleId: 'COMMITTEE_HEAD', workspaceIds: [] },
+        { id: 'LENDING_STAFF', label: 'Lending Staff', roleId: 'DOL_STAFF', workspaceIds: ['inventory-pantry'], committeeIds: ['COM_INVENTORY_PANTRY'] },
+        { id: 'REQUESTER_ONLY', label: 'Requester Only', roleId: 'REQUESTER', workspaceIds: [] },
+        { id: 'CUSTOM', label: 'Custom', roleId: '', workspaceIds: [] },
+      ],
+      committees: [
+        { id: 'COM_FOOD', label: 'Food Committee' },
+        { id: 'COM_INVENTORY_PANTRY', label: 'Inventory & Pantry Committee' },
+        { id: 'COM_MATERIALS', label: 'Materials Committee' },
+      ],
+      locations: [],
+      eventSeries: [],
+      events: [],
+      capabilities: (state.currentUser?.authorization?.capabilities ?? []).map((id) => ({ id, label: id })),
+    });
+    services.previewAccessPolicy ??= async (command) => ({
+      ok: true,
+      ...command,
+      visibleNavigation: command.workspaceIds,
+      allowedActions: (state.currentUser?.authorization?.capabilities ?? []).filter(
+        (capability) => !command.capabilityDenies.includes(capability),
+      ),
+      explicitDenies: command.capabilityDenies,
+      sensitiveCapabilities: [],
+      conflictWarnings: [],
+      sessionImpact: 'ALL_ACTIVE_SESSIONS_REVOKED',
+    });
+    services.updateAccessPolicy ??= async (command) => ({
+      ok: true,
+      changed: true,
+      replayed: false,
+      sessionsRevoked: true,
+      preview: await services.previewAccessPolicy(command),
     });
     services.seedDepartmentAccessAccounts ??= async () => ({
       ok: true,
@@ -1382,13 +1443,22 @@ export function createRuntimeExtensions(options) {
           const departmentLine = account.departmentId
             ? `<small>${esc(account.departmentDisplayName)} &middot; ${esc(account.departmentId)}</small>`
             : '';
+          const archiveAction = ['ACTIVE', 'STARTER', 'DISABLED'].includes(account.status)
+            ? `<button class="danger mini" type="button" data-access-action="archive" data-access-id="${esc(account.accessId)}">Archive</button>`
+            : '';
           const lifecycleAction =
-            account.status === 'ACTIVE'
-              ? `<button class="danger mini" type="button" data-access-action="revoke" data-access-id="${esc(account.accessId)}">Revoke</button>`
-              : ['DISABLED', 'REVOKED'].includes(account.status)
-                ? `<button class="secondary mini" type="button" data-access-action="restore" data-access-id="${esc(account.accessId)}">Restore</button>`
-                : '';
-          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
+            account.status === 'ACTIVE' || account.status === 'STARTER'
+              ? `<button class="danger mini" type="button" data-access-action="disable" data-access-id="${esc(account.accessId)}">Disable</button>${archiveAction}`
+              : account.status === 'DISABLED'
+                ? `<button class="secondary mini" type="button" data-access-action="restore" data-access-id="${esc(account.accessId)}">Restore</button>${archiveAction}`
+                : account.status === 'REVOKED'
+                  ? `<button class="secondary mini" type="button" data-access-action="restore" data-access-id="${esc(account.accessId)}">Restore</button>`
+                  : '';
+          const accessProfile = account.accessProfile ?? {};
+          const workspaceLine = (accessProfile.workspaceIds ?? []).length
+            ? `${accessProfile.workspaceIds.join(', ')}; default ${accessProfile.defaultWorkspaceId || 'not set'}`
+            : 'No internal workspace';
+          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>Workspaces: ${esc(workspaceLine)} &middot; Preset: ${esc(accessProfile.presetId || 'CUSTOM')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="policy" data-access-id="${esc(account.accessId)}">Edit access</button><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
         })
         .join('') || '<div class="empty">No accounts match the authorized filters.</div>';
     const pagination = accessDirectory?.pagination ?? { page: 1, totalPages: 1, total: items.length };
@@ -1434,6 +1504,156 @@ export function createRuntimeExtensions(options) {
 
   const accessAccount = (accessId) =>
     (accessDirectory?.items ?? []).find((account) => account.accessId === accessId);
+
+  const ensureAccessPolicyOptions = async () => {
+    accessPolicyOptions ??= await services.getAccessPolicyOptions({});
+    return accessPolicyOptions;
+  };
+
+  const accessCheckboxes = (name, entries, selected = []) => {
+    const selectedIds = new Set(selected);
+    return `<div class="access-choice-grid" data-access-choice-group="${esc(name)}">${entries
+      .map(
+        (entry) =>
+          `<label class="checkbox"><input name="${esc(name)}" type="checkbox" value="${esc(entry.id)}"${selectedIds.has(entry.id) ? ' checked' : ''}> ${esc(entry.label ?? entry.id)}</label>`,
+      )
+      .join('') || '<span class="empty">No governed values are currently available.</span>'}</div>`;
+  };
+
+  const accessCapabilityOptions = (capabilities, selected = []) => {
+    const selectedIds = new Set(selected);
+    const groups = new Map();
+    capabilities.forEach((entry) => {
+      const group = entry.id.split('.')[0] || 'other';
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(entry);
+    });
+    return [...groups.entries()]
+      .map(
+        ([group, entries]) =>
+          `<optgroup label="${esc(group)}">${entries.map((entry) => `<option value="${esc(entry.id)}"${selectedIds.has(entry.id) ? ' selected' : ''}>${esc(entry.id)} — ${esc(entry.label ?? '')}</option>`).join('')}</optgroup>`,
+      )
+      .join('');
+  };
+
+  const accessPolicyFormMarkup = (account, options) => {
+    const profile = account.accessProfile ?? {};
+    const workspaceIds = profile.workspaceIds ?? [];
+    const committeeIds = account.committeeIds ?? [];
+    return `<form id="accessPolicyForm">
+      <div class="mode-note">Workspace visibility is not authorization. The server validates this policy, projects effective actions, revokes active sessions after a material change, and appends audit history.</div>
+      <div class="form-grid section-gap">
+        <label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label>
+        <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, profile.presetId || 'CUSTOM')).join('')}</select></label>
+        <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), account.roleId)).join('')}</select></label>
+        <label>Default workspace<select name="defaultWorkspaceId"><option value="">No internal workspace</option>${options.workspaces.map((entry) => option(entry.id, entry.label, profile.defaultWorkspaceId)).join('')}</select></label>
+        <fieldset class="span-2"><legend>Authorized workspaces</legend>${accessCheckboxes('workspaceIds', options.workspaces, workspaceIds)}</fieldset>
+        <fieldset class="span-2"><legend>Committee scopes</legend>${accessCheckboxes('committeeIds', options.committees, committeeIds)}</fieldset>
+        <label>Primary committee<select name="defaultCommitteeId"><option value="">No primary committee</option>${options.committees.map((entry) => option(entry.id, entry.label, account.defaultCommitteeId)).join('')}</select></label>
+        <span></span>
+        <fieldset class="span-2"><legend>Location scopes</legend>${accessCheckboxes('locationScopeIds', options.locations, profile.locationScopeIds)}</fieldset>
+        <fieldset class="span-2"><legend>Event-series scopes</legend>${accessCheckboxes('eventSeriesScopeIds', options.eventSeries, profile.eventSeriesScopeIds)}</fieldset>
+        <fieldset class="span-2"><legend>Sub-event scopes</legend>${accessCheckboxes('eventScopeIds', options.events, profile.eventScopeIds)}</fieldset>
+        <details class="span-2 access-advanced-settings"><summary>Advanced settings</summary><p>Use only small approved overrides. Sensitive grants require System Owner approval.</p><div class="form-grid section-gap"><label>Explicit grants<select name="capabilityGrants" multiple size="8">${accessCapabilityOptions(options.capabilities, profile.capabilityGrants)}</select></label><label>Explicit denies<select name="capabilityDenies" multiple size="8">${accessCapabilityOptions(options.capabilities, profile.capabilityDenies)}</select></label></div></details>
+        <label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label>
+        <label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label>
+      </div>
+      <button class="primary" type="submit">Preview effective access</button>
+    </form>`;
+  };
+
+  const accessPolicyCommand = (form) => {
+    const data = new FormData(form);
+    return {
+      currentAccessId: data.get('currentAccessId'),
+      confirmCurrentAccessId: data.get('confirmCurrentAccessId'),
+      presetId: data.get('presetId'),
+      roleId: data.get('roleId'),
+      workspaceIds: data.getAll('workspaceIds'),
+      defaultWorkspaceId: data.get('defaultWorkspaceId'),
+      committeeIds: data.getAll('committeeIds'),
+      defaultCommitteeId: data.get('defaultCommitteeId'),
+      locationScopeIds: data.getAll('locationScopeIds'),
+      eventSeriesScopeIds: data.getAll('eventSeriesScopeIds'),
+      eventScopeIds: data.getAll('eventScopeIds'),
+      capabilityGrants: data.getAll('capabilityGrants'),
+      capabilityDenies: data.getAll('capabilityDenies'),
+      reason: data.get('reason'),
+    };
+  };
+
+  const accessPreviewMarkup = (preview) => {
+    const rows = [
+      ['Preset', preview.presetId],
+      ['Role', preview.roleId],
+      ['Available workspaces', preview.workspaceIds?.join(', ') || 'None'],
+      ['Default workspace', preview.defaultWorkspaceId || 'None'],
+      ['Visible navigation', preview.visibleNavigation?.join(', ') || 'None'],
+      ['Committee scopes', preview.committeeIds?.join(', ') || 'None'],
+      ['Location scopes', preview.locationScopeIds?.join(', ') || 'All authorized'],
+      ['Event-series scopes', preview.eventSeriesScopeIds?.join(', ') || 'All authorized'],
+      ['Sub-event scopes', preview.eventScopeIds?.join(', ') || 'All authorized'],
+      ['Explicit denies', preview.explicitDenies?.join(', ') || 'None'],
+      ['Sensitive capabilities', preview.sensitiveCapabilities?.join(', ') || 'None'],
+    ];
+    return `<dl class="access-effective-preview">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
+  };
+
+  const openAccessPolicyEditor = async (account) => {
+    try {
+      const options = await ensureAccessPolicyOptions();
+      openModal(`Edit effective access · ${account.accessId}`, accessPolicyFormMarkup(account, options), (modal) => {
+        const form = modal.querySelector('#accessPolicyForm');
+        const presetSelect = form.elements.presetId;
+        presetSelect.addEventListener('change', () => {
+          const preset = options.presets.find((entry) => entry.id === presetSelect.value);
+          if (!preset || preset.id === 'CUSTOM') return;
+          form.elements.roleId.value = preset.roleId;
+          form.querySelectorAll('[name="workspaceIds"]').forEach((control) => {
+            control.checked = (preset.workspaceIds ?? []).includes(control.value);
+          });
+          form.querySelectorAll('[name="committeeIds"]').forEach((control) => {
+            control.checked = (preset.committeeIds ?? []).includes(control.value);
+          });
+          form.elements.defaultWorkspaceId.value = preset.workspaceIds?.[0] ?? '';
+          form.elements.defaultCommitteeId.value = preset.committeeIds?.[0] ?? '';
+        });
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          const command = accessPolicyCommand(form);
+          try {
+            const preview = await services.previewAccessPolicy(command);
+            openModal('Confirm effective access', `${accessPreviewMarkup(preview)}<button class="danger section-gap" type="button" data-access-policy-confirm>Save policy and revoke sessions</button>`, (confirmModal) => {
+              confirmModal.querySelector('[data-access-policy-confirm]').addEventListener('click', async (confirmEvent) => {
+                confirmEvent.currentTarget.disabled = true;
+                try {
+                  await services.updateAccessPolicy({
+                    ...command,
+                    idempotencyKey: `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                  });
+                  closeModal();
+                  accessDirectory = null;
+                  await refreshAccessDirectory({ force: true });
+                  toast('Effective access updated; active sessions were revoked and audit history was appended.');
+                } catch (error) {
+                  toast(error.message, true);
+                  confirmEvent.currentTarget.disabled = false;
+                }
+              });
+            });
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      });
+    } catch (error) {
+      toast(error.message, true);
+    }
+  };
 
   const openAccessHistory = async (account) => {
     openModal('Access ID history', '<div class="empty">Loading append-only history…</div>');
@@ -1514,7 +1734,12 @@ export function createRuntimeExtensions(options) {
     const definitions = {
       disable: { title: 'Disable account', button: 'Disable and revoke sessions', status: 'DISABLED' },
       enable: { title: 'Enable account', button: 'Enable account', status: 'ACTIVE' },
-      revoke: { title: 'Revoke account', button: 'Revoke account and sessions', status: 'REVOKED' },
+      archive: {
+        title: 'Archive account',
+        button: 'Archive account and revoke sessions',
+        status: 'REVOKED',
+        lifecycleAction: 'ARCHIVE',
+      },
       restore: { title: 'Restore account', button: 'Restore account', status: 'ACTIVE' },
       'revoke-sessions': { title: 'Revoke all sessions', button: 'Revoke all sessions' },
       unlock: { title: 'Unlock account', button: 'Unlock account' },
@@ -1522,14 +1747,18 @@ export function createRuntimeExtensions(options) {
     const definition = definitions[action];
     openModal(
       `${definition.title} · ${account.accessId}`,
-      `<form id="accessReasonActionForm"><div class="mode-note">This is a consequential account action and will be recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${action === 'disable' ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
+      `<form id="accessReasonActionForm"><div class="mode-note">This is a consequential account action and will be recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${['disable', 'archive'].includes(action) ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessReasonActionForm');
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (!form.reportValidity()) return;
           const values = Object.fromEntries(new FormData(form).entries());
-          const command = { currentAccessId: account.accessId, ...values };
+          const command = {
+            currentAccessId: account.accessId,
+            ...values,
+            ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
+          };
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
@@ -1540,7 +1769,11 @@ export function createRuntimeExtensions(options) {
             closeModal();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
-            toast(`${definition.title} completed.`);
+            toast(
+              action === 'archive'
+                ? 'Account archived without deleting history; active sessions were revoked.'
+                : `${definition.title} completed.`,
+            );
           } catch (error) {
             toast(error.message, true);
             button.disabled = false;
@@ -1616,40 +1849,95 @@ export function createRuntimeExtensions(options) {
     );
   };
 
-  const openAccessAccountCreate = () => {
-    openModal(
-      'Create staging account',
-      `<form id="accessAccountCreateForm"><div class="mode-note">Creates one governed starter account with a server-generated one-time password. Role, committee scope, and optional department identity are validated by the server.</div><div class="form-grid section-gap"><label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label><label>Role<select name="roleId"><option value="REQUESTER">Department requester</option><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option></select></label><label>Department<select name="departmentId"><option value="">Not mapped</option>${USC_DEPARTMENT_REGISTRY.map((department) => option(department.id, department.displayName)).join('')}</select></label><label>Committee scope<select name="committeeId"><option value="">None / all</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this account assignment.</label></div><button class="primary" type="submit">Create starter account</button></form>`,
-      (modal) => {
-        const form = modal.querySelector('#accessAccountCreateForm');
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
-          if (!form.reportValidity()) return;
-          const values = Object.fromEntries(new FormData(form).entries());
-          const committeeIds = values.committeeId ? [values.committeeId] : [];
-          const button = form.querySelector('[type="submit"]');
-          button.disabled = true;
-          try {
-            const result = await services.createAccessAccount({
-              accessId: values.accessId,
-              roleId: values.roleId,
-              departmentId: values.departmentId,
-              committeeIds,
-              defaultCommitteeId: committeeIds[0] ?? '',
-              reason: values.reason,
-              confirmed: form.elements.confirmed.checked,
+  const openAccessAccountCreate = async () => {
+    try {
+      const options = await ensureAccessPolicyOptions();
+      openModal(
+        'Create governed account',
+        `<form id="accessAccountCreateForm"><div class="mode-note">The server generates the temporary password, validates effective access, requires first-login password change, and returns plaintext only once.</div><div class="form-grid section-gap">
+          <label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label>
+          <label class="checkbox"><input name="generateAccessId" type="checkbox"> Generate DOL-YYYY-NNNN Access ID</label>
+          <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, 'CUSTOM')).join('')}</select></label>
+          <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD'].map((value) => option(value, value.replaceAll('_', ' '), 'REQUESTER')).join('')}</select></label>
+          <label>Department<select name="departmentId"><option value="">Not mapped</option>${USC_DEPARTMENT_REGISTRY.map((department) => option(department.id, department.displayName)).join('')}</select></label>
+          <label>Account status<select name="status"><option value="STARTER">Starter — first-login activation required</option><option value="DISABLED">Disabled — credential cannot be used yet</option></select></label>
+          <label>Temporary credential expiry<select name="temporaryPasswordHours"><option value="24">24 hours</option><option value="48">48 hours</option><option value="72" selected>72 hours</option><option value="168">7 days</option></select></label>
+          <label>Default workspace<select name="defaultWorkspaceId"><option value="">No internal workspace</option>${options.workspaces.map((entry) => option(entry.id, entry.label)).join('')}</select></label>
+          <fieldset class="span-2"><legend>Authorized workspaces</legend>${accessCheckboxes('workspaceIds', options.workspaces)}</fieldset>
+          <fieldset class="span-2"><legend>Committee scopes</legend>${accessCheckboxes('committeeIds', options.committees)}</fieldset>
+          <label>Primary committee<select name="defaultCommitteeId"><option value="">No primary committee</option>${options.committees.map((entry) => option(entry.id, entry.label)).join('')}</select></label>
+          <label class="checkbox"><input name="lendingEligible" type="checkbox"> Requester is eligible for Office Lending</label>
+          <label>Institution ID<input name="institutionId" inputmode="numeric" maxlength="8"></label>
+          <fieldset class="span-2"><legend>Location scopes</legend>${accessCheckboxes('locationScopeIds', options.locations)}</fieldset>
+          <fieldset class="span-2"><legend>Event-series scopes</legend>${accessCheckboxes('eventSeriesScopeIds', options.eventSeries)}</fieldset>
+          <fieldset class="span-2"><legend>Sub-event scopes</legend>${accessCheckboxes('eventScopeIds', options.events)}</fieldset>
+          <details class="span-2 access-advanced-settings"><summary>Advanced settings</summary><p>Use small approved overrides only. Sensitive grants require System Owner approval.</p><div class="form-grid section-gap"><label>Explicit grants<select name="capabilityGrants" multiple size="8">${accessCapabilityOptions(options.capabilities)}</select></label><label>Explicit denies<select name="capabilityDenies" multiple size="8">${accessCapabilityOptions(options.capabilities)}</select></label></div></details>
+          <label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label>
+          <label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this account and effective-access assignment.</label>
+        </div><button class="primary" type="submit">Create account and show one-time credential</button></form>`,
+        (modal) => {
+          const form = modal.querySelector('#accessAccountCreateForm');
+          form.elements.generateAccessId.addEventListener('change', () => {
+            form.elements.accessId.disabled = form.elements.generateAccessId.checked;
+            form.elements.accessId.required = !form.elements.generateAccessId.checked;
+            if (form.elements.generateAccessId.checked) form.elements.accessId.value = '';
+          });
+          form.elements.presetId.addEventListener('change', () => {
+            const preset = options.presets.find((entry) => entry.id === form.elements.presetId.value);
+            if (!preset || preset.id === 'CUSTOM') return;
+            form.elements.roleId.value = preset.roleId;
+            form.querySelectorAll('[name="workspaceIds"]').forEach((control) => {
+              control.checked = (preset.workspaceIds ?? []).includes(control.value);
             });
-            form.reset();
-            accessDirectory = null;
-            await refreshAccessDirectory({ force: true });
-            openOneTimeCredentialHandoff('Starter account created', [result.credential]);
-          } catch (error) {
-            toast(error.message, true);
-            button.disabled = false;
-          }
-        });
-      },
-    );
+            form.querySelectorAll('[name="committeeIds"]').forEach((control) => {
+              control.checked = (preset.committeeIds ?? []).includes(control.value);
+            });
+            form.elements.defaultWorkspaceId.value = preset.workspaceIds?.[0] ?? '';
+            form.elements.defaultCommitteeId.value = preset.committeeIds?.[0] ?? '';
+          });
+          form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            if (!form.reportValidity()) return;
+            const data = new FormData(form);
+            const button = form.querySelector('[type="submit"]');
+            button.disabled = true;
+            try {
+              const result = await services.createAccessAccount({
+                accessId: data.get('accessId'),
+                generateAccessId: form.elements.generateAccessId.checked,
+                presetId: data.get('presetId'),
+                roleId: data.get('roleId'),
+                departmentId: data.get('departmentId'),
+                status: data.get('status'),
+                temporaryPasswordHours: Number(data.get('temporaryPasswordHours')),
+                workspaceIds: data.getAll('workspaceIds'),
+                defaultWorkspaceId: data.get('defaultWorkspaceId'),
+                committeeIds: data.getAll('committeeIds'),
+                defaultCommitteeId: data.get('defaultCommitteeId'),
+                lendingEligible: form.elements.lendingEligible.checked,
+                institutionId: data.get('institutionId'),
+                locationScopeIds: data.getAll('locationScopeIds'),
+                eventSeriesScopeIds: data.getAll('eventSeriesScopeIds'),
+                eventScopeIds: data.getAll('eventScopeIds'),
+                capabilityGrants: data.getAll('capabilityGrants'),
+                capabilityDenies: data.getAll('capabilityDenies'),
+                reason: data.get('reason'),
+                confirmed: form.elements.confirmed.checked,
+              });
+              form.reset();
+              accessDirectory = null;
+              await refreshAccessDirectory({ force: true });
+              openOneTimeCredentialHandoff('Account created', [result.credential]);
+            } catch (error) {
+              toast(error.message, true);
+              button.disabled = false;
+            }
+          });
+        },
+      );
+    } catch (error) {
+      toast(error.message, true);
+    }
   };
 
   const openDepartmentAccountSeed = () => {
@@ -2239,7 +2527,8 @@ export function createRuntimeExtensions(options) {
       if (!button) return;
       const account = accessAccount(button.dataset.accessId);
       if (!account) return;
-      if (button.dataset.accessAction === 'history') void openAccessHistory(account);
+      if (button.dataset.accessAction === 'policy') void openAccessPolicyEditor(account);
+      else if (button.dataset.accessAction === 'history') void openAccessHistory(account);
       else if (button.dataset.accessAction === 'rename') openAccessIdChange(account);
       else if (button.dataset.accessAction === 'reset') openAccessPasswordReset(account);
       else openAccessReasonAction(account, button.dataset.accessAction);
@@ -3786,6 +4075,15 @@ export function createRuntimeExtensions(options) {
       ).toUpperCase(),
     );
 
+  const authorizedWorkspaceIds = () => {
+    const authorization = getState()?.currentUser?.authorization ?? {};
+    const projected = Array.isArray(authorization.workspaceIds)
+      ? authorization.workspaceIds.filter((id) => workspaceDefinitions[id])
+      : [];
+    if (projected.length) return projected;
+    return isAdministrator() ? Object.keys(workspaceDefinitions) : [];
+  };
+
   const workspaceFromPath = () =>
     Object.entries(workspaceDefinitions).find(
       ([, definition]) =>
@@ -3794,7 +4092,10 @@ export function createRuntimeExtensions(options) {
 
   const workspaceForCurrentUser = () => {
     const routedWorkspace = workspaceFromPath();
-    if (isAdministrator() && workspaceDefinitions[routedWorkspace]) return routedWorkspace;
+    const allowed = authorizedWorkspaceIds();
+    if (allowed.includes(routedWorkspace)) return routedWorkspace;
+    const defaultWorkspace = getState()?.currentUser?.authorization?.defaultWorkspaceId;
+    if (allowed.includes(defaultWorkspace)) return defaultWorkspace;
     const experience = normalizedExperience();
     if (workspaceDefinitions[experience]) return experience;
     const user = getState()?.currentUser ?? {};
@@ -3810,7 +4111,7 @@ export function createRuntimeExtensions(options) {
 
   const syncRoutedExperience = () => {
     const workspace = workspaceFromPath();
-    if (isAdministrator() && workspaceDefinitions[workspace]) {
+    if (authorizedWorkspaceIds().includes(workspace)) {
       document.body.dataset.experience = workspace;
     }
   };
@@ -3867,16 +4168,16 @@ export function createRuntimeExtensions(options) {
     const workspaceId = workspaceForCurrentUser();
     const workspace = workspaceDefinitions[workspaceId] ?? workspaceDefinitions.administrator;
     const workspaceSelect = internalShellBar.querySelector('#shellWorkspaceSelect');
-    const administrator = isAdministrator();
+    const authorizedWorkspaces = authorizedWorkspaceIds();
     workspaceSelect.innerHTML = Object.entries(workspaceDefinitions)
       .map(([id, definition]) => {
         const selected = id === workspaceId ? ' selected' : '';
-        const unavailable = !administrator && id !== workspaceId;
+        const unavailable = !authorizedWorkspaces.includes(id);
         const stateLabel = id === workspaceId ? 'current workspace' : unavailable ? 'unavailable' : 'view and operate';
         return `<option value="${esc(id)}"${selected}${unavailable ? ' disabled' : ''}>${esc(definition.initial)} · ${esc(definition.label)} — ${esc(definition.purpose)} — ${esc(stateLabel)}</option>`;
       })
       .join('');
-    internalShellBar.querySelector('#shellWorkspaceHelp').textContent = administrator
+    internalShellBar.querySelector('#shellWorkspaceHelp').textContent = authorizedWorkspaces.length > 1
       ? `Switches the active workspace while preserving your authenticated ${authorization.roleLabel || 'Administrator'} identity.`
       : 'Workspace access is assigned by the server.';
     document.body.dataset.workspace = workspaceId;
@@ -4002,7 +4303,10 @@ export function createRuntimeExtensions(options) {
       </div>`;
     header.before(internalShellBar);
     internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', (event) => {
-      if (isAdministrator() && workspaceDefinitions[event.target.value]) {
+      if (
+        authorizedWorkspaceIds().includes(event.target.value) &&
+        workspaceDefinitions[event.target.value]
+      ) {
         const target = new URL(workspaceDefinitions[event.target.value].path, location.origin);
         target.search = location.search;
         history.pushState(history.state, '', `${target.pathname}${target.search}`);

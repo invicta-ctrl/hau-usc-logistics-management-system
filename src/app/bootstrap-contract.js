@@ -117,6 +117,13 @@ const AUTHORIZATION_ROLES = new Set(['SYSTEM_OWNER', 'REQUESTER', 'DOL_STAFF', '
 const AUTHORIZATION_COMMITTEES = new Set(['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS']);
 const AUTHORIZATION_SCOPE_MODES = new Set(['SELF', 'COMMITTEE', 'ALL', 'DENY']);
 const AUTHORIZATION_MAPPING_STATUSES = new Set(['MAPPED', 'INACTIVE', 'NEEDS_REVIEW', 'UNKNOWN_ROLE']);
+const AUTHORIZATION_WORKSPACES = new Set([
+  'administrator',
+  'director',
+  'food',
+  'inventory-pantry',
+  'materials',
+]);
 const AUTHORIZATION_CAPABILITIES = new Set([
   'view.request', 'view.internal', 'view.committee.summary', 'view.all.summary', 'view.audit', 'view.inventory',
   'request.create', 'request.review', 'request.missing_information', 'request.reject', 'request.reopen',
@@ -217,7 +224,7 @@ function assertBoolean(value) {
 
 function assertAuthorization(value) {
   if (!isPlainObject(value)) fail();
-  assertAllowedKeys(value, new Set(['contract', 'contractVersion', 'modelVersion', 'roleId', 'roleLabel', 'scopeMode', 'committeeIds', 'committees', 'capabilities', 'mappingStatus', 'active']));
+  assertAllowedKeys(value, new Set(['contract', 'contractVersion', 'modelVersion', 'roleId', 'roleLabel', 'scopeMode', 'committeeIds', 'committees', 'capabilities', 'workspaceIds', 'defaultWorkspaceId', 'locationScopeIds', 'eventSeriesScopeIds', 'eventScopeIds', 'explicitDenies', 'mappingStatus', 'active']));
   if (value.contract !== 'canonical-authorization' || value.contractVersion !== 2) fail();
   if (!Number.isInteger(value.modelVersion) || ![1, 2].includes(value.modelVersion)) fail();
   assertSafeText(value.roleId, { max: 40 });
@@ -239,6 +246,29 @@ function assertAuthorization(value) {
   });
   if (!Array.isArray(value.capabilities) || value.capabilities.length > AUTHORIZATION_CAPABILITIES.size) fail();
   value.capabilities.forEach((capability) => {
+    assertSafeText(capability, { required: true, max: 80 });
+    if (!AUTHORIZATION_CAPABILITIES.has(capability)) fail();
+  });
+  const workspaceIds = value.workspaceIds ?? [];
+  if (!Array.isArray(workspaceIds) || workspaceIds.length > AUTHORIZATION_WORKSPACES.size) fail();
+  workspaceIds.forEach((workspaceId) => {
+    assertSafeText(workspaceId, { required: true, max: 40 });
+    if (!AUTHORIZATION_WORKSPACES.has(workspaceId)) fail();
+  });
+  assertSafeText(value.defaultWorkspaceId ?? '', { max: 40 });
+  if (value.defaultWorkspaceId && !workspaceIds.includes(value.defaultWorkspaceId)) fail();
+  for (const [key, limit] of [
+    ['locationScopeIds', 50],
+    ['eventSeriesScopeIds', 50],
+    ['eventScopeIds', 100],
+  ]) {
+    const values = value[key] ?? [];
+    if (!Array.isArray(values) || values.length > limit) fail();
+    values.forEach((id) => assertSafeText(id, { required: true, max: 100 }));
+  }
+  const explicitDenies = value.explicitDenies ?? [];
+  if (!Array.isArray(explicitDenies) || explicitDenies.length > AUTHORIZATION_CAPABILITIES.size) fail();
+  explicitDenies.forEach((capability) => {
     assertSafeText(capability, { required: true, max: 80 });
     if (!AUTHORIZATION_CAPABILITIES.has(capability)) fail();
   });

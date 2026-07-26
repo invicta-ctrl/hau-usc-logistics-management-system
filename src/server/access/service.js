@@ -4,6 +4,12 @@ import {
   uscDepartmentById,
 } from '../../domain/usc-departments.js';
 import { ACCOUNT_STATUS, normalizeAccessId, validateStarterAssignment } from '../auth/contracts.js';
+import {
+  ACCESS_PRESETS,
+  ACCESS_WORKSPACES,
+  accountAccessPolicy,
+  normalizeAccessPolicy,
+} from './policy.js';
 
 const SAFE_MESSAGES = Object.freeze({
   ACCESS_ACCOUNT_NOT_FOUND: 'The selected account is no longer available.',
@@ -13,6 +19,15 @@ const SAFE_MESSAGES = Object.freeze({
   ACCESS_ID_UNCHANGED: 'Enter a different Access ID.',
   ACCESS_IDEMPOTENCY_REQUIRED: 'A safe retry key is required.',
   ACCESS_REASON_REQUIRED: 'A reason is required for this account change.',
+  ACCESS_PRESET_INVALID: 'The selected access preset is not supported.',
+  ACCESS_ROLE_INVALID: 'The selected role cannot be assigned through Access Management.',
+  CAPABILITY_OVERRIDE_CONFLICT: 'A capability cannot be both granted and denied.',
+  CAPABILITY_OVERRIDE_INVALID: 'One or more selected capability overrides are unavailable.',
+  DEFAULT_COMMITTEE_OUT_OF_SCOPE: 'The primary committee must be in the assigned committee scopes.',
+  DEFAULT_WORKSPACE_OUT_OF_SCOPE: 'The default workspace must be in the authorized workspace set.',
+  GOVERNED_SCOPE_INVALID: 'One or more selected governed scopes are unavailable.',
+  OWNER_APPROVAL_REQUIRED: 'A System Owner must approve this sensitive access assignment.',
+  WORKSPACE_ASSIGNMENT_INVALID: 'The selected workspace assignment is invalid for this role.',
   ACCESS_WRITE_CONFLICT: 'The account changed before this request completed. Refresh and try again.',
   ACCOUNT_STATUS_INVALID: 'The requested account status is not supported.',
   ADMINISTRATOR_REQUIRED: 'Administrator access is required.',
@@ -86,6 +101,8 @@ function safeAccount(account) {
     displayName: account.profile?.fullName || account.accessIdNormalized,
     roleId: account.roleId,
     committeeIds: account.committeeIds ?? [],
+    defaultCommitteeId: account.defaultCommitteeId ?? '',
+    accessProfile: accountAccessPolicy(account),
     status: account.status,
     firstLoginPending: account.status === ACCOUNT_STATUS.STARTER || !account.onboardingCompletedAt,
     locked: Boolean(account.lockedAt),
@@ -185,6 +202,70 @@ export function createAccessManagementService({
   }
 
   return Object.freeze({
+    async getAccessPolicyOptions({ actor } = {}) {
+      assertAdministrator(actor);
+      const reference = await repository.listAccessPolicyReferences();
+      return {
+        workspaces: ACCESS_WORKSPACES,
+        presets: ACCESS_PRESETS,
+        ...reference,
+      };
+    },
+
+    async previewAccessPolicy({ actor, command = {} } = {}) {
+      assertAdministrator(actor);
+      const account = await accountByAccessId(command.currentAccessId);
+      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
+        fail('ACCESS_CONFIRMATION_REQUIRED');
+      }
+      const reference = await repository.listAccessPolicyReferences();
+      const normalized = normalizeAccessPolicy(command, {
+        actorRoleId: actor.roleId,
+        reference,
+        existingAccount: account,
+      });
+      if (!normalized.valid) fail(normalized.code, normalized.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422);
+      return { account: safeAccount(account), proposedAccount: safeAccount(normalized.account), ...normalized.preview };
+    },
+
+    async updateAccessPolicy({ actor, command = {}, correlationId = '' } = {}) {
+      assertAdministrator(actor);
+      const idempotencyKey = requiredIdempotencyKey(command.idempotencyKey);
+      const existing = await repository.getAccessPolicyChangeByIdempotency(idempotencyKey);
+      if (existing) return { changed: true, replayed: true, sessionsRevoked: true, preview: existing.after };
+      const account = await accountByAccessId(command.currentAccessId);
+      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
+        fail('ACCESS_CONFIRMATION_REQUIRED');
+      }
+      const reason = requiredReason(command.reason);
+      const reference = await repository.listAccessPolicyReferences();
+      const normalized = normalizeAccessPolicy(command, {
+        actorRoleId: actor.roleId,
+        reference,
+        existingAccount: account,
+      });
+      if (!normalized.valid) fail(normalized.code, normalized.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422);
+      if (
+        account.roleId === ROLES.ADMINISTRATOR &&
+        normalized.account.roleId !== ROLES.ADMINISTRATOR
+      ) {
+        await protectAdministrator(actor, account);
+      }
+      const changedAt = nowIso();
+      await repository.updateAccessPolicy({
+        account,
+        nextAccount: normalized.account,
+        actor,
+        changedAt,
+        reason,
+        correlationId: String(correlationId || `ACCESS_${createId()}`),
+        idempotencyKey,
+        changeId: createId(),
+        auditId: createId(),
+      });
+      return { changed: true, replayed: false, sessionsRevoked: true, preview: normalized.preview };
+    },
+
     async listAccounts({ actor, command = {} } = {}) {
       assertAdministrator(actor);
       const status = String(command.status ?? 'ALL').toUpperCase();
@@ -270,7 +351,11 @@ export function createAccessManagementService({
       assertAdministrator(actor);
       const reason = requiredReason(command.reason);
       if (command.confirmed !== true) fail('ACCESS_CONFIRMATION_REQUIRED');
-      const available = await ensureAvailableAccessId(command.accessId);
+      const requestedAccessId =
+        command.generateAccessId === true
+          ? await repository.nextGeneratedAccessId(new Date(clock.now()).getUTCFullYear())
+          : command.accessId;
+      const available = await ensureAvailableAccessId(requestedAccessId);
       const assignment = validateStarterAssignment(command);
       if (!assignment.valid) fail('STARTER_ASSIGNMENT_INVALID');
       const lendingEligible = command.lendingEligible === true;
@@ -284,6 +369,14 @@ export function createAccessManagementService({
       }
       if (lendingEligible && !/^\d{1,8}$/u.test(institutionId)) fail('STARTER_ASSIGNMENT_INVALID');
       const temporaryPassword = createTemporaryPassword();
+      const initialStatus =
+        String(command.status ?? ACCOUNT_STATUS.STARTER).toUpperCase() === ACCOUNT_STATUS.DISABLED
+          ? ACCOUNT_STATUS.DISABLED
+          : ACCOUNT_STATUS.STARTER;
+      const temporaryPasswordHours = Math.min(
+        168,
+        Math.max(1, Math.floor(Number(command.temporaryPasswordHours) || 72)),
+      );
       let credential;
       try {
         credential = await passwordKdf.hash(temporaryPassword);
@@ -294,7 +387,7 @@ export function createAccessManagementService({
       const account = {
         id: createId(),
         accessIdNormalized: available.normalized,
-        status: ACCOUNT_STATUS.STARTER,
+        status: initialStatus,
         roleId: assignment.roleId,
         committeeIds: assignment.committeeIds,
         defaultCommitteeId: assignment.defaultCommitteeId,
@@ -302,7 +395,7 @@ export function createAccessManagementService({
         passwordCredential: null,
         temporaryCredential: {
           ...credential,
-          expiresAt: new Date(clock.now() + 72 * 60 * 60 * 1000).toISOString(),
+          expiresAt: new Date(clock.now() + temporaryPasswordHours * 60 * 60 * 1000).toISOString(),
           consumedAt: null,
         },
         credentialVersion: 1,
@@ -318,6 +411,22 @@ export function createAccessManagementService({
         passwordChangedAt: null,
         lastPasswordResetAt: null,
       };
+      const reference = await repository.listAccessPolicyReferences();
+      const normalizedPolicy = normalizeAccessPolicy(command, {
+        actorRoleId: actor.roleId,
+        reference,
+        existingAccount: account,
+      });
+      if (!normalizedPolicy.valid) {
+        fail(
+          normalizedPolicy.code,
+          normalizedPolicy.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422,
+        );
+      }
+      account.roleId = normalizedPolicy.account.roleId;
+      account.committeeIds = normalizedPolicy.account.committeeIds;
+      account.defaultCommitteeId = normalizedPolicy.account.defaultCommitteeId;
+      account.accessProfile = normalizedPolicy.account.accessProfile;
       await repository.createStarterAccount({
         account,
         actor,
@@ -476,6 +585,10 @@ export function createAccessManagementService({
         fail('ACCESS_CONFIRMATION_REQUIRED');
       }
       const reason = requiredReason(command.reason);
+      const lifecycleAction = String(command.lifecycleAction ?? '').toUpperCase();
+      if (lifecycleAction && !(nextStatus === ACCOUNT_STATUS.REVOKED && lifecycleAction === 'ARCHIVE')) {
+        fail('ACCOUNT_STATUS_INVALID');
+      }
       if (nextStatus !== ACCOUNT_STATUS.ACTIVE) await protectAdministrator(actor, account);
       const restoredStatus =
         nextStatus === ACCOUNT_STATUS.ACTIVE &&
@@ -497,10 +610,16 @@ export function createAccessManagementService({
         nextStatus: restoredStatus,
         changedAt: nowIso(),
         reason,
+        auditAction: lifecycleAction === 'ARCHIVE' ? 'ACCOUNT_ARCHIVED' : 'ACCOUNT_STATUS_CHANGED',
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
       });
-      return { changed: true, status: restoredStatus, sessionsRevoked: true };
+      return {
+        changed: true,
+        status: restoredStatus,
+        archived: lifecycleAction === 'ARCHIVE',
+        sessionsRevoked: true,
+      };
     },
 
     async revokeSessions({ actor, command = {}, correlationId = '' } = {}) {

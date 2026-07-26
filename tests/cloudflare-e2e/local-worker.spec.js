@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '19' },
+    database: { connected: true, schemaVersion: '20' },
   });
 
   await page.goto('/');
@@ -735,6 +735,158 @@ test('Administrator Access Management renames an Access ID once and revokes prio
   }
 });
 
+test('System Owner assigns effective workspace policy and direct routes fail closed', async ({
+  page,
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  const admin = await apiRequest.newContext({ baseURL });
+  const managed = page.context().request;
+  try {
+    const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const options = await owner.post('/api/admin/access/options', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {},
+    });
+    expect(options.status()).toBe(200);
+    await expect(options.json()).resolves.toMatchObject({
+      workspaces: expect.arrayContaining([
+        expect.objectContaining({ id: 'administrator' }),
+        expect.objectContaining({ id: 'materials' }),
+      ]),
+      presets: expect.arrayContaining([
+        expect.objectContaining({ id: 'MATERIALS_OPERATOR' }),
+      ]),
+    });
+
+    const created = await owner.post('/api/admin/access/create-account', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        generateAccessId: true,
+        presetId: 'MATERIALS_OPERATOR',
+        roleId: 'DOL_STAFF',
+        committeeIds: ['COM_MATERIALS'],
+        defaultCommitteeId: 'COM_MATERIALS',
+        workspaceIds: ['materials'],
+        defaultWorkspaceId: 'materials',
+        status: 'STARTER',
+        temporaryPasswordHours: 24,
+        reason: 'Create the synthetic advanced access policy account.',
+        confirmed: true,
+      },
+    });
+    expect(created.status()).toBe(200);
+    const createdResult = await created.json();
+    expect(createdResult.account).toMatchObject({
+      accessId: 'DOL-2026-0001',
+      roleId: 'DOL_STAFF',
+      committeeIds: ['COM_MATERIALS'],
+      accessProfile: {
+        presetId: 'MATERIALS_OPERATOR',
+        workspaceIds: ['materials'],
+        defaultWorkspaceId: 'materials',
+      },
+    });
+
+    const starter = await managed.post('/api/auth/login', {
+      data: {
+        accessId: createdResult.account.accessId,
+        password: createdResult.credential.temporaryPassword,
+      },
+    });
+    expect(starter.status()).toBe(200);
+    const starterResult = await starter.json();
+    expect(starterResult.state).toBe('ACTIVATION_REQUIRED');
+    const activated = await managed.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': starterResult.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Synthetic Advanced Access Operator',
+          mobileNumber: '+63 917 000 0014',
+          email: 'local-advanced-access@example.invalid',
+        },
+        password: MANAGED_ACTIVATED_PASSWORD,
+        confirmPassword: MANAGED_ACTIVATED_PASSWORD,
+      },
+    });
+    expect(activated.status()).toBe(200);
+
+    const command = {
+      currentAccessId: createdResult.account.accessId,
+      confirmCurrentAccessId: createdResult.account.accessId,
+      presetId: 'FOOD_OPERATOR',
+      roleId: 'DOL_STAFF',
+      committeeIds: ['COM_FOOD'],
+      defaultCommitteeId: 'COM_FOOD',
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
+      locationScopeIds: [],
+      eventSeriesScopeIds: [],
+      eventScopeIds: [],
+      capabilityGrants: [],
+      capabilityDenies: ['lending.usage.view'],
+      reason: 'Move the synthetic operator to the governed Food policy.',
+    };
+    const sensitiveDenied = await admin.post('/api/admin/access/preview-policy', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: { ...command, capabilityGrants: ['system.admin'] },
+    });
+    expect(sensitiveDenied.status()).toBe(403);
+    await expect(sensitiveDenied.json()).resolves.toMatchObject({
+      code: 'OWNER_APPROVAL_REQUIRED',
+    });
+    const preview = await owner.post('/api/admin/access/preview-policy', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: command,
+    });
+    expect(preview.status()).toBe(200);
+    await expect(preview.json()).resolves.toMatchObject({
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
+      committeeIds: ['COM_FOOD'],
+      explicitDenies: ['lending.usage.view'],
+      sessionImpact: 'ALL_ACTIVE_SESSIONS_REVOKED',
+    });
+    const updated = await owner.post('/api/admin/access/update-policy', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { ...command, idempotencyKey: 'local-access-policy-change-0001' },
+    });
+    expect(updated.status()).toBe(200);
+    await expect(updated.json()).resolves.toMatchObject({
+      changed: true,
+      replayed: false,
+      sessionsRevoked: true,
+    });
+    expect((await managed.get('/api/requests')).status()).toBe(401);
+
+    const relogin = await managed.post('/api/auth/login', {
+      data: { accessId: createdResult.account.accessId, password: MANAGED_ACTIVATED_PASSWORD },
+    });
+    expect(relogin.status()).toBe(200);
+    await expect(relogin.json()).resolves.toMatchObject({
+      user: {
+        experienceId: 'food',
+        authorization: {
+          workspaceIds: ['food'],
+          defaultWorkspaceId: 'food',
+          committeeIds: ['COM_FOOD'],
+          explicitDenies: ['lending.usage.view'],
+        },
+      },
+    });
+
+    await page.goto('/app/materials');
+    await expect(page).toHaveURL(/\/app\/food$/u);
+    await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
+    const workspace = page.locator('[data-internal-shell-context]').getByLabel('Workspace');
+    await expect(workspace).toHaveValue('food');
+    await expect(workspace.locator('option[value="materials"]')).toHaveAttribute('disabled', '');
+  } finally {
+    await Promise.all([owner.dispose(), admin.dispose()]);
+  }
+});
+
 test('Administrator Access Management governs the staging account lifecycle and safe audit history', async () => {
   const baseURL = process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787';
   const admin = await apiRequest.newContext({ baseURL });
@@ -837,6 +989,40 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(enable.status()).toBe(200);
+
+    const archived = await admin.post('/api/admin/access/status', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        status: 'REVOKED',
+        lifecycleAction: 'ARCHIVE',
+        reason: 'Synthetic archive preserves account and audit history.',
+      },
+    });
+    expect(archived.status()).toBe(200);
+    await expect(archived.json()).resolves.toMatchObject({
+      archived: true,
+      status: 'REVOKED',
+      sessionsRevoked: true,
+    });
+    expect(
+      (
+        await anonymous.post('/api/auth/login', {
+          data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_ACTIVATED_PASSWORD },
+        })
+      ).status(),
+    ).toBe(403);
+    const restoreArchived = await admin.post('/api/admin/access/status', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        status: 'ACTIVE',
+        reason: 'Synthetic restore after archive lifecycle proof.',
+      },
+    });
+    expect(restoreArchived.status()).toBe(200);
     const managedCsrf = await login(managed, 'LOCAL.ACCESS.ACTIONS', MANAGED_ACTIVATED_PASSWORD);
 
     const revoked = await admin.post('/api/admin/access/revoke-sessions', {
@@ -905,6 +1091,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       expect.arrayContaining([
         'STARTER_ACCOUNT_CREATED',
         'ACCOUNT_STATUS_CHANGED',
+        'ACCOUNT_ARCHIVED',
         'ACCOUNT_SESSIONS_REVOKED',
         'TEMPORARY_PASSWORD_RESET',
         'ACCOUNT_UNLOCKED',

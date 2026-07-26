@@ -31,6 +31,8 @@ async function openDirector(page) {
       committeeIds: [],
       committees: [],
       capabilities: DIRECTOR_CAPABILITIES,
+      workspaceIds: ['director'],
+      defaultWorkspaceId: 'director',
       mappingStatus: 'MAPPED',
       active: true,
     },

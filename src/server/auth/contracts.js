@@ -1,11 +1,11 @@
 import { ROLES } from '../../domain/constants.js';
 import {
-  capabilitiesFor,
   canonicalCommitteeId,
   canonicalRoleId,
   COMMITTEE_REGISTRY,
   COMMITTEES,
 } from '../../domain/permissions.js';
+import { accountAccessPolicy, effectiveCapabilities } from '../access/policy.js';
 
 export const ACCOUNT_STATUS = Object.freeze({
   STARTER: 'STARTER',
@@ -65,6 +65,8 @@ export function normalizeCommitteeIds(values) {
 }
 
 export function resolveExperience(account) {
+  const policy = accountAccessPolicy(account);
+  if (policy.defaultWorkspaceId) return policy.defaultWorkspaceId;
   const roleId = canonicalRoleId(account?.roleId);
   if ([ROLES.ADMINISTRATOR, ROLES.SYSTEM_OWNER].includes(roleId)) return EXPERIENCE.ADMINISTRATOR;
   if (roleId === ROLES.DIRECTOR) return EXPERIENCE.DIRECTOR;
@@ -79,6 +81,7 @@ export function resolveExperience(account) {
 export function accountAuthorization(account) {
   const roleId = canonicalRoleId(account?.roleId);
   const committeeIds = normalizeCommitteeIds(account?.committeeIds);
+  const policy = accountAccessPolicy(account);
   const scopeMode = [ROLES.DOL_STAFF, ROLES.COMMITTEE_HEAD].includes(roleId)
     ? 'COMMITTEE'
     : roleId === ROLES.REQUESTER
@@ -97,8 +100,19 @@ export function accountAuthorization(account) {
     scopeMode,
     committeeIds,
     committees,
-    capabilities: roleId ? capabilitiesFor(roleId) : [],
-    mappingStatus: roleId && (scopeMode !== 'COMMITTEE' || committeeIds.length) ? 'MAPPED' : 'NEEDS_REVIEW',
+    capabilities: roleId ? effectiveCapabilities(account) : [],
+    workspaceIds: policy.workspaceIds,
+    defaultWorkspaceId: policy.defaultWorkspaceId,
+    locationScopeIds: policy.locationScopeIds,
+    eventSeriesScopeIds: policy.eventSeriesScopeIds,
+    eventScopeIds: policy.eventScopeIds,
+    explicitDenies: policy.capabilityDenies,
+    mappingStatus:
+      roleId &&
+      (scopeMode !== 'COMMITTEE' || committeeIds.length) &&
+      (roleId === ROLES.REQUESTER || roleId === ROLES.READ_ONLY_AUDITOR || policy.workspaceIds.length)
+        ? 'MAPPED'
+        : 'NEEDS_REVIEW',
     active: account?.status === ACCOUNT_STATUS.ACTIVE,
   });
 }

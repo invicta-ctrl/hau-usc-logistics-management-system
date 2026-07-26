@@ -35,7 +35,24 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
   const repository = {
     getAccountByAccessId: vi.fn(async (accessId) => byAccessId.get(accessId)),
     getAccessIdReservation: vi.fn(async (key) => reservations.get(key)),
+    nextGeneratedAccessId: vi.fn(async (year) => `DOL-${year}-0001`),
     countActiveAdministrators: vi.fn(async () => activeAdministrators),
+    listAccessPolicyReferences: vi.fn(async () => ({
+      committees: [
+        { id: 'COM_FOOD', label: 'Food Committee' },
+        { id: 'COM_INVENTORY_PANTRY', label: 'Inventory and Pantry Committee' },
+        { id: 'COM_MATERIALS', label: 'Materials Committee' },
+      ],
+      locations: [{ id: 'MAIN_STORAGE', label: 'MAIN_STORAGE' }],
+      eventSeries: [{ id: 'SER-001', label: 'Synthetic Series' }],
+      events: [{ id: 'EVT-001', eventSeriesId: 'SER-001', label: 'Synthetic Event' }],
+      capabilities: [],
+      locationScopeIds: ['MAIN_STORAGE'],
+      eventSeriesScopeIds: ['SER-001'],
+      eventScopeIds: ['EVT-001'],
+    })),
+    getAccessPolicyChangeByIdempotency: vi.fn(async () => null),
+    updateAccessPolicy: vi.fn(),
     listAccounts: vi.fn(async () => ({ items: [], pagination: { page: 1, totalPages: 1, total: 0 } })),
     listAccessIdHistory: vi.fn(async () => []),
     listAccountAuditHistory: vi.fn(async () => []),
@@ -206,6 +223,35 @@ describe('access management service', () => {
     expect(repository.setAccountStatus).not.toHaveBeenCalled();
   });
 
+  it('archives an account without deleting history and records the distinct audit action', async () => {
+    const target = account({ id: 'ACCOUNT-ARCHIVE', accessIdNormalized: 'HAU.FOOD.ARCHIVE' });
+    const { service, repository } = context({ accounts: [target] });
+
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          status: ACCOUNT_STATUS.REVOKED,
+          lifecycleAction: 'ARCHIVE',
+          reason: 'Archive this departed operator while retaining history.',
+        },
+      }),
+    ).resolves.toMatchObject({
+      changed: true,
+      status: ACCOUNT_STATUS.REVOKED,
+      archived: true,
+      sessionsRevoked: true,
+    });
+    expect(repository.setAccountStatus).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nextStatus: ACCOUNT_STATUS.REVOKED,
+        auditAction: 'ACCOUNT_ARCHIVED',
+      }),
+    );
+  });
+
   it('restores an unactivated revoked department account to STARTER', async () => {
     const target = account({
       id: 'ACCOUNT-DEPT-DOL',
@@ -330,5 +376,66 @@ describe('access management service', () => {
     expect(JSON.stringify(repository.resetTemporaryPassword.mock.calls[0][0])).not.toContain(
       result.credential.temporaryPassword,
     );
+  });
+
+  it('previews and applies a governed access policy with session revocation and audit input', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = {
+      currentAccessId: target.accessIdNormalized,
+      confirmCurrentAccessId: target.accessIdNormalized,
+      presetId: 'MATERIALS_OPERATOR',
+      roleId: 'DOL_STAFF',
+      committeeIds: ['COM_MATERIALS'],
+      defaultCommitteeId: 'COM_MATERIALS',
+      workspaceIds: ['materials'],
+      defaultWorkspaceId: 'materials',
+      locationScopeIds: ['MAIN_STORAGE'],
+      eventSeriesScopeIds: ['SER-001'],
+      eventScopeIds: ['EVT-001'],
+      capabilityDenies: ['lending.usage.view'],
+      reason: 'Assign the synthetic Materials operating policy.',
+      idempotencyKey: 'access-policy-change-00000001',
+    };
+
+    await expect(service.previewAccessPolicy({ actor: ownerActor, command })).resolves.toMatchObject({
+      roleId: 'DOL_STAFF',
+      workspaceIds: ['materials'],
+      defaultWorkspaceId: 'materials',
+      explicitDenies: ['lending.usage.view'],
+      sessionImpact: 'ALL_ACTIVE_SESSIONS_REVOKED',
+    });
+    await expect(
+      service.updateAccessPolicy({ actor: ownerActor, command, correlationId: 'REQ-POLICY' }),
+    ).resolves.toMatchObject({ changed: true, replayed: false, sessionsRevoked: true });
+    expect(repository.updateAccessPolicy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        account: expect.objectContaining({ accessIdNormalized: target.accessIdNormalized }),
+        nextAccount: expect.objectContaining({
+          roleId: 'DOL_STAFF',
+          committeeIds: ['COM_MATERIALS'],
+          accessProfile: expect.objectContaining({ workspaceIds: ['materials'] }),
+        }),
+        reason: command.reason,
+        correlationId: 'REQ-POLICY',
+      }),
+    );
+  });
+
+  it('blocks an ordinary Administrator from assigning the Administrator preset', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    await expect(
+      service.previewAccessPolicy({
+        actor,
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          presetId: 'ADMINISTRATOR',
+          roleId: 'ADMINISTRATOR',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'OWNER_APPROVAL_REQUIRED', status: 403 });
+    expect(repository.updateAccessPolicy).not.toHaveBeenCalled();
   });
 });

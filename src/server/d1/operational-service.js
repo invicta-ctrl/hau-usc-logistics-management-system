@@ -250,20 +250,39 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
     ),
   ]);
   const allScope = authorization.scopeMode === 'ALL';
+  const committeeRestricted = allScope && authorization.committeeIds.length > 0;
   const allowedCommitteeIds = new Set(
-    allScope ? committeeRows.map((entry) => entry.id) : authorization.committeeIds,
+    allScope && !committeeRestricted
+      ? committeeRows.map((entry) => entry.id)
+      : authorization.committeeIds,
   );
   const visibleCommittees = committeeRows.filter((entry) => allowedCommitteeIds.has(entry.id));
-  const visibleEvents = allScope
-    ? eventRows
-    : eventRows.filter((entry) => allowedCommitteeIds.has(entry.owner_committee_id));
+  const allowedEventSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
+  const allowedEventIds = new Set(authorization.eventScopeIds ?? []);
+  const eventRestricted = allowedEventSeriesIds.size > 0 || allowedEventIds.size > 0;
+  const visibleEvents = eventRows.filter(
+    (entry) =>
+      (allScope && !committeeRestricted
+        ? true
+        : allowedCommitteeIds.has(entry.owner_committee_id)) &&
+      (!allowedEventSeriesIds.size || allowedEventSeriesIds.has(entry.event_series_id)) &&
+      (!allowedEventIds.size || allowedEventIds.has(entry.id)),
+  );
   const visibleSeriesIds = new Set(visibleEvents.map((entry) => entry.event_series_id).filter(Boolean));
-  const visibleSeries = allScope
-    ? seriesRows
-    : seriesRows.filter((entry) => visibleSeriesIds.has(entry.id));
+  const eventVisibilityRestricted = eventRestricted || !allScope || committeeRestricted;
+  const visibleSeries = seriesRows.filter(
+    (entry) =>
+      (!eventVisibilityRestricted || visibleSeriesIds.has(entry.id)) &&
+      (!allowedEventSeriesIds.size || allowedEventSeriesIds.has(entry.id)),
+  );
   const locationAllowed = allScope || allowedCommitteeIds.has(COMMITTEES.INVENTORY_PANTRY);
+  const allowedLocationIds = new Set(authorization.locationScopeIds ?? []);
+  const visibleLocations = locationRows.filter(
+    (entry) => !allowedLocationIds.size || allowedLocationIds.has(entry.id),
+  );
+  const boundedScope = committeeRestricted || eventRestricted || allowedLocationIds.size > 0;
   const options = [
-    ...(allScope
+    ...(allScope && !boundedScope
       ? [
           operationalOption('ALL', 'AUTHORIZED', 'All authorized operations', 'Global authorized view'),
           operationalOption('OFFICE', 'NON_EVENT', 'Office / non-event operations', 'Requests outside an event'),
@@ -273,7 +292,7 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
       operationalOption('COMMITTEE', entry.id, entry.name, 'Committee-owned operations'),
     ),
     ...(locationAllowed
-      ? locationRows.map((entry) =>
+      ? visibleLocations.map((entry) =>
           operationalOption('LOCATION', entry.id, entry.id, 'Inventory storage location'),
         )
       : []),

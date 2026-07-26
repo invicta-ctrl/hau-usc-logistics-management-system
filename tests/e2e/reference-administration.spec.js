@@ -86,6 +86,81 @@ test('administrator control desk exposes only existing governed domains', async 
   await expect(page.locator('[data-reference-admin-results]')).toContainText('Read only');
 });
 
+test('advanced Access Management previews bounded workspace and scope policy', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop effective-access proof are sufficient.',
+  );
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await navigateToAdminView(page, 'referenceAdmin');
+  await page.getByRole('button', { name: /Access Management/ }).click();
+  const accountRow = page.locator('[data-access-results] .access-account-row').first();
+  const accessId = (await accountRow.locator('strong').first().textContent()).trim();
+  await expect(accountRow.getByRole('button', { name: 'Disable' })).toBeVisible();
+  await expect(accountRow.getByRole('button', { name: 'Archive' })).toBeVisible();
+  await expect(accountRow.getByRole('button', { name: /delete/i })).toHaveCount(0);
+  await accountRow.getByRole('button', { name: 'Edit access' }).click();
+
+  const form = page.locator('#accessPolicyForm');
+  await expect(form).toBeVisible();
+  await expect(form.getByLabel('Access preset')).toBeVisible();
+  await expect(form.getByText('Authorized workspaces')).toBeVisible();
+  await expect(form.getByText('Committee scopes')).toBeVisible();
+  await expect(form.getByText('Location scopes')).toBeVisible();
+  await expect(form.getByText('Event-series scopes')).toBeVisible();
+  await expect(form.getByText('Sub-event scopes')).toBeVisible();
+  await expect(form.locator('.access-advanced-settings')).not.toHaveAttribute('open', /.*/u);
+
+  await form.getByLabel('Access preset').selectOption('MATERIALS_OPERATOR');
+  await expect(form.getByLabel('Role')).toHaveValue('DOL_STAFF');
+  await expect(form.getByLabel('Default workspace')).toHaveValue('materials');
+  await expect(form.locator('[name="workspaceIds"][value="materials"]')).toBeChecked();
+  await expect(form.locator('[name="committeeIds"][value="COM_MATERIALS"]')).toBeChecked();
+  await form.getByLabel('Confirm current Access ID').fill(accessId);
+  await form.getByLabel('Reason').fill('Preview the bounded Materials operator assignment.');
+  await form.getByRole('button', { name: 'Preview effective access' }).click();
+
+  await expect(page.getByRole('heading', { name: 'Confirm effective access' })).toBeVisible();
+  const preview = page.locator('.access-effective-preview');
+  await expect(preview).toContainText('MATERIALS_OPERATOR');
+  await expect(preview).toContainText('materials');
+  await expect(preview).toContainText('COM_MATERIALS');
+  await expect(page.locator('#modal')).toContainText('All active sessions will be revoked');
+  await expect(page.getByRole('button', { name: 'Save policy and revoke sessions' })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .toBeLessThanOrEqual(1);
+});
+
+test('advanced account creation exposes governed identity and credential controls', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-390', 'One mobile creation-form proof is sufficient.');
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await navigateToAdminView(page, 'referenceAdmin');
+  await page.getByRole('button', { name: /Access Management/ }).click();
+  await page.getByRole('button', { name: 'Create account' }).click();
+
+  const form = page.locator('#accessAccountCreateForm');
+  await expect(form).toBeVisible();
+  await expect(form.getByLabel('Access preset')).toBeVisible();
+  await expect(form.getByLabel('Account status')).toHaveValue('STARTER');
+  await expect(form.getByLabel('Temporary credential expiry')).toHaveValue('72');
+  await expect(form.getByLabel('Requester is eligible for Office Lending')).toBeVisible();
+  await expect(form.locator('.access-advanced-settings')).not.toHaveAttribute('open', /.*/u);
+  await form.getByLabel('Generate DOL-YYYY-NNNN Access ID').check();
+  await expect(form.getByRole('textbox', { name: 'Access ID', exact: true })).toBeDisabled();
+  await form.getByLabel('Access preset').selectOption('FOOD_OPERATOR');
+  await expect(form.getByLabel('Role')).toHaveValue('DOL_STAFF');
+  await expect(form.getByLabel('Default workspace')).toHaveValue('food');
+  await expect(form.locator('[name="committeeIds"][value="COM_FOOD"]')).toBeChecked();
+  await expect(form).toContainText('plaintext only once');
+});
+
 test('read-only roster ownership and second-review routing are visible', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One mobile policy proof is sufficient.');
   await page.goto('/');

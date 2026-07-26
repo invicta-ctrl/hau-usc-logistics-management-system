@@ -34,17 +34,17 @@ const WORKSPACE_PATHS = Object.freeze({
 });
 
 function authorizedWorkspacePath(user) {
-  return WORKSPACE_PATHS[user?.experienceId] ?? '/app/admin';
+  const defaultWorkspaceId = user?.authorization?.defaultWorkspaceId || user?.experienceId;
+  return WORKSPACE_PATHS[defaultWorkspaceId] ?? '/login';
 }
 
 function routedExperience(user) {
-  const administrator = ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(user?.authorization?.roleId);
-  if (administrator) {
-    const route = Object.entries(WORKSPACE_PATHS).find(
-      ([, path]) => location.pathname === path || location.pathname.startsWith(`${path}/`),
-    );
-    if (route) return route[0];
-  }
+  const allowed = new Set(user?.authorization?.workspaceIds ?? []);
+  const route = Object.entries(WORKSPACE_PATHS).find(
+    ([id, path]) =>
+      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
+  );
+  if (route) return route[0];
   return user?.experienceId ?? '';
 }
 
@@ -61,11 +61,12 @@ function routeAuthorizedWorkspace(user) {
     return;
   }
   const target = authorizedWorkspacePath(user);
-  const administrator = ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(user?.authorization?.roleId);
-  const validInternalWorkspace = Object.values(WORKSPACE_PATHS).some(
-    (path) => location.pathname === path || location.pathname.startsWith(`${path}/`),
+  const allowed = new Set(user?.authorization?.workspaceIds ?? []);
+  const validInternalWorkspace = Object.entries(WORKSPACE_PATHS).some(
+    ([id, path]) =>
+      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
   );
-  if (administrator && validInternalWorkspace) return;
+  if (validInternalWorkspace) return;
   const alreadyInAuthorizedWorkspace =
     location.pathname === target || location.pathname.startsWith(`${target}/`);
   if (

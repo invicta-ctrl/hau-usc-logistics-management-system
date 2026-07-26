@@ -23,6 +23,25 @@ async function committeeIds(db, accountId) {
   return result.results.map((row) => row.committee_id);
 }
 
+async function accessProfile(db, accountId) {
+  const row = await db
+    .prepare('SELECT * FROM account_access_profiles WHERE account_id = ?1')
+    .bind(accountId)
+    .first();
+  return row
+    ? {
+        presetId: row.preset_id,
+        workspaceIds: parseJson(row.workspace_ids_json, []),
+        defaultWorkspaceId: row.default_workspace_id ?? '',
+        locationScopeIds: parseJson(row.location_scope_ids_json, []),
+        eventSeriesScopeIds: parseJson(row.event_series_scope_ids_json, []),
+        eventScopeIds: parseJson(row.event_scope_ids_json, []),
+        capabilityGrants: parseJson(row.capability_grants_json, []),
+        capabilityDenies: parseJson(row.capability_denies_json, []),
+      }
+    : null;
+}
+
 async function accountFromRow(db, row) {
   if (!row) return undefined;
   const department = row.department_id
@@ -37,6 +56,7 @@ async function accountFromRow(db, row) {
     status: row.status,
     roleId: row.role_id,
     committeeIds: await committeeIds(db, row.id),
+    accessProfile: await accessProfile(db, row.id),
     defaultCommitteeId: row.default_committee_id ?? '',
     profile: row.profile_full_name
       ? {
@@ -121,6 +141,24 @@ export function createD1AccessManagementRepository(db) {
         .first();
     },
 
+    async nextGeneratedAccessId(year) {
+      const prefix = `DOL-${year}-`;
+      const result = await db
+        .prepare(
+          `SELECT access_id_normalized FROM accounts
+           WHERE access_id_normalized LIKE ?1
+           ORDER BY access_id_normalized DESC LIMIT 200`,
+        )
+        .bind(`${prefix}%`)
+        .all();
+      const maximum = result.results.reduce((current, row) => {
+        const match = String(row.access_id_normalized).match(/^DOL-\d{4}-(\d{4})$/u);
+        return Math.max(current, Number(match?.[1] ?? 0));
+      }, 0);
+      if (maximum >= 9999) throw new Error('Generated Access ID sequence is exhausted.');
+      return `${prefix}${String(maximum + 1).padStart(4, '0')}`;
+    },
+
     async countActiveAdministrators() {
       const row = await db
         .prepare(
@@ -128,6 +166,167 @@ export function createD1AccessManagementRepository(db) {
         )
         .first();
       return Number(row?.count ?? 0);
+    },
+
+    async listAccessPolicyReferences() {
+      const [committees, locations, eventSeries, events, capabilities] = await Promise.all([
+        db.prepare('SELECT id, name FROM committees WHERE active = 1 ORDER BY name').all(),
+        db
+          .prepare(
+            "SELECT DISTINCT storage_location AS id FROM inventory_items WHERE status = 'ACTIVE' AND trim(storage_location) <> '' ORDER BY storage_location LIMIT 100",
+          )
+          .all(),
+        db.prepare("SELECT id, name FROM event_series WHERE status = 'ACTIVE' ORDER BY name LIMIT 100").all(),
+        db
+          .prepare(
+            'SELECT id, event_series_id, name FROM events WHERE active = 1 ORDER BY starts_at, name LIMIT 200',
+          )
+          .all(),
+        db.prepare('SELECT id, description FROM capabilities ORDER BY id').all(),
+      ]);
+      return {
+        committees: committees.results.map((row) => ({ id: row.id, label: row.name })),
+        locations: locations.results.map((row) => ({ id: row.id, label: row.id })),
+        eventSeries: eventSeries.results.map((row) => ({ id: row.id, label: row.name })),
+        events: events.results.map((row) => ({
+          id: row.id,
+          eventSeriesId: row.event_series_id,
+          label: row.name,
+        })),
+        capabilities: capabilities.results.map((row) => ({ id: row.id, label: row.description })),
+        locationScopeIds: locations.results.map((row) => row.id),
+        eventSeriesScopeIds: eventSeries.results.map((row) => row.id),
+        eventScopeIds: events.results.map((row) => row.id),
+      };
+    },
+
+    async getAccessPolicyChangeByIdempotency(idempotencyKey) {
+      const row = await db
+        .prepare('SELECT after_json FROM access_policy_changes WHERE idempotency_key = ?1')
+        .bind(idempotencyKey)
+        .first();
+      return row ? { after: parseJson(row.after_json, {}) } : null;
+    },
+
+    async updateAccessPolicy({
+      account,
+      nextAccount,
+      actor,
+      changedAt,
+      reason,
+      correlationId,
+      idempotencyKey,
+      changeId,
+      auditId,
+    }) {
+      const profile = nextAccount.accessProfile;
+      const before = {
+        roleId: account.roleId,
+        committeeIds: account.committeeIds,
+        defaultCommitteeId: account.defaultCommitteeId,
+        accessProfile: account.accessProfile ?? null,
+      };
+      const after = {
+        roleId: nextAccount.roleId,
+        committeeIds: nextAccount.committeeIds,
+        defaultCommitteeId: nextAccount.defaultCommitteeId,
+        accessProfile: profile,
+        sessionsRevoked: true,
+      };
+      const statements = [
+        db
+          .prepare(
+            `UPDATE accounts
+             SET role_id = ?1, default_committee_id = ?2,
+                 credential_version = credential_version + 1, updated_at = ?3
+             WHERE id = ?4 AND credential_version = ?5`,
+          )
+          .bind(
+            nextAccount.roleId,
+            nextAccount.defaultCommitteeId || null,
+            changedAt,
+            account.id,
+            account.credentialVersion,
+          ),
+        db.prepare('DELETE FROM account_committees WHERE account_id = ?1').bind(account.id),
+      ];
+      for (const committeeId of nextAccount.committeeIds) {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO account_committees (
+                 account_id, committee_id, membership_type, active, source
+               ) VALUES (?1, ?2, 'ASSIGNED', 1, 'ACCESS_MANAGEMENT')`,
+            )
+            .bind(account.id, committeeId),
+        );
+      }
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO account_access_profiles (
+               account_id, preset_id, workspace_ids_json, default_workspace_id,
+               location_scope_ids_json, event_series_scope_ids_json, event_scope_ids_json,
+               capability_grants_json, capability_denies_json, updated_at, updated_by_account_id
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+             ON CONFLICT(account_id) DO UPDATE SET
+               preset_id = excluded.preset_id,
+               workspace_ids_json = excluded.workspace_ids_json,
+               default_workspace_id = excluded.default_workspace_id,
+               location_scope_ids_json = excluded.location_scope_ids_json,
+               event_series_scope_ids_json = excluded.event_series_scope_ids_json,
+               event_scope_ids_json = excluded.event_scope_ids_json,
+               capability_grants_json = excluded.capability_grants_json,
+               capability_denies_json = excluded.capability_denies_json,
+               updated_at = excluded.updated_at,
+               updated_by_account_id = excluded.updated_by_account_id`,
+          )
+          .bind(
+            account.id,
+            profile.presetId,
+            JSON.stringify(profile.workspaceIds),
+            profile.defaultWorkspaceId,
+            JSON.stringify(profile.locationScopeIds),
+            JSON.stringify(profile.eventSeriesScopeIds),
+            JSON.stringify(profile.eventScopeIds),
+            JSON.stringify(profile.capabilityGrants),
+            JSON.stringify(profile.capabilityDenies),
+            changedAt,
+            actor.id,
+          ),
+        db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
+        db
+          .prepare(
+            `INSERT INTO access_policy_changes (
+               id, account_id, actor_account_id, idempotency_key, before_json,
+               after_json, changed_at, reason, correlation_id
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+          )
+          .bind(
+            changeId,
+            account.id,
+            actor.id,
+            idempotencyKey,
+            JSON.stringify(before),
+            JSON.stringify(after),
+            changedAt,
+            reason,
+            correlationId,
+          ),
+        auditStatement(db, {
+          id: auditId,
+          createdAt: changedAt,
+          action: 'ACCESS_POLICY_CHANGED',
+          accountId: account.id,
+          actorId: actor.id,
+          before,
+          after,
+          correlationId,
+          notes: reason,
+        }),
+      );
+      const results = await db.batch(statements);
+      if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
     },
 
     async listAccounts({ query, role, committee, status, sort, direction, page, pageSize }) {
@@ -203,6 +402,8 @@ export function createD1AccessManagementRepository(db) {
           displayName: account.profile?.fullName || account.accessIdNormalized,
           roleId: account.roleId,
           committeeIds: account.committeeIds,
+          defaultCommitteeId: account.defaultCommitteeId,
+          accessProfile: account.accessProfile,
           status: account.status,
           firstLoginPending: account.status === 'STARTER' || !account.onboardingCompletedAt,
           locked: Boolean(account.lockedAt),
@@ -405,6 +606,31 @@ export function createD1AccessManagementRepository(db) {
             .bind(account.id, committeeId),
         );
       }
+      if (account.accessProfile) {
+        statements.push(
+          db
+            .prepare(
+              `INSERT INTO account_access_profiles (
+                 account_id, preset_id, workspace_ids_json, default_workspace_id,
+                 location_scope_ids_json, event_series_scope_ids_json, event_scope_ids_json,
+                 capability_grants_json, capability_denies_json, updated_at, updated_by_account_id
+               ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+            )
+            .bind(
+              account.id,
+              account.accessProfile.presetId,
+              JSON.stringify(account.accessProfile.workspaceIds),
+              account.accessProfile.defaultWorkspaceId,
+              JSON.stringify(account.accessProfile.locationScopeIds),
+              JSON.stringify(account.accessProfile.eventSeriesScopeIds),
+              JSON.stringify(account.accessProfile.eventScopeIds),
+              JSON.stringify(account.accessProfile.capabilityGrants),
+              JSON.stringify(account.accessProfile.capabilityDenies),
+              account.createdAt,
+              actor.id,
+            ),
+        );
+      }
       statements.push(
         auditStatement(db, {
           id: auditId,
@@ -560,7 +786,16 @@ export function createD1AccessManagementRepository(db) {
       if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
     },
 
-    async setAccountStatus({ account, actor, nextStatus, changedAt, reason, correlationId, auditId }) {
+    async setAccountStatus({
+      account,
+      actor,
+      nextStatus,
+      changedAt,
+      reason,
+      correlationId,
+      auditId,
+      auditAction = 'ACCOUNT_STATUS_CHANGED',
+    }) {
       const results = await db.batch([
         db
           .prepare(
@@ -574,7 +809,7 @@ export function createD1AccessManagementRepository(db) {
         auditStatement(db, {
           id: auditId,
           createdAt: changedAt,
-          action: 'ACCOUNT_STATUS_CHANGED',
+          action: auditAction,
           accountId: account.id,
           actorId: actor.id,
           before: { status: account.status },

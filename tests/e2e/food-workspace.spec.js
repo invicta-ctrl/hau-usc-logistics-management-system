@@ -103,6 +103,8 @@ async function openFood(page, { capabilities = FOOD_CAPABILITIES } = {}) {
       committeeIds: ['COM_FOOD'],
       committees: [{ id: 'COM_FOOD', name: 'Food Committee' }],
       capabilities,
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
       mappingStatus: 'MAPPED',
       active: true,
     },

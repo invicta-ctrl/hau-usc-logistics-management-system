@@ -133,6 +133,8 @@ async function openMaterials(page, { capabilities = MATERIALS_CAPABILITIES } = {
       committeeIds: ['COM_MATERIALS'],
       committees: [{ id: 'COM_MATERIALS', name: 'Materials Committee' }],
       capabilities,
+      workspaceIds: ['materials'],
+      defaultWorkspaceId: 'materials',
       mappingStatus: 'MAPPED',
       active: true,
     },

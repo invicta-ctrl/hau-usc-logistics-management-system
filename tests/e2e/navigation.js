@@ -1,11 +1,14 @@
 export async function navigateToView(page, view) {
   const mobile = page.locator(`[data-shared-mobile-view="${view}"]`);
-  if (await mobile.isVisible()) {
+  const mobileViewport = (page.viewportSize()?.width ?? 1024) <= 820;
+  if (mobileViewport && ['overview', 'request', 'lending', 'release'].includes(view)) {
+    await mobile.waitFor({ state: 'visible' });
     await mobile.click();
     return;
   }
   const more = page.locator('[data-shared-mobile-more]');
-  if (await more.isVisible()) {
+  if (mobileViewport) {
+    await more.waitFor({ state: 'visible' });
     await more.click();
     await page.locator(`[data-shared-more-view="${view}"]`).click();
     return;
@@ -15,7 +18,9 @@ export async function navigateToView(page, view) {
 
 export async function navigateToAdminView(page, view) {
   const more = page.locator('[data-shared-mobile-more]');
-  if (await more.isVisible()) {
+  const mobileViewport = (page.viewportSize()?.width ?? 1024) <= 820;
+  if (mobileViewport) {
+    await more.waitFor({ state: 'visible' });
     await more.click();
     await page.locator(`[data-shared-more-admin="${view}"]`).click();
     return;

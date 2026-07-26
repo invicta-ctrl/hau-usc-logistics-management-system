@@ -34,6 +34,8 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
       committeeIds: ['COM_INVENTORY_PANTRY'],
       committees: [{ id: 'COM_INVENTORY_PANTRY', name: 'Inventory & Pantry Committee' }],
       capabilities,
+      workspaceIds: ['inventory-pantry'],
+      defaultWorkspaceId: 'inventory-pantry',
       mappingStatus: 'MAPPED',
       active: true,
     },
