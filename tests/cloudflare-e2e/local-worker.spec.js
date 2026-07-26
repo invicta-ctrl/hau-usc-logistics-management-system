@@ -541,6 +541,52 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   );
 });
 
+test('Materials queue projects canonical deliverables and fails closed across committee scope', async ({
+  baseURL,
+}) => {
+  const materials = await apiRequest.newContext({ baseURL });
+  const inventory = await apiRequest.newContext({ baseURL });
+  try {
+    const materialsCsrf = await login(materials, 'LOCAL.MATERIALS');
+    const materialsQueue = await materials.post('/api/getMaterialsWorkQueue', {
+      headers: { 'x-csrf-token': materialsCsrf },
+      data: {},
+    });
+    expect(materialsQueue.status()).toBe(200);
+    const materialsQueueBody = await materialsQueue.json();
+    expect(materialsQueueBody).toMatchObject({
+      ok: true,
+      committeeId: 'COM_MATERIALS',
+      items: expect.any(Array),
+    });
+    const projected = materialsQueueBody.items.find(
+      (item) => item.deliverableId === 'DEL-LOCAL-001',
+    );
+    expect(projected).toMatchObject({
+      deliverableId: 'DEL-LOCAL-001',
+      requestId: 'REQ-LOCAL-RECEIVING',
+      requestLineId: 'LIN-LOCAL-RECEIVING',
+      eventId: 'EVT-LOCAL',
+      status: 'PROCURED',
+      quantityRequested: 10,
+      quantityReceived: 0,
+      quantityReleased: 0,
+    });
+    expect(typeof projected.quoteSummary.activeCount).toBe('number');
+    expect(typeof projected.quoteSummary.distinctUnits).toBe('number');
+
+    const inventoryCsrf = await login(inventory, 'LOCAL.INVENTORY');
+    const inventoryQueue = await inventory.post('/api/getMaterialsWorkQueue', {
+      headers: { 'x-csrf-token': inventoryCsrf },
+      data: {},
+    });
+    expect(inventoryQueue.status()).toBe(200);
+    await expect(inventoryQueue.json()).resolves.toMatchObject({ items: [] });
+  } finally {
+    await Promise.all([materials.dispose(), inventory.dispose()]);
+  }
+});
+
 test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
   page,
 }) => {

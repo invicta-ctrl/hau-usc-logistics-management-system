@@ -2814,12 +2814,14 @@ export function createRuntimeExtensions(options) {
       const result = await services.getMaterialsWorkQueue();
       materialsQueueItems = Array.isArray(result?.items) ? result.items : [];
       renderMaterialsQueue();
+      renderRoleExperience();
     })();
     try {
       await materialsQueuePromise;
     } catch (error) {
       materialsQueueItems = [];
       renderMaterialsQueue(error.message);
+      renderRoleExperience();
     } finally {
       materialsQueuePromise = null;
     }
@@ -2828,6 +2830,11 @@ export function createRuntimeExtensions(options) {
   const renderMaterialsQueue = (error = '') => {
     if (!materialsQueue) return;
     const items = materialsQueueItems ?? [];
+    materialsQueue.tabIndex = -1;
+    if (backendMode === 'rest') {
+      materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee · canonical D1 projection</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials Queue</h3><p>Exact specifications, stable event/request/deliverable identities, quote evidence, budget, cumulative receiving, and release quantities remain connected.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}${materialsQueueGroupsMarkup(items, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}`;
+      return;
+    }
     materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} Â· ${esc(item.materials?.fulfillmentPath || 'PENDING_DECISION')} Â· ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
   };
 
@@ -2963,6 +2970,21 @@ export function createRuntimeExtensions(options) {
       materialsQueue.addEventListener('click', (event) => {
         const button = event.target.closest('[data-materials-manage]');
         if (button) openMaterialsWorkflow(button.dataset.materialsManage);
+        const deliverable = event.target.closest('[data-materials-open-deliverable]');
+        if (deliverable) {
+          const item = (materialsQueueItems ?? []).find(
+            (entry) =>
+              (entry.deliverableId || entry.componentId) ===
+              deliverable.dataset.materialsOpenDeliverable,
+          );
+          const status = String(item?.status ?? '').toUpperCase();
+          if (status === 'FOR_CANVASSING') openMaterialsDestination('materials-canvassing');
+          else if (['PROCURED', 'PARTIALLY_RECEIVED', 'RECEIVING'].includes(status))
+            openMaterialsDestination('materials-receiving');
+          else if (['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(status))
+            openMaterialsDestination('materials-release');
+          else openMaterialsDestination('materials-deliverables');
+        }
       });
       void refreshMaterialsQueue();
     }
@@ -4197,33 +4219,21 @@ export function createRuntimeExtensions(options) {
     },
     materials: {
       label: 'Materials & Documentation workspace',
-      heading: 'Move materials from request to release without losing context',
+      heading: 'Materials Overview',
       description:
         'Keep event identity, exact specifications, canvass evidence, quote freshness, budget state, procurement, cumulative receiving, deliverables, and controlled release connected through one traceable fulfillment pipeline.',
       boundaryTitle: 'Materials capability boundary',
       boundary:
         'Materials ownership scopes the queue and fulfillment context. Quote preference, budget, procurement, receiving, evidence, stock transfer, and Release Desk actions remain available only through existing capabilities and server-side validation.',
       actions: [
-        [
-          'request',
-          'Open the materials queue',
-          'Exact requirements, quantities, specifications, purpose, and deadlines',
-        ],
-        [
-          'procurement',
-          'Compare sourcing and budget',
-          'Current quotes, stale references, purchasing stages, and cumulative receipts',
-        ],
-        [
-          'release',
-          'Open controlled fulfillment',
-          'Requested, received, and released quantities with recipient evidence',
-        ],
-        [
-          'inventory',
-          'Review stock and provenance',
-          'Availability, event-item identity, transfers, and movement history',
-        ],
+        ['request', 'Materials Queue', 'Exact requirements grouped by stable event and request identity', 'materials-queue'],
+        ['procurement', 'Canvassing', 'Comparable current quotes and evidence before preference', 'materials-canvassing'],
+        ['procurement', 'Procurement', 'Budget clearance, preferred quote, and purchasing stage', 'materials-procurement'],
+        ['procurement', 'Suppliers', 'Governed supplier references without private financial details', 'materials-suppliers'],
+        ['procurement', 'Price History', 'Historical checks clearly separated from current evidence', 'materials-price-history'],
+        ['procurement', 'Receiving', 'Cumulative physical intake, condition, provenance, and evidence', 'materials-receiving'],
+        ['procurement', 'Deliverables', 'Requested, received, and released quantities in one pipeline', 'materials-deliverables'],
+        ['release', 'Release Desk', 'Shared recipient-confirmed controlled handoff', 'materials-release'],
       ],
     },
   };
@@ -4531,6 +4541,32 @@ export function createRuntimeExtensions(options) {
   };
 
   const materialsMetrics = (state) => {
+    const canonicalQueue = materialsQueueItems ?? [];
+    if (canonicalQueue.length) {
+      const status = (row) => String(row?.status ?? '').toUpperCase();
+      const active = canonicalQueue.filter(
+        (row) => !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(status(row)),
+      );
+      const quoteAttention = active.filter(
+        (row) =>
+          Number(row?.quoteSummary?.activeCount ?? 0) < 2 ||
+          Number(row?.quoteSummary?.distinctUnits ?? 0) > 1 ||
+          !row?.materials?.preferredCanvassId,
+      ).length;
+      const receiving = active.filter(
+        (row) =>
+          ['PROCURED', 'PARTIALLY_RECEIVED', 'RECEIVING'].includes(status(row)) ||
+          Number(row?.quantityReceived ?? 0) < Number(row?.quantityRequested ?? 0),
+      ).length;
+      return [
+        ['Active requirements', active.length, 'Canonical scoped deliverables', 'materials-queue'],
+        ['Quote attention', quoteAttention, 'Coverage, comparability, freshness, or preference', 'materials-canvassing'],
+        ['Waiting for budget', countStatuses(active, new Set(['WAITING_FOR_BUDGET'])), 'Approved requirements blocked before purchase', 'materials-procurement'],
+        ['To be procured', countStatuses(active, new Set(['TO_BE_PROCURED'])), 'Preferred sourcing ready for purchasing', 'materials-procurement'],
+        ['Receiving attention', receiving, 'Cumulative intake and evidence remain incomplete', 'materials-receiving'],
+        ['Ready to release', countStatuses(active, new Set(['READY_TO_RELEASE', 'PARTIALLY_RELEASED'])), 'Received deliverables awaiting controlled handoff', 'materials-release'],
+      ];
+    }
     const materialsOwned = (row) =>
       [row?.ownerCommitteeId, row?.assignedCommittee, row?.committeeId, row?.committee]
         .filter(Boolean)
@@ -4550,23 +4586,84 @@ export function createRuntimeExtensions(options) {
         'For canvassing',
         countStatuses(active, new Set(['FOR_CANVASSING'])),
         'Current comparable quotes required',
+        'materials-canvassing',
       ],
       [
         'Waiting for budget',
         countStatuses(active, new Set(['WAITING_FOR_BUDGET'])),
         'Approved needs blocked before purchase',
+        'materials-procurement',
       ],
       [
         'To be procured',
         countStatuses(active, new Set(['TO_BE_PROCURED'])),
         'Preferred sourcing ready for purchasing',
+        'materials-procurement',
       ],
       [
         'Ready to release',
         countStatuses(active, new Set(['READY_TO_RELEASE'])),
         'Received deliverables awaiting handoff',
+        'materials-release',
       ],
     ];
+  };
+
+  const materialsStatusLabel = (value) =>
+    String(value ?? 'FOR_REVIEW')
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .replace(/^./u, (character) => character.toUpperCase());
+
+  const materialsQuantityLabel = (item) => {
+    const requested = Number(item?.quantityRequested ?? item?.lines?.[0]?.quantity ?? 0);
+    const received = Number(item?.quantityReceived ?? item?.lines?.[0]?.receivedQuantity ?? 0);
+    const released = Number(item?.quantityReleased ?? item?.lines?.[0]?.releasedQuantity ?? 0);
+    const unit = item?.unit ?? item?.lines?.[0]?.unit ?? '';
+    return `Requested ${requested} ${unit} · Received ${received} · Released ${released}`;
+  };
+
+  const materialsQueueGroupsMarkup = (rows, { allowOpen = true } = {}) => {
+    const groups = new Map();
+    [...(rows ?? [])]
+      .sort(
+        (left, right) =>
+          new Date(left?.neededAt || left?.materials?.requiredBy || 0) -
+          new Date(right?.neededAt || right?.materials?.requiredBy || 0),
+      )
+      .forEach((row) => {
+        const key = row?.eventId || row?.parent?.eventId || row?.requestId || 'NON_EVENT';
+        const group = groups.get(key) ?? {
+          label: row?.parent?.eventName || row?.eventId || row?.requestId || 'Non-event materials work',
+          rows: [],
+        };
+        group.rows.push(row);
+        groups.set(key, group);
+      });
+    if (!groups.size)
+      return '<div class="empty">No Materials work is in the current authorized scope.</div>';
+    return [...groups.values()]
+      .map(
+        (group) => `<section class="materials-event-group"><div class="materials-event-group-head"><h4>${esc(group.label)}</h4><span class="pill">${group.rows.length} deliverable${group.rows.length === 1 ? '' : 's'}</span></div><div class="line-list">${group.rows
+          .map((item) => {
+            const materials = item?.materials ?? {};
+            const line = item?.lines?.[0] ?? {};
+            const terminal = ['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(
+              String(item?.status ?? '').toUpperCase(),
+            );
+            const quoteCount = Number(item?.quoteSummary?.activeCount ?? 0);
+            const unitCount = Number(item?.quoteSummary?.distinctUnits ?? 0);
+            const quoteSignal = quoteCount
+              ? `${quoteCount} active quote${quoteCount === 1 ? '' : 's'}${unitCount > 1 ? ' · units need comparison' : ''}`
+              : 'No active quote';
+            const preferred = materials.preferredSupplierName
+              ? `Preferred ${materials.preferredSupplierName}${materials.preferredPrice == null ? '' : ` · ₱${Number(materials.preferredPrice).toLocaleString('en-PH')} / ${materials.preferredUnit || item.unit || ''}`}`
+              : 'No preferred quote';
+            return `<article class="request-line materials-work-line"><div><strong>${esc(materials.specification || line.specification || line.description || item.deliverableId || item.componentId)}</strong><small>${esc(item.deliverableId || item.componentId)} · Request ${esc(item.requestId || 'Not recorded')} · ${esc(item.eventId || item.parent?.eventId || 'No event ID')}</small><small>${esc(materials.materialCategory || line.category || 'Materials')} · ${esc(materialsQuantityLabel(item))}</small><small>${esc(quoteSignal)} · ${esc(preferred)}</small><small>Budget ${esc(materialsStatusLabel(materials.budgetStatus || 'NOT_STARTED'))} · Procurement ${esc(materialsStatusLabel(materials.procurementStatus || item.status))} · Required ${esc(foodDateLabel(item.neededAt || materials.requiredBy))}</small></div><div class="request-line-actions"><span class="pill">${esc(materialsStatusLabel(item.status))}</span>${allowOpen && !terminal ? `<button class="secondary mini" type="button" data-materials-open-deliverable="${esc(item.deliverableId || item.componentId)}">Open workflow</button>` : ''}</div></article>`;
+          })
+          .join('')}</div></section>`,
+      )
+      .join('');
   };
 
   const metricsForExperience = (experience, state) =>
@@ -4809,6 +4906,50 @@ export function createRuntimeExtensions(options) {
     return !capability || can(getState()?.currentUser, capability);
   };
 
+  const MATERIALS_DESTINATION_CAPABILITIES = Object.freeze({
+    'materials-queue': 'request.review',
+    'materials-canvassing': 'fulfillment.canvass',
+    'materials-procurement': 'fulfillment.procure',
+    'materials-suppliers': 'fulfillment.canvass',
+    'materials-price-history': 'fulfillment.canvass',
+    'materials-receiving': 'fulfillment.receive',
+    'materials-deliverables': 'view.internal',
+    'materials-release': 'fulfillment.release',
+  });
+
+  const materialsDestinationAllowed = (destination) => {
+    const capability = MATERIALS_DESTINATION_CAPABILITIES[destination];
+    return !capability || can(getState()?.currentUser, capability);
+  };
+
+  const openMaterialsDestination = (destination) => {
+    if (!materialsDestinationAllowed(destination)) return;
+    const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
+    if (destination === 'materials-queue') {
+      openView('request');
+      materialsQueue?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      materialsQueue?.focus({ preventScroll: true });
+      return;
+    }
+    if (destination === 'materials-release') return openView('release');
+    openView('procurement');
+    if (['materials-canvassing', 'materials-suppliers', 'materials-price-history'].includes(destination)) {
+      document.querySelector('[data-proc-tab="canvass"]')?.click();
+      const target =
+        destination === 'materials-canvassing'
+          ? document.querySelector('#proc-canvass')
+          : document.querySelector('#canvassLibrary');
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    if (destination === 'materials-receiving') {
+      document.querySelector('[data-proc-tab="receiving"]')?.click();
+      document.querySelector('#proc-receiving')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    document.querySelector('[data-proc-tab="deliverables"]')?.click();
+  };
+
   const installInventoryWorkspaceSupplement = () => {
     const host = document.querySelector('#inventory');
     if (!host || host.querySelector('[data-inventory-workspace-supplement]')) return;
@@ -4929,6 +5070,9 @@ export function createRuntimeExtensions(options) {
       const inventoryDestination = event.target.closest('[data-inventory-destination]')?.dataset
         .inventoryDestination;
       if (inventoryDestination) openInventoryDestination(inventoryDestination);
+      const materialsDestination = event.target.closest('[data-materials-destination]')?.dataset
+        .materialsDestination;
+      if (materialsDestination) openMaterialsDestination(materialsDestination);
     });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
@@ -4961,13 +5105,17 @@ export function createRuntimeExtensions(options) {
           ? `data-director-destination="${esc(destination)}"`
           : experience === 'food'
             ? `data-food-destination="${esc(destination)}"`
-            : `data-inventory-destination="${esc(destination)}"`;
+            : experience === 'inventory-pantry'
+              ? `data-inventory-destination="${esc(destination)}"`
+              : `data-materials-destination="${esc(destination)}"`;
     const destinationEnabled = (destination) =>
       experience === 'food'
         ? foodDestinationAllowed(destination)
         : experience === 'inventory-pantry'
           ? inventoryDestinationAllowed(destination)
-          : true;
+          : experience === 'materials'
+            ? materialsDestinationAllowed(destination)
+            : true;
     const destinationAttributes = (destination) =>
       `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available in the current server capability projection"'}`;
     const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
@@ -4999,6 +5147,11 @@ export function createRuntimeExtensions(options) {
             })
             .join('') || '<div class="empty">No stock exceptions are in the current authorized projection.</div>'}</div></section>`
         : '';
+    const materialsRows = experience === 'materials' ? materialsQueueItems ?? [] : [];
+    const materialsOverview =
+      experience === 'materials'
+        ? `<section class="materials-overview-detail" data-materials-overview aria-labelledby="materialsPipelineTitle"><div class="panel-head"><div><p class="eyebrow">Request → Canvass → Budget → Procurement → Receiving → Deliverables → Release → Complete</p><h3 id="materialsPipelineTitle">Traceable materials pipeline</h3><p>Stable request, event, and deliverable identities keep exact specifications and cumulative quantities connected. Historical prices inform review but never replace current quote evidence.</p></div><span class="pill">${materialsRows.length} scoped deliverable${materialsRows.length === 1 ? '' : 's'}</span></div>${materialsQueueGroupsMarkup(materialsRows, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}</section>`
+        : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
       <div>
@@ -5013,7 +5166,7 @@ export function createRuntimeExtensions(options) {
     </div>
     <div class="role-experience-layout">
       <section aria-labelledby="roleExperienceActionsTitle">
-        <div class="section-kicker" id="roleExperienceActionsTitle">${experience === 'food' ? 'Food operations' : experience === 'inventory-pantry' ? 'Inventory operations' : 'Leadership action map'}</div>
+        <div class="section-kicker" id="roleExperienceActionsTitle">${experience === 'food' ? 'Food operations' : experience === 'inventory-pantry' ? 'Inventory operations' : experience === 'materials' ? 'Materials operations' : 'Leadership action map'}</div>
         <div class="role-experience-actions">
           ${definition.actions.map(([view, title, detail, destination]) => `<button type="button" ${destination ? destinationAttributes(destination) : `data-go="${esc(view)}"`}><span>${esc(title)}</span><small>${esc(detail)}</small><b aria-hidden="true">&rarr;</b></button>`).join('')}
         </div>
@@ -5028,6 +5181,7 @@ export function createRuntimeExtensions(options) {
     ${foodOverview}
     ${foodWorkflowReference}
     ${inventoryOverview}
+    ${materialsOverview}
     ${experience === 'director' ? '<section class="director-detail panel" data-director-detail tabindex="-1" aria-labelledby="directorDetailTitle" hidden></section>' : ''}`;
   };
 

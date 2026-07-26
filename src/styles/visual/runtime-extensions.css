@@ -219,6 +219,14 @@ body:not(.request-mode) .secondary {
 .food-reference-grid small { color: #735f5c; line-height: 1.45; }
 .inventory-overview-detail { display: grid; gap: 13px; padding-top: 2px; scroll-margin-top: 18px; }
 .inventory-workspace-supplement { scroll-margin-top: 18px; }
+.materials-overview-detail { display: grid; gap: 13px; padding-top: 2px; scroll-margin-top: 18px; }
+.materials-event-group { display: grid; gap: 9px; padding: 14px; border: 1px solid #e4d6bd; border-radius: 15px; background: #fffdf8; }
+.materials-event-group + .materials-event-group { margin-top: 10px; }
+.materials-event-group-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.materials-event-group-head h4 { margin: 0; color: #5e0b10; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; }
+.materials-work-line { align-items: flex-start; }
+.materials-work-line > div:first-child { display: grid; gap: 4px; min-width: 0; }
+.materials-work-line strong, .materials-work-line small { overflow-wrap: anywhere; }
 .inventory-workspace-supplement[hidden] { display: none; }
 .inventory-workspace-supplement:focus-visible { outline: 3px solid color-mix(in srgb, var(--role-accent) 35%, transparent); outline-offset: 3px; }
 .inventory-attention-line, .inventory-movement-line { align-items: flex-start; }

@@ -34,6 +34,7 @@ const METHOD_CAPABILITIES = Object.freeze({
   reviewRequest: CAPABILITIES.REQUEST_REVIEW,
   reserveStock: CAPABILITIES.FULFILL_RESERVE,
   saveCanvassReference: CAPABILITIES.FULFILL_CANVASS,
+  getMaterialsWorkQueue: CAPABILITIES.VIEW_INTERNAL,
   selectPreferredCanvass: CAPABILITIES.FULFILL_PROCURE,
   transitionDeliverable: CAPABILITIES.FULFILL_PROCURE,
   getRestockDetail: CAPABILITIES.VIEW_INVENTORY,
@@ -1138,6 +1139,129 @@ export function createD1OperationalService({
         ? { safe: true, scope: 'PUBLIC_REFERENCE', ttlMs: 300_000 }
         : { safe: false, scope: 'SESSION_OPERATIONAL', ttlMs: 0 },
       metrics: { readCount: 4, cacheHits: 0 },
+    };
+  }
+
+  async function getMaterialsWorkQueue({ account, command = {}, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.getMaterialsWorkQueue);
+    const scope = multiScopeWhere(account, {
+      committeeColumns: [
+        'COALESCE(deliverable.assigned_committee_id, request.owner_committee_id)',
+      ],
+      ownerColumns: ['request.requester_account_id'],
+    });
+    const limit = Math.min(Math.max(Number(command.limit ?? 100), 1), 100);
+    const limitIndex = scope.values.length + 1;
+    const queueRows = await rows(
+      db,
+      `SELECT deliverable.*, line.description AS line_description,
+              line.specification AS line_specification, line.category AS line_category,
+              line.requested_quantity AS line_requested_quantity,
+              line.received_quantity AS line_received_quantity,
+              line.released_quantity AS line_released_quantity,
+              line.needed_at AS line_needed_at, line.status AS line_status,
+              request.event_series_id AS request_event_series_id,
+              request.event_id AS request_event_id, request.department,
+              request.priority, request.purpose, request.status AS request_status,
+              event.name AS event_name, event.starts_at AS event_start_at,
+              preferred.supplier_id AS preferred_supplier_id,
+              preferred.supplier_name AS preferred_supplier_name,
+              preferred.price AS preferred_price, preferred.unit AS preferred_unit,
+              preferred.checked_at AS preferred_checked_at,
+              preferred.receipt_status AS preferred_receipt_status,
+              preferred.reliability AS preferred_reliability,
+              preferred.evidence_id AS preferred_evidence_id,
+              (SELECT COUNT(*) FROM canvass_references canvass
+                WHERE canvass.status = 'ACTIVE'
+                  AND (canvass.linked_deliverable_id = deliverable.id
+                    OR canvass.linked_request_line_id = deliverable.request_line_id)) AS canvass_count,
+              (SELECT COUNT(DISTINCT canvass.unit) FROM canvass_references canvass
+                WHERE canvass.status = 'ACTIVE'
+                  AND (canvass.linked_deliverable_id = deliverable.id
+                    OR canvass.linked_request_line_id = deliverable.request_line_id)) AS canvass_unit_count,
+              (SELECT MAX(canvass.checked_at) FROM canvass_references canvass
+                WHERE canvass.status = 'ACTIVE'
+                  AND (canvass.linked_deliverable_id = deliverable.id
+                    OR canvass.linked_request_line_id = deliverable.request_line_id)) AS latest_canvass_at
+       FROM deliverables deliverable
+       JOIN requests request ON request.id = deliverable.request_id
+       JOIN request_lines line ON line.id = deliverable.request_line_id
+       LEFT JOIN events event ON event.id = COALESCE(deliverable.event_id, request.event_id)
+       LEFT JOIN canvass_references preferred ON preferred.id = deliverable.preferred_canvass_id
+       WHERE COALESCE(deliverable.assigned_committee_id, request.owner_committee_id) = '${COMMITTEES.MATERIALS}'
+         AND ${scope.sql}
+       ORDER BY deliverable.updated_at DESC, deliverable.id
+       LIMIT ?${limitIndex}`,
+      [...scope.values, limit],
+    );
+    return {
+      committeeId: COMMITTEES.MATERIALS,
+      correlationId,
+      items: queueRows.map((row) => ({
+        deliverableId: row.id,
+        componentId: row.id,
+        requestId: row.request_id,
+        requestLineId: row.request_line_id,
+        eventSeriesId: row.event_series_id ?? row.request_event_series_id,
+        eventId: row.event_id ?? row.request_event_id,
+        status: row.status,
+        ownerCommitteeId: row.assigned_committee_id ?? COMMITTEES.MATERIALS,
+        assignedAccountId: row.assigned_account_id,
+        quantityRequested: Number(row.quantity_requested),
+        quantityReceived: Number(row.quantity_received),
+        quantityReleased: Number(row.quantity_released),
+        unit: row.unit,
+        eventItemId: row.event_item_id ?? null,
+        inventoryMatchId: row.inventory_match_id ?? null,
+        evidenceId: row.evidence_id ?? null,
+        neededAt: row.needed_at ?? row.line_needed_at,
+        updatedAt: row.updated_at,
+        parent: {
+          eventId: row.event_id ?? row.request_event_id,
+          eventName: row.event_name ?? '',
+          eventStartAt: row.event_start_at ?? '',
+          priority: row.priority,
+          purpose: row.purpose,
+          department: row.department,
+        },
+        materials: {
+          materialCategory: row.line_category,
+          specification: row.line_specification || row.item_spec,
+          requiredBy: row.needed_at ?? row.line_needed_at,
+          usagePurpose: row.purpose,
+          fulfillmentPath: row.fulfillment_source,
+          budgetStatus: row.budget_status,
+          procurementStatus: row.procurement_status,
+          receiptStatus: row.receipt_status,
+          preferredCanvassId: row.preferred_canvass_id,
+          preferredSupplierId: row.preferred_supplier_id,
+          preferredSupplierName: row.preferred_supplier_name,
+          preferredPrice: row.preferred_price == null ? null : Number(row.preferred_price),
+          preferredUnit: row.preferred_unit,
+          preferredCheckedAt: row.preferred_checked_at,
+          preferredReceiptStatus: row.preferred_receipt_status,
+          preferredReliability: row.preferred_reliability,
+          preferredEvidenceId: row.preferred_evidence_id,
+        },
+        lines: [
+          {
+            id: row.request_line_id,
+            description: row.line_description,
+            specification: row.line_specification,
+            category: row.line_category,
+            quantity: Number(row.line_requested_quantity),
+            receivedQuantity: Number(row.line_received_quantity),
+            releasedQuantity: Number(row.line_released_quantity),
+            unit: row.unit,
+            status: row.line_status,
+          },
+        ],
+        quoteSummary: {
+          activeCount: Number(row.canvass_count ?? 0),
+          distinctUnits: Number(row.canvass_unit_count ?? 0),
+          latestCheckedAt: row.latest_canvass_at ?? '',
+        },
+      })),
     };
   }
 
@@ -4161,6 +4285,7 @@ export function createD1OperationalService({
     reviewRequest,
     reserveStock,
     saveCanvassReference,
+    getMaterialsWorkQueue,
     selectPreferredCanvass,
     transitionDeliverable,
     getRestockDetail,

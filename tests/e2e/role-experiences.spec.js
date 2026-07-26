@@ -133,12 +133,10 @@ test('Materials receives a traceable blue-accent shared-shell experience', async
   const panel = page.locator('#roleExperiencePanel');
   await expect(panel).toBeVisible();
   await expect(panel).toHaveAttribute('data-role-experience', 'materials');
-  await expect(
-    panel.getByRole('heading', { name: 'Move materials from request to release without losing context' }),
-  ).toBeVisible();
+  await expect(panel.getByRole('heading', { name: 'Materials Overview' })).toBeVisible();
   await expect(panel.getByText('Materials capability boundary', { exact: true })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Open the materials queue/ })).toBeVisible();
-  await expect(panel.getByRole('button', { name: /Compare sourcing and budget/ })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Materials Queue/u })).toBeVisible();
+  await expect(panel.getByRole('button', { name: /^Canvassing/u })).toBeVisible();
   expect(
     await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
   ).toBe('#356a88');
