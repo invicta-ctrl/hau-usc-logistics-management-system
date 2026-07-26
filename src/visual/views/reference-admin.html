@@ -23,7 +23,7 @@
         <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
         <button class="admin-control-card" type="button" data-admin-control-surface="operational-health"><span class="admin-control-kicker">Operational Health</span><strong>Environment and workflow readiness</strong><small>Inspect server-reported identity, freshness, and cross-workspace attention without exposing secrets.</small><span class="admin-control-action">Open operational health</span></button>
         <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets"><span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong><small>Inspect the active R2-backed DOL, USC, login-background, and favicon routes.</small><span class="admin-control-action">Open governed assets</span></button>
-        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster"><span class="admin-control-kicker">System Owner only</span><strong>Identity roster</strong><small>Preview, reconcile, apply, and roll back the protected private-Sheet identity projection.</small><span class="admin-control-action">Sync identity roster</span></button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster"><span class="admin-control-kicker">System Owner only</span><strong>USC Officer and Staff Directory</strong><small>Review, apply, and roll back the protected directory from the approved private source.</small><span class="admin-control-action">Open protected directory</span></button>
         <button class="admin-control-card" type="button" data-advertisement-admin-control><span class="admin-control-kicker">USC Announcements</span><strong>Public advertisement rotation</strong><small>Create, preview, schedule, reorder, and archive governed public media.</small><span class="admin-control-action">Manage advertisements</span></button>
       </div>
     </section>
@@ -52,22 +52,26 @@
 
     <article class="panel" data-identity-roster hidden>
       <div class="panel-head">
-        <div><h2>Owner-Protected Identity Roster</h2><p>The private Google Sheet is read only during an explicit preview. Protected values are encrypted in D1 and never queried from Google during login.</p></div>
-        <div class="button-row"><button class="secondary" type="button" data-roster-refresh>Refresh</button><button class="primary" type="button" data-roster-preview>Preview sync</button></div>
+        <div><h2>USC Officer and Staff Directory</h2><p>Review the approved private source before changing the protected directory. Google is read only for this review; login uses the encrypted D1 copy.</p></div>
+        <div class="button-row"><button class="secondary" type="button" data-roster-refresh>Refresh</button><button class="primary" type="button" data-roster-preview>Preview directory update</button></div>
+      </div>
+      <div class="context-cues" aria-label="Directory guidance">
+        <details class="context-cue"><summary aria-label="How directory updates work">?</summary><p>A preview compares the approved source with D1 and shows additions, changes, removals, unchanged records, and quarantined rows before any write.</p></details>
+        <details class="context-cue warning"><summary aria-label="Important directory safety warning">!</summary><p>Duplicate or incomplete rows stay quarantined. Confirm the exact fingerprint before applying, and use rollback only for the latest applied update.</p></details>
       </div>
       <div class="alert warning" data-roster-source-state>Checking the private roster source configuration.</div>
       <div class="grid-4 section-gap" data-roster-metrics></div>
       <div class="section-gap" data-roster-preview-result></div>
       <div class="toolbar section-gap">
-        <label>Search protected directory<input name="identityRosterSearch" maxlength="160" placeholder="Student ID, institutional email, name, or verification"></label>
+        <label>Search officers and staff<input name="identityRosterSearch" maxlength="160" placeholder="Student ID, HAU email, name, or verification"></label>
       </div>
-      <div class="line-list section-gap" data-roster-directory><div class="empty">Open Identity Roster to load the owner-protected directory.</div></div>
+      <div class="line-list section-gap" data-roster-directory><div class="empty">Open the USC Officer and Staff Directory to load protected records.</div></div>
       <div class="access-pagination section-gap" data-roster-pagination hidden>
         <button class="secondary mini" type="button" data-roster-page="previous">Previous</button>
         <span data-roster-page-summary></span>
         <button class="secondary mini" type="button" data-roster-page="next">Next</button>
       </div>
-      <details class="section-gap"><summary>Sync and rollback history</summary><div class="line-list section-gap" data-roster-history><div class="empty">No sync history loaded.</div></div></details>
+      <details class="section-gap"><summary>Update and rollback history</summary><div class="line-list section-gap" data-roster-history><div class="empty">No update history loaded.</div></div></details>
     </article>
 
     <article class="panel" data-access-management hidden>

@@ -17,7 +17,9 @@ const ERROR_MESSAGES = Object.freeze({
   ROSTER_SOURCE_AUTHORIZATION_FAILED: 'The approved private roster source could not be authorized.',
   ROSTER_SOURCE_UNAVAILABLE: 'The approved private roster source could not be read.',
   ROSTER_PREVIEW_NOT_FOUND: 'The identity roster sync preview was not found.',
-  ROSTER_PREVIEW_REJECTED: 'The identity roster preview has validation rejections and cannot be applied.',
+  ROSTER_PREVIEW_REJECTED: 'The directory preview has no valid rows and cannot be applied.',
+  ROSTER_PREVIEW_STALE: 'This directory preview is out of date. Create and review a new preview.',
+  ROSTER_SOURCE_ALREADY_APPLIED: 'The protected directory already matches this reviewed update.',
   ROSTER_FINGERPRINT_CONFIRMATION_REQUIRED: 'Confirm the exact source fingerprint before applying.',
   ROSTER_REASON_REQUIRED: 'A specific reason of at least eight characters is required.',
   ROSTER_ROLLBACK_NOT_LATEST: 'Only the latest applied identity roster sync can be rolled back.',
@@ -103,10 +105,18 @@ export function validateIdentityRosterSource(source) {
   }
 
   const accepted = [];
-  const emails = new Set();
-  const studentIds = new Set();
-  rows.forEach((row, index) => {
-    if (!Array.isArray(row) || row.every((value) => normalizeText(value) === '')) return;
+  const meaningfulRows = rows
+    .map((row, index) => ({ row, index }))
+    .filter(({ row }) => Array.isArray(row) && row.some((value) => normalizeText(value) !== ''));
+  const emailCounts = new Map();
+  const studentIdCounts = new Map();
+  for (const { row } of meaningfulRows) {
+    const email = normalizeEmail(row[1]);
+    const studentId = compact(row[0]).toUpperCase();
+    if (email) emailCounts.set(email, (emailCounts.get(email) ?? 0) + 1);
+    if (studentId) studentIdCounts.set(studentId, (studentIdCounts.get(studentId) ?? 0) + 1);
+  }
+  meaningfulRows.forEach(({ row, index }) => {
     const studentId = compact(row[0]);
     const institutionalEmail = normalizeEmail(row[1]);
     const displayName = compact(row[2]);
@@ -124,10 +134,12 @@ export function validateIdentityRosterSource(source) {
     if (!VERIFICATION_RESULTS.has(verificationResult)) codes.push('VERIFICATION_RESULT_INVALID');
     if (active === null) codes.push('ACTIVE_VALUE_INVALID');
     if (reviewNotes.length > 1000) codes.push('REVIEW_NOTES_TOO_LONG');
-    if (emails.has(institutionalEmail)) codes.push('DUPLICATE_INSTITUTIONAL_EMAIL');
-    if (studentIds.has(studentId.toUpperCase())) codes.push('DUPLICATE_STUDENT_ID');
-    if (institutionalEmail) emails.add(institutionalEmail);
-    if (studentId) studentIds.add(studentId.toUpperCase());
+    if (institutionalEmail && emailCounts.get(institutionalEmail) > 1) {
+      codes.push('DUPLICATE_INSTITUTIONAL_EMAIL');
+    }
+    if (studentId && studentIdCounts.get(studentId.toUpperCase()) > 1) {
+      codes.push('DUPLICATE_STUDENT_ID');
+    }
     if (codes.length) {
       rejections.push({
         rowNumber: index + 2,
@@ -153,7 +165,7 @@ export function validateIdentityRosterSource(source) {
     left.institutionalEmail.localeCompare(right.institutionalEmail),
   );
   return {
-    valid: rejections.length === 0,
+    valid: accepted.length > 0,
     sourceRowCount: accepted.length + rejections.length,
     rows: accepted,
     rejections,
@@ -213,10 +225,12 @@ export function createIdentityRosterService({
         fail(code, { status: code === 'ROSTER_SOURCE_NOT_CONFIGURED' ? 503 : 502 });
       }
       const validation = validateIdentityRosterSource(sourceData);
-      const sourceFingerprint = await crypto.fingerprint({
-        headers: sourceData.headers,
-        rows: sourceData.rows,
-      });
+      const sourceFingerprint = await crypto.fingerprint(
+        sourceData.fingerprintSource ?? {
+          headers: sourceData.headers,
+          rows: sourceData.rows,
+        },
+      );
       const current = await decryptedEntries();
       const currentByKey = new Map(current.map((entry) => [entry.identityKey, entry]));
       const planned = [];
@@ -226,10 +240,33 @@ export function createIdentityRosterService({
         planned.push({ identityKey, profile, action: existing ? (sameProfile(existing.profile, profile) ? 'UNCHANGED' : 'CHANGE') : 'ADD' });
         currentByKey.delete(identityKey);
       }
+      const rejectedEmails = new Set(
+        validation.rejections.map((rejection) => normalizeEmail(rejection.institutionalEmail)).filter(Boolean),
+      );
+      const rejectedStudentIds = new Set(
+        validation.rejections
+          .map((rejection) => compact(rejection.studentId).toUpperCase())
+          .filter(Boolean),
+      );
+      const preservedProfiles = [];
+      for (const [identityKey, entry] of currentByKey) {
+        const email = normalizeEmail(entry.profile.institutionalEmail);
+        const studentId = compact(entry.profile.studentId).toUpperCase();
+        if (rejectedEmails.has(email) || rejectedStudentIds.has(studentId)) {
+          preservedProfiles.push(entry.profile);
+          currentByKey.delete(identityKey);
+        }
+      }
       const addCount = planned.filter((entry) => entry.action === 'ADD').length;
       const changeCount = planned.filter((entry) => entry.action === 'CHANGE').length;
-      const unchangedCount = planned.filter((entry) => entry.action === 'UNCHANGED').length;
+      const unchangedCount =
+        planned.filter((entry) => entry.action === 'UNCHANGED').length + preservedProfiles.length;
       const removalCount = currentByKey.size;
+      const validationStatus = validation.valid
+        ? validation.rejections.length
+          ? 'VALID_WITH_REJECTIONS'
+          : 'VALID'
+        : 'REJECTED';
       const run = {
         id: `RSY-${createId()}`,
         sourceFingerprint,
@@ -240,15 +277,18 @@ export function createIdentityRosterService({
         changeCount,
         removalCount,
         unchangedCount,
-        validationStatus: validation.valid ? 'VALID' : 'REJECTED',
-        protectedSourceEnvelope: await crypto.encrypt(validation.rows),
+        validationStatus,
+        protectedSourceEnvelope: await crypto.encrypt([...validation.rows, ...preservedProfiles]),
         protectedRejectionsEnvelope: await crypto.encrypt(validation.rejections),
         createdByAccountId: actor.id,
         createdAt: nowIso(),
         correlationId,
       };
       await repository.createPreview(run);
-      return { ...safeRun({ ...run, applyStatus: 'PREVIEWED' }), rejections: validation.rejections };
+      return {
+        ...safeRun({ ...run, applyStatus: 'PREVIEWED' }),
+        rejections: validation.rejections.map(({ rowNumber, codes }) => ({ rowNumber, codes })),
+      };
     },
 
     async directory({ actor, command = {} }) {
@@ -303,12 +343,35 @@ export function createIdentityRosterService({
       const reason = requiredReason(command.reason);
       const run = await repository.getRun(String(command.runId ?? ''));
       if (!run) fail('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
-      if (run.validationStatus !== 'VALID' || run.rejectionCount) fail('ROSTER_PREVIEW_REJECTED', { status: 409 });
       if (run.applyStatus === 'APPLIED') return { applied: true, replayed: true, run: safeRun(run) };
+      if (!['VALID', 'VALID_WITH_REJECTIONS'].includes(run.validationStatus)) {
+        fail('ROSTER_PREVIEW_REJECTED', { status: 409 });
+      }
       if (run.applyStatus !== 'PREVIEWED') fail('ROSTER_PREVIEW_REJECTED', { status: 409 });
       if (String(command.confirmSourceFingerprint ?? '') !== run.sourceFingerprint) {
         fail('ROSTER_FINGERPRINT_CONFIRMATION_REQUIRED', { status: 409 });
       }
+      const latestRun = await repository.latestRun();
+      if (!latestRun || latestRun.id !== run.id) fail('ROSTER_PREVIEW_STALE', { status: 409 });
+      if (run.addCount === 0 && run.changeCount === 0 && run.removalCount === 0) {
+        fail('ROSTER_SOURCE_ALREADY_APPLIED', { status: 409 });
+      }
+      let currentSource;
+      try {
+        currentSource = await source.read();
+      } catch (error) {
+        const code = Object.hasOwn(ERROR_MESSAGES, error?.code)
+          ? error.code
+          : 'ROSTER_SOURCE_UNAVAILABLE';
+        fail(code, { status: code === 'ROSTER_SOURCE_NOT_CONFIGURED' ? 503 : 502 });
+      }
+      const currentFingerprint = await crypto.fingerprint(
+        currentSource.fingerprintSource ?? {
+          headers: currentSource.headers,
+          rows: currentSource.rows,
+        },
+      );
+      if (currentFingerprint !== run.sourceFingerprint) fail('ROSTER_PREVIEW_STALE', { status: 409 });
       const [profiles, current] = await Promise.all([
         crypto.decrypt(run.protectedSourceEnvelope),
         repository.listEntries(),

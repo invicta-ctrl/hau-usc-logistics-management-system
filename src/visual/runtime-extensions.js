@@ -2340,8 +2340,8 @@ export function createRuntimeExtensions(options) {
     if (!identityRosterPreview) previewRoot.innerHTML = '';
     else {
       const preview = identityRosterPreview;
-      const rejected = preview.validationStatus !== 'VALID' || preview.rejectionCount > 0;
-      previewRoot.innerHTML = `<article class="mode-note"><strong>Sync preview ${esc(preview.id)}</strong><dl class="access-effective-preview section-gap"><div><dt>Source fingerprint</dt><dd>${esc(preview.sourceFingerprint)}</dd></div><div><dt>Rows</dt><dd>${esc(preview.sourceRowCount)}</dd></div><div><dt>Adds</dt><dd>${esc(preview.addCount)}</dd></div><div><dt>Changes</dt><dd>${esc(preview.changeCount)}</dd></div><div><dt>Removals</dt><dd>${esc(preview.removalCount)}</dd></div><div><dt>Unchanged</dt><dd>${esc(preview.unchangedCount)}</dd></div><div><dt>Rejections</dt><dd>${esc(preview.rejectionCount)}</dd></div><div><dt>Validation</dt><dd>${esc(preview.validationStatus)}</dd></div></dl>${(preview.rejections ?? []).length ? `<div class="alert error section-gap"><strong>Rejected source rows</strong>${preview.rejections.map((entry) => `<p>Row ${esc(entry.rowNumber)} &middot; ${esc(entry.studentId || 'No Student ID')} &middot; ${esc(entry.institutionalEmail || 'No institutional email')} &middot; ${esc(entry.codes.join(', '))}</p>`).join('')}</div>` : ''}${rejected ? '<div class="alert warning section-gap">This preview cannot be applied. Correct the private source and create a new preview.</div>' : `<form data-roster-apply class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(preview.id)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="danger" type="submit">Apply reconciled roster</button></form>`}</article>`;
+      const rejected = preview.validationStatus === 'REJECTED';
+      previewRoot.innerHTML = `<article class="mode-note"><strong>Directory preview ${esc(preview.id)}</strong><dl class="access-effective-preview section-gap"><div><dt>Source fingerprint</dt><dd>${esc(preview.sourceFingerprint)}</dd></div><div><dt>Rows reviewed</dt><dd>${esc(preview.sourceRowCount)}</dd></div><div><dt>Additions</dt><dd>${esc(preview.addCount)}</dd></div><div><dt>Changes</dt><dd>${esc(preview.changeCount)}</dd></div><div><dt>Removals</dt><dd>${esc(preview.removalCount)}</dd></div><div><dt>Unchanged</dt><dd>${esc(preview.unchangedCount)}</dd></div><div><dt>Quarantined</dt><dd>${esc(preview.rejectionCount)}</dd></div><div><dt>Validation</dt><dd>${esc(preview.validationStatus)}</dd></div></dl>${(preview.rejections ?? []).length ? `<div class="alert warning section-gap"><strong>Rows kept in quarantine</strong><p>These rows will not be written. A matching current directory record, when identifiable, will be kept unchanged.</p>${preview.rejections.map((entry) => `<p>Source row ${esc(entry.rowNumber)} &middot; ${esc(entry.codes.join(', '))}</p>`).join('')}</div>` : ''}${rejected ? '<div class="alert error section-gap">No valid directory rows are available to apply. Correct the private source and create a new preview.</div>' : `<form data-roster-apply class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(preview.id)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="danger" type="submit">Apply accepted directory rows</button></form>`}</article>`;
       const applyForm = previewRoot.querySelector('[data-roster-apply]');
       applyForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -2351,7 +2351,7 @@ export function createRuntimeExtensions(options) {
         try {
           await services.applyIdentityRosterSync(Object.fromEntries(new FormData(applyForm).entries()));
           identityRosterPreview = null;
-          toast('Identity roster applied and reconciled.');
+          toast('USC Officer and Staff Directory applied and reconciled.');
           await refreshIdentityRoster({ force: true });
         } catch (error) {
           toast(error.message, true);
@@ -2367,7 +2367,7 @@ export function createRuntimeExtensions(options) {
           (entry) =>
             `<div class="request-line"><div><strong>${esc(entry.displayName)}</strong><small>${esc(entry.studentId)} &middot; ${esc(entry.institutionalEmail)}</small><small>${esc(entry.verificationResult)} &middot; ${entry.active ? 'Active' : 'Inactive'} &middot; updated ${esc(accessDate(entry.updatedAt))}</small>${entry.reviewNotes ? `<small>Review: ${esc(entry.reviewNotes)}</small>` : ''}</div><span class="pill">${entry.active ? 'Active' : 'Inactive'}</span></div>`,
         )
-        .join('') || '<div class="empty">No protected identities match this search.</div>';
+        .join('') || '<div class="empty">No officers or staff match this search.</div>';
     const pagination = identityRosterDirectory?.pagination ?? {
       page: 1,
       totalPages: 1,
@@ -2390,7 +2390,7 @@ export function createRuntimeExtensions(options) {
           (run) =>
             `<div class="request-line"><div><strong>${esc(run.applyStatus)} &middot; ${esc(run.id)}</strong><small>${esc(accessDate(run.createdAt))} &middot; ${esc(run.validationStatus)} &middot; fingerprint ${esc(run.sourceFingerprint)}</small><small>${esc(run.addCount)} add &middot; ${esc(run.changeCount)} change &middot; ${esc(run.removalCount)} removal &middot; ${esc(run.rejectionCount)} rejection</small></div>${latestApplied?.id === run.id ? `<button class="danger mini" type="button" data-roster-rollback="${esc(run.id)}" data-roster-fingerprint="${esc(run.sourceFingerprint)}">Roll back latest sync</button>` : ''}</div>`,
         )
-        .join('') || '<div class="empty">No identity roster sync has been previewed.</div>';
+        .join('') || '<div class="empty">No directory update has been previewed.</div>';
   };
 
   const refreshIdentityRoster = async ({ force = false } = {}) => {
@@ -2402,7 +2402,7 @@ export function createRuntimeExtensions(options) {
       return;
     }
     root.querySelector('[data-roster-directory]').innerHTML =
-      '<div class="empty">Loading the owner-protected D1 directory…</div>';
+      '<div class="empty">Loading the protected USC Officer and Staff Directory…</div>';
     try {
       [identityRosterStatus, identityRosterDirectory] = await Promise.all([
         services.getIdentityRosterStatus({}),
@@ -2428,7 +2428,7 @@ export function createRuntimeExtensions(options) {
       identityRosterStatus = null;
       identityRosterDirectory = null;
       await refreshIdentityRoster({ force: true });
-      toast('Identity roster source preview completed.');
+      toast('USC Officer and Staff Directory preview completed.');
     } catch (error) {
       toast(error.message, true);
     } finally {
@@ -2438,7 +2438,7 @@ export function createRuntimeExtensions(options) {
 
   const openIdentityRosterRollback = (runId, sourceFingerprint) => {
     openModal(
-      'Roll back latest identity roster sync',
+      'Roll back the latest directory update',
       `<form data-roster-rollback-form><div class="alert warning">Rollback restores the protected pre-apply D1 snapshot. It does not change the private Google Sheet.</div><div class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(runId)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Restore protected snapshot</button></form>`,
       (modal) => {
         const form = modal.querySelector('[data-roster-rollback-form]');
@@ -2457,7 +2457,7 @@ export function createRuntimeExtensions(options) {
             identityRosterStatus = null;
             identityRosterDirectory = null;
             await refreshIdentityRoster({ force: true });
-            toast('The latest identity roster sync was rolled back and reconciled.');
+            toast('The latest directory update was rolled back and reconciled.');
           } catch (error) {
             toast(error.message, true);
             button.disabled = false;

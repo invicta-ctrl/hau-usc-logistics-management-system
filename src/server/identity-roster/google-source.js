@@ -1,4 +1,17 @@
 const encoder = new TextEncoder();
+const NORMALIZED_ROSTER_HEADERS = Object.freeze([
+  'Student_ID',
+  'Institutional_Email',
+  'Display_Name',
+  'Verification_Result',
+  'Active',
+  'Review_Notes',
+]);
+const USC_DIRECTORY_FIELDS = Object.freeze({
+  displayName: 'Full Name',
+  studentId: 'Student Number',
+  institutionalEmail: 'HAU Email',
+});
 
 function bytesToBase64Url(bytes) {
   let binary = '';
@@ -56,6 +69,39 @@ async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvide
     });
   }
   return payload.access_token;
+}
+
+function normalizeRosterValues(headers, rows) {
+  const normalizedHeaders = headers.map((value) => String(value ?? '').trim());
+  if (
+    normalizedHeaders.length === NORMALIZED_ROSTER_HEADERS.length &&
+    normalizedHeaders.every((header, index) => header === NORMALIZED_ROSTER_HEADERS[index])
+  ) {
+    return { headers, rows, fingerprintSource: { headers, rows } };
+  }
+
+  const indexes = Object.fromEntries(
+    Object.entries(USC_DIRECTORY_FIELDS).map(([field, header]) => [
+      field,
+      normalizedHeaders.indexOf(header),
+    ]),
+  );
+  if (Object.values(indexes).some((index) => index < 0)) {
+    return { headers, rows, fingerprintSource: { headers, rows } };
+  }
+
+  return {
+    headers: [...NORMALIZED_ROSTER_HEADERS],
+    rows: rows.map((row) => [
+      row?.[indexes.studentId] ?? '',
+      row?.[indexes.institutionalEmail] ?? '',
+      row?.[indexes.displayName] ?? '',
+      'VERIFIED',
+      true,
+      '',
+    ]),
+    fingerprintSource: { headers, rows },
+  };
 }
 
 export function createGoogleSheetsRosterSource({
@@ -120,7 +166,7 @@ export function createGoogleSheetsRosterSource({
         });
       }
       const [headers = [], ...rows] = payload.values;
-      return { headers, rows };
+      return normalizeRosterValues(headers, rows);
     },
   });
 }

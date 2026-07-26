@@ -21,6 +21,50 @@
   display: none;
 }
 
+.context-cues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.context-cue {
+  position: relative;
+}
+
+.context-cue summary {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--shell-paper, #fffdf8);
+  color: var(--oxblood);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.context-cue summary::-webkit-details-marker {
+  display: none;
+}
+
+.context-cue.warning summary {
+  border-color: #b77917;
+  background: #fff7df;
+}
+
+.context-cue p {
+  width: min(560px, calc(100vw - 72px));
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--shell-paper, #fffdf8);
+  color: var(--muted);
+  line-height: 1.55;
+}
+
 [data-admin-control-surface][hidden],
 [data-identity-roster][hidden] {
   display: none !important;

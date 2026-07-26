@@ -72,7 +72,7 @@ function context(sourceRows = rows) {
 }
 
 describe('identity roster source validation', () => {
-  it('requires the exact protected roster schema and rejects duplicates and invalid values', () => {
+  it('requires the exact protected roster schema and quarantines every duplicate occurrence', () => {
     expect(
       validateIdentityRosterSource({ headers: ['Institutional_Email'], rows }),
     ).toMatchObject({ valid: false, rejections: [{ codes: ['SOURCE_SCHEMA_INVALID'] }] });
@@ -85,7 +85,12 @@ describe('identity roster source validation', () => {
       ],
     });
     expect(result.valid).toBe(false);
+    expect(result.rows).toHaveLength(0);
+    expect(result.rejections).toHaveLength(2);
     expect(result.rejections[0].codes).toEqual(
+      expect.arrayContaining(['DUPLICATE_INSTITUTIONAL_EMAIL', 'DUPLICATE_STUDENT_ID']),
+    );
+    expect(result.rejections[1].codes).toEqual(
       expect.arrayContaining([
         'VERIFICATION_RESULT_INVALID',
         'ACTIVE_VALUE_INVALID',
@@ -144,6 +149,16 @@ describe('owner-protected identity roster service', () => {
     expect(repository.applyRun).toHaveBeenCalledOnce();
     expect(getEntries()).toHaveLength(2);
     expect(JSON.stringify(getEntries())).not.toMatch(/operator\.one|STUDENT-001|Reviewed\./iu);
+    await expect(
+      service.apply({
+        actor: owner,
+        command: {
+          runId: preview.id,
+          confirmSourceFingerprint: preview.sourceFingerprint,
+          reason: 'Replay the exact accepted update safely.',
+        },
+      }),
+    ).resolves.toMatchObject({ applied: true, replayed: true });
 
     const self = await service.selfProfile({ actor: normalUser });
     expect(self).toMatchObject({
@@ -212,5 +227,113 @@ describe('owner-protected identity roster service', () => {
         },
       }),
     ).rejects.toMatchObject({ code: 'ROSTER_PREVIEW_REJECTED' });
+  });
+
+  it('applies valid rows while quarantining incomplete rows and preserving their current match', async () => {
+    const scenario = context([rows[0]]);
+    const original = await scenario.service.preview({ actor: owner });
+    await scenario.service.apply({
+      actor: owner,
+      command: {
+        runId: original.id,
+        confirmSourceFingerprint: original.sourceFingerprint,
+        reason: 'Apply the initial reviewed directory.',
+      },
+    });
+
+    scenario.source.read.mockResolvedValue({
+      headers: [...IDENTITY_ROSTER_HEADERS],
+      fingerprintSource: {
+        headers: ['Synthetic source headers'],
+        rows: [['Synthetic exact source state']],
+      },
+      rows: [
+        ['STUDENT-001', 'operator.one@example.invalid', '', 'VERIFIED', true, ''],
+        rows[1],
+      ],
+    });
+    const preview = await scenario.service.preview({ actor: owner });
+    expect(preview).toMatchObject({
+      acceptedCount: 1,
+      rejectionCount: 1,
+      addCount: 1,
+      removalCount: 0,
+      validationStatus: 'VALID_WITH_REJECTIONS',
+    });
+    expect(preview.rejections).toEqual([
+      { rowNumber: 2, codes: ['DISPLAY_NAME_INVALID'] },
+    ]);
+    expect(JSON.stringify(preview)).not.toMatch(/operator\.one|STUDENT-001/iu);
+
+    await expect(
+      scenario.service.apply({
+        actor: owner,
+        command: {
+          runId: preview.id,
+          confirmSourceFingerprint: preview.sourceFingerprint,
+          reason: 'Apply accepted rows and retain quarantined matches.',
+        },
+      }),
+    ).resolves.toMatchObject({ applied: true, reconciliation: { reconciled: true } });
+    await expect(scenario.service.selfProfile({ actor: normalUser })).resolves.toMatchObject({
+      linked: true,
+      profile: { studentId: 'STUDENT-001' },
+    });
+  });
+
+  it('rejects superseded, source-changed, and no-op previews', async () => {
+    const scenario = context([rows[0]]);
+    const superseded = await scenario.service.preview({ actor: owner });
+    scenario.source.read.mockResolvedValue({
+      headers: [...IDENTITY_ROSTER_HEADERS],
+      rows: [rows[1]],
+    });
+    const latest = await scenario.service.preview({ actor: owner });
+    await expect(
+      scenario.service.apply({
+        actor: owner,
+        command: {
+          runId: superseded.id,
+          confirmSourceFingerprint: superseded.sourceFingerprint,
+          reason: 'Reject the superseded directory preview.',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ROSTER_PREVIEW_STALE' });
+
+    scenario.source.read.mockResolvedValue({
+      headers: [...IDENTITY_ROSTER_HEADERS],
+      rows: [rows[0]],
+    });
+    await expect(
+      scenario.service.apply({
+        actor: owner,
+        command: {
+          runId: latest.id,
+          confirmSourceFingerprint: latest.sourceFingerprint,
+          reason: 'Reject the changed private source safely.',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ROSTER_PREVIEW_STALE' });
+
+    const accepted = await scenario.service.preview({ actor: owner });
+    await scenario.service.apply({
+      actor: owner,
+      command: {
+        runId: accepted.id,
+        confirmSourceFingerprint: accepted.sourceFingerprint,
+        reason: 'Apply the current reviewed directory.',
+      },
+    });
+    const noOp = await scenario.service.preview({ actor: owner });
+    await expect(
+      scenario.service.apply({
+        actor: owner,
+        command: {
+          runId: noOp.id,
+          confirmSourceFingerprint: noOp.sourceFingerprint,
+          reason: 'Prevent a duplicate directory application.',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ROSTER_SOURCE_ALREADY_APPLIED' });
   });
 });

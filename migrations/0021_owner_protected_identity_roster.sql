@@ -10,7 +10,9 @@ CREATE TABLE identity_roster_sync_runs (
   change_count INTEGER NOT NULL CHECK (change_count >= 0),
   removal_count INTEGER NOT NULL CHECK (removal_count >= 0),
   unchanged_count INTEGER NOT NULL CHECK (unchanged_count >= 0),
-  validation_status TEXT NOT NULL CHECK (validation_status IN ('VALID', 'REJECTED')),
+  validation_status TEXT NOT NULL CHECK (
+    validation_status IN ('VALID', 'VALID_WITH_REJECTIONS', 'REJECTED')
+  ),
   apply_status TEXT NOT NULL CHECK (apply_status IN ('PREVIEWED', 'APPLIED', 'ROLLED_BACK')),
   protected_source_envelope TEXT NOT NULL,
   protected_rejections_envelope TEXT NOT NULL,

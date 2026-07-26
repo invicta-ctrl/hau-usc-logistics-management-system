@@ -83,6 +83,17 @@ describe('Google Sheets identity roster source', () => {
         'Review_Notes',
       ],
       rows: [['SYNTHETIC-001', 'synthetic@example.invalid', 'Synthetic', 'VERIFIED', true, '']],
+      fingerprintSource: {
+        headers: [
+          'Student_ID',
+          'Institutional_Email',
+          'Display_Name',
+          'Verification_Result',
+          'Active',
+          'Review_Notes',
+        ],
+        rows: [['SYNTHETIC-001', 'synthetic@example.invalid', 'Synthetic', 'VERIFIED', true, '']],
+      },
     });
     expect(fetchImpl).toHaveBeenCalledTimes(2);
     expect(fetchImpl.mock.calls[0][0]).toBe('https://oauth2.googleapis.com/token');
@@ -93,5 +104,87 @@ describe('Google Sheets identity roster source', () => {
     expect(fetchImpl.mock.calls[1][1].headers).toEqual({
       authorization: 'Bearer synthetic-access-token',
     });
+  });
+
+  it('maps the approved USC directory columns without importing unrelated private fields', async () => {
+    const rawHeaders = [
+      '# Core',
+      'Position',
+      'Full Name',
+      'Nickname',
+      'Pronouns',
+      'Contact Number',
+      'Student Number',
+      'Working Email',
+      'HAU Email',
+      'Birthday',
+      'Year Level',
+      'Department',
+      'Program',
+    ];
+    const rawRows = [
+      [
+        'Core',
+        'Director',
+        'Synthetic Officer',
+        'Syn',
+        'They/Them',
+        '00000000000',
+        'SYNTHETIC-001',
+        'private@example.invalid',
+        'synthetic.officer@example.invalid',
+        '2000-01-01',
+        '4',
+        'Logistics',
+        'Synthetic Program',
+      ],
+      ['', 'Staff', 'Incomplete Officer', '', '', '', '', '', '', '', '', 'Logistics', ''],
+    ];
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ access_token: 'synthetic-access-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ values: [rawHeaders, ...rawRows] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    const source = createGoogleSheetsRosterSource({
+      spreadsheetId: 'synthetic-private-spreadsheet-id',
+      range: 'Official!A:M',
+      serviceAccountEmail: 'synthetic-reader@example.invalid',
+      serviceAccountPrivateKey: await privateKeyPem(),
+      fetchImpl,
+    });
+
+    const result = await source.read();
+    expect(result.headers).toEqual([
+      'Student_ID',
+      'Institutional_Email',
+      'Display_Name',
+      'Verification_Result',
+      'Active',
+      'Review_Notes',
+    ]);
+    expect(result.rows).toEqual([
+      [
+        'SYNTHETIC-001',
+        'synthetic.officer@example.invalid',
+        'Synthetic Officer',
+        'VERIFIED',
+        true,
+        '',
+      ],
+      ['', '', 'Incomplete Officer', 'VERIFIED', true, ''],
+    ]);
+    expect(result.fingerprintSource).toEqual({ headers: rawHeaders, rows: rawRows });
+    expect(JSON.stringify(result.rows)).not.toMatch(
+      /private@example|00000000000|They\/Them|2000-01-01|Synthetic Program/u,
+    );
   });
 });
