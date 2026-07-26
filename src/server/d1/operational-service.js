@@ -47,7 +47,9 @@ const METHOD_CAPABILITIES = Object.freeze({
   confirmReturn: CAPABILITIES.LENDING_RETURN,
   receiveRestock: CAPABILITIES.FULFILL_RECEIVE,
   receiveDeliverable: CAPABILITIES.FULFILL_RECEIVE,
+  uploadEvidence: CAPABILITIES.EVIDENCE_UPLOAD,
   confirmRelease: CAPABILITIES.FULFILL_RELEASE,
+  correctRelease: CAPABILITIES.FULFILL_RELEASE,
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   getMigrationStatus: CAPABILITIES.SYSTEM_DIAGNOSTICS,
 });
@@ -324,7 +326,37 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
   return { selected, options };
 }
 
-function filterOperationalData(data, selected) {
+function scopedReleaseGroup(entry, linePredicate) {
+  const lineReleases = (entry.lineReleases ?? []).filter(linePredicate);
+  const visibleConfirmationIds = new Set(lineReleases.map((line) => line.confirmationId));
+  const corrections = (entry.corrections ?? []).filter((correction) =>
+    visibleConfirmationIds.has(correction.releaseConfirmationId),
+  );
+  return {
+    ...entry,
+    lineReleases,
+    corrections,
+    correctedQuantity: lineReleases.reduce(
+      (total, line) => total + Number(line.correctedQuantity ?? 0),
+      0,
+    ),
+    correctableQuantity: lineReleases.reduce(
+      (total, line) => total + Number(line.correctableQuantity ?? 0),
+      0,
+    ),
+    status: lineReleases.some((line) => line.status === 'PARTIAL') ? 'PARTIAL' : 'COMPLETED',
+    updatedAt:
+      corrections.reduce(
+        (latest, correction) =>
+          !latest || correction.correctedAt > latest ? correction.correctedAt : latest,
+        '',
+      ) ||
+      entry.releasedAt ||
+      entry.createdAt,
+  };
+}
+
+export function filterOperationalData(data, selected) {
   if (!selected || ['ALL', 'COMMITTEE', 'SELF'].includes(selected.kind)) return data;
   const next = { ...data };
   if (selected.kind === 'LOCATION') {
@@ -332,6 +364,18 @@ function filterOperationalData(data, selected) {
       (entry) => String(entry.storageLocation ?? '') === selected.id,
     );
     const itemIds = new Set(next.inventoryItems.map((entry) => entry.id));
+    if (Array.isArray(next.requestLines)) {
+      next.requestLines = next.requestLines.filter((entry) => itemIds.has(entry.itemId));
+      const requestIds = new Set(next.requestLines.map((entry) => entry.requestId));
+      if (Array.isArray(next.requests))
+        next.requests = next.requests.filter((entry) => requestIds.has(entry.id));
+    }
+    if (Array.isArray(next.lendingTickets))
+      next.lendingTickets = next.lendingTickets.filter((entry) => itemIds.has(entry.itemId));
+    if (Array.isArray(next.releaseConfirmations))
+      next.releaseConfirmations = next.releaseConfirmations
+        .map((entry) => scopedReleaseGroup(entry, (line) => itemIds.has(line.itemId)))
+        .filter((entry) => entry.lineReleases.length > 0);
     ['inventoryAssets', 'inventoryAssetInstances'].forEach((key) => {
       if (Array.isArray(next[key])) next[key] = next[key].filter((entry) => itemIds.has(entry.item_id ?? entry.itemId));
     });
@@ -358,6 +402,11 @@ function filterOperationalData(data, selected) {
     next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
     next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
+    if (Array.isArray(next.releaseConfirmations))
+      next.releaseConfirmations = next.releaseConfirmations.filter((entry) =>
+        eventIds.has(entry.eventId),
+      );
+    if (Array.isArray(next.lendingTickets)) next.lendingTickets = [];
     if (Array.isArray(next.ledgerTransactions))
       next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
         eventIds.has(entry.eventId ?? entry.event_id),
@@ -370,6 +419,11 @@ function filterOperationalData(data, selected) {
     next.requests = (next.requests ?? []).filter((entry) => entry.eventId === selected.id);
     next.requestLines = (next.requestLines ?? []).filter((entry) => entry.eventId === selected.id);
     next.deliverables = (next.deliverables ?? []).filter((entry) => entry.eventId === selected.id);
+    if (Array.isArray(next.releaseConfirmations))
+      next.releaseConfirmations = next.releaseConfirmations.filter(
+        (entry) => entry.eventId === selected.id,
+      );
+    if (Array.isArray(next.lendingTickets)) next.lendingTickets = [];
     if (Array.isArray(next.ledgerTransactions))
       next.ledgerTransactions = next.ledgerTransactions.filter(
         (entry) => (entry.eventId ?? entry.event_id) === selected.id,
@@ -384,10 +438,22 @@ function filterOperationalData(data, selected) {
     const requestIds = new Set(next.requests.map((entry) => entry.id));
     next.requestLines = (next.requestLines ?? []).filter((entry) => requestIds.has(entry.requestId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => requestIds.has(entry.requestId));
+    if (Array.isArray(next.releaseConfirmations))
+      next.releaseConfirmations = next.releaseConfirmations.filter((entry) => !entry.eventId);
     if (Array.isArray(next.ledgerTransactions))
       next.ledgerTransactions = next.ledgerTransactions.filter(
         (entry) => !(entry.eventId ?? entry.event_id),
       );
+  }
+  if (Array.isArray(next.releaseConfirmations) && Array.isArray(next.releaseCorrections)) {
+    const visibleConfirmationIds = new Set(
+      next.releaseConfirmations.flatMap((entry) =>
+        (entry.lineReleases ?? []).map((line) => line.confirmationId),
+      ),
+    );
+    next.releaseCorrections = next.releaseCorrections.filter((entry) =>
+      visibleConfirmationIds.has(entry.releaseConfirmationId),
+    );
   }
   return next;
 }
@@ -720,6 +786,76 @@ const lineDto = (row) => ({
   updatedAt: row.updated_at,
 });
 
+const releaseCorrectionDto = (row) => ({
+  id: row.id,
+  releaseGroupId: row.release_group_id,
+  releaseConfirmationId: row.release_confirmation_id,
+  quantity: Number(row.quantity),
+  reason: row.reason,
+  evidenceId: row.evidence_id,
+  transactionId: row.ledger_transaction_id,
+  correctedBy: row.corrected_by,
+  correctedAt: row.corrected_at,
+  status: row.status,
+});
+
+function releaseConfirmationDtos(confirmationRows, correctionRows) {
+  const correctionsByConfirmation = new Map();
+  correctionRows.forEach((row) => {
+    const correction = releaseCorrectionDto(row);
+    const existing = correctionsByConfirmation.get(correction.releaseConfirmationId) ?? [];
+    existing.push(correction);
+    correctionsByConfirmation.set(correction.releaseConfirmationId, existing);
+  });
+  const groups = new Map();
+  confirmationRows.forEach((row) => {
+    const releaseGroupId = row.release_group_id || row.id;
+    const corrections = correctionsByConfirmation.get(row.id) ?? [];
+    const correctedQuantity = corrections.reduce((sum, entry) => sum + entry.quantity, 0);
+    const line = {
+      confirmationId: row.id,
+      requestLineId: row.request_line_id,
+      itemId: row.item_id,
+      quantity: Number(row.quantity),
+      correctedQuantity,
+      correctableQuantity: Math.max(0, Number(row.quantity) - correctedQuantity),
+      unit: row.unit,
+      status: row.status,
+      corrections,
+    };
+    const existing = groups.get(releaseGroupId);
+    if (existing) {
+      existing.lineReleases.push(line);
+      existing.corrections.push(...corrections);
+      existing.correctedQuantity += correctedQuantity;
+      existing.correctableQuantity += line.correctableQuantity;
+      if (row.status === 'PARTIAL') existing.status = 'PARTIAL';
+      return;
+    }
+    groups.set(releaseGroupId, {
+      id: releaseGroupId,
+      requestId: row.request_id,
+      eventId: row.event_id,
+      lendingTicketId: row.lending_ticket_id,
+      recipientName: row.recipient_name,
+      recipientRole: row.recipient_role,
+      department: row.department,
+      lineReleases: [line],
+      notes: row.notes,
+      releasedAt: row.released_at,
+      releasedBy: row.released_by,
+      evidenceId: row.evidence_id,
+      status: row.status === 'PARTIAL' ? 'PARTIAL' : 'COMPLETED',
+      corrections: [...corrections],
+      correctedQuantity,
+      correctableQuantity: line.correctableQuantity,
+      createdAt: row.released_at,
+      updatedAt: corrections.at(-1)?.correctedAt ?? row.released_at,
+    });
+  });
+  return [...groups.values()];
+}
+
 async function revision(db, scope = 'global') {
   const value = await db
     .prepare('SELECT revision, updated_at FROM data_revisions WHERE scope = ?1')
@@ -733,6 +869,7 @@ export function createD1OperationalService({
   environment = 'DEVELOPMENT',
   appVersion = '0.7.0',
   schemaVersion = '1.0.0',
+  evidenceStore = null,
 }) {
   if (!db) throw new Error('D1 database binding is required.');
 
@@ -1007,22 +1144,91 @@ export function createD1OperationalService({
           ownerColumns: ['request.requester_account_id', 'ticket.created_by'],
         });
         const releaseLimitIndex = releaseScope.values.length + 1;
+        const confirmationRows = await rows(
+          db,
+          `SELECT confirmation.* FROM release_confirmations confirmation
+           LEFT JOIN requests request ON request.id = confirmation.request_id
+           LEFT JOIN lending_tickets ticket ON ticket.id = confirmation.lending_ticket_id
+           WHERE ${releaseScope.sql}
+           ORDER BY confirmation.released_at DESC
+           LIMIT ?${releaseLimitIndex} OFFSET ?${releaseLimitIndex + 1}`,
+          [...releaseScope.values, page.pageSize, page.offset],
+        );
+        const confirmationIds = confirmationRows.map((entry) => entry.id);
+        const correctionRows = confirmationIds.length
+          ? await rows(
+              db,
+              `SELECT correction.* FROM release_corrections correction
+               WHERE correction.release_confirmation_id IN (${confirmationIds
+                 .map((_, index) => `?${index + 1}`)
+                 .join(', ')})
+               ORDER BY correction.corrected_at`,
+              confirmationIds,
+            )
+          : [];
+        const eventScope = multiScopeWhere(account, {
+          committeeColumns: ['event.owner_committee_id'],
+        });
+        const eventLimitIndex = eventScope.values.length + 1;
+        const eventRows = await rows(
+          db,
+          `SELECT event.* FROM events event
+           WHERE event.active = 1 AND ${eventScope.sql}
+           ORDER BY event.starts_at, event.name
+           LIMIT ?${eventLimitIndex}`,
+          [...eventScope.values, 100],
+        );
+        const lendingScope = scopedWhere(account, {
+          committeeColumn: 'owner_committee_id',
+          ownerColumn: 'created_by',
+          alias: 'ticket',
+        });
+        const lendingLimitIndex = lendingScope.values.length + 1;
+        const lendingRows = await rows(
+          db,
+          `SELECT ticket.* FROM lending_tickets ticket
+           WHERE ticket.status = 'READY_TO_CLAIM' AND ${lendingScope.sql}
+           ORDER BY ticket.updated_at
+           LIMIT ?${lendingLimitIndex}`,
+          [...lendingScope.values, page.pageSize],
+        );
         data = {
-          eventSeries: [],
-          events: [],
+          eventSeries: await rows(
+            db,
+            "SELECT id, code, name, status FROM event_series WHERE status = 'ACTIVE' ORDER BY name LIMIT 50",
+          ),
+          events: eventRows.map((row) => ({
+            id: row.id,
+            seriesId: row.event_series_id,
+            name: row.name,
+            startAt: row.starts_at,
+            endAt: row.ends_at,
+            venue: row.venue,
+            status: row.status,
+          })),
+          inventoryItems: itemRows.map((row) => itemDto(row)),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          lendingTickets: [],
-          releaseConfirmations: await rows(
-            db,
-            `SELECT confirmation.* FROM release_confirmations confirmation
-             LEFT JOIN requests request ON request.id = confirmation.request_id
-             LEFT JOIN lending_tickets ticket ON ticket.id = confirmation.lending_ticket_id
-             WHERE ${releaseScope.sql}
-             ORDER BY confirmation.released_at DESC
-             LIMIT ?${releaseLimitIndex} OFFSET ?${releaseLimitIndex + 1}`,
-            [...releaseScope.values, page.pageSize, page.offset],
-          ),
+          lendingTickets: lendingRows.map((row) => ({
+            id: row.id,
+            itemId: row.item_id,
+            quantity: Number(row.quantity),
+            unit: row.unit,
+            studentIdNumber: row.borrower_reference,
+            borrowerName: row.borrower_name,
+            borrowerType: row.borrower_type,
+            department: row.department_organization,
+            contact: row.contact,
+            purpose: row.purpose,
+            dueAt: row.due_at,
+            ticketType: row.ticket_type,
+            status: row.status,
+            ownerCommitteeId: row.owner_committee_id,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          })),
+          releaseConfirmations: releaseConfirmationDtos(confirmationRows, correctionRows),
+          releaseCorrections: correctionRows.map(releaseCorrectionDto),
         };
       } else if (module === 'restocking') {
         const restockScope = scopedWhere(account, {
@@ -1373,7 +1579,7 @@ export function createD1OperationalService({
     return { linkedRequestLineId, linkedDeliverableId, linkedRestockId, record };
   }
 
-  async function requireStoredEvidence(command) {
+  async function requireStoredEvidence(command, { evidenceTypes = [], relatedEntityIds = [] } = {}) {
     const evidenceId = optionalText(command.evidenceId, 80);
     if (command.evidence && !evidenceId) {
       throw new ApiError(
@@ -1384,7 +1590,10 @@ export function createD1OperationalService({
     }
     if (!evidenceId) return null;
     const evidence = await db
-      .prepare('SELECT id, upload_status FROM evidence_metadata WHERE id = ?1')
+      .prepare(
+        `SELECT id, evidence_type, related_entity_id, upload_status
+         FROM evidence_metadata WHERE id = ?1`,
+      )
       .bind(evidenceId)
       .first();
     if (!evidence || !['STORED', 'VERIFIED'].includes(String(evidence.upload_status).toUpperCase())) {
@@ -1394,7 +1603,286 @@ export function createD1OperationalService({
         { status: 409 },
       );
     }
+    if (evidenceTypes.length && !evidenceTypes.includes(evidence.evidence_type)) {
+      throw new ApiError(
+        'EVIDENCE_REFERENCE_MISMATCH',
+        'The evidence reference does not match this workflow.',
+        { status: 409 },
+      );
+    }
+    const expectedIds = relatedEntityIds.filter(Boolean).map(String);
+    if (expectedIds.length && !expectedIds.includes(String(evidence.related_entity_id))) {
+      throw new ApiError(
+        'EVIDENCE_REFERENCE_MISMATCH',
+        'The evidence reference belongs to a different operational record.',
+        { status: 409 },
+      );
+    }
     return evidence.id;
+  }
+
+  async function assertEvidenceScope(account, command) {
+    const evidenceType = requiredText(command.evidenceType, 'evidenceType', 80);
+    const relatedEntityId = requiredText(
+      command.relatedEntityId ??
+        command.requestId ??
+        command.restockId ??
+        command.deliverableId ??
+        command.lendingTicketId,
+      'relatedEntityId',
+      100,
+    );
+    let scopeRecord;
+    if (evidenceType === 'RELEASE_CONFIRMATION_PHOTO') {
+      assertCapability(account, CAPABILITIES.FULFILL_RELEASE);
+      scopeRecord = await db
+        .prepare(
+          `SELECT owner_committee_id AS committee_id, requester_account_id AS owner_account_id
+           FROM requests WHERE id = ?1`,
+        )
+        .bind(command.requestId ?? relatedEntityId)
+        .first();
+    } else if (['RESTOCK_RECEIPT', 'RESTOCK_INVOICE'].includes(evidenceType)) {
+      assertCapability(account, CAPABILITIES.FULFILL_RECEIVE);
+      scopeRecord = await db
+        .prepare(
+          `SELECT restock.assigned_committee_id AS committee_id,
+                  request.requester_account_id AS owner_account_id
+           FROM restock_requests restock
+           LEFT JOIN requests request ON request.id = restock.source_request_id
+           WHERE restock.id = ?1`,
+        )
+        .bind(command.restockId ?? relatedEntityId)
+        .first();
+    } else if (
+      ['DELIVERABLE_RECEIPT', 'DELIVERABLE_DELIVERY_PROOF'].includes(evidenceType)
+    ) {
+      assertCapability(account, CAPABILITIES.FULFILL_RECEIVE);
+      scopeRecord = await db
+        .prepare(
+          `SELECT COALESCE(deliverable.assigned_committee_id, request.owner_committee_id) AS committee_id,
+                  request.requester_account_id AS owner_account_id
+           FROM deliverables deliverable
+           JOIN requests request ON request.id = deliverable.request_id
+           WHERE deliverable.id = ?1`,
+        )
+        .bind(command.deliverableId ?? relatedEntityId)
+        .first();
+    } else if (['LENDING_HANDOFF_PHOTO', 'LENDING_RETURN_PHOTO'].includes(evidenceType)) {
+      const capability =
+        evidenceType === 'LENDING_HANDOFF_PHOTO'
+          ? CAPABILITIES.LENDING_HANDOFF
+          : CAPABILITIES.LENDING_RETURN;
+      assertCapability(account, capability);
+      scopeRecord = await db
+        .prepare(
+          `SELECT owner_committee_id AS committee_id, created_by AS owner_account_id
+           FROM lending_tickets WHERE id = ?1`,
+        )
+        .bind(command.lendingTicketId ?? relatedEntityId)
+        .first();
+    } else if (['CANVASS_QUOTE', 'CANVASS_PHOTO'].includes(evidenceType)) {
+      assertCapability(account, CAPABILITIES.FULFILL_CANVASS);
+      const requestLineId = command.requestLineId ?? relatedEntityId;
+      scopeRecord = await db
+        .prepare(
+          `SELECT request.owner_committee_id AS committee_id,
+                  request.requester_account_id AS owner_account_id
+           FROM request_lines line
+           JOIN requests request ON request.id = line.request_id
+           WHERE line.id = ?1`,
+        )
+        .bind(requestLineId)
+        .first();
+    } else if (evidenceType === 'OTHER_SUPPORTING_DOCUMENT') {
+      assertCapability(account, CAPABILITIES.SYSTEM_ADMIN);
+      return { evidenceType, relatedEntityId };
+    } else {
+      throw new ApiError('UNSUPPORTED_EVIDENCE_TYPE', 'The evidence type is not supported.');
+    }
+    if (!scopeRecord) {
+      throw new ApiError(
+        'EVIDENCE_RELATED_RECORD_NOT_FOUND',
+        'The evidence target was not found in the authorized operational scope.',
+        { status: 404 },
+      );
+    }
+    assertEntityScope(account, {
+      committeeId: scopeRecord.committee_id,
+      ownerAccountId: scopeRecord.owner_account_id,
+    });
+    return { evidenceType, relatedEntityId };
+  }
+
+  async function uploadEvidence({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.uploadEvidence);
+    const { evidenceType, relatedEntityId } = await assertEvidenceScope(account, command);
+    if (!evidenceStore?.status(evidenceType)?.configured) {
+      throw new ApiError(
+        'EVIDENCE_STORE_NOT_CONFIGURED',
+        'The approved private evidence store is not configured for this evidence type.',
+        { status: 503 },
+      );
+    }
+    const mutation = await replay(db, 'uploadEvidence', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const evidenceId = createId('EVD');
+    let prepared;
+    try {
+      prepared = await evidenceStore.prepare({
+        evidenceId,
+        command: { ...command, evidenceType, relatedEntityId },
+      });
+    } catch (error) {
+      throw new ApiError(error?.code ?? 'EVIDENCE_VALIDATION_FAILED', error?.message, {
+        status: error?.code === 'EVIDENCE_STORE_NOT_CONFIGURED' ? 503 : 422,
+        details: error?.details,
+      });
+    }
+    const duplicate = await db
+      .prepare(
+        `SELECT id FROM evidence_metadata
+         WHERE sha256 = ?1 AND related_entity_type = ?2 AND related_entity_id = ?3
+           AND UPPER(upload_status) IN ('STORED', 'VERIFIED')
+         ORDER BY created_at LIMIT 1`,
+      )
+      .bind(prepared.sha256, prepared.relatedEntityType, prepared.relatedEntityId)
+      .first();
+    if (duplicate) {
+      const result = {
+        evidenceId: duplicate.id,
+        id: duplicate.id,
+        duplicate: true,
+        uploadStatus: 'STORED',
+        correlationId,
+      };
+      await db.batch([
+        auditStatement(db, {
+          action: 'DUPLICATE_EVIDENCE_ATTEMPT',
+          entityType: 'EVIDENCE',
+          entityId: duplicate.id,
+          accountId: account.id,
+          correlationId,
+          after: {
+            evidenceType,
+            relatedEntityType: prepared.relatedEntityType,
+            relatedEntityId: prepared.relatedEntityId,
+          },
+        }),
+        idempotencyStatement(db, 'uploadEvidence', mutation, account.id, result),
+      ]);
+      return result;
+    }
+    let stored;
+    try {
+      stored = await evidenceStore.upload(prepared);
+    } catch (error) {
+      throw new ApiError(error?.code ?? 'EVIDENCE_STORE_UPLOAD_FAILED', error?.message, {
+        status: 502,
+      });
+    }
+    const timestamp = nowIso();
+    const result = {
+      evidenceId,
+      id: evidenceId,
+      evidenceLabel: prepared.evidenceLabel,
+      normalizedFileName: prepared.normalizedFileName,
+      duplicate: false,
+      uploadStatus: 'STORED',
+      correlationId,
+    };
+    try {
+      await db.batch([
+        db
+          .prepare(
+            `INSERT INTO evidence_metadata (
+               id, evidence_type, evidence_label, normalized_file_name, mime_type,
+               size_bytes, sha256, private_storage_reference, related_entity_type,
+               related_entity_id, uploaded_by, upload_status, duplicate_of, notes, created_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'STORED', NULL, ?12, ?13)`,
+          )
+          .bind(
+            evidenceId,
+            prepared.evidenceType,
+            prepared.evidenceLabel,
+            prepared.normalizedFileName,
+            prepared.mimeType,
+            prepared.sizeBytes,
+            prepared.sha256,
+            stored.privateStorageReference,
+            prepared.relatedEntityType,
+            prepared.relatedEntityId,
+            account.id,
+            prepared.notes,
+            timestamp,
+          ),
+        auditStatement(db, {
+          action: 'EVIDENCE_STORED',
+          entityType: 'EVIDENCE',
+          entityId: evidenceId,
+          accountId: account.id,
+          correlationId,
+          after: {
+            evidenceType,
+            relatedEntityType: prepared.relatedEntityType,
+            relatedEntityId: prepared.relatedEntityId,
+            sizeBytes: prepared.sizeBytes,
+          },
+        }),
+        idempotencyStatement(db, 'uploadEvidence', mutation, account.id, result),
+        ...revisionStatements(db, ['evidence']),
+      ]);
+    } catch (error) {
+      await evidenceStore.remove(stored.privateStorageReference).catch(() => false);
+      if (String(error?.message ?? '').includes('evidence duplicate conflict')) {
+        const existing = await db
+          .prepare(
+            `SELECT id FROM evidence_metadata
+             WHERE sha256 = ?1 AND related_entity_type = ?2 AND related_entity_id = ?3
+               AND UPPER(upload_status) IN ('STORED', 'VERIFIED')
+             ORDER BY created_at LIMIT 1`,
+          )
+          .bind(prepared.sha256, prepared.relatedEntityType, prepared.relatedEntityId)
+          .first();
+        if (existing) {
+          const duplicateResult = {
+            evidenceId: existing.id,
+            id: existing.id,
+            duplicate: true,
+            uploadStatus: 'STORED',
+            correlationId,
+          };
+          await db.batch([
+            auditStatement(db, {
+              action: 'DUPLICATE_EVIDENCE_ATTEMPT',
+              entityType: 'EVIDENCE',
+              entityId: existing.id,
+              accountId: account.id,
+              correlationId,
+              after: {
+                evidenceType,
+                relatedEntityType: prepared.relatedEntityType,
+                relatedEntityId: prepared.relatedEntityId,
+              },
+            }),
+            idempotencyStatement(
+              db,
+              'uploadEvidence',
+              mutation,
+              account.id,
+              duplicateResult,
+            ),
+          ]);
+          return duplicateResult;
+        }
+      }
+      throw new ApiError(
+        'EVIDENCE_METADATA_FAILED',
+        'The evidence upload was reversed because its governed metadata could not be recorded.',
+        { status: 503 },
+      );
+    }
+    return result;
   }
 
   async function saveCanvassReference({ account, command, correlationId }) {
@@ -1404,7 +1892,14 @@ export function createD1OperationalService({
       committeeId: link.record.committee_id,
       ownerAccountId: link.record.owner_account_id,
     });
-    const evidenceId = await requireStoredEvidence(command);
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
+      relatedEntityIds: [
+        link.linkedRequestLineId,
+        link.linkedDeliverableId,
+        link.linkedRestockId,
+      ],
+    });
     const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const supplierName = requiredText(command.supplierName, 'supplierName', 160);
@@ -3391,7 +3886,10 @@ export function createD1OperationalService({
     if (!ticket)
       throw new ApiError('LENDING_NOT_FOUND', 'The lending ticket was not found.', { status: 404 });
     assertEntityScope(account, { committeeId: ticket.owner_committee_id, ownerAccountId: ticket.created_by });
-    const evidenceId = await requireStoredEvidence(command);
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes: ['LENDING_RETURN_PHOTO'],
+      relatedEntityIds: [ticketId],
+    });
     const mutation = await replay(db, 'confirmReturn', key, account.id, command);
     if (mutation.replayed) return mutation.value;
     if (ticket.status !== 'ON_LOAN')
@@ -3801,7 +4299,10 @@ export function createD1OperationalService({
     if (uniqueLines.size !== lines.length || uniqueLines.has('')) {
       throw new ApiError('DUPLICATE_RELEASE_LINE', 'Each release line must be unique.');
     }
-    const evidenceId = await requireStoredEvidence(command);
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes: ['RELEASE_CONFIRMATION_PHOTO'],
+      relatedEntityIds: [requestId],
+    });
     const mutation = await replay(db, 'confirmRelease', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const releaseId = createId('REL');
@@ -3922,15 +4423,16 @@ export function createD1OperationalService({
         db
           .prepare(
             `INSERT INTO release_confirmations (
-               id, request_id, request_line_id, event_id, lending_ticket_id,
+               id, release_group_id, request_id, request_line_id, event_id, lending_ticket_id,
                recipient_name, recipient_role, department, item_id, quantity, unit,
                released_by, released_at, confirmation_label, evidence_id,
                idempotency_key, status, notes
              ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-               ?13, ?14, ?15, ?16, ?17, ?18)`,
+               ?13, ?14, ?15, ?16, ?17, ?18, ?19)`,
           )
           .bind(
             lineReleaseId,
+            releaseId,
             requestId,
             lineId,
             line.event_id,
@@ -4009,6 +4511,220 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function correctRelease({ account, command, correlationId }) {
+    const authorization = assertCapability(account, METHOD_CAPABILITIES.correctRelease);
+    if (authorization.roleId !== 'SYSTEM_OWNER') {
+      throw new ApiError('SYSTEM_OWNER_REQUIRED', 'Only the System Owner may correct a release.', {
+        status: 403,
+      });
+    }
+    if (command.correctionConfirmed !== true) {
+      throw new ApiError(
+        'CORRECTION_CONFIRMATION_REQUIRED',
+        'Confirm the compensating correction before posting it.',
+      );
+    }
+    const releaseConfirmationId = requiredText(
+      command.releaseConfirmationId,
+      'releaseConfirmationId',
+      100,
+    );
+    const quantity = positiveNumber(command.quantity, 'quantity');
+    const reason = requiredText(command.reason, 'reason', 500);
+    const confirmation = await db
+      .prepare(
+        `SELECT confirmation.*, request.owner_committee_id, request.requester_account_id,
+                line.requested_quantity, line.released_quantity, line.status AS line_status,
+                ledger.id AS original_ledger_id
+         FROM release_confirmations confirmation
+         JOIN requests request ON request.id = confirmation.request_id
+         JOIN request_lines line ON line.id = confirmation.request_line_id
+         JOIN inventory_ledger ledger ON ledger.idempotency_key = confirmation.idempotency_key
+         WHERE confirmation.id = ?1 AND ledger.related_entity_type = 'RELEASE'
+         LIMIT 1`,
+      )
+      .bind(releaseConfirmationId)
+      .first();
+    if (!confirmation) {
+      throw new ApiError('RELEASE_CONFIRMATION_NOT_FOUND', 'The release confirmation was not found.', {
+        status: 404,
+      });
+    }
+    assertEntityScope(account, {
+      committeeId: confirmation.owner_committee_id,
+      ownerAccountId: confirmation.requester_account_id,
+    });
+    const corrected = await db
+      .prepare(
+        `SELECT COALESCE(SUM(quantity), 0) AS quantity
+         FROM release_corrections
+         WHERE release_confirmation_id = ?1`,
+      )
+      .bind(releaseConfirmationId)
+      .first();
+    const correctable = Number(confirmation.quantity) - Number(corrected?.quantity ?? 0);
+    if (quantity > correctable || quantity > Number(confirmation.released_quantity)) {
+      throw new ApiError(
+        'CORRECTION_QUANTITY_CONFLICT',
+        'The correction exceeds the unreversed release quantity.',
+        { status: 409 },
+      );
+    }
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes: ['RELEASE_CONFIRMATION_PHOTO'],
+      relatedEntityIds: [confirmation.request_id],
+    });
+    const mutation = await replay(db, 'correctRelease', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const correctionId = createId('RLC');
+    const transactionId = createId('LED');
+    const reservationId = createId('RSV');
+    const timestamp = nowIso();
+    const nextReleased = Number(confirmation.released_quantity) - quantity;
+    const nextStatus = nextReleased <= 0 ? 'READY_TO_RELEASE' : 'PARTIALLY_RELEASED';
+    const result = {
+      correctionId,
+      id: correctionId,
+      releaseId: confirmation.release_group_id || confirmation.id,
+      releaseConfirmationId,
+      transactionId,
+      reservationId,
+      quantity,
+      status: 'POSTED',
+      lineStatus: nextStatus,
+      remainingReleasedQuantity: nextReleased,
+      correlationId,
+    };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO inventory_ledger (
+             id, created_at, transaction_type, direction, item_id, quantity, unit,
+             signed_quantity, related_entity_type, related_entity_id, request_id,
+             event_id, actor_account_id, idempotency_key, reversal_of, status, notes
+           ) VALUES (?1, ?2, 'RELEASE_CORRECTION', 'REVERSAL', ?3, ?4, ?5, ?4,
+             'RELEASE_CORRECTION', ?6, ?7, ?8, ?9, ?10, ?11, 'POSTED', ?12)`,
+        )
+        .bind(
+          transactionId,
+          timestamp,
+          confirmation.item_id,
+          quantity,
+          confirmation.unit,
+          correctionId,
+          confirmation.request_id,
+          confirmation.event_id,
+          account.id,
+          `${mutation.key}:ledger`,
+          confirmation.original_ledger_id,
+          reason,
+        ),
+      db
+        .prepare(
+          `INSERT INTO reservations (
+             id, item_id, quantity, unit, request_line_id, lending_ticket_id,
+             status, idempotency_key, cleared_at, clear_reason, notes,
+             created_at, updated_at, created_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, NULL, 'ACTIVE', ?6, NULL, '', ?7, ?8, ?8, ?9)`,
+        )
+        .bind(
+          reservationId,
+          confirmation.item_id,
+          quantity,
+          confirmation.unit,
+          confirmation.request_line_id,
+          `${mutation.key}:reservation`,
+          `Compensating reservation for ${correctionId}.`,
+          timestamp,
+          account.id,
+        ),
+      db
+        .prepare(
+          `INSERT INTO release_corrections (
+             id, release_group_id, release_confirmation_id, quantity, reason,
+             evidence_id, ledger_transaction_id, corrected_by, corrected_at,
+             idempotency_key, status
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, 'POSTED')`,
+        )
+        .bind(
+          correctionId,
+          confirmation.release_group_id || confirmation.id,
+          releaseConfirmationId,
+          quantity,
+          reason,
+          evidenceId,
+          transactionId,
+          account.id,
+          timestamp,
+          mutation.key,
+        ),
+      db
+        .prepare(
+          `UPDATE request_lines
+           SET released_quantity = released_quantity - ?2,
+               status = ?3,
+               updated_at = ?4
+           WHERE id = ?1 AND released_quantity >= ?2`,
+        )
+        .bind(confirmation.request_line_id, quantity, nextStatus, timestamp),
+      db
+        .prepare("UPDATE requests SET status = 'PARTIALLY_RELEASED', updated_at = ?2 WHERE id = ?1")
+        .bind(confirmation.request_id, timestamp),
+      historyStatement(db, {
+        entityType: 'REQUEST_LINE',
+        entityId: confirmation.request_line_id,
+        previousStatus: confirmation.line_status,
+        newStatus: nextStatus,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason,
+        metadata: {
+          correctionId,
+          releaseId: confirmation.release_group_id || confirmation.id,
+          quantity,
+          transactionId,
+        },
+      }),
+      auditStatement(db, {
+        action: 'RELEASE_CORRECTED',
+        entityType: 'RELEASE_CORRECTION',
+        entityId: correctionId,
+        accountId: account.id,
+        correlationId,
+        after: {
+          releaseId: confirmation.release_group_id || confirmation.id,
+          releaseConfirmationId,
+          quantity,
+          transactionId,
+          reason,
+        },
+      }),
+      idempotencyStatement(db, 'correctRelease', mutation, account.id, result),
+      ...revisionStatements(db, ['release', 'request', 'inventory']),
+    ];
+    let outcomes;
+    try {
+      outcomes = await db.batch(statements);
+    } catch (error) {
+      if (String(error?.message ?? '').includes('release correction state conflict')) {
+        throw new ApiError(
+          'CORRECTION_STATE_CONFLICT',
+          'The release changed before the correction could be posted.',
+          { status: 409 },
+        );
+      }
+      throw error;
+    }
+    if (Number(outcomes[3]?.meta?.changes ?? 0) !== 1) {
+      throw new ApiError(
+        'CORRECTION_STATE_CONFLICT',
+        'The release changed before the correction could be posted.',
+        { status: 409 },
+      );
+    }
+    return result;
+  }
+
   async function receiveEntity({ account, command, correlationId, kind }) {
     const method = kind === 'RESTOCK' ? 'receiveRestock' : 'receiveDeliverable';
     assertCapability(account, METHOD_CAPABILITIES[method]);
@@ -4053,7 +4769,13 @@ export function createD1OperationalService({
       committeeId: scopeRecord?.committee_id,
       ownerAccountId: scopeRecord?.owner_account_id,
     });
-    const evidenceId = await requireStoredEvidence(command);
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes:
+        kind === 'RESTOCK'
+          ? ['RESTOCK_RECEIPT', 'RESTOCK_INVOICE']
+          : ['DELIVERABLE_RECEIPT', 'DELIVERABLE_DELIVERY_PROOF'],
+      relatedEntityIds: [entityId],
+    });
     const mutation = await replay(db, method, command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const requested = Number(kind === 'RESTOCK' ? entity.requested_quantity : entity.quantity_requested);
@@ -4315,7 +5037,9 @@ export function createD1OperationalService({
     approveLendingTicket,
     confirmLendingHandoff,
     confirmReturn,
+    uploadEvidence,
     confirmRelease,
+    correctRelease,
     receiveRestock: (context) => receiveEntity({ ...context, kind: 'RESTOCK' }),
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     postCycleCountAdjustment,

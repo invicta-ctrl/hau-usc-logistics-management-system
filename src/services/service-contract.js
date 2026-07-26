@@ -23,6 +23,7 @@ export const SERVICE_METHODS = Object.freeze([
   'transitionRestock',
   'receiveRestock',
   'confirmRelease',
+  'correctRelease',
   'transferEventItem',
   'finalizeEvidence',
   'postEmergencyIssue',

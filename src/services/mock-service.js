@@ -1700,6 +1700,88 @@ export class MockService {
     );
   }
 
+  correctRelease(command) {
+    return this._run(
+      command,
+      'CORRECT_RELEASE',
+      async (state, tx) => {
+        requirePermission(state, 'release');
+        if (String(state.role ?? '').toUpperCase() !== 'SYSTEM_OWNER')
+          throw new AppError('SYSTEM_OWNER_REQUIRED', 'Only the System Owner may correct a release.');
+        if (command.correctionConfirmed !== true)
+          throw new AppError(
+            'CORRECTION_CONFIRMATION_REQUIRED',
+            'Confirm the compensating correction before posting it.',
+          );
+        const release = state.releaseRecords.find((row) => row.id === command.releaseConfirmationId);
+        if (!release)
+          throw new AppError('RELEASE_CONFIRMATION_NOT_FOUND', 'The release confirmation was not found.');
+        const quantity = positiveNumber(command.quantity);
+        const prior = (state.releaseCorrections ?? [])
+          .filter((row) => row.releaseConfirmationId === release.id)
+          .reduce((sum, row) => sum + Number(row.quantity), 0);
+        if (quantity > Number(release.quantity) - prior)
+          throw new AppError(
+            'CORRECTION_QUANTITY_CONFLICT',
+            'The correction exceeds the unreversed release quantity.',
+          );
+        const line = state.requestLines.find((row) => row.id === release.requestLineId);
+        if (!line || quantity > Number(line.releasedQuantity ?? 0))
+          throw new AppError('CORRECTION_STATE_CONFLICT', 'The release line changed before correction.');
+        const transactionId = appendLedger(state, {
+          type: 'RELEASE_CORRECTION',
+          direction: 'IN',
+          quantity,
+          itemId: line.itemId,
+          relatedEntityId: release.id,
+          idempotencyKey: `${tx.key}:ledger`,
+          actor: tx.actor,
+          note: requiredText(command.reason, 'reason', 'Correction reason'),
+          correlationId: tx.correlationId,
+        });
+        line.releasedQuantity = Number(line.releasedQuantity ?? 0) - quantity;
+        line.status = line.releasedQuantity > 0 ? 'PARTIALLY_RELEASED' : 'READY_TO_RELEASE';
+        state.reservations.push({
+          id: allocateId(state, 'RSV'),
+          itemId: line.itemId,
+          quantity,
+          unit: line.unit,
+          requestLineId: line.id,
+          status: 'ACTIVE',
+          idempotencyKey: `${tx.key}:reservation`,
+          createdAt: now(),
+          updatedAt: now(),
+          createdBy: tx.actor,
+        });
+        const correctionId = allocateId(state, 'RLC');
+        state.releaseCorrections ??= [];
+        state.releaseCorrections.push({
+          id: correctionId,
+          releaseGroupId: release.id,
+          releaseConfirmationId: release.id,
+          quantity,
+          reason: command.reason,
+          evidenceId: command.evidenceId || null,
+          transactionId,
+          correctedBy: tx.actor,
+          correctedAt: now(),
+          status: 'POSTED',
+        });
+        return {
+          entityType: 'RELEASE_CORRECTION',
+          entityId: correctionId,
+          correctionId,
+          releaseId: release.id,
+          releaseConfirmationId: release.id,
+          transactionId,
+          quantity,
+          status: 'POSTED',
+        };
+      },
+      { views: ['release', 'inventory', 'overview', 'requests'], shared: true },
+    );
+  }
+
   transferEventItem(command) {
     return this._run(
       command,

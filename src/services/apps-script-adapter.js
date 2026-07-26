@@ -42,6 +42,7 @@ const METHODS = Object.freeze({
   receiveRestock: 'api_receiveRestock',
   receiveDeliverable: 'api_receiveDeliverable',
   confirmRelease: 'api_confirmRelease',
+  correctRelease: 'api_correctRelease',
   transferEventItemToInventory: 'api_transferEventItemToInventory',
   uploadEvidence: 'api_uploadEvidence',
   getAuditTimeline: 'api_getAuditTimeline',

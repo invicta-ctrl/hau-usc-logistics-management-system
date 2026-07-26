@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '21' },
+    database: { connected: true, schemaVersion: '22' },
   });
 
   await page.goto('/');
@@ -246,7 +246,9 @@ test('shared shell exposes the protected roster surface only to the System Owner
   await ownerPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await ownerPage.getByRole('button', { name: 'Sign in' }).click();
   await navigateToAdminView(ownerPage, 'referenceAdmin');
-  const rosterControl = ownerPage.getByRole('button', { name: /Identity roster/iu });
+  const rosterControl = ownerPage.getByRole('button', {
+    name: /USC Officer and Staff Directory/iu,
+  });
   await expect(rosterControl).toBeVisible();
   await rosterControl.click();
   await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
@@ -258,7 +260,9 @@ test('shared shell exposes the protected roster surface only to the System Owner
   await adminPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await adminPage.getByRole('button', { name: 'Sign in' }).click();
   await navigateToAdminView(adminPage, 'referenceAdmin');
-  await expect(adminPage.getByRole('button', { name: /Identity roster/iu })).toBeHidden();
+  await expect(
+    adminPage.getByRole('button', { name: /USC Officer and Staff Directory/iu }),
+  ).toBeHidden();
   await expect(adminPage.locator('[data-identity-roster]')).toBeHidden();
 
   await Promise.all([ownerPage.close(), adminPage.close()]);
@@ -1646,8 +1650,9 @@ test('requester portals keep request and lending records self-scoped', async () 
   }
 });
 
-test('D1 request split, allocation, release, and lending lifecycle preserve retry safety', async ({
+test('D1 request split, allocation, release, correction, and lending lifecycle preserve retry safety', async ({
   request,
+  baseURL,
 }) => {
   const csrfToken = await login(request, 'LOCAL.DIRECTOR');
   const splitGroupId = 'SPLIT-LOCAL-E2E';
@@ -1715,6 +1720,19 @@ test('D1 request split, allocation, release, and lending lifecycle preserve retr
   expect(reserveReplay.status()).toBe(200);
   expect((await reserveReplay.json()).reservationId).toBe((await reserved.json()).reservationId);
 
+  const unconfiguredEvidence = await mutate(request, csrfToken, 'uploadEvidence', {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    originalFileName: 'synthetic-release.png',
+    mimeType: 'image/png',
+    base64: btoa('synthetic-release-evidence'),
+    relatedEntityType: 'RELEASE_REQUEST',
+    relatedEntityId: requestId,
+    requestId,
+    clientRequestId: 'local-e2e-release-evidence-unconfigured',
+  });
+  expect(unconfiguredEvidence.status()).toBe(503);
+  expect((await unconfiguredEvidence.json()).code).toBe('EVIDENCE_STORE_NOT_CONFIGURED');
+
   const releaseCommand = {
     requestId,
     recipientConfirmed: true,
@@ -1726,14 +1744,86 @@ test('D1 request split, allocation, release, and lending lifecycle preserve retr
   };
   const released = await mutate(request, csrfToken, 'confirmRelease', releaseCommand);
   expect(released.status()).toBe(200);
+  const releaseResult = await released.json();
   const releaseReplay = await mutate(request, csrfToken, 'confirmRelease', releaseCommand);
   expect(releaseReplay.status()).toBe(200);
-  expect((await releaseReplay.json()).releaseId).toBe((await released.json()).releaseId);
+  expect((await releaseReplay.json()).releaseId).toBe(releaseResult.releaseId);
   const duplicateRelease = await mutate(request, csrfToken, 'confirmRelease', {
     ...releaseCommand,
     clientRequestId: 'local-e2e-release-duplicate',
   });
   expect(duplicateRelease.status()).toBe(409);
+  const deniedCorrection = await mutate(request, csrfToken, 'correctRelease', {
+    releaseConfirmationId: releaseResult.releaseId,
+    quantity: 1,
+    reason: 'Synthetic owner-only correction denial.',
+    correctionConfirmed: true,
+    clientRequestId: 'local-e2e-release-correction-denied',
+  });
+  expect(deniedCorrection.status()).toBe(403);
+  await expect(deniedCorrection.json()).resolves.toMatchObject({ code: 'SYSTEM_OWNER_REQUIRED' });
+
+  const owner = await apiRequest.newContext({ baseURL });
+  const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+  const correctionCommand = {
+    releaseConfirmationId: releaseResult.releaseId,
+    quantity: 1,
+    reason: 'Synthetic physical handoff correction.',
+    correctionConfirmed: true,
+    operationalScope: 'EVENT:EVT-LOCAL',
+    activeWorkspace: 'inventory',
+    clientRequestId: 'local-e2e-release-correction',
+  };
+  const corrected = await mutate(owner, ownerCsrf, 'correctRelease', correctionCommand);
+  expect(corrected.status()).toBe(200);
+  const correctionResult = await corrected.json();
+  expect(correctionResult).toMatchObject({
+    releaseId: releaseResult.releaseId,
+    releaseConfirmationId: releaseResult.releaseId,
+    quantity: 1,
+    status: 'POSTED',
+    lineStatus: 'PARTIALLY_RELEASED',
+  });
+  const correctionReplay = await mutate(owner, ownerCsrf, 'correctRelease', correctionCommand);
+  expect(correctionReplay.status()).toBe(200);
+  expect((await correctionReplay.json()).correctionId).toBe(correctionResult.correctionId);
+  const overCorrection = await mutate(owner, ownerCsrf, 'correctRelease', {
+    ...correctionCommand,
+    quantity: 2,
+    clientRequestId: 'local-e2e-release-correction-over',
+  });
+  expect(overCorrection.status()).toBe(409);
+  await expect(overCorrection.json()).resolves.toMatchObject({ code: 'CORRECTION_QUANTITY_CONFLICT' });
+  const releaseProjection = await owner.get(
+    '/api/releases?operationalScope=EVENT%3AEVT-LOCAL&pageSize=50',
+  );
+  expect(releaseProjection.status()).toBe(200);
+  const releaseData = (await releaseProjection.json()).data;
+  expect(releaseData.events).toEqual([
+    expect.objectContaining({ id: 'EVT-LOCAL', seriesId: 'SER-LOCAL' }),
+  ]);
+  expect(releaseData.releaseConfirmations).toEqual([
+    expect.objectContaining({
+      id: releaseResult.releaseId,
+      correctedQuantity: 1,
+      correctableQuantity: 1,
+      lineReleases: [
+        expect.objectContaining({
+          confirmationId: releaseResult.releaseId,
+          correctedQuantity: 1,
+          correctableQuantity: 1,
+        }),
+      ],
+      corrections: [
+        expect.objectContaining({
+          id: correctionResult.correctionId,
+          quantity: 1,
+          status: 'POSTED',
+        }),
+      ],
+    }),
+  ]);
+  await owner.dispose();
 
   const lending = await mutate(request, csrfToken, 'createLendingTicket', {
     clientRequestId: 'local-e2e-lending-create',

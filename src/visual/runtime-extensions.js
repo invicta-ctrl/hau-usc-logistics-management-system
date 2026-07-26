@@ -4307,6 +4307,13 @@ export function createRuntimeExtensions(options) {
     'inventory-pantry': { initial: 'I', label: 'Inventory & Pantry', purpose: 'Stock and lending', path: '/app/inventory' },
     materials: { initial: 'M', label: 'Materials & Documentation', purpose: 'Procurement and evidence', path: '/app/materials' },
   });
+  const releaseWorkspaceScopes = Object.freeze({
+    administrator: 'ALL:AUTHORIZED',
+    director: 'ALL:AUTHORIZED',
+    food: 'COMMITTEE:COM_FOOD',
+    'inventory-pantry': 'COMMITTEE:COM_INVENTORY_PANTRY',
+    materials: 'COMMITTEE:COM_MATERIALS',
+  });
 
   const isAdministrator = () =>
     ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(
@@ -4542,17 +4549,29 @@ export function createRuntimeExtensions(options) {
         </details>
       </div>`;
     header.before(internalShellBar);
-    internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', (event) => {
+    internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
       if (
         authorizedWorkspaceIds().includes(event.target.value) &&
         workspaceDefinitions[event.target.value]
       ) {
-        const target = new URL(workspaceDefinitions[event.target.value].path, location.origin);
+        const releaseRoute = location.pathname.split('/')[3] === 'release';
+        const target = new URL(
+          `${workspaceDefinitions[event.target.value].path}${releaseRoute ? '/release' : ''}`,
+          location.origin,
+        );
         target.search = location.search;
+        if (releaseRoute) target.searchParams.set('scope', releaseWorkspaceScopes[event.target.value]);
         history.pushState(history.state, '', `${target.pathname}${target.search}`);
         syncRoutedExperience();
         renderRoleExperience();
         renderInternalShell();
+        if (releaseRoute && changeOperationalScope) {
+          try {
+            await changeOperationalScope(releaseWorkspaceScopes[event.target.value]);
+          } catch (error) {
+            toast(error?.message || 'The Release Desk context could not be changed.', true);
+          }
+        }
         return;
       }
       event.target.value = workspaceForCurrentUser();

@@ -309,6 +309,15 @@ test('authenticated System Owner keeps owner identity across every workspace and
 
   await navigateToView(page, 'release');
   await expect(page.locator('#release')).toHaveClass(/active/u);
+  await expect(page).toHaveURL(/\/app\/materials\/release$/u);
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await page.reload();
+  await expect(page.locator('#release')).toHaveClass(/active/u);
+  await expect(page).toHaveURL(/\/app\/materials\/release$/u);
+  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
+  await shell.getByLabel('Workspace').selectOption('food');
+  await expect(page).toHaveURL(/\/app\/food\/release\?scope=COMMITTEE%3ACOM_FOOD$/u);
+  await expect(page.locator('#release')).toHaveClass(/active/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await navigateToView(page, 'lending');
   await expect(page.locator('[data-lending-usage]')).toBeVisible();

@@ -40,6 +40,7 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'receiveRestock',
   'receiveDeliverable',
   'confirmRelease',
+  'correctRelease',
   'transferEventItemToInventory',
   'uploadEvidence',
   'getAuditTimeline',

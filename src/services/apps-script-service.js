@@ -43,6 +43,7 @@ for (const [client, server] of Object.entries({
   transitionRestock: 'api_transitionRestock',
   receiveRestock: 'api_receiveRestock',
   confirmRelease: 'api_confirmRelease',
+  correctRelease: 'api_correctRelease',
   transferEventItem: 'api_transferEventItem',
   finalizeEvidence: 'api_finalizeEvidence',
   postEmergencyIssue: 'api_postEmergencyIssue',

@@ -284,7 +284,7 @@
       </section>
 
       <section id="release" class="view">
-        <article class="panel"><div class="panel-head"><div><h2>Active Release Tickets</h2><p>The controlled physical handoff point for accepted event requests and approved circulation tickets.</p></div><span id="releaseActiveCount" class="pill">—</span></div><div class="toolbar compact"><input id="releaseSearch" placeholder="Search request, event, item, department, or recipient"><select id="releaseSeriesFilter"><option value="ALL">All event series</option></select><select id="releaseSourceFilter"><option value="ALL">All sources</option><option value="EVENT">Event requests</option><option value="LENDING">Approved lending/consumables</option></select><button id="clearReleaseFilters" class="secondary" type="button">Clear</button></div><div id="releaseTickets" class="line-list"></div></article>
+        <article class="panel"><div class="panel-head"><div><h2>Active Release Tickets</h2><p>The controlled physical handoff point for accepted event requests and approved circulation tickets.</p></div><span id="releaseActiveCount" class="pill">—</span></div><div id="releaseScopeSummary" class="mode-note">The server-authorized operational scope filters this one shared queue across every workspace route.</div><div class="toolbar compact"><input id="releaseSearch" placeholder="Search request, event, item, department, or recipient"><select id="releaseSeriesFilter"><option value="ALL">All event series</option></select><select id="releaseSourceFilter"><option value="ALL">All sources</option><option value="EVENT">Event requests</option><option value="LENDING">Approved lending/consumables</option></select><button id="clearReleaseFilters" class="secondary" type="button">Clear</button></div><div id="releaseTickets" class="line-list"></div></article>
         <article class="panel section-gap"><div class="panel-head"><div><h2>Release History</h2><p>Completed tickets leave the active queue but remain fully traceable.</p></div><span id="releaseHistoryCount" class="pill">—</span></div><div id="releaseHistory" class="line-list"></div></article>
       </section>
 
@@ -530,7 +530,7 @@
       {id:'RM-07',order:7,title:'Pilot testing with DOL staff',status:'PLANNED',description:'Run real scenarios with a controlled group and record workflow defects.',output:'Pilot findings, fixes, and launch decision',progress:0,details:'Test desktop and mobile use, slow connections, partial releases, returns, and evidence capture.'},
       {id:'RM-08',order:8,title:'Version 1.0 launch, documentation, and reporting',status:'PLANNED',description:'Deploy the approved web app with operating guides and reporting views.',output:'Production v1.0, training guide, and reporting workflow',progress:0,details:'Include administrator handoff, backup process, change log, and end-of-term reporting.'}
     ];
-    return {version:'1.0.0',users:[CURRENT_ACTOR,{id:'USR-DOL-002',name:'Kristel Joy Cortez',role:'DOL Staff'},{id:'USR-DOL-003',name:'Zhar Paolo Dayrit',role:'Materials Committee'},{id:'USR-DOL-004',name:'Mary Rose Lapuz',role:'Food Committee'}],eventSeries,events,requests,requestLines,inventoryItems,reservations,ledgerTransactions,restockRequests,restockRecords,lendingTickets,releaseConfirmations,deliverables,canvassReferences,evidenceFiles,compositeRequests:[],compositeComponents:[],statusHistory,auditLog,roadmapMilestones,assets:{},settings:{requestPortalEnabled:true,studentIdValidation:{required:true,pattern:''}},createdAt:now,updatedAt:now};
+    return {version:'1.0.0',users:[CURRENT_ACTOR,{id:'USR-DOL-002',name:'Kristel Joy Cortez',role:'DOL Staff'},{id:'USR-DOL-003',name:'Zhar Paolo Dayrit',role:'Materials Committee'},{id:'USR-DOL-004',name:'Mary Rose Lapuz',role:'Food Committee'}],eventSeries,events,requests,requestLines,inventoryItems,reservations,ledgerTransactions,restockRequests,restockRecords,lendingTickets,releaseConfirmations,releaseCorrections:[],deliverables,canvassReferences,evidenceFiles,compositeRequests:[],compositeComponents:[],statusHistory,auditLog,roadmapMilestones,assets:{},settings:{requestPortalEnabled:true,studentIdValidation:{required:true,pattern:''}},createdAt:now,updatedAt:now};
   }
 
   /* =========================================================
@@ -671,7 +671,7 @@
   }
 
   function normalizeStateRecords(){
-    const operational=['requests','requestLines','inventoryItems','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','deliverables','canvassReferences','evidenceFiles','compositeRequests','compositeComponents','roadmapMilestones'];
+    const operational=['requests','requestLines','inventoryItems','reservations','ledgerTransactions','restockRequests','restockRecords','lendingTickets','releaseConfirmations','releaseCorrections','deliverables','canvassReferences','evidenceFiles','compositeRequests','compositeComponents','roadmapMilestones'];
     operational.forEach(name=>(state[name]||[]).forEach(record=>{record.createdAt=record.createdAt||isoNow();record.updatedAt=record.updatedAt||record.createdAt;record.createdBy=record.createdBy||'SYSTEM';record.status=record.status|| (name==='ledgerTransactions'?'POSTED':'ACTIVE');record.statusHistory=record.statusHistory||[];}));
     state.statusHistory=state.statusHistory||[];state.auditLog=state.auditLog||[];
   }

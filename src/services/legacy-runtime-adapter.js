@@ -61,8 +61,45 @@ export function createLegacyRuntimeAdapter(mockServices) {
   const mutationRequests = createMutationRequestTracker();
   const evidencePayload = async (payload, evidenceType) => {
     if (!payload.file) return payload;
-    const evidence = { ...(await fileToEvidencePayload(payload.file)), evidenceType };
-    const sanitized = { ...payload, evidence };
+    const filePayload = await fileToEvidencePayload(payload.file);
+    if (backendMode === 'apps-script') {
+      const sanitized = { ...payload, evidence: { ...filePayload, evidenceType } };
+      delete sanitized.file;
+      return sanitized;
+    }
+    const relatedEntityId =
+      payload.requestId ??
+      payload.restockId ??
+      payload.restockRequestId ??
+      payload.deliverableId ??
+      payload.lendingTicketId ??
+      'UNLINKED';
+    const relatedEntityType =
+      evidenceType === 'RELEASE_CONFIRMATION_PHOTO'
+        ? 'RELEASE_REQUEST'
+        : evidenceType.startsWith('RESTOCK_')
+          ? 'RESTOCK'
+          : evidenceType.startsWith('DELIVERABLE_')
+            ? 'DELIVERABLE'
+            : evidenceType.startsWith('LENDING_')
+              ? 'LENDING'
+              : 'SUPPORTING_RECORD';
+    const evidence = await mutationRequests.run(
+      'evidence',
+      {
+        ...filePayload,
+        evidenceType,
+        relatedEntityType,
+        relatedEntityId,
+        requestId: payload.requestId,
+        requestLineId: payload.requestLineId,
+        restockId: payload.restockId ?? payload.restockRequestId,
+        deliverableId: payload.deliverableId,
+        lendingTicketId: payload.lendingTicketId,
+      },
+      (command) => remote.uploadEvidence(command),
+    );
+    const sanitized = { ...payload, evidenceId: evidence.evidenceId };
     delete sanitized.file;
     return sanitized;
   };
@@ -277,6 +314,16 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.confirmRelease(tracked),
       );
       return { id: result.releaseId, ...result };
+    },
+    async correctRelease(payload) {
+      const command = {
+        ...(await evidencePayload(payload, 'RELEASE_CONFIRMATION_PHOTO')),
+        correctionConfirmed: true,
+      };
+      const result = await mutationRequests.run('release-correction', command, (tracked) =>
+        remote.correctRelease(tracked),
+      );
+      return { id: result.correctionId, ...result };
     },
     async receiveRestock(payload) {
       const command = await evidencePayload(

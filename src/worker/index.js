@@ -8,6 +8,7 @@ import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-r
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
+import { createGoogleDriveEvidenceStore } from '../server/evidence/google-drive-store.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
 import { createPublicAdvertisementService } from '../server/public-advertisement-service.js';
@@ -111,14 +112,19 @@ function cookies(request) {
   );
 }
 
-async function body(request) {
+async function body(request, maxBytes = 1_100_000) {
   const length = Number(request.headers.get('content-length') ?? 0);
-  if (length > 1_100_000) {
+  if (length > maxBytes) {
     throw new ApiError('PAYLOAD_TOO_LARGE', 'The request body is too large.', { status: 413 });
   }
   try {
-    return await request.json();
-  } catch {
+    const value = await request.text();
+    if (new TextEncoder().encode(value).byteLength > maxBytes) {
+      throw new ApiError('PAYLOAD_TOO_LARGE', 'The request body is too large.', { status: 413 });
+    }
+    return JSON.parse(value);
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError('INVALID_JSON', 'The request body must be valid JSON.', { status: 400 });
   }
 }
@@ -171,6 +177,20 @@ function services(env) {
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
     appVersion: env.APP_VERSION ?? '0.7.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
+    evidenceStore: createGoogleDriveEvidenceStore({
+      folderIds: {
+        ROOT: env.GOOGLE_DRIVE_ROOT_FOLDER_ID,
+        RESTOCK_RECEIPT: env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID,
+        CANVASS: env.GOOGLE_DRIVE_CANVASS_FOLDER_ID,
+        DELIVERABLE: env.GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID,
+        RELEASE: env.GOOGLE_DRIVE_RELEASE_FOLDER_ID,
+        LENDING: env.GOOGLE_DRIVE_LENDING_FOLDER_ID,
+      },
+      serviceAccountEmail:
+        env.GOOGLE_EVIDENCE_SERVICE_ACCOUNT_EMAIL ?? env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+      serviceAccountPrivateKey:
+        env.GOOGLE_EVIDENCE_PRIVATE_KEY ?? env.GOOGLE_ROSTER_PRIVATE_KEY,
+    }),
   });
   const publicRequests = createPublicRequestService({
     db: env.DB,
@@ -606,7 +626,6 @@ async function handleApi(request, env, requestId) {
 
     const method = url.pathname.slice('/api/'.length);
     if (method && !method.includes('/') && request.method === 'POST') {
-      const command = await body(request);
       const capability = operations.capabilityForMethod(method);
       if (!capability) {
         throw new ApiError('OPERATION_NOT_FOUND', 'The requested API operation was not found.', {
@@ -614,6 +633,7 @@ async function handleApi(request, env, requestId) {
         });
       }
       const actor = await authorize(request, auth, capability, { mutation: true });
+      const command = await body(request, method === 'uploadEvidence' ? 14_100_000 : 1_100_000);
       const result = await operations.call(method, {
         account: actor.account,
         command,

@@ -10,6 +10,7 @@ export const BOOTSTRAP_COLLECTIONS = Object.freeze([
   'restockRecords',
   'lendingTickets',
   'releaseConfirmations',
+  'releaseCorrections',
   'deliverables',
   'canvassReferences',
   'evidenceFiles',
