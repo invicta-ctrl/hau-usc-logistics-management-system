@@ -25,7 +25,11 @@
       "migrations_table": "d1_migrations"
     }
   ],
-  "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-local-assets" }],
+  "r2_buckets": [
+    { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-local-assets" },
+    { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-local-evidence" }
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
   "vars": {
     "ENVIRONMENT": "DEVELOPMENT",
     "APP_VERSION": "0.7.0",
@@ -52,7 +56,11 @@
           "migrations_table": "d1_migrations"
         }
       ],
-      "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-staging-assets" }],
+      "r2_buckets": [
+        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-staging-assets" },
+        { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-staging-evidence" }
+      ],
+      "triggers": { "crons": ["*/5 * * * *"] },
       "vars": {
         "ENVIRONMENT": "STAGING",
         "APP_VERSION": "0.7.0",
@@ -79,7 +87,11 @@
           "migrations_table": "d1_migrations"
         }
       ],
-      "r2_buckets": [{ "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-production-assets" }],
+      "r2_buckets": [
+        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-production-assets" },
+        { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-production-evidence" }
+      ],
+      "triggers": { "crons": ["*/5 * * * *"] },
       "vars": {
         "ENVIRONMENT": "PRODUCTION",
         "APP_VERSION": "0.7.0",

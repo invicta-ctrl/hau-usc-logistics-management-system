@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '22' },
+    database: { connected: true, schemaVersion: '23' },
   });
 
   await page.goto('/');
@@ -107,9 +107,7 @@ test('System Owner receives every module and a server-validated operational scop
       role: 'SYSTEM_OWNER',
       authorization: { roleId: 'SYSTEM_OWNER', scopeMode: 'ALL' },
     },
-    navigation: expect.arrayContaining([
-      expect.objectContaining({ id: 'release', enabled: true }),
-    ]),
+    navigation: expect.arrayContaining([expect.objectContaining({ id: 'release', enabled: true })]),
     operationalContext: {
       selected: { value: 'COMMITTEE:COM_FOOD', kind: 'COMMITTEE', id: 'COM_FOOD' },
     },
@@ -150,9 +148,9 @@ test('System Owner receives every module and a server-validated operational scop
   expect(locationModule.status()).toBe(200);
   const locationData = await locationModule.json();
   expect(locationData.data.inventoryItems.length).toBeGreaterThan(0);
-  expect(
-    locationData.data.inventoryItems.every((item) => item.storageLocation === 'Synthetic Storage'),
-  ).toBe(true);
+  expect(locationData.data.inventoryItems.every((item) => item.storageLocation === 'Synthetic Storage')).toBe(
+    true,
+  );
   const eventModule = await owner.post('/api/getBootstrapModule', {
     data: {
       module: 'request',
@@ -260,9 +258,7 @@ test('shared shell exposes the protected roster surface only to the System Owner
   await adminPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await adminPage.getByRole('button', { name: 'Sign in' }).click();
   await navigateToAdminView(adminPage, 'referenceAdmin');
-  await expect(
-    adminPage.getByRole('button', { name: /USC Officer and Staff Directory/iu }),
-  ).toBeHidden();
+  await expect(adminPage.getByRole('button', { name: /USC Officer and Staff Directory/iu })).toBeHidden();
   await expect(adminPage.locator('[data-identity-roster]')).toBeHidden();
 
   await Promise.all([ownerPage.close(), adminPage.close()]);
@@ -644,9 +640,7 @@ test('Materials queue projects canonical deliverables and fails closed across co
       committeeId: 'COM_MATERIALS',
       items: expect.any(Array),
     });
-    const projected = materialsQueueBody.items.find(
-      (item) => item.deliverableId === 'DEL-LOCAL-001',
-    );
+    const projected = materialsQueueBody.items.find((item) => item.deliverableId === 'DEL-LOCAL-001');
     expect(projected).toMatchObject({
       deliverableId: 'DEL-LOCAL-001',
       requestId: 'REQ-LOCAL-RECEIVING',
@@ -840,9 +834,7 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
         expect.objectContaining({ id: 'administrator' }),
         expect.objectContaining({ id: 'materials' }),
       ]),
-      presets: expect.arrayContaining([
-        expect.objectContaining({ id: 'MATERIALS_OPERATOR' }),
-      ]),
+      presets: expect.arrayContaining([expect.objectContaining({ id: 'MATERIALS_OPERATOR' })]),
     });
 
     const created = await owner.post('/api/admin/access/create-account', {
@@ -1390,9 +1382,7 @@ test('Administrator UI shows department identity and a one-time server-generated
   await resetForm
     .getByLabel('Reason')
     .fill('Verify the one-time server-generated credential handoff interface.');
-  await resetForm
-    .getByRole('button', { name: 'Generate reset credential and revoke sessions' })
-    .click();
+  await resetForm.getByRole('button', { name: 'Generate reset credential and revoke sessions' }).click();
   await expect(page.getByRole('heading', { name: 'Temporary password generated' })).toBeVisible();
   await expect(page.locator('.credential-handoff')).toContainText('Access ID: DOL_2026');
   await expect(page.locator('.credential-handoff')).toContainText('Initial password: Hau!9');
@@ -1720,18 +1710,34 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(reserveReplay.status()).toBe(200);
   expect((await reserveReplay.json()).reservationId).toBe((await reserved.json()).reservationId);
 
-  const unconfiguredEvidence = await mutate(request, csrfToken, 'uploadEvidence', {
+  const evidenceBytes = new Uint8Array([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...new TextEncoder().encode('synthetic-release-evidence'),
+  ]);
+  const acceptedEvidence = await mutate(request, csrfToken, 'uploadEvidence', {
     evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
     originalFileName: 'synthetic-release.png',
     mimeType: 'image/png',
-    base64: btoa('synthetic-release-evidence'),
+    base64: btoa(String.fromCharCode(...evidenceBytes)),
     relatedEntityType: 'RELEASE_REQUEST',
     relatedEntityId: requestId,
     requestId,
-    clientRequestId: 'local-e2e-release-evidence-unconfigured',
+    clientRequestId: 'local-e2e-release-evidence-r2-primary',
   });
-  expect(unconfiguredEvidence.status()).toBe(503);
-  expect((await unconfiguredEvidence.json()).code).toBe('EVIDENCE_STORE_NOT_CONFIGURED');
+  expect(acceptedEvidence.status()).toBe(200);
+  const evidenceResult = await acceptedEvidence.json();
+  expect(evidenceResult).toMatchObject({
+    uploadStatus: 'VERIFIED',
+    backupStatus: 'PENDING',
+    message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
+  });
 
   const releaseCommand = {
     requestId,
@@ -1739,6 +1745,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
     recipientName: 'Synthetic Recipient',
     recipientRole: 'Synthetic Tester',
     department: 'Synthetic Department',
+    evidenceId: evidenceResult.evidenceId,
     lines: [{ requestLineId: stockLine.id, quantity: 2 }],
     clientRequestId: 'local-e2e-release',
   };
@@ -1765,6 +1772,21 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
 
   const owner = await apiRequest.newContext({ baseURL });
   const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+  const ownerEvidenceStatus = await owner.post('/api/owner/evidence/status', {
+    headers: { 'x-csrf-token': ownerCsrf },
+    data: {},
+  });
+  expect(ownerEvidenceStatus.status()).toBe(200);
+  await expect(ownerEvidenceStatus.json()).resolves.toMatchObject({
+    primaryR2Status: 'AVAILABLE',
+    pendingDriveBackups: expect.any(Number),
+    failedDriveBackups: expect.any(Number),
+    technicalDetails: { providerIdentifiersProtected: true },
+  });
+  const unauthorizedEvidenceStatus = await request.post('/api/owner/evidence/status', {
+    data: {},
+  });
+  expect(unauthorizedEvidenceStatus.status()).toBe(403);
   const correctionCommand = {
     releaseConfirmationId: releaseResult.releaseId,
     quantity: 1,
@@ -1794,14 +1816,10 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   });
   expect(overCorrection.status()).toBe(409);
   await expect(overCorrection.json()).resolves.toMatchObject({ code: 'CORRECTION_QUANTITY_CONFLICT' });
-  const releaseProjection = await owner.get(
-    '/api/releases?operationalScope=EVENT%3AEVT-LOCAL&pageSize=50',
-  );
+  const releaseProjection = await owner.get('/api/releases?operationalScope=EVENT%3AEVT-LOCAL&pageSize=50');
   expect(releaseProjection.status()).toBe(200);
   const releaseData = (await releaseProjection.json()).data;
-  expect(releaseData.events).toEqual([
-    expect.objectContaining({ id: 'EVT-LOCAL', seriesId: 'SER-LOCAL' }),
-  ]);
+  expect(releaseData.events).toEqual([expect.objectContaining({ id: 'EVT-LOCAL', seriesId: 'SER-LOCAL' })]);
   expect(releaseData.releaseConfirmations).toEqual([
     expect.objectContaining({
       id: releaseResult.releaseId,

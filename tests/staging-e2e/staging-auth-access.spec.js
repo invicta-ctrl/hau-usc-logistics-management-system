@@ -82,8 +82,7 @@ test('deployed staging Materials workspace projects its canonical queue and shar
 
   const sessionResponse = page.waitForResponse(
     (response) =>
-      response.request().method() === 'GET' &&
-      new URL(response.url()).pathname === '/api/auth/session',
+      response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
   );
   await page.goto('/app/materials');
   const browserSession = await (await sessionResponse).json();
@@ -124,7 +123,9 @@ test('deployed staging Materials workspace projects its canonical queue and shar
   }
 
   await expect(panel.getByRole('heading', { name: 'Traceable materials pipeline' })).toBeVisible();
-  await expect(panel).toContainText(`${queue.items.length} scoped deliverable${queue.items.length === 1 ? '' : 's'}`);
+  await expect(panel).toContainText(
+    `${queue.items.length} scoped deliverable${queue.items.length === 1 ? '' : 's'}`,
+  );
   if (queue.items.length === 0) {
     await expect(panel).toContainText('No Materials work is in the current authorized scope.');
   } else {
@@ -155,14 +156,13 @@ test('deployed staging Materials workspace projects its canonical queue and shar
   await expect(page.locator('[data-proc-tab="receiving"]')).toHaveClass(/active/u);
   await page.goto('/app/materials?scope=COMMITTEE%3ACOM_MATERIALS');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator('#roleExperiencePanel [data-materials-destination="materials-release"]')
-    .last()
-    .click();
+  await page.locator('#roleExperiencePanel [data-materials-destination="materials-release"]').last().click();
   await expect(page.locator('#release')).toHaveClass(/active/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .poll(() =>
+      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    )
     .toBeLessThanOrEqual(1);
 });
 
@@ -198,8 +198,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '22',
-        latestMigration: '0022_shared_release_desk.sql',
+        schemaVersion: '23',
+        latestMigration: '0023_hybrid_evidence_storage.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -271,8 +271,7 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
     const refreshedSessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.reload();
     ownerCsrf = (await (await refreshedSessionResponse).json()).csrfToken;
@@ -281,9 +280,7 @@ test('deployed staging authentication and Access Management remain operational',
     await shell.getByLabel('Workspace').selectOption('administrator');
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
 
-    const adminControlCenter = page.locator(
-      '#roleExperiencePanel[data-role-experience="administrator"]',
-    );
+    const adminControlCenter = page.locator('#roleExperiencePanel[data-role-experience="administrator"]');
     await expect(adminControlCenter).toBeVisible();
     await expect(
       adminControlCenter.getByRole('heading', { name: 'Administrator Control Center' }),
@@ -298,9 +295,7 @@ test('deployed staging authentication and Access Management remain operational',
       'Receiving',
       'Evidence status',
     ]) {
-      await expect(
-        adminControlCenter.getByRole('button', { name: new RegExp(name, 'u') }),
-      ).toBeVisible();
+      await expect(adminControlCenter.getByRole('button', { name: new RegExp(name, 'u') })).toBeVisible();
     }
     await adminControlCenter.getByRole('button', { name: /Environment health/u }).click();
     await expect(page.locator('[data-admin-operational-health]')).toBeVisible();
@@ -311,18 +306,13 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page).toHaveURL(/\/app\/director\?scope=COMMITTEE%3ACOM_FOOD$/u);
     const directorSessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.reload();
     ownerCsrf = (await (await directorSessionResponse).json()).csrfToken;
     await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-    const directorWorkspace = page.locator(
-      '#roleExperiencePanel[data-role-experience="director"]',
-    );
-    await expect(
-      directorWorkspace.getByRole('heading', { name: 'Executive Overview' }),
-    ).toBeVisible();
+    const directorWorkspace = page.locator('#roleExperiencePanel[data-role-experience="director"]');
+    await expect(directorWorkspace.getByRole('heading', { name: 'Executive Overview' })).toBeVisible();
     for (const name of [
       'Decision Queue',
       'Event Planning',
@@ -346,8 +336,7 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page).toHaveURL(/\/app\/food\?scope=COMMITTEE%3ACOM_FOOD$/u);
     const foodSessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.reload();
     ownerCsrf = (await (await foodSessionResponse).json()).csrfToken;
@@ -366,10 +355,7 @@ test('deployed staging authentication and Access Management remain operational',
         foodWorkspace.locator(`.role-experience-actions [data-food-destination="${destination}"]`),
       ).toContainText(name);
     }
-    await foodWorkspace
-      .locator('[data-food-destination="food-workflow-reference"]')
-      .last()
-      .click();
+    await foodWorkspace.locator('[data-food-destination="food-workflow-reference"]').last().click();
     const foodReference = foodWorkspace.locator('[data-food-workflow-reference]');
     await expect(foodReference).toContainText('10 business days');
     await expect(foodReference).toContainText('5 business days');
@@ -384,8 +370,7 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.locator('[data-proc-tab="receiving"]')).toHaveClass(/active/u);
     const foodReleaseSessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.goto('/app/food?scope=COMMITTEE%3ACOM_FOOD');
     ownerCsrf = (await (await foodReleaseSessionResponse).json()).csrfToken;
@@ -396,13 +381,10 @@ test('deployed staging authentication and Access Management remain operational',
     await shell.getByLabel('Operational scope').selectOption('COMMITTEE:COM_INVENTORY_PANTRY');
     await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_INVENTORY_PANTRY/u);
     await shell.getByLabel('Workspace').selectOption('inventory-pantry');
-    await expect(page).toHaveURL(
-      /\/app\/inventory\/release\?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY$/u,
-    );
+    await expect(page).toHaveURL(/\/app\/inventory\/release\?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY$/u);
     const inventorySessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.reload();
     ownerCsrf = (await (await inventorySessionResponse).json()).csrfToken;
@@ -411,12 +393,8 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page.locator('#release')).toHaveClass(/active/u);
     await page.goto('/app/inventory?scope=COMMITTEE%3ACOM_INVENTORY_PANTRY');
     await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-    const inventoryWorkspace = page.locator(
-      '#roleExperiencePanel[data-role-experience="inventory-pantry"]',
-    );
-    await expect(
-      inventoryWorkspace.getByRole('heading', { name: 'Inventory Overview' }),
-    ).toBeVisible();
+    const inventoryWorkspace = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
+    await expect(inventoryWorkspace.getByRole('heading', { name: 'Inventory Overview' })).toBeVisible();
     for (const [destination, name] of [
       ['inventory-management', 'Inventory Management'],
       ['inventory-pantry-stock', 'Pantry'],
@@ -428,9 +406,7 @@ test('deployed staging authentication and Access Management remain operational',
       ['inventory-alerts', 'Condition & Stock Alerts'],
     ]) {
       await expect(
-        inventoryWorkspace.locator(
-          `.role-experience-actions [data-inventory-destination="${destination}"]`,
-        ),
+        inventoryWorkspace.locator(`.role-experience-actions [data-inventory-destination="${destination}"]`),
       ).toContainText(name);
     }
     const inventoryModuleResponse = await ownerRequest.post('/api/getBootstrapModule', {
@@ -461,10 +437,7 @@ test('deployed staging authentication and Access Management remain operational',
         availableToPromise: expect.any(Number),
       }),
     );
-    await inventoryWorkspace
-      .locator('[data-inventory-destination="inventory-management"]')
-      .last()
-      .click();
+    await inventoryWorkspace.locator('[data-inventory-destination="inventory-management"]').last().click();
     await expect(page.locator('#inventory')).toHaveClass(/active/u);
     await expect(page.locator('#inventoryTable')).toContainText(inventoryItem.id);
     await expect(page.locator('#inventoryTable')).toContainText(
@@ -487,8 +460,7 @@ test('deployed staging authentication and Access Management remain operational',
     await expect(page).toHaveURL(/\/app\/admin\?scope=COMMITTEE%3ACOM_FOOD$/u);
     const adminSessionResponse = page.waitForResponse(
       (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/api/auth/session',
+        response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
     );
     await page.reload();
     ownerCsrf = (await (await adminSessionResponse).json()).csrfToken;
@@ -739,11 +711,7 @@ test('deployed staging Advanced Access Management assigns and enforces effective
       credential: { accessId: targetAccessId, temporaryPassword: expect.stringMatching(/^Hau!9/u) },
     });
 
-    const starter = await login(
-      targetRequest,
-      targetAccessId,
-      createdResult.credential.temporaryPassword,
-    );
+    const starter = await login(targetRequest, targetAccessId, createdResult.credential.temporaryPassword);
     expect(starter.state).toBe('ACTIVATION_REQUIRED');
     const activated = await targetRequest.post('/api/auth/activate', {
       headers: { 'x-csrf-token': starter.csrfToken },

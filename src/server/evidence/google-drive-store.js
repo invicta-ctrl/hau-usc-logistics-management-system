@@ -1,23 +1,18 @@
+import {
+  EVIDENCE_TYPES,
+  encodeEvidenceText,
+  evidenceFolderKey,
+  validateEvidenceBytes,
+} from './evidence-contract.js';
+
 const encoder = new TextEncoder();
-const MAX_EVIDENCE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = Object.freeze({
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'application/pdf': 'pdf',
-});
-const EVIDENCE_TYPES = Object.freeze({
-  RESTOCK_RECEIPT: Object.freeze({ code: 'RST-RCPT', folderKey: 'RESTOCK_RECEIPT' }),
-  RESTOCK_INVOICE: Object.freeze({ code: 'RST-INV', folderKey: 'RESTOCK_RECEIPT' }),
-  CANVASS_QUOTE: Object.freeze({ code: 'CAN-QUOTE', folderKey: 'CANVASS' }),
-  CANVASS_PHOTO: Object.freeze({ code: 'CAN-PHOTO', folderKey: 'CANVASS' }),
-  DELIVERABLE_RECEIPT: Object.freeze({ code: 'DEL-RCPT', folderKey: 'DELIVERABLE' }),
-  DELIVERABLE_DELIVERY_PROOF: Object.freeze({ code: 'DEL-PROOF', folderKey: 'DELIVERABLE' }),
-  RELEASE_CONFIRMATION_PHOTO: Object.freeze({ code: 'REL-PHOTO', folderKey: 'RELEASE' }),
-  LENDING_HANDOFF_PHOTO: Object.freeze({ code: 'LND-OUT', folderKey: 'LENDING' }),
-  LENDING_RETURN_PHOTO: Object.freeze({ code: 'LND-RETURN', folderKey: 'LENDING' }),
-  OTHER_SUPPORTING_DOCUMENT: Object.freeze({ code: 'OTHER', folderKey: 'ROOT' }),
-});
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_FILE_FIELDS =
+  'id,name,mimeType,size,md5Checksum,sha1Checksum,sha256Checksum,parents,appProperties,shared,trashed';
+
+function backupError(code, message, retryable = false) {
+  return Object.assign(new Error(message), { code, retryable });
+}
 
 function bytesToBase64Url(bytes) {
   let binary = '';
@@ -29,9 +24,13 @@ function pemBytes(value) {
   const body = String(value ?? '')
     .replaceAll('\\n', '\n')
     .replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/gu, '');
-  if (!body) throw Object.assign(new Error('Google evidence private key is not configured.'), {
-    code: 'EVIDENCE_STORE_NOT_CONFIGURED',
-  });
+  if (!body) {
+    throw backupError(
+      'EVIDENCE_BACKUP_NOT_CONFIGURED',
+      'The private Google Drive backup credential is not configured.',
+      true,
+    );
+  }
   return Uint8Array.from(atob(body), (character) => character.charCodeAt(0));
 }
 
@@ -42,7 +41,7 @@ async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvide
     encoder.encode(
       JSON.stringify({
         iss: email,
-        scope: 'https://www.googleapis.com/auth/drive',
+        scope: DRIVE_SCOPE,
         aud: 'https://oauth2.googleapis.com/token',
         iat: issuedAt,
         exp: issuedAt + 3600,
@@ -72,14 +71,16 @@ async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvide
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || typeof payload.access_token !== 'string') {
-    throw Object.assign(new Error('The approved private evidence store could not be authorized.'), {
-      code: 'EVIDENCE_STORE_AUTHORIZATION_FAILED',
-    });
+    throw backupError(
+      'EVIDENCE_BACKUP_AUTHORIZATION_FAILED',
+      'The private Google Drive backup could not be authorized.',
+      response.status === 408 || response.status === 429 || response.status >= 500,
+    );
   }
   return payload.access_token;
 }
 
-async function oauthRefreshToken({ clientId, clientSecret, refreshToken, fetchImpl }) {
+async function oauthAccessToken({ clientId, clientSecret, refreshToken, fetchImpl }) {
   const response = await fetchImpl('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -92,55 +93,13 @@ async function oauthRefreshToken({ clientId, clientSecret, refreshToken, fetchIm
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || typeof payload.access_token !== 'string') {
-    throw Object.assign(new Error('The approved private evidence store could not be authorized.'), {
-      code: 'EVIDENCE_STORE_AUTHORIZATION_FAILED',
-    });
+    throw backupError(
+      'EVIDENCE_BACKUP_AUTHORIZATION_FAILED',
+      'The private Google Drive backup could not be authorized.',
+      response.status === 408 || response.status === 429 || response.status >= 500,
+    );
   }
   return payload.access_token;
-}
-
-function decodeBase64(value) {
-  const base64 = String(value ?? '').replace(/^data:[^;]+;base64,/u, '');
-  if (!base64) throw Object.assign(new Error('The uploaded file is empty.'), {
-    code: 'EMPTY_FILE',
-  });
-  try {
-    return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
-  } catch {
-    throw Object.assign(new Error('The uploaded file data is invalid.'), {
-      code: 'INVALID_FILE_DATA',
-    });
-  }
-}
-
-function matchesMimeSignature(bytes, mimeType) {
-  if (mimeType === 'image/jpeg') {
-    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
-  }
-  if (mimeType === 'image/png') {
-    return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
-      (value, index) => bytes[index] === value,
-    );
-  }
-  if (mimeType === 'image/webp') {
-    return (
-      String.fromCharCode(...bytes.slice(0, 4)) === 'RIFF' &&
-      String.fromCharCode(...bytes.slice(8, 12)) === 'WEBP'
-    );
-  }
-  if (mimeType === 'application/pdf') {
-    return String.fromCharCode(...bytes.slice(0, 5)) === '%PDF-';
-  }
-  return false;
-}
-
-function safeToken(value, fallback = 'NA') {
-  const result = String(value ?? '')
-    .normalize('NFKC')
-    .replace(/[^A-Za-z0-9_-]+/gu, '-')
-    .replace(/^-+|-+$/gu, '')
-    .slice(0, 60);
-  return result || fallback;
 }
 
 function concatenate(...chunks) {
@@ -154,20 +113,71 @@ function concatenate(...chunks) {
   return result;
 }
 
-async function sha256Hex(bytes, cryptoProvider) {
-  const digest = new Uint8Array(await cryptoProvider.subtle.digest('SHA-256', bytes));
-  return [...digest].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
 function multipartBody({ metadata, bytes, mimeType, boundary }) {
   return concatenate(
-    encoder.encode(
+    encodeEvidenceText(
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
         `--${boundary}\r\nContent-Type: ${mimeType}\r\n\r\n`,
     ),
     bytes,
-    encoder.encode(`\r\n--${boundary}--`),
+    encodeEvidenceText(`\r\n--${boundary}--`),
   );
+}
+
+function escapeDriveQuery(value) {
+  return String(value).replaceAll('\\', '\\\\').replaceAll("'", "\\'");
+}
+
+function retryableStatus(status) {
+  return status === 408 || status === 429 || status >= 500;
+}
+
+async function driveJson(fetchImpl, url, options, failureCode) {
+  const response = await fetchImpl(url, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw backupError(
+      failureCode,
+      'The private Google Drive backup operation did not complete.',
+      retryableStatus(response.status),
+    );
+  }
+  return payload;
+}
+
+function verifyDriveFile(file, expected) {
+  if (
+    !file ||
+    typeof file.id !== 'string' ||
+    Number(file.size) !== Number(expected.sizeBytes) ||
+    file.mimeType !== expected.mimeType ||
+    !Array.isArray(file.parents) ||
+    !file.parents.includes(expected.folderId) ||
+    file.appProperties?.hauUscEvidenceVersion !== expected.idempotencyKey ||
+    file.trashed === true ||
+    file.shared === true
+  ) {
+    throw backupError(
+      'EVIDENCE_BACKUP_VERIFICATION_FAILED',
+      'The private Google Drive backup could not be verified.',
+    );
+  }
+  if (
+    typeof file.sha256Checksum === 'string' &&
+    file.sha256Checksum &&
+    file.sha256Checksum.toLowerCase() !== expected.sha256
+  ) {
+    throw backupError(
+      'EVIDENCE_BACKUP_CHECKSUM_MISMATCH',
+      'The private Google Drive backup checksum did not match the primary object.',
+    );
+  }
+  return {
+    driveFileId: file.id,
+    sizeBytes: Number(file.size),
+    providerChecksum: String(file.sha256Checksum ?? file.md5Checksum ?? ''),
+    providerChecksumType: file.sha256Checksum ? 'SHA256' : file.md5Checksum ? 'MD5' : 'UNAVAILABLE',
+  };
 }
 
 export function createGoogleDriveEvidenceStore({
@@ -183,9 +193,7 @@ export function createGoogleDriveEvidenceStore({
 } = {}) {
   const configuration = Object.freeze({
     folderIds: Object.freeze(
-      Object.fromEntries(
-        Object.entries(folderIds).map(([key, value]) => [key, String(value ?? '').trim()]),
-      ),
+      Object.fromEntries(Object.entries(folderIds).map(([key, value]) => [key, String(value ?? '').trim()])),
     ),
     oauthClientId: String(oauthClientId ?? '').trim(),
     oauthClientSecret: String(oauthClientSecret ?? ''),
@@ -194,22 +202,16 @@ export function createGoogleDriveEvidenceStore({
     serviceAccountPrivateKey: String(serviceAccountPrivateKey ?? ''),
   });
   const hasOAuthConfiguration = Boolean(
-    configuration.oauthClientId &&
-      configuration.oauthClientSecret &&
-      configuration.oauthRefreshToken,
+    configuration.oauthClientId && configuration.oauthClientSecret && configuration.oauthRefreshToken,
   );
   const hasServiceAccountConfiguration = Boolean(
     configuration.serviceAccountEmail && configuration.serviceAccountPrivateKey,
   );
   const configuredCredentials = hasOAuthConfiguration || hasServiceAccountConfiguration;
-
-  const folderFor = (evidenceType) => {
-    const definition = EVIDENCE_TYPES[evidenceType];
-    return definition ? configuration.folderIds[definition.folderKey] ?? '' : '';
-  };
+  const folderFor = (evidenceType) => configuration.folderIds[evidenceFolderKey(evidenceType)] ?? '';
   const accessToken = () =>
     hasOAuthConfiguration
-      ? oauthRefreshToken({
+      ? oauthAccessToken({
           clientId: configuration.oauthClientId,
           clientSecret: configuration.oauthClientSecret,
           refreshToken: configuration.oauthRefreshToken,
@@ -223,94 +225,99 @@ export function createGoogleDriveEvidenceStore({
           now: () => clock.now(),
         });
 
+  async function metadata(fileId, providerAccessToken) {
+    const query = new URLSearchParams({ fields: DRIVE_FILE_FIELDS });
+    return driveJson(
+      fetchImpl,
+      `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?${query}`,
+      { headers: { authorization: `Bearer ${providerAccessToken}` } },
+      'EVIDENCE_BACKUP_VERIFICATION_FAILED',
+    );
+  }
+
+  async function exactMatches(expected, providerAccessToken) {
+    const q = [
+      `'${escapeDriveQuery(expected.folderId)}' in parents`,
+      `appProperties has { key='hauUscEvidenceVersion' and value='${escapeDriveQuery(expected.idempotencyKey)}' }`,
+      'trashed = false',
+      "visibility = 'limited'",
+    ].join(' and ');
+    const query = new URLSearchParams({
+      q,
+      spaces: 'drive',
+      pageSize: '2',
+      fields: `files(${DRIVE_FILE_FIELDS})`,
+    });
+    const payload = await driveJson(
+      fetchImpl,
+      `https://www.googleapis.com/drive/v3/files?${query}`,
+      { headers: { authorization: `Bearer ${providerAccessToken}` } },
+      'EVIDENCE_BACKUP_LOOKUP_FAILED',
+    );
+    return Array.isArray(payload.files) ? payload.files : [];
+  }
+
   return Object.freeze({
+    scope: DRIVE_SCOPE,
+
     status(evidenceType) {
       return {
-        configured: Boolean(
-          EVIDENCE_TYPES[evidenceType] &&
-            folderFor(evidenceType) &&
-            configuredCredentials,
-        ),
+        configured: Boolean(EVIDENCE_TYPES[evidenceType] && folderFor(evidenceType) && configuredCredentials),
       };
     },
 
-    async prepare({ evidenceId, command, timestamp = new Date(clock.now()).toISOString() }) {
-      const evidenceType = String(command?.evidenceType ?? '').trim();
-      const definition = EVIDENCE_TYPES[evidenceType];
-      if (!definition) {
-        throw Object.assign(new Error('The evidence type is not supported.'), {
-          code: 'UNSUPPORTED_EVIDENCE_TYPE',
-        });
-      }
-      const mimeType = String(command?.mimeType ?? '').trim().toLowerCase();
-      const extension = ALLOWED_MIME_TYPES[mimeType];
-      if (!extension) {
-        throw Object.assign(new Error('Allowed files are JPG, PNG, WEBP, and PDF.'), {
-          code: 'UNSUPPORTED_FILE_TYPE',
-        });
-      }
-      const originalExtension = String(command?.originalFileName ?? '')
-        .split('.')
-        .at(-1)
-        .toLowerCase()
-        .replace('jpeg', 'jpg');
-      if (originalExtension !== extension) {
-        throw Object.assign(new Error('File extension does not match its MIME type.'), {
-          code: 'MIME_EXTENSION_MISMATCH',
-        });
-      }
-      const bytes = decodeBase64(command?.base64 ?? command?.data);
-      if (!bytes.byteLength) {
-        throw Object.assign(new Error('The uploaded file is empty.'), { code: 'EMPTY_FILE' });
-      }
-      if (bytes.byteLength > MAX_EVIDENCE_BYTES) {
-        throw Object.assign(new Error('The maximum upload size is 10 MB.'), {
-          code: 'FILE_TOO_LARGE',
-          details: { maxBytes: MAX_EVIDENCE_BYTES },
-        });
-      }
-      if (!matchesMimeSignature(bytes, mimeType)) {
-        throw Object.assign(new Error('The file contents do not match the declared file type.'), {
-          code: 'FILE_SIGNATURE_MISMATCH',
-        });
-      }
+    async backup({
+      evidenceId,
+      evidenceType,
+      normalizedFileName,
+      mimeType,
+      sizeBytes,
+      sha256,
+      bytes,
+      idempotencyKey,
+      existingDriveFileId,
+    }) {
       const folderId = folderFor(evidenceType);
       if (!folderId || !configuredCredentials) {
-        throw Object.assign(new Error('The approved private evidence store is not configured.'), {
-          code: 'EVIDENCE_STORE_NOT_CONFIGURED',
-        });
-      }
-      const relatedEntityId = safeToken(command?.relatedEntityId);
-      const secondaryId = safeToken(
-        command?.secondaryId ?? command?.itemId ?? command?.eventItemId ?? command?.requestLineId,
-      );
-      const stamp = timestamp.replace(/\D/gu, '').slice(0, 14);
-      const normalizedFileName =
-        `${definition.code}_${relatedEntityId}_${secondaryId}_${stamp}_${safeToken(evidenceId)}.${extension}`.slice(
-          0,
-          180,
+        throw backupError(
+          'EVIDENCE_BACKUP_NOT_CONFIGURED',
+          'The private Google Drive backup is not configured.',
+          true,
         );
-      return {
+      }
+      const validated = await validateEvidenceBytes(
+        { bytes, mimeType, expectedSize: sizeBytes, expectedSha256: sha256 },
+        cryptoProvider,
+      );
+      const expected = {
         evidenceId,
-        evidenceType,
-        evidenceLabel: `${evidenceType.replaceAll('_', ' ')} | ${relatedEntityId} | ${timestamp}`,
-        normalizedFileName,
-        mimeType,
-        sizeBytes: bytes.byteLength,
-        sha256: await sha256Hex(bytes, cryptoProvider),
-        relatedEntityType: String(command?.relatedEntityType ?? '').trim() || 'SUPPORTING_RECORD',
-        relatedEntityId: String(command?.relatedEntityId ?? '').trim(),
-        notes: String(command?.notes ?? '').trim().slice(0, 500),
         folderId,
-        bytes,
+        idempotencyKey,
+        mimeType,
+        sha256: validated.sha256,
+        sizeBytes: validated.bytes.byteLength,
       };
-    },
-
-    async upload(prepared) {
       const providerAccessToken = await accessToken();
+      if (existingDriveFileId) {
+        return verifyDriveFile(await metadata(existingDriveFileId, providerAccessToken), expected);
+      }
+      const matches = await exactMatches(expected, providerAccessToken);
+      if (matches.length > 1) {
+        throw backupError(
+          'EVIDENCE_BACKUP_DUPLICATE_CONFLICT',
+          'Multiple backup copies require owner reconciliation.',
+        );
+      }
+      if (matches.length === 1) return verifyDriveFile(matches[0], expected);
+
       const boundary = `hau-usc-${cryptoProvider.randomUUID?.() ?? String(clock.now())}`;
-      const response = await fetchImpl(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      const query = new URLSearchParams({
+        uploadType: 'multipart',
+        fields: DRIVE_FILE_FIELDS,
+      });
+      const uploaded = await driveJson(
+        fetchImpl,
+        `https://www.googleapis.com/upload/drive/v3/files?${query}`,
         {
           method: 'POST',
           headers: {
@@ -319,33 +326,65 @@ export function createGoogleDriveEvidenceStore({
           },
           body: multipartBody({
             metadata: {
-              name: prepared.normalizedFileName,
-              parents: [prepared.folderId],
-              description: prepared.evidenceLabel,
+              name: normalizedFileName,
+              mimeType,
+              parents: [folderId],
+              description: `HAU-USC governed evidence backup ${evidenceId}`,
+              appProperties: {
+                hauUscEvidenceVersion: idempotencyKey,
+                hauUscEvidenceId: evidenceId,
+              },
+              copyRequiresWriterPermission: true,
             },
-            bytes: prepared.bytes,
-            mimeType: prepared.mimeType,
+            bytes: validated.bytes,
+            mimeType,
             boundary,
           }),
         },
+        'EVIDENCE_BACKUP_UPLOAD_FAILED',
       );
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || typeof payload.id !== 'string' || !payload.id) {
-        throw Object.assign(new Error('Evidence could not be uploaded. You may retry safely.'), {
-          code: 'EVIDENCE_STORE_UPLOAD_FAILED',
-        });
-      }
-      return { privateStorageReference: payload.id };
+      const file = await metadata(uploaded.id, providerAccessToken);
+      return verifyDriveFile(file, expected);
     },
 
-    async remove(privateStorageReference) {
-      if (!privateStorageReference) return false;
+    async download({ driveFileId, evidenceId, evidenceType, mimeType, sizeBytes, sha256, idempotencyKey }) {
+      const folderId = folderFor(evidenceType);
+      if (!folderId || !configuredCredentials || !driveFileId) {
+        throw backupError(
+          'EVIDENCE_BACKUP_NOT_AVAILABLE',
+          'The private Google Drive recovery copy is not available.',
+        );
+      }
       const providerAccessToken = await accessToken();
+      const expected = {
+        evidenceId,
+        folderId,
+        idempotencyKey,
+        mimeType,
+        sha256,
+        sizeBytes,
+      };
+      verifyDriveFile(await metadata(driveFileId, providerAccessToken), expected);
       const response = await fetchImpl(
-        `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(privateStorageReference)}`,
-        { method: 'DELETE', headers: { authorization: `Bearer ${providerAccessToken}` } },
+        `https://www.googleapis.com/drive/v3/files/${encodeURIComponent(driveFileId)}?alt=media`,
+        { headers: { authorization: `Bearer ${providerAccessToken}` } },
       );
-      return response.ok || response.status === 404;
+      if (!response.ok) {
+        throw backupError(
+          'EVIDENCE_BACKUP_DOWNLOAD_FAILED',
+          'The private Google Drive recovery copy could not be read.',
+          retryableStatus(response.status),
+        );
+      }
+      return validateEvidenceBytes(
+        {
+          bytes: new Uint8Array(await response.arrayBuffer()),
+          mimeType,
+          expectedSize: sizeBytes,
+          expectedSha256: sha256,
+        },
+        cryptoProvider,
+      );
     },
   });
 }

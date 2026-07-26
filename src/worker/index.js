@@ -9,6 +9,11 @@ import { createD1AccessManagementRepository } from '../server/d1/access-manageme
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { createGoogleDriveEvidenceStore } from '../server/evidence/google-drive-store.js';
+import {
+  createHybridEvidenceService,
+  EvidenceServiceError,
+} from '../server/evidence/hybrid-evidence-service.js';
+import { createR2EvidenceStore } from '../server/evidence/r2-evidence-store.js';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../server/environment.js';
 import { createCorrelationId, structuredLog } from '../server/observability.js';
 import { createPublicAdvertisementService } from '../server/public-advertisement-service.js';
@@ -18,10 +23,7 @@ import { createPublicLendingService } from '../server/public-lending-service.js'
 import { createPublicRequestService } from '../server/public-request-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
-import {
-  createIdentityRosterService,
-  IdentityRosterError,
-} from '../server/identity-roster/service.js';
+import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -172,28 +174,32 @@ function services(env) {
     passwordKdf,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
   });
+  const evidenceBackup = createGoogleDriveEvidenceStore({
+    folderIds: {
+      ROOT: env.GOOGLE_DRIVE_ROOT_FOLDER_ID,
+      RESTOCK_RECEIPT: env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID,
+      CANVASS: env.GOOGLE_DRIVE_CANVASS_FOLDER_ID,
+      DELIVERABLE: env.GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID,
+      RELEASE: env.GOOGLE_EVIDENCE_RELEASE_FOLDER_ID,
+      LENDING: env.GOOGLE_DRIVE_LENDING_FOLDER_ID,
+    },
+    oauthClientId: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_ID,
+    oauthClientSecret: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET,
+    oauthRefreshToken: env.GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN,
+    serviceAccountEmail: env.GOOGLE_EVIDENCE_SERVICE_ACCOUNT_EMAIL ?? env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+    serviceAccountPrivateKey: env.GOOGLE_EVIDENCE_PRIVATE_KEY ?? env.GOOGLE_ROSTER_PRIVATE_KEY,
+  });
+  const evidence = createHybridEvidenceService({
+    db: env.DB,
+    primaryStore: createR2EvidenceStore({ bucket: env.EVIDENCE_ASSETS }),
+    backupStore: evidenceBackup,
+  });
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
     appVersion: env.APP_VERSION ?? '0.7.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
-    evidenceStore: createGoogleDriveEvidenceStore({
-      folderIds: {
-        ROOT: env.GOOGLE_DRIVE_ROOT_FOLDER_ID,
-        RESTOCK_RECEIPT: env.GOOGLE_DRIVE_RECEIPTS_FOLDER_ID,
-        CANVASS: env.GOOGLE_DRIVE_CANVASS_FOLDER_ID,
-        DELIVERABLE: env.GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID,
-        RELEASE: env.GOOGLE_DRIVE_RELEASE_FOLDER_ID,
-        LENDING: env.GOOGLE_DRIVE_LENDING_FOLDER_ID,
-      },
-      oauthClientId: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_ID,
-      oauthClientSecret: env.GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET,
-      oauthRefreshToken: env.GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN,
-      serviceAccountEmail:
-        env.GOOGLE_EVIDENCE_SERVICE_ACCOUNT_EMAIL ?? env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
-      serviceAccountPrivateKey:
-        env.GOOGLE_EVIDENCE_PRIVATE_KEY ?? env.GOOGLE_ROSTER_PRIVATE_KEY,
-    }),
+    evidenceStore: evidence,
   });
   const publicRequests = createPublicRequestService({
     db: env.DB,
@@ -240,6 +246,7 @@ function services(env) {
     access,
     advertisementAdmin,
     auth,
+    evidence,
     lendingUsage,
     identityRoster,
     operations,
@@ -290,6 +297,7 @@ async function health(env, requestId, readiness = false) {
         d1: Boolean(schema),
         staticAssets: Boolean(env.ASSETS),
         brandAssets: Boolean(env.BRAND_ASSETS),
+        evidenceAssets: Boolean(env.EVIDENCE_ASSETS),
         protectedConfiguration: !runtimeIssues.some((issue) => issue.endsWith('_MISSING')),
       },
       ...(readiness
@@ -300,12 +308,13 @@ async function health(env, requestId, readiness = false) {
   );
 }
 
-async function handleApi(request, env, requestId) {
+async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
   const {
     access,
     advertisementAdmin,
     auth,
+    evidence,
     lendingUsage,
     identityRoster,
     operations,
@@ -539,6 +548,56 @@ async function handleApi(request, env, requestId) {
       throw new IdentityRosterError('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
     }
 
+    if (url.pathname.startsWith('/api/owner/evidence/') && request.method === 'POST') {
+      const mutation = url.pathname !== '/api/owner/evidence/status';
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation })).account;
+      const command = await body(request);
+      if (url.pathname === '/api/owner/evidence/status') {
+        return json({ ok: true, ...(await evidence.systemStatus({ account: actor })) });
+      }
+      if (url.pathname === '/api/owner/evidence/process') {
+        const backup = await evidence.processBackups({
+          limit: command.limit,
+          evidenceId: command.evidenceId,
+          correlationId: requestId,
+        });
+        const reconciliation = await evidence.reconcilePrimary({
+          limit: command.limit,
+          correlationId: requestId,
+        });
+        return json({
+          ok: true,
+          backup,
+          reconciliation,
+        });
+      }
+      if (url.pathname === '/api/owner/evidence/restore') {
+        return json({
+          ok: true,
+          ...(await evidence.restore({
+            account: actor,
+            evidenceId: command.evidenceId,
+            reason: command.reason,
+            correlationId: requestId,
+          })),
+        });
+      }
+      if (url.pathname === '/api/owner/evidence/archive') {
+        return json({
+          ok: true,
+          ...(await evidence.archive({
+            account: actor,
+            evidenceId: command.evidenceId,
+            reason: command.reason,
+            correlationId: requestId,
+          })),
+        });
+      }
+      throw new ApiError('EVIDENCE_OWNER_ROUTE_NOT_FOUND', 'The evidence owner route was not found.', {
+        status: 404,
+      });
+    }
+
     if (url.pathname === '/api/identity-roster/self' && request.method === 'POST') {
       const actor = (await authorize(request, auth, CAPABILITIES.VIEW_REQUEST)).account;
       return json({ ok: true, ...(await identityRoster.selfProfile({ actor })) });
@@ -642,6 +701,30 @@ async function handleApi(request, env, requestId) {
         command,
         correlationId: requestId,
       });
+      if (method === 'uploadEvidence' && !result.duplicate) {
+        executionContext?.waitUntil(
+          evidence
+            .processBackups({
+              limit: 1,
+              evidenceId: result.evidenceId,
+              correlationId: requestId,
+            })
+            .catch((error) => {
+              structuredLog({
+                level: 'error',
+                event: 'EVIDENCE_BACKUP_BACKGROUND_FAILED',
+                correlationId: requestId,
+                env,
+                details: {
+                  result: 'FAILED',
+                  errorCode: String(error?.code ?? 'EVIDENCE_BACKUP_BACKGROUND_FAILED')
+                    .replace(/[^A-Z0-9_]/giu, '_')
+                    .slice(0, 80),
+                },
+              });
+            }),
+        );
+      }
       return json({ ok: true, ...result });
     }
 
@@ -654,10 +737,12 @@ async function handleApi(request, env, requestId) {
       error instanceof ApiError ||
       error instanceof AuthError ||
       error instanceof AccessManagementError ||
+      error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError;
     const status =
       error instanceof ApiError ||
       error instanceof AccessManagementError ||
+      error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError
         ? error.status
         : error instanceof AuthError
@@ -692,7 +777,7 @@ async function handleApi(request, env, requestId) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, executionContext) {
     const url = new URL(request.url);
     const brandKey = BRAND_ASSET_KEYS[url.pathname];
     if (brandKey) return brandAsset(request, env, brandKey);
@@ -729,7 +814,7 @@ export default {
     if (url.pathname.startsWith('/api/')) {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();
-      const response = await handleApi(request, env, requestId);
+      const response = await handleApi(request, env, requestId, executionContext);
       response.headers.set('x-correlation-id', requestId);
       structuredLog({
         event: 'API_REQUEST_COMPLETED',
@@ -746,5 +831,30 @@ export default {
       return response;
     }
     return env.ASSETS.fetch(request);
+  },
+  async scheduled(_event, env, executionContext) {
+    const evidence = services(env).evidence;
+    executionContext.waitUntil(
+      Promise.all([
+        evidence.processBackups({ limit: 10, correlationId: 'scheduled-evidence-backup' }),
+        evidence.reconcilePrimary({
+          limit: 10,
+          correlationId: 'scheduled-evidence-reconciliation',
+        }),
+      ]).catch((error) => {
+        structuredLog({
+          level: 'error',
+          event: 'EVIDENCE_BACKUP_SCHEDULE_FAILED',
+          correlationId: 'scheduled-evidence-backup',
+          env,
+          details: {
+            result: 'FAILED',
+            errorCode: String(error?.code ?? 'EVIDENCE_BACKUP_SCHEDULE_FAILED')
+              .replace(/[^A-Z0-9_]/giu, '_')
+              .slice(0, 80),
+          },
+        });
+      }),
+    );
   },
 };

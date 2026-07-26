@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createGoogleDriveEvidenceStore } from '../../src/server/evidence/google-drive-store.js';
 
+const SHA256 = '07'.repeat(32);
+
 function cryptoFixture() {
   return {
     randomUUID: () => 'synthetic-boundary',
@@ -12,8 +14,8 @@ function cryptoFixture() {
   };
 }
 
-function pngFixtureBase64() {
-  const bytes = new Uint8Array([
+function pngFixture() {
+  return new Uint8Array([
     0x89,
     0x50,
     0x4e,
@@ -24,184 +26,203 @@ function pngFixtureBase64() {
     0x0a,
     ...new TextEncoder().encode('synthetic-image'),
   ]);
-  return btoa(String.fromCharCode(...bytes));
 }
 
-describe('Google Drive evidence store', () => {
-  it('prepares and uploads release evidence only to the configured private folder', async () => {
+function metadata(id = 'private-drive-file-reference') {
+  return {
+    id,
+    name: 'REL-PHOTO_SYNTHETIC.png',
+    mimeType: 'image/png',
+    size: String(pngFixture().byteLength),
+    md5Checksum: 'synthetic-md5',
+    sha256Checksum: SHA256,
+    parents: ['private-release-folder'],
+    appProperties: {
+      hauUscEvidenceVersion: `EVD-SYNTHETIC:${SHA256}`,
+      hauUscEvidenceId: 'EVD-SYNTHETIC',
+    },
+    shared: false,
+    trashed: false,
+  };
+}
+
+function backupInput(overrides = {}) {
+  return {
+    evidenceId: 'EVD-SYNTHETIC',
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    normalizedFileName: 'REL-PHOTO_SYNTHETIC.png',
+    mimeType: 'image/png',
+    sizeBytes: pngFixture().byteLength,
+    sha256: SHA256,
+    bytes: pngFixture(),
+    idempotencyKey: `EVD-SYNTHETIC:${SHA256}`,
+    ...overrides,
+  };
+}
+
+function store(fetchImpl, cryptoProvider = cryptoFixture()) {
+  return createGoogleDriveEvidenceStore({
+    folderIds: { RELEASE: 'private-release-folder' },
+    oauthClientId: 'synthetic-client-id',
+    oauthClientSecret: 'synthetic-client-secret',
+    oauthRefreshToken: 'synthetic-refresh-token',
+    fetchImpl,
+    cryptoProvider,
+    clock: { now: () => Date.parse('2026-07-26T08:15:30.000Z') },
+  });
+}
+
+describe('Google Drive evidence backup', () => {
+  it('creates one private verified copy and reuses it after duplicate delivery', async () => {
     const calls = [];
+    let uploaded = false;
     const fetchImpl = vi.fn(async (url, options = {}) => {
-      calls.push({ url: String(url), options });
-      if (String(url).includes('oauth2.googleapis.com')) {
-        return new Response(JSON.stringify({ access_token: 'synthetic-access-token' }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
+      const target = String(url);
+      calls.push({ url: target, options });
+      if (target === 'https://oauth2.googleapis.com/token') {
+        return Response.json({ access_token: 'synthetic-oauth-access-token' });
       }
-      return new Response(JSON.stringify({ id: 'private-drive-file-reference' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      });
+      if (target.includes('/upload/drive/v3/files')) {
+        uploaded = true;
+        return Response.json({ id: 'private-drive-file-reference' });
+      }
+      if (target.includes('/drive/v3/files/private-drive-file-reference')) {
+        return Response.json(metadata());
+      }
+      if (target.includes('/drive/v3/files?')) {
+        return Response.json({ files: uploaded ? [metadata()] : [] });
+      }
+      throw new Error(`Unexpected URL: ${target}`);
     });
-    const store = createGoogleDriveEvidenceStore({
-      folderIds: { RELEASE: 'private-release-folder' },
-      serviceAccountEmail: 'evidence-reader@example.invalid',
-      serviceAccountPrivateKey: 'AQ==',
-      fetchImpl,
-      cryptoProvider: cryptoFixture(),
-      clock: { now: () => Date.parse('2026-07-26T08:15:30.000Z') },
+    const evidenceBackup = store(fetchImpl);
+
+    expect(evidenceBackup.scope).toBe('https://www.googleapis.com/auth/drive.file');
+    expect(evidenceBackup.status('RELEASE_CONFIRMATION_PHOTO')).toEqual({ configured: true });
+    expect(evidenceBackup.status('RESTOCK_RECEIPT')).toEqual({ configured: false });
+    await expect(evidenceBackup.backup(backupInput())).resolves.toMatchObject({
+      driveFileId: 'private-drive-file-reference',
+      sizeBytes: pngFixture().byteLength,
+      providerChecksum: SHA256,
+      providerChecksumType: 'SHA256',
+    });
+    await expect(evidenceBackup.backup(backupInput())).resolves.toMatchObject({
+      driveFileId: 'private-drive-file-reference',
     });
 
-    expect(store.status('RELEASE_CONFIRMATION_PHOTO')).toEqual({ configured: true });
-    expect(store.status('RESTOCK_RECEIPT')).toEqual({ configured: false });
-    const prepared = await store.prepare({
-      evidenceId: 'EVD-SYNTHETIC',
-      command: {
-        evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-        originalFileName: 'recipient-confirmation.png',
-        mimeType: 'image/png',
-        base64: pngFixtureBase64(),
-        relatedEntityType: 'RELEASE_REQUEST',
-        relatedEntityId: 'REQ-SYNTHETIC',
-        secondaryId: 'LINE-SYNTHETIC',
-      },
-    });
-    expect(prepared).toMatchObject({
-      evidenceId: 'EVD-SYNTHETIC',
-      evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-      mimeType: 'image/png',
-      sizeBytes: 23,
-      relatedEntityType: 'RELEASE_REQUEST',
-      relatedEntityId: 'REQ-SYNTHETIC',
-      folderId: 'private-release-folder',
-    });
-    expect(prepared.normalizedFileName).toMatch(
-      /^REL-PHOTO_REQ-SYNTHETIC_LINE-SYNTHETIC_20260726081530_EVD-SYNTHETIC\.png$/u,
-    );
-
-    await expect(store.upload(prepared)).resolves.toEqual({
-      privateStorageReference: 'private-drive-file-reference',
-    });
-    expect(calls).toHaveLength(2);
-    expect(calls[0].url).toBe('https://oauth2.googleapis.com/token');
-    expect(String(calls[0].options.body)).toContain(
-      'urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer',
-    );
-    expect(calls[1].url).toContain('upload/drive/v3/files');
-    expect(calls[1].options.headers.authorization).toBe('Bearer synthetic-access-token');
-    const uploadBody = new TextDecoder().decode(calls[1].options.body);
+    const uploadCalls = calls.filter((entry) => entry.url.includes('/upload/drive/v3/files'));
+    expect(uploadCalls).toHaveLength(1);
+    const uploadBody = new TextDecoder().decode(uploadCalls[0].options.body);
     expect(uploadBody).toContain('private-release-folder');
-    expect(uploadBody).toContain('REL-PHOTO_REQ-SYNTHETIC_LINE-SYNTHETIC');
-    expect(uploadBody).toContain('synthetic-image');
+    expect(uploadBody).toContain('hauUscEvidenceVersion');
+    expect(uploadBody).toContain(`EVD-SYNTHETIC:${SHA256}`);
+    expect(uploadBody).not.toContain('"writersCanShare"');
+    expect(calls.some((entry) => entry.url.includes('/permissions'))).toBe(false);
+    const lookup = calls.find((entry) => entry.url.includes('/drive/v3/files?'));
+    const lookupQuery = new URL(lookup.url).searchParams.get('q');
+    expect(lookupQuery).toContain("appProperties has { key='hauUscEvidenceVersion'");
+    expect(lookupQuery).toContain("'private-release-folder' in parents");
+    expect(lookupQuery).toContain("visibility = 'limited'");
   });
 
-  it('prefers a user OAuth refresh token for a private My Drive folder', async () => {
+  it('downloads a verified recovery copy without accepting a caller-supplied folder or file', async () => {
     const calls = [];
-    const fetchImpl = vi.fn(async (url, options = {}) => {
-      calls.push({ url: String(url), options });
-      if (String(url).includes('oauth2.googleapis.com')) {
-        return new Response(JSON.stringify({ access_token: 'synthetic-oauth-access-token' }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        });
+    const fetchImpl = vi.fn(async (url) => {
+      const target = String(url);
+      calls.push(target);
+      if (target === 'https://oauth2.googleapis.com/token') {
+        return Response.json({ access_token: 'synthetic-oauth-access-token' });
       }
-      return new Response(JSON.stringify({ id: 'private-oauth-drive-reference' }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      });
+      if (target.includes('alt=media')) {
+        return new Response(pngFixture(), { headers: { 'content-type': 'image/png' } });
+      }
+      if (target.includes('/drive/v3/files/private-drive-file-reference')) {
+        return Response.json(metadata());
+      }
+      throw new Error(`Unexpected URL: ${target}`);
     });
+    const evidenceBackup = store(fetchImpl);
+
+    await expect(
+      evidenceBackup.download(backupInput({ driveFileId: 'private-drive-file-reference', bytes: undefined })),
+    ).resolves.toMatchObject({ sha256: SHA256, mimeType: 'image/png' });
+    expect(calls.some((url) => url.includes('private-drive-file-reference?alt=media'))).toBe(true);
+  });
+
+  it('uses the narrow Drive scope through the service-account fallback when OAuth is absent', async () => {
     const cryptoProvider = cryptoFixture();
-    const store = createGoogleDriveEvidenceStore({
+    let tokenRequest;
+    const fetchImpl = vi.fn(async (url, options = {}) => {
+      const target = String(url);
+      if (target === 'https://oauth2.googleapis.com/token') {
+        tokenRequest = options;
+        return Response.json({ access_token: 'synthetic-service-account-token' });
+      }
+      if (target.includes('/drive/v3/files?')) {
+        return Response.json({ files: [metadata()] });
+      }
+      throw new Error(`Unexpected URL: ${target}`);
+    });
+    const evidenceBackup = createGoogleDriveEvidenceStore({
       folderIds: { RELEASE: 'private-release-folder' },
-      oauthClientId: 'synthetic-client-id',
-      oauthClientSecret: 'synthetic-client-secret',
-      oauthRefreshToken: 'synthetic-refresh-token',
-      serviceAccountEmail: 'unused-service-account@example.invalid',
-      serviceAccountPrivateKey: 'AQ==',
+      serviceAccountEmail: 'synthetic-service-account@example.invalid',
+      serviceAccountPrivateKey: '-----BEGIN PRIVATE KEY-----\nAQID\n-----END PRIVATE KEY-----',
       fetchImpl,
       cryptoProvider,
       clock: { now: () => Date.parse('2026-07-26T08:15:30.000Z') },
     });
-    const prepared = await store.prepare({
-      evidenceId: 'EVD-OAUTH',
-      command: {
-        evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-        originalFileName: 'recipient-confirmation.png',
-        mimeType: 'image/png',
-        base64: pngFixtureBase64(),
-        relatedEntityType: 'RELEASE_REQUEST',
-        relatedEntityId: 'REQ-OAUTH',
-        secondaryId: 'LINE-OAUTH',
-      },
-    });
 
-    await expect(store.upload(prepared)).resolves.toEqual({
-      privateStorageReference: 'private-oauth-drive-reference',
+    await expect(evidenceBackup.backup(backupInput())).resolves.toMatchObject({
+      driveFileId: 'private-drive-file-reference',
     });
-    expect(calls).toHaveLength(2);
-    expect(calls[0].url).toBe('https://oauth2.googleapis.com/token');
-    const tokenBody = new URLSearchParams(String(calls[0].options.body));
-    expect(Object.fromEntries(tokenBody)).toEqual({
-      client_id: 'synthetic-client-id',
-      client_secret: 'synthetic-client-secret',
-      refresh_token: 'synthetic-refresh-token',
-      grant_type: 'refresh_token',
-    });
-    expect(calls[1].url).toContain('upload/drive/v3/files');
-    expect(calls[1].options.headers.authorization).toBe('Bearer synthetic-oauth-access-token');
-    expect(cryptoProvider.subtle.importKey).not.toHaveBeenCalled();
+    expect(cryptoProvider.subtle.importKey).toHaveBeenCalledWith(
+      'pkcs8',
+      new Uint8Array([1, 2, 3]),
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    expect(cryptoProvider.subtle.sign).toHaveBeenCalled();
+    expect(tokenRequest.body.get('grant_type')).toBe('urn:ietf:params:oauth:grant-type:jwt-bearer');
+    const assertionParts = tokenRequest.body.get('assertion').split('.');
+    const claim = JSON.parse(atob(assertionParts[1].replaceAll('-', '+').replaceAll('_', '/')));
+    expect(claim.scope).toBe('https://www.googleapis.com/auth/drive.file');
+    expect(tokenRequest.body.has('client_secret')).toBe(false);
   });
 
-  it('fails closed for an unsupported type, mismatched extension, signature, or absent folder', async () => {
-    const store = createGoogleDriveEvidenceStore({
+  it('fails closed for a shared, mismatched, duplicate, or unconfigured backup', async () => {
+    const sharedStore = store(async (url) => {
+      const target = String(url);
+      if (target === 'https://oauth2.googleapis.com/token') {
+        return Response.json({ access_token: 'synthetic-oauth-access-token' });
+      }
+      if (target.includes('/drive/v3/files?')) {
+        return Response.json({ files: [{ ...metadata(), shared: true }] });
+      }
+      throw new Error(`Unexpected URL: ${target}`);
+    });
+    await expect(sharedStore.backup(backupInput())).rejects.toMatchObject({
+      code: 'EVIDENCE_BACKUP_VERIFICATION_FAILED',
+    });
+
+    const duplicateStore = store(async (url) => {
+      const target = String(url);
+      if (target === 'https://oauth2.googleapis.com/token') {
+        return Response.json({ access_token: 'synthetic-oauth-access-token' });
+      }
+      return Response.json({ files: [metadata('one'), metadata('two')] });
+    });
+    await expect(duplicateStore.backup(backupInput())).rejects.toMatchObject({
+      code: 'EVIDENCE_BACKUP_DUPLICATE_CONFLICT',
+    });
+
+    const unconfigured = createGoogleDriveEvidenceStore({
       folderIds: {},
-      serviceAccountEmail: 'evidence-reader@example.invalid',
-      serviceAccountPrivateKey: 'AQ==',
+      fetchImpl: vi.fn(),
       cryptoProvider: cryptoFixture(),
     });
-    await expect(
-      store.prepare({
-        evidenceId: 'EVD-1',
-        command: {
-          evidenceType: 'UNKNOWN',
-          originalFileName: 'proof.png',
-          mimeType: 'image/png',
-          base64: btoa('proof'),
-        },
-      }),
-    ).rejects.toMatchObject({ code: 'UNSUPPORTED_EVIDENCE_TYPE' });
-    await expect(
-      store.prepare({
-        evidenceId: 'EVD-2',
-        command: {
-          evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-          originalFileName: 'proof.pdf',
-          mimeType: 'image/png',
-          base64: btoa('proof'),
-        },
-      }),
-    ).rejects.toMatchObject({ code: 'MIME_EXTENSION_MISMATCH' });
-    await expect(
-      store.prepare({
-        evidenceId: 'EVD-3',
-        command: {
-          evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-          originalFileName: 'proof.png',
-          mimeType: 'image/png',
-          base64: btoa('proof'),
-        },
-      }),
-    ).rejects.toMatchObject({ code: 'FILE_SIGNATURE_MISMATCH' });
-    await expect(
-      store.prepare({
-        evidenceId: 'EVD-4',
-        command: {
-          evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
-          originalFileName: 'proof.png',
-          mimeType: 'image/png',
-          base64: pngFixtureBase64(),
-        },
-      }),
-    ).rejects.toMatchObject({ code: 'EVIDENCE_STORE_NOT_CONFIGURED' });
+    await expect(unconfigured.backup(backupInput())).rejects.toMatchObject({
+      code: 'EVIDENCE_BACKUP_NOT_CONFIGURED',
+      retryable: true,
+    });
   });
 });

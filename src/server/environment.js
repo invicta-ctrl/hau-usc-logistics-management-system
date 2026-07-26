@@ -22,13 +22,18 @@ export function safeReleaseIdentity(env) {
 export function environmentReadinessIssues(env) {
   const identity = safeReleaseIdentity(env);
   const issues = [];
-  if (!['DEVELOPMENT', 'STAGING', 'PRODUCTION'].includes(identity.environment)) issues.push('ENVIRONMENT_INVALID');
+  if (!['DEVELOPMENT', 'STAGING', 'PRODUCTION'].includes(identity.environment))
+    issues.push('ENVIRONMENT_INVALID');
   if (identity.environment !== 'DEVELOPMENT') {
     if (!SHA.test(identity.candidateSha)) issues.push('CANDIDATE_SHA_INVALID');
     if (!VERSION.test(identity.releaseVersion)) issues.push('RELEASE_VERSION_INVALID');
     if (!env?.DB || typeof env.DB.prepare !== 'function') issues.push('D1_BINDING_MISSING');
     if (!env?.ASSETS || typeof env.ASSETS.fetch !== 'function') issues.push('ASSETS_BINDING_MISSING');
-    if (!env?.BRAND_ASSETS || typeof env.BRAND_ASSETS.get !== 'function') issues.push('R2_BRAND_ASSETS_BINDING_MISSING');
+    if (!env?.BRAND_ASSETS || typeof env.BRAND_ASSETS.get !== 'function')
+      issues.push('R2_BRAND_ASSETS_BINDING_MISSING');
+    if (!env?.EVIDENCE_ASSETS || typeof env.EVIDENCE_ASSETS.put !== 'function') {
+      issues.push('R2_EVIDENCE_ASSETS_BINDING_MISSING');
+    }
     for (const key of REQUIRED_PROTECTED_ENV) {
       if (typeof env?.[key] !== 'string' || env[key].length < 32) issues.push(`${key}_MISSING`);
     }

@@ -1,4 +1,5 @@
-const PRIVATE_KEY = /(?:authorization|cookie|password|secret|token|pepper|credential|student.?id|institution.?id|email|contact|phone|mobile|sheet|workbook|drive|database.?id|account.?id|bucket.?id|tracking.?code)/iu;
+const PRIVATE_KEY =
+  /(?:authorization|cookie|password|secret|token|pepper|credential|student.?id|institution.?id|email|contact|phone|mobile|sheet|workbook|drive|oauth|database.?id|account.?id|bucket.?id|folder.?id|file.?id|object.?key|storage.?reference|provider.?error|tracking.?code)/iu;
 const EMAIL = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/giu;
 const PHONE = /\+?\d[\d\s().-]{7,}\d/gu;
 

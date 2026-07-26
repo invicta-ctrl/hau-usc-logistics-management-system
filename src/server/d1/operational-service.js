@@ -218,7 +218,9 @@ function publicUser() {
 }
 
 const operationalOption = (kind, id, label, purpose = '') => ({
-  value: `${kind}:${String(id).toUpperCase().replace(/[^A-Z0-9_.-]+/gu, '_')}`,
+  value: `${kind}:${String(id)
+    .toUpperCase()
+    .replace(/[^A-Z0-9_.-]+/gu, '_')}`,
   kind,
   id: String(id),
   label: String(label),
@@ -254,9 +256,7 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
   const allScope = authorization.scopeMode === 'ALL';
   const committeeRestricted = allScope && authorization.committeeIds.length > 0;
   const allowedCommitteeIds = new Set(
-    allScope && !committeeRestricted
-      ? committeeRows.map((entry) => entry.id)
-      : authorization.committeeIds,
+    allScope && !committeeRestricted ? committeeRows.map((entry) => entry.id) : authorization.committeeIds,
   );
   const visibleCommittees = committeeRows.filter((entry) => allowedCommitteeIds.has(entry.id));
   const allowedEventSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
@@ -264,9 +264,7 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
   const eventRestricted = allowedEventSeriesIds.size > 0 || allowedEventIds.size > 0;
   const visibleEvents = eventRows.filter(
     (entry) =>
-      (allScope && !committeeRestricted
-        ? true
-        : allowedCommitteeIds.has(entry.owner_committee_id)) &&
+      (allScope && !committeeRestricted ? true : allowedCommitteeIds.has(entry.owner_committee_id)) &&
       (!allowedEventSeriesIds.size || allowedEventSeriesIds.has(entry.event_series_id)) &&
       (!allowedEventIds.size || allowedEventIds.has(entry.id)),
   );
@@ -287,7 +285,12 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
     ...(allScope && !boundedScope
       ? [
           operationalOption('ALL', 'AUTHORIZED', 'All authorized operations', 'Global authorized view'),
-          operationalOption('OFFICE', 'NON_EVENT', 'Office / non-event operations', 'Requests outside an event'),
+          operationalOption(
+            'OFFICE',
+            'NON_EVENT',
+            'Office / non-event operations',
+            'Requests outside an event',
+          ),
         ]
       : []),
     ...visibleCommittees.map((entry) =>
@@ -301,9 +304,7 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
     ...visibleSeries.map((entry) =>
       operationalOption('EVENT_SERIES', entry.id, entry.name, 'Approved event series'),
     ),
-    ...visibleEvents.map((entry) =>
-      operationalOption('EVENT', entry.id, entry.name, 'Approved sub-event'),
-    ),
+    ...visibleEvents.map((entry) => operationalOption('EVENT', entry.id, entry.name, 'Approved sub-event')),
   ];
   const fallback =
     options.find((entry) => entry.kind === 'ALL') ??
@@ -315,9 +316,10 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
     });
   }
   const requested = String(requestedValue ?? '').trim();
-  const selected = requested && requested.toLowerCase() !== 'current'
-    ? options.find((entry) => entry.value === requested)
-    : fallback;
+  const selected =
+    requested && requested.toLowerCase() !== 'current'
+      ? options.find((entry) => entry.value === requested)
+      : fallback;
   if (!selected) {
     throw new ApiError('OPERATIONAL_SCOPE_INVALID', 'The selected operational scope is not authorized.', {
       status: 403,
@@ -336,10 +338,7 @@ function scopedReleaseGroup(entry, linePredicate) {
     ...entry,
     lineReleases,
     corrections,
-    correctedQuantity: lineReleases.reduce(
-      (total, line) => total + Number(line.correctedQuantity ?? 0),
-      0,
-    ),
+    correctedQuantity: lineReleases.reduce((total, line) => total + Number(line.correctedQuantity ?? 0), 0),
     correctableQuantity: lineReleases.reduce(
       (total, line) => total + Number(line.correctableQuantity ?? 0),
       0,
@@ -377,7 +376,8 @@ export function filterOperationalData(data, selected) {
         .map((entry) => scopedReleaseGroup(entry, (line) => itemIds.has(line.itemId)))
         .filter((entry) => entry.lineReleases.length > 0);
     ['inventoryAssets', 'inventoryAssetInstances'].forEach((key) => {
-      if (Array.isArray(next[key])) next[key] = next[key].filter((entry) => itemIds.has(entry.item_id ?? entry.itemId));
+      if (Array.isArray(next[key]))
+        next[key] = next[key].filter((entry) => itemIds.has(entry.item_id ?? entry.itemId));
     });
     const assetIds = new Set(
       (next.inventoryAssets ?? next.inventoryAssetInstances ?? []).map((entry) => entry.id),
@@ -403,9 +403,7 @@ export function filterOperationalData(data, selected) {
     next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
     if (Array.isArray(next.releaseConfirmations))
-      next.releaseConfirmations = next.releaseConfirmations.filter((entry) =>
-        eventIds.has(entry.eventId),
-      );
+      next.releaseConfirmations = next.releaseConfirmations.filter((entry) => eventIds.has(entry.eventId));
     if (Array.isArray(next.lendingTickets)) next.lendingTickets = [];
     if (Array.isArray(next.ledgerTransactions))
       next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
@@ -420,9 +418,7 @@ export function filterOperationalData(data, selected) {
     next.requestLines = (next.requestLines ?? []).filter((entry) => entry.eventId === selected.id);
     next.deliverables = (next.deliverables ?? []).filter((entry) => entry.eventId === selected.id);
     if (Array.isArray(next.releaseConfirmations))
-      next.releaseConfirmations = next.releaseConfirmations.filter(
-        (entry) => entry.eventId === selected.id,
-      );
+      next.releaseConfirmations = next.releaseConfirmations.filter((entry) => entry.eventId === selected.id);
     if (Array.isArray(next.lendingTickets)) next.lendingTickets = [];
     if (Array.isArray(next.ledgerTransactions))
       next.ledgerTransactions = next.ledgerTransactions.filter(
@@ -432,18 +428,14 @@ export function filterOperationalData(data, selected) {
   if (selected.kind === 'OFFICE') {
     next.eventSeries = [];
     next.events = [];
-    next.requests = (next.requests ?? []).filter(
-      (entry) => !entry.eventId && !entry.eventSeriesId,
-    );
+    next.requests = (next.requests ?? []).filter((entry) => !entry.eventId && !entry.eventSeriesId);
     const requestIds = new Set(next.requests.map((entry) => entry.id));
     next.requestLines = (next.requestLines ?? []).filter((entry) => requestIds.has(entry.requestId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => requestIds.has(entry.requestId));
     if (Array.isArray(next.releaseConfirmations))
       next.releaseConfirmations = next.releaseConfirmations.filter((entry) => !entry.eventId);
     if (Array.isArray(next.ledgerTransactions))
-      next.ledgerTransactions = next.ledgerTransactions.filter(
-        (entry) => !(entry.eventId ?? entry.event_id),
-      );
+      next.ledgerTransactions = next.ledgerTransactions.filter((entry) => !(entry.eventId ?? entry.event_id));
   }
   if (Array.isArray(next.releaseConfirmations) && Array.isArray(next.releaseCorrections)) {
     const visibleConfirmationIds = new Set(
@@ -532,11 +524,7 @@ function assertBorrowerPortalAccount(account) {
 
 function assertRequesterPortalAccount(account) {
   const authorization = assertCapability(account, CAPABILITIES.REQUEST_CREATE);
-  if (
-    authorization.roleId !== 'REQUESTER' ||
-    !account.departmentId ||
-    !account.departmentDisplayName
-  ) {
+  if (authorization.roleId !== 'REQUESTER' || !account.departmentId || !account.departmentDisplayName) {
     throw new ApiError('REQUESTER_PORTAL_REQUIRED', 'This account cannot use the requester portal.', {
       status: 403,
     });
@@ -992,7 +980,7 @@ export function createD1OperationalService({
                   occurred_at, recorded_by, notes
            FROM inventory_asset_movements
            ORDER BY occurred_at DESC LIMIT 100`,
-         ),
+        ),
         ledgerTransactions: (
           await rows(
             db,
@@ -1096,13 +1084,13 @@ export function createD1OperationalService({
           eligibilityReviewedBy: row.eligibility_reviewed_by,
           eligibilityReviewedAt: row.eligibility_reviewed_at,
           assetOptions: availableAssets.map((asset) => ({
-              id: asset.id,
-              itemId: asset.item_id,
-              assetTag: asset.asset_tag,
-              serialNumber: asset.serial_number,
-              condition: asset.condition_label,
-              status: asset.lifecycle_status,
-            })),
+            id: asset.id,
+            itemId: asset.item_id,
+            assetTag: asset.asset_tag,
+            serialNumber: asset.serial_number,
+            condition: asset.condition_label,
+            status: asset.lifecycle_status,
+          })),
           history: ticketHistory
             .filter((entry) => entry.entity_id === row.id)
             .map((entry) => ({
@@ -1370,9 +1358,7 @@ export function createD1OperationalService({
   async function getMaterialsWorkQueue({ account, command = {}, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.getMaterialsWorkQueue);
     const scope = multiScopeWhere(account, {
-      committeeColumns: [
-        'COALESCE(deliverable.assigned_committee_id, request.owner_committee_id)',
-      ],
+      committeeColumns: ['COALESCE(deliverable.assigned_committee_id, request.owner_committee_id)'],
       ownerColumns: ['request.requester_account_id'],
     });
     const limit = Math.min(Math.max(Number(command.limit ?? 100), 1), 100);
@@ -1654,9 +1640,7 @@ export function createD1OperationalService({
         )
         .bind(command.restockId ?? relatedEntityId)
         .first();
-    } else if (
-      ['DELIVERABLE_RECEIPT', 'DELIVERABLE_DELIVERY_PROOF'].includes(evidenceType)
-    ) {
+    } else if (['DELIVERABLE_RECEIPT', 'DELIVERABLE_DELIVERY_PROOF'].includes(evidenceType)) {
       assertCapability(account, CAPABILITIES.FULFILL_RECEIVE);
       scopeRecord = await db
         .prepare(
@@ -1670,9 +1654,7 @@ export function createD1OperationalService({
         .first();
     } else if (['LENDING_HANDOFF_PHOTO', 'LENDING_RETURN_PHOTO'].includes(evidenceType)) {
       const capability =
-        evidenceType === 'LENDING_HANDOFF_PHOTO'
-          ? CAPABILITIES.LENDING_HANDOFF
-          : CAPABILITIES.LENDING_RETURN;
+        evidenceType === 'LENDING_HANDOFF_PHOTO' ? CAPABILITIES.LENDING_HANDOFF : CAPABILITIES.LENDING_RETURN;
       assertCapability(account, capability);
       scopeRecord = await db
         .prepare(
@@ -1741,10 +1723,14 @@ export function createD1OperationalService({
     }
     const duplicate = await db
       .prepare(
-        `SELECT id FROM evidence_metadata
-         WHERE sha256 = ?1 AND related_entity_type = ?2 AND related_entity_id = ?3
-           AND UPPER(upload_status) IN ('STORED', 'VERIFIED')
-         ORDER BY created_at LIMIT 1`,
+        `SELECT evidence.id, backup.status AS backup_status
+         FROM evidence_metadata evidence
+         LEFT JOIN evidence_backup_jobs backup ON backup.evidence_id = evidence.id
+         WHERE evidence.sha256 = ?1
+           AND evidence.related_entity_type = ?2
+           AND evidence.related_entity_id = ?3
+           AND UPPER(evidence.upload_status) IN ('STORED', 'VERIFIED')
+         ORDER BY evidence.created_at LIMIT 1`,
       )
       .bind(prepared.sha256, prepared.relatedEntityType, prepared.relatedEntityId)
       .first();
@@ -1753,7 +1739,9 @@ export function createD1OperationalService({
         evidenceId: duplicate.id,
         id: duplicate.id,
         duplicate: true,
-        uploadStatus: 'STORED',
+        uploadStatus: 'VERIFIED',
+        backupStatus: duplicate.backup_status ?? 'PENDING',
+        message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
         correlationId,
       };
       await db.batch([
@@ -1788,9 +1776,13 @@ export function createD1OperationalService({
       evidenceLabel: prepared.evidenceLabel,
       normalizedFileName: prepared.normalizedFileName,
       duplicate: false,
-      uploadStatus: 'STORED',
+      uploadStatus: 'VERIFIED',
+      backupStatus: 'PENDING',
+      message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
       correlationId,
     };
+    const backupJobId = createId('EBJ');
+    const backupIdempotencyKey = `${evidenceId}:${prepared.sha256}`;
     try {
       await db.batch([
         db
@@ -1798,8 +1790,11 @@ export function createD1OperationalService({
             `INSERT INTO evidence_metadata (
                id, evidence_type, evidence_label, normalized_file_name, mime_type,
                size_bytes, sha256, private_storage_reference, related_entity_type,
-               related_entity_id, uploaded_by, upload_status, duplicate_of, notes, created_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, 'STORED', NULL, ?12, ?13)`,
+               related_entity_id, uploaded_by, upload_status, duplicate_of, notes, created_at,
+               primary_storage_status, primary_etag, primary_version, retention_class
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11,
+                       'VERIFIED', NULL, ?12, ?13, 'VERIFIED', ?14, ?15,
+                       'HAU_USC_OPERATIONAL_EVIDENCE')`,
           )
           .bind(
             evidenceId,
@@ -1815,9 +1810,19 @@ export function createD1OperationalService({
             account.id,
             prepared.notes,
             timestamp,
+            stored.primaryEtag,
+            stored.primaryVersion,
           ),
+        db
+          .prepare(
+            `INSERT INTO evidence_backup_jobs (
+               id, evidence_id, idempotency_key, status, attempt_count, max_attempts,
+               next_attempt_at, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, 'PENDING', 0, 8, ?4, ?4, ?4)`,
+          )
+          .bind(backupJobId, evidenceId, backupIdempotencyKey, timestamp),
         auditStatement(db, {
-          action: 'EVIDENCE_STORED',
+          action: 'EVIDENCE_PRIMARY_STORED',
           entityType: 'EVIDENCE',
           entityId: evidenceId,
           accountId: account.id,
@@ -1833,14 +1838,18 @@ export function createD1OperationalService({
         ...revisionStatements(db, ['evidence']),
       ]);
     } catch (error) {
-      await evidenceStore.remove(stored.privateStorageReference).catch(() => false);
+      await evidenceStore.remove(stored.privateStorageReference, evidenceId).catch(() => false);
       if (String(error?.message ?? '').includes('evidence duplicate conflict')) {
         const existing = await db
           .prepare(
-            `SELECT id FROM evidence_metadata
-             WHERE sha256 = ?1 AND related_entity_type = ?2 AND related_entity_id = ?3
-               AND UPPER(upload_status) IN ('STORED', 'VERIFIED')
-             ORDER BY created_at LIMIT 1`,
+            `SELECT evidence.id, backup.status AS backup_status
+               FROM evidence_metadata evidence
+               LEFT JOIN evidence_backup_jobs backup ON backup.evidence_id = evidence.id
+               WHERE evidence.sha256 = ?1
+                 AND evidence.related_entity_type = ?2
+                 AND evidence.related_entity_id = ?3
+                 AND UPPER(evidence.upload_status) IN ('STORED', 'VERIFIED')
+               ORDER BY evidence.created_at LIMIT 1`,
           )
           .bind(prepared.sha256, prepared.relatedEntityType, prepared.relatedEntityId)
           .first();
@@ -1849,7 +1858,10 @@ export function createD1OperationalService({
             evidenceId: existing.id,
             id: existing.id,
             duplicate: true,
-            uploadStatus: 'STORED',
+            uploadStatus: 'VERIFIED',
+            backupStatus: existing.backup_status ?? 'PENDING',
+            message:
+              '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
             correlationId,
           };
           await db.batch([
@@ -1865,13 +1877,7 @@ export function createD1OperationalService({
                 relatedEntityId: prepared.relatedEntityId,
               },
             }),
-            idempotencyStatement(
-              db,
-              'uploadEvidence',
-              mutation,
-              account.id,
-              duplicateResult,
-            ),
+            idempotencyStatement(db, 'uploadEvidence', mutation, account.id, duplicateResult),
           ]);
           return duplicateResult;
         }
@@ -1894,11 +1900,7 @@ export function createD1OperationalService({
     });
     const evidenceId = await requireStoredEvidence(command, {
       evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
-      relatedEntityIds: [
-        link.linkedRequestLineId,
-        link.linkedDeliverableId,
-        link.linkedRestockId,
-      ],
+      relatedEntityIds: [link.linkedRequestLineId, link.linkedDeliverableId, link.linkedRestockId],
     });
     const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -2666,7 +2668,9 @@ export function createD1OperationalService({
       const description = requiredText(source.description, `lines[${index}].description`, 240);
       const custom = source.custom === true || category === REQUEST_CENTER_CATEGORIES.OTHER;
       if (!custom && !isApprovedRequestCenterChoice(category, description)) {
-        throw new ApiError('VALIDATION_FAILED', `lines[${index}] is not an approved choice.`, { status: 422 });
+        throw new ApiError('VALIDATION_FAILED', `lines[${index}] is not an approved choice.`, {
+          status: 422,
+        });
       }
       const unit = requiredText(source.unit, `lines[${index}].unit`, 40).toLowerCase();
       if (!REQUEST_CENTER_UNITS.includes(unit)) {
@@ -3543,9 +3547,7 @@ export function createD1OperationalService({
         { status: 409 },
       );
     }
-    const maximumQuantity = Number(
-      approvedItem.maximum_loan_quantity ?? approvedItem.available_to_promise,
-    );
+    const maximumQuantity = Number(approvedItem.maximum_loan_quantity ?? approvedItem.available_to_promise);
     if (
       approvedQuantity > Number(approvedItem.available_to_promise) ||
       (Number.isFinite(maximumQuantity) && approvedQuantity > maximumQuantity)
@@ -4524,11 +4526,7 @@ export function createD1OperationalService({
         'Confirm the compensating correction before posting it.',
       );
     }
-    const releaseConfirmationId = requiredText(
-      command.releaseConfirmationId,
-      'releaseConfirmationId',
-      100,
-    );
+    const releaseConfirmationId = requiredText(command.releaseConfirmationId, 'releaseConfirmationId', 100);
     const quantity = positiveNumber(command.quantity, 'quantity');
     const reason = requiredText(command.reason, 'reason', 500);
     const confirmation = await db
@@ -5075,8 +5073,13 @@ export function createD1OperationalService({
         context.command?.operationalScope,
       );
       const authorization = accountAuthorization(context.account);
-      const activeWorkspace = String(context.command?.activeWorkspace ?? '').trim().toLowerCase();
-      if (activeWorkspace && !['admin', 'director', 'food', 'inventory', 'materials'].includes(activeWorkspace)) {
+      const activeWorkspace = String(context.command?.activeWorkspace ?? '')
+        .trim()
+        .toLowerCase();
+      if (
+        activeWorkspace &&
+        !['admin', 'director', 'food', 'inventory', 'materials'].includes(activeWorkspace)
+      ) {
         throw new ApiError('OPERATIONAL_WORKSPACE_INVALID', 'The active workspace is not recognized.', {
           status: 400,
         });

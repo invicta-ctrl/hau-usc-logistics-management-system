@@ -26,37 +26,62 @@ function binding(config, collection, name) {
 function requiredEnvironment(config, expected, issues) {
   const actual = String(config.vars?.ENVIRONMENT ?? '').toUpperCase();
   if (actual !== expected) issues.push(`${expected}: vars.ENVIRONMENT must be ${expected}`);
-  if (!SHA.test(String(config.vars?.CANDIDATE_SHA ?? ''))) issues.push(`${expected}: vars.CANDIDATE_SHA must be an exact 40-character commit SHA`);
+  if (!SHA.test(String(config.vars?.CANDIDATE_SHA ?? '')))
+    issues.push(`${expected}: vars.CANDIDATE_SHA must be an exact 40-character commit SHA`);
   if (config.preview_urls === true) issues.push(`${expected}: preview_urls must not be enabled`);
   if (!config.observability?.logs?.enabled) issues.push(`${expected}: Workers Logs must be enabled`);
   if (!config.observability?.traces?.enabled) issues.push(`${expected}: Workers Traces must be enabled`);
-  if (expected === 'STAGING' && config.observability?.logs?.head_sampling_rate !== 1) issues.push('STAGING: log sampling must be 1 during acceptance');
+  if (expected === 'STAGING' && config.observability?.logs?.head_sampling_rate !== 1)
+    issues.push('STAGING: log sampling must be 1 during acceptance');
   const d1 = binding(config, 'd1_databases', 'DB');
-  const r2 = binding(config, 'r2_buckets', 'BRAND_ASSETS');
-  if (!d1 || PLACEHOLDER.test(String(d1.database_name)) || PLACEHOLDER.test(String(d1.database_id))) issues.push(`${expected}: exact D1 DB binding is required`);
-  if (!r2 || PLACEHOLDER.test(String(r2.bucket_name))) issues.push(`${expected}: exact BRAND_ASSETS R2 binding is required`);
+  const brandR2 = binding(config, 'r2_buckets', 'BRAND_ASSETS');
+  const evidenceR2 = binding(config, 'r2_buckets', 'EVIDENCE_ASSETS');
+  if (!d1 || PLACEHOLDER.test(String(d1.database_name)) || PLACEHOLDER.test(String(d1.database_id)))
+    issues.push(`${expected}: exact D1 DB binding is required`);
+  if (!brandR2 || PLACEHOLDER.test(String(brandR2.bucket_name)))
+    issues.push(`${expected}: exact BRAND_ASSETS R2 binding is required`);
+  if (!evidenceR2 || PLACEHOLDER.test(String(evidenceR2.bucket_name)))
+    issues.push(`${expected}: exact EVIDENCE_ASSETS R2 binding is required`);
   for (const key of Object.keys(config.vars ?? {})) {
-    if (PROTECTED_NAMES.has(key)) issues.push(`${expected}: ${key} must be a protected secret, not a plaintext var`);
+    if (PROTECTED_NAMES.has(key))
+      issues.push(`${expected}: ${key} must be a protected secret, not a plaintext var`);
   }
-  return { d1, r2 };
+  return { d1, brandR2, evidenceR2 };
 }
 
 export function validateEnvironmentSeparation(staging, production, { expectedSha } = {}) {
   const issues = [];
   const stagingBindings = requiredEnvironment(staging, 'STAGING', issues);
   const productionBindings = requiredEnvironment(production, 'PRODUCTION', issues);
-  if (!staging.name || !production.name || staging.name === production.name) issues.push('Worker names must be present and distinct');
-  if (stagingBindings.d1?.database_id === productionBindings.d1?.database_id) issues.push('Staging and production D1 database IDs must be distinct');
-  if (stagingBindings.r2?.bucket_name === productionBindings.r2?.bucket_name) issues.push('Staging and production R2 buckets must be distinct');
-  if (staging.vars?.CANDIDATE_SHA !== production.vars?.CANDIDATE_SHA) issues.push('Staging and production configs must bind the same frozen candidate SHA');
-  if (expectedSha && staging.vars?.CANDIDATE_SHA !== expectedSha) issues.push('Private configs must match the current repository HEAD');
+  if (!staging.name || !production.name || staging.name === production.name)
+    issues.push('Worker names must be present and distinct');
+  if (stagingBindings.d1?.database_id === productionBindings.d1?.database_id)
+    issues.push('Staging and production D1 database IDs must be distinct');
+  if (stagingBindings.brandR2?.bucket_name === productionBindings.brandR2?.bucket_name)
+    issues.push('Staging and production brand R2 buckets must be distinct');
+  if (stagingBindings.evidenceR2?.bucket_name === productionBindings.evidenceR2?.bucket_name)
+    issues.push('Staging and production evidence R2 buckets must be distinct');
+  if (stagingBindings.brandR2?.bucket_name === stagingBindings.evidenceR2?.bucket_name)
+    issues.push('STAGING: brand and evidence R2 buckets must be distinct');
+  if (productionBindings.brandR2?.bucket_name === productionBindings.evidenceR2?.bucket_name)
+    issues.push('PRODUCTION: brand and evidence R2 buckets must be distinct');
+  if (staging.vars?.CANDIDATE_SHA !== production.vars?.CANDIDATE_SHA)
+    issues.push('Staging and production configs must bind the same frozen candidate SHA');
+  if (expectedSha && staging.vars?.CANDIDATE_SHA !== expectedSha)
+    issues.push('Private configs must match the current repository HEAD');
   return { valid: issues.length === 0, issues };
 }
 
 async function run() {
   const [stagingPath, productionPath] = process.argv.slice(2);
-  if (!path.isAbsolute(stagingPath ?? '') || !path.isAbsolute(productionPath ?? '')) throw new Error('Usage: node scripts/cloudflare-environment-preflight.mjs <absolute-staging-config> <absolute-production-config>');
-  const [staging, production] = await Promise.all([readFile(stagingPath, 'utf8').then(parseJsonc), readFile(productionPath, 'utf8').then(parseJsonc)]);
+  if (!path.isAbsolute(stagingPath ?? '') || !path.isAbsolute(productionPath ?? ''))
+    throw new Error(
+      'Usage: node scripts/cloudflare-environment-preflight.mjs <absolute-staging-config> <absolute-production-config>',
+    );
+  const [staging, production] = await Promise.all([
+    readFile(stagingPath, 'utf8').then(parseJsonc),
+    readFile(productionPath, 'utf8').then(parseJsonc),
+  ]);
   const expectedSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const result = validateEnvironmentSeparation(staging, production, { expectedSha });
   if (!result.valid) {
@@ -66,13 +91,17 @@ async function run() {
     return;
   }
   console.log('Cloudflare environment preflight: PASSED');
-  console.log('Staging and production Worker, D1, R2, environment, candidate, and observability settings are distinct and complete.');
+  console.log(
+    'Staging and production Worker, D1, R2, environment, candidate, and observability settings are distinct and complete.',
+  );
   console.log('No private provider identifiers or secret values were printed.');
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   run().catch((error) => {
-    console.error(error?.code === 'ENOENT' ? 'Cloudflare environment preflight config is missing.' : error.message);
+    console.error(
+      error?.code === 'ENOENT' ? 'Cloudflare environment preflight config is missing.' : error.message,
+    );
     process.exitCode = 1;
   });
 }
