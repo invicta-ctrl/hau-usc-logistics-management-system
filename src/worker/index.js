@@ -553,7 +553,13 @@ async function handleApi(request, env, requestId, executionContext) {
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation })).account;
       const command = await body(request);
       if (url.pathname === '/api/owner/evidence/status') {
-        return json({ ok: true, ...(await evidence.systemStatus({ account: actor })) });
+        return json({
+          ok: true,
+          ...(await evidence.systemStatus({
+            account: actor,
+            evidenceId: command.evidenceId,
+          })),
+        });
       }
       if (url.pathname === '/api/owner/evidence/process') {
         const backup = await evidence.processBackups({

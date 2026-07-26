@@ -1142,3 +1142,112 @@ test('deployed staging public Lending Center enforces governed availability and 
     await Promise.all([publicRequest.dispose(), adminRequest.dispose()]);
   }
 });
+
+test('deployed staging stores evidence in R2, verifies one private Drive backup, and archives safely', async ({
+  page,
+  baseURL,
+}) => {
+  const owner = await ownerCredential();
+  const ownerRequest = page.context().request;
+  const ownerLogin = await login(ownerRequest, owner.accessId, owner.password);
+  expect(ownerLogin.state).toBe('AUTHENTICATED');
+  expect(ownerLogin.user.authorization.roleId).toBe('SYSTEM_OWNER');
+
+  const nonce = `${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
+  const relatedEntityId = `SYNTHETIC-EVIDENCE-${nonce}`.toUpperCase();
+  const evidenceBytes = Buffer.from([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...Buffer.from(`staging-hybrid-evidence-${nonce}`),
+  ]);
+  const uploadCommand = {
+    evidenceType: 'OTHER_SUPPORTING_DOCUMENT',
+    originalFileName: `synthetic-hybrid-${nonce}.png`,
+    mimeType: 'image/png',
+    base64: evidenceBytes.toString('base64'),
+    relatedEntityType: 'STAGING_ACCEPTANCE',
+    relatedEntityId,
+    clientRequestId: `staging-hybrid-upload-${nonce}`,
+  };
+  const upload = await ownerRequest.post('/api/uploadEvidence', {
+    headers: { 'x-csrf-token': ownerLogin.csrfToken },
+    data: uploadCommand,
+  });
+  expect(upload.status()).toBe(200);
+  const accepted = await upload.json();
+  expect(accepted).toMatchObject({
+    uploadStatus: 'VERIFIED',
+    backupStatus: 'PENDING',
+    duplicate: false,
+    message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
+  });
+
+  const duplicate = await ownerRequest.post('/api/uploadEvidence', {
+    headers: { 'x-csrf-token': ownerLogin.csrfToken },
+    data: {
+      ...uploadCommand,
+      clientRequestId: `staging-hybrid-duplicate-${nonce}`,
+    },
+  });
+  expect(duplicate.status()).toBe(200);
+  await expect(duplicate.json()).resolves.toMatchObject({
+    evidenceId: accepted.evidenceId,
+    duplicate: true,
+  });
+
+  await expect
+    .poll(
+      async () => {
+        await ownerRequest.post('/api/owner/evidence/process', {
+          headers: { 'x-csrf-token': ownerLogin.csrfToken },
+          data: { evidenceId: accepted.evidenceId, limit: 1 },
+        });
+        const statusResponse = await ownerRequest.post('/api/owner/evidence/status', {
+          data: { evidenceId: accepted.evidenceId },
+        });
+        expect(statusResponse.status()).toBe(200);
+        return (await statusResponse.json()).selectedEvidence;
+      },
+      { timeout: 30_000 },
+    )
+    .toMatchObject({
+      evidenceId: accepted.evidenceId,
+      status: 'SYNCED',
+      hasVerifiedDriveCopy: true,
+    });
+
+  const unauthorized = await apiRequest.newContext({ baseURL });
+  const deniedStatus = await unauthorized.post('/api/owner/evidence/status', {
+    data: { evidenceId: accepted.evidenceId },
+  });
+  expect(deniedStatus.status()).toBe(401);
+  const deniedRestore = await unauthorized.post('/api/owner/evidence/restore', {
+    data: {
+      evidenceId: accepted.evidenceId,
+      reason: 'Synthetic unauthorized restore denial',
+    },
+  });
+  expect(deniedRestore.status()).toBe(401);
+  await unauthorized.dispose();
+
+  const archived = await ownerRequest.post('/api/owner/evidence/archive', {
+    headers: { 'x-csrf-token': ownerLogin.csrfToken },
+    data: {
+      evidenceId: accepted.evidenceId,
+      reason: 'Synthetic Phase 16 staging acceptance cleanup',
+    },
+  });
+  expect(archived.status()).toBe(200);
+  await expect(archived.json()).resolves.toMatchObject({
+    evidenceId: accepted.evidenceId,
+    status: 'ARCHIVED',
+    primaryCopyRetained: true,
+    driveCopyRetained: true,
+  });
+});

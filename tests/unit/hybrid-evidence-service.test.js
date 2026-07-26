@@ -298,4 +298,22 @@ describe('hybrid evidence service', () => {
     expect(ordinary).not.toContain('oauth');
     expect(ordinary).not.toContain('provider unavailable');
   });
+
+  it('returns only safe selected-evidence backup state to the System Owner', async () => {
+    const job = await jobFixture({ status: 'SYNCED', driveFileId: 'protected-drive-file-id' });
+    const fixture = serviceFixture({ job });
+
+    const status = await fixture.service.systemStatus({
+      account: { id: 'ACC-OWNER', roleId: ROLES.SYSTEM_OWNER },
+      evidenceId: job.evidenceId,
+    });
+
+    expect(status.selectedEvidence).toEqual({
+      evidenceId: job.evidenceId,
+      status: 'SYNCED',
+      attemptCount: 0,
+      hasVerifiedDriveCopy: true,
+    });
+    expect(JSON.stringify(status.selectedEvidence)).not.toContain('protected-drive-file-id');
+  });
 });

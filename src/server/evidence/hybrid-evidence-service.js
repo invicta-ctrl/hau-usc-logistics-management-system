@@ -160,9 +160,13 @@ export function createHybridEvidenceService({
       return { processed: jobs.length, verified, restoreRequired };
     },
 
-    async systemStatus({ account }) {
+    async systemStatus({ account, evidenceId = '' }) {
       requireSystemOwner(account);
-      const summary = await repository.statusSummary();
+      const normalizedEvidenceId = String(evidenceId ?? '').trim();
+      const [summary, selected] = await Promise.all([
+        repository.statusSummary(),
+        normalizedEvidenceId ? repository.get(normalizedEvidenceId) : null,
+      ]);
       return {
         primaryR2Status: primaryStore.status('OTHER_SUPPORTING_DOCUMENT').configured
           ? 'AVAILABLE'
@@ -174,6 +178,16 @@ export function createHybridEvidenceService({
         lastSuccessfulBackupAt: summary.lastSuccessfulBackupAt,
         lastReconciliationAt: summary.lastReconciliationAt,
         filesRequiringRestoration: summary.filesRequiringRestoration,
+        selectedEvidence: normalizedEvidenceId
+          ? selected
+            ? {
+                evidenceId: selected.evidenceId,
+                status: selected.status,
+                attemptCount: selected.attemptCount,
+                hasVerifiedDriveCopy: Boolean(selected.driveFileId && selected.status === 'SYNCED'),
+              }
+            : null
+          : undefined,
         backupMessage:
           (summary.counts.PENDING ?? 0) +
             (summary.counts.IN_PROGRESS ?? 0) +
