@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.0 Phase 18 approved-event source gate — blocked on owner values
+
+- The approved Google/current-project/staging source recheck was read-only.
+  The governed event and composite-request sheets have zero data rows, governed
+  requests have zero event scopes, and staging has zero active future events or
+  future event series.
+- One older non-future event record is not an approved launch structure and
+  lacks the required request window, release deadline, preparation deadline,
+  and readiness contract. It was not promoted or copied.
+- One structured owner-review queue was created outside Git requesting the
+  exact missing future series/sub-event names, dates/times, committees,
+  windows, deadlines, status, readiness rules, and optional approved venues.
+  No value was inferred.
+- `docs/ROADMAP_TO_V1.md` now supplies the controlled post-v0.7 weekly roadmap
+  required by Phase 18 without deferring broken core functionality.
+- Phase 18 remains blocked until the owner populates the governed event source
+  or designates an approved owner record and the exact values pass staging
+  preview, validation, application, and reconciliation. Production remains
+  NO-GO; Phase 19 has not started.
+
 ## v0.7.0 Phase 17 inventory data readiness accepted on staging — Phase 18 active
 
 - A private immutable snapshot of the authoritative 397-row item master was

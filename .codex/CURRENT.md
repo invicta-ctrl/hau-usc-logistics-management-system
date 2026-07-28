@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 18 — Upcoming Events and Next-Major-Event Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 17 ACCEPTED ON STAGING; PHASE 18 APPROVED-EVENT SOURCE GATE; PRODUCTION NO-GO
+Status: BLOCKED — PHASE 18 REQUIRES OWNER-APPROVED FUTURE EVENT VALUES; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -89,6 +89,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_16_HYBRID_EVIDENCE_HANDOFF.md`
 - `.codex/V0_7_PHASE_16_SHARED_RELEASE_DESK_HANDOFF.md`
 - `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`
+- `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -255,11 +256,20 @@ browser matrix remains 126 passed / 306 intentional skips; PR #9 passed 6 / 6.
 The authoritative import reconciles 397 imported / 0 rejected, with all 397
 pending rows tracked and non-lendable and no active acceptance fixtures.
 
-Phase 18 is active. The last authoritative governed-source read reported zero
-approved future event rows. Recheck only the approved event sources, then
-create the bounded owner-review queue required by the master specification if
-names, dates/times, committees, request windows, release/preparation deadlines,
-venues, status, or readiness values remain unavailable. Do not infer them.
+Phase 18 rechecked the approved sources read-only. The governed event sheet and
+composite-request sheet contain zero data rows; none of the governed requests
+has event scope; staging has zero active future events or series. One older
+non-future record is not valid launch input and lacks the required windows,
+deadlines, and readiness contract. A structured private owner-review queue now
+requests the missing series/sub-event names, dates/times, committees, windows,
+deadlines, status, readiness rules, and optional approved venues exactly once.
+No values were inferred.
+
+Blocked next action: the owner must populate the governed event source or
+designate an approved owner record containing those values. Then preview,
+validate, apply, and reconcile the exact structure on staging before Phase 18
+can be accepted. The controlled post-v0.7 roadmap is complete in
+`docs/ROADMAP_TO_V1.md`.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -268,3 +278,6 @@ Phase 17 checkpoint evidence:
 Product/deployed staging commit:
 `03b408826d993be0c79692e15b86b38fc97dadf6`; exact-product-head PR #9
 checks passed 6 / 6.
+
+Phase 18 blocked evidence:
+`.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.

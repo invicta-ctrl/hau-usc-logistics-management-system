@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 APPROVED-EVENT SOURCE GATE ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 BLOCKED ON OWNER-APPROVED FUTURE EVENT VALUES**
 
 ## Phase 0 repository and remote truth
 
@@ -365,6 +365,12 @@ venues, status, or readiness values. If the approved source remains empty,
 create one bounded owner-review queue and request the missing values once
 before production freeze.
 
+That read-only recheck is now complete: the governed event and
+composite-request sheets contain zero data rows, governed requests contain zero
+event scopes, and staging contains zero active future events or series. The
+private owner-review queue and controlled post-v0.7 roadmap are complete.
+Phase 18 is blocked until the owner supplies or designates the approved values.
+
 Do not upload or deploy a production Worker before final freeze, merge, and
 production authorization validation.
 
@@ -376,6 +382,9 @@ Approved upcoming-event values must be requested once before final freeze becaus
   classification, private backups, ledger parity, and staging evidence.
 - Read only the Phase 18 master-specification section and the approved event
   source/current-project event structures needed to establish source truth.
-- The last governed-source check reported zero approved future event rows.
-  Recheck once, create the bounded owner-review queue if still empty, and do
-  not infer any event value.
+- The approved-source recheck reports zero approved future event rows. The
+  bounded private owner-review queue has been created without inferred values.
+- Resume only after the owner populates the governed event source or designates
+  an approved owner record, then preview, validate, apply, and reconcile the
+  exact event structure on staging.
+- Durable blocker evidence: `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
