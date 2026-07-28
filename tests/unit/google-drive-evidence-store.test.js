@@ -215,6 +215,24 @@ describe('Google Drive evidence backup', () => {
       code: 'EVIDENCE_BACKUP_DUPLICATE_CONFLICT',
     });
 
+    const providerFailureStore = store(async (url) => {
+      const target = String(url);
+      if (target === 'https://oauth2.googleapis.com/token') {
+        return Response.json({ access_token: 'synthetic-oauth-access-token' });
+      }
+      if (target.includes('/upload/drive/v3/files')) {
+        return Response.json({}, { status: 403 });
+      }
+      if (target.includes('/drive/v3/files?')) {
+        return Response.json({ files: [] });
+      }
+      throw new Error(`Unexpected URL: ${target}`);
+    });
+    await expect(providerFailureStore.backup(backupInput())).rejects.toMatchObject({
+      code: 'EVIDENCE_BACKUP_UPLOAD_FAILED_HTTP_403',
+      retryable: false,
+    });
+
     const unconfigured = createGoogleDriveEvidenceStore({
       folderIds: {},
       fetchImpl: vi.fn(),

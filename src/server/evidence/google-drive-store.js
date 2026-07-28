@@ -132,12 +132,19 @@ function retryableStatus(status) {
   return status === 408 || status === 429 || status >= 500;
 }
 
+function providerFailureCode(failureCode, status) {
+  const normalizedStatus = Number(status);
+  return Number.isInteger(normalizedStatus) && normalizedStatus >= 100 && normalizedStatus <= 599
+    ? `${failureCode}_HTTP_${normalizedStatus}`
+    : failureCode;
+}
+
 async function driveJson(fetchImpl, url, options, failureCode) {
   const response = await fetchImpl(url, options);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw backupError(
-      failureCode,
+      providerFailureCode(failureCode, response.status),
       'The private Google Drive backup operation did not complete.',
       retryableStatus(response.status),
     );
