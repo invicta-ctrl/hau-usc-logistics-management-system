@@ -1,4 +1,9 @@
 import { brandLockupMarkup } from './brand-assets.js';
+import {
+  bindPublicPolicyDialogs,
+  publicPolicyDialogsMarkup,
+  publicPolicyLinksMarkup,
+} from './public-policy.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -159,6 +164,9 @@ export async function mountPublicRequesterPortal({ root, client }) {
             <section class="public-review-evidence"><h3>Evidence</h3><p>No public evidence is attached. Staff may request supporting evidence during review.</p></section>
             <div data-lead-time-warning class="public-lead-time-warning" hidden></div>
             <label class="public-check"><input name="reviewAcknowledged" type="checkbox" required><span><strong>Review acknowledgment</strong><small>I confirm these details are accurate and understand this request starts For Review without reserving or deducting stock.</small></span></label>
+            <label class="public-check"><input name="dataUseAcknowledged" type="checkbox" required><span><strong>Privacy acknowledgment</strong><small>I read the Privacy Notice and understand how my request data, private tracking, governed retention, correction, and support paths work.</small></span></label>
+            <label class="public-check"><input name="acceptableUseAcknowledged" type="checkbox" required><span><strong>Acceptable Use acknowledgment</strong><small>I will provide accurate authorized information and keep identifiers, tracking codes, and sensitive data out of public channels.</small></span></label>
+            <label class="public-check"><input name="evidenceConsentAcknowledged" type="checkbox" required><span><strong>Evidence and photo acknowledgment</strong><small>If evidence is later requested through a protected workflow, I will share only relevant content I am authorized to provide and have consent for.</small></span></label>
           </section>
 
           <p class="borrower-form-message" role="status" aria-live="polite"></p>
@@ -187,7 +195,11 @@ export async function mountPublicRequesterPortal({ root, client }) {
           <section class="panel public-privacy-note"><h2>Your privacy</h2><p>The tracking code is not stored in this browser. This view never exposes other requests, internal comments, protected stock, suppliers, audit records, or private evidence.</p></section>
         </div>
       </section>
+      ${publicPolicyLinksMarkup()}
+      ${publicPolicyDialogsMarkup()}
     </main>`;
+
+  bindPublicPolicyDialogs(root);
 
   const form = root.querySelector('#publicRequestForm');
   const category = form.elements.lineCategory;
@@ -539,6 +551,9 @@ export async function mountPublicRequesterPortal({ root, client }) {
           neededDate: values.neededDate,
           relatedRequestId: values.relatedRequestId,
           purpose: purposeValue(),
+          dataUseAcknowledged: values.dataUseAcknowledged === 'on',
+          acceptableUseAcknowledged: values.acceptableUseAcknowledged === 'on',
+          evidenceConsentAcknowledged: values.evidenceConsentAcknowledged === 'on',
           lines,
           clientRequestId: clientRequestId(),
         },

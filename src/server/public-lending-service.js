@@ -6,6 +6,13 @@ const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
 export const USC_DEPARTMENTS = USC_DEPARTMENT_NAMES;
 const encoder = new TextEncoder();
+const PUBLIC_POLICY_VERSION = '2026-07-28';
+
+function requireAcknowledgment(command, field, message) {
+  if (command[field] !== true) {
+    throw new ApiError('VALIDATION_FAILED', message, { status: 422, details: { field } });
+  }
+}
 
 const requiredText = (value, field, max) => {
   const result = String(value ?? '')
@@ -207,6 +214,26 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         correlationId,
       };
     }
+    requireAcknowledgment(
+      command,
+      'dataUseAcknowledged',
+      'Privacy acknowledgment is required.',
+    );
+    requireAcknowledgment(
+      command,
+      'acceptableUseAcknowledged',
+      'Acceptable Use acknowledgment is required.',
+    );
+    requireAcknowledgment(
+      command,
+      'borrowerResponsibilityAcknowledged',
+      'Borrower responsibility acknowledgment is required.',
+    );
+    requireAcknowledgment(
+      command,
+      'evidenceConsentAcknowledged',
+      'Evidence and photo acknowledgment is required.',
+    );
 
     const borrowerType = requiredText(command.borrowerType, 'borrowerType', 20).toUpperCase();
     if (!['USC_STAFF', 'ANGELITE'].includes(borrowerType)) {
@@ -373,7 +400,16 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
             timestamp,
             ticketId,
             PUBLIC_ACTOR_ID,
-            JSON.stringify({ submissionId, borrowerType, status: 'FOR_REVIEW' }),
+            JSON.stringify({
+              submissionId,
+              borrowerType,
+              status: 'FOR_REVIEW',
+              policyVersion: PUBLIC_POLICY_VERSION,
+              dataUseAcknowledged: true,
+              acceptableUseAcknowledged: true,
+              borrowerResponsibilityAcknowledged: true,
+              evidenceConsentAcknowledged: true,
+            }),
             correlationId,
           ),
       );

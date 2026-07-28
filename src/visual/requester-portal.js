@@ -1,4 +1,9 @@
 import { brandLockupMarkup } from './brand-assets.js';
+import {
+  bindPublicPolicyDialogs,
+  publicPolicyDialogsMarkup,
+  publicPolicyLinksMarkup,
+} from './public-policy.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -222,6 +227,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
               <button class="secondary" type="button" data-add-request-line>Add requested item</button>
             </div>
             <div class="request-center-draft" aria-live="polite">${draft.length ? '' : '<p class="empty">No requested items added.</p>'}</div>
+            <label class="public-check"><input name="dataUseAcknowledged" type="checkbox" required><span><strong>Privacy and acceptable use</strong><small>I read the Privacy Notice and Acceptable Use terms and confirm this authorized department request is accurate.</small></span></label>
             <p class="borrower-form-message" role="status" aria-live="polite"></p>
             <button class="primary" type="submit" ${draft.length ? '' : 'disabled'}>Submit request</button>
           </form>
@@ -238,7 +244,11 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
           <p class="eyebrow">Request committed</p><h2>Submitted successfully</h2>
           ${receipt ? `<dl><dt>Request ID</dt><dd><code>${escapeHtml(receipt.requestId)}</code></dd><dt>Type</dt><dd>${escapeHtml(receipt.requestType)}</dd><dt>Event</dt><dd>${escapeHtml(receipt.event)}</dd><dt>Sub-event</dt><dd>${escapeHtml(receipt.subEvent)}</dd><dt>Department</dt><dd>${escapeHtml(receipt.department)}</dd><dt>Submitted</dt><dd>${escapeHtml(formatDate(receipt.submittedAt))}</dd><dt>Status</dt><dd>For Review</dd></dl><p>This confirms submission only; it is not approval or a reservation.</p><div class="button-row"><button class="primary" type="button" data-view-receipt-status>View Request Status</button><button class="secondary" type="button" data-create-another>Create Another Request</button><button class="secondary" type="button" data-save-receipt>Save PDF Receipt</button></div>` : ''}
         </section>
+        ${publicPolicyLinksMarkup()}
+        ${publicPolicyDialogsMarkup()}
       </main>`;
+
+    bindPublicPolicyDialogs(root);
 
     root.querySelector('[data-requester-logout]').addEventListener('click', logout);
     const form = root.querySelector('#requesterRequestForm');

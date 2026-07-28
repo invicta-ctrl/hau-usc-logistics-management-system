@@ -1,5 +1,10 @@
 import { brandLockupMarkup } from './brand-assets.js';
 import { mountPublicAdvertisementCarousel } from './public-advertisement-carousel.js';
+import {
+  bindPublicPolicyDialogs,
+  publicPolicyDialogsMarkup,
+  publicPolicyLinksMarkup,
+} from './public-policy.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -95,6 +100,10 @@ export async function mountPublicLendingPortal({ root, client }) {
               <label>Requested due date<input name="dueDate" type="date" min="${today}" data-lending-due><small data-lending-due-help>Required when a selected reusable item has a governed due-date rule.</small></label>
               <label class="span-2">Purpose<textarea name="purpose" maxlength="500" required></textarea></label>
               <label class="public-check span-2"><input name="responsibilityAcknowledged" type="checkbox" data-lending-acknowledgment><span><strong>Responsibility acknowledgment</strong><small data-lending-acknowledgment-help>Required when a selected item has a governed acknowledgment rule.</small></span></label>
+              <label class="public-check span-2"><input name="dataUseAcknowledged" type="checkbox" required><span><strong>Privacy acknowledgment</strong><small>I read the Privacy Notice and understand the data use, private review, governed retention, correction, and support paths.</small></span></label>
+              <label class="public-check span-2"><input name="acceptableUseAcknowledged" type="checkbox" required><span><strong>Acceptable Use acknowledgment</strong><small>I will provide accurate authorized information and will not put secrets, unrelated sensitive data, or another person's information in this request.</small></span></label>
+              <label class="public-check span-2"><input name="borrowerResponsibilityAcknowledged" type="checkbox" required><span><strong>Borrower responsibility</strong><small>I understand this starts For Review and I must follow eligibility, pickup, care, condition, return, due-date, and correction instructions from authorized logistics staff.</small></span></label>
+              <label class="public-check span-2"><input name="evidenceConsentAcknowledged" type="checkbox" required><span><strong>Evidence and photo acknowledgment</strong><small>If evidence is later requested through a protected workflow, I will share only relevant content I am authorized to provide and have consent for.</small></span></label>
             </div>
           </section>
           <p class="borrower-form-message" role="status" aria-live="polite"></p>
@@ -105,7 +114,11 @@ export async function mountPublicLendingPortal({ root, client }) {
           <div data-public-announcements></div>
         </aside>
       </div>
+      ${publicPolicyLinksMarkup()}
+      ${publicPolicyDialogsMarkup()}
     </main>`;
+
+  bindPublicPolicyDialogs(root);
 
   mountPublicAdvertisementCarousel({
     root: root.querySelector('[data-public-announcements]'),
@@ -277,6 +290,11 @@ export async function mountPublicLendingPortal({ root, client }) {
         body: {
           ...values,
           responsibilityAcknowledged: form.elements.responsibilityAcknowledged.checked,
+          dataUseAcknowledged: form.elements.dataUseAcknowledged.checked,
+          acceptableUseAcknowledged: form.elements.acceptableUseAcknowledged.checked,
+          borrowerResponsibilityAcknowledged:
+            form.elements.borrowerResponsibilityAcknowledged.checked,
+          evidenceConsentAcknowledged: form.elements.evidenceConsentAcknowledged.checked,
           lines: [...selected.values()].map(({ itemId, quantity }) => ({ itemId, quantity })),
           clientRequestId: clientRequestId(),
         },

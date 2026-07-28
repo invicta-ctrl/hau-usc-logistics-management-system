@@ -550,6 +550,10 @@ test('public Lending Center submits both borrower types without exposing public 
     pickupDate: '2026-08-03',
     dueDate: '2026-08-10',
     responsibilityAcknowledged: true,
+    dataUseAcknowledged: true,
+    acceptableUseAcknowledged: true,
+    borrowerResponsibilityAcknowledged: true,
+    evidenceConsentAcknowledged: true,
     lines: [{ itemId: item.id, quantity: 1 }],
     clientRequestId,
   };

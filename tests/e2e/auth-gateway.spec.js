@@ -624,8 +624,10 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await expect(page.getByText('Department of Logistics').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Track Existing Request' })).toBeVisible();
   const requestForm = page.locator('#requesterRequestForm');
-  await expect(requestForm.getByLabel('Department')).toHaveValue('Department of Logistics');
-  await expect(requestForm.getByLabel('Department')).toHaveAttribute('readonly', '');
+  await expect(requestForm.getByLabel('Department', { exact: true })).toHaveValue(
+    'Department of Logistics',
+  );
+  await expect(requestForm.getByLabel('Department', { exact: true })).toHaveAttribute('readonly', '');
   const eventAutocomplete = requestForm.locator('[data-event-series-autocomplete]');
   await expect(eventAutocomplete).toBeVisible();
   await eventAutocomplete.fill('Synthetic Approved Event');
@@ -642,6 +644,11 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await requestForm.locator('[name="lineSpecification"]').fill('Accessible seating');
   await requestForm.getByRole('button', { name: 'Add requested item' }).click();
   await expect(requestForm.locator('.request-center-draft')).toContainText('University Theater');
+  await requestForm.getByLabel('Privacy and acceptable use').check();
+  await page.getByRole('button', { name: 'Privacy Notice' }).click();
+  await expect(page.getByRole('heading', { name: 'Privacy Notice' })).toBeVisible();
+  await expect(page.getByText('A specific institutional retention period has not been published')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Privacy Notice' }).click();
   await requestForm.getByRole('button', { name: 'Submit request' }).click();
   await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
   await expect(page.getByText('REQ-SYNTHETIC-DEPARTMENT', { exact: true })).toBeVisible();
@@ -742,6 +749,10 @@ test('public Lending Center classifies borrowers and submits without public trac
       courseYear: 'BSIT 2',
       academicDepartment: 'School of Computing',
       responsibilityAcknowledged: true,
+      dataUseAcknowledged: true,
+      acceptableUseAcknowledged: true,
+      borrowerResponsibilityAcknowledged: true,
+      evidenceConsentAcknowledged: true,
       lines: [{ itemId: 'ITM-LEND-SYNTHETIC', quantity: 1 }],
     });
     await route.fulfill({
@@ -776,6 +787,17 @@ test('public Lending Center classifies borrowers and submits without public trac
   await form.getByLabel('Requested due date').fill('2026-08-10');
   await form.getByLabel('Purpose').fill('Synthetic public lending browser proof.');
   await form.getByLabel('Responsibility acknowledgment').check();
+  await form.getByLabel('Privacy acknowledgment').check();
+  await form.getByLabel('Acceptable Use acknowledgment').check();
+  await form.getByLabel('Borrower responsibility').check();
+  await form.getByLabel('Evidence and photo acknowledgment').check();
+  await page.getByRole('button', { name: 'Privacy Notice' }).click();
+  await expect(page.getByRole('heading', { name: 'Privacy Notice' })).toBeVisible();
+  await expect(page.getByText('Only authorized HAU-USC and Department of Logistics staff')).toBeVisible();
+  await page.getByRole('button', { name: 'Close Privacy Notice' }).click();
+  await page.getByRole('button', { name: 'Acceptable Use' }).click();
+  await expect(page.getByRole('heading', { name: 'Acceptable Use' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close Acceptable Use' }).click();
   await expect(page.getByRole('heading', { name: 'USC Announcements' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Synthetic announcement one' })).toBeVisible();
   await page.getByRole('button', { name: 'Next announcement' }).click();
@@ -783,7 +805,7 @@ test('public Lending Center classifies borrowers and submits without public trac
   await form.getByRole('button', { name: 'Submit borrowing request for review' }).click();
   await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
   await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
-  await expect(page.getByText('private tracking', { exact: false })).toHaveCount(0);
+  await expect(page.locator('.public-tracking-receipt')).not.toContainText(/tracking code|ticket id/iu);
 });
 
 test('public Lending Center distinguishes service failure from true-empty and clears inactive borrower fields', async ({

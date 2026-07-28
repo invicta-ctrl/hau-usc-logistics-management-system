@@ -17,6 +17,13 @@ const REQUESTER_TYPES = Object.freeze([
   'External partner',
 ]);
 const encoder = new TextEncoder();
+const PUBLIC_POLICY_VERSION = '2026-07-28';
+
+function requireAcknowledgment(command, field, message) {
+  if (command[field] !== true) {
+    throw new ApiError('VALIDATION_FAILED', message, { status: 422, details: { field } });
+  }
+}
 
 const requiredText = (value, field, max) => {
   const result = String(value ?? '')
@@ -308,6 +315,21 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         correlationId,
       };
     }
+    requireAcknowledgment(
+      command,
+      'dataUseAcknowledged',
+      'Privacy acknowledgment is required.',
+    );
+    requireAcknowledgment(
+      command,
+      'acceptableUseAcknowledged',
+      'Acceptable Use acknowledgment is required.',
+    );
+    requireAcknowledgment(
+      command,
+      'evidenceConsentAcknowledged',
+      'Evidence and photo acknowledgment is required.',
+    );
     const requesterName = requiredText(command.requesterName, 'requesterName', 120);
     const organization = requiredText(command.organization, 'organization', 120);
     const requesterType = requiredText(command.requesterType, 'requesterType', 80);
@@ -509,7 +531,14 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           timestamp,
           requestId,
           PUBLIC_ACTOR_ID,
-          JSON.stringify({ status: 'FOR_REVIEW', lineCount: lines.length }),
+          JSON.stringify({
+            status: 'FOR_REVIEW',
+            lineCount: lines.length,
+            policyVersion: PUBLIC_POLICY_VERSION,
+            dataUseAcknowledged: true,
+            acceptableUseAcknowledged: true,
+            evidenceConsentAcknowledged: true,
+          }),
           correlationId,
         ),
       db

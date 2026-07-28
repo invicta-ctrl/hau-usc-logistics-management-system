@@ -496,6 +496,53 @@
 .public-privacy-note p {
   margin-bottom: 0;
 }
+.public-policy-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.public-policy-links button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--accent-strong, #7a1f2b);
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.public-policy-dialog {
+  width: min(44rem, calc(100% - 2rem));
+  max-height: min(46rem, calc(100dvh - 2rem));
+  overflow: auto;
+  border: 1px solid var(--line, #d9d9de);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  color: var(--ink, #241f20);
+  background: var(--surface, #fff);
+}
+.public-policy-dialog::backdrop {
+  background: rgb(22 16 18 / 68%);
+}
+.public-policy-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: -1.25rem;
+  padding: 1.25rem 0 0.75rem;
+  background: var(--surface, #fff);
+}
+.public-policy-dialog h2,
+.public-policy-dialog h3 {
+  margin-top: 0;
+}
+.public-policy-dialog section + section {
+  margin-top: 1rem;
+}
 .public-catalog {
   display: grid;
   gap: 1rem;
