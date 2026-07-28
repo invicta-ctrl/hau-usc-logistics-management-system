@@ -30,3 +30,18 @@ test('request-only portal uses sanitized state and hides internal workspaces', a
   await expect(page.locator('#inventoryTable')).toBeEmpty();
   await expect(page.locator('#releaseTickets')).toBeEmpty();
 });
+
+test('legacy preview state without Event Days still starts safely', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.use.viewport.width !== 390, 'One representative preview migration is sufficient.');
+  await page.goto('/');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await page.evaluate(() => {
+    const key = 'hau-usc-logistics-prototype:v1.0.0';
+    const saved = JSON.parse(localStorage.getItem(key));
+    delete saved.eventDays;
+    localStorage.setItem(key, JSON.stringify(saved));
+  });
+  await page.reload();
+  await expect(page.locator('#loading')).toHaveClass(/hidden/);
+  await expect(page.getByRole('heading', { name: 'Operations Overview' })).toBeVisible();
+});
