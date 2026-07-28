@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 16 Shared Release Desk and System Status (2026-07-28)
+
+### Added
+
+- One canonical Shared Release Desk proof across full, partial, corrected, and final recipient-confirmed release projections.
+- Protected System Owner presentation for primary R2, Drive backup queues/failures, oldest pending, latest success/reconciliation, and restore-required counts.
+- Exact local and staging acceptance for request, line, recipient, evidence, ledger, correction, idempotency, scope, and authorization invariants.
+
+### Fixed
+
+- Replay a fully consumed release correction before mutable remaining-quantity validation while preserving actor and scope authorization.
+- Route protected evidence status through every browser runtime adapter and refresh the governed Owner session before final staging cleanup.
+
+### Verified
+
+- `npm run check`: 70 Vitest files / 457 tests; local Worker/D1: 30 / 30; browser matrix: 126 passed / 306 intentional skips.
+- Exact staging runtime `ac83af8`, schema 23, passed the complete Shared Release Desk, verified private backup, protected System Status, archive, reconciliation, and 6 / 6 draft PR checks.
+
+### Boundary
+
+- Phase 16 is accepted on staging and Phase 17 is next. Production was not deployed, migrated, written, promoted, merged, tagged, or released.
+
 ## Unreleased - v0.7.0 Phase 16 hybrid evidence storage sub-slice (2026-07-28)
 
 ### Added

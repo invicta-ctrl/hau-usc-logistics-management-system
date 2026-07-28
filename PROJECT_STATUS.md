@@ -1,12 +1,12 @@
 # Project Status
 
-## v0.7.0 Phase 16 hybrid evidence storage accepted on staging — Phase 16 remains active
+## v0.7.0 Phase 16 Shared Release Desk accepted on staging — Phase 17 active
 
-- Exact runtime `5f2645d45106bad05ff3bcdab64c1d6bcc322c88` is healthy and ready on schema 23 / migration `0023_hybrid_evidence_storage.sql`.
-- Private R2 is authoritative for website-uploaded evidence. D1 owns protected metadata and asynchronous backup state; Google Drive is the private, verified secondary recovery copy.
-- Staging proved R2/D1 completion during Drive failure, retry behavior, duplicate-delivery idempotency, verification before `SYNCED`, Owner-only restore, unauthorized denial, private visibility, archive retention, and log/UI redaction.
-- Verification: `npm run check` passed with 70 Vitest files / 456 tests; local Worker/D1 passed 30 / 30; focused deployed acceptance passed 1 / 1; governed restore and independent checksum reconciliation passed; PR #9 passed 6 / 6 exact-runtime checks.
-- All synthetic evidence records were reconciled to `ARCHIVED`. Production was untouched and remains NO-GO. Phase 16 still owns the remaining Shared Release Desk and protected System Status acceptance.
+- Exact runtime `ac83af82aec2e42ae839d8b4975947ebf0a1526a` is healthy and ready on schema 23 / migration `0023_hybrid_evidence_storage.sql`.
+- One canonical Shared Release Desk now proves reservation, stock revalidation, partial/completed/final handoff, explicit recipient and evidence, duplicate-safe replay, append-only ISSUE movements, Owner-only correction, compensating reversal, and scoped request/release/inventory projections.
+- The protected System Status presents all seven required R2/Drive/reconciliation/restore metrics only to the System Owner and keeps storage identifiers, OAuth values, and raw provider errors out of ordinary UI.
+- Verification: `npm run check` passed with 70 Vitest files / 457 tests; local Worker/D1 passed 30 / 30; full browser coverage passed 126 / 306 intentional skips; focused exact-runtime staging acceptance passed 1 / 1; draft PR #9 passed 6 / 6 checks.
+- The synthetic event/item baseline is restored, on-hand is `1`, effective reserved is `0`, and all Release Desk acceptance evidence is `ARCHIVED` with both private copies retained. Production was untouched and remains NO-GO.
 
 ## v0.7.0 Phase 9 Administrator workspace accepted on staging — Phase 10 active
 

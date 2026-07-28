@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 16 — Shared Release Desk and Global Owner Access
+Phase: Phase 17 — Inventory Production Data Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–15 AND PHASE 16 HYBRID EVIDENCE SUB-SLICE ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 NEXT; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -22,6 +22,7 @@ Phase 13 accepted staging runtime: `653c6f846fc219f0c01ece83726583d8a7c80188`
 Phase 14 accepted staging runtime: `eca00e606054e896d9559e0249aaff8de0e0b750`
 Phase 15 accepted staging runtime: `07b5dd006656e370cc2bf7df4ced785be61a2604`
 Phase 16 hybrid evidence accepted staging runtime: `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`
+Phase 16 accepted staging runtime: `ac83af82aec2e42ae839d8b4975947ebf0a1526a`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -36,7 +37,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 15
+## Accepted completion through Phase 16
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -54,6 +55,7 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
 - Phase 13: process-oriented Materials Overview, canonical scoped D1 queue, complete sourcing/procurement/receiving/deliverables/release destinations, stable identity, cumulative quantities, bounded quote evidence, and capability-bound actions accepted.
 - Phase 14: governed access presets, workspace/default/committee/location/event scopes, effective-access preview, bounded overrides, generated credentials, session revocation, direct-route enforcement, audited lifecycle, and archive-without-delete accepted.
 - Phase 15: owner-protected USC Officer and Staff Directory, read-only governed Google source, encrypted D1 projection, privacy-safe validation, atomic apply/rollback, self-profile boundary, and staging reconciliation accepted.
+- Phase 16: one canonical Shared Release Desk, full/partial/final recipient-confirmed handoff, authoritative R2 evidence with verified asynchronous Drive backup, append-only issue/correction ledger, scoped projections, and protected System Status accepted.
 - Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
 
 Durable handoffs:
@@ -78,6 +80,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`
 - `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`
 - `.codex/V0_7_PHASE_16_HYBRID_EVIDENCE_HANDOFF.md`
+- `.codex/V0_7_PHASE_16_SHARED_RELEASE_DESK_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -211,16 +214,42 @@ Durable handoffs:
 - Production was not deployed, migrated, written, promoted, merged, tagged, or
   released. Protected provider identifiers and credentials remain outside Git.
 
+## Phase 16 final evidence
+
+- Product/proof commits:
+  `8bd5897cf7afb6e1ef75ce69e4c3f2818603b179`,
+  `b02b50219ecec02d2dfabfc42b260f08eb8328d9`, and
+  `ac83af82aec2e42ae839d8b4975947ebf0a1526a`.
+- Exact runtime `ac83af82aec2e42ae839d8b4975947ebf0a1526a`
+  is healthy and ready on schema 23 / migration 0023 with evidence R2 and
+  protected configuration available.
+- `npm run check` passed with 70 Vitest files / 457 tests; fresh local
+  Worker/D1 passed 30 / 30; the full browser matrix passed 126 / 306
+  intentional skips; focused deployed Phase 16 acceptance passed 1 / 1;
+  draft PR #9 exact-runtime checks passed 6 / 6.
+- Live staging proved partial, completed, corrected, and final release;
+  recipient/evidence/history projections; append-only ISSUE and linked
+  correction-reversal movements; duplicate-safe replay; verified Drive
+  synchronization; protected seven-metric System Status; and governed archive.
+- Reconciliation restored the synthetic event to `CANCELLED`, its series and
+  item to `ARCHIVED`, on-hand to `1`, effective reserved to `0`, and all
+  Release Desk acceptance evidence to `ARCHIVED` with both private copies
+  retained.
+- Production was not deployed, migrated, written, promoted, merged, tagged, or
+  released.
+
 ## Current blockers and next action
 
-Production remains NO-GO. Approved upcoming-event values and approved real
-public-lending item policy/data are absent and must not be invented. Formal
-rollback, complete operational acceptance, final freeze, branch consolidation,
-release, and production gates remain pending in their ordered master phases.
+Production remains NO-GO. The owner has confirmed that the previously provided
+production event and inventory values are accurate, but Phase 17 must still
+take a fresh authoritative snapshot, validate mapping, classify and reconcile
+the inventory, and prove zero unexplained differences before any production
+write. Formal rollback, final freeze, branch consolidation, release, and
+production gates remain pending in their ordered master phases.
 
-One smallest safe next action: audit and prove the remaining Phase 16 Shared
-Release Desk operational path and protected System Status presentation against
-the master specification and hybrid amendment. Preserve the accepted Phase 15
-roster and Phase 16 evidence-storage staging state; do not advance Phase 17.
+One smallest safe next action: begin Phase 17 with a read-only authoritative
+inventory export/snapshot and mapping reconciliation. Preserve the accepted
+Phase 16 release, evidence, ledger, and System Status invariants; do not infer
+production mutation or deployment authority.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
