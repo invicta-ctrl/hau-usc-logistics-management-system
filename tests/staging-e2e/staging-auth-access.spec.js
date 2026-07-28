@@ -1281,7 +1281,7 @@ test('deployed staging proves the shared Release Desk path, projections, and pro
   const scope = `EVENT:${eventId}`;
   const encodedScope = encodeURIComponent(scope);
   const requestProjectionResponse = await ownerRequest.get(
-    `/api/request?operationalScope=${encodedScope}&pageSize=50`,
+    `/api/requests?operationalScope=${encodedScope}&pageSize=50`,
   );
   expect(requestProjectionResponse.status()).toBe(200);
   const requestProjection = (await requestProjectionResponse.json()).data;
