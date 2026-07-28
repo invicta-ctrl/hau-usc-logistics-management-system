@@ -629,6 +629,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
 
 test('Admin and Director govern event hierarchy while unauthorized roles remain read-only', async ({
   baseURL,
+  page,
 }) => {
   const admin = await apiRequest.newContext({ baseURL });
   const director = await apiRequest.newContext({ baseURL });
@@ -706,6 +707,17 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
       expect.objectContaining({ entityId: activity.activityId, action: 'CREATED' }),
     ]),
   );
+
+  await page.goto('/app/director');
+  await page.getByLabel('Access ID').fill('LOCAL.DIRECTOR');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByText('NaN% overall', { exact: true })).toHaveCount(0);
+  const tbaOverview = page.locator('.subevent').filter({ hasText: 'Synthetic TBA Workshop' });
+  await expect(tbaOverview).toBeVisible();
+  await expect(tbaOverview).toContainText('TBA');
+  await expect(tbaOverview.getByText('Not assessed', { exact: true })).toHaveCount(2);
+  await expect(tbaOverview).toContainText('Not added yet');
 
   const submittedRequest = await mutate(admin, adminCsrf, 'submitRequest', {
     clientRequestId: `event-linked-request-${suffix}`,
