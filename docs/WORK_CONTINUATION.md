@@ -3,7 +3,7 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 16 accepted runtime `ac83af82aec2e42ae839d8b4975947ebf0a1526a`; upstream parity verified at the accepted runtime.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 17 product checkpoint `009de29d27e2e86168e255b037039020a60a2f08` is pushed with 6 / 6 PR checks; Phase 16 accepted staging runtime remains `ac83af82aec2e42ae839d8b4975947ebf0a1526a`.
 - **Current phase/stage:** Phases 0–16 accepted on staging; Phase 17 Inventory Production Data Readiness is active with owner review required; production NO-GO.
 - **Accepted scope:** Phase 17 of `.codex/specs/v0.7.0-production-master.md` under the follow-up amendment, accepted hybrid evidence-storage amendment, and shared efficiency contract.
 - **Completed work:** Phase 16 remains accepted. Phase 17 captured and validated a private immutable 397-row source snapshot, repaired ledger-only opening imports and duplicate quarantine, added migration 0024 and classification review, and proved isolated import/replay reconciliation.

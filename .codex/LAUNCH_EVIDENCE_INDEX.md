@@ -7,8 +7,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWN
 | Phase 17 inventory source/import preparation | `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md` | PARTIAL — 397 imported / 0 rejected locally; 397 classification reviews block staging |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 15 candidate `07b5dd0`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact product head `07b5dd0`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Git handshake | exact pushed Phase 17 product checkpoint `009de29`, upstream parity before status checkpoint | PASS |
+| PR #9 / CI | exact Phase 17 product checkpoint `009de29`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
 | Live staging identity | cache-busted health/readiness/version | STAGING, exact `07b5dd0`, D1 connected, schema 21, migration 0021 |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |

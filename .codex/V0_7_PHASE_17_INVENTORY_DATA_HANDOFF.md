@@ -68,11 +68,17 @@ Source reconciliation:
 
 Verification:
 
+- Product/checkpoint commit:
+  `009de29d27e2e86168e255b037039020a60a2f08`, pushed with upstream
+  parity.
 - Focused Vitest: 2 files / 12 tests passed.
 - ESLint on the changed importer and regression test: passed.
 - `npm run check`: passed, including 71 Vitest files / 462 tests and all
   repository gates.
 - Wrangler migration rehearsal: schema 24 and all migration commands passed.
+- Draft PR #9 remained open and mergeable; exact-product-head validation,
+  verification, browser smoke, Pages build/deploy, and build-status checks
+  passed 6 / 6.
 
 ## Required owner review
 

@@ -258,3 +258,6 @@ Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_E
 
 Phase 17 checkpoint evidence:
 `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`.
+Product/checkpoint commit:
+`009de29d27e2e86168e255b037039020a60a2f08`; exact-product-head PR #9
+checks passed 6 / 6.

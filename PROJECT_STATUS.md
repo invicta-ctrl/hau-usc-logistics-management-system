@@ -16,6 +16,8 @@
   one private owner-review queue and were not invented.
 - Phase 17 is not accepted. Staging remains on accepted Phase 16 runtime
   `ac83af8`, schema 23; production remains NO-GO.
+- Product checkpoint `009de29` is pushed at upstream parity and passed all
+  6 / 6 exact-head PR checks.
 
 ## v0.7.0 Phase 16 Shared Release Desk accepted on staging — Phase 17 active
 
