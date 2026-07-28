@@ -44,7 +44,12 @@
   output. Repair `a342c7a2d8b03b21ad400705575adada0a69591a` passes its
   focused Worker/browser regression, ESLint, 71 / 464 Vitest, and generated
   build. Exact staging redeploy, repeated browser acceptance, and exact-head CI
-  remain pending.
+  subsequently passed at exact runtime
+  `80c0db43cc06145ada09434fd55f3fd31c0873f7`.
+- Added preview-state compatibility for the Event Days bootstrap collection.
+  The complete repository gate passes; the six-width browser matrix passes
+  127 / 311 intentional skips; live mobile/desktop acceptance passes; seed
+  replay remains 2 days / 7 activities; and PR #9 exact-head CI passes 6 / 6.
 
 ### Boundary
 

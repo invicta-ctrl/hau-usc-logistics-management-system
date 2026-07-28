@@ -1,6 +1,6 @@
 # v0.7.0 Phase 18 Event Readiness Resolution Handoff
 
-Status: **OWNER DATA BLOCKER RESOLVED — STAGING DATA RECONCILED — DASHBOARD REPAIR VERIFIED LOCALLY — EXACT REDEPLOY PENDING — PRODUCTION NO-GO**
+Status: **ACCEPTED ON STAGING — PRODUCTION NO-GO**
 
 Date: 2026-07-28
 
@@ -119,17 +119,32 @@ cases themselves reported `ok` before teardown.
 - Production was not readied, migrated, seeded, deployed, or otherwise
   modified.
 
-## Remaining staging gate
+## Final acceptance
 
-Before Phase 18 can be accepted:
+- Startup compatibility repair
+  `80c0db43cc06145ada09434fd55f3fd31c0873f7` supplies the new Event Days
+  collection to fresh mock state and safely migrates older persisted preview
+  state. The complete repository gate passes, and the full responsive matrix
+  passes 127 tests with 311 intentional skips and zero failures.
+- Exact runtime `80c0db43cc06145ada09434fd55f3fd31c0873f7` is deployed to
+  staging. Three cache-busted probes returned that exact SHA and `STAGING`.
+- Seed replay at the exact runtime reconciles two active days, seven active
+  activities, and 40 append-only history records without duplicates.
+- Live 390×844 and 1440×900 acceptance each show all seven activities. The
+  September 1 workshop shows `TBA · Sep 1, 2026`, `Not added yet`, two
+  `Not assessed` values, and no fabricated `0%`; Event Management and Activity
+  History are available in both layouts.
+- D1 reconciliation proves one active series, two active days, seven active
+  activities, zero active August 10/12 days, seven owner-review-required
+  activities with nullable unknown fields, 30 audited event records, three
+  authorized `event.manage` role grants, and zero unauthorized role grants.
+- Focused Worker acceptance proves Administrator/Director mutation,
+  unauthorized denial, request/event-day/activity linking, idempotency,
+  Activity History, and audit behavior on the deployed exact code.
+- Draft PR #9 is open and mergeable at exact head `80c0db4`; all 6 / 6 checks
+  pass, including the six-minute browser-smoke job.
+- No synthetic event series or activity was added to staging acceptance data;
+  only the approved deterministic hierarchy and append-only replay history
+  remain. Production was not modified.
 
-1. push and deploy exact repair commit
-   `a342c7a2d8b03b21ad400705575adada0a69591a` to staging only;
-2. reconfirm cache-busted exact-candidate convergence;
-3. repeat protected mobile and desktop acceptance for the approved hierarchy,
-   truthful TBA/unknown values, Activity History, and operational links;
-4. confirm server-side unauthorized denial and reconcile any acceptance
-   effects;
-5. verify exact-head CI.
-
-Phase 18 is not yet accepted, and Phase 19 has not started.
+Phase 18 is accepted. The authoritative pointer advances to Phase 19.

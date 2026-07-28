@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 18 — Upcoming Events and Next-Major-Event Readiness
+Phase: Phase 19 — Brand Assets and R2
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 18 DATA RECONCILED; EXACT DASHBOARD REPAIR REDEPLOY PENDING; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 18 ACCEPTED ON STAGING; PHASE 19 AUDIT IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -24,6 +24,7 @@ Phase 15 accepted staging runtime: `07b5dd006656e370cc2bf7df4ced785be61a2604`
 Phase 16 hybrid evidence accepted staging runtime: `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`
 Phase 16 accepted staging runtime: `ac83af82aec2e42ae839d8b4975947ebf0a1526a`
 Phase 17 accepted staging runtime: `03b408826d993be0c79692e15b86b38fc97dadf6`
+Phase 18 accepted staging runtime: `80c0db43cc06145ada09434fd55f3fd31c0873f7`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -247,7 +248,7 @@ Durable handoffs:
 - Production was not deployed, migrated, written, promoted, merged, tagged, or
   released.
 
-## Current Phase 18 state and next action
+## Phase 18 final state and Phase 19 next action
 
 Production remains NO-GO. Phase 17 is accepted on staging at exact runtime
 `03b408826d993be0c79692e15b86b38fc97dadf6`, schema 26. The repository gate
@@ -273,16 +274,20 @@ key violations. Migration 0027 is applied on staging. Exact candidate
 seed plus replay reconcile one series / two active September days / seven
 activities with no active August schedule or duplicates.
 
-Live mobile review rejected omitted TBA activity, fabricated zero readiness,
-and an empty-roadmap `NaN%`. Repair
-`a342c7a2d8b03b21ad400705575adada0a69591a` now uses Event Day dates for TBA
-activities and renders unknown readiness/roadmap values truthfully. The focused
-Worker/browser regression, ESLint, 71 / 464 Vitest, and generated build pass.
+Live review defects were repaired and exact runtime
+`80c0db43cc06145ada09434fd55f3fd31c0873f7` is accepted on staging. The
+repository gate passes 71 / 464 Vitest; the full responsive browser matrix
+passes 127 / 311 intentional skips; live 390px/1440px event management passes;
+the deterministic seed replay remains one series / two days / seven
+activities; authorization, audit/history, linking, and truthful unknown-value
+checks pass; and PR #9 is green 6 / 6 at exact head. Production was untouched.
 
-Next action: push and deploy exact repair `a342c7a`, reconfirm cache-busted
-identity, repeat protected desktop/mobile and authorization/history/link
-acceptance, reconcile effects, verify exact-head CI, then advance directly to
-Phase 19. Production remains untouched and NO-GO.
+Phase 19 is active. Audit the existing governed Brand Assets workspace and
+staging R2/D1 state against all six required slots, upload/preview/publish/
+replace/rollback, byte-derived validation, versioning, environment separation,
+and automatic application surfaces. Implement only verified gaps, then run the
+Phase 19 staging gate. Do not add live stock-media integrations. Production
+remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 

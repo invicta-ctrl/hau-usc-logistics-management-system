@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 17 product/runtime `03b408826d993be0c79692e15b86b38fc97dadf6` is pushed, deployed, and passed 6 / 6 PR checks.
-- **Current phase/stage:** Phases 0–17 accepted on staging; Phase 18 schema/data are reconciled; exact dashboard repair redeploy and live acceptance remain; production NO-GO.
-- **Accepted scope:** Phase 18 of `.codex/specs/v0.7.0-production-master.md`, the current owner decision, accepted amendments, and shared efficiency contract. September 1–2 YDD 2026 is authoritative; August 10/12 is superseded historical context; missing operational values remain null/not assessed.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 18 exact product/runtime `80c0db43cc06145ada09434fd55f3fd31c0873f7` is pushed, deployed, and passed 6 / 6 PR checks.
+- **Current phase/stage:** Phases 0–18 accepted on staging; Phase 19 Brand Assets and R2 audit is active; production NO-GO.
+- **Accepted scope:** Phase 19 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
 - **Completed work:** Schema 27 implements governed Main Events, Event Days, Activities, operational links, append-only Activity History, server-owned IDs/codes, protected Administrator/Director edits, unauthorized denial, authoritative dashboard/request/release projections, and a deterministic approved YDD staging seed.
 - **Tests verified:** exact implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the complete `npm run check` from an isolated worktree: governance, lint, 71 files / 464 Vitest, build, deterministic Apps Script parity, distribution verification, Cloudflare types, and dry-run. Repair `a342c7a2d8b03b21ad400705575adada0a69591a` passes the focused Worker/browser regression, ESLint, 71 / 464 Vitest, and generated build verification.
 - **External actions:** a verified private pre-0027 export was created; migration 0027 was applied; exact candidate `41e2ead` was deployed to staging; the approved seed and replay reconciled one series / two active days / seven activities with no active August schedule or duplicates. Production and Google sources were untouched.
 - **Rollback:** preserve the private pre-0026 export and append-only ledger/classification history; redeploy the last accepted product runtime only through the documented rollback procedure. Additive schema 26 remains unless a separately approved data-reversal plan is executed.
-- **Blocker:** live mobile acceptance rejected the initial dashboard because it omitted the TBA activity and rendered unknown readiness as `0%`; the repair is locally verified but not yet deployed at exact head.
-- **Next action:** push and deploy exact repair `a342c7a`, reconfirm cache-busted identity, repeat protected desktop/mobile and authorization/history/link acceptance, reconcile effects, verify exact-head CI, and continue directly to Phase 19. Durable resolution evidence is `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
+- **Blocker:** none for Phase 19 audit. Stop only on a missing authoritative source, cross-environment binding, unsafe media validation, unreconciled staging mutation, or production boundary.
+- **Next action:** reconcile existing code/schema, six required slots, staging R2/D1 versions, lifecycle permissions, validation, rollback, and automatic application use; implement only verified Phase 19 gaps. Durable Phase 18 evidence is `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block
