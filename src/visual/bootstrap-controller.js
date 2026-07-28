@@ -1,5 +1,6 @@
 export const BOOTSTRAP_COLLECTIONS = Object.freeze([
   'eventSeries',
+  'eventDays',
   'events',
   'requests',
   'requestLines',
@@ -133,17 +134,24 @@ function normalizeToken(value, fallback) {
 
 export function createOpaqueId(prefix = 'ATT') {
   const uuid = globalThis.crypto?.randomUUID?.();
-  const suffix = uuid ? uuid.replace(/-/g, '').slice(0, 20) : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const suffix = uuid
+    ? uuid.replace(/-/g, '').slice(0, 20)
+    : `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   return `${prefix}-${suffix}`.toUpperCase().slice(0, 64);
 }
 
 export function validateBootstrapEnvelope(value, { backendMode = 'mock' } = {}) {
   const seen = new WeakSet();
   assertJsonSafe(value, seen);
-  if (!isPlainObject(value) || typeof value.version !== 'string' || !SUPPORTED_BOOTSTRAP_VERSIONS.has(value.version)) {
+  if (
+    !isPlainObject(value) ||
+    typeof value.version !== 'string' ||
+    !SUPPORTED_BOOTSTRAP_VERSIONS.has(value.version)
+  ) {
     invalidContract();
   }
-  if (value.schemaVersion !== undefined && !SUPPORTED_SCHEMA_VERSIONS.has(value.schemaVersion)) invalidContract();
+  if (value.schemaVersion !== undefined && !SUPPORTED_SCHEMA_VERSIONS.has(value.schemaVersion))
+    invalidContract();
   if (value.backendMode !== undefined && value.backendMode !== backendMode) invalidContract();
   BOOTSTRAP_COLLECTIONS.forEach((name) => {
     if (!Array.isArray(value[name])) invalidContract();
@@ -191,19 +199,21 @@ function safeCorrelationId(value, fallback) {
 }
 
 export function createSafeStartupFailure(error, stage, { attemptId, correlationId } = {}) {
-  const normalizedStage = Object.values(BOOTSTRAP_STAGES).includes(stage)
-    ? stage
-    : BOOTSTRAP_STAGES.READY;
+  const normalizedStage = Object.values(BOOTSTRAP_STAGES).includes(stage) ? stage : BOOTSTRAP_STAGES.READY;
   const fallbackCode = `BOOTSTRAP_${normalizedStage}`;
   const candidateCode = normalizeToken(error?.code, '');
   const code = ERROR_MESSAGES[candidateCode] ? candidateCode : fallbackCode;
-  const safeCorrelation = safeCorrelationId(error?.correlationId, safeCorrelationId(correlationId, attemptId));
+  const safeCorrelation = safeCorrelationId(
+    error?.correlationId,
+    safeCorrelationId(correlationId, attemptId),
+  );
   return Object.freeze({
     code,
     stage: normalizedStage,
     correlationId: safeCorrelation,
     attemptId,
-    message: ERROR_MESSAGES[code] ?? STAGE_MESSAGES[normalizedStage] ?? 'The workspace could not finish loading.',
+    message:
+      ERROR_MESSAGES[code] ?? STAGE_MESSAGES[normalizedStage] ?? 'The workspace could not finish loading.',
     retryable: true,
   });
 }
@@ -308,7 +318,12 @@ export function createBootstrapController({
   };
   const runAttempt = async (attempt) => {
     try {
-      const request = await executeStage(attempt, BOOTSTRAP_STAGES.REQUEST, (value, context) => load(context), undefined);
+      const request = await executeStage(
+        attempt,
+        BOOTSTRAP_STAGES.REQUEST,
+        (value, context) => load(context),
+        undefined,
+      );
       if (request.ignored) return { ignored: true, attemptId: attempt.attemptId };
       if (!isCurrent(attempt)) return { ignored: true, attemptId: attempt.attemptId };
       emit(attempt, BOOTSTRAP_STATES.RESPONSE_RECEIVED, BOOTSTRAP_STAGES.REQUEST, { phase: 'response' });

@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 18 — Upcoming Events and Next-Major-Event Readiness
 Required model: GPT-5.6 Sol — High
-Status: BLOCKED — PHASE 18 REQUIRES OWNER-APPROVED FUTURE EVENT VALUES; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 18 OWNER DATA RESOLVED; LOCAL CANDIDATE VERIFIED; STAGING ACCEPTANCE PENDING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -247,7 +247,7 @@ Durable handoffs:
 - Production was not deployed, migrated, written, promoted, merged, tagged, or
   released.
 
-## Current blockers and next action
+## Current Phase 18 state and next action
 
 Production remains NO-GO. Phase 17 is accepted on staging at exact runtime
 `03b408826d993be0c79692e15b86b38fc97dadf6`, schema 26. The repository gate
@@ -256,20 +256,29 @@ browser matrix remains 126 passed / 306 intentional skips; PR #9 passed 6 / 6.
 The authoritative import reconciles 397 imported / 0 rejected, with all 397
 pending rows tracked and non-lendable and no active acceptance fixtures.
 
-Phase 18 rechecked the approved sources read-only. The governed event sheet and
-composite-request sheet contain zero data rows; none of the governed requests
-has event scope; staging has zero active future events or series. One older
-non-future record is not valid launch input and lacks the required windows,
-deadlines, and readiness contract. A structured private owner-review queue now
-requests the missing series/sub-event names, dates/times, committees, windows,
-deadlines, status, readiness rules, and optional approved venues exactly once.
-No values were inferred.
+The owner resolved the Phase 18 data blocker by designating the approved
+continuation record and reproducing the complete September 1–2 Youth
+Development Days 2026 hierarchy. The August 10/12 schedule from the July 4
+meeting notes is superseded historical planning context and must not be active
+or merged. Missing committees, deadlines, request windows, readiness,
+progress, and notes remain nullable, `OWNER_REVIEW_REQUIRED`, `Not added yet`,
+or `Not assessed` rather than fabricated.
 
-Blocked next action: the owner must populate the governed event source or
-designate an approved owner record containing those values. Then preview,
-validate, apply, and reconcile the exact structure on staging before Phase 18
-can be accepted. The controlled post-v0.7 roadmap is complete in
-`docs/ROADMAP_TO_V1.md`.
+Schema 27, protected Admin/Director event management, server-owned IDs/codes,
+audited corrections, hierarchy links, authoritative overview/request/release
+projections, and the deterministic YDD staging seed are implemented. ESLint,
+71 / 464 Vitest, fresh migrations 0001–0027, focused Worker authorization and
+history coverage, and protected 390px/1440px browser acceptance pass. The
+standalone distribution build verifies. Apps Script generator parity remains
+unrun to completion because `apps-script/AppBody.html` is locally locked; no
+generated file was hand-edited.
+
+Next action: after external connectivity returns, create a private pre-0027
+staging backup, apply schema 27, deploy the exact staging candidate, run the
+approved seed, reconcile one series / two active days / seven activities with
+zero active August schedule or duplicates, complete deployed browser/audit/link
+acceptance, verify exact-head CI, then advance directly to Phase 19. Production
+remains untouched and NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -279,5 +288,5 @@ Product/deployed staging commit:
 `03b408826d993be0c79692e15b86b38fc97dadf6`; exact-product-head PR #9
 checks passed 6 / 6.
 
-Phase 18 blocked evidence:
+Phase 18 resolution and pending staging evidence:
 `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.

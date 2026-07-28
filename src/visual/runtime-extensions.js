@@ -379,6 +379,9 @@ export function createRuntimeExtensions(options) {
   let inventoryClassificationStatus = 'NEEDS_CLASSIFICATION';
   let inventoryClassificationKind = 'ALL';
   let inventoryClassificationSearchTimer = null;
+  let eventManagementDirectory = null;
+  let eventManagementPromise = null;
+  let eventManagementOpen = false;
   let internalShellBar = null;
   let accountControlObserver = null;
   let lendingApprovalRoot = null;
@@ -4902,6 +4905,12 @@ export function createRuntimeExtensions(options) {
           'Cross-workspace evidence exceptions and missing records',
           'evidence-status',
         ],
+        [
+          'overview',
+          'Event Management',
+          'Create and maintain governed main events, event days, activities, links, and history',
+          'event-management',
+        ],
       ],
     },
     director: {
@@ -4913,7 +4922,12 @@ export function createRuntimeExtensions(options) {
       boundary:
         'Director visibility supports event structure and leadership decisions. Access, configuration, and environment changes remain in the existing server-authorized administration boundary.',
       actions: [
-        ['overview', 'Decision Queue', 'Requests and deliverables awaiting a leadership decision', 'decision-queue'],
+        [
+          'overview',
+          'Decision Queue',
+          'Requests and deliverables awaiting a leadership decision',
+          'decision-queue',
+        ],
         [
           'overview',
           'Event Planning',
@@ -4925,6 +4939,12 @@ export function createRuntimeExtensions(options) {
           'Event Series & Sub-events',
           'Approved hierarchy and active event progress',
           'event-series',
+        ],
+        [
+          'overview',
+          'Manage Events',
+          'Complete dates, venues, committees, deadlines, readiness, links, and audited corrections',
+          'event-management',
         ],
         [
           'overview',
@@ -5673,6 +5693,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAdminDestination = (destination) => {
+    if (destination === 'event-management') return openEventManagement();
     const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
     if (destination === 'access-changes') return openAdminReferenceDestination({ domain: 'PERMISSIONS' });
     if (destination === 'failed-evidence' || destination === 'evidence-status')
@@ -5713,6 +5734,263 @@ export function createRuntimeExtensions(options) {
       openView('overview');
       document.querySelector('[data-dashboard-queue="blocked"]')?.click();
     }
+  };
+
+  const eventManagementAllowed = () => can(getState()?.currentUser, 'event.manage');
+  const pendingEventValue = (value) =>
+    value === null || value === undefined || value === '' ? 'Not added yet' : String(value);
+  const eventDateTimeValue = (value) => (value ? String(value).slice(0, 16) : '');
+  const eventFormNumber = (value) => (value === '' ? null : Number(value));
+
+  const eventSeriesForm = (series = null) => `<form id="eventSeriesForm">
+    <div class="mode-note">The server allocates the system ID and event code. Older planning schedules stay historical and are never merged into the active hierarchy.</div>
+    <div class="form-grid section-gap">
+      <label class="span-2">Main event name<input name="name" value="${esc(series?.name ?? '')}" required maxlength="200"></label>
+      <label>Status<select name="status">${option('ACTIVE', 'Active planning record', series?.status ?? 'ACTIVE')}${option('ARCHIVED', 'Archived', series?.status)}</select></label>
+      <label>Event year<input name="year" type="number" min="2000" max="2200" value="${esc(series?.name?.match(/\b20\d{2}\b/u)?.[0] ?? new Date().getFullYear())}" required></label>
+      <label class="span-2">Approved source reference<input name="sourceReference" value="${esc(series?.sourceReference ?? '')}"></label>
+      <label class="span-2">Superseded historical reference<input name="supersedesReference" value="${esc(series?.supersedesReference ?? '')}"></label>
+      <label class="span-2">Additional notes<textarea name="notes">${esc(series?.notes ?? '')}</textarea></label>
+      <label class="span-2">Correction reason<input name="reason" value="${esc(series ? 'Audited event-series correction' : 'Approved main event creation')}" required minlength="8"></label>
+    </div>
+    <button class="primary" type="submit">${series ? 'Save Main Event' : 'Create Main Event'}</button>
+  </form>`;
+
+  const eventDayForm = (seriesId, day = null) => `<form id="eventDayForm">
+    <div class="form-grid">
+      <label>Event date<input name="date" type="date" value="${esc(day?.date ?? '')}" required></label>
+      <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), day?.status ?? 'UPCOMING')).join('')}</select></label>
+      <label class="span-2">Day label <small>Optional; a date label is generated when blank.</small><input name="name" value="${esc(day?.name ?? '')}"></label>
+      <label class="span-2">Notes<textarea name="notes">${esc(day?.notes ?? '')}</textarea></label>
+      <label class="span-2">Correction reason<input name="reason" value="${esc(day ? 'Audited event-day correction' : 'Approved event day creation')}" required minlength="8"></label>
+    </div>
+    <button class="primary" type="submit">${day ? 'Save Event Day' : 'Add Event Day'}</button>
+    <input type="hidden" name="eventSeriesId" value="${esc(seriesId)}">
+  </form>`;
+
+  const eventActivityForm = (dayId, activity = null) => {
+    const committees = eventManagementDirectory?.committees ?? [];
+    return `<form id="eventActivityForm">
+      <div class="mode-note">Unknown operational values may remain blank. They render as <strong>Not added yet</strong> or <strong>Not assessed</strong> and stay in owner review.</div>
+      <div class="form-grid section-gap">
+        <label class="span-2">Activity name<input name="name" value="${esc(activity?.name ?? '')}" required></label>
+        <label>Activity type<input name="activityType" value="${esc(activity?.activityType ?? '')}" required></label>
+        <label>Venue<input name="venue" value="${esc(activity?.venue ?? '')}" required></label>
+        <label class="span-2">Included games or program items <small>Comma-separated; leave blank when not applicable.</small><input name="includedItems" value="${esc((activity?.includedItems ?? []).join(', '))}"></label>
+        <label>Time status<select name="timeStatus">${option('TBA', 'TBA', activity?.timeStatus ?? 'TBA')}${option('SCHEDULED', 'Scheduled', activity?.timeStatus)}</select></label>
+        <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), activity?.status ?? 'UPCOMING')).join('')}</select></label>
+        <label>Starts at<input name="startAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.startAt))}"></label>
+        <label>Ends at<input name="endAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.endAt))}"></label>
+        <label>Responsible committee<select name="responsibleCommitteeId"><option value="">Not added yet</option>${committees.map((entry) => option(entry.id, entry.name, activity?.responsibleCommitteeId)).join('')}</select></label>
+        <label>Supporting committees<select name="supportingCommitteeIds" multiple size="4">${committees.map((entry) => option(entry.id, entry.name, (activity?.supportingCommitteeIds ?? []).includes(entry.id) ? entry.id : '')).join('')}</select></label>
+        <label>Preparation deadline<input name="preparationDeadline" type="datetime-local" value="${esc(eventDateTimeValue(activity?.preparationDeadline))}"></label>
+        <label>Release deadline<input name="releaseDeadline" type="datetime-local" value="${esc(eventDateTimeValue(activity?.releaseDeadline))}"></label>
+        <label>Request window opens<input name="requestWindowOpensAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.requestWindowOpensAt))}"></label>
+        <label>Request window closes<input name="requestWindowClosesAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.requestWindowClosesAt))}"></label>
+        <label>Readiness percent <small>Blank means Not assessed.</small><input name="readinessPercentage" type="number" min="0" max="100" step="1" value="${esc(activity?.readinessPercentage ?? '')}"></label>
+        <label>Preparation progress <small>Blank means Not assessed.</small><input name="preparationProgress" type="number" min="0" max="100" step="1" value="${esc(activity?.preparationProgress ?? '')}"></label>
+        <label class="span-2">Additional notes<textarea name="notes">${esc(activity?.notes ?? '')}</textarea></label>
+        <label class="span-2">Approved source reference<input name="sourceReference" value="${esc(activity?.sourceReference ?? '')}"></label>
+        <label class="span-2">Correction reason<input name="reason" value="${esc(activity ? 'Audited activity correction' : 'Approved activity creation')}" required minlength="8"></label>
+      </div>
+      <button class="primary" type="submit">${activity ? 'Save Audited Correction' : 'Add Activity'}</button>
+      <input type="hidden" name="eventDayId" value="${esc(dayId)}">
+    </form>`;
+  };
+
+  const attachEventSeriesForm = (series = null) => {
+    const form = document.querySelector('#eventSeriesForm');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(form));
+      try {
+        await services.saveEventSeries({
+          ...values,
+          ...(series ? { eventSeriesId: series.id, expectedRevision: series.revision } : {}),
+        });
+        markFormClean(form);
+        closeModal();
+        await openEventManagement(true);
+        toast(series ? 'Main event updated with audit history.' : 'Main event created.');
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+  };
+
+  const attachEventDayForm = (seriesId, day = null) => {
+    const form = document.querySelector('#eventDayForm');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(form));
+      try {
+        await services.saveEventDay({
+          ...values,
+          eventSeriesId: seriesId,
+          ...(day ? { eventDayId: day.id, expectedRevision: day.revision } : {}),
+        });
+        markFormClean(form);
+        closeModal();
+        await openEventManagement(true);
+        toast(day ? 'Event day updated with audit history.' : 'Event day added.');
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+  };
+
+  const attachEventActivityForm = (dayId, activity = null) => {
+    const form = document.querySelector('#eventActivityForm');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(form);
+      const values = Object.fromEntries(formData);
+      values.includedItems = String(values.includedItems ?? '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean);
+      values.supportingCommitteeIds = formData.getAll('supportingCommitteeIds');
+      values.readinessPercentage = eventFormNumber(values.readinessPercentage);
+      values.preparationProgress = eventFormNumber(values.preparationProgress);
+      if (values.timeStatus === 'TBA') {
+        values.startAt = null;
+        values.endAt = null;
+      }
+      try {
+        await services.saveEventActivity({
+          ...values,
+          eventDayId: dayId,
+          ...(activity ? { activityId: activity.id, expectedRevision: activity.revision } : {}),
+        });
+        markFormClean(form);
+        closeModal();
+        await openEventManagement(true);
+        toast(activity ? 'Activity correction recorded.' : 'Activity added.');
+      } catch (error) {
+        toast(error.message, true);
+      }
+    });
+  };
+
+  const openEventEditor = (action, id = '') => {
+    if (!eventManagementAllowed()) return toast('Event management is not authorized.', true);
+    if (action === 'series-create' || action === 'series-edit') {
+      const series = eventManagementDirectory?.eventSeries?.find((entry) => entry.id === id) ?? null;
+      openModal(series ? `Edit ${series.name}` : 'Create Main Event', eventSeriesForm(series));
+      attachEventSeriesForm(series);
+      return;
+    }
+    if (action === 'day-create' || action === 'day-edit') {
+      const day = eventManagementDirectory?.eventDays?.find((entry) => entry.id === id) ?? null;
+      const seriesId = day?.seriesId ?? id;
+      openModal(day ? `Edit ${day.name}` : 'Add Event Day', eventDayForm(seriesId, day));
+      attachEventDayForm(seriesId, day);
+      return;
+    }
+    if (action === 'activity-create' || action === 'activity-edit') {
+      const activity = eventManagementDirectory?.activities?.find((entry) => entry.id === id) ?? null;
+      const dayId = activity?.eventDayId ?? id;
+      openModal(activity ? `Edit ${activity.name}` : 'Add Activity', eventActivityForm(dayId, activity));
+      attachEventActivityForm(dayId, activity);
+      return;
+    }
+    if (action === 'activity-link') {
+      const activity = eventManagementDirectory?.activities?.find((entry) => entry.id === id);
+      if (!activity) return;
+      openModal(
+        `Link operational record to ${activity.name}`,
+        `<form id="eventLinkForm"><div class="form-grid"><label>Record type<select name="linkType">${['REQUEST', 'FOOD_REQUIREMENT', 'MATERIAL', 'PROCUREMENT', 'INVENTORY_REQUIREMENT', 'RELEASE'].map((type) => option(type, type.replaceAll('_', ' '))).join('')}</select></label><label>Authoritative record ID<input name="linkedEntityId" required></label><label class="span-2">Notes<textarea name="notes"></textarea></label><label class="span-2">Reason<input name="reason" value="Link operational record to approved activity" required minlength="8"></label></div><button class="primary" type="submit">Create Audited Link</button></form>`,
+      );
+      const form = document.querySelector('#eventLinkForm');
+      form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          await services.linkEventOperationalRecord({
+            ...Object.fromEntries(new FormData(form)),
+            activityId: activity.id,
+          });
+          markFormClean(form);
+          closeModal();
+          await openEventManagement(true);
+          toast('Operational record linked with audit history.');
+        } catch (error) {
+          toast(error.message, true);
+        }
+      });
+    }
+  };
+
+  const renderEventManagement = () => {
+    const root = document.querySelector('[data-event-management]');
+    if (!root) return;
+    if (!eventManagementDirectory) {
+      root.innerHTML = '<div class="empty">Loading protected event management…</div>';
+      return;
+    }
+    const directory = eventManagementDirectory;
+    const activityMarkup = (activity) => {
+      const readiness =
+        activity.readinessPercentage === null ? 'Not assessed' : `${activity.readinessPercentage}%`;
+      const progress =
+        activity.preparationProgress === null ? 'Not assessed' : `${activity.preparationProgress}%`;
+      const time =
+        activity.timeStatus === 'TBA'
+          ? 'TBA'
+          : `${new Date(activity.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}–${new Date(activity.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      const activityLinks = (directory.links ?? []).filter((entry) => entry.activityId === activity.id);
+      return `<article class="event-activity-card"><div class="panel-head"><div><p class="eyebrow">${esc(activity.code)} · ${esc(activity.activityType)}</p><h4>${esc(activity.name)}</h4><p>${esc(time)} · ${esc(activity.venue)}</p>${activity.includedItems?.length ? `<p><strong>Included:</strong> ${esc(activity.includedItems.join(', '))}</p>` : ''}</div><span class="pill">${esc(activity.ownerReviewStatus.replaceAll('_', ' '))}</span></div><dl class="event-truth-grid"><div><dt>Responsible committee</dt><dd>${esc(activity.responsibleCommitteeName ?? 'Not added yet')}</dd></div><div><dt>Supporting committees</dt><dd>${esc(activity.supportingCommitteeIds.length ? activity.supportingCommitteeIds.join(', ') : 'Not added yet')}</dd></div><div><dt>Preparation deadline</dt><dd>${esc(pendingEventValue(activity.preparationDeadline))}</dd></div><div><dt>Request window</dt><dd>${esc(activity.requestWindowOpensAt && activity.requestWindowClosesAt ? `${activity.requestWindowOpensAt} – ${activity.requestWindowClosesAt}` : 'Not added yet')}</dd></div><div><dt>Release deadline</dt><dd>${esc(pendingEventValue(activity.releaseDeadline))}</dd></div><div><dt>Readiness</dt><dd>${esc(readiness)}</dd></div><div><dt>Preparation progress</dt><dd>${esc(progress)}</dd></div><div><dt>Additional notes</dt><dd>${esc(activity.notes ?? 'Not added yet')}</dd></div></dl><div class="button-row"><button class="secondary" type="button" data-event-action="activity-edit" data-event-id="${esc(activity.id)}">Edit audited fields</button><button class="secondary" type="button" data-event-action="activity-link" data-event-id="${esc(activity.id)}">Link operational record</button><span class="pill">${esc(activityLinks.length)} linked</span></div></article>`;
+    };
+    root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Protected Admin and Director workflow</p><h2>Event Management</h2><p>Main Events → Event Days → Activities. Missing operational values remain truthful and visible in owner review.</p></div><button class="primary" type="button" data-event-action="series-create">Create Main Event</button></div><div class="event-series-stack section-gap">${
+      directory.eventSeries
+        .map((series) => {
+          const days = directory.eventDays.filter((day) => day.seriesId === series.id && day.active);
+          return `<section class="event-series-card"><div class="panel-head"><div><p class="eyebrow">${esc(series.code)} · ${esc(series.status)}</p><h3>${esc(series.name)}</h3><p>Source: ${esc(series.sourceReference ?? 'Not added yet')}</p></div><div class="button-row"><button class="secondary" type="button" data-event-action="series-edit" data-event-id="${esc(series.id)}">Edit</button><button class="primary" type="button" data-event-action="day-create" data-event-id="${esc(series.id)}">Add Event Day</button></div></div>${
+            days
+              .map(
+                (day) =>
+                  `<section class="event-day-card"><div class="panel-head"><div><p class="eyebrow">Event Day · ${esc(day.status)}</p><h4>${esc(day.name)}</h4><p>${esc(day.date)}</p></div><div class="button-row"><button class="secondary" type="button" data-event-action="day-edit" data-event-id="${esc(day.id)}">Edit day</button><button class="primary" type="button" data-event-action="activity-create" data-event-id="${esc(day.id)}">Add activity</button></div></div>${
+                    directory.activities
+                      .filter((activity) => activity.eventDayId === day.id && activity.active)
+                      .map(activityMarkup)
+                      .join('') || '<div class="empty">No activities added.</div>'
+                  }</section>`,
+              )
+              .join('') || '<div class="empty">No event days added.</div>'
+          }</section>`;
+        })
+        .join('') || '<div class="empty">No governed main events exist.</div>'
+    }</div><section class="event-history section-gap"><div class="panel-head"><div><p class="eyebrow">Append-only evidence</p><h3>Activity History</h3><p>Actor, timestamp, reason, and correlation are server-owned.</p></div><span class="pill">${esc(directory.history.length)} records</span></div><div class="line-list">${
+      directory.history
+        .slice(0, 100)
+        .map(
+          (entry) =>
+            `<div class="request-line"><div><strong>${esc(entry.action.replaceAll('_', ' '))} · ${esc(entry.entityType.replaceAll('_', ' '))}</strong><small>${esc(entry.reason)} · ${esc(entry.actorName ?? entry.actorId)} · ${esc(new Date(entry.occurredAt).toLocaleString())}</small></div><span class="pill">${esc(entry.entityId)}</span></div>`,
+        )
+        .join('') || '<div class="empty">No event history has been recorded.</div>'
+    }</div></section>`;
+  };
+
+  const openEventManagement = async (force = false) => {
+    if (!eventManagementAllowed()) return toast('Event management is not authorized.', true);
+    const root = document.querySelector('[data-event-management]');
+    if (!root) return;
+    eventManagementOpen = true;
+    root.hidden = false;
+    renderEventManagement();
+    if (!eventManagementDirectory || force) {
+      eventManagementPromise ??= services.getEventManagement({}).finally(() => {
+        eventManagementPromise = null;
+      });
+      try {
+        eventManagementDirectory = await eventManagementPromise;
+        renderEventManagement();
+      } catch (error) {
+        root.innerHTML = `<div class="alert error">${esc(error.message)}</div>`;
+        return;
+      }
+    }
+    root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    root.focus({ preventScroll: true });
   };
 
   const renderDirectorDetail = (destination) => {
@@ -5795,6 +6073,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openDirectorDestination = (destination) => {
+    if (destination === 'event-management') return openEventManagement();
     const openView = (view) => document.querySelector(`#primaryNav [data-view="${view}"]`)?.click();
     if (
       [
@@ -6461,6 +6740,8 @@ export function createRuntimeExtensions(options) {
       const materialsDestination = event.target.closest('[data-materials-destination]')?.dataset
         .materialsDestination;
       if (materialsDestination) openMaterialsDestination(materialsDestination);
+      const eventAction = event.target.closest('[data-event-action]');
+      if (eventAction) openEventEditor(eventAction.dataset.eventAction, eventAction.dataset.eventId);
     });
     overviewHero.before(panel);
     if (!roleExperienceObserver) {
@@ -6497,13 +6778,15 @@ export function createRuntimeExtensions(options) {
               ? `data-inventory-destination="${esc(destination)}"`
               : `data-materials-destination="${esc(destination)}"`;
     const destinationEnabled = (destination) =>
-      experience === 'food'
-        ? foodDestinationAllowed(destination)
-        : experience === 'inventory-pantry'
-          ? inventoryDestinationAllowed(destination)
-          : experience === 'materials'
-            ? materialsDestinationAllowed(destination)
-            : true;
+      destination === 'event-management'
+        ? eventManagementAllowed()
+        : experience === 'food'
+          ? foodDestinationAllowed(destination)
+          : experience === 'inventory-pantry'
+            ? inventoryDestinationAllowed(destination)
+            : experience === 'materials'
+              ? materialsDestinationAllowed(destination)
+              : true;
     const destinationAttributes = (destination) =>
       `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available in the current server capability projection"'}`;
     const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
@@ -6573,7 +6856,17 @@ export function createRuntimeExtensions(options) {
     ${foodWorkflowReference}
     ${inventoryOverview}
     ${materialsOverview}
+    ${['administrator', 'director'].includes(experience) ? '<section class="event-management panel" data-event-management tabindex="-1" aria-label="Event Management" hidden></section>' : ''}
     ${experience === 'director' ? '<section class="director-detail panel" data-director-detail tabindex="-1" aria-labelledby="directorDetailTitle" hidden></section>' : ''}`;
+    if (
+      eventManagementOpen &&
+      ['administrator', 'director'].includes(experience) &&
+      eventManagementAllowed()
+    ) {
+      const root = panel.querySelector('[data-event-management]');
+      if (root) root.hidden = false;
+      renderEventManagement();
+    }
   };
 
   const install = () => {

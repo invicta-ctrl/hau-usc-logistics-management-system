@@ -1,5 +1,44 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 18 event readiness (2026-07-28)
+
+### Added
+
+- Schema 27 Main Events → Event Days → Activities hierarchy with server-owned
+  IDs/codes, included activity items, nullable operational values, operational
+  record links, optimistic revisions, and append-only Activity History.
+- Protected Administrator and Director Event Management for dates/times,
+  venues, committees, deadlines, request windows, status, readiness,
+  preparation progress, links, and audited corrections.
+- Deterministic authenticated YDD 2026 staging seed that records August 10/12
+  as superseded history, rejects duplicates/unexpected activities, and
+  reconciles the approved September 1–2 hierarchy.
+
+### Fixed
+
+- Upcoming-event, Request Center, Release Desk, and requester projections now
+  use active authoritative Event Days and Activities instead of empty or
+  synthetic event fallback.
+- Missing committee/deadline/window fields render `Not added yet`; null
+  readiness and progress render `Not assessed` rather than zero percent.
+- Requests now persist the linked main event, event day, and activity derived
+  from the selected active hierarchy.
+
+### Verified
+
+- ESLint and 71 Vitest files / 464 tests pass.
+- Fresh migrations 0001–0027 pass; focused local Worker authorization,
+  null/TBA, and history coverage passes.
+- Protected Event Management passes at 390×844 mobile and 1440×900 desktop.
+- Distribution build and standalone verification pass. Staging application,
+  deployed acceptance, and exact-head CI remain pending external connectivity.
+
+### Boundary
+
+- The owner approved September 1–2 YDD 2026 and superseded the August 10/12
+  plan. Unknown operational values remain owner-review-required and are not a
+  Phase 18 data blocker. Production was not modified.
+
 ## Unreleased - v0.7.0 Phase 17 inventory data readiness (2026-07-28)
 
 ### Added

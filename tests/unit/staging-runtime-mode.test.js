@@ -46,6 +46,8 @@ describe('staging runtime mode boundary', () => {
     expect(roleRuntime).toContain('document.title = `${workspace.label}');
     expect(roleRuntime).toContain("backendMode !== 'rest'");
     expect(roleStyles).toContain('.internal-shell-context');
-    expect(roleStyles).toContain("body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }");
+    expect(roleStyles).toMatch(
+      /body\[data-runtime-mode='rest'\]:not\(\.request-mode\) \.hero\s*\{\s*display: none;/u,
+    );
   });
 });

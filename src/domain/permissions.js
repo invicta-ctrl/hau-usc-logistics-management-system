@@ -28,6 +28,7 @@ export const CAPABILITIES = Object.freeze({
   INVENTORY_MERGE: 'inventory.merge_event_item',
   INVENTORY_ADJUST: 'inventory.adjust',
   INVENTORY_CLASSIFY: 'inventory.classify',
+  EVENT_MANAGE: 'event.manage',
   REFERENCE_CATALOG_MANAGE: 'reference.catalog.manage',
   REFERENCE_MANAGE: 'reference.manage',
   ADVERTISEMENT_MANAGE: 'advertisement.manage',
@@ -45,23 +46,147 @@ export const COMMITTEES = Object.freeze({
 
 export const COMMITTEE_REGISTRY = Object.freeze([
   Object.freeze({ id: COMMITTEES.FOOD, name: 'Food Committee', aliases: ['FOOD', 'FOOD COMMITTEE'] }),
-  Object.freeze({ id: COMMITTEES.INVENTORY_PANTRY, name: 'Inventory and Pantry Committee', aliases: ['INVENTORY', 'INVENTORY COMMITTEE', 'INVENTORY AND PANTRY COMMITTEE', 'INVENTORY & PANTRY COMMITTEE', 'PANTRY COMMITTEE'] }),
-  Object.freeze({ id: COMMITTEES.MATERIALS, name: 'Materials Committee', aliases: ['MATERIALS', 'MATERIALS COMMITTEE'] }),
+  Object.freeze({
+    id: COMMITTEES.INVENTORY_PANTRY,
+    name: 'Inventory and Pantry Committee',
+    aliases: [
+      'INVENTORY',
+      'INVENTORY COMMITTEE',
+      'INVENTORY AND PANTRY COMMITTEE',
+      'INVENTORY & PANTRY COMMITTEE',
+      'PANTRY COMMITTEE',
+    ],
+  }),
+  Object.freeze({
+    id: COMMITTEES.MATERIALS,
+    name: 'Materials Committee',
+    aliases: ['MATERIALS', 'MATERIALS COMMITTEE'],
+  }),
 ]);
 
 const ROLE_REGISTRY = Object.freeze({
   [ROLES.SYSTEM_OWNER]: Object.freeze({ scopeMode: 'ALL', capabilities: Object.values(CAPABILITIES) }),
-  [ROLES.REQUESTER]: Object.freeze({ scopeMode: 'SELF', capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE] }),
-  [ROLES.DOL_STAFF]: Object.freeze({ scopeMode: 'COMMITTEE', capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.VIEW_INTERNAL, CAPABILITIES.VIEW_COMMITTEE_SUMMARY, CAPABILITIES.VIEW_INVENTORY, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE, CAPABILITIES.REQUEST_REVIEW, CAPABILITIES.REQUEST_MISSING_INFORMATION, CAPABILITIES.REQUEST_REJECT, CAPABILITIES.FULFILL_CANVASS, CAPABILITIES.FULFILL_PROCURE, CAPABILITIES.FULFILL_RESERVE, CAPABILITIES.FULFILL_RECEIVE, CAPABILITIES.FULFILL_RELEASE, CAPABILITIES.LENDING_APPROVE, CAPABILITIES.LENDING_HANDOFF, CAPABILITIES.LENDING_RETURN, CAPABILITIES.LENDING_USAGE_VIEW, CAPABILITIES.INVENTORY_CLASSIFY, CAPABILITIES.EVIDENCE_UPLOAD] }),
-  [ROLES.COMMITTEE_HEAD]: Object.freeze({ scopeMode: 'COMMITTEE', capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.VIEW_INTERNAL, CAPABILITIES.VIEW_COMMITTEE_SUMMARY, CAPABILITIES.VIEW_INVENTORY, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE, CAPABILITIES.REQUEST_REVIEW, CAPABILITIES.REQUEST_MISSING_INFORMATION, CAPABILITIES.REQUEST_REJECT, CAPABILITIES.REQUEST_REOPEN, CAPABILITIES.ASSIGN_STAFF, CAPABILITIES.ESCALATE, CAPABILITIES.FULFILL_CANVASS, CAPABILITIES.FULFILL_PROCURE, CAPABILITIES.FULFILL_RESERVE, CAPABILITIES.FULFILL_RECEIVE, CAPABILITIES.LENDING_APPROVE, CAPABILITIES.LENDING_USAGE_VIEW, CAPABILITIES.INVENTORY_MERGE, CAPABILITIES.INVENTORY_CLASSIFY, CAPABILITIES.EVIDENCE_UPLOAD] }),
-  [ROLES.DIRECTOR]: Object.freeze({ scopeMode: 'ALL', capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.VIEW_INTERNAL, CAPABILITIES.VIEW_ALL_SUMMARY, CAPABILITIES.VIEW_AUDIT, CAPABILITIES.VIEW_INVENTORY, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE, CAPABILITIES.REQUEST_REVIEW, CAPABILITIES.REQUEST_MISSING_INFORMATION, CAPABILITIES.REQUEST_REJECT, CAPABILITIES.REQUEST_REOPEN, CAPABILITIES.ASSIGN_COMMITTEE, CAPABILITIES.ASSIGN_STAFF, CAPABILITIES.ESCALATE, CAPABILITIES.FULFILL_CANVASS, CAPABILITIES.FULFILL_PROCURE, CAPABILITIES.FULFILL_RESERVE, CAPABILITIES.FULFILL_RECEIVE, CAPABILITIES.FULFILL_RELEASE, CAPABILITIES.LENDING_APPROVE, CAPABILITIES.LENDING_HANDOFF, CAPABILITIES.LENDING_RETURN, CAPABILITIES.LENDING_USAGE_VIEW, CAPABILITIES.INVENTORY_MERGE, CAPABILITIES.INVENTORY_ADJUST, CAPABILITIES.INVENTORY_CLASSIFY, CAPABILITIES.EVIDENCE_UPLOAD] }),
-  [ROLES.ADMINISTRATOR]: Object.freeze({ scopeMode: 'ALL', capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.VIEW_INTERNAL, CAPABILITIES.VIEW_ALL_SUMMARY, CAPABILITIES.VIEW_AUDIT, CAPABILITIES.VIEW_INVENTORY, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE, CAPABILITIES.LENDING_USAGE_VIEW, CAPABILITIES.INVENTORY_CLASSIFY, CAPABILITIES.REFERENCE_CATALOG_MANAGE, CAPABILITIES.REFERENCE_MANAGE, CAPABILITIES.ADVERTISEMENT_MANAGE, CAPABILITIES.ACCESS_ADMIN, CAPABILITIES.SYSTEM_ADMIN, CAPABILITIES.SYSTEM_DIAGNOSTICS, CAPABILITIES.EVIDENCE_UPLOAD] }),
+  [ROLES.REQUESTER]: Object.freeze({
+    scopeMode: 'SELF',
+    capabilities: [CAPABILITIES.VIEW_REQUEST, CAPABILITIES.REQUEST_CREATE, CAPABILITIES.LENDING_CREATE],
+  }),
+  [ROLES.DOL_STAFF]: Object.freeze({
+    scopeMode: 'COMMITTEE',
+    capabilities: [
+      CAPABILITIES.VIEW_REQUEST,
+      CAPABILITIES.VIEW_INTERNAL,
+      CAPABILITIES.VIEW_COMMITTEE_SUMMARY,
+      CAPABILITIES.VIEW_INVENTORY,
+      CAPABILITIES.REQUEST_CREATE,
+      CAPABILITIES.LENDING_CREATE,
+      CAPABILITIES.REQUEST_REVIEW,
+      CAPABILITIES.REQUEST_MISSING_INFORMATION,
+      CAPABILITIES.REQUEST_REJECT,
+      CAPABILITIES.FULFILL_CANVASS,
+      CAPABILITIES.FULFILL_PROCURE,
+      CAPABILITIES.FULFILL_RESERVE,
+      CAPABILITIES.FULFILL_RECEIVE,
+      CAPABILITIES.FULFILL_RELEASE,
+      CAPABILITIES.LENDING_APPROVE,
+      CAPABILITIES.LENDING_HANDOFF,
+      CAPABILITIES.LENDING_RETURN,
+      CAPABILITIES.LENDING_USAGE_VIEW,
+      CAPABILITIES.INVENTORY_CLASSIFY,
+      CAPABILITIES.EVIDENCE_UPLOAD,
+    ],
+  }),
+  [ROLES.COMMITTEE_HEAD]: Object.freeze({
+    scopeMode: 'COMMITTEE',
+    capabilities: [
+      CAPABILITIES.VIEW_REQUEST,
+      CAPABILITIES.VIEW_INTERNAL,
+      CAPABILITIES.VIEW_COMMITTEE_SUMMARY,
+      CAPABILITIES.VIEW_INVENTORY,
+      CAPABILITIES.REQUEST_CREATE,
+      CAPABILITIES.LENDING_CREATE,
+      CAPABILITIES.REQUEST_REVIEW,
+      CAPABILITIES.REQUEST_MISSING_INFORMATION,
+      CAPABILITIES.REQUEST_REJECT,
+      CAPABILITIES.REQUEST_REOPEN,
+      CAPABILITIES.ASSIGN_STAFF,
+      CAPABILITIES.ESCALATE,
+      CAPABILITIES.FULFILL_CANVASS,
+      CAPABILITIES.FULFILL_PROCURE,
+      CAPABILITIES.FULFILL_RESERVE,
+      CAPABILITIES.FULFILL_RECEIVE,
+      CAPABILITIES.LENDING_APPROVE,
+      CAPABILITIES.LENDING_USAGE_VIEW,
+      CAPABILITIES.INVENTORY_MERGE,
+      CAPABILITIES.INVENTORY_CLASSIFY,
+      CAPABILITIES.EVIDENCE_UPLOAD,
+    ],
+  }),
+  [ROLES.DIRECTOR]: Object.freeze({
+    scopeMode: 'ALL',
+    capabilities: [
+      CAPABILITIES.VIEW_REQUEST,
+      CAPABILITIES.VIEW_INTERNAL,
+      CAPABILITIES.VIEW_ALL_SUMMARY,
+      CAPABILITIES.VIEW_AUDIT,
+      CAPABILITIES.VIEW_INVENTORY,
+      CAPABILITIES.REQUEST_CREATE,
+      CAPABILITIES.LENDING_CREATE,
+      CAPABILITIES.REQUEST_REVIEW,
+      CAPABILITIES.REQUEST_MISSING_INFORMATION,
+      CAPABILITIES.REQUEST_REJECT,
+      CAPABILITIES.REQUEST_REOPEN,
+      CAPABILITIES.ASSIGN_COMMITTEE,
+      CAPABILITIES.ASSIGN_STAFF,
+      CAPABILITIES.ESCALATE,
+      CAPABILITIES.FULFILL_CANVASS,
+      CAPABILITIES.FULFILL_PROCURE,
+      CAPABILITIES.FULFILL_RESERVE,
+      CAPABILITIES.FULFILL_RECEIVE,
+      CAPABILITIES.FULFILL_RELEASE,
+      CAPABILITIES.LENDING_APPROVE,
+      CAPABILITIES.LENDING_HANDOFF,
+      CAPABILITIES.LENDING_RETURN,
+      CAPABILITIES.LENDING_USAGE_VIEW,
+      CAPABILITIES.INVENTORY_MERGE,
+      CAPABILITIES.INVENTORY_ADJUST,
+      CAPABILITIES.INVENTORY_CLASSIFY,
+      CAPABILITIES.EVENT_MANAGE,
+      CAPABILITIES.EVIDENCE_UPLOAD,
+    ],
+  }),
+  [ROLES.ADMINISTRATOR]: Object.freeze({
+    scopeMode: 'ALL',
+    capabilities: [
+      CAPABILITIES.VIEW_REQUEST,
+      CAPABILITIES.VIEW_INTERNAL,
+      CAPABILITIES.VIEW_ALL_SUMMARY,
+      CAPABILITIES.VIEW_AUDIT,
+      CAPABILITIES.VIEW_INVENTORY,
+      CAPABILITIES.REQUEST_CREATE,
+      CAPABILITIES.LENDING_CREATE,
+      CAPABILITIES.LENDING_USAGE_VIEW,
+      CAPABILITIES.INVENTORY_CLASSIFY,
+      CAPABILITIES.EVENT_MANAGE,
+      CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+      CAPABILITIES.REFERENCE_MANAGE,
+      CAPABILITIES.ADVERTISEMENT_MANAGE,
+      CAPABILITIES.ACCESS_ADMIN,
+      CAPABILITIES.SYSTEM_ADMIN,
+      CAPABILITIES.SYSTEM_DIAGNOSTICS,
+      CAPABILITIES.EVIDENCE_UPLOAD,
+    ],
+  }),
   [ROLES.READ_ONLY_AUDITOR]: Object.freeze({ scopeMode: 'ALL', capabilities: [CAPABILITIES.VIEW_AUDIT] }),
 });
 
-export const ROLE_CAPABILITIES = Object.freeze(Object.fromEntries(
-  Object.entries(ROLE_REGISTRY).map(([role, definition]) => [role, Object.freeze([...definition.capabilities])]),
-));
+export const ROLE_CAPABILITIES = Object.freeze(
+  Object.fromEntries(
+    Object.entries(ROLE_REGISTRY).map(([role, definition]) => [
+      role,
+      Object.freeze([...definition.capabilities]),
+    ]),
+  ),
+);
 
 const ROLE_ALIASES = Object.freeze({
   SYSTEM_OWNER: ROLES.SYSTEM_OWNER,
@@ -91,6 +216,7 @@ const ACTION_CAPABILITIES = Object.freeze({
   diagnostics: CAPABILITIES.SYSTEM_DIAGNOSTICS,
   manage_catalog: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
   classify_inventory: CAPABILITIES.INVENTORY_CLASSIFY,
+  manage_event: CAPABILITIES.EVENT_MANAGE,
   manage_reference: CAPABILITIES.REFERENCE_MANAGE,
   manage_advertisements: CAPABILITIES.ADVERTISEMENT_MANAGE,
   admin_access: CAPABILITIES.ACCESS_ADMIN,
@@ -109,23 +235,31 @@ const LEGACY_PERMISSION_KEYS = Object.freeze({
 const CANONICAL_CAPABILITIES = new Set(Object.values(CAPABILITIES));
 
 function normalizeRole(value) {
-  return String(value ?? '').trim().replace(/[\s-]+/g, '_').toUpperCase();
+  return String(value ?? '')
+    .trim()
+    .replace(/[\s-]+/g, '_')
+    .toUpperCase();
 }
 
 export function canonicalRoleId(value) {
   const raw = String(value ?? '').trim();
-  return ROLE_REGISTRY[normalizeRole(raw)] ? normalizeRole(raw) : ROLE_ALIASES[raw] ?? ROLE_ALIASES[normalizeRole(raw)] ?? '';
+  return ROLE_REGISTRY[normalizeRole(raw)]
+    ? normalizeRole(raw)
+    : (ROLE_ALIASES[raw] ?? ROLE_ALIASES[normalizeRole(raw)] ?? '');
 }
 
 export function canonicalCommitteeId(value) {
   const raw = String(value ?? '').trim();
   const normalized = normalizeRole(raw);
-  return COMMITTEE_REGISTRY.find((committee) => (
-    raw === committee.id
-    || normalized === normalizeRole(committee.id)
-    || normalized === normalizeRole(committee.name)
-    || committee.aliases.some((alias) => normalized === normalizeRole(alias))
-  ))?.id ?? '';
+  return (
+    COMMITTEE_REGISTRY.find(
+      (committee) =>
+        raw === committee.id ||
+        normalized === normalizeRole(committee.id) ||
+        normalized === normalizeRole(committee.name) ||
+        committee.aliases.some((alias) => normalized === normalizeRole(alias)),
+    )?.id ?? ''
+  );
 }
 
 export function capabilitiesFor(role) {
@@ -155,21 +289,31 @@ export function can(roleOrUser, action) {
 }
 
 export function permissionsFor(role) {
-  return Object.fromEntries(Object.keys(ACTION_CAPABILITIES).map((action) => [action, can(role, action)]).filter(([action]) => action !== 'manage_reference' && action !== 'admin_access' && action !== 'system_admin'));
+  return Object.fromEntries(
+    Object.keys(ACTION_CAPABILITIES)
+      .map((action) => [action, can(role, action)])
+      .filter(
+        ([action]) => action !== 'manage_reference' && action !== 'admin_access' && action !== 'system_admin',
+      ),
+  );
 }
 
 export function authorizationDenialMessage(reason) {
-  return ({
-    INACTIVE_USER: 'Your access is inactive.',
-    AMBIGUOUS_IDENTITY: 'Your account has multiple active access mappings and requires administrator review.',
-    UNKNOWN_ROLE: 'Your account role is not recognized.',
-    CAPABILITY_NOT_GRANTED: 'Your account is not permitted to perform this action.',
-    MISSING_COMMITTEE_SCOPE: 'Your account has no active committee scope for this action.',
-    ENTITY_SCOPE_REQUIRED: 'The requested record has no verified authorization scope.',
-    OUT_OF_SCOPE: 'The requested record is outside your authorized committee scope.',
-    SELF_SCOPE_ONLY: 'This action is limited to your own request scope.',
-    MAPPING_RECONCILIATION_REQUIRED: 'Your account authorization mapping requires reconciliation before this action is available.',
-  })[reason] ?? 'This action is not authorized.';
+  return (
+    {
+      INACTIVE_USER: 'Your access is inactive.',
+      AMBIGUOUS_IDENTITY:
+        'Your account has multiple active access mappings and requires administrator review.',
+      UNKNOWN_ROLE: 'Your account role is not recognized.',
+      CAPABILITY_NOT_GRANTED: 'Your account is not permitted to perform this action.',
+      MISSING_COMMITTEE_SCOPE: 'Your account has no active committee scope for this action.',
+      ENTITY_SCOPE_REQUIRED: 'The requested record has no verified authorization scope.',
+      OUT_OF_SCOPE: 'The requested record is outside your authorized committee scope.',
+      SELF_SCOPE_ONLY: 'This action is limited to your own request scope.',
+      MAPPING_RECONCILIATION_REQUIRED:
+        'Your account authorization mapping requires reconciliation before this action is available.',
+    }[reason] ?? 'This action is not authorized.'
+  );
 }
 
 export function projectClientAuthorization(currentUser, { requireCanonical = false } = {}) {
@@ -185,12 +329,24 @@ export function projectClientAuthorization(currentUser, { requireCanonical = fal
     };
   }
   if (authorization?.modelVersion >= 2) {
-    const capabilities = authorization.active === true && authorization.mappingStatus === 'MAPPED' && Array.isArray(authorization.capabilities)
-      ? authorization.capabilities.filter((capability) => CANONICAL_CAPABILITIES.has(capability))
+    const capabilities =
+      authorization.active === true &&
+      authorization.mappingStatus === 'MAPPED' &&
+      Array.isArray(authorization.capabilities)
+        ? authorization.capabilities.filter((capability) => CANONICAL_CAPABILITIES.has(capability))
+        : [];
+    const committeeIds = Array.isArray(authorization.committeeIds)
+      ? authorization.committeeIds.filter(Boolean).slice(0, 3)
       : [];
-    const committeeIds = Array.isArray(authorization.committeeIds) ? authorization.committeeIds.filter(Boolean).slice(0, 3) : [];
-    const committees = Array.isArray(authorization.committees) ? authorization.committees.filter((committee) => committee && typeof committee === 'object').slice(0, 3) : [];
-    const permissions = Object.fromEntries(Object.entries(LEGACY_PERMISSION_KEYS).map(([key, capability]) => [key, capabilities.includes(capability)]));
+    const committees = Array.isArray(authorization.committees)
+      ? authorization.committees.filter((committee) => committee && typeof committee === 'object').slice(0, 3)
+      : [];
+    const permissions = Object.fromEntries(
+      Object.entries(LEGACY_PERMISSION_KEYS).map(([key, capability]) => [
+        key,
+        capabilities.includes(capability),
+      ]),
+    );
     return {
       ...currentUser,
       role: authorization.roleId || 'REQUESTER',

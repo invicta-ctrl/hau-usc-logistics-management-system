@@ -142,10 +142,15 @@ async function main() {
     statements.push(
       `INSERT OR REPLACE INTO event_series (id, code, name, status, created_at, updated_at) VALUES (` +
         `'SER-LOCAL', 'LOCAL', 'Local Synthetic Series', 'ACTIVE', ${sql(createdAt)}, ${sql(createdAt)});`,
-      `INSERT OR REPLACE INTO events (` +
-        `id, event_series_id, name, starts_at, ends_at, venue, owner_committee_id, department, status, active, created_at, updated_at` +
+      `INSERT OR REPLACE INTO event_days (` +
+        `id, event_series_id, name, event_date, status, notes, active, created_at, updated_at, created_by, updated_by` +
         `) VALUES (` +
-        `'EVT-LOCAL', 'SER-LOCAL', 'Local Synthetic Event', '2026-08-01T08:00:00+08:00', ` +
+        `'EDY-LOCAL', 'SER-LOCAL', 'August 1, 2026', '2026-08-01', 'UPCOMING', '', 1, ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'LOCAL-OWNER', 'LOCAL-OWNER');`,
+      `INSERT OR REPLACE INTO events (` +
+        `id, event_series_id, event_day_id, name, starts_at, ends_at, venue, owner_committee_id, department, status, active, created_at, updated_at` +
+        `) VALUES (` +
+        `'EVT-LOCAL', 'SER-LOCAL', 'EDY-LOCAL', 'Local Synthetic Event', '2026-08-01T08:00:00+08:00', ` +
         `'2026-08-01T17:00:00+08:00', 'Synthetic Venue', 'COM_INVENTORY_PANTRY', ` +
         `'Department of Logistics', 'ACTIVE', 1, ${sql(createdAt)}, ${sql(createdAt)});`,
       `INSERT OR REPLACE INTO inventory_items (` +
@@ -196,10 +201,10 @@ async function main() {
       `INSERT OR REPLACE INTO item_aliases (item_id, normalized_alias, display_alias) VALUES (` +
         `'ITM-LOCAL-001', 'CHAIR', 'Chair');`,
       `INSERT OR IGNORE INTO requests (` +
-        `id, request_type, request_stage, event_series_id, event_id, requester_name, requester_email, ` +
+        `id, request_type, request_stage, event_series_id, event_day_id, event_id, requester_name, requester_email, ` +
         `department, priority, purpose, status, client_request_id, created_at, updated_at, created_by` +
         `) VALUES (` +
-        `'REQ-LOCAL-RECEIVING', 'CATALOG_RESTOCK', 'PROCUREMENT', 'SER-LOCAL', 'EVT-LOCAL', ` +
+        `'REQ-LOCAL-RECEIVING', 'CATALOG_RESTOCK', 'PROCUREMENT', 'SER-LOCAL', 'EDY-LOCAL', 'EVT-LOCAL', ` +
         `'Synthetic Requester', '', 'Department of Logistics', 'NORMAL', 'Synthetic receiving seed', ` +
         `'ACCEPTED', 'LOCAL-RECEIVING-SEED', ${sql(createdAt)}, ${sql(createdAt)}, 'SYSTEM-IMPORT');`,
       `INSERT OR IGNORE INTO request_lines (` +

@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '26' },
+    database: { connected: true, schemaVersion: '27' },
   });
 
   await page.goto('/');
@@ -625,6 +625,172 @@ test('Lending Usage and advertisement management enforce role and media boundari
   expect(publicAfterArchive.items.some((item) => item.id === advertisementId)).toBe(false);
 
   await Promise.all([admin.dispose(), director.dispose(), inventory.dispose(), food.dispose()]);
+});
+
+test('Admin and Director govern event hierarchy while unauthorized roles remain read-only', async ({
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  const director = await apiRequest.newContext({ baseURL });
+  const food = await apiRequest.newContext({ baseURL });
+  const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+  const directorCsrf = await login(director, 'LOCAL.DIRECTOR');
+  const foodCsrf = await login(food, 'LOCAL.FOOD');
+  const suffix = crypto.randomUUID();
+
+  const createdSeries = await mutate(admin, adminCsrf, 'saveEventSeries', {
+    clientRequestId: `event-series-${suffix}`,
+    name: 'Local Event Management Acceptance 2099',
+    year: 2099,
+    status: 'ACTIVE',
+    sourceReference: 'Synthetic local acceptance source',
+    supersedesReference: 'Synthetic earlier planning schedule',
+    reason: 'Synthetic local event management acceptance.',
+  });
+  expect(createdSeries.status()).toBe(200);
+  const series = await createdSeries.json();
+  expect(series.code).toMatch(/-2099(?:-|$)/u);
+
+  const createdDay = await mutate(director, directorCsrf, 'saveEventDay', {
+    clientRequestId: `event-day-${suffix}`,
+    eventSeriesId: series.eventSeriesId,
+    date: '2099-09-01',
+    status: 'UPCOMING',
+    reason: 'Synthetic local event day acceptance.',
+  });
+  expect(createdDay.status()).toBe(200);
+  const day = await createdDay.json();
+
+  const createdActivity = await mutate(admin, adminCsrf, 'saveEventActivity', {
+    clientRequestId: `event-activity-${suffix}`,
+    eventDayId: day.eventDayId,
+    name: 'Synthetic TBA Workshop',
+    activityType: 'Workshop',
+    includedItems: ['Synthetic included activity'],
+    timeStatus: 'TBA',
+    venue: 'Synthetic Local Venue',
+    status: 'UPCOMING',
+    sourceReference: 'Synthetic local acceptance source',
+    reason: 'Synthetic local activity acceptance.',
+  });
+  expect(createdActivity.status()).toBe(200);
+  const activity = await createdActivity.json();
+  expect(activity).toMatchObject({
+    timeStatus: 'TBA',
+    ownerReviewStatus: 'OWNER_REVIEW_REQUIRED',
+  });
+
+  const directoryResponse = await mutate(director, directorCsrf, 'getEventManagement', {});
+  expect(directoryResponse.status()).toBe(200);
+  const directory = await directoryResponse.json();
+  expect(directory.eventSeries).toContainEqual(
+    expect.objectContaining({ id: series.eventSeriesId, name: 'Local Event Management Acceptance 2099' }),
+  );
+  expect(directory.activities).toContainEqual(
+    expect.objectContaining({
+      id: activity.activityId,
+      eventDayId: day.eventDayId,
+      includedItems: ['Synthetic included activity'],
+      timeStatus: 'TBA',
+      startAt: null,
+      endAt: null,
+      responsibleCommitteeId: null,
+      readinessPercentage: null,
+      preparationProgress: null,
+      ownerReviewStatus: 'OWNER_REVIEW_REQUIRED',
+    }),
+  );
+  expect(directory.history).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ entityId: series.eventSeriesId, action: 'CREATED' }),
+      expect.objectContaining({ entityId: activity.activityId, action: 'CREATED' }),
+    ]),
+  );
+
+  const submittedRequest = await mutate(admin, adminCsrf, 'submitRequest', {
+    clientRequestId: `event-linked-request-${suffix}`,
+    requestType: 'EVENT_LOGISTICS',
+    eventSeriesId: series.eventSeriesId,
+    eventId: activity.activityId,
+    purpose: 'Synthetic event-link acceptance',
+    lines: [
+      {
+        clientLineId: `event-link-line-${suffix}`,
+        description: 'Synthetic linked material',
+        quantity: 1,
+        unit: 'piece',
+        fulfillmentSource: 'FOR_CANVASSING',
+      },
+    ],
+  });
+  expect(submittedRequest.status()).toBe(200);
+  const requestResult = await submittedRequest.json();
+  const linked = await mutate(admin, adminCsrf, 'linkEventOperationalRecord', {
+    clientRequestId: `event-operational-link-${suffix}`,
+    activityId: activity.activityId,
+    linkType: 'REQUEST',
+    linkedEntityId: requestResult.requestId,
+    reason: 'Synthetic event operational-link acceptance.',
+  });
+  expect(linked.status()).toBe(200);
+  const linkedDirectory = await (await mutate(director, directorCsrf, 'getEventManagement', {})).json();
+  expect(linkedDirectory.links).toContainEqual(
+    expect.objectContaining({
+      activityId: activity.activityId,
+      linkType: 'REQUEST',
+      linkedEntityId: requestResult.requestId,
+    }),
+  );
+  expect(linkedDirectory.history).toContainEqual(
+    expect.objectContaining({ entityId: (await linked.json()).linkId, action: 'LINKED' }),
+  );
+
+  const denied = await mutate(food, foodCsrf, 'saveEventActivity', {
+    clientRequestId: `event-denied-${suffix}`,
+    eventDayId: day.eventDayId,
+    name: 'Unauthorized activity',
+    activityType: 'Workshop',
+    timeStatus: 'TBA',
+    venue: 'Blocked',
+    reason: 'Synthetic authorization denial coverage.',
+  });
+  expect(denied.status()).toBe(403);
+  await expect(denied.json()).resolves.toMatchObject({ code: 'CAPABILITY_REQUIRED' });
+
+  await Promise.all([admin.dispose(), director.dispose(), food.dispose()]);
+});
+
+test('event management renders truthful unknown fields on the protected mobile path', async ({ page }) => {
+  await page.goto('/app/director');
+  await page.getByLabel('Access ID').fill('LOCAL.DIRECTOR');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Manage Events' }).click();
+  const management = page.locator('[data-event-management]');
+  await expect(management).toBeVisible();
+  await expect(management.getByRole('heading', { name: 'Event Management', exact: true })).toBeVisible();
+  await expect(management.getByText('Synthetic TBA Workshop')).toBeVisible();
+  await expect(management.getByText('TBA · Synthetic Local Venue')).toBeVisible();
+  const tbaActivity = management
+    .locator('.event-activity-card')
+    .filter({ hasText: 'Synthetic TBA Workshop' });
+  await expect(tbaActivity.getByText('Not assessed', { exact: true })).toHaveCount(2);
+  await expect(tbaActivity.getByText('Not added yet', { exact: true }).first()).toBeVisible();
+  await expect(management.getByRole('heading', { name: 'Activity History' })).toBeVisible();
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.reload();
+  await page.getByRole('button', { name: 'Manage Events' }).click();
+  await expect(page.locator('[data-event-management]').getByText('Synthetic TBA Workshop')).toBeVisible();
+  await expect(
+    page
+      .locator('[data-event-management] .event-activity-card')
+      .filter({ hasText: 'Synthetic TBA Workshop' })
+      .locator('.event-truth-grid'),
+  ).toHaveCSS(
+    'grid-template-columns',
+    /\d+(?:\.\d+)?px \d+(?:\.\d+)?px/u,
+  );
 });
 
 for (const [accessId, experience, workspace] of roles) {

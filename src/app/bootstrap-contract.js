@@ -2,7 +2,17 @@ export const ESSENTIAL_BOOTSTRAP_CONTRACT = 'essential-bootstrap';
 export const BOOTSTRAP_MODULE_CONTRACT = 'bootstrap-module';
 export const ESSENTIAL_BOOTSTRAP_VERSION = 2;
 
-const SUPPORTED_SCHEMA_VERSIONS = new Set(['1.6.0', '1.5.0', '1.4.0', '1.3.0', '1.2.0', '1.1.0', '1.0.0', '3', 3]);
+const SUPPORTED_SCHEMA_VERSIONS = new Set([
+  '1.6.0',
+  '1.5.0',
+  '1.4.0',
+  '1.3.0',
+  '1.2.0',
+  '1.1.0',
+  '1.0.0',
+  '3',
+  3,
+]);
 
 export const BOOTSTRAP_MODULES = Object.freeze([
   'overview',
@@ -16,6 +26,7 @@ export const BOOTSTRAP_MODULES = Object.freeze([
 
 const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'eventSeries',
+  'eventDays',
   'events',
   'requests',
   'requestLines',
@@ -46,6 +57,7 @@ const LEGACY_STATE_COLLECTIONS = Object.freeze([
 const MODULE_DATA_KEYS = Object.freeze({
   overview: Object.freeze([
     'eventSeries',
+    'eventDays',
     'events',
     'requests',
     'requestLines',
@@ -60,10 +72,11 @@ const MODULE_DATA_KEYS = Object.freeze({
     'dashboardActivity',
     'dashboardLinks',
   ]),
-  request: Object.freeze(['eventSeries', 'events', 'inventoryItems']),
+  request: Object.freeze(['eventSeries', 'eventDays', 'events', 'inventoryItems']),
   lending: Object.freeze(['inventoryItems', 'lendingTickets']),
   release: Object.freeze([
     'eventSeries',
+    'eventDays',
     'events',
     'inventoryItems',
     'requests',
@@ -73,7 +86,14 @@ const MODULE_DATA_KEYS = Object.freeze({
     'releaseCorrections',
   ]),
   restocking: Object.freeze(['inventoryItems', 'restockRequests', 'restockRecords', 'canvassReferences']),
-  procurement: Object.freeze(['eventSeries', 'events', 'requests', 'requestLines', 'deliverables', 'canvassReferences']),
+  procurement: Object.freeze([
+    'eventSeries',
+    'events',
+    'requests',
+    'requestLines',
+    'deliverables',
+    'canvassReferences',
+  ]),
   inventory: Object.freeze([
     'inventoryItems',
     'ledgerTransactions',
@@ -123,7 +143,15 @@ const MODULE_KEYS = new Set([
 
 const PERMISSION_KEYS = new Set(['review', 'release', 'receive', 'admin', 'manageCatalog']);
 const SCOPE_KEYS = new Set(['committee', 'organization']);
-const AUTHORIZATION_ROLES = new Set(['SYSTEM_OWNER', 'REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR']);
+const AUTHORIZATION_ROLES = new Set([
+  'SYSTEM_OWNER',
+  'REQUESTER',
+  'DOL_STAFF',
+  'COMMITTEE_HEAD',
+  'DIRECTOR',
+  'ADMINISTRATOR',
+  'READ_ONLY_AUDITOR',
+]);
 const AUTHORIZATION_COMMITTEES = new Set(['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS']);
 const AUTHORIZATION_SCOPE_MODES = new Set(['SELF', 'COMMITTEE', 'ALL', 'DENY']);
 const AUTHORIZATION_MAPPING_STATUSES = new Set(['MAPPED', 'INACTIVE', 'NEEDS_REVIEW', 'UNKNOWN_ROLE']);
@@ -135,12 +163,41 @@ const AUTHORIZATION_WORKSPACES = new Set([
   'materials',
 ]);
 const AUTHORIZATION_CAPABILITIES = new Set([
-  'view.request', 'view.internal', 'view.committee.summary', 'view.all.summary', 'view.audit', 'view.inventory',
-  'request.create', 'request.review', 'request.missing_information', 'request.reject', 'request.reopen',
-  'workflow.assign_committee', 'workflow.assign_staff', 'workflow.escalate',
-  'fulfillment.canvass', 'fulfillment.procure', 'fulfillment.reserve', 'fulfillment.receive', 'fulfillment.release',
-  'lending.create', 'lending.approve', 'lending.handoff', 'lending.return', 'lending.usage.view', 'inventory.merge_event_item', 'inventory.adjust', 'inventory.classify',
-  'reference.catalog.manage', 'reference.manage', 'advertisement.manage', 'access.admin', 'system.admin', 'system.diagnostics', 'evidence.upload',
+  'view.request',
+  'view.internal',
+  'view.committee.summary',
+  'view.all.summary',
+  'view.audit',
+  'view.inventory',
+  'request.create',
+  'request.review',
+  'request.missing_information',
+  'request.reject',
+  'request.reopen',
+  'workflow.assign_committee',
+  'workflow.assign_staff',
+  'workflow.escalate',
+  'fulfillment.canvass',
+  'fulfillment.procure',
+  'fulfillment.reserve',
+  'fulfillment.receive',
+  'fulfillment.release',
+  'lending.create',
+  'lending.approve',
+  'lending.handoff',
+  'lending.return',
+  'lending.usage.view',
+  'inventory.merge_event_item',
+  'inventory.adjust',
+  'inventory.classify',
+  'reference.catalog.manage',
+  'reference.manage',
+  'advertisement.manage',
+  'access.admin',
+  'event.manage',
+  'system.admin',
+  'system.diagnostics',
+  'evidence.upload',
 ]);
 const SENSITIVE_KEYS = new Set([
   'email',
@@ -199,7 +256,14 @@ function assertJsonSafe(value, seen = new WeakSet()) {
     if (!Number.isFinite(value)) fail();
     return;
   }
-  if (typeof value !== 'object' || value instanceof Date || typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint') fail();
+  if (
+    typeof value !== 'object' ||
+    value instanceof Date ||
+    typeof value === 'function' ||
+    typeof value === 'symbol' ||
+    typeof value === 'bigint'
+  )
+    fail();
   if (seen.has(value)) fail('The bootstrap response contains a circular value.');
   seen.add(value);
   if (Array.isArray(value)) value.forEach((item) => assertJsonSafe(item, seen));
@@ -234,7 +298,28 @@ function assertBoolean(value) {
 
 function assertAuthorization(value) {
   if (!isPlainObject(value)) fail();
-  assertAllowedKeys(value, new Set(['contract', 'contractVersion', 'modelVersion', 'roleId', 'roleLabel', 'scopeMode', 'committeeIds', 'committees', 'capabilities', 'workspaceIds', 'defaultWorkspaceId', 'locationScopeIds', 'eventSeriesScopeIds', 'eventScopeIds', 'explicitDenies', 'mappingStatus', 'active']));
+  assertAllowedKeys(
+    value,
+    new Set([
+      'contract',
+      'contractVersion',
+      'modelVersion',
+      'roleId',
+      'roleLabel',
+      'scopeMode',
+      'committeeIds',
+      'committees',
+      'capabilities',
+      'workspaceIds',
+      'defaultWorkspaceId',
+      'locationScopeIds',
+      'eventSeriesScopeIds',
+      'eventScopeIds',
+      'explicitDenies',
+      'mappingStatus',
+      'active',
+    ]),
+  );
   if (value.contract !== 'canonical-authorization' || value.contractVersion !== 2) fail();
   if (!Number.isInteger(value.modelVersion) || ![1, 2].includes(value.modelVersion)) fail();
   assertSafeText(value.roleId, { max: 40 });
@@ -254,7 +339,8 @@ function assertAuthorization(value) {
     if (!AUTHORIZATION_COMMITTEES.has(committee.id)) fail();
     assertSafeText(committee.name, { required: true, max: 80 });
   });
-  if (!Array.isArray(value.capabilities) || value.capabilities.length > AUTHORIZATION_CAPABILITIES.size) fail();
+  if (!Array.isArray(value.capabilities) || value.capabilities.length > AUTHORIZATION_CAPABILITIES.size)
+    fail();
   value.capabilities.forEach((capability) => {
     assertSafeText(capability, { required: true, max: 80 });
     if (!AUTHORIZATION_CAPABILITIES.has(capability)) fail();
@@ -321,7 +407,10 @@ function assertMetrics(value) {
 
 function assertCurrentUser(value, { requireAuthorization = false } = {}) {
   if (!isPlainObject(value)) fail();
-  assertAllowedKeys(value, new Set(['id', 'displayName', 'role', 'committee', 'permissions', 'scopes', 'authorization']));
+  assertAllowedKeys(
+    value,
+    new Set(['id', 'displayName', 'role', 'committee', 'permissions', 'scopes', 'authorization']),
+  );
   assertSafeText(value.id, { required: true, max: 80 });
   assertSafeText(value.displayName, { required: true, max: 120 });
   assertSafeText(value.role, { required: true, max: 80 });
@@ -338,7 +427,8 @@ function assertCurrentUser(value, { requireAuthorization = false } = {}) {
       value.scopes[key].forEach((scope) => assertSafeText(scope, { max: 120 }));
     });
   }
-  if (requireAuthorization && value.authorization === undefined) fail('Canonical authorization metadata is required for the v2 bootstrap contract.');
+  if (requireAuthorization && value.authorization === undefined)
+    fail('Canonical authorization metadata is required for the v2 bootstrap contract.');
   if (value.authorization !== undefined) assertAuthorization(value.authorization);
 }
 
@@ -377,9 +467,17 @@ function assertOperationalContext(value) {
 
 function assertModuleConfig(value) {
   if (!isPlainObject(value)) fail();
-  assertAllowedKeys(value, new Set(['maxPageSize', 'defaultPageSize', 'legacyEndpointAvailable', 'activeModuleOnly']));
+  assertAllowedKeys(
+    value,
+    new Set(['maxPageSize', 'defaultPageSize', 'legacyEndpointAvailable', 'activeModuleOnly']),
+  );
   if (!Number.isInteger(value.maxPageSize) || value.maxPageSize < 1 || value.maxPageSize > 100) fail();
-  if (!Number.isInteger(value.defaultPageSize) || value.defaultPageSize < 1 || value.defaultPageSize > value.maxPageSize) fail();
+  if (
+    !Number.isInteger(value.defaultPageSize) ||
+    value.defaultPageSize < 1 ||
+    value.defaultPageSize > value.maxPageSize
+  )
+    fail();
   assertBoolean(value.legacyEndpointAvailable);
   assertBoolean(value.activeModuleOnly);
 }
@@ -389,7 +487,11 @@ export function validateEssentialBootstrap(value, { backendMode = 'mock' } = {})
   assertAllowedKeys(value, ESSENTIAL_KEYS);
   if (value.ok !== undefined && value.ok !== true) fail();
   if (value.correlationId !== undefined) assertSafeToken(value.correlationId);
-  if (value.contract !== ESSENTIAL_BOOTSTRAP_CONTRACT || value.contractVersion !== ESSENTIAL_BOOTSTRAP_VERSION) fail();
+  if (
+    value.contract !== ESSENTIAL_BOOTSTRAP_CONTRACT ||
+    value.contractVersion !== ESSENTIAL_BOOTSTRAP_VERSION
+  )
+    fail();
   assertSafeText(value.appVersion, { required: true, max: 32 });
   if (value.schemaVersion === undefined || value.schemaVersion === null) fail();
   assertSafeText(String(value.schemaVersion), { required: true, max: 32 });
@@ -412,11 +514,13 @@ function assertNoSensitiveKeys(value, seen = new WeakSet()) {
   if (seen.has(value)) fail();
   seen.add(value);
   if (Array.isArray(value)) value.forEach((item) => assertNoSensitiveKeys(item, seen));
-  else Object.entries(value).forEach(([key, item]) => {
-    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (SENSITIVE_KEYS.has(key.toLowerCase()) || SENSITIVE_KEYS.has(normalizedKey)) fail(`Sensitive bootstrap field: ${key}`);
-    assertNoSensitiveKeys(item, seen);
-  });
+  else
+    Object.entries(value).forEach(([key, item]) => {
+      const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (SENSITIVE_KEYS.has(key.toLowerCase()) || SENSITIVE_KEYS.has(normalizedKey))
+        fail(`Sensitive bootstrap field: ${key}`);
+      assertNoSensitiveKeys(item, seen);
+    });
   seen.delete(value);
 }
 
@@ -445,7 +549,8 @@ export function validateBootstrapModule(value, { backendMode = 'mock', module } 
   assertAllowedKeys(value, MODULE_KEYS);
   if (value.ok !== undefined && value.ok !== true) fail();
   if (value.correlationId !== undefined) assertSafeToken(value.correlationId);
-  if (value.contract !== BOOTSTRAP_MODULE_CONTRACT || value.contractVersion !== ESSENTIAL_BOOTSTRAP_VERSION) fail();
+  if (value.contract !== BOOTSTRAP_MODULE_CONTRACT || value.contractVersion !== ESSENTIAL_BOOTSTRAP_VERSION)
+    fail();
   assertSafeText(value.appVersion, { required: true, max: 32 });
   if (value.schemaVersion === undefined || value.schemaVersion === null) fail();
   assertSafeText(String(value.schemaVersion), { required: true, max: 32 });

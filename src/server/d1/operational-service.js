@@ -53,6 +53,11 @@ const METHOD_CAPABILITIES = Object.freeze({
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
   classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
+  getEventManagement: CAPABILITIES.EVENT_MANAGE,
+  saveEventSeries: CAPABILITIES.EVENT_MANAGE,
+  saveEventDay: CAPABILITIES.EVENT_MANAGE,
+  saveEventActivity: CAPABILITIES.EVENT_MANAGE,
+  linkEventOperationalRecord: CAPABILITIES.EVENT_MANAGE,
   getMigrationStatus: CAPABILITIES.SYSTEM_DIAGNOSTICS,
 });
 
@@ -140,6 +145,19 @@ const nonNegativeNumber = (value, field = 'value') => {
 
 const nowIso = () => new Date().toISOString();
 const createId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
+
+const nullableText = (value, max = 500) => optionalText(value, max) || null;
+
+const nullablePercentage = (value, field) => {
+  if (value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0 || number > 100) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be between 0 and 100.`, {
+      details: { field },
+    });
+  }
+  return number;
+};
 
 const stableValue = (value) => {
   if (Array.isArray(value)) return value.map(stableValue);
@@ -637,6 +655,49 @@ function historyStatement(
     );
 }
 
+function eventActivityHistoryStatement(
+  db,
+  {
+    eventSeriesId,
+    eventDayId = null,
+    eventId = null,
+    entityType,
+    entityId,
+    action,
+    before = null,
+    after = null,
+    reason,
+    accountId,
+    correlationId,
+    idempotencyKey,
+  },
+) {
+  return db
+    .prepare(
+      `INSERT INTO event_activity_history (
+         id, event_series_id, event_day_id, event_id, entity_type, entity_id, action,
+         before_json, after_json, reason, actor_account_id, occurred_at, correlation_id,
+         idempotency_key
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
+    )
+    .bind(
+      createId('EAH'),
+      eventSeriesId,
+      eventDayId,
+      eventId,
+      entityType,
+      entityId,
+      action,
+      before ? JSON.stringify(before) : null,
+      after ? JSON.stringify(after) : null,
+      reason,
+      accountId,
+      nowIso(),
+      correlationId,
+      idempotencyKey,
+    );
+}
+
 function revisionStatements(db, scopes, timestamp = nowIso()) {
   return [...new Set(['global', 'overview', ...scopes])].map((scope) =>
     db
@@ -805,6 +866,7 @@ const requestDto = (row) => ({
   stage: row.request_stage,
   parentRequestId: row.parent_request_id,
   eventSeriesId: row.event_series_id,
+  eventDayId: row.event_day_id,
   eventId: row.event_id,
   ownerCommitteeId: row.owner_committee_id,
   catalogType: row.catalog_type,
@@ -814,6 +876,53 @@ const requestDto = (row) => ({
   status: row.status,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+});
+
+const parseJsonArray = (value) => {
+  try {
+    const parsed = JSON.parse(value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const eventActivityDto = (row) => ({
+  id: row.id,
+  code: row.code || '',
+  seriesId: row.event_series_id,
+  eventDayId: row.event_day_id,
+  name: row.name,
+  activityType: row.activity_type || '',
+  includedItems: parseJsonArray(row.included_items_json),
+  timeStatus: row.time_status || (row.starts_at ? 'SCHEDULED' : 'TBA'),
+  startAt: row.starts_at,
+  endAt: row.ends_at,
+  venue: row.venue,
+  responsibleCommitteeId: row.owner_committee_id,
+  responsibleCommitteeName: row.responsible_committee_name || null,
+  supportingCommitteeIds: parseJsonArray(row.supporting_committees_json),
+  preparationDeadline: row.preparation_deadline,
+  requestWindowOpensAt: row.request_window_opens_at,
+  requestWindowClosesAt: row.request_window_closes_at,
+  releaseDeadline: row.release_deadline,
+  readinessPercentage:
+    row.readiness_percentage === null || row.readiness_percentage === undefined
+      ? null
+      : Number(row.readiness_percentage),
+  preparationProgress:
+    row.preparation_progress === null || row.preparation_progress === undefined
+      ? null
+      : Number(row.preparation_progress),
+  status: row.status,
+  ownerReviewStatus: row.owner_review_status || 'OWNER_REVIEW_REQUIRED',
+  notes: row.notes || null,
+  sourceReference: row.source_reference || null,
+  revision: Number(row.revision || 1),
+  active: row.active === 1,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  updatedBy: row.updated_by || row.created_by || null,
 });
 
 const lineDto = (row) => ({
@@ -1001,18 +1110,31 @@ export function createD1OperationalService({
       const eventLimitIndex = eventScope.values.length + 1;
       const eventRows = await rows(
         db,
-        `SELECT event.* FROM events event WHERE event.active = 1 AND ${eventScope.sql}
+        `SELECT event.* FROM events event
+         JOIN event_days event_day ON event_day.id = event.event_day_id
+         WHERE event.active = 1 AND event_day.active = 1 AND ${eventScope.sql}
          ORDER BY event.starts_at DESC LIMIT ?${eventLimitIndex} OFFSET ?${eventLimitIndex + 1}`,
         [...eventScope.values, page.pageSize, page.offset],
       );
       data = {
-        eventSeries: await rows(db, 'SELECT id, code, name, status FROM event_series ORDER BY name LIMIT 50'),
+        eventSeries: await rows(
+          db,
+          "SELECT id, code, name, status FROM event_series WHERE status = 'ACTIVE' ORDER BY name LIMIT 50",
+        ),
+        eventDays: await rows(
+          db,
+          `SELECT id, event_series_id AS seriesId, name, event_date AS date, status
+           FROM event_days WHERE active = 1 ORDER BY event_date LIMIT 100`,
+        ),
         events: eventRows.map((row) => ({
           id: row.id,
           seriesId: row.event_series_id,
           name: row.name,
           startAt: row.starts_at,
           endAt: row.ends_at,
+          eventDayId: row.event_day_id,
+          activityType: row.activity_type,
+          timeStatus: row.time_status,
           ...(requestOnly ? {} : { venue: row.venue }),
           status: row.status,
         })),
@@ -1224,7 +1346,8 @@ export function createD1OperationalService({
         const eventRows = await rows(
           db,
           `SELECT event.* FROM events event
-           WHERE event.active = 1 AND ${eventScope.sql}
+           JOIN event_days event_day ON event_day.id = event.event_day_id
+           WHERE event.active = 1 AND event_day.active = 1 AND ${eventScope.sql}
            ORDER BY event.starts_at, event.name
            LIMIT ?${eventLimitIndex}`,
           [...eventScope.values, 100],
@@ -1362,6 +1485,40 @@ export function createD1OperationalService({
              LIMIT ?${canvassLimitIndex} OFFSET ?${canvassLimitIndex + 1}`,
             [...canvassScope.values, page.pageSize, page.offset],
           ),
+        };
+      } else if (module === 'overview') {
+        const eventScope = multiScopeWhere(account, { committeeColumns: ['event.owner_committee_id'] });
+        const eventRows = await rows(
+          db,
+          `SELECT event.* FROM events event
+           JOIN event_days event_day ON event_day.id = event.event_day_id
+           WHERE event.active = 1 AND event_day.active = 1 AND ${eventScope.sql}
+           ORDER BY COALESCE(event.starts_at, '9999-12-31'), event.name LIMIT 200`,
+          eventScope.values,
+        );
+        data = {
+          eventSeries: await rows(
+            db,
+            "SELECT id, code, name, status FROM event_series WHERE status = 'ACTIVE' ORDER BY name LIMIT 50",
+          ),
+          eventDays: await rows(
+            db,
+            `SELECT id, event_series_id AS seriesId, name, event_date AS date, status
+             FROM event_days WHERE active = 1 ORDER BY event_date LIMIT 100`,
+          ),
+          events: eventRows.map(eventActivityDto),
+          requests: requestRows.map(requestDto),
+          requestLines: requestLines.map(lineDto),
+          inventoryItems: itemRows.map((row) => itemDto(row)),
+          lendingTickets: [],
+          restockRequests: [],
+          deliverables: [],
+          roadmapMilestones: [],
+          dashboardMeta: [],
+          dashboardQueues: [],
+          dashboardStaffWorkload: [],
+          dashboardActivity: [],
+          dashboardLinks: [],
         };
       } else {
         data = {
@@ -2450,22 +2607,47 @@ export function createD1OperationalService({
     const timestamp = nowIso();
     const requestId = createId('REQ');
     const committeeId = ownerCommitteeId(account, command.ownerCommitteeId);
+    const eventSeriesId = optionalText(command.eventSeriesId, 80) || null;
+    const eventId = optionalText(command.eventId, 80) || null;
+    let eventDayId = null;
+    if (eventSeriesId || eventId) {
+      if (!eventSeriesId || !eventId) {
+        throw new ApiError('VALIDATION_FAILED', 'Event-linked requests require a main event and activity.');
+      }
+      const event = await db
+        .prepare(
+          `SELECT event.event_day_id FROM events event
+           JOIN event_series series ON series.id = event.event_series_id
+           JOIN event_days day ON day.id = event.event_day_id
+           WHERE event.id = ?1 AND event.event_series_id = ?2 AND event.active = 1
+             AND day.active = 1 AND series.status = 'ACTIVE'`,
+        )
+        .bind(eventId, eventSeriesId)
+        .first();
+      if (!event) {
+        throw new ApiError('REQUEST_EVENT_UNAVAILABLE', 'The selected event activity is unavailable.', {
+          status: 409,
+        });
+      }
+      eventDayId = event.event_day_id;
+    }
     const result = { requestId, id: requestId, status: 'FOR_REVIEW', correlationId };
     const statements = [
       db
         .prepare(
           `INSERT INTO requests (
-             id, request_type, request_stage, event_series_id, event_id, catalog_type,
+             id, request_type, request_stage, event_series_id, event_day_id, event_id, catalog_type,
              requester_account_id, requester_name, requester_email, department, priority, owner_committee_id,
              purpose, status, client_request_id, notes, created_at, updated_at, created_by
-           ) VALUES (?1, ?2, 'REVIEW', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11,
-             ?12, 'FOR_REVIEW', ?13, ?14, ?15, ?15, ?6)`,
+           ) VALUES (?1, ?2, 'REVIEW', ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
+              ?13, 'FOR_REVIEW', ?14, ?15, ?16, ?16, ?7)`,
         )
         .bind(
           requestId,
           requiredText(command.requestType ?? 'EVENT_LOGISTICS', 'requestType', 64),
-          optionalText(command.eventSeriesId, 80) || null,
-          optionalText(command.eventId, 80) || null,
+          eventSeriesId,
+          eventDayId,
+          eventId,
           optionalText(command.catalogType, 80),
           account.id,
           optionalText(command.requesterName ?? account.profile?.fullName, 120),
@@ -2546,9 +2728,11 @@ export function createD1OperationalService({
     );
     const events = await rows(
       db,
-      `SELECT id, event_series_id, name, starts_at, ends_at, venue
+      `SELECT events.id, events.event_series_id, events.event_day_id, events.name,
+              events.activity_type, events.time_status, events.starts_at, events.ends_at, events.venue
        FROM events
-       WHERE active = 1 AND status NOT IN ('COMPLETED', 'CANCELLED')
+       JOIN event_days day ON day.id = events.event_day_id
+       WHERE events.active = 1 AND day.active = 1 AND events.status NOT IN ('COMPLETED', 'CANCELLED')
        ORDER BY starts_at, name`,
     );
     const requests = await rows(
@@ -2604,7 +2788,10 @@ export function createD1OperationalService({
       events: events.map((event) => ({
         id: event.id,
         seriesId: event.event_series_id,
+        eventDayId: event.event_day_id,
         name: event.name,
+        activityType: event.activity_type,
+        timeStatus: event.time_status,
         startsAt: event.starts_at,
         endsAt: event.ends_at,
         venue: event.venue,
@@ -2655,7 +2842,7 @@ export function createD1OperationalService({
     const eventId = requiredText(command.eventId, 'eventId', 80);
     const event = await db
       .prepare(
-        `SELECT event.id, event.name, series.name AS event_name
+        `SELECT event.id, event.name, event.event_day_id, series.name AS event_name
          FROM events event
          JOIN event_series series ON series.id = event.event_series_id
          WHERE event.id = ?1 AND event.event_series_id = ?2
@@ -2776,13 +2963,13 @@ export function createD1OperationalService({
         .prepare(
           `INSERT INTO requests (
              id, request_type, request_stage, parent_request_id, additional_sequence,
-             event_series_id, event_id, catalog_type, requester_account_id,
+             event_series_id, event_day_id, event_id, catalog_type, requester_account_id,
              requester_name, requester_email, department, priority, owner_committee_id,
              purpose, status, client_request_id, notes, created_at, updated_at,
              created_by, requester_department_id
-           ) VALUES (?1, 'EVENT_LOGISTICS', ?2, ?3, ?4, ?5, ?6, '', ?7,
-             ?8, ?9, ?10, 'NORMAL', NULL, ?11, 'FOR_REVIEW', ?12, '', ?13, ?13,
-             ?7, ?14)`,
+           ) VALUES (?1, 'EVENT_LOGISTICS', ?2, ?3, ?4, ?5, ?6, ?7, '', ?8,
+              ?9, ?10, ?11, 'NORMAL', NULL, ?12, 'FOR_REVIEW', ?13, '', ?14, ?14,
+              ?8, ?15)`,
         )
         .bind(
           requestId,
@@ -2790,6 +2977,7 @@ export function createD1OperationalService({
           parent?.id ?? null,
           additionalSequence,
           eventSeriesId,
+          event.event_day_id,
           eventId,
           account.id,
           account.departmentDisplayName,
@@ -5602,6 +5790,766 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function getEventManagement({ account, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.getEventManagement);
+    const [series, eventDays, activities, committees, history, links] = await Promise.all([
+      rows(
+        db,
+        `SELECT id, code, name, status, revision, owner_review_status, source_reference,
+                supersedes_reference, notes, archived_at, created_at, updated_at, created_by, updated_by
+         FROM event_series ORDER BY CASE status WHEN 'ACTIVE' THEN 0 ELSE 1 END, name`,
+      ),
+      rows(
+        db,
+        `SELECT id, event_series_id, name, event_date, status, revision, owner_review_status,
+                notes, active, archived_at, created_at, updated_at, created_by, updated_by
+         FROM event_days ORDER BY event_date, name`,
+      ),
+      rows(
+        db,
+        `SELECT event.*, committee.name AS responsible_committee_name
+         FROM events event
+         LEFT JOIN committees committee ON committee.id = event.owner_committee_id
+         ORDER BY COALESCE(event.starts_at, event_day.event_date || 'T23:59:59'), event.name`.replace(
+          'FROM events event',
+          'FROM events event LEFT JOIN event_days event_day ON event_day.id = event.event_day_id',
+        ),
+      ),
+      rows(db, 'SELECT id, name FROM committees WHERE active = 1 ORDER BY name'),
+      rows(
+        db,
+        `SELECT history.*, account.profile_full_name AS actor_name,
+                account.access_id_normalized AS actor_access_id
+         FROM event_activity_history history
+         LEFT JOIN accounts account ON account.id = history.actor_account_id
+         ORDER BY history.occurred_at DESC LIMIT 500`,
+      ),
+      rows(
+        db,
+        `SELECT link.*, account.profile_full_name AS linked_by_name
+         FROM event_operational_links link
+         LEFT JOIN accounts account ON account.id = link.linked_by
+         ORDER BY link.linked_at DESC`,
+      ),
+    ]);
+    return {
+      ok: true,
+      correlationId,
+      eventSeries: series.map((entry) => ({
+        id: entry.id,
+        code: entry.code,
+        name: entry.name,
+        status: entry.status,
+        revision: Number(entry.revision || 1),
+        ownerReviewStatus: entry.owner_review_status,
+        sourceReference: entry.source_reference || null,
+        supersedesReference: entry.supersedes_reference || null,
+        notes: entry.notes || null,
+        archivedAt: entry.archived_at,
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+        updatedBy: entry.updated_by || entry.created_by || null,
+      })),
+      eventDays: eventDays.map((entry) => ({
+        id: entry.id,
+        seriesId: entry.event_series_id,
+        name: entry.name,
+        date: entry.event_date,
+        status: entry.status,
+        revision: Number(entry.revision || 1),
+        ownerReviewStatus: entry.owner_review_status,
+        notes: entry.notes || null,
+        active: entry.active === 1,
+        archivedAt: entry.archived_at,
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+        updatedBy: entry.updated_by || entry.created_by || null,
+      })),
+      activities: activities.map(eventActivityDto),
+      committees,
+      history: history.map((entry) => ({
+        id: entry.id,
+        seriesId: entry.event_series_id,
+        eventDayId: entry.event_day_id,
+        activityId: entry.event_id,
+        entityType: entry.entity_type,
+        entityId: entry.entity_id,
+        action: entry.action,
+        before: entry.before_json ? JSON.parse(entry.before_json) : null,
+        after: entry.after_json ? JSON.parse(entry.after_json) : null,
+        reason: entry.reason,
+        actorId: entry.actor_account_id,
+        actorName: entry.actor_name || entry.actor_access_id,
+        occurredAt: entry.occurred_at,
+        correlationId: entry.correlation_id,
+      })),
+      links: links.map((entry) => ({
+        id: entry.id,
+        seriesId: entry.event_series_id,
+        eventDayId: entry.event_day_id,
+        activityId: entry.event_id,
+        linkType: entry.link_type,
+        linkedEntityType: entry.linked_entity_type,
+        linkedEntityId: entry.linked_entity_id,
+        notes: entry.notes || null,
+        linkedBy: entry.linked_by,
+        linkedByName: entry.linked_by_name || null,
+        linkedAt: entry.linked_at,
+      })),
+    };
+  }
+
+  async function allocateEventCode(name, year, excludeId = '') {
+    const words = name
+      .normalize('NFKD')
+      .replace(/[^A-Za-z0-9 ]+/gu, ' ')
+      .trim()
+      .split(/\s+/u)
+      .filter(Boolean);
+    const acronym = (words.length > 1 ? words.map((word) => word[0]).join('') : words[0] || 'EVENT')
+      .slice(0, 12)
+      .toUpperCase();
+    const base = `${acronym}-${year}`;
+    for (let sequence = 1; sequence <= 999; sequence += 1) {
+      const code = sequence === 1 ? base : `${base}-${sequence}`;
+      const existing = await db
+        .prepare('SELECT id FROM event_series WHERE code = ?1 AND id <> ?2')
+        .bind(code, excludeId)
+        .first();
+      if (!existing) return code;
+    }
+    throw new ApiError('EVENT_CODE_EXHAUSTED', 'A unique event code could not be allocated.', {
+      status: 409,
+    });
+  }
+
+  async function allocateActivityCode(seriesCode, name, excludeId = '') {
+    const activityToken =
+      name
+        .normalize('NFKD')
+        .replace(/[^A-Za-z0-9 ]+/gu, ' ')
+        .trim()
+        .split(/\s+/u)
+        .filter(Boolean)
+        .map((word) => word[0])
+        .join('')
+        .slice(0, 10)
+        .toUpperCase() || 'ACT';
+    const base = `${seriesCode}-${activityToken}`;
+    for (let sequence = 1; sequence <= 999; sequence += 1) {
+      const code = sequence === 1 ? base : `${base}-${sequence}`;
+      const existing = await db
+        .prepare('SELECT id FROM events WHERE code = ?1 AND id <> ?2')
+        .bind(code, excludeId)
+        .first();
+      if (!existing) return code;
+    }
+    throw new ApiError('EVENT_CODE_EXHAUSTED', 'A unique activity code could not be allocated.', {
+      status: 409,
+    });
+  }
+
+  async function saveEventSeries({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.saveEventSeries);
+    const mutation = await replay(db, 'saveEventSeries', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const id = optionalText(command.eventSeriesId, 80) || createId('SER');
+    const existing = command.eventSeriesId
+      ? await db.prepare('SELECT * FROM event_series WHERE id = ?1').bind(id).first()
+      : null;
+    if (command.eventSeriesId && !existing) {
+      throw new ApiError('EVENT_SERIES_NOT_FOUND', 'The selected main event was not found.', { status: 404 });
+    }
+    const name = requiredText(command.name ?? existing?.name, 'name', 200);
+    const status = requiredText(command.status ?? existing?.status ?? 'ACTIVE', 'status', 32).toUpperCase();
+    if (!['ACTIVE', 'ARCHIVED'].includes(status)) {
+      throw new ApiError('VALIDATION_FAILED', 'Main event status must be Active or Archived.');
+    }
+    const yearMatch = name.match(/\b(20\d{2})\b/u);
+    const year = Number(command.year || yearMatch?.[1] || new Date().getUTCFullYear());
+    if (!Number.isInteger(year) || year < 2000 || year > 2200) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose a valid event year.');
+    }
+    const expectedRevision = existing ? Number(command.expectedRevision) : 0;
+    if (existing && (!Number.isInteger(expectedRevision) || expectedRevision !== Number(existing.revision))) {
+      throw new ApiError('REVISION_CONFLICT', 'This main event changed. Refresh before saving.', {
+        status: 409,
+      });
+    }
+    const code = existing?.code || (await allocateEventCode(name, year));
+    const sourceReference = optionalText(command.sourceReference ?? existing?.source_reference, 500);
+    const supersedesReference = optionalText(
+      command.supersedesReference ?? existing?.supersedes_reference,
+      500,
+    );
+    const notes = optionalText(command.notes ?? existing?.notes, 1000);
+    const reason = requiredText(command.reason, 'reason', 500);
+    const timestamp = nowIso();
+    const revision = existing ? expectedRevision + 1 : 1;
+    const archivedAt = status === 'ARCHIVED' ? timestamp : null;
+    const result = { eventSeriesId: id, code, status, revision, correlationId };
+    const statement = existing
+      ? db
+          .prepare(
+            `UPDATE event_series SET name = ?2, status = ?3, revision = ?4,
+               owner_review_status = 'OWNER_REVIEW_REQUIRED', source_reference = ?5,
+               supersedes_reference = ?6, notes = ?7, archived_at = ?8, updated_at = ?9,
+               updated_by = ?10 WHERE id = ?1 AND revision = ?11`,
+          )
+          .bind(
+            id,
+            name,
+            status,
+            revision,
+            sourceReference,
+            supersedesReference,
+            notes,
+            archivedAt,
+            timestamp,
+            account.id,
+            expectedRevision,
+          )
+      : db
+          .prepare(
+            `INSERT INTO event_series (
+               id, code, name, status, revision, owner_review_status, source_reference,
+               supersedes_reference, notes, archived_at, created_at, updated_at, created_by, updated_by
+             ) VALUES (?1, ?2, ?3, ?4, 1, 'OWNER_REVIEW_REQUIRED', ?5, ?6, ?7, ?8, ?9, ?9, ?10, ?10)`,
+          )
+          .bind(
+            id,
+            code,
+            name,
+            status,
+            sourceReference,
+            supersedesReference,
+            notes,
+            archivedAt,
+            timestamp,
+            account.id,
+          );
+    await db.batch([
+      statement,
+      eventActivityHistoryStatement(db, {
+        eventSeriesId: id,
+        entityType: 'EVENT_SERIES',
+        entityId: id,
+        action: existing ? (status === 'ARCHIVED' ? 'ARCHIVED' : 'UPDATED') : 'CREATED',
+        before: existing,
+        after: { id, code, name, status, revision, sourceReference, supersedesReference, notes },
+        reason,
+        accountId: account.id,
+        correlationId,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: existing ? 'EVENT_SERIES_UPDATED' : 'EVENT_SERIES_CREATED',
+        entityType: 'EVENT_SERIES',
+        entityId: id,
+        accountId: account.id,
+        correlationId,
+        after: result,
+      }),
+      idempotencyStatement(db, 'saveEventSeries', mutation, account.id, result),
+      ...revisionStatements(db, ['request', 'release']),
+    ]);
+    return result;
+  }
+
+  async function saveEventDay({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.saveEventDay);
+    const mutation = await replay(db, 'saveEventDay', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const id = optionalText(command.eventDayId, 80) || createId('EDY');
+    const existing = command.eventDayId
+      ? await db.prepare('SELECT * FROM event_days WHERE id = ?1').bind(id).first()
+      : null;
+    if (command.eventDayId && !existing) {
+      throw new ApiError('EVENT_DAY_NOT_FOUND', 'The selected event day was not found.', { status: 404 });
+    }
+    const seriesId = requiredText(command.eventSeriesId ?? existing?.event_series_id, 'eventSeriesId', 80);
+    const series = await db
+      .prepare('SELECT id FROM event_series WHERE id = ?1 AND status <> ?2')
+      .bind(seriesId, 'ARCHIVED')
+      .first();
+    if (!series)
+      throw new ApiError('EVENT_SERIES_NOT_FOUND', 'Choose an active main event.', { status: 404 });
+    const eventDate = requiredText(command.date ?? existing?.event_date, 'date', 10);
+    if (!/^20\d{2}-\d{2}-\d{2}$/u.test(eventDate) || Number.isNaN(Date.parse(`${eventDate}T00:00:00Z`))) {
+      throw new ApiError('VALIDATION_FAILED', 'Event day date must use YYYY-MM-DD.');
+    }
+    const status = requiredText(command.status ?? existing?.status ?? 'UPCOMING', 'status', 32).toUpperCase();
+    if (!['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].includes(status)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved event-day status.');
+    }
+    const expectedRevision = existing ? Number(command.expectedRevision) : 0;
+    if (existing && (!Number.isInteger(expectedRevision) || expectedRevision !== Number(existing.revision))) {
+      throw new ApiError('REVISION_CONFLICT', 'This event day changed. Refresh before saving.', {
+        status: 409,
+      });
+    }
+    const name =
+      optionalText(command.name, 200) ||
+      new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+        timeZone: 'UTC',
+      }).format(new Date(`${eventDate}T00:00:00Z`));
+    const notes = optionalText(command.notes ?? existing?.notes, 1000);
+    const reason = requiredText(command.reason, 'reason', 500);
+    const timestamp = nowIso();
+    const revision = existing ? expectedRevision + 1 : 1;
+    const archivedAt = status === 'ARCHIVED' ? timestamp : null;
+    const active = status === 'ARCHIVED' ? 0 : 1;
+    const result = {
+      eventDayId: id,
+      eventSeriesId: seriesId,
+      date: eventDate,
+      status,
+      revision,
+      correlationId,
+    };
+    const statement = existing
+      ? db
+          .prepare(
+            `UPDATE event_days SET event_series_id = ?2, name = ?3, event_date = ?4, status = ?5,
+             revision = ?6, owner_review_status = 'OWNER_REVIEW_REQUIRED', notes = ?7, active = ?8,
+             archived_at = ?9, updated_at = ?10, updated_by = ?11
+           WHERE id = ?1 AND revision = ?12`,
+          )
+          .bind(
+            id,
+            seriesId,
+            name,
+            eventDate,
+            status,
+            revision,
+            notes,
+            active,
+            archivedAt,
+            timestamp,
+            account.id,
+            expectedRevision,
+          )
+      : db
+          .prepare(
+            `INSERT INTO event_days (
+             id, event_series_id, name, event_date, status, revision, owner_review_status,
+             notes, active, archived_at, created_at, updated_at, created_by, updated_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, 1, 'OWNER_REVIEW_REQUIRED', ?6, ?7, ?8, ?9, ?9, ?10, ?10)`,
+          )
+          .bind(id, seriesId, name, eventDate, status, notes, active, archivedAt, timestamp, account.id);
+    await db.batch([
+      statement,
+      eventActivityHistoryStatement(db, {
+        eventSeriesId: seriesId,
+        eventDayId: id,
+        entityType: 'EVENT_DAY',
+        entityId: id,
+        action: existing ? (status === 'ARCHIVED' ? 'ARCHIVED' : 'UPDATED') : 'CREATED',
+        before: existing,
+        after: { id, seriesId, name, eventDate, status, revision, notes },
+        reason,
+        accountId: account.id,
+        correlationId,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: existing ? 'EVENT_DAY_UPDATED' : 'EVENT_DAY_CREATED',
+        entityType: 'EVENT_DAY',
+        entityId: id,
+        accountId: account.id,
+        correlationId,
+        after: result,
+      }),
+      idempotencyStatement(db, 'saveEventDay', mutation, account.id, result),
+      ...revisionStatements(db, ['request', 'release']),
+    ]);
+    return result;
+  }
+
+  async function saveEventActivity({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.saveEventActivity);
+    const mutation = await replay(db, 'saveEventActivity', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const id = optionalText(command.activityId ?? command.eventId, 80) || createId('EVT');
+    const existing =
+      command.activityId || command.eventId
+        ? await db.prepare('SELECT * FROM events WHERE id = ?1').bind(id).first()
+        : null;
+    if ((command.activityId || command.eventId) && !existing) {
+      throw new ApiError('EVENT_ACTIVITY_NOT_FOUND', 'The selected activity was not found.', { status: 404 });
+    }
+    const eventDayId = requiredText(command.eventDayId ?? existing?.event_day_id, 'eventDayId', 80);
+    const eventDay = await db
+      .prepare(
+        `SELECT day.*, series.code AS series_code FROM event_days day
+                JOIN event_series series ON series.id = day.event_series_id
+                WHERE day.id = ?1 AND day.active = 1 AND series.status <> 'ARCHIVED'`,
+      )
+      .bind(eventDayId)
+      .first();
+    if (!eventDay) throw new ApiError('EVENT_DAY_NOT_FOUND', 'Choose an active event day.', { status: 404 });
+    const name = requiredText(command.name ?? existing?.name, 'name', 240);
+    const activityType = requiredText(command.activityType ?? existing?.activity_type, 'activityType', 120);
+    const includedItems = Array.isArray(command.includedItems)
+      ? [...new Set(command.includedItems.map((value) => requiredText(value, 'includedItem', 120)))]
+      : parseJsonArray(existing?.included_items_json);
+    const timeStatus = requiredText(
+      command.timeStatus ?? existing?.time_status ?? 'TBA',
+      'timeStatus',
+      20,
+    ).toUpperCase();
+    if (!['TBA', 'SCHEDULED'].includes(timeStatus)) {
+      throw new ApiError('VALIDATION_FAILED', 'Activity time status must be TBA or Scheduled.');
+    }
+    const startAt = timeStatus === 'TBA' ? null : nullableText(command.startAt ?? existing?.starts_at, 40);
+    const endAt = timeStatus === 'TBA' ? null : nullableText(command.endAt ?? existing?.ends_at, 40);
+    if (timeStatus === 'SCHEDULED') {
+      if (
+        !startAt ||
+        !endAt ||
+        Number.isNaN(Date.parse(startAt)) ||
+        Number.isNaN(Date.parse(endAt)) ||
+        Date.parse(endAt) <= Date.parse(startAt)
+      ) {
+        throw new ApiError(
+          'VALIDATION_FAILED',
+          'Scheduled activities require a valid start and later end time.',
+        );
+      }
+      if (!startAt.startsWith(eventDay.event_date) || !endAt.startsWith(eventDay.event_date)) {
+        throw new ApiError('VALIDATION_FAILED', 'Activity times must fall on the selected event day.');
+      }
+    }
+    const venue = requiredText(command.venue ?? existing?.venue, 'venue', 240);
+    const status = requiredText(command.status ?? existing?.status ?? 'UPCOMING', 'status', 32).toUpperCase();
+    if (!['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].includes(status)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved activity status.');
+    }
+    const commandOrExisting = (commandKey, column) =>
+      Object.prototype.hasOwnProperty.call(command, commandKey) ? command[commandKey] : existing?.[column];
+    const responsibleCommitteeId = nullableText(
+      commandOrExisting('responsibleCommitteeId', 'owner_committee_id'),
+      80,
+    );
+    const supportingCommitteeIds = Array.isArray(command.supportingCommitteeIds)
+      ? [
+          ...new Set(
+            command.supportingCommitteeIds.map((value) => requiredText(value, 'supportingCommitteeId', 80)),
+          ),
+        ]
+      : parseJsonArray(existing?.supporting_committees_json);
+    const committeeIds = [...new Set([responsibleCommitteeId, ...supportingCommitteeIds].filter(Boolean))];
+    if (committeeIds.length) {
+      const placeholders = committeeIds.map((_, index) => `?${index + 1}`).join(', ');
+      const found = await rows(
+        db,
+        `SELECT id FROM committees WHERE active = 1 AND id IN (${placeholders})`,
+        committeeIds,
+      );
+      if (found.length !== committeeIds.length) {
+        throw new ApiError('VALIDATION_FAILED', 'Choose only active responsible and supporting committees.');
+      }
+    }
+    const preparationDeadline = nullableText(
+      commandOrExisting('preparationDeadline', 'preparation_deadline'),
+      40,
+    );
+    const requestWindowOpensAt = nullableText(
+      commandOrExisting('requestWindowOpensAt', 'request_window_opens_at'),
+      40,
+    );
+    const requestWindowClosesAt = nullableText(
+      commandOrExisting('requestWindowClosesAt', 'request_window_closes_at'),
+      40,
+    );
+    const releaseDeadline = nullableText(commandOrExisting('releaseDeadline', 'release_deadline'), 40);
+    for (const [field, value] of Object.entries({
+      preparationDeadline,
+      requestWindowOpensAt,
+      requestWindowClosesAt,
+      releaseDeadline,
+    })) {
+      if (value && Number.isNaN(Date.parse(value)))
+        throw new ApiError('VALIDATION_FAILED', `${field} must be a valid date and time.`);
+    }
+    if (
+      requestWindowOpensAt &&
+      requestWindowClosesAt &&
+      Date.parse(requestWindowClosesAt) <= Date.parse(requestWindowOpensAt)
+    ) {
+      throw new ApiError('VALIDATION_FAILED', 'The request window must close after it opens.');
+    }
+    const readinessPercentage = nullablePercentage(
+      commandOrExisting('readinessPercentage', 'readiness_percentage'),
+      'readinessPercentage',
+    );
+    const preparationProgress = nullablePercentage(
+      commandOrExisting('preparationProgress', 'preparation_progress'),
+      'preparationProgress',
+    );
+    const notes = optionalText(commandOrExisting('notes', 'notes'), 2000);
+    const sourceReference = optionalText(commandOrExisting('sourceReference', 'source_reference'), 500);
+    const ownerReviewStatus = [
+      responsibleCommitteeId,
+      supportingCommitteeIds.length ? supportingCommitteeIds : null,
+      preparationDeadline,
+      requestWindowOpensAt,
+      requestWindowClosesAt,
+      releaseDeadline,
+      readinessPercentage,
+      preparationProgress,
+      notes || null,
+    ].every((value) => value !== null)
+      ? 'REVIEW_COMPLETE'
+      : 'OWNER_REVIEW_REQUIRED';
+    const expectedRevision = existing ? Number(command.expectedRevision) : 0;
+    if (existing && (!Number.isInteger(expectedRevision) || expectedRevision !== Number(existing.revision))) {
+      throw new ApiError('REVISION_CONFLICT', 'This activity changed. Refresh before saving.', {
+        status: 409,
+      });
+    }
+    const code = existing?.code || (await allocateActivityCode(eventDay.series_code, name));
+    const reason = requiredText(command.reason, 'reason', 500);
+    const timestamp = nowIso();
+    const revision = existing ? expectedRevision + 1 : 1;
+    const active = status === 'ARCHIVED' ? 0 : 1;
+    const archivedAt = status === 'ARCHIVED' ? timestamp : null;
+    const result = {
+      activityId: id,
+      eventId: id,
+      eventDayId,
+      eventSeriesId: eventDay.event_series_id,
+      code,
+      status,
+      timeStatus,
+      ownerReviewStatus,
+      revision,
+      correlationId,
+    };
+    const statement = existing
+      ? db
+          .prepare(
+            `UPDATE events SET event_series_id = ?2, event_day_id = ?3, name = ?4, code = ?5,
+             activity_type = ?6, included_items_json = ?7, time_status = ?8,
+             starts_at = ?9, ends_at = ?10, venue = ?11,
+             owner_committee_id = ?12, supporting_committees_json = ?13,
+             preparation_deadline = ?14, request_window_opens_at = ?15,
+             request_window_closes_at = ?16, release_deadline = ?17,
+             readiness_percentage = ?18, preparation_progress = ?19, status = ?20,
+             owner_review_status = ?21, revision = ?22, notes = ?23, source_reference = ?24,
+             active = ?25, archived_at = ?26, updated_at = ?27, updated_by = ?28
+           WHERE id = ?1 AND revision = ?29`,
+          )
+          .bind(
+            id,
+            eventDay.event_series_id,
+            eventDayId,
+            name,
+            code,
+            activityType,
+            JSON.stringify(includedItems),
+            timeStatus,
+            startAt,
+            endAt,
+            venue,
+            responsibleCommitteeId,
+            JSON.stringify(supportingCommitteeIds),
+            preparationDeadline,
+            requestWindowOpensAt,
+            requestWindowClosesAt,
+            releaseDeadline,
+            readinessPercentage,
+            preparationProgress,
+            status,
+            ownerReviewStatus,
+            revision,
+            notes,
+            sourceReference,
+            active,
+            archivedAt,
+            timestamp,
+            account.id,
+            expectedRevision,
+          )
+      : db
+          .prepare(
+            `INSERT INTO events (
+             id, event_series_id, event_day_id, name, code, activity_type, included_items_json,
+             time_status, starts_at, ends_at, venue, owner_committee_id, supporting_committees_json,
+             preparation_deadline, request_window_opens_at, request_window_closes_at,
+             release_deadline, readiness_percentage, preparation_progress, status,
+             owner_review_status, revision, notes, source_reference, active, archived_at,
+             department, external_reference, created_at, updated_at, created_by, updated_by
+           ) VALUES (
+             ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15,
+             ?16, ?17, ?18, ?19, ?20, ?21, 1, ?22, ?23, ?24, ?25, '', '', ?26, ?26, ?27, ?27
+           )`,
+          )
+          .bind(
+            id,
+            eventDay.event_series_id,
+            eventDayId,
+            name,
+            code,
+            activityType,
+            JSON.stringify(includedItems),
+            timeStatus,
+            startAt,
+            endAt,
+            venue,
+            responsibleCommitteeId,
+            JSON.stringify(supportingCommitteeIds),
+            preparationDeadline,
+            requestWindowOpensAt,
+            requestWindowClosesAt,
+            releaseDeadline,
+            readinessPercentage,
+            preparationProgress,
+            status,
+            ownerReviewStatus,
+            notes,
+            sourceReference,
+            active,
+            archivedAt,
+            timestamp,
+            account.id,
+          );
+    await db.batch([
+      statement,
+      eventActivityHistoryStatement(db, {
+        eventSeriesId: eventDay.event_series_id,
+        eventDayId,
+        eventId: id,
+        entityType: 'EVENT_ACTIVITY',
+        entityId: id,
+        action: existing ? (status === 'ARCHIVED' ? 'ARCHIVED' : 'CORRECTED') : 'CREATED',
+        before: existing,
+        after: {
+          ...result,
+          name,
+          activityType,
+          includedItems,
+          startAt,
+          endAt,
+          venue,
+          responsibleCommitteeId,
+          supportingCommitteeIds,
+          preparationDeadline,
+          requestWindowOpensAt,
+          requestWindowClosesAt,
+          releaseDeadline,
+          readinessPercentage,
+          preparationProgress,
+          notes,
+        },
+        reason,
+        accountId: account.id,
+        correlationId,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: existing ? 'EVENT_ACTIVITY_CORRECTED' : 'EVENT_ACTIVITY_CREATED',
+        entityType: 'EVENT_ACTIVITY',
+        entityId: id,
+        accountId: account.id,
+        correlationId,
+        after: result,
+      }),
+      idempotencyStatement(db, 'saveEventActivity', mutation, account.id, result),
+      ...revisionStatements(db, ['request', 'release']),
+    ]);
+    return result;
+  }
+
+  async function linkEventOperationalRecord({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.linkEventOperationalRecord);
+    const mutation = await replay(
+      db,
+      'linkEventOperationalRecord',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const activityId = requiredText(command.activityId ?? command.eventId, 'activityId', 80);
+    const activity = await db
+      .prepare('SELECT id, event_series_id, event_day_id FROM events WHERE id = ?1 AND active = 1')
+      .bind(activityId)
+      .first();
+    if (!activity)
+      throw new ApiError('EVENT_ACTIVITY_NOT_FOUND', 'Choose an active activity.', { status: 404 });
+    const linkType = requiredText(command.linkType, 'linkType', 40).toUpperCase();
+    const targets = {
+      REQUEST: ['requests', 'REQUEST'],
+      FOOD_REQUIREMENT: ['request_lines', 'REQUEST_LINE'],
+      MATERIAL: ['request_lines', 'REQUEST_LINE'],
+      PROCUREMENT: ['deliverables', 'DELIVERABLE'],
+      INVENTORY_REQUIREMENT: ['request_lines', 'REQUEST_LINE'],
+      RELEASE: ['release_confirmations', 'RELEASE_CONFIRMATION'],
+    };
+    const target = targets[linkType];
+    if (!target) throw new ApiError('VALIDATION_FAILED', 'Choose an approved operational link type.');
+    const linkedEntityId = requiredText(command.linkedEntityId, 'linkedEntityId', 100);
+    const linkedEntity = await db
+      .prepare(`SELECT id FROM ${target[0]} WHERE id = ?1`)
+      .bind(linkedEntityId)
+      .first();
+    if (!linkedEntity)
+      throw new ApiError('LINKED_RECORD_NOT_FOUND', 'The operational record was not found.', { status: 404 });
+    const linkId = createId('EVL');
+    const notes = nullableText(command.notes, 1000);
+    const reason = requiredText(command.reason, 'reason', 500);
+    const result = { linkId, activityId, linkType, linkedEntityId, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `INSERT INTO event_operational_links (
+           id, event_series_id, event_day_id, event_id, link_type, linked_entity_type,
+           linked_entity_id, notes, linked_by, linked_at
+         ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
+        )
+        .bind(
+          linkId,
+          activity.event_series_id,
+          activity.event_day_id,
+          activityId,
+          linkType,
+          target[1],
+          linkedEntityId,
+          notes,
+          account.id,
+          nowIso(),
+        ),
+      eventActivityHistoryStatement(db, {
+        eventSeriesId: activity.event_series_id,
+        eventDayId: activity.event_day_id,
+        eventId: activityId,
+        entityType: 'EVENT_LINK',
+        entityId: linkId,
+        action: 'LINKED',
+        after: { linkType, linkedEntityType: target[1], linkedEntityId, notes },
+        reason,
+        accountId: account.id,
+        correlationId,
+        idempotencyKey: mutation.key,
+      }),
+      auditStatement(db, {
+        action: 'EVENT_OPERATIONAL_RECORD_LINKED',
+        entityType: 'EVENT_ACTIVITY',
+        entityId: activityId,
+        accountId: account.id,
+        correlationId,
+        after: result,
+      }),
+      idempotencyStatement(db, 'linkEventOperationalRecord', mutation, account.id, result),
+      ...revisionStatements(db, ['request', 'release']),
+    ]);
+    return result;
+  }
+
   async function migrationStatus({ account, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.getMigrationStatus);
     const migrations = await rows(db, 'SELECT name, applied_at FROM d1_migrations ORDER BY id');
@@ -5649,6 +6597,11 @@ export function createD1OperationalService({
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     listInventoryClassifications,
     classifyInventoryItem,
+    getEventManagement,
+    saveEventSeries,
+    saveEventDay,
+    saveEventActivity,
+    linkEventOperationalRecord,
     postCycleCountAdjustment,
   };
 

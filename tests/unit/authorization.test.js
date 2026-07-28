@@ -42,10 +42,13 @@ describe('canonical authorization projection', () => {
     expect(can('COMMITTEE_HEAD', 'release')).toBe(false);
     expect(can('COMMITTEE_HEAD', 'merge_event_item')).toBe(true);
     expect(can('DIRECTOR', 'release')).toBe(true);
+    expect(can('DIRECTOR', 'event.manage')).toBe(true);
     expect(can('DIRECTOR', 'system_admin')).toBe(false);
     expect(can('ADMINISTRATOR', 'manage_catalog')).toBe(true);
+    expect(can('ADMINISTRATOR', 'event.manage')).toBe(true);
     expect(can('ADMINISTRATOR', 'release')).toBe(false);
     expect(can('READ_ONLY_AUDITOR', 'view.audit')).toBe(true);
+    expect(can('DOL_STAFF', 'event.manage')).toBe(false);
     expect(permissionsFor('ADMINISTRATOR').diagnostics).toBe(true);
   });
 
@@ -84,14 +87,23 @@ describe('canonical authorization projection', () => {
   });
 
   it('fails closed when a canonical bootstrap caller lacks authorization metadata', () => {
-    const projected = projectClientAuthorization({
-      id: 'SYNTHETIC-USER-002',
-      displayName: 'Synthetic User',
-      role: 'ADMINISTRATOR',
-      permissions: { review: true, release: true, receive: true, admin: true, manageCatalog: true },
-    }, { requireCanonical: true });
+    const projected = projectClientAuthorization(
+      {
+        id: 'SYNTHETIC-USER-002',
+        displayName: 'Synthetic User',
+        role: 'ADMINISTRATOR',
+        permissions: { review: true, release: true, receive: true, admin: true, manageCatalog: true },
+      },
+      { requireCanonical: true },
+    );
 
-    expect(projected.permissions).toEqual({ review: false, release: false, receive: false, admin: false, manageCatalog: false });
+    expect(projected.permissions).toEqual({
+      review: false,
+      release: false,
+      receive: false,
+      admin: false,
+      manageCatalog: false,
+    });
     expect(can(projected, 'release')).toBe(false);
   });
 

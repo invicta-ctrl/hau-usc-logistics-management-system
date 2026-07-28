@@ -17,7 +17,7 @@ describe('Phase 2 role experiences', () => {
     expect(digest).toContain('decision-first leadership overview');
     expect(runtime).toContain('director: {');
     expect(runtime).toContain("heading: 'Executive Overview'");
-    expect(runtime).toContain("['overview', 'Decision Queue'");
+    expect(runtime).toContain("'Decision Queue'");
     expect(runtime).toContain('renderRoleExperience();');
     expect(css).toContain("body[data-experience='administrator']");
     expect(css).toContain("body[data-experience='inventory-pantry']");

@@ -1096,7 +1096,9 @@ body:not(.request-mode) .secondary {
 }
 
 /* Task 2A: lead the authenticated workspace with operational signals, not a demo hero. */
-body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
+body[data-runtime-mode='rest']:not(.request-mode) .hero {
+  display: none;
+}
 .brand-text-lockup {
   grid-template-columns: 1fr;
 }
@@ -1515,5 +1517,72 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero { display: none; }
   .inventory-classification-queue .classification-row > span {
     align-items: flex-start;
     grid-column: 2;
+  }
+}
+.event-management {
+  margin-top: 1.25rem;
+}
+
+.event-series-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.event-series-card,
+.event-day-card,
+.event-activity-card {
+  border: 1px solid var(--line, #d9dde5);
+  border-radius: 16px;
+  padding: 1rem;
+  background: var(--surface, #fff);
+}
+
+.event-day-card,
+.event-activity-card {
+  margin-top: 0.85rem;
+}
+
+.event-day-card {
+  border-left: 4px solid var(--brand, #7b1e2b);
+}
+
+.event-activity-card {
+  background: var(--surface-subtle, #f8f9fb);
+}
+
+.event-truth-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+
+.event-truth-grid div {
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface, #fff) 92%, #7b1e2b 8%);
+  padding: 0.7rem;
+}
+
+.event-truth-grid dt {
+  color: var(--muted, #596273);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.event-truth-grid dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 720px) {
+  .event-truth-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .event-management .panel-head,
+  .event-series-card > .panel-head,
+  .event-day-card > .panel-head {
+    align-items: stretch;
   }
 }

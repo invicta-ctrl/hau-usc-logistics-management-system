@@ -32,21 +32,21 @@ Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 BLO
 
 ## Milestones
 
-| Milestone                                  | State                                                                                                                                                               |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Git/PR/CI verified                      | PASS                                                                                                                                                                |
-| 2. Private v0.7 configs                    | PASS — distinct pair and secret packages retained outside Git                                                                                                       |
-| 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred                                                                                   |
-| 4. Google mappings                         | PASS READ-ONLY; event source empty                                                                                                                                  |
-| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0026; formal rollback rehearsal remains Phase 24                                                   |
-| 6. Migrations                              | PARTIAL — staging through 0026 applied/reconciled; production migrations pending                                                                                     |
-| 7. Import/reconciliation                   | PASS ON STAGING — 397 / 397 imported, zero rejected, exact replay, ledger parity, fail-closed classification, scope/invariant reconciliation                         |
-| 8. Staging deployment                      | PASS THROUGH PHASE 17 runtime `03b4088`                                                                                                                             |
-| 9. Staging acceptance                      | PASS THROUGH PHASE 17; Phase 18 and full master Phase 22 pending                                                                                                    |
-| 10. Rollback rehearsal                     | PENDING                                                                                                                                                             |
-| 11. Consolidation merge/tag/release        | PENDING                                                                                                                                                             |
-| 12. Production deployment                  | PENDING                                                                                                                                                             |
-| 13. Production smoke                       | PENDING                                                                                                                                                             |
+| Milestone                                  | State                                                                                                                                        |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Git/PR/CI verified                      | PASS                                                                                                                                         |
+| 2. Private v0.7 configs                    | PASS — distinct pair and secret packages retained outside Git                                                                                |
+| 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred                                                            |
+| 4. Google mappings                         | PASS READ-ONLY; event source empty                                                                                                           |
+| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0026; formal rollback rehearsal remains Phase 24                            |
+| 6. Migrations                              | PARTIAL — staging through 0026 applied/reconciled; production migrations pending                                                             |
+| 7. Import/reconciliation                   | PASS ON STAGING — 397 / 397 imported, zero rejected, exact replay, ledger parity, fail-closed classification, scope/invariant reconciliation |
+| 8. Staging deployment                      | PASS THROUGH PHASE 17 runtime `03b4088`                                                                                                      |
+| 9. Staging acceptance                      | PASS THROUGH PHASE 17; Phase 18 and full master Phase 22 pending                                                                             |
+| 10. Rollback rehearsal                     | PENDING                                                                                                                                      |
+| 11. Consolidation merge/tag/release        | PENDING                                                                                                                                      |
+| 12. Production deployment                  | PENDING                                                                                                                                      |
+| 13. Production smoke                       | PENDING                                                                                                                                      |
 
 ## Phase 1 evidence
 
@@ -358,33 +358,33 @@ Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 BLO
 
 ## Immediate accepted target
 
-Phase 17 is accepted on staging. Continue with Phase 18 Upcoming Events and
-Next-Major-Event Readiness. Read only approved Google/current-project/owner
-records; do not invent event names, dates, committees, windows, deadlines,
-venues, status, or readiness values. If the approved source remains empty,
-create one bounded owner-review queue and request the missing values once
-before production freeze.
+Phase 17 is accepted on staging. The owner resolved the Phase 18 event-data
+blocker by designating the approved continuation record and reproducing the
+complete September 1–2 Youth Development Days 2026 hierarchy. August 10/12 is
+superseded historical planning context and must not be active or merged.
 
-That read-only recheck is now complete: the governed event and
-composite-request sheets contain zero data rows, governed requests contain zero
-event scopes, and staging contains zero active future events or series. The
-private owner-review queue and controlled post-v0.7 roadmap are complete.
-Phase 18 is blocked until the owner supplies or designates the approved values.
+Schema 27, protected Admin/Director event management, audited corrections,
+hierarchy links, truthful null/not-assessed projections, and the deterministic
+approved seed pass locally. Phase 18 remains pending the private staging
+backup, migration, exact-candidate deploy, seed/reconciliation, deployed
+desktop/mobile acceptance, and exact-head CI. External connectivity is the
+current blocker; owner event values are no longer missing.
 
 Do not upload or deploy a production Worker before final freeze, merge, and
 production authorization validation.
 
-Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.
+Approved upcoming-event values are supplied. Do not invent the still-unknown
+committee, deadline, request-window, readiness, progress, or note values.
 
 ## Phase 18 starting checkpoint
 
 - Preserve the accepted Phase 17 source snapshot, schema 26 fail-closed
   classification, private backups, ledger parity, and staging evidence.
-- Read only the Phase 18 master-specification section and the approved event
-  source/current-project event structures needed to establish source truth.
-- The approved-source recheck reports zero approved future event rows. The
-  bounded private owner-review queue has been created without inferred values.
-- Resume only after the owner populates the governed event source or designates
-  an approved owner record, then preview, validate, apply, and reconcile the
-  exact event structure on staging.
-- Durable blocker evidence: `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
+- Create a private pre-0027 staging export, apply 0027, and deploy only the
+  exact Phase 18 candidate.
+- Run the deterministic approved YDD seed and reconcile exactly one active
+  series, two active September days, seven activities, zero active August
+  schedule, zero duplicates, and truthful owner-review-required nulls.
+- Complete Admin/Director mobile and desktop acceptance, unauthorized denial,
+  history/audit/link verification, exact-head CI, and then continue to Phase 19.
+- Durable resolution evidence: `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.

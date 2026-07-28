@@ -425,6 +425,25 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.classifyInventoryItem(command),
       );
     },
+    async getEventManagement(payload = {}) {
+      return remote.getEventManagement(payload);
+    },
+    saveEventSeries(payload) {
+      return mutationRequests.run('event-series-save', payload, (command) => remote.saveEventSeries(command));
+    },
+    saveEventDay(payload) {
+      return mutationRequests.run('event-day-save', payload, (command) => remote.saveEventDay(command));
+    },
+    saveEventActivity(payload) {
+      return mutationRequests.run('event-activity-save', payload, (command) =>
+        remote.saveEventActivity(command),
+      );
+    },
+    linkEventOperationalRecord(payload) {
+      return mutationRequests.run('event-operational-link', payload, (command) =>
+        remote.linkEventOperationalRecord(command),
+      );
+    },
     async updateInventoryItem(payload) {
       const result = await mutationRequests.run('update-item', payload, (command) =>
         remote.updateInventoryItem(command),
