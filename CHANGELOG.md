@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 16 hybrid evidence storage sub-slice (2026-07-28)
+
+### Added
+
+- Private R2 authoritative evidence writes with post-write verification, protected D1 metadata, governed retention, and asynchronous Google Drive backup jobs.
+- Owner-protected evidence status, archive, reconciliation, and fail-safe restore with append-only activity and audit evidence.
+- Bounded retry, duplicate-delivery idempotency, verification-before-`SYNCED`, and redacted technical diagnostics.
+
+### Fixed
+
+- Replaced an over-length Google Drive custom-property idempotency value with its deterministic SHA-256 marker while retaining the full evidence-ID/checksum key in protected D1 metadata.
+- Preserved a bounded HTTP status suffix in protected Drive failure codes without exposing raw provider errors.
+
+### Verified
+
+- `npm run check`: 70 Vitest files / 456 tests; local Worker/D1: 30 / 30.
+- Exact staging runtime `5f2645d`, schema 23, passed focused hybrid evidence acceptance, governed Owner restore, independent R2/Drive checksum reconciliation, synthetic cleanup, and 6 / 6 PR checks.
+
+### Boundary
+
+- Phase 16 remains active for the broader Shared Release Desk and protected System Status acceptance. No production deployment, migration, data write, promotion, merge, tag, or release occurred.
+
 ## Unreleased - v0.7.0 Phase 9 Administrator workspace (2026-07-26)
 
 ### Added

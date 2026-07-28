@@ -1,5 +1,13 @@
 # Project Status
 
+## v0.7.0 Phase 16 hybrid evidence storage accepted on staging — Phase 16 remains active
+
+- Exact runtime `5f2645d45106bad05ff3bcdab64c1d6bcc322c88` is healthy and ready on schema 23 / migration `0023_hybrid_evidence_storage.sql`.
+- Private R2 is authoritative for website-uploaded evidence. D1 owns protected metadata and asynchronous backup state; Google Drive is the private, verified secondary recovery copy.
+- Staging proved R2/D1 completion during Drive failure, retry behavior, duplicate-delivery idempotency, verification before `SYNCED`, Owner-only restore, unauthorized denial, private visibility, archive retention, and log/UI redaction.
+- Verification: `npm run check` passed with 70 Vitest files / 456 tests; local Worker/D1 passed 30 / 30; focused deployed acceptance passed 1 / 1; governed restore and independent checksum reconciliation passed; PR #9 passed 6 / 6 exact-runtime checks.
+- All synthetic evidence records were reconciled to `ARCHIVED`. Production was untouched and remains NO-GO. Phase 16 still owns the remaining Shared Release Desk and protected System Status acceptance.
+
 ## v0.7.0 Phase 9 Administrator workspace accepted on staging — Phase 10 active
 
 - Exact runtime `e3d3c761369f09807d90982576818a6c8406e637` is healthy and ready on schema 19 / migration `0019_system_owner_operational_scope.sql`.

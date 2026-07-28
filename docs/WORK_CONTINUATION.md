@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/HEAD/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 9 runtime `e3d3c761369f09807d90982576818a6c8406e637`; upstream parity verified.
-- **Current phase/stage:** Phases 0–9 and the complete amendment accepted on staging; Phase 10 active; production NO-GO.
-- **Accepted scope:** Phase 10 of `.codex/specs/v0.7.0-production-master.md` under the accepted follow-up amendment and shared efficiency contract.
-- **Completed work:** exception-first Administrator Control Center; nine actionable attention signals; complete operations map; distinct Health, Evidence, and governed Brand destinations; existing server-authorized Access/Reference/Link/Audit workflows retained.
-- **Tests verified:** `npm run check` (61 files / 416 tests), full Playwright 104 / 250 intentional skips, deployed Phase 9 2 / 2, and remote CI 6 / 6.
-- **External actions:** exact-SHA staging Worker deployment and read/write smoke through the existing reversible synthetic Access Management lifecycle. No migration, production, or Google-source action occurred.
-- **Rollback:** no schema change; prior immutable Worker version retained. Formal rehearsal remains Phase 24.
-- **Blocker:** none for Phase 10 implementation; real lendable policy/data and approved upcoming-event values remain absent and must not be invented.
-- **Next action:** audit the existing Director workspace against Phase 10 and implement only its missing coherent leadership workflow slice.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 16 hybrid evidence runtime `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`; upstream parity verified at the accepted runtime.
+- **Current phase/stage:** Phases 0–15 accepted on staging; Phase 16 hybrid evidence sub-slice accepted; Phase 16 remains active; production NO-GO.
+- **Accepted scope:** Phase 16 of `.codex/specs/v0.7.0-production-master.md` under the follow-up amendment, accepted hybrid evidence-storage amendment, and shared efficiency contract.
+- **Completed work:** private R2 authoritative writes; verified D1 metadata/backup transaction; asynchronous private Drive backup with bounded retry and idempotency; protected status, archive, reconciliation, and governed Owner restore.
+- **Tests verified:** `npm run check` (70 files / 456 tests), local Worker/D1 30 / 30, focused deployed hybrid acceptance 1 / 1, governed restore plus independent checksum reconciliation, and exact-runtime remote CI 6 / 6.
+- **External actions:** private staging backup configuration refreshed; migration 0023 applied; exact-SHA staging Worker deployed; reversible synthetic failure, backup, archive, and restore acceptance completed and reconciled. Production was untouched.
+- **Rollback:** redeploy the last fully accepted Phase 15 runtime `07b5dd006656e370cc2bf7df4ced785be61a2604`; preserve additive schema/history and investigate before any data reversal. Intermediate diagnostic runtimes are not accepted rollback targets.
+- **Blocker:** none for the remaining Phase 16 staging work; approved real event/inventory values remain absent and must not be invented.
+- **Next action:** audit and prove the remaining Shared Release Desk operational path and protected System Status presentation; do not advance Phase 17.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

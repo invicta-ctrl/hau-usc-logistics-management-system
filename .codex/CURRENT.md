@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 16 — Shared Release Desk and Global Owner Access
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING; PRODUCTION NO-GO
+Status: ACTIVE — PHASES 0–15 AND PHASE 16 HYBRID EVIDENCE SUB-SLICE ACCEPTED ON STAGING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -21,12 +21,14 @@ Phase 12 accepted staging runtime: `f37671ce63087bc0b90a2775e5a3f1b15a15b25d`
 Phase 13 accepted staging runtime: `653c6f846fc219f0c01ece83726583d8a7c80188`
 Phase 14 accepted staging runtime: `eca00e606054e896d9559e0249aaff8de0e0b750`
 Phase 15 accepted staging runtime: `07b5dd006656e370cc2bf7df4ced785be61a2604`
+Phase 16 hybrid evidence accepted staging runtime: `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
 
 - `.codex/specs/v0.7.0-production-master.md`
 - `.codex/specs/v0.7.0-follow-up-amendment.md`
+- `.codex/specs/v0.7.0-hybrid-evidence-storage-amendment.md`
 - `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`
 - Master prompt source SHA-256: `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067`.
 - Shared contract source SHA-256: `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67`.
@@ -75,6 +77,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_13_MATERIALS_WORKSPACE_HANDOFF.md`
 - `.codex/V0_7_PHASE_14_ADVANCED_ACCESS_MANAGEMENT_HANDOFF.md`
 - `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`
+- `.codex/V0_7_PHASE_16_HYBRID_EVIDENCE_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -180,6 +183,34 @@ Durable handoffs:
 - Exact-candidate deployed staging acceptance passed 6 / 6 Chromium scenarios;
   health/readiness/version reports schema 21 and migration 0021.
 
+## Phase 16 hybrid evidence sub-slice evidence
+
+- The accepted hybrid amendment makes private R2 the authoritative operational
+  store and Google Drive an asynchronous private recovery copy.
+- Product commits:
+  `fc737d0101ec97c749ad7d718ddb35afdcf26279`,
+  `7eb682a1899640e0f39414678f2756604412001e`,
+  `1daad52e531bf5a400ca2a368ac9229cd3b83593`,
+  `f936b5ac2b88ad5475ae3aabc986c836245ca0b2`, and
+  `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`.
+- Staging is healthy on schema 23 /
+  `0023_hybrid_evidence_storage.sql` at exact runtime `5f2645d`.
+- `npm run check` passed with 70 Vitest files / 456 tests. Fresh local
+  Worker/D1 coverage passed 30 / 30.
+- Focused deployed staging acceptance passed 1 / 1, including authoritative
+  R2 persistence, asynchronous backup, duplicate-delivery idempotency,
+  verified Drive synchronization, unauthorized denial, and archive retention.
+- A separate governed Owner restore acceptance removed only a validated
+  synthetic primary object, observed `RESTORE_REQUIRED`, restored and
+  independently reverified matching R2 and Drive checksums, appended history
+  and audit evidence, and archived the synthetic record.
+- All synthetic evidence records were reconciled to `ARCHIVED`; no pending,
+  failed, restore-required, or synced acceptance fixture remains active.
+- PR #9 was open, draft, mergeable, and passed 6 / 6 exact-head checks at the
+  accepted runtime.
+- Production was not deployed, migrated, written, promoted, merged, tagged, or
+  released. Protected provider identifiers and credentials remain outside Git.
+
 ## Current blockers and next action
 
 Production remains NO-GO. Approved upcoming-event values and approved real
@@ -187,8 +218,9 @@ public-lending item policy/data are absent and must not be invented. Formal
 rollback, complete operational acceptance, final freeze, branch consolidation,
 release, and production gates remain pending in their ordered master phases.
 
-One smallest safe next action: execute Phase 16 — Shared Release Desk and
-Global Owner Access from the accepted master specification, preserving the
-Phase 15 source, encrypted projection, and live staging evidence.
+One smallest safe next action: audit and prove the remaining Phase 16 Shared
+Release Desk operational path and protected System Status presentation against
+the master specification and hybrid amendment. Preserve the accepted Phase 15
+roster and Phase 16 evidence-storage staging state; do not advance Phase 17.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
