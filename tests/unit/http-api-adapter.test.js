@@ -42,4 +42,22 @@ describe('HttpApiAdapter', () => {
       '/api/getBootstrapModule',
     ]);
   });
+
+  it('routes protected evidence status reads to the System Owner endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, primaryR2Status: 'AVAILABLE' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await new HttpApiAdapter('').getEvidenceSystemStatus({});
+
+    expect(result).toMatchObject({ ok: true, primaryR2Status: 'AVAILABLE' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/owner/evidence/status',
+      expect.objectContaining({ method: 'POST', credentials: 'include' }),
+    );
+  });
 });

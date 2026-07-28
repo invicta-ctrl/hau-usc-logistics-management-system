@@ -234,7 +234,7 @@ test('identity roster is owner-only, metadata-safe, explicit-preview-only, and a
   }
 });
 
-test('shared shell exposes the protected roster surface only to the System Owner', async ({
+test('shared shell exposes protected System Owner surfaces only to the System Owner', async ({
   browser,
   baseURL,
 }) => {
@@ -251,6 +251,26 @@ test('shared shell exposes the protected roster surface only to the System Owner
   await rosterControl.click();
   await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
   await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
+  const systemStatusControl = ownerPage.locator('[data-admin-control-surface="system-status"]');
+  await expect(systemStatusControl).toBeVisible();
+  await systemStatusControl.click();
+  const systemStatus = ownerPage.locator('[data-system-status]');
+  await expect(systemStatus).toBeVisible();
+  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(7);
+  for (const label of [
+    'Primary R2 status',
+    'Pending Drive backups',
+    'Failed backups',
+    'Oldest pending backup',
+    'Last successful backup',
+    'Last reconciliation',
+    'Files requiring restoration',
+  ]) {
+    await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(label);
+  }
+  await expect(systemStatus.locator('[data-system-status-technical-details]')).toContainText(
+    'Identifier protection',
+  );
 
   const adminPage = await browser.newPage();
   await adminPage.goto(`${baseURL}/app/admin`);
@@ -259,6 +279,8 @@ test('shared shell exposes the protected roster surface only to the System Owner
   await adminPage.getByRole('button', { name: 'Sign in' }).click();
   await navigateToAdminView(adminPage, 'referenceAdmin');
   await expect(adminPage.getByRole('button', { name: /USC Officer and Staff Directory/iu })).toBeHidden();
+  await expect(adminPage.locator('[data-admin-control-surface="system-status"]')).toBeHidden();
+  await expect(adminPage.locator('[data-system-status]')).toBeHidden();
   await expect(adminPage.locator('[data-identity-roster]')).toBeHidden();
 
   await Promise.all([ownerPage.close(), adminPage.close()]);
@@ -1739,31 +1761,68 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
     message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
   });
 
-  const releaseCommand = {
+  const partialReleaseCommand = {
     requestId,
     recipientConfirmed: true,
     recipientName: 'Synthetic Recipient',
     recipientRole: 'Synthetic Tester',
     department: 'Synthetic Department',
     evidenceId: evidenceResult.evidenceId,
-    lines: [{ requestLineId: stockLine.id, quantity: 2 }],
-    clientRequestId: 'local-e2e-release',
+    lines: [{ requestLineId: stockLine.id, quantity: 1 }],
+    clientRequestId: 'local-e2e-release-partial',
   };
-  const released = await mutate(request, csrfToken, 'confirmRelease', releaseCommand);
-  expect(released.status()).toBe(200);
-  const releaseResult = await released.json();
-  const releaseReplay = await mutate(request, csrfToken, 'confirmRelease', releaseCommand);
-  expect(releaseReplay.status()).toBe(200);
-  expect((await releaseReplay.json()).releaseId).toBe(releaseResult.releaseId);
+  const partialRelease = await mutate(request, csrfToken, 'confirmRelease', partialReleaseCommand);
+  expect(partialRelease.status()).toBe(200);
+  const partialReleaseResult = await partialRelease.json();
+  expect(partialReleaseResult).toMatchObject({ status: 'PARTIAL', recipientConfirmed: true });
+  const partialReplay = await mutate(request, csrfToken, 'confirmRelease', partialReleaseCommand);
+  expect(partialReplay.status()).toBe(200);
+  expect((await partialReplay.json()).releaseId).toBe(partialReleaseResult.releaseId);
+  const partialProjection = await request.get('/api/releases?operationalScope=EVENT%3AEVT-LOCAL&pageSize=50');
+  expect(partialProjection.status()).toBe(200);
+  expect((await partialProjection.json()).data.releaseConfirmations).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: partialReleaseResult.releaseId,
+        requestId,
+        eventId: 'EVT-LOCAL',
+        recipientName: 'Synthetic Recipient',
+        recipientRole: 'Synthetic Tester',
+        department: 'Synthetic Department',
+        evidenceId: evidenceResult.evidenceId,
+        status: 'PARTIAL',
+        lineReleases: [
+          expect.objectContaining({
+            requestLineId: stockLine.id,
+            quantity: 1,
+            status: 'PARTIAL',
+          }),
+        ],
+      }),
+    ]),
+  );
+
+  const fullReleaseCommand = {
+    ...partialReleaseCommand,
+    clientRequestId: 'local-e2e-release-complete',
+  };
+  const fullRelease = await mutate(request, csrfToken, 'confirmRelease', fullReleaseCommand);
+  expect(fullRelease.status()).toBe(200);
+  const fullReleaseResult = await fullRelease.json();
+  expect(fullReleaseResult).toMatchObject({ status: 'COMPLETED', recipientConfirmed: true });
+  const fullReleaseReplay = await mutate(request, csrfToken, 'confirmRelease', fullReleaseCommand);
+  expect(fullReleaseReplay.status()).toBe(200);
+  expect((await fullReleaseReplay.json()).releaseId).toBe(fullReleaseResult.releaseId);
   const duplicateRelease = await mutate(request, csrfToken, 'confirmRelease', {
-    ...releaseCommand,
+    ...fullReleaseCommand,
     clientRequestId: 'local-e2e-release-duplicate',
   });
   expect(duplicateRelease.status()).toBe(409);
   const deniedCorrection = await mutate(request, csrfToken, 'correctRelease', {
-    releaseConfirmationId: releaseResult.releaseId,
+    releaseConfirmationId: fullReleaseResult.releaseId,
     quantity: 1,
     reason: 'Synthetic owner-only correction denial.',
+    evidenceId: evidenceResult.evidenceId,
     correctionConfirmed: true,
     clientRequestId: 'local-e2e-release-correction-denied',
   });
@@ -1788,9 +1847,10 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   });
   expect(unauthorizedEvidenceStatus.status()).toBe(403);
   const correctionCommand = {
-    releaseConfirmationId: releaseResult.releaseId,
+    releaseConfirmationId: fullReleaseResult.releaseId,
     quantity: 1,
     reason: 'Synthetic physical handoff correction.',
+    evidenceId: evidenceResult.evidenceId,
     correctionConfirmed: true,
     operationalScope: 'EVENT:EVT-LOCAL',
     activeWorkspace: 'inventory',
@@ -1800,8 +1860,8 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(corrected.status()).toBe(200);
   const correctionResult = await corrected.json();
   expect(correctionResult).toMatchObject({
-    releaseId: releaseResult.releaseId,
-    releaseConfirmationId: releaseResult.releaseId,
+    releaseId: fullReleaseResult.releaseId,
+    releaseConfirmationId: fullReleaseResult.releaseId,
     quantity: 1,
     status: 'POSTED',
     lineStatus: 'PARTIALLY_RELEASED',
@@ -1820,27 +1880,93 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(releaseProjection.status()).toBe(200);
   const releaseData = (await releaseProjection.json()).data;
   expect(releaseData.events).toEqual([expect.objectContaining({ id: 'EVT-LOCAL', seriesId: 'SER-LOCAL' })]);
-  expect(releaseData.releaseConfirmations).toEqual([
-    expect.objectContaining({
-      id: releaseResult.releaseId,
-      correctedQuantity: 1,
-      correctableQuantity: 1,
-      lineReleases: [
-        expect.objectContaining({
-          confirmationId: releaseResult.releaseId,
-          correctedQuantity: 1,
-          correctableQuantity: 1,
-        }),
-      ],
-      corrections: [
-        expect.objectContaining({
-          id: correctionResult.correctionId,
-          quantity: 1,
-          status: 'POSTED',
-        }),
-      ],
-    }),
-  ]);
+  expect(releaseData.releaseConfirmations).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: partialReleaseResult.releaseId,
+        requestId,
+        recipientName: 'Synthetic Recipient',
+        recipientRole: 'Synthetic Tester',
+        department: 'Synthetic Department',
+        evidenceId: evidenceResult.evidenceId,
+        status: 'PARTIAL',
+        lineReleases: [
+          expect.objectContaining({
+            confirmationId: partialReleaseResult.releaseId,
+            requestLineId: stockLine.id,
+            quantity: 1,
+            correctedQuantity: 0,
+            correctableQuantity: 1,
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        id: fullReleaseResult.releaseId,
+        requestId,
+        recipientName: 'Synthetic Recipient',
+        recipientRole: 'Synthetic Tester',
+        department: 'Synthetic Department',
+        evidenceId: evidenceResult.evidenceId,
+        status: 'COMPLETED',
+        correctedQuantity: 1,
+        correctableQuantity: 0,
+        lineReleases: [
+          expect.objectContaining({
+            confirmationId: fullReleaseResult.releaseId,
+            requestLineId: stockLine.id,
+            quantity: 1,
+            correctedQuantity: 1,
+            correctableQuantity: 0,
+          }),
+        ],
+        corrections: [
+          expect.objectContaining({
+            id: correctionResult.correctionId,
+            evidenceId: evidenceResult.evidenceId,
+            quantity: 1,
+            status: 'POSTED',
+          }),
+        ],
+      }),
+    ]),
+  );
+  const inventoryProjection = await owner.get(
+    '/api/inventory?operationalScope=EVENT%3AEVT-LOCAL&pageSize=50',
+  );
+  expect(inventoryProjection.status()).toBe(200);
+  const releaseLedger = (await inventoryProjection.json()).data.ledgerTransactions;
+  const issueTransactions = releaseLedger.filter(
+    (entry) =>
+      entry.relatedId === partialReleaseResult.releaseId || entry.relatedId === fullReleaseResult.releaseId,
+  );
+  expect(issueTransactions).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: 'ISSUE',
+        direction: 'OUT',
+        relatedId: partialReleaseResult.releaseId,
+        quantity: 1,
+      }),
+      expect.objectContaining({
+        type: 'ISSUE',
+        direction: 'OUT',
+        relatedId: fullReleaseResult.releaseId,
+        quantity: 1,
+      }),
+    ]),
+  );
+  const correctedIssue = issueTransactions.find((entry) => entry.relatedId === fullReleaseResult.releaseId);
+  expect(releaseLedger).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: 'RELEASE_CORRECTION',
+        direction: 'REVERSAL',
+        relatedId: correctionResult.correctionId,
+        quantity: 1,
+        reversalOf: correctedIssue.id,
+      }),
+    ]),
+  );
   await owner.dispose();
 
   const lending = await mutate(request, csrfToken, 'createLendingTicket', {

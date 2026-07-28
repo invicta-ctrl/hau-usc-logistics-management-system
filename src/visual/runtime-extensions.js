@@ -357,6 +357,7 @@ export function createRuntimeExtensions(options) {
   let accessDirectoryPage = 1;
   let accessPolicyOptions = null;
   let accessSearchTimer = null;
+  let evidenceSystemStatus = null;
   let identityRosterStatus = null;
   let identityRosterDirectory = null;
   let identityRosterPreview = null;
@@ -966,6 +967,7 @@ export function createRuntimeExtensions(options) {
     String(
       getState()?.currentUser?.authorization?.roleId ?? getState()?.currentUser?.role ?? '',
     ).toUpperCase() === 'SYSTEM_OWNER';
+  const evidenceSystemStatusAllowed = identityRosterAllowed;
   const advertisementManagementAllowed = () =>
     can(getState()?.currentUser, 'manage_advertisements');
 
@@ -1318,6 +1320,21 @@ export function createRuntimeExtensions(options) {
         },
       };
     };
+    services.getEvidenceSystemStatus ??= async () => ({
+      primaryR2Status: 'AVAILABLE',
+      pendingDriveBackups: 0,
+      failedDriveBackups: 0,
+      oldestPendingBackupAt: null,
+      lastSuccessfulBackupAt: null,
+      lastReconciliationAt: null,
+      filesRequiringRestoration: 0,
+      backupMessage: '',
+      technicalDetails: {
+        driveBackupConfigured: false,
+        providerIdentifiersProtected: true,
+        statusCounts: {},
+      },
+    });
     services.getIdentityRosterStatus ??= async () => ({
       ok: true,
       source: {
@@ -2309,6 +2326,100 @@ export function createRuntimeExtensions(options) {
       '<div class="empty">No failed evidence or open deliverable evidence exceptions are currently projected.</div>';
   };
 
+  const renderEvidenceSystemStatus = () => {
+    const root = document.querySelector('[data-system-status]');
+    if (!root || root.hidden || !evidenceSystemStatusAllowed()) return;
+    const status = evidenceSystemStatus;
+    if (!status) return;
+    const pending = Number(status.pendingDriveBackups ?? 0);
+    const failed = Number(status.failedDriveBackups ?? 0);
+    const restoreRequired = Number(status.filesRequiringRestoration ?? 0);
+    const primaryAvailable = String(status.primaryR2Status ?? '').toUpperCase() === 'AVAILABLE';
+    root.querySelector('[data-system-status-metrics]').innerHTML = [
+      ['Primary R2 status', primaryAvailable ? 'Available' : 'Unavailable', 'Operational source of truth'],
+      ['Pending Drive backups', pending, 'Includes pending, in-progress, and retrying jobs'],
+      ['Failed backups', failed, 'Owner review required after retries are exhausted'],
+      [
+        'Oldest pending backup',
+        status.oldestPendingBackupAt ? accessDate(status.oldestPendingBackupAt) : 'None',
+        'Age of the oldest unfinished backup',
+      ],
+      [
+        'Last successful backup',
+        status.lastSuccessfulBackupAt ? accessDate(status.lastSuccessfulBackupAt) : 'Not recorded',
+        'Most recent verified private recovery copy',
+      ],
+      [
+        'Last reconciliation',
+        status.lastReconciliationAt ? accessDate(status.lastReconciliationAt) : 'Not recorded',
+        'Most recent primary-object verification',
+      ],
+      ['Files requiring restoration', restoreRequired, 'Primary objects requiring governed recovery'],
+    ]
+      .map(
+        ([label, value, note]) =>
+          `<article class="card metric"><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`,
+      )
+      .join('');
+
+    const stateMessage = root.querySelector('[data-system-status-state]');
+    const needsAttention = !primaryAvailable || pending > 0 || failed > 0 || restoreRequired > 0;
+    stateMessage.className = `alert ${needsAttention ? 'warning' : 'success'}`;
+    stateMessage.textContent =
+      status.backupMessage ||
+      (needsAttention
+        ? 'Evidence storage needs attention. Review the protected counts below.'
+        : 'Primary evidence storage and asynchronous backup processing report no active exceptions.');
+
+    const technical = status.technicalDetails ?? {};
+    const statusCounts = Object.entries(technical.statusCounts ?? {})
+      .filter(([, count]) => Number(count) > 0)
+      .map(([name, count]) => `${name}: ${Number(count)}`)
+      .join(' | ');
+    root.querySelector('[data-system-status-technical-details]').innerHTML = [
+      [
+        'Private Drive backup',
+        technical.driveBackupConfigured ? 'Configured' : 'Not configured',
+        'Provider identifiers remain protected',
+      ],
+      [
+        'Backup status counts',
+        statusCounts || 'No active backup records',
+        'Only governed status totals are shown',
+      ],
+      [
+        'Identifier protection',
+        technical.providerIdentifiersProtected ? 'Enforced' : 'Unconfirmed',
+        'No bucket, object, file, OAuth, or raw provider values are rendered',
+      ],
+    ]
+      .map(
+        ([label, value, note]) =>
+          `<div class="request-line"><div><strong>${esc(label)}</strong><small>${esc(value)}</small><small>${esc(note)}</small></div></div>`,
+      )
+      .join('');
+  };
+
+  const refreshEvidenceSystemStatus = async ({ force = false } = {}) => {
+    if (!evidenceSystemStatusAllowed()) return;
+    const root = document.querySelector('[data-system-status]');
+    if (!root || root.hidden) return;
+    if (!force && evidenceSystemStatus) {
+      renderEvidenceSystemStatus();
+      return;
+    }
+    const stateMessage = root.querySelector('[data-system-status-state]');
+    stateMessage.className = 'alert';
+    stateMessage.textContent = 'Loading protected evidence-storage status...';
+    try {
+      evidenceSystemStatus = await services.getEvidenceSystemStatus({});
+      renderEvidenceSystemStatus();
+    } catch (error) {
+      stateMessage.className = 'alert error';
+      stateMessage.textContent = error.message;
+    }
+  };
+
   const renderIdentityRoster = () => {
     const root = document.querySelector('[data-identity-roster]');
     if (!root || root.hidden || !identityRosterAllowed()) return;
@@ -2471,6 +2582,7 @@ export function createRuntimeExtensions(options) {
     if (adminControlSurface === 'operational-health') renderAdminOperationalHealth();
     if (adminControlSurface === 'brand-assets') renderAdminBrandAssets();
     if (adminControlSurface === 'evidence-status') renderAdminEvidenceStatus();
+    if (adminControlSurface === 'system-status') renderEvidenceSystemStatus();
     if (adminControlSurface === 'identity-roster') renderIdentityRoster();
   };
 
@@ -2484,6 +2596,7 @@ export function createRuntimeExtensions(options) {
       'operational-health',
       'brand-assets',
       'evidence-status',
+      'system-status',
       'identity-roster',
     ].includes(adminControlSurface);
     const accessMode = !customSurface && referenceAdminDomain === 'PERMISSIONS';
@@ -2497,6 +2610,8 @@ export function createRuntimeExtensions(options) {
       adminControlSurface !== 'operational-health';
     root.querySelector('[data-admin-brand-assets]').hidden = adminControlSurface !== 'brand-assets';
     root.querySelector('[data-admin-evidence-status]').hidden = adminControlSurface !== 'evidence-status';
+    root.querySelector('[data-system-status]').hidden =
+      adminControlSurface !== 'system-status' || !evidenceSystemStatusAllowed();
     root.querySelector('[data-identity-roster]').hidden =
       adminControlSurface !== 'identity-roster' || !identityRosterAllowed();
     const advertisementRoot = root.querySelector('[data-advertisement-admin]');
@@ -2515,6 +2630,11 @@ export function createRuntimeExtensions(options) {
     if (rosterControl) {
       rosterControl.hidden = !identityRosterAllowed();
       rosterControl.disabled = !identityRosterAllowed();
+    }
+    const systemStatusControl = root.querySelector('[data-admin-control-surface="system-status"]');
+    if (systemStatusControl) {
+      systemStatusControl.hidden = !evidenceSystemStatusAllowed();
+      systemStatusControl.disabled = !evidenceSystemStatusAllowed();
     }
     const workspace = referenceAdminWorkspace;
     root.querySelector('[data-reference-admin-write-state]').textContent = workspace?.writesEnabled
@@ -2622,13 +2742,20 @@ export function createRuntimeExtensions(options) {
     });
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       control.addEventListener('click', () => {
+        if (control.dataset.adminControlSurface === 'system-status' && !evidenceSystemStatusAllowed())
+          return;
         if (control.dataset.adminControlSurface === 'identity-roster' && !identityRosterAllowed())
           return;
         advertisementAdminOpen = false;
         adminControlSurface = control.dataset.adminControlSurface;
         renderReferenceAdminWorkspace();
+        if (adminControlSurface === 'system-status') void refreshEvidenceSystemStatus({ force: true });
         if (adminControlSurface === 'identity-roster') void refreshIdentityRoster({ force: true });
       });
+    });
+    root.querySelector('[data-system-status-refresh]').addEventListener('click', () => {
+      evidenceSystemStatus = null;
+      void refreshEvidenceSystemStatus({ force: true });
     });
     root.querySelector('[data-roster-refresh]').addEventListener('click', () => {
       identityRosterStatus = null;

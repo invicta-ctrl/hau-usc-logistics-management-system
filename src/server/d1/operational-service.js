@@ -4552,6 +4552,8 @@ export function createD1OperationalService({
       committeeId: confirmation.owner_committee_id,
       ownerAccountId: confirmation.requester_account_id,
     });
+    const mutation = await replay(db, 'correctRelease', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
     const corrected = await db
       .prepare(
         `SELECT COALESCE(SUM(quantity), 0) AS quantity
@@ -4572,8 +4574,6 @@ export function createD1OperationalService({
       evidenceTypes: ['RELEASE_CONFIRMATION_PHOTO'],
       relatedEntityIds: [confirmation.request_id],
     });
-    const mutation = await replay(db, 'correctRelease', command.clientRequestId, account.id, command);
-    if (mutation.replayed) return mutation.value;
     const correctionId = createId('RLC');
     const transactionId = createId('LED');
     const reservationId = createId('RSV');

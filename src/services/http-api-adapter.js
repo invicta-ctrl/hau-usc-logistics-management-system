@@ -44,6 +44,7 @@ for (const [method, path] of Object.entries({
   setAccessAccountStatus: '/api/admin/access/status',
   revokeAccessSessions: '/api/admin/access/revoke-sessions',
   unlockAccessAccount: '/api/admin/access/unlock',
+  getEvidenceSystemStatus: '/api/owner/evidence/status',
   getIdentityRosterStatus: '/api/owner/identity-roster/status',
   previewIdentityRosterSync: '/api/owner/identity-roster/preview',
   listIdentityRoster: '/api/owner/identity-roster/directory',

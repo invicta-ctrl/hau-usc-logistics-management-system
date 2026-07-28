@@ -41,6 +41,21 @@ async function login(context, accessId, password) {
   return response.json();
 }
 
+async function mutate(context, csrfToken, method, data) {
+  return context.post(`/api/${method}`, {
+    headers: { 'x-csrf-token': csrfToken },
+    data,
+  });
+}
+
+function releaseFixtureId(name) {
+  const value = String(process.env[name] ?? '').trim();
+  if (!value || !/SYNTHETIC|STAGING/iu.test(value)) {
+    throw new Error(`${name} must identify an explicitly synthetic staging fixture.`);
+  }
+  return value;
+}
+
 test('deployed staging serves the governed login background and official brand slots', async ({
   page,
   request,
@@ -1246,6 +1261,385 @@ test('deployed staging stores evidence in R2, verifies one private Drive backup,
   expect(archived.status()).toBe(200);
   await expect(archived.json()).resolves.toMatchObject({
     evidenceId: accepted.evidenceId,
+    status: 'ARCHIVED',
+    primaryCopyRetained: true,
+    driveCopyRetained: true,
+  });
+});
+
+test('deployed staging proves the shared Release Desk path, projections, and protected System Status', async ({
+  page,
+}) => {
+  const eventId = releaseFixtureId('HAU_STAGING_RELEASE_EVENT_ID');
+  const itemId = releaseFixtureId('HAU_STAGING_RELEASE_ITEM_ID');
+  const owner = await ownerCredential();
+  const ownerRequest = page.context().request;
+  const ownerLogin = await login(ownerRequest, owner.accessId, owner.password);
+  expect(ownerLogin.state).toBe('AUTHENTICATED');
+  expect(ownerLogin.user.authorization.roleId).toBe('SYSTEM_OWNER');
+
+  const scope = `EVENT:${eventId}`;
+  const encodedScope = encodeURIComponent(scope);
+  const requestProjectionResponse = await ownerRequest.get(
+    `/api/request?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(requestProjectionResponse.status()).toBe(200);
+  const requestProjection = (await requestProjectionResponse.json()).data;
+  const event = requestProjection.events.find((entry) => entry.id === eventId);
+  expect(event).toMatchObject({ id: eventId, status: 'ACTIVE' });
+
+  const inventoryBeforeResponse = await ownerRequest.get(
+    `/api/inventory?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(inventoryBeforeResponse.status()).toBe(200);
+  const inventoryBefore = (await inventoryBeforeResponse.json()).data.inventoryItems.find(
+    (entry) => entry.id === itemId,
+  );
+  expect(inventoryBefore).toBeTruthy();
+  expect(inventoryBefore.status).toBe('ACTIVE');
+  expect(inventoryBefore.availableToPromise).toBeGreaterThanOrEqual(2);
+
+  const nonce = `${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
+  const submitted = await mutate(ownerRequest, ownerLogin.csrfToken, 'submitRequest', {
+    clientRequestId: `staging-release-submit-${nonce}`,
+    requestType: 'EVENT_LOGISTICS',
+    eventSeriesId: event.seriesId,
+    eventId,
+    purpose: `Synthetic shared Release Desk acceptance ${nonce}`,
+    department: 'Department of Logistics',
+    lines: [
+      {
+        clientLineId: `staging-release-line-${nonce}`,
+        itemId,
+        description: 'Synthetic staging Release Desk fixture',
+        quantity: 2,
+        unit: inventoryBefore.unit,
+        fulfillmentSource: 'ISSUE_FROM_STOCK',
+      },
+    ],
+  });
+  expect(submitted.status()).toBe(200);
+  const requestId = (await submitted.json()).requestId;
+
+  const reviewed = await mutate(ownerRequest, ownerLogin.csrfToken, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Authorized synthetic Phase 16 staging acceptance.',
+    clientRequestId: `staging-release-review-${nonce}`,
+  });
+  expect(reviewed.status()).toBe(200);
+
+  const readyProjectionResponse = await ownerRequest.get(
+    `/api/releases?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(readyProjectionResponse.status()).toBe(200);
+  const readyProjection = (await readyProjectionResponse.json()).data;
+  const requestLine = readyProjection.requestLines.find((entry) => entry.requestId === requestId);
+  expect(requestLine).toMatchObject({
+    requestId,
+    eventId,
+    itemId,
+    quantity: 2,
+    status: 'READY_TO_RESERVE',
+  });
+
+  const reservationCommand = {
+    itemId,
+    requestLineId: requestLine.id,
+    quantity: 2,
+    clientRequestId: `staging-release-reserve-${nonce}`,
+  };
+  const reserved = await mutate(ownerRequest, ownerLogin.csrfToken, 'reserveStock', reservationCommand);
+  expect(reserved.status()).toBe(200);
+  const reservationId = (await reserved.json()).reservationId;
+  const reservationReplay = await mutate(
+    ownerRequest,
+    ownerLogin.csrfToken,
+    'reserveStock',
+    reservationCommand,
+  );
+  expect(reservationReplay.status()).toBe(200);
+  await expect(reservationReplay.json()).resolves.toMatchObject({ reservationId });
+
+  const evidenceBytes = Buffer.from([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...Buffer.from(`staging-release-evidence-${nonce}`),
+  ]);
+  const uploaded = await mutate(ownerRequest, ownerLogin.csrfToken, 'uploadEvidence', {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    originalFileName: `synthetic-release-${nonce}.png`,
+    mimeType: 'image/png',
+    base64: evidenceBytes.toString('base64'),
+    relatedEntityType: 'RELEASE_REQUEST',
+    relatedEntityId: requestId,
+    requestId,
+    clientRequestId: `staging-release-evidence-${nonce}`,
+  });
+  expect(uploaded.status()).toBe(200);
+  const evidence = await uploaded.json();
+  expect(evidence).toMatchObject({
+    uploadStatus: 'VERIFIED',
+    backupStatus: 'PENDING',
+    message: '✓ Your photo or document is saved securely. A backup copy will be created automatically.',
+  });
+
+  const recipient = {
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Phase 16 Recipient',
+    recipientRole: 'Authorized staging acceptance',
+    department: 'Department of Logistics',
+    evidenceId: evidence.evidenceId,
+  };
+  const partialCommand = {
+    requestId,
+    ...recipient,
+    lines: [{ requestLineId: requestLine.id, quantity: 1 }],
+    clientRequestId: `staging-release-partial-${nonce}`,
+  };
+  const partial = await mutate(ownerRequest, ownerLogin.csrfToken, 'confirmRelease', partialCommand);
+  expect(partial.status()).toBe(200);
+  const partialResult = await partial.json();
+  expect(partialResult).toMatchObject({ status: 'PARTIAL', recipientConfirmed: true });
+  const partialReplay = await mutate(ownerRequest, ownerLogin.csrfToken, 'confirmRelease', partialCommand);
+  expect(partialReplay.status()).toBe(200);
+  await expect(partialReplay.json()).resolves.toMatchObject({ releaseId: partialResult.releaseId });
+
+  const afterPartialResponse = await ownerRequest.get(
+    `/api/releases?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(afterPartialResponse.status()).toBe(200);
+  const afterPartial = (await afterPartialResponse.json()).data;
+  expect(afterPartial.releaseConfirmations).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: partialResult.releaseId,
+        requestId,
+        eventId,
+        recipientName: recipient.recipientName,
+        recipientRole: recipient.recipientRole,
+        department: recipient.department,
+        evidenceId: evidence.evidenceId,
+        status: 'PARTIAL',
+        lineReleases: [
+          expect.objectContaining({
+            requestLineId: requestLine.id,
+            itemId,
+            quantity: 1,
+            status: 'PARTIAL',
+          }),
+        ],
+      }),
+    ]),
+  );
+
+  const completeCommand = {
+    ...partialCommand,
+    clientRequestId: `staging-release-complete-${nonce}`,
+  };
+  const completed = await mutate(ownerRequest, ownerLogin.csrfToken, 'confirmRelease', completeCommand);
+  expect(completed.status()).toBe(200);
+  const completedResult = await completed.json();
+  expect(completedResult).toMatchObject({ status: 'COMPLETED', recipientConfirmed: true });
+  const completedReplay = await mutate(ownerRequest, ownerLogin.csrfToken, 'confirmRelease', completeCommand);
+  expect(completedReplay.status()).toBe(200);
+  await expect(completedReplay.json()).resolves.toMatchObject({
+    releaseId: completedResult.releaseId,
+  });
+
+  const correctionCommand = {
+    releaseConfirmationId: completedResult.releaseId,
+    quantity: 1,
+    reason: 'Synthetic Phase 16 correction and compensating-ledger proof.',
+    evidenceId: evidence.evidenceId,
+    correctionConfirmed: true,
+    operationalScope: scope,
+    activeWorkspace: 'inventory',
+    clientRequestId: `staging-release-correction-${nonce}`,
+  };
+  const corrected = await mutate(ownerRequest, ownerLogin.csrfToken, 'correctRelease', correctionCommand);
+  expect(corrected.status()).toBe(200);
+  const correction = await corrected.json();
+  expect(correction).toMatchObject({
+    releaseId: completedResult.releaseId,
+    releaseConfirmationId: completedResult.releaseId,
+    quantity: 1,
+    status: 'POSTED',
+    lineStatus: 'PARTIALLY_RELEASED',
+  });
+  const correctionReplay = await mutate(
+    ownerRequest,
+    ownerLogin.csrfToken,
+    'correctRelease',
+    correctionCommand,
+  );
+  expect(correctionReplay.status()).toBe(200);
+  await expect(correctionReplay.json()).resolves.toMatchObject({
+    correctionId: correction.correctionId,
+  });
+
+  const finalReleaseCommand = {
+    ...partialCommand,
+    clientRequestId: `staging-release-final-${nonce}`,
+  };
+  const finalRelease = await mutate(
+    ownerRequest,
+    ownerLogin.csrfToken,
+    'confirmRelease',
+    finalReleaseCommand,
+  );
+  expect(finalRelease.status()).toBe(200);
+  const finalReleaseResult = await finalRelease.json();
+  expect(finalReleaseResult).toMatchObject({ status: 'COMPLETED', recipientConfirmed: true });
+
+  const finalProjectionResponse = await ownerRequest.get(
+    `/api/releases?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(finalProjectionResponse.status()).toBe(200);
+  const finalProjection = (await finalProjectionResponse.json()).data;
+  expect(finalProjection.requests.find((entry) => entry.id === requestId)).toMatchObject({
+    id: requestId,
+    eventId,
+    status: 'COMPLETED',
+  });
+  expect(finalProjection.requestLines.find((entry) => entry.id === requestLine.id)).toMatchObject({
+    id: requestLine.id,
+    releasedQuantity: 2,
+    status: 'COMPLETED',
+  });
+  expect(finalProjection.releaseConfirmations).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        id: partialResult.releaseId,
+        status: 'PARTIAL',
+        recipientName: recipient.recipientName,
+        evidenceId: evidence.evidenceId,
+      }),
+      expect.objectContaining({
+        id: completedResult.releaseId,
+        status: 'COMPLETED',
+        correctedQuantity: 1,
+        correctableQuantity: 0,
+        corrections: [
+          expect.objectContaining({
+            id: correction.correctionId,
+            evidenceId: evidence.evidenceId,
+            transactionId: correction.transactionId,
+            status: 'POSTED',
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        id: finalReleaseResult.releaseId,
+        status: 'COMPLETED',
+        recipientName: recipient.recipientName,
+        evidenceId: evidence.evidenceId,
+      }),
+    ]),
+  );
+
+  const inventoryAfterResponse = await ownerRequest.get(
+    `/api/inventory?operationalScope=${encodedScope}&pageSize=50`,
+  );
+  expect(inventoryAfterResponse.status()).toBe(200);
+  const inventoryAfter = (await inventoryAfterResponse.json()).data;
+  const itemAfter = inventoryAfter.inventoryItems.find((entry) => entry.id === itemId);
+  expect(itemAfter.onHand).toBe(inventoryBefore.onHand - 2);
+  expect(itemAfter.reserved).toBe(inventoryBefore.reserved);
+  const ledger = inventoryAfter.ledgerTransactions;
+  const relevantIssues = ledger.filter((entry) =>
+    [partialResult.releaseId, completedResult.releaseId, finalReleaseResult.releaseId].includes(
+      entry.relatedId,
+    ),
+  );
+  expect(relevantIssues).toHaveLength(3);
+  const correctedIssue = relevantIssues.find((entry) => entry.relatedId === completedResult.releaseId);
+  expect(correctedIssue).toBeTruthy();
+  expect(ledger).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: 'RELEASE_CORRECTION',
+        direction: 'REVERSAL',
+        relatedId: correction.correctionId,
+        reversalOf: correctedIssue.id,
+        quantity: 1,
+      }),
+    ]),
+  );
+
+  const backupInitially = await ownerRequest.post('/api/owner/evidence/status', {
+    data: { evidenceId: evidence.evidenceId },
+  });
+  expect(backupInitially.status()).toBe(200);
+  await expect(backupInitially.json()).resolves.toMatchObject({
+    selectedEvidence: {
+      evidenceId: evidence.evidenceId,
+      status: expect.stringMatching(/^(PENDING|IN_PROGRESS|RETRYING|SYNCED)$/u),
+    },
+  });
+
+  await expect
+    .poll(
+      async () => {
+        await ownerRequest.post('/api/owner/evidence/process', {
+          headers: { 'x-csrf-token': ownerLogin.csrfToken },
+          data: { evidenceId: evidence.evidenceId, limit: 1 },
+        });
+        const statusResponse = await ownerRequest.post('/api/owner/evidence/status', {
+          data: { evidenceId: evidence.evidenceId },
+        });
+        expect(statusResponse.status()).toBe(200);
+        return (await statusResponse.json()).selectedEvidence;
+      },
+      { timeout: 30_000 },
+    )
+    .toMatchObject({
+      evidenceId: evidence.evidenceId,
+      status: 'SYNCED',
+      hasVerifiedDriveCopy: true,
+    });
+
+  await page.goto('/app/admin');
+  await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+  await page.locator('[data-admin-view="referenceAdmin"]').click();
+  const systemStatusControl = page.locator('[data-admin-control-surface="system-status"]');
+  await expect(systemStatusControl).toBeVisible();
+  await systemStatusControl.click();
+  const systemStatus = page.locator('[data-system-status]');
+  await expect(systemStatus).toBeVisible();
+  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(7);
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Primary R2 status');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Pending Drive backups');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Failed backups');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Oldest pending backup');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Last successful backup');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Last reconciliation');
+  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(
+    'Files requiring restoration',
+  );
+  await expect(systemStatus.locator('[data-system-status-technical-details]')).toContainText(
+    'Identifier protection',
+  );
+  await expect(systemStatus).not.toContainText(eventId);
+  await expect(systemStatus).not.toContainText(itemId);
+  await expect(systemStatus).not.toContainText(evidence.evidenceId);
+
+  const archived = await ownerRequest.post('/api/owner/evidence/archive', {
+    headers: { 'x-csrf-token': ownerLogin.csrfToken },
+    data: {
+      evidenceId: evidence.evidenceId,
+      reason: 'Synthetic Phase 16 shared Release Desk acceptance archive',
+    },
+  });
+  expect(archived.status()).toBe(200);
+  await expect(archived.json()).resolves.toMatchObject({
+    evidenceId: evidence.evidenceId,
     status: 'ARCHIVED',
     primaryCopyRetained: true,
     driveCopyRetained: true,

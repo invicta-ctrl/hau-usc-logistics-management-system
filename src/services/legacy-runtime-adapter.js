@@ -238,6 +238,9 @@ export function createLegacyRuntimeAdapter(mockServices) {
     unlockAccessAccount(payload) {
       return mutationRequests.run('access-unlock', payload, (command) => remote.unlockAccessAccount(command));
     },
+    getEvidenceSystemStatus(payload = {}) {
+      return remote.getEvidenceSystemStatus(payload);
+    },
     getLendingUsage(payload = {}) {
       return remote.getLendingUsage(payload);
     },
