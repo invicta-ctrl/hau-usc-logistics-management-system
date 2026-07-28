@@ -81,10 +81,7 @@ function normalizeRosterValues(headers, rows) {
   }
 
   const indexes = Object.fromEntries(
-    Object.entries(USC_DIRECTORY_FIELDS).map(([field, header]) => [
-      field,
-      normalizedHeaders.indexOf(header),
-    ]),
+    Object.entries(USC_DIRECTORY_FIELDS).map(([field, header]) => [field, normalizedHeaders.indexOf(header)]),
   );
   if (Object.values(indexes).some((index) => index < 0)) {
     return { headers, rows, fingerprintSource: { headers, rows } };
@@ -119,9 +116,10 @@ export function createGoogleSheetsRosterSource({
     serviceAccountEmail: String(serviceAccountEmail ?? '').trim(),
     serviceAccountPrivateKey: String(serviceAccountPrivateKey ?? ''),
   });
+  const placeholder = /(?:REPLACE|TBD|TODO|UNKNOWN|<[^>]+>)/iu;
   const missing = () =>
     Object.entries(configuration)
-      .filter(([, value]) => !value)
+      .filter(([, value]) => !value || placeholder.test(value))
       .map(([key]) => key);
 
   return Object.freeze({
@@ -129,13 +127,14 @@ export function createGoogleSheetsRosterSource({
       const missingValues = missing();
       return {
         configured: missingValues.length === 0,
-        missingConfiguration: missingValues.map((key) =>
-          ({
-            spreadsheetId: 'GOOGLE_ROSTER_SPREADSHEET_ID',
-            range: 'GOOGLE_ROSTER_RANGE',
-            serviceAccountEmail: 'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
-            serviceAccountPrivateKey: 'GOOGLE_ROSTER_PRIVATE_KEY',
-          })[key],
+        missingConfiguration: missingValues.map(
+          (key) =>
+            ({
+              spreadsheetId: 'GOOGLE_ROSTER_SPREADSHEET_ID',
+              range: 'GOOGLE_ROSTER_RANGE',
+              serviceAccountEmail: 'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
+              serviceAccountPrivateKey: 'GOOGLE_ROSTER_PRIVATE_KEY',
+            })[key],
         ),
       };
     },

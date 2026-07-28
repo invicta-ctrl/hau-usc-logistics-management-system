@@ -61,11 +61,11 @@
           ><span class="admin-control-action">Open governed assets</span>
         </button>
         <button class="admin-control-card" type="button" data-admin-control-surface="system-status">
-          <span class="admin-control-kicker">System Owner only</span><strong>System Status</strong
+          <span class="admin-control-kicker">System Owner only</span><strong>System Operational Health</strong
           ><small
-            >Inspect primary evidence storage, private backup health, reconciliation, and restore
-            requirements.</small
-          ><span class="admin-control-action">Open protected status</span>
+            >Inspect protected release, data, authentication, provider, storage, inventory, and recovery
+            status.</small
+          ><span class="admin-control-action">Open operational health</span>
         </button>
         <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster">
           <span class="admin-control-kicker">System Owner only</span
@@ -142,10 +142,11 @@
     <article class="panel" data-system-status hidden>
       <div class="panel-head">
         <div>
-          <h2>System Status</h2>
+          <h2>System Operational Health</h2>
           <p>
-            Protected evidence-storage health for the System Owner. Bucket names, object keys, backup file
-            IDs, OAuth values, and raw provider errors are intentionally omitted.
+            Protected release, data, authentication, provider, storage, inventory, and recovery health for the
+            System Owner. Secrets, account identifiers, provider IDs, raw errors, object keys, OAuth values,
+            and personal data are intentionally omitted.
           </p>
         </div>
         <div class="button-row">
@@ -154,7 +155,7 @@
         </div>
       </div>
       <div class="alert" data-system-status-state aria-live="polite">
-        Open System Status to load protected storage health.
+        Open System Operational Health to load safe aggregate status.
       </div>
       <div class="grid-4 section-gap" data-system-status-metrics></div>
       <details class="section-gap" data-system-status-technical>

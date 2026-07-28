@@ -444,15 +444,24 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await systemStatusControl.click();
   const systemStatus = ownerPage.locator('[data-system-status]');
   await expect(systemStatus).toBeVisible();
-  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(7);
+  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(16);
   for (const label of [
-    'Primary R2 status',
-    'Pending Drive backups',
-    'Failed backups',
-    'Oldest pending backup',
+    'Overall',
+    'Worker / API',
+    'Deployed release',
+    'D1 schema',
+    'Current bindings',
+    'Authentication',
+    'Email verification',
+    'Identity roster sync',
+    'Google Drive backup',
+    'R2 storage',
+    'Evidence failures',
+    'Login / rate limits',
+    'Inventory alerts',
     'Last successful backup',
     'Last reconciliation',
-    'Files requiring restoration',
+    'Last rollback rehearsal',
   ]) {
     await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(label);
   }
@@ -2213,6 +2222,16 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   });
   expect(ownerEvidenceStatus.status()).toBe(200);
   await expect(ownerEvidenceStatus.json()).resolves.toMatchObject({
+    overallStatus: expect.stringMatching(/^(?:HEALTHY|ATTENTION)$/u),
+    release: { environment: 'DEVELOPMENT', candidateSha: expect.any(String) },
+    database: { schemaVersion: expect.any(String), latestMigration: expect.any(String) },
+    authentication: { totalAccounts: expect.any(Number), failedLoginEvents24h: expect.any(Number) },
+    emailVerification: { status: expect.any(String) },
+    identityRoster: { status: expect.any(String) },
+    storage: { brandR2: 'AVAILABLE', evidenceR2: 'AVAILABLE' },
+    inventory: { negativeBalanceAlerts: expect.any(Number) },
+    recovery: { rollbackRehearsalStatus: expect.any(String) },
+    protection: { personalDataExcluded: true, rawErrorsExcluded: true },
     primaryR2Status: 'AVAILABLE',
     pendingDriveBackups: expect.any(Number),
     failedDriveBackups: expect.any(Number),

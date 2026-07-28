@@ -1275,7 +1275,7 @@ test('deployed staging stores evidence in R2, verifies one private Drive backup,
   });
 });
 
-test('deployed staging proves the shared Release Desk path, projections, and protected System Status', async ({
+test('deployed staging proves the shared Release Desk path, projections, and protected operational health', async ({
   page,
 }) => {
   const eventId = releaseFixtureId('HAU_STAGING_RELEASE_EVENT_ID');
@@ -1621,16 +1621,27 @@ test('deployed staging proves the shared Release Desk path, projections, and pro
   await systemStatusControl.click();
   const systemStatus = page.locator('[data-system-status]');
   await expect(systemStatus).toBeVisible();
-  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(7);
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Primary R2 status');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Pending Drive backups');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Failed backups');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Oldest pending backup');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Last successful backup');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText('Last reconciliation');
-  await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(
-    'Files requiring restoration',
-  );
+  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(16);
+  for (const label of [
+    'Overall',
+    'Worker / API',
+    'Deployed release',
+    'D1 schema',
+    'Current bindings',
+    'Authentication',
+    'Email verification',
+    'Identity roster sync',
+    'Google Drive backup',
+    'R2 storage',
+    'Evidence failures',
+    'Login / rate limits',
+    'Inventory alerts',
+    'Last successful backup',
+    'Last reconciliation',
+    'Last rollback rehearsal',
+  ]) {
+    await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(label);
+  }
   await expect(systemStatus.locator('[data-system-status-technical-details]')).toContainText(
     'Identifier protection',
   );

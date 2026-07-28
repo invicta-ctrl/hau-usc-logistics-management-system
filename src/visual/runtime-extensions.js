@@ -2520,26 +2520,98 @@ export function createRuntimeExtensions(options) {
     const failed = Number(status.failedDriveBackups ?? 0);
     const restoreRequired = Number(status.filesRequiringRestoration ?? 0);
     const primaryAvailable = String(status.primaryR2Status ?? '').toUpperCase() === 'AVAILABLE';
+    const release = status.release ?? {};
+    const database = status.database ?? {};
+    const bindings = status.bindings ?? {};
+    const authentication = status.authentication ?? {};
+    const emailVerification = status.emailVerification ?? {};
+    const roster = status.identityRoster ?? {};
+    const storage = status.storage ?? {};
+    const inventory = status.inventory ?? {};
+    const recovery = status.recovery ?? {};
+    const rateLimitTotal =
+      Number(authentication.authRateLimitEvents24h ?? 0) +
+      Number(authentication.publicRequestRateLimitEvents24h ?? 0) +
+      Number(authentication.publicLendingRateLimitEvents24h ?? 0);
     root.querySelector('[data-system-status-metrics]').innerHTML = [
-      ['Primary R2 status', primaryAvailable ? 'Available' : 'Unavailable', 'Operational source of truth'],
-      ['Pending Drive backups', pending, 'Includes pending, in-progress, and retrying jobs'],
-      ['Failed backups', failed, 'Owner review required after retries are exhausted'],
+      ['Overall', status.overallStatus ?? 'Not assessed', 'Truthful aggregate; attention is not hidden'],
       [
-        'Oldest pending backup',
-        status.oldestPendingBackupAt ? accessDate(status.oldestPendingBackupAt) : 'None',
-        'Age of the oldest unfinished backup',
+        'Worker / API',
+        status.workerApi?.status ?? 'Not reported',
+        `${status.workerApi?.readinessIssueCount ?? 0} readiness issue(s)`,
+      ],
+      [
+        'Deployed release',
+        `v${release.releaseVersion ?? 'Not reported'}`,
+        `${release.environment ?? 'Unknown'} · ${String(release.candidateSha ?? 'Not reported').slice(0, 12)}`,
+      ],
+      [
+        'D1 schema',
+        database.schemaVersion ?? 'Not reported',
+        database.latestMigration ?? 'Latest migration not reported',
+      ],
+      [
+        'Current bindings',
+        [bindings.d1, bindings.brandR2, bindings.evidenceR2, bindings.staticAssets].every(
+          (value) => value === 'BOUND',
+        )
+          ? 'Bound'
+          : 'Attention',
+        `${bindings.currentEnvironment ?? 'Unknown'} resources only`,
+      ],
+      [
+        'Authentication',
+        authentication.status ?? 'Not reported',
+        `${authentication.activeAccounts ?? 0} active account(s) · ${authentication.activeSessions ?? 0} active session(s)`,
+      ],
+      [
+        'Email verification',
+        emailVerification.status ?? 'Not reported',
+        emailVerification.note ?? 'Provider state unavailable',
+      ],
+      [
+        'Identity roster sync',
+        roster.status ?? 'Not reported',
+        `${roster.latestApplyStatus ?? 'Not recorded'} · ${roster.activeIdentities ?? 0} active identities`,
+      ],
+      ['Google Drive backup', storage.googleDrive ?? 'Not reported', 'Private evidence recovery copy'],
+      [
+        'R2 storage',
+        primaryAvailable && storage.brandR2 === 'AVAILABLE' ? 'Available' : 'Attention',
+        `Brand ${storage.brandR2 ?? 'unknown'} · Evidence ${storage.evidenceR2 ?? 'unknown'}`,
+      ],
+      [
+        'Evidence failures',
+        failed + restoreRequired,
+        `${pending} pending · ${restoreRequired} require restoration`,
+      ],
+      [
+        'Login / rate limits',
+        Number(authentication.failedLoginEvents24h ?? 0) + rateLimitTotal,
+        `${authentication.failedLoginEvents24h ?? 0} failed login event(s) · ${rateLimitTotal} rate-limit event(s), last 24h`,
+      ],
+      [
+        'Inventory alerts',
+        Number(inventory.negativeBalanceAlerts ?? 0) + Number(inventory.lowStockAlerts ?? 0),
+        `${inventory.negativeBalanceAlerts ?? 0} negative · ${inventory.lowStockAlerts ?? 0} low stock · ${inventory.classificationPending ?? 0} pending classification`,
       ],
       [
         'Last successful backup',
-        status.lastSuccessfulBackupAt ? accessDate(status.lastSuccessfulBackupAt) : 'Not recorded',
+        recovery.lastSuccessfulBackupAt ? accessDate(recovery.lastSuccessfulBackupAt) : 'Not recorded',
         'Most recent verified private recovery copy',
       ],
       [
         'Last reconciliation',
-        status.lastReconciliationAt ? accessDate(status.lastReconciliationAt) : 'Not recorded',
+        recovery.lastSuccessfulReconciliationAt
+          ? accessDate(recovery.lastSuccessfulReconciliationAt)
+          : 'Not recorded',
         'Most recent primary-object verification',
       ],
-      ['Files requiring restoration', restoreRequired, 'Primary objects requiring governed recovery'],
+      [
+        'Last rollback rehearsal',
+        recovery.lastRollbackRehearsalAt ? accessDate(recovery.lastRollbackRehearsalAt) : 'Not recorded',
+        recovery.rollbackRehearsalStatus ?? 'Recovery rehearsal status unavailable',
+      ],
     ]
       .map(
         ([label, value, note]) =>
@@ -2548,13 +2620,11 @@ export function createRuntimeExtensions(options) {
       .join('');
 
     const stateMessage = root.querySelector('[data-system-status-state]');
-    const needsAttention = !primaryAvailable || pending > 0 || failed > 0 || restoreRequired > 0;
+    const needsAttention = String(status.overallStatus ?? '').toUpperCase() !== 'HEALTHY';
     stateMessage.className = `alert ${needsAttention ? 'warning' : 'success'}`;
-    stateMessage.textContent =
-      status.backupMessage ||
-      (needsAttention
-        ? 'Evidence storage needs attention. Review the protected counts below.'
-        : 'Primary evidence storage and asynchronous backup processing report no active exceptions.');
+    stateMessage.textContent = needsAttention
+      ? 'Operational health has truthful attention items. Review the safe aggregate statuses below.'
+      : 'Worker, data, authentication, storage, inventory, and recovery status report no active exceptions.';
 
     const technical = status.technicalDetails ?? {};
     const statusCounts = Object.entries(technical.statusCounts ?? {})
@@ -2563,19 +2633,31 @@ export function createRuntimeExtensions(options) {
       .join(' | ');
     root.querySelector('[data-system-status-technical-details]').innerHTML = [
       [
-        'Private Drive backup',
-        technical.driveBackupConfigured ? 'Configured' : 'Not configured',
-        'Provider identifiers remain protected',
+        'Environment boundary',
+        bindings.otherEnvironment ?? 'Not reported',
+        'The other environment is not loaded into this Worker',
       ],
       [
-        'Backup status counts',
+        'D1 migration time',
+        database.latestMigrationAt ? accessDate(database.latestMigrationAt) : 'Not recorded',
+        database.schemaUpdatedAt
+          ? `Schema updated ${accessDate(database.schemaUpdatedAt)}`
+          : 'Schema update time not recorded',
+      ],
+      [
+        'Authentication totals',
+        `${authentication.totalAccounts ?? 0} total · ${authentication.starterAccounts ?? 0} starter · ${authentication.inactiveAccounts ?? 0} inactive`,
+        'Aggregate counts only; account identifiers are omitted',
+      ],
+      [
+        'Evidence backup queue',
         statusCounts || 'No active backup records',
-        'Only governed status totals are shown',
+        `Oldest pending: ${status.oldestPendingBackupAt ? accessDate(status.oldestPendingBackupAt) : 'None'}`,
       ],
       [
         'Identifier protection',
-        technical.providerIdentifiersProtected ? 'Enforced' : 'Unconfirmed',
-        'No bucket, object, file, OAuth, or raw provider values are rendered',
+        Object.values(status.protection ?? {}).every(Boolean) ? 'Enforced' : 'Unconfirmed',
+        'No secret, account identifier, provider ID, raw error, object key, OAuth value, or personal data is rendered',
       ],
     ]
       .map(

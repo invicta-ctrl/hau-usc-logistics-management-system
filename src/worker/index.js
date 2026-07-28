@@ -25,6 +25,7 @@ import { createPublicRequestService } from '../server/public-request-service.js'
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
+import { createOperationalHealthService } from '../server/operational-health-service.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -256,6 +257,12 @@ function services(env) {
           : ''),
     }),
   });
+  const operationalHealth = createOperationalHealthService({
+    db: env.DB,
+    env,
+    evidence,
+    identityRoster,
+  });
   return {
     access,
     advertisementAdmin,
@@ -264,6 +271,7 @@ function services(env) {
     evidence,
     lendingUsage,
     identityRoster,
+    operationalHealth,
     operations,
     publicAdvertisements,
     publicLending,
@@ -333,6 +341,7 @@ async function handleApi(request, env, requestId, executionContext) {
     evidence,
     lendingUsage,
     identityRoster,
+    operationalHealth,
     operations,
     publicAdvertisements,
     publicLending,
@@ -588,7 +597,7 @@ async function handleApi(request, env, requestId, executionContext) {
       if (url.pathname === '/api/owner/evidence/status') {
         return json({
           ok: true,
-          ...(await evidence.systemStatus({
+          ...(await operationalHealth.status({
             account: actor,
             evidenceId: command.evidenceId,
           })),

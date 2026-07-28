@@ -37,6 +37,24 @@ describe('Google Sheets identity roster source', () => {
     expect(JSON.stringify(source.status())).not.toMatch(/spreadsheetId|privateKey|serviceAccountEmail/u);
   });
 
+  it('treats generated placeholder values as missing private configuration', () => {
+    const source = createGoogleSheetsRosterSource({
+      spreadsheetId: 'REPLACE_WITH_PRIVATE_SPREADSHEET_ID',
+      range: 'TBD',
+      serviceAccountEmail: '<private-reader-email>',
+      serviceAccountPrivateKey: 'TODO',
+    });
+    expect(source.status()).toMatchObject({
+      configured: false,
+      missingConfiguration: [
+        'GOOGLE_ROSTER_SPREADSHEET_ID',
+        'GOOGLE_ROSTER_RANGE',
+        'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
+        'GOOGLE_ROSTER_PRIVATE_KEY',
+      ],
+    });
+  });
+
   it('uses a read-only service-account token and returns only the requested range values', async () => {
     const fetchImpl = vi
       .fn()
@@ -172,14 +190,7 @@ describe('Google Sheets identity roster source', () => {
       'Review_Notes',
     ]);
     expect(result.rows).toEqual([
-      [
-        'SYNTHETIC-001',
-        'synthetic.officer@example.invalid',
-        'Synthetic Officer',
-        'VERIFIED',
-        true,
-        '',
-      ],
+      ['SYNTHETIC-001', 'synthetic.officer@example.invalid', 'Synthetic Officer', 'VERIFIED', true, ''],
       ['', '', 'Incomplete Officer', 'VERIFIED', true, ''],
     ]);
     expect(result.fingerprintSource).toEqual({ headers: rawHeaders, rows: rawRows });
