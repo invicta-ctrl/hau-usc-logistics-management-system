@@ -1630,8 +1630,10 @@ test('deployed staging proves the shared Release Desk path, projections, and pro
   await expect(systemStatus).not.toContainText(itemId);
   await expect(systemStatus).not.toContainText(evidence.evidenceId);
 
+  const cleanupLogin = await login(ownerRequest, owner.accessId, owner.password);
+  expect(cleanupLogin.state).toBe('AUTHENTICATED');
   const archived = await ownerRequest.post('/api/owner/evidence/archive', {
-    headers: { 'x-csrf-token': ownerLogin.csrfToken },
+    headers: { 'x-csrf-token': cleanupLogin.csrfToken },
     data: {
       evidenceId: evidence.evidenceId,
       reason: 'Synthetic Phase 16 shared Release Desk acceptance archive',
