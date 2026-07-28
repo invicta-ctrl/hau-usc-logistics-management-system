@@ -2,6 +2,7 @@ import {
   EVIDENCE_TYPES,
   encodeEvidenceText,
   evidenceFolderKey,
+  sha256Hex,
   validateEvidenceBytes,
 } from './evidence-contract.js';
 
@@ -296,10 +297,11 @@ export function createGoogleDriveEvidenceStore({
         { bytes, mimeType, expectedSize: sizeBytes, expectedSha256: sha256 },
         cryptoProvider,
       );
+      const driveVersionKey = await sha256Hex(encoder.encode(idempotencyKey), cryptoProvider);
       const expected = {
         evidenceId,
         folderId,
-        idempotencyKey,
+        idempotencyKey: driveVersionKey,
         mimeType,
         sha256: validated.sha256,
         sizeBytes: validated.bytes.byteLength,
@@ -338,7 +340,7 @@ export function createGoogleDriveEvidenceStore({
               parents: [folderId],
               description: `HAU-USC governed evidence backup ${evidenceId}`,
               appProperties: {
-                hauUscEvidenceVersion: idempotencyKey,
+                hauUscEvidenceVersion: expected.idempotencyKey,
                 hauUscEvidenceId: evidenceId,
               },
               copyRequiresWriterPermission: true,
@@ -366,7 +368,7 @@ export function createGoogleDriveEvidenceStore({
       const expected = {
         evidenceId,
         folderId,
-        idempotencyKey,
+        idempotencyKey: await sha256Hex(encoder.encode(idempotencyKey), cryptoProvider),
         mimeType,
         sha256,
         sizeBytes,

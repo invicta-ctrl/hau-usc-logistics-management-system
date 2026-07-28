@@ -38,7 +38,7 @@ function metadata(id = 'private-drive-file-reference') {
     sha256Checksum: SHA256,
     parents: ['private-release-folder'],
     appProperties: {
-      hauUscEvidenceVersion: `EVD-SYNTHETIC:${SHA256}`,
+      hauUscEvidenceVersion: SHA256,
       hauUscEvidenceId: 'EVD-SYNTHETIC',
     },
     shared: false,
@@ -114,7 +114,9 @@ describe('Google Drive evidence backup', () => {
     const uploadBody = new TextDecoder().decode(uploadCalls[0].options.body);
     expect(uploadBody).toContain('private-release-folder');
     expect(uploadBody).toContain('hauUscEvidenceVersion');
-    expect(uploadBody).toContain(`EVD-SYNTHETIC:${SHA256}`);
+    expect(uploadBody).toContain(`"hauUscEvidenceVersion":"${SHA256}"`);
+    expect(uploadBody).not.toContain(`EVD-SYNTHETIC:${SHA256}`);
+    expect(new TextEncoder().encode(`hauUscEvidenceVersion${SHA256}`).byteLength).toBeLessThanOrEqual(124);
     expect(uploadBody).not.toContain('"writersCanShare"');
     expect(calls.some((entry) => entry.url.includes('/permissions'))).toBe(false);
     const lookup = calls.find((entry) => entry.url.includes('/drive/v3/files?'));
