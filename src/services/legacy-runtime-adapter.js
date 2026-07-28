@@ -267,6 +267,24 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.archiveAdvertisement(command),
       );
     },
+    listBrandAssets(payload = {}) {
+      return remote.listBrandAssets(payload);
+    },
+    uploadBrandAsset(payload) {
+      return mutationRequests.run('brand-asset-upload', payload, (command) =>
+        remote.uploadBrandAsset(command),
+      );
+    },
+    publishBrandAsset(payload) {
+      return mutationRequests.run('brand-asset-publish', payload, (command) =>
+        remote.publishBrandAsset(command),
+      );
+    },
+    rollbackBrandAsset(payload) {
+      return mutationRequests.run('brand-asset-rollback', payload, (command) =>
+        remote.rollbackBrandAsset(command),
+      );
+    },
     transitionCompositeComponent(payload) {
       return mutationRequests.run('composite-transition', payload, (command) =>
         remote.transitionCompositeComponent(command),

@@ -11,13 +11,9 @@ function escapeHtml(value) {
 }
 
 const clientRequestId = () => `public-lending:${crypto.randomUUID()}`;
-const requestable = (item) =>
-  ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability);
+const requestable = (item) => ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability);
 const searchableText = (item) =>
-  [item.name, item.productId, item.category, ...(item.aliases ?? [])]
-    .join(' ')
-    .trim()
-    .toLowerCase();
+  [item.name, item.productId, item.category, ...(item.aliases ?? [])].join(' ').trim().toLowerCase();
 
 export async function mountPublicLendingPortal({ root, client }) {
   root.innerHTML =
@@ -34,9 +30,9 @@ export async function mountPublicLendingPortal({ root, client }) {
     ]);
   } catch (error) {
     root.innerHTML = `<section class="auth-card" role="alert"><p class="eyebrow">Lending Center</p><h1>Catalog service unavailable</h1><p class="auth-intro">The borrower-safe catalog could not be loaded. This is a service error, not an empty catalog.</p><p>${escapeHtml(error.message)}</p><button class="secondary" type="button" data-retry-catalog>Try again</button><a href="/login">Staff sign in</a></section>`;
-    root.querySelector('[data-retry-catalog]')?.addEventListener('click', () =>
-      mountPublicLendingPortal({ root, client }),
-    );
+    root
+      .querySelector('[data-retry-catalog]')
+      ?.addEventListener('click', () => mountPublicLendingPortal({ root, client }));
     return;
   }
 
@@ -150,9 +146,9 @@ export async function mountPublicLendingPortal({ root, client }) {
       if (staff) control.value = '';
     }
   };
-  form.querySelectorAll('[name="borrowerType"]').forEach((control) =>
-    control.addEventListener('change', () => syncBorrowerType(control.value)),
-  );
+  form
+    .querySelectorAll('[name="borrowerType"]')
+    .forEach((control) => control.addEventListener('change', () => syncBorrowerType(control.value)));
   syncBorrowerType('');
 
   const renderSelected = () => {
@@ -222,7 +218,7 @@ export async function mountPublicLendingPortal({ root, client }) {
         ? visible
             .map(
               (item) =>
-                `<article class="public-catalog-card"><div class="public-catalog-image">${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="" loading="lazy" decoding="async">` : '<span aria-hidden="true">Image pending</span>'}</div><div><span class="status ${requestable(item) ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><p class="eyebrow">Product ID ${escapeHtml(item.productId)}</p><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Normal loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small>${item.eligibility ? `<small><strong>Eligibility:</strong> ${escapeHtml(item.eligibility)}</small>` : ''}${item.restrictions ? `<small><strong>Restrictions:</strong> ${escapeHtml(item.restrictions)}</small>` : ''}${item.handlingNotes ? `<small><strong>Handling:</strong> ${escapeHtml(item.handlingNotes)}</small>` : ''}</div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${!requestable(item) ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Request item'}</button></article>`,
+                `<article class="public-catalog-card"><div class="public-catalog-image"><img src="${escapeHtml(item.imageUrl || '/brand/default-item-image')}" alt="" loading="lazy" decoding="async"></div><div><span class="status ${requestable(item) ? 'green' : 'red'}">${escapeHtml(item.availability.replaceAll('_', ' '))}</span><p class="eyebrow">Product ID ${escapeHtml(item.productId)}</p><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${escapeHtml(item.type)}</p>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<small>Unit: ${escapeHtml(item.unit)} · Maximum request: ${escapeHtml(item.maximumQuantity)}${item.defaultLoanDays ? ` · Normal loan: ${escapeHtml(item.defaultLoanDays)} days` : ''}</small>${item.eligibility ? `<small><strong>Eligibility:</strong> ${escapeHtml(item.eligibility)}</small>` : ''}${item.restrictions ? `<small><strong>Restrictions:</strong> ${escapeHtml(item.restrictions)}</small>` : ''}${item.handlingNotes ? `<small><strong>Handling:</strong> ${escapeHtml(item.handlingNotes)}</small>` : ''}</div><button class="${selected.has(item.id) ? 'secondary' : 'primary'} mini" type="button" data-select-lending="${escapeHtml(item.id)}" ${!requestable(item) ? 'disabled' : ''}>${selected.has(item.id) ? 'Selected' : 'Request item'}</button></article>`,
             )
             .join('')
         : '<p class="empty">No catalog items match the current search and filters.</p>';

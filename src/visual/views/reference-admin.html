@@ -4,7 +4,10 @@
       <div>
         <p class="eyebrow">Authorized administration · governed control desk</p>
         <h2>Resolve exceptions without widening access.</h2>
-        <p>Start with the change, warning, or review that needs attention. Every control below delegates to the existing server-authorized reference workspace; changing a view never grants permission.</p>
+        <p>
+          Start with the change, warning, or review that needs attention. Every control below delegates to the
+          existing server-authorized reference workspace; changing a view never grants permission.
+        </p>
       </div>
       <div class="hero-actions">
         <span class="pill" data-reference-admin-write-state>Checking write controls</span>
@@ -14,93 +17,273 @@
 
     <section class="admin-control-section" aria-labelledby="adminControlAreasTitle">
       <div class="section-head">
-        <div><p class="eyebrow">System control</p><h2 id="adminControlAreasTitle">Governed control areas</h2><p>Authorized visibility across the system, with no client-side authority change.</p></div>
+        <div>
+          <p class="eyebrow">System control</p>
+          <h2 id="adminControlAreasTitle">Governed control areas</h2>
+          <p>Authorized visibility across the system, with no client-side authority change.</p>
+        </div>
       </div>
       <div class="admin-control-grid">
-        <button class="admin-control-card" type="button" data-reference-admin-control-domain="PERMISSIONS"><span class="admin-control-kicker">Access Management</span><strong>Accounts, roles, and scope</strong><small>Permission changes remain review-gated and cannot self-escalate.</small><span class="admin-control-action">Open controlled permissions</span></button>
-        <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES"><span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong><small>Manage approved references without editing raw operational sources.</small><span class="admin-control-action">Open reference data</span></button>
-        <button class="admin-control-card" type="button" data-reference-admin-control-domain="ROUTING"><span class="admin-control-kicker">Link Registry</span><strong>Routes and canonical ownership</strong><small>Cross-office routing remains a separate-review decision.</small><span class="admin-control-action">Open controlled routing</span></button>
-        <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH"><span class="admin-control-kicker">Audit &amp; System</span><strong>Health, evidence, and exceptions</strong><small>System status is visible here; restricted configuration remains protected.</small><span class="admin-control-action">Open read-only health</span></button>
-        <button class="admin-control-card" type="button" data-admin-control-surface="operational-health"><span class="admin-control-kicker">Operational Health</span><strong>Environment and workflow readiness</strong><small>Inspect server-reported identity, freshness, and cross-workspace attention without exposing secrets.</small><span class="admin-control-action">Open operational health</span></button>
-        <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets"><span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong><small>Inspect the active R2-backed DOL, USC, login-background, and favicon routes.</small><span class="admin-control-action">Open governed assets</span></button>
-        <button class="admin-control-card" type="button" data-admin-control-surface="system-status"><span class="admin-control-kicker">System Owner only</span><strong>System Status</strong><small>Inspect primary evidence storage, private backup health, reconciliation, and restore requirements.</small><span class="admin-control-action">Open protected status</span></button>
-        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster"><span class="admin-control-kicker">System Owner only</span><strong>USC Officer and Staff Directory</strong><small>Review, apply, and roll back the protected directory from the approved private source.</small><span class="admin-control-action">Open protected directory</span></button>
-        <button class="admin-control-card" type="button" data-advertisement-admin-control><span class="admin-control-kicker">USC Announcements</span><strong>Public advertisement rotation</strong><small>Create, preview, schedule, reorder, and archive governed public media.</small><span class="admin-control-action">Manage advertisements</span></button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="PERMISSIONS">
+          <span class="admin-control-kicker">Access Management</span
+          ><strong>Accounts, roles, and scope</strong
+          ><small>Permission changes remain review-gated and cannot self-escalate.</small
+          ><span class="admin-control-action">Open controlled permissions</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="VENUES">
+          <span class="admin-control-kicker">Reference Data</span><strong>Versioned operational values</strong
+          ><small>Manage approved references without editing raw operational sources.</small
+          ><span class="admin-control-action">Open reference data</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="ROUTING">
+          <span class="admin-control-kicker">Link Registry</span
+          ><strong>Routes and canonical ownership</strong
+          ><small>Cross-office routing remains a separate-review decision.</small
+          ><span class="admin-control-action">Open controlled routing</span>
+        </button>
+        <button class="admin-control-card" type="button" data-reference-admin-control-domain="SYNC_HEALTH">
+          <span class="admin-control-kicker">Audit &amp; System</span
+          ><strong>Health, evidence, and exceptions</strong
+          ><small>System status is visible here; restricted configuration remains protected.</small
+          ><span class="admin-control-action">Open read-only health</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="operational-health">
+          <span class="admin-control-kicker">Operational Health</span
+          ><strong>Environment and workflow readiness</strong
+          ><small
+            >Inspect server-reported identity, freshness, and cross-workspace attention without exposing
+            secrets.</small
+          ><span class="admin-control-action">Open operational health</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="brand-assets">
+          <span class="admin-control-kicker">Brand Assets</span><strong>Governed public media slots</strong
+          ><small>Inspect all six active R2-backed identity, background, favicon, and fallback routes.</small
+          ><span class="admin-control-action">Open governed assets</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="system-status">
+          <span class="admin-control-kicker">System Owner only</span><strong>System Status</strong
+          ><small
+            >Inspect primary evidence storage, private backup health, reconciliation, and restore
+            requirements.</small
+          ><span class="admin-control-action">Open protected status</span>
+        </button>
+        <button class="admin-control-card" type="button" data-admin-control-surface="identity-roster">
+          <span class="admin-control-kicker">System Owner only</span
+          ><strong>USC Officer and Staff Directory</strong
+          ><small
+            >Review, apply, and roll back the protected directory from the approved private source.</small
+          ><span class="admin-control-action">Open protected directory</span>
+        </button>
+        <button class="admin-control-card" type="button" data-advertisement-admin-control>
+          <span class="admin-control-kicker">USC Announcements</span
+          ><strong>Public advertisement rotation</strong
+          ><small>Create, preview, schedule, reorder, and archive governed public media.</small
+          ><span class="admin-control-action">Manage advertisements</span>
+        </button>
       </div>
     </section>
 
     <article class="admin-governance-note" aria-label="Administrator authority boundary">
       <strong>Authority boundary</strong>
-      <span>Operational work remains in its role workspace. This control desk surfaces authorized context and invokes existing server checks; it does not grant access, bypass review, or mutate ledger records.</span>
+      <span
+        >Operational work remains in its role workspace. This control desk surfaces authorized context and
+        invokes existing server checks; it does not grant access, bypass review, or mutate ledger
+        records.</span
+      >
     </article>
 
     <article class="panel" data-admin-operational-health hidden>
-      <div class="panel-head"><div><h2>Operational Health</h2><p>Server-reported environment identity, data freshness, and operational exceptions. Secret values and provider identifiers are intentionally omitted.</p></div><span class="pill">Read only</span></div>
+      <div class="panel-head">
+        <div>
+          <h2>Operational Health</h2>
+          <p>
+            Server-reported environment identity, data freshness, and operational exceptions. Secret values
+            and provider identifiers are intentionally omitted.
+          </p>
+        </div>
+        <span class="pill">Read only</span>
+      </div>
       <div class="grid-4 section-gap" data-admin-health-metrics></div>
       <div class="line-list section-gap" data-admin-health-attention></div>
     </article>
 
     <article class="panel" data-admin-brand-assets hidden>
-      <div class="panel-head"><div><h2>Brand Assets</h2><p>Current governed media routes used throughout the application. Replacement lifecycle remains separately authorized.</p></div><span class="pill">Governed R2 slots</span></div>
+      <div class="panel-head">
+        <div>
+          <h2>Brand Assets</h2>
+          <p>
+            Preview all six governed routes. The System Owner can upload validated drafts, publish
+            replacements, and roll back retained versions.
+          </p>
+        </div>
+        <div class="button-row">
+          <span class="pill" data-brand-assets-owner-state>Checking authority</span
+          ><button class="secondary" type="button" data-brand-assets-refresh>Refresh</button>
+        </div>
+      </div>
       <div class="admin-brand-slot-grid section-gap" data-admin-brand-slots></div>
     </article>
 
     <article class="panel" data-admin-evidence-status hidden>
-      <div class="panel-head"><div><h2>Evidence status</h2><p>Cross-workspace evidence exceptions and records requiring follow-up. Files remain governed by their owning workflow.</p></div><span class="pill">Read only</span></div>
+      <div class="panel-head">
+        <div>
+          <h2>Evidence status</h2>
+          <p>
+            Cross-workspace evidence exceptions and records requiring follow-up. Files remain governed by
+            their owning workflow.
+          </p>
+        </div>
+        <span class="pill">Read only</span>
+      </div>
       <div class="grid-4 section-gap" data-admin-evidence-metrics></div>
       <div class="line-list section-gap" data-admin-evidence-results></div>
     </article>
 
     <article class="panel" data-system-status hidden>
       <div class="panel-head">
-        <div><h2>System Status</h2><p>Protected evidence-storage health for the System Owner. Bucket names, object keys, backup file IDs, OAuth values, and raw provider errors are intentionally omitted.</p></div>
-        <div class="button-row"><span class="pill">System Owner only</span><button class="secondary" type="button" data-system-status-refresh>Refresh</button></div>
+        <div>
+          <h2>System Status</h2>
+          <p>
+            Protected evidence-storage health for the System Owner. Bucket names, object keys, backup file
+            IDs, OAuth values, and raw provider errors are intentionally omitted.
+          </p>
+        </div>
+        <div class="button-row">
+          <span class="pill">System Owner only</span
+          ><button class="secondary" type="button" data-system-status-refresh>Refresh</button>
+        </div>
       </div>
-      <div class="alert" data-system-status-state aria-live="polite">Open System Status to load protected storage health.</div>
+      <div class="alert" data-system-status-state aria-live="polite">
+        Open System Status to load protected storage health.
+      </div>
       <div class="grid-4 section-gap" data-system-status-metrics></div>
-      <details class="section-gap" data-system-status-technical><summary>Technical Details</summary><div class="line-list section-gap" data-system-status-technical-details></div></details>
+      <details class="section-gap" data-system-status-technical>
+        <summary>Technical Details</summary>
+        <div class="line-list section-gap" data-system-status-technical-details></div>
+      </details>
     </article>
 
     <article class="panel" data-identity-roster hidden>
       <div class="panel-head">
-        <div><h2>USC Officer and Staff Directory</h2><p>Review the approved private source before changing the protected directory. Google is read only for this review; login uses the encrypted D1 copy.</p></div>
-        <div class="button-row"><button class="secondary" type="button" data-roster-refresh>Refresh</button><button class="primary" type="button" data-roster-preview>Preview directory update</button></div>
+        <div>
+          <h2>USC Officer and Staff Directory</h2>
+          <p>
+            Review the approved private source before changing the protected directory. Google is read only
+            for this review; login uses the encrypted D1 copy.
+          </p>
+        </div>
+        <div class="button-row">
+          <button class="secondary" type="button" data-roster-refresh>Refresh</button
+          ><button class="primary" type="button" data-roster-preview>Preview directory update</button>
+        </div>
       </div>
       <div class="context-cues" aria-label="Directory guidance">
-        <details class="context-cue"><summary aria-label="How directory updates work">?</summary><p>A preview compares the approved source with D1 and shows additions, changes, removals, unchanged records, and quarantined rows before any write.</p></details>
-        <details class="context-cue warning"><summary aria-label="Important directory safety warning">!</summary><p>Duplicate or incomplete rows stay quarantined. Confirm the exact fingerprint before applying, and use rollback only for the latest applied update.</p></details>
+        <details class="context-cue">
+          <summary aria-label="How directory updates work">?</summary>
+          <p>
+            A preview compares the approved source with D1 and shows additions, changes, removals, unchanged
+            records, and quarantined rows before any write.
+          </p>
+        </details>
+        <details class="context-cue warning">
+          <summary aria-label="Important directory safety warning">!</summary>
+          <p>
+            Duplicate or incomplete rows stay quarantined. Confirm the exact fingerprint before applying, and
+            use rollback only for the latest applied update.
+          </p>
+        </details>
       </div>
-      <div class="alert warning" data-roster-source-state>Checking the private roster source configuration.</div>
+      <div class="alert warning" data-roster-source-state>
+        Checking the private roster source configuration.
+      </div>
       <div class="grid-4 section-gap" data-roster-metrics></div>
       <div class="section-gap" data-roster-preview-result></div>
       <div class="toolbar section-gap">
-        <label>Search officers and staff<input name="identityRosterSearch" maxlength="160" placeholder="Student ID, HAU email, name, or verification"></label>
+        <label
+          >Search officers and staff<input
+            name="identityRosterSearch"
+            maxlength="160"
+            placeholder="Student ID, HAU email, name, or verification"
+        /></label>
       </div>
-      <div class="line-list section-gap" data-roster-directory><div class="empty">Open the USC Officer and Staff Directory to load protected records.</div></div>
+      <div class="line-list section-gap" data-roster-directory>
+        <div class="empty">Open the USC Officer and Staff Directory to load protected records.</div>
+      </div>
       <div class="access-pagination section-gap" data-roster-pagination hidden>
         <button class="secondary mini" type="button" data-roster-page="previous">Previous</button>
         <span data-roster-page-summary></span>
         <button class="secondary mini" type="button" data-roster-page="next">Next</button>
       </div>
-      <details class="section-gap"><summary>Update and rollback history</summary><div class="line-list section-gap" data-roster-history><div class="empty">No update history loaded.</div></div></details>
+      <details class="section-gap">
+        <summary>Update and rollback history</summary>
+        <div class="line-list section-gap" data-roster-history>
+          <div class="empty">No update history loaded.</div>
+        </div>
+      </details>
     </article>
 
     <article class="panel" data-access-management hidden>
       <div class="panel-head">
-        <div><h2>Access Management</h2><p>Search governed accounts, inspect Access ID history, and perform confirmed account actions.</p></div>
+        <div>
+          <h2>Access Management</h2>
+          <p>Search governed accounts, inspect Access ID history, and perform confirmed account actions.</p>
+        </div>
         <div class="button-row">
-          <button class="secondary" type="button" data-access-seed-departments>Initialize department accounts</button>
+          <button class="secondary" type="button" data-access-seed-departments>
+            Initialize department accounts
+          </button>
           <button class="primary" type="button" data-access-create>Create account</button>
         </div>
       </div>
       <div class="toolbar access-management-toolbar">
-        <label>Search<input name="accessSearch" maxlength="120" placeholder="Access ID, department, or display name"></label>
-        <label>Role<select name="accessRole"><option value="">All roles</option><option value="REQUESTER">Department requester</option><option value="ADMINISTRATOR">Administrator</option><option value="DIRECTOR">Director</option><option value="DOL_STAFF">DOL staff</option><option value="COMMITTEE_HEAD">Committee head</option><option value="READ_ONLY_AUDITOR">Read-only auditor</option></select></label>
-        <label>Status<select name="accessStatus"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="DISABLED">Disabled</option><option value="REVOKED">Archived / revoked</option><option value="LOCKED">Locked</option><option value="PENDING_FIRST_LOGIN">Pending first login</option></select></label>
-        <label>Committee<select name="accessCommittee"><option value="">All committees</option><option value="COM_FOOD">Food</option><option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option><option value="COM_MATERIALS">Materials</option></select></label>
-        <label>Sort<select name="accessSort"><option value="accessId">Identifier</option><option value="department">Department</option><option value="role">Role</option><option value="status">Status</option><option value="lastLogin">Last login</option></select></label>
+        <label
+          >Search<input
+            name="accessSearch"
+            maxlength="120"
+            placeholder="Access ID, department, or display name"
+        /></label>
+        <label
+          >Role<select name="accessRole">
+            <option value="">All roles</option>
+            <option value="REQUESTER">Department requester</option>
+            <option value="ADMINISTRATOR">Administrator</option>
+            <option value="DIRECTOR">Director</option>
+            <option value="DOL_STAFF">DOL staff</option>
+            <option value="COMMITTEE_HEAD">Committee head</option>
+            <option value="READ_ONLY_AUDITOR">Read-only auditor</option>
+          </select></label
+        >
+        <label
+          >Status<select name="accessStatus">
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="DISABLED">Disabled</option>
+            <option value="REVOKED">Archived / revoked</option>
+            <option value="LOCKED">Locked</option>
+            <option value="PENDING_FIRST_LOGIN">Pending first login</option>
+          </select></label
+        >
+        <label
+          >Committee<select name="accessCommittee">
+            <option value="">All committees</option>
+            <option value="COM_FOOD">Food</option>
+            <option value="COM_INVENTORY_PANTRY">Inventory &amp; Pantry</option>
+            <option value="COM_MATERIALS">Materials</option>
+          </select></label
+        >
+        <label
+          >Sort<select name="accessSort">
+            <option value="accessId">Identifier</option>
+            <option value="department">Department</option>
+            <option value="role">Role</option>
+            <option value="status">Status</option>
+            <option value="lastLogin">Last login</option>
+          </select></label
+        >
       </div>
-      <div class="line-list section-gap" data-access-results><div class="empty">Open Access Management to load authorized accounts.</div></div>
+      <div class="line-list section-gap" data-access-results>
+        <div class="empty">Open Access Management to load authorized accounts.</div>
+      </div>
       <div class="access-pagination section-gap" data-access-pagination hidden>
         <button class="secondary mini" type="button" data-access-page="previous">Previous</button>
         <span data-access-page-summary></span>
@@ -110,43 +293,81 @@
 
     <article class="panel" data-reference-admin-generic>
       <div class="panel-head">
-        <div><h2>Controlled domain workspace</h2><p>Search, inspect, add, version, archive, or restore through server-authorized forms.</p></div>
+        <div>
+          <h2>Controlled domain workspace</h2>
+          <p>Search, inspect, add, version, archive, or restore through server-authorized forms.</p>
+        </div>
         <button class="primary" type="button" data-reference-admin-add>Add record</button>
       </div>
       <div class="toolbar reference-admin-toolbar">
-        <label>Domain<select name="referenceAdminDomain">
-          <option value="ORGANIZATION">Organization</option>
-          <option value="PEOPLE_MEMBERSHIPS">People and memberships</option>
-          <option value="COMMITTEES">Committees</option>
-          <option value="VENUES" selected>Venues</option>
-          <option value="EQUIPMENT">Equipment</option>
-          <option value="ROUTING">Routing</option>
-          <option value="LIFECYCLE">Lifecycle</option>
-          <option value="PERMISSIONS">Permissions</option>
-          <option value="SYNC_HEALTH">Sync health</option>
-        </select></label>
-        <label>Search<input name="referenceAdminSearch" maxlength="120" placeholder="Stable ID, name, or alias"></label>
-        <label>Status<select name="referenceAdminStatus"><option value="ALL">All statuses</option><option value="ACTIVE">Active</option><option value="ARCHIVED">Archived</option></select></label>
+        <label
+          >Domain<select name="referenceAdminDomain">
+            <option value="ORGANIZATION">Organization</option>
+            <option value="PEOPLE_MEMBERSHIPS">People and memberships</option>
+            <option value="COMMITTEES">Committees</option>
+            <option value="VENUES" selected>Venues</option>
+            <option value="EQUIPMENT">Equipment</option>
+            <option value="ROUTING">Routing</option>
+            <option value="LIFECYCLE">Lifecycle</option>
+            <option value="PERMISSIONS">Permissions</option>
+            <option value="SYNC_HEALTH">Sync health</option>
+          </select></label
+        >
+        <label
+          >Search<input name="referenceAdminSearch" maxlength="120" placeholder="Stable ID, name, or alias"
+        /></label>
+        <label
+          >Status<select name="referenceAdminStatus">
+            <option value="ALL">All statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="ARCHIVED">Archived</option>
+          </select></label
+        >
       </div>
-      <div class="line-list section-gap" data-reference-admin-results><div class="empty">Loading authorized references…</div></div>
+      <div class="line-list section-gap" data-reference-admin-results>
+        <div class="empty">Loading authorized references…</div>
+      </div>
     </article>
 
     <article class="panel" data-reference-admin-pending-panel>
-      <div class="panel-head"><div><h2>Pending second review</h2><p>Permission escalation and cross-office routing remain unapplied until a different authorized administrator reviews them.</p></div></div>
+      <div class="panel-head">
+        <div>
+          <h2>Pending second review</h2>
+          <p>
+            Permission escalation and cross-office routing remain unapplied until a different authorized
+            administrator reviews them.
+          </p>
+        </div>
+      </div>
       <div class="line-list" data-reference-admin-pending><div class="empty">Loading review queue…</div></div>
     </article>
 
     <article class="panel" data-advertisement-admin hidden>
       <div class="panel-head">
-        <div><h2>USC Announcements</h2><p>Administrator-only public advertisement media and rotation.</p></div>
+        <div>
+          <h2>USC Announcements</h2>
+          <p>Administrator-only public advertisement media and rotation.</p>
+        </div>
         <button class="primary" type="button" data-advertisement-create>Create advertisement</button>
       </div>
       <div class="toolbar">
-        <label>Search<input name="advertisementSearch" maxlength="120" placeholder="Stable ID or title"></label>
-        <label>Status<select name="advertisementStatus"><option value="ALL">All statuses</option><option value="DRAFT">Draft</option><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option><option value="ARCHIVED">Archived</option></select></label>
+        <label
+          >Search<input name="advertisementSearch" maxlength="120" placeholder="Stable ID or title"
+        /></label>
+        <label
+          >Status<select name="advertisementStatus">
+            <option value="ALL">All statuses</option>
+            <option value="DRAFT">Draft</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+            <option value="ARCHIVED">Archived</option>
+          </select></label
+        >
         <button class="secondary" type="button" data-advertisement-refresh>Refresh</button>
       </div>
-      <div class="line-list section-gap" data-advertisement-results><div class="empty">Open USC Announcements to load authorized records.</div></div>
+      <div class="line-list section-gap" data-advertisement-results>
+        <div class="empty">Open USC Announcements to load authorized records.</div>
+      </div>
       <div class="access-pagination section-gap" data-advertisement-pagination hidden>
         <button class="secondary mini" type="button" data-advertisement-page="previous">Previous</button>
         <span data-advertisement-page-summary></span>

@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '27' },
+    database: { connected: true, schemaVersion: '28' },
   });
 
   await page.goto('/');
@@ -179,6 +179,86 @@ test('System Owner receives every module and a server-validated operational scop
   });
   expect(contextualMutation.status()).toBe(200);
   await Promise.all([owner.dispose(), admin.dispose()]);
+});
+
+test('System Owner governs immutable brand versions while Administrator mutations fail closed', async ({
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  const admin = await apiRequest.newContext({ baseURL });
+  const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+  const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+  const encode = (fill) =>
+    Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180"><rect width="320" height="180" fill="${fill}"/></svg>`,
+    ).toString('base64');
+
+  const denied = await admin.post('/api/owner/brand-assets/upload', {
+    headers: { 'x-csrf-token': adminCsrf },
+    data: {
+      slot: 'default-item-image',
+      base64: encode('#78151b'),
+      altText: 'Denied synthetic brand asset',
+      reason: 'Authorization boundary proof only.',
+      clientRequestId: `brand-denied-${crypto.randomUUID()}`,
+    },
+  });
+  expect(denied.status()).toBe(403);
+
+  const upload = async (fill, suffix) => {
+    const response = await owner.post('/api/owner/brand-assets/upload', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        slot: 'default-item-image',
+        base64: encode(fill),
+        altText: `Synthetic ${suffix} item placeholder`,
+        reason: 'Local governed brand asset acceptance proof.',
+        clientRequestId: `brand-upload-${suffix}-${crypto.randomUUID()}`,
+      },
+    });
+    expect(response.status()).toBe(200);
+    return response.json();
+  };
+  const publish = async (versionId, revision, suffix, rollback = false) => {
+    const response = await owner.post(`/api/owner/brand-assets/${rollback ? 'rollback' : 'publish'}`, {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: {
+        slot: 'default-item-image',
+        versionId,
+        expectedRevision: revision,
+        reason: `Local ${suffix} publication acceptance proof.`,
+        clientRequestId: `brand-${suffix}-${crypto.randomUUID()}`,
+      },
+    });
+    expect(response.status()).toBe(200);
+    return response.json();
+  };
+
+  const first = await upload('#78151b', 'first');
+  const firstPublished = await publish(first.versionId, 1, 'first');
+  const firstDelivery = await owner.get('/brand/default-item-image');
+  expect(firstDelivery.status()).toBe(200);
+  expect(firstDelivery.headers()['content-type']).toContain('image/svg+xml');
+  expect(await firstDelivery.text()).toContain('#78151b');
+
+  const second = await upload('#183153', 'second');
+  const secondPublished = await publish(second.versionId, firstPublished.revision, 'second');
+  const rollback = await publish(first.versionId, secondPublished.revision, 'rollback', true);
+  expect(rollback.versionId).toBe(first.versionId);
+
+  const directory = await owner.post('/api/owner/brand-assets/list', {
+    headers: { 'x-csrf-token': ownerCsrf },
+    data: {},
+  });
+  expect(directory.status()).toBe(200);
+  const result = await directory.json();
+  expect(result.slots).toContainEqual(
+    expect.objectContaining({ id: 'default-item-image', published_version_id: first.versionId }),
+  );
+  expect(result.versions.filter((version) => version.slot_id === 'default-item-image')).toHaveLength(2);
+  expect(result.history.map((entry) => entry.action)).toEqual(
+    expect.arrayContaining(['UPLOADED', 'PUBLISHED', 'REPLACED', 'ROLLED_BACK']),
+  );
 });
 
 test('inventory classification is protected, audited, idempotent, and fail-closed for lending', async ({
@@ -799,10 +879,7 @@ test('event management renders truthful unknown fields on the protected mobile p
       .locator('[data-event-management] .event-activity-card')
       .filter({ hasText: 'Synthetic TBA Workshop' })
       .locator('.event-truth-grid'),
-  ).toHaveCSS(
-    'grid-template-columns',
-    /\d+(?:\.\d+)?px \d+(?:\.\d+)?px/u,
-  );
+  ).toHaveCSS('grid-template-columns', /\d+(?:\.\d+)?px \d+(?:\.\d+)?px/u);
 });
 
 for (const [accessId, experience, workspace] of roles) {

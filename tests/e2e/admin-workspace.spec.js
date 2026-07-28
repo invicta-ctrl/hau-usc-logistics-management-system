@@ -91,7 +91,7 @@ test('Administrator exposes every accepted Control Center and Operations destina
 
   await page.getByRole('button', { name: /Brand Assets/u }).click();
   await expect(page.locator('[data-admin-brand-assets]')).toBeVisible();
-  await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(4);
+  await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(6);
 
   await expect
     .poll(() =>

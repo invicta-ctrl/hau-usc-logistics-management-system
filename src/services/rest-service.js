@@ -101,6 +101,10 @@ for (const [method, path] of Object.entries({
   saveAdvertisement: '/api/admin/advertisements/save',
   uploadAdvertisementMedia: '/api/admin/advertisements/upload',
   archiveAdvertisement: '/api/admin/advertisements/archive',
+  listBrandAssets: '/api/owner/brand-assets/list',
+  uploadBrandAsset: '/api/owner/brand-assets/upload',
+  publishBrandAsset: '/api/owner/brand-assets/publish',
+  rollbackBrandAsset: '/api/owner/brand-assets/rollback',
 })) {
   RestService.prototype[method] = function post(command) {
     return this._post(path, command);

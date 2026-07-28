@@ -47,6 +47,23 @@ describe('governed brand asset delivery', () => {
     expect(mutation.headers.get('allow')).toBe('GET, HEAD');
   });
 
+  it('resolves a published governed version while retaining legacy-key fallback', async () => {
+    const asset = {
+      body: 'published-version',
+      httpMetadata: { contentType: 'image/png' },
+    };
+    const first = vi.fn().mockResolvedValue({ object_key: 'brand/versions/usc-logo/BRAND-1.png' });
+    const bind = vi.fn(() => ({ first }));
+    const prepare = vi.fn(() => ({ bind }));
+    const env = { ...environment(asset), DB: { prepare } };
+
+    const response = await worker.fetch(new Request('https://example.test/brand/usc-logo'), env);
+
+    expect(bind).toHaveBeenCalledWith('usc-logo');
+    expect(env.BRAND_ASSETS.get).toHaveBeenCalledWith('brand/versions/usc-logo/BRAND-1.png');
+    expect(await response.text()).toBe('published-version');
+  });
+
   it('serves only bounded governed catalog image keys', async () => {
     const env = environment({
       body: 'synthetic-catalog-image',

@@ -367,6 +367,7 @@ export function createRuntimeExtensions(options) {
   let advertisementDirectory = null;
   let advertisementPage = 1;
   let advertisementSearchTimer = null;
+  let brandAssetDirectory = null;
   let lendingUsageReport = null;
   let sharedMobileNav = null;
   let sharedMobileMore = null;
@@ -972,6 +973,7 @@ export function createRuntimeExtensions(options) {
     ).toUpperCase() === 'SYSTEM_OWNER';
   const evidenceSystemStatusAllowed = identityRosterAllowed;
   const advertisementManagementAllowed = () => can(getState()?.currentUser, 'manage_advertisements');
+  const brandAssetManagementAllowed = () => can(getState()?.currentUser, 'manage_brand_assets');
 
   const lendingUsageAllowed = () => {
     const authorization = getState()?.currentUser?.authorization;
@@ -1321,6 +1323,27 @@ export function createRuntimeExtensions(options) {
       if (current) current.status = 'ARCHIVED';
       return { ok: true, id: command.id, status: 'ARCHIVED' };
     };
+    services.listBrandAssets ??= async () => ({
+      ok: true,
+      slots: [
+        ['usc-logo', 'USC logo'],
+        ['dol-logo', 'DOL logo'],
+        ['combined-lockup', 'Combined lockup'],
+        ['favicon', 'Favicon'],
+        ['login-background', 'Login background'],
+        ['default-item-image', 'Default item image'],
+      ].map(([id, label]) => ({ id, label, public_path: `/brand/${id}`, revision: 1 })),
+      versions: [],
+    });
+    services.uploadBrandAsset ??= async (command) => ({
+      ok: true,
+      slot: command.slot,
+      versionId: `BRAND-${Date.now()}`,
+      versionNumber: 1,
+      status: 'DRAFT',
+    });
+    services.publishBrandAsset ??= async (command) => ({ ok: true, ...command, status: 'PUBLISHED' });
+    services.rollbackBrandAsset ??= services.publishBrandAsset;
     services.getLendingUsage ??= async () => {
       const activity = [
         ...new Map(
@@ -2306,21 +2329,129 @@ export function createRuntimeExtensions(options) {
       <div class="request-line"><div><strong>Cross-workspace attention</strong><small>${esc(counts.requestBlockers)} request &middot; ${esc(counts.lendingBlockers)} lending &middot; ${esc(counts.releaseBlockers)} release &middot; ${esc(counts.inventoryDiscrepancies)} inventory</small></div><button class="secondary mini" type="button" data-admin-destination="cross-workspace-attention">Open attention</button></div>`;
   };
 
+  const brandAssetDefinitions = [
+    ['usc-logo', 'USC logo', 'Official council identity'],
+    ['dol-logo', 'DOL logo', 'Department identity'],
+    ['combined-lockup', 'Combined lockup', 'Approved combined identity'],
+    ['favicon', 'Favicon', 'Browser and compact identity'],
+    ['login-background', 'Login background', 'Governed staff sign-in background'],
+    ['default-item-image', 'Default item image', 'Catalog fallback when no item photo exists'],
+  ];
+
   const renderAdminBrandAssets = () => {
     const root = document.querySelector('[data-admin-brand-assets]');
     if (!root) return;
-    const slots = [
-      ['USC logo', '/brand/usc-logo', 'Official council identity'],
-      ['DOL logo', '/brand/dol-logo', 'Department identity'],
-      ['Login background', '/brand/login-background', 'Governed staff sign-in background'],
-      ['Favicon', '/brand/favicon', 'Browser and compact identity'],
-    ];
-    root.querySelector('[data-admin-brand-slots]').innerHTML = slots
-      .map(
-        ([label, path, note]) =>
-          `<article class="admin-brand-slot" data-brand-slot="${esc(path)}"><div class="admin-brand-preview"><img src="${esc(path)}" alt="" loading="lazy" decoding="async"></div><strong>${esc(label)}</strong><small>${esc(note)}</small><code>${esc(path)}</code><span class="pill">Governed route</span></article>`,
-      )
+    const managed = brandAssetManagementAllowed();
+    root.querySelector('[data-brand-assets-owner-state]').textContent = managed
+      ? 'System Owner controls enabled'
+      : 'Read-only governed routes';
+    root.querySelector('[data-brand-assets-refresh]').hidden = !managed;
+    root.querySelector('[data-admin-brand-slots]').innerHTML = brandAssetDefinitions
+      .map(([id, label, note]) => {
+        const path = `/brand/${id}`;
+        const slot = brandAssetDirectory?.slots?.find((entry) => entry.id === id);
+        const versions = (brandAssetDirectory?.versions ?? []).filter((entry) => entry.slot_id === id);
+        const history = versions
+          .map((version) => {
+            const published = version.status === 'PUBLISHED';
+            const action = published
+              ? ''
+              : version.published_at
+                ? `<button class="secondary mini" type="button" data-brand-rollback="${esc(version.id)}" data-brand-slot-id="${esc(id)}">Roll back</button>`
+                : `<button class="primary mini" type="button" data-brand-publish="${esc(version.id)}" data-brand-slot-id="${esc(id)}">Publish</button>`;
+            return `<div class="request-line"><div><strong>Version ${esc(version.version_number)}</strong><small>${esc(version.content_type)} &middot; ${esc(version.width)}&times;${esc(version.height)} &middot; ${esc(version.byte_size)} bytes</small><small>${esc(version.status)} &middot; SHA-256 ${esc(String(version.content_sha256).slice(0, 12))}&hellip;</small></div>${managed ? action : ''}</div>`;
+          })
+          .join('');
+        return `<article class="admin-brand-slot" data-brand-slot="${esc(path)}"><div class="admin-brand-preview"><img src="${esc(path)}?revision=${esc(slot?.revision ?? 1)}" alt="${esc(slot?.alt_text ?? '')}" loading="lazy" decoding="async"></div><strong>${esc(label)}</strong><small>${esc(note)}</small><code>${esc(path)}</code><span class="pill">${esc(slot?.published_version_id ? `Published v${slot.version_number}` : 'Legacy route / not published')}</span>${managed ? `<button class="secondary mini" type="button" data-brand-upload="${esc(id)}">Upload new draft</button>` : ''}${history ? `<details><summary>Version history</summary><div class="line-list">${history}</div></details>` : ''}</article>`;
+      })
       .join('');
+  };
+
+  const refreshBrandAssets = async ({ force = false } = {}) => {
+    if (!brandAssetManagementAllowed()) {
+      renderAdminBrandAssets();
+      return;
+    }
+    if (!force && brandAssetDirectory) return renderAdminBrandAssets();
+    const root = document.querySelector('[data-admin-brand-slots]');
+    if (root) root.innerHTML = '<div class="empty">Loading governed brand asset versions&hellip;</div>';
+    try {
+      brandAssetDirectory = await services.listBrandAssets({});
+      renderAdminBrandAssets();
+    } catch (error) {
+      if (root) root.innerHTML = `<div class="empty">${esc(error.message)}</div>`;
+    }
+  };
+
+  const openBrandAssetUpload = (slot) => {
+    const label = brandAssetDefinitions.find(([id]) => id === slot)?.[1] ?? slot;
+    openModal(
+      `Upload ${label}`,
+      `<form data-brand-upload-form><div class="alert">The file is validated from its bytes. Upload creates a draft; publication is a separate audited action.</div><div class="form-grid section-gap"><label class="span-2">Image file<input name="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" required></label><label class="span-2">Accessible alt text<input name="altText" maxlength="240" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><div class="admin-brand-preview section-gap"><img data-brand-local-preview alt="Local preview" hidden></div><button class="primary" type="submit">Validate and upload draft</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('[data-brand-upload-form]');
+        const input = form.elements.file;
+        input.addEventListener('change', () => {
+          const preview = form.querySelector('[data-brand-local-preview]');
+          if (!input.files?.[0]) return;
+          preview.src = URL.createObjectURL(input.files[0]);
+          preview.hidden = false;
+        });
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            const file = input.files[0];
+            const base64 = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onerror = () => reject(new Error('The selected file could not be read.'));
+              reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+              reader.readAsDataURL(file);
+            });
+            await services.uploadBrandAsset({
+              slot,
+              base64,
+              altText: form.elements.altText.value,
+              reason: form.elements.reason.value,
+              clientRequestId: `brand-upload-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+            });
+            closeModal();
+            brandAssetDirectory = null;
+            await refreshBrandAssets({ force: true });
+            toast('Validated brand asset draft uploaded. Review its metadata before publishing.');
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const changePublishedBrandAsset = async (slot, versionId, rollback) => {
+    const current = brandAssetDirectory?.slots?.find((entry) => entry.id === slot);
+    try {
+      await services[rollback ? 'rollbackBrandAsset' : 'publishBrandAsset']({
+        slot,
+        versionId,
+        expectedRevision: current?.revision,
+        reason: rollback
+          ? 'Restore a previously published governed version.'
+          : 'Publish the reviewed governed brand asset version.',
+        clientRequestId: `brand-${rollback ? 'rollback' : 'publish'}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+      });
+      brandAssetDirectory = null;
+      await refreshBrandAssets({ force: true });
+      toast(
+        rollback
+          ? 'Brand asset rollback published and audited.'
+          : 'Brand asset version published and audited.',
+      );
+    } catch (error) {
+      toast(error.message, true);
+    }
   };
 
   const renderAdminEvidenceStatus = () => {
@@ -2799,7 +2930,30 @@ export function createRuntimeExtensions(options) {
         renderReferenceAdminWorkspace();
         if (adminControlSurface === 'system-status') void refreshEvidenceSystemStatus({ force: true });
         if (adminControlSurface === 'identity-roster') void refreshIdentityRoster({ force: true });
+        if (adminControlSurface === 'brand-assets') void refreshBrandAssets({ force: true });
       });
+    });
+    root.querySelector('[data-brand-assets-refresh]').addEventListener('click', () => {
+      brandAssetDirectory = null;
+      void refreshBrandAssets({ force: true });
+    });
+    root.querySelector('[data-admin-brand-slots]').addEventListener('click', (event) => {
+      const upload = event.target.closest('[data-brand-upload]');
+      if (upload && brandAssetManagementAllowed()) return openBrandAssetUpload(upload.dataset.brandUpload);
+      const publish = event.target.closest('[data-brand-publish]');
+      if (publish && brandAssetManagementAllowed())
+        return void changePublishedBrandAsset(
+          publish.dataset.brandSlotId,
+          publish.dataset.brandPublish,
+          false,
+        );
+      const rollback = event.target.closest('[data-brand-rollback]');
+      if (rollback && brandAssetManagementAllowed())
+        return void changePublishedBrandAsset(
+          rollback.dataset.brandSlotId,
+          rollback.dataset.brandRollback,
+          true,
+        );
     });
     root.querySelector('[data-system-status-refresh]').addEventListener('click', () => {
       evidenceSystemStatus = null;

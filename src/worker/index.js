@@ -18,6 +18,7 @@ import { environmentReadinessIssues, safeReleaseIdentity } from '../server/envir
 import { createCorrelationId, structuredLog } from '../server/observability.js';
 import { createPublicAdvertisementService } from '../server/public-advertisement-service.js';
 import { createAdvertisementAdminService } from '../server/advertisement-admin-service.js';
+import { createBrandAssetService } from '../server/brand-asset-service.js';
 import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
@@ -44,11 +45,23 @@ const BRAND_ASSET_KEYS = Object.freeze({
   '/brand/default-item-image': 'brand/default-item-image',
 });
 
-async function brandAsset(request, env, key) {
+async function brandAsset(request, env, key, { governedSlot = false } = {}) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response(null, { status: 405, headers: { allow: 'GET, HEAD' } });
   }
-  const asset = await env.BRAND_ASSETS?.get(key);
+  let objectKey = key;
+  if (governedSlot && env.DB) {
+    const published = await env.DB.prepare(
+      `SELECT version.object_key
+       FROM brand_asset_slots slot
+       JOIN brand_asset_versions version ON version.id = slot.published_version_id
+       WHERE slot.id = ?1 AND version.status = 'PUBLISHED'`,
+    )
+      .bind(key.slice('brand/'.length))
+      .first();
+    objectKey = published?.object_key ?? key;
+  }
+  const asset = await env.BRAND_ASSETS?.get(objectKey);
   if (!asset) {
     return new Response(null, {
       status: 404,
@@ -225,6 +238,7 @@ function services(env) {
     db: env.DB,
     bucket: env.BRAND_ASSETS,
   });
+  const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
   const identityRoster = createIdentityRosterService({
     repository: createD1IdentityRosterRepository(env.DB),
@@ -245,6 +259,7 @@ function services(env) {
   return {
     access,
     advertisementAdmin,
+    brandAssets,
     auth,
     evidence,
     lendingUsage,
@@ -313,6 +328,7 @@ async function handleApi(request, env, requestId, executionContext) {
   const {
     access,
     advertisementAdmin,
+    brandAssets,
     auth,
     evidence,
     lendingUsage,
@@ -401,6 +417,23 @@ async function handleApi(request, env, requestId, executionContext) {
       if (url.pathname === '/api/admin/advertisements/archive') {
         return json(await advertisementAdmin.archive(context));
       }
+    }
+    if (url.pathname.startsWith('/api/owner/brand-assets/') && request.method === 'POST') {
+      const mutation = url.pathname !== '/api/owner/brand-assets/list';
+      const actor = await authorize(request, auth, CAPABILITIES.BRAND_MANAGE, { mutation });
+      const context = {
+        account: actor.account,
+        command: await body(request, mutation ? 7_500_000 : 1_100_000),
+        correlationId: requestId,
+      };
+      if (url.pathname === '/api/owner/brand-assets/list') return json(await brandAssets.list(context));
+      if (url.pathname === '/api/owner/brand-assets/upload') return json(await brandAssets.upload(context));
+      if (url.pathname === '/api/owner/brand-assets/publish') return json(await brandAssets.publish(context));
+      if (url.pathname === '/api/owner/brand-assets/rollback')
+        return json(await brandAssets.rollback(context));
+      throw new ApiError('BRAND_ASSET_ROUTE_NOT_FOUND', 'The brand asset owner route was not found.', {
+        status: 404,
+      });
     }
     if (url.pathname === '/api/session') {
       const alias = new Request(new URL('/api/auth/session', url), {
@@ -786,7 +819,7 @@ export default {
   async fetch(request, env, executionContext) {
     const url = new URL(request.url);
     const brandKey = BRAND_ASSET_KEYS[url.pathname];
-    if (brandKey) return brandAsset(request, env, brandKey);
+    if (brandKey) return brandAsset(request, env, brandKey, { governedSlot: true });
     if (url.pathname.startsWith('/brand/catalog/')) {
       let assetKey = '';
       try {

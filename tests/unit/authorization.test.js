@@ -56,6 +56,8 @@ describe('canonical authorization projection', () => {
     expect(canonicalRoleId('System Owner')).toBe('SYSTEM_OWNER');
     expect(canonicalRoleId('Administrator')).toBe('ADMINISTRATOR');
     expect(can('SYSTEM_OWNER', 'release')).toBe(true);
+    expect(can('SYSTEM_OWNER', 'manage_brand_assets')).toBe(true);
+    expect(can('ADMINISTRATOR', 'manage_brand_assets')).toBe(false);
     expect(can('ADMINISTRATOR', 'release')).toBe(false);
   });
 
