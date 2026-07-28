@@ -1,6 +1,6 @@
 # v0.7.0 Phase 17 Inventory Production Data Handoff
 
-Status: **ACTIVE — SAFE CLASSIFICATION LOCAL PASS — STAGING PENDING — PRODUCTION NO-GO**
+Status: **ACCEPTED ON STAGING — PRODUCTION NO-GO**
 
 Date: 2026-07-28
 
@@ -57,13 +57,18 @@ Source reconciliation:
   instances from stock quantity.
 - Lending submission, approval, and handoff revalidate completed
   classification server-side.
+- `migrations/0026_fail_closed_legacy_inventory.sql` conservatively repairs
+  every legacy unclassified row to the same non-lendable boundary without
+  deleting inventory, ledger, evidence, or history.
+- Import reconciliation recognizes both authenticated requester ownership and
+  public tracking ownership, while still reporting genuinely unscoped rows.
 - Focused regression coverage verifies ledger-only openings, duplicate
   quarantine, private classification review, migration guards, and
   reconciliation SQL.
 
 ## Isolated D1 proof
 
-- Migrations 0001–0024 applied successfully in a fresh isolated D1 database.
+- Migrations 0001–0026 applied successfully in a fresh isolated D1 database.
 - The prepared 397-row import applied successfully and an exact replay applied
   successfully.
 - Reconciliation after replay:
@@ -82,18 +87,18 @@ Source reconciliation:
 
 Verification:
 
-- Product/checkpoint commit:
-  `009de29d27e2e86168e255b037039020a60a2f08`, pushed with upstream
+- Product/deployed staging commit:
+  `03b408826d993be0c79692e15b86b38fc97dadf6`, pushed with upstream
   parity.
 - Focused Vitest: 2 files / 12 tests passed.
 - ESLint on the changed importer and regression test: passed.
-- `npm run check`: passed, including 71 Vitest files / 462 tests and all
+- `npm run check`: passed, including 71 Vitest files / 464 tests and all
   repository gates.
-- Wrangler migration rehearsal: schema 24 and all migration commands passed.
+- Wrangler migration rehearsal: schema 26 and all migration commands passed.
 - Draft PR #9 remained open and mergeable; exact-product-head validation,
   verification, browser smoke, Pages build/deploy, and build-status checks
   passed 6 / 6.
-- Current schema-25 repository acceptance passed 71 Vitest files / 463 tests
+- Current schema-26 repository acceptance passed 71 Vitest files / 464 tests
   plus governance, lint, build, generated-artifact, Apps Script, and
   Cloudflare dry-run gates.
 - Current isolated Worker/D1 acceptance passed 31 / 31, including the protected,
@@ -118,24 +123,34 @@ authorized user records:
 These values cannot be inferred from item names, quantities, or category
 labels. Pending rows may now import to staging only as `UNVERIFIED` /
 `NEEDS_CLASSIFICATION`; they cannot enter public or staff lending, reservation,
-Ready to Claim, or handoff. Phase 17 still requires staging proof of this denial,
-one controlled classification, audited history, later explicit lending
-enablement, fixture reconciliation, exact-head CI, and full import replay.
+Ready to Claim, or handoff.
+
+Staging proved this contract end to end. One controlled synthetic item was
+classified through the protected Inventory workspace with explicit physical
+verification, reusable-asset registration, audited history, and explicit
+lending enablement. A separate pending item was denied by the live lending API
+with `LENDING_ITEM_UNAVAILABLE` and created no ticket. Lending was then disabled
+again; both items and the registered asset were archived, while two append-only
+classification history rows and one archive movement were preserved.
 
 ## External-state boundary
 
-- Staging remains on accepted Phase 16 runtime
-  `ac83af82aec2e42ae839d8b4975947ebf0a1526a`, schema 23.
-- No staging or production database migration/import occurred.
-- No Worker deployment, provider write, production promotion, merge, tag, or
-  release occurred.
+- A private pre-migration D1 export was captured before the Phase 17 repair.
+- Staging migrations 0024–0026, the 397-row import, and one exact replay were
+  applied. Final reconciliation reports schema 26, 397 imported / 0 rejected,
+  397 active pending classifications, zero unsafe unclassified lending, zero
+  opening-ledger differences, zero negative balances, zero scope gaps, zero
+  duplicate handoffs/returns, and zero active mock inventory.
+- Cache-busted health/readiness/version reports `STAGING`, release `0.7.0`,
+  exact runtime `03b408826d993be0c79692e15b86b38fc97dadf6`, schema 26, migration
+  `0026_fail_closed_legacy_inventory.sql`, and ready `true`.
+- No production database, Worker, R2 object, Google source, merge, tag, release,
+  or production smoke was touched.
 
 ## Resume action
 
-Review the complete diff, create and push the exact candidate, and recapture
-the source snapshot against that SHA. Then perform a private staging backup,
-apply migrations 0024
-and 0025, import once and replay once, reconcile all Phase 17 invariants,
-deploy the exact candidate, run the classification/fail-closed browser
-acceptance and exact-head CI, and continue directly to Phase 18 only after the
-Phase 17 gate passes.
+Phase 17 is accepted. Continue directly to Phase 18 and identify approved
+future event data without inventing names, dates, venues, committees, windows,
+or deadlines. If the approved sources remain empty, create the bounded owner
+review queue required by the master specification and stop only on the exact
+missing owner values. Production remains NO-GO.

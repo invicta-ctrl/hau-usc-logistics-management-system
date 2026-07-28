@@ -1,6 +1,6 @@
 # Project Status
 
-## v0.7.0 Phase 17 inventory data readiness — safe classification staging pending
+## v0.7.0 Phase 17 inventory data readiness accepted on staging — Phase 18 active
 
 - A private immutable snapshot of the authoritative 397-row item master was
   captured and hash-validated without modifying Google data or exposing source
@@ -8,25 +8,35 @@
 - The import now creates append-only idempotent opening-balance ledger
   movements, keeps catalog opening metadata at zero, quarantines duplicate IDs,
   and reports complete reconciliation.
-- Fresh isolated D1 migrations through schema 24, import, and exact replay
+- Fresh isolated D1 migrations through schema 26, import, and exact replay
   passed with 397 imported / 0 rejected, zero opening count/quantity
   difference, zero negative stock, and zero active mock inventory.
 - The owner-approved safe-classification amendment permits all 397
   `TO_CLASSIFY` rows to import as `UNVERIFIED` / `NEEDS_CLASSIFICATION` while
   remaining non-lendable and excluded from lending submission, approval, and
   handoff.
-- Additive schema 25, append-only classification history, a protected
+- Additive schemas 25–26, append-only classification history, a protected
   search/filter/progress queue, individual review, safe non-lendable bulk
   review, explicit lending confirmation, condition/maintenance gating, and
   physical asset-tag creation are implemented locally.
-- Repository acceptance passed 71 Vitest files / 463 tests and every required
-  gate; isolated Worker/D1 acceptance passed 31 / 31 on schema 25; full browser
+- Repository acceptance passed 71 Vitest files / 464 tests and every required
+  gate; isolated Worker/D1 acceptance passed 31 / 31 on schema 26; full browser
   coverage passed 126 with 306 intentional skips; focused Inventory queue/API
   browser evidence remains green.
-- Phase 17 is not accepted. Staging remains on accepted Phase 16 runtime
-  `ac83af8`, schema 23; production remains NO-GO.
-- Product checkpoint `009de29` is pushed at upstream parity and passed all
-  6 / 6 exact-head PR checks.
+- A private backup preceded migrations 0024–0026. Staging imported 397 / 397
+  rows with zero rejected, replayed exactly, and reconciled zero unsafe
+  lending, opening differences, negative balances, scope gaps, duplicate
+  handoffs/returns, and active mock inventory.
+- Live owner acceptance classified one synthetic reusable asset with explicit
+  physical verification and audited history; a separate pending item was
+  denied by the lending API with no ticket. Cleanup archived both items and
+  the asset, disabled lending, and retained append-only history.
+- Exact runtime `03b408826d993be0c79692e15b86b38fc97dadf6` is healthy and ready
+  on schema 26 / migration `0026_fail_closed_legacy_inventory.sql`; the pushed
+  product head passed all 6 / 6 PR checks.
+- Phase 17 is accepted. Phase 18 must now read only approved future-event
+  sources and create the required owner-review queue if the previously empty
+  governed source remains empty. Production remains NO-GO.
 
 ## v0.7.0 Phase 16 Shared Release Desk accepted on staging — Phase 17 active
 

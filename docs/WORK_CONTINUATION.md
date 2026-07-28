@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 17 product checkpoint `009de29d27e2e86168e255b037039020a60a2f08` is pushed with 6 / 6 PR checks; Phase 16 accepted staging runtime remains `ac83af82aec2e42ae839d8b4975947ebf0a1526a`.
-- **Current phase/stage:** Phases 0–16 accepted on staging; Phase 17 Inventory Production Data Readiness has a focused safe-classification local pass and awaits full/staging acceptance; production NO-GO.
-- **Accepted scope:** Phase 17 of `.codex/specs/v0.7.0-production-master.md` under the follow-up amendment, hybrid evidence-storage amendment, owner-approved `.codex/specs/v0.7.0-phase-17-safe-classification-amendment.md`, and shared efficiency contract.
-- **Completed work:** Phase 16 remains accepted. Phase 17 captured and validated a private immutable 397-row source snapshot, repaired ledger-only opening imports and duplicate quarantine, proved isolated import/replay reconciliation, and implemented schema 25 plus the protected audited in-website classification workflow with fail-closed lending.
-- **Tests verified:** Current `npm run check` passes 71 files / 463 tests and every repository gate. Isolated schema-25 Worker/D1 passes 31 / 31, full browser coverage passes 126 with 306 intentional skips, focused Inventory queue/API/browser evidence passes, and the prior 397-row import/replay reconciles exactly.
-- **External actions:** exact-SHA staging Worker deployed; preflight D1 export verified; bounded synthetic release/backup/correction/UI acceptance completed; event/item and evidence state reconciled. Production was untouched.
-- **Rollback:** redeploy the accepted hybrid-evidence predecessor `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`; preserve additive schema 23 and immutable ledger/evidence/history before any data reversal.
-- **Blocker:** no owner-data blocker remains for safe import; all pending rows must remain visibly tracked and fail closed. Staging is unchanged until the current full gates, diff review, candidate checkpoint, and private backup pass.
-- **Next action:** review/commit/push the candidate, recapture the candidate-bound private source snapshot, then back up and apply migrations 0024–0025 plus import/replay on staging with full reconciliation.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 17 product/runtime `03b408826d993be0c79692e15b86b38fc97dadf6` is pushed, deployed, and passed 6 / 6 PR checks.
+- **Current phase/stage:** Phases 0–17 accepted on staging; Phase 18 Upcoming Events and Next-Major-Event Readiness is active at the approved-event source gate; production NO-GO.
+- **Accepted scope:** Phase 18 of `.codex/specs/v0.7.0-production-master.md` under the accepted amendments and shared efficiency contract. Event names, dates, committees, windows, deadlines, venues, status, and readiness values may not be invented.
+- **Completed work:** Phase 17 applied migrations 0024–0026 after a private backup, imported and replayed the authoritative 397-row source with 0 rejected, deployed the exact candidate, proved the protected audited classification workflow and live fail-closed lending denial, and archived all synthetic acceptance data while retaining append-only history.
+- **Tests verified:** `npm run check` passes 71 files / 464 tests and every repository gate. Fresh schema-26 Worker/D1 passes 31 / 31; full browser coverage remains 126 passed / 306 intentional skips; focused live Inventory classification and denial passed; exact-head PR checks passed 6 / 6. Final staging reconciliation has zero opening differences, negative balances, unsafe unclassified lending, scope gaps, duplicate handoffs/returns, and active mock inventory.
+- **External actions:** staging D1 migrations/import/replay and exact-SHA Worker deployment completed. Cache-busted health/readiness/version reports `STAGING`, ready `true`, schema 26 / migration 0026. Production and Google sources were untouched.
+- **Rollback:** preserve the private pre-0026 export and append-only ledger/classification history; redeploy the last accepted product runtime only through the documented rollback procedure. Additive schema 26 remains unless a separately approved data-reversal plan is executed.
+- **Blocker:** the last approved governed-source evidence contains zero future event rows. Phase 18 must recheck the approved sources and create one bounded owner-review queue for any still-missing authoritative values.
+- **Next action:** perform the Phase 18 approved-event source read; if still empty, record the required fields once for owner completion without guessing values.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

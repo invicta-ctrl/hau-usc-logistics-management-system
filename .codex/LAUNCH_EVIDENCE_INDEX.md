@@ -1,15 +1,15 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAFE CLASSIFICATION LOCAL PASS / STAGING PENDING**
+Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 APPROVED-EVENT SOURCE GATE ACTIVE**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
-| Phase 17 inventory source/import preparation | `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`; `.codex/specs/v0.7.0-phase-17-safe-classification-amendment.md` | PARTIAL — 397 imported / 0 rejected locally; pending rows may import fail closed; schema 25 repository 463/463, Worker 31/31, and browser 126-pass gates are green; staging pending |
+| Phase 17 inventory source/import/classification | `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`; `.codex/specs/v0.7.0-phase-17-safe-classification-amendment.md`; exact runtime `03b4088` | PASS ON STAGING — 397 imported / 0 rejected; 397 pending rows fail closed; schema 26; repository 464/464, Worker 31/31, browser 126-pass baseline, live classification/denial, and cleanup reconciled |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
-| Git handshake | exact pushed Phase 17 product checkpoint `009de29`, upstream parity before status checkpoint | PASS |
-| PR #9 / CI | exact Phase 17 product checkpoint `009de29`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
-| Live staging identity | cache-busted health/readiness/version | STAGING, exact `07b5dd0`, D1 connected, schema 21, migration 0021 |
+| Git handshake | exact pushed Phase 17 product/runtime `03b4088`, upstream parity before documentation checkpoint | PASS |
+| PR #9 / CI | exact Phase 17 product/runtime `03b4088`; validate, verify, build, browser-smoke, deploy, report-build-status | 6 / 6 PASS |
+| Live staging identity | cache-busted health/readiness/version | STAGING, exact `03b4088`, D1 connected, schema 26, migration 0026, ready true |
 | Public surfaces | `/request`, `/lending` | HTTP 200; public SPA returned |
 | Version endpoint | `/api/version` | PASS — exact environment/version/candidate |
 | All-ref preservation | private bundle SHA-256 `39b5dff168b705fb68b71d7dd822e02077ed0e58c9401119e716d0738c735b93` | PASS |
@@ -22,7 +22,7 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAF
 | Protected Cloudflare secrets | staging provider inventory | 5 / 5 PRESENT; production package private/unapplied |
 | Google workbook | connector metadata read | 36 sheets readable |
 | Drive mappings | connector metadata read | 7 / 7 readable |
-| Canonical inventory | `01_ITEM_MASTER` bounded read | 1 approved item |
+| Canonical inventory | private immutable `01_ITEM_MASTER` snapshot plus staging reconciliation | 397 governed rows imported; all 397 pending classification and fail closed |
 | Upcoming events | `13_EVENTS`, requests, composite requests | 0 approved rows — owner values required before freeze |
 | Brand asset registry | `21_BRANDING` | 0 rows |
 | Five role visual references | hashes match `.codex/DESIGN_REFERENCE_DIGEST.md` | PASS; large files not reread |
@@ -131,6 +131,9 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAF
 | Approved private identity roster source | restricted outside-Git source; dedicated Viewer-only reader | PASS — 127 source rows; 37 accepted; 90 quarantined; no row values or provider identifiers recorded |
 | Phase 15 deployed preview/apply/rollback | exact `07b5dd0`; staging Worker/D1/Google; deployed Chromium | PASS — stale/no-op fail closed; apply/replay/rollback/re-apply reconciled; final 37 active, one current fingerprint, zero inconsistent runs; 6 / 6 deployed scenarios |
 | Phase 15 repaired atomicity regression | first live apply recovery plus Miniflare regression | PASS — affected run reconciled through normal rollback, transaction guards added, final live gate rerun from empty projection |
+| Phase 17 staging backup and migrations | private pre-0026 D1 export; migrations 0024–0026 | PASS — schema 26, ledger-only openings, audited classification, and fail-closed legacy repair |
+| Phase 17 import/replay reconciliation | candidate-bound private source and final remote scalar reconciliation | PASS — 397 imported / 0 rejected; zero opening differences, negative balances, unsafe lending, scope gaps, duplicate handoffs/returns, and active mock inventory |
+| Phase 17 live owner workflow | protected Inventory workspace, authenticated API denial, D1 reconciliation | PASS — explicit physical classification and lending enablement audited; pending fixture denied; zero resulting tickets; all fixtures archived with history retained |
 | Phase 1 rollback input | private anchor SHA-256 `39080a81dbdfb208700b7f9e24317fd27e6e36c6acd76246c6efa57df7fd1d52` | CAPTURED; rehearsal remains Phase 24 |
 | Backup/rollback rehearsal | pending | UNRUN |
 | Production authorization/deployment/smoke | pending | NOT AUTHORIZED UNTIL GATES PASS |

@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 17 — Inventory Production Data Readiness
+Phase: Phase 18 — Upcoming Events and Next-Major-Event Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 17 SAFE CLASSIFICATION IMPLEMENTED LOCALLY; STAGING PENDING; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 17 ACCEPTED ON STAGING; PHASE 18 APPROVED-EVENT SOURCE GATE; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -23,6 +23,7 @@ Phase 14 accepted staging runtime: `eca00e606054e896d9559e0249aaff8de0e0b750`
 Phase 15 accepted staging runtime: `07b5dd006656e370cc2bf7df4ced785be61a2604`
 Phase 16 hybrid evidence accepted staging runtime: `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`
 Phase 16 accepted staging runtime: `ac83af82aec2e42ae839d8b4975947ebf0a1526a`
+Phase 17 accepted staging runtime: `03b408826d993be0c79692e15b86b38fc97dadf6`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -38,7 +39,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 16
+## Accepted completion through Phase 17
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -57,6 +58,11 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
 - Phase 14: governed access presets, workspace/default/committee/location/event scopes, effective-access preview, bounded overrides, generated credentials, session revocation, direct-route enforcement, audited lifecycle, and archive-without-delete accepted.
 - Phase 15: owner-protected USC Officer and Staff Directory, read-only governed Google source, encrypted D1 projection, privacy-safe validation, atomic apply/rollback, self-profile boundary, and staging reconciliation accepted.
 - Phase 16: one canonical Shared Release Desk, full/partial/final recipient-confirmed handoff, authoritative R2 evidence with verified asynchronous Drive backup, append-only issue/correction ledger, scoped projections, and protected System Status accepted.
+- Phase 17: the authoritative 397-row inventory source imported and replayed
+  with ledger-only openings; all pending classification rows fail closed;
+  schema 26 repairs legacy defaults; the protected audited classification and
+  explicit lending workflow passed live staging; reconciliation and synthetic
+  cleanup are complete.
 - Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
 
 Durable handoffs:
@@ -82,6 +88,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`
 - `.codex/V0_7_PHASE_16_HYBRID_EVIDENCE_HANDOFF.md`
 - `.codex/V0_7_PHASE_16_SHARED_RELEASE_DESK_HANDOFF.md`
+- `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -241,24 +248,23 @@ Durable handoffs:
 
 ## Current blockers and next action
 
-Production remains NO-GO. Phase 17 now has a validated private immutable
-snapshot of 397 authoritative inventory rows and a locally rehearsed
-ledger-only import with zero rejected rows, zero opening count/quantity
-difference, zero negative stock, and zero active mock inventory. The source
-still marks all 397 items `TO_CLASSIFY`; the exact six missing reusable,
-lending, asset, condition, and maintenance fields are recorded in one bounded
-private owner-review queue. No values were inferred.
+Production remains NO-GO. Phase 17 is accepted on staging at exact runtime
+`03b408826d993be0c79692e15b86b38fc97dadf6`, schema 26. The repository gate
+passed 71 Vitest files / 464 tests; fresh Worker/D1 passed 31 / 31; the full
+browser matrix remains 126 passed / 306 intentional skips; PR #9 passed 6 / 6.
+The authoritative import reconciles 397 imported / 0 rejected, with all 397
+pending rows tracked and non-lendable and no active acceptance fixtures.
 
-One smallest safe next action: resolve the private Phase 17 classification
-queue from an approved owner source, freeze a new exact candidate and
-candidate-bound snapshot, then perform the backup/migration/import/replay and
-full reconciliation on staging. Preserve the accepted Phase 16 release,
-evidence, ledger, and System Status invariants.
+Phase 18 is active. The last authoritative governed-source read reported zero
+approved future event rows. Recheck only the approved event sources, then
+create the bounded owner-review queue required by the master specification if
+names, dates/times, committees, request windows, release/preparation deadlines,
+venues, status, or readiness values remain unavailable. Do not infer them.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
 Phase 17 checkpoint evidence:
 `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`.
-Product/checkpoint commit:
-`009de29d27e2e86168e255b037039020a60a2f08`; exact-product-head PR #9
+Product/deployed staging commit:
+`03b408826d993be0c79692e15b86b38fc97dadf6`; exact-product-head PR #9
 checks passed 6 / 6.

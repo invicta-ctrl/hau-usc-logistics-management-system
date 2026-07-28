@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAFE CLASSIFICATION LOCAL PASS / STAGING PENDING**
+Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 APPROVED-EVENT SOURCE GATE ACTIVE**
 
 ## Phase 0 repository and remote truth
 
@@ -38,11 +38,11 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAF
 | 2. Private v0.7 configs                    | PASS — distinct pair and secret packages retained outside Git                                                                                                       |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred                                                                                   |
 | 4. Google mappings                         | PASS READ-ONLY; event source empty                                                                                                                                  |
-| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0023; Phase 17 pre-0024/0025 backup and formal rehearsal pending                                   |
-| 6. Migrations                              | PARTIAL — staging through 0023 applied/reconciled; schema 24–25 and production migrations pending                                                                   |
-| 7. Import/reconciliation                   | PARTIAL — isolated 397-row inventory import/replay passes; schema-25 repository 463/463, Worker 31/31, and browser 126-pass gates are green; staging pending       |
-| 8. Staging deployment                      | PASS THROUGH PHASE 16 runtime `ac83af8`                                                                                                                             |
-| 9. Staging acceptance                      | PASS THROUGH PHASE 16; Phase 17 and full master Phase 22 pending                                                                                                    |
+| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0026; formal rollback rehearsal remains Phase 24                                                   |
+| 6. Migrations                              | PARTIAL — staging through 0026 applied/reconciled; production migrations pending                                                                                     |
+| 7. Import/reconciliation                   | PASS ON STAGING — 397 / 397 imported, zero rejected, exact replay, ledger parity, fail-closed classification, scope/invariant reconciliation                         |
+| 8. Staging deployment                      | PASS THROUGH PHASE 17 runtime `03b4088`                                                                                                                             |
+| 9. Staging acceptance                      | PASS THROUGH PHASE 17; Phase 18 and full master Phase 22 pending                                                                                                    |
 | 10. Rollback rehearsal                     | PENDING                                                                                                                                                             |
 | 11. Consolidation merge/tag/release        | PENDING                                                                                                                                                             |
 | 12. Production deployment                  | PENDING                                                                                                                                                             |
@@ -333,23 +333,49 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAF
 - Durable handoff:
   `.codex/V0_7_PHASE_15_IDENTITY_ROSTER_IMPLEMENTATION_HANDOFF.md`.
 
+## Phase 17 Inventory Production Data Readiness evidence
+
+- The authoritative private 397-row item-master snapshot validated without a
+  Google write. Import and exact replay produced 397 imported / 0 rejected,
+  ledger-only opening balances, and zero count or quantity difference.
+- Migrations 0024–0026 followed private staging exports. Schema 26 forces
+  legacy or unverified inventory to remain non-lendable and preserves every
+  catalog, ledger, evidence, asset, and classification-history record.
+- Repository acceptance passed 71 Vitest files / 464 tests; fresh Worker/D1
+  acceptance passed 31 / 31; the full browser baseline remained 126 passed /
+  306 intentional skips; exact-product PR checks passed 6 / 6.
+- Live owner acceptance proved explicit physical classification, registered
+  reusable-asset history, deliberate lending enablement, and live denial of a
+  separate pending item. Cleanup archived both synthetic items and the asset,
+  disabled lending, created no denial ticket, and retained append-only history.
+- Final staging reconciliation reports 397 pending active classifications,
+  zero unsafe unclassified lending, negative balances, opening differences,
+  scope gaps, duplicate handoffs/returns, or active mock inventory.
+- Cache-busted health/readiness/version reports exact runtime
+  `03b408826d993be0c79692e15b86b38fc97dadf6`, release `0.7.0`, schema 26,
+  migration 0026, and ready `true`. Production and Google were untouched.
+- Durable handoff: `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`.
+
 ## Immediate accepted target
 
-The targeted Phase 2/3 correction is accepted on staging at exact runtime `6c4cff601b04b64d9327ac1308d2cc2cab59e584`, schema 13. Governed Brand & Media routes, responsive official lockups, source-grounded guided requests, separate private tracking, and secure related-request verification passed. The accepted Phase 4 Lending Center backend remains intact. Durable evidence: `.codex/V0_7_PHASE_2_3_CORRECTION_HANDOFF.md`.
+Phase 17 is accepted on staging. Continue with Phase 18 Upcoming Events and
+Next-Major-Event Readiness. Read only approved Google/current-project/owner
+records; do not invent event names, dates, committees, windows, deadlines,
+venues, status, or readiness values. If the approved source remains empty,
+create one bounded owner-review queue and request the missing values once
+before production freeze.
 
-Complete Phase 16 Shared Release Desk and Global Owner Access. Do not
-upload or deploy a production Worker before final freeze, merge, and production
-authorization validation.
+Do not upload or deploy a production Worker before final freeze, merge, and
+production authorization validation.
 
 Approved upcoming-event values must be requested once before final freeze because the governed source is empty. Do not invent them.
 
-## Phase 16 starting checkpoint
+## Phase 18 starting checkpoint
 
-- Preserve the Phase 15 approved source, private configuration, encrypted
-  projection, transaction guards, and staging evidence.
-- Read only the Phase 16 master-specification section and directly relevant
-  Release Desk routes, capabilities, source, and focused tests before changing
-  code.
-- Implement one shared Release Desk over authoritative fulfillment/release
-  services and prove global System Owner access without impersonation or
-  capability bypass.
+- Preserve the accepted Phase 17 source snapshot, schema 26 fail-closed
+  classification, private backups, ledger parity, and staging evidence.
+- Read only the Phase 18 master-specification section and the approved event
+  source/current-project event structures needed to establish source truth.
+- The last governed-source check reported zero approved future event rows.
+  Recheck once, create the bounded owner-review queue if still empty, and do
+  not infer any event value.
