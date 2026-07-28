@@ -2733,7 +2733,7 @@ export function createD1OperationalService({
        FROM events
        JOIN event_days day ON day.id = events.event_day_id
        WHERE events.active = 1 AND day.active = 1 AND events.status NOT IN ('COMPLETED', 'CANCELLED')
-       ORDER BY starts_at, name`,
+       ORDER BY events.starts_at, events.name`,
     );
     const requests = await rows(
       db,
