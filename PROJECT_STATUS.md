@@ -1,24 +1,39 @@
 # Project Status
 
-## v0.7.0 Phase 18 approved-event source gate — blocked on owner values
+## v0.7.0 Phase 19 governed brand assets accepted — Phase 20 active
 
-- The approved Google/current-project/staging source recheck was read-only.
-  The governed event and composite-request sheets have zero data rows, governed
-  requests have zero event scopes, and staging has zero active future events or
-  future event series.
-- One older non-future event record is not an approved launch structure and
-  lacks the required request window, release deadline, preparation deadline,
-  and readiness contract. It was not promoted or copied.
-- One structured owner-review queue was created outside Git requesting the
-  exact missing future series/sub-event names, dates/times, committees,
-  windows, deadlines, status, readiness rules, and optional approved venues.
-  No value was inferred.
-- `docs/ROADMAP_TO_V1.md` now supplies the controlled post-v0.7 weekly roadmap
-  required by Phase 18 without deferring broken core functionality.
-- Phase 18 remains blocked until the owner populates the governed event source
-  or designates an approved owner record and the exact values pass staging
-  preview, validation, application, and reconciliation. Production remains
-  NO-GO; Phase 19 has not started.
+- Migration 0028 adds the owner-only brand capability, six-slot registry,
+  immutable retained versions, publication pointers, optimistic revisions,
+  replay safety, and append-only lifecycle history/audit.
+- Protected System Owner workflows cover upload, preview, publish, replace,
+  rollback, alt text, and version history. Administrator is read only.
+- Staging reconciles six published slots, seven retained versions, and fifteen
+  lifecycle/history rows. Media type is derived from bytes; size, dimensions,
+  SVG safety, content hashes, duplicates, and environment separation fail
+  closed.
+- Repository acceptance passed 72 Vitest files / 467 tests and every required
+  gate; the full responsive browser matrix passed 127 with 311 intentional
+  skips; fresh local Worker/D1/R2 acceptance passed 34 / 34.
+- Exact runtime `f8b19f6be042c995ad0ae01f420d15ac191cfdad` is healthy and ready
+  on schema 28 / migration `0028_brand_asset_governance.sql`; PR #9 passed all
+  6 / 6 checks. The synthetic owner was disabled and sessions revoked after
+  deployed mobile/desktop acceptance. Production remains NO-GO.
+- Phase 20 Privacy, Consent, and Support is active. Institutional policy,
+  contact, and retention values must not be invented.
+
+## v0.7.0 Phase 18 approved-event source gate — resolved and accepted
+
+- The owner designated the complete September 1–2 Youth Development Days 2026
+  record as authoritative and superseded the August 10/12 planning schedule.
+  The schedules were not merged.
+- Schema 27, protected Administrator/Director event management, deterministic
+  seeding, links, truthful null/TBA presentation, and append-only Activity
+  History/audit passed staging acceptance.
+- Staging reconciles one event series, two active September days, seven
+  activities, no active August days, and no duplicates at exact runtime
+  `80c0db43cc06145ada09434fd55f3fd31c0873f7`.
+- Unknown operational values remain nullable and owner-review-required; they
+  are not fabricated and did not block acceptance. Production was untouched.
 
 ## v0.7.0 Phase 17 inventory data readiness accepted on staging — Phase 18 active
 

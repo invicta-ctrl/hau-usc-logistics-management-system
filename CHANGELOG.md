@@ -1,5 +1,40 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 19 governed brand assets (2026-07-28)
+
+### Added
+
+- Schema 28 owner-only brand capability, six-slot registry, immutable retained
+  versions, published pointers, optimistic revisions, replay records, and
+  append-only lifecycle history/audit.
+- Protected Brand Assets upload, preview, publish, replace, rollback, alt-text,
+  and version-history workflow backed by versioned private R2 objects.
+
+### Fixed
+
+- Public brand delivery now follows D1-published pointers with a bounded legacy
+  fallback, while the login, shared shell, requester/borrower identity,
+  favicon, and catalog placeholders use governed routes automatically.
+- Upload validation now derives PNG/JPEG/WebP/SVG type from bytes, enforces
+  dimensions and size, sanitizes SVG, hashes content, and rejects duplicates.
+- Private candidate routing includes `/api/*`, `/brand/*`, and `/media/*`;
+  owner bootstrap accepts `brand.manage`; requester event ordering is fully
+  qualified for local Worker/D1 execution.
+
+### Verified
+
+- `npm run check`: 72 Vitest files / 467 tests plus all repository gates.
+- Full Playwright: 127 passed / 311 intentional skips; fresh local Worker/D1/R2:
+  34 / 34 passed; exact-head PR #9 CI: 6 / 6 passed.
+- Staging schema 28 reconciles six published slots, seven retained versions,
+  fifteen lifecycle/history rows, owner-only mutation, responsive browser
+  acceptance, fail-closed media rejection, and post-test fixture cleanup.
+
+### Boundary
+
+- Production was not deployed, migrated, seeded, promoted, merged, tagged, or
+  otherwise modified.
+
 ## Unreleased - v0.7.0 Phase 18 event readiness (2026-07-28)
 
 ### Added

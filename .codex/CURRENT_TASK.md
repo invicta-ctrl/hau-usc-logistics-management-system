@@ -1,29 +1,30 @@
 # Current Task
 
 INTENT: SOFTWARE_FEATURE
-SECONDARY INTENTS: AUDIT, TESTING, STAGING_ACCEPTANCE, RELEASE
+SECONDARY INTENTS: PRIVACY_REVIEW, TESTING, STAGING_ACCEPTANCE, RELEASE
 MODE: execute
-TARGET: HAU-USC Logistics v0.7.0 Phase 19 governed Brand Assets workspace and R2 delivery
-SKILLS: lean-ctx, cloudflare-deploy, browser:control-in-app-browser
+TARGET: HAU-USC Logistics v0.7.0 Phase 20 Privacy, Consent, and Support
+SKILLS: lean-ctx, browser:control-in-app-browser
 AUTHORITY: autonomous Phase 18–29 master prompt; `.codex/specs/v0.7.0-production-master.md`; accepted amendments; repository invariants
 RISK: high
-DELIVERABLE: accepted focused Brand Assets workspace with six governed slots, private staging R2 objects and D1 metadata, complete lifecycle/version validation, and automatic application use
-VERIFICATION: code and schema audit; six-slot reconciliation; focused lifecycle/security/validation tests; repository gate; staging R2/D1 separation; deployed desktop/mobile acceptance; rollback; exact-head CI
-STOP CONDITIONS: unknown work; missing authoritative asset source; cross-environment binding; unsafe MIME/SVG handling; authorization or audit defect; privacy exposure; irreversible data-loss risk; unresolved P0/P1; production mutation
+DELIVERABLE: accessible production-ready privacy, acceptable-use, consent, correction, retention, and support content across public requester and borrower workflows
+VERIFICATION: content/source audit; public and authenticated surface tests; privacy/error/URL/log/screenshot/receipt/unauthorized-response review; repository gate; deployed desktop/mobile acceptance; exact-head CI
+STOP CONDITIONS: invented institutional policy or contact; private-data exposure; weakened tracking/auth; inaccessible consent; unresolved P0/P1; production mutation
 
-## Active Phase 19 contract
+## Active Phase 20 contract
 
-- Required slots: USC logo, DOL logo, combined lockup, favicon, login
-  background, and default item image.
-- The focused Owner workspace must govern upload, preview, publish, replace,
-  rollback, alt text, duplicate handling, and version history.
-- Private/governed R2 stores objects; D1 stores governed metadata and history.
-- Validate MIME from bytes, dimensions, size, SVG sanitation, content hashes,
-  duplicates, and environment separation.
-- Published slots automatically drive login, navigation, mobile header,
-  Request Center, Lending Center, favicon, and item placeholders.
-- Do not add Unsplash, Pexels, Pixabay, or another live stock-media integration.
-- Production remains out of scope during the Phase 19 staging gate.
+- Provide accessible Privacy Notice and Acceptable Use content.
+- Explain requester data use, borrower responsibility, evidence/photo consent,
+  correction requests, retention expectations, and support/contact paths.
+- Public requester and borrower surfaces must state what is collected, why it
+  is collected, who reviews it, how private tracking works, what is retained,
+  and how correction can be requested.
+- No private data may appear in public errors, URLs, logs, screenshots,
+  analytics, downloadable receipts, or unauthorized responses.
+- Do not invent an institutional retention period, legal basis, email address,
+  phone number, or office contact. Use an existing approved repository value or
+  truthful role/path wording when a value is not yet approved.
+- Production remains out of scope during the Phase 20 staging gate.
 
 The primary agent is the only writer, credential handler, provider mutator,
 migration executor, deployer, merger, tagger, release manager, and rollback
@@ -31,8 +32,10 @@ operator.
 
 ## Current execution checkpoint
 
-- Phase 18: accepted on staging at exact runtime
-  `80c0db43cc06145ada09434fd55f3fd31c0873f7`; PR #9 exact-head CI 6 / 6.
-- Phase 19: audit in progress. Existing governed brand/R2 implementation and
-  staging objects must be reconciled before any new schema or media mutation.
+- Phase 19: accepted on staging at exact runtime
+  `f8b19f6be042c995ad0ae01f420d15ac191cfdad`; exact-head CI is 6 / 6.
+- Staging: schema 28, six published brand slots, seven retained versions,
+  lifecycle/audit reconciliation complete, synthetic owner disabled.
+- Phase 20: active. Audit existing privacy/consent/support copy and private-data
+  boundaries before editing.
 - Production: untouched and prohibited.

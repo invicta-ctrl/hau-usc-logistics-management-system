@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 18 exact product/runtime `80c0db43cc06145ada09434fd55f3fd31c0873f7` is pushed, deployed, and passed 6 / 6 PR checks.
-- **Current phase/stage:** Phases 0–18 accepted on staging; Phase 19 Brand Assets and R2 audit is active; production NO-GO.
-- **Accepted scope:** Phase 19 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** Schema 27 implements governed Main Events, Event Days, Activities, operational links, append-only Activity History, server-owned IDs/codes, protected Administrator/Director edits, unauthorized denial, authoritative dashboard/request/release projections, and a deterministic approved YDD staging seed.
-- **Tests verified:** exact implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the complete `npm run check` from an isolated worktree: governance, lint, 71 files / 464 Vitest, build, deterministic Apps Script parity, distribution verification, Cloudflare types, and dry-run. Repair `a342c7a2d8b03b21ad400705575adada0a69591a` passes the focused Worker/browser regression, ESLint, 71 / 464 Vitest, and generated build verification.
-- **External actions:** a verified private pre-0027 export was created; migration 0027 was applied; exact candidate `41e2ead` was deployed to staging; the approved seed and replay reconciled one series / two active days / seven activities with no active August schedule or duplicates. Production and Google sources were untouched.
-- **Rollback:** preserve the private pre-0026 export and append-only ledger/classification history; redeploy the last accepted product runtime only through the documented rollback procedure. Additive schema 26 remains unless a separately approved data-reversal plan is executed.
-- **Blocker:** none for Phase 19 audit. Stop only on a missing authoritative source, cross-environment binding, unsafe media validation, unreconciled staging mutation, or production boundary.
-- **Next action:** reconcile existing code/schema, six required slots, staging R2/D1 versions, lifecycle permissions, validation, rollback, and automatic application use; implement only verified Phase 19 gaps. Durable Phase 18 evidence is `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 19 exact product/runtime `f8b19f6be042c995ad0ae01f420d15ac191cfdad` is pushed, deployed, and passed 6 / 6 PR checks.
+- **Current phase/stage:** Phases 0–19 accepted on staging; Phase 20 Privacy, Consent, and Support is active; production NO-GO.
+- **Accepted scope:** Phase 20 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** Schema 28 and protected owner routes govern six brand slots, immutable retained versions, publication pointers, optimistic revisions, replay safety, and append-only history/audit. Automatic brand surfaces use the governed public routes; Administrator is read only.
+- **Tests verified:** `npm run check` passes 72 files / 467 Vitest plus every repository gate; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop lifecycle and authorization acceptance passes; exact-head PR #9 CI is 6 / 6.
+- **External actions:** a verified private pre-0028 export was created and restored in memory; migration 0028 was applied; exact candidate `f8b19f6` was deployed to staging; six governed assets were seeded, lifecycle/rejection cases reconciled, and the synthetic owner was disabled with sessions revoked. Production was untouched.
+- **Rollback:** preserve the verified private pre-0028 export and retained R2 versions; redeploy the last accepted runtime through the documented rollback procedure. Additive schema 28 and append-only history remain unless a separately approved data-reversal plan is executed.
+- **Blocker:** none for Phase 20 audit. Stop on an unapproved institutional policy/contact/retention value, private-data exposure, weakened tracking/authorization, unreconciled staging mutation, or production boundary.
+- **Next action:** audit and repair accessible privacy, acceptable-use, consent, correction, retention, and support content plus private-data exclusion across public requester and borrower workflows. Durable Phase 19 evidence is `.codex/V0_7_PHASE_19_BRAND_ASSETS_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

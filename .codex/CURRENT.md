@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 19 — Brand Assets and R2
+Phase: Phase 20 — Privacy, Consent, and Support
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 18 ACCEPTED ON STAGING; PHASE 19 AUDIT IN PROGRESS; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 19 ACCEPTED ON STAGING; PHASE 20 AUDIT IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -25,6 +25,7 @@ Phase 16 hybrid evidence accepted staging runtime: `5f2645d45106bad05ff3bcdab64c
 Phase 16 accepted staging runtime: `ac83af82aec2e42ae839d8b4975947ebf0a1526a`
 Phase 17 accepted staging runtime: `03b408826d993be0c79692e15b86b38fc97dadf6`
 Phase 18 accepted staging runtime: `80c0db43cc06145ada09434fd55f3fd31c0873f7`
+Phase 19 accepted staging runtime: `f8b19f6be042c995ad0ae01f420d15ac191cfdad`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -40,7 +41,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 17
+## Accepted completion through Phase 19
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -64,7 +65,14 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
   schema 26 repairs legacy defaults; the protected audited classification and
   explicit lending workflow passed live staging; reconciliation and synthetic
   cleanup are complete.
-- Official campus background, DOL logo, HAU-USC logo, and favicon are served through governed R2 slots and passed source-hash and responsive staging checks.
+- Phase 18: the owner-approved September 1–2 Youth Development Days 2026
+  hierarchy is active without the superseded August schedule; protected event
+  administration, truthful unknowns, links, audit/history, and staging
+  reconciliation are accepted.
+- Phase 19: six versioned brand slots use private staging R2 objects and D1
+  publication metadata; owner lifecycle controls, byte-derived validation,
+  rollback/history, automatic application use, authorization, and responsive
+  staging acceptance are complete.
 
 Durable handoffs:
 
@@ -91,6 +99,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_16_SHARED_RELEASE_DESK_HANDOFF.md`
 - `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`
 - `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`
+- `.codex/V0_7_PHASE_19_BRAND_ASSETS_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -282,12 +291,18 @@ the deterministic seed replay remains one series / two days / seven
 activities; authorization, audit/history, linking, and truthful unknown-value
 checks pass; and PR #9 is green 6 / 6 at exact head. Production was untouched.
 
-Phase 19 is active. Audit the existing governed Brand Assets workspace and
-staging R2/D1 state against all six required slots, upload/preview/publish/
-replace/rollback, byte-derived validation, versioning, environment separation,
-and automatic application surfaces. Implement only verified gaps, then run the
-Phase 19 staging gate. Do not add live stock-media integrations. Production
-remains NO-GO.
+Phase 19 is accepted on exact staging runtime
+`f8b19f6be042c995ad0ae01f420d15ac191cfdad`. Schema 28 governs six published
+brand slots, seven retained versions, append-only lifecycle/audit history, and
+owner-only mutation. Repository, local Worker, responsive browser, deployed
+authorization/lifecycle, cleanup, and exact-head CI gates pass. Production was
+untouched.
+
+Phase 20 is active. Audit privacy, acceptable-use, consent, correction,
+retention, and support content across public requester and borrower workflows,
+plus private-data exclusion from errors, URLs, logs, screenshots, analytics,
+receipts, and unauthorized responses. Do not invent institutional policy,
+retention periods, or contact values. Production remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -297,5 +312,8 @@ Product/deployed staging commit:
 `03b408826d993be0c79692e15b86b38fc97dadf6`; exact-product-head PR #9
 checks passed 6 / 6.
 
-Phase 18 resolution and pending staging evidence:
+Phase 18 accepted staging evidence:
 `.codex/V0_7_PHASE_18_EVENT_READINESS_HANDOFF.md`.
+
+Phase 19 accepted staging evidence:
+`.codex/V0_7_PHASE_19_BRAND_ASSETS_HANDOFF.md`.
