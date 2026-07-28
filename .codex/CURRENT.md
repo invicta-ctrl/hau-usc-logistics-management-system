@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 17 — Inventory Production Data Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 NEXT; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 17 OWNER REVIEW REQUIRED; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -240,16 +240,21 @@ Durable handoffs:
 
 ## Current blockers and next action
 
-Production remains NO-GO. The owner has confirmed that the previously provided
-production event and inventory values are accurate, but Phase 17 must still
-take a fresh authoritative snapshot, validate mapping, classify and reconcile
-the inventory, and prove zero unexplained differences before any production
-write. Formal rollback, final freeze, branch consolidation, release, and
-production gates remain pending in their ordered master phases.
+Production remains NO-GO. Phase 17 now has a validated private immutable
+snapshot of 397 authoritative inventory rows and a locally rehearsed
+ledger-only import with zero rejected rows, zero opening count/quantity
+difference, zero negative stock, and zero active mock inventory. The source
+still marks all 397 items `TO_CLASSIFY`; the exact six missing reusable,
+lending, asset, condition, and maintenance fields are recorded in one bounded
+private owner-review queue. No values were inferred.
 
-One smallest safe next action: begin Phase 17 with a read-only authoritative
-inventory export/snapshot and mapping reconciliation. Preserve the accepted
-Phase 16 release, evidence, ledger, and System Status invariants; do not infer
-production mutation or deployment authority.
+One smallest safe next action: resolve the private Phase 17 classification
+queue from an approved owner source, freeze a new exact candidate and
+candidate-bound snapshot, then perform the backup/migration/import/replay and
+full reconciliation on staging. Preserve the accepted Phase 16 release,
+evidence, ledger, and System Status invariants.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
+
+Phase 17 checkpoint evidence:
+`.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md`.

@@ -37,10 +37,10 @@ Commands:
 
 ```powershell
 npm run migration:validate -- --input <private-export.json> --candidate-sha <commit>
-npm run migration:prepare -- --input <private-export.json> --output-sql <private-import.sql> --rejections <private-rejections.json> --reconciliation-sql <private-reconcile.sql> --candidate-sha <commit>
+npm run migration:prepare -- --input <private-export.json> --output-sql <private-import.sql> --rejections <private-rejections.json> --owner-review-queue <private-owner-review.json> --reconciliation-sql <private-reconcile.sql> --candidate-sha <commit>
 ```
 
-The prepared SQL uses source fingerprints, `ON CONFLICT` handling, an import batch, and imported-row records. Reapplying the same snapshot must not create duplicate ledger, handoff, return, release, receipt, or idempotency rows. Quarantined rows remain explicit and block acceptance until disposition is approved.
+The prepared SQL uses source fingerprints, `ON CONFLICT` handling, an import batch, and imported-row records. Opening quantities are posted as immutable `OPENING_BALANCE` ledger movements; the catalog opening field remains zero. Reapplying the same snapshot must not create duplicate ledger, handoff, return, release, receipt, or idempotency rows. Quarantined rows remain explicit and block acceptance until disposition is approved. Missing reusable/consumable, lendability, or reusable-asset classifications are written to one private owner-review queue and also block acceptance without inventing values.
 
 ## Reporting sidecar after cutover
 

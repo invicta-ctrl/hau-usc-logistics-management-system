@@ -1,5 +1,22 @@
 # Project Status
 
+## v0.7.0 Phase 17 inventory data readiness — owner review required
+
+- A private immutable snapshot of the authoritative 397-row item master was
+  captured and hash-validated without modifying Google data or exposing source
+  identifiers.
+- The import now creates append-only idempotent opening-balance ledger
+  movements, keeps catalog opening metadata at zero, quarantines duplicate IDs,
+  and reports complete reconciliation.
+- Fresh isolated D1 migrations through schema 24, import, and exact replay
+  passed with 397 imported / 0 rejected, zero opening count/quantity
+  difference, zero negative stock, and zero active mock inventory.
+- All 397 source rows remain genuinely `TO_CLASSIFY`; reusable/consumable,
+  lending, asset-instance, condition, and maintenance values are retained in
+  one private owner-review queue and were not invented.
+- Phase 17 is not accepted. Staging remains on accepted Phase 16 runtime
+  `ac83af8`, schema 23; production remains NO-GO.
+
 ## v0.7.0 Phase 16 Shared Release Desk accepted on staging — Phase 17 active
 
 - Exact runtime `ac83af82aec2e42ae839d8b4975947ebf0a1526a` is healthy and ready on schema 23 / migration `0023_hybrid_evidence_storage.sql`.

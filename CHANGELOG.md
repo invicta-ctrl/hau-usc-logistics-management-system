@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 17 inventory data readiness (2026-07-28)
+
+### Added
+
+- Ledger-only production inventory import with idempotent opening-balance
+  movements, duplicate-ID quarantine, private owner review, and full
+  reconciliation SQL.
+- D1 migration 0024 to migrate legacy opening metadata into the immutable
+  ledger and reject future direct nonzero opening writes.
+- Regression coverage for opening balances, replay safety, duplicate source
+  IDs, classification review, and migration guards.
+
+### Verified
+
+- Authoritative private snapshot: 397 unique item IDs, zero missing units,
+  zero invalid/negative openings.
+- Isolated D1: migrations through schema 24, import, and exact replay passed;
+  397 imported / 0 rejected; zero opening-ledger count/quantity difference,
+  zero negative stock, and zero active mock inventory.
+- Focused Vitest 12 / 12, targeted ESLint passed, and `npm run check` passed
+  with 71 files / 462 tests.
+
+### Boundary
+
+- All 397 items require owner-supplied reusable/lending/asset classification.
+  Phase 17 is not accepted; staging and production were not migrated, imported,
+  deployed, promoted, merged, tagged, or released.
+
 ## Unreleased - v0.7.0 Phase 16 Shared Release Desk and System Status (2026-07-28)
 
 ### Added

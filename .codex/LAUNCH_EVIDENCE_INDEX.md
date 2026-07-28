@@ -1,9 +1,10 @@
 # HAU-USC Logistics v0.7.0 Launch Evidence Index
 
-Decision: **PRODUCTION NO-GO — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWNER REVIEW REQUIRED**
 
 | Area | Evidence | Result |
 | --- | --- | --- |
+| Phase 17 inventory source/import preparation | `.codex/V0_7_PHASE_17_INVENTORY_DATA_HANDOFF.md` | PARTIAL — 397 imported / 0 rejected locally; 397 classification reviews block staging |
 | Accepted master prompt | `.codex/specs/v0.7.0-production-master.md`; source SHA-256 `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067` | ADOPTED |
 | Efficiency contract | `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`; source SHA-256 `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67` | ADOPTED |
 | Git handshake | exact pushed Phase 15 candidate `07b5dd0`, upstream parity before status checkpoint | PASS |

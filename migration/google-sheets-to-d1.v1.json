@@ -29,12 +29,16 @@
         "stock_area": { "source": "Stock_Area", "type": "text", "default": "" },
         "handling": { "source": "Handling", "type": "text", "default": "NON_CIRCULATING" },
         "unit": { "source": "Unit", "type": "text", "required": true },
-        "opening_quantity": { "source": "Opening_Qty", "type": "number", "default": 0 },
+        "opening_quantity": { "constant": 0, "type": "number" },
         "status": { "source": "Status", "type": "text", "default": "ACTIVE" },
         "catalog_type": { "source": "Catalog_Type", "type": "text", "default": "" },
         "storage_location": { "source": "Storage_Location", "type": "text", "default": "" },
         "reorder_threshold": { "source": "Reorder_Threshold", "type": "number", "default": 0 },
-        "lending_audience": { "source": "Lending_Audience", "type": "text", "default": "NOT_AVAILABLE_FOR_LENDING" },
+        "lending_audience": {
+          "source": "Lending_Audience",
+          "type": "text",
+          "default": "NOT_AVAILABLE_FOR_LENDING"
+        },
         "default_loan_days": { "source": "Default_Loan_Days", "type": "nullable-integer" },
         "maximum_loan_quantity": { "source": "Maximum_Loan_Qty", "type": "nullable-number" },
         "approval_required": { "source": "Approval_Required", "type": "boolean", "default": 1 },
@@ -84,7 +88,11 @@
         "event_id": { "source": "Event_ID", "type": "nullable-text" },
         "catalog_type": { "source": "Catalog_Type", "type": "text", "default": "" },
         "requester_account_id": { "constant": null, "type": "nullable-text" },
-        "requester_name": { "source": "Requester_Name", "type": "text", "default": "REDACTED_SOURCE_REQUESTER" },
+        "requester_name": {
+          "source": "Requester_Name",
+          "type": "text",
+          "default": "REDACTED_SOURCE_REQUESTER"
+        },
         "requester_email": { "constant": "", "type": "text" },
         "department": { "source": "Department", "type": "text", "default": "" },
         "priority": { "source": "Priority", "type": "text", "default": "NORMAL" },
@@ -213,16 +221,42 @@
       "sourceId": "Release_ID",
       "transform": "release-lines",
       "sourceColumns": [
-        "Release_ID", "Request_ID", "Event_ID", "Lending_Ticket_ID", "Recipient_Name",
-        "Recipient_Role", "Department", "Released_At", "Status", "Evidence_ID",
-        "Confirmation_Label", "Notes", "Request_Line_IDs_JSON", "Quantities_JSON",
-        "Units_JSON", "Idempotency_Key"
+        "Release_ID",
+        "Request_ID",
+        "Event_ID",
+        "Lending_Ticket_ID",
+        "Recipient_Name",
+        "Recipient_Role",
+        "Department",
+        "Released_At",
+        "Status",
+        "Evidence_ID",
+        "Confirmation_Label",
+        "Notes",
+        "Request_Line_IDs_JSON",
+        "Quantities_JSON",
+        "Units_JSON",
+        "Idempotency_Key"
       ],
       "targetFields": [
-        "id", "request_id", "request_line_id", "event_id", "lending_ticket_id",
-        "recipient_name", "recipient_role", "department", "item_id", "quantity", "unit",
-        "released_by", "released_at", "confirmation_label", "evidence_id",
-        "idempotency_key", "status", "notes"
+        "id",
+        "request_id",
+        "request_line_id",
+        "event_id",
+        "lending_ticket_id",
+        "recipient_name",
+        "recipient_role",
+        "department",
+        "item_id",
+        "quantity",
+        "unit",
+        "released_by",
+        "released_at",
+        "confirmation_label",
+        "evidence_id",
+        "idempotency_key",
+        "status",
+        "notes"
       ],
       "rules": {
         "recipient_name": "redacted during export import",
@@ -370,7 +404,11 @@
         "role_id": { "source": "Role_ID", "type": "text", "required": true },
         "committee_ids_json": { "source": "Committee_IDs_JSON", "type": "json", "default": "[]" },
         "active": { "source": "Active", "type": "boolean", "default": 0 },
-        "authorization_status": { "source": "Authorization_Status", "type": "text", "default": "NEEDS_REVIEW" },
+        "authorization_status": {
+          "source": "Authorization_Status",
+          "type": "text",
+          "default": "NEEDS_REVIEW"
+        },
         "source_revision": { "source": "Access_Source_Revision", "type": "text", "default": "" },
         "imported_at": { "constant": "__IMPORT_TIME__", "type": "datetime" }
       }

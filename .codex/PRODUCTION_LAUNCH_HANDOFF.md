@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED ON STAGING**
+Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWNER REVIEW REQUIRED**
 
 ## Phase 0 repository and remote truth
 
@@ -39,9 +39,9 @@ Decision: **PRODUCTION NO-GO — PHASES 0–15 AND FOLLOW-UP AMENDMENT ACCEPTED 
 | 4. Google mappings | PASS READ-ONLY; event source empty |
 | 5. Backup | PARTIAL — staging pre-migration SQL exports retained through pre-0021; formal rehearsal pending |
 | 6. Migrations | PARTIAL — staging through 0021 applied/reconciled; later and production migrations pending |
-| 7. Import/reconciliation | PENDING |
-| 8. Staging deployment | PASS THROUGH PHASE 15 runtime `07b5dd0` |
-| 9. Staging acceptance | PASS THROUGH PHASE 15; full master Phase 22 pending |
+| 7. Import/reconciliation | PARTIAL — isolated 397-row inventory import/replay passes; 397 classifications block staging |
+| 8. Staging deployment | PASS THROUGH PHASE 16 runtime `ac83af8` |
+| 9. Staging acceptance | PASS THROUGH PHASE 16; Phase 17 and full master Phase 22 pending |
 | 10. Rollback rehearsal | PENDING |
 | 11. Consolidation merge/tag/release | PENDING |
 | 12. Production deployment | PENDING |
