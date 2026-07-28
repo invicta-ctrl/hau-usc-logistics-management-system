@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 20 privacy and consent (2026-07-28)
+
+### Added
+
+- Accessible Privacy Notice and Acceptable Use dialogs for requester and
+  borrower paths, covering data use, authorized review, private tracking,
+  borrower responsibility, evidence/photo consent, governed retention,
+  corrections, and role-based support.
+- Required privacy, acceptable-use, evidence/photo, and borrower-responsibility
+  acknowledgments with server-side validation and safe versioned audit metadata.
+
+### Privacy
+
+- No institutional contact, legal basis, or retention duration was invented;
+  unavailable policy detail is stated truthfully.
+- Public tracking codes remain out of URLs and browser storage; lending receipts
+  expose neither tracking codes nor internal ticket IDs; structured logs remain
+  redacted and unknown production errors remain generic.
+
+### Verified
+
+- `npm run check`: 73 Vitest files / 474 tests plus all repository gates.
+- Focused policy/redaction tests: 14 / 14; local Worker/D1/R2: 34 / 34; full
+  Playwright: 127 passed / 311 intentional skips; exact-head PR #9 CI: 6 / 6.
+- Exact staging runtime `4709e84` passed cache-busted readiness and live
+  390px/1440px Request Center/Lending Center policy acceptance without creating
+  workflow fixtures.
+
+### Boundary
+
+- Production was not deployed, migrated, seeded, promoted, merged, tagged, or
+  otherwise modified.
+
 ## Unreleased - v0.7.0 Phase 19 governed brand assets (2026-07-28)
 
 ### Added

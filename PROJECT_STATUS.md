@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.0 Phase 20 privacy, consent, and support accepted — Phase 21 active
+
+- Accessible Privacy Notice and Acceptable Use dialogs explain collected data,
+  purposes, authorized reviewers, private tracking, borrower responsibility,
+  evidence/photo consent, governed retention, correction, and support paths.
+- Public services reject missing acknowledgments and record the policy version
+  plus boolean acceptance in protected audit metadata. No institutional
+  contact, legal basis, or retention duration was invented.
+- Privacy-safe errors, URLs, structured logs, requester PDF receipts, lending
+  receipts, unauthorized responses, and the absence of analytics were audited.
+- Repository acceptance passed 73 Vitest files / 474 tests and every required
+  gate; fresh Worker acceptance passed 34 / 34; the responsive browser matrix
+  passed 127 with 311 intentional skips.
+- Exact runtime `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89` is healthy and ready
+  on schema 28; deployed 390px/1440px policy acceptance passed; exact-head PR
+  #9 CI passed 6 / 6. No live workflow fixture was created and production was
+  untouched.
+- Phase 21 Owner Operational Health is active and must expose safe redacted
+  status only.
+
 ## v0.7.0 Phase 19 governed brand assets accepted — Phase 20 active
 
 - Migration 0028 adds the owner-only brand capability, six-slot registry,

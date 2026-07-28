@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 19 exact product/runtime `f8b19f6be042c995ad0ae01f420d15ac191cfdad` is pushed, deployed, and passed 6 / 6 PR checks.
-- **Current phase/stage:** Phases 0–19 accepted on staging; Phase 20 Privacy, Consent, and Support is active; production NO-GO.
-- **Accepted scope:** Phase 20 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** Schema 28 and protected owner routes govern six brand slots, immutable retained versions, publication pointers, optimistic revisions, replay safety, and append-only history/audit. Automatic brand surfaces use the governed public routes; Administrator is read only.
-- **Tests verified:** `npm run check` passes 72 files / 467 Vitest plus every repository gate; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop lifecycle and authorization acceptance passes; exact-head PR #9 CI is 6 / 6.
-- **External actions:** a verified private pre-0028 export was created and restored in memory; migration 0028 was applied; exact candidate `f8b19f6` was deployed to staging; six governed assets were seeded, lifecycle/rejection cases reconciled, and the synthetic owner was disabled with sessions revoked. Production was untouched.
-- **Rollback:** preserve the verified private pre-0028 export and retained R2 versions; redeploy the last accepted runtime through the documented rollback procedure. Additive schema 28 and append-only history remain unless a separately approved data-reversal plan is executed.
-- **Blocker:** none for Phase 20 audit. Stop on an unapproved institutional policy/contact/retention value, private-data exposure, weakened tracking/authorization, unreconciled staging mutation, or production boundary.
-- **Next action:** audit and repair accessible privacy, acceptable-use, consent, correction, retention, and support content plus private-data exclusion across public requester and borrower workflows. Durable Phase 19 evidence is `.codex/V0_7_PHASE_19_BRAND_ASSETS_HANDOFF.md`.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 20 exact product/runtime `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89` is pushed, deployed, and passed 6 / 6 PR checks.
+- **Current phase/stage:** Phases 0–20 accepted on staging; Phase 21 Owner Operational Health is active; production NO-GO.
+- **Accepted scope:** Phase 21 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** accessible Privacy Notice and Acceptable Use dialogs cover collected data, purposes, authorized reviewers, private tracking, borrower responsibility, evidence/photo consent, governed retention, correction, and role-based support. Public services fail closed on missing acknowledgments and record safe policy metadata only.
+- **Tests verified:** `npm run check` passes 73 files / 474 Vitest plus every repository gate; policy/redaction coverage passes 14 / 14; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop privacy acceptance passes; exact-head PR #9 CI is 6 / 6.
+- **External actions:** exact candidate `4709e84` was deployed only to staging. Cache-busted health/readiness/version report schema 28 and ready true. Live requester/lending policy acceptance created no workflow records; the requester session was signed out. Production was untouched.
+- **Rollback:** redeploy the last accepted Phase 19 runtime through the documented rollback procedure if policy rendering or acknowledgment enforcement regresses. Schema 28 and staging data were unchanged by Phase 20.
+- **Blocker:** none for Phase 21 audit. Stop on private provider/secret/personal-data exposure, raw error/object key/OAuth display, false healthy state, weakened owner authorization, or production boundary.
+- **Next action:** audit and complete the System Owner operational-health API and UI against every required subsystem and recovery checkpoint using safe redacted state only. Durable Phase 20 evidence is `.codex/V0_7_PHASE_20_PRIVACY_CONSENT_SUPPORT_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block
