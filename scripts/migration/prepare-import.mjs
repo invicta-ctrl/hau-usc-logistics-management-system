@@ -496,7 +496,9 @@ async function main() {
     `SELECT COUNT(*) AS request_lines_over_received FROM request_lines WHERE received_quantity > requested_quantity;`,
     `SELECT COUNT(*) AS duplicate_handoffs FROM (SELECT lending_ticket_id FROM lending_handoffs GROUP BY lending_ticket_id HAVING COUNT(*) > 1);`,
     `SELECT COUNT(*) AS duplicate_returns FROM (SELECT lending_ticket_id FROM lending_returns GROUP BY lending_ticket_id HAVING COUNT(*) > 1);`,
-    `SELECT COUNT(*) AS unscoped_requests FROM requests WHERE owner_committee_id IS NULL;`,
+    `SELECT COUNT(*) AS unscoped_requests FROM requests ` +
+      `WHERE owner_committee_id IS NULL AND requester_account_id IS NULL ` +
+      `AND NOT EXISTS (SELECT 1 FROM public_request_access access WHERE access.request_id = requests.id);`,
     `SELECT COUNT(*) AS unscoped_lending_tickets FROM lending_tickets WHERE owner_committee_id IS NULL;`,
     `SELECT COUNT(*) AS unscoped_restock_requests FROM restock_requests WHERE assigned_committee_id IS NULL;`,
     `SELECT COUNT(*) AS unscoped_deliverables FROM deliverables WHERE assigned_committee_id IS NULL;`,

@@ -111,6 +111,8 @@ describe('Phase 17 production inventory import', () => {
     expect(prepared.rejections.rejections).toEqual([]);
     expect(prepared.reconciliation).toContain('catalog_nonzero_opening_quantities');
     expect(prepared.reconciliation).toContain('opening_balance_quantity_difference');
+    expect(prepared.reconciliation).toContain('requester_account_id IS NULL');
+    expect(prepared.reconciliation).toContain('public_request_access');
   });
 
   it('quarantines every duplicate source identifier instead of overwriting', async () => {
