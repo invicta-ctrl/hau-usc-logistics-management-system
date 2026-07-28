@@ -36,6 +36,7 @@ describe('essential bootstrap contract', () => {
     fixture.currentUser.role = 'SYSTEM_OWNER';
     fixture.currentUser.authorization.roleId = 'SYSTEM_OWNER';
     fixture.currentUser.authorization.roleLabel = 'System Owner';
+    fixture.currentUser.authorization.capabilities.push('brand.manage');
     expect(validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toBe(fixture);
   });
 
@@ -59,9 +60,7 @@ describe('essential bootstrap contract', () => {
         },
       ],
     };
-    expect(createStateFromEssentialBootstrap(fixture).operationalContext).toEqual(
-      fixture.operationalContext,
-    );
+    expect(createStateFromEssentialBootstrap(fixture).operationalContext).toEqual(fixture.operationalContext);
     fixture.operationalContext.selected.value = 'COMMITTEE:COM_MATERIALS';
     expect(() => validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toThrowError(
       expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
@@ -69,12 +68,42 @@ describe('essential bootstrap contract', () => {
   });
 
   it.each([
-    ['unknown top-level field', (value) => { value.privateStudentRecords = []; }],
-    ['missing schema version', (value) => { delete value.schemaVersion; }],
-    ['unsupported schema version', (value) => { value.schemaVersion = 'SYNTHETIC-UNSUPPORTED'; }],
-    ['Date value', (value) => { value.metrics = { readCount: new Date() }; }],
-    ['undefined value', (value) => { value.metrics = { readCount: undefined }; }],
-    ['circular value', (value) => { value.metrics.circular = value; }],
+    [
+      'unknown top-level field',
+      (value) => {
+        value.privateStudentRecords = [];
+      },
+    ],
+    [
+      'missing schema version',
+      (value) => {
+        delete value.schemaVersion;
+      },
+    ],
+    [
+      'unsupported schema version',
+      (value) => {
+        value.schemaVersion = 'SYNTHETIC-UNSUPPORTED';
+      },
+    ],
+    [
+      'Date value',
+      (value) => {
+        value.metrics = { readCount: new Date() };
+      },
+    ],
+    [
+      'undefined value',
+      (value) => {
+        value.metrics = { readCount: undefined };
+      },
+    ],
+    [
+      'circular value',
+      (value) => {
+        value.metrics.circular = value;
+      },
+    ],
   ])('rejects %s before state creation', (_label, mutate) => {
     const fixture = createEssentialBootstrapFixture();
     mutate(fixture);
@@ -83,35 +112,47 @@ describe('essential bootstrap contract', () => {
     );
   });
 
-  it.each(['studentIdNumber', 'requester_email', 'borrowerName', 'evidenceId'])('rejects sensitive module field %s and unsupported module data keys', (field) => {
-    const sensitive = createBootstrapModuleFixture({ requestOnly: true });
-    sensitive.data.inventoryItems[0][field] = 'SYNTHETIC-PRIVATE-CANARY';
-    expect(() => validateBootstrapModule(sensitive, { backendMode: 'mock', module: 'request' })).toThrowError(
-      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
-    );
+  it.each(['studentIdNumber', 'requester_email', 'borrowerName', 'evidenceId'])(
+    'rejects sensitive module field %s and unsupported module data keys',
+    (field) => {
+      const sensitive = createBootstrapModuleFixture({ requestOnly: true });
+      sensitive.data.inventoryItems[0][field] = 'SYNTHETIC-PRIVATE-CANARY';
+      expect(() =>
+        validateBootstrapModule(sensitive, { backendMode: 'mock', module: 'request' }),
+      ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
 
-    const unsupported = createBootstrapModuleFixture({ requestOnly: true });
-    unsupported.data.ledgerTransactions = [];
-    expect(() => validateBootstrapModule(unsupported, { backendMode: 'mock', module: 'request' })).toThrowError(
-      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
-    );
-  });
+      const unsupported = createBootstrapModuleFixture({ requestOnly: true });
+      unsupported.data.ledgerTransactions = [];
+      expect(() =>
+        validateBootstrapModule(unsupported, { backendMode: 'mock', module: 'request' }),
+      ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
+    },
+  );
 
   it('requires request-only modules to omit scoped revision metadata', () => {
     const requestOnly = createBootstrapModuleFixture({ requestOnly: true });
-    expect(validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' }).scopeRevision).toBeNull();
+    expect(
+      validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' }).scopeRevision,
+    ).toBeNull();
     requestOnly.scopeRevision = { scope: 'request', token: 1, updatedAt: '2026-07-16T12:00:00+08:00' };
-    expect(() => validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' })).toThrowError(
-      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
-    );
+    expect(() =>
+      validateBootstrapModule(requestOnly, { backendMode: 'mock', module: 'request' }),
+    ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
   });
 
   it('allows authorized internal modules to carry operational borrower fields without treating them as public cache data', () => {
     const internal = createBootstrapModuleFixture({ module: 'lending', cacheSafe: false });
-    internal.data.lendingTickets = [{
-      id: 'SYNTHETIC-TICKET-001', studentIdNumber: 'SYNTHETIC-STUDENT-001', borrowerName: 'Synthetic Borrower',
-      contact: 'synthetic-contact', itemId: 'SYNTHETIC-ITEM-001', quantity: 1, status: 'FOR_REVIEW',
-    }];
+    internal.data.lendingTickets = [
+      {
+        id: 'SYNTHETIC-TICKET-001',
+        studentIdNumber: 'SYNTHETIC-STUDENT-001',
+        borrowerName: 'Synthetic Borrower',
+        contact: 'synthetic-contact',
+        itemId: 'SYNTHETIC-ITEM-001',
+        quantity: 1,
+        status: 'FOR_REVIEW',
+      },
+    ];
     expect(validateBootstrapModule(internal, { backendMode: 'mock', module: 'lending' })).toBe(internal);
   });
 
@@ -132,27 +173,34 @@ describe('essential bootstrap contract', () => {
     inventory.data.assetMaintenanceHistory = [];
     inventory.data.assetMovementHistory = [];
 
-    expect(validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' })).toBe(
+    expect(validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' })).toBe(inventory);
+    const merged = mergeBootstrapModule(
+      createStateFromEssentialBootstrap(createEssentialBootstrapFixture()),
       inventory,
+      {
+        backendMode: 'mock',
+      },
     );
-    const merged = mergeBootstrapModule(createStateFromEssentialBootstrap(createEssentialBootstrapFixture()), inventory, {
-      backendMode: 'mock',
-    });
     expect(merged.inventoryAssets).toHaveLength(1);
     expect(merged.ledgerTransactions).toHaveLength(1);
   });
 
-  it.each(['1.3.0', '1.6.0'])('accepts additive schema %s and the overview dashboard projections', (schemaVersion) => {
-    const overview = createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
-    overview.schemaVersion = schemaVersion;
-    overview.data.dashboardMeta = [{ scopeMode: 'ALL', activeCommitteeId: '', allowedCommitteeIds: [], stale: false }];
-    overview.data.dashboardQueues = [{ id: 'requests-review', count: 0, recordIds: [], truncated: false }];
-    overview.data.dashboardStaffWorkload = [];
-    overview.data.dashboardActivity = [];
-    overview.data.dashboardLinks = [{ id: 'overview', label: 'Main Hub', view: 'overview' }];
+  it.each(['1.3.0', '1.6.0'])(
+    'accepts additive schema %s and the overview dashboard projections',
+    (schemaVersion) => {
+      const overview = createBootstrapModuleFixture({ module: 'overview', cacheSafe: false });
+      overview.schemaVersion = schemaVersion;
+      overview.data.dashboardMeta = [
+        { scopeMode: 'ALL', activeCommitteeId: '', allowedCommitteeIds: [], stale: false },
+      ];
+      overview.data.dashboardQueues = [{ id: 'requests-review', count: 0, recordIds: [], truncated: false }];
+      overview.data.dashboardStaffWorkload = [];
+      overview.data.dashboardActivity = [];
+      overview.data.dashboardLinks = [{ id: 'overview', label: 'Main Hub', view: 'overview' }];
 
-    expect(validateBootstrapModule(overview, { backendMode: 'mock', module: 'overview' })).toBe(overview);
-  });
+      expect(validateBootstrapModule(overview, { backendMode: 'mock', module: 'overview' })).toBe(overview);
+    },
+  );
 
   it('rejects false envelopes and cache policies that could retain session data', () => {
     const essential = createEssentialBootstrapFixture();

@@ -195,6 +195,7 @@ const AUTHORIZATION_CAPABILITIES = new Set([
   'advertisement.manage',
   'access.admin',
   'event.manage',
+  'brand.manage',
   'system.admin',
   'system.diagnostics',
   'evidence.upload',

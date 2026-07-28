@@ -2362,7 +2362,12 @@ export function createRuntimeExtensions(options) {
             return `<div class="request-line"><div><strong>Version ${esc(version.version_number)}</strong><small>${esc(version.content_type)} &middot; ${esc(version.width)}&times;${esc(version.height)} &middot; ${esc(version.byte_size)} bytes</small><small>${esc(version.status)} &middot; SHA-256 ${esc(String(version.content_sha256).slice(0, 12))}&hellip;</small></div>${managed ? action : ''}</div>`;
           })
           .join('');
-        return `<article class="admin-brand-slot" data-brand-slot="${esc(path)}"><div class="admin-brand-preview"><img src="${esc(path)}?revision=${esc(slot?.revision ?? 1)}" alt="${esc(slot?.alt_text ?? '')}" loading="lazy" decoding="async"></div><strong>${esc(label)}</strong><small>${esc(note)}</small><code>${esc(path)}</code><span class="pill">${esc(slot?.published_version_id ? `Published v${slot.version_number}` : 'Legacy route / not published')}</span>${managed ? `<button class="secondary mini" type="button" data-brand-upload="${esc(id)}">Upload new draft</button>` : ''}${history ? `<details><summary>Version history</summary><div class="line-list">${history}</div></details>` : ''}</article>`;
+        const routeState = slot?.published_version_id
+          ? `Published v${slot.version_number}`
+          : managed
+            ? 'Not published'
+            : 'Governed route';
+        return `<article class="admin-brand-slot" data-brand-slot="${esc(path)}"><div class="admin-brand-preview"><img src="${esc(path)}?revision=${esc(slot?.revision ?? 1)}" alt="${esc(slot?.alt_text ?? '')}" loading="lazy" decoding="async"></div><strong>${esc(label)}</strong><small>${esc(note)}</small><code>${esc(path)}</code><span class="pill">${esc(routeState)}</span>${managed ? `<button class="secondary mini" type="button" data-brand-upload="${esc(id)}">Upload new draft</button>` : ''}${history ? `<details><summary>Version history</summary><div class="line-list">${history}</div></details>` : ''}</article>`;
       })
       .join('');
   };
