@@ -45,6 +45,8 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'uploadEvidence',
   'getAuditTimeline',
   'getInventoryItem',
+  'listInventoryClassifications',
+  'classifyInventoryItem',
   'createInventoryItem',
   'updateInventoryItem',
   'updateInventoryStorageContext',

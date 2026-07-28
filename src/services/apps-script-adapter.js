@@ -50,6 +50,8 @@ const METHODS = Object.freeze({
   postEmergencyIssue: 'api_postEmergencyIssue',
   postCycleCountAdjustment: 'api_postCycleCountAdjustment',
   getInventoryItem: 'api_getInventoryItem',
+  listInventoryClassifications: 'api_listInventoryClassifications',
+  classifyInventoryItem: 'api_classifyInventoryItem',
   createInventoryItem: 'api_createInventoryItem',
   updateInventoryItem: 'api_updateInventoryItem',
   updateInventoryStorageContext: 'api_updateInventoryStorageContext',

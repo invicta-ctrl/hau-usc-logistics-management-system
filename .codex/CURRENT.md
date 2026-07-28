@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 17 — Inventory Production Data Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 17 OWNER REVIEW REQUIRED; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 17 SAFE CLASSIFICATION IMPLEMENTED LOCALLY; STAGING PENDING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -30,6 +30,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 - `.codex/specs/v0.7.0-production-master.md`
 - `.codex/specs/v0.7.0-follow-up-amendment.md`
 - `.codex/specs/v0.7.0-hybrid-evidence-storage-amendment.md`
+- `.codex/specs/v0.7.0-phase-17-safe-classification-amendment.md`
 - `.codex/SHARED_TOKEN_EFFICIENCY_CONTRACT.md`
 - Master prompt source SHA-256: `9bf903dcd1172be7bf6dbbadf903c5f33cc4aaa44adc9b6c693df6d201e5d067`.
 - Shared contract source SHA-256: `22658a6afddebe26270845a6e4678685b1a0875da0fb73ed2943ea08f6d37d67`.

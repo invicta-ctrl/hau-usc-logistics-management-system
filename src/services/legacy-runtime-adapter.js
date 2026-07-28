@@ -14,7 +14,9 @@ const clientRequestId = (prefix) =>
 
 const mutationOperationalContext = () => {
   if (typeof globalThis.location === 'undefined') return {};
-  const match = globalThis.location.pathname.match(/^\/app\/(admin|director|food|inventory|materials)(?:\/|$)/u);
+  const match = globalThis.location.pathname.match(
+    /^\/app\/(admin|director|food|inventory|materials)(?:\/|$)/u,
+  );
   return {
     activeWorkspace: match?.[1] ?? '',
     operationalScope: new URL(globalThis.location.href).searchParams.get('scope') ?? '',
@@ -133,6 +135,9 @@ export function createLegacyRuntimeAdapter(mockServices) {
     async getInventoryItem(itemId) {
       const result = await remote.getInventoryItem({ itemId });
       return result.item;
+    },
+    async listInventoryClassifications(payload = {}) {
+      return remote.listInventoryClassifications(payload);
     },
     async submitRequest(payload) {
       const result = await mutationRequests.run('request', payload, (command) =>
@@ -414,6 +419,11 @@ export function createLegacyRuntimeAdapter(mockServices) {
         remote.createInventoryItem(command),
       );
       return { id: result.itemId, ...result };
+    },
+    async classifyInventoryItem(payload) {
+      return mutationRequests.run('classify-inventory', payload, (command) =>
+        remote.classifyInventoryItem(command),
+      );
     },
     async updateInventoryItem(payload) {
       const result = await mutationRequests.run('update-item', payload, (command) =>

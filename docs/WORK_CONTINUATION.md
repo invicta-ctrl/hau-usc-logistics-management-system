@@ -4,14 +4,14 @@
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 17 product checkpoint `009de29d27e2e86168e255b037039020a60a2f08` is pushed with 6 / 6 PR checks; Phase 16 accepted staging runtime remains `ac83af82aec2e42ae839d8b4975947ebf0a1526a`.
-- **Current phase/stage:** Phases 0–16 accepted on staging; Phase 17 Inventory Production Data Readiness is active with owner review required; production NO-GO.
-- **Accepted scope:** Phase 17 of `.codex/specs/v0.7.0-production-master.md` under the follow-up amendment, accepted hybrid evidence-storage amendment, and shared efficiency contract.
-- **Completed work:** Phase 16 remains accepted. Phase 17 captured and validated a private immutable 397-row source snapshot, repaired ledger-only opening imports and duplicate quarantine, added migration 0024 and classification review, and proved isolated import/replay reconciliation.
-- **Tests verified:** Phase 17 focused Vitest 12 / 12, targeted ESLint, `npm run check` with 71 files / 462 tests, migrations through schema 24, and isolated 397-row import/replay with zero rejected, negative, mock, or opening-difference results. Prior Phase 16 browser/staging/CI evidence remains unchanged.
+- **Current phase/stage:** Phases 0–16 accepted on staging; Phase 17 Inventory Production Data Readiness has a focused safe-classification local pass and awaits full/staging acceptance; production NO-GO.
+- **Accepted scope:** Phase 17 of `.codex/specs/v0.7.0-production-master.md` under the follow-up amendment, hybrid evidence-storage amendment, owner-approved `.codex/specs/v0.7.0-phase-17-safe-classification-amendment.md`, and shared efficiency contract.
+- **Completed work:** Phase 16 remains accepted. Phase 17 captured and validated a private immutable 397-row source snapshot, repaired ledger-only opening imports and duplicate quarantine, proved isolated import/replay reconciliation, and implemented schema 25 plus the protected audited in-website classification workflow with fail-closed lending.
+- **Tests verified:** Current `npm run check` passes 71 files / 463 tests and every repository gate. Isolated schema-25 Worker/D1 passes 31 / 31, full browser coverage passes 126 with 306 intentional skips, focused Inventory queue/API/browser evidence passes, and the prior 397-row import/replay reconciles exactly.
 - **External actions:** exact-SHA staging Worker deployed; preflight D1 export verified; bounded synthetic release/backup/correction/UI acceptance completed; event/item and evidence state reconciled. Production was untouched.
 - **Rollback:** redeploy the accepted hybrid-evidence predecessor `5f2645d45106bad05ff3bcdab64c1d6bcc322c88`; preserve additive schema 23 and immutable ledger/evidence/history before any data reversal.
-- **Blocker:** all 397 source rows remain `TO_CLASSIFY`; six reusable/lending/asset fields per item are in one private owner-review queue and cannot be invented.
-- **Next action:** resolve the private classification queue from an approved source, freeze a new candidate-bound snapshot, then back up and apply migration/import/replay on staging with full reconciliation.
+- **Blocker:** no owner-data blocker remains for safe import; all pending rows must remain visibly tracked and fail closed. Staging is unchanged until the current full gates, diff review, candidate checkpoint, and private backup pass.
+- **Next action:** review/commit/push the candidate, recapture the candidate-bound private source snapshot, then back up and apply migrations 0024–0025 plus import/replay on staging with full reconciliation.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

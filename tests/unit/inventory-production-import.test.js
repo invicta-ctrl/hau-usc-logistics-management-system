@@ -95,7 +95,7 @@ describe('Phase 17 production inventory import', () => {
     const prepared = await prepare([item()]);
     const mapping = await readMapping();
 
-    expect(prepared.result.status).toBe(0);
+    expect(prepared.result.status).toBe(3);
     expect(mapping.tabs['01_ITEM_MASTER'].fields.opening_quantity).toEqual({
       constant: 0,
       type: 'number',
@@ -104,7 +104,10 @@ describe('Phase 17 production inventory import', () => {
     expect(prepared.sql).toContain("'OPENING_BALANCE'");
     expect(prepared.sql).toContain("'IMPORT:OPENING_BALANCE:ITM-PHASE17'");
     expect(prepared.sql).toContain('ON CONFLICT DO NOTHING;');
-    expect(prepared.review).toMatchObject({ status: 'COMPLETE', ownerReviews: [] });
+    expect(prepared.review).toMatchObject({
+      status: 'OWNER_REVIEW_REQUIRED',
+      ownerReviews: [expect.objectContaining({ sourceRecordId: 'ITM-PHASE17' })],
+    });
     expect(prepared.rejections.rejections).toEqual([]);
     expect(prepared.reconciliation).toContain('catalog_nonzero_opening_quantities');
     expect(prepared.reconciliation).toContain('opening_balance_quantity_difference');
@@ -161,5 +164,22 @@ describe('Phase 17 production inventory import', () => {
     expect(migration).toContain('inventory_items_opening_quantity_insert_guard');
     expect(migration).toContain('inventory_items_opening_quantity_update_guard');
     expect(migration).not.toContain('item.opening_quantity + COALESCE');
+  });
+
+  it('adds an append-only fail-closed classification workflow without deriving asset state from stock', async () => {
+    const migration = await readFile(
+      resolve(root, 'migrations/0025_inventory_classification_workflow.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain("inventory_kind TEXT NOT NULL DEFAULT 'UNVERIFIED'");
+    expect(migration).toContain("classification_status TEXT NOT NULL DEFAULT 'NEEDS_CLASSIFICATION'");
+    expect(migration).toContain('inventory_classification_history');
+    expect(migration).toContain('inventory_classification_history_no_update');
+    expect(migration).toContain('inventory_classification_history_no_delete');
+    expect(migration).toContain('UNIQUE (item_id, revision)');
+    expect(migration).toContain('unclassified inventory must remain non-lendable');
+    expect(migration).toContain('unsafe or unreviewed reusable inventory cannot be lendable');
+    expect(migration).not.toMatch(/opening_quantity[^\n]+asset/iu);
   });
 });

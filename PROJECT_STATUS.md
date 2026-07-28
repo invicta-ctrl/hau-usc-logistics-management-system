@@ -1,6 +1,6 @@
 # Project Status
 
-## v0.7.0 Phase 17 inventory data readiness — owner review required
+## v0.7.0 Phase 17 inventory data readiness — safe classification staging pending
 
 - A private immutable snapshot of the authoritative 397-row item master was
   captured and hash-validated without modifying Google data or exposing source
@@ -11,9 +11,18 @@
 - Fresh isolated D1 migrations through schema 24, import, and exact replay
   passed with 397 imported / 0 rejected, zero opening count/quantity
   difference, zero negative stock, and zero active mock inventory.
-- All 397 source rows remain genuinely `TO_CLASSIFY`; reusable/consumable,
-  lending, asset-instance, condition, and maintenance values are retained in
-  one private owner-review queue and were not invented.
+- The owner-approved safe-classification amendment permits all 397
+  `TO_CLASSIFY` rows to import as `UNVERIFIED` / `NEEDS_CLASSIFICATION` while
+  remaining non-lendable and excluded from lending submission, approval, and
+  handoff.
+- Additive schema 25, append-only classification history, a protected
+  search/filter/progress queue, individual review, safe non-lendable bulk
+  review, explicit lending confirmation, condition/maintenance gating, and
+  physical asset-tag creation are implemented locally.
+- Repository acceptance passed 71 Vitest files / 463 tests and every required
+  gate; isolated Worker/D1 acceptance passed 31 / 31 on schema 25; full browser
+  coverage passed 126 with 306 intentional skips; focused Inventory queue/API
+  browser evidence remains green.
 - Phase 17 is not accepted. Staging remains on accepted Phase 16 runtime
   `ac83af8`, schema 23; production remains NO-GO.
 - Product checkpoint `009de29` is pushed at upstream parity and passed all

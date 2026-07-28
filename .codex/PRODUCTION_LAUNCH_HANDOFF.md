@@ -1,6 +1,6 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWNER REVIEW REQUIRED**
+Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 SAFE CLASSIFICATION LOCAL PASS / STAGING PENDING**
 
 ## Phase 0 repository and remote truth
 
@@ -17,7 +17,8 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWN
 - Production Worker: reserved in the validated private configuration; intentionally not uploaded or deployed before the final merged release exists.
 - Staging Workers Logs and sampled Traces are enabled. Three protected staging secrets are applied; a distinct production package is retained privately and unapplied.
 - Google workbook and seven governed Drive mappings are readable.
-- Approved item master: one canonical item.
+- Authoritative item master: 397 governed rows captured in a private immutable
+  snapshot; all remain pending physical classification and fail closed.
 - Approved events: zero rows. Approved brand assets: zero rows.
 - No production provider mutation, merge, tag, release, D1 write, Google write, or smoke write occurred in Phase 0.
 
@@ -31,21 +32,21 @@ Decision: **PRODUCTION NO-GO — PHASES 0–16 ACCEPTED ON STAGING; PHASE 17 OWN
 
 ## Milestones
 
-| Milestone | State |
-| --- | --- |
-| 1. Git/PR/CI verified | PASS |
-| 2. Private v0.7 configs | PASS — distinct pair and secret packages retained outside Git |
-| 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred |
-| 4. Google mappings | PASS READ-ONLY; event source empty |
-| 5. Backup | PARTIAL — staging pre-migration SQL exports retained through pre-0021; formal rehearsal pending |
-| 6. Migrations | PARTIAL — staging through 0021 applied/reconciled; later and production migrations pending |
-| 7. Import/reconciliation | PARTIAL — isolated 397-row inventory import/replay passes; 397 classifications block staging |
-| 8. Staging deployment | PASS THROUGH PHASE 16 runtime `ac83af8` |
-| 9. Staging acceptance | PASS THROUGH PHASE 16; Phase 17 and full master Phase 22 pending |
-| 10. Rollback rehearsal | PENDING |
-| 11. Consolidation merge/tag/release | PENDING |
-| 12. Production deployment | PENDING |
-| 13. Production smoke | PENDING |
+| Milestone                                  | State                                                                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Git/PR/CI verified                      | PASS                                                                                                                                                                |
+| 2. Private v0.7 configs                    | PASS — distinct pair and secret packages retained outside Git                                                                                                       |
+| 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred                                                                                   |
+| 4. Google mappings                         | PASS READ-ONLY; event source empty                                                                                                                                  |
+| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0023; Phase 17 pre-0024/0025 backup and formal rehearsal pending                                   |
+| 6. Migrations                              | PARTIAL — staging through 0023 applied/reconciled; schema 24–25 and production migrations pending                                                                   |
+| 7. Import/reconciliation                   | PARTIAL — isolated 397-row inventory import/replay passes; schema-25 repository 463/463, Worker 31/31, and browser 126-pass gates are green; staging pending       |
+| 8. Staging deployment                      | PASS THROUGH PHASE 16 runtime `ac83af8`                                                                                                                             |
+| 9. Staging acceptance                      | PASS THROUGH PHASE 16; Phase 17 and full master Phase 22 pending                                                                                                    |
+| 10. Rollback rehearsal                     | PENDING                                                                                                                                                             |
+| 11. Consolidation merge/tag/release        | PENDING                                                                                                                                                             |
+| 12. Production deployment                  | PENDING                                                                                                                                                             |
+| 13. Production smoke                       | PENDING                                                                                                                                                             |
 
 ## Phase 1 evidence
 

@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '23' },
+    database: { connected: true, schemaVersion: '25' },
   });
 
   await page.goto('/');
@@ -179,6 +179,114 @@ test('System Owner receives every module and a server-validated operational scop
   });
   expect(contextualMutation.status()).toBe(200);
   await Promise.all([owner.dispose(), admin.dispose()]);
+});
+
+test('inventory classification is protected, audited, idempotent, and fail-closed for lending', async ({
+  baseURL,
+}) => {
+  const inventory = await apiRequest.newContext({ baseURL });
+  const food = await apiRequest.newContext({ baseURL });
+  try {
+    const inventoryCsrf = await login(inventory, 'LOCAL.INVENTORY');
+    const foodCsrf = await login(food, 'LOCAL.FOOD');
+    const pendingResponse = await mutate(inventory, inventoryCsrf, 'listInventoryClassifications', {
+      status: 'NEEDS_CLASSIFICATION',
+      page: 1,
+      pageSize: 10,
+    });
+    expect(pendingResponse.status()).toBe(200);
+    const pending = await pendingResponse.json();
+    const fixture = pending.items.find((item) => item.id === 'ITM-LOCAL-CLASSIFY');
+    expect(fixture).toMatchObject({
+      inventoryKind: 'UNVERIFIED',
+      classificationStatus: 'NEEDS_CLASSIFICATION',
+      isLendable: false,
+      assetInstanceCount: 0,
+    });
+
+    const unrelatedCommittee = await mutate(food, foodCsrf, 'listInventoryClassifications', {
+      status: 'ALL',
+    });
+    expect(unrelatedCommittee.status()).toBe(403);
+    await expect(unrelatedCommittee.json()).resolves.toMatchObject({
+      code: 'INVENTORY_CLASSIFICATION_FORBIDDEN',
+    });
+
+    const unsafeTicket = await mutate(inventory, inventoryCsrf, 'createLendingTicket', {
+      clientRequestId: `classification-denial-${crypto.randomUUID()}`,
+      borrowerReference: '12345678',
+      borrowerName: 'Synthetic Classification Borrower',
+      borrowerType: 'STUDENT',
+      itemId: fixture.id,
+      quantity: 1,
+      unit: fixture.unit,
+      purpose: 'Fail-closed classification proof',
+      dueAt: '2026-08-10T12:00:00+08:00',
+      ticketType: 'LOAN',
+    });
+    expect(unsafeTicket.status()).toBe(409);
+    await expect(unsafeTicket.json()).resolves.toMatchObject({ code: 'LENDING_ITEM_UNAVAILABLE' });
+
+    const command = {
+      clientRequestId: `classification-${crypto.randomUUID()}`,
+      itemId: fixture.id,
+      expectedRevision: fixture.classificationRevision,
+      classificationStatus: 'CLASSIFIED',
+      inventoryKind: 'REUSABLE',
+      stockArea: fixture.stockArea,
+      storageLocation: fixture.storageLocation,
+      unit: fixture.unit,
+      reorderThreshold: fixture.reorderThreshold,
+      conditionReviewState: 'GOOD',
+      maintenanceReviewState: 'CLEARED',
+      isLendable: true,
+      lendingAudience: 'STUDENTS_AND_STAFF',
+      enableLendingConfirmed: true,
+      assetInstanceCountIfReusable: 1,
+      assetTrackingConfirmed: true,
+      assetTags: [`PHASE17-${crypto.randomUUID()}`],
+      classificationNotes: 'Synthetic local physical classification proof',
+    };
+    const classifiedResponse = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', command);
+    expect(classifiedResponse.status()).toBe(200);
+    const classified = await classifiedResponse.json();
+    expect(classified).toMatchObject({
+      itemId: fixture.id,
+      classificationStatus: 'CLASSIFIED',
+      inventoryKind: 'REUSABLE',
+      isLendable: true,
+      assetInstanceCount: 1,
+      classificationRevision: fixture.classificationRevision + 1,
+    });
+    const replay = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', command);
+    expect(replay.status()).toBe(200);
+    await expect(replay.json()).resolves.toMatchObject(classified);
+
+    const completedResponse = await mutate(inventory, inventoryCsrf, 'listInventoryClassifications', {
+      status: 'CLASSIFIED',
+      search: fixture.id,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(completedResponse.status()).toBe(200);
+    const completed = await completedResponse.json();
+    expect(completed.items[0]).toMatchObject({
+      id: fixture.id,
+      classificationStatus: 'CLASSIFIED',
+      assetInstanceCount: 1,
+      classificationHistory: [
+        expect.objectContaining({
+          previousStatus: 'NEEDS_CLASSIFICATION',
+          newStatus: 'CLASSIFIED',
+          isLendable: true,
+        }),
+      ],
+    });
+    const publicCatalog = await (await inventory.get('/api/public/lending/catalog')).json();
+    expect(publicCatalog.items).toContainEqual(expect.objectContaining({ id: fixture.id }));
+  } finally {
+    await Promise.all([inventory.dispose(), food.dispose()]);
+  }
 });
 
 test('identity roster is owner-only, metadata-safe, explicit-preview-only, and absent from login reads', async ({
@@ -642,6 +750,15 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   await expect(page.locator('#inventoryTable')).toContainText(
     `On hand ${authoritative.onHand} · Reserved ${authoritative.reserved} · ATP ${authoritative.availableToPromise} ${authoritative.unit}`,
   );
+  const classificationQueue = page.locator('[data-inventory-classification-queue]');
+  await expect(classificationQueue.getByRole('heading', { name: 'Needs Classification' })).toBeVisible();
+  await classificationQueue.locator('[data-classification-status]').selectOption('ALL');
+  await classificationQueue.getByLabel('Search classification queue').fill('ITM-LOCAL-CLASSIFY');
+  await expect(classificationQueue).toContainText('ITM-LOCAL-CLASSIFY');
+  await classificationQueue.getByRole('button', { name: 'Review' }).first().click();
+  await expect(page.getByRole('heading', { name: /Classify ITM-LOCAL-CLASSIFY/u })).toBeVisible();
+  await expect(page.getByLabel('Review status')).toBeVisible();
+  await expect(page.getByText('Opening quantity is never converted into asset instances.')).toBeVisible();
 });
 
 test('Materials queue projects canonical deliverables and fails closed across committee scope', async ({

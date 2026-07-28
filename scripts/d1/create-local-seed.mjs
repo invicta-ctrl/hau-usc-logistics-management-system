@@ -153,15 +153,46 @@ async function main() {
         `storage_location, reorder_threshold, lending_audience, default_loan_days, maximum_loan_quantity, ` +
         `approval_required, is_lendable, lending_kind, lending_status, lending_unit, due_date_required, ` +
         `acknowledgment_required, eligibility_rule, lending_handling_notes, borrower_safe_description, ` +
-        `borrower_safe_restrictions, image_asset_key, condition_tracking, created_at, updated_at, updated_by` +
+        `borrower_safe_restrictions, image_asset_key, condition_tracking, inventory_kind, ` +
+        `classification_status, condition_review_state, maintenance_review_state, classification_notes, ` +
+        `classification_revision, classified_at, classified_by, created_at, updated_at, updated_by` +
         `) VALUES (` +
         `'ITM-LOCAL-001', 'Synthetic Folding Chair', 'Equipment', 'Office Inventory', 'LOANABLE', ` +
-        `'piece', 20, 'ACTIVE', 'OFFICE_INVENTORY', 'Synthetic Storage', 5, ` +
+        `'piece', 0, 'ACTIVE', 'OFFICE_INVENTORY', 'Synthetic Storage', 5, ` +
         `'STUDENTS_AND_STAFF', 3, 5, 1, 1, 'REUSABLE', 'ACTIVE', 'piece', 1, 1, ` +
         `'HAU students and authorized USC staff', 'Keep dry and return after use.', ` +
         `'A portable folding chair for approved university activities.', ` +
-        `'Subject to staff review and approved event use.', '', 1, ` +
+        `'Subject to staff review and approved event use.', '', 1, 'REUSABLE', 'CLASSIFIED', ` +
+        `'GOOD', 'CLEARED', 'Explicit local synthetic classification fixture', 1, ${sql(createdAt)}, ` +
+        `'LOCAL-INVENTORY', ` +
         `${sql(createdAt)}, ${sql(createdAt)}, 'LOCAL-SEED');`,
+      `INSERT OR IGNORE INTO inventory_ledger (` +
+        `id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity, ` +
+        `related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes` +
+        `) VALUES (` +
+        `'LED-LOCAL-OPENING-001', ${sql(createdAt)}, 'OPENING_BALANCE', 'IN', 'ITM-LOCAL-001', ` +
+        `20, 'piece', 20, 'INVENTORY_ITEM', 'ITM-LOCAL-001', 'SYSTEM-IMPORT', ` +
+        `'LOCAL:OPENING_BALANCE:ITM-LOCAL-001', 'POSTED', 'Explicit local synthetic opening balance');`,
+      `INSERT OR REPLACE INTO inventory_items (` +
+        `id, name, category, stock_area, handling, unit, opening_quantity, status, catalog_type, ` +
+        `storage_location, reorder_threshold, lending_audience, approval_required, is_lendable, ` +
+        `lending_kind, lending_status, lending_unit, condition_tracking, inventory_kind, ` +
+        `classification_status, condition_review_state, maintenance_review_state, ` +
+        `classification_revision, created_at, updated_at, updated_by` +
+        `) VALUES (` +
+        `'ITM-LOCAL-CLASSIFY', 'Synthetic Classification Fixture', 'Equipment', 'Office Inventory', ` +
+        `'TO_CLASSIFY', 'piece', 0, 'ACTIVE', 'OFFICE_INVENTORY', 'Synthetic Storage', 1, ` +
+        `'NOT_AVAILABLE_FOR_LENDING', 1, 0, 'CONSUMABLE', 'NOT_LENDABLE', 'piece', 0, ` +
+        `'UNVERIFIED', 'NEEDS_CLASSIFICATION', 'NOT_ASSESSED', 'NOT_ASSESSED', 1, ` +
+        `${sql(createdAt)}, ${sql(createdAt)}, 'LOCAL-SEED');`,
+      `INSERT OR IGNORE INTO inventory_ledger (` +
+        `id, created_at, transaction_type, direction, item_id, quantity, unit, signed_quantity, ` +
+        `related_entity_type, related_entity_id, actor_account_id, idempotency_key, status, notes` +
+        `) VALUES (` +
+        `'LED-LOCAL-OPENING-CLASSIFY', ${sql(createdAt)}, 'OPENING_BALANCE', 'IN', ` +
+        `'ITM-LOCAL-CLASSIFY', 2, 'piece', 2, 'INVENTORY_ITEM', 'ITM-LOCAL-CLASSIFY', ` +
+        `'SYSTEM-IMPORT', 'LOCAL:OPENING_BALANCE:ITM-LOCAL-CLASSIFY', 'POSTED', ` +
+        `'Explicit local synthetic opening balance for classification proof');`,
       `INSERT OR REPLACE INTO item_aliases (item_id, normalized_alias, display_alias) VALUES (` +
         `'ITM-LOCAL-001', 'CHAIR', 'Chair');`,
       `INSERT OR IGNORE INTO requests (` +
@@ -223,7 +254,9 @@ async function main() {
   await writeFile(resolved, `${statements.join('\n')}\n`, { flag: 'wx', mode: 0o600 });
   console.log('Synthetic local-only D1 seed created outside the repository.');
   if (!starterOnly) {
-    console.log('Access IDs: LOCAL.OWNER, LOCAL.ADMIN, LOCAL.DIRECTOR, LOCAL.FOOD, LOCAL.INVENTORY, LOCAL.MATERIALS');
+    console.log(
+      'Access IDs: LOCAL.OWNER, LOCAL.ADMIN, LOCAL.DIRECTOR, LOCAL.FOOD, LOCAL.INVENTORY, LOCAL.MATERIALS',
+    );
     console.log('Active-account password label: repository-documented synthetic local credential only.');
   }
   console.log('Starter Access ID: LOCAL.STARTER');

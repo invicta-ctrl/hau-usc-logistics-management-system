@@ -12,5 +12,25 @@ export class MockAdapter extends MockService {
   saveCanvassReference() { return Promise.reject(new Error('Canvass writes are available in Apps Script staging.')); }
   selectPreferredCanvass() { return Promise.reject(new Error('Canvass selection is available in Apps Script staging.')); }
   getAuditTimeline({ entityType, entityId }) { return Promise.resolve({ ok: true, timeline: this.store.getState().auditLog.filter((row) => row.entityType === entityType && row.entityId === entityId) }); }
+  listInventoryClassifications({ status = 'NEEDS_CLASSIFICATION', search = '' } = {}) {
+    const q = search.toLowerCase();
+    const source = this.store.getState().inventoryItems;
+    const items = source.filter((item) =>
+      (status === 'ALL' || (item.classificationStatus ?? 'NEEDS_CLASSIFICATION') === status)
+      && (!q || `${item.id} ${item.name} ${item.category}`.toLowerCase().includes(q)));
+    return Promise.resolve({
+      ok: true,
+      progress: {
+        total: source.length,
+        pending: source.filter((item) => (item.classificationStatus ?? 'NEEDS_CLASSIFICATION') === 'NEEDS_CLASSIFICATION').length,
+        classified: source.filter((item) => item.classificationStatus === 'CLASSIFIED').length,
+      },
+      page: 1,
+      pageSize: items.length || 10,
+      total: items.length,
+      items,
+    });
+  }
+  classifyInventoryItem() { return Promise.reject(new Error('Use the local preview classification workflow.')); }
 }
 

@@ -70,6 +70,8 @@ export function lendingCatalogDto(row, { staff = false } = {}) {
 export async function loadLendingCatalog(db, { publicOnly = false, itemId = '', staff = false } = {}) {
   const conditions = [
     "item.status = 'ACTIVE'",
+    "item.classification_status = 'CLASSIFIED'",
+    "item.inventory_kind <> 'UNVERIFIED'",
     'item.is_lendable = 1',
     "item.lending_status <> 'NOT_LENDABLE'",
   ];

@@ -11,6 +11,15 @@
   ledger and reject future direct nonzero opening writes.
 - Regression coverage for opening balances, replay safety, duplicate source
   IDs, classification review, and migration guards.
+- Owner-approved safe-classification amendment and additive D1 migration 0025
+  with explicit `UNVERIFIED` / `NEEDS_CLASSIFICATION` state, fail-closed
+  lending triggers, and append-only classification history.
+- Protected Needs Classification queue with search, filters, progress,
+  pagination, individual review, safe non-lendable bulk review, explicit
+  lending confirmation, condition/maintenance gates, and physical asset-tag
+  registration that never derives instances from opening quantity.
+- Server-side classification revalidation for lending submission, approval,
+  and handoff.
 
 ### Verified
 
@@ -19,14 +28,18 @@
 - Isolated D1: migrations through schema 24, import, and exact replay passed;
   397 imported / 0 rejected; zero opening-ledger count/quantity difference,
   zero negative stock, and zero active mock inventory.
-- Focused Vitest 12 / 12, targeted ESLint passed, and `npm run check` passed
-  with 71 files / 462 tests.
+- Current `npm run check` passed with 71 files / 463 tests and every repository
+  gate. Isolated schema-25 Worker/D1 acceptance passed 31 / 31, full browser
+  coverage passed 126 with 306 intentional skips, and the focused Inventory
+  classification API/queue browser scenarios passed.
 
 ### Boundary
 
-- All 397 items require owner-supplied reusable/lending/asset classification.
-  Phase 17 is not accepted; staging and production were not migrated, imported,
-  deployed, promoted, merged, tagged, or released.
+- All 397 items may import only in the conservative pending-classification
+  state and remain non-lendable until authorized physical review. Phase 17 is
+  not yet accepted; staging gates remain pending, and
+  production was not migrated, imported, deployed, promoted, merged, tagged,
+  or released.
 
 ## Unreleased - v0.7.0 Phase 16 Shared Release Desk and System Status (2026-07-28)
 

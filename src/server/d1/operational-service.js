@@ -51,6 +51,8 @@ const METHOD_CAPABILITIES = Object.freeze({
   confirmRelease: CAPABILITIES.FULFILL_RELEASE,
   correctRelease: CAPABILITIES.FULFILL_RELEASE,
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
+  listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
+  classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
   getMigrationStatus: CAPABILITIES.SYSTEM_DIAGNOSTICS,
 });
 
@@ -686,6 +688,58 @@ async function rows(db, sql, bindings = []) {
   return (await (bindings.length ? statement.bind(...bindings) : statement).all()).results;
 }
 
+const INVENTORY_CLASSIFICATION_ROLES = new Set(['SYSTEM_OWNER', 'ADMINISTRATOR', 'DIRECTOR']);
+const INVENTORY_KINDS = new Set(['UNVERIFIED', 'REUSABLE', 'CONSUMABLE']);
+const CLASSIFICATION_STATUSES = new Set(['NEEDS_CLASSIFICATION', 'CLASSIFIED']);
+const CONDITION_REVIEW_STATES = new Set([
+  'NOT_ASSESSED',
+  'NOT_APPLICABLE',
+  'NEW',
+  'GOOD',
+  'FAIR',
+  'POOR',
+  'DAMAGED',
+]);
+const MAINTENANCE_REVIEW_STATES = new Set([
+  'NOT_ASSESSED',
+  'NOT_APPLICABLE',
+  'CLEARED',
+  'MAINTENANCE_REQUIRED',
+]);
+const LENDING_AUDIENCES = new Set([
+  'NOT_AVAILABLE_FOR_LENDING',
+  'USC_STAFF_ONLY',
+  'STUDENTS_AND_STAFF',
+  'DOL_INTERNAL_ONLY',
+]);
+
+function assertInventoryClassificationAccess(account) {
+  assertCapability(account, CAPABILITIES.INVENTORY_CLASSIFY);
+  const authorization = accountAuthorization(account);
+  if (
+    !INVENTORY_CLASSIFICATION_ROLES.has(authorization.roleId) &&
+    !authorization.committeeIds.includes(COMMITTEES.INVENTORY_PANTRY)
+  ) {
+    throw new ApiError(
+      'INVENTORY_CLASSIFICATION_FORBIDDEN',
+      'Inventory classification is limited to authorized Inventory, Administrator, Director, and System Owner users.',
+      { status: 403 },
+    );
+  }
+}
+
+function classificationEnum(value, allowed, field, fallback = '') {
+  const normalized = String(value ?? fallback)
+    .trim()
+    .toUpperCase();
+  if (!allowed.has(normalized)) {
+    throw new ApiError('VALIDATION_FAILED', `Choose an approved ${field}.`, {
+      details: { field },
+    });
+  }
+  return normalized;
+}
+
 const itemDto = (row, requestOnly = false) => ({
   id: row.id,
   name: row.name,
@@ -733,6 +787,15 @@ const itemDto = (row, requestOnly = false) => ({
         traceableAssets: Number(row.traceable_assets ?? 0),
         availableAssets: Number(row.available_assets ?? 0),
         lendableAvailable: Number(row.lendable_available ?? 0),
+        inventoryKind: row.inventory_kind ?? 'UNVERIFIED',
+        classificationStatus: row.classification_status ?? 'NEEDS_CLASSIFICATION',
+        conditionReviewState: row.condition_review_state ?? 'NOT_ASSESSED',
+        maintenanceReviewState: row.maintenance_review_state ?? 'NOT_ASSESSED',
+        classificationNotes: row.classification_notes ?? '',
+        classificationEvidenceId: row.classification_evidence_id ?? '',
+        classificationRevision: Number(row.classification_revision ?? 1),
+        classifiedAt: row.classified_at ?? null,
+        classifiedBy: row.classified_by ?? null,
       }),
 });
 
@@ -2953,6 +3016,34 @@ export function createD1OperationalService({
 
   async function createLendingTicket({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.createLendingTicket);
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const catalogItem = await db
+      .prepare(
+        `SELECT id, unit, status, classification_status, inventory_kind, is_lendable,
+           lending_status, lending_audience
+         FROM inventory_items WHERE id = ?1`,
+      )
+      .bind(itemId)
+      .first();
+    if (
+      !catalogItem ||
+      catalogItem.status !== 'ACTIVE' ||
+      catalogItem.classification_status !== 'CLASSIFIED' ||
+      catalogItem.inventory_kind === 'UNVERIFIED' ||
+      catalogItem.is_lendable !== 1 ||
+      catalogItem.lending_status !== 'ACTIVE'
+    ) {
+      throw new ApiError(
+        'LENDING_ITEM_UNAVAILABLE',
+        'That item is not classified and available for lending.',
+        { status: 409 },
+      );
+    }
+    if (requiredText(command.unit, 'unit', 40) !== catalogItem.unit) {
+      throw new ApiError('LENDING_UNIT_MISMATCH', 'The lending unit no longer matches the catalog.', {
+        status: 409,
+      });
+    }
     const mutation = await replay(db, 'createLendingTicket', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const ticketId = createId('LND');
@@ -2985,7 +3076,7 @@ export function createD1OperationalService({
           requiredText(command.borrowerType, 'borrowerType', 40),
           optionalText(command.department ?? command.departmentOrganization, 120),
           optionalText(command.contact, 120),
-          requiredText(command.itemId, 'itemId', 80),
+          itemId,
           positiveNumber(command.quantity),
           requiredText(command.unit, 'unit', 40),
           requiredText(command.purpose, 'purpose', 500),
@@ -3078,13 +3169,16 @@ export function createD1OperationalService({
     const item = await db
       .prepare(
         `SELECT id, unit, lending_unit, lending_audience, lending_kind, lending_status,
-                is_lendable, maximum_loan_quantity, default_loan_days, due_date_required
+                is_lendable, maximum_loan_quantity, default_loan_days, due_date_required,
+                classification_status, inventory_kind
          FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'`,
       )
       .bind(requiredText(command.itemId, 'itemId', 80))
       .first();
     if (
       !item ||
+      item.classification_status !== 'CLASSIFIED' ||
+      item.inventory_kind === 'UNVERIFIED' ||
       item.is_lendable !== 1 ||
       item.lending_status !== 'ACTIVE' ||
       !['STUDENTS_AND_STAFF', 'USC_STAFF_ONLY'].includes(item.lending_audience)
@@ -3188,13 +3282,18 @@ export function createD1OperationalService({
     const itemId = requiredText(command.itemId, 'itemId', 80);
     const item = await db
       .prepare(
-        `SELECT id, lending_kind, condition_tracking
+        `SELECT id, inventory_kind, classification_status, condition_tracking
          FROM inventory_items
-         WHERE id = ?1 AND status = 'ACTIVE' AND is_lendable = 1`,
+         WHERE id = ?1 AND status = 'ACTIVE'`,
       )
       .bind(itemId)
       .first();
-    if (!item || item.lending_kind !== 'REUSABLE' || item.condition_tracking !== 1) {
+    if (
+      !item ||
+      item.inventory_kind !== 'REUSABLE' ||
+      item.classification_status !== 'CLASSIFIED' ||
+      item.condition_tracking !== 1
+    ) {
       throw new ApiError(
         'ASSET_ITEM_NOT_TRACEABLE',
         'Asset instances may be registered only for condition-tracked reusable items.',
@@ -3530,6 +3629,8 @@ export function createD1OperationalService({
     if (
       !approvedItem ||
       approvedItem.status !== 'ACTIVE' ||
+      approvedItem.classification_status !== 'CLASSIFIED' ||
+      approvedItem.inventory_kind === 'UNVERIFIED' ||
       approvedItem.is_lendable !== 1 ||
       approvedItem.lending_status !== 'ACTIVE'
     ) {
@@ -3762,6 +3863,27 @@ export function createD1OperationalService({
         'The lending handoff has already been completed or is not ready.',
         { status: 409 },
       );
+    const handoffItem = await db
+      .prepare(
+        `SELECT status, classification_status, inventory_kind, is_lendable, lending_status
+         FROM inventory_items WHERE id = ?1`,
+      )
+      .bind(ticket.item_id)
+      .first();
+    if (
+      !handoffItem ||
+      handoffItem.status !== 'ACTIVE' ||
+      handoffItem.classification_status !== 'CLASSIFIED' ||
+      handoffItem.inventory_kind === 'UNVERIFIED' ||
+      handoffItem.is_lendable !== 1 ||
+      handoffItem.lending_status !== 'ACTIVE'
+    ) {
+      throw new ApiError(
+        'LENDING_ITEM_UNAVAILABLE',
+        'The item classification is no longer safe for handoff.',
+        { status: 409 },
+      );
+    }
     const timestamp = nowIso();
     const handoffId = createId('HND');
     const consumableIssue = ticket.ticket_type === 'CONSUMABLE';
@@ -4925,6 +5047,491 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function listInventoryClassifications({ account, command = {}, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    const page = pageInput(command);
+    const statusFilter = String(command.status ?? 'NEEDS_CLASSIFICATION')
+      .trim()
+      .toUpperCase();
+    if (!new Set(['ALL', ...CLASSIFICATION_STATUSES]).has(statusFilter)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved classification status filter.');
+    }
+    const kindFilter = String(command.inventoryKind ?? 'ALL')
+      .trim()
+      .toUpperCase();
+    if (!new Set(['ALL', ...INVENTORY_KINDS]).has(kindFilter)) {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved inventory kind filter.');
+    }
+    const search = optionalText(command.search, 120).toUpperCase();
+    const conditions = ["item.status <> 'ARCHIVED'"];
+    const values = [];
+    if (statusFilter !== 'ALL') {
+      values.push(statusFilter);
+      conditions.push(`item.classification_status = ?${values.length}`);
+    }
+    if (kindFilter !== 'ALL') {
+      values.push(kindFilter);
+      conditions.push(`item.inventory_kind = ?${values.length}`);
+    }
+    if (search) {
+      values.push(`%${search}%`);
+      conditions.push(
+        `(upper(item.id) LIKE ?${values.length} OR upper(item.name) LIKE ?${values.length} ` +
+          `OR upper(item.category) LIKE ?${values.length} OR upper(item.stock_area) LIKE ?${values.length})`,
+      );
+    }
+    const where = conditions.join(' AND ');
+    const [summary, totalRow, itemRows] = await Promise.all([
+      db
+        .prepare(
+          `SELECT COUNT(*) AS total,
+             SUM(CASE WHEN classification_status = 'NEEDS_CLASSIFICATION' THEN 1 ELSE 0 END) AS pending,
+             SUM(CASE WHEN classification_status = 'CLASSIFIED' THEN 1 ELSE 0 END) AS classified
+           FROM inventory_items WHERE status <> 'ARCHIVED'`,
+        )
+        .first(),
+      (values.length
+        ? db.prepare(`SELECT COUNT(*) AS count FROM inventory_items item WHERE ${where}`).bind(...values)
+        : db.prepare(`SELECT COUNT(*) AS count FROM inventory_items item WHERE ${where}`)
+      ).first(),
+      rows(
+        db,
+        `SELECT item.*, availability.on_hand, availability.reserved,
+           availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+           availability.overdue, availability.expected_return_at, availability.traceable_assets,
+           availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+           availability.lendable_available
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE ${where}
+         ORDER BY CASE item.classification_status WHEN 'NEEDS_CLASSIFICATION' THEN 0 ELSE 1 END,
+           item.name, item.id
+         LIMIT ?${values.length + 1} OFFSET ?${values.length + 2}`,
+        [...values, page.pageSize, page.offset],
+      ),
+    ]);
+    const ids = itemRows.map((item) => item.id);
+    const historyRows = ids.length
+      ? await rows(
+          db,
+          `SELECT id, item_id, revision, previous_status, new_status, previous_kind, new_kind,
+             lendable_enabled, lending_audience, condition_review_state,
+             maintenance_review_state, asset_instance_count, classification_notes,
+             evidence_id, bulk_group_id, occurred_at, actor_account_id, correlation_id
+           FROM inventory_classification_history
+           WHERE item_id IN (${ids.map((_, index) => `?${index + 1}`).join(', ')})
+           ORDER BY occurred_at DESC LIMIT 500`,
+          ids,
+        )
+      : [];
+    const historyByItem = new Map();
+    for (const entry of historyRows) {
+      if (!historyByItem.has(entry.item_id)) historyByItem.set(entry.item_id, []);
+      historyByItem.get(entry.item_id).push({
+        id: entry.id,
+        revision: Number(entry.revision),
+        previousStatus: entry.previous_status,
+        newStatus: entry.new_status,
+        previousKind: entry.previous_kind,
+        newKind: entry.new_kind,
+        isLendable: entry.lendable_enabled === 1,
+        lendingAudience: entry.lending_audience,
+        conditionReviewState: entry.condition_review_state,
+        maintenanceReviewState: entry.maintenance_review_state,
+        assetInstanceCount: Number(entry.asset_instance_count),
+        classificationNotes: entry.classification_notes,
+        evidenceId: entry.evidence_id,
+        bulkGroupId: entry.bulk_group_id,
+        occurredAt: entry.occurred_at,
+        actorAccountId: entry.actor_account_id,
+        correlationId: entry.correlation_id,
+      });
+    }
+    return {
+      ok: true,
+      correlationId,
+      progress: {
+        total: Number(summary?.total ?? 0),
+        pending: Number(summary?.pending ?? 0),
+        classified: Number(summary?.classified ?? 0),
+      },
+      page: page.page,
+      pageSize: page.pageSize,
+      total: Number(totalRow?.count ?? 0),
+      items: itemRows.map((item) => ({
+        ...itemDto(item),
+        assetInstanceCount: Number(item.traceable_assets ?? 0),
+        classificationHistory: historyByItem.get(item.id) ?? [],
+      })),
+    };
+  }
+
+  async function classifyInventoryItem({ account, command, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const mutation = await replay(db, 'classifyInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const current = await db
+      .prepare(
+        `SELECT item.*,
+           (SELECT COUNT(*) FROM inventory_ledger ledger WHERE ledger.item_id = item.id) AS ledger_count,
+           (SELECT COUNT(*) FROM inventory_asset_instances asset
+             WHERE asset.item_id = item.id AND asset.lifecycle_status <> 'ARCHIVED') AS asset_count
+         FROM inventory_items item WHERE item.id = ?1 AND item.status <> 'ARCHIVED'`,
+      )
+      .bind(itemId)
+      .first();
+    if (!current) {
+      throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
+    }
+    const expectedRevision = Number(command.expectedRevision);
+    if (!Number.isInteger(expectedRevision) || expectedRevision !== Number(current.classification_revision)) {
+      throw new ApiError(
+        'CLASSIFICATION_REVISION_CONFLICT',
+        'This classification changed. Refresh the queue before saving.',
+        { status: 409 },
+      );
+    }
+    const classificationStatus = classificationEnum(
+      command.classificationStatus,
+      CLASSIFICATION_STATUSES,
+      'classification status',
+      'NEEDS_CLASSIFICATION',
+    );
+    const inventoryKind = classificationEnum(
+      command.inventoryKind,
+      INVENTORY_KINDS,
+      'inventory kind',
+      'UNVERIFIED',
+    );
+    if (classificationStatus === 'CLASSIFIED' && inventoryKind === 'UNVERIFIED') {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'A completed classification requires reusable or consumable kind.',
+      );
+    }
+    let conditionReviewState = classificationEnum(
+      command.conditionReviewState,
+      CONDITION_REVIEW_STATES,
+      'condition review state',
+      inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED',
+    );
+    let maintenanceReviewState = classificationEnum(
+      command.maintenanceReviewState,
+      MAINTENANCE_REVIEW_STATES,
+      'maintenance review state',
+      inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED',
+    );
+    if (inventoryKind !== 'REUSABLE') {
+      conditionReviewState = inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED';
+      maintenanceReviewState = inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED';
+    }
+    if (
+      classificationStatus === 'CLASSIFIED' &&
+      inventoryKind === 'REUSABLE' &&
+      (conditionReviewState === 'NOT_ASSESSED' || maintenanceReviewState === 'NOT_ASSESSED')
+    ) {
+      throw new ApiError(
+        'PHYSICAL_REVIEW_REQUIRED',
+        'Reusable classification requires a physical condition and maintenance review.',
+        { status: 409 },
+      );
+    }
+    let isLendable =
+      classificationStatus === 'CLASSIFIED' && (command.isLendable === true || command.isLendable === 'true');
+    let lendingAudience = classificationEnum(
+      command.lendingAudience,
+      LENDING_AUDIENCES,
+      'lending audience',
+      'NOT_AVAILABLE_FOR_LENDING',
+    );
+    if (isLendable && command.enableLendingConfirmed !== true && command.enableLendingConfirmed !== 'true') {
+      throw new ApiError(
+        'LENDING_CONFIRMATION_REQUIRED',
+        'Explicit confirmation is required before enabling lending.',
+        { status: 409 },
+      );
+    }
+    if (isLendable && lendingAudience === 'NOT_AVAILABLE_FOR_LENDING') {
+      throw new ApiError('VALIDATION_FAILED', 'Choose an approved lending audience before enabling lending.');
+    }
+    if (
+      isLendable &&
+      inventoryKind === 'REUSABLE' &&
+      (!['NEW', 'GOOD', 'FAIR'].includes(conditionReviewState) || maintenanceReviewState !== 'CLEARED')
+    ) {
+      throw new ApiError(
+        'UNSAFE_REUSABLE_LENDING_BLOCKED',
+        'Reusable lending remains disabled until condition is safe and maintenance is cleared.',
+        { status: 409 },
+      );
+    }
+    if (!isLendable) lendingAudience = 'NOT_AVAILABLE_FOR_LENDING';
+
+    const stockArea = requiredText(command.stockArea ?? current.stock_area, 'stockArea', 120);
+    const storageLocation = requiredText(
+      command.storageLocation ?? current.storage_location,
+      'storageLocation',
+      160,
+    );
+    const unit = requiredText(command.unit ?? current.unit, 'unit', 40);
+    if (unit !== current.unit && Number(current.ledger_count) > 0) {
+      throw new ApiError(
+        'HISTORICAL_UNIT_CHANGE_BLOCKED',
+        'An item with ledger history cannot change unit through classification.',
+        { status: 409 },
+      );
+    }
+    const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
+    if (!Number.isFinite(reorderThreshold) || reorderThreshold < 0) {
+      throw new ApiError('VALIDATION_FAILED', 'Reorder threshold must be zero or greater.');
+    }
+    const classificationNotes = optionalText(command.classificationNotes, 1000);
+    const evidenceId = optionalText(command.evidenceId, 120);
+    if (evidenceId) {
+      const evidence = await db
+        .prepare(
+          `SELECT id FROM evidence_metadata
+           WHERE id = ?1 AND related_entity_id = ?2 AND upload_status NOT IN ('FAILED', 'ARCHIVED')`,
+        )
+        .bind(evidenceId, itemId)
+        .first();
+      if (!evidence) {
+        throw new ApiError(
+          'CLASSIFICATION_EVIDENCE_INVALID',
+          'Classification evidence must be an active governed file linked to this item.',
+          { status: 409 },
+        );
+      }
+    }
+    const existingAssetCount = Number(current.asset_count ?? 0);
+    const requestedAssetCount = Number(command.assetInstanceCountIfReusable ?? existingAssetCount);
+    if (!Number.isInteger(requestedAssetCount) || requestedAssetCount < 0) {
+      throw new ApiError('VALIDATION_FAILED', 'Asset instance count must be a whole number zero or greater.');
+    }
+    const assetTags = Array.isArray(command.assetTags)
+      ? command.assetTags.map((tag) => requiredText(tag, 'assetTag', 80).toUpperCase())
+      : [];
+    if (new Set(assetTags).size !== assetTags.length) {
+      throw new ApiError('ASSET_TAG_CONFLICT', 'Asset tags in this classification must be unique.', {
+        status: 409,
+      });
+    }
+    if (inventoryKind !== 'REUSABLE' && (requestedAssetCount !== 0 || assetTags.length)) {
+      throw new ApiError('ASSET_ITEM_NOT_TRACEABLE', 'Only reusable items may have asset instances.', {
+        status: 409,
+      });
+    }
+    if (requestedAssetCount < existingAssetCount) {
+      throw new ApiError(
+        'ASSET_INSTANCE_COUNT_CONFLICT',
+        'Classification cannot remove existing physical asset instances.',
+        { status: 409 },
+      );
+    }
+    if (requestedAssetCount - existingAssetCount !== assetTags.length) {
+      throw new ApiError(
+        'ASSET_INSTANCE_COUNT_CONFLICT',
+        'Enter one new physical asset tag for every added asset instance.',
+        { status: 409 },
+      );
+    }
+    if (
+      assetTags.length &&
+      (classificationStatus !== 'CLASSIFIED' ||
+        (command.assetTrackingConfirmed !== true && command.assetTrackingConfirmed !== 'true') ||
+        conditionReviewState === 'NOT_ASSESSED')
+    ) {
+      throw new ApiError(
+        'ASSET_TRACKING_CONFIRMATION_REQUIRED',
+        'Confirm reusable kind, actual instance count, individual tracking, and physical condition before creating assets.',
+        { status: 409 },
+      );
+    }
+    const timestamp = nowIso();
+    const nextRevision = expectedRevision + 1;
+    const bulkGroupId = optionalText(command.bulkGroupId, 120);
+    const handling =
+      inventoryKind === 'REUSABLE'
+        ? 'REUSABLE_ASSET'
+        : inventoryKind === 'CONSUMABLE'
+          ? 'CONSUMABLE'
+          : 'TO_CLASSIFY';
+    const result = {
+      itemId,
+      classificationStatus,
+      inventoryKind,
+      isLendable,
+      lendingAudience,
+      assetInstanceCount: requestedAssetCount,
+      classificationRevision: nextRevision,
+      correlationId,
+    };
+    const assetLifecycleStatus =
+      maintenanceReviewState === 'MAINTENANCE_REQUIRED'
+        ? 'MAINTENANCE'
+        : ['POOR'].includes(conditionReviewState)
+          ? 'QUARANTINE'
+          : conditionReviewState === 'DAMAGED'
+            ? 'DAMAGED'
+            : 'AVAILABLE';
+    const statements = [
+      db
+        .prepare(
+          `UPDATE inventory_items SET
+             stock_area = ?1, storage_location = ?2, handling = ?3, unit = ?4,
+             reorder_threshold = ?5, inventory_kind = ?6, classification_status = ?7,
+             condition_review_state = ?8, maintenance_review_state = ?9,
+             classification_notes = ?10, classification_evidence_id = ?11,
+             classification_revision = ?12, classified_at = ?13, classified_by = ?14,
+             is_lendable = ?15, lending_audience = ?16, lending_kind = ?17,
+             lending_status = ?18, lending_unit = ?4, due_date_required = ?19,
+             condition_tracking = ?20, eligibility_rule = ?21,
+             lending_handling_notes = ?10, updated_at = ?22, updated_by = ?14
+           WHERE id = ?23 AND classification_revision = ?24`,
+        )
+        .bind(
+          stockArea,
+          storageLocation,
+          handling,
+          unit,
+          reorderThreshold,
+          inventoryKind,
+          classificationStatus,
+          conditionReviewState,
+          maintenanceReviewState,
+          classificationNotes,
+          evidenceId,
+          nextRevision,
+          classificationStatus === 'CLASSIFIED' ? timestamp : null,
+          classificationStatus === 'CLASSIFIED' ? account.id : null,
+          isLendable ? 1 : 0,
+          lendingAudience,
+          inventoryKind === 'REUSABLE' ? 'REUSABLE' : 'CONSUMABLE',
+          isLendable ? 'ACTIVE' : 'NOT_LENDABLE',
+          inventoryKind === 'REUSABLE' ? 1 : 0,
+          inventoryKind === 'REUSABLE' ? 1 : 0,
+          isLendable
+            ? lendingAudience === 'STUDENTS_AND_STAFF'
+              ? 'HAU students and authorized USC staff'
+              : lendingAudience === 'USC_STAFF_ONLY'
+                ? 'Authorized USC staff only'
+                : 'Authorized DOL users only'
+            : '',
+          timestamp,
+          itemId,
+          expectedRevision,
+        ),
+      db
+        .prepare(
+          `INSERT INTO inventory_classification_history (
+             id, item_id, revision, previous_status, new_status, previous_kind, new_kind,
+             lendable_enabled, lending_audience, condition_review_state,
+             maintenance_review_state, asset_instance_count, classification_notes,
+             evidence_id, bulk_group_id, occurred_at, actor_account_id, correlation_id
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17, ?18)`,
+        )
+        .bind(
+          createId('ICH'),
+          itemId,
+          nextRevision,
+          current.classification_status,
+          classificationStatus,
+          current.inventory_kind,
+          inventoryKind,
+          isLendable ? 1 : 0,
+          lendingAudience,
+          conditionReviewState,
+          maintenanceReviewState,
+          requestedAssetCount,
+          classificationNotes,
+          evidenceId,
+          bulkGroupId,
+          timestamp,
+          account.id,
+          correlationId,
+        ),
+      historyStatement(db, {
+        entityType: 'INVENTORY_CLASSIFICATION',
+        entityId: itemId,
+        previousStatus: current.classification_status,
+        newStatus: classificationStatus,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: classificationNotes,
+        metadata: { inventoryKind, isLendable, assetInstanceCount: requestedAssetCount },
+      }),
+      auditStatement(db, {
+        action: 'INVENTORY_CLASSIFICATION_RECORDED',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        after: {
+          classificationStatus,
+          inventoryKind,
+          isLendable,
+          lendingAudience,
+          conditionReviewState,
+          maintenanceReviewState,
+          assetInstanceCount: requestedAssetCount,
+          classificationRevision: nextRevision,
+          evidenceLinked: Boolean(evidenceId),
+          bulkGroupId,
+        },
+      }),
+      idempotencyStatement(db, 'classifyInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ];
+    for (const assetTag of assetTags) {
+      const assetId = createId('AST');
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_instances (
+               id, item_id, asset_tag, condition_label, lifecycle_status,
+               created_at, updated_at, created_by, updated_by
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?6, ?7, ?7)`,
+          )
+          .bind(assetId, itemId, assetTag, conditionReviewState, assetLifecycleStatus, timestamp, account.id),
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_movements (
+               id, asset_id, movement_type, new_status, condition_label,
+               occurred_at, recorded_by, notes
+             ) VALUES (?1, ?2, 'REGISTERED', ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            createId('AMV'),
+            assetId,
+            assetLifecycleStatus,
+            conditionReviewState,
+            timestamp,
+            account.id,
+            classificationNotes,
+          ),
+      );
+    }
+    try {
+      await db.batch(statements);
+    } catch (error) {
+      if (String(error?.message ?? '').includes('inventory_classification_history.item_id')) {
+        throw new ApiError(
+          'CLASSIFICATION_REVISION_CONFLICT',
+          'This classification changed. Refresh the queue before saving.',
+          { status: 409 },
+        );
+      }
+      if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
+        throw new ApiError('ASSET_TAG_CONFLICT', 'An entered asset tag is already registered.', {
+          status: 409,
+        });
+      }
+      throw error;
+    }
+    return result;
+  }
+
   async function postCycleCountAdjustment({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.postCycleCountAdjustment);
     const itemId = requiredText(command.itemId, 'itemId', 80);
@@ -5040,6 +5647,8 @@ export function createD1OperationalService({
     correctRelease,
     receiveRestock: (context) => receiveEntity({ ...context, kind: 'RESTOCK' }),
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
+    listInventoryClassifications,
+    classifyInventoryItem,
     postCycleCountAdjustment,
   };
 

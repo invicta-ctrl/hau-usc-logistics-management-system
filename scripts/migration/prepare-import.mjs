@@ -342,7 +342,12 @@ async function main() {
               : handling.includes('CONSUMABLE')
                 ? 'CONSUMABLE'
                 : '';
-          if (!inventoryKind) {
+          const classificationApproved = ['TRUE', 'YES', 'APPROVED', '1'].includes(
+            String(row.Classification_Approved ?? '')
+              .trim()
+              .toUpperCase(),
+          );
+          if (!inventoryKind || !classificationApproved) {
             ownerReviews.push({
               tab,
               rowNumber: index + 2,
@@ -484,8 +489,8 @@ async function main() {
     `SELECT COUNT(*) AS catalog_nonzero_opening_quantities FROM inventory_items WHERE opening_quantity <> 0;`,
     `SELECT ABS(COUNT(*) - ${openingBalanceCount}) AS opening_balance_ledger_count_difference FROM inventory_ledger WHERE transaction_type='OPENING_BALANCE' AND related_entity_type='IMPORT_BATCH' AND related_entity_id=${sql(batchId)};`,
     `SELECT ABS(COALESCE(SUM(signed_quantity), 0) - ${openingBalanceQuantity}) AS opening_balance_quantity_difference FROM inventory_ledger WHERE transaction_type='OPENING_BALANCE' AND related_entity_type='IMPORT_BATCH' AND related_entity_id=${sql(batchId)};`,
-    `SELECT COUNT(*) AS pending_inventory_classifications FROM inventory_items WHERE upper(trim(handling)) IN ('', 'TO_CLASSIFY');`,
-    `SELECT COUNT(*) AS unsafe_lendable_unclassified_items FROM inventory_items WHERE is_lendable = 1 AND upper(trim(handling)) IN ('', 'TO_CLASSIFY');`,
+    `SELECT COUNT(*) AS pending_inventory_classifications FROM inventory_items WHERE classification_status='NEEDS_CLASSIFICATION' OR inventory_kind='UNVERIFIED';`,
+    `SELECT COUNT(*) AS unsafe_lendable_unclassified_items FROM inventory_items WHERE is_lendable = 1 AND (classification_status<>'CLASSIFIED' OR inventory_kind='UNVERIFIED');`,
     `SELECT COUNT(*) AS active_mock_inventory_items FROM inventory_items WHERE status = 'ACTIVE' AND (upper(id) LIKE '%SYNTHETIC%' OR upper(id) LIKE 'SMOKE.%' OR upper(name) LIKE '%SYNTHETIC%');`,
     `SELECT COUNT(*) AS negative_inventory_balances FROM inventory_balances WHERE on_hand < 0 OR reserved < 0 OR available_to_promise < 0;`,
     `SELECT COUNT(*) AS request_lines_over_received FROM request_lines WHERE received_quantity > requested_quantity;`,
