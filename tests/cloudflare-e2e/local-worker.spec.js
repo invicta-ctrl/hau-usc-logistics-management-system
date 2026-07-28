@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '25' },
+    database: { connected: true, schemaVersion: '26' },
   });
 
   await page.goto('/');

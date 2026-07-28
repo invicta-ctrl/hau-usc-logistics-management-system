@@ -182,4 +182,20 @@ describe('Phase 17 production inventory import', () => {
     expect(migration).toContain('unsafe or unreviewed reusable inventory cannot be lendable');
     expect(migration).not.toMatch(/opening_quantity[^\n]+asset/iu);
   });
+
+  it('repairs every legacy unclassified item to a non-lendable state without deleting history', async () => {
+    const migration = await readFile(
+      resolve(root, 'migrations/0026_fail_closed_legacy_inventory.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('UPDATE inventory_items');
+    expect(migration).toContain('is_lendable = 0');
+    expect(migration).toContain("lending_audience = 'NOT_AVAILABLE_FOR_LENDING'");
+    expect(migration).toContain("lending_status = 'NOT_LENDABLE'");
+    expect(migration).toContain("classification_status <> 'CLASSIFIED'");
+    expect(migration).toContain("inventory_kind = 'UNVERIFIED'");
+    expect(migration).toContain("SET value = '26'");
+    expect(migration).not.toMatch(/\bDELETE\b/iu);
+  });
 });
