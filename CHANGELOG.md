@@ -30,8 +30,11 @@
 - Fresh migrations 0001–0027 pass; focused local Worker authorization,
   null/TBA, and history coverage passes.
 - Protected Event Management passes at 390×844 mobile and 1440×900 desktop.
-- Distribution build and standalone verification pass. Staging application,
-  deployed acceptance, and exact-head CI remain pending external connectivity.
+- Exact implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4`
+  passes the complete `npm run check`, including deterministic Apps Script
+  parity, distribution verification, Cloudflare types, and deployment dry-run.
+  Staging application, deployed acceptance, and exact-head CI remain pending
+  external connectivity.
 
 ### Boundary
 

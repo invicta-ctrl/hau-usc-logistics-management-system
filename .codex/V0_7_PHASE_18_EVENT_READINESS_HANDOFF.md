@@ -84,9 +84,11 @@ readiness/progress as `Not assessed`. It never substitutes zero percent.
   review values persist; Activity History is present.
 - Focused protected browser acceptance: mobile 390×844 and desktop 1440×900
   both pass with truthful `TBA`, `Not added yet`, and `Not assessed` output.
-- Distribution build and standalone verification pass. Apps Script generated
-  parity is pending because the local generator could not obtain a write
-  handle for `apps-script/AppBody.html`; generated files were not hand-edited.
+- Exact implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4`
+  passes the complete `npm run check` in an isolated exact-commit worktree:
+  governance, lint, 71 files / 464 Vitest tests, build, deterministic Apps
+  Script generated parity, distribution verification, Cloudflare types, and
+  deployment dry-run. Generated files were not hand-edited.
 
 The Windows Playwright wrapper did not terminate its local Worker after the
 focused cases completed, so the outer command timed out; both requested test

@@ -269,8 +269,10 @@ audited corrections, hierarchy links, authoritative overview/request/release
 projections, and the deterministic YDD staging seed are implemented. ESLint,
 71 / 464 Vitest, fresh migrations 0001–0027, focused Worker authorization and
 history coverage, and protected 390px/1440px browser acceptance pass. The
-standalone distribution build verifies. Apps Script generator parity remains
-unrun to completion because `apps-script/AppBody.html` is locally locked; no
+implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the
+complete `npm run check` from an isolated exact-commit worktree, including
+governance, lint, 71 / 464 Vitest, build, deterministic Apps Script parity,
+distribution verification, Cloudflare types, and deployment dry-run. No
 generated file was hand-edited.
 
 Next action: after external connectivity returns, create a private pre-0027

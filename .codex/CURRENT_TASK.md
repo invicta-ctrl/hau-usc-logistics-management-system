@@ -41,7 +41,10 @@ operator.
 - Deterministic approved YDD 2026 seed and duplicate/supersession checks:
   complete locally.
 - Local verification: ESLint pass; 71 / 464 Vitest pass; fresh migrations
-  0001–0027 pass; focused Worker and mobile/desktop browser cases pass.
+  0001–0027 pass; focused Worker and mobile/desktop browser cases pass; exact
+  implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the
+  complete repository `npm run check`, including deterministic Apps Script
+  parity and Cloudflare dry-run.
 - Staging backup, migration, deploy, seed, deployed acceptance, reconciliation,
   push, and exact-head CI: pending external connectivity.
 - Production: untouched and prohibited.
