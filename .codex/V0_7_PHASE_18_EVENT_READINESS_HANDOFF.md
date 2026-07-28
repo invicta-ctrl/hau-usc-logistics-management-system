@@ -1,6 +1,6 @@
 # v0.7.0 Phase 18 Event Readiness Resolution Handoff
 
-Status: **OWNER DATA BLOCKER RESOLVED — LOCAL CANDIDATE VERIFIED — STAGING ACCEPTANCE PENDING — PRODUCTION NO-GO**
+Status: **OWNER DATA BLOCKER RESOLVED — STAGING DATA RECONCILED — DASHBOARD REPAIR VERIFIED LOCALLY — EXACT REDEPLOY PENDING — PRODUCTION NO-GO**
 
 Date: 2026-07-28
 
@@ -94,19 +94,42 @@ The Windows Playwright wrapper did not terminate its local Worker after the
 focused cases completed, so the outer command timed out; both requested test
 cases themselves reported `ok` before teardown.
 
+## Staging execution checkpoint
+
+- A private pre-0027 staging export was created and independently restored into
+  SQLite with `integrity_check=ok`, zero foreign-key violations, and 69 tables.
+  Its SHA-256 is
+  `9bcc61adec05c482a3542d65a8b4188f3b07b68c8ff2e243e42a60ff37f1248d`.
+- Migration `0027_event_management.sql` is applied on staging; the operational
+  schema version is 27 and the migration is no longer pending.
+- Exact candidate `41e2ead90fd5120c69843fad9aeda473e3f8f2cc` was deployed to
+  staging and passed cache-busted environment/candidate convergence.
+- The authenticated deterministic seed and its idempotent replay both passed.
+  Staging reconciles to one Youth Development Days 2026 series, two active
+  September days, seven approved activities, no active August 10/12 day, and
+  no duplicate series or activity.
+- Live mobile review found that the overview omitted the TBA workshop and
+  rendered absent readiness as `0%`; an empty roadmap also rendered `NaN%`.
+  These were not accepted as truthful output. Repair commit
+  `a342c7a2d8b03b21ad400705575adada0a69591a` now derives TBA activity dates
+  from Event Days, renders absent committees as `Not added yet`, renders
+  unassessed readiness as `Not assessed`, and supplies a truthful empty
+  roadmap state. Its focused local Worker/browser regression passes, as do
+  ESLint, 71 files / 464 Vitest tests, and the generated production build.
+- Production was not readied, migrated, seeded, deployed, or otherwise
+  modified.
+
 ## Remaining staging gate
 
 Before Phase 18 can be accepted:
 
-1. create a private pre-0027 staging D1 export;
-2. apply migration 0027 to staging;
-3. deploy the exact candidate to staging only;
-4. run the deterministic approved seed and reconcile one series / two days /
-   seven activities with no active August schedule or duplicate rows;
-5. run protected Admin and Director desktop/mobile acceptance, unauthorized
-   denial, history/audit/link verification, and cleanup;
-6. verify cache-busted health/readiness/version and exact-head CI.
+1. push and deploy exact repair commit
+   `a342c7a2d8b03b21ad400705575adada0a69591a` to staging only;
+2. reconfirm cache-busted exact-candidate convergence;
+3. repeat protected mobile and desktop acceptance for the approved hierarchy,
+   truthful TBA/unknown values, Activity History, and operational links;
+4. confirm server-side unauthorized denial and reconcile any acceptance
+   effects;
+5. verify exact-head CI.
 
-Current external limitation: this sandbox cannot connect to GitHub or external
-staging services. No staging or production value was changed in this local
-checkpoint. Phase 18 is not yet accepted, and Phase 19 has not started.
+Phase 18 is not yet accepted, and Phase 19 has not started.

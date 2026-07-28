@@ -3,7 +3,7 @@
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 18 — Upcoming Events and Next-Major-Event Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 18 OWNER DATA RESOLVED; LOCAL CANDIDATE VERIFIED; STAGING ACCEPTANCE PENDING; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 18 DATA RECONCILED; EXACT DASHBOARD REPAIR REDEPLOY PENDING; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -266,21 +266,23 @@ or `Not assessed` rather than fabricated.
 
 Schema 27, protected Admin/Director event management, server-owned IDs/codes,
 audited corrections, hierarchy links, authoritative overview/request/release
-projections, and the deterministic YDD staging seed are implemented. ESLint,
-71 / 464 Vitest, fresh migrations 0001–0027, focused Worker authorization and
-history coverage, and protected 390px/1440px browser acceptance pass. The
-implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the
-complete `npm run check` from an isolated exact-commit worktree, including
-governance, lint, 71 / 464 Vitest, build, deterministic Apps Script parity,
-distribution verification, Cloudflare types, and deployment dry-run. No
-generated file was hand-edited.
+projections, and the deterministic YDD staging seed are implemented. A private
+pre-0027 export was independently restored with integrity `ok` and zero foreign
+key violations. Migration 0027 is applied on staging. Exact candidate
+`41e2ead90fd5120c69843fad9aeda473e3f8f2cc` was deployed, and the approved
+seed plus replay reconcile one series / two active September days / seven
+activities with no active August schedule or duplicates.
 
-Next action: after external connectivity returns, create a private pre-0027
-staging backup, apply schema 27, deploy the exact staging candidate, run the
-approved seed, reconcile one series / two active days / seven activities with
-zero active August schedule or duplicates, complete deployed browser/audit/link
-acceptance, verify exact-head CI, then advance directly to Phase 19. Production
-remains untouched and NO-GO.
+Live mobile review rejected omitted TBA activity, fabricated zero readiness,
+and an empty-roadmap `NaN%`. Repair
+`a342c7a2d8b03b21ad400705575adada0a69591a` now uses Event Day dates for TBA
+activities and renders unknown readiness/roadmap values truthfully. The focused
+Worker/browser regression, ESLint, 71 / 464 Vitest, and generated build pass.
+
+Next action: push and deploy exact repair `a342c7a`, reconfirm cache-busted
+identity, repeat protected desktop/mobile and authorization/history/link
+acceptance, reconcile effects, verify exact-head CI, then advance directly to
+Phase 19. Production remains untouched and NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 

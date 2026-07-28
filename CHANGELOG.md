@@ -21,6 +21,9 @@
   synthetic event fallback.
 - Missing committee/deadline/window fields render `Not added yet`; null
   readiness and progress render `Not assessed` rather than zero percent.
+- TBA activities use their governed Event Day for upcoming-event inclusion and
+  sorting; empty roadmap data renders a truthful unpublished/not-assessed state
+  instead of `NaN%`.
 - Requests now persist the linked main event, event day, and activity derived
   from the selected active hierarchy.
 
@@ -33,8 +36,15 @@
 - Exact implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4`
   passes the complete `npm run check`, including deterministic Apps Script
   parity, distribution verification, Cloudflare types, and deployment dry-run.
-  Staging application, deployed acceptance, and exact-head CI remain pending
-  external connectivity.
+- A verified private pre-0027 export was created; staging migration 0027 is
+  applied; exact candidate `41e2ead` was deployed; the approved seed and replay
+  reconcile one series / two active days / seven activities with no active
+  August schedule or duplicates.
+- Live review found and rejected omitted TBA/zero-readiness/empty-roadmap
+  output. Repair `a342c7a2d8b03b21ad400705575adada0a69591a` passes its
+  focused Worker/browser regression, ESLint, 71 / 464 Vitest, and generated
+  build. Exact staging redeploy, repeated browser acceptance, and exact-head CI
+  remain pending.
 
 ### Boundary
 

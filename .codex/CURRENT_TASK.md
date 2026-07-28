@@ -45,6 +45,13 @@ operator.
   implementation commit `d54e733f3936513bb2305e53fa95d984060c28a4` passes the
   complete repository `npm run check`, including deterministic Apps Script
   parity and Cloudflare dry-run.
-- Staging backup, migration, deploy, seed, deployed acceptance, reconciliation,
-  push, and exact-head CI: pending external connectivity.
+- Private staging backup verified; migration 0027 applied; initial exact
+  candidate deployed; approved seed and replay reconciled to one series / two
+  active days / seven activities with no active August schedule or duplicates.
+- Live mobile review rejected omitted TBA activity, fabricated `0%` readiness,
+  and `NaN%` empty-roadmap output. Repair
+  `a342c7a2d8b03b21ad400705575adada0a69591a` passes focused Worker/browser,
+  ESLint, 71 / 464 Vitest, and generated build verification.
+- Exact repair push/redeploy, deployed mobile/desktop acceptance,
+  reconciliation, and exact-head CI: pending.
 - Production: untouched and prohibited.
