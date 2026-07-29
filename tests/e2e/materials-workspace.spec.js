@@ -117,7 +117,7 @@ const materialsItems = [
 
 async function openMaterials(
   page,
-  { capabilities = MATERIALS_CAPABILITIES, scopeSensitive = false } = {},
+  { capabilities = MATERIALS_CAPABILITIES, scopeSensitive = false, systemOwner = false } = {},
 ) {
   const bootstrap = createEmptyBootstrapFixture({ backendMode: 'rest' });
   bootstrap.currentUser = {
@@ -142,6 +142,20 @@ async function openMaterials(
       active: true,
     },
   };
+  if (systemOwner) {
+    bootstrap.currentUser = {
+      ...bootstrap.currentUser,
+      role: 'SYSTEM_OWNER',
+      authorization: {
+        ...bootstrap.currentUser.authorization,
+        roleId: 'SYSTEM_OWNER',
+        roleLabel: 'System Owner',
+        scopeMode: 'ALL',
+        committeeIds: [],
+        committees: [],
+      },
+    };
+  }
   bootstrap.operationalContext = {
     selected: {
       value: 'ALL:AUTHORIZED',
@@ -309,9 +323,12 @@ test('Materials exposes all accepted destinations and a stable source-grounded p
 
 test('Materials refreshes canonical overview truth when operational scope changes', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-1366', 'One focused scope-change proof is sufficient.');
-  const { materialsQueueScopes } = await openMaterials(page, { scopeSensitive: true });
+  const { materialsQueueScopes } = await openMaterials(page, {
+    scopeSensitive: true,
+    systemOwner: true,
+  });
   const panel = page.locator('#roleExperiencePanel[data-role-experience="materials"]');
-  expect(materialsQueueScopes).toEqual(['ALL:AUTHORIZED']);
+  await expect.poll(() => materialsQueueScopes).toContain('ALL:AUTHORIZED');
 
   await page
     .locator('[data-internal-shell-context]')

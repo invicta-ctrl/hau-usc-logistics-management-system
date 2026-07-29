@@ -3460,7 +3460,11 @@ export function createRuntimeExtensions(options) {
       ['DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR'].includes(role) ||
       (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role));
     if (!mayReview) return false;
-    if (role === 'DIRECTOR' || (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role)))
+    if (
+      role === 'DIRECTOR' ||
+      user.authorization?.scopeMode === 'ALL' ||
+      (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role))
+    )
       return true;
     const committeeIds = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
     if (committeeIds.length) return committeeIds.includes('COM_FOOD');
@@ -3627,7 +3631,11 @@ export function createRuntimeExtensions(options) {
       ['DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR'].includes(role) ||
       (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role));
     if (!mayReview) return false;
-    if (role === 'DIRECTOR' || (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role)))
+    if (
+      role === 'DIRECTOR' ||
+      user.authorization?.scopeMode === 'ALL' ||
+      (backendMode === 'mock' && ['ADMIN', 'ADMINISTRATOR'].includes(role))
+    )
       return true;
     const committeeIds = user.authorization?.committeeIds ?? user.scopes?.committee ?? [];
     if (committeeIds.length) return committeeIds.includes('COM_MATERIALS');
