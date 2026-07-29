@@ -2,8 +2,8 @@
 
 ## v0.7.0 verified production recovery baseline
 
-- Final production export: 1,235,317 bytes; SHA-256
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`.
+- Final zero-session production export: 1,235,351 bytes; SHA-256
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`.
 - Independent restore: 76 application tables, integrity `ok`, zero foreign-key
   violations.
 - The final D1 Time Travel bookmark, exact Worker version, prelaunch empty

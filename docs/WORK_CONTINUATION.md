@@ -14,7 +14,7 @@
   one active owner; 15 starter accounts; zero active synthetic/session/limiter
   state.
 - **Recovery:** private final export SHA-256
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`;
   independent restore integrity `ok`, zero foreign-key violations, Time Travel
   bookmark and exact Worker recovery mapping retained outside Git.
 - **Durable handoff:** `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.

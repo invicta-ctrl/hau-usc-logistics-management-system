@@ -55,8 +55,8 @@ Decision: **ACCEPTED — PRODUCTION LIVE**
   record remain.
 - Workers Logs and sampled traces captured a successful, non-truncated
   production event with zero exceptions, secret matches, or raw-error exposure.
-- Final export: 1,235,317 bytes; SHA-256
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`.
+- Final zero-session export: 1,235,351 bytes; SHA-256
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`.
   A clean independent restore contains 76 application tables, reports integrity
   `ok`, and has zero foreign-key violations. A final Time Travel bookmark is
   retained privately.
