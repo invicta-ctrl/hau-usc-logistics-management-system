@@ -1,5 +1,9 @@
 # Administrator and Director guide
 
+Production status: operational. Missing event operational values remain
+`Not added yet`/owner-review-required until an authorized actor records them;
+the interface must not substitute zero readiness or fabricated completeness.
+
 ## Separate authority domains
 
 Administrator and Director are distinct server-owned roles. Administrator system/reference

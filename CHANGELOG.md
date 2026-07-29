@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.7.0 - 2026-07-29
+
+### Released
+
+- Consolidated all accepted unique launch work into canonical `main`, preserved
+  old main and the all-ref audit bundle, and published annotated release
+  `v0.7.0` from `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
+- Launched separated production Worker/static assets, D1 schema 29, brand and
+  evidence R2, protected secrets/routes, Google Drive evidence, and Google
+  Sheets roster sidecars.
+- Imported and reconciled 397 inventory rows, the approved Youth Development
+  Days hierarchy, six governed brand slots, and governed starter access.
+
+### Accepted
+
+- Production staff/public workflows, role workspaces, Release Desk, lending,
+  inventory/procurement/receiving/restocking, Access Management, privacy,
+  responsive paths, operational health, logs/traces, backup/restore, and
+  rollback procedures.
+- Final reconciliation retains immutable history and leaves zero active
+  synthetic, session, limiter, or smoke-actor state.
+- Production closure reports, operator guides, incident controls, risk closure,
+  and the controlled weekly v1 readiness roadmap.
+
 ## Unreleased - v0.7.0 Phase 26 final freeze (2026-07-29)
 
 ### Fixed

@@ -32,3 +32,13 @@ No branch, PR, detached worktree, or untracked `.codegraph/` content is deleted
 by this inventory. Final containment, eligible PR closure, and optional remote
 cleanup occur only after the verified `main` release baseline and v0.7.0 tag
 exist. PR #10 remains open until its separate review is resolved.
+
+## Final disposition
+
+- Normal consolidation merge and canonical production/release source:
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
+- PR #9 is merged. PR #7 was already merged/contained. PR #8 is closed with a
+  release-containment comment. PR #10 remains open, draft,
+  `UNKNOWN_REQUIRES_REVIEW`, and unmodified.
+- No remote branch was deleted. The old-main tag and private all-ref bundle
+  remain the immutable preservation controls.

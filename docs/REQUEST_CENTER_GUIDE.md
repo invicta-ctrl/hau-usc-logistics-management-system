@@ -1,5 +1,10 @@
 # Request Center guide
 
+Production status: operational. Department requester accounts use the protected
+login; the public page itself must not expose internal data, account identifiers,
+or provider configuration. Save private tracking references outside public
+channels.
+
 ## Choose the request type
 
 - **Event Logistics** is for an approved or proposed event/sub-event and may contain Food,

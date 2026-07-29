@@ -1,5 +1,32 @@
 # Launch Runbook
 
+## v0.7.0 production baseline
+
+Production release `v0.7.0` is operational from exact source
+`dc98d670fdd63f649037616c5a2d51e5c62ca4ae`. The detailed launch transaction is
+closed in `.codex/V0_7_PHASE_28_PRODUCTION_LAUNCH_HANDOFF.md`.
+
+For any subsequent production change:
+
+1. branch from current `main`, adopt a bounded specification, and preserve
+   unknown work;
+2. run focused and repository verification, deploy the exact candidate only to
+   the separated staging targets, and complete affected browser/operational
+   acceptance;
+3. capture a fresh private production authorization package, D1 export and Time
+   Travel bookmark, exact Worker recovery target, and affected R2/Google
+   reconciliation inputs;
+4. merge through a current green pull request without force-push;
+5. deploy production only from the accepted `main` commit in an approved change
+   window, verify exact version/health/readiness, run bounded smoke, and
+   reconcile every reversible effect;
+6. retain append-only history and update the durable handoff with safe counts,
+   hashes, and exact commit identity only.
+
+On integrity, authorization, privacy, evidence, or identity drift, stop the
+affected write path and follow `docs/PRODUCTION_INCIDENT_GUIDE.md` and
+`docs/BACKUP_AND_RECOVERY.md`.
+
 ## v0.6 Cloudflare/D1 staging candidate
 
 The v0.6 Worker/D1 candidate is governed separately from the preserved Apps Script staging runtime below. Repository/local completion does not authorize account access or deployment.

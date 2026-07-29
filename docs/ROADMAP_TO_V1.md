@@ -1,6 +1,6 @@
 # HAU-USC Logistics controlled roadmap to v1.0
 
-Status: **CONTROLLED POST-v0.7 ROADMAP — NOT LAUNCH AUTHORITY**
+Status: **ACTIVE POST-v0.7 ROADMAP — v0.7.0 LAUNCHED; NOT CHANGE AUTHORITY**
 
 This roadmap begins only after v0.7.0 passes every production gate. It cannot
 be used to defer a broken core workflow, missing production evidence, required

@@ -3,6 +3,28 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
+- **Branch:** `main`; future work starts from current `main` on a short-lived
+  branch and returns only through a current green pull request.
+- **Production/release source:** annotated `v0.7.0` at
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
+- **Status:** Phases 0–29 accepted; production operational; zero unresolved
+  P0/P1 and zero mandatory `UNRUN`.
+- **Truth:** schema 29 / migration 0029; 397 imported safely pending inventory
+  rows; one YDD series/two September days/seven activities; six brand slots;
+  one active owner; 15 starter accounts; zero active synthetic/session/limiter
+  state.
+- **Recovery:** private final export SHA-256
+  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+  independent restore integrity `ok`, zero foreign-key violations, Time Travel
+  bookmark and exact Worker recovery mapping retained outside Git.
+- **Durable handoff:** `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.
+- **Operating boundary:** use protected audited website workflows; keep private
+  configuration/recovery material outside Git; never edit append-only history;
+  no automated evidence purge until owner retention policy is approved.
+
+## Historical Phase 27 resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; frozen staging product runtime `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3` is healthy on schema 29.
 - **Current phase/stage:** Phases 0–26 accepted; Phase 27 Branch Consolidation is active; production NO-GO.
 - **Accepted scope:** Phase 27 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.

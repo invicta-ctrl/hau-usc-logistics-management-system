@@ -1,5 +1,24 @@
 # Project Status
 
+## v0.7.0 production launch and closure accepted
+
+- Production source, annotated `v0.7.0` tag, and published release are exact
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`; `main` is canonical.
+- Production Worker/static assets, D1 schema 29, dedicated R2 bindings,
+  protected configuration, Google Drive evidence, Google Sheets roster, public
+  routes, and all five internal workspaces are operational and separated from
+  staging.
+- Controlled production smoke, responsive authorization/privacy denial,
+  operational health, monitoring, recovery, and reconciliation pass with zero
+  unresolved P0/P1 or mandatory `UNRUN`.
+- Production truth: one active owner, 15 starter accounts, 397 imported safely
+  pending items, one approved YDD series/two September days/seven activities,
+  six published brand slots, and zero active synthetic/session/limiter state.
+- Final 1,235,317-byte export SHA-256 is
+  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+  independent restore integrity is `ok` with zero foreign-key violations.
+- Durable closure: `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.
+
 ## v0.7.0 Phase 26 final freeze accepted - Phase 27 active
 
 - Frozen product/staging candidate

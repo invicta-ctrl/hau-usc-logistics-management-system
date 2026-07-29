@@ -1,6 +1,33 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–26 ACCEPTED; PHASE 27 CONSOLIDATION ACTIVE**
+Decision: **PRODUCTION GO — v0.7.0 LIVE, RECONCILED, AND OPERATIONALLY ACCEPTED**
+
+## Production launch acceptance
+
+- The annotated `v0.7.0` tag and published GitHub Release target canonical
+  production source `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
+- Production Worker, static assets, D1, two R2 bindings, protected secrets,
+  routes, Google Drive evidence, and Google Sheets roster sidecars are distinct
+  from staging and passed the authorized production preflight.
+- Ordered migrations 0001–0029, approved inventory, approved Youth Development
+  Days 2026, and six brand assets were applied idempotently and reconciled.
+- Controlled production acceptance passed staff authentication, public Request
+  Center, public Lending Center, internal Lending Hub, review/reservation/
+  handoff/return, Release Desk, evidence backup/archive, Access Management,
+  inventory/procurement/receiving/restocking, role workspaces, privacy denial,
+  mobile/desktop, and truthful operational-health paths.
+- Final reconciliation leaves zero active synthetic workflow/event/inventory,
+  session, limiter, evidence, or actor state while retaining immutable audit,
+  history, ledger, release, and archived evidence records.
+- The final 1,235,317-byte production export has SHA-256
+  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+  an independent 76-table restore reports integrity `ok` and zero foreign-key
+  violations. The Time Travel bookmark and rollback inputs remain private.
+- Workers Logs and sampled traces captured a successful, non-truncated event
+  with zero exceptions, secret matches, or raw-error exposure.
+- Durable evidence:
+  `.codex/V0_7_PHASE_28_PRODUCTION_LAUNCH_HANDOFF.md` and
+  `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.
 
 ## Phase 26 final freeze
 

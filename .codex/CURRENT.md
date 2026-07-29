@@ -1,12 +1,12 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 27 — Branch Consolidation
+Phase: Phase 29 — Production Closure and v1 Readiness
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 26 ACCEPTED; PHASE 27 CONSOLIDATION IN PROGRESS; PRODUCTION NO-GO
+Status: COMPLETE — v0.7.0 PRODUCTION OPERATIONAL; PHASES 0–29 ACCEPTED
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
-Branch: `chore/v0.6-codex-continuity-bootstrap`
+Branch: `main`
 Phase 5 deployed runtime: `fc9ef1ccc5fef9018d37157a13078773c9018a13`
 Amendment Slice 1 deployed runtime: `fb94a1f14b7652a85e589e00536de6ffe45d5284`
 Amendment Slice 2 deployed runtime: `5cc171afcf993cd16dd9061d008a29a51b41fb29`
@@ -426,3 +426,12 @@ Phase 25 accepted preflight evidence:
 
 Phase 26 accepted final-freeze evidence:
 `.codex/V0_7_PHASE_26_FINAL_FREEZE_HANDOFF.md`.
+
+Phase 27 accepted branch-consolidation evidence:
+`.codex/V0_7_PHASE_27_BRANCH_CONSOLIDATION_HANDOFF.md`.
+
+Phase 28 accepted production-launch evidence:
+`.codex/V0_7_PHASE_28_PRODUCTION_LAUNCH_HANDOFF.md`.
+
+Phase 29 accepted production-closure evidence:
+`.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.

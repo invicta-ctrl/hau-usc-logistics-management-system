@@ -1,34 +1,40 @@
 # Current Task
 
-INTENT: DEPLOYMENT
-SECONDARY INTENTS: CONSOLIDATION, TESTING, SECURITY, RELEASE
-MODE: execute
-TARGET: HAU-USC Logistics v0.7.0 Phase 27 Branch Consolidation
-SKILLS: lean-ctx, github, cloudflare-deploy, browser
+INTENT: PRODUCTION CLOSURE
+MODE: complete
+TARGET: HAU-USC Logistics v0.7.0 production baseline
 AUTHORITY: autonomous Phase 18–29 master prompt; `.codex/specs/v0.7.0-production-master.md`; accepted amendments; repository invariants
-RISK: critical
-DELIVERABLE: accepted work consolidated into the canonical branch with preserved refs, exact merge identity, rebound private launch package, and affected gates green
-VERIFICATION: branch and pull-request inventory; preserved old-main reference; accepted tree containment; merge policy and commit; exact main CI; staging/runtime rebinding; private production authorization/preflight; zero unresolved P0/P1
-STOP CONDITIONS: missing accepted work; unknown branch divergence; failed preservation; merge conflict; failed exact-main gate; stale private package; any production write before Phase 27 passes
+RISK: controlled operations
+DELIVERABLE: accepted v0.7.0 production release, reconciled launch state, durable operator evidence, and governed v1 readiness path
+VERIFICATION: exact release identity; production smoke; authorization and privacy denial; inventory/event/brand reconciliation; D1 recovery; monitoring; branch containment; exact-head CI; zero unresolved P0/P1 or mandatory UNRUN
+STATUS: COMPLETE
 
-## Active Phase 27 contract
+## Accepted baseline
 
-- Inventory local and remote refs and prove no accepted launch work is omitted.
-- Preserve the pre-consolidation canonical branch before merging.
-- Consolidate through the accepted pull request using repository-approved
-  history semantics; do not silently squash immutable implementation history.
-- Verify the exact resulting canonical head, CI, tree identity, staging
-  runtime, and rebound private production package.
-- Production remains read-only throughout Phase 27.
+- Canonical production source and annotated release tag:
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
+- Canonical branch: `main`; future work starts from current `main` through a
+  short-lived branch and a green pull request.
+- Production schema: 29; latest migration: 0029.
+- Inventory: 397 approved rows imported; all 397 remain safely pending physical
+  classification and are not lendable until an authorized review.
+- Event truth: one Youth Development Days 2026 series, two active September
+  days, seven activities, and no active superseded August schedule.
+- Brand truth: six governed public slots backed by the dedicated production R2
+  binding.
+- Launch reconciliation: zero active synthetic requests, lending tickets,
+  reservations, items, event series, sessions, limiter rows, or smoke actors;
+  immutable audit/history and archived smoke evidence remain.
 
-## Current execution checkpoint
+## Operating boundary
 
-- Phase 26: accepted at frozen product/staging candidate
-  `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3`.
-- Repository gate: 76 Vitest files / 495 tests and every required check pass.
-- Controlled deployed browser gate: 15 / 15; exact-product-head CI: 6 / 6.
-- Final reconciliation, hashes, schema/bindings, D1 export/bookmark, R2 safe
-  inventory, Worker version, rollback, and private production package pass.
-- Documentation-only Phase 26 acceptance commit must not replace the frozen
-  product identity or trigger a staging deployment.
-- Production: untouched and prohibited.
+- Production is operational. Routine operation must use the protected website
+  and normal audited server validation.
+- Keep credentials, provider identifiers, private routes, object keys, OAuth
+  values, exports, bookmarks, and recovery packages outside Git.
+- Do not modify append-only audit, history, ledger, release, or evidence records;
+  corrections use linked audited records.
+- Numeric retention and deletion rules remain owner-policy decisions. No
+  automated evidence purge is authorized.
+- Durable closure evidence is
+  `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.

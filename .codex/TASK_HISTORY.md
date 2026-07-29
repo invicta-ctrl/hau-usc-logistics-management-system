@@ -5,6 +5,9 @@ belongs in the canonical status and continuation files.
 
 | Date       | Task                                           | Result                           | Evidence checkpoint                                                                                   | Next gate                        |
 | ---------- | ---------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------- |
+| 2026-07-29 | Phase 29 - Production closure and v1 readiness | Accepted; program complete       | Production reports/guides, risk closure, canonical baseline policy, weekly v1 roadmap                | Controlled post-launch operation |
+| 2026-07-29 | Phase 28 - Production release and launch       | Accepted; production operational | `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`; production smoke/reconciliation/monitoring/recovery pass | Phase 29 closure                  |
+| 2026-07-29 | Phase 27 - Branch consolidation                | Accepted; main canonical         | Normal merge `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`; refs preserved; main CI/staging pass       | Phase 28 production launch       |
 | 2026-07-29 | Phase 26 - Final freeze                        | Accepted; production untouched   | `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3`; repository, browser, reconciliation, CI pass              | Phase 27 branch consolidation    |
 | 2026-07-29 | Phase 25 - Production authorization/preflight  | Accepted; production untouched   | `73612344a7e0b1f533ff56a3e24695176bb9a75e`; private preflight and dry-run pass                        | Phase 26 final freeze            |
 | 2026-07-15 | Slice 6 - Composite Event Logistics foundation | Accepted after push and green CI | `813f6b8f01b975e0952f553dc1bde4e3bc90fe0a`; documentation `c96bdc32e6777d948c6520bd94200f5dc537374d`  | Phase 2 Caveman/efficiency layer |

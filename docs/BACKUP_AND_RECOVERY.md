@@ -1,5 +1,23 @@
 # Backup and Recovery
 
+## v0.7.0 verified production recovery baseline
+
+- Final production export: 1,235,317 bytes; SHA-256
+  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`.
+- Independent restore: 76 application tables, integrity `ok`, zero foreign-key
+  violations.
+- The final D1 Time Travel bookmark, exact Worker version, prelaunch empty
+  export, staging rollback evidence, Google recovery mapping, and R2 metadata
+  remain in the private launch package outside Git.
+- The provider export orders some table data before referenced table creation.
+  The verified isolated-restore procedure first creates all exported tables,
+  then replays the retained statements with foreign keys disabled only for the
+  isolated import, reenables them, and requires both integrity and foreign-key
+  checks to pass before any recovery promotion.
+- Do not exercise a destructive rollback against a healthy production system.
+  Restore to an isolated target, reconcile, validate through staging, and then
+  use the production change window.
+
 ## Backup layers
 
 - Pre-rework reference: spreadsheet `17nyUqDACyc4ZpWL_mZ1S-QAmIGECKtbXFci9rWtqTBg`; application writes are prohibited.

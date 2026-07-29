@@ -1,5 +1,9 @@
 # Office Lending Hub guide
 
+Production status: operational. External borrowers submit through the public
+Lending Center; staff review and complete the lifecycle here under server-owned
+authorization.
+
 ## Create a ticket
 
 1. Choose the borrower type: USC Officer/Staff or Angelite/Student.
