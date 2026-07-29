@@ -156,7 +156,8 @@ async function navigationMeasurement(page, pathname, viewport) {
   };
   page.on('response', collect);
   const startedAt = performance.now();
-  await page.goto(pathname, { waitUntil: 'networkidle' });
+  const cacheBustedPath = `${pathname}${pathname.includes('?') ? '&' : '?'}phase23=${candidateSha}`;
+  await page.goto(cacheBustedPath, { waitUntil: 'networkidle' });
   const durationMs = Math.round((performance.now() - startedAt) * 10) / 10;
   const navigation = await page.evaluate(() => {
     const entry = performance.getEntriesByType('navigation')[0];
@@ -235,7 +236,11 @@ test('login, requester boundary, and public lending reflow accessibly at require
     { width: 820, height: 900 },
     { width: 1366, height: 900 },
   ]) {
-    const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
+    const context = await browser.newContext({
+      viewport,
+      reducedMotion: 'reduce',
+      extraHTTPHeaders: { 'cache-control': 'no-cache, no-store', pragma: 'no-cache' },
+    });
     const page = await context.newPage();
     try {
       await navigationMeasurement(page, '/login', viewport);
@@ -257,7 +262,7 @@ test('login, requester boundary, and public lending reflow accessibly at require
 
 test('desktop 200 percent zoom preserves required actions without horizontal overflow', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/lending', { waitUntil: 'networkidle' });
+  await page.goto(`/lending?phase23=${candidateSha}`, { waitUntil: 'networkidle' });
   await page.evaluate(() => {
     document.documentElement.style.zoom = '2';
   });
@@ -275,7 +280,11 @@ test('protected owner bootstrap and route transitions remain accessible across r
     { width: 820, height: 900 },
     { width: 1366, height: 900 },
   ]) {
-    const context = await browser.newContext({ viewport, reducedMotion: 'reduce' });
+    const context = await browser.newContext({
+      viewport,
+      reducedMotion: 'reduce',
+      extraHTTPHeaders: { 'cache-control': 'no-cache, no-store', pragma: 'no-cache' },
+    });
     const page = await context.newPage();
     let pollingRequests = 0;
     page.on('response', (response) => {
@@ -283,7 +292,7 @@ test('protected owner bootstrap and route transitions remain accessible across r
     });
     try {
       const startedAt = performance.now();
-      await page.goto('/app/admin');
+      await page.goto(`/app/admin?phase23=${candidateSha}`);
       await page.getByLabel('Access ID').fill(credential.accessId);
       await page.getByLabel('Password', { exact: true }).fill(credential.password);
       const loginResponse = page.waitForResponse(

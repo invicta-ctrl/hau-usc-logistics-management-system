@@ -1,5 +1,34 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 23 accessibility, performance, and capacity (2026-07-29)
+
+### Added
+
+- Exact-candidate staging acceptance at 390 px, approximately 820 px, and
+  1366 px covering accessibility, responsive behavior, 200% zoom, measured
+  page/API/D1/payload behavior, polling truth, and bounded capacity.
+- Focused unit coverage for public request and lending rate limits and the
+  incidental-private-key placeholder regression.
+
+### Fixed
+
+- Shared touch targets, policy actions, announcement hit areas, and small gold
+  text contrast now meet the Phase 23 accessibility contract.
+- Roster configuration no longer fails nondeterministically when random
+  private-key base64 merely contains an embedded placeholder substring.
+
+### Verified
+
+- `npm run check`: 74 Vitest files / 480 tests; focused capacity/concurrency/
+  idempotency coverage 52 / 52; live staging acceptance 5 / 5.
+- Exact runtime `d095685`, schema 29, and exact-product-head CI 6 / 6 pass.
+
+### Boundary
+
+- Temporary owner disabled, sessions zero, credential denied, all Phase 23
+  limiter rows removed, immutable audit/correction evidence retained, and
+  production untouched. Phase 24 rollback rehearsal is active.
+
 ## Unreleased - v0.7.0 Phase 22 full staging acceptance (2026-07-29)
 
 ### Added

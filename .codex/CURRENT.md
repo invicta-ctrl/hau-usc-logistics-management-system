@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 23 — Accessibility, Responsiveness, Performance, and Capacity
+Phase: Phase 24 — Backup, Cleanup, Retention, and Rollback
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 22 ACCEPTED ON STAGING; PHASE 23 ACCEPTANCE IN PROGRESS; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 23 ACCEPTED ON STAGING; PHASE 24 REHEARSAL IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -29,6 +29,7 @@ Phase 19 accepted staging runtime: `f8b19f6be042c995ad0ae01f420d15ac191cfdad`
 Phase 20 accepted staging runtime: `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89`
 Phase 21 accepted staging runtime: `3c5b7aa1b1166775fffce9ef8e5275e0eef65021`
 Phase 22 accepted staging runtime: `7c47f229c43e36bcf28273998a48b36aeb3aaedd`
+Phase 23 accepted staging runtime: `d095685e223be2697cc72582d35967e70cfd5163`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -44,7 +45,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 22
+## Accepted completion through Phase 23
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -88,6 +89,10 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
   asset history/reuse, complete public/internal operations, concurrency,
   evidence, privacy, authorization, responsive deployed acceptance, and
   audited reconciliation are complete on schema 29.
+- Phase 23: required-width accessibility, keyboard/focus/zoom/contrast/touch/
+  overflow/reduced-motion checks, measured staging performance, bounded rate
+  limits and capacity, exact-lineage concurrency/idempotency proof, private
+  evidence, actor cleanup, and immutable audit reconciliation are complete.
 
 Durable handoffs:
 
@@ -118,6 +123,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_20_PRIVACY_CONSENT_SUPPORT_HANDOFF.md`
 - `.codex/V0_7_PHASE_21_OPERATIONAL_HEALTH_HANDOFF.md`
 - `.codex/V0_7_PHASE_22_FULL_STAGING_ACCEPTANCE_HANDOFF.md`
+- `.codex/V0_7_PHASE_23_ACCESSIBILITY_PERFORMANCE_CAPACITY_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -338,9 +344,16 @@ bindings and exact runtime identity pass; the final deployed operations matrix
 passes 10 / 10; temporary actors, sessions, active workflow fixtures, and
 synthetic inventory are reconciled with immutable evidence retained.
 
-Phase 23 is active. Execute accessibility, responsiveness, performance, and
-bounded non-abusive capacity acceptance at 390 px, approximately 820 px, and
-1366 px. Production remains NO-GO.
+Phase 23 is accepted on exact staging runtime
+`d095685e223be2697cc72582d35967e70cfd5163`, schema 29. Live responsive and
+accessibility acceptance passed 5 / 5; `npm run check` passed 74 / 480 tests;
+bounded capacity, measured performance, reconciliation, and exact-product-head
+CI 6 / 6 passed. Production was untouched.
+
+Phase 24 is active. Capture the required private recovery inputs, verify
+retention and synthetic cleanup, and perform the real staging rollback to the
+approved prior safe deployment and restoration to the exact final candidate.
+Production remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -364,3 +377,6 @@ Phase 21 accepted staging evidence:
 
 Phase 22 accepted staging evidence:
 `.codex/V0_7_PHASE_22_FULL_STAGING_ACCEPTANCE_HANDOFF.md`.
+
+Phase 23 accepted staging evidence:
+`.codex/V0_7_PHASE_23_ACCESSIBILITY_PERFORMANCE_CAPACITY_HANDOFF.md`.

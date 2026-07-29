@@ -1,5 +1,23 @@
 # Project Status
 
+## v0.7.0 Phase 23 accessibility/performance/capacity accepted — Phase 24 active
+
+- Exact staging runtime `d095685e223be2697cc72582d35967e70cfd5163`
+  is healthy on schema 29 / migration 0029; production was untouched.
+- Live acceptance passed 5 / 5 across 390 px, approximately 820 px, and
+  1366 px, including keyboard, focus, labels/errors, accessible names,
+  contrast, touch targets, reduced motion, overflow, and desktop 200% zoom.
+- Page, bootstrap, route, API, D1, payload, repeated-request, and polling
+  behavior was measured. Bounded login/request/lending limits failed closed;
+  focused capacity/concurrency/idempotency coverage passed 52 / 52.
+- `npm run check` passes 74 Vitest files / 480 tests and every repository gate;
+  exact product-head PR #9 CI passes 6 / 6.
+- The temporary owner is disabled with zero sessions and HTTP 403 denial. All
+  Phase 23 limiter rows are removed; immutable enable/disable and correction
+  audits remain.
+- Phase 24 backup, cleanup, retention, and real staging rollback rehearsal is
+  active. Production remains NO-GO.
+
 ## v0.7.0 Phase 22 full staging acceptance complete — Phase 23 active
 
 - Exact staging runtime `7c47f229c43e36bcf28273998a48b36aeb3aaedd`

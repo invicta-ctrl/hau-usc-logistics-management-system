@@ -1,29 +1,26 @@
 # Current Task
 
-INTENT: TESTING
-SECONDARY INTENTS: ACCESSIBILITY, PERFORMANCE, CAPACITY, STAGING_ACCEPTANCE, RELEASE
+INTENT: DEPLOYMENT
+SECONDARY INTENTS: BACKUP, CLEANUP, RETENTION, ROLLBACK, STAGING_ACCEPTANCE
 MODE: execute
-TARGET: HAU-USC Logistics v0.7.0 Phase 23 Accessibility, Responsiveness, Performance, and Capacity
-SKILLS: lean-ctx, browser:control-in-app-browser, cloudflare-deploy
+TARGET: HAU-USC Logistics v0.7.0 Phase 24 Backup, Cleanup, Retention, and Rollback
+SKILLS: lean-ctx, cloudflare-deploy, browser:control-in-app-browser
 AUTHORITY: autonomous Phase 18–29 master prompt; `.codex/specs/v0.7.0-production-master.md`; accepted amendments; repository invariants
-RISK: high
-DELIVERABLE: complete responsive accessibility, performance, and bounded non-abusive capacity acceptance on the exact staging candidate
-VERIFICATION: 390px, approximately 820px, and 1366px keyboard/zoom/overflow/contrast checks; measured load/API/D1/payload/polling behavior; bounded rate-limit/contention/concurrency/idempotency proof; reconciliation; exact-head CI
-STOP CONDITIONS: production binding or mutation; abusive load; secret or personal-data exposure; inaccessible required action; unresolved P0/P1; unreconciled synthetic effect
+RISK: critical
+DELIVERABLE: complete private recovery capture, retention and cleanup verification, and a real staging rollback/restoration rehearsal without production mutation
+VERIFICATION: D1 export and recovery bookmark; Google source snapshot; R2 metadata; approved rollback target; retention and synthetic-account state; append-only history; prior-runtime switch; compatibility smoke; exact-candidate restoration; health/auth/request/lending/release smoke; D1 reconciliation; exact-head CI
+STOP CONDITIONS: production binding or mutation; missing/invalid backup; unapproved rollback target; destructive cleanup without exact targets; secret or personal-data exposure; incompatible rollback; unreconciled D1 state
 
-## Active Phase 23 contract
+## Active Phase 24 contract
 
-- Test keyboard use, visible focus, labels and errors, screen-reader names,
-  contrast, 200% zoom, touch targets, clipping, required-action visibility,
-  horizontal overflow, and reduced motion at 390px, approximately 820px, and
-  1366px.
-- Measure initial page load, login bootstrap, public portal load, route
-  transitions, API/D1 timings, payload size, repeated requests, and polling.
-- Run only bounded, non-abusive capacity checks for login rate limits, public
-  request and lending bursts, D1 contention, concurrent reservations, and
-  idempotent retries.
-- Reconcile every synthetic effect and retain immutable history and audit.
-- Production remains out of scope during Phase 23.
+- Create a private D1 backup/export and capture the recovery bookmark.
+- Preserve the approved Google source snapshot and private R2 asset metadata.
+- Verify the rollback target, retention contract, synthetic account labels or
+  disablement, and append-only history.
+- Perform a real staging rollback rehearsal: deploy the approved prior safe
+  version, verify compatibility, restore exact final candidate `d095685`, run
+  health/auth/request/lending/release smoke, reconcile D1, and retain evidence.
+- Production remains out of scope during Phase 24.
 
 The primary agent is the only writer, credential handler, provider mutator,
 migration executor, deployer, merger, tagger, release manager, and rollback
@@ -31,18 +28,15 @@ operator.
 
 ## Current execution checkpoint
 
-- Phase 22: accepted on staging at exact runtime
-  `7c47f229c43e36bcf28273998a48b36aeb3aaedd`, schema 29.
-- Repository: `npm run check` passes 74 Vitest files / 477 tests and every
-  repository gate.
-- Deployed staging: final operations matrix passes 10 / 10; focused Materials
-  and Request Center reruns pass.
-- Observability: six private sampled traces and six structured application logs
-  passed timing, correlation, redaction, and staging-only binding checks.
-- Reconciliation: temporary credentials denied; zero fixture sessions, active
-  reservations, active requests, and active public lending; synthetic items and
-  seven asset instances archived; prior account/event snapshots restored; 50
-  final-cleanup audits retained.
-- Phase 23: active. Begin with the existing responsive/accessibility automation
-  inventory, then run only the missing exact-candidate deployed checks.
+- Phase 23: accepted on staging at exact runtime
+  `d095685e223be2697cc72582d35967e70cfd5163`, schema 29.
+- Repository: `npm run check` passes 74 Vitest files / 480 tests and every
+  repository gate; focused capacity and idempotency tests pass 52 / 52.
+- Deployed staging: responsive accessibility and measured performance suite
+  passes 5 / 5 at 390 px, approximately 820 px, and 1366 px.
+- Reconciliation: temporary owner disabled, sessions zero, final credential
+  denied, zero Phase 23 limiter rows, immutable enable/disable/correction
+  audits retained.
+- Phase 24: active. Begin with private backup/bookmark/source/R2 capture and
+  exact rollback-target verification before changing the staging deployment.
 - Production: untouched and prohibited.
