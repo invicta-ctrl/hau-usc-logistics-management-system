@@ -61,7 +61,10 @@ async function contrastTruth(page) {
     const background = (element) => {
       let current = element;
       while (current) {
-        const value = getComputedStyle(current).backgroundColor;
+        const style = getComputedStyle(current);
+        const gradient = rgb(style.backgroundImage);
+        if (gradient) return gradient;
+        const value = style.backgroundColor;
         if (value && !value.endsWith(', 0)') && value !== 'transparent') return rgb(value);
         current = current.parentElement;
       }
