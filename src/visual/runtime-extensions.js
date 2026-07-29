@@ -3737,7 +3737,10 @@ export function createRuntimeExtensions(options) {
   const refreshMaterialsQueue = async ({ force = false } = {}) => {
     if (!materialsQueue || !canAccessMaterialsQueue() || typeof services.getMaterialsWorkQueue !== 'function')
       return;
-    if (materialsQueuePromise) return materialsQueuePromise;
+    if (materialsQueuePromise) {
+      if (!force) return materialsQueuePromise;
+      await materialsQueuePromise.catch(() => undefined);
+    }
     if (!force && materialsQueueItems !== null) return;
     materialsQueuePromise = (async () => {
       const operationalScope =

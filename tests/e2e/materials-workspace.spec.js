@@ -247,9 +247,11 @@ async function openMaterials(
     });
   });
   const materialsQueueScopes = [];
-  await page.route('**/api/getMaterialsWorkQueue', (route) => {
+  await page.route('**/api/getMaterialsWorkQueue', async (route) => {
     const operationalScope = route.request().postDataJSON()?.operationalScope ?? '';
     materialsQueueScopes.push(operationalScope);
+    if (scopeSensitive && operationalScope !== 'COMMITTEE:COM_MATERIALS')
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -309,7 +311,7 @@ test('Materials refreshes canonical overview truth when operational scope change
   test.skip(testInfo.project.name !== 'chromium-1366', 'One focused scope-change proof is sufficient.');
   const { materialsQueueScopes } = await openMaterials(page, { scopeSensitive: true });
   const panel = page.locator('#roleExperiencePanel[data-role-experience="materials"]');
-  await expect(panel).toContainText('0 scoped deliverables');
+  expect(materialsQueueScopes).toEqual(['ALL:AUTHORIZED']);
 
   await page
     .locator('[data-internal-shell-context]')
@@ -318,7 +320,7 @@ test('Materials refreshes canonical overview truth when operational scope change
 
   await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_MATERIALS/u);
   await expect.poll(() => materialsQueueScopes).toContain('COMMITTEE:COM_MATERIALS');
-  await expect(panel).toContainText('2 scoped deliverables');
+  await expect(panel).toContainText('2 scoped deliverables', { timeout: 10_000 });
   await expect(panel).toContainText('SYNTHETIC-DEL-MAT-1');
 });
 
