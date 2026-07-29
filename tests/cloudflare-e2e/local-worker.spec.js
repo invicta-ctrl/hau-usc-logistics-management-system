@@ -2621,3 +2621,67 @@ test('traceable reusable assets preserve assignment, condition, and maintenance 
   expect(restored.status()).toBe(200);
   await expect(restored.json()).resolves.toMatchObject({ status: 'AVAILABLE' });
 });
+
+test('a returned reusable asset can be assigned to a later lending ticket without losing history', async ({
+  request,
+}) => {
+  const csrfToken = await login(request, 'LOCAL.DIRECTOR');
+  const registered = await mutate(request, csrfToken, 'registerInventoryAsset', {
+    itemId: 'ITM-LOCAL-001',
+    assetTag: 'LOCAL-REUSE-0001',
+    serialNumber: 'SYNTHETIC-REUSE-0001',
+    conditionLabel: 'GOOD',
+    notes: 'Reusable assignment regression fixture.',
+    clientRequestId: 'local-reuse-asset-register',
+  });
+  expect(registered.status()).toBe(200);
+  const assetId = (await registered.json()).assetId;
+
+  async function completeLoan(suffix) {
+    const created = await mutate(request, csrfToken, 'createLendingTicket', {
+      borrowerReference: suffix === 'first' ? '12345671' : '12345672',
+      borrowerName: `Synthetic ${suffix} reuse borrower`,
+      borrowerType: 'STUDENT',
+      itemId: 'ITM-LOCAL-001',
+      quantity: 1,
+      unit: 'piece',
+      purpose: `Synthetic ${suffix} reusable assignment`,
+      dueAt: '2026-08-10T12:00:00+08:00',
+      ticketType: 'LOAN',
+      clientRequestId: `local-reuse-ticket-${suffix}`,
+    });
+    expect(created.status()).toBe(200);
+    const ticketId = (await created.json()).ticketId;
+    const approved = await mutate(request, csrfToken, 'approveLendingTicket', {
+      ticketId,
+      assetIds: [assetId],
+      identityVerified: true,
+      identityVerificationSource: 'APPROVED_ANGELITE_IDENTITY_RULE',
+      clientRequestId: `local-reuse-approve-${suffix}`,
+    });
+    expect(approved.status()).toBe(200);
+    const handedOff = await mutate(request, csrfToken, 'confirmLendingHandoff', {
+      ticketId,
+      conditionLabel: 'GOOD',
+      clientRequestId: `local-reuse-handoff-${suffix}`,
+    });
+    expect(handedOff.status()).toBe(200);
+    const returned = await mutate(request, csrfToken, 'confirmReturn', {
+      ticketId,
+      conditionLabel: 'GOOD',
+      clientRequestId: `local-reuse-return-${suffix}`,
+    });
+    expect(returned.status()).toBe(200);
+    return ticketId;
+  }
+
+  const firstTicketId = await completeLoan('first');
+  const secondTicketId = await completeLoan('second');
+  const inventory = await (await request.get('/api/inventory')).json();
+  const assignments = inventory.data.assetMovementHistory.filter(
+    (entry) => entry.asset_id === assetId && entry.movement_type === 'HANDOFF',
+  );
+  expect(assignments.map((entry) => entry.lending_ticket_id)).toEqual(
+    expect.arrayContaining([firstTicketId, secondTicketId]),
+  );
+});

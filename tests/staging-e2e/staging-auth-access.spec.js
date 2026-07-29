@@ -72,7 +72,7 @@ test('deployed staging serves the governed login background and official brand s
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
   const visibleBrandMedia = page.locator('.brand-media:visible');
-  await expect(visibleBrandMedia).toHaveCount(2);
+  await expect(visibleBrandMedia).toHaveCount(1);
   await expect
     .poll(() =>
       visibleBrandMedia.evaluateAll((images) =>
@@ -213,8 +213,8 @@ test('deployed staging authentication and Access Management remain operational',
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '23',
-        latestMigration: '0023_hybrid_evidence_storage.sql',
+        schemaVersion: '29',
+        latestMigration: '0029_reusable_asset_reassignment.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {
@@ -315,7 +315,7 @@ test('deployed staging authentication and Access Management remain operational',
     await adminControlCenter.getByRole('button', { name: /Environment health/u }).click();
     await expect(page.locator('[data-admin-operational-health]')).toBeVisible();
     await page.getByRole('button', { name: /Brand Assets/u }).click();
-    await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(4);
+    await expect(page.locator('[data-admin-brand-assets] [data-brand-slot]')).toHaveCount(6);
 
     await shell.getByLabel('Workspace').selectOption('director');
     await expect(page).toHaveURL(/\/app\/director\?scope=COMMITTEE%3ACOM_FOOD$/u);
@@ -919,7 +919,9 @@ test('deployed staging authenticated Request Center enforces approved events and
     await page.getByLabel('Password', { exact: true }).fill(credential.password);
     await page.getByRole('button', { name: 'Sign in' }).click();
     const form = page.locator('#requesterRequestForm');
-    await expect(form.getByLabel('Department')).toHaveValue('Department of Logistics');
+    await expect(form.getByRole('textbox', { name: 'Department', exact: true })).toHaveValue(
+      'Department of Logistics',
+    );
     if ((await form.locator('[name="eventSeriesId"] option').count()) === 1) {
       test.info().annotations.push({
         type: 'blocked-branch',
@@ -949,6 +951,7 @@ test('deployed staging authenticated Request Center enforces approved events and
       .locator('[name="lineSpecification"]')
       .fill('Authorized reversible acceptance fixture; no reservation or stock movement.');
     await form.getByRole('button', { name: 'Add requested item' }).click();
+    await form.locator('[name="dataUseAcknowledged"]').check();
     await form.getByRole('button', { name: 'Submit request' }).click();
     await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
     const requestId = await page.locator('.request-success code').textContent();
