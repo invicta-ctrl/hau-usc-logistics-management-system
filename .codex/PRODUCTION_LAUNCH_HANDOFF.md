@@ -1,6 +1,20 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–17 ACCEPTED ON STAGING; PHASE 18 BLOCKED ON OWNER-APPROVED FUTURE EVENT VALUES**
+Decision: **PRODUCTION NO-GO — PHASES 0–25 ACCEPTED; PHASE 26 FINAL FREEZE ACTIVE**
+
+## Phase 25 production authorization and preflight
+
+- Frozen candidate `73612344a7e0b1f533ff56a3e24695176bb9a75e` is
+  pushed and bound to the outside-Git production authorization package.
+- Distinct production Worker, D1, two R2 buckets, Google configuration,
+  protected secrets, route labels, observability, backups, rollback, operator,
+  window, and smoke classification pass the fail-closed launch preflight.
+- A dedicated production roster reader passed live read-only source access;
+  six private OAuth-created production Drive roles were verified. Private
+  identifiers, credentials, and cell values remain outside Git.
+- The exact production Wrangler package passed dry-run. Production was not
+  uploaded, deployed, migrated, configured, seeded, written, or smoke-tested.
+- Durable evidence: `.codex/V0_7_PHASE_25_PRODUCTION_PREFLIGHT_HANDOFF.md`.
 
 ## Phase 0 repository and remote truth
 

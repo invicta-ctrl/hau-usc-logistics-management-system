@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 25 production authorization and preflight (2026-07-29)
+
+### Added
+
+- Environment-aware private Google Drive folder provisioning for staging and
+  production, preserving narrow `drive.file` scope and private verification.
+- Production secret application support for the complete roster and evidence
+  credential/binding set.
+
+### Verified
+
+- Exact-candidate private authorization, Worker/D1/R2/Google separation,
+  protected secret completeness, fresh backup/bookmark, rollback labels,
+  negative fail-closed boundaries, and production Wrangler dry-run.
+- Dedicated production roster reader with live read-only source access and six
+  isolated private production Drive roles; no values or identifiers recorded.
+- `npm run check`: 75 Vitest files / 494 tests and every repository gate.
+
+### Boundary
+
+- Production was untouched. Phase 26 final freeze is active; production
+  remains NO-GO until Phases 26–27 and the final authorization gates pass.
+
 ## Unreleased - v0.7.0 Phase 24 backup, retention, and rollback (2026-07-29)
 
 ### Added

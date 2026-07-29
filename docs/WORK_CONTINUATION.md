@@ -4,15 +4,15 @@
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; final staging runtime `d095685e223be2697cc72582d35967e70cfd5163` is restored and healthy.
-- **Current phase/stage:** Phases 0–24 accepted; Phase 25 Production Authorization, Resource Separation, and Preflight is active; production NO-GO.
-- **Accepted scope:** Phase 25 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** fresh D1 export/bookmark, encrypted Google snapshot, R2 metadata, retention and synthetic-account proof, retained version mapping, real staging rollback to `7c47f22`, exact restore to `d095685`, smoke, and byte-identical D1 reconciliation.
-- **Tests verified:** both rehearsal runtimes passed health/readiness/version, auth session, request page/session boundary, public lending, and protected release smoke; Phase 23 documentation head `c61cb65` passes exact-head CI 6 / 6.
-- **External actions:** staging traffic only was switched to the retained prior version and restored to the exact final version. D1 was read/exported, not restored or mutated; production Worker/D1/R2/config/secrets/routes/data were untouched.
+- **Current phase/stage:** Phases 0–25 accepted; Phase 26 Final Freeze is active; production NO-GO.
+- **Accepted scope:** Phase 26 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** exact-candidate production authorization/resource separation; complete private secrets; dedicated read-only roster reader; six-role production Drive mapping; fresh recovery validation; negative preflight; production dry-run without upload.
+- **Tests verified:** `npm run check` passes 75 Vitest files / 494 tests; focused Google/environment tests 11 / 11; private environment, authorization, and launch preflights pass.
+- **External actions:** created and verified dedicated Google reader/Drive configuration only; failed/inaccessible service-account keys were revoked. Production Worker/D1/R2/secrets/routes/data remain untouched.
 - **Rollback:** current private schema-29 export SHA-256 `ba8c039a5ebbdfb56103fd49baee5d3eade9b06985023d826d4e8fc1fcd28c42`; private Time Travel bookmark and exact prior/final Worker version mapping retained.
-- **Blocker:** none for Phase 25 read-only preflight. Stop on missing owner authorization, staging/production overlap, missing/staging-valued secrets, stale recovery evidence, unverified target, or any production write.
-- **Next action:** validate the private production authorization package and prove resource/config separation plus negative fail-closed cases without deploying or mutating production. Durable Phase 24 evidence is `.codex/V0_7_PHASE_24_BACKUP_ROLLBACK_HANDOFF.md`.
-- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
+- **Blocker:** none for Phase 26. Stop on any exact-candidate staging, full browser, CI, hash, reconciliation, backup, authorization, or zero-P0/P1 failure.
+- **Next action:** deploy exact `73612344a7e0b1f533ff56a3e24695176bb9a75e` to staging, run the full deployed browser gate, confirm exact-head CI, and freeze all release hashes/evidence. Durable Phase 25 evidence is `.codex/V0_7_PHASE_25_PRODUCTION_PREFLIGHT_HANDOFF.md`.
+- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before Phases 26–27 pass.
 
 ## Prior Phase 8 resume block
 

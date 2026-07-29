@@ -1,5 +1,20 @@
 # Project Status
 
+## v0.7.0 Phase 25 production preflight accepted — Phase 26 active
+
+- Exact candidate `73612344a7e0b1f533ff56a3e24695176bb9a75e` is pushed and
+  bound to a complete outside-Git production authorization package.
+- Distinct production Worker/D1/R2/Google targets, complete protected secrets,
+  observability, approved target labels, fresh export/bookmark, rollback, and
+  negative fail-closed cases pass the production launch preflight.
+- The dedicated roster reader passed a live read-only 128-row/13-column source
+  check; six private OAuth-created production Drive roles were verified without
+  exposing provider identifiers or cell values.
+- `npm run check` passes 75 Vitest files / 494 tests and every repository gate;
+  the exact production Wrangler package passes dry-run without upload.
+- Production remains untouched and NO-GO. Phase 26 exact-candidate staging,
+  full deployed browser, CI, and immutable final-freeze evidence are active.
+
 ## v0.7.0 Phase 24 backup/retention/rollback accepted — Phase 25 active
 
 - A fresh private 3,265,192-byte schema-29 D1 export has integrity `ok`, zero
