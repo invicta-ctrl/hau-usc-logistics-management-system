@@ -887,6 +887,15 @@ const parseJsonArray = (value) => {
   }
 };
 
+export const parseHistoryMetadata = (value) => {
+  try {
+    const parsed = JSON.parse(value || '{}');
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
 const eventActivityDto = (row) => ({
   id: row.id,
   code: row.code || '',
@@ -1284,7 +1293,7 @@ export function createD1OperationalService({
               changedAt: entry.changed_at,
               changedBy: entry.changed_by,
               reason: entry.reason,
-              metadata: JSON.parse(entry.metadata_json || '{}'),
+              metadata: parseHistoryMetadata(entry.metadata_json),
             })),
           createdAt: row.created_at,
           updatedAt: row.updated_at,
