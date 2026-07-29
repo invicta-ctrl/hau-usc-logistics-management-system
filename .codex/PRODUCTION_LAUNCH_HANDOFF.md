@@ -19,8 +19,8 @@ Decision: **PRODUCTION GO — v0.7.0 LIVE, RECONCILED, AND OPERATIONALLY ACCEPTE
 - Final reconciliation leaves zero active synthetic workflow/event/inventory,
   session, limiter, evidence, or actor state while retaining immutable audit,
   history, ledger, release, and archived evidence records.
-- The final 1,235,317-byte production export has SHA-256
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+- The final zero-session 1,235,351-byte production export has SHA-256
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`;
   an independent 76-table restore reports integrity `ok` and zero foreign-key
   violations. The Time Travel bookmark and rollback inputs remain private.
 - Workers Logs and sampled traces captured a successful, non-truncated event

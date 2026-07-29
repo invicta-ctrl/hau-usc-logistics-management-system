@@ -10,8 +10,8 @@ Production launch source: `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`.
   replayed idempotently.
 - Post-launch reconciliation reports schema 29 / migration 0029 and zero
   foreign-key violations.
-- Final recovery export is 1,235,317 bytes with SHA-256
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`.
+- Final zero-session recovery export is 1,235,351 bytes with SHA-256
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`.
   Its independent 76-table restore reports integrity `ok` and zero foreign-key
   violations.
 

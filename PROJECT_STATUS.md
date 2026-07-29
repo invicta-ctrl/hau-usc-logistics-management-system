@@ -14,8 +14,8 @@
 - Production truth: one active owner, 15 starter accounts, 397 imported safely
   pending items, one approved YDD series/two September days/seven activities,
   six published brand slots, and zero active synthetic/session/limiter state.
-- Final 1,235,317-byte export SHA-256 is
-  `db5e7688259c230920b7e4f6e6682fe655c9355e0383f733d472e13a6c90a7f1`;
+- Final zero-session 1,235,351-byte export SHA-256 is
+  `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`;
   independent restore integrity is `ok` with zero foreign-key violations.
 - Durable closure: `.codex/V0_7_PHASE_29_PRODUCTION_CLOSURE_HANDOFF.md`.
 
