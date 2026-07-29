@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   createProductionAuthorizationTemplate,
+  materialProductionWorkingTreeEntries,
   PRODUCTION_ACTIONS,
   validateProductionAuthorizationPackage,
 } from '../../scripts/production-authorization.mjs';
@@ -90,6 +91,15 @@ async function completedPackage() {
 }
 
 describe('production authorization', () => {
+  it('ignores only the preserved CodeGraph index when checking release cleanliness', () => {
+    expect(
+      materialProductionWorkingTreeEntries(
+        '?? .codegraph/index.sqlite\n?? .codegraph/cache/graph.bin\n M src/worker/index.js\n?? evidence.txt',
+      ),
+    ).toEqual([' M src/worker/index.js', '?? evidence.txt']);
+    expect(materialProductionWorkingTreeEntries('?? .codegraph/index.sqlite')).toEqual([]);
+  });
+
   it('authorizes only an exact candidate with all approvals during the launch window', async () => {
     const source = await completedPackage();
     const result = await validateProductionAuthorizationPackage(source, {

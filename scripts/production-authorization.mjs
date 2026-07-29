@@ -25,6 +25,14 @@ function git(args) {
   return execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8' }).trim();
 }
 
+export function materialProductionWorkingTreeEntries(status) {
+  return String(status ?? '')
+    .split(/\r?\n/gu)
+    .map((line) => line.trimEnd())
+    .filter(Boolean)
+    .filter((line) => !/^\?\? \.codegraph(?:\/|\\)/u.test(line));
+}
+
 function isInside(parent, candidate) {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
   return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
@@ -43,7 +51,10 @@ async function sourceFiles(directory) {
 
 export async function productionCandidateEvidence({ requireRepositoryReady = true } = {}) {
   if (requireRepositoryReady) {
-    if (git(['status', '--short'])) {
+    const materialStatus = materialProductionWorkingTreeEntries(
+      git(['status', '--short', '--untracked-files=all']),
+    );
+    if (materialStatus.length) {
       throw new Error('Production authorization requires a clean working tree.');
     }
     let upstream;

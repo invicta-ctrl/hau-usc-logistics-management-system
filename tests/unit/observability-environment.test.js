@@ -111,6 +111,28 @@ describe('v0.7 environment and observability foundation', () => {
     );
   });
 
+  it('fails closed for preview mode, plaintext secrets, and candidate drift', () => {
+    const staging = binding('STAGING', 'hau-usc-logistics-staging', '1'.repeat(32), 'staging-assets');
+    const production = binding(
+      'PRODUCTION',
+      'hau-usc-logistics-production',
+      '2'.repeat(32),
+      'production-assets',
+    );
+    production.preview_urls = true;
+    production.vars.PASSWORD_PEPPER = 'must-not-be-plaintext';
+    production.vars.CANDIDATE_SHA = 'b'.repeat(40);
+    const invalid = validateEnvironmentSeparation(staging, production, { expectedSha: 'a'.repeat(40) });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.issues).toEqual(
+      expect.arrayContaining([
+        'PRODUCTION: preview_urls must not be enabled',
+        'PRODUCTION: PASSWORD_PEPPER must be a protected secret, not a plaintext var',
+        'Staging and production configs must bind the same frozen candidate SHA',
+      ]),
+    );
+  });
+
   it('preserves route glob strings while parsing strict private configuration JSON', () => {
     const config = parseJsonConfig(
       JSON.stringify({
