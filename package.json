@@ -20,6 +20,7 @@
     "phase3:authorization:check": "node scripts/phase3-staging-authorization.mjs check",
     "production:authorization:init": "node scripts/production-authorization.mjs init",
     "production:authorization:check": "node scripts/production-authorization.mjs check",
+    "production:preflight": "node scripts/production-launch-preflight.mjs",
     "cloudflare:preflight": "node scripts/cloudflare-environment-preflight.mjs",
     "cloudflare:private-configs:init": "node scripts/create-private-cloudflare-configs.mjs",
     "cloudflare:secrets": "node scripts/cloudflare-secret-package.mjs",
