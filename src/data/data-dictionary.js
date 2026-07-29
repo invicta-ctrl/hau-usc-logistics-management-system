@@ -3,6 +3,8 @@ export const DATA_DICTIONARY = Object.freeze({
   ledgerTransactions: 'Immutable signed inventory/event-item movements.',
   reservations: 'Active or cleared allocation records.',
   requests: 'Requester-facing parent records with derived status.',
+  compositeRequests: 'Composite event-logistics parent records with derived status.',
+  compositeComponents: 'Independent composite section records with versioned relationships.',
   requestLines: 'Item-level fulfillment lifecycle.',
   deliverableReceipts: 'Immutable event procurement receipts.',
   restockReceipts: 'Immutable catalog restock receipts.',

@@ -1,0 +1,203 @@
+import { spawnSync } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { canonicalTabRows, readMapping, sha256 } from '../../scripts/migration/export-contract.mjs';
+
+const root = resolve(import.meta.dirname, '../..');
+const temporaryDirectories = [];
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })),
+  );
+});
+
+async function sourceExport(rows) {
+  const mapping = await readMapping();
+  const tabHash = sha256(canonicalTabRows(rows));
+  return {
+    schemaVersion: mapping.schemaVersion,
+    metadata: {
+      exporterVersion: mapping.exporterVersion,
+      snapshotAt: '2026-07-28T00:00:00.000Z',
+      snapshotHash: sha256(`01_ITEM_MASTER:${tabHash}:${rows.length}`),
+      sourceWorkbookLabel: 'Synthetic Phase 17 source',
+      sourceOwnerLabel: 'Synthetic owner',
+      permittedRowsLabel: 'Synthetic rows only',
+      candidateSha: 'phase17-candidate',
+      dataClassification: 'SYNTHETIC',
+      requiredTabs: ['01_ITEM_MASTER'],
+      excludedColumns: mapping.restrictedColumns,
+      tabs: [{ label: '01_ITEM_MASTER', rowCount: rows.length, sha256: tabHash }],
+    },
+    tabs: { '01_ITEM_MASTER': rows },
+  };
+}
+
+async function prepare(rows) {
+  const directory = await mkdtemp(join(tmpdir(), 'hau-phase17-'));
+  temporaryDirectories.push(directory);
+  const paths = {
+    input: join(directory, 'source.json'),
+    sql: join(directory, 'import.sql'),
+    rejections: join(directory, 'rejections.json'),
+    review: join(directory, 'owner-review.json'),
+    reconciliation: join(directory, 'reconciliation.sql'),
+  };
+  await writeFile(paths.input, `${JSON.stringify(await sourceExport(rows), null, 2)}\n`);
+  const result = spawnSync(
+    process.execPath,
+    [
+      resolve(root, 'scripts/migration/prepare-import.mjs'),
+      '--input',
+      paths.input,
+      '--output-sql',
+      paths.sql,
+      '--rejections',
+      paths.rejections,
+      '--owner-review-queue',
+      paths.review,
+      '--reconciliation-sql',
+      paths.reconciliation,
+      '--candidate-sha',
+      'phase17-candidate',
+    ],
+    { cwd: root, encoding: 'utf8' },
+  );
+  return {
+    result,
+    sql: await readFile(paths.sql, 'utf8'),
+    rejections: JSON.parse(await readFile(paths.rejections, 'utf8')),
+    review: JSON.parse(await readFile(paths.review, 'utf8')),
+    reconciliation: await readFile(paths.reconciliation, 'utf8'),
+  };
+}
+
+const item = (overrides = {}) => ({
+  Item_ID: 'ITM-PHASE17',
+  Item_Name: 'Synthetic Phase 17 item',
+  Category: 'Synthetic',
+  Stock_Area: 'Inventory',
+  Handling: 'CONSUMABLE',
+  Unit: 'piece',
+  Opening_Qty: 5,
+  Status: 'ACTIVE',
+  Catalog_Type: 'OFFICE_INVENTORY',
+  Lending_Audience: 'NOT_AVAILABLE_FOR_LENDING',
+  Updated_At: '2026-07-28T00:00:00.000Z',
+  ...overrides,
+});
+
+describe('Phase 17 production inventory import', () => {
+  it('posts opening stock through an idempotent immutable ledger movement', async () => {
+    const prepared = await prepare([item()]);
+    const mapping = await readMapping();
+
+    expect(prepared.result.status).toBe(3);
+    expect(mapping.tabs['01_ITEM_MASTER'].fields.opening_quantity).toEqual({
+      constant: 0,
+      type: 'number',
+    });
+    expect(prepared.sql).toContain('INSERT INTO inventory_ledger');
+    expect(prepared.sql).toContain("'OPENING_BALANCE'");
+    expect(prepared.sql).toContain("'IMPORT:OPENING_BALANCE:ITM-PHASE17'");
+    expect(prepared.sql).toContain('ON CONFLICT DO NOTHING;');
+    expect(prepared.review).toMatchObject({
+      status: 'OWNER_REVIEW_REQUIRED',
+      ownerReviews: [expect.objectContaining({ sourceRecordId: 'ITM-PHASE17' })],
+    });
+    expect(prepared.rejections.rejections).toEqual([]);
+    expect(prepared.reconciliation).toContain('catalog_nonzero_opening_quantities');
+    expect(prepared.reconciliation).toContain('opening_balance_quantity_difference');
+    expect(prepared.reconciliation).toContain('requester_account_id IS NULL');
+    expect(prepared.reconciliation).toContain('public_request_access');
+  });
+
+  it('quarantines every duplicate source identifier instead of overwriting', async () => {
+    const prepared = await prepare([item(), item({ Item_Name: 'Conflicting duplicate' })]);
+
+    expect(prepared.result.status).toBe(2);
+    expect(prepared.rejections.rejections).toHaveLength(2);
+    expect(prepared.rejections.rejections.every((entry) => entry.reasonCode === 'SOURCE_ID_DUPLICATE')).toBe(
+      true,
+    );
+    expect(prepared.sql).not.toContain('INSERT INTO inventory_ledger');
+  });
+
+  it('does not stage a partial catalog insert for an invalid opening quantity', async () => {
+    const prepared = await prepare([item({ Opening_Qty: -1 })]);
+
+    expect(prepared.result.status).toBe(2);
+    expect(prepared.rejections.rejections).toEqual([
+      expect.objectContaining({ reasonCode: 'NEGATIVE_OPENING_QUANTITY' }),
+    ]);
+    expect(prepared.sql).not.toContain('INSERT INTO inventory_items');
+    expect(prepared.sql).not.toContain('INSERT INTO inventory_ledger');
+  });
+
+  it('creates one private owner-review queue for unclassified inventory', async () => {
+    const prepared = await prepare([item({ Handling: 'TO_CLASSIFY', Approval_Required: '✔' })]);
+
+    expect(prepared.result.status).toBe(3);
+    expect(prepared.rejections.rejections).toEqual([]);
+    expect(prepared.review.status).toBe('OWNER_REVIEW_REQUIRED');
+    expect(prepared.review.ownerReviews).toEqual([
+      expect.objectContaining({
+        sourceRecordId: 'ITM-PHASE17',
+        reasonCode: 'INVENTORY_CLASSIFICATION_REQUIRED',
+        requiredFields: expect.arrayContaining([
+          'inventoryKind',
+          'isLendable',
+          'assetInstanceCountIfReusable',
+        ]),
+      }),
+    ]);
+    expect(prepared.sql).toContain('INSERT INTO inventory_ledger');
+  });
+
+  it('migrates existing opening metadata to one ledger row and prevents future direct stock', async () => {
+    const migration = await readFile(resolve(root, 'migrations/0024_inventory_opening_ledger.sql'), 'utf8');
+
+    expect(migration).toContain("'MIGRATION:OPENING_BALANCE:' || item.id");
+    expect(migration).toContain('phase17_opening_balance_guard');
+    expect(migration).toContain('SET opening_quantity = 0');
+    expect(migration).toContain('inventory_items_opening_quantity_insert_guard');
+    expect(migration).toContain('inventory_items_opening_quantity_update_guard');
+    expect(migration).not.toContain('item.opening_quantity + COALESCE');
+  });
+
+  it('adds an append-only fail-closed classification workflow without deriving asset state from stock', async () => {
+    const migration = await readFile(
+      resolve(root, 'migrations/0025_inventory_classification_workflow.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain("inventory_kind TEXT NOT NULL DEFAULT 'UNVERIFIED'");
+    expect(migration).toContain("classification_status TEXT NOT NULL DEFAULT 'NEEDS_CLASSIFICATION'");
+    expect(migration).toContain('inventory_classification_history');
+    expect(migration).toContain('inventory_classification_history_no_update');
+    expect(migration).toContain('inventory_classification_history_no_delete');
+    expect(migration).toContain('UNIQUE (item_id, revision)');
+    expect(migration).toContain('unclassified inventory must remain non-lendable');
+    expect(migration).toContain('unsafe or unreviewed reusable inventory cannot be lendable');
+    expect(migration).not.toMatch(/opening_quantity[^\n]+asset/iu);
+  });
+
+  it('repairs every legacy unclassified item to a non-lendable state without deleting history', async () => {
+    const migration = await readFile(
+      resolve(root, 'migrations/0026_fail_closed_legacy_inventory.sql'),
+      'utf8',
+    );
+
+    expect(migration).toContain('UPDATE inventory_items');
+    expect(migration).toContain('is_lendable = 0');
+    expect(migration).toContain("lending_audience = 'NOT_AVAILABLE_FOR_LENDING'");
+    expect(migration).toContain("lending_status = 'NOT_LENDABLE'");
+    expect(migration).toContain("classification_status <> 'CLASSIFIED'");
+    expect(migration).toContain("inventory_kind = 'UNVERIFIED'");
+    expect(migration).toContain("SET value = '26'");
+    expect(migration).not.toMatch(/\bDELETE\b/iu);
+  });
+});

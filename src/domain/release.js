@@ -1,6 +1,20 @@
 import { AppError } from '../app/errors.js';
 import { positiveNumber } from './validators.js';
 
+export function requireRecipientConfirmation(value) {
+  const confirmed =
+    value === true ||
+    String(value ?? '')
+      .trim()
+      .toLowerCase() === 'true';
+  if (!confirmed)
+    throw new AppError(
+      'RECIPIENT_CONFIRMATION_REQUIRED',
+      'The recipient must confirm the physical handoff before release.',
+    );
+  return true;
+}
+
 export function validateRelease({
   requested,
   released,

@@ -4,6 +4,7 @@ export class AppError extends Error {
     this.name = 'AppError';
     this.code = code;
     this.fieldErrors = options.fieldErrors ?? {};
+    this.details = options.details ?? {};
     this.retryable = Boolean(options.retryable);
     this.correlationId = options.correlationId ?? `INC-${cryptoSafeToken()}`;
   }

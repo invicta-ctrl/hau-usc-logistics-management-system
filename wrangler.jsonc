@@ -1,0 +1,104 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "hau-usc-logistics",
+  "main": "./src/worker/index.js",
+  "compatibility_date": "2026-07-22",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": {
+    "enabled": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+    "traces": { "enabled": true, "head_sampling_rate": 0.05, "persist": true }
+  },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/brand/*", "/media/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hau-usc-logistics-local",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "./migrations",
+      "migrations_table": "d1_migrations"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-local-assets" },
+    { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-local-evidence" }
+  ],
+  "triggers": { "crons": ["*/5 * * * *"] },
+  "vars": {
+    "ENVIRONMENT": "DEVELOPMENT",
+    "APP_VERSION": "0.7.0",
+    "SCHEMA_VERSION": "1.0.0",
+    "BOOTSTRAP_CONTRACT_VERSION": "2",
+    "CANDIDATE_SHA": "LOCAL_UNFROZEN"
+  },
+  "env": {
+    "staging": {
+      "name": "hau-usc-logistics-staging",
+      "workers_dev": true,
+      "preview_urls": false,
+      "observability": {
+        "enabled": true,
+        "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+        "traces": { "enabled": true, "head_sampling_rate": 0.05, "persist": true }
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "REPLACE_PRIVATELY_STAGING_D1",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "./migrations",
+          "migrations_table": "d1_migrations"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-staging-assets" },
+        { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-staging-evidence" }
+      ],
+      "triggers": { "crons": ["*/5 * * * *"] },
+      "vars": {
+        "ENVIRONMENT": "STAGING",
+        "APP_VERSION": "0.7.0",
+        "SCHEMA_VERSION": "1.0.0",
+        "BOOTSTRAP_CONTRACT_VERSION": "2",
+        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE"
+      }
+    },
+    "production": {
+      "name": "hau-usc-logistics-production",
+      "workers_dev": true,
+      "preview_urls": false,
+      "observability": {
+        "enabled": true,
+        "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": true, "persist": true },
+        "traces": { "enabled": true, "head_sampling_rate": 0.05, "persist": true }
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "REPLACE_PRIVATELY_PRODUCTION_D1",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "./migrations",
+          "migrations_table": "d1_migrations"
+        }
+      ],
+      "r2_buckets": [
+        { "binding": "BRAND_ASSETS", "bucket_name": "hau-usc-logistics-production-assets" },
+        { "binding": "EVIDENCE_ASSETS", "bucket_name": "hau-usc-logistics-production-evidence" }
+      ],
+      "triggers": { "crons": ["*/5 * * * *"] },
+      "vars": {
+        "ENVIRONMENT": "PRODUCTION",
+        "APP_VERSION": "0.7.0",
+        "SCHEMA_VERSION": "1.0.0",
+        "BOOTSTRAP_CONTRACT_VERSION": "2",
+        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE"
+      }
+    }
+  }
+}

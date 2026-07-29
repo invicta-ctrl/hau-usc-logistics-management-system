@@ -2,8 +2,8 @@
 
 ## Inventory and ledger
 
-- Catalog records contain metadata only.
-- Every opening balance, receipt, issue, loan, return, adjustment, emergency issue, and transfer is an immutable ledger movement.
+- Catalog records contain metadata and the preserved launch opening quantity. All later quantity changes are ledger movements.
+- Every receipt, issue, loan, return, adjustment, emergency issue, and transfer is an immutable ledger movement.
 - Every movement stores unique ID, type, direction, quantity, item/event-item, related entity, idempotency key, actor, timestamp, note, and audit correlation ID.
 - Raw negative balances remain visible. Allocation views may clamp to zero, but audit values are never hidden.
 - New allocations are blocked when available-to-promise is insufficient or negative.
@@ -38,10 +38,32 @@
 
 ## Lending
 
-- Loanable lifecycle: `FOR_REVIEW -> READY_TO_CLAIM -> ON_LOAN -> RETURNED`; past-due `ON_LOAN` displays as `OVERDUE`.
-- Consumables: `FOR_REVIEW -> READY_TO_CLAIM -> COMPLETED`.
+- Handling and lending audience are separate policies. Supported handling values are `CONSUMABLE`, `LOANABLE`, `REUSABLE_ASSET`, and `NON_CIRCULATING`.
+- Supported audiences are `NOT_AVAILABLE_FOR_LENDING`, `USC_STAFF_ONLY`, `STUDENTS_AND_STAFF`, and future-ready `DOL_INTERNAL_ONLY`.
+- `STUDENTS_AND_STAFF` permits student/`ANGELITE` and `USC_STAFF` borrowers. `USC_STAFF_ONLY` permits only `USC_STAFF`. `NOT_AVAILABLE_FOR_LENDING` always blocks Lending Hub circulation. `DOL_INTERNAL_ONLY`, when used, requires an eligible authenticated DOL user.
+- Loanable and reusable-asset lifecycle: `FOR_REVIEW -> READY_TO_CLAIM -> ON_LOAN -> RETURNED`; a future due date is required and past-due `ON_LOAN` displays as `OVERDUE`.
+- Consumables require no return due date and follow `FOR_REVIEW -> READY_TO_CLAIM -> COMPLETED`.
+- Non-circulating, inactive, archived, and `VERIFY` items cannot create lending tickets.
+- Ticket quantity must be positive, no greater than configured `Maximum_Loan_Qty`, and no greater than current available-to-promise. These checks run at creation and are repeated during approval/handoff where applicable.
 - Handoff requires exact reservation and creates one `LOAN_OUT`/`ISSUE`.
 - Return is allowed only from active/overdue loan. Restored quantity excludes lost and unusably damaged quantity. A completed ticket cannot return again.
+
+## Catalog management
+
+- Item IDs, opening quantity, current on-hand, reservations, available-to-promise, posted ledger rows, and legacy provenance are never editable catalog metadata.
+- A new item receives a server ID. Any authorized initial quantity is an append-only ledger movement, not a metadata overwrite.
+- Unit changes are blocked after any dependent ledger, reservation, lending, request-line, restock, or release history exists. Genuine corrections require a separate documented administrative migration/correction workflow.
+- Archive requires raw on-hand of zero, active reservations of zero, and no open lending or active request/release dependency. Archive preserves history and forces lending audience to `NOT_AVAILABLE_FOR_LENDING`.
+- Restore preserves all history. An item with a verification note returns to `VERIFY`; other safe restores default to staff-only unless an explicit reviewed audience is supplied.
+- Catalog mutations require `Can_Manage_Catalog`, a script lock, idempotency, before/after audit data, and status history for status changes.
+- Nonzero initial stock additionally requires receive or admin permission, is posted only through the append-only ledger, and is rejected for VERIFY or inactive items. Catalog-only users create at zero and use the approved receiving workflow.
+
+## Data revision
+
+- Each successful non-replay mutation advances the shared data revision exactly once, including commands that write multiple rows atomically.
+- An idempotent replay returns the original result and does not advance the revision again.
+- Bootstrap reads, revision reads, searches, diagnostics, health checks, and validation-only reads do not advance the revision.
+- Direct relevant human spreadsheet edits advance the revision through the installable operational edit trigger. Edits to the human README tab and the revision rows themselves are ignored to prevent loops.
 
 ## Transfers
 

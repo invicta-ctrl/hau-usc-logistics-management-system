@@ -23,11 +23,13 @@ export const STATUS = Object.freeze({
 });
 
 export const ROLES = Object.freeze({
+  SYSTEM_OWNER: 'SYSTEM_OWNER',
   REQUESTER: 'REQUESTER',
   DOL_STAFF: 'DOL_STAFF',
   COMMITTEE_HEAD: 'COMMITTEE_HEAD',
   DIRECTOR: 'DIRECTOR',
   ADMINISTRATOR: 'ADMINISTRATOR',
+  READ_ONLY_AUDITOR: 'READ_ONLY_AUDITOR',
 });
 
 export const CATEGORIES = Object.freeze([

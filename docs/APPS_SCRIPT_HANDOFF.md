@@ -1,52 +1,11 @@
 # Google Apps Script Handoff
 
-The current prototype does not call Apps Script. `apps-script-service.js` documents client method mappings only.
+The Apps Script implementation is under `apps-script/`; `npm run build` generates its `Index.html`. It is code-complete for staging setup but has not been pushed or deployed.
 
-## Required server action pattern
+Each write entry point uses the server pattern: resolve identity/permission, validate command, acquire lock, check idempotency, load current state, validate transition/reservation/balance, allocate server IDs, append/update records, write status and audit with correlation ID, release lock, and return a normalized safe result. Paired transfer ledger rows use one batch range write.
 
-Every irreversible Apps Script function must:
+The database uses the prepared tabs for users/access, events, requests/lines, items, ledger, reservations, lending, releases, restock receipts, deliverables, suppliers, canvass, evidence, status, audit, config, errors, and migration mapping. Opening quantities remain preserved in the item master for the launch baseline; all later physical changes are immutable ledger movements.
 
-1. Resolve institutional identity and role.
-2. Validate the command schema and reject unknown fields.
-3. Acquire a scoped `LockService` lock.
-4. Load current records.
-5. Validate transition, permission, reservation, and balance.
-6. Check the idempotency key and return the original result if already posted.
-7. Allocate server IDs while locked.
-8. Append related rows in one batch.
-9. Write the audit record with correlation ID.
-10. Release the lock in `finally`.
-11. Return a normalized DTO with no restricted fields.
+Drive evidence is routed only through configured folders. Missing folder configuration fails closed. Server code validates type/extension/size, generates privacy-safe labels and filenames, computes a digest, prevents same-entity duplicates, records `12_EVIDENCE`, and quarantines orphan uploads.
 
-## Suggested Sheets/entities
-
-- Users & Roles
-- Event Series
-- Events
-- Requests
-- Request Lines
-- Inventory Items
-- Ledger Transactions
-- Reservations
-- Lending Tickets
-- Restock Requests
-- Restock Receipts
-- Deliverables
-- Deliverable Receipts
-- Suppliers
-- Canvass References
-- Evidence Files
-- Event Tasks
-- Audit Log
-- Idempotency Records
-- Configuration
-
-Google Sheets is a reporting/export destination and prototype persistence option, not an excuse to keep mutable stock totals. Quantity remains derived from Ledger Transactions and active Reservations.
-
-## Evidence production rules
-
-Validate MIME signature server-side, enforce extension/size/image-dimension limits, normalize filenames, route to controlled least-privilege Drive folders, store uploader identity/timestamp/access class, and implement retention/deletion policy. Browser-provided MIME type is advisory only.
-
-## Security
-
-The server resolves identity and permission for every action. UI hiding is not security. Public/requester DTOs contain only permitted events, limited catalog suggestions, units, and the requester's own result. Never expose staff records, full ledger, supplier TINs, borrower histories, audits, or admin operations.
+Next operator step: follow `APPS_SCRIPT_SETUP.md`, `CLASP_DEPLOYMENT.md`, and `LAUNCH_RUNBOOK.md` against a staging Script project. Do not run `applyApprovedMigration()` or create a production deployment until dry-run reports and access/Drive configuration are approved.
