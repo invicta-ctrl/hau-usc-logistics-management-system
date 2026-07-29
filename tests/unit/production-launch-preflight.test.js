@@ -32,7 +32,13 @@ const config = (environment, marker) => ({
     { binding: 'BRAND_ASSETS', bucket_name: `brand-${marker}` },
     { binding: 'EVIDENCE_ASSETS', bucket_name: `evidence-${marker}` },
   ],
-  vars: { ENVIRONMENT: environment, CANDIDATE_SHA: sha },
+  vars: {
+    ENVIRONMENT: environment,
+    CANDIDATE_SHA: sha,
+    GOOGLE_ROSTER_SPREADSHEET_ID: 'approved-private-roster-source',
+    GOOGLE_ROSTER_RANGE: 'Official!A1:AA128',
+    GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: `reader-${environment.toLowerCase()}@example.invalid`,
+  },
 });
 
 beforeAll(() => {
@@ -116,6 +122,16 @@ async function fixture() {
           'TRACKING_LINK_SECRET',
           'PROTECTED_PROFILE_ENCRYPTION_KEY',
           'ROSTER_DATA_ENCRYPTION_KEY',
+          'GOOGLE_ROSTER_PRIVATE_KEY',
+          'GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET',
+          'GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN',
+          'GOOGLE_EVIDENCE_OAUTH_CLIENT_ID',
+          'GOOGLE_DRIVE_ROOT_FOLDER_ID',
+          'GOOGLE_DRIVE_RECEIPTS_FOLDER_ID',
+          'GOOGLE_DRIVE_CANVASS_FOLDER_ID',
+          'GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID',
+          'GOOGLE_EVIDENCE_RELEASE_FOLDER_ID',
+          'GOOGLE_DRIVE_LENDING_FOLDER_ID',
         ].map((name, index) => [name, String(index + 1).repeat(48)]),
       ),
     },
@@ -126,7 +142,16 @@ async function fixture() {
       roster: {
         status: 'PREPARED',
         sourceAccess: 'READ_ONLY',
+        spreadsheetId: 'approved-private-roster-source',
+        range: 'Official!A1:AA128',
+        serviceAccountEmail: 'reader-production@example.invalid',
         privateKeySecretName: 'GOOGLE_ROSTER_PRIVATE_KEY',
+      },
+      evidenceDrive: {
+        status: 'PREPARED',
+        operational: false,
+        credentialMode: 'OAUTH_REFRESH_TOKEN',
+        folderMapLabel: 'Dedicated production evidence folder map',
       },
       emailVerification: { status: 'NOT_CONFIGURED', operational: false },
     },
@@ -160,6 +185,16 @@ describe('production launch preflight', () => {
       'D1 database IDs',
     ],
     ['preview mode', (value) => (value.productionConfig.preview_urls = true), 'preview_urls'],
+    [
+      'placeholder roster binding',
+      (value) => (value.productionConfig.vars.GOOGLE_ROSTER_SPREADSHEET_ID = '<REPLACE_PRIVATELY>'),
+      'production roster spreadsheetId',
+    ],
+    [
+      'unprepared Drive sidecar',
+      (value) => (value.googleConfig.evidenceDrive.status = 'NOT_CONFIGURED'),
+      'evidence Drive status',
+    ],
     ['missing secret', (value) => delete value.productionSecrets.secrets.PASSWORD_PEPPER, 'PASSWORD_PEPPER'],
     [
       'test data promotion',

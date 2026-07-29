@@ -8,12 +8,28 @@ import {
 } from './production-authorization.mjs';
 
 const SHA256 = /^[0-9a-f]{64}$/iu;
-const REQUIRED_SECRETS = Object.freeze([
+const PLACEHOLDER = /^(?:<.*>|REPLACE(?:_|\b)|TBD\b|TODO\b|UNKNOWN\b|PENDING(?:_|\b))/iu;
+const REQUIRED_PROTECTED_SECRETS = Object.freeze([
   'PASSWORD_PEPPER',
   'TRACKING_LINK_SECRET',
   'PROTECTED_PROFILE_ENCRYPTION_KEY',
   'ROSTER_DATA_ENCRYPTION_KEY',
+  'GOOGLE_ROSTER_PRIVATE_KEY',
+  'GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET',
+  'GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN',
 ]);
+const REQUIRED_PRIVATE_IDENTIFIERS = Object.freeze([
+  'GOOGLE_EVIDENCE_OAUTH_CLIENT_ID',
+  'GOOGLE_DRIVE_ROOT_FOLDER_ID',
+  'GOOGLE_DRIVE_RECEIPTS_FOLDER_ID',
+  'GOOGLE_DRIVE_CANVASS_FOLDER_ID',
+  'GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID',
+  'GOOGLE_EVIDENCE_RELEASE_FOLDER_ID',
+  'GOOGLE_DRIVE_LENDING_FOLDER_ID',
+]);
+
+const completedPrivateValue = (value, minimumLength = 1) =>
+  typeof value === 'string' && value.trim().length >= minimumLength && !PLACEHOLDER.test(value.trim());
 
 export async function validateProductionLaunchPreflight({
   authorization,
@@ -44,14 +60,22 @@ export async function validateProductionLaunchPreflight({
     issues.push('secrets: environment must be PRODUCTION');
   }
   const secretValues = [];
-  for (const name of REQUIRED_SECRETS) {
+  for (const name of REQUIRED_PROTECTED_SECRETS) {
     const value = productionSecrets?.secrets?.[name];
-    if (typeof value !== 'string' || value.length < 32)
-      issues.push(`secrets: ${name} is missing or malformed`);
+    if (!completedPrivateValue(value, 32)) issues.push(`secrets: ${name} is missing or malformed`);
     else secretValues.push(value);
+  }
+  const privateIdentifiers = [];
+  for (const name of REQUIRED_PRIVATE_IDENTIFIERS) {
+    const value = productionSecrets?.secrets?.[name];
+    if (!completedPrivateValue(value, 16)) issues.push(`secrets: ${name} is missing or malformed`);
+    else privateIdentifiers.push(value);
   }
   if (new Set(secretValues).size !== secretValues.length) {
     issues.push('secrets: protected production secret values must be distinct');
+  }
+  if (new Set(privateIdentifiers).size !== privateIdentifiers.length) {
+    issues.push('secrets: production Google private identifiers must be distinct');
   }
 
   if (googleConfig?.schemaVersion !== 1) issues.push('google: schemaVersion must be 1');
@@ -67,6 +91,51 @@ export async function validateProductionLaunchPreflight({
   }
   if (googleConfig?.roster?.privateKeySecretName !== 'GOOGLE_ROSTER_PRIVATE_KEY') {
     issues.push('google: roster private key must remain in the protected provider secret');
+  }
+  const rosterBindings = {
+    spreadsheetId: productionConfig?.vars?.GOOGLE_ROSTER_SPREADSHEET_ID,
+    range: productionConfig?.vars?.GOOGLE_ROSTER_RANGE,
+    serviceAccountEmail: productionConfig?.vars?.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+  };
+  for (const [name, value] of Object.entries(rosterBindings)) {
+    if (!completedPrivateValue(value)) {
+      issues.push(`google: production roster ${name} must be configured without a placeholder`);
+    }
+    if (!completedPrivateValue(googleConfig?.roster?.[name])) {
+      issues.push(`google: private roster ${name} must be configured without a placeholder`);
+    } else if (googleConfig.roster[name] !== value) {
+      issues.push(`google: private roster ${name} must match the production Worker binding`);
+    }
+  }
+  if (
+    completedPrivateValue(stagingConfig?.vars?.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL) &&
+    stagingConfig.vars.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL === rosterBindings.serviceAccountEmail
+  ) {
+    issues.push('google: production roster reader identity must be distinct from staging');
+  }
+  if (
+    googleConfig?.evidenceDrive?.status !== 'PREPARED' &&
+    googleConfig?.evidenceDrive?.status !== 'CONFIGURED'
+  ) {
+    issues.push('google: production evidence Drive status must be PREPARED or CONFIGURED');
+  }
+  if (googleConfig?.evidenceDrive?.credentialMode !== 'OAUTH_REFRESH_TOKEN') {
+    issues.push('google: production evidence Drive must use the approved OAuth refresh-token mode');
+  }
+  if (!completedPrivateValue(googleConfig?.evidenceDrive?.folderMapLabel)) {
+    issues.push('google: production evidence Drive folder mapping label is required');
+  }
+  if (
+    googleConfig?.evidenceDrive?.status === 'PREPARED' &&
+    googleConfig?.evidenceDrive?.operational !== false
+  ) {
+    issues.push('google: prepared evidence Drive must not be marked operational before deployment');
+  }
+  if (
+    googleConfig?.evidenceDrive?.status === 'CONFIGURED' &&
+    googleConfig?.evidenceDrive?.operational !== true
+  ) {
+    issues.push('google: configured evidence Drive must be marked operational');
   }
   if (
     googleConfig?.emailVerification?.status === 'NOT_CONFIGURED' &&
