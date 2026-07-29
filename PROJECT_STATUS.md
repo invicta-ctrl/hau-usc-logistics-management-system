@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.0 Phase 21 operational health accepted — Phase 22 active
+
+- The protected System Owner surface reports 16 safe operational metrics for
+  release, Worker/API, D1, bindings, authentication, provider/storage state,
+  evidence failures, rate limits, inventory alerts, and recovery checkpoints.
+- Unavailable email/roster provider state and unrecorded backup/rollback state
+  render as `ATTENTION`, `NOT_CONFIGURED`, or `Not recorded`; no synthetic
+  healthy state is shown.
+- Desktop and 390×844 staging acceptance passed without overflow. The live DTO
+  and UI omit credentials, account/provider identifiers, raw errors, object
+  keys, OAuth values, private URLs, and personal data.
+- Administrator UI controls are hidden and the owner API returns 403
+  `SYSTEM_OWNER_REQUIRED`. Both synthetic actors are disabled, sessions are
+  zero, and immutable create/disable audits remain.
+- Repository acceptance passed 74 Vitest files / 477 tests, Worker 34 / 34,
+  browser 127 / 311 intentional skips, and exact-product-head PR #9 CI 6 / 6.
+- Exact runtime `3c5b7aa1b1166775fffce9ef8e5275e0eef65021` is healthy and ready
+  on staging schema 28. Production was untouched.
+- Phase 22 full staging and operations acceptance is active.
+
 ## v0.7.0 Phase 20 privacy, consent, and support accepted — Phase 21 active
 
 - Accessible Privacy Notice and Acceptable Use dialogs explain collected data,

@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 21 — Owner Operational Health
+Phase: Phase 22 — Full Staging and Operations Acceptance
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 20 ACCEPTED ON STAGING; PHASE 21 AUDIT IN PROGRESS; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 21 ACCEPTED ON STAGING; PHASE 22 ACCEPTANCE IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -27,6 +27,7 @@ Phase 17 accepted staging runtime: `03b408826d993be0c79692e15b86b38fc97dadf6`
 Phase 18 accepted staging runtime: `80c0db43cc06145ada09434fd55f3fd31c0873f7`
 Phase 19 accepted staging runtime: `f8b19f6be042c995ad0ae01f420d15ac191cfdad`
 Phase 20 accepted staging runtime: `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89`
+Phase 21 accepted staging runtime: `3c5b7aa1b1166775fffce9ef8e5275e0eef65021`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -42,7 +43,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 20
+## Accepted completion through Phase 21
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -78,6 +79,10 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
   requester/borrower/evidence acknowledgments, truthful retention/correction/
   support wording, server enforcement, and privacy-safe errors, tracking,
   receipts, logs, and responsive staging acceptance are complete.
+- Phase 21: protected System Owner operational health, truthful attention and
+  not-configured states, safe release/schema/binding/auth/provider/storage/
+  inventory/recovery aggregates, responsive acceptance, authorization denial,
+  redaction proof, synthetic cleanup, and exact-head CI are complete.
 
 Durable handoffs:
 
@@ -311,11 +316,19 @@ private tracking, receipt boundaries, responsive browser acceptance, and
 exact-head CI gates pass. No staging workflow records were created during live
 acceptance. Production was untouched.
 
-Phase 21 is active. Audit and complete the protected System Owner operational-
-health surface for Worker/API, deployed release, D1, environment bindings,
-authentication, providers, identity sync, Drive/R2/evidence, login/rate-limit
-events, inventory alerts, backup/reconciliation, and rollback rehearsal. Show
-only safe redacted state. Production remains NO-GO.
+Phase 21 is accepted on exact staging runtime
+`3c5b7aa1b1166775fffce9ef8e5275e0eef65021`. The owner-only operational-
+health API and responsive UI expose 16 safe aggregates, report unavailable
+services and unrecorded recovery checkpoints truthfully, deny Administrator
+access, and omit protected values. Both synthetic actors are disabled, sessions
+are revoked, and immutable create/disable audits remain. Production was
+untouched.
+
+Phase 22 is active. Confirm redacted Workers Logs and sampled Traces,
+staging-only bindings, exact health/readiness/version and correlation IDs, then
+execute the complete synthetic/redacted authentication, public Request Center,
+public Lending Center, inventory, Release Desk, and event operations matrix.
+Production remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -333,3 +346,6 @@ Phase 19 accepted staging evidence:
 
 Phase 20 accepted staging evidence:
 `.codex/V0_7_PHASE_20_PRIVACY_CONSENT_SUPPORT_HANDOFF.md`.
+
+Phase 21 accepted staging evidence:
+`.codex/V0_7_PHASE_21_OPERATIONAL_HEALTH_HANDOFF.md`.

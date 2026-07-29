@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 20 exact product/runtime `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89` is pushed, deployed, and passed 6 / 6 PR checks.
-- **Current phase/stage:** Phases 0–20 accepted on staging; Phase 21 Owner Operational Health is active; production NO-GO.
-- **Accepted scope:** Phase 21 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** accessible Privacy Notice and Acceptable Use dialogs cover collected data, purposes, authorized reviewers, private tracking, borrower responsibility, evidence/photo consent, governed retention, correction, and role-based support. Public services fail closed on missing acknowledgments and record safe policy metadata only.
-- **Tests verified:** `npm run check` passes 73 files / 474 Vitest plus every repository gate; policy/redaction coverage passes 14 / 14; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop privacy acceptance passes; exact-head PR #9 CI is 6 / 6.
-- **External actions:** exact candidate `4709e84` was deployed only to staging. Cache-busted health/readiness/version report schema 28 and ready true. Live requester/lending policy acceptance created no workflow records; the requester session was signed out. Production was untouched.
-- **Rollback:** redeploy the last accepted Phase 19 runtime through the documented rollback procedure if policy rendering or acknowledgment enforcement regresses. Schema 28 and staging data were unchanged by Phase 20.
-- **Blocker:** none for Phase 21 audit. Stop on private provider/secret/personal-data exposure, raw error/object key/OAuth display, false healthy state, weakened owner authorization, or production boundary.
-- **Next action:** audit and complete the System Owner operational-health API and UI against every required subsystem and recovery checkpoint using safe redacted state only. Durable Phase 20 evidence is `.codex/V0_7_PHASE_20_PRIVACY_CONSENT_SUPPORT_HANDOFF.md`.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 21 exact product/runtime `3c5b7aa1b1166775fffce9ef8e5275e0eef65021` is pushed, deployed, and passed 6 / 6 PR checks.
+- **Current phase/stage:** Phases 0–21 accepted on staging; Phase 22 Full Staging and Operations Acceptance is active; production NO-GO.
+- **Accepted scope:** Phase 22 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** owner-only operational health reports 16 safe release/data/auth/provider/storage/inventory/recovery metrics, truthful attention/not-configured/unrecorded state, protected-value omission, and responsive presentation.
+- **Tests verified:** `npm run check` passes 74 files / 477 Vitest plus every repository gate; focused health/roster tests pass 6 / 6; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop owner acceptance and Administrator denial pass; exact-product-head PR #9 CI is 6 / 6.
+- **External actions:** exact candidate `3c5b7aa` was deployed only to staging. Cache-busted health/readiness/version report schema 28 and ready true. Two synthetic actors were disabled, sessions reconciled to zero, and four immutable lifecycle audits retained. Production was untouched.
+- **Rollback:** redeploy exact Phase 20 runtime `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89` if the operational-health route or UI regresses. Schema 28 was unchanged by Phase 21.
+- **Blocker:** none for Phase 22 staging acceptance. Stop on production binding/mutation, secret/personal-data logging, fallback/demo data, authorization/invariant failure, or unreconciled synthetic effects.
+- **Next action:** verify redacted Workers Logs, sampled Traces, staging-only bindings, endpoints, and correlation IDs, then run the complete synthetic/redacted Phase 22 authentication and operations matrix. Durable Phase 21 evidence is `.codex/V0_7_PHASE_21_OPERATIONAL_HEALTH_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

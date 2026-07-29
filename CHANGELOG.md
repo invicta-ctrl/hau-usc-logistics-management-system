@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 21 operational health (2026-07-29)
+
+### Added
+
+- Protected System Owner operational-health service and responsive 16-metric
+  control-desk surface for release, Worker/API, D1, bindings, authentication,
+  providers, storage, evidence, rate limits, inventory, and recovery.
+- Explicit protection flags and safe aggregate details without account,
+  provider, object, OAuth, secret, error, or personal-data values.
+
+### Fixed
+
+- Generated private roster placeholders now fail closed as `NOT_CONFIGURED`.
+- Unavailable services and unrecorded backup/rollback checkpoints render
+  `ATTENTION`, `NOT_CONFIGURED`, or `Not recorded` rather than fabricated
+  healthy or zero-valued state.
+
+### Verified
+
+- `npm run check`: 74 Vitest files / 477 tests; local Worker/D1/R2: 34 / 34;
+  full Playwright: 127 passed / 311 intentional skips.
+- Exact staging runtime `3c5b7aa` passed cache-busted release/schema/binding
+  identity, desktop and 390×844 owner acceptance, protected-value scans,
+  Administrator UI/API denial, cleanup, reconciliation, and exact-product-head
+  PR #9 CI 6 / 6.
+
+### Boundary
+
+- Both synthetic actors are disabled, sessions are zero, immutable create and
+  disable audits remain, and production was not modified.
+
 ## Unreleased - v0.7.0 Phase 20 privacy and consent (2026-07-28)
 
 ### Added
