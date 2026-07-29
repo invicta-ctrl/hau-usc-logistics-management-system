@@ -167,8 +167,8 @@ export function createLegacyRuntimeAdapter(mockServices) {
     updateFoodComponent(payload) {
       return mutationRequests.run('food-update', payload, (command) => remote.updateFoodComponent(command));
     },
-    async getMaterialsWorkQueue() {
-      return remote.getMaterialsWorkQueue({});
+    async getMaterialsWorkQueue(payload = {}) {
+      return remote.getMaterialsWorkQueue(payload);
     },
     updateMaterialsComponent(payload) {
       return mutationRequests.run('materials-update', payload, (command) =>

@@ -115,7 +115,10 @@ const materialsItems = [
   },
 ];
 
-async function openMaterials(page, { capabilities = MATERIALS_CAPABILITIES } = {}) {
+async function openMaterials(
+  page,
+  { capabilities = MATERIALS_CAPABILITIES, scopeSensitive = false } = {},
+) {
   const bootstrap = createEmptyBootstrapFixture({ backendMode: 'rest' });
   bootstrap.currentUser = {
     ...bootstrap.currentUser,
@@ -138,6 +141,34 @@ async function openMaterials(page, { capabilities = MATERIALS_CAPABILITIES } = {
       mappingStatus: 'MAPPED',
       active: true,
     },
+  };
+  bootstrap.operationalContext = {
+    selected: {
+      value: 'ALL:AUTHORIZED',
+      kind: 'ALL',
+      id: 'AUTHORIZED',
+      label: 'All authorized operations',
+      purpose: 'Global authorized view',
+      available: true,
+    },
+    options: [
+      {
+        value: 'ALL:AUTHORIZED',
+        kind: 'ALL',
+        id: 'AUTHORIZED',
+        label: 'All authorized operations',
+        purpose: 'Global authorized view',
+        available: true,
+      },
+      {
+        value: 'COMMITTEE:COM_MATERIALS',
+        kind: 'COMMITTEE',
+        id: 'COM_MATERIALS',
+        label: 'Materials Committee',
+        purpose: 'Committee-owned operations',
+        available: true,
+      },
+    ],
   };
   bootstrap.deliverables = materialsItems.map((item) => ({
     id: item.deliverableId,
@@ -203,20 +234,38 @@ async function openMaterials(page, { capabilities = MATERIALS_CAPABILITIES } = {
       }),
     }),
   );
-  await page.route('**/api/getBootstrapData', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: bootstrap }) }),
-  );
-  await page.route('**/api/getMaterialsWorkQueue', (route) =>
-    route.fulfill({
+  let bootstrapCalls = 0;
+  await page.route('**/api/getBootstrapData', (route) => {
+    bootstrapCalls += 1;
+    const response = structuredClone(bootstrap);
+    if (scopeSensitive && bootstrapCalls > 1)
+      response.operationalContext.selected = response.operationalContext.options[1];
+    return route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ ok: true, committeeId: 'COM_MATERIALS', items: materialsItems }),
-    }),
-  );
+      body: JSON.stringify({ ok: true, data: response }),
+    });
+  });
+  const materialsQueueScopes = [];
+  await page.route('**/api/getMaterialsWorkQueue', (route) => {
+    const operationalScope = route.request().postDataJSON()?.operationalScope ?? '';
+    materialsQueueScopes.push(operationalScope);
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        committeeId: 'COM_MATERIALS',
+        items:
+          scopeSensitive && operationalScope !== 'COMMITTEE:COM_MATERIALS' ? [] : materialsItems,
+      }),
+    });
+  });
   await page.goto('/app/materials');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await expect(page.locator('#materialsCommitteeQueue')).toContainText('SYNTHETIC-DEL-MAT-1');
-  return bootstrap;
+  if (!scopeSensitive)
+    await expect(page.locator('#materialsCommitteeQueue')).toContainText('SYNTHETIC-DEL-MAT-1');
+  return { bootstrap, materialsQueueScopes };
 }
 
 test('Materials exposes all accepted destinations and a stable source-grounded pipeline', async ({ page }, testInfo) => {
@@ -254,6 +303,23 @@ test('Materials exposes all accepted destinations and a stable source-grounded p
   await expect(panel).toContainText('No preferred quote');
   await expect(panel).toContainText('Synthetic Print House');
   await expect(panel).not.toContainText('PRIVATE-TEST-TIN');
+});
+
+test('Materials refreshes canonical overview truth when operational scope changes', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-1366', 'One focused scope-change proof is sufficient.');
+  const { materialsQueueScopes } = await openMaterials(page, { scopeSensitive: true });
+  const panel = page.locator('#roleExperiencePanel[data-role-experience="materials"]');
+  await expect(panel).toContainText('0 scoped deliverables');
+
+  await page
+    .locator('[data-internal-shell-context]')
+    .getByLabel('Operational scope')
+    .selectOption('COMMITTEE:COM_MATERIALS');
+
+  await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_MATERIALS/u);
+  await expect.poll(() => materialsQueueScopes).toContain('COMMITTEE:COM_MATERIALS');
+  await expect(panel).toContainText('2 scoped deliverables');
+  await expect(panel).toContainText('SYNTHETIC-DEL-MAT-1');
 });
 
 test('Materials destinations reuse shared queue, canvass, deliverables, receiving, and Release Desk', async ({ page }, testInfo) => {

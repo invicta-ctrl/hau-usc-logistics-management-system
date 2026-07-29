@@ -3740,7 +3740,10 @@ export function createRuntimeExtensions(options) {
     if (materialsQueuePromise) return materialsQueuePromise;
     if (!force && materialsQueueItems !== null) return;
     materialsQueuePromise = (async () => {
-      const result = await services.getMaterialsWorkQueue();
+      const operationalScope =
+        new URL(location.href).searchParams.get('scope') ??
+        getState()?.operationalContext?.selected?.value;
+      const result = await services.getMaterialsWorkQueue(operationalScope ? { operationalScope } : {});
       materialsQueueItems = Array.isArray(result?.items) ? result.items : [];
       renderMaterialsQueue();
       renderRoleExperience();
@@ -4996,7 +4999,15 @@ export function createRuntimeExtensions(options) {
       }
       select.disabled = true;
       try {
+        foodQueueItems = null;
+        materialsQueueItems = null;
+        venueEquipmentQueueItems = null;
         await changeOperationalScope(select.value);
+        await Promise.all([
+          refreshFoodQueue({ force: true }),
+          refreshMaterialsQueue({ force: true }),
+          refreshVenueEquipmentQueue({ force: true }),
+        ]);
         const label = getState()?.operationalContext?.selected?.label ?? currentScopeLabel();
         internalShellBar.querySelector('[data-shell-context-announcement]').textContent =
           `Operational scope changed to ${label}.`;
@@ -5760,7 +5771,7 @@ export function createRuntimeExtensions(options) {
 
   const materialsMetrics = (state) => {
     const canonicalQueue = materialsQueueItems ?? [];
-    if (canonicalQueue.length) {
+    if (backendMode === 'rest' || canonicalQueue.length) {
       const status = (row) => String(row?.status ?? '').toUpperCase();
       const active = canonicalQueue.filter(
         (row) => !['COMPLETED', 'REJECTED', 'CANCELLED', 'ARCHIVED'].includes(status(row)),
@@ -7063,9 +7074,10 @@ export function createRuntimeExtensions(options) {
           }</div></section>`
         : '';
     const materialsRows = experience === 'materials' ? (materialsQueueItems ?? []) : [];
+    const materialsQueueLoading = experience === 'materials' && materialsQueueItems === null;
     const materialsOverview =
       experience === 'materials'
-        ? `<section class="materials-overview-detail" data-materials-overview aria-labelledby="materialsPipelineTitle"><div class="panel-head"><div><p class="eyebrow">Request → Canvass → Budget → Procurement → Receiving → Deliverables → Release → Complete</p><h3 id="materialsPipelineTitle">Traceable materials pipeline</h3><p>Stable request, event, and deliverable identities keep exact specifications and cumulative quantities connected. Historical prices inform review but never replace current quote evidence.</p></div><span class="pill">${materialsRows.length} scoped deliverable${materialsRows.length === 1 ? '' : 's'}</span></div>${materialsQueueGroupsMarkup(materialsRows, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}</section>`
+        ? `<section class="materials-overview-detail" data-materials-overview aria-labelledby="materialsPipelineTitle"><div class="panel-head"><div><p class="eyebrow">Request → Canvass → Budget → Procurement → Receiving → Deliverables → Release → Complete</p><h3 id="materialsPipelineTitle">Traceable materials pipeline</h3><p>Stable request, event, and deliverable identities keep exact specifications and cumulative quantities connected. Historical prices inform review but never replace current quote evidence.</p></div><span class="pill">${materialsQueueLoading ? 'Loading canonical queue…' : `${materialsRows.length} scoped deliverable${materialsRows.length === 1 ? '' : 's'}`}</span></div>${materialsQueueLoading ? '<div class="empty">Loading the current authorized Materials scope…</div>' : materialsQueueGroupsMarkup(materialsRows, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}</section>`
         : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">

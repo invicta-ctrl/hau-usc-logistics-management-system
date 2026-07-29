@@ -198,6 +198,7 @@ test('Phase 22 procurement, restock, cumulative receiving, and reservation concu
 }) => {
   const eventId = fixture('HAU_STAGING_RELEASE_EVENT_ID');
   const itemId = fixture('HAU_STAGING_RELEASE_ITEM_ID');
+  const reusableItemId = fixture('HAU_STAGING_REUSABLE_ITEM_ID');
   const owner = page.context().request;
   const csrfToken = await login(owner);
   const nonce = `${Date.now().toString(36)}-${randomBytes(4).toString('hex')}`;
@@ -367,9 +368,9 @@ test('Phase 22 procurement, restock, cumulative receiving, and reservation concu
 
   const inventoryBeforeConcurrency = await (await owner.get('/api/inventory?pageSize=50')).json();
   const availableBeforeConcurrency = inventoryBeforeConcurrency.data.inventoryItems.find(
-    (entry) => entry.id === itemId,
+    (entry) => entry.id === reusableItemId,
   ).availableToPromise;
-  expect(availableBeforeConcurrency).toBeGreaterThanOrEqual(2);
+  expect(availableBeforeConcurrency).toBeGreaterThanOrEqual(1);
   const concurrencyRequest = await mutate(owner, csrfToken, 'submitRequest', {
     requestType: 'EVENT_LOGISTICS',
     eventSeriesId: 'SER-STAGING-REQUEST-ACCEPTANCE',
@@ -381,10 +382,10 @@ test('Phase 22 procurement, restock, cumulative receiving, and reservation concu
     lines: [
       {
         clientLineId: `p22-stock-${nonce}`,
-        itemId,
-        description: 'Synthetic Phase 22 concurrency kit',
+        itemId: reusableItemId,
+        description: 'Synthetic Phase 22 reusable concurrency kit',
         quantity: availableBeforeConcurrency,
-        unit: 'kit',
+        unit: 'unit',
         fulfillmentSource: 'ISSUE_FROM_STOCK',
       },
     ],
@@ -409,16 +410,16 @@ test('Phase 22 procurement, restock, cumulative receiving, and reservation concu
   const stockLine = release.data.requestLines.find(
     (entry) => entry.requestId === concurrencyRequestId && entry.status === 'READY_TO_RESERVE',
   );
-  expect(stockLine).toMatchObject({ itemId, quantity: availableBeforeConcurrency });
+  expect(stockLine).toMatchObject({ itemId: reusableItemId, quantity: availableBeforeConcurrency });
   const reservations = await Promise.all([
     mutate(owner, csrfToken, 'reserveStock', {
-      itemId,
+      itemId: reusableItemId,
       requestLineId: stockLine.id,
       quantity: availableBeforeConcurrency,
       clientRequestId: `p22-concurrency-a-${nonce}`,
     }),
     mutate(owner, csrfToken, 'reserveStock', {
-      itemId,
+      itemId: reusableItemId,
       requestLineId: stockLine.id,
       quantity: availableBeforeConcurrency,
       clientRequestId: `p22-concurrency-b-${nonce}`,
@@ -429,8 +430,10 @@ test('Phase 22 procurement, restock, cumulative receiving, and reservation concu
   expect(deniedBody).toMatchObject({ code: 'INSUFFICIENT_STOCK' });
 
   const inventory = await (await owner.get('/api/inventory?pageSize=50')).json();
-  const item = inventory.data.inventoryItems.find((entry) => entry.id === itemId);
-  expect(item.reserved).toBeGreaterThanOrEqual(availableBeforeConcurrency);
-  expect(item.availableToPromise).toBeGreaterThanOrEqual(0);
-  expect(inventory.data.ledgerTransactions.some((entry) => entry.type === 'RECEIPT' && entry.itemId === itemId)).toBe(true);
+  const concurrencyItem = inventory.data.inventoryItems.find((entry) => entry.id === reusableItemId);
+  expect(concurrencyItem.reserved).toBeGreaterThanOrEqual(availableBeforeConcurrency);
+  expect(concurrencyItem.availableToPromise).toBeGreaterThanOrEqual(0);
+  expect(
+    inventory.data.ledgerTransactions.some((entry) => entry.type === 'RECEIVE' && entry.itemId === itemId),
+  ).toBe(true);
 });

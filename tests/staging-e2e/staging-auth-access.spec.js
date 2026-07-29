@@ -110,7 +110,7 @@ test('deployed staging Materials workspace projects its canonical queue and shar
 
   const queueResponse = await ownerRequest.post('/api/getMaterialsWorkQueue', {
     headers: { 'x-csrf-token': browserSession.csrfToken },
-    data: {},
+    data: { operationalScope: 'COMMITTEE:COM_MATERIALS' },
   });
   expect(queueResponse.status()).toBe(200);
   const queue = await queueResponse.json();
