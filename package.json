@@ -41,6 +41,7 @@
     "test:e2e": "playwright test",
     "test:e2e:cloudflare:local": "playwright test --config playwright.cloudflare.config.js",
     "test:e2e:staging:auth": "playwright test --config playwright.staging-auth.config.js",
+    "test:e2e:staging:phase23": "playwright test --config playwright.phase23.config.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

@@ -116,7 +116,7 @@ export function createGoogleSheetsRosterSource({
     serviceAccountEmail: String(serviceAccountEmail ?? '').trim(),
     serviceAccountPrivateKey: String(serviceAccountPrivateKey ?? ''),
   });
-  const placeholder = /(?:REPLACE|TBD|TODO|UNKNOWN|<[^>]+>)/iu;
+  const placeholder = /^(?:REPLACE(?:[_\s-].*)?|TBD|TODO|UNKNOWN|<[^>]+>)$/iu;
   const missing = () =>
     Object.entries(configuration)
       .filter(([, value]) => !value || placeholder.test(value))

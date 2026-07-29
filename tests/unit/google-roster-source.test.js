@@ -55,6 +55,16 @@ describe('Google Sheets identity roster source', () => {
     });
   });
 
+  it('does not treat an embedded placeholder token inside a private value as generated configuration', () => {
+    const source = createGoogleSheetsRosterSource({
+      spreadsheetId: 'synthetic-private-spreadsheet-id',
+      range: 'Approved Identity Roster!A:F',
+      serviceAccountEmail: 'synthetic-reader@example.invalid',
+      serviceAccountPrivateKey: '-----BEGIN PRIVATE KEY-----\nSYNTHETIC-TBD-KEY\n-----END PRIVATE KEY-----',
+    });
+    expect(source.status()).toEqual({ configured: true, missingConfiguration: [] });
+  });
+
   it('uses a read-only service-account token and returns only the requested range values', async () => {
     const fetchImpl = vi
       .fn()
