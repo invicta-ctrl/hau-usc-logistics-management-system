@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 24 — Backup, Cleanup, Retention, and Rollback
+Phase: Phase 25 — Production Authorization, Resource Separation, and Preflight
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 23 ACCEPTED ON STAGING; PHASE 24 REHEARSAL IN PROGRESS; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 24 ACCEPTED ON STAGING; PHASE 25 PREFLIGHT IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -30,6 +30,7 @@ Phase 20 accepted staging runtime: `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89`
 Phase 21 accepted staging runtime: `3c5b7aa1b1166775fffce9ef8e5275e0eef65021`
 Phase 22 accepted staging runtime: `7c47f229c43e36bcf28273998a48b36aeb3aaedd`
 Phase 23 accepted staging runtime: `d095685e223be2697cc72582d35967e70cfd5163`
+Phase 24 restored final staging runtime: `d095685e223be2697cc72582d35967e70cfd5163`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -45,7 +46,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 23
+## Accepted completion through Phase 24
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -93,6 +94,10 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
   overflow/reduced-motion checks, measured staging performance, bounded rate
   limits and capacity, exact-lineage concurrency/idempotency proof, private
   evidence, actor cleanup, and immutable audit reconciliation are complete.
+- Phase 24: a fresh D1 export and Time Travel bookmark, encrypted Google source
+  snapshot, R2 metadata, retention and synthetic-account state, append-only
+  guards, approved prior version, real staging rollback, exact final restore,
+  smoke, and byte-identical D1 reconciliation are complete.
 
 Durable handoffs:
 
@@ -124,6 +129,7 @@ Durable handoffs:
 - `.codex/V0_7_PHASE_21_OPERATIONAL_HEALTH_HANDOFF.md`
 - `.codex/V0_7_PHASE_22_FULL_STAGING_ACCEPTANCE_HANDOFF.md`
 - `.codex/V0_7_PHASE_23_ACCESSIBILITY_PERFORMANCE_CAPACITY_HANDOFF.md`
+- `.codex/V0_7_PHASE_24_BACKUP_ROLLBACK_HANDOFF.md`
 
 ## Phase 5 final evidence
 
@@ -350,10 +356,17 @@ accessibility acceptance passed 5 / 5; `npm run check` passed 74 / 480 tests;
 bounded capacity, measured performance, reconciliation, and exact-product-head
 CI 6 / 6 passed. Production was untouched.
 
-Phase 24 is active. Capture the required private recovery inputs, verify
-retention and synthetic cleanup, and perform the real staging rollback to the
-approved prior safe deployment and restoration to the exact final candidate.
-Production remains NO-GO.
+Phase 24 is accepted. The private schema-29 export has SHA-256
+`ba8c039a5ebbdfb56103fd49baee5d3eade9b06985023d826d4e8fc1fcd28c42`;
+the recovery bookmark, protected Google source snapshot, R2 metadata, retained
+versions, retention record, and append-only evidence are present. A real
+staging rollback to `7c47f22` and restore to exact `d095685` passed smoke, and
+the pre/post D1 exports are byte-identical. Production was untouched.
+
+Phase 25 is active. Verify the private production authorization package,
+staging/production resource separation, secret/config identity, exact frozen
+candidate binding, rollback inputs, route/domain approval, and every negative
+fail-closed case before any production write. Production remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -380,3 +393,6 @@ Phase 22 accepted staging evidence:
 
 Phase 23 accepted staging evidence:
 `.codex/V0_7_PHASE_23_ACCESSIBILITY_PERFORMANCE_CAPACITY_HANDOFF.md`.
+
+Phase 24 accepted recovery evidence:
+`.codex/V0_7_PHASE_24_BACKUP_ROLLBACK_HANDOFF.md`.

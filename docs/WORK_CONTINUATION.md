@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 23 exact product/runtime `d095685e223be2697cc72582d35967e70cfd5163` is pushed and deployed to staging.
-- **Current phase/stage:** Phases 0–23 accepted on staging; Phase 24 Backup, Cleanup, Retention, and Rollback is active; production NO-GO.
-- **Accepted scope:** Phase 24 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** required-width accessibility and 200% zoom passed; staging page/API/D1/payload/polling behavior was measured; bounded limit/capacity checks passed; touch/contrast and nondeterministic roster validation defects were repaired.
-- **Tests verified:** `npm run check` passes 74 files / 480 Vitest plus every repository gate; focused capacity/concurrency/idempotency passes 52 / 52; deployed Phase 23 passes 5 / 5; exact-product-head CI passes 6 / 6.
-- **External actions:** exact candidate `d095685` was deployed only to staging on schema 29. The temporary owner is disabled, sessions are zero, its credential is denied, Phase 23 limiter effects are zero, and immutable audit/correction evidence remains. Production was untouched.
-- **Rollback:** private pre-Phase 22 schema-28 export SHA-256 `032e4067060ebfdcc4e69f4944492a8912ee0f458b920f93b72c4dff62f25e49`; Phase 24 must capture a fresh final-candidate backup/bookmark before the real staging rollback rehearsal.
-- **Blocker:** none for Phase 24 preflight. Stop on production mutation, invalid backup/bookmark, unapproved rollback target, incompatible rollback, privacy/security failure, or unreconciled D1 effects.
-- **Next action:** capture private D1/Google/R2 recovery evidence, verify retention and the approved prior safe runtime, then perform and restore the real staging rollback rehearsal. Durable Phase 23 evidence is `.codex/V0_7_PHASE_23_ACCESSIBILITY_PERFORMANCE_CAPACITY_HANDOFF.md`.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; final staging runtime `d095685e223be2697cc72582d35967e70cfd5163` is restored and healthy.
+- **Current phase/stage:** Phases 0–24 accepted; Phase 25 Production Authorization, Resource Separation, and Preflight is active; production NO-GO.
+- **Accepted scope:** Phase 25 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** fresh D1 export/bookmark, encrypted Google snapshot, R2 metadata, retention and synthetic-account proof, retained version mapping, real staging rollback to `7c47f22`, exact restore to `d095685`, smoke, and byte-identical D1 reconciliation.
+- **Tests verified:** both rehearsal runtimes passed health/readiness/version, auth session, request page/session boundary, public lending, and protected release smoke; Phase 23 documentation head `c61cb65` passes exact-head CI 6 / 6.
+- **External actions:** staging traffic only was switched to the retained prior version and restored to the exact final version. D1 was read/exported, not restored or mutated; production Worker/D1/R2/config/secrets/routes/data were untouched.
+- **Rollback:** current private schema-29 export SHA-256 `ba8c039a5ebbdfb56103fd49baee5d3eade9b06985023d826d4e8fc1fcd28c42`; private Time Travel bookmark and exact prior/final Worker version mapping retained.
+- **Blocker:** none for Phase 25 read-only preflight. Stop on missing owner authorization, staging/production overlap, missing/staging-valued secrets, stale recovery evidence, unverified target, or any production write.
+- **Next action:** validate the private production authorization package and prove resource/config separation plus negative fail-closed cases without deploying or mutating production. Durable Phase 24 evidence is `.codex/V0_7_PHASE_24_BACKUP_ROLLBACK_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

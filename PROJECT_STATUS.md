@@ -1,5 +1,22 @@
 # Project Status
 
+## v0.7.0 Phase 24 backup/retention/rollback accepted — Phase 25 active
+
+- A fresh private 3,265,192-byte schema-29 D1 export has integrity `ok`, zero
+  foreign-key violations, and SHA-256
+  `ba8c039a5ebbdfb56103fd49baee5d3eade9b06985023d826d4e8fc1fcd28c42`.
+- A Time Travel bookmark, encrypted 127-row Google source snapshot, 464 rows of
+  R2 metadata, and retained prior/final Worker version mappings are preserved
+  outside Git.
+- All 42 labeled synthetic accounts are disabled or revoked; 30 append-only
+  guards remain. Numeric evidence retention awaits HAU policy, so no automated
+  purge is authorized.
+- The real staging rollback `d095685 → 7c47f22 → d095685` passed identity,
+  compatibility, auth/request/lending/release smoke, and byte-identical D1
+  reconciliation. Production was untouched.
+- Phase 25 production authorization, resource separation, and fail-closed
+  read-only preflight is active. Production remains NO-GO.
+
 ## v0.7.0 Phase 23 accessibility/performance/capacity accepted — Phase 24 active
 
 - Exact staging runtime `d095685e223be2697cc72582d35967e70cfd5163`

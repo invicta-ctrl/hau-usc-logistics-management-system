@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 24 backup, retention, and rollback (2026-07-29)
+
+### Added
+
+- Fresh private schema-29 D1 export and Time Travel bookmark, encrypted Google
+  source snapshot, R2 metadata snapshot, and retained Worker-version mapping.
+- Explicit launch retention contract preserving backups and append-only
+  evidence while numeric deletion periods remain an HAU owner-policy value.
+
+### Verified
+
+- D1 export integrity `ok`, zero foreign-key violations, 42/42 labeled
+  synthetic accounts disabled/revoked, and 30 append-only guards retained.
+- Real staging rollback `d095685 → 7c47f22 → d095685` passed exact identity,
+  schema compatibility, health/auth/request/lending/release smoke, and a
+  byte-identical post-rehearsal D1 export.
+
+### Boundary
+
+- Production was untouched. Phase 25 read-only production authorization and
+  resource-separation preflight is active; production remains NO-GO.
+
 ## Unreleased - v0.7.0 Phase 23 accessibility, performance, and capacity (2026-07-29)
 
 ### Added
