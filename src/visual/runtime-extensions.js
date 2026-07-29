@@ -3735,8 +3735,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const refreshMaterialsQueue = async ({ force = false } = {}) => {
-    if (!materialsQueue || !canAccessMaterialsQueue() || typeof services.getMaterialsWorkQueue !== 'function')
-      return;
+    if (!canAccessMaterialsQueue() || typeof services.getMaterialsWorkQueue !== 'function') return;
     if (materialsQueuePromise) {
       if (!force) return materialsQueuePromise;
       await materialsQueuePromise.catch(() => undefined);
@@ -7209,6 +7208,8 @@ export function createRuntimeExtensions(options) {
     }
     renderFoodQueue();
     renderMaterialsQueue();
+    if (normalizedExperience() === 'materials' && materialsQueueItems === null)
+      void refreshMaterialsQueue();
     renderVenueEquipmentQueue();
     installInventoryClassificationQueue();
     renderInventoryWorkspaceSupplement();
