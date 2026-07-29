@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { authorizationParameters, GOOGLE_EVIDENCE_SCOPE } from '../../scripts/google-evidence-oauth.mjs';
+import {
+  authorizationParameters,
+  evidenceFolderDefinitions,
+  GOOGLE_EVIDENCE_SCOPE,
+} from '../../scripts/google-evidence-oauth.mjs';
 
 describe('Google evidence OAuth setup', () => {
   it('uses PKCE and the narrow app-created-file scope without requesting full Drive access', () => {
@@ -17,5 +21,22 @@ describe('Google evidence OAuth setup', () => {
     expect(parameters.get('access_type')).toBe('offline');
     expect(parameters.get('prompt')).toBe('consent');
     expect(parameters.get('state')).toBe('synthetic-state');
+  });
+});
+
+describe('Google evidence folder environments', () => {
+  it('keeps staging and production roots distinct while preserving child roles', () => {
+    const staging = evidenceFolderDefinitions('STAGING');
+    const production = evidenceFolderDefinitions('production');
+
+    expect(staging[0].name).toBe('HAU-USC Logistics Evidence Backup — STAGING');
+    expect(production[0].name).toBe('HAU-USC Logistics Evidence Backup — PRODUCTION');
+    expect(production.slice(1)).toEqual(staging.slice(1));
+  });
+
+  it('rejects unsupported environments', () => {
+    expect(() => evidenceFolderDefinitions('preview')).toThrow(
+      'Google evidence environment must be STAGING or PRODUCTION.',
+    );
   });
 });

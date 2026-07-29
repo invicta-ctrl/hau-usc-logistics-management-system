@@ -5,11 +5,23 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const SECRET_NAMES = Object.freeze([
+const GENERATED_SECRET_NAMES = Object.freeze([
   'PASSWORD_PEPPER',
   'TRACKING_LINK_SECRET',
   'PROTECTED_PROFILE_ENCRYPTION_KEY',
   'ROSTER_DATA_ENCRYPTION_KEY',
+]);
+const PRODUCTION_GOOGLE_SECRET_NAMES = Object.freeze([
+  'GOOGLE_ROSTER_PRIVATE_KEY',
+  'GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET',
+  'GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN',
+  'GOOGLE_EVIDENCE_OAUTH_CLIENT_ID',
+  'GOOGLE_DRIVE_ROOT_FOLDER_ID',
+  'GOOGLE_DRIVE_RECEIPTS_FOLDER_ID',
+  'GOOGLE_DRIVE_CANVASS_FOLDER_ID',
+  'GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID',
+  'GOOGLE_EVIDENCE_RELEASE_FOLDER_ID',
+  'GOOGLE_DRIVE_LENDING_FOLDER_ID',
 ]);
 
 export function createSecretPackage(environment, random = randomBytes) {
@@ -19,7 +31,9 @@ export function createSecretPackage(environment, random = randomBytes) {
     schemaVersion: 1,
     environment: normalized,
     createdAt: new Date().toISOString(),
-    secrets: Object.fromEntries(SECRET_NAMES.map((name) => [name, random(48).toString('base64url')])),
+    secrets: Object.fromEntries(
+      GENERATED_SECRET_NAMES.map((name) => [name, random(48).toString('base64url')]),
+    ),
   };
 }
 
@@ -35,9 +49,19 @@ async function apply(configPath, packagePath) {
   const [resolvedConfig, source] = await Promise.all([realpath(configPath), realpath(packagePath).then((file) => readFile(file, 'utf8').then(JSON.parse))]);
   const config = JSON.parse(await readFile(resolvedConfig, 'utf8'));
   if (String(config.vars?.ENVIRONMENT ?? '').toUpperCase() !== source.environment) throw new Error('Secret package environment does not match the Wrangler config.');
-  if (source.schemaVersion !== 1 || SECRET_NAMES.some((name) => typeof source.secrets?.[name] !== 'string' || source.secrets[name].length < 32)) throw new Error('Secret package is incomplete or malformed.');
+  const secretNames =
+    source.environment === 'PRODUCTION'
+      ? [...GENERATED_SECRET_NAMES, ...PRODUCTION_GOOGLE_SECRET_NAMES]
+      : GENERATED_SECRET_NAMES;
+  if (
+    source.schemaVersion !== 1 ||
+    secretNames.some(
+      (name) => typeof source.secrets?.[name] !== 'string' || source.secrets[name].length < 16,
+    )
+  )
+    throw new Error('Secret package is incomplete or malformed.');
   const wrangler = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
-  for (const name of SECRET_NAMES) {
+  for (const name of secretNames) {
     const result = spawnSync(process.execPath, [wrangler, 'secret', 'put', name, '--config', resolvedConfig], {
       cwd: repoRoot,
       input: `${source.secrets[name]}\n`,
@@ -46,7 +70,7 @@ async function apply(configPath, packagePath) {
     });
     if (result.status !== 0) throw new Error(`Cloudflare rejected protected secret ${name}.`);
   }
-  console.log(`${source.environment} protected Cloudflare secrets applied: ${SECRET_NAMES.join(', ')}.`);
+  console.log(`${source.environment} protected Cloudflare secrets applied: ${secretNames.join(', ')}.`);
   console.log('No secret values were printed.');
 }
 

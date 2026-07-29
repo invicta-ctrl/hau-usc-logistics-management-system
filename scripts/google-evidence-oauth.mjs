@@ -8,14 +8,34 @@ import { fileURLToPath } from 'node:url';
 export const GOOGLE_EVIDENCE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 const DRIVE_FOLDER_MIME_TYPE = 'application/vnd.google-apps.folder';
+const EVIDENCE_ENVIRONMENTS = new Set(['STAGING', 'PRODUCTION']);
 const FOLDER_DEFINITIONS = Object.freeze([
-  { key: 'ROOT', name: 'HAU-USC Logistics Evidence Backup — STAGING', parentKey: '' },
+  { key: 'ROOT', name: 'HAU-USC Logistics Evidence Backup', parentKey: '' },
   { key: 'RESTOCK_RECEIPT', name: 'Restock Receipts', parentKey: 'ROOT' },
   { key: 'CANVASS', name: 'Canvass', parentKey: 'ROOT' },
   { key: 'DELIVERABLE', name: 'Deliverables', parentKey: 'ROOT' },
   { key: 'RELEASE', name: 'Release Confirmations', parentKey: 'ROOT' },
   { key: 'LENDING', name: 'Lending Evidence', parentKey: 'ROOT' },
 ]);
+
+function evidenceEnvironment(value = 'STAGING') {
+  const environment = String(value).trim().toUpperCase();
+  if (!EVIDENCE_ENVIRONMENTS.has(environment)) {
+    throw new Error('Google evidence environment must be STAGING or PRODUCTION.');
+  }
+  return environment;
+}
+
+export function evidenceFolderDefinitions(value = 'STAGING') {
+  const environment = evidenceEnvironment(value);
+  return FOLDER_DEFINITIONS.map((definition) => ({
+    ...definition,
+    name:
+      definition.key === 'ROOT'
+        ? `${definition.name} — ${environment}`
+        : definition.name,
+  }));
+}
 
 function base64Url(bytes) {
   return Buffer.from(bytes).toString('base64url');
@@ -61,18 +81,18 @@ async function driveJson(accessToken, url, options = {}, operation = 'request') 
   return payload;
 }
 
-function folderQuery(definition, parentId) {
+function folderQuery(definition, parentId, environment) {
   return [
     `mimeType = '${DRIVE_FOLDER_MIME_TYPE}'`,
     `appProperties has { key='hauUscArchiveRole' and value='${definition.key}' }`,
-    "appProperties has { key='hauUscEnvironment' and value='STAGING' }",
+    `appProperties has { key='hauUscEnvironment' and value='${environment}' }`,
     `'${escapeDriveQuery(parentId || 'root')}' in parents`,
     'trashed = false',
     "visibility = 'limited'",
   ].join(' and ');
 }
 
-function verifyFolder(folder, definition, parentId) {
+function verifyFolder(folder, definition, parentId, environment) {
   if (
     !folder ||
     typeof folder.id !== 'string' ||
@@ -82,7 +102,7 @@ function verifyFolder(folder, definition, parentId) {
       ? !folder.parents?.includes(parentId)
       : !Array.isArray(folder.parents) || folder.parents.length !== 1) ||
     folder.appProperties?.hauUscArchiveRole !== definition.key ||
-    folder.appProperties?.hauUscEnvironment !== 'STAGING' ||
+    folder.appProperties?.hauUscEnvironment !== environment ||
     folder.shared === true ||
     folder.trashed === true
   ) {
@@ -90,9 +110,9 @@ function verifyFolder(folder, definition, parentId) {
   }
 }
 
-async function ensureFolder(accessToken, definition, parentId) {
+async function ensureFolder(accessToken, definition, parentId, environment) {
   const list = new URLSearchParams({
-    q: folderQuery(definition, parentId),
+    q: folderQuery(definition, parentId, environment),
     spaces: 'drive',
     pageSize: '2',
     fields: 'files(id,name,mimeType,parents,appProperties,shared,trashed)',
@@ -122,24 +142,26 @@ async function ensureFolder(accessToken, definition, parentId) {
           ...(parentId ? { parents: [parentId] } : {}),
           appProperties: {
             hauUscArchiveRole: definition.key,
-            hauUscEnvironment: 'STAGING',
+            hauUscEnvironment: environment,
           },
         }),
       },
       `folder create ${definition.key}`,
     );
   }
-  verifyFolder(folder, definition, parentId);
+  verifyFolder(folder, definition, parentId, environment);
   return folder.id;
 }
 
-export async function ensureEvidenceFolderTree(accessToken) {
+export async function ensureEvidenceFolderTree(accessToken, { environment: value = 'STAGING' } = {}) {
+  const environment = evidenceEnvironment(value);
   const ids = {};
-  for (const definition of FOLDER_DEFINITIONS) {
+  for (const definition of evidenceFolderDefinitions(environment)) {
     ids[definition.key] = await ensureFolder(
       accessToken,
       definition,
       definition.parentKey ? ids[definition.parentKey] : '',
+      environment,
     );
   }
   return ids;
@@ -201,12 +223,14 @@ function callbackServer({ expectedState }) {
 }
 
 async function main() {
-  const [clientPath, outputDirectory] = process.argv.slice(2);
+  const [clientPath, outputDirectory, rawEnvironment = 'STAGING'] = process.argv.slice(2);
   if (!path.isAbsolute(clientPath ?? '') || !path.isAbsolute(outputDirectory ?? '')) {
     throw new Error(
-      'Usage: node scripts/google-evidence-oauth.mjs <absolute-client-json> <absolute-output-directory>',
+      'Usage: node scripts/google-evidence-oauth.mjs <absolute-client-json> <absolute-output-directory> [STAGING|PRODUCTION]',
     );
   }
+  const environment = evidenceEnvironment(rawEnvironment);
+  const outputPrefix = environment.toLowerCase();
   const credential = JSON.parse(await readFile(clientPath, 'utf8'));
   const client = credential.installed;
   if (!client?.client_id || !client?.client_secret) {
@@ -236,10 +260,10 @@ async function main() {
   try {
     const code = await callback;
     const token = await tokenExchange({ code, client, redirectUri, verifier });
-    const folderIds = await ensureEvidenceFolderTree(token.access_token);
+    const folderIds = await ensureEvidenceFolderTree(token.access_token, { environment });
     await Promise.all([
       writeFile(
-        path.join(outputDirectory, 'staging-oauth-token.json'),
+        path.join(outputDirectory, `${outputPrefix}-oauth-token.json`),
         `${JSON.stringify(
           {
             refresh_token: token.refresh_token,
@@ -253,7 +277,7 @@ async function main() {
         { mode: 0o600, flag: 'wx' },
       ),
       writeFile(
-        path.join(outputDirectory, 'staging-drive-folders.json'),
+        path.join(outputDirectory, `${outputPrefix}-drive-folders.json`),
         `${JSON.stringify(folderIds, null, 2)}\n`,
         { mode: 0o600, flag: 'wx' },
       ),
@@ -265,7 +289,11 @@ async function main() {
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  typeof process !== 'undefined' &&
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   main().catch((error) => {
     console.error(error.message);
     process.exitCode = 1;
