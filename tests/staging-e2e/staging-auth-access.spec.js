@@ -99,6 +99,14 @@ test('deployed staging Materials workspace projects its canonical queue and shar
     (response) =>
       response.request().method() === 'GET' && new URL(response.url()).pathname === '/api/auth/session',
   );
+  const browserQueueCalls = [];
+  page.on('response', (response) => {
+    if (new URL(response.url()).pathname === '/api/getMaterialsWorkQueue')
+      browserQueueCalls.push({
+        status: response.status(),
+        operationalScope: response.request().postDataJSON()?.operationalScope ?? '',
+      });
+  });
   await page.goto('/app/materials');
   const browserSession = await (await sessionResponse).json();
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
@@ -138,6 +146,10 @@ test('deployed staging Materials workspace projects its canonical queue and shar
   }
 
   await expect(panel.getByRole('heading', { name: 'Traceable materials pipeline' })).toBeVisible();
+  await expect.poll(() => browserQueueCalls).toContainEqual({
+    status: 200,
+    operationalScope: 'COMMITTEE:COM_MATERIALS',
+  });
   await expect(panel).toContainText(
     `${queue.items.length} scoped deliverable${queue.items.length === 1 ? '' : 's'}`,
   );
@@ -149,7 +161,7 @@ test('deployed staging Materials workspace projects its canonical queue and shar
     await expect(panel).toContainText(firstItem.requestId);
     await expect(panel).toContainText(firstItem.materials.specification);
     await expect(panel).toContainText(
-      `Requested ${firstItem.quantityRequested} ${firstItem.unit} Â· Received ${firstItem.quantityReceived} Â· Released ${firstItem.quantityReleased}`,
+      `Requested ${firstItem.quantityRequested} ${firstItem.unit} · Received ${firstItem.quantityReceived} · Released ${firstItem.quantityReleased}`,
     );
   }
 
