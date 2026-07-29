@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.0 Phase 26 final freeze accepted - Phase 27 active
+
+- Frozen product/staging candidate
+  `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3` is healthy on schema 29 /
+  migration 0029 with the required staging bindings and readiness true.
+- A bounded compatibility repair prevents malformed retained history metadata
+  from failing lending projection; focused regression coverage and live HTTP
+  200 acceptance pass without deleting immutable history.
+- `npm run check` passes 76 Vitest files / 495 tests and every repository gate;
+  the controlled deployed browser matrix passes 15 / 15 and exact-product-head
+  CI passes 6 / 6.
+- Final reconciliation leaves no active synthetic workflow, event, evidence,
+  session, or limiter state; the temporary owner is disabled and denied.
+- Immutable hashes, schema identity, D1 export/bookmark, safe R2 inventory,
+  Worker-version capture, rollback evidence, and the complete launch package
+  are preserved privately.
+- Production remains untouched and NO-GO. Phase 27 branch consolidation,
+  reference preservation, merge-identity rebinding, and affected-gate reruns
+  are active.
+
 ## v0.7.0 Phase 25 production preflight accepted — Phase 26 active
 
 - Exact candidate `73612344a7e0b1f533ff56a3e24695176bb9a75e` is pushed and

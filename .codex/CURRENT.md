@@ -1,9 +1,9 @@
 # Current Codex Work Pointer
 
 Program: HAU-USC Logistics v0.7.0 continuous production completion
-Phase: Phase 26 — Final Freeze
+Phase: Phase 27 — Branch Consolidation
 Required model: GPT-5.6 Sol — High
-Status: ACTIVE — PHASE 25 ACCEPTED; PHASE 26 FINAL FREEZE IN PROGRESS; PRODUCTION NO-GO
+Status: ACTIVE — PHASE 26 ACCEPTED; PHASE 27 CONSOLIDATION IN PROGRESS; PRODUCTION NO-GO
 
 Repository: `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`
 Branch: `chore/v0.6-codex-continuity-bootstrap`
@@ -31,6 +31,7 @@ Phase 21 accepted staging runtime: `3c5b7aa1b1166775fffce9ef8e5275e0eef65021`
 Phase 22 accepted staging runtime: `7c47f229c43e36bcf28273998a48b36aeb3aaedd`
 Phase 23 accepted staging runtime: `d095685e223be2697cc72582d35967e70cfd5163`
 Phase 24 restored final staging runtime: `d095685e223be2697cc72582d35967e70cfd5163`
+Phase 26 frozen product/staging runtime: `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3`
 Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 ## Active accepted specification
@@ -46,7 +47,7 @@ Upstream: `origin/chore/v0.6-codex-continuity-bootstrap`
 
 The accepted follow-up amendment supersedes only the product behaviors it explicitly changes, including public Request Center access/tracking and public Lending Center tracking. Safety, privacy, recovery, fail-closed authorization, truthful evidence, inventory/ledger invariants, and the master-prompt production gates remain mandatory.
 
-## Accepted completion through Phase 24
+## Accepted completion through Phase 26
 
 - Phase 0: repository, provider, data-source, branch, and all-ref preservation truth established.
 - Phase 1: distinct staging/production D1 and R2, private fail-closed configs, staging secrets/observability, health/readiness/version, and staging foundation accepted.
@@ -102,6 +103,10 @@ The accepted follow-up amendment supersedes only the product behaviors it explic
   Worker/D1/R2/Google configuration, complete protected secrets, fresh
   recovery inputs, dedicated read-only roster access, isolated private Drive
   mappings, negative fail-closed validation, and production dry-run are
+  accepted without a production write.
+- Phase 26: exact-candidate staging identity, complete repository and deployed
+  browser gates, immutable hash/recovery capture, authoritative inventory and
+  event reconciliation, synthetic cleanup, and exact-product-head CI are
   accepted without a production write.
 
 Durable handoffs:
@@ -375,9 +380,17 @@ launch preflight pass for the active window; production resources, secrets,
 Google configuration, backups, rollback inputs, and route labels are complete
 and distinct. Production was untouched.
 
-Phase 26 is active. Deploy the exact candidate to staging, run the full
-repository and deployed browser gates, verify exact-head CI, and freeze the
-complete immutable release/hash/evidence package. Production remains NO-GO.
+Phase 26 is accepted at exact product/staging candidate
+`4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3`. Repository acceptance passed
+76 Vitest files / 495 tests and every gate; the controlled deployed browser
+matrix passed 15 / 15; final D1, inventory, event, actor, evidence, limiter,
+and synthetic reconciliation passed; exact-product-head CI passed 6 / 6.
+Production was untouched.
+
+Phase 27 is active. Preserve prior refs, prove the accepted branch contains
+all launch work, consolidate through the approved pull request, rebind the
+private production package to the merge identity, and rerun every affected
+gate. Production remains NO-GO.
 
 Durable launch evidence: `.codex/PRODUCTION_LAUNCH_HANDOFF.md`, `.codex/LAUNCH_EVIDENCE_INDEX.md`, and `.codex/V0_7_BRANCH_INVENTORY.md`.
 
@@ -410,3 +423,6 @@ Phase 24 accepted recovery evidence:
 
 Phase 25 accepted preflight evidence:
 `.codex/V0_7_PHASE_25_PRODUCTION_PREFLIGHT_HANDOFF.md`.
+
+Phase 26 accepted final-freeze evidence:
+`.codex/V0_7_PHASE_26_FINAL_FREEZE_HANDOFF.md`.

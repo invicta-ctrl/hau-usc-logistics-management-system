@@ -1,6 +1,26 @@
 # HAU-USC Logistics v0.7.0 Production Launch Handoff
 
-Decision: **PRODUCTION NO-GO — PHASES 0–25 ACCEPTED; PHASE 26 FINAL FREEZE ACTIVE**
+Decision: **PRODUCTION NO-GO — PHASES 0–26 ACCEPTED; PHASE 27 CONSOLIDATION ACTIVE**
+
+## Phase 26 final freeze
+
+- Frozen product/staging candidate
+  `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3` is healthy and ready on
+  schema 29 / migration 0029 with the required staging bindings.
+- A bounded compatibility repair makes retained malformed lending-history
+  metadata safe to project without deleting immutable history.
+- Repository acceptance passed 76 Vitest files / 495 tests and every required
+  gate. The controlled deployed browser matrix passed 15 / 15 and exact-
+  product-head CI passed 6 / 6.
+- Final reconciliation leaves zero active synthetic workflow/event/evidence,
+  session, or limiter state; inventory remains 397 rows and the approved event
+  remains two September days / seven activities with no active August schedule.
+- Exact artifact hashes, all migration hashes, the final D1 export/bookmark,
+  safe R2 inventory, Worker-version capture, and the private launch package are
+  preserved outside Git.
+- Production was not uploaded, deployed, migrated, configured, seeded,
+  written, or smoke-tested.
+- Durable evidence: `.codex/V0_7_PHASE_26_FINAL_FREEZE_HANDOFF.md`.
 
 ## Phase 25 production authorization and preflight
 
@@ -52,12 +72,12 @@ Decision: **PRODUCTION NO-GO — PHASES 0–25 ACCEPTED; PHASE 26 FINAL FREEZE A
 | 2. Private v0.7 configs                    | PASS — distinct pair and secret packages retained outside Git                                                                                |
 | 3. Cloudflare staging/production resources | PASS FOR D1/R2; staging Worker deployed; production Worker intentionally deferred                                                            |
 | 4. Google mappings                         | PASS READ-ONLY; event source empty                                                                                                           |
-| 5. Backup                                  | PARTIAL — staging pre-migration SQL exports retained through pre-0026; formal rollback rehearsal remains Phase 24                            |
-| 6. Migrations                              | PARTIAL — staging through 0026 applied/reconciled; production migrations pending                                                             |
+| 5. Backup                                  | PASS — final schema-29 export/bookmark plus verified rollback evidence retained privately                                                    |
+| 6. Migrations                              | PASS ON STAGING — all 29 migrations applied/reconciled; production migrations pending                                                        |
 | 7. Import/reconciliation                   | PASS ON STAGING — 397 / 397 imported, zero rejected, exact replay, ledger parity, fail-closed classification, scope/invariant reconciliation |
-| 8. Staging deployment                      | PASS THROUGH PHASE 17 runtime `03b4088`                                                                                                      |
-| 9. Staging acceptance                      | PASS THROUGH PHASE 17; Phase 18 and full master Phase 22 pending                                                                             |
-| 10. Rollback rehearsal                     | PENDING                                                                                                                                      |
+| 8. Staging deployment                      | PASS — exact frozen product runtime `4cba9f0`                                                                                                |
+| 9. Staging acceptance                      | PASS — full controlled deployed matrix and final reconciliation                                                                              |
+| 10. Rollback rehearsal                     | PASS — real prior-version rollback, smoke, exact restore, byte-identical D1                                                                  |
 | 11. Consolidation merge/tag/release        | PENDING                                                                                                                                      |
 | 12. Production deployment                  | PENDING                                                                                                                                      |
 | 13. Production smoke                       | PENDING                                                                                                                                      |

@@ -3,16 +3,16 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; final staging runtime `d095685e223be2697cc72582d35967e70cfd5163` is restored and healthy.
-- **Current phase/stage:** Phases 0–25 accepted; Phase 26 Final Freeze is active; production NO-GO.
-- **Accepted scope:** Phase 26 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** exact-candidate production authorization/resource separation; complete private secrets; dedicated read-only roster reader; six-role production Drive mapping; fresh recovery validation; negative preflight; production dry-run without upload.
-- **Tests verified:** `npm run check` passes 75 Vitest files / 494 tests; focused Google/environment tests 11 / 11; private environment, authorization, and launch preflights pass.
-- **External actions:** created and verified dedicated Google reader/Drive configuration only; failed/inaccessible service-account keys were revoked. Production Worker/D1/R2/secrets/routes/data remain untouched.
-- **Rollback:** current private schema-29 export SHA-256 `ba8c039a5ebbdfb56103fd49baee5d3eade9b06985023d826d4e8fc1fcd28c42`; private Time Travel bookmark and exact prior/final Worker version mapping retained.
-- **Blocker:** none for Phase 26. Stop on any exact-candidate staging, full browser, CI, hash, reconciliation, backup, authorization, or zero-P0/P1 failure.
-- **Next action:** deploy exact `73612344a7e0b1f533ff56a3e24695176bb9a75e` to staging, run the full deployed browser gate, confirm exact-head CI, and freeze all release hashes/evidence. Durable Phase 25 evidence is `.codex/V0_7_PHASE_25_PRODUCTION_PREFLIGHT_HANDOFF.md`.
-- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before Phases 26–27 pass.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; frozen staging product runtime `4cba9f09ebd88085f1f93f0c4d37fbb8c185c4c3` is healthy on schema 29.
+- **Current phase/stage:** Phases 0–26 accepted; Phase 27 Branch Consolidation is active; production NO-GO.
+- **Accepted scope:** Phase 27 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** final freeze at `4cba9f0`; complete repository gate, controlled 15/15 deployed browser gate, exact-product-head CI, immutable hashes/recovery capture, authoritative reconciliation, and synthetic cleanup.
+- **Tests verified:** `npm run check` passes 76 Vitest files / 495 tests; deployed browser 15 / 15; exact-product-head CI 6 / 6; private environment, authorization, and launch preflights pass.
+- **External actions:** exact candidate deployed only to staging; final staging export/bookmark/version evidence captured privately. Production Worker/D1/R2/secrets/routes/data remain untouched.
+- **Rollback:** final private schema-29 export SHA-256 `a0cd2674f2eb92ae9392b654f3c4ba14225c15bfdff1e1666ea589e9adc2f49a`; private Time Travel bookmark and Phase 24 byte-identical rollback evidence retained.
+- **Blocker:** none for Phase 27. Stop on omitted accepted work, ref-preservation failure, merge conflict, exact-main gate failure, or stale launch-package identity.
+- **Next action:** inventory and preserve refs, consolidate PR #9 into the canonical branch, verify the merge identity and CI, then rebind and revalidate the private production package. Durable Phase 26 evidence is `.codex/V0_7_PHASE_26_FINAL_FREEZE_HANDOFF.md`.
+- **Prohibited actions:** no production Worker upload/deploy, production migration/data write, release, or production smoke before Phase 27 and every final authorization gate pass.
 
 ## Prior Phase 8 resume block
 

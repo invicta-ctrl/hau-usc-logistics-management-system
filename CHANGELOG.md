@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 26 final freeze (2026-07-29)
+
+### Fixed
+
+- Lending history projection now safely tolerates retained malformed or
+  non-object legacy metadata without discarding immutable history.
+
+### Verified
+
+- Exact product/staging candidate `4cba9f0` passed 76 Vitest files / 495 tests,
+  every repository gate, exact staging identity/readiness, the controlled
+  15 / 15 deployed browser matrix, final reconciliation, recovery/hash
+  capture, and exact-product-head CI 6 / 6.
+- Authoritative inventory remains 397 rows; Youth Development Days remains
+  exactly two active September days and seven activities with no active
+  superseded August schedule.
+
+### Boundary
+
+- Production was untouched. Phase 27 branch consolidation is active; the
+  private production package must be rebound to the merge identity before any
+  production write.
+
 ## Unreleased - v0.7.0 Phase 25 production authorization and preflight (2026-07-29)
 
 ### Added
