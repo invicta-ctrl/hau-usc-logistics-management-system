@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.0 Phase 22 full staging acceptance complete — Phase 23 active
+
+- Exact staging runtime `7c47f229c43e36bcf28273998a48b36aeb3aaedd`
+  is healthy on schema 29 / migration 0029; production was untouched.
+- Private sampled observability passed six traces and six structured
+  application logs with timings, correlation IDs, application-message
+  redaction, and staging-only binding proof.
+- Reusable assets can enter later loans after return while every historical
+  assignment remains retained. Materials scope changes now render canonical
+  server truth without fabricated zero values or stale in-flight results.
+- `npm run check` passes 74 Vitest files / 477 tests and every repository gate.
+  Focused Materials and Request Center staging reruns pass, and the final
+  deployed operations matrix passes 10 / 10.
+- Final reconciliation leaves zero fixture sessions, active reservations,
+  active requests, and active public lending. Temporary credentials are
+  denied; two synthetic items and seven asset instances are archived; prior
+  department/event snapshots are restored; 50 cleanup audits remain.
+- Phase 23 accessibility, responsiveness, performance, and bounded capacity
+  acceptance is active. Production remains NO-GO.
+
 ## v0.7.0 Phase 21 operational health accepted — Phase 22 active
 
 - The protected System Owner surface reports 16 safe operational metrics for

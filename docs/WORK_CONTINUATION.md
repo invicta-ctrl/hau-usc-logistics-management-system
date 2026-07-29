@@ -3,15 +3,15 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 21 exact product/runtime `3c5b7aa1b1166775fffce9ef8e5275e0eef65021` is pushed, deployed, and passed 6 / 6 PR checks.
-- **Current phase/stage:** Phases 0–21 accepted on staging; Phase 22 Full Staging and Operations Acceptance is active; production NO-GO.
-- **Accepted scope:** Phase 22 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
-- **Completed work:** owner-only operational health reports 16 safe release/data/auth/provider/storage/inventory/recovery metrics, truthful attention/not-configured/unrecorded state, protected-value omission, and responsive presentation.
-- **Tests verified:** `npm run check` passes 74 files / 477 Vitest plus every repository gate; focused health/roster tests pass 6 / 6; full Playwright passes 127 with 311 intentional skips; fresh local Worker/D1/R2 passes 34 / 34; deployed mobile/desktop owner acceptance and Administrator denial pass; exact-product-head PR #9 CI is 6 / 6.
-- **External actions:** exact candidate `3c5b7aa` was deployed only to staging. Cache-busted health/readiness/version report schema 28 and ready true. Two synthetic actors were disabled, sessions reconciled to zero, and four immutable lifecycle audits retained. Production was untouched.
-- **Rollback:** redeploy exact Phase 20 runtime `4709e844f1bfcb0309cb1a2feeca2f66d9aeab89` if the operational-health route or UI regresses. Schema 28 was unchanged by Phase 21.
-- **Blocker:** none for Phase 22 staging acceptance. Stop on production binding/mutation, secret/personal-data logging, fallback/demo data, authorization/invariant failure, or unreconciled synthetic effects.
-- **Next action:** verify redacted Workers Logs, sampled Traces, staging-only bindings, endpoints, and correlation IDs, then run the complete synthetic/redacted Phase 22 authentication and operations matrix. Durable Phase 21 evidence is `.codex/V0_7_PHASE_21_OPERATIONAL_HEALTH_HANDOFF.md`.
+- **Branch/runtime/upstream:** `chore/v0.6-codex-continuity-bootstrap`; Phase 22 exact product/runtime `7c47f229c43e36bcf28273998a48b36aeb3aaedd` is pushed and deployed to staging.
+- **Current phase/stage:** Phases 0–22 accepted on staging; Phase 23 Accessibility, Responsiveness, Performance, and Capacity is active; production NO-GO.
+- **Accepted scope:** Phase 23 of `.codex/specs/v0.7.0-production-master.md`, the autonomous continuation prompt, accepted amendments, and shared efficiency contract.
+- **Completed work:** redacted logs/traces and staging-only bindings passed; migration 0029 repairs reusable-asset reassignment; Materials scope renders canonical truth; the complete public/internal operations matrix and final reconciliation passed.
+- **Tests verified:** `npm run check` passes 74 files / 477 Vitest plus every repository gate; focused Materials and Request Center deployed checks pass; final deployed Phase 22 matrix passes 10 / 10.
+- **External actions:** exact candidate `7c47f22` was deployed only to staging on schema 29. Temporary actors, sessions, active workflow fixtures, items, assets, and prior account/event state were reconciled with immutable history retained. Production was untouched.
+- **Rollback:** private pre-Phase 22 schema-28 export SHA-256 `032e4067060ebfdcc4e69f4944492a8912ee0f458b920f93b72c4dff62f25e49`; redeploy the prior safe runtime and restore only under the governed Phase 24 rehearsal procedure.
+- **Blocker:** none for Phase 23 staging acceptance. Stop on production mutation, abusive load, inaccessible required actions, privacy/security failure, P0/P1 defects, or unreconciled synthetic effects.
+- **Next action:** inventory existing accessibility/responsive/performance automation and execute only the missing 390px/~820px/1366px, 200% zoom, measurement, polling, and bounded capacity checks. Durable Phase 22 evidence is `.codex/V0_7_PHASE_22_FULL_STAGING_ACCEPTANCE_HANDOFF.md`.
 - **Prohibited actions:** no production Worker upload/deploy, production migration/data write, merge/tag/release, or production smoke before the master gates pass.
 
 ## Prior Phase 8 resume block

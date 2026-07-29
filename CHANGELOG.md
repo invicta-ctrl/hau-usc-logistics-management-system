@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased - v0.7.0 Phase 22 full staging acceptance (2026-07-29)
+
+### Added
+
+- Schema 29 reusable-asset reassignment history and a complete redacted
+  staging operations acceptance packet spanning authentication, public
+  request and lending, inventory, procurement, restocking, release, evidence,
+  events, access management, and protected health.
+- Private sampled Worker trace/log evidence with application-message
+  redaction, correlation IDs, timings, and staging-only binding proof.
+
+### Fixed
+
+- Returned reusable assets can enter a later governed loan while every prior
+  assignment remains immutable and queryable.
+- Materials scope changes now resolve to canonical server truth after
+  in-flight requests and render an explicit loading state instead of a
+  synthetic zero.
+
+### Verified
+
+- `npm run check`: 74 Vitest files / 477 tests plus every repository gate;
+  focused deployed Materials and Request Center checks pass.
+- Exact staging runtime `7c47f22`, schema 29, passed the final deployed
+  operations matrix 10 / 10, authorization/privacy/concurrency/ledger checks,
+  and audited reconciliation.
+
+### Boundary
+
+- Temporary credentials are denied, active fixture state is zero, synthetic
+  inventory is archived, prior account/event state is restored, immutable
+  evidence remains, and production was not modified.
+
 ## Unreleased - v0.7.0 Phase 21 operational health (2026-07-29)
 
 ### Added
