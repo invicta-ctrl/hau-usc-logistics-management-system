@@ -39,5 +39,8 @@ Decision: **ACCEPTED — PROGRAM COMPLETE**
 - Preserve administrator emergency access as an audited exception; never
   force-push or delete `main`.
 
+These controls are enabled and verified on GitHub for `main`, with strict
+`verify` and `browser-smoke` status checks and conversation resolution.
+
 The controlled weekly v1 roadmap contains only post-launch improvements; no
 broken v0.7.0 core workflow has been deferred.

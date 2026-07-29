@@ -35,3 +35,8 @@ Decision: **ACCEPTED**
 
 Future branches start from `main` and merge only through a current, green pull
 request. Force-push and branch deletion remain prohibited.
+
+Post-launch GitHub protection is verified active on `main`: pull requests,
+strict current `verify` and `browser-smoke` checks, and resolved conversations
+are required; force-push and deletion are disabled. Administrator emergency
+bypass remains available as the audited recovery exception.
