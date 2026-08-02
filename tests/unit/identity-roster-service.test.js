@@ -289,13 +289,19 @@ describe('owner-protected identity roster service', () => {
       reason: 'Restore rollback idempotency acceptance data.',
       clientRequestId: 'roster-rollback-idempotency-0001',
     };
-    await expect(scenario.service.rollback({ actor: owner, command })).resolves.toMatchObject({
+    await expect(
+      scenario.service.rollback({ actor: owner, command, correlationId: 'REQ_ROSTERORIGINAL1' }),
+    ).resolves.toMatchObject({
       rolledBack: true,
       replayed: false,
+      correlationId: 'REQ_ROSTERORIGINAL1',
     });
-    await expect(scenario.service.rollback({ actor: owner, command })).resolves.toMatchObject({
+    await expect(
+      scenario.service.rollback({ actor: owner, command, correlationId: 'REQ_ROSTERRETRY999' }),
+    ).resolves.toMatchObject({
       rolledBack: true,
       replayed: true,
+      correlationId: 'REQ_ROSTERORIGINAL1',
     });
     expect(scenario.repository.rollbackRun).toHaveBeenCalledOnce();
     await expect(

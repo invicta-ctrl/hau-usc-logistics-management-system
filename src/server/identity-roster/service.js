@@ -466,16 +466,18 @@ export function createIdentityRosterService({
       if (!snapshotEnvelope) fail('ROSTER_ROLLBACK_UNAVAILABLE', { status: 409 });
       const entries = await crypto.decrypt(snapshotEnvelope);
       const rolledBackAt = nowIso();
+      const mutationCorrelationId = String(correlationId);
       const replayResult = {
         rolledBack: true,
         run: safeRun({ ...run, applyStatus: 'ROLLED_BACK', rolledBackAt }),
+        correlationId: mutationCorrelationId,
       };
       await repository.rollbackRun({
         run,
         entries,
         actor,
         rolledBackAt,
-        correlationId,
+        correlationId: mutationCorrelationId,
         auditId: `AUD-${createId()}`,
         reason,
         idempotency: {

@@ -232,10 +232,10 @@ export function createD1AccessManagementRepository(db) {
 
     async getAccessPolicyChangeByIdempotency(idempotencyKey) {
       const row = await db
-        .prepare('SELECT after_json FROM access_policy_changes WHERE idempotency_key = ?1')
+        .prepare('SELECT after_json, correlation_id FROM access_policy_changes WHERE idempotency_key = ?1')
         .bind(idempotencyKey)
         .first();
-      return row ? { after: parseJson(row.after_json, {}) } : null;
+      return row ? { after: parseJson(row.after_json, {}), correlationId: row.correlation_id } : null;
     },
 
     async updateAccessPolicy({
@@ -522,7 +522,7 @@ export function createD1AccessManagementRepository(db) {
     async getAccessIdHistoryByIdempotency(idempotencyKey) {
       const row = await db
         .prepare(
-          `SELECT account_id, old_access_id_normalized, new_access_id_normalized
+          `SELECT account_id, old_access_id_normalized, new_access_id_normalized, correlation_id
            FROM access_id_history
            WHERE idempotency_key = ?1`,
         )
@@ -533,6 +533,7 @@ export function createD1AccessManagementRepository(db) {
             accountId: row.account_id,
             oldAccessId: row.old_access_id_normalized,
             newAccessId: row.new_access_id_normalized,
+            correlationId: row.correlation_id,
           }
         : undefined;
     },

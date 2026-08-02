@@ -71,6 +71,7 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
         accountId: command.account.id,
         oldAccessId: command.account.accessIdNormalized,
         newAccessId: command.newAccessId,
+        correlationId: command.correlationId,
       });
       changes.push(command);
     }),
@@ -190,10 +191,15 @@ describe('access management service', () => {
     };
 
     const first = await service.changeAccessId({ actor, command, correlationId: 'REQ-SYNTHETIC' });
-    const replay = await service.changeAccessId({ actor, command, correlationId: 'REQ-SYNTHETIC' });
+    const replay = await service.changeAccessId({ actor, command, correlationId: 'REQ-RETRY' });
 
     expect(first).toMatchObject({ changed: true, replayed: false, sessionsRevoked: true });
-    expect(replay).toMatchObject({ changed: true, replayed: true, sessionsRevoked: true });
+    expect(replay).toMatchObject({
+      changed: true,
+      replayed: true,
+      sessionsRevoked: true,
+      correlationId: 'REQ-SYNTHETIC',
+    });
     expect(repository.changeAccessId).toHaveBeenCalledTimes(1);
     expect(changes[0]).toMatchObject({
       account: { id: target.id, roleId: target.roleId },
@@ -376,6 +382,7 @@ describe('access management service', () => {
     const { service, repository } = context({ accounts: [target] });
     const result = await service.resetTemporaryPassword({
       actor,
+      correlationId: 'REQ_RESETORIGINAL123',
       command: {
         currentAccessId: target.accessIdNormalized,
         confirmCurrentAccessId: target.accessIdNormalized,
@@ -392,6 +399,7 @@ describe('access management service', () => {
         accessId: target.accessIdNormalized,
         temporaryPassword: 'Generated!Password19472',
       },
+      correlationId: 'REQ_RESETORIGINAL123',
     });
     expect(repository.resetTemporaryPassword).toHaveBeenCalledOnce();
     expect(JSON.stringify(repository.resetTemporaryPassword.mock.calls[0][0])).not.toContain(
@@ -399,6 +407,7 @@ describe('access management service', () => {
     );
     const replay = await service.resetTemporaryPassword({
       actor,
+      correlationId: 'REQ_RESETRETRY9999',
       command: {
         currentAccessId: target.accessIdNormalized,
         confirmCurrentAccessId: target.accessIdNormalized,
@@ -410,6 +419,7 @@ describe('access management service', () => {
       reset: true,
       replayed: true,
       credentialUnavailable: true,
+      correlationId: 'REQ_RESETORIGINAL123',
     });
     expect(replay).not.toHaveProperty('credential');
     expect(repository.resetTemporaryPassword).toHaveBeenCalledOnce();

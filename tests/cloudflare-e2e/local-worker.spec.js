@@ -1594,6 +1594,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       reset: true,
       replayed: true,
       credentialUnavailable: true,
+      correlationId: resetResult.correlationId,
     });
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -1852,6 +1853,7 @@ test('Administrator UI shows department identity and a one-time server-generated
   await expect(page.getByRole('heading', { name: 'Temporary password generated' })).toBeVisible();
   await expect(page.locator('.credential-handoff')).toContainText('Access ID: DOL_2026');
   await expect(page.locator('.credential-handoff')).toContainText('Initial password: Hau!9');
+  await expect(page.getByText(/Audit reference: REQ_/u)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Download access codes' })).toBeVisible();
 });
 

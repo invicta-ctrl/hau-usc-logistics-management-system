@@ -70,6 +70,7 @@ const operationalErrorText = (error) => {
 };
 
 const auditReferenceText = (result) => {
+  if (result?.changed === false) return ' No new audit record was created.';
   const reference = safeReference(result?.correlationId);
   return reference ? ` Audit reference: ${reference}.` : '';
 };
@@ -1734,6 +1735,7 @@ export function createRuntimeExtensions(options) {
   const openAccessPolicyEditor = async (account) => {
     try {
       const options = await ensureAccessPolicyOptions();
+      const idempotencyKey = `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
       openModal(
         `Edit effective access · ${account.accessId}`,
         accessPolicyFormMarkup(account, options),
@@ -1772,7 +1774,7 @@ export function createRuntimeExtensions(options) {
                       try {
                         const result = await services.updateAccessPolicy({
                           ...command,
-                          idempotencyKey: `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                          idempotencyKey,
                         });
                         closeModal();
                         accessDirectory = null;
@@ -1831,6 +1833,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessIdChange = (account) => {
+    const idempotencyKey = `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Change Access ID · ${account.accessId}`,
       `<form id="accessIdChangeForm"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
@@ -1846,24 +1849,26 @@ export function createRuntimeExtensions(options) {
             const preview = await services.previewAccessIdChange(command);
             openModal(
               'Confirm Access ID change',
-              `<div class="mode-note"><strong>${esc(account.accessId)} → ${esc(preview.normalizationPreview)}</strong><br>All active sessions will be revoked. The previous Access ID remains reserved and cannot be reused. Role, capability, and historical ownership links are unchanged.</div><button class="danger section-gap" type="button" data-access-confirm-change>Confirm and revoke sessions</button>`,
+              `<div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current Access ID: ${esc(account.accessId)}<br>Proposed Access ID: ${esc(preview.normalizationPreview)}<br>Result: all active sessions revoked; previous Access ID reserved. Role, capability, and historical ownership links remain unchanged.</div><button class="danger section-gap" type="button" data-access-confirm-change>Confirm and revoke sessions</button>`,
               (confirmModal) => {
                 confirmModal
                   .querySelector('[data-access-confirm-change]')
                   .addEventListener('click', async (confirmEvent) => {
                     confirmEvent.currentTarget.disabled = true;
                     try {
-                      await services.changeAccessId({
+                      const result = await services.changeAccessId({
                         ...command,
                         proposedAccessId: preview.proposedAccessId,
-                        idempotencyKey: `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                        idempotencyKey,
                       });
                       closeModal();
                       accessDirectory = null;
                       await refreshAccessDirectory({ force: true });
-                      toast('Access ID changed; prior sessions were revoked and history was appended.');
+                      toast(
+                        `Access ID changed; prior sessions were revoked and history was appended.${auditReferenceText(result)}`,
+                      );
                     } catch (error) {
-                      toast(error.message, true);
+                      toast(operationalErrorText(error), true);
                       confirmEvent.currentTarget.disabled = false;
                     }
                   });
@@ -1949,11 +1954,11 @@ export function createRuntimeExtensions(options) {
       'These one-time credentials must be delivered through an approved private channel.',
     ].join('\r\n');
 
-  const openOneTimeCredentialHandoff = (title, credentials) => {
+  const openOneTimeCredentialHandoff = (title, credentials, result) => {
     const text = credentialsText(credentials);
     openModal(
       title,
-      `<div class="alert warning"><strong>One-time credential display.</strong> Save this export now. Passwords are not stored in plaintext and cannot be reconstructed after this dialog closes.</div><pre class="credential-handoff section-gap">${esc(text)}</pre><div class="button-row section-gap"><button class="secondary" type="button" data-copy-credentials>Copy access codes</button><button class="primary" type="button" data-download-credentials>Download access codes</button></div>`,
+      `<div class="alert warning"><strong>One-time credential display.</strong> Save this export now. Passwords are not stored in plaintext and cannot be reconstructed after this dialog closes.${esc(auditReferenceText(result))}</div><pre class="credential-handoff section-gap">${esc(text)}</pre><div class="button-row section-gap"><button class="secondary" type="button" data-copy-credentials>Copy access codes</button><button class="primary" type="button" data-download-credentials>Download access codes</button></div>`,
       (modal) => {
         modal.querySelector('[data-copy-credentials]').addEventListener('click', async () => {
           await navigator.clipboard.writeText(text);
@@ -1993,7 +1998,7 @@ export function createRuntimeExtensions(options) {
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
             if (result.credential) {
-              openOneTimeCredentialHandoff('Temporary password generated', [result.credential]);
+              openOneTimeCredentialHandoff('Temporary password generated', [result.credential], result);
             } else {
               openModal(
                 'Password reset completed',

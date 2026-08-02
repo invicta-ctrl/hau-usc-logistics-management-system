@@ -265,7 +265,14 @@ export function createAccessManagementService({
       assertAdministrator(actor);
       const idempotencyKey = requiredIdempotencyKey(command.idempotencyKey);
       const existing = await repository.getAccessPolicyChangeByIdempotency(idempotencyKey);
-      if (existing) return { changed: true, replayed: true, sessionsRevoked: true, preview: existing.after };
+      if (existing)
+        return {
+          changed: true,
+          replayed: true,
+          sessionsRevoked: true,
+          preview: existing.after,
+          correlationId: existing.correlationId,
+        };
       const account = await accountByAccessId(command.currentAccessId);
       if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
         fail('ACCESS_CONFIRMATION_REQUIRED');
@@ -348,7 +355,13 @@ export function createAccessManagementService({
         ) {
           fail('ACCESS_WRITE_CONFLICT', 409);
         }
-        return { changed: true, replayed: true, accessId: existing.newAccessId, sessionsRevoked: true };
+        return {
+          changed: true,
+          replayed: true,
+          accessId: existing.newAccessId,
+          sessionsRevoked: true,
+          correlationId: existing.correlationId,
+        };
       }
       const reason = requiredReason(command.reason);
       const preview = await previewAccessIdChange({ actor, command });
@@ -577,11 +590,13 @@ export function createAccessManagementService({
         fail('TEMPORARY_PASSWORD_INVALID');
       }
       const resetAt = nowIso();
+      const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
       const replayResult = {
         reset: true,
         status: ACCOUNT_STATUS.STARTER,
         sessionsRevoked: true,
         credentialUnavailable: true,
+        correlationId: mutationCorrelationId,
       };
       await repository.resetTemporaryPassword({
         account,
@@ -593,7 +608,7 @@ export function createAccessManagementService({
         },
         resetAt,
         reason,
-        correlationId: String(correlationId || `ACCESS_${createId()}`),
+        correlationId: mutationCorrelationId,
         auditId: createId(),
         idempotency: {
           scope: 'access-reset-temporary-password',
@@ -614,6 +629,7 @@ export function createAccessManagementService({
         status: ACCOUNT_STATUS.STARTER,
         sessionsRevoked: true,
         replayed: false,
+        correlationId: mutationCorrelationId,
         credential: oneTimeCredential(resetAccount, temporaryPassword, resetAt),
       };
     },
@@ -676,13 +692,14 @@ export function createAccessManagementService({
       }
       const reason = requiredReason(command.reason);
       const changedAt = nowIso();
-      const replayResult = { revoked: true };
+      const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
+      const replayResult = { revoked: true, correlationId: mutationCorrelationId };
       await repository.revokeSessions({
         account,
         actor,
         changedAt,
         reason,
-        correlationId: String(correlationId || `ACCESS_${createId()}`),
+        correlationId: mutationCorrelationId,
         auditId: createId(),
         idempotency: {
           scope: 'access-revoke-sessions',
@@ -706,13 +723,14 @@ export function createAccessManagementService({
       }
       const reason = requiredReason(command.reason);
       const changedAt = nowIso();
-      const replayResult = { unlocked: true };
+      const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
+      const replayResult = { unlocked: true, correlationId: mutationCorrelationId };
       await repository.unlockAccount({
         account,
         actor,
         changedAt,
         reason,
-        correlationId: String(correlationId || `ACCESS_${createId()}`),
+        correlationId: mutationCorrelationId,
         auditId: createId(),
         idempotency: {
           scope: 'access-unlock-account',
