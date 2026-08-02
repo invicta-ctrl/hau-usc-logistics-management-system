@@ -1,6 +1,7 @@
 import { config } from '../app/config.js';
 import { AppsScriptAdapter, fileToEvidencePayload } from './apps-script-adapter.js';
 import { HttpApiAdapter } from './http-api-adapter.js';
+import { assertProtectedRuntimeServiceContract } from './launch-service-contract.js';
 
 export const backendMode = config.backendMode;
 export const appEnvironment = config.appEnvironment;
@@ -56,15 +57,20 @@ export function createMutationRequestTracker({ createId = clientRequestId } = {}
   };
 }
 
-export function createLegacyRuntimeAdapter(mockServices) {
-  if (backendMode === 'mock') return mockServices;
+export function createLegacyRuntimeAdapter(
+  mockServices,
+  { mode = backendMode, remote: providedRemote } = {},
+) {
+  if (mode === 'mock') return mockServices;
   const remote =
-    backendMode === 'apps-script' ? new AppsScriptAdapter() : new HttpApiAdapter(config.httpApiBaseUrl);
+    providedRemote ??
+    (mode === 'apps-script' ? new AppsScriptAdapter() : new HttpApiAdapter(config.httpApiBaseUrl));
+  if (mode === 'rest' || mode === 'http') assertProtectedRuntimeServiceContract(remote);
   const mutationRequests = createMutationRequestTracker();
   const evidencePayload = async (payload, evidenceType) => {
     if (!payload.file) return payload;
     const filePayload = await fileToEvidencePayload(payload.file);
-    if (backendMode === 'apps-script') {
+    if (mode === 'apps-script') {
       const sanitized = { ...payload, evidence: { ...filePayload, evidenceType } };
       delete sanitized.file;
       return sanitized;
@@ -114,7 +120,7 @@ export function createLegacyRuntimeAdapter(mockServices) {
     })[metadata.folderType] ??
     metadata.evidenceType ??
     'OTHER_SUPPORTING_DOCUMENT';
-  return {
+  const runtimeAdapter = {
     async loadBootstrapData(options = {}) {
       const result = await remote.getBootstrapData(options);
       return result.data ?? result;
@@ -212,6 +218,17 @@ export function createLegacyRuntimeAdapter(mockServices) {
     previewAccessIdChange(payload = {}) {
       return remote.previewAccessIdChange(payload);
     },
+    getAccessPolicyOptions(payload = {}) {
+      return remote.getAccessPolicyOptions(payload);
+    },
+    previewAccessPolicy(payload = {}) {
+      return remote.previewAccessPolicy(payload);
+    },
+    updateAccessPolicy(payload) {
+      return mutationRequests.run('access-policy-update', payload, (command) =>
+        remote.updateAccessPolicy(command),
+      );
+    },
     changeAccessId(payload) {
       return mutationRequests.run('access-id-change', payload, (command) => remote.changeAccessId(command));
     },
@@ -245,6 +262,28 @@ export function createLegacyRuntimeAdapter(mockServices) {
     },
     getEvidenceSystemStatus(payload = {}) {
       return remote.getEvidenceSystemStatus(payload);
+    },
+    getIdentityRosterStatus(payload = {}) {
+      return remote.getIdentityRosterStatus(payload);
+    },
+    listIdentityRoster(payload = {}) {
+      return remote.listIdentityRoster(payload);
+    },
+    previewIdentityRosterSync(payload = {}) {
+      return remote.previewIdentityRosterSync(payload);
+    },
+    applyIdentityRosterSync(payload) {
+      return mutationRequests.run('identity-roster-apply', payload, (command) =>
+        remote.applyIdentityRosterSync(command),
+      );
+    },
+    rollbackIdentityRosterSync(payload) {
+      return mutationRequests.run('identity-roster-rollback', payload, (command) =>
+        remote.rollbackIdentityRosterSync(command),
+      );
+    },
+    getIdentityRosterSelfProfile(payload = {}) {
+      return remote.getIdentityRosterSelfProfile(payload);
     },
     getLendingUsage(payload = {}) {
       return remote.getLendingUsage(payload);
@@ -515,4 +554,7 @@ export function createLegacyRuntimeAdapter(mockServices) {
       return { id: result.evidenceId, url: result.driveUrl, ...result };
     },
   };
+  return mode === 'rest' || mode === 'http'
+    ? assertProtectedRuntimeServiceContract(runtimeAdapter)
+    : runtimeAdapter;
 }
