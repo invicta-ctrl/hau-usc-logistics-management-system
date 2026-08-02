@@ -14,6 +14,7 @@ reasoning effort to the agent.
 | Wave 1 UI/UX defect audit      | Routine auditor     | Luna Max        | `/root/v071_wave1_luna_ui_audit`    | `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`                                                       | read-only | Complete; confirmed portal navigation, integer quantity, dirty-route/workspace, loading/error semantics, and Canvass empty-state gaps; suspected items remain unclaimed pending reproduction |
 | Wave 1 architecture/risk audit | Complex auditor     | Terra Max       | `/root/v071_wave1_terra_risk_audit` | `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`                                                       | read-only | Complete; confirmed adapter parity and host-routing P1s plus auth-correlation/security-header and deployment-automation P2s; no P0 found                                                     |
 | R0 specification/truth review  | Fresh reviewer      | fresh Sol Max   | `/root/v071_r0_spec_review`         | base `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`; head `28d935f573e19a8603ad46f080f3f432d71f5337` | read-only | FAIL; P1 factual error: reports misclassified mock-only services as a production masking mechanism; correction required before implementation                                                |
+| R0 correction re-review        | Fresh reviewer      | fresh Sol Max   | `/root/v071_r0_spec_rereview`       | base `28d935f573e19a8603ad46f080f3f432d71f5337`; head `bb952492bee9b5d2878d0e37b99dd826f50d5e5c` | read-only | PASS; prior P1 fully repaired; implementation gate cleared                                                                                                                                   |
 
 All packets prohibited repository writes and nested delegation. The parent is
 the only writer to `fix/v0.7.1-production-recovery`. Later material review
@@ -52,5 +53,6 @@ The reviewer finding is accepted. `installLocalReferenceAdminServices` is
 guarded to mock mode; its preview services neither mask nor cause the
 production failure. The specification, truth audit, and current pointer were
 corrected to attribute the failure solely to the incomplete production adapter
-surface and to preserve isolated mock-preview behavior. A new exact-head
-read-only review is required before implementation begins.
+surface and to preserve isolated mock-preview behavior. The exact-head
+read-only re-review passed at
+`bb952492bee9b5d2878d0e37b99dd826f50d5e5c`.
