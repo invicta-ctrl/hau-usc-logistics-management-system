@@ -2,6 +2,70 @@ import { expect, test } from '@playwright/test';
 import { createEmptyBootstrapFixture } from '../fixtures/bootstrap-fixtures.js';
 import { navigateToView } from './navigation.js';
 
+const releaseIdentity = (environment = 'STAGING') => ({
+  ok: true,
+  environment,
+  appVersion: '0.7.1',
+  releaseVersion: '0.7.1',
+  candidateSha: 'a'.repeat(40),
+});
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(releaseIdentity()),
+    }),
+  );
+});
+
+test('portal selection and login identity use the authoritative Worker release', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'One browser exercises the focused 390, 820, and 1366 responsive identity matrix.',
+  );
+  await page.addInitScript(() => {
+    globalThis.__HAU_RUNTIME_CONFIG__ = {
+      backendMode: 'rest',
+      httpApiBaseUrl: '',
+      appEnvironment: 'staging',
+    };
+  });
+  await page.unroute('**/api/version');
+  await page.route('**/api/version', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(releaseIdentity('PRODUCTION')),
+    }),
+  );
+  let authCalls = 0;
+  await page.route('**/api/auth/**', (route) => {
+    authCalls += 1;
+    return route.abort();
+  });
+
+  for (const width of [390, 820, 1366]) {
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+    await page.goto('/portals');
+    await expect(page.getByRole('heading', { name: 'Choose a logistics portal' })).toBeVisible();
+    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.1');
+    await expect(page.locator('[data-release-identity]')).toHaveAttribute('data-environment', 'PRODUCTION');
+    await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
+    await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
+    await expect(page.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
+      'href',
+      'https://logistics.hausc.org/login',
+    );
+    await expect(page.getByRole('link', { name: 'Back to portal selection' })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  }
+  expect(authCalls).toBe(0);
+});
+
 test('HTTP mode requires Access ID login and starter activation without role selection', async ({
   page,
 }, testInfo) => {
@@ -125,9 +189,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
   await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
   await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.0/u);
-  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
-    'Food Committee',
-  );
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
   await expect(shell).not.toContainText(
@@ -204,13 +266,8 @@ test('authenticated Administrator switches real workspace routes without changin
   await expect(page).toHaveURL(/\/app\/materials$/u);
   await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
   await expect(page).toHaveTitle(/Materials & Documentation.*HAU-USC Logistics/u);
-  await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText(
-    'Materials & Documentation',
-  );
-  await expect(page.locator('#roleExperiencePanel')).toHaveAttribute(
-    'data-role-experience',
-    'materials',
-  );
+  await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText('Materials & Documentation');
+  await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'materials');
   await expect(page.locator('.app-shell')).not.toContainText(
     /Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
   );
@@ -383,9 +440,11 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
     route.fulfill({
       status: 401,
       contentType: 'application/json',
+      headers: { 'x-correlation-id': 'REQ_LOGINFAILURE123' },
       body: JSON.stringify({
         code: 'AUTHENTICATION_FAILED',
         message: 'The Access ID or password is incorrect.',
+        correlationId: 'REQ_BODYIGNORED123',
       }),
     }),
   );
@@ -410,7 +469,9 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await password.fill('Synthetic!Password9472');
   await page.getByRole('button', { name: 'Sign in' }).click();
 
-  await expect(page.getByRole('alert')).toContainText('Access ID or password is incorrect');
+  await expect(page.getByRole('alert')).toContainText(
+    'Access ID or password is incorrect. Reference: REQ_LOGINFAILURE123',
+  );
   await expect(accessId).toHaveValue('HAU.SYNTHETIC.001');
   await expect(password).toHaveValue('Synthetic!Password9472');
   expect(await accessId.evaluate((element) => element === globalThis.__authAccessIdNode)).toBe(true);
@@ -464,6 +525,11 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(page.getByText(/authorized Administrator.*one-time temporary password/i)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
   await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
+  await expect(page.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+    'href',
+    '/portals',
+  );
+  await expect(page.locator('.portal-navigation [aria-current="page"]')).toHaveText('Staff sign in');
 });
 
 test('authenticated department Request Center submits, tracks, and saves a PDF receipt', async ({
@@ -617,6 +683,20 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
 
   await page.goto('/request');
   await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+  const requesterNavigation = page.locator('.portal-navigation');
+  await expect(requesterNavigation.locator('[aria-current="page"]')).toHaveText('Request Center');
+  await expect(requesterNavigation.getByRole('link', { name: 'Lending Center' })).toHaveAttribute(
+    'href',
+    '/lending',
+  );
+  await expect(requesterNavigation.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
+    'href',
+    'https://logistics.hausc.org/login',
+  );
+  await expect(requesterNavigation.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+    'href',
+    '/portals',
+  );
   await expect(page.getByLabel('Access ID')).toBeVisible();
   await page.getByLabel('Access ID').fill('DOL_2026');
   await page.getByLabel('Password', { exact: true }).fill('Synthetic!Password9472');
@@ -624,9 +704,7 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await expect(page.getByText('Department of Logistics').first()).toBeVisible();
   await expect(page.getByRole('button', { name: 'Track Existing Request' })).toBeVisible();
   const requestForm = page.locator('#requesterRequestForm');
-  await expect(requestForm.getByLabel('Department', { exact: true })).toHaveValue(
-    'Department of Logistics',
-  );
+  await expect(requestForm.getByLabel('Department', { exact: true })).toHaveValue('Department of Logistics');
   await expect(requestForm.getByLabel('Department', { exact: true })).toHaveAttribute('readonly', '');
   const eventAutocomplete = requestForm.locator('[data-event-series-autocomplete]');
   await expect(eventAutocomplete).toBeVisible();
@@ -647,7 +725,9 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await requestForm.getByLabel('Privacy and acceptable use').check();
   await page.getByRole('button', { name: 'Privacy Notice' }).click();
   await expect(page.getByRole('heading', { name: 'Privacy Notice' })).toBeVisible();
-  await expect(page.getByText('A specific institutional retention period has not been published')).toBeVisible();
+  await expect(
+    page.getByText('A specific institutional retention period has not been published'),
+  ).toBeVisible();
   await page.getByRole('button', { name: 'Close Privacy Notice' }).click();
   await requestForm.getByRole('button', { name: 'Submit request' }).click();
   await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
@@ -767,6 +847,20 @@ test('public Lending Center classifies borrowers and submits without public trac
 
   await page.goto('/lending');
   await expect(page.getByRole('heading', { name: 'Lending Center' })).toBeVisible();
+  const lendingNavigation = page.locator('.portal-navigation');
+  await expect(lendingNavigation.locator('[aria-current="page"]')).toHaveText('Lending Center');
+  await expect(lendingNavigation.getByRole('link', { name: 'Request Center' })).toHaveAttribute(
+    'href',
+    '/request',
+  );
+  await expect(lendingNavigation.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
+    'href',
+    'https://logistics.hausc.org/login',
+  );
+  await expect(lendingNavigation.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+    'href',
+    '/portals',
+  );
   await expect(page.getByRole('heading', { name: 'Browse Items Available for Lending' })).toBeVisible();
   await expect(page.getByLabel('Access ID')).toHaveCount(0);
   expect(authCalls).toBe(0);

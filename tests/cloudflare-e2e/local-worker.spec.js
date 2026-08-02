@@ -84,9 +84,16 @@ test('unknown credentials return the safe authentication error instead of a serv
     data: { accessId: 'LOCAL.UNKNOWN', password: 'Synthetic!Invalid9472' },
   });
   expect(response.status()).toBe(401);
+  const correlationId = response.headers()['x-correlation-id'];
+  expect(correlationId).toMatch(/^REQ_[A-Za-z0-9_-]+$/u);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  expect(response.headers()['x-content-type-options']).toBe('nosniff');
+  expect(response.headers()['referrer-policy']).toBe('no-referrer');
+  expect(response.headers()['permissions-policy']).toContain('camera=()');
   await expect(response.json()).resolves.toMatchObject({
     code: 'AUTHENTICATION_FAILED',
     message: 'The Access ID or password is incorrect.',
+    correlationId,
   });
 });
 
@@ -1110,6 +1117,19 @@ test('starter activation rotates into a normal session and logout revokes it', a
   await shell.locator('.shell-account > summary').click();
   await shell.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByLabel('Access ID')).toBeVisible();
+  const sessionAfterLogout = await page.evaluate(async () => {
+    const response = await fetch('/api/session', { credentials: 'include' });
+    return { status: response.status, body: await response.json() };
+  });
+  expect(sessionAfterLogout).toMatchObject({
+    status: 401,
+    body: { code: 'SESSION_REQUIRED' },
+  });
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/app\//u);
+  await page.goto('/');
+  await expect(page.getByLabel('Access ID')).toBeVisible();
+  await expect(page.locator('.app-shell')).toBeHidden();
 });
 
 test('Administrator Access Management renames an Access ID once and revokes prior sessions', async () => {

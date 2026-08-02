@@ -452,12 +452,16 @@ async function handleApi(request, env, requestId, executionContext) {
       return createAuthHttpHandler({
         service: auth,
         secureCookies: String(env.ENVIRONMENT).toUpperCase() !== 'DEVELOPMENT',
+        correlationId: requestId,
+        apiHeaders: API_SECURITY_HEADERS,
       })(alias);
     }
     if (url.pathname.startsWith('/api/auth/')) {
       return createAuthHttpHandler({
         service: auth,
         secureCookies: String(env.ENVIRONMENT).toUpperCase() !== 'DEVELOPMENT',
+        correlationId: requestId,
+        apiHeaders: API_SECURITY_HEADERS,
       })(request);
     }
 

@@ -24,11 +24,11 @@ async function jsonBody(request) {
   }
 }
 
-function json(value, { status = 200, cookieHeaders = [] } = {}) {
-  const headers = new Headers({
-    'content-type': 'application/json; charset=utf-8',
-    'cache-control': 'no-store',
-  });
+function json(value, { status = 200, cookieHeaders = [], correlationId = '', apiHeaders = {} } = {}) {
+  const headers = new Headers(apiHeaders);
+  headers.set('content-type', 'application/json; charset=utf-8');
+  headers.set('cache-control', 'no-store');
+  if (correlationId) headers.set('x-correlation-id', correlationId);
   for (const cookie of cookieHeaders) headers.append('set-cookie', cookie);
   return new Response(JSON.stringify(value), { status, headers });
 }
@@ -66,16 +66,23 @@ function publicResult(result, tokenField) {
   return safe;
 }
 
-export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
+export function createAuthHttpHandler({
+  service,
+  secureCookies = true,
+  correlationId = '',
+  apiHeaders = {},
+} = {}) {
   if (!service) throw new Error('Authentication service is required.');
   const cookieNames = authCookieNames({ secure: secureCookies });
+  const respond = (value, options = {}) => json(value, { ...options, correlationId, apiHeaders });
+  const errorResult = (value) => ({ ...value, ...(correlationId ? { correlationId } : {}) });
   return async function handleAuthRequest(request) {
     const url = new URL(request.url);
     const cookieValues = cookies(request);
     const csrfToken = request.headers.get('x-csrf-token') ?? '';
     try {
       if (url.pathname === AUTH_API_ROUTES.session && request.method === 'GET') {
-        return json(await service.getSession({ sessionToken: cookieValues[cookieNames.session] }));
+        return respond(await service.getSession({ sessionToken: cookieValues[cookieNames.session] }));
       }
       if (url.pathname === AUTH_API_ROUTES.login && request.method === 'POST') {
         const body = await jsonBody(request);
@@ -85,7 +92,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
           networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
         });
         if (result.state === 'ACTIVATION_REQUIRED') {
-          return json(publicResult(result, 'activationToken'), {
+          return respond(publicResult(result, 'activationToken'), {
             cookieHeaders: [
               serializeAuthCookie(cookieNames.activation, result.activationToken, {
                 secure: secureCookies,
@@ -97,7 +104,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
             ],
           });
         }
-        return json(publicResult(result, 'sessionToken'), {
+        return respond(publicResult(result, 'sessionToken'), {
           cookieHeaders: [
             serializeAuthCookie(cookieNames.session, result.sessionToken, { secure: secureCookies }),
           ],
@@ -112,7 +119,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
           password: body.password,
           confirmPassword: body.confirmPassword,
         });
-        return json(publicResult(result, 'sessionToken'), {
+        return respond(publicResult(result, 'sessionToken'), {
           cookieHeaders: [
             serializeAuthCookie(cookieNames.activation, '', { secure: secureCookies, clear: true }),
             serializeAuthCookie(cookieNames.session, result.sessionToken, { secure: secureCookies }),
@@ -121,7 +128,7 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
       }
       if (url.pathname === AUTH_API_ROUTES.logout && request.method === 'POST') {
         const result = await service.logout({ sessionToken: cookieValues[cookieNames.session], csrfToken });
-        return json(result, {
+        return respond(result, {
           cookieHeaders: [
             serializeAuthCookie(cookieNames.session, '', { secure: secureCookies, clear: true }),
           ],
@@ -129,23 +136,28 @@ export function createAuthHttpHandler({ service, secureCookies = true } = {}) {
       }
       if (url.pathname === AUTH_API_ROUTES.resetComplete && request.method === 'POST') {
         const body = await jsonBody(request);
-        return json(await service.completePasswordReset(body));
+        return respond(await service.completePasswordReset(body));
       }
-      return json({ code: 'NOT_FOUND', message: 'The authentication route was not found.' }, { status: 404 });
+      return respond(errorResult({ code: 'NOT_FOUND', message: 'The authentication route was not found.' }), {
+        status: 404,
+      });
     } catch (error) {
       if (error instanceof AuthError) {
-        return json(
-          {
+        return respond(
+          errorResult({
             code: error.code,
             message: error.message,
             ...(error.fieldErrors ? { fieldErrors: error.fieldErrors } : {}),
             ...(error.retryAfterMs ? { retryAfterMs: error.retryAfterMs } : {}),
-          },
+          }),
           { status: statusForAuthError(error) },
         );
       }
-      return json(
-        { code: 'AUTH_INTERNAL_ERROR', message: 'The authentication service is temporarily unavailable.' },
+      return respond(
+        errorResult({
+          code: 'AUTH_INTERNAL_ERROR',
+          message: 'The authentication service is temporarily unavailable.',
+        }),
         { status: 500 },
       );
     }

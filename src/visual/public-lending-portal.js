@@ -1,4 +1,5 @@
 import { brandLockupMarkup } from './brand-assets.js';
+import { portalNavigationMarkup, releaseIdentityMarkup } from './portal-navigation.js';
 import { mountPublicAdvertisementCarousel } from './public-advertisement-carousel.js';
 import {
   bindPublicPolicyDialogs,
@@ -34,7 +35,7 @@ export async function mountPublicLendingPortal({ root, client }) {
         .catch(() => []),
     ]);
   } catch (error) {
-    root.innerHTML = `<section class="auth-card" role="alert"><p class="eyebrow">Lending Center</p><h1>Catalog service unavailable</h1><p class="auth-intro">The borrower-safe catalog could not be loaded. This is a service error, not an empty catalog.</p><p>${escapeHtml(error.message)}</p><button class="secondary" type="button" data-retry-catalog>Try again</button><a href="/login">Staff sign in</a></section>`;
+    root.innerHTML = `<section class="auth-card" role="alert"><p class="eyebrow">Lending Center</p><h1>Catalog service unavailable</h1>${releaseIdentityMarkup()}<p class="auth-intro">The borrower-safe catalog could not be loaded. This is a service error, not an empty catalog.</p><p>${escapeHtml(error.message)}</p><button class="secondary" type="button" data-retry-catalog>Try again</button>${portalNavigationMarkup({ current: 'lending' })}</section>`;
     root
       .querySelector('[data-retry-catalog]')
       ?.addEventListener('click', () => mountPublicLendingPortal({ root, client }));
@@ -47,8 +48,8 @@ export async function mountPublicLendingPortal({ root, client }) {
   root.innerHTML = `
     <main class="public-request-portal public-lending-portal" aria-labelledby="publicLendingTitle">
       <header class="public-portal-header">
-        <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="publicLendingTitle">Lending Center</h1><p>Browse the borrower-safe catalog before providing personal information. Every request starts For Review.</p></div></div>
-        <nav aria-label="Logistics portal links"><a href="/request">Request Center</a><a href="/login">Staff sign in</a></nav>
+        <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="publicLendingTitle">Lending Center</h1><p>Browse the borrower-safe catalog before providing personal information. Every request starts For Review.</p>${releaseIdentityMarkup()}</div></div>
+        ${portalNavigationMarkup({ current: 'lending' })}
       </header>
       <section class="panel public-catalog" aria-labelledby="publicCatalogTitle">
         <div class="panel-head"><div><h2 id="publicCatalogTitle">Browse Items Available for Lending</h2><p>Displayed availability is a current review signal, not a reservation or approval.</p></div><span class="pill" data-catalog-count></span></div>
@@ -292,8 +293,7 @@ export async function mountPublicLendingPortal({ root, client }) {
           responsibilityAcknowledged: form.elements.responsibilityAcknowledged.checked,
           dataUseAcknowledged: form.elements.dataUseAcknowledged.checked,
           acceptableUseAcknowledged: form.elements.acceptableUseAcknowledged.checked,
-          borrowerResponsibilityAcknowledged:
-            form.elements.borrowerResponsibilityAcknowledged.checked,
+          borrowerResponsibilityAcknowledged: form.elements.borrowerResponsibilityAcknowledged.checked,
           evidenceConsentAcknowledged: form.elements.evidenceConsentAcknowledged.checked,
           lines: [...selected.values()].map(({ itemId, quantity }) => ({ itemId, quantity })),
           clientRequestId: clientRequestId(),

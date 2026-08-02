@@ -36,6 +36,11 @@ describe('authentication cryptography', () => {
     });
 
     expect(validateNewPassword('short')).toMatchObject({ valid: false, code: 'PASSWORD_POLICY_FAILED' });
+    expect(validateNewPassword('Abcd!234')).toMatchObject({
+      valid: false,
+      code: 'PASSWORD_POLICY_FAILED',
+    });
+    expect(validateNewPassword('Good!Pass123')).toMatchObject({ valid: true });
     await expect(kdf.hash('short')).rejects.toMatchObject({ code: 'PASSWORD_POLICY_FAILED' });
     await expect(kdf.verify('Strong!Password9472', { algorithm: 'PLAINTEXT', hash: 'secret' })).resolves.toBe(
       false,

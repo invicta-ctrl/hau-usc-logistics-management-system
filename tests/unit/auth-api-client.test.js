@@ -57,4 +57,61 @@ describe('authentication API client', () => {
     );
     await expect(new AuthApiClient().getSession()).rejects.toMatchObject({ code: 'SESSION_INVALID' });
   });
+
+  it('prefers the response correlation header and safely normalizes transport failure', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            code: 'AUTHENTICATION_FAILED',
+            message: 'The Access ID or password is incorrect.',
+            correlationId: 'REQ_BODY_REFERENCE',
+          }),
+          {
+            status: 401,
+            headers: {
+              'content-type': 'application/json',
+              'x-correlation-id': 'REQ_HEADER_REFERENCE',
+            },
+          },
+        ),
+      )
+      .mockRejectedValueOnce(new Error('private network diagnostics'));
+    vi.stubGlobal('fetch', fetch);
+    const client = new AuthApiClient();
+
+    await expect(client.login('SYNTHETIC', 'not-logged')).rejects.toMatchObject({
+      correlationId: 'REQ_HEADER_REFERENCE',
+    });
+    await expect(client.login('SYNTHETIC', 'not-logged')).rejects.toMatchObject({
+      code: 'AUTH_SERVICE_UNAVAILABLE',
+      message: 'The authentication service is temporarily unavailable.',
+      retryable: true,
+    });
+  });
+
+  it('reads the authoritative same-origin Worker release identity', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          environment: 'PRODUCTION',
+          appVersion: '0.7.1',
+          candidateSha: 'a'.repeat(40),
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      ),
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    await expect(new AuthApiClient().getReleaseIdentity()).resolves.toMatchObject({
+      environment: 'PRODUCTION',
+      appVersion: '0.7.1',
+    });
+    expect(fetch).toHaveBeenCalledWith(
+      '/api/version',
+      expect.objectContaining({ method: 'GET', credentials: 'include' }),
+    );
+  });
 });
