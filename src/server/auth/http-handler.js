@@ -11,7 +11,11 @@ function cookies(request) {
       .map((part) => {
         const separator = part.indexOf('=');
         if (separator < 0) return [part, ''];
-        return [part.slice(0, separator), decodeURIComponent(part.slice(separator + 1))];
+        try {
+          return [part.slice(0, separator), decodeURIComponent(part.slice(separator + 1))];
+        } catch {
+          throw new AuthError('SESSION_INVALID');
+        }
       }),
   );
 }
@@ -77,10 +81,10 @@ export function createAuthHttpHandler({
   const respond = (value, options = {}) => json(value, { ...options, correlationId, apiHeaders });
   const errorResult = (value) => ({ ...value, ...(correlationId ? { correlationId } : {}) });
   return async function handleAuthRequest(request) {
-    const url = new URL(request.url);
-    const cookieValues = cookies(request);
-    const csrfToken = request.headers.get('x-csrf-token') ?? '';
     try {
+      const url = new URL(request.url);
+      const cookieValues = cookies(request);
+      const csrfToken = request.headers.get('x-csrf-token') ?? '';
       if (url.pathname === AUTH_API_ROUTES.session && request.method === 'GET') {
         return respond(await service.getSession({ sessionToken: cookieValues[cookieNames.session] }));
       }

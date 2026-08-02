@@ -46,7 +46,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run check:governance && npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare"
+    "check": "npm run check:governance && npm run lint && npm run test && npm run build && npm run check:apps-script && npm run verify:dist && npm run check:cloudflare && npm run build && npm run check:apps-script && npm run verify:dist"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,6 +1,6 @@
 # v0.7.1 Slice 3 — Login, Session, and Portal Audit
 
-Status: IMPLEMENTED; INDEPENDENT REVIEW PENDING
+Status: INITIAL REVIEW REPAIRS IMPLEMENTED; INDEPENDENT RE-REVIEW PENDING
 
 Base: `fbaf7700561be5d369e66d81fc962597d2a7b88f`
 
@@ -58,16 +58,31 @@ Production/external writes: none
 | Release identity | Same-origin Worker identity overrides bundle build mode; invalid identity fails closed | release identity unit and responsive browser tests | PASS |
 | Portal navigation | Request, Lending, staff, and selector links remain consistent without widening authorization | responsive browser and requester/lending journey tests | PASS |
 | Cookie scope | Secure/HttpOnly/SameSite=Lax/Path=/; no shared Domain | auth handler tests and unchanged serializer contract | PASS |
+| Malformed cookie | Invalid percent encoding fails closed inside the safe correlated boundary | auth handler and local Worker tests | PASS |
+
+## Initial review repairs
+
+The first fresh review of `fbaf770…2fbab8a` correctly failed the slice gate:
+
+- P1: `check:cloudflare` ended with a staging asset build in `dist/`, after the
+  preview shareables had been generated. The `check` script now restores and
+  re-verifies the deterministic preview artifacts after the Cloudflare dry-run,
+  so a successful full gate leaves the committed artifact set internally
+  consistent.
+- P2: malformed percent-encoded cookies could throw before the handler `try`.
+  Cookie parsing now runs inside the guarded boundary and converts malformed
+  encoding to safe, correlated `SESSION_INVALID` JSON with the standard
+  security headers.
 
 ## Verification evidence
 
-- Focused authentication and release-identity Vitest: 6 files / 30 tests
+- Focused authentication and release-identity Vitest: 6 files / 31 tests
   passed.
 - Full auth-gateway Playwright: 11 executed / 11 passed; 49 intentional
   project skips.
 - Focused local Worker Playwright: 2 / 2 passed for safe unknown-credential
   correlation and activation/logout/back-button behavior.
-- Full `npm run check`: governance, ESLint, 78 Vitest files / 509 tests,
+- Full `npm run check`: governance, ESLint, 78 Vitest files / 510 tests,
   preview build, deterministic shareables and Apps Script bundle, Apps Script
   and dist verification, Cloudflare types, staging build, and Wrangler local
   binding dry-run passed.

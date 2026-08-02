@@ -97,6 +97,23 @@ test('unknown credentials return the safe authentication error instead of a serv
   });
 });
 
+test('malformed authentication cookies fail closed inside the correlated Worker boundary', async ({
+  request,
+}) => {
+  const response = await request.get('/api/session', {
+    headers: { cookie: '__Host-hau_session=%' },
+  });
+  expect(response.status()).toBe(401);
+  const correlationId = response.headers()['x-correlation-id'];
+  expect(correlationId).toMatch(/^REQ_[A-Za-z0-9_-]+$/u);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  expect(response.headers()['x-content-type-options']).toBe('nosniff');
+  await expect(response.json()).resolves.toMatchObject({
+    code: 'SESSION_INVALID',
+    correlationId,
+  });
+});
+
 test('System Owner receives every module and a server-validated operational scope catalog', async ({
   baseURL,
 }) => {

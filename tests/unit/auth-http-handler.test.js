@@ -141,6 +141,30 @@ describe('authentication HTTP boundary', () => {
     });
   });
 
+  it('fails closed with a safe correlated response for malformed cookies', async () => {
+    const service = { getSession: vi.fn() };
+    const handle = createAuthHttpHandler({
+      service,
+      correlationId: 'REQ_BADCOOKIE123',
+      apiHeaders: { 'x-content-type-options': 'nosniff' },
+    });
+    const response = await handle(
+      new Request('https://logistics.example.test/api/auth/session', {
+        headers: { cookie: '__Host-hau_session=%' },
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-correlation-id')).toBe('REQ_BADCOOKIE123');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SESSION_INVALID',
+      correlationId: 'REQ_BADCOOKIE123',
+    });
+    expect(service.getSession).not.toHaveBeenCalled();
+  });
+
   it('keeps password-reset completion inside the safe correlated HTTP boundary', async () => {
     const service = {
       completePasswordReset: vi.fn().mockResolvedValue({ ok: true, sessionsRevoked: 2 }),
