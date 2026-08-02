@@ -102,13 +102,16 @@ Worker routes exist for Access Management policy operations and Staff
 Directory/identity-roster operations. `RestService` maps them, but
 `HttpApiAdapter` omits the access-policy operations and
 `createLegacyRuntimeAdapter` omits both the policy and roster method families.
-The runtime extension supplies synthetic `??=` fallbacks, hiding the missing
-production adapter contract and producing raw `... is not a function` failures
-or false `not configured` states depending on load order.
+The runtime extension contains similarly named `??=` services only inside
+`installLocalReferenceAdminServices`, which returns immediately outside mock
+mode. Those preview services do not mask or cause the production failure. The
+active production runtime therefore receives undefined methods directly from
+the incomplete adapter surface and fails closed before any unsupported write.
 
 Required repair: make the shared contract explicit across adapters, preserve
-mutation tracking/CSRF for writes, remove production-masking fallbacks, add
-whole-surface parity tests, and provide correlation-based user-safe failures.
+mutation tracking/CSRF for writes, preserve the isolated mock-preview services,
+add whole-surface parity tests, and provide correlation-based user-safe
+failures.
 
 ### P1 — dedicated public-domain routing is not implemented
 

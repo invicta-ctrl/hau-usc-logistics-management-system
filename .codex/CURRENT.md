@@ -17,8 +17,9 @@
   `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`, schema 29. No staging-binding
   incident was found.
 - Confirmed first repair: complete the browser/Worker service contract for
-  Staff Directory and Access Management, remove masking fallbacks, add parity
-  tests and user-safe errors, then pass a fresh read-only review gate.
+  Staff Directory and Access Management, preserve isolated mock-preview
+  services, add parity tests and user-safe errors, then pass a fresh read-only
+  review gate.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.
