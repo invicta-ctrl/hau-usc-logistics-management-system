@@ -252,9 +252,9 @@ test('authenticated Administrator switches real workspace routes without changin
     }),
   );
 
-  await page.goto('/app/food');
+  await page.goto('/food');
   await expect(page.locator('.app-shell')).toBeVisible();
-  await expect(page).toHaveURL(/\/app\/food$/u);
+  await expect(page).toHaveURL(/\/food$/u);
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell.getByLabel('Workspace')).toHaveValue('food');
@@ -262,21 +262,41 @@ test('authenticated Administrator switches real workspace routes without changin
   await expect(shell.locator('[data-shell-account-role]')).toHaveText(/ADMINISTRATOR|Administrator/u);
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
 
+  const setRequesterName = (value) =>
+    page.evaluate((next) => {
+      const input = document.querySelector('#requestForm [name="requesterName"]');
+      input.value = next;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+  await setRequesterName('Temporary edit');
+  await setRequesterName('');
   await shell.getByLabel('Workspace').selectOption('materials');
-  await expect(page).toHaveURL(/\/app\/materials$/u);
+  await expect(page).toHaveURL(/\/materials$/u);
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
   await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
   await expect(page).toHaveTitle(/Materials & Documentation.*HAU-USC Logistics/u);
   await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText('Materials & Documentation');
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'materials');
+  await setRequesterName('Unsaved workspace edit');
+  await shell.getByLabel('Workspace').selectOption('food');
+  const discardDialog = page.getByRole('alertdialog', { name: 'Discard unsaved changes?' });
+  await expect(discardDialog).toBeVisible();
+  await discardDialog.getByRole('button', { name: 'Continue editing' }).click();
+  await expect(page).toHaveURL(/\/materials$/u);
+  await shell.getByLabel('Workspace').selectOption('food');
+  await discardDialog.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(page).toHaveURL(/\/food$/u);
+  await shell.getByLabel('Workspace').selectOption('materials');
+  await expect(page).toHaveURL(/\/materials$/u);
   await expect(page.locator('.app-shell')).not.toContainText(
     /Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
   );
   expect(sessionCalls).toBe(1);
 
   for (const [path, workspace, experience] of [
-    ['/app/admin', 'administrator', 'administrator'],
-    ['/app/director', 'director', 'director'],
-    ['/app/inventory', 'inventory-pantry', 'inventory-pantry'],
+    ['/admin', 'administrator', 'administrator'],
+    ['/director', 'director', 'director'],
+    ['/inventory', 'inventory-pantry', 'inventory-pantry'],
   ]) {
     await page.goto(path);
     await expect(page.locator('.app-shell')).toBeVisible();

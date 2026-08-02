@@ -8,7 +8,9 @@ const read = (file) => readFile(resolve(root, file), 'utf8');
 describe('staging runtime mode boundary', () => {
   it('selects REST/D1 for Cloudflare builds and refuses a mock override', async () => {
     const config = await read('src/app/config.js');
-    expect(config).toContain("const isCloudflareBuild = buildMode === 'staging' || buildMode === 'production'");
+    expect(config).toContain(
+      "const isCloudflareBuild = buildMode === 'staging' || buildMode === 'production'",
+    );
     expect(config).toContain("requestedBackendMode ?? (isCloudflareBuild ? 'rest' : 'mock')");
     expect(config).toContain("isCloudflareBuild && configuredBackendMode === 'mock' ? 'unconfigured'");
   });
@@ -24,15 +26,16 @@ describe('staging runtime mode boundary', () => {
 
   it('hides the workspace until authentication and routes a session to its server-assigned workspace', async () => {
     const gateway = await read('src/visual/auth-gateway.js');
+    const routes = await read('src/visual/workspace-routes.js');
     expect(gateway).not.toContain('class="auth-brand"');
-    expect(gateway).toContain("administrator: '/app/admin'");
-    expect(gateway).toContain("director: '/app/director'");
-    expect(gateway).toContain("food: '/app/food'");
-    expect(gateway).toContain("'inventory-pantry': '/app/inventory'");
-    expect(gateway).toContain("materials: '/app/materials'");
+    expect(routes).toContain("administrator: Object.freeze({ slug: 'admin', path: '/admin' })");
+    expect(routes).toContain("director: Object.freeze({ slug: 'director', path: '/director' })");
+    expect(routes).toContain("food: Object.freeze({ slug: 'food', path: '/food' })");
+    expect(routes).toContain("'inventory-pantry': Object.freeze({ slug: 'inventory', path: '/inventory' })");
+    expect(routes).toContain("materials: Object.freeze({ slug: 'materials', path: '/materials' })");
     expect(gateway).toContain('routeAuthorizedWorkspace(result.user);');
-    expect(gateway).toContain('allowed.has(id)');
-    expect(gateway).toContain('if (validInternalWorkspace) return;');
+    expect(gateway).toContain('allowed.has(route.workspaceId)');
+    expect(gateway).toContain('if (validInternalWorkspace && !routed.legacy) return;');
     expect(gateway).not.toContain('administrator && validInternalWorkspace');
     expect(gateway).toContain("backendMode === 'unconfigured'");
     expect(gateway).toContain('No local or preview data has been loaded.');

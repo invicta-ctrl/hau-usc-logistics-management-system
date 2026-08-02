@@ -1,13 +1,8 @@
 import { AppError } from '../app/errors.js';
 import { foodAttentionFlags, normalizeFoodDetails } from './food-workflow.js';
-import {
-  materialsAttentionFlags,
-  normalizeMaterialsDetails,
-} from './materials-workflow.js';
-import {
-  normalizeVenueEquipmentDetails,
-  venueEquipmentAttentionFlags,
-} from './venue-equipment-workflow.js';
+import { materialsAttentionFlags, normalizeMaterialsDetails } from './materials-workflow.js';
+import { normalizeVenueEquipmentDetails, venueEquipmentAttentionFlags } from './venue-equipment-workflow.js';
+import { isCountableUnit } from './quantity-units.js';
 
 export const COMPOSITE_SECTION_TYPES = Object.freeze(['FOOD', 'MATERIALS', 'VENUE_EQUIPMENT']);
 
@@ -64,11 +59,15 @@ function text(value, field, { required = false, max = MAX_TEXT_LENGTH } = {}) {
   return normalized;
 }
 
-function positiveQuantity(value, field) {
+function positiveQuantity(value, field, unit = '') {
   const quantity = Number(value);
   if (!Number.isFinite(quantity) || quantity <= 0)
     throw new AppError('VALIDATION_ERROR', `${field} must be greater than zero.`, {
       fieldErrors: { [field]: 'Enter a quantity greater than zero.' },
+    });
+  if (isCountableUnit(unit) && !Number.isInteger(quantity))
+    throw new AppError('VALIDATION_ERROR', `${field} must be a whole number for ${unit}.`, {
+      fieldErrors: { [field]: `Enter a whole number for ${unit}.` },
     });
   return quantity;
 }
@@ -108,7 +107,7 @@ function normalizedLine(line, index) {
     referenceId,
     ...(referenceRevision == null ? {} : { referenceRevision }),
     label,
-    quantity: positiveQuantity(line.quantity, `lines[${index}].quantity`),
+    quantity: positiveQuantity(line.quantity, `lines[${index}].quantity`, unit),
     unit,
     category,
     notes,
@@ -170,9 +169,7 @@ function normalizeSection(section, index, context = {}) {
   );
   const food = type === 'FOOD' ? normalizeFoodDetails(section.food, context) : undefined;
   const normalizedMaterials =
-    type === 'MATERIALS'
-      ? normalizeMaterialsDetails(section.materials, normalizedLines, context)
-      : undefined;
+    type === 'MATERIALS' ? normalizeMaterialsDetails(section.materials, normalizedLines, context) : undefined;
   const normalizedVenueEquipment =
     type === 'VENUE_EQUIPMENT' && (context.requireVenueEquipmentDetails || section.venueEquipment)
       ? normalizeVenueEquipmentDetails(section.venueEquipment, normalizedLines, context)
@@ -342,7 +339,7 @@ export function createCompositePacket(
         ? materialsAttentionFlags(section.materials)
         : section.venueEquipment
           ? venueEquipmentAttentionFlags(section.venueEquipment)
-        : [],
+          : [],
     progress: {
       lineCount: section.lines.length,
       duplicateCount: section.lines.reduce((sum, line) => sum + line.duplicateCount, 0),
@@ -501,7 +498,7 @@ export function transitionCompositeChild(child, action, { reason = '' } = {}) {
             ? materialsAttentionFlags(child.payload?.materials)
             : child.componentType === 'VENUE_EQUIPMENT' && child.payload?.venueEquipment
               ? venueEquipmentAttentionFlags(child.payload.venueEquipment)
-          : []
+              : []
         : (child.attentionFlags || []).filter((flag) => flag !== COMPOSITE_ATTENTION_FLAGS.NEEDS_INFORMATION),
     transitionReason: text(reason, 'reason', { max: 500 }),
   };
@@ -565,9 +562,7 @@ export function amendCompositeSection(
           ? foodAttentionFlags(section.food)
           : section.materials
             ? [
-                ...(child.attentionFlags || []).filter(
-                  (flag) => !String(flag).startsWith('MATERIALS_'),
-                ),
+                ...(child.attentionFlags || []).filter((flag) => !String(flag).startsWith('MATERIALS_')),
                 ...materialsAttentionFlags(section.materials),
               ]
             : section.venueEquipment
@@ -577,7 +572,7 @@ export function amendCompositeSection(
                   ),
                   ...venueEquipmentAttentionFlags(section.venueEquipment),
                 ]
-            : child.attentionFlags || []),
+              : child.attentionFlags || []),
         COMPOSITE_ATTENTION_FLAGS.AMENDED,
       ]),
     ],

@@ -1,5 +1,6 @@
 import { AppError, assertDomain } from '../app/errors.js';
 import { CATEGORIES, UNITS } from './constants.js';
+import { isCountableUnit } from './quantity-units.js';
 
 export function positiveNumber(value, field = 'quantity') {
   const number = Number(value);
@@ -12,6 +13,17 @@ export function positiveNumber(value, field = 'quantity') {
   return number;
 }
 
+export function positiveOperationalQuantity(value, unit, field = 'quantity') {
+  const number = positiveNumber(value, field);
+  assertDomain(
+    !isCountableUnit(unit) || Number.isInteger(number),
+    'INVALID_QUANTITY',
+    `Enter a whole-number quantity for ${unit}.`,
+    { fieldErrors: { [field]: `Enter a whole number for ${unit}.` } },
+  );
+  return number;
+}
+
 export function nonNegativeNumber(value, field = 'quantity') {
   const number = Number(value);
   assertDomain(
@@ -19,6 +31,17 @@ export function nonNegativeNumber(value, field = 'quantity') {
     'INVALID_QUANTITY',
     'Enter a quantity of zero or greater.',
     { fieldErrors: { [field]: 'Enter zero or a positive number.' } },
+  );
+  return number;
+}
+
+export function nonNegativeOperationalQuantity(value, unit, field = 'quantity') {
+  const number = nonNegativeNumber(value, field);
+  assertDomain(
+    !isCountableUnit(unit) || Number.isInteger(number),
+    'INVALID_QUANTITY',
+    `Enter a whole-number quantity for ${unit}.`,
+    { fieldErrors: { [field]: `Enter a whole number for ${unit}.` } },
   );
   return number;
 }

@@ -1,6 +1,9 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
+import { isCountableUnit, quantityStep } from '../domain/quantity-units.js';
+import { createFormDirtyTracker } from './form-dirty-state.js';
+import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
   evaluateLendingEligibility,
   lendingAudienceLabel,
@@ -90,6 +93,10 @@ function localDueValue(days) {
   due.setHours(17, 0, 0, 0);
   const pad = (value) => String(value).padStart(2, '0');
   return `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
+}
+
+function quantityInputBounds(unit, { allowZero = false } = {}) {
+  return `min="${allowZero ? '0' : isCountableUnit(unit) ? '1' : '0.01'}" step="${quantityStep(unit)}"`;
 }
 
 function createLendingController({ markFormClean }) {
@@ -319,13 +326,13 @@ function catalogFormHtml(item = null) {
       <label>Storage location<input name="storageLocation" value="${esc(current.storageLocation)}" required></label>
       <label>Handling<select name="handling">${option('CONSUMABLE', 'Consumable', current.handlingCode || current.handling)}${option('LOANABLE', 'Loanable', current.handlingCode || current.handling)}${option('REUSABLE_ASSET', 'Reusable Asset', current.handlingCode || current.handling)}${option('NON_CIRCULATING', 'Non-circulating', current.handlingCode || current.handling)}</select></label>
       <label>Unit<input name="unit" value="${esc(current.unit)}" required><small>Changing a historical unit is blocked by the server.</small></label>
-      <label>Reorder threshold<input name="reorderThreshold" type="number" min="0" step="0.01" value="${esc(current.reorderThreshold ?? 0)}" required></label>
+      <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="${esc(current.reorderThreshold ?? 0)}" required></label>
       <label>Lending audience<select name="lendingAudience">${option('NOT_AVAILABLE_FOR_LENDING', 'Not available in Lending Hub', current.lendingAudience)}${option('USC_STAFF_ONLY', 'USC officers and staff only', current.lendingAudience)}${option('STUDENTS_AND_STAFF', 'Students and USC staff', current.lendingAudience)}${option('DOL_INTERNAL_ONLY', 'Eligible DOL users only', current.lendingAudience)}</select></label>
       <label>Default loan days<input name="defaultLoanDays" type="number" min="1" step="1" value="${esc(current.defaultLoanDays ?? '')}"></label>
-      <label>Maximum lending quantity<input name="maximumLoanQuantity" type="number" min="0.01" step="0.01" value="${esc(current.maximumLoanQuantity ?? '')}"></label>
+      <label>Maximum lending quantity<input name="maximumLoanQuantity" type="number" ${quantityInputBounds(current.unit)} value="${esc(current.maximumLoanQuantity ?? '')}"></label>
       <label>Approval required<select name="approvalRequired">${option('true', 'Yes', String(current.approvalRequired))}${option('false', 'No', String(current.approvalRequired))}</select></label>
       <label>Active / verification status<select name="status">${option('ACTIVE', 'Active', current.status)}${option('VERIFY', 'Verification required', current.status)}${option('INACTIVE', 'Inactive', current.status)}</select></label>
-      ${create ? '<label>Initial quantity<input name="initialQuantity" type="number" min="0" step="0.01" value="0"></label><label>Creation reason<input name="reason" value="Administrative catalog creation" required></label>' : ''}
+      ${create ? `<label>Initial quantity<input name="initialQuantity" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="0"></label><label>Creation reason<input name="reason" value="Administrative catalog creation" required></label>` : ''}
       <label class="span-2">Notes<textarea name="notes">${esc(current.notes ?? '')}</textarea></label>
     </div>
     <button class="primary" type="submit">${create ? 'Create Inventory Item' : 'Save Item Settings'}</button>
@@ -348,8 +355,10 @@ export function createRuntimeExtensions(options) {
     getActiveModule = () => 'overview',
     refreshActiveModule = null,
     changeOperationalScope = null,
+    changeWorkspace = null,
+    clearUnsavedRuntimeState = () => {},
   } = options;
-  const dirtyForms = new Set();
+  const dirtyTracker = createFormDirtyTracker();
   const acceptedRevisions = new Map();
   let pendingRevision = null;
   let refreshPromise = null;
@@ -404,6 +413,7 @@ export function createRuntimeExtensions(options) {
   let eventManagementPromise = null;
   let eventManagementOpen = false;
   let internalShellBar = null;
+  let acceptedLocation = `${location.pathname}${location.search}${location.hash}`;
   let accountControlObserver = null;
   let lendingApprovalRoot = null;
   let releaseConfirmationInstalled = false;
@@ -510,7 +520,7 @@ export function createRuntimeExtensions(options) {
             <option value="SUBSTITUTE">Approve a substitute</option>
             <option value="REJECT">Reject</option>
           </select></label>
-          <label>Approved quantity<input name="approvedQuantity" type="number" min="0.01" max="${esc(ticket.requestedQuantity || ticket.quantity)}" step="0.01" value="${esc(ticket.requestedQuantity || ticket.quantity)}"></label>
+          <label>Approved quantity<input name="approvedQuantity" type="number" ${quantityInputBounds(ticket.unit)} max="${esc(ticket.requestedQuantity || ticket.quantity)}" value="${esc(ticket.requestedQuantity || ticket.quantity)}"></label>
           <label class="span-2" data-substitution-wrap>Substitute item<select name="substitutionItemId">${itemOptions}</select></label>
           <label class="span-2" data-review-reason-wrap>Decision reason<textarea name="reviewReason" maxlength="500"></textarea></label>
           <label class="span-2">Internal review note<textarea name="reviewNotes" maxlength="500"></textarea></label>
@@ -663,9 +673,9 @@ export function createRuntimeExtensions(options) {
         <div class="mode-note"><strong>${esc(ticket.quantity)} ${esc(ticket.unit)}</strong> must be fully reconciled as returned, lost, or damaged beyond use.</div>
         <div class="form-grid section-gap">
           <label>Inspection condition<select name="conditionLabel"><option>GOOD</option><option>FAIR</option><option>POOR</option><option>DAMAGED</option><option>MAINTENANCE</option><option>LOST</option><option>DAMAGED_BEYOND_USE</option></select></label>
-          <label>Returned quantity<input name="returnedQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="${esc(ticket.quantity)}" required></label>
-          <label>Lost quantity<input name="lostQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
-          <label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
+          <label>Returned quantity<input name="returnedQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="${esc(ticket.quantity)}" required></label>
+          <label>Lost quantity<input name="lostQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="0" required></label>
+          <label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="0" required></label>
           <label class="span-2">Inspection note<textarea name="notes" maxlength="500" required>Return inspected and reconciled.</textarea></label>
           <label class="span-2">Governed evidence asset key, when already uploaded<input name="assetEvidenceKey" maxlength="160"></label>
         </div>
@@ -4501,19 +4511,79 @@ export function createRuntimeExtensions(options) {
     }
   };
 
-  const cleanAbandonedForms = () => {
-    const modalOpen = document.querySelector('#modalBackdrop')?.classList.contains('show');
-    for (const form of dirtyForms) {
-      if (!form.isConnected || (!modalOpen && form.closest('#modal'))) dirtyForms.delete(form);
-    }
-  };
-  const isDirty = () => {
-    cleanAbandonedForms();
-    return (
-      dirtyForms.size > 0 ||
-      document.querySelector('#modalBackdrop')?.classList.contains('show') ||
-      hasUnsavedRuntimeState()
+  const isDirty = (root = null, { includeRuntime = true } = {}) =>
+    dirtyTracker.isDirty(root) || (includeRuntime && hasUnsavedRuntimeState());
+  const isTrackableForm = (form) =>
+    Boolean(
+      form &&
+        !form.matches('[data-dirty-ignore], [data-lending-usage-filters]') &&
+        form.querySelector('button[type="submit"], input[type="submit"]'),
     );
+  let discardDialog = null;
+  let discardPromise = null;
+  let formSnapshotsInitialized = false;
+  let afterRenderCount = 0;
+  const ensureDiscardDialog = () => {
+    if (discardDialog) return discardDialog;
+    discardDialog = document.createElement('div');
+    discardDialog.className = 'unsaved-changes-backdrop';
+    discardDialog.hidden = true;
+    discardDialog.innerHTML = `<section class="unsaved-changes-dialog" role="alertdialog" aria-modal="true" aria-labelledby="unsavedChangesTitle" aria-describedby="unsavedChangesDescription">
+      <p class="eyebrow">Unsaved changes</p>
+      <h2 id="unsavedChangesTitle">Discard unsaved changes?</h2>
+      <p id="unsavedChangesDescription">Your latest edits have not been saved. Continue editing to keep them, or discard them before leaving.</p>
+      <div class="button-row">
+        <button class="primary" type="button" data-unsaved-continue>Continue editing</button>
+        <button class="danger" type="button" data-unsaved-discard>Discard changes</button>
+      </div>
+    </section>`;
+    document.body.append(discardDialog);
+    return discardDialog;
+  };
+  const requestDiscard = ({ root = null, includeRuntime = true } = {}) => {
+    if (!isDirty(root, { includeRuntime })) return Promise.resolve(true);
+    if (discardPromise) return discardPromise;
+    const dialog = ensureDiscardDialog();
+    const continueButton = dialog.querySelector('[data-unsaved-continue]');
+    const discardButton = dialog.querySelector('[data-unsaved-discard]');
+    const returnFocus = document.activeElement;
+    dialog.hidden = false;
+    discardPromise = new Promise((resolve) => {
+      const finish = (discarded) => {
+        dialog.hidden = true;
+        dialog.removeEventListener('keydown', onKeydown);
+        continueButton.removeEventListener('click', continueEditing);
+        discardButton.removeEventListener('click', discardChanges);
+        discardPromise = null;
+        if (!discarded) returnFocus?.focus?.({ preventScroll: true });
+        resolve(discarded);
+      };
+      const continueEditing = () => finish(false);
+      const discardChanges = () => finish(true);
+      const onKeydown = (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          continueEditing();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const buttons = [continueButton, discardButton];
+        const first = buttons[0];
+        const last = buttons.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+      dialog.addEventListener('keydown', onKeydown);
+      continueButton.addEventListener('click', continueEditing);
+      discardButton.addEventListener('click', discardChanges);
+      continueButton.focus();
+    });
+    return discardPromise;
   };
   const setSyncStatus = (status, detail = {}) => {
     if (!syncIndicator) return;
@@ -4542,10 +4612,40 @@ export function createRuntimeExtensions(options) {
     setSyncStatus(failure ? 'delayed' : 'updates-available');
   };
   const markFormClean = (form) => {
-    if (form) dirtyForms.delete(form);
+    dirtyTracker.markClean(form);
   };
   const markAllClean = () => {
-    dirtyForms.clear();
+    dirtyTracker.markAllClean();
+  };
+  const syncQuantityControl = (input, unit, { allowZero = false } = {}) => {
+    if (!input || !unit) return;
+    input.step = quantityStep(unit);
+    input.min = allowZero ? '0' : isCountableUnit(unit) ? '1' : '0.01';
+    input.dataset.quantityUnit = String(unit);
+  };
+  const syncRenderedQuantityControls = (root = document) => {
+    const state = getState() ?? {};
+    root.querySelectorAll?.('input[type="number"][name^="qty_"]').forEach((input) => {
+      const lineId = input.name.slice(4);
+      const line = (state.requestLines ?? []).find((entry) => entry.id === lineId);
+      syncQuantityControl(input, line?.unit);
+    });
+    for (const formId of ['restockReceiveForm', 'deliverableReceiveForm']) {
+      const form =
+        (root.matches?.(`#${formId}`) ? root : root.querySelector?.(`#${formId}`)) ??
+        document.querySelector(`#${formId}`);
+      if (form) syncQuantityControl(form.elements.quantity, form.elements.unit?.value);
+    }
+    const correctionForm =
+      (root.matches?.('#releaseCorrectionForm') ? root : root.querySelector?.('#releaseCorrectionForm')) ??
+      document.querySelector('#releaseCorrectionForm');
+    if (correctionForm) {
+      const confirmationId = correctionForm.elements.releaseConfirmationId?.value;
+      const line = (state.releaseConfirmations ?? [])
+        .flatMap((release) => release.lineReleases ?? [])
+        .find((entry) => entry.confirmationId === confirmationId);
+      syncQuantityControl(correctionForm.elements.quantity, line?.unit);
+    }
   };
   const acceptScopedRevision = (revision) => {
     if (!revision?.scope) return;
@@ -4772,20 +4872,35 @@ export function createRuntimeExtensions(options) {
   };
 
   const workspaceDefinitions = Object.freeze({
-    administrator: { initial: 'A', label: 'Administrator', purpose: 'Control Center', path: '/app/admin' },
-    director: { initial: 'D', label: 'Director', purpose: 'Department oversight', path: '/app/director' },
-    food: { initial: 'F', label: 'Food Committee', purpose: 'Food operations', path: '/app/food' },
+    administrator: {
+      initial: 'A',
+      label: 'Administrator',
+      purpose: 'Control Center',
+      path: WORKSPACE_ROUTES.administrator.path,
+    },
+    director: {
+      initial: 'D',
+      label: 'Director',
+      purpose: 'Department oversight',
+      path: WORKSPACE_ROUTES.director.path,
+    },
+    food: {
+      initial: 'F',
+      label: 'Food Committee',
+      purpose: 'Food operations',
+      path: WORKSPACE_ROUTES.food.path,
+    },
     'inventory-pantry': {
       initial: 'I',
       label: 'Inventory & Pantry',
       purpose: 'Stock and lending',
-      path: '/app/inventory',
+      path: WORKSPACE_ROUTES['inventory-pantry'].path,
     },
     materials: {
       initial: 'M',
       label: 'Materials & Documentation',
       purpose: 'Procurement and evidence',
-      path: '/app/materials',
+      path: WORKSPACE_ROUTES.materials.path,
     },
   });
   const releaseWorkspaceScopes = Object.freeze({
@@ -4795,6 +4910,31 @@ export function createRuntimeExtensions(options) {
     'inventory-pantry': 'COMMITTEE:COM_INVENTORY_PANTRY',
     materials: 'COMMITTEE:COM_MATERIALS',
   });
+  const clearWorkspaceCaches = () => {
+    foodQueueItems = null;
+    materialsQueueItems = null;
+    venueEquipmentQueueItems = null;
+    accessDirectory = null;
+    referenceAdminWorkspace = null;
+    pendingRevision = null;
+    acceptedRevisions.clear();
+  };
+  const reloadRoutedWorkspace = async (reason) => {
+    clearWorkspaceCaches();
+    const route = workspaceRouteFromPath(location.pathname);
+    if (typeof changeWorkspace === 'function') {
+      await changeWorkspace({ ...route, reason });
+    } else {
+      acceptState(await loadAuthoritativeState(isRequestOnly()));
+    }
+    syncRoutedExperience();
+    renderRoleExperience();
+    renderInternalShell();
+    acceptedLocation = `${location.pathname}${location.search}${location.hash}`;
+    const announcement = internalShellBar?.querySelector('[data-shell-context-announcement]');
+    if (announcement)
+      announcement.textContent = `${workspaceDefinitions[route.workspaceId]?.label ?? 'Workspace'} loaded.`;
+  };
 
   const isAdministrator = () =>
     ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(
@@ -4812,11 +4952,7 @@ export function createRuntimeExtensions(options) {
     return isAdministrator() ? Object.keys(workspaceDefinitions) : [];
   };
 
-  const workspaceFromPath = () =>
-    Object.entries(workspaceDefinitions).find(
-      ([, definition]) =>
-        location.pathname === definition.path || location.pathname.startsWith(`${definition.path}/`),
-    )?.[0] ?? '';
+  const workspaceFromPath = () => workspaceRouteFromPath(location.pathname).workspaceId;
 
   const workspaceForCurrentUser = () => {
     const routedWorkspace = workspaceFromPath();
@@ -5032,23 +5168,31 @@ export function createRuntimeExtensions(options) {
     header.before(internalShellBar);
     internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
       if (authorizedWorkspaceIds().includes(event.target.value) && workspaceDefinitions[event.target.value]) {
-        const releaseRoute = location.pathname.split('/')[3] === 'release';
+        const previousLocation = acceptedLocation;
+        const previousWorkspace = workspaceForCurrentUser();
+        if (!(await requestDiscard())) {
+          event.target.value = previousWorkspace;
+          return;
+        }
+        dirtyTracker.discard();
+        clearUnsavedRuntimeState();
+        const releaseRoute = workspaceRouteFromPath(location.pathname).module === 'release';
         const target = new URL(
-          `${workspaceDefinitions[event.target.value].path}${releaseRoute ? '/release' : ''}`,
+          workspacePath(event.target.value, releaseRoute ? 'release' : ''),
           location.origin,
         );
         target.search = location.search;
         if (releaseRoute) target.searchParams.set('scope', releaseWorkspaceScopes[event.target.value]);
         history.pushState(history.state, '', `${target.pathname}${target.search}`);
-        syncRoutedExperience();
-        renderRoleExperience();
-        renderInternalShell();
-        if (releaseRoute && changeOperationalScope) {
-          try {
-            await changeOperationalScope(releaseWorkspaceScopes[event.target.value]);
-          } catch (error) {
-            toast(error?.message || 'The Release Desk context could not be changed.', true);
-          }
+        try {
+          await reloadRoutedWorkspace('workspace-change');
+        } catch (error) {
+          history.replaceState(history.state, '', previousLocation);
+          syncRoutedExperience();
+          renderRoleExperience();
+          renderInternalShell();
+          event.target.value = previousWorkspace;
+          toast(error?.message || 'The workspace could not be changed.', true);
         }
         return;
       }
@@ -5103,10 +5247,23 @@ export function createRuntimeExtensions(options) {
       accountControlObserver = new MutationObserver(() => adoptAccountControls());
       accountControlObserver.observe(tools, { childList: true });
     }
-    addEventListener('popstate', () => {
-      syncRoutedExperience();
-      renderRoleExperience();
-      renderInternalShell();
+    addEventListener('popstate', async () => {
+      const attemptedLocation = `${location.pathname}${location.search}${location.hash}`;
+      if (!(await requestDiscard())) {
+        history.pushState(history.state, '', acceptedLocation);
+        renderInternalShell();
+        return;
+      }
+      dirtyTracker.discard();
+      clearUnsavedRuntimeState();
+      try {
+        await reloadRoutedWorkspace('history-navigation');
+      } catch (error) {
+        history.replaceState(history.state, '', acceptedLocation);
+        toast(error?.message || 'The previous workspace could not be restored.', true);
+        return;
+      }
+      acceptedLocation = attemptedLocation;
     });
     renderInternalShell();
     applyProductionShellCopy();
@@ -6619,7 +6776,7 @@ export function createRuntimeExtensions(options) {
         <label>Stock area<input name="stockArea" value="${esc(item.stockArea ?? '')}" required></label>
         <label>Storage location<input name="storageLocation" value="${esc(item.storageLocation ?? '')}" required></label>
         <label>Unit<input name="unit" value="${esc(item.unit ?? '')}" required><small>Historical units cannot be changed after ledger activity.</small></label>
-        <label>Reorder threshold<input name="reorderThreshold" type="number" min="0" step="0.01" value="${esc(item.reorderThreshold ?? 0)}" required></label>
+        <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(item.unit, { allowZero: true })} value="${esc(item.reorderThreshold ?? 0)}" required></label>
         <label>Condition review<select name="conditionReviewState">${option('NOT_ASSESSED', 'Not assessed', item.conditionReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.conditionReviewState)}${option('NEW', 'New', item.conditionReviewState)}${option('GOOD', 'Good', item.conditionReviewState)}${option('FAIR', 'Fair', item.conditionReviewState)}${option('POOR', 'Poor / quarantine', item.conditionReviewState)}${option('DAMAGED', 'Damaged', item.conditionReviewState)}</select></label>
         <label>Maintenance review<select name="maintenanceReviewState">${option('NOT_ASSESSED', 'Not assessed', item.maintenanceReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.maintenanceReviewState)}${option('CLEARED', 'Cleared', item.maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', item.maintenanceReviewState)}</select></label>
         <label class="checkbox span-2"><input name="isLendable" type="checkbox" value="true" ${item.isLendable ? 'checked' : ''}> Enable lending after this review</label>
@@ -7224,23 +7381,112 @@ export function createRuntimeExtensions(options) {
         'beforeend',
         '<option value="Reusable Asset">Reusable Asset</option><option value="Non Circulating">Non-circulating</option>',
       );
+    document.querySelectorAll('form').forEach((form) => {
+      if (isTrackableForm(form)) dirtyTracker.register(form);
+    });
+    new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.matches('form') && isTrackableForm(node)) dirtyTracker.register(node);
+          node.querySelectorAll?.('form').forEach((form) => {
+            if (isTrackableForm(form)) dirtyTracker.register(form);
+          });
+          syncRenderedQuantityControls(node);
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+    const updateDirtyForm = (event) => {
+      const form = event.target.closest('form');
+      if (isTrackableForm(form) && !event.target.closest('[data-passive-sync]')) dirtyTracker.update(form);
+      syncRenderedQuantityControls(form ?? document);
+    };
+    document.addEventListener('input', updateDirtyForm, true);
+    document.addEventListener('change', updateDirtyForm, true);
     document.addEventListener(
-      'input',
+      'focusin',
       (event) => {
-        const form = event.target.closest('form');
-        if (form && !event.target.closest('[data-passive-sync]')) dirtyForms.add(form);
-      },
-      true,
-    );
-    document.addEventListener(
-      'change',
-      (event) => {
-        const form = event.target.closest('form');
-        if (form && !event.target.closest('[data-passive-sync]')) dirtyForms.add(form);
+        if (event.target.matches?.('input[type="number"]'))
+          syncRenderedQuantityControls(event.target.form ?? document);
       },
       true,
     );
     document.addEventListener('reset', (event) => setTimeout(() => markFormClean(event.target), 0), true);
+    document.addEventListener(
+      'click',
+      (event) => {
+        const modal = document.querySelector('#modal');
+        const modalBackdrop = document.querySelector('#modalBackdrop');
+        const modalClose =
+          event.target.closest('[data-close-modal]') ||
+          (event.target === modalBackdrop ? modalBackdrop : null);
+        if (modalClose && modal && isDirty(modal, { includeRuntime: false })) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          void requestDiscard({ root: modal, includeRuntime: false }).then((discarded) => {
+            if (!discarded) return;
+            dirtyTracker.discard(modal);
+            clearUnsavedRuntimeState('modal');
+            closeModal();
+          });
+          return;
+        }
+        const cancelEdit = event.target.closest('#cancelLineEdit');
+        if (cancelEdit) {
+          const form = cancelEdit.closest('form');
+          if (form && isDirty(form, { includeRuntime: false })) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            void requestDiscard({ root: form, includeRuntime: false }).then((discarded) => {
+              if (!discarded) return;
+              dirtyTracker.discard(form);
+              cancelEdit.click();
+            });
+            return;
+          }
+        }
+        const navigation = event.target.closest(
+          '#primaryNav [data-view], [data-go], [data-shared-mobile-view], [data-shared-more-view]',
+        );
+        if (navigation && isDirty()) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          void requestDiscard().then((discarded) => {
+            if (!discarded) return;
+            dirtyTracker.discard();
+            clearUnsavedRuntimeState('all');
+            navigation.click();
+          });
+        }
+      },
+      true,
+    );
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Escape' || discardPromise) return;
+        const modal = document.querySelector('#modal');
+        if (
+          !document.querySelector('#modalBackdrop')?.classList.contains('show') ||
+          !isDirty(modal, { includeRuntime: false })
+        )
+          return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        void requestDiscard({ root: modal, includeRuntime: false }).then((discarded) => {
+          if (!discarded) return;
+          dirtyTracker.discard(modal);
+          clearUnsavedRuntimeState('modal');
+          closeModal();
+        });
+      },
+      true,
+    );
+    addEventListener('beforeunload', (event) => {
+      if (!isDirty()) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
     ['pointerdown', 'keydown'].forEach((eventName) => {
       document.addEventListener(
         eventName,
@@ -7254,6 +7500,14 @@ export function createRuntimeExtensions(options) {
   };
 
   const afterRender = () => {
+    afterRenderCount += 1;
+    syncRenderedQuantityControls();
+    if (!formSnapshotsInitialized && afterRenderCount >= 2) {
+      document.querySelectorAll('form').forEach((form) => {
+        if (isTrackableForm(form)) markFormClean(form);
+      });
+      formSnapshotsInitialized = true;
+    }
     syncSharedMobileNav();
     renderRoleExperience();
     installInternalShell();

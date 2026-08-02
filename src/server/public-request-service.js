@@ -1,4 +1,5 @@
 import { ApiError } from './d1/operational-service.js';
+import { isCountableUnit } from '../domain/quantity-units.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const CATEGORIES = Object.freeze([
@@ -46,6 +47,17 @@ const positiveNumber = (value, field) => {
     throw new ApiError('VALIDATION_FAILED', `${field} must be greater than zero.`, {
       status: 422,
       details: { field },
+    });
+  }
+  return result;
+};
+
+const operationalQuantity = (value, unit, field) => {
+  const result = positiveNumber(value, field);
+  if (isCountableUnit(unit) && !Number.isInteger(result)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+      status: 422,
+      details: { field, unit },
     });
   }
   return result;
@@ -237,7 +249,6 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       if (!CATEGORIES.includes(category)) {
         throw new ApiError('VALIDATION_FAILED', `lines[${index}].category is invalid.`, { status: 422 });
       }
-      const quantity = positiveNumber(source.quantity, `lines[${index}].quantity`);
       if (category === 'Inventory Item') {
         const item = await db
           .prepare("SELECT id, name, category, unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
@@ -252,7 +263,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           description: item.name,
           specification: optionalText(source.specification, 1000),
           category,
-          quantity,
+          quantity: operationalQuantity(source.quantity, item.unit, `lines[${index}].quantity`),
           unit: item.unit,
         });
         continue;
@@ -278,18 +289,19 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           description: safeReference.name,
           specification: optionalText(source.specification, 1000),
           category,
-          quantity,
+          quantity: operationalQuantity(source.quantity, safeReference.unit, `lines[${index}].quantity`),
           unit: safeReference.unit,
         });
         continue;
       }
+      const unit = requiredText(source.unit, `lines[${index}].unit`, 40);
       normalized.push({
         itemId: null,
         description: requiredText(source.description, `lines[${index}].description`, 240),
         specification: optionalText(source.specification, 1000),
         category,
-        quantity,
-        unit: requiredText(source.unit, `lines[${index}].unit`, 40),
+        quantity: operationalQuantity(source.quantity, unit, `lines[${index}].quantity`),
+        unit,
       });
     }
     return normalized;
@@ -315,16 +327,8 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         correlationId,
       };
     }
-    requireAcknowledgment(
-      command,
-      'dataUseAcknowledged',
-      'Privacy acknowledgment is required.',
-    );
-    requireAcknowledgment(
-      command,
-      'acceptableUseAcknowledged',
-      'Acceptable Use acknowledgment is required.',
-    );
+    requireAcknowledgment(command, 'dataUseAcknowledged', 'Privacy acknowledgment is required.');
+    requireAcknowledgment(command, 'acceptableUseAcknowledged', 'Acceptable Use acknowledgment is required.');
     requireAcknowledgment(
       command,
       'evidenceConsentAcknowledged',

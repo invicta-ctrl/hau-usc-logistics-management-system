@@ -1,5 +1,5 @@
 import { AppError } from '../app/errors.js';
-import { positiveNumber } from './validators.js';
+import { positiveOperationalQuantity } from './validators.js';
 
 export function requireRecipientConfirmation(value) {
   const confirmed =
@@ -22,8 +22,9 @@ export function validateRelease({
   reservationBalance,
   physicalBalance,
   eventItemBalance = null,
+  unit = '',
 }) {
-  const posting = positiveNumber(quantity);
+  const posting = positiveOperationalQuantity(quantity, unit);
   const remaining = Number(requested) - Number(released);
   if (posting > remaining) throw new AppError('OVER_RELEASE', `Only ${remaining} remains requested.`);
   if (reservationBalance !== null && posting > Number(reservationBalance))

@@ -36,6 +36,24 @@ describe('cumulative receiving', () => {
     expect(() => validateReceipt({ requiredTotal: 10, alreadyReceived: 8, quantityReceivedNow: 3 })).toThrow(
       /exceeds/,
     ));
+  it('rejects fractional received, damaged, rejected, and amendment quantities for countable units', () => {
+    for (const patch of [
+      { quantityReceivedNow: 1.5 },
+      { quantityDamaged: 0.5 },
+      { quantityRejected: 0.5 },
+      { amendmentQuantity: 0.5 },
+    ]) {
+      expect(() =>
+        validateReceipt({
+          requiredTotal: 10,
+          alreadyReceived: 0,
+          quantityReceivedNow: 1,
+          unit: 'piece',
+          ...patch,
+        }),
+      ).toThrow(/whole-number quantity/u);
+    }
+  });
 });
 
 describe('Asia/Manila-safe date-only helpers', () => {

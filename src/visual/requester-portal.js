@@ -215,7 +215,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
               <label>Category<select name="lineCategory">${categoryOptions}</select></label>
               <label>Approved item<select name="lineChoice"></select></label>
               <label data-custom-name hidden>Custom item name<input name="lineCustomName" maxlength="240"></label>
-              <label>Quantity<input name="lineQuantity" type="number" min="0.01" max="100000" step="0.01" value="1"></label>
+              <label>Quantity<input name="lineQuantity" type="number" min="1" max="100000" step="1" value="1"></label>
               <label>Unit<select name="lineUnit">${unitOptions}</select></label>
               <label class="span-2">Optional note / specifications<textarea name="lineSpecification" maxlength="1000"></textarea></label>
               <button class="secondary" type="button" data-add-request-line>Add requested item</button>
@@ -344,8 +344,8 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
       const description = String(custom ? form.elements.lineCustomName.value : choiceSelect.value).trim();
       const quantity = Number(form.elements.lineQuantity.value);
       const unit = form.elements.lineUnit.value;
-      if (!description || !Number.isFinite(quantity) || quantity <= 0 || !unit) {
-        message.textContent = 'Choose or name an item, then enter a valid quantity and unit.';
+      if (!description || !Number.isInteger(quantity) || quantity <= 0 || !unit) {
+        message.textContent = 'Choose or name an item, then enter a whole-number quantity and unit.';
         return;
       }
       if (

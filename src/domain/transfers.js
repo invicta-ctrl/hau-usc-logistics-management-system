@@ -1,5 +1,5 @@
 import { AppError } from '../app/errors.js';
-import { positiveNumber, controlledCategory } from './validators.js';
+import { positiveOperationalQuantity, controlledCategory } from './validators.js';
 
 export function validateTransfer({
   quantity,
@@ -10,7 +10,7 @@ export function validateTransfer({
   mergeReason,
   semanticConfirmed,
 }) {
-  const amount = positiveNumber(quantity);
+  const amount = positiveOperationalQuantity(quantity, source.unit);
   if (amount > Number(eventBalance))
     throw new AppError('INSUFFICIENT_EVENT_BALANCE', `Only ${eventBalance} remains in the event item.`);
   if (source.unit !== destination.unit)

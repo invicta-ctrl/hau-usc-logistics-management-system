@@ -9,7 +9,7 @@ import { validateTransfer } from '../domain/transfers.js';
 import { restorableReturnQuantity, derivedLendingStatus } from '../domain/lending.js';
 import { assertTransition } from '../domain/transitions.js';
 import {
-  positiveNumber,
+  positiveOperationalQuantity,
   requiredText,
   controlledCategory,
   controlledUnit,
@@ -143,7 +143,9 @@ function requireVenueEquipmentRevisionMap(command, children, statuses) {
 function venueEquipmentEffectiveAt(record, at) {
   const date = String(at ?? '').slice(0, 10);
   return (
-    String(record.status ?? '').trim().toUpperCase() === 'ACTIVE' &&
+    String(record.status ?? '')
+      .trim()
+      .toUpperCase() === 'ACTIVE' &&
     (!record.effectiveFrom || date >= record.effectiveFrom) &&
     (!record.effectiveTo || date <= record.effectiveTo)
   );
@@ -178,7 +180,8 @@ function venueEquipmentResolvers(state, at) {
       ),
     resolveVenueEquipmentOtherRoute: (effectiveAt = at) => {
       const effective = (state.venueEquipmentRoutes ?? []).filter(
-        (route) => route.matchKind === 'OTHER' && !route.archivedAt && venueEquipmentEffectiveAt(route, effectiveAt),
+        (route) =>
+          route.matchKind === 'OTHER' && !route.archivedAt && venueEquipmentEffectiveAt(route, effectiveAt),
       );
       if (effective.length > 1)
         throw new AppError(
@@ -304,7 +307,7 @@ export class MockService {
         };
         state.requests.push(request);
         for (const draftLine of command.lines) {
-          const quantity = positiveNumber(draftLine.quantity);
+          const quantity = positiveOperationalQuantity(draftLine.quantity, draftLine.unit);
           controlledUnit(draftLine.unit);
           if (!draftLine.itemId) controlledCategory(draftLine.category);
           state.requestLines.push({
@@ -350,17 +353,20 @@ export class MockService {
             'Venue and Equipment request specialization is not enabled.',
           );
         const submittedAt = now();
-        const packet = createCompositePacket({ ...command, submittedAt }, {
-          requestId: allocateId(state, 'LREQ', 2026),
-          componentIds: (command.sections ?? [])
-            .filter((section) => section?.lines?.length || section?.label || section?.notes)
-            .map(() => allocateSimpleId(state, 'CMP')),
-          actor: tx.actor,
-          now: submittedAt,
-          resolveMaterialReference: (referenceId) =>
-            state.inventoryItems.find((item) => item.id === referenceId),
-          ...venueEquipmentResolvers(state, submittedAt),
-        });
+        const packet = createCompositePacket(
+          { ...command, submittedAt },
+          {
+            requestId: allocateId(state, 'LREQ', 2026),
+            componentIds: (command.sections ?? [])
+              .filter((section) => section?.lines?.length || section?.label || section?.notes)
+              .map(() => allocateSimpleId(state, 'CMP')),
+            actor: tx.actor,
+            now: submittedAt,
+            resolveMaterialReference: (referenceId) =>
+              state.inventoryItems.find((item) => item.id === referenceId),
+            ...venueEquipmentResolvers(state, submittedAt),
+          },
+        );
         const { children, ...parent } = packet.parent;
         state.compositeRequests.push(parent);
         state.compositeComponents.push(...children);
@@ -488,10 +494,7 @@ export class MockService {
       );
     const parents = new Map(state.compositeRequests.map((parent) => [parent.requestId, parent]));
     const items = state.compositeComponents
-      .filter(
-        (child) =>
-          child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId,
-      )
+      .filter((child) => child.componentType === 'VENUE_EQUIPMENT' && child.ownerCommitteeId === committeeId)
       .map((child) => buildVenueEquipmentQueueItem(parents.get(child.requestId), child));
     return Promise.resolve({ ok: true, committeeId, items });
   }
@@ -515,10 +518,7 @@ export class MockService {
             'Terminal Venue and Equipment components cannot be updated.',
           );
         requireVenueEquipmentRevision(command, child);
-        const venueEquipment = updateVenueEquipmentWorkflow(
-          child.payload.venueEquipment,
-          command.patch,
-        );
+        const venueEquipment = updateVenueEquipmentWorkflow(child.payload.venueEquipment, command.patch);
         if (venueEquipment.fulfillmentEvidenceId) {
           const valid = (state.evidenceFiles ?? []).some(
             (evidence) =>
@@ -1147,6 +1147,7 @@ export class MockService {
           quantityDamaged: command.quantityDamaged,
           quantityRejected: command.quantityRejected,
           amendmentQuantity: command.amendmentQuantity,
+          unit: deliverable.unit,
         });
         deliverable.eventItemId ??= eventItemId(
           state,
@@ -1246,14 +1247,19 @@ export class MockService {
   getRestockDetail({ restockRequestId, requestLineId } = {}) {
     const state = this.store.getState();
     const restock = state.restockRequests.find(
-      (row) => (!restockRequestId || row.id === restockRequestId) && (!requestLineId || row.requestLineId === requestLineId),
+      (row) =>
+        (!restockRequestId || row.id === restockRequestId) &&
+        (!requestLineId || row.requestLineId === requestLineId),
     );
-    if (!restock) return Promise.reject(new AppError('NOT_FOUND', 'The selected restock request line was not found.'));
+    if (!restock)
+      return Promise.reject(new AppError('NOT_FOUND', 'The selected restock request line was not found.'));
     const totals = receiptTotals(state.restockReceipts, restock.id);
     const line = state.requestLines.find((row) => row.id === restock.requestLineId);
     const reconciliationRequired = Number(line?.receivedQuantity ?? totals.received) !== totals.received;
     const preferredQuote = (state.quotes ?? state.canvassReferences ?? []).find(
-      (row) => row.id === restock.preferredCanvassId || row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId),
+      (row) =>
+        row.id === restock.preferredCanvassId ||
+        (row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId)),
     );
     return Promise.resolve({
       ok: true,
@@ -1263,7 +1269,13 @@ export class MockService {
         receivedQuantity: totals.received,
         remainingQuantity: Number(restock.quantityOrdered) - totals.received,
         preferredQuote: preferredQuote
-          ? { id: preferredQuote.id, supplierName: preferredQuote.supplierName, price: preferredQuote.price, unit: preferredQuote.unit, checkedAt: preferredQuote.checkedAt }
+          ? {
+              id: preferredQuote.id,
+              supplierName: preferredQuote.supplierName,
+              price: preferredQuote.price,
+              unit: preferredQuote.unit,
+              checkedAt: preferredQuote.checkedAt,
+            }
           : null,
         receipts: structuredClone(state.restockReceipts.filter((row) => row.relatedId === restock.id)),
         timeline: structuredClone(restock.statusHistory ?? []),
@@ -1293,9 +1305,14 @@ export class MockService {
         const receiptTotal = receiptTotals(state.restockReceipts, restock.id).received;
         const storedLine = state.requestLines.find((row) => row.id === restock.requestLineId);
         if (Number(storedLine?.receivedQuantity ?? receiptTotal) !== receiptTotal)
-          throw new AppError('RESTOCK_RECONCILIATION_REQUIRED', 'Receipt totals require reconciliation before another action.');
+          throw new AppError(
+            'RESTOCK_RECONCILIATION_REQUIRED',
+            'Receipt totals require reconciliation before another action.',
+          );
         const preferredQuote = (state.quotes ?? state.canvassReferences ?? []).find(
-          (row) => row.id === restock.preferredCanvassId || row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId),
+          (row) =>
+            row.id === restock.preferredCanvassId ||
+            (row.preferred === true && (row.linkedLineIds ?? []).includes(restock.requestLineId)),
         );
         const validation = validateRestockTransition({
           status: restock.status,
@@ -1310,7 +1327,15 @@ export class MockService {
         restock.status = validation.targetStatus;
         restock.workflowRevision = Number(restock.workflowRevision ?? 1) + 1;
         restock.updatedAt = now();
-        restock.statusHistory = [...(restock.statusHistory ?? []), { status: restock.status, previousStatus: previous, changedAt: restock.updatedAt, reason: command.reason }];
+        restock.statusHistory = [
+          ...(restock.statusHistory ?? []),
+          {
+            status: restock.status,
+            previousStatus: previous,
+            changedAt: restock.updatedAt,
+            reason: command.reason,
+          },
+        ];
         const line = state.requestLines.find((row) => row.id === restock.requestLineId);
         if (line) {
           line.status = restock.status;
@@ -1352,7 +1377,10 @@ export class MockService {
         const totals = receiptTotals(state.restockReceipts, restock.id);
         const storedLine = state.requestLines.find((row) => row.id === restock.requestLineId);
         if (Number(storedLine?.receivedQuantity ?? totals.received) !== totals.received)
-          throw new AppError('RESTOCK_RECONCILIATION_REQUIRED', 'Receipt totals require reconciliation before another receipt.');
+          throw new AppError(
+            'RESTOCK_RECONCILIATION_REQUIRED',
+            'Receipt totals require reconciliation before another receipt.',
+          );
         const validation = validateReceipt({
           requiredTotal: restock.quantityOrdered,
           alreadyReceived: totals.received,
@@ -1360,6 +1388,7 @@ export class MockService {
           quantityDamaged: command.quantityDamaged,
           quantityRejected: command.quantityRejected,
           amendmentQuantity: command.amendmentQuantity,
+          unit: item?.unit,
         });
         const receiptId = allocateId(state, 'RRCP');
         state.restockReceipts.push({
@@ -1398,7 +1427,10 @@ export class MockService {
         });
         restock.workflowRevision = Number(restock.workflowRevision ?? 1) + 1;
         restock.updatedAt = now();
-        restock.statusHistory = [...(restock.statusHistory ?? []), { status: restock.status, changedAt: restock.updatedAt, reason: 'Catalog restock receipt' }];
+        restock.statusHistory = [
+          ...(restock.statusHistory ?? []),
+          { status: restock.status, changedAt: restock.updatedAt, reason: 'Catalog restock receipt' },
+        ];
         const line = state.requestLines.find((row) => row.id === restock.requestLineId);
         if (line) {
           line.receivedQuantity = validation.receivedTotal;
@@ -1432,7 +1464,7 @@ export class MockService {
         requirePermission(state, 'submit_request');
         const item = state.inventoryItems.find((row) => row.id === command.itemId);
         if (!item) throw new AppError('ITEM_SELECTION_REQUIRED', 'Select an exact inventory item.');
-        const quantity = positiveNumber(command.quantity);
+        const quantity = positiveOperationalQuantity(command.quantity, item.unit);
         if (!command.physicalIdVerified)
           throw new AppError('PHYSICAL_ID_REQUIRED', 'Physical institutional ID verification is required.');
         if (item.handling === 'Loanable' && !command.dueDate)
@@ -1567,7 +1599,11 @@ export class MockService {
         const displayed = derivedLendingStatus(ticket, state.demoToday);
         if (!['ON_LOAN', 'OVERDUE'].includes(displayed))
           throw new AppError('INVALID_TRANSITION', 'Only an active or overdue loan may be returned.');
-        const returnedNow = positiveNumber(command.returnedQuantity, 'returnedQuantity');
+        const returnedNow = positiveOperationalQuantity(
+          command.returnedQuantity,
+          ticket.unit,
+          'returnedQuantity',
+        );
         const remainingOut = Number(ticket.handedOutQuantity) - Number(ticket.returnedQuantity ?? 0);
         if (returnedNow > remainingOut)
           throw new AppError('OVER_RETURN', `Only ${remainingOut} remains on loan.`);
@@ -1716,7 +1752,7 @@ export class MockService {
         const release = state.releaseRecords.find((row) => row.id === command.releaseConfirmationId);
         if (!release)
           throw new AppError('RELEASE_CONFIRMATION_NOT_FOUND', 'The release confirmation was not found.');
-        const quantity = positiveNumber(command.quantity);
+        const quantity = positiveOperationalQuantity(command.quantity, release.unit);
         const prior = (state.releaseCorrections ?? [])
           .filter((row) => row.releaseConfirmationId === release.id)
           .reduce((sum, row) => sum + Number(row.quantity), 0);
@@ -1901,7 +1937,9 @@ export class MockService {
       'EMERGENCY_ISSUE',
       async (state, tx) => {
         requirePermission(state, 'release');
-        const quantity = positiveNumber(command.quantity);
+        const item = state.inventoryItems.find((row) => row.id === command.itemId);
+        if (!item) throw new AppError('NOT_FOUND', 'Inventory item was not found.');
+        const quantity = positiveOperationalQuantity(command.quantity, item.unit);
         requiredText(command.reason, 'reason', 'Reason');
         requiredText(command.approver, 'approver', 'Approver');
         const indexes = buildInventoryIndexes(state);

@@ -1594,3 +1594,36 @@ button {
 .eyebrow {
   color: #9a661c;
 }
+
+.unsaved-changes-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(36, 5, 7, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.unsaved-changes-backdrop[hidden] {
+  display: none;
+}
+
+.unsaved-changes-dialog {
+  width: min(31rem, 100%);
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: var(--paper, #fffaf2);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+}
+
+.unsaved-changes-dialog h2 {
+  margin: 0.25rem 0 0.75rem;
+  color: var(--oxblood, #610b0f);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.unsaved-changes-dialog .button-row {
+  margin-top: 1.25rem;
+}

@@ -593,6 +593,20 @@ test('public Lending Center submits both borrower types without exposing public 
     lines: [{ itemId: item.id, quantity: 1 }],
     clientRequestId,
   };
+  const fractionalCountable = await request.post('/api/public/lending', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: {
+      ...command,
+      lines: [{ itemId: item.id, quantity: 1.5 }],
+      clientRequestId: `public-lending-fractional-${crypto.randomUUID()}`,
+    },
+  });
+  expect(fractionalCountable.status()).toBe(422);
+  await expect(fractionalCountable.json()).resolves.toMatchObject({
+    code: 'VALIDATION_FAILED',
+    message: expect.stringMatching(/whole number/u),
+  });
+
   const submitted = await request.post('/api/public/lending', {
     headers: { origin: 'http://127.0.0.1:8787' },
     data: command,

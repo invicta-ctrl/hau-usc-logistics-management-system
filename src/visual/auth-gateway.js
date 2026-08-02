@@ -7,6 +7,7 @@ import { mountPublicLendingPortal } from './public-lending-portal.js';
 import { mountRequesterPortal } from './requester-portal.js';
 import { brandLockupMarkup } from './brand-assets.js';
 import { portalNavigationMarkup, portalSelectionMarkup, releaseIdentityMarkup } from './portal-navigation.js';
+import { isInternalWorkspacePath, WORKSPACE_ROUTES, workspaceRouteFromPath } from './workspace-routes.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -28,26 +29,15 @@ function gatewayRoot() {
   return root;
 }
 
-const WORKSPACE_PATHS = Object.freeze({
-  administrator: '/app/admin',
-  director: '/app/director',
-  food: '/app/food',
-  'inventory-pantry': '/app/inventory',
-  materials: '/app/materials',
-});
-
 function authorizedWorkspacePath(user) {
   const defaultWorkspaceId = user?.authorization?.defaultWorkspaceId || user?.experienceId;
-  return WORKSPACE_PATHS[defaultWorkspaceId] ?? '/login';
+  return WORKSPACE_ROUTES[defaultWorkspaceId]?.path ?? '/login';
 }
 
 function routedExperience(user) {
   const allowed = new Set(user?.authorization?.workspaceIds ?? []);
-  const route = Object.entries(WORKSPACE_PATHS).find(
-    ([id, path]) =>
-      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
-  );
-  if (route) return route[0];
+  const route = workspaceRouteFromPath(location.pathname);
+  if (allowed.has(route.workspaceId)) return route.workspaceId;
   return user?.experienceId ?? '';
 }
 
@@ -57,7 +47,7 @@ function routeAuthorizedWorkspace(user) {
     if (
       location.pathname === '/login' ||
       location.pathname === '/' ||
-      location.pathname.startsWith('/app/')
+      isInternalWorkspacePath(location.pathname)
     ) {
       history.replaceState(null, '', target);
     }
@@ -65,17 +55,19 @@ function routeAuthorizedWorkspace(user) {
   }
   const target = authorizedWorkspacePath(user);
   const allowed = new Set(user?.authorization?.workspaceIds ?? []);
-  const validInternalWorkspace = Object.entries(WORKSPACE_PATHS).some(
-    ([id, path]) =>
-      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
-  );
-  if (validInternalWorkspace) return;
+  const routed = workspaceRouteFromPath(location.pathname);
+  const validInternalWorkspace = allowed.has(routed.workspaceId);
+  if (validInternalWorkspace && !routed.legacy) return;
+  if (validInternalWorkspace && routed.legacy) {
+    history.replaceState(history.state, '', `${routed.canonicalPath}${location.search}${location.hash}`);
+    return;
+  }
   const alreadyInAuthorizedWorkspace =
     location.pathname === target || location.pathname.startsWith(`${target}/`);
   if (
     location.pathname === '/login' ||
     location.pathname === '/' ||
-    (location.pathname.startsWith('/app/') && !alreadyInAuthorizedWorkspace)
+    (isInternalWorkspacePath(location.pathname) && !alreadyInAuthorizedWorkspace)
   ) {
     history.replaceState(null, '', target);
   }

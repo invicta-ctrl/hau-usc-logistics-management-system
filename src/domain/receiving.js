@@ -1,5 +1,8 @@
 import { AppError } from '../app/errors.js';
-import { positiveNumber, nonNegativeNumber } from './validators.js';
+import {
+  nonNegativeOperationalQuantity,
+  positiveOperationalQuantity,
+} from './validators.js';
 
 export function receiptTotals(receipts, relatedId) {
   return receipts
@@ -21,11 +24,13 @@ export function validateReceipt({
   quantityDamaged = 0,
   quantityRejected = 0,
   amendmentQuantity = 0,
+  unit = '',
 }) {
-  const receivedNow = positiveNumber(quantityReceivedNow, 'quantityReceivedNow');
-  const damaged = nonNegativeNumber(quantityDamaged, 'quantityDamaged');
-  const rejected = nonNegativeNumber(quantityRejected, 'quantityRejected');
-  const allowed = Number(requiredTotal) + Number(amendmentQuantity);
+  const receivedNow = positiveOperationalQuantity(quantityReceivedNow, unit, 'quantityReceivedNow');
+  const damaged = nonNegativeOperationalQuantity(quantityDamaged, unit, 'quantityDamaged');
+  const rejected = nonNegativeOperationalQuantity(quantityRejected, unit, 'quantityRejected');
+  const amendment = nonNegativeOperationalQuantity(amendmentQuantity, unit, 'amendmentQuantity');
+  const allowed = Number(requiredTotal) + amendment;
   const receivedTotal = Number(alreadyReceived) + receivedNow;
   if (receivedTotal > allowed)
     throw new AppError(

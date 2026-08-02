@@ -8,6 +8,7 @@ import {
   REQUEST_CENTER_UNITS,
 } from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
+import { isCountableUnit } from '../../domain/quantity-units.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -133,11 +134,31 @@ const positiveNumber = (value, field = 'quantity') => {
   return result;
 };
 
+const positiveOperationalQuantity = (value, unit, field = 'quantity') => {
+  const result = positiveNumber(value, field);
+  if (isCountableUnit(unit) && !Number.isInteger(result)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
+  return result;
+};
+
 const nonNegativeNumber = (value, field = 'value') => {
   const result = Number(value);
   if (!Number.isFinite(result) || result < 0) {
     throw new ApiError('VALIDATION_FAILED', `${field} must be zero or greater.`, {
       details: { field },
+    });
+  }
+  return result;
+};
+
+const nonNegativeOperationalQuantity = (value, unit, field = 'quantity') => {
+  const result = nonNegativeNumber(value, field);
+  if (isCountableUnit(unit) && !Number.isInteger(result)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+      details: { field, unit: String(unit ?? '') },
     });
   }
   return result;
@@ -2671,6 +2692,12 @@ export function createD1OperationalService({
         ),
     ];
     lines.forEach((line, index) => {
+      const unit = requiredText(line.unit, `lines[${index}].unit`, 40);
+      const quantity = positiveOperationalQuantity(
+        line.quantity ?? line.requestedQuantity,
+        unit,
+        `lines[${index}].quantity`,
+      );
       statements.push(
         db
           .prepare(
@@ -2689,8 +2716,8 @@ export function createD1OperationalService({
             requiredText(line.description ?? line.itemName, `lines[${index}].description`, 240),
             optionalText(line.specification, 1000),
             optionalText(line.category, 120),
-            positiveNumber(line.quantity ?? line.requestedQuantity, `lines[${index}].quantity`),
-            requiredText(line.unit, `lines[${index}].unit`, 40),
+            quantity,
+            unit,
             requiredText(line.fulfillmentSource ?? 'FOR_CANVASSING', `lines[${index}].fulfillmentSource`, 64),
             optionalText(line.splitGroupId, 80) || null,
             optionalText(line.neededAt, 64) || null,
@@ -2943,7 +2970,7 @@ export function createD1OperationalService({
       lines.push({
         category,
         description,
-        quantity: positiveNumber(source.quantity, `lines[${index}].quantity`),
+        quantity: positiveOperationalQuantity(source.quantity, unit, `lines[${index}].quantity`),
         unit,
         specification: optionalText(source.specification, 1000),
       });
@@ -3126,7 +3153,6 @@ export function createD1OperationalService({
   async function reserveStock({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.reserveStock);
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const quantity = positiveNumber(command.quantity);
     const requestLineId = optionalText(command.requestLineId, 80);
     if (entityScope(account).mode !== 'ALL' && !requestLineId) {
       throw new ApiError('ENTITY_SCOPE_REQUIRED', 'A scoped request line is required for this reservation.', {
@@ -3156,6 +3182,7 @@ export function createD1OperationalService({
       .bind(itemId, 'ACTIVE')
       .first();
     if (!item) throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
+    const quantity = positiveOperationalQuantity(command.quantity, item.unit);
     const reservationId = createId('RSV');
     const result = { reservationId, id: reservationId, itemId, quantity, status: 'ACTIVE', correlationId };
     const inserted = db
@@ -3274,7 +3301,7 @@ export function createD1OperationalService({
           optionalText(command.department ?? command.departmentOrganization, 120),
           optionalText(command.contact, 120),
           itemId,
-          positiveNumber(command.quantity),
+          positiveOperationalQuantity(command.quantity, catalogItem.unit),
           requiredText(command.unit, 'unit', 40),
           requiredText(command.purpose, 'purpose', 500),
           optionalText(command.dueAt, 64) || null,
@@ -3384,7 +3411,7 @@ export function createD1OperationalService({
         status: 404,
       });
     }
-    const quantity = positiveNumber(command.quantity);
+    const quantity = positiveOperationalQuantity(command.quantity, item.lending_unit || item.unit);
     if (item.maximum_loan_quantity && quantity > Number(item.maximum_loan_quantity)) {
       throw new ApiError(
         'LENDING_QUANTITY_EXCEEDED',
@@ -3785,7 +3812,9 @@ export function createD1OperationalService({
     }
     const requestedQuantity = Number(ticket.requested_quantity ?? ticket.quantity);
     const approvedQuantity =
-      command.approvedQuantity == null ? requestedQuantity : positiveNumber(command.approvedQuantity);
+      command.approvedQuantity == null
+        ? requestedQuantity
+        : positiveOperationalQuantity(command.approvedQuantity, ticket.unit);
     if (approvedQuantity > requestedQuantity) {
       throw new ApiError(
         'LENDING_APPROVED_QUANTITY_INVALID',
@@ -4223,17 +4252,20 @@ export function createD1OperationalService({
     const returnId = createId('RTN');
     const returnCondition = requiredText(command.conditionLabel, 'conditionLabel', 80).toUpperCase();
     const ticketQuantity = Number(ticket.quantity);
-    const lostQuantity = nonNegativeNumber(
+    const lostQuantity = nonNegativeOperationalQuantity(
       command.lostQuantity ?? (returnCondition.includes('LOST') ? ticketQuantity : 0),
+      ticket.unit,
       'lostQuantity',
     );
-    const damagedBeyondUseQuantity = nonNegativeNumber(
+    const damagedBeyondUseQuantity = nonNegativeOperationalQuantity(
       command.damagedBeyondUseQuantity ??
         (returnCondition.includes('DAMAGED_BEYOND_USE') ? ticketQuantity : 0),
+      ticket.unit,
       'damagedBeyondUseQuantity',
     );
-    const returnedQuantity = nonNegativeNumber(
+    const returnedQuantity = nonNegativeOperationalQuantity(
       command.returnedQuantity ?? ticketQuantity - lostQuantity - damagedBeyondUseQuantity,
+      ticket.unit,
       'returnedQuantity',
     );
     if (Math.abs(returnedQuantity + lostQuantity + damagedBeyondUseQuantity - ticketQuantity) > 0.000001) {
@@ -4634,7 +4666,6 @@ export function createD1OperationalService({
     for (let index = 0; index < lines.length; index += 1) {
       const input = lines[index];
       const lineId = requiredText(input.requestLineId, `lines[${index}].requestLineId`, 80);
-      const quantity = positiveNumber(input.quantity, `lines[${index}].quantity`);
       const line = await db.prepare('SELECT * FROM request_lines WHERE id = ?1').bind(lineId).first();
       if (!line || line.request_id !== requestId) {
         throw new ApiError(
@@ -4643,6 +4674,7 @@ export function createD1OperationalService({
           { status: 409 },
         );
       }
+      const quantity = positiveOperationalQuantity(input.quantity, line.unit, `lines[${index}].quantity`);
       if (!['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(line.status)) {
         throw new ApiError('RELEASE_STATE_CONFLICT', 'A release line is not ready for physical handoff.', {
           status: 409,
@@ -4846,7 +4878,6 @@ export function createD1OperationalService({
       );
     }
     const releaseConfirmationId = requiredText(command.releaseConfirmationId, 'releaseConfirmationId', 100);
-    const quantity = positiveNumber(command.quantity, 'quantity');
     const reason = requiredText(command.reason, 'reason', 500);
     const confirmation = await db
       .prepare(
@@ -4867,6 +4898,7 @@ export function createD1OperationalService({
         status: 404,
       });
     }
+    const quantity = positiveOperationalQuantity(command.quantity, confirmation.unit, 'quantity');
     assertEntityScope(account, {
       committeeId: confirmation.owner_committee_id,
       ownerAccountId: confirmation.requester_account_id,
@@ -5050,7 +5082,6 @@ export function createD1OperationalService({
       kind === 'RESTOCK' ? 'restockId' : 'deliverableId',
       80,
     );
-    const quantity = positiveNumber(command.quantity ?? command.quantityReceived, 'quantity');
     const table = kind === 'RESTOCK' ? 'restock_requests' : 'deliverables';
     const entity = await db.prepare(`SELECT * FROM ${table} WHERE id = ?1`).bind(entityId).first();
     if (!entity) {
@@ -5058,6 +5089,11 @@ export function createD1OperationalService({
         status: 404,
       });
     }
+    const quantity = positiveOperationalQuantity(
+      command.quantity ?? command.quantityReceived,
+      entity.unit,
+      'quantity',
+    );
     let scopeRecord;
     if (kind === 'RESTOCK') {
       scopeRecord = await db
@@ -5480,8 +5516,17 @@ export function createD1OperationalService({
       );
     }
     const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
-    if (!Number.isFinite(reorderThreshold) || reorderThreshold < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'Reorder threshold must be zero or greater.');
+    if (
+      !Number.isFinite(reorderThreshold) ||
+      reorderThreshold < 0 ||
+      (isCountableUnit(unit) && !Number.isInteger(reorderThreshold))
+    ) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        isCountableUnit(unit)
+          ? `Reorder threshold must be a whole number for ${unit}.`
+          : 'Reorder threshold must be zero or greater.',
+      );
     }
     const classificationNotes = optionalText(command.classificationNotes, 1000);
     const evidenceId = optionalText(command.evidenceId, 120);
@@ -5732,17 +5777,23 @@ export function createD1OperationalService({
   async function postCycleCountAdjustment({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.postCycleCountAdjustment);
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const countedQuantity = Number(command.countedQuantity);
-    if (!Number.isFinite(countedQuantity) || countedQuantity < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'countedQuantity must be zero or greater.');
-    }
     const balance = await db
-      .prepare('SELECT on_hand FROM inventory_balances WHERE item_id = ?1')
+      .prepare(
+        `SELECT balance.on_hand, item.unit
+         FROM inventory_balances balance
+         JOIN inventory_items item ON item.id = balance.item_id
+         WHERE balance.item_id = ?1`,
+      )
       .bind(itemId)
       .first();
     if (!balance) {
       throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
     }
+    const countedQuantity = nonNegativeOperationalQuantity(
+      command.countedQuantity,
+      balance.unit,
+      'countedQuantity',
+    );
     const delta = countedQuantity - Number(balance.on_hand);
     if (delta === 0) {
       throw new ApiError('NO_ADJUSTMENT_REQUIRED', 'The count already matches authoritative stock.');
