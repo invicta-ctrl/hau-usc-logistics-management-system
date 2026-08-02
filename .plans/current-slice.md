@@ -1,5 +1,21 @@
 # HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
 
+> v0.7.1 authority update (2026-08-02): the active slice is the accepted
+> client/runtime contract repair in
+> `.codex/specs/v0.7.1-production-recovery.md`. Routing/TOML preflight and the
+> read-only production truth audit passed from synchronized `main` at
+> `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`. Production remains operational
+> on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
+> historical Slice 13 material below does not override the active pointer.
+
+CURRENT SLICE: v0.7.1 Slice 2 - Client/runtime contract parity and safe errors
+
+CURRENT STAGE: SPEC_ACCEPTED_AUDIT_COMPLETE_IMPLEMENTATION_READY
+
+LAST UPDATED: 2026-08-02 (Asia/Manila)
+
+---
+
 > v0.6 authority update (2026-07-21): Phase 1 is complete at implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`. The active cross-version pointer is `.codex/CURRENT.md`; this file preserves the v0.5 Slice 13 staging record and does not authorize bypassing its distinct-identity acceptance blocker.
 
 > v0.6 Phase 3 update (2026-07-22): the Worker/D1/Google migration repository candidate is locally verified but remains blocked before the first remote Cloudflare or Google access by the missing exact private Phase 3 staging authorization package. Follow `.codex/CURRENT.md` and `.codex/PHASE_3_STAGING_CANDIDATE_HANDOFF.md`. This does not alter or clear the distinct v0.5 Slice 13 acceptance blocker below.

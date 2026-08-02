@@ -1,5 +1,24 @@
 # Current Task
 
+INTENT: PRODUCTION RECOVERY
+MODE: execute bounded v0.7.1 slices
+TARGET: client/runtime contract parity and safe failure behavior
+AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
+RISK: high
+DELIVERABLE: complete production browser-service contract for Access Management and Staff Directory with focused regression coverage and fresh independent review
+VERIFICATION: explicit adapter/route parity; focused unit tests; relevant browser coverage; repository-required gates; exact base/head review
+STATUS: ACTIVE
+
+Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
+
+Branch: `fix/v0.7.1-production-recovery`
+
+Stop on an unaccepted migration need, wrong production binding, privacy or
+authorization uncertainty, unknown overlapping repository work, or a P0 data
+integrity risk. Production and external provider writes remain owner-gated.
+
+---
+
 INTENT: PRODUCTION CLOSURE
 MODE: complete
 TARGET: HAU-USC Logistics v0.7.0 production baseline

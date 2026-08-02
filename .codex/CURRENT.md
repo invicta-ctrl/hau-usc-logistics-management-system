@@ -1,5 +1,32 @@
 # Current Codex Work Pointer
 
+## Active v0.7.1 recovery pointer
+
+- Program: HAU-USC Logistics v0.7.1 production recovery.
+- Status: specification accepted; routing/TOML preflight passed; read-only
+  production truth audit complete; client/runtime contract repair is the first
+  implementation slice.
+- Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
+  `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
+- Active specification:
+  `.codex/specs/v0.7.1-production-recovery.md`.
+- Current evidence:
+  `.codex/V0_7_1_ROUTING_AND_PRODUCTION_TRUTH_AUDIT.md` and
+  `.codex/V0_7_1_DELEGATION_LEDGER.md`.
+- Production remains operational on immutable v0.7.0 source
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`, schema 29. No staging-binding
+  incident was found.
+- Confirmed first repair: complete the browser/Worker service contract for
+  Staff Directory and Access Management, remove masking fallbacks, add parity
+  tests and user-safe errors, then pass a fresh read-only review gate.
+- Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
+  inventory, ledger, history, evidence, privacy, backup, and rollback
+  invariants.
+- No production, deployment, migration, domain, Google, or destructive
+  external write is authorized by this pointer.
+
+---
+
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 29 — Production Closure and v1 Readiness
 Required model: GPT-5.6 Sol — High
