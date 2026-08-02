@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased - v0.7.1 production recovery
+
+### Fixed
+
+- Restored the three protected Access Policy and six Staff Directory client
+  methods across the active HTTP and legacy-runtime adapter layers.
+- Preserved CSRF, safe correlated server errors, and retry-stable mutation IDs
+  for policy update and roster apply/rollback operations.
+
+### Verified
+
+- Added explicit remote/runtime contract assertions and focused regression
+  coverage; full `npm run check` passes 77 Vitest files / 502 tests and every
+  deterministic build, Apps Script, dist, and Cloudflare dry-run gate.
+- Focused local-Worker Access Management and Staff Directory UI journeys pass
+  2/2. Fresh exact-SHA R2 review reports no P0-P3.
+
+### Boundary
+
+- Production remains operational on v0.7.0 and was not modified. No provider,
+  migration, deployment, domain, Google, or GitHub external write occurred.
+
 ## 0.7.0 - 2026-07-29
 
 ### Released

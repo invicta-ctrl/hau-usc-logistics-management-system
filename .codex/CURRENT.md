@@ -3,9 +3,9 @@
 ## Active v0.7.1 recovery pointer
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
-- Status: specification accepted; routing/TOML preflight passed; read-only
-  production truth audit complete; client/runtime contract repair is the first
-  implementation slice.
+- Status: specification accepted; routing/TOML preflight and read-only
+  production truth audit passed; Slice 2 client/runtime contract repair is
+  accepted; login/session and public-navigation recovery is active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -16,10 +16,15 @@
 - Production remains operational on immutable v0.7.0 source
   `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`, schema 29. No staging-binding
   incident was found.
-- Confirmed first repair: complete the browser/Worker service contract for
-  Staff Directory and Access Management, preserve isolated mock-preview
-  services, add parity tests and user-safe errors, then pass a fresh read-only
-  review gate.
+- Accepted Slice 2 implementation:
+  `8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2`; all nine protected Access
+  Policy/Staff Directory methods now have HTTP and legacy-runtime parity,
+  retry-stable mutations, focused browser proof, full repository gates, and a
+  fresh review PASS. Handoff:
+  `.codex/V0_7_1_SLICE_2_CLIENT_RUNTIME_CONTRACT_HANDOFF.md`.
+- Active next slice: complete the login/session lifecycle audit; repair safe
+  authentication correlation/security headers and public portal navigation;
+  preserve host-scoped cookies and server authorization.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

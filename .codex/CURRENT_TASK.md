@@ -2,16 +2,20 @@
 
 INTENT: PRODUCTION RECOVERY
 MODE: execute bounded v0.7.1 slices
-TARGET: client/runtime contract parity and safe failure behavior
+TARGET: login/session lifecycle, safe authentication errors, and public portal navigation
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: complete production browser-service contract for Access Management and Staff Directory with focused regression coverage and fresh independent review
-VERIFICATION: explicit adapter/route parity; focused unit tests; relevant browser coverage; repository-required gates; exact base/head review
+DELIVERABLE: verified staff entry through activation/login/logout/reset/revocation with safe correlation behavior and consistent Request/Lending/staff navigation
+VERIFICATION: focused auth handler/client tests; login and portal browser matrix; relevant local Worker coverage; repository-required gates; exact base/head review
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
+
+Accepted previous slice: client/runtime contract repair at
+`8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2`; full `npm run check`, focused
+local-Worker UI 2/2, and fresh R2 review passed.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data

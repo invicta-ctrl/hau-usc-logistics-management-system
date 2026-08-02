@@ -1,5 +1,21 @@
 # Project Status
 
+## v0.7.1 production recovery active — client/runtime contract accepted
+
+- Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
+  `main` at `9fb1b4e6b4e956419fa65dee55268b10c0a55da6` under the accepted
+  `.codex/specs/v0.7.1-production-recovery.md` contract.
+- Read-only provider truth shows production remains healthy on immutable
+  v0.7.0, schema 29, with no verified staging D1/R2 binding incident.
+- Slice 2 at `8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2` restores the complete protected
+  Access Policy and Staff Directory browser-service contract while preserving
+  authorization, CSRF, idempotency, mock isolation, and Apps Script startup.
+- Full `npm run check` passes 77 Vitest files / 502 tests and all build,
+  generated, Apps Script, dist, and Cloudflare dry-run gates. Focused local
+  Worker UI passes 2/2; fresh R2 review reports no P0-P3.
+- Production was not deployed or changed. Login/session and public-navigation
+  recovery is the next bounded slice.
+
 ## v0.7.0 production launch and closure accepted
 
 - Production source, annotated `v0.7.0` tag, and published release are exact
