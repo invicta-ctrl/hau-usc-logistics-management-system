@@ -32,6 +32,11 @@ async function context() {
       correlation_id TEXT NOT NULL,
       notes TEXT NOT NULL
     ) STRICT`,
+    `CREATE TABLE idempotency_keys (
+      scope TEXT NOT NULL, idempotency_key TEXT NOT NULL, actor_account_id TEXT NOT NULL,
+      request_fingerprint TEXT NOT NULL, result_json TEXT NOT NULL, created_at TEXT NOT NULL,
+      PRIMARY KEY (scope, idempotency_key)
+    ) STRICT`,
     "INSERT INTO accounts VALUES ('OWNER-SYNTHETIC')",
     `CREATE TABLE identity_roster_sync_runs (
       id TEXT PRIMARY KEY, source_fingerprint TEXT NOT NULL, source_row_count INTEGER NOT NULL,
@@ -110,9 +115,7 @@ describe('D1 identity roster repository', () => {
       id: run.id,
       applyStatus: 'APPLIED',
     });
-    await expect(repository.getSnapshotEnvelope(run.id)).resolves.toBe(
-      'v1.synthetic.empty-snapshot',
-    );
+    await expect(repository.getSnapshotEnvelope(run.id)).resolves.toBe('v1.synthetic.empty-snapshot');
 
     await repository.rollbackRun({
       run: { ...run, applyStatus: 'APPLIED' },
@@ -122,19 +125,27 @@ describe('D1 identity roster repository', () => {
       correlationId: 'COR-SYNTHETIC-ROLLBACK',
       auditId: 'AUD-SYNTHETIC-ROLLBACK',
       reason: 'Restore synthetic pre-apply state.',
+      idempotency: {
+        scope: 'identity-roster-rollback',
+        key: 'roster-rollback-repository-0001',
+        actorAccountId: 'OWNER-SYNTHETIC',
+        requestFingerprint: 'FINGERPRINT-SYNTHETIC',
+        result: { rolledBack: true },
+        createdAt: '2026-07-26T10:02:00.000Z',
+      },
     });
     await expect(repository.listEntries()).resolves.toEqual([]);
     await expect(repository.getRun(run.id)).resolves.toMatchObject({ applyStatus: 'ROLLED_BACK' });
+    await expect(
+      repository.getIdempotency('identity-roster-rollback', 'roster-rollback-repository-0001'),
+    ).resolves.toMatchObject({ actorAccountId: 'OWNER-SYNTHETIC', result: { rolledBack: true } });
     const audits = await db.prepare('SELECT action FROM audit_log ORDER BY created_at').all();
     expect(audits.results.map((entry) => entry.action)).toEqual([
       'IDENTITY_ROSTER_SYNC_APPLIED',
       'IDENTITY_ROSTER_SYNC_ROLLED_BACK',
     ]);
     await expect(
-      db
-        .prepare('DELETE FROM identity_roster_rollback_snapshots WHERE run_id = ?1')
-        .bind(run.id)
-        .run(),
+      db.prepare('DELETE FROM identity_roster_rollback_snapshots WHERE run_id = ?1').bind(run.id).run(),
     ).rejects.toThrow(/append-only/iu);
   });
 

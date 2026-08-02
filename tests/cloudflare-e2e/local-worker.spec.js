@@ -463,6 +463,9 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await rosterControl.click();
   await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
   await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
+  await expect(ownerPage.getByLabel('Activity')).toBeVisible();
+  await expect(ownerPage.getByLabel('Verification')).toBeVisible();
+  await expect(ownerPage.locator('[data-roster-directory]')).toHaveAttribute('aria-live', 'polite');
   const systemStatusControl = ownerPage.locator('[data-admin-control-surface="system-status"]');
   await expect(systemStatusControl).toBeVisible();
   await systemStatusControl.click();
@@ -1552,6 +1555,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic revoke sessions lifecycle proof.',
+        clientRequestId: 'local-revoke-sessions-0001',
       },
     });
     expect(revoked.status()).toBe(200);
@@ -1565,6 +1569,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
+        clientRequestId: 'local-reset-password-0001',
       },
     });
     expect(reset.status()).toBe(200);
@@ -1575,6 +1580,21 @@ test('Administrator Access Management governs the staging account lifecycle and 
       sessionsRevoked: true,
     });
     const generatedResetPassword = resetResult.credential.temporaryPassword;
+    const resetReplay = await admin.post('/api/admin/access/reset-password', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        reason: 'Synthetic temporary password reset lifecycle proof.',
+        clientRequestId: 'local-reset-password-0001',
+      },
+    });
+    expect(resetReplay.status()).toBe(200);
+    await expect(resetReplay.json()).resolves.toMatchObject({
+      reset: true,
+      replayed: true,
+      credentialUnavailable: true,
+    });
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const wrong = await anonymous.post('/api/auth/login', {
@@ -1593,6 +1613,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic unlock and rate-limit reset lifecycle proof.',
+        clientRequestId: 'local-unlock-account-0001',
       },
     });
     expect(unlocked.status()).toBe(200);
@@ -1775,6 +1796,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Generate one governed replacement department credential.',
+        clientRequestId: 'department-reset-password-0001',
       },
     });
     expect(reset.status()).toBe(200);
@@ -1848,6 +1870,7 @@ test('requester portals keep request and lending records self-scoped', async () 
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Prepare the governed department account for authenticated Request Center coverage.',
+        clientRequestId: `department-requester-reset-${suffix}`,
       },
     });
     expect(departmentReset.status()).toBe(200);

@@ -31,6 +31,7 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
     accounts.map((entry) => [accessIdCollisionKey(entry.accessIdNormalized), { accountId: entry.id }]),
   );
   const history = new Map();
+  const idempotency = new Map();
   const changes = [];
   const repository = {
     getAccountByAccessId: vi.fn(async (accessId) => byAccessId.get(accessId)),
@@ -56,6 +57,7 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
     listAccounts: vi.fn(async () => ({ items: [], pagination: { page: 1, totalPages: 1, total: 0 } })),
     listAccessIdHistory: vi.fn(async () => []),
     listAccountAuditHistory: vi.fn(async () => []),
+    getIdempotency: vi.fn(async (scope, key) => idempotency.get(`${scope}:${key}`) ?? null),
     getAccessIdHistoryByIdempotency: vi.fn(async (key) => history.get(key)),
     changeAccessId: vi.fn(async (command) => {
       byAccessId.delete(command.account.accessIdNormalized);
@@ -92,10 +94,28 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
       })),
     ),
     seedDepartmentAccounts: vi.fn(),
-    resetTemporaryPassword: vi.fn(),
+    resetTemporaryPassword: vi.fn(async ({ idempotency: replay }) => {
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
     setAccountStatus: vi.fn(),
-    revokeSessions: vi.fn(),
-    unlockAccount: vi.fn(),
+    revokeSessions: vi.fn(async ({ idempotency: replay }) => {
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
+    unlockAccount: vi.fn(async ({ idempotency: replay }) => {
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
   };
   let id = 0;
   let password = 0;
@@ -360,6 +380,7 @@ describe('access management service', () => {
         currentAccessId: target.accessIdNormalized,
         confirmCurrentAccessId: target.accessIdNormalized,
         reason: 'Authorized synthetic credential reset for acceptance.',
+        clientRequestId: 'access-reset-synthetic-00000001',
       },
     });
 
@@ -376,6 +397,22 @@ describe('access management service', () => {
     expect(JSON.stringify(repository.resetTemporaryPassword.mock.calls[0][0])).not.toContain(
       result.credential.temporaryPassword,
     );
+    const replay = await service.resetTemporaryPassword({
+      actor,
+      command: {
+        currentAccessId: target.accessIdNormalized,
+        confirmCurrentAccessId: target.accessIdNormalized,
+        reason: 'Authorized synthetic credential reset for acceptance.',
+        clientRequestId: 'access-reset-synthetic-00000001',
+      },
+    });
+    expect(replay).toMatchObject({
+      reset: true,
+      replayed: true,
+      credentialUnavailable: true,
+    });
+    expect(replay).not.toHaveProperty('credential');
+    expect(repository.resetTemporaryPassword).toHaveBeenCalledOnce();
   });
 
   it('previews and applies a governed access policy with session revocation and audit input', async () => {

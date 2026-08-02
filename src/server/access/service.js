@@ -1,15 +1,7 @@
 import { ROLES } from '../../domain/constants.js';
-import {
-  USC_DEPARTMENT_REGISTRY,
-  uscDepartmentById,
-} from '../../domain/usc-departments.js';
+import { USC_DEPARTMENT_REGISTRY, uscDepartmentById } from '../../domain/usc-departments.js';
 import { ACCOUNT_STATUS, normalizeAccessId, validateStarterAssignment } from '../auth/contracts.js';
-import {
-  ACCESS_PRESETS,
-  ACCESS_WORKSPACES,
-  accountAccessPolicy,
-  normalizeAccessPolicy,
-} from './policy.js';
+import { ACCESS_PRESETS, ACCESS_WORKSPACES, accountAccessPolicy, normalizeAccessPolicy } from './policy.js';
 
 const SAFE_MESSAGES = Object.freeze({
   ACCESS_ACCOUNT_NOT_FOUND: 'The selected account is no longer available.',
@@ -18,6 +10,7 @@ const SAFE_MESSAGES = Object.freeze({
   ACCESS_ID_INVALID: 'Use 4–64 letters, numbers, periods, underscores, or hyphens.',
   ACCESS_ID_UNCHANGED: 'Enter a different Access ID.',
   ACCESS_IDEMPOTENCY_REQUIRED: 'A safe retry key is required.',
+  ACCESS_IDEMPOTENCY_CONFLICT: 'The retry key was already used for another account action.',
   ACCESS_REASON_REQUIRED: 'A reason is required for this account change.',
   ACCESS_PRESET_INVALID: 'The selected access preset is not supported.',
   ACCESS_ROLE_INVALID: 'The selected role cannot be assigned through Access Management.',
@@ -75,6 +68,29 @@ function requiredIdempotencyKey(value) {
   const key = String(value ?? '').trim();
   if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/u.test(key)) fail('ACCESS_IDEMPOTENCY_REQUIRED');
   return key;
+}
+
+const stableValue = (value) => {
+  if (Array.isArray(value)) return value.map(stableValue);
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+      .sort()
+      .reduce((result, key) => {
+        result[key] = stableValue(value[key]);
+        return result;
+      }, {});
+  }
+  return value;
+};
+
+async function requestFingerprint(value) {
+  const digest = await globalThis.crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(JSON.stringify(stableValue(value))),
+  );
+  let binary = '';
+  for (const byte of new Uint8Array(digest)) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/u, '');
 }
 
 function assertAdministrator(actor) {
@@ -146,6 +162,19 @@ export function createAccessManagementService({
   }
 
   const nowIso = () => new Date(clock.now()).toISOString();
+
+  async function mutationReplay(scope, actor, command) {
+    const key = requiredIdempotencyKey(command.clientRequestId);
+    const fingerprint = await requestFingerprint(command);
+    const prior = await repository.getIdempotency(scope, key);
+    if (prior) {
+      if (prior.actorAccountId !== actor.id || prior.requestFingerprint !== fingerprint) {
+        fail('ACCESS_IDEMPOTENCY_CONFLICT', 409);
+      }
+      return { replayed: true, result: prior.result, key, fingerprint };
+    }
+    return { replayed: false, key, fingerprint };
+  }
 
   async function accountByAccessId(value) {
     const accessId = normalizeAccessId(value);
@@ -225,7 +254,11 @@ export function createAccessManagementService({
         existingAccount: account,
       });
       if (!normalized.valid) fail(normalized.code, normalized.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422);
-      return { account: safeAccount(account), proposedAccount: safeAccount(normalized.account), ...normalized.preview };
+      return {
+        account: safeAccount(account),
+        proposedAccount: safeAccount(normalized.account),
+        ...normalized.preview,
+      };
     },
 
     async updateAccessPolicy({ actor, command = {}, correlationId = '' } = {}) {
@@ -245,10 +278,7 @@ export function createAccessManagementService({
         existingAccount: account,
       });
       if (!normalized.valid) fail(normalized.code, normalized.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422);
-      if (
-        account.roleId === ROLES.ADMINISTRATOR &&
-        normalized.account.roleId !== ROLES.ADMINISTRATOR
-      ) {
+      if (account.roleId === ROLES.ADMINISTRATOR && normalized.account.roleId !== ROLES.ADMINISTRATOR) {
         await protectAdministrator(actor, account);
       }
       const changedAt = nowIso();
@@ -418,10 +448,7 @@ export function createAccessManagementService({
         existingAccount: account,
       });
       if (!normalizedPolicy.valid) {
-        fail(
-          normalizedPolicy.code,
-          normalizedPolicy.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422,
-        );
+        fail(normalizedPolicy.code, normalizedPolicy.code === 'OWNER_APPROVAL_REQUIRED' ? 403 : 422);
       }
       account.roleId = normalizedPolicy.account.roleId;
       account.committeeIds = normalizedPolicy.account.committeeIds;
@@ -534,6 +561,8 @@ export function createAccessManagementService({
 
     async resetTemporaryPassword({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
+      const replay = await mutationReplay('access-reset-temporary-password', actor, command);
+      if (replay.replayed) return { ...replay.result, replayed: true };
       const account = await accountByAccessId(command.currentAccessId);
       await protectAdministrator(actor, account);
       const reason = requiredReason(command.reason);
@@ -548,6 +577,12 @@ export function createAccessManagementService({
         fail('TEMPORARY_PASSWORD_INVALID');
       }
       const resetAt = nowIso();
+      const replayResult = {
+        reset: true,
+        status: ACCOUNT_STATUS.STARTER,
+        sessionsRevoked: true,
+        credentialUnavailable: true,
+      };
       await repository.resetTemporaryPassword({
         account,
         actor,
@@ -560,6 +595,14 @@ export function createAccessManagementService({
         reason,
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
+        idempotency: {
+          scope: 'access-reset-temporary-password',
+          key: replay.key,
+          actorAccountId: actor.id,
+          requestFingerprint: replay.fingerprint,
+          result: replayResult,
+          createdAt: resetAt,
+        },
       });
       const resetAccount = {
         ...account,
@@ -570,6 +613,7 @@ export function createAccessManagementService({
         reset: true,
         status: ACCOUNT_STATUS.STARTER,
         sessionsRevoked: true,
+        replayed: false,
         credential: oneTimeCredential(resetAccount, temporaryPassword, resetAt),
       };
     },
@@ -624,38 +668,62 @@ export function createAccessManagementService({
 
     async revokeSessions({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
+      const replay = await mutationReplay('access-revoke-sessions', actor, command);
+      if (replay.replayed) return { ...replay.result, replayed: true };
       const account = await accountByAccessId(command.currentAccessId);
       if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
         fail('ACCESS_CONFIRMATION_REQUIRED');
       }
       const reason = requiredReason(command.reason);
+      const changedAt = nowIso();
+      const replayResult = { revoked: true };
       await repository.revokeSessions({
         account,
         actor,
-        changedAt: nowIso(),
+        changedAt,
         reason,
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
+        idempotency: {
+          scope: 'access-revoke-sessions',
+          key: replay.key,
+          actorAccountId: actor.id,
+          requestFingerprint: replay.fingerprint,
+          result: replayResult,
+          createdAt: changedAt,
+        },
       });
-      return { revoked: true };
+      return { ...replayResult, replayed: false };
     },
 
     async unlockAccount({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
+      const replay = await mutationReplay('access-unlock-account', actor, command);
+      if (replay.replayed) return { ...replay.result, replayed: true };
       const account = await accountByAccessId(command.currentAccessId);
       if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
         fail('ACCESS_CONFIRMATION_REQUIRED');
       }
       const reason = requiredReason(command.reason);
+      const changedAt = nowIso();
+      const replayResult = { unlocked: true };
       await repository.unlockAccount({
         account,
         actor,
-        changedAt: nowIso(),
+        changedAt,
         reason,
         correlationId: String(correlationId || `ACCESS_${createId()}`),
         auditId: createId(),
+        idempotency: {
+          scope: 'access-unlock-account',
+          key: replay.key,
+          actorAccountId: actor.id,
+          requestFingerprint: replay.fingerprint,
+          result: replayResult,
+          createdAt: changedAt,
+        },
       });
-      return { unlocked: true };
+      return { ...replayResult, replayed: false };
     },
   });
 }

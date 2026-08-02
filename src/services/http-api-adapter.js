@@ -12,20 +12,31 @@ export class HttpApiAdapter {
   }
   async _callPath(path, command = {}) {
     const csrfToken = getCsrfToken();
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json', ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}) },
-      body: JSON.stringify(command),
-    });
+    let response;
+    try {
+      response = await fetch(`${this.baseUrl}${path}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'content-type': 'application/json',
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+        },
+        body: JSON.stringify(command),
+      });
+    } catch {
+      throw new AppError('HTTP_SERVICE_UNAVAILABLE', 'The service is temporarily unavailable.', {
+        retryable: true,
+      });
+    }
     const result = await response.json().catch(() => null);
+    const correlationId = response.headers.get('x-correlation-id') ?? result?.correlationId;
     if (!response.ok || !result?.ok)
       throw new AppError(
         result?.code ?? 'HTTP_ERROR',
         result?.message ?? `Server returned ${response.status}.`,
-        { correlationId: result?.correlationId, retryable: response.status >= 500, details: result?.details },
+        { correlationId, retryable: response.status >= 500, details: result?.details },
       );
-    return result;
+    return correlationId && !result.correlationId ? { ...result, correlationId } : result;
   }
 }
 for (const method of LAUNCH_SERVICE_METHODS)

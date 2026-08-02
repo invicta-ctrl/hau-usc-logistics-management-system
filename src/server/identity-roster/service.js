@@ -22,6 +22,8 @@ const ERROR_MESSAGES = Object.freeze({
   ROSTER_SOURCE_ALREADY_APPLIED: 'The protected directory already matches this reviewed update.',
   ROSTER_FINGERPRINT_CONFIRMATION_REQUIRED: 'Confirm the exact source fingerprint before applying.',
   ROSTER_REASON_REQUIRED: 'A specific reason of at least eight characters is required.',
+  ROSTER_IDEMPOTENCY_REQUIRED: 'A safe retry key is required.',
+  ROSTER_IDEMPOTENCY_CONFLICT: 'The retry key was already used for another roster action.',
   ROSTER_ROLLBACK_NOT_LATEST: 'Only the latest applied identity roster sync can be rolled back.',
   ROSTER_ROLLBACK_UNAVAILABLE: 'The protected rollback snapshot is unavailable.',
   ROSTER_RECONCILIATION_FAILED: 'The identity roster write did not reconcile.',
@@ -40,13 +42,18 @@ const fail = (code, options) => {
   throw new IdentityRosterError(code, options);
 };
 
-const normalizeEmail = (value) => String(value ?? '').trim().toLowerCase();
+const normalizeEmail = (value) =>
+  String(value ?? '')
+    .trim()
+    .toLowerCase();
 const normalizeText = (value) => String(value ?? '').trim();
 const compact = (value) => normalizeText(value).replaceAll(/\s+/gu, ' ');
 
 function activeValue(value) {
   if (value === true || value === false) return value;
-  const normalized = String(value ?? '').trim().toUpperCase();
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase();
   if (normalized === 'TRUE') return true;
   if (normalized === 'FALSE') return false;
   return null;
@@ -80,6 +87,14 @@ function requiredReason(value) {
   const reason = compact(value);
   if (reason.length < 8 || reason.length > 500) fail('ROSTER_REASON_REQUIRED');
   return reason;
+}
+
+function requiredIdempotencyKey(value) {
+  const key = String(value ?? '').trim();
+  if (!/^[A-Za-z0-9][A-Za-z0-9._:-]{15,127}$/u.test(key)) {
+    fail('ROSTER_IDEMPOTENCY_REQUIRED');
+  }
+  return key;
 }
 
 function assertOwner(actor) {
@@ -125,10 +140,7 @@ export function validateIdentityRosterSource(source) {
     const reviewNotes = compact(row[5]);
     const codes = [];
     if (studentId.length < 3 || studentId.length > 64) codes.push('STUDENT_ID_INVALID');
-    if (
-      institutionalEmail.length > 254 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(institutionalEmail)
-    )
+    if (institutionalEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(institutionalEmail))
       codes.push('INSTITUTIONAL_EMAIL_INVALID');
     if (displayName.length < 2 || displayName.length > 160) codes.push('DISPLAY_NAME_INVALID');
     if (!VERIFICATION_RESULTS.has(verificationResult)) codes.push('VERIFICATION_RESULT_INVALID');
@@ -161,9 +173,7 @@ export function validateIdentityRosterSource(source) {
   if (!accepted.length && !rejections.length) {
     rejections.push({ rowNumber: 2, codes: ['SOURCE_EMPTY'] });
   }
-  accepted.sort((left, right) =>
-    left.institutionalEmail.localeCompare(right.institutionalEmail),
-  );
+  accepted.sort((left, right) => left.institutionalEmail.localeCompare(right.institutionalEmail));
   return {
     valid: accepted.length > 0,
     sourceRowCount: accepted.length + rejections.length,
@@ -197,14 +207,16 @@ export function createIdentityRosterService({
   return Object.freeze({
     async status({ actor }) {
       assertOwner(actor);
-      const [latestRun, runs, entries] = await Promise.all([
+      const [latestRun, latestAppliedRun, runs, entries] = await Promise.all([
         repository.latestRun(),
+        repository.latestAppliedRun(),
         repository.listRuns(20),
         repository.listEntries(),
       ]);
       return {
         source: source.status(),
         latestRun: safeRun(latestRun),
+        latestAppliedRun: safeRun(latestAppliedRun),
         runs: runs.map(safeRun),
         directory: {
           total: entries.length,
@@ -219,9 +231,7 @@ export function createIdentityRosterService({
       try {
         sourceData = await source.read();
       } catch (error) {
-        const code = Object.hasOwn(ERROR_MESSAGES, error?.code)
-          ? error.code
-          : 'ROSTER_SOURCE_UNAVAILABLE';
+        const code = Object.hasOwn(ERROR_MESSAGES, error?.code) ? error.code : 'ROSTER_SOURCE_UNAVAILABLE';
         fail(code, { status: code === 'ROSTER_SOURCE_NOT_CONFIGURED' ? 503 : 502 });
       }
       const validation = validateIdentityRosterSource(sourceData);
@@ -237,16 +247,20 @@ export function createIdentityRosterService({
       for (const profile of validation.rows) {
         const identityKey = await crypto.identityKey(profile.institutionalEmail);
         const existing = currentByKey.get(identityKey);
-        planned.push({ identityKey, profile, action: existing ? (sameProfile(existing.profile, profile) ? 'UNCHANGED' : 'CHANGE') : 'ADD' });
+        planned.push({
+          identityKey,
+          profile,
+          action: existing ? (sameProfile(existing.profile, profile) ? 'UNCHANGED' : 'CHANGE') : 'ADD',
+        });
         currentByKey.delete(identityKey);
       }
       const rejectedEmails = new Set(
-        validation.rejections.map((rejection) => normalizeEmail(rejection.institutionalEmail)).filter(Boolean),
+        validation.rejections
+          .map((rejection) => normalizeEmail(rejection.institutionalEmail))
+          .filter(Boolean),
       );
       const rejectedStudentIds = new Set(
-        validation.rejections
-          .map((rejection) => compact(rejection.studentId).toUpperCase())
-          .filter(Boolean),
+        validation.rejections.map((rejection) => compact(rejection.studentId).toUpperCase()).filter(Boolean),
       );
       const preservedProfiles = [];
       for (const [identityKey, entry] of currentByKey) {
@@ -294,14 +308,31 @@ export function createIdentityRosterService({
     async directory({ actor, command = {} }) {
       assertOwner(actor);
       const query = compact(command.query).toLowerCase();
-      const pageSize = Math.max(1, Math.min(100, Number(command.pageSize) || 25));
+      const active = String(command.active ?? 'ALL').toUpperCase();
+      const verificationResult = String(command.verificationResult ?? 'ALL').toUpperCase();
+      const pageSize = Math.max(1, Math.min(100, Math.floor(Number(command.pageSize) || 25)));
       const all = (await decryptedEntries()).filter((entry) => {
-        if (!query) return true;
         const profile = entry.profile;
-        return [profile.studentId, profile.institutionalEmail, profile.displayName, profile.verificationResult]
-          .some((value) => String(value).toLowerCase().includes(query));
+        if (active === 'ACTIVE' && profile.active !== true) return false;
+        if (active === 'INACTIVE' && profile.active !== false) return false;
+        if (
+          VERIFICATION_RESULTS.has(verificationResult) &&
+          profile.verificationResult !== verificationResult
+        ) {
+          return false;
+        }
+        return (
+          !query ||
+          [
+            profile.studentId,
+            profile.institutionalEmail,
+            profile.displayName,
+            profile.verificationResult,
+          ].some((value) => String(value).toLowerCase().includes(query))
+        );
       });
-      const page = Math.max(1, Number(command.page) || 1);
+      const totalPages = Math.max(1, Math.ceil(all.length / pageSize));
+      const page = Math.min(totalPages, Math.max(1, Math.floor(Number(command.page) || 1)));
       const start = (page - 1) * pageSize;
       return {
         items: all.slice(start, start + pageSize).map((entry) => ({
@@ -314,7 +345,7 @@ export function createIdentityRosterService({
           page,
           pageSize,
           total: all.length,
-          totalPages: Math.max(1, Math.ceil(all.length / pageSize)),
+          totalPages,
         },
       };
     },
@@ -360,9 +391,7 @@ export function createIdentityRosterService({
       try {
         currentSource = await source.read();
       } catch (error) {
-        const code = Object.hasOwn(ERROR_MESSAGES, error?.code)
-          ? error.code
-          : 'ROSTER_SOURCE_UNAVAILABLE';
+        const code = Object.hasOwn(ERROR_MESSAGES, error?.code) ? error.code : 'ROSTER_SOURCE_UNAVAILABLE';
         fail(code, { status: code === 'ROSTER_SOURCE_NOT_CONFIGURED' ? 503 : 502 });
       }
       const currentFingerprint = await crypto.fingerprint(
@@ -401,12 +430,30 @@ export function createIdentityRosterService({
       });
       const reconciliation = await repository.reconcile(run.sourceFingerprint, entries.length);
       if (!reconciliation.reconciled) fail('ROSTER_RECONCILIATION_FAILED', { status: 500 });
-      return { applied: true, replayed: false, run: safeRun({ ...run, applyStatus: 'APPLIED', appliedAt }), reconciliation };
+      return {
+        applied: true,
+        replayed: false,
+        run: safeRun({ ...run, applyStatus: 'APPLIED', appliedAt }),
+        reconciliation,
+      };
     },
 
     async rollback({ actor, command = {}, correlationId = '' }) {
       assertOwner(actor);
       const reason = requiredReason(command.reason);
+      const idempotencyKey = requiredIdempotencyKey(command.clientRequestId);
+      const requestFingerprint = await crypto.fingerprint({
+        runId: String(command.runId ?? ''),
+        confirmSourceFingerprint: String(command.confirmSourceFingerprint ?? ''),
+        reason,
+      });
+      const prior = await repository.getIdempotency('identity-roster-rollback', idempotencyKey);
+      if (prior) {
+        if (prior.actorAccountId !== actor.id || prior.requestFingerprint !== requestFingerprint) {
+          fail('ROSTER_IDEMPOTENCY_CONFLICT', { status: 409 });
+        }
+        return { ...prior.result, replayed: true };
+      }
       const run = await repository.getRun(String(command.runId ?? ''));
       const latest = await repository.latestAppliedRun();
       if (!run || !latest || latest.id !== run.id || run.applyStatus !== 'APPLIED') {
@@ -419,6 +466,10 @@ export function createIdentityRosterService({
       if (!snapshotEnvelope) fail('ROSTER_ROLLBACK_UNAVAILABLE', { status: 409 });
       const entries = await crypto.decrypt(snapshotEnvelope);
       const rolledBackAt = nowIso();
+      const replayResult = {
+        rolledBack: true,
+        run: safeRun({ ...run, applyStatus: 'ROLLED_BACK', rolledBackAt }),
+      };
       await repository.rollbackRun({
         run,
         entries,
@@ -427,13 +478,21 @@ export function createIdentityRosterService({
         correlationId,
         auditId: `AUD-${createId()}`,
         reason,
+        idempotency: {
+          scope: 'identity-roster-rollback',
+          key: idempotencyKey,
+          actorAccountId: actor.id,
+          requestFingerprint,
+          result: replayResult,
+          createdAt: rolledBackAt,
+        },
       });
       const expectedFingerprint = entries[0]?.sourceFingerprint ?? '';
       const reconciliation = expectedFingerprint
         ? await repository.reconcile(expectedFingerprint, entries.length)
         : { entryCount: 0, matchingCount: 0, reconciled: (await repository.listEntries()).length === 0 };
       if (!reconciliation.reconciled) fail('ROSTER_RECONCILIATION_FAILED', { status: 500 });
-      return { rolledBack: true, run: safeRun({ ...run, applyStatus: 'ROLLED_BACK', rolledBackAt }), reconciliation };
+      return { ...replayResult, replayed: false, reconciliation };
     },
   });
 }

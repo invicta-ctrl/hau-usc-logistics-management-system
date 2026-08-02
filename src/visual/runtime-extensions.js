@@ -1,5 +1,6 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
+import { AppError } from '../app/errors.js';
 import {
   evaluateLendingEligibility,
   lendingAudienceLabel,
@@ -54,6 +55,24 @@ const esc = (value) =>
 
 const option = (value, label, selected) =>
   `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(label)}</option>`;
+
+const safeReference = (value) => {
+  const reference = String(value ?? '').trim();
+  return /^(?:REQ_[A-Za-z0-9_-]{8,64}|INC-[A-Z0-9-]{4,64}|ACCESS_[A-Za-z0-9_-]{4,64})$/u.test(reference)
+    ? reference
+    : '';
+};
+
+const operationalErrorText = (error) => {
+  const message = error instanceof AppError ? error.message : 'The service is temporarily unavailable.';
+  const reference = safeReference(error?.correlationId);
+  return reference ? `${message} Reference: ${reference}` : message;
+};
+
+const auditReferenceText = (result) => {
+  const reference = safeReference(result?.correlationId);
+  return reference ? ` Audit reference: ${reference}.` : '';
+};
 
 const statusText = {
   synced: 'Near-live · updated just now',
@@ -1707,7 +1726,9 @@ export function createRuntimeExtensions(options) {
       ['Explicit denies', preview.explicitDenies?.join(', ') || 'None'],
       ['Sensitive capabilities', preview.sensitiveCapabilities?.join(', ') || 'None'],
     ];
-    return `<dl class="access-effective-preview">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
+    const current = preview.account ?? {};
+    const proposed = preview.proposedAccount ?? {};
+    return `<div class="mode-note"><strong>Target: ${esc(current.accessId || 'Unknown account')}</strong><br>Current: ${esc(current.roleId || 'Unknown role')} / ${esc(current.status || 'Unknown status')}<br>Proposed: ${esc(proposed.roleId || preview.roleId || 'Unknown role')} / ${esc(proposed.status || current.status || 'Unknown status')}</div><dl class="access-effective-preview section-gap">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
   };
 
   const openAccessPolicyEditor = async (account) => {
@@ -1749,7 +1770,7 @@ export function createRuntimeExtensions(options) {
                     .addEventListener('click', async (confirmEvent) => {
                       confirmEvent.currentTarget.disabled = true;
                       try {
-                        await services.updateAccessPolicy({
+                        const result = await services.updateAccessPolicy({
                           ...command,
                           idempotencyKey: `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
                         });
@@ -1757,7 +1778,7 @@ export function createRuntimeExtensions(options) {
                         accessDirectory = null;
                         await refreshAccessDirectory({ force: true });
                         toast(
-                          'Effective access updated; active sessions were revoked and audit history was appended.',
+                          `Effective access updated; active sessions were revoked and audit history was appended.${auditReferenceText(result)}`,
                         );
                       } catch (error) {
                         toast(error.message, true);
@@ -1793,6 +1814,10 @@ export function createRuntimeExtensions(options) {
             .join('') || '<div class="empty">No Access ID changes have been recorded.</div>'
         }</div><h3 class="section-gap">Safe account audit history</h3><div class="line-list">${
           (result.auditHistory ?? [])
+            .map((entry) => ({
+              ...entry,
+              reason: `Before: ${JSON.stringify(entry.before ?? {})}; After: ${JSON.stringify(entry.after ?? {})}; ${entry.reason || 'No reason recorded'}`,
+            }))
             .map(
               (entry) =>
                 `<div class="request-line"><div><strong>${esc(entry.action)}</strong><small>${esc(accessDate(entry.changedAt))} · ${esc(entry.correlationId || 'No correlation ID')}</small><small>${esc(entry.reason || 'No reason recorded')}</small></div></div>`,
@@ -1854,6 +1879,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessReasonAction = (account, action) => {
+    const clientRequestId = `access-${action}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     const definitions = {
       disable: { title: 'Disable account', button: 'Disable and revoke sessions', status: 'DISABLED' },
       enable: { title: 'Enable account', button: 'Enable account', status: 'ACTIVE' },
@@ -1870,7 +1896,7 @@ export function createRuntimeExtensions(options) {
     const definition = definitions[action];
     openModal(
       `${definition.title} · ${account.accessId}`,
-      `<form id="accessReasonActionForm"><div class="mode-note">This is a consequential account action and will be recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${['disable', 'archive'].includes(action) ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
+      `<form id="accessReasonActionForm"><div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current state: ${esc(account.status)}${account.locked ? ' / locked' : ''}<br>Proposed result: ${esc(definition.status ?? (action === 'unlock' ? 'unlocked' : 'all sessions revoked'))}. This action is recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${['disable', 'archive'].includes(action) ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessReasonActionForm');
         form.addEventListener('submit', async (event) => {
@@ -1881,24 +1907,26 @@ export function createRuntimeExtensions(options) {
             currentAccessId: account.accessId,
             ...values,
             ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
+            ...(['unlock', 'revoke-sessions'].includes(action) ? { clientRequestId } : {}),
           };
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
+            let result;
             if (definition.status)
-              await services.setAccessAccountStatus({ ...command, status: definition.status });
-            else if (action === 'unlock') await services.unlockAccessAccount(command);
-            else await services.revokeAccessSessions(command);
+              result = await services.setAccessAccountStatus({ ...command, status: definition.status });
+            else if (action === 'unlock') result = await services.unlockAccessAccount(command);
+            else result = await services.revokeAccessSessions(command);
             closeModal();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
             toast(
               action === 'archive'
-                ? 'Account archived without deleting history; active sessions were revoked.'
-                : `${definition.title} completed.`,
+                ? `Account archived without deleting history; active sessions were revoked.${auditReferenceText(result)}`
+                : `${definition.title} completed.${auditReferenceText(result)}`,
             );
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -1944,9 +1972,10 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessPasswordReset = (account) => {
+    const clientRequestId = `access-reset-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Reset temporary password · ${account.accessId}`,
-      `<form id="accessPasswordResetForm"><div class="mode-note">The server will generate a cryptographically secure one-time password. The account will return to first-login activation and all existing sessions will be revoked.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Generate reset credential and revoke sessions</button></form>`,
+      `<form id="accessPasswordResetForm"><div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current state: ${esc(account.status)}<br>Proposed result: STARTER / pending first login / sessions revoked. The server generates a cryptographically secure one-time password.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Generate reset credential and revoke sessions</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessPasswordResetForm');
         form.addEventListener('submit', async (event) => {
@@ -1958,13 +1987,21 @@ export function createRuntimeExtensions(options) {
             const result = await services.resetAccessPassword({
               currentAccessId: account.accessId,
               ...Object.fromEntries(new FormData(form).entries()),
+              clientRequestId,
             });
             form.reset();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
-            openOneTimeCredentialHandoff('Temporary password generated', [result.credential]);
+            if (result.credential) {
+              openOneTimeCredentialHandoff('Temporary password generated', [result.credential]);
+            } else {
+              openModal(
+                'Password reset completed',
+                `<div class="alert warning">The reset was already completed, but its one-time plaintext credential cannot be displayed again. Start a new confirmed reset if a replacement credential is required.${esc(auditReferenceText(result))}</div>`,
+              );
+            }
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -2701,14 +2738,15 @@ export function createRuntimeExtensions(options) {
       sourceState.textContent = `Sync remains fail-closed. Missing private configuration: ${(source?.missingConfiguration ?? []).join(', ') || 'status unavailable'}.`;
     }
     const latest = identityRosterStatus?.latestRun;
+    const latestApplied = identityRosterStatus?.latestAppliedRun;
     const directory = identityRosterStatus?.directory ?? { total: 0, active: 0 };
     root.querySelector('[data-roster-metrics]').innerHTML = [
       ['Protected identities', directory.total, 'Owner directory only'],
       ['Active identities', directory.active, 'D1 last-known projection'],
       [
         'Last sync',
-        latest?.appliedAt ? accessDate(latest.appliedAt) : 'Not applied',
-        latest?.applyStatus ?? 'No run',
+        latestApplied?.appliedAt ? accessDate(latestApplied.appliedAt) : 'Not applied',
+        latestApplied?.applyStatus ?? 'No applied run',
       ],
       ['Source fingerprint', latest?.sourceFingerprint ?? 'Not recorded', 'Opaque content fingerprint'],
     ]
@@ -2736,7 +2774,7 @@ export function createRuntimeExtensions(options) {
           toast('USC Officer and Staff Directory applied and reconciled.');
           await refreshIdentityRoster({ force: true });
         } catch (error) {
-          toast(error.message, true);
+          toast(operationalErrorText(error), true);
           button.disabled = false;
         }
       });
@@ -2762,7 +2800,6 @@ export function createRuntimeExtensions(options) {
     pager.querySelector('[data-roster-page="previous"]').disabled = pagination.page <= 1;
     pager.querySelector('[data-roster-page="next"]').disabled = pagination.page >= pagination.totalPages;
 
-    const latestApplied = (identityRosterStatus?.runs ?? []).find((run) => run.applyStatus === 'APPLIED');
     root.querySelector('[data-roster-history]').innerHTML =
       (identityRosterStatus?.runs ?? [])
         .map(
@@ -2787,6 +2824,8 @@ export function createRuntimeExtensions(options) {
         services.getIdentityRosterStatus({}),
         services.listIdentityRoster({
           query: root.querySelector('[name="identityRosterSearch"]')?.value ?? '',
+          active: root.querySelector('[name="identityRosterActive"]')?.value ?? 'ALL',
+          verificationResult: root.querySelector('[name="identityRosterVerification"]')?.value ?? 'ALL',
           page: identityRosterPage,
           pageSize: 25,
         }),
@@ -2794,7 +2833,12 @@ export function createRuntimeExtensions(options) {
       renderIdentityRoster();
     } catch (error) {
       root.querySelector('[data-roster-directory]').innerHTML =
-        `<div class="alert error">${esc(error.message)}</div>`;
+        `<div class="alert error"><strong>Directory unavailable.</strong><p>${esc(operationalErrorText(error))}</p><button class="secondary mini" type="button" data-roster-retry>Retry</button></div>`;
+      root.querySelector('[data-roster-retry]')?.addEventListener('click', () => {
+        identityRosterStatus = null;
+        identityRosterDirectory = null;
+        void refreshIdentityRoster({ force: true });
+      });
     }
   };
 
@@ -2809,13 +2853,14 @@ export function createRuntimeExtensions(options) {
       await refreshIdentityRoster({ force: true });
       toast('USC Officer and Staff Directory preview completed.');
     } catch (error) {
-      toast(error.message, true);
+      toast(operationalErrorText(error), true);
     } finally {
       button.disabled = false;
     }
   };
 
   const openIdentityRosterRollback = (runId, sourceFingerprint) => {
+    const clientRequestId = `roster-rollback-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       'Roll back the latest directory update',
       `<form data-roster-rollback-form><div class="alert warning">Rollback restores the protected pre-apply D1 snapshot. It does not change the private Google Sheet.</div><div class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(runId)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Restore protected snapshot</button></form>`,
@@ -2831,14 +2876,17 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
-            await services.rollbackIdentityRosterSync(Object.fromEntries(new FormData(form).entries()));
+            const result = await services.rollbackIdentityRosterSync({
+              ...Object.fromEntries(new FormData(form).entries()),
+              clientRequestId,
+            });
             closeModal();
             identityRosterStatus = null;
             identityRosterDirectory = null;
             await refreshIdentityRoster({ force: true });
-            toast('The latest directory update was rolled back and reconciled.');
+            toast(`The latest directory update was rolled back and reconciled.${auditReferenceText(result)}`);
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -3059,6 +3107,13 @@ export function createRuntimeExtensions(options) {
         identityRosterDirectory = null;
         void refreshIdentityRoster({ force: true });
       }, 180);
+    });
+    ['identityRosterActive', 'identityRosterVerification'].forEach((name) => {
+      root.querySelector(`[name="${name}"]`).addEventListener('change', () => {
+        identityRosterPage = 1;
+        identityRosterDirectory = null;
+        void refreshIdentityRoster({ force: true });
+      });
     });
     root.querySelector('[data-roster-pagination]').addEventListener('click', (event) => {
       const control = event.target.closest('[data-roster-page]');
@@ -3751,8 +3806,7 @@ export function createRuntimeExtensions(options) {
     if (!force && materialsQueueItems !== null) return;
     materialsQueuePromise = (async () => {
       const operationalScope =
-        new URL(location.href).searchParams.get('scope') ??
-        getState()?.operationalContext?.selected?.value;
+        new URL(location.href).searchParams.get('scope') ?? getState()?.operationalContext?.selected?.value;
       const result = await services.getMaterialsWorkQueue(operationalScope ? { operationalScope } : {});
       materialsQueueItems = Array.isArray(result?.items) ? result.items : [];
       renderMaterialsQueue();
@@ -7216,8 +7270,7 @@ export function createRuntimeExtensions(options) {
     }
     renderFoodQueue();
     renderMaterialsQueue();
-    if (normalizedExperience() === 'materials' && materialsQueueItems === null)
-      void refreshMaterialsQueue();
+    if (normalizedExperience() === 'materials' && materialsQueueItems === null) void refreshMaterialsQueue();
     renderVenueEquipmentQueue();
     installInventoryClassificationQueue();
     renderInventoryWorkspaceSupplement();

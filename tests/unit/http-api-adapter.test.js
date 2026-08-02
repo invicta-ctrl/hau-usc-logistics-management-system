@@ -124,4 +124,31 @@ describe('HttpApiAdapter', () => {
       retryable: false,
     });
   });
+
+  it('propagates the response correlation header on success and normalizes transport failure', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true, changed: true }), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            'x-correlation-id': 'REQ_ACCESSRESULT123',
+          },
+        }),
+      )
+      .mockRejectedValueOnce(new Error('private transport detail'));
+    vi.stubGlobal('fetch', fetchMock);
+    const adapter = new HttpApiAdapter('');
+
+    await expect(adapter.updateAccessPolicy({})).resolves.toMatchObject({
+      changed: true,
+      correlationId: 'REQ_ACCESSRESULT123',
+    });
+    await expect(adapter.listAccessAccounts({})).rejects.toMatchObject({
+      code: 'HTTP_SERVICE_UNAVAILABLE',
+      message: 'The service is temporarily unavailable.',
+      retryable: true,
+    });
+  });
 });

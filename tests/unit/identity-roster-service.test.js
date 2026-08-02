@@ -26,41 +26,59 @@ function context(sourceRows = rows) {
   const runs = [];
   let entries = [];
   const snapshots = new Map();
+  const idempotency = new Map();
   let sequence = 0;
   const repository = {
     latestRun: vi.fn(async () => runs.at(-1) ?? null),
-    latestAppliedRun: vi.fn(async () => [...runs].reverse().find((run) => run.applyStatus === 'APPLIED') ?? null),
+    latestAppliedRun: vi.fn(
+      async () => [...runs].reverse().find((run) => run.applyStatus === 'APPLIED') ?? null,
+    ),
     getRun: vi.fn(async (runId) => runs.find((run) => run.id === runId) ?? null),
     listRuns: vi.fn(async () => [...runs].reverse()),
     listEntries: vi.fn(async () => structuredClone(entries)),
-    getEntry: vi.fn(async (identityKey) => entries.find((entry) => entry.identityKey === identityKey) ?? null),
+    getEntry: vi.fn(
+      async (identityKey) => entries.find((entry) => entry.identityKey === identityKey) ?? null,
+    ),
+    getIdempotency: vi.fn(async (scope, key) => idempotency.get(`${scope}:${key}`) ?? null),
     createPreview: vi.fn(async (run) => runs.push({ ...run, applyStatus: 'PREVIEWED' })),
     applyRun: vi.fn(async ({ run, entries: next, snapshotEnvelope, appliedAt }) => {
       snapshots.set(run.id, snapshotEnvelope);
       entries = structuredClone(next);
-      Object.assign(runs.find((entry) => entry.id === run.id), { applyStatus: 'APPLIED', appliedAt });
+      Object.assign(
+        runs.find((entry) => entry.id === run.id),
+        { applyStatus: 'APPLIED', appliedAt },
+      );
     }),
     getSnapshotEnvelope: vi.fn(async (runId) => snapshots.get(runId) ?? ''),
-    rollbackRun: vi.fn(async ({ run, entries: restored, rolledBackAt }) => {
+    rollbackRun: vi.fn(async ({ run, entries: restored, rolledBackAt, idempotency: replay }) => {
       entries = structuredClone(restored);
-      Object.assign(runs.find((entry) => entry.id === run.id), {
-        applyStatus: 'ROLLED_BACK',
-        rolledBackAt,
+      Object.assign(
+        runs.find((entry) => entry.id === run.id),
+        {
+          applyStatus: 'ROLLED_BACK',
+          rolledBackAt,
+        },
+      );
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
       });
     }),
     reconcile: vi.fn(async (fingerprint, expectedCount) => ({
       entryCount: entries.length,
       matchingCount: entries.filter((entry) => entry.sourceFingerprint === fingerprint).length,
       reconciled:
-        entries.length === expectedCount &&
-        entries.every((entry) => entry.sourceFingerprint === fingerprint),
+        entries.length === expectedCount && entries.every((entry) => entry.sourceFingerprint === fingerprint),
     })),
   };
   const source = {
     status: () => ({ configured: true, missingConfiguration: [] }),
     read: vi.fn(async () => ({ headers: [...IDENTITY_ROSTER_HEADERS], rows: sourceRows })),
   };
-  const crypto = createIdentityRosterCrypto({ secret: 'synthetic-roster-secret-with-at-least-thirty-two-characters' });
+  const crypto = createIdentityRosterCrypto({
+    secret: 'synthetic-roster-secret-with-at-least-thirty-two-characters',
+  });
   const service = createIdentityRosterService({
     repository,
     source,
@@ -73,16 +91,14 @@ function context(sourceRows = rows) {
 
 describe('identity roster source validation', () => {
   it('requires the exact protected roster schema and quarantines every duplicate occurrence', () => {
-    expect(
-      validateIdentityRosterSource({ headers: ['Institutional_Email'], rows }),
-    ).toMatchObject({ valid: false, rejections: [{ codes: ['SOURCE_SCHEMA_INVALID'] }] });
+    expect(validateIdentityRosterSource({ headers: ['Institutional_Email'], rows })).toMatchObject({
+      valid: false,
+      rejections: [{ codes: ['SOURCE_SCHEMA_INVALID'] }],
+    });
 
     const result = validateIdentityRosterSource({
       headers: [...IDENTITY_ROSTER_HEADERS],
-      rows: [
-        rows[0],
-        ['STUDENT-001', ' OPERATOR.ONE@example.invalid ', 'Other', 'UNKNOWN', 'MAYBE', ''],
-      ],
+      rows: [rows[0], ['STUDENT-001', ' OPERATOR.ONE@example.invalid ', 'Other', 'UNKNOWN', 'MAYBE', '']],
     });
     expect(result.valid).toBe(false);
     expect(result.rows).toHaveLength(0);
@@ -206,6 +222,7 @@ describe('owner-protected identity roster service', () => {
         runId: replacement.id,
         confirmSourceFingerprint: replacement.sourceFingerprint,
         reason: 'Restore the prior reviewed synthetic snapshot.',
+        clientRequestId: 'roster-rollback-synthetic-0001',
       },
     });
     await expect(first.service.selfProfile({ actor: normalUser })).resolves.toMatchObject({
@@ -213,9 +230,7 @@ describe('owner-protected identity roster service', () => {
       profile: { studentId: 'STUDENT-001' },
     });
 
-    const rejected = context([
-      ['STUDENT-001', 'not-an-email', 'Synthetic', 'VERIFIED', true, ''],
-    ]);
+    const rejected = context([['STUDENT-001', 'not-an-email', 'Synthetic', 'VERIFIED', true, '']]);
     const rejectedPreview = await rejected.service.preview({ actor: owner });
     await expect(
       rejected.service.apply({
@@ -227,6 +242,68 @@ describe('owner-protected identity roster service', () => {
         },
       }),
     ).rejects.toMatchObject({ code: 'ROSTER_PREVIEW_REJECTED' });
+  });
+
+  it('filters and clamps the owner directory while reporting the latest applied run', async () => {
+    const scenario = context();
+    const preview = await scenario.service.preview({ actor: owner });
+    await scenario.service.apply({
+      actor: owner,
+      command: {
+        runId: preview.id,
+        confirmSourceFingerprint: preview.sourceFingerprint,
+        reason: 'Apply directory filters acceptance data.',
+      },
+    });
+    await scenario.service.preview({ actor: owner });
+
+    await expect(scenario.service.status({ actor: owner })).resolves.toMatchObject({
+      latestRun: { applyStatus: 'PREVIEWED' },
+      latestAppliedRun: { id: preview.id, applyStatus: 'APPLIED' },
+    });
+    await expect(
+      scenario.service.directory({
+        actor: owner,
+        command: { active: 'INACTIVE', verificationResult: 'PENDING', page: 99.8, pageSize: 1.9 },
+      }),
+    ).resolves.toMatchObject({
+      items: [{ studentId: 'STUDENT-002', active: false, verificationResult: 'PENDING' }],
+      pagination: { page: 1, pageSize: 1, total: 1, totalPages: 1 },
+    });
+  });
+
+  it('replays an exact rollback without another protected write and rejects retry-key reuse', async () => {
+    const scenario = context([rows[0]]);
+    const preview = await scenario.service.preview({ actor: owner });
+    await scenario.service.apply({
+      actor: owner,
+      command: {
+        runId: preview.id,
+        confirmSourceFingerprint: preview.sourceFingerprint,
+        reason: 'Apply rollback idempotency acceptance data.',
+      },
+    });
+    const command = {
+      runId: preview.id,
+      confirmSourceFingerprint: preview.sourceFingerprint,
+      reason: 'Restore rollback idempotency acceptance data.',
+      clientRequestId: 'roster-rollback-idempotency-0001',
+    };
+    await expect(scenario.service.rollback({ actor: owner, command })).resolves.toMatchObject({
+      rolledBack: true,
+      replayed: false,
+    });
+    await expect(scenario.service.rollback({ actor: owner, command })).resolves.toMatchObject({
+      rolledBack: true,
+      replayed: true,
+    });
+    expect(scenario.repository.rollbackRun).toHaveBeenCalledOnce();
+    await expect(
+      scenario.service.rollback({
+        actor: owner,
+        command: { ...command, reason: 'A different retry payload is blocked.' },
+      }),
+    ).rejects.toMatchObject({ code: 'ROSTER_IDEMPOTENCY_CONFLICT', status: 409 });
   });
 
   it('applies valid rows while quarantining incomplete rows and preserving their current match', async () => {
@@ -247,10 +324,7 @@ describe('owner-protected identity roster service', () => {
         headers: ['Synthetic source headers'],
         rows: [['Synthetic exact source state']],
       },
-      rows: [
-        ['STUDENT-001', 'operator.one@example.invalid', '', 'VERIFIED', true, ''],
-        rows[1],
-      ],
+      rows: [['STUDENT-001', 'operator.one@example.invalid', '', 'VERIFIED', true, ''], rows[1]],
     });
     const preview = await scenario.service.preview({ actor: owner });
     expect(preview).toMatchObject({
@@ -260,9 +334,7 @@ describe('owner-protected identity roster service', () => {
       removalCount: 0,
       validationStatus: 'VALID_WITH_REJECTIONS',
     });
-    expect(preview.rejections).toEqual([
-      { rowNumber: 2, codes: ['DISPLAY_NAME_INVALID'] },
-    ]);
+    expect(preview.rejections).toEqual([{ rowNumber: 2, codes: ['DISPLAY_NAME_INVALID'] }]);
     expect(JSON.stringify(preview)).not.toMatch(/operator\.one|STUDENT-001/iu);
 
     await expect(
