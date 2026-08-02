@@ -1,6 +1,6 @@
 import { AppError, assertDomain } from '../app/errors.js';
 import { CATEGORIES, UNITS } from './constants.js';
-import { isCountableUnit } from './quantity-units.js';
+import { isCountableUnit, isKnownQuantityUnit } from './quantity-units.js';
 
 export function positiveNumber(value, field = 'quantity') {
   const number = Number(value);
@@ -15,6 +15,9 @@ export function positiveNumber(value, field = 'quantity') {
 
 export function positiveOperationalQuantity(value, unit, field = 'quantity') {
   const number = positiveNumber(value, field);
+  assertDomain(isKnownQuantityUnit(unit), 'INVALID_UNIT', 'Select a supported unit.', {
+    fieldErrors: { unit: 'Select a supported unit.' },
+  });
   assertDomain(
     !isCountableUnit(unit) || Number.isInteger(number),
     'INVALID_QUANTITY',
@@ -37,6 +40,9 @@ export function nonNegativeNumber(value, field = 'quantity') {
 
 export function nonNegativeOperationalQuantity(value, unit, field = 'quantity') {
   const number = nonNegativeNumber(value, field);
+  assertDomain(isKnownQuantityUnit(unit), 'INVALID_UNIT', 'Select a supported unit.', {
+    fieldErrors: { unit: 'Select a supported unit.' },
+  });
   assertDomain(
     !isCountableUnit(unit) || Number.isInteger(number),
     'INVALID_QUANTITY',

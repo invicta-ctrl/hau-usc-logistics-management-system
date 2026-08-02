@@ -15,7 +15,12 @@ describe('cumulative receiving', () => {
       ),
     ).toEqual({ received: 10, damaged: 1, rejected: 2 }));
   it('supports partial then final receiving', () => {
-    const partial = validateReceipt({ requiredTotal: 10, alreadyReceived: 0, quantityReceivedNow: 4 });
+    const partial = validateReceipt({
+      requiredTotal: 10,
+      alreadyReceived: 0,
+      quantityReceivedNow: 4,
+      unit: 'piece',
+    });
     expect(
       receivingStatus({
         receivedTotal: partial.receivedTotal,
@@ -23,7 +28,12 @@ describe('cumulative receiving', () => {
         finalStatus: 'READY_TO_RELEASE',
       }),
     ).toBe('PARTIALLY_RECEIVED');
-    const final = validateReceipt({ requiredTotal: 10, alreadyReceived: 4, quantityReceivedNow: 6 });
+    const final = validateReceipt({
+      requiredTotal: 10,
+      alreadyReceived: 4,
+      quantityReceivedNow: 6,
+      unit: 'piece',
+    });
     expect(
       receivingStatus({
         receivedTotal: final.receivedTotal,
@@ -33,9 +43,9 @@ describe('cumulative receiving', () => {
     ).toBe('READY_TO_RELEASE');
   });
   it('rejects over-receiving without an amendment', () =>
-    expect(() => validateReceipt({ requiredTotal: 10, alreadyReceived: 8, quantityReceivedNow: 3 })).toThrow(
-      /exceeds/,
-    ));
+    expect(() =>
+      validateReceipt({ requiredTotal: 10, alreadyReceived: 8, quantityReceivedNow: 3, unit: 'piece' }),
+    ).toThrow(/exceeds/));
   it('rejects fractional received, damaged, rejected, and amendment quantities for countable units', () => {
     for (const patch of [
       { quantityReceivedNow: 1.5 },

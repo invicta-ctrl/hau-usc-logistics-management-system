@@ -277,12 +277,21 @@ test('authenticated Administrator switches real workspace routes without changin
   await expect(page).toHaveTitle(/Materials & Documentation.*HAU-USC Logistics/u);
   await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText('Materials & Documentation');
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'materials');
-  await setRequesterName('Unsaved workspace edit');
-  await shell.getByLabel('Workspace').selectOption('food');
+  await page.locator('#primaryNav [data-view="request"]').evaluate((button) => button.click());
+  await expect(page).toHaveURL(/\/materials\/requests$/u);
+  await setRequesterName('Unsaved history edit');
+  await page.evaluate(() => history.back());
   const discardDialog = page.getByRole('alertdialog', { name: 'Discard unsaved changes?' });
   await expect(discardDialog).toBeVisible();
   await discardDialog.getByRole('button', { name: 'Continue editing' }).click();
-  await expect(page).toHaveURL(/\/materials$/u);
+  await expect(page).toHaveURL(/\/materials\/requests$/u);
+  await expect(page.locator('#request')).toHaveClass(/active/u);
+  await setRequesterName('');
+  await setRequesterName('Unsaved workspace edit');
+  await shell.getByLabel('Workspace').selectOption('food');
+  await expect(discardDialog).toBeVisible();
+  await discardDialog.getByRole('button', { name: 'Continue editing' }).click();
+  await expect(page).toHaveURL(/\/materials\/requests$/u);
   await shell.getByLabel('Workspace').selectOption('food');
   await discardDialog.getByRole('button', { name: 'Discard changes' }).click();
   await expect(page).toHaveURL(/\/food$/u);
@@ -292,6 +301,21 @@ test('authenticated Administrator switches real workspace routes without changin
     /Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
   );
   expect(sessionCalls).toBe(1);
+
+  await page.goto('/admin');
+  await page.evaluate(() => document.querySelector('#adminCatalogException').click());
+  const catalogForm = page.locator('#catalogItemForm');
+  await expect(catalogForm).toBeVisible();
+  await catalogForm.getByLabel('Item name').fill('Unsaved modal item');
+  await page.keyboard.press('Escape');
+  await expect(discardDialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(discardDialog).toBeHidden();
+  await expect(page.locator('#modalBackdrop')).toHaveClass(/show/u);
+  await expect(catalogForm.getByLabel('Item name')).toHaveValue('Unsaved modal item');
+  await page.keyboard.press('Escape');
+  await discardDialog.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(page.locator('#modalBackdrop')).not.toHaveClass(/show/u);
 
   for (const [path, workspace, experience] of [
     ['/admin', 'administrator', 'administrator'],

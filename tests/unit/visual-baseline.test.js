@@ -1,9 +1,12 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 
 const root = resolve(import.meta.dirname, '../..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
+const sha256 = async (path) =>
+  createHash('sha256').update(await readFile(resolve(root, path))).digest('hex');
 const compact = (value) => value.replace(/\s+/g, ' ').trim();
 const generatedNotice =
   '<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->';
@@ -35,6 +38,12 @@ const cssMarkers = [
 ];
 
 describe('authoritative visual extraction', () => {
+  it('keeps the protected historical baseline byte-identical', async () => {
+    await expect(sha256('legacy/HAU-USC_Logistics-Prototype.original.html')).resolves.toBe(
+      '06dc6c4e62ac6db1e873f5f18dd6531dd6a9f91e3a1b1d27e89582eac3f04a84',
+    );
+  });
+
   it('routes the active Food queue and revision-safe updates through service endpoints', async () => {
     const source = await read('src/visual/runtime-extensions.js');
     expect(source).toContain('await services.getFoodWorkQueue()');

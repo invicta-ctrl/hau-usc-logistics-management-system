@@ -1599,9 +1599,10 @@ export class MockService {
         const displayed = derivedLendingStatus(ticket, state.demoToday);
         if (!['ON_LOAN', 'OVERDUE'].includes(displayed))
           throw new AppError('INVALID_TRANSITION', 'Only an active or overdue loan may be returned.');
+        const item = state.inventoryItems.find((row) => row.id === ticket.itemId);
         const returnedNow = positiveOperationalQuantity(
           command.returnedQuantity,
-          ticket.unit,
+          item?.unit ?? ticket.unit,
           'returnedQuantity',
         );
         const remainingOut = Number(ticket.handedOutQuantity) - Number(ticket.returnedQuantity ?? 0);
@@ -1676,6 +1677,7 @@ export class MockService {
           reservationBalance: line.itemId ? (reservation?.quantity ?? 0) : null,
           physicalBalance,
           eventItemBalance: deliverable ? physicalBalance : null,
+          unit: line.unit,
         });
         const transactionId = appendLedger(state, {
           type: 'ISSUE',

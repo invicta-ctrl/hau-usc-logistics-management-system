@@ -1,5 +1,5 @@
 import { ApiError } from './d1/operational-service.js';
-import { isCountableUnit } from '../domain/quantity-units.js';
+import { isCountableUnit, isKnownQuantityUnit } from '../domain/quantity-units.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const CATEGORIES = Object.freeze([
@@ -54,6 +54,12 @@ const positiveNumber = (value, field) => {
 
 const operationalQuantity = (value, unit, field) => {
   const result = positiveNumber(value, field);
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
+      status: 422,
+      details: { field, unit },
+    });
+  }
   if (isCountableUnit(unit) && !Number.isInteger(result)) {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
       status: 422,

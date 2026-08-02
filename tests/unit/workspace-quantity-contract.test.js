@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   isCountableUnit,
+  isKnownQuantityUnit,
   isValidOperationalQuantity,
   quantityStep,
 } from '../../src/domain/quantity-units.js';
@@ -53,9 +54,28 @@ describe('countable operational quantities', () => {
   });
 
   it('treats governed request-center and kit units as countable', () => {
-    for (const unit of ['set', 'unit', 'chair', 'table', 'facility', 'day', 'kit']) {
+    for (const unit of [
+      'set',
+      'unit',
+      'chair',
+      'table',
+      'facility',
+      'day',
+      'kit',
+      'can',
+      'pair',
+      'pallet',
+      'tray',
+    ]) {
       expect(isCountableUnit(unit)).toBe(true);
       expect(isValidOperationalQuantity(0.5, { unit })).toBe(false);
     }
+  });
+
+  it('fails closed for unknown quantity units', () => {
+    expect(isKnownQuantityUnit('unsupported-fixture-unit')).toBe(false);
+    expect(quantityStep('unsupported-fixture-unit')).toBe('1');
+    expect(isValidOperationalQuantity(1, { unit: 'unsupported-fixture-unit' })).toBe(false);
+    expect(() => positiveOperationalQuantity(1, 'unsupported-fixture-unit')).toThrow(/supported unit/u);
   });
 });

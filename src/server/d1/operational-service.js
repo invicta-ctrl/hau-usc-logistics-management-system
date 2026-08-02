@@ -8,7 +8,7 @@ import {
   REQUEST_CENTER_UNITS,
 } from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
-import { isCountableUnit } from '../../domain/quantity-units.js';
+import { isCountableUnit, isKnownQuantityUnit } from '../../domain/quantity-units.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -136,6 +136,11 @@ const positiveNumber = (value, field = 'quantity') => {
 
 const positiveOperationalQuantity = (value, unit, field = 'quantity') => {
   const result = positiveNumber(value, field);
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
   if (isCountableUnit(unit) && !Number.isInteger(result)) {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
       details: { field, unit: String(unit ?? '') },
@@ -156,6 +161,11 @@ const nonNegativeNumber = (value, field = 'value') => {
 
 const nonNegativeOperationalQuantity = (value, unit, field = 'quantity') => {
   const result = nonNegativeNumber(value, field);
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
   if (isCountableUnit(unit) && !Number.isInteger(result)) {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
       details: { field, unit: String(unit ?? '') },
@@ -2691,8 +2701,25 @@ export function createD1OperationalService({
           timestamp,
         ),
     ];
-    lines.forEach((line, index) => {
-      const unit = requiredText(line.unit, `lines[${index}].unit`, 40);
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      const itemId = optionalText(line.itemId, 80) || null;
+      let unit = requiredText(line.unit, `lines[${index}].unit`, 40);
+      if (itemId) {
+        const item = await db
+          .prepare("SELECT unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
+          .bind(itemId)
+          .first();
+        if (!item) {
+          throw new ApiError('ITEM_NOT_FOUND', `lines[${index}].itemId is unavailable.`, { status: 404 });
+        }
+        if (String(unit).trim().toLowerCase() !== String(item.unit).trim().toLowerCase()) {
+          throw new ApiError('UNIT_MISMATCH', `lines[${index}].unit must match the catalog item.`, {
+            details: { field: `lines[${index}].unit` },
+          });
+        }
+        unit = item.unit;
+      }
       const quantity = positiveOperationalQuantity(
         line.quantity ?? line.requestedQuantity,
         unit,
@@ -2712,7 +2739,7 @@ export function createD1OperationalService({
             createId('LIN'),
             requestId,
             optionalText(line.eventId ?? command.eventId, 80) || null,
-            optionalText(line.itemId, 80) || null,
+            itemId,
             requiredText(line.description ?? line.itemName, `lines[${index}].description`, 240),
             optionalText(line.specification, 1000),
             optionalText(line.category, 120),
@@ -2728,7 +2755,7 @@ export function createD1OperationalService({
             account.id,
           ),
       );
-    });
+    }
     statements.push(
       historyStatement(db, {
         entityType: 'REQUEST',
@@ -5517,13 +5544,16 @@ export function createD1OperationalService({
     }
     const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
     if (
+      !isKnownQuantityUnit(unit) ||
       !Number.isFinite(reorderThreshold) ||
       reorderThreshold < 0 ||
       (isCountableUnit(unit) && !Number.isInteger(reorderThreshold))
     ) {
       throw new ApiError(
         'VALIDATION_FAILED',
-        isCountableUnit(unit)
+        !isKnownQuantityUnit(unit)
+          ? `Reorder threshold uses an unsupported unit: ${unit}.`
+          : isCountableUnit(unit)
           ? `Reorder threshold must be a whole number for ${unit}.`
           : 'Reorder threshold must be zero or greater.',
       );

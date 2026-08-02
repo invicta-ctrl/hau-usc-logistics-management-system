@@ -2,7 +2,7 @@ import { AppError } from '../app/errors.js';
 import { foodAttentionFlags, normalizeFoodDetails } from './food-workflow.js';
 import { materialsAttentionFlags, normalizeMaterialsDetails } from './materials-workflow.js';
 import { normalizeVenueEquipmentDetails, venueEquipmentAttentionFlags } from './venue-equipment-workflow.js';
-import { isCountableUnit } from './quantity-units.js';
+import { isCountableUnit, isKnownQuantityUnit } from './quantity-units.js';
 
 export const COMPOSITE_SECTION_TYPES = Object.freeze(['FOOD', 'MATERIALS', 'VENUE_EQUIPMENT']);
 
@@ -59,13 +59,17 @@ function text(value, field, { required = false, max = MAX_TEXT_LENGTH } = {}) {
   return normalized;
 }
 
-function positiveQuantity(value, field, unit = '') {
+function positiveQuantity(value, field, unit = null) {
   const quantity = Number(value);
   if (!Number.isFinite(quantity) || quantity <= 0)
     throw new AppError('VALIDATION_ERROR', `${field} must be greater than zero.`, {
       fieldErrors: { [field]: 'Enter a quantity greater than zero.' },
     });
-  if (isCountableUnit(unit) && !Number.isInteger(quantity))
+  if (unit != null && !isKnownQuantityUnit(unit))
+    throw new AppError('VALIDATION_ERROR', `${field} uses an unsupported unit.`, {
+      fieldErrors: { [field]: 'Select a supported unit.' },
+    });
+  if (unit != null && isCountableUnit(unit) && !Number.isInteger(quantity))
     throw new AppError('VALIDATION_ERROR', `${field} must be a whole number for ${unit}.`, {
       fieldErrors: { [field]: `Enter a whole number for ${unit}.` },
     });

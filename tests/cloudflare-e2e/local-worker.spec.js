@@ -142,6 +142,48 @@ test('System Owner receives every module and a server-validated operational scop
   expect(invalid.status()).toBe(403);
   await expect(invalid.json()).resolves.toMatchObject({ code: 'OPERATIONAL_SCOPE_INVALID' });
 
+  for (const [unit, quantity, message] of [
+    ['pair', 1.5, /whole number/u],
+    ['unsupported-fixture-unit', 1, /unsupported unit/u],
+  ]) {
+    const invalidQuantity = await mutate(owner, ownerCsrf, 'submitRequest', {
+      clientRequestId: `invalid-quantity-${unit}-${crypto.randomUUID()}`,
+      requestType: 'GENERAL_REQUEST',
+      purpose: 'Synthetic quantity validation proof',
+      lines: [
+        {
+          clientLineId: `invalid-quantity-line-${crypto.randomUUID()}`,
+          description: 'Synthetic countable quantity fixture',
+          quantity,
+          unit,
+          fulfillmentSource: 'FOR_CANVASSING',
+        },
+      ],
+    });
+    expect(invalidQuantity.status()).toBe(422);
+    await expect(invalidQuantity.json()).resolves.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      message: expect.stringMatching(message),
+    });
+  }
+  const mismatchedCatalogUnit = await mutate(owner, ownerCsrf, 'submitRequest', {
+    clientRequestId: `mismatched-catalog-unit-${crypto.randomUUID()}`,
+    requestType: 'GENERAL_REQUEST',
+    purpose: 'Synthetic authoritative unit validation proof',
+    lines: [
+      {
+        clientLineId: `mismatched-catalog-unit-line-${crypto.randomUUID()}`,
+        itemId: 'ITM-LOCAL-001',
+        description: 'Synthetic catalog unit fixture',
+        quantity: 1,
+        unit: 'pair',
+        fulfillmentSource: 'FOR_CANVASSING',
+      },
+    ],
+  });
+  expect(mismatchedCatalogUnit.status()).toBe(422);
+  await expect(mismatchedCatalogUnit.json()).resolves.toMatchObject({ code: 'UNIT_MISMATCH' });
+
   expect(
     (
       await owner.post('/api/getBootstrapModule', {

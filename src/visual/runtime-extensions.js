@@ -1,7 +1,7 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
-import { isCountableUnit, quantityStep } from '../domain/quantity-units.js';
+import { quantityStep } from '../domain/quantity-units.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
@@ -96,7 +96,8 @@ function localDueValue(days) {
 }
 
 function quantityInputBounds(unit, { allowZero = false } = {}) {
-  return `min="${allowZero ? '0' : isCountableUnit(unit) ? '1' : '0.01'}" step="${quantityStep(unit)}"`;
+  const step = quantityStep(unit);
+  return `min="${allowZero ? '0' : step === '1' ? '1' : '0.01'}" step="${step}"`;
 }
 
 function createLendingController({ markFormClean }) {
@@ -414,6 +415,11 @@ export function createRuntimeExtensions(options) {
   let eventManagementOpen = false;
   let internalShellBar = null;
   let acceptedLocation = `${location.pathname}${location.search}${location.hash}`;
+  const routeHistoryIndexKey = '__hauRouteIndex';
+  const initialRouteHistoryIndex = Number(history.state?.[routeHistoryIndexKey]);
+  let routeHistorySequence = Number.isFinite(initialRouteHistoryIndex) ? initialRouteHistoryIndex : 0;
+  let acceptedHistoryIndex = routeHistorySequence;
+  let restoringRejectedHistory = false;
   let accountControlObserver = null;
   let lendingApprovalRoot = null;
   let releaseConfirmationInstalled = false;
@@ -422,6 +428,34 @@ export function createRuntimeExtensions(options) {
   const canvassObservedRoots = new WeakSet();
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
+
+  const currentLocation = () => `${location.pathname}${location.search}${location.hash}`;
+  const indexedHistoryState = (index) => ({
+    ...(history.state && typeof history.state === 'object' ? history.state : {}),
+    [routeHistoryIndexKey]: index,
+  });
+  const ensureCurrentHistoryEntry = () => {
+    const index = Number(history.state?.[routeHistoryIndexKey]);
+    if (Number.isFinite(index)) return index;
+    history.replaceState(indexedHistoryState(routeHistorySequence), '', currentLocation());
+    return routeHistorySequence;
+  };
+  const acceptCurrentLocation = () => {
+    acceptedLocation = currentLocation();
+    const index = Number(history.state?.[routeHistoryIndexKey]);
+    if (Number.isFinite(index)) acceptedHistoryIndex = index;
+    return acceptedLocation;
+  };
+  const pushRouteLocation = (target, { accept = true } = {}) => {
+    routeHistorySequence += 1;
+    history.pushState(indexedHistoryState(routeHistorySequence), '', target);
+    if (accept) acceptCurrentLocation();
+  };
+  const replaceRouteLocation = (target, index = acceptedHistoryIndex, { accept = true } = {}) => {
+    history.replaceState(indexedHistoryState(index), '', target);
+    routeHistorySequence = Math.max(routeHistorySequence, index);
+    if (accept) acceptCurrentLocation();
+  };
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
@@ -4563,6 +4597,7 @@ export function createRuntimeExtensions(options) {
       const onKeydown = (event) => {
         if (event.key === 'Escape') {
           event.preventDefault();
+          event.stopImmediatePropagation();
           continueEditing();
           return;
         }
@@ -4619,8 +4654,9 @@ export function createRuntimeExtensions(options) {
   };
   const syncQuantityControl = (input, unit, { allowZero = false } = {}) => {
     if (!input || !unit) return;
-    input.step = quantityStep(unit);
-    input.min = allowZero ? '0' : isCountableUnit(unit) ? '1' : '0.01';
+    const step = quantityStep(unit);
+    input.step = step;
+    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
     input.dataset.quantityUnit = String(unit);
   };
   const syncRenderedQuantityControls = (root = document) => {
@@ -4930,7 +4966,7 @@ export function createRuntimeExtensions(options) {
     syncRoutedExperience();
     renderRoleExperience();
     renderInternalShell();
-    acceptedLocation = `${location.pathname}${location.search}${location.hash}`;
+    acceptCurrentLocation();
     const announcement = internalShellBar?.querySelector('[data-shell-context-announcement]');
     if (announcement)
       announcement.textContent = `${workspaceDefinitions[route.workspaceId]?.label ?? 'Workspace'} loaded.`;
@@ -5125,6 +5161,8 @@ export function createRuntimeExtensions(options) {
   const installInternalShell = () => {
     if (isRequestOnly() || internalShellBar || document.querySelector('[data-internal-shell-context]'))
       return;
+    ensureCurrentHistoryEntry();
+    acceptCurrentLocation();
     const header = document.querySelector('.app-header');
     if (!header) return;
     internalShellBar = document.createElement('section');
@@ -5169,6 +5207,7 @@ export function createRuntimeExtensions(options) {
     internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
       if (authorizedWorkspaceIds().includes(event.target.value) && workspaceDefinitions[event.target.value]) {
         const previousLocation = acceptedLocation;
+        const previousHistoryIndex = acceptedHistoryIndex;
         const previousWorkspace = workspaceForCurrentUser();
         if (!(await requestDiscard())) {
           event.target.value = previousWorkspace;
@@ -5183,11 +5222,11 @@ export function createRuntimeExtensions(options) {
         );
         target.search = location.search;
         if (releaseRoute) target.searchParams.set('scope', releaseWorkspaceScopes[event.target.value]);
-        history.pushState(history.state, '', `${target.pathname}${target.search}`);
+        pushRouteLocation(`${target.pathname}${target.search}`, { accept: false });
         try {
           await reloadRoutedWorkspace('workspace-change');
         } catch (error) {
-          history.replaceState(history.state, '', previousLocation);
+          replaceRouteLocation(previousLocation, previousHistoryIndex);
           syncRoutedExperience();
           renderRoleExperience();
           renderInternalShell();
@@ -5247,10 +5286,21 @@ export function createRuntimeExtensions(options) {
       accountControlObserver = new MutationObserver(() => adoptAccountControls());
       accountControlObserver.observe(tools, { childList: true });
     }
-    addEventListener('popstate', async () => {
-      const attemptedLocation = `${location.pathname}${location.search}${location.hash}`;
+    addEventListener('popstate', async (event) => {
+      if (restoringRejectedHistory) {
+        restoringRejectedHistory = false;
+        return;
+      }
+      const attemptedLocation = currentLocation();
+      const attemptedHistoryIndex = Number(event.state?.[routeHistoryIndexKey]);
       if (!(await requestDiscard())) {
-        history.pushState(history.state, '', acceptedLocation);
+        const delta = acceptedHistoryIndex - attemptedHistoryIndex;
+        if (Number.isFinite(delta) && delta !== 0) {
+          restoringRejectedHistory = true;
+          history.go(delta);
+        } else {
+          pushRouteLocation(acceptedLocation);
+        }
         renderInternalShell();
         return;
       }
@@ -5259,11 +5309,12 @@ export function createRuntimeExtensions(options) {
       try {
         await reloadRoutedWorkspace('history-navigation');
       } catch (error) {
-        history.replaceState(history.state, '', acceptedLocation);
+        replaceRouteLocation(acceptedLocation, acceptedHistoryIndex);
         toast(error?.message || 'The previous workspace could not be restored.', true);
         return;
       }
       acceptedLocation = attemptedLocation;
+      if (Number.isFinite(attemptedHistoryIndex)) acceptedHistoryIndex = attemptedHistoryIndex;
     });
     renderInternalShell();
     applyProductionShellCopy();
@@ -7587,6 +7638,9 @@ export function createRuntimeExtensions(options) {
     start,
     afterRender,
     markFormClean,
+    acceptCurrentLocation,
+    pushRouteLocation,
+    replaceRouteLocation,
     refreshAuthoritative,
     async refreshAfterMutation(result = {}) {
       const scope = getActiveModule();
