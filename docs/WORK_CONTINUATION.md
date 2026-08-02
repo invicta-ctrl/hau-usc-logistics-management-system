@@ -5,13 +5,14 @@
 - **Repository:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch:** `fix/v0.7.1-production-recovery`.
 - **Starting SHA:** `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
-- **Accepted slice:** login/session and portal recovery at
-  `de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`.
-- **Evidence:** amended full `npm run check` (78 files / 510 tests), focused
-  auth/browser/local-Worker proofs, final preview/dist parity, fresh re-review
-  PASS, and `.codex/V0_7_1_SLICE_3_LOGIN_SESSION_PORTAL_HANDOFF.md`.
-- **Current action:** audit and repair bounded Staff Directory and Access
-  Management workflow completeness against the real Slice 2 contract.
+- **Accepted slice:** Staff Directory and Access Management recovery at
+  `6bec7d9be355b556fe0d93143a85127a99dd9740`.
+- **Evidence:** full `npm run check` (78 files / 513 tests), focused real
+  local-Worker and UI proofs, final preview/dist parity, P1 repair, exact-head
+  fresh re-review PASS, and
+  `.codex/V0_7_1_SLICE_4_DIRECTORY_ACCESS_HANDOFF.md`.
+- **Current action:** audit and repair canonical workspace routing, integer
+  quantities, borrower-selector semantics, and dirty-form protection.
 - **Production:** operational on immutable v0.7.0; no production or provider
   write occurred. Production deployment remains owner-gated.
 - **Preserve:** untracked `.codegraph/`; 397 fail-closed pending inventory rows;

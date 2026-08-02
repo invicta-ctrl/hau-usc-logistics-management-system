@@ -4,8 +4,9 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 and 3 are accepted; Staff Directory
-  and Access Management workflow recovery is active.
+  production truth audit passed; Slices 2 through 4 are accepted; canonical
+  workspace, integer quantity, borrower-selector, and dirty-form recovery is
+  active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -27,10 +28,14 @@
   malformed-cookie handling, authoritative release identity, consistent portal
   navigation, final generated parity, 510 tests, and fresh re-review PASS.
   Handoff: `.codex/V0_7_1_SLICE_3_LOGIN_SESSION_PORTAL_HANDOFF.md`.
-- Active next slice: audit and repair Staff Directory and Access Management
-  workflow completeness while preserving the accepted Slice 2 contract,
-  server authorization, privacy boundaries, previews, history, and retry-safe
-  mutations.
+- Accepted Slice 4 repair:
+  `6bec7d9be355b556fe0d93143a85127a99dd9740`; Staff Directory and Access
+  Management now have complete filtering/state, retry-safe mutations, truthful
+  audit references, 513 tests, full repository gates, real local-Worker/UI
+  proof, and a fresh re-review PASS. Handoff:
+  `.codex/V0_7_1_SLICE_4_DIRECTORY_ACCESS_HANDOFF.md`.
+- Active next slice: canonical workspace routing, integer quantities,
+  borrower-selector semantics, and dirty-form protection.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

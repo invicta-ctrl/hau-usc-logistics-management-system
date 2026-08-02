@@ -2,21 +2,21 @@
 
 INTENT: PRODUCTION RECOVERY
 MODE: execute bounded v0.7.1 slices
-TARGET: Staff Directory and Access Management workflow completeness
+TARGET: canonical workspace routing, integer quantities, borrower selector, and dirty-form protection
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: verified directory status/search/filter/pagination/preview/apply/rollback/history/quarantine and access edit/preview/history/ID/password/session/status/archive/restore workflows against the real protected contract
-VERIFICATION: focused service and authorization tests; protected local Worker UI journeys; privacy and mutation-safety evidence; repository-required gates; exact base/head review
+DELIVERABLE: canonical route-derived workspace state, whole-number countable quantities, accessible borrower selection, and complete unsaved-change interception
+VERIFICATION: focused route/quantity/borrower/dirty-state tests; protected browser journeys; repository-required gates; exact base/head review
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted previous slice: login/session and portal recovery at
-`de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`; amended full `npm run check`
-passes 78 files / 510 tests, focused auth/Worker/browser proofs pass, final
-generated parity passes, and fresh re-review reports no P0-P3.
+Accepted previous slice: Staff Directory and Access Management recovery at
+`6bec7d9be355b556fe0d93143a85127a99dd9740`; full `npm run check` passes 78
+files / 513 tests, focused real Worker/UI proofs pass, generated parity passes,
+and the P1-triggered fresh re-review reports no P0-P3.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data
