@@ -2,20 +2,21 @@
 
 INTENT: PRODUCTION RECOVERY
 MODE: execute bounded v0.7.1 slices
-TARGET: login/session lifecycle, safe authentication errors, and public portal navigation
+TARGET: Staff Directory and Access Management workflow completeness
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: verified staff entry through activation/login/logout/reset/revocation with safe correlation behavior and consistent Request/Lending/staff navigation
-VERIFICATION: focused auth handler/client tests; login and portal browser matrix; relevant local Worker coverage; repository-required gates; exact base/head review
+DELIVERABLE: verified directory status/search/filter/pagination/preview/apply/rollback/history/quarantine and access edit/preview/history/ID/password/session/status/archive/restore workflows against the real protected contract
+VERIFICATION: focused service and authorization tests; protected local Worker UI journeys; privacy and mutation-safety evidence; repository-required gates; exact base/head review
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted previous slice: client/runtime contract repair at
-`8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2`; full `npm run check`, focused
-local-Worker UI 2/2, and fresh R2 review passed.
+Accepted previous slice: login/session and portal recovery at
+`de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`; amended full `npm run check`
+passes 78 files / 510 tests, focused auth/Worker/browser proofs pass, final
+generated parity passes, and fresh re-review reports no P0-P3.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data

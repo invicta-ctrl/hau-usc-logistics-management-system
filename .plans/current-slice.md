@@ -8,17 +8,17 @@
 > on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
 > historical Slice 13 material below does not override the active pointer.
 
-CURRENT SLICE: v0.7.1 Slice 3 - Login/session, safe auth errors, and portal navigation
+CURRENT SLICE: v0.7.1 Slice 4 - Staff Directory and Access Management
 
-CURRENT STAGE: SLICE_2_ACCEPTED_SLICE_3_ACTIVE
+CURRENT STAGE: SLICE_3_ACCEPTED_SLICE_4_ACTIVE
 
 LAST UPDATED: 2026-08-02 (Asia/Manila)
 
-Slice 2 accepted implementation:
-`8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2`. The protected Access Policy and
-Staff Directory browser/Worker contract now has explicit nine-method parity,
-tracked mutations, 502 passing unit tests, deterministic generated artifacts,
-Cloudflare dry-run, focused local-Worker UI proof, and a fresh review PASS.
+Slice 3 accepted repair:
+`de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`. Safe auth correlation/security
+headers, malformed-cookie failure closure, authoritative Worker release
+identity, and consistent public portal navigation pass 510 unit tests, focused
+browser/local-Worker proofs, final generated parity, and fresh re-review.
 Production and external systems were untouched.
 
 ---

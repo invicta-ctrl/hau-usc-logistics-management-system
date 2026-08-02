@@ -8,6 +8,11 @@
   methods across the active HTTP and legacy-runtime adapter layers.
 - Preserved CSRF, safe correlated server errors, and retry-stable mutation IDs
   for policy update and roster apply/rollback operations.
+- Added safe correlated auth responses with standard security headers,
+  malformed-cookie failure closure, authoritative Worker release identity, and
+  consistent Request/Lending/staff/portal-selection navigation.
+- Preserved the stronger 12–128 character, three-category password policy and
+  normalized raw authentication transport failures to safe retryable errors.
 
 ### Verified
 
@@ -16,6 +21,10 @@
   deterministic build, Apps Script, dist, and Cloudflare dry-run gate.
 - Focused local-Worker Access Management and Staff Directory UI journeys pass
   2/2. Fresh exact-SHA R2 review reports no P0-P3.
+- Slice 3's amended full gate passes 78 Vitest files / 510 tests and now leaves
+  preview shareables and `dist` deterministically aligned after Cloudflare
+  dry-run. Auth browser, local-Worker, malformed-cookie, and release-identity
+  proofs pass; fresh correction re-review reports no P0-P3.
 
 ### Boundary
 

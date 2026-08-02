@@ -4,8 +4,8 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slice 2 client/runtime contract repair is
-  accepted; login/session and public-navigation recovery is active.
+  production truth audit passed; Slices 2 and 3 are accepted; Staff Directory
+  and Access Management workflow recovery is active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -22,9 +22,15 @@
   retry-stable mutations, focused browser proof, full repository gates, and a
   fresh review PASS. Handoff:
   `.codex/V0_7_1_SLICE_2_CLIENT_RUNTIME_CONTRACT_HANDOFF.md`.
-- Active next slice: complete the login/session lifecycle audit; repair safe
-  authentication correlation/security headers and public portal navigation;
-  preserve host-scoped cookies and server authorization.
+- Accepted Slice 3 repair:
+  `de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`; safe auth correlation and
+  malformed-cookie handling, authoritative release identity, consistent portal
+  navigation, final generated parity, 510 tests, and fresh re-review PASS.
+  Handoff: `.codex/V0_7_1_SLICE_3_LOGIN_SESSION_PORTAL_HANDOFF.md`.
+- Active next slice: audit and repair Staff Directory and Access Management
+  workflow completeness while preserving the accepted Slice 2 contract,
+  server authorization, privacy boundaries, previews, history, and retry-safe
+  mutations.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.
