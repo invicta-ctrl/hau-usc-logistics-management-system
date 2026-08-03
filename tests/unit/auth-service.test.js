@@ -9,6 +9,8 @@ import {
 } from '../../src/server/auth/repository.js';
 import { createAuthService } from '../../src/server/auth/service.js';
 
+const repositoryByService = new WeakMap();
+
 function testContext({ loginLimit = 10, activationLifecycle, rateLimiter } = {}) {
   let timestamp = Date.parse('2026-07-21T08:00:00.000Z');
   let sequence = 0;
@@ -35,6 +37,7 @@ function testContext({ loginLimit = 10, activationLifecycle, rateLimiter } = {})
     clock,
     createId: () => `SYNTHETIC-ID-${String(++sequence).padStart(4, '0')}`,
   });
+  repositoryByService.set(service, repository);
   return { service, repository, clock };
 }
 
@@ -48,6 +51,7 @@ async function activate(
     defaultCommitteeId = '',
   } = {},
 ) {
+  const repository = repositoryByService.get(service);
   const starter = await service.createStarterAccount({
     accessId,
     temporaryPassword,
@@ -72,6 +76,11 @@ async function activate(
     confirmPassword: 'Activated!Password9472',
     roleId: 'DIRECTOR',
     committeeIds: [COMMITTEES.MATERIALS],
+  });
+  const activatedAccount = repository.inspect().accounts.find((account) => account.id === starter.accountId);
+  await repository.saveAccount({
+    ...activatedAccount,
+    verifiedEmailFingerprint: `synthetic:${accessId.toLowerCase()}`,
   });
   return { starter, login, activated };
 }
@@ -115,6 +124,34 @@ describe('v0.6 authentication and onboarding service', () => {
         networkKey: 'verified-email-network',
       }),
     ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
+  });
+
+  it('rejects timestamp-only email ownership and accepts a qualified fingerprint', async () => {
+    const { service, repository } = context;
+    const active = await activate(service, { accessId: 'HAU-EMAIL-001' });
+    const account = repository
+      .inspect()
+      .accounts.find((entry) => entry.accessIdNormalized === 'HAU-EMAIL-001');
+    const email = 'hau-email-001@example.test';
+
+    await repository.saveAccount({ ...account, verifiedEmailFingerprint: '' });
+    await expect(
+      service.login({
+        accessId: email,
+        password: 'Activated!Password9472',
+        networkKey: 'timestamp-only-email',
+      }),
+    ).rejects.toMatchObject({ code: 'AUTHENTICATION_FAILED' });
+
+    await repository.saveAccount({ ...account, verifiedEmailFingerprint: 'approved-email-fingerprint' });
+    await expect(
+      service.login({
+        accessId: email,
+        password: 'Activated!Password9472',
+        networkKey: 'approved-email',
+      }),
+    ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
+    expect(active.activated.state).toBe('AUTHENTICATED');
   });
 
   it('enforces an injected approved-email activation lifecycle and completes its follow-up', async () => {

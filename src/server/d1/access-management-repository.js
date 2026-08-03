@@ -12,6 +12,30 @@ const parseJson = (value, fallback = null) => {
 const escapeLike = (value) =>
   String(value).replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_');
 
+function accountRevisionToken(account) {
+  const explicit = String(account?.revision ?? '').trim();
+  if (explicit) return explicit;
+  return `${Number(account?.credentialVersion ?? 1)}:${String(account?.updatedAt ?? '')}`;
+}
+
+function collisionKey(value) {
+  return String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[._-]/gu, '');
+}
+
+function accountSelect(whereClause) {
+  return `SELECT a.*,
+            COALESCE((
+              SELECT MAX(log.created_at)
+              FROM audit_log log
+              WHERE log.action = 'LOGIN_SUCCEEDED' AND log.entity_id = a.id
+            ), '') AS last_successful_login
+          FROM accounts a
+          WHERE ${whereClause}`;
+}
+
 async function committeeIds(db, accountId) {
   const result = await db
     .prepare(
@@ -87,6 +111,7 @@ async function accountFromRow(db, row) {
     usernameNormalized: row.username_normalized ?? '',
     profileEmailVerifiedAt: row.profile_email_verified_at ?? null,
     profileEmail: row.profile_email ?? '',
+    revision: `${Number(row.credential_version ?? 1)}:${String(row.updated_at ?? '')}`,
   };
 }
 
@@ -155,20 +180,24 @@ export function createD1AccessManagementRepository(db) {
     async getAccountByAccessId(accessIdNormalized) {
       return accountFromRow(
         db,
-        await db
-          .prepare(
-            `SELECT a.*,
-              COALESCE((
-                SELECT MAX(log.created_at)
-                FROM audit_log log
-                WHERE log.action = 'LOGIN_SUCCEEDED' AND log.entity_id = a.id
-              ), '') AS last_successful_login
-             FROM accounts a
-             WHERE a.access_id_normalized = ?1`,
-          )
-          .bind(accessIdNormalized)
-          .first(),
+        await db.prepare(accountSelect('a.access_id_normalized = ?1')).bind(accessIdNormalized).first(),
       );
+    },
+
+    async getAccountById(accountId) {
+      return accountFromRow(db, await db.prepare(accountSelect('a.id = ?1')).bind(accountId).first());
+    },
+
+    async getAccountByUsername(accessIdNormalized) {
+      return db
+        .prepare(
+          `SELECT id
+           FROM accounts
+           WHERE UPPER(REPLACE(REPLACE(REPLACE(COALESCE(username_normalized, ''), '.', ''), '-', ''), '_', '')) = ?1
+           LIMIT 1`,
+        )
+        .bind(collisionKey(accessIdNormalized))
+        .first();
     },
 
     async getAccessIdReservation(collisionKey) {
@@ -239,10 +268,21 @@ export function createD1AccessManagementRepository(db) {
 
     async getAccessPolicyChangeByIdempotency(idempotencyKey) {
       const row = await db
-        .prepare('SELECT after_json, correlation_id FROM access_policy_changes WHERE idempotency_key = ?1')
+        .prepare(
+          `SELECT after_json, correlation_id, actor_account_id, account_id
+           FROM access_policy_changes
+           WHERE idempotency_key = ?1`,
+        )
         .bind(idempotencyKey)
         .first();
-      return row ? { after: parseJson(row.after_json, {}), correlationId: row.correlation_id } : null;
+      return row
+        ? {
+            after: parseJson(row.after_json, {}),
+            correlationId: row.correlation_id,
+            actorAccountId: row.actor_account_id,
+            accountId: row.account_id,
+          }
+        : null;
     },
 
     async updateAccessPolicy({
@@ -255,6 +295,7 @@ export function createD1AccessManagementRepository(db) {
       idempotencyKey,
       changeId,
       auditId,
+      idempotency,
     }) {
       const profile = nextAccount.accessProfile;
       const before = {
@@ -378,6 +419,7 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
+        ...(idempotency ? [idempotencyStatement(db, idempotency)] : []),
       );
       await runAtomicRevisionGuardedBatch(db, {
         guardedStatement,
@@ -456,6 +498,8 @@ export function createD1AccessManagementRepository(db) {
       for (const row of result.results) {
         const account = await accountFromRow(db, row);
         items.push({
+          accountId: account.id,
+          revision: accountRevisionToken(account),
           accessId: account.accessIdNormalized,
           displayName: account.profile?.fullName || account.accessIdNormalized,
           roleId: account.roleId,
@@ -579,7 +623,33 @@ export function createD1AccessManagementRepository(db) {
       historyId,
       auditId,
     }) {
-      const results = await db.batch([
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET access_id_normalized = ?1,
+               credential_version = credential_version + 1,
+               last_access_id_changed_at = ?2,
+               updated_at = ?2
+           WHERE id = ?3
+             AND access_id_normalized = ?4
+             AND credential_version = ?5
+             AND updated_at = ?6
+             AND NOT EXISTS (
+               SELECT 1
+               FROM accounts username_account
+               WHERE UPPER(REPLACE(REPLACE(REPLACE(COALESCE(username_account.username_normalized, ''), '.', ''), '-', ''), '_', '')) = ?7
+             )`,
+        )
+        .bind(
+          newAccessId,
+          changedAt,
+          account.id,
+          account.accessIdNormalized,
+          account.credentialVersion,
+          account.updatedAt,
+          collisionKey,
+        );
+      const dependentStatements = [
         db
           .prepare(
             `INSERT INTO access_id_reservations (
@@ -587,19 +657,6 @@ export function createD1AccessManagementRepository(db) {
              ) VALUES (?1, ?2, ?3, ?4, 'ACCESS_ID_CHANGE')`,
           )
           .bind(collisionKey, account.id, newAccessId, changedAt),
-        db
-          .prepare(
-            `UPDATE accounts
-             SET access_id_normalized = CASE
-                   WHEN access_id_normalized = ?4 AND credential_version = ?5 THEN ?1
-                   ELSE NULL
-                 END,
-                 credential_version = credential_version + 1,
-                 last_access_id_changed_at = ?2,
-                 updated_at = ?2
-             WHERE id = ?3`,
-          )
-          .bind(newAccessId, changedAt, account.id, account.accessIdNormalized, account.credentialVersion),
         db
           .prepare(
             `INSERT INTO access_id_history (
@@ -633,10 +690,13 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
-      ]);
-      if (Number(results[1]?.meta?.changes ?? 0) !== 1) {
-        throw new Error('Account write conflict.');
-      }
+      ];
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
 
     async createStarterAccount({ account, actor, collisionKey, reason, correlationId, auditId }) {
@@ -834,18 +894,38 @@ export function createD1AccessManagementRepository(db) {
       auditId,
       idempotency,
     }) {
-      const results = await db.batch([
-        db
-          .prepare(
-            `UPDATE accounts
-             SET status = CASE WHEN credential_version = ?4 THEN 'STARTER' ELSE NULL END,
-                 temporary_credential_json = ?1,
-                 credential_version = credential_version + 1,
-                 onboarding_completed_at = NULL, locked_at = NULL,
-                 last_password_reset_at = ?2, updated_at = ?2
-             WHERE id = ?3`,
-          )
-          .bind(JSON.stringify(temporaryCredential), resetAt, account.id, account.credentialVersion),
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET status = 'STARTER',
+               temporary_credential_json = ?1,
+               credential_version = credential_version + 1,
+               onboarding_completed_at = NULL, locked_at = NULL,
+               last_password_reset_at = ?2, updated_at = ?2
+           WHERE id = ?3
+             AND credential_version = ?4
+             AND updated_at = ?5
+             AND NOT (
+               role_id = 'ADMINISTRATOR'
+               AND status = 'ACTIVE'
+               AND locked_at IS NULL
+               AND (
+                 SELECT COUNT(*)
+                 FROM accounts
+                 WHERE role_id = 'ADMINISTRATOR'
+                   AND status = 'ACTIVE'
+                   AND locked_at IS NULL
+               ) <= 1
+             )`,
+        )
+        .bind(
+          JSON.stringify(temporaryCredential),
+          resetAt,
+          account.id,
+          account.credentialVersion,
+          account.updatedAt,
+        );
+      const dependentStatements = [
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
         db
           .prepare("DELETE FROM auth_rate_limit_events WHERE limiter_key LIKE ?1 ESCAPE '\\'")
@@ -862,8 +942,13 @@ export function createD1AccessManagementRepository(db) {
           notes: reason,
         }),
         idempotencyStatement(db, idempotency),
-      ]);
-      if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
+      ];
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
 
     async setAccountStatus({
@@ -876,15 +961,29 @@ export function createD1AccessManagementRepository(db) {
       auditId,
       auditAction = 'ACCOUNT_STATUS_CHANGED',
     }) {
-      const results = await db.batch([
-        db
-          .prepare(
-            `UPDATE accounts
-             SET status = CASE WHEN credential_version = ?4 THEN ?1 ELSE NULL END,
-                 credential_version = credential_version + 1, updated_at = ?2
-             WHERE id = ?3`,
-          )
-          .bind(nextStatus, changedAt, account.id, account.credentialVersion),
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET status = ?1, credential_version = credential_version + 1, updated_at = ?2
+           WHERE id = ?3
+             AND credential_version = ?4
+             AND updated_at = ?5
+             AND NOT (
+               role_id = 'ADMINISTRATOR'
+               AND status = 'ACTIVE'
+               AND locked_at IS NULL
+               AND ?1 <> 'ACTIVE'
+               AND (
+                 SELECT COUNT(*)
+                 FROM accounts
+                 WHERE role_id = 'ADMINISTRATOR'
+                   AND status = 'ACTIVE'
+                   AND locked_at IS NULL
+               ) <= 1
+             )`,
+        )
+        .bind(nextStatus, changedAt, account.id, account.credentialVersion, account.updatedAt);
+      const dependentStatements = [
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
         auditStatement(db, {
           id: auditId,
@@ -897,12 +996,24 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
-      ]);
-      if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
+      ];
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
 
     async revokeSessions({ account, actor, changedAt, reason, correlationId, auditId, idempotency }) {
-      await db.batch([
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET credential_version = credential_version + 1, updated_at = ?1
+           WHERE id = ?2 AND credential_version = ?3 AND updated_at = ?4`,
+        )
+        .bind(changedAt, account.id, account.credentialVersion, account.updatedAt);
+      const dependentStatements = [
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
         auditStatement(db, {
           id: auditId,
@@ -916,7 +1027,13 @@ export function createD1AccessManagementRepository(db) {
           notes: reason,
         }),
         idempotencyStatement(db, idempotency),
-      ]);
+      ];
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
 
     async unlockAccount({
@@ -933,10 +1050,14 @@ export function createD1AccessManagementRepository(db) {
         .map((value) => String(value ?? '').trim())
         .filter(Boolean)
         .filter((value, index, values) => values.indexOf(value) === index);
-      await db.batch([
-        db
-          .prepare('UPDATE accounts SET locked_at = NULL, updated_at = ?1 WHERE id = ?2')
-          .bind(changedAt, account.id),
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET locked_at = NULL, credential_version = credential_version + 1, updated_at = ?1
+           WHERE id = ?2 AND credential_version = ?3 AND updated_at = ?4`,
+        )
+        .bind(changedAt, account.id, account.credentialVersion, account.updatedAt);
+      const dependentStatements = [
         ...identities.map((identity) =>
           db
             .prepare("DELETE FROM auth_rate_limit_events WHERE limiter_key LIKE ?1 ESCAPE '\\'")
@@ -954,7 +1075,13 @@ export function createD1AccessManagementRepository(db) {
           notes: reason,
         }),
         idempotencyStatement(db, idempotency),
-      ]);
+      ];
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
   });
 }

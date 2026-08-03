@@ -8,7 +8,7 @@
 - **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md` and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 - **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
 - **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
-- **Tests verified:** `npm run check` 109 files / 726 tests; Playwright 136 passed / 356 intentional skips; local Worker/D1 39/39; migration 0001-0030 integrity `ok` and zero foreign-key findings.
+- **Tests verified:** `npm run check` 113 files / 769 tests; Playwright 136 passed / 356 intentional skips; local Worker/D1 39/39; migration 0001-0030 integrity `ok` and zero foreign-key findings.
 - **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
 - **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
 - **Blocker:** owner-approved live email provider implementation/configuration and private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` are absent; readiness intentionally fails closed.

@@ -926,6 +926,7 @@ async function handleApi(request, env, requestId, executionContext) {
           ok: true,
           ...(await access.getAccessIdHistory({
             actor,
+            accountId: command.accountId,
             currentAccessId: command.currentAccessId,
             limit: command.limit,
           })),

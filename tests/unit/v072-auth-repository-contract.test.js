@@ -15,9 +15,22 @@ describe('v0.7.2 authentication persistence contract', () => {
       'profile_course_id = excluded.profile_course_id',
       'WHEN access_id_normalized = upper(?1) THEN 1',
       'WHEN username_normalized = lower(?1) THEN 2',
+      'application.approved_account_id = accounts.id',
+      "application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')",
     ]) {
       expect(source).toContain(marker);
     }
+    expect(source).not.toContain(
+      'profile_email_verified_at IS NOT NULL AND lower(profile_email) = lower(?1)',
+    );
+  });
+
+  it('checks pending account applications when reserving a profile username', async () => {
+    const source = await readFile(resolve(root, 'src/server/d1/profile-repository.js'), 'utf8');
+
+    expect(source).toContain('FROM account_applications');
+    expect(source).toContain('requested_username_normalized = ?1');
+    expect(source).toContain("'APPROVED_ACTIVATION_REQUIRED'");
   });
 
   it('blocks requested usernames that collide with account codes or reservations', async () => {

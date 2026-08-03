@@ -47,6 +47,7 @@ class FakeProfileRepository {
     this.audits = [];
     this.sessionsRevoked = 0;
     this.forceConflict = false;
+    this.pendingUsernames = new Set();
   }
 
   async getProfile(accountId) {
@@ -58,6 +59,7 @@ class FakeProfileRepository {
   }
 
   async findUsername(username, accountId) {
+    if (this.pendingUsernames.has(username)) return 'PENDING-APPLICATION';
     return username === this.current.username && accountId !== this.current.accountId
       ? this.current.accountId
       : null;
@@ -203,6 +205,25 @@ describe('v0.7.2 self-profile service', () => {
     expect(repository.history).toHaveLength(1);
     expect(repository.sessionsRevoked).toBe(1);
     expect(JSON.stringify(repository.audits.at(-1))).not.toContain('new.user');
+  });
+
+  it('rejects a username reserved by a pending account application before mutation', async () => {
+    const repository = new FakeProfileRepository();
+    repository.pendingUsernames.add('pending.user');
+    const service = makeService(repository);
+
+    await expect(
+      service.changeUsername({
+        actor: ACTOR,
+        command: mutation({
+          username: 'Pending.User',
+          currentPassword: 'CurrentPassword!123',
+          clientRequestId: 'username-pending-0001',
+        }),
+      }),
+    ).rejects.toMatchObject({ code: 'USERNAME_TAKEN', status: 409 });
+    expect(repository.current.username).toBe('synthetic.user');
+    expect(repository.history).toHaveLength(0);
   });
 
   it('changes passwords only after policy and current-password checks, then revokes sessions', async () => {

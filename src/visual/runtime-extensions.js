@@ -1756,6 +1756,8 @@ export function createRuntimeExtensions(options) {
     services.listAccessAccounts ??= async (command = {}) => {
       const user = state.currentUser ?? {};
       const item = {
+        accountId: user.accountId ?? user.id ?? 'ACCOUNT-PREVIEW-ADMIN',
+        revision: user.revision ?? '1:PREVIEW',
         accessId: user.accessId ?? user.id ?? 'PREVIEW.ADMIN',
         displayName: user.displayName ?? 'Preview Administrator',
         roleId: user.authorization?.roleId ?? user.role ?? 'ADMINISTRATOR',
@@ -1785,7 +1787,7 @@ export function createRuntimeExtensions(options) {
     };
     services.getAccessIdHistory ??= async (command = {}) => ({
       ok: true,
-      account: { accessId: command.currentAccessId },
+      account: { accountId: command.accountId, accessId: command.currentAccessId },
       history: [],
     });
     services.getAccessPolicyOptions ??= async () => ({
@@ -2435,7 +2437,7 @@ export function createRuntimeExtensions(options) {
     const profile = account.accessProfile ?? {};
     const workspaceIds = profile.workspaceIds ?? [];
     const committeeIds = account.committeeIds ?? [];
-    return `<form id="accessPolicyForm">
+    return `<form id="accessPolicyForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}">
       <div class="mode-note">Workspace visibility is not authorization. The server validates this policy, projects effective actions, revokes active sessions after a material change, and appends audit history.</div>
       <div class="form-grid section-gap">
         <label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label>
@@ -2460,6 +2462,8 @@ export function createRuntimeExtensions(options) {
   const accessPolicyCommand = (form) => {
     const data = new FormData(form);
     return {
+      accountId: data.get('accountId'),
+      expectedRevision: data.get('expectedRevision'),
       currentAccessId: data.get('currentAccessId'),
       confirmCurrentAccessId: data.get('confirmCurrentAccessId'),
       presetId: data.get('presetId'),
@@ -2568,7 +2572,11 @@ export function createRuntimeExtensions(options) {
   const openAccessHistory = async (account) => {
     openModal('Access ID history', '<div class="empty">Loading append-only history…</div>');
     try {
-      const result = await services.getAccessIdHistory({ currentAccessId: account.accessId, limit: 100 });
+      const result = await services.getAccessIdHistory({
+        accountId: account.accountId,
+        currentAccessId: account.accessId,
+        limit: 100,
+      });
       openModal(
         `Access ID history · ${account.accessId}`,
         `<h3>Append-only Access ID history</h3><div class="line-list">${
@@ -2600,7 +2608,7 @@ export function createRuntimeExtensions(options) {
     const idempotencyKey = `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Change Access ID · ${account.accessId}`,
-      `<form id="accessIdChangeForm"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
+      `<form id="accessIdChangeForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessIdChangeForm');
         form.addEventListener('submit', async (event) => {
@@ -2673,7 +2681,8 @@ export function createRuntimeExtensions(options) {
           if (!form.reportValidity()) return;
           const values = Object.fromEntries(new FormData(form).entries());
           const command = {
-            currentAccessId: account.accessId,
+            accountId: account.accountId,
+            expectedRevision: account.revision,
             ...values,
             ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
             ...(['unlock', 'revoke-sessions'].includes(action) ? { clientRequestId } : {}),
@@ -2754,7 +2763,8 @@ export function createRuntimeExtensions(options) {
           button.disabled = true;
           try {
             const result = await services.resetAccessPassword({
-              currentAccessId: account.accessId,
+              accountId: account.accountId,
+              expectedRevision: account.revision,
               ...Object.fromEntries(new FormData(form).entries()),
               clientRequestId,
             });
@@ -2946,32 +2956,30 @@ export function createRuntimeExtensions(options) {
     if (!force && referenceAdminWorkspace?.domain === referenceAdminDomain) return;
     const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
     const status = root.querySelector('[name="referenceAdminStatus"]')?.value ?? 'ALL';
-    referenceAdminPromise =
-      referenceLinkRegistryOpen
-        ? services.listReferenceLinks({
-            query,
-            ...(status === 'ALL' ? {} : { status }),
-            page: 1,
-            pageSize: 50,
-          })
-        : services.getReferenceAdminWorkspace({
-            domain: referenceAdminDomain,
-            query,
-            status,
-            limit: 50,
-          });
+    referenceAdminPromise = referenceLinkRegistryOpen
+      ? services.listReferenceLinks({
+          query,
+          ...(status === 'ALL' ? {} : { status }),
+          page: 1,
+          pageSize: 50,
+        })
+      : services.getReferenceAdminWorkspace({
+          domain: referenceAdminDomain,
+          query,
+          status,
+          limit: 50,
+        });
     try {
       const workspace = await referenceAdminPromise;
-      referenceAdminWorkspace =
-        referenceLinkRegistryOpen
-          ? {
-              ...workspace,
-              contract: 'canonical-link-registry',
-              domain: 'ROUTING',
-              writesEnabled: true,
-              pendingChanges: [],
-            }
-          : workspace;
+      referenceAdminWorkspace = referenceLinkRegistryOpen
+        ? {
+            ...workspace,
+            contract: 'canonical-link-registry',
+            domain: 'ROUTING',
+            writesEnabled: true,
+            pendingChanges: [],
+          }
+        : workspace;
       renderReferenceAdminWorkspace();
     } catch (error) {
       root.querySelector('[data-reference-admin-results]').innerHTML =

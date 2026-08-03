@@ -76,7 +76,10 @@ describe('public policy acknowledgment enforcement', () => {
     const service = createPublicLendingService({ db: preValidationDb(), trackingSecret: secret });
     await expect(
       service.submit({
-        command: { clientRequestId: `policy-lending-${field}`, ...acknowledgments },
+        command: {
+          clientRequestId: 'policy-lending-00000000-0000-4000-8000-000000000001',
+          ...acknowledgments,
+        },
         networkKey: 'synthetic-network',
       }),
     ).rejects.toMatchObject({ code: 'VALIDATION_FAILED', details: { field } });

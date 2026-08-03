@@ -5,6 +5,8 @@ import { ACCESS_PRESETS, ACCESS_WORKSPACES, accountAccessPolicy, normalizeAccess
 
 const SAFE_MESSAGES = Object.freeze({
   ACCESS_ACCOUNT_NOT_FOUND: 'The selected account is no longer available.',
+  ACCESS_ACCOUNT_ID_REQUIRED: 'A server-issued account ID is required for this action.',
+  ACCESS_REVISION_REQUIRED: 'Refresh the account and retry this action with its current revision.',
   ACCESS_CONFIRMATION_REQUIRED: 'Confirm the selected account and the requested action.',
   ACCESS_ID_COLLISION: 'The proposed Access ID conflicts with an existing or reserved Access ID.',
   ACCESS_ID_INVALID: 'Use 4–64 letters, numbers, periods, underscores, or hyphens.',
@@ -70,6 +72,34 @@ function requiredIdempotencyKey(value) {
   return key;
 }
 
+function requiredAccountId(value) {
+  const accountId = String(value ?? '').trim();
+  if (!accountId || accountId.length > 160) fail('ACCESS_ACCOUNT_ID_REQUIRED');
+  return accountId;
+}
+
+function requiredRevision(value) {
+  const revision = String(value ?? '').trim();
+  if (!revision || revision.length > 256) fail('ACCESS_REVISION_REQUIRED');
+  return revision;
+}
+
+function accountRevision(account) {
+  const hasCanonicalRevisionFields = account?.credentialVersion != null || account?.updatedAt != null;
+  if (hasCanonicalRevisionFields) {
+    const credentialVersion = Number(account?.credentialVersion ?? 1);
+    const updatedAt = String(account?.updatedAt ?? '').trim();
+    return `${Number.isFinite(credentialVersion) ? credentialVersion : 1}:${updatedAt}`;
+  }
+  return String(account?.revision ?? '').trim();
+}
+
+function assertExpectedRevision(account, expectedRevision) {
+  if (accountRevision(account) !== requiredRevision(expectedRevision)) {
+    fail('ACCESS_WRITE_CONFLICT', 409);
+  }
+}
+
 const stableValue = (value) => {
   if (Array.isArray(value)) return value.map(stableValue);
   if (value && typeof value === 'object') {
@@ -113,6 +143,8 @@ export function secureTemporaryPassword() {
 
 function safeAccount(account) {
   return {
+    accountId: account.id,
+    revision: accountRevision(account),
     accessId: account.accessIdNormalized,
     displayName: account.profile?.fullName || account.accessIdNormalized,
     roleId: account.roleId,
@@ -165,8 +197,12 @@ export function createAccessManagementService({
   const nowIso = () => new Date(clock.now()).toISOString();
 
   async function mutationReplay(scope, actor, command) {
-    const key = requiredIdempotencyKey(command.clientRequestId);
-    const fingerprint = await requestFingerprint(command);
+    const key = requiredIdempotencyKey(command.clientRequestId ?? command.idempotencyKey);
+    const fingerprint = await requestFingerprint({
+      operation: scope,
+      targetAccountId: command.accountId,
+      command,
+    });
     const prior = await repository.getIdempotency(scope, key);
     if (prior) {
       if (prior.actorAccountId !== actor.id || prior.requestFingerprint !== fingerprint) {
@@ -187,23 +223,51 @@ export function createAccessManagementService({
     return account;
   }
 
+  async function accountById(value) {
+    const accountId = requiredAccountId(value);
+    const account = await repository.getAccountById(accountId);
+    if (!account) fail('ACCESS_ACCOUNT_NOT_FOUND', 404);
+    if (String(account.id).startsWith('SYSTEM-') || account.roleId === ROLES.SYSTEM_OWNER) {
+      fail('SYSTEM_ACCOUNT_PROTECTED', 403);
+    }
+    return account;
+  }
+
+  async function accountForCommand(command = {}, { requireRevision = true, confirmAccessId = true } = {}) {
+    const account = await accountById(command.accountId);
+    if (requireRevision) assertExpectedRevision(account, command.expectedRevision);
+    if (
+      confirmAccessId &&
+      command.confirmCurrentAccessId != null &&
+      normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized
+    ) {
+      fail('ACCESS_CONFIRMATION_REQUIRED');
+    }
+    return account;
+  }
+
   async function ensureAvailableAccessId(proposedAccessId) {
     const normalized = normalizeAccessId(proposedAccessId);
     if (!normalized) fail('ACCESS_ID_INVALID');
     const collisionKey = accessIdCollisionKey(normalized);
-    const [reservation, current] = await Promise.all([
+    const [reservation, current, username] = await Promise.all([
       repository.getAccessIdReservation(collisionKey),
       repository.getAccountByAccessId(normalized),
+      repository.getAccountByUsername ? repository.getAccountByUsername(normalized) : null,
     ]);
-    if (reservation || current) fail('ACCESS_ID_COLLISION', 409);
+    if (reservation || current || username) fail('ACCESS_ID_COLLISION', 409);
     return { normalized, collisionKey };
   }
 
   async function protectAdministrator(actor, target) {
     if (actor.id === target.id) fail('SELF_ACCESS_CHANGE_BLOCKED', 409);
+    // This is an early UX guard only. Every affected repository mutation also
+    // enforces the invariant in its guarded SQL write so concurrent requests
+    // cannot rely on this pre-read to commit an unsafe state.
     if (
       target.roleId === ROLES.ADMINISTRATOR &&
       target.status === ACCOUNT_STATUS.ACTIVE &&
+      target.lockedAt == null &&
       (await repository.countActiveAdministrators()) <= 1
     ) {
       fail('LAST_ACTIVE_ADMIN_PROTECTED', 409);
@@ -229,10 +293,7 @@ export function createAccessManagementService({
 
   async function previewAccessIdChange({ actor, command = {} } = {}) {
     assertAdministrator(actor);
-    const account = await accountByAccessId(command.currentAccessId);
-    if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-      fail('ACCESS_CONFIRMATION_REQUIRED');
-    }
+    const account = await accountForCommand(command);
     const proposed = normalizeAccessId(command.proposedAccessId);
     if (!proposed) fail('ACCESS_ID_INVALID');
     if (proposed === account.accessIdNormalized) fail('ACCESS_ID_UNCHANGED', 409);
@@ -261,10 +322,7 @@ export function createAccessManagementService({
 
     async previewAccessPolicy({ actor, command = {} } = {}) {
       assertAdministrator(actor);
-      const account = await accountByAccessId(command.currentAccessId);
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
-      }
+      const account = await accountForCommand(command);
       const reference = await repository.listAccessPolicyReferences();
       const normalized = normalizeAccessPolicy(command, {
         actorRoleId: actor.roleId,
@@ -282,19 +340,12 @@ export function createAccessManagementService({
     async updateAccessPolicy({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
       const idempotencyKey = requiredIdempotencyKey(command.idempotencyKey);
-      const existing = await repository.getAccessPolicyChangeByIdempotency(idempotencyKey);
-      if (existing)
-        return {
-          changed: true,
-          replayed: true,
-          sessionsRevoked: true,
-          preview: existing.after,
-          correlationId: existing.correlationId,
-        };
-      const account = await accountByAccessId(command.currentAccessId);
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
-      }
+      const replay = await mutationReplay('access-update-policy', actor, {
+        ...command,
+        accountId: requiredAccountId(command.accountId),
+      });
+      if (replay.replayed) return { ...replay.result, replayed: true };
+      const account = await accountForCommand(command);
       const reason = requiredReason(command.reason);
       const reference = await repository.listAccessPolicyReferences();
       const normalized = normalizeAccessPolicy(command, {
@@ -307,6 +358,20 @@ export function createAccessManagementService({
         await protectAdministrator(actor, account);
       }
       const changedAt = nowIso();
+      const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
+      const replayResult = {
+        changed: true,
+        replayed: false,
+        sessionsRevoked: true,
+        preview: normalized.preview,
+        accountId: account.id,
+        revision: accountRevision({
+          ...account,
+          credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+          updatedAt: changedAt,
+        }),
+        correlationId: mutationCorrelationId,
+      };
       try {
         await repository.updateAccessPolicy({
           account,
@@ -314,16 +379,24 @@ export function createAccessManagementService({
           actor,
           changedAt,
           reason,
-          correlationId: String(correlationId || `ACCESS_${createId()}`),
+          correlationId: mutationCorrelationId,
           idempotencyKey,
           changeId: createId(),
           auditId: createId(),
+          idempotency: {
+            scope: 'access-update-policy',
+            key: replay.key,
+            actorAccountId: actor.id,
+            requestFingerprint: replay.fingerprint,
+            result: replayResult,
+            createdAt: changedAt,
+          },
         });
       } catch (error) {
         if (error?.code === 'ACCESS_WRITE_CONFLICT') fail('ACCESS_WRITE_CONFLICT', 409);
         throw error;
       }
-      return { changed: true, replayed: false, sessionsRevoked: true, preview: normalized.preview };
+      return replayResult;
     },
 
     async listAccounts({ actor, command = {} } = {}) {
@@ -349,9 +422,9 @@ export function createAccessManagementService({
       });
     },
 
-    async getAccessIdHistory({ actor, currentAccessId, limit = 50 } = {}) {
+    async getAccessIdHistory({ actor, accountId, currentAccessId, limit = 50 } = {}) {
       assertAdministrator(actor);
-      const account = await accountByAccessId(currentAccessId);
+      const account = accountId ? await accountById(accountId) : await accountByAccessId(currentAccessId);
       const safeLimit = Math.min(100, Math.max(1, Number(limit) || 50));
       const [history, auditHistory] = await Promise.all([
         repository.listAccessIdHistory(account.id, safeLimit),
@@ -368,19 +441,20 @@ export function createAccessManagementService({
 
     async changeAccessId({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
+      const accountId = requiredAccountId(command.accountId);
       const idempotencyKey = requiredIdempotencyKey(command.idempotencyKey);
       const proposed = normalizeAccessId(command.proposedAccessId);
       const existing = await repository.getAccessIdHistoryByIdempotency(idempotencyKey);
       if (existing) {
-        if (
-          existing.oldAccessId !== normalizeAccessId(command.currentAccessId) ||
-          existing.newAccessId !== proposed
-        ) {
+        if (existing.accountId !== accountId || existing.newAccessId !== proposed) {
           fail('ACCESS_WRITE_CONFLICT', 409);
         }
+        const replayAccount = await accountById(accountId);
         return {
           changed: true,
           replayed: true,
+          accountId,
+          revision: accountRevision(replayAccount),
           accessId: existing.newAccessId,
           sessionsRevoked: true,
           correlationId: existing.correlationId,
@@ -388,7 +462,7 @@ export function createAccessManagementService({
       }
       const reason = requiredReason(command.reason);
       const preview = await previewAccessIdChange({ actor, command });
-      const account = await accountByAccessId(command.currentAccessId);
+      const account = await accountForCommand(command);
       const changedAt = nowIso();
       try {
         await repository.changeAccessId({
@@ -410,7 +484,18 @@ export function createAccessManagementService({
         }
         throw error;
       }
-      return { changed: true, replayed: false, accessId: preview.proposedAccessId, sessionsRevoked: true };
+      return {
+        changed: true,
+        replayed: false,
+        accountId: account.id,
+        revision: accountRevision({
+          ...account,
+          credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+          updatedAt: changedAt,
+        }),
+        accessId: preview.proposedAccessId,
+        sessionsRevoked: true,
+      };
     },
 
     async createStarterAccount({ actor, command = {}, correlationId = '' } = {}) {
@@ -597,14 +682,12 @@ export function createAccessManagementService({
 
     async resetTemporaryPassword({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
-      const replay = await mutationReplay('access-reset-temporary-password', actor, command);
+      const targetCommand = { ...command, accountId: requiredAccountId(command.accountId) };
+      const replay = await mutationReplay('access-reset-temporary-password', actor, targetCommand);
       if (replay.replayed) return { ...replay.result, replayed: true };
-      const account = await accountByAccessId(command.currentAccessId);
+      const account = await accountForCommand(targetCommand);
       await protectAdministrator(actor, account);
       const reason = requiredReason(command.reason);
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
-      }
       const temporaryPassword = createTemporaryPassword();
       let credential;
       try {
@@ -614,11 +697,18 @@ export function createAccessManagementService({
       }
       const resetAt = nowIso();
       const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
+      const nextRevision = accountRevision({
+        ...account,
+        credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+        updatedAt: resetAt,
+      });
       const replayResult = {
         reset: true,
         status: ACCOUNT_STATUS.STARTER,
         sessionsRevoked: true,
         credentialUnavailable: true,
+        accountId: account.id,
+        revision: nextRevision,
         correlationId: mutationCorrelationId,
       };
       await repository.resetTemporaryPassword({
@@ -653,19 +743,18 @@ export function createAccessManagementService({
         sessionsRevoked: true,
         replayed: false,
         correlationId: mutationCorrelationId,
+        accountId: account.id,
+        revision: nextRevision,
         credential: oneTimeCredential(resetAccount, temporaryPassword, resetAt),
       };
     },
 
     async setAccountStatus({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
-      const account = await accountByAccessId(command.currentAccessId);
+      const account = await accountForCommand(command);
       const nextStatus = String(command.status ?? '').toUpperCase();
       if (![ACCOUNT_STATUS.ACTIVE, ACCOUNT_STATUS.DISABLED, ACCOUNT_STATUS.REVOKED].includes(nextStatus)) {
         fail('ACCOUNT_STATUS_INVALID');
-      }
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
       }
       const reason = requiredReason(command.reason);
       const lifecycleAction = String(command.lifecycleAction ?? '').toUpperCase();
@@ -687,67 +776,113 @@ export function createAccessManagementService({
       }
       if (restoredStatus === account.status)
         return { changed: false, status: restoredStatus, sessionsRevoked: false };
-      await repository.setAccountStatus({
-        account,
-        actor,
-        nextStatus: restoredStatus,
-        changedAt: nowIso(),
-        reason,
-        auditAction: lifecycleAction === 'ARCHIVE' ? 'ACCOUNT_ARCHIVED' : 'ACCOUNT_STATUS_CHANGED',
-        correlationId: String(correlationId || `ACCESS_${createId()}`),
-        auditId: createId(),
-      });
+      const changedAt = nowIso();
+      try {
+        await repository.setAccountStatus({
+          account,
+          actor,
+          nextStatus: restoredStatus,
+          changedAt,
+          reason,
+          auditAction: lifecycleAction === 'ARCHIVE' ? 'ACCOUNT_ARCHIVED' : 'ACCOUNT_STATUS_CHANGED',
+          correlationId: String(correlationId || `ACCESS_${createId()}`),
+          auditId: createId(),
+        });
+      } catch (error) {
+        if (
+          error?.code === 'ACCESS_WRITE_CONFLICT' ||
+          /Account write conflict/iu.test(String(error?.message ?? error))
+        ) {
+          fail('ACCESS_WRITE_CONFLICT', 409);
+        }
+        throw error;
+      }
       return {
         changed: true,
         status: restoredStatus,
         archived: lifecycleAction === 'ARCHIVE',
         sessionsRevoked: true,
+        accountId: account.id,
+        revision: accountRevision({
+          ...account,
+          credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+          updatedAt: changedAt,
+        }),
       };
     },
 
     async revokeSessions({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
-      const replay = await mutationReplay('access-revoke-sessions', actor, command);
+      const targetCommand = { ...command, accountId: requiredAccountId(command.accountId) };
+      const replay = await mutationReplay('access-revoke-sessions', actor, targetCommand);
       if (replay.replayed) return { ...replay.result, replayed: true };
-      const account = await accountByAccessId(command.currentAccessId);
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
-      }
+      const account = await accountForCommand(targetCommand);
       const reason = requiredReason(command.reason);
       const changedAt = nowIso();
       const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
-      const replayResult = { revoked: true, correlationId: mutationCorrelationId };
-      await repository.revokeSessions({
-        account,
-        actor,
-        changedAt,
-        reason,
-        correlationId: mutationCorrelationId,
-        auditId: createId(),
-        idempotency: {
-          scope: 'access-revoke-sessions',
-          key: replay.key,
-          actorAccountId: actor.id,
-          requestFingerprint: replay.fingerprint,
-          result: replayResult,
-          createdAt: changedAt,
-        },
+      const nextRevision = accountRevision({
+        ...account,
+        credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+        updatedAt: changedAt,
       });
-      return { ...replayResult, replayed: false };
+      const replayResult = {
+        revoked: true,
+        accountId: account.id,
+        revision: nextRevision,
+        correlationId: mutationCorrelationId,
+      };
+      try {
+        await repository.revokeSessions({
+          account,
+          actor,
+          changedAt,
+          reason,
+          correlationId: mutationCorrelationId,
+          auditId: createId(),
+          idempotency: {
+            scope: 'access-revoke-sessions',
+            key: replay.key,
+            actorAccountId: actor.id,
+            requestFingerprint: replay.fingerprint,
+            result: replayResult,
+            createdAt: changedAt,
+          },
+        });
+      } catch (error) {
+        if (
+          error?.code === 'ACCESS_WRITE_CONFLICT' ||
+          /Account write conflict/iu.test(String(error?.message ?? error))
+        ) {
+          fail('ACCESS_WRITE_CONFLICT', 409);
+        }
+        throw error;
+      }
+      return {
+        ...replayResult,
+        replayed: false,
+      };
     },
 
     async unlockAccount({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
-      const replay = await mutationReplay('access-unlock-account', actor, command);
+      const targetCommand = { ...command, accountId: requiredAccountId(command.accountId) };
+      const replay = await mutationReplay('access-unlock-account', actor, targetCommand);
       if (replay.replayed) return { ...replay.result, replayed: true };
-      const account = await accountByAccessId(command.currentAccessId);
-      if (normalizeAccessId(command.confirmCurrentAccessId) !== account.accessIdNormalized) {
-        fail('ACCESS_CONFIRMATION_REQUIRED');
-      }
+      const account = await accountForCommand(targetCommand);
       const reason = requiredReason(command.reason);
       const changedAt = nowIso();
       const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
-      const replayResult = { unlocked: true, correlationId: mutationCorrelationId };
+      const nextRevision = accountRevision({
+        ...account,
+        credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+        updatedAt: changedAt,
+      });
+      const replayResult = {
+        unlocked: true,
+        accountId: account.id,
+        revision: nextRevision,
+        correlationId: mutationCorrelationId,
+      };
       await repository.unlockAccount({
         account,
         limiterIdentities: await limiterIdentitiesFor(account),
@@ -765,7 +900,10 @@ export function createAccessManagementService({
           createdAt: changedAt,
         },
       });
-      return { ...replayResult, replayed: false };
+      return {
+        ...replayResult,
+        replayed: false,
+      };
     },
   });
 }

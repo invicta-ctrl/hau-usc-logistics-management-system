@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createPublicLendingService,
-  USC_DEPARTMENTS,
-} from '../../src/server/public-lending-service.js';
+import { createPublicLendingService, USC_DEPARTMENTS } from '../../src/server/public-lending-service.js';
 
 class Statement {
   constructor(database, sql) {
@@ -87,6 +84,9 @@ class LendingDatabase {
           .map((link) => {
             const ticket = this.tickets.get(link.ticketId);
             return {
+              item_id: ticket.itemId,
+              requested_item_id: ticket.itemId,
+              requested_quantity: ticket.quantity,
               status: ticket.status,
               ticket_type: ticket.ticketType,
               quantity: ticket.quantity,
@@ -113,10 +113,23 @@ class LendingDatabase {
         const values = statement.values;
         this.submissions.set(values[0], {
           id: values[0],
+          borrower_type: values[1],
+          borrower_name: values[2],
+          student_id: values[3],
+          course_year: values[4],
+          academic_department: values[5],
+          usc_department: values[6],
+          position_role: values[7],
+          contact_number: values[8],
+          email: values[9],
+          purpose: values[10],
+          requested_pickup_date: values[11],
+          requested_due_date: values[12],
+          responsibility_acknowledged_at: values[13],
           receipt_digest: values[14],
           client_request_id: values[15],
-          created_at: values[13],
-          updated_at: values[13],
+          created_at: values[16],
+          updated_at: values[16],
         });
       } else if (statement.sql.includes('INSERT INTO lending_tickets')) {
         const values = statement.values;
@@ -188,7 +201,7 @@ describe('v0.7.2 public Lending contract', () => {
   it('returns a replay-stable private credential and tracks without exposing borrower identity', async () => {
     const db = new LendingDatabase();
     const service = createPublicLendingService({ db, trackingSecret, clock });
-    const source = command({ clientRequestId: 'SYN-LENDING-1' });
+    const source = command({ clientRequestId: `public-lending:${crypto.randomUUID()}` });
     const submitted = await service.submit({ command: source, correlationId: 'COR-1' });
     const replayed = await service.submit({ command: source, correlationId: 'COR-2' });
     const tracked = await service.track({
@@ -205,9 +218,7 @@ describe('v0.7.2 public Lending contract', () => {
       trackingCode: submitted.trackingCode,
       replayed: true,
     });
-    expect(db.submissions.get(submitted.submissionId).receipt_digest).not.toBe(
-      submitted.trackingCode,
-    );
+    expect(db.submissions.get(submitted.submissionId).receipt_digest).not.toBe(submitted.trackingCode);
     expect(tracked).toMatchObject({
       submissionId: submitted.submissionId,
       status: 'FOR_REVIEW',
@@ -217,6 +228,56 @@ describe('v0.7.2 public Lending contract', () => {
     expect(JSON.stringify(tracked)).not.toContain('Synthetic Borrower');
     expect(JSON.stringify(tracked)).not.toContain('synthetic@example.invalid');
     expect(JSON.stringify(tracked)).not.toContain('+639171234567');
+  });
+
+  it.each(['x', 'guessable-client-request-id-000000000000000000000000'])(
+    'rejects weak client idempotency keys without creating a submission (%s)',
+    async (key) => {
+      const service = createPublicLendingService({
+        db: new LendingDatabase(),
+        trackingSecret,
+        clock,
+      });
+
+      await expect(service.submit({ command: command({ clientRequestId: key }) })).rejects.toMatchObject({
+        code: 'VALIDATION_FAILED',
+        status: 422,
+        details: { field: 'clientRequestId' },
+      });
+    },
+  );
+
+  it('rejects a colliding key with a generic conflict instead of disclosing tracking authority', async () => {
+    const db = new LendingDatabase();
+    const service = createPublicLendingService({ db, trackingSecret, clock });
+    const source = command({ clientRequestId: `public-lending:${crypto.randomUUID()}` });
+    const submitted = await service.submit({ command: source });
+
+    await expect(
+      service.submit({ command: { clientRequestId: source.clientRequestId } }),
+    ).rejects.toMatchObject({ code: 'PUBLIC_LENDING_CONFLICT', status: 409 });
+    expect(JSON.stringify(db.submissions)).not.toContain(submitted.trackingCode);
+  });
+
+  it.each([
+    ['borrowerName', 'Different borrower'],
+    ['studentId', '87654321'],
+    ['email', 'other@example.invalid'],
+    ['purpose', 'Different purpose'],
+    ['pickupDate', '2026-08-05'],
+    ['dueDate', '2026-08-06'],
+    ['responsibilityAcknowledged', false],
+    ['lines', [{ itemId: 'ITEM-1', quantity: 2 }]],
+  ])('rejects replay when the request fingerprint changes in %s', async (field, value) => {
+    const db = new LendingDatabase();
+    const service = createPublicLendingService({ db, trackingSecret, clock });
+    const source = command({ clientRequestId: `public-lending:${crypto.randomUUID()}` });
+    await service.submit({ command: source });
+
+    await expect(service.submit({ command: { ...source, [field]: value } })).rejects.toMatchObject({
+      code: 'PUBLIC_LENDING_CONFLICT',
+      status: 409,
+    });
   });
 
   it('returns one generic error for an invalid private tracking credential', async () => {

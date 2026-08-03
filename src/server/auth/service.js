@@ -200,8 +200,9 @@ export function createAuthService({
 
   async function login({ accessId, password, networkKey } = {}) {
     const candidate = String(accessId ?? '').trim();
+    const normalizedEmail = normalizeVerifiedEmail(candidate);
     const loginIdentifier =
-      normalizeVerifiedEmail(candidate) ||
+      normalizedEmail ||
       (/^[A-Za-z0-9][A-Za-z0-9._-]{3,63}$/u.test(candidate) ? candidate.toLowerCase() : '');
     const limiterIdentity = loginIdentifier ? await tokenCrypto.digest(loginIdentifier) : 'invalid';
     const limiterKey = `${limiterIdentity}:${safeNetworkKey(networkKey)}`;
@@ -211,10 +212,16 @@ export function createAuthService({
       ? await (repository.getAccountByLoginIdentifier?.(loginIdentifier) ??
           repository.getAccountByAccessId(loginIdentifier))
       : null;
+    const emailOwnershipQualified =
+      !normalizedEmail || Boolean(String(account?.verifiedEmailFingerprint ?? '').trim());
     const credential =
-      account?.status === ACCOUNT_STATUS.STARTER ? account.temporaryCredential : account?.passwordCredential;
+      emailOwnershipQualified && account?.status === ACCOUNT_STATUS.STARTER
+        ? account.temporaryCredential
+        : emailOwnershipQualified
+          ? account?.passwordCredential
+          : await dummyCredential();
     const verified = await passwordKdf.verify(password, credential ?? (await dummyCredential()));
-    if (!account || !verified) {
+    if (!account || !emailOwnershipQualified || !verified) {
       await audit('LOGIN_FAILED', account?.id, { reason: 'INVALID_CREDENTIAL' });
       throw new AuthError('AUTHENTICATION_FAILED');
     }

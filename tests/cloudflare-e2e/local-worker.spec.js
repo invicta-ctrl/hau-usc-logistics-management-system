@@ -1047,10 +1047,7 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
   const optionsResponse = await request.get('/api/public/request/options');
   expect(optionsResponse.status()).toBe(200);
   const options = await optionsResponse.json();
-  expect(options.requestPurposes).toEqual([
-    'EVENT_ACTIVITY_SUPPORT',
-    'OFFICE_INVENTORY_PANTRY',
-  ]);
+  expect(options.requestPurposes).toEqual(['EVENT_ACTIVITY_SUPPORT', 'OFFICE_INVENTORY_PANTRY']);
   const event = options.events[0];
   const item = options.items[0];
   expect(event).toBeTruthy();
@@ -1923,18 +1920,24 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       data: { query: 'LOCAL.FOOD', status: 'ALL', page: 1, pageSize: 20 },
     });
     expect(directory.status()).toBe(200);
-    await expect(directory.json()).resolves.toMatchObject({
+    const directoryResult = await directory.json();
+    expect(directoryResult).toMatchObject({
       ok: true,
       items: [
         {
+          accountId: expect.any(String),
+          revision: expect.any(String),
           accessId: 'LOCAL.FOOD',
           roleId: 'DOL_STAFF',
           committeeIds: ['COM_FOOD'],
         },
       ],
     });
+    const managedAccount = directoryResult.items[0];
 
     const command = {
+      accountId: managedAccount.accountId,
+      expectedRevision: managedAccount.revision,
       currentAccessId: 'LOCAL.FOOD',
       confirmCurrentAccessId: 'LOCAL.FOOD',
       proposedAccessId: 'LOCAL.FOOD.RENAMED',
@@ -1957,7 +1960,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       data: command,
     });
     expect(changed.status()).toBe(200);
-    await expect(changed.json()).resolves.toMatchObject({
+    const changedResult = await changed.json();
+    expect(changedResult).toMatchObject({
       changed: true,
       replayed: false,
       sessionsRevoked: true,
@@ -1983,7 +1987,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
 
     const history = await admin.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { currentAccessId: 'LOCAL.FOOD.RENAMED' },
+      data: { accountId: managedAccount.accountId, currentAccessId: 'LOCAL.FOOD.RENAMED' },
     });
     expect(history.status()).toBe(200);
     const historyResult = await history.json();
@@ -2000,6 +2004,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
     const collision = await admin.post('/api/admin/access/preview-access-id', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: managedAccount.accountId,
+        expectedRevision: changedResult.revision,
         currentAccessId: 'LOCAL.FOOD.RENAMED',
         confirmCurrentAccessId: 'LOCAL.FOOD.RENAMED',
         proposedAccessId: 'LOCAL_ADMIN',
@@ -2087,7 +2093,16 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
     });
     expect(activated.status()).toBe(200);
 
+    const managedDirectory = await owner.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { query: createdResult.account.accessId, status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(managedDirectory.status()).toBe(200);
+    const managedAccount = (await managedDirectory.json()).items[0];
+
     const command = {
+      accountId: managedAccount.accountId,
+      expectedRevision: managedAccount.revision,
       currentAccessId: createdResult.account.accessId,
       confirmCurrentAccessId: createdResult.account.accessId,
       presetId: 'FOOD_OPERATOR',
@@ -2233,14 +2248,18 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(filteredDirectory.status()).toBe(200);
-    await expect(filteredDirectory.json()).resolves.toMatchObject({
+    const filteredDirectoryResult = await filteredDirectory.json();
+    expect(filteredDirectoryResult).toMatchObject({
       items: [{ accessId: 'LOCAL.ACCESS.ACTIONS', status: 'ACTIVE' }],
       pagination: { page: 1, pageSize: 5, total: 1 },
     });
+    const accessAccount = filteredDirectoryResult.items[0];
 
     const disable = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: accessAccount.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'DISABLED',
@@ -2248,6 +2267,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(disable.status()).toBe(200);
+    const disableResult = await disable.json();
     expect((await managed.get('/api/requests')).status()).toBe(401);
     const disabledLogin = await anonymous.post('/api/auth/login', {
       data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_ACTIVATED_PASSWORD },
@@ -2257,6 +2277,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const enable = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: disableResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
@@ -2264,10 +2286,13 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(enable.status()).toBe(200);
+    const enableResult = await enable.json();
 
     const archived = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: enableResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'REVOKED',
@@ -2276,7 +2301,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(archived.status()).toBe(200);
-    await expect(archived.json()).resolves.toMatchObject({
+    const archivedResult = await archived.json();
+    expect(archivedResult).toMatchObject({
       archived: true,
       status: 'REVOKED',
       sessionsRevoked: true,
@@ -2291,6 +2317,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const restoreArchived = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: archivedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
@@ -2298,11 +2326,14 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(restoreArchived.status()).toBe(200);
+    const restoredResult = await restoreArchived.json();
     const managedCsrf = await login(managed, 'LOCAL.ACCESS.ACTIONS', MANAGED_ACTIVATED_PASSWORD);
 
     const revoked = await admin.post('/api/admin/access/revoke-sessions', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: restoredResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic revoke sessions lifecycle proof.',
@@ -2310,6 +2341,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(revoked.status()).toBe(200);
+    const revokedResult = await revoked.json();
     expect((await managed.get('/api/requests', { headers: { 'x-csrf-token': managedCsrf } })).status()).toBe(
       401,
     );
@@ -2317,6 +2349,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const reset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
@@ -2334,6 +2368,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const resetReplay = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
@@ -2362,6 +2398,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const unlocked = await admin.post('/api/admin/access/unlock', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: resetResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic unlock and rate-limit reset lifecycle proof.',
@@ -2377,7 +2415,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
 
     const audit = await admin.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { currentAccessId: 'LOCAL.ACCESS.ACTIONS', limit: 20 },
+      data: { accountId: accessAccount.accountId, currentAccessId: 'LOCAL.ACCESS.ACTIONS', limit: 20 },
     });
     expect(audit.status()).toBe(200);
     const auditActions = (await audit.json()).auditHistory.map((entry) => entry.action);
@@ -2500,10 +2538,13 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
       }),
     ]);
     expect(JSON.stringify(directoryResult)).not.toContain(dolCredential.temporaryPassword);
+    const departmentAccount = directoryResult.items[0];
 
     const revoked = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: departmentAccount.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'REVOKED',
@@ -2511,6 +2552,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
       },
     });
     expect(revoked.status()).toBe(200);
+    const revokedResult = await revoked.json();
     expect((await requester.get('/api/requests')).status()).toBe(401);
     expect(
       (
@@ -2523,6 +2565,8 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
     const restored = await admin.post('/api/admin/access/status', {
       headers: { 'x-cs-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
@@ -2533,6 +2577,8 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
     const restoredWithCsrf = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
@@ -2540,11 +2586,14 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
       },
     });
     expect(restoredWithCsrf.status()).toBe(200);
+    const restoredResult = await restoredWithCsrf.json();
     await expect(login(requester, 'DOL_2026', departmentPassword)).resolves.toBeTruthy();
 
     const reset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: restoredResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Generate one governed replacement department credential.',
@@ -2617,9 +2666,17 @@ test('requester portals keep request and lending records self-scoped', async () 
   const requesterAccessId = `LOCAL.REQUESTER.${suffix}`;
   try {
     const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const departmentDirectory = await admin.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: { query: 'DOL_2026', role: 'REQUESTER', status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(departmentDirectory.status()).toBe(200);
+    const departmentAccount = (await departmentDirectory.json()).items[0];
     const departmentReset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: departmentAccount.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Prepare the governed department account for authenticated Request Center coverage.',

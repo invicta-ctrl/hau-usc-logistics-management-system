@@ -175,7 +175,7 @@ export function createD1ProfileRepository(db) {
     async findUsername(username, excludeAccountId) {
       const accountId = requiredAccountId(excludeAccountId);
       const collisionKey = String(username ?? '').replaceAll(/[._-]/gu, '');
-      const [account, reservation] = await Promise.all([
+      const [account, reservation, application] = await Promise.all([
         db
           .prepare(
             `SELECT id
@@ -195,8 +195,21 @@ export function createD1ProfileRepository(db) {
           )
           .bind(collisionKey)
           .first(),
+        db
+          .prepare(
+            `SELECT id
+             FROM account_applications
+             WHERE requested_username_normalized = ?1
+               AND state IN (
+                 'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                 'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+               )
+             LIMIT 1`,
+          )
+          .bind(username)
+          .first(),
       ]);
-      return account?.id ?? reservation?.account_id ?? null;
+      return account?.id ?? reservation?.account_id ?? application?.id ?? null;
     },
 
     async getIdentityCorrectionByClientRequest(clientRequestId) {

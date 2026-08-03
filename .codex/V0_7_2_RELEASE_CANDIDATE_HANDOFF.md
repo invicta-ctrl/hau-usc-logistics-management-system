@@ -56,7 +56,7 @@ reconciliation gates.
   reset on authorized unlock, deterministic artifacts, and fail-closed
   non-development readiness.
 
-## Complete-candidate R2 repair cycle
+## Complete-candidate R2 repair cycles
 
 The first R2 review rejected the prior candidate before push. It identified a
 verification-purpose/nullability schema mismatch, activation reconciliation
@@ -73,13 +73,33 @@ protected in the guarded SQL write, and authorized unlock clears digested
 account-code, username, and verified-email limiter aliases. A fresh exact-SHA
 R2 review remains mandatory; no prior review acceptance is reused.
 
+The second fresh R2 review rejected that repaired SHA before push. It found
+that the last-active-unlocked Administrator invariant still needed guarded SQL
+coverage on every relevant account path; Access mutations needed an opaque
+account ID plus expected-revision contract; verified-email login needed to be
+bound to the approved application identity fingerprint; public Lending replay
+needed to bind its private tracking response to the full original submission;
+identifier collision checks needed to span Access IDs, usernames, and pending
+applications; and access-policy idempotency needed actor, target, operation,
+and request-fingerprint binding.
+
+The current repair tree closes those findings with atomic D1 guards, stable
+opaque account revisions, complete collision checks, approved-identity email
+qualification, fingerprint-bound idempotency, and payload-bound Lending
+replay. A final Worker integration failure also exposed that successful Access
+mutations returned the prior explicit revision even though D1 committed the
+next revision; the revision helper now derives from the authoritative
+credential version and update timestamp, with unit and real Worker regression
+coverage. A new independent review of the eventual freeze SHA is still
+required.
+
 ## Verification evidence
 
 - Focused identity/access: 14 files / 73 tests passed; focused lint passed.
 - Focused final regressions: 2 files / 12 tests and 14 browser tests passed
   with 8 intentional skips.
 - Release identity: 3 files / 15 tests and 10/10 focused browser tests passed.
-- Final `npm run check`: 112 files / 740 tests passed; lint, two deterministic
+- Final `npm run check`: 113 files / 769 tests passed; lint, two deterministic
   builds, 34 Apps Script sources / 57 required functions, generated parity,
   Cloudflare type/dry-run checks, and all standalone artifacts passed.
 - Full browser matrix: 136 passed / 356 intentionally scoped skips / 0 failed.
@@ -96,6 +116,10 @@ evidence:
 - `2026-08-03T13-39-37-953Z-full-playwright-v072-r2-repairs.log`
 - `2026-08-03T13-41-49-325Z-local-worker-d1-v072-r2-repairs.log`
 - `2026-08-03T13-43-48-825Z-migration-0030-rehearsal-r2-repairs-2.log`
+- `2026-08-03T14-32-28-073Z-full-repository-check-v072-r2-round2-final.log`
+- `2026-08-03T14-33-28-681Z-full-playwright-v072-r2-round2-final.log`
+- `2026-08-03T14-30-38-821Z-local-worker-d1-v072-r2-round2-fixed.log`
+- `2026-08-03T14-36-03-563Z-migration-0030-rehearsal-r2-round2-final.log`
 
 ## Blocking pre-production gate
 

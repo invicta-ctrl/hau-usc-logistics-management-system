@@ -8,6 +8,7 @@ const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
 export const USC_DEPARTMENTS = USC_DEPARTMENT_NAMES;
 const encoder = new TextEncoder();
 const PUBLIC_POLICY_VERSION = '2026-07-28';
+const UUID_V4_SUFFIX = /(?:^|[-_:])[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function requireAcknowledgment(command, field, message) {
   if (command[field] !== true) {
@@ -33,6 +34,17 @@ const optionalText = (value, max) =>
     .trim()
     .replace(/\s+/gu, ' ')
     .slice(0, max);
+
+function strongClientRequestId(value) {
+  const result = requiredText(value, 'clientRequestId', 80);
+  if (!UUID_V4_SUFFIX.test(result)) {
+    throw new ApiError('VALIDATION_FAILED', 'A strong retry key is required.', {
+      status: 422,
+      details: { field: 'clientRequestId' },
+    });
+  }
+  return result;
+}
 
 function email(value) {
   const result = requiredText(value, 'email', 254).toLowerCase();
@@ -115,10 +127,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     const now = clock.now();
     const windowMs = 60 * 60 * 1000;
     const limit = action === 'TRACK' ? 60 : 10;
-    const limiterKey = await hmac(
-      trackingSecret,
-      `${action}:lending:${String(networkKey || 'untrusted')}`,
-    );
+    const limiterKey = await hmac(trackingSecret, `${action}:lending:${String(networkKey || 'untrusted')}`);
     const recent = await db
       .prepare(
         `SELECT COUNT(*) AS count FROM public_lending_rate_limit_events
@@ -156,7 +165,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     };
   }
 
-  async function normalizeLines(lines) {
+  async function normalizeLines(lines, { replay = false } = {}) {
     if (!Array.isArray(lines) || lines.length < 1 || lines.length > 12) {
       throw new ApiError('VALIDATION_FAILED', 'Select between 1 and 12 lending items.', {
         status: 422,
@@ -172,6 +181,11 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         });
       }
       seen.add(itemId);
+      if (replay) {
+        // A retry must survive catalog availability changes; persisted request lines are the proof.
+        normalized.push({ itemId, quantity: positiveInteger(line.quantity, `lines[${index}].quantity`) });
+        continue;
+      }
       const [item] = await loadLendingCatalog(db, { publicOnly: true, itemId, staff: true });
       if (!item) {
         throw new ApiError('PUBLIC_REFERENCE_UNAVAILABLE', 'A selected lending item is unavailable.', {
@@ -205,13 +219,40 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
 
   const trackingCodeFor = (submissionId, clientRequestId) =>
     hmac(trackingSecret, `lending-code:${submissionId}:${clientRequestId}`);
-  const trackingDigestFor = (trackingCode) =>
-    hmac(trackingSecret, `lending-digest:${trackingCode}`);
+  const trackingDigestFor = (trackingCode) => hmac(trackingSecret, `lending-digest:${trackingCode}`);
+  const requestFingerprintFor = (submission) =>
+    hmac(
+      trackingSecret,
+      `lending-request:${JSON.stringify({
+        borrowerType: submission.borrowerType,
+        borrowerName: submission.borrowerName,
+        studentId: submission.studentId,
+        courseYear: submission.courseYear,
+        academicDepartment: submission.academicDepartment,
+        uscDepartment: submission.uscDepartment,
+        positionRole: submission.positionRole,
+        contactNumber: submission.contactNumber,
+        email: submission.email,
+        purpose: submission.purpose,
+        pickupDate: submission.pickupDate,
+        dueDate: submission.dueDate,
+        responsibilityAcknowledged: submission.responsibilityAcknowledged === true,
+        dataUseAcknowledged: submission.dataUseAcknowledged === true,
+        acceptableUseAcknowledged: submission.acceptableUseAcknowledged === true,
+        borrowerResponsibilityAcknowledged: submission.borrowerResponsibilityAcknowledged === true,
+        evidenceConsentAcknowledged: submission.evidenceConsentAcknowledged === true,
+        lines: submission.lines.map((line) => ({
+          itemId: line.itemId,
+          quantity: line.fingerprintQuantity ?? line.quantity,
+        })),
+      })}`,
+    );
 
-  async function trackedLines(submissionId) {
+  async function trackedLines(submissionId, { includeItemId = false } = {}) {
     const result = await db
       .prepare(
-        `SELECT ticket.status, ticket.ticket_type, ticket.quantity, ticket.unit,
+        `SELECT ticket.item_id, ticket.requested_item_id, ticket.requested_quantity,
+           ticket.status, ticket.ticket_type, ticket.quantity, ticket.unit,
            ticket.due_at, item.name AS item_name
          FROM public_lending_submission_tickets link
          JOIN lending_tickets ticket ON ticket.id = link.lending_ticket_id
@@ -222,6 +263,12 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       .bind(submissionId)
       .all();
     return (result.results ?? []).map((row) => ({
+      ...(includeItemId
+        ? {
+            itemId: row.requested_item_id ?? row.item_id,
+            fingerprintQuantity: row.requested_quantity ?? row.quantity,
+          }
+        : {}),
       itemName: String(row.item_name ?? 'Requested item'),
       ticketType: row.ticket_type,
       quantity: row.quantity,
@@ -237,36 +284,9 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     return statuses.length === 1 ? statuses[0] : 'IN_PROGRESS';
   }
 
-  async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
-    await rateLimit(networkKey);
-    const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
-    const existing = await db
-      .prepare(
-        'SELECT id, client_request_id FROM public_lending_submissions WHERE client_request_id = ?1',
-      )
-      .bind(clientRequestId)
-      .first();
-    if (existing) {
-      const lines = await trackedLines(existing.id);
-      return {
-        ok: true,
-        submissionId: existing.id,
-        status: overallStatus(lines),
-        trackingCode: await trackingCodeFor(existing.id, existing.client_request_id),
-        replayed: true,
-        correlationId,
-      };
-    }
-    requireAcknowledgment(
-      command,
-      'dataUseAcknowledged',
-      'Privacy acknowledgment is required.',
-    );
-    requireAcknowledgment(
-      command,
-      'acceptableUseAcknowledged',
-      'Acceptable Use acknowledgment is required.',
-    );
+  async function validateSubmission(command, { replay = false } = {}) {
+    requireAcknowledgment(command, 'dataUseAcknowledged', 'Privacy acknowledgment is required.');
+    requireAcknowledgment(command, 'acceptableUseAcknowledged', 'Acceptable Use acknowledgment is required.');
     requireAcknowledgment(
       command,
       'borrowerResponsibilityAcknowledged',
@@ -293,12 +313,9 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         details: { field: 'studentId' },
       });
     }
-    const courseYear =
-      borrowerType === 'ANGELITE' ? requiredText(command.courseYear, 'courseYear', 80) : '';
+    const courseYear = borrowerType === 'ANGELITE' ? requiredText(command.courseYear, 'courseYear', 80) : '';
     const academicDepartment =
-      borrowerType === 'ANGELITE'
-        ? requiredText(command.academicDepartment, 'academicDepartment', 120)
-        : '';
+      borrowerType === 'ANGELITE' ? requiredText(command.academicDepartment, 'academicDepartment', 120) : '';
     const uscDepartment =
       borrowerType === 'USC_STAFF' ? requiredText(command.uscDepartment, 'uscDepartment', 120) : '';
     if (borrowerType === 'USC_STAFF' && !USC_DEPARTMENTS.includes(uscDepartment)) {
@@ -307,19 +324,18 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         details: { field: 'uscDepartment' },
       });
     }
-    const positionRole =
-      borrowerType === 'USC_STAFF' ? optionalText(command.positionRole, 120) : '';
+    const positionRole = borrowerType === 'USC_STAFF' ? optionalText(command.positionRole, 120) : '';
     const contactNumber = phone(command.contactNumber);
     const borrowerEmail = email(command.email);
     const purpose = requiredText(command.purpose, 'purpose', 500);
     const pickupDate = dateOnly(command.pickupDate, 'pickupDate');
-    const lines = await normalizeLines(command.lines);
+    const lines = await normalizeLines(command.lines, { replay });
     const dueDate = command.dueDate ? dateOnly(command.dueDate, 'dueDate') : '';
     const today = nowIso().slice(0, 10);
     if (
-      pickupDate < today ||
+      (!replay && pickupDate < today) ||
       (dueDate && dueDate < pickupDate) ||
-      (lines.some((line) => line.dueDateRequired) && !dueDate)
+      (!replay && lines.some((line) => line.dueDateRequired) && !dueDate)
     ) {
       throw new ApiError(
         'VALIDATION_FAILED',
@@ -328,6 +344,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       );
     }
     if (
+      !replay &&
       lines.some((line) => line.acknowledgmentRequired) &&
       command.responsibilityAcknowledged !== true
     ) {
@@ -336,6 +353,110 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
         details: { field: 'responsibilityAcknowledged' },
       });
     }
+    return {
+      borrowerType,
+      borrowerName,
+      studentId,
+      courseYear,
+      academicDepartment,
+      uscDepartment,
+      positionRole,
+      contactNumber,
+      borrowerEmail,
+      purpose,
+      pickupDate,
+      dueDate,
+      responsibilityAcknowledged: command.responsibilityAcknowledged === true,
+      dataUseAcknowledged: command.dataUseAcknowledged === true,
+      acceptableUseAcknowledged: command.acceptableUseAcknowledged === true,
+      borrowerResponsibilityAcknowledged: command.borrowerResponsibilityAcknowledged === true,
+      evidenceConsentAcknowledged: command.evidenceConsentAcknowledged === true,
+      lines,
+    };
+  }
+
+  const replayConflict = () =>
+    new ApiError('PUBLIC_LENDING_CONFLICT', 'The submission could not be safely replayed.', {
+      status: 409,
+    });
+
+  async function replayExisting(existing, normalized, correlationId) {
+    const storedLines = await trackedLines(existing.id, { includeItemId: true });
+    const expectedFingerprint = await requestFingerprintFor({
+      borrowerType: existing.borrower_type,
+      borrowerName: existing.borrower_name,
+      studentId: existing.student_id,
+      courseYear: existing.course_year,
+      academicDepartment: existing.academic_department,
+      uscDepartment: existing.usc_department,
+      positionRole: existing.position_role,
+      contactNumber: existing.contact_number,
+      email: existing.email,
+      purpose: existing.purpose,
+      pickupDate: existing.requested_pickup_date,
+      dueDate: existing.requested_due_date,
+      responsibilityAcknowledged: Boolean(existing.responsibility_acknowledged_at),
+      dataUseAcknowledged: true,
+      acceptableUseAcknowledged: true,
+      borrowerResponsibilityAcknowledged: true,
+      evidenceConsentAcknowledged: true,
+      lines: storedLines,
+    });
+    const actualFingerprint = await requestFingerprintFor({
+      ...normalized,
+      email: normalized.borrowerEmail,
+    });
+    if (expectedFingerprint !== actualFingerprint) throw replayConflict();
+    return {
+      ok: true,
+      submissionId: existing.id,
+      status: overallStatus(storedLines),
+      trackingCode: await trackingCodeFor(existing.id, existing.client_request_id),
+      replayed: true,
+      correlationId,
+    };
+  }
+
+  async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
+    await rateLimit(networkKey);
+    const clientRequestIdValue = strongClientRequestId(command.clientRequestId);
+    const existing = await db
+      .prepare(
+        `SELECT id, client_request_id, borrower_type, borrower_name, student_id,
+           course_year, academic_department, usc_department, position_role, contact_number,
+           email, purpose, requested_pickup_date, requested_due_date,
+           responsibility_acknowledged_at, receipt_digest, created_at, updated_at
+         FROM public_lending_submissions
+         WHERE client_request_id = ?1`,
+      )
+      .bind(clientRequestIdValue)
+      .first();
+    if (existing) {
+      try {
+        const normalized = await validateSubmission(command, { replay: true });
+        return await replayExisting(existing, normalized, correlationId);
+      } catch (error) {
+        if (error instanceof ApiError && error.code === 'PUBLIC_LENDING_CONFLICT') throw error;
+        throw replayConflict();
+      }
+    }
+    const normalized = await validateSubmission(command);
+    const {
+      borrowerType,
+      borrowerName,
+      studentId,
+      courseYear,
+      academicDepartment,
+      uscDepartment,
+      positionRole,
+      contactNumber,
+      borrowerEmail,
+      purpose,
+      pickupDate,
+      dueDate,
+      lines,
+    } = normalized;
+    const clientRequestId = clientRequestIdValue;
 
     const submissionId = createId('LBR');
     const timestamp = nowIso();
@@ -351,7 +472,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
              requested_pickup_date, requested_due_date, responsibility_acknowledged_at,
              receipt_digest, client_request_id, created_at, updated_at, created_by
            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
-             ?14, ?15, ?16, ?14, ?14, ?17)`,
+             ?14, ?15, ?16, ?17, ?17, ?18)`,
         )
         .bind(
           submissionId,
@@ -367,9 +488,10 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
           purpose,
           pickupDate,
           dueDate,
-          timestamp,
+          normalized.responsibilityAcknowledged ? timestamp : '',
           receiptDigest,
           clientRequestId,
+          timestamp,
           PUBLIC_ACTOR_ID,
         ),
     ];
@@ -449,6 +571,7 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
               dataUseAcknowledged: true,
               acceptableUseAcknowledged: true,
               borrowerResponsibilityAcknowledged: true,
+              responsibilityAcknowledged: normalized.responsibilityAcknowledged,
               evidenceConsentAcknowledged: true,
             }),
             correlationId,
@@ -466,9 +589,25 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('PUBLIC_LENDING_CONFLICT', 'This submission is already being processed.', {
-          status: 409,
-        });
+        const raced = await db
+          .prepare(
+            `SELECT id, client_request_id, borrower_type, borrower_name, student_id,
+               course_year, academic_department, usc_department, position_role, contact_number,
+               email, purpose, requested_pickup_date, requested_due_date,
+               responsibility_acknowledged_at, receipt_digest, created_at, updated_at
+             FROM public_lending_submissions
+             WHERE client_request_id = ?1`,
+          )
+          .bind(clientRequestId)
+          .first();
+        if (raced) {
+          try {
+            return await replayExisting(raced, normalized, correlationId);
+          } catch {
+            throw replayConflict();
+          }
+        }
+        throw replayConflict();
       }
       throw error;
     }

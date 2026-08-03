@@ -15,11 +15,12 @@
   R2 review and PR CI, then stop before pre-production until the approved
   private identity classes and email-provider implementation/configuration
   exist.
-- Verification: schema-30 rehearsal passed; `npm run check` passes 112 files /
-  740 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
-  39/39. The first complete-candidate R2 review rejected the prior SHA; its
-  schema/runtime, reconciliation, transaction, invariant, and limiter findings
-  are repaired locally and require fresh exact-SHA review.
+- Verification: schema-30 rehearsal passed; `npm run check` passes 113 files /
+  769 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
+  39/39. Two independent candidate R2 rounds rejected earlier SHAs; their
+  schema/runtime, reconciliation, transaction, account-revision, stale-write,
+  identifier, login-identity, idempotency, and public-replay findings are
+  repaired locally and require fresh exact-SHA review.
 - Production boundary: the owner supplied `AUTHORIZE V0.7.2 PRODUCTION` and no
   second confirmation wait is required. Production is still prohibited until
   the exact target, provider, pre-production, backup, rollback, and

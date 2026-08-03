@@ -189,7 +189,48 @@ export function createD1AuthRepository(db) {
             `SELECT * FROM accounts
              WHERE access_id_normalized = upper(?1)
                 OR username_normalized = lower(?1)
-                OR (profile_email_verified_at IS NOT NULL AND lower(profile_email) = lower(?1))
+                OR (
+                  status IN ('STARTER', 'ACTIVE')
+                  AND NULLIF(trim(verified_email_fingerprint), '') IS NOT NULL
+                  AND lower(profile_email) = lower(?1)
+                  AND EXISTS (
+                    SELECT 1
+                    FROM account_applications application
+                    WHERE application.approved_account_id = accounts.id
+                      AND application.email_fingerprint = accounts.verified_email_fingerprint
+                      AND application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                  )
+                  AND (
+                    SELECT COUNT(*)
+                    FROM accounts fingerprint_account
+                    WHERE fingerprint_account.status IN ('STARTER', 'ACTIVE')
+                      AND fingerprint_account.verified_email_fingerprint = accounts.verified_email_fingerprint
+                      AND NULLIF(trim(fingerprint_account.verified_email_fingerprint), '') IS NOT NULL
+                      AND EXISTS (
+                        SELECT 1
+                        FROM account_applications fingerprint_application
+                        WHERE fingerprint_application.approved_account_id = fingerprint_account.id
+                          AND fingerprint_application.email_fingerprint =
+                            fingerprint_account.verified_email_fingerprint
+                          AND fingerprint_application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                      )
+                  ) = 1
+                  AND (
+                    SELECT COUNT(*)
+                    FROM accounts qualified_account
+                    WHERE qualified_account.status IN ('STARTER', 'ACTIVE')
+                      AND NULLIF(trim(qualified_account.verified_email_fingerprint), '') IS NOT NULL
+                      AND lower(qualified_account.profile_email) = lower(?1)
+                      AND EXISTS (
+                        SELECT 1
+                        FROM account_applications qualified_application
+                        WHERE qualified_application.approved_account_id = qualified_account.id
+                          AND qualified_application.email_fingerprint =
+                            qualified_account.verified_email_fingerprint
+                          AND qualified_application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                      )
+                  ) = 1
+                )
              ORDER BY CASE
                WHEN access_id_normalized = upper(?1) THEN 1
                WHEN username_normalized = lower(?1) THEN 2

@@ -51,6 +51,16 @@ async function context() {
       committee_id TEXT NOT NULL,
       active INTEGER NOT NULL DEFAULT 1
     ) STRICT`,
+    `CREATE TABLE account_applications (
+      id TEXT PRIMARY KEY,
+      requested_username_normalized TEXT NOT NULL,
+      state TEXT NOT NULL,
+      approved_account_id TEXT
+    ) STRICT`,
+    `CREATE TABLE access_id_reservations (
+      collision_key TEXT PRIMARY KEY,
+      account_id TEXT NOT NULL
+    ) STRICT`,
     `CREATE TABLE sessions (
       token_digest TEXT PRIMARY KEY,
       account_id TEXT NOT NULL
@@ -147,6 +157,23 @@ async function counts(db) {
 }
 
 describe('profile repository D1 atomicity', () => {
+  it('reports a pending account-application username as a collision', async () => {
+    const { db, repository } = await context();
+    await db
+      .prepare(
+        `INSERT INTO account_applications (
+           id, requested_username_normalized, state, approved_account_id
+         ) VALUES (?1, ?2, 'PENDING_ADMIN_REVIEW', NULL)`,
+      )
+      .bind('APPLICATION-PENDING-USERNAME', 'pending.user')
+      .run();
+
+    await expect(repository.findUsername('pending.user', ACCOUNT_ID)).resolves.toBe(
+      'APPLICATION-PENDING-USERNAME',
+    );
+    await expect(repository.findUsername('available.user', ACCOUNT_ID)).resolves.toBeNull();
+  });
+
   it('rolls back a stale contact guard with no evidence or authoritative change', async () => {
     const { db, repository } = await context();
 
