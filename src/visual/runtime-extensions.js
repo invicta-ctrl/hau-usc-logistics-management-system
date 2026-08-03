@@ -20,6 +20,7 @@ import {
 import {
   buildCatalogUpdateCommand,
   canManageCatalog,
+  validateCatalogQuantities,
   validateCatalogDraft,
 } from '../domain/catalog-management.js';
 import {
@@ -98,6 +99,140 @@ function localDueValue(days) {
 function quantityInputBounds(unit, { allowZero = false } = {}) {
   const step = quantityStep(unit);
   return `min="${allowZero ? '0' : step === '1' ? '1' : '0.01'}" step="${step}"`;
+}
+
+export function syncUnitBoundInputs(form, fields) {
+  const unit = String(form?.elements?.unit?.value ?? '');
+  for (const { name, allowZero = false } of fields) {
+    const input = form?.elements?.[name];
+    if (!input) continue;
+    const step = quantityStep(unit);
+    input.step = step;
+    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
+    input.dataset.quantityUnit = unit;
+  }
+}
+
+export function bindUnitBoundInputs(form, fields) {
+  const sync = () => syncUnitBoundInputs(form, fields);
+  form?.elements?.unit?.addEventListener('input', sync);
+  form?.elements?.unit?.addEventListener('change', sync);
+  sync();
+  return sync;
+}
+
+export function withExpectedUpdatedAt(payload, item) {
+  return { ...payload, expectedUpdatedAt: String(item?.updatedAt ?? '') };
+}
+
+export function toFailClosedInventoryClassification(item = {}) {
+  const classificationStatus =
+    String(item.classificationStatus ?? '').trim().toUpperCase() === 'CLASSIFIED'
+      ? 'CLASSIFIED'
+      : 'NEEDS_CLASSIFICATION';
+  const handling = String(item.handlingCode ?? item.handling).toUpperCase();
+  const derivedKind =
+    handling.includes('REUSABLE') || handling.includes('LOAN')
+      ? 'REUSABLE'
+      : handling.includes('CONSUMABLE')
+        ? 'CONSUMABLE'
+        : 'UNVERIFIED';
+  const isLendable = classificationStatus === 'CLASSIFIED' && item.isLendable === true;
+  return {
+    ...item,
+    inventoryKind: classificationStatus === 'CLASSIFIED' ? item.inventoryKind ?? derivedKind : 'UNVERIFIED',
+    classificationStatus,
+    isLendable,
+    lendingAudience: isLendable ? item.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
+    conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
+    maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
+    classificationRevision: Number(item.classificationRevision ?? 1),
+    assetInstanceCount: Number(item.traceableAssets ?? 0),
+    classificationHistory: item.classificationHistory ?? [],
+  };
+}
+
+export function applyMockInventoryClassification(item, payload = {}, { now = new Date().toISOString() } = {}) {
+  const previousStatus = item.classificationStatus ?? 'NEEDS_CLASSIFICATION';
+  const previousKind = item.inventoryKind ?? 'UNVERIFIED';
+  const before = {
+    classificationStatus: previousStatus,
+    inventoryKind: previousKind,
+    stockArea: item.stockArea ?? '',
+    storageLocation: item.storageLocation ?? '',
+    unit: item.unit ?? '',
+    reorderThreshold: item.reorderThreshold ?? 0,
+    conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
+    maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
+    isLendable: item.isLendable === true,
+    lendingAudience: item.lendingAudience ?? 'NOT_AVAILABLE_FOR_LENDING',
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+  };
+  const classificationStatus =
+    payload.classificationStatus === 'CLASSIFIED' ? 'CLASSIFIED' : 'NEEDS_CLASSIFICATION';
+  const isLendable =
+    classificationStatus === 'CLASSIFIED' &&
+    payload.isLendable === true &&
+    payload.enableLendingConfirmed === true;
+  Object.assign(item, {
+    inventoryKind: payload.inventoryKind,
+    classificationStatus,
+    conditionReviewState: payload.conditionReviewState,
+    maintenanceReviewState: payload.maintenanceReviewState,
+    stockArea: payload.stockArea,
+    storageLocation: payload.storageLocation,
+    unit: payload.unit,
+    reorderThreshold: Number(payload.reorderThreshold),
+    assetInstanceCount: Number(payload.assetInstanceCountIfReusable ?? 0),
+    isLendable,
+    lendingAudience: isLendable ? payload.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
+    handling:
+      payload.inventoryKind === 'REUSABLE'
+        ? 'REUSABLE_ASSET'
+        : payload.inventoryKind === 'CONSUMABLE'
+          ? 'CONSUMABLE'
+          : 'TO_CLASSIFY',
+    classificationNotes: payload.classificationNotes,
+    classificationEvidenceId: payload.evidenceId,
+    classificationRevision: Number(item.classificationRevision ?? 1) + 1,
+    classifiedAt: classificationStatus === 'CLASSIFIED' ? now : null,
+  });
+  const after = {
+    classificationStatus: item.classificationStatus,
+    inventoryKind: item.inventoryKind,
+    stockArea: item.stockArea,
+    storageLocation: item.storageLocation,
+    unit: item.unit,
+    reorderThreshold: item.reorderThreshold,
+    conditionReviewState: item.conditionReviewState,
+    maintenanceReviewState: item.maintenanceReviewState,
+    isLendable: item.isLendable,
+    lendingAudience: item.lendingAudience,
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+  };
+  item.classificationHistory ??= [];
+  item.classificationHistory.unshift({
+    revision: item.classificationRevision,
+    previousStatus,
+    newStatus: item.classificationStatus,
+    previousKind,
+    newKind: item.inventoryKind,
+    isLendable: item.isLendable,
+    lendingAudience: item.lendingAudience,
+    conditionReviewState: item.conditionReviewState,
+    maintenanceReviewState: item.maintenanceReviewState,
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+    before,
+    after,
+    occurredAt: now,
+    actorAccountId: 'LOCAL_PREVIEW',
+    evidenceId: payload.evidenceId,
+  });
+  return {
+    itemId: item.id,
+    classificationRevision: item.classificationRevision,
+    correlationId: 'LOCAL-PREVIEW',
+  };
 }
 
 function createLendingController({ markFormClean }) {
@@ -4798,18 +4933,25 @@ export function createRuntimeExtensions(options) {
   };
 
   const runCatalogMutation = async (kind, payload) => {
-    if (backendMode === 'mock') return mockCatalogMutation(kind, payload);
-    if (kind === 'create') return services.createInventoryItem(payload);
-    if (kind === 'update') return services.updateInventoryItem(payload);
-    if (kind === 'storage') return services.updateInventoryStorageContext(payload);
-    if (kind === 'archive') return services.archiveInventoryItem(payload.itemId, payload);
-    if (kind === 'restore') return services.restoreInventoryItem(payload.itemId, payload);
+    const currentItem = (getState()?.inventoryItems ?? []).find((item) => item.id === payload.itemId);
+    const mutationPayload = kind === 'create' ? payload : withExpectedUpdatedAt(payload, currentItem);
+    if (backendMode === 'mock') return mockCatalogMutation(kind, mutationPayload);
+    if (kind === 'create') return services.createInventoryItem(mutationPayload);
+    if (kind === 'update') return services.updateInventoryItem(mutationPayload);
+    if (kind === 'storage') return services.updateInventoryStorageContext(mutationPayload);
+    if (kind === 'archive') return services.archiveInventoryItem(mutationPayload.itemId, mutationPayload);
+    if (kind === 'restore') return services.restoreInventoryItem(mutationPayload.itemId, mutationPayload);
     throw new Error('Unsupported catalog mutation.');
   };
 
   const openCatalogForm = (item = null) => {
     openModal(item ? `View / Edit ${item.id}` : 'Create Inventory Item', catalogFormHtml(item), (modal) => {
       const form = modal.querySelector('#catalogItemForm');
+      bindUnitBoundInputs(form, [
+        { name: 'reorderThreshold', allowZero: true },
+        { name: 'maximumLoanQuantity' },
+        { name: 'initialQuantity', allowZero: true },
+      ]);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!form.reportValidity()) return;
@@ -5950,12 +6092,14 @@ export function createRuntimeExtensions(options) {
     const suppliedOnHand = Number(item?.onHand);
     const suppliedReserved = Number(item?.reserved);
     const suppliedAvailable = Number(item?.availableToPromise);
-    if (
-      Number.isFinite(suppliedOnHand) &&
-      Number.isFinite(suppliedReserved) &&
-      Number.isFinite(suppliedAvailable)
-    )
-      return { onHand: suppliedOnHand, reserved: suppliedReserved, availableToPromise: suppliedAvailable };
+    if (Number.isFinite(suppliedOnHand) && Number.isFinite(suppliedReserved))
+      return {
+        onHand: suppliedOnHand,
+        reserved: suppliedReserved,
+        availableToPromise: suppliedOnHand - suppliedReserved,
+      };
+    if (Number.isFinite(suppliedAvailable))
+      return { onHand: suppliedOnHand || 0, reserved: suppliedReserved || 0, availableToPromise: suppliedAvailable };
     const onHand = (state.ledgerTransactions ?? [])
       .filter((movement) => movement?.itemId === item.id)
       .reduce(
@@ -5968,6 +6112,283 @@ export function createRuntimeExtensions(options) {
       .filter((reservation) => reservation?.itemId === item.id && reservation?.status === 'ACTIVE')
       .reduce((total, reservation) => total + Number(reservation?.quantity ?? 0), 0);
     return { onHand, reserved, availableToPromise: onHand - reserved };
+  };
+
+  const inventoryAdvancedDefaults = Object.freeze({
+    classification: 'ALL',
+    category: 'ALL',
+    unit: 'ALL',
+    lendingAudience: 'ALL',
+    lifecycle: 'ALL',
+    sort: 'NAME_ASC',
+  });
+  const inventoryAdvancedFilters = { ...inventoryAdvancedDefaults };
+  let inventoryRuntimePresentationTimer = null;
+
+  const scheduleInventoryRuntimePresentation = () => {
+    clearTimeout(inventoryRuntimePresentationTimer);
+    inventoryRuntimePresentationTimer = setTimeout(() => renderInventoryRuntimePresentation(), 180);
+  };
+
+  const inventoryReviewKind = (item) => {
+    const classification = String(item?.classificationStatus ?? '').trim().toUpperCase();
+    const inventoryKind = String(item?.inventoryKind ?? '').trim().toUpperCase();
+    const handling = normalizeHandling(item?.handlingCode ?? item?.handling);
+    if (classification !== 'CLASSIFIED' || inventoryKind === 'UNVERIFIED') return 'UNVERIFIED';
+    if (inventoryKind === 'REUSABLE' || handling === 'REUSABLE_ASSET') return 'REUSABLE';
+    if (handling === 'NON_CIRCULATING') return 'NON_CIRCULATING';
+    return 'OTHER';
+  };
+
+  const inventoryOptions = (items, key, allLabel, label = (value) => value) => [
+    option('ALL', allLabel, inventoryAdvancedFilters[key]),
+    ...[...new Set(items.map((item) => String(item?.[key] ?? '').trim()).filter(Boolean))]
+      .sort((left, right) => left.localeCompare(right))
+      .map((value) => option(value, label(value), inventoryAdvancedFilters[key])),
+  ].join('');
+
+  const requestInventoryRerender = () => {
+    const search = document.querySelector('#inventorySearch');
+    search?.dispatchEvent(new Event('input', { bubbles: true }));
+    scheduleInventoryRuntimePresentation();
+  };
+
+  const ensureInventoryControls = (items = []) => {
+    const inventory = document.querySelector('#inventory');
+    const table = inventory?.querySelector('#inventoryTable');
+    if (!inventory || !table) return;
+    let host = inventory.querySelector('[data-inventory-advanced-controls]');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'toolbar inventory-runtime-controls';
+      host.dataset.inventoryAdvancedControls = '';
+      table.before(host);
+    }
+    host.innerHTML = `<label>Classification<select data-inventory-advanced-filter="classification">${option('ALL', 'All review states', inventoryAdvancedFilters.classification)}${option('REUSABLE', 'Reusable', inventoryAdvancedFilters.classification)}${option('NON_CIRCULATING', 'Non-circulating', inventoryAdvancedFilters.classification)}${option('UNVERIFIED', 'Unverified / needs classification', inventoryAdvancedFilters.classification)}</select></label><label>Category<select data-inventory-advanced-filter="category">${inventoryOptions(items, 'category', 'All categories')}</select></label><label>Unit<select data-inventory-advanced-filter="unit">${inventoryOptions(items, 'unit', 'All units')}</select></label><label>Lending audience<select data-inventory-advanced-filter="lendingAudience">${inventoryOptions(items, 'lendingAudience', 'All lending audiences', lendingAudienceLabel)}</select></label><label>Lifecycle<select data-inventory-advanced-filter="lifecycle">${option('ALL', 'All lifecycle states', inventoryAdvancedFilters.lifecycle)}${option('ACTIVE', 'Active', inventoryAdvancedFilters.lifecycle)}${option('VERIFY', 'Verification required', inventoryAdvancedFilters.lifecycle)}${option('INACTIVE', 'Inactive', inventoryAdvancedFilters.lifecycle)}${option('ARCHIVED', 'Archived', inventoryAdvancedFilters.lifecycle)}</select></label><label>Sort<select data-inventory-advanced-filter="sort">${option('NAME_ASC', 'Name A–Z', inventoryAdvancedFilters.sort)}${option('NAME_DESC', 'Name Z–A', inventoryAdvancedFilters.sort)}${option('ATP_ASC', 'ATP: lowest first', inventoryAdvancedFilters.sort)}${option('ATP_DESC', 'ATP: highest first', inventoryAdvancedFilters.sort)}${option('ON_HAND_ASC', 'On hand: lowest first', inventoryAdvancedFilters.sort)}${option('ON_HAND_DESC', 'On hand: highest first', inventoryAdvancedFilters.sort)}${option('REORDER_RISK', 'Reorder risk first', inventoryAdvancedFilters.sort)}${option('UPDATED_DESC', 'Recently updated', inventoryAdvancedFilters.sort)}</select></label>`;
+    if (host.dataset.inventoryAdvancedBound === 'true') return;
+    host.dataset.inventoryAdvancedBound = 'true';
+    host.addEventListener('change', (event) => {
+      const field = event.target.closest('[data-inventory-advanced-filter]');
+      if (!field) return;
+      inventoryAdvancedFilters[field.dataset.inventoryAdvancedFilter] = field.value;
+      inventoryRuntimePage = 1;
+      requestInventoryRerender();
+    });
+    inventory.addEventListener(
+      'input',
+      (event) => {
+        if (event.target.closest('#inventorySearch,#inventoryAreaFilter,#inventoryHandlingFilter,#inventoryStatusFilter'))
+          inventoryRuntimePage = 1;
+        scheduleInventoryRuntimePresentation();
+      },
+      true,
+    );
+    inventory.addEventListener(
+      'click',
+      (event) => {
+        if (event.target.closest('#clearInventoryFilters')) resetInventoryControls();
+      },
+      true,
+    );
+    document.addEventListener(
+      'click',
+      (event) => {
+        if (
+          event.target.closest(
+            '[data-view="inventory"],[data-inventory-destination="inventory-management"],[data-inventory-destination="inventory-pantry-stock"]',
+          )
+        )
+          scheduleInventoryRuntimePresentation();
+      },
+      true,
+    );
+  };
+
+  const inventoryFilterValues = () => ({ ...inventoryAdvancedFilters });
+
+  let inventoryRuntimePage = 1;
+
+  const resetInventoryControls = () => {
+    Object.assign(inventoryAdvancedFilters, inventoryAdvancedDefaults);
+    inventoryRuntimePage = 1;
+    document.querySelectorAll('[data-inventory-advanced-filter]').forEach((input) => {
+      input.value = inventoryAdvancedFilters[input.dataset.inventoryAdvancedFilter];
+    });
+    scheduleInventoryRuntimePresentation();
+  };
+
+  const inventoryRuntimeText = (value) => String(value ?? '').trim().toLowerCase();
+  const inventoryRuntimeQuantity = (value) =>
+    Number(value ?? 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+  const inventoryRuntimeStatusLabel = (value) =>
+    String(value ?? '')
+      .replaceAll('_', ' ')
+      .toLowerCase()
+      .replace(/(^|\s)\S/g, (part) => part.toUpperCase());
+  const inventoryRuntimeStatusClass = (value) => {
+    const status = String(value ?? '').toUpperCase();
+    if (['IN_STOCK', 'ACTIVE'].includes(status)) return 'green';
+    if (['LOW_STOCK'].includes(status)) return 'amber';
+    if (['OUT_OF_STOCK', 'VERIFY'].includes(status)) return 'red';
+    return 'gray';
+  };
+  const inventoryRuntimeQuery = (item) =>
+    [
+      item?.id,
+      item?.name,
+      ...(item?.aliases ?? []),
+      item?.category,
+      item?.stockArea,
+      item?.unit,
+      item?.lendingAudience,
+      item?.provenance?.originEventItemId,
+    ]
+      .join(' ')
+      .toLowerCase();
+  const inventoryRuntimeControls = () => ({
+    query: inventoryRuntimeText(document.querySelector('#inventorySearch')?.value),
+    area: document.querySelector('#inventoryAreaFilter')?.value ?? 'ALL',
+    handling: document.querySelector('#inventoryHandlingFilter')?.value ?? 'ALL',
+    status: document.querySelector('#inventoryStatusFilter')?.value ?? 'ALL',
+  });
+  const inventoryRuntimeMatches = (state, item, controls) => {
+    const status = String(item?.status ?? '').toUpperCase();
+    const health = inventoryHealth(state, item);
+    const lifecycleIncludesArchived = inventoryAdvancedFilters.lifecycle === 'ARCHIVED';
+    const archivedIncluded = controls.status === 'ARCHIVED' || lifecycleIncludesArchived;
+    return (
+      (archivedIncluded ? status === 'ARCHIVED' : status !== 'ARCHIVED') &&
+      (!controls.query || inventoryRuntimeQuery(item).includes(controls.query)) &&
+      (controls.area === 'ALL' || item.stockArea === controls.area) &&
+      (controls.handling === 'ALL' ||
+        normalizeHandling(item.handlingCode ?? item.handling) === normalizeHandling(controls.handling)) &&
+      (controls.status === 'ALL' || controls.status === 'ARCHIVED' || health === controls.status) &&
+      (inventoryAdvancedFilters.lifecycle === 'ALL' || status === inventoryAdvancedFilters.lifecycle) &&
+      (inventoryAdvancedFilters.classification === 'ALL' ||
+        inventoryReviewKind(item) === inventoryAdvancedFilters.classification) &&
+      (inventoryAdvancedFilters.category === 'ALL' || item.category === inventoryAdvancedFilters.category) &&
+      (inventoryAdvancedFilters.unit === 'ALL' || item.unit === inventoryAdvancedFilters.unit) &&
+      (inventoryAdvancedFilters.lendingAudience === 'ALL' ||
+        item.lendingAudience === inventoryAdvancedFilters.lendingAudience)
+    );
+  };
+  const inventoryRuntimeRows = (state) => {
+    const controls = inventoryRuntimeControls();
+    return [...(state.inventoryItems ?? [])]
+      .filter((item) => inventoryRuntimeMatches(state, item, controls))
+      .sort((left, right) => {
+        const leftBalance = inventoryBalance(state, left);
+        const rightBalance = inventoryBalance(state, right);
+        const name = String(left.name ?? '').localeCompare(String(right.name ?? ''));
+        switch (inventoryAdvancedFilters.sort) {
+          case 'NAME_DESC':
+            return -name;
+          case 'ATP_ASC':
+            return leftBalance.availableToPromise - rightBalance.availableToPromise || name;
+          case 'ATP_DESC':
+            return rightBalance.availableToPromise - leftBalance.availableToPromise || name;
+          case 'ON_HAND_ASC':
+            return leftBalance.onHand - rightBalance.onHand || name;
+          case 'ON_HAND_DESC':
+            return rightBalance.onHand - leftBalance.onHand || name;
+          case 'REORDER_RISK':
+            return (
+              leftBalance.availableToPromise - Number(left.reorderThreshold ?? 0) -
+                (rightBalance.availableToPromise - Number(right.reorderThreshold ?? 0)) ||
+              name
+            );
+          case 'UPDATED_DESC':
+            return new Date(right.updatedAt ?? 0) - new Date(left.updatedAt ?? 0) || name;
+          default:
+            return name;
+        }
+      });
+  };
+  const inventoryRuntimeLatestMovement = (state, itemId) =>
+    [...(state.ledgerTransactions ?? [])]
+      .filter((movement) => movement?.itemId === itemId)
+      .sort((left, right) => new Date(right.createdAt ?? 0) - new Date(left.createdAt ?? 0))[0];
+  const inventoryRuntimeMovementLabel = (movement) => {
+    if (!movement) return 'No movement';
+    const type = movement.type ?? movement.transactionType ?? 'Movement';
+    const createdAt = movement.createdAt ? new Date(movement.createdAt).toLocaleString('en-PH') : '';
+    return `${type}${createdAt ? ` · ${createdAt}` : ''}`;
+  };
+  const inventoryActionMarkup = (item) => {
+    const user = getState()?.currentUser;
+    const itemId = esc(item.id);
+    const active = String(item.status).toUpperCase() !== 'ARCHIVED';
+    const catalog =
+      canManageCatalog(user) && active
+        ? `<button class="secondary mini" type="button" data-inventory-action="edit" data-item-id="${itemId}">View / Edit</button>`
+        : '';
+    const history = can(user, 'view.inventory')
+      ? `<button class="secondary mini" type="button" data-inventory-action="history" data-item-id="${itemId}">Ledger</button>`
+      : '';
+    const operational = active
+      ? `${can(user, 'request.create') ? `<button class="ghost mini" type="button" data-inventory-action="restock" data-item-id="${itemId}">Restock</button>` : ''}${can(user, 'fulfillment.reserve') ? `<button class="ghost mini" type="button" data-inventory-action="context" data-item-id="${itemId}">Reserve / Release</button>` : ''}${canManageCatalog(user) ? `<button class="ghost mini" type="button" data-inventory-action="transfer" data-item-id="${itemId}">Transfer</button>` : ''}`
+      : '';
+    const lifecycle = canManageCatalog(user)
+      ? active
+        ? `<button class="danger mini" type="button" data-inventory-action="archive" data-item-id="${itemId}">Archive</button>`
+        : `<button class="secondary mini" type="button" data-inventory-action="restore" data-item-id="${itemId}">Restore Item</button>`
+      : '';
+    return `${catalog}${history}${operational}${lifecycle}`;
+  };
+  const inventoryRuntimeActions = (item) => {
+    const actions = inventoryActionMarkup(item);
+    return actions ? `<div class="button-row">${actions}</div>` : '';
+  };
+  const inventoryRuntimePagination = (current, total) => {
+    const pagination = document.querySelector('#inventoryPagination');
+    if (!pagination) return;
+    pagination.innerHTML = `<button class="secondary mini" type="button" data-inventory-runtime-page="previous" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="pill">Page ${current} of ${total}</span><button class="secondary mini" type="button" data-inventory-runtime-page="next" ${current >= total ? 'disabled' : ''}>Next</button>`;
+    if (pagination.dataset.inventoryRuntimePaginationBound === 'true') return;
+    pagination.dataset.inventoryRuntimePaginationBound = 'true';
+    pagination.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-inventory-runtime-page]');
+      if (!button) return;
+      inventoryRuntimePage += button.dataset.inventoryRuntimePage === 'next' ? 1 : -1;
+      renderInventoryRuntimePresentation();
+    });
+  };
+  const renderInventoryRuntimePresentation = () => {
+    const state = getState() ?? {};
+    const table = document.querySelector('#inventoryTable');
+    if (!table) return;
+    const rows = inventoryRuntimeRows(state);
+    const pageSize = 20;
+    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+    inventoryRuntimePage = Math.min(Math.max(inventoryRuntimePage, 1), pageCount);
+    const pageRows = rows.slice((inventoryRuntimePage - 1) * pageSize, inventoryRuntimePage * pageSize);
+    const rowMarkup = (item) => {
+      const balance = inventoryBalance(state, item);
+      const negative = balance.availableToPromise < 0;
+      const health = inventoryHealth(state, item);
+      const atpNote = negative ? 'Negative ATP — new allocations blocked' : 'Available to promise';
+      const movement = inventoryRuntimeLatestMovement(state, item.id);
+      const evidence = (state.evidenceFiles ?? []).filter((entry) => entry.itemId === item.id);
+      const provenance = item.provenance?.originEventItemId
+        ? `<code>${esc(item.provenance.originEventItemId)}</code><small>Event transfer origin</small>`
+        : 'Standard catalog';
+      const evidenceLabel = evidence.length ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}` : 'None';
+      return `<tr><td><strong>${esc(item.name)}</strong><code>${esc(item.id)}</code><small>${esc((item.aliases ?? []).join(', ') || 'No aliases')}<br>${esc(item.category)} · ${esc(item.unit)}</small></td><td>${esc(item.stockArea)}<small>${esc(item.handlingCode ?? item.handling)} · ${esc(item.catalogType === 'PANTRY' ? 'Pantry' : 'Office Inventory')}<br>${esc(item.storageLocation)}</small></td><td><strong>${inventoryRuntimeQuantity(balance.onHand)} ${esc(item.unit)}</strong></td><td>${inventoryRuntimeQuantity(balance.reserved)} ${esc(item.unit)}</td><td><strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)} ${esc(item.unit)}</strong><small class="${negative ? 'danger-text' : ''}">${atpNote}</small></td><td><span class="status ${inventoryRuntimeStatusClass(health)}">${esc(inventoryRuntimeStatusLabel(health))}</span><small>Reorder at ${inventoryRuntimeQuantity(item.reorderThreshold)} ${esc(item.unit)}</small></td><td>${provenance}<small>${esc(inventoryRuntimeMovementLabel(movement))}</small></td><td><span class="status ${evidence.length ? 'green' : 'gray'}">${esc(evidenceLabel)}</span></td><td>${inventoryRuntimeActions(item)}</td></tr>`;
+    };
+    const cardMarkup = (item) => {
+      const balance = inventoryBalance(state, item);
+      const negative = balance.availableToPromise < 0;
+      const movement = inventoryRuntimeLatestMovement(state, item.id);
+      const evidence = (state.evidenceFiles ?? []).filter((entry) => entry.itemId === item.id);
+      const provenance = item.provenance?.originEventItemId ?? 'Standard catalog';
+      const evidenceLabel = evidence.length ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}` : 'None';
+      return `<article class="data-card"><div class="button-row"><span class="status ${inventoryRuntimeStatusClass(inventoryHealth(state, item))}">${esc(inventoryRuntimeStatusLabel(inventoryHealth(state, item)))}</span><span class="pill">${esc(item.id)}</span></div><h4 style="margin-top:8px">${esc(item.name)}</h4><p>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.handlingCode ?? item.handling)}<br>On hand ${inventoryRuntimeQuantity(balance.onHand)} · Reserved ${inventoryRuntimeQuantity(balance.reserved)} · ATP <strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)}</strong> ${esc(item.unit)}${negative ? '<br><strong class="danger-text">Negative ATP — new allocations blocked</strong>' : ''}<br><small>Provenance ${esc(provenance)} · Latest movement ${esc(inventoryRuntimeMovementLabel(movement))} · Evidence ${esc(evidenceLabel)}</small></p>${inventoryRuntimeActions(item)}</article>`;
+    };
+    table.innerHTML = pageRows.length
+      ? `<div class="table-wrap desktop-table"><table><thead><tr><th>Product</th><th>Catalog / Handling</th><th>On Hand</th><th>Reserved</th><th>Raw ATP</th><th>Status / Reorder</th><th>Provenance / Movement</th><th>Evidence</th><th></th></tr></thead><tbody>${pageRows.map(rowMarkup).join('')}</tbody></table></div><div class="mobile-cards">${pageRows.map(cardMarkup).join('')}</div>`
+      : '<div class="empty">No inventory products match these filters.</div>';
+    const count = document.querySelector('#inventoryCount');
+    if (count) count.textContent = `${rows.length} matching product${rows.length === 1 ? '' : 's'}`;
+    inventoryRuntimePagination(inventoryRuntimePage, pageCount);
   };
 
   const inventoryHealth = (state, item) => {
@@ -6730,44 +7151,22 @@ export function createRuntimeExtensions(options) {
   const localClassificationDirectory = () => {
     const all = (getState()?.inventoryItems ?? [])
       .filter((item) => item.status !== 'ARCHIVED')
-      .map((item) => ({
-        ...item,
-        inventoryKind:
-          item.inventoryKind ??
-          (String(item.handlingCode ?? item.handling)
-            .toUpperCase()
-            .includes('REUSABLE') ||
-          String(item.handlingCode ?? item.handling)
-            .toUpperCase()
-            .includes('LOAN')
-            ? 'REUSABLE'
-            : String(item.handlingCode ?? item.handling)
-                  .toUpperCase()
-                  .includes('CONSUMABLE')
-              ? 'CONSUMABLE'
-              : 'UNVERIFIED'),
-        classificationStatus:
-          item.classificationStatus ??
-          (['', 'TO_CLASSIFY'].includes(
-            String(item.handlingCode ?? item.handling)
-              .trim()
-              .toUpperCase(),
-          )
-            ? 'NEEDS_CLASSIFICATION'
-            : 'CLASSIFIED'),
-        conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
-        maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
-        classificationRevision: Number(item.classificationRevision ?? 1),
-        assetInstanceCount: Number(item.traceableAssets ?? 0),
-        classificationHistory: item.classificationHistory ?? [],
-      }));
+      .map(toFailClosedInventoryClassification);
     const matches = all.filter(
       (item) =>
         (inventoryClassificationStatus === 'ALL' ||
           item.classificationStatus === inventoryClassificationStatus) &&
         (inventoryClassificationKind === 'ALL' || item.inventoryKind === inventoryClassificationKind) &&
         (!inventoryClassificationSearch ||
-          [item.id, item.name, item.category, item.stockArea]
+          [
+            item.id,
+            item.name,
+            ...(item.aliases ?? []),
+            item.category,
+            item.stockArea,
+            item.unit,
+            item.lendingAudience,
+          ]
             .join(' ')
             .toLowerCase()
             .includes(inventoryClassificationSearch.toLowerCase())),
@@ -6817,6 +7216,41 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const classificationHistoryChangeMarkup = (entry) => {
+    const before = entry?.before && typeof entry.before === 'object' ? entry.before : {};
+    const after = entry?.after && typeof entry.after === 'object' ? entry.after : {};
+    const has = (source, key) => Object.prototype.hasOwnProperty.call(source, key);
+    const previous = (key, legacy) => (has(before, key) ? before[key] : has(entry, legacy) ? entry[legacy] : undefined);
+    const next = (key, legacy) => (has(after, key) ? after[key] : has(entry, legacy) ? entry[legacy] : has(entry, key) ? entry[key] : undefined);
+    const display = (value) => {
+      if (value === true) return 'Enabled';
+      if (value === false) return 'Non-lendable';
+      return value == null || value === '' ? 'Not recorded' : String(value).replaceAll('_', ' ');
+    };
+    const fields = [
+      ['Review status', 'classificationStatus', 'previousStatus', 'newStatus'],
+      ['Inventory kind', 'inventoryKind', 'previousKind', 'newKind'],
+      ['Stock area', 'stockArea', 'previousStockArea', 'newStockArea'],
+      ['Storage location', 'storageLocation', 'previousStorageLocation', 'newStorageLocation'],
+      ['Unit', 'unit', 'previousUnit', 'newUnit'],
+      ['Reorder threshold', 'reorderThreshold', 'previousReorderThreshold', 'newReorderThreshold'],
+      ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState'],
+      ['Maintenance review', 'maintenanceReviewState', 'previousMaintenanceReviewState', 'newMaintenanceReviewState'],
+      ['Lending', 'isLendable', 'previousIsLendable', 'newIsLendable'],
+      ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience'],
+      ['Traceable asset count', 'assetInstanceCount', 'previousAssetInstanceCount', 'newAssetInstanceCount'],
+    ];
+    const changes = fields
+      .map(([label, key, previousKey, nextKey]) => {
+        const from = previous(key, previousKey);
+        const to = next(key, nextKey);
+        if (from === undefined && to === undefined) return '';
+        return `<li><strong>${esc(label)}</strong>: ${esc(display(from))} → ${esc(display(to))}</li>`;
+      })
+      .filter(Boolean);
+    return changes.length ? `<ul class="classification-history-changes">${changes.join('')}</ul>` : '';
+  };
+
   const classificationFormHtml = (item) => {
     const history = item.classificationHistory ?? [];
     return `<form id="inventoryClassificationForm">
@@ -6844,57 +7278,14 @@ export function createRuntimeExtensions(options) {
         history
           .map(
             (entry) =>
-              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(entry.newStatus)}</strong><small>${esc(entry.newKind)} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small></div></div>`,
+              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(entry.newStatus)}</strong><small>${esc(entry.newKind)} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small>${classificationHistoryChangeMarkup(entry)}</div></div>`,
           )
           .join('') || '<div class="empty">No classification history has been recorded.</div>'
       }</div></section>
     </form>`;
   };
 
-  const mockClassifyInventoryItem = (item, payload) => {
-    const now = new Date().toISOString();
-    const previousStatus = item.classificationStatus ?? 'NEEDS_CLASSIFICATION';
-    const previousKind = item.inventoryKind ?? 'UNVERIFIED';
-    Object.assign(item, {
-      inventoryKind: payload.inventoryKind,
-      classificationStatus: payload.classificationStatus,
-      conditionReviewState: payload.conditionReviewState,
-      maintenanceReviewState: payload.maintenanceReviewState,
-      stockArea: payload.stockArea,
-      storageLocation: payload.storageLocation,
-      unit: payload.unit,
-      reorderThreshold: Number(payload.reorderThreshold),
-      isLendable: payload.isLendable === true,
-      lendingAudience: payload.isLendable ? payload.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
-      handling:
-        payload.inventoryKind === 'REUSABLE'
-          ? 'REUSABLE_ASSET'
-          : payload.inventoryKind === 'CONSUMABLE'
-            ? 'CONSUMABLE'
-            : 'TO_CLASSIFY',
-      classificationNotes: payload.classificationNotes,
-      classificationEvidenceId: payload.evidenceId,
-      classificationRevision: Number(item.classificationRevision ?? 1) + 1,
-      classifiedAt: payload.classificationStatus === 'CLASSIFIED' ? now : null,
-    });
-    item.classificationHistory ??= [];
-    item.classificationHistory.unshift({
-      revision: item.classificationRevision,
-      previousStatus,
-      newStatus: item.classificationStatus,
-      previousKind,
-      newKind: item.inventoryKind,
-      isLendable: item.isLendable,
-      occurredAt: now,
-      actorAccountId: 'LOCAL_PREVIEW',
-      evidenceId: payload.evidenceId,
-    });
-    return {
-      itemId: item.id,
-      classificationRevision: item.classificationRevision,
-      correlationId: 'LOCAL-PREVIEW',
-    };
-  };
+  const mockClassifyInventoryItem = applyMockInventoryClassification;
 
   const submitInventoryClassification = async (item, draft, { bulkGroupId = '' } = {}) => {
     const payload = {
@@ -6936,9 +7327,13 @@ export function createRuntimeExtensions(options) {
   const openInventoryClassification = (item) => {
     openModal(`Classify ${item.id}`, classificationFormHtml(item), (modal) => {
       const form = modal.querySelector('#inventoryClassificationForm');
+      bindUnitBoundInputs(form, [{ name: 'reorderThreshold', allowZero: true }]);
       const sync = () => {
         const reusable = form.elements.inventoryKind.value === 'REUSABLE';
-        const lendable = form.elements.isLendable.checked;
+        const classified = form.elements.classificationStatus.value === 'CLASSIFIED';
+        if (!classified) form.elements.isLendable.checked = false;
+        form.elements.isLendable.disabled = !classified;
+        const lendable = classified && form.elements.isLendable.checked;
         form.elements.conditionReviewState.disabled = !reusable;
         form.elements.maintenanceReviewState.disabled = !reusable;
         form.elements.assetInstanceCountIfReusable.disabled = !reusable;
@@ -6948,6 +7343,7 @@ export function createRuntimeExtensions(options) {
         form.elements.enableLendingConfirmed.disabled = !lendable;
         if (!lendable) form.elements.lendingAudience.value = 'NOT_AVAILABLE_FOR_LENDING';
       };
+      form.elements.classificationStatus.addEventListener('change', sync);
       form.elements.inventoryKind.addEventListener('change', sync);
       form.elements.isLendable.addEventListener('change', sync);
       sync();
@@ -6960,6 +7356,12 @@ export function createRuntimeExtensions(options) {
         draft.isLendable = form.elements.isLendable.checked;
         draft.enableLendingConfirmed = form.elements.enableLendingConfirmed.checked;
         draft.assetTrackingConfirmed = form.elements.assetTrackingConfirmed.checked;
+        const quantityValidation = validateCatalogQuantities(draft);
+        if (!quantityValidation.valid) {
+          toast(quantityValidation.message, true);
+          button.disabled = false;
+          return;
+        }
         try {
           const result = await submitInventoryClassification(item, draft);
           markFormClean(form);
@@ -7578,6 +7980,8 @@ export function createRuntimeExtensions(options) {
       catalogButton.disabled = !allowed;
       catalogButton.setAttribute('aria-hidden', String(!allowed));
     }
+    ensureInventoryControls(getState()?.inventoryItems ?? []);
+    renderInventoryRuntimePresentation();
     renderFoodQueue();
     renderMaterialsQueue();
     if (normalizedExperience() === 'materials' && materialsQueueItems === null) void refreshMaterialsQueue();
@@ -7685,6 +8089,10 @@ export function createRuntimeExtensions(options) {
     get lending() {
       return lending;
     },
+    ensureInventoryControls,
+    inventoryFilterValues,
+    inventoryReviewKind,
+    resetInventoryControls,
     showRecordedRefreshFailure({ correlationId, error }) {
       const suffix = correlationId ? ` Correlation ID: ${correlationId}.` : '';
       showBanner(
@@ -7693,25 +8101,7 @@ export function createRuntimeExtensions(options) {
       );
     },
     inventoryActions(item) {
-      const user = getState()?.currentUser;
-      const allowed = canManageCatalog(user);
-      const catalog =
-        allowed && item.status !== 'ARCHIVED'
-          ? `<button class="secondary mini" data-inventory-action="edit" data-item-id="${esc(item.id)}">View / Edit</button>`
-          : '';
-      const lifecycle = allowed
-        ? item.status === 'ARCHIVED'
-          ? `<button class="secondary mini" data-inventory-action="restore" data-item-id="${esc(item.id)}">Restore Item</button>`
-          : `<button class="danger mini" data-inventory-action="archive" data-item-id="${esc(item.id)}">Archive</button>`
-        : '';
-      const operational =
-        item.status === 'ARCHIVED'
-          ? ''
-          : `${can(user, 'request.create') ? `<button class="ghost mini" data-inventory-action="restock" data-item-id="${esc(item.id)}">Restock</button>` : ''}${can(user, 'fulfillment.reserve') ? `<button class="ghost mini" data-inventory-action="context" data-item-id="${esc(item.id)}">Reserve / Release</button>` : ''}${allowed ? `<button class="ghost mini" data-inventory-action="transfer" data-item-id="${esc(item.id)}">Transfer</button>` : ''}`;
-      const history = can(user, 'view.inventory')
-        ? `<button class="secondary mini" data-inventory-action="history" data-item-id="${esc(item.id)}">Ledger</button>`
-        : '';
-      return `${catalog}${history}${operational}${lifecycle}`;
+      return inventoryActionMarkup(item);
     },
     openCatalogItem(itemId) {
       const item = getState().inventoryItems.find((candidate) => candidate.id === itemId);

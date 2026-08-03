@@ -1,4 +1,5 @@
 import { can } from './permissions.js';
+import { isCountableUnit, isKnownQuantityUnit, isValidOperationalQuantity } from './quantity-units.js';
 
 const EDITABLE_FIELDS = Object.freeze([
   'itemName', 'aliases', 'category', 'catalogType', 'stockArea', 'storageLocation',
@@ -32,8 +33,36 @@ export function validateCatalogDraft(draft) {
   for (const field of ['itemName', 'category', 'stockArea', 'storageLocation', 'handling', 'unit', 'catalogType', 'lendingAudience']) {
     if (!String(draft[field] ?? '').trim()) return { valid: false, field, message: `${field} is required.` };
   }
-  if (Number(draft.reorderThreshold) < 0) return { valid: false, field: 'reorderThreshold', message: 'Reorder threshold cannot be negative.' };
+  const quantityValidation = validateCatalogQuantities(draft);
+  if (!quantityValidation.valid) return quantityValidation;
   return { valid: true };
+}
+
+export function validateCatalogQuantities(draft = {}) {
+  const unit = String(draft.unit ?? '').trim();
+  if (!isKnownQuantityUnit(unit)) {
+    return { valid: false, field: 'unit', message: 'Select a supported quantity unit.' };
+  }
+  const validate = (field, { allowZero = false, optional = false, label = field } = {}) => {
+    const value = draft[field];
+    if (optional && String(value ?? '').trim() === '') return null;
+    if (!isValidOperationalQuantity(value, { unit, allowZero })) {
+      return {
+        valid: false,
+        field,
+        message: `${label} must be ${allowZero ? 'zero or greater' : 'greater than zero'}${
+          isCountableUnit(unit) ? `; ${unit} requires whole numbers.` : '.'
+        }`,
+      };
+    }
+    return null;
+  };
+  return (
+    validate('reorderThreshold', { allowZero: true, label: 'Reorder threshold' }) ??
+    validate('maximumLoanQuantity', { optional: true, label: 'Maximum lending quantity' }) ??
+    validate('initialQuantity', { allowZero: true, optional: true, label: 'Initial quantity' }) ??
+    { valid: true }
+  );
 }
 
 export { EDITABLE_FIELDS };
