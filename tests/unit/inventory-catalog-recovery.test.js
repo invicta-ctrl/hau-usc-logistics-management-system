@@ -45,7 +45,7 @@ describe('Slice 6 catalog quantity validation', () => {
     });
   });
 
-  it('keeps measured quantities decimal-capable and permits zero opening/reorder values', () => {
+  it('requires whole operational quantities for measured units and permits zero opening/reorder values', () => {
     expect(
       validateCatalogQuantities(
         catalogDraft({
@@ -55,6 +55,25 @@ describe('Slice 6 catalog quantity validation', () => {
           initialQuantity: '0.25',
         }),
       ),
+    ).toMatchObject({ valid: false, field: 'maximumLoanQuantity' });
+    expect(
+      validateCatalogQuantities(
+        catalogDraft({
+          unit: 'liter',
+          reorderThreshold: '0',
+          maximumLoanQuantity: '2',
+          initialQuantity: '0',
+        }),
+      ),
+    ).toEqual({ valid: true });
+  });
+
+  it('requires an explicit whole-number threshold when low-stock alerts are enabled', () => {
+    expect(
+      validateCatalogQuantities(catalogDraft({ lowStockAlertEnabled: 'true', lowStockThreshold: '' })),
+    ).toMatchObject({ valid: false, field: 'lowStockThreshold' });
+    expect(
+      validateCatalogQuantities(catalogDraft({ lowStockAlertEnabled: 'true', lowStockThreshold: '2' })),
     ).toEqual({ valid: true });
   });
 });
@@ -93,8 +112,8 @@ describe('Slice 6 extension-owned quantity and classification behavior', () => {
 
     unit.value = 'liter';
     listeners.get('change')();
-    expect(reorderThreshold).toMatchObject({ min: '0', step: '0.01', dataset: { quantityUnit: 'liter' } });
-    expect(maximumLoanQuantity).toMatchObject({ min: '0.01', step: '0.01' });
+    expect(reorderThreshold).toMatchObject({ min: '0', step: '1', dataset: { quantityUnit: 'liter' } });
+    expect(maximumLoanQuantity).toMatchObject({ min: '1', step: '1' });
   });
 
   it('keeps pending reusable mock classification fail-closed with unknown assessments and records complete history', () => {
@@ -164,7 +183,7 @@ describe('Slice 6 inventory extension contract', () => {
       "classificationStatus === 'CLASSIFIED' && item.isLendable === true",
       'const classificationHistoryChangeMarkup',
       "['Stock area', 'stockArea'",
-      "['Lending audience', 'lendingAudience'",
+      "'Lending audience'",
       'const mockClassifyInventoryItem',
       'payload.enableLendingConfirmed === true',
       'withExpectedUpdatedAt(payload, currentItem)',

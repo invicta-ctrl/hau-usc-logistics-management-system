@@ -795,7 +795,7 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await expect(page.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
 });
 
-test('public Lending Center classifies borrowers and submits without public tracking', async ({
+test('public Lending Center classifies borrowers and returns private tracking', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -892,6 +892,7 @@ test('public Lending Center classifies borrowers and submits without public trac
       contentType: 'application/json',
       body: JSON.stringify({
         submissionId: 'LBR-SYNTHETIC-PUBLIC',
+        trackingCode: 'TRACK-SYNTHETIC-PRIVATE',
         status: 'FOR_REVIEW',
       }),
     });
@@ -949,9 +950,10 @@ test('public Lending Center classifies borrowers and submits without public trac
   await page.getByRole('button', { name: 'Next announcement' }).click();
   await expect(page.getByRole('heading', { name: 'Synthetic announcement two' })).toBeVisible();
   await form.getByRole('button', { name: 'Submit borrowing request for review' }).click();
-  await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
   await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
-  await expect(page.locator('.public-tracking-receipt')).not.toContainText(/tracking code|ticket id/iu);
+  await expect(page.locator('.public-tracking-receipt')).toContainText('TRACK-SYNTHETIC-PRIVATE');
+  await expect(page.locator('.public-tracking-receipt')).toContainText('shown once');
 });
 
 test('public Lending Center distinguishes service failure from true-empty and clears inactive borrower fields', async ({
