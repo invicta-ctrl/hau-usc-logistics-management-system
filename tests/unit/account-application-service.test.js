@@ -1,0 +1,545 @@
+import { timingSafeEqual, webcrypto } from 'node:crypto';
+import { describe, expect, it } from 'vitest';
+import {
+  ACCOUNT_APPLICATION_CAPABILITY,
+  ACCOUNT_APPLICATION_STATE,
+} from '../../src/server/account-application/contracts.js';
+import { createFailClosedEmailProvider } from '../../src/server/account-application/email-provider.js';
+import { createPasswordKdf, createTokenCrypto } from '../../src/server/auth/crypto.js';
+import { createAccountApplicationService } from '../../src/server/account-application/service.js';
+
+const clone = (value) => structuredClone(value);
+
+function createRepository() {
+  const challenges = new Map();
+  const applications = new Map();
+  const accounts = new Map();
+  const history = [];
+  const audits = [];
+
+  const repository = {
+    async createVerificationChallenge(challenge) {
+      for (const current of challenges.values()) {
+        if (
+          current.emailFingerprint === challenge.emailFingerprint &&
+          current.purpose === challenge.purpose &&
+          current.state === 'PENDING'
+        ) {
+          current.state = 'REVOKED';
+        }
+      }
+      const next = { ...clone(challenge), state: 'PENDING', verificationReceiptDigest: '', attemptCount: 0 };
+      challenges.set(next.id, next);
+      return clone(next);
+    },
+
+    async markVerificationChallengeSent({ challengeId, emailFingerprint, sentAt }) {
+      const challenge = challenges.get(challengeId);
+      if (!challenge || challenge.emailFingerprint !== emailFingerprint || challenge.state !== 'PENDING') {
+        throw new Error('challenge send conflict');
+      }
+      challenge.lastSentAt = sentAt;
+    },
+
+    async confirmVerificationChallenge({
+      emailFingerprint,
+      identityClassId,
+      purpose,
+      secretDigest,
+      verificationReceiptDigest,
+      confirmedAt,
+      receiptExpiresAt,
+      maxAttempts,
+    }) {
+      const current = [...challenges.values()]
+        .filter(
+          (challenge) =>
+            challenge.emailFingerprint === emailFingerprint &&
+            challenge.identityClassId === identityClassId &&
+            challenge.purpose === purpose &&
+            challenge.state === 'PENDING',
+        )
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0];
+      if (!current || current.expiresAt <= confirmedAt || current.attemptCount >= maxAttempts) {
+        if (current?.expiresAt <= confirmedAt) current.state = 'EXPIRED';
+        return { verified: false };
+      }
+      if (current.secretDigest !== secretDigest) {
+        current.attemptCount += 1;
+        if (current.attemptCount >= maxAttempts) current.state = 'REVOKED';
+        return { verified: false };
+      }
+      current.state = 'VERIFIED';
+      current.verificationReceiptDigest = verificationReceiptDigest;
+      current.verifiedAt = confirmedAt;
+      current.expiresAt = receiptExpiresAt;
+      return { verified: true, challenge: clone(current) };
+    },
+
+    async getVerificationChallengeByReceiptDigest(digest) {
+      return clone(
+        [...challenges.values()].find((challenge) => challenge.verificationReceiptDigest === digest),
+      );
+    },
+
+    async getApplicationByClientRequestId(clientRequestId) {
+      return clone(
+        [...applications.values()].find((application) => application.clientRequestId === clientRequestId),
+      );
+    },
+
+    async createSubmittedApplication({ application, verificationReceiptDigest, history: entries, audit }) {
+      const receipt = [...challenges.values()].find(
+        (challenge) => challenge.verificationReceiptDigest === verificationReceiptDigest,
+      );
+      if (!receipt || receipt.state !== 'VERIFIED' || receipt.expiresAt <= application.createdAt) {
+        throw new Error('receipt conflict');
+      }
+      if (
+        applications.has(application.id) ||
+        (await repository.getApplicationByClientRequestId(application.clientRequestId))
+      ) {
+        throw new Error('application conflict');
+      }
+      receipt.state = 'CONSUMED';
+      receipt.consumedAt = application.createdAt;
+      applications.set(application.id, clone(application));
+      history.push(clone(entries.draft), clone(entries.submission));
+      audits.push(clone(audit));
+      return repository.getApplicationById(application.id);
+    },
+
+    async getApplicationById(applicationId) {
+      return clone(applications.get(applicationId));
+    },
+
+    async getApplicationByStatusTokenDigest(digest, now) {
+      return clone(
+        [...applications.values()].find(
+          (application) => application.statusTokenDigest === digest && application.statusTokenExpiresAt > now,
+        ),
+      );
+    },
+
+    async getApplicationReplayByIdempotencyKey(idempotencyKey) {
+      const entry = history.find((candidate) => candidate.idempotencyKey === idempotencyKey);
+      if (!entry) return undefined;
+      return { application: await repository.getApplicationById(entry.applicationId), history: clone(entry) };
+    },
+
+    async transitionApplication({
+      applicationId,
+      fromState,
+      toState,
+      expectedRevision,
+      actorAccountId,
+      idempotencyKey,
+      updates,
+      history: entry,
+      audit,
+      requireDistinctFromAdministrator,
+      revokeApprovedStarter,
+    }) {
+      const application = applications.get(applicationId);
+      if (
+        !application ||
+        application.state !== fromState ||
+        application.revision !== expectedRevision ||
+        history.some((candidate) => candidate.idempotencyKey === idempotencyKey) ||
+        (requireDistinctFromAdministrator && application.administratorReviewerId === actorAccountId)
+      ) {
+        throw new Error('transition guard conflict');
+      }
+      if (revokeApprovedStarter) {
+        const account = accounts.get(application.approvedAccountId);
+        if (!account || account.status !== 'STARTER') throw new Error('starter revocation guard conflict');
+        account.status = 'REVOKED';
+      }
+      Object.assign(application, clone(updates), { state: toState, revision: application.revision + 1 });
+      history.push(clone(entry));
+      audits.push(clone(audit));
+      return clone(application);
+    },
+
+    async approveApplication({
+      applicationId,
+      expectedRevision,
+      actorAccountId,
+      idempotencyKey,
+      starterAccount,
+      history: entry,
+      accountAudit,
+      applicationAudit,
+      allowSameReviewer,
+    }) {
+      const application = applications.get(applicationId);
+      if (
+        !application ||
+        application.state !== 'PENDING_DIRECTOR_APPROVAL' ||
+        application.revision !== expectedRevision ||
+        !application.administratorReviewerId ||
+        (!allowSameReviewer && application.administratorReviewerId === actorAccountId) ||
+        accounts.has(starterAccount.id) ||
+        history.some((candidate) => candidate.idempotencyKey === idempotencyKey)
+      ) {
+        throw new Error('approval guard conflict');
+      }
+      accounts.set(starterAccount.id, clone({ ...starterAccount, status: 'STARTER' }));
+      Object.assign(application, {
+        state: 'APPROVED_ACTIVATION_REQUIRED',
+        revision: application.revision + 1,
+        directorReviewerId: actorAccountId,
+        directorReviewedAt: entry.createdAt,
+        approvedAccountId: starterAccount.id,
+        accountCode: starterAccount.accessIdNormalized,
+      });
+      history.push(clone(entry));
+      audits.push(clone(accountAudit), clone(applicationAudit));
+      return clone(application);
+    },
+
+    inspect() {
+      return clone({
+        challenges: [...challenges.values()],
+        applications: [...applications.values()],
+        accounts: [...accounts.values()],
+        history,
+        audits,
+      });
+    },
+  };
+  return repository;
+}
+
+function testContext({ providerConfigured = true } = {}) {
+  let timestamp = Date.parse('2026-08-03T08:00:00.000Z');
+  let sequence = 0;
+  const sent = [];
+  const clock = { now: () => timestamp, advance: (milliseconds) => (timestamp += milliseconds) };
+  const repository = createRepository();
+  const tokenCrypto = createTokenCrypto({ cryptoProvider: webcrypto, timingSafeEqual });
+  const passwordKdf = createPasswordKdf({
+    cryptoProvider: webcrypto,
+    timingSafeEqual,
+    defaultIterations: 1_000,
+    minimumIterations: 1_000,
+  });
+  const emailProvider = providerConfigured
+    ? {
+        configured: true,
+        async sendVerification(command) {
+          sent.push(clone(command));
+        },
+      }
+    : createFailClosedEmailProvider();
+  const service = createAccountApplicationService({
+    repository,
+    emailProvider,
+    identityProtection: {
+      async prepareEmail(email) {
+        if (String(email).toLowerCase() !== 'eligible@example.test') return { approved: false };
+        return {
+          approved: true,
+          emailFingerprint: 'KEYED-FINGERPRINT-ELIGIBLE',
+          protectedEmailEnvelope: 'v1.synthetic.email-envelope',
+          identityClassId: 'SYNTHETIC_APPROVED_STAFF',
+          providerDelivery: { opaqueDestination: 'synthetic' },
+        };
+      },
+      async protectApplicationProfile() {
+        return {
+          protectedProfileEnvelope: 'v1.synthetic.profile-envelope',
+          profileFingerprint: 'KEYED-PROFILE-FINGERPRINT',
+        };
+      },
+      async fingerprintRequestedAccess() {
+        return 'KEYED-ACCESS-FINGERPRINT';
+      },
+    },
+    passwordKdf,
+    tokenCrypto,
+    rateLimiter: {
+      async consume() {
+        return { allowed: true };
+      },
+    },
+    activationHandoff: {
+      async prepare({ approvedAt }) {
+        return {
+          starterAccount: {
+            id: 'ACCOUNT-SYNTHETIC-001',
+            accessIdNormalized: 'HAU-STAFF-001',
+            collisionKey: 'HAUSTAFF001',
+            roleId: 'REQUESTER',
+            defaultCommitteeId: '',
+            committeeIds: [],
+            accessProfile: {
+              presetId: 'REQUESTER',
+              workspaceIds: [],
+              defaultWorkspaceId: '',
+              locationScopeIds: [],
+              eventSeriesScopeIds: [],
+              eventScopeIds: [],
+              capabilityGrants: [],
+              capabilityDenies: [],
+            },
+            temporaryCredential: {
+              algorithm: 'PBKDF2-SHA-256',
+              iterations: 1_000,
+              salt: 'synthetic-salt',
+              hash: 'synthetic-hash',
+              peppered: false,
+              expiresAt: approvedAt,
+              consumedAt: null,
+            },
+            createdAt: approvedAt,
+            lendingEligible: false,
+            institutionId: '',
+            departmentId: '',
+          },
+          privateHandoff: {
+            accountCode: 'HAU-STAFF-001',
+            temporaryCredential: 'ONE-TIME-PRIVATE-CREDENTIAL',
+          },
+        };
+      },
+    },
+    clock,
+    createId: () => `SYNTHETIC-${String(++sequence).padStart(4, '0')}`,
+  });
+  return { clock, repository, sent, service };
+}
+
+const applicationCommand = (verificationReceipt, clientRequestId = 'submit-synthetic-0001') => ({
+  verificationReceipt,
+  legalName: 'Synthetic Applicant Name',
+  contactNumber: '+63 917 000 0000',
+  departmentId: 'USC-DEPT-DOL',
+  courseId: 'COURSE-SYNTHETIC',
+  yearLevel: 2,
+  requestedUsername: 'synthetic.applicant',
+  requestedAccountType: 'STAFF',
+  requestedRoleId: 'REQUESTER',
+  requestedCommitteeIds: [],
+  requestedWorkspaceIds: [],
+  lendingSelfService: true,
+  internalLendingOperations: false,
+  requestCenterAccess: true,
+  password: 'Applicant!Password9472',
+  confirmPassword: 'Applicant!Password9472',
+  clientRequestId,
+});
+
+async function submittedApplication(context) {
+  await context.service.startEmailVerification({ email: 'eligible@example.test' });
+  const confirmation = await context.service.confirmEmailVerification({
+    email: 'eligible@example.test',
+    code: context.sent[0].verificationCode,
+  });
+  const submitted = await context.service.submitApplication(
+    applicationCommand(confirmation.verificationReceipt),
+  );
+  return { confirmation, submitted };
+}
+
+describe('account-application service', () => {
+  it('keeps verification start generic for unknown identity, unavailable provider, and approved identity', async () => {
+    const configured = testContext();
+    const approved = await configured.service.startEmailVerification({ email: 'eligible@example.test' });
+    const unknown = await configured.service.startEmailVerification({ email: 'unknown@example.test' });
+    expect(approved).toEqual(unknown);
+    expect(configured.sent).toHaveLength(1);
+
+    const failClosed = testContext({ providerConfigured: false });
+    const unavailable = await failClosed.service.startEmailVerification({ email: 'eligible@example.test' });
+    expect(unavailable).toEqual(approved);
+    expect(failClosed.repository.inspect().challenges).toEqual([]);
+  });
+
+  it('stores only verification/status digests and returns each opaque credential boundary once', async () => {
+    const context = testContext();
+    const { confirmation, submitted } = await submittedApplication(context);
+    const stored = context.repository.inspect();
+    const serialized = JSON.stringify(stored);
+
+    expect(submitted.statusToken).toBeTruthy();
+    expect(stored.challenges[0]).toMatchObject({ state: 'CONSUMED' });
+    expect(stored.challenges[0].secretDigest).not.toBe(context.sent[0].verificationCode);
+    expect(stored.challenges[0].verificationReceiptDigest).not.toBe(confirmation.verificationReceipt);
+    expect(stored.applications[0].statusTokenDigest).not.toBe(submitted.statusToken);
+    expect(serialized).not.toContain(context.sent[0].verificationCode);
+    expect(serialized).not.toContain(confirmation.verificationReceipt);
+    expect(serialized).not.toContain(submitted.statusToken);
+    expect(serialized).not.toContain('Applicant!Password9472');
+    expect(serialized).not.toContain('Synthetic Applicant Name');
+
+    await expect(
+      context.service.confirmEmailVerification({
+        email: 'eligible@example.test',
+        code: context.sent[0].verificationCode,
+      }),
+    ).rejects.toMatchObject({ code: 'VERIFICATION_INVALID' });
+  });
+
+  it('enforces expected revision and returns an idempotent withdrawal replay without a second transition', async () => {
+    const context = testContext();
+    const { submitted } = await submittedApplication(context);
+    await expect(
+      context.service.withdraw({
+        statusToken: submitted.statusToken,
+        expectedRevision: 1,
+        reason: 'Applicant chooses not to continue.',
+        clientRequestId: 'withdraw-synthetic-0001',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_REVISION_CONFLICT' });
+
+    const withdrawn = await context.service.withdraw({
+      statusToken: submitted.statusToken,
+      expectedRevision: 2,
+      reason: 'Applicant chooses not to continue.',
+      clientRequestId: 'withdraw-synthetic-0001',
+    });
+    const replayed = await context.service.withdraw({
+      statusToken: submitted.statusToken,
+      expectedRevision: 2,
+      reason: 'Applicant chooses not to continue.',
+      clientRequestId: 'withdraw-synthetic-0001',
+    });
+
+    expect(withdrawn).toMatchObject({ state: ACCOUNT_APPLICATION_STATE.WITHDRAWN, revision: 3 });
+    expect(replayed).toEqual(withdrawn);
+    expect(context.repository.inspect().history).toHaveLength(3);
+  });
+
+  it('requires distinct Administrator and Director review, then preserves a one-time private activation handoff', async () => {
+    const context = testContext();
+    const { submitted } = await submittedApplication(context);
+    const admin = { id: 'ADMIN-SYNTHETIC-001', capabilities: [ACCOUNT_APPLICATION_CAPABILITY.ADMIN_REVIEW] };
+    const director = {
+      id: 'DIRECTOR-SYNTHETIC-001',
+      capabilities: [ACCOUNT_APPLICATION_CAPABILITY.DIRECTOR_DECIDE],
+    };
+    const dualRoleReviewer = {
+      id: admin.id,
+      capabilities: [
+        ACCOUNT_APPLICATION_CAPABILITY.ADMIN_REVIEW,
+        ACCOUNT_APPLICATION_CAPABILITY.DIRECTOR_DECIDE,
+      ],
+    };
+    const forwarded = await context.service.adminForward({
+      actor: admin,
+      applicationId: context.repository.inspect().applications[0].id,
+      expectedRevision: submitted.revision,
+      reason: 'Verified directory and proposed access were reviewed.',
+      reviewEvidence: {
+        evidenceFingerprint: 'ADMIN-EVIDENCE-FP',
+        protectedReviewEnvelope: 'v1.admin-review',
+      },
+      clientRequestId: 'admin-forward-synthetic-001',
+    });
+    expect(forwarded).toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+      revision: 3,
+    });
+
+    await expect(
+      context.service.directorApprove({
+        actor: dualRoleReviewer,
+        applicationId: context.repository.inspect().applications[0].id,
+        expectedRevision: 3,
+        reason: 'Attempting prohibited same-reviewer approval.',
+        reviewEvidence: {
+          evidenceFingerprint: 'DIRECTOR-EVIDENCE-FP',
+          protectedReviewEnvelope: 'v1.director-review',
+        },
+        clientRequestId: 'director-approve-synthetic-001',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_SAME_REVIEWER' });
+
+    const approved = await context.service.directorApprove({
+      actor: director,
+      applicationId: context.repository.inspect().applications[0].id,
+      expectedRevision: 3,
+      reason: 'Director approved the independently reviewed application.',
+      reviewEvidence: {
+        evidenceFingerprint: 'DIRECTOR-EVIDENCE-FP',
+        protectedReviewEnvelope: 'v1.director-review',
+      },
+      clientRequestId: 'director-approve-synthetic-002',
+    });
+    const replayed = await context.service.directorApprove({
+      actor: director,
+      applicationId: context.repository.inspect().applications[0].id,
+      expectedRevision: 3,
+      reason: 'Director approved the independently reviewed application.',
+      reviewEvidence: {
+        evidenceFingerprint: 'DIRECTOR-EVIDENCE-FP',
+        protectedReviewEnvelope: 'v1.director-review',
+      },
+      clientRequestId: 'director-approve-synthetic-002',
+    });
+    const persisted = JSON.stringify(context.repository.inspect());
+
+    expect(approved).toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+      revision: 4,
+      accountCode: 'HAU-STAFF-001',
+      activationReady: true,
+      activationHandoff: { temporaryCredential: 'ONE-TIME-PRIVATE-CREDENTIAL' },
+    });
+    expect(replayed).toMatchObject({ replayed: true, activationReady: true });
+    expect(replayed).not.toHaveProperty('activationHandoff');
+    expect(persisted).not.toContain('ONE-TIME-PRIVATE-CREDENTIAL');
+    expect(JSON.stringify(context.repository.inspect().audits)).not.toContain('v1.admin-review');
+    expect(JSON.stringify(context.repository.inspect().audits)).not.toContain('v1.director-review');
+  });
+
+  it('requires owner override confirmation and durable safe follow-up capture', async () => {
+    const context = testContext();
+    const { submitted } = await submittedApplication(context);
+    const applicationId = context.repository.inspect().applications[0].id;
+    const owner = {
+      id: 'OWNER-SYNTHETIC-001',
+      capabilities: [ACCOUNT_APPLICATION_CAPABILITY.OWNER_OVERRIDE],
+    };
+
+    await expect(
+      context.service.ownerOverride({
+        actor: owner,
+        applicationId,
+        expectedRevision: submitted.revision,
+        reason: 'System Owner reviews a documented exception.',
+        clientRequestId: 'owner-override-synthetic-001',
+        override: {
+          action: 'FORWARD',
+          currentState: 'DRAFT',
+          effectiveAccessFingerprint: 'ACCESS-FP',
+          sessionImpactFingerprint: 'SESSION-FP',
+          followUpReviewReference: 'FOLLOW-UP-001',
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_OVERRIDE_INVALID' });
+
+    const result = await context.service.ownerOverride({
+      actor: owner,
+      applicationId,
+      expectedRevision: submitted.revision,
+      reason: 'System Owner reviews a documented exception.',
+      clientRequestId: 'owner-override-synthetic-002',
+      override: {
+        action: 'FORWARD',
+        currentState: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+        effectiveAccessFingerprint: 'ACCESS-FP',
+        sessionImpactFingerprint: 'SESSION-FP',
+        followUpReviewReference: 'FOLLOW-UP-001',
+      },
+    });
+    expect(result).toMatchObject({ state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL, revision: 3 });
+    expect(context.repository.inspect().history.at(-1).after).toMatchObject({
+      ownerOverride: true,
+      effectiveAccessFingerprint: 'ACCESS-FP',
+      sessionImpactFingerprint: 'SESSION-FP',
+      followUpReviewReference: 'FOLLOW-UP-001',
+    });
+  });
+});
