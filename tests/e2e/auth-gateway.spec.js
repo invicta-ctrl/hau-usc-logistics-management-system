@@ -180,7 +180,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page.locator('.app-shell')).toBeVisible();
   await expect(page.locator('[data-auth-logout]')).toHaveCount(1);
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
-  await expect(page).toHaveURL(/\/app\/food$/);
+  await expect(page).toHaveURL(/\/food$/);
   await expect(page.locator('#authGateway')).toHaveCount(0);
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell).toBeVisible();
@@ -188,7 +188,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
   await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
-  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.0/u);
+  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.1/u);
   await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();

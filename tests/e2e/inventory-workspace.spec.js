@@ -191,7 +191,7 @@ test('Inventory & Pantry exposes every accepted destination and distinct stock t
   }
   await expect(panel).toContainText('SYNTHETIC-ITEM-LOW');
   await expect(panel).toContainText('On hand 8 · Reserved 2 · ATP 6 piece');
-  await expect(panel).toContainText('LOW STOCK');
+  await expect(panel).toContainText('Low Stock');
   await expect(panel.getByRole('button', { name: /^Overdue 1 /u })).toBeVisible();
 });
 

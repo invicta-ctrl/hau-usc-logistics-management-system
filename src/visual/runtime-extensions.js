@@ -703,7 +703,13 @@ export function createRuntimeExtensions(options) {
   const ensureCurrentHistoryEntry = () => {
     const index = Number(history.state?.[routeHistoryIndexKey]);
     if (Number.isFinite(index)) return index;
-    history.replaceState(indexedHistoryState(routeHistorySequence), '', currentLocation());
+    const target = currentLocation();
+    try {
+      if (target) history.replaceState(indexedHistoryState(routeHistorySequence), '', target);
+      else history.replaceState(indexedHistoryState(routeHistorySequence), '');
+    } catch (error) {
+      if (location.origin !== 'null' || error?.name !== 'SecurityError') throw error;
+    }
     return routeHistorySequence;
   };
   const acceptCurrentLocation = () => {
@@ -8193,39 +8199,50 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const clearRequestOnlyInternalSurfaces = () => {
+    for (const selector of ['#inventoryTable', '#inventoryCount', '#inventoryPagination', '#releaseTickets', '#lendingTickets']) {
+      document.querySelector(selector)?.replaceChildren();
+    }
+    document
+      .querySelectorAll(
+        '[data-inventory-advanced-controls],[data-inventory-classification-queue],[data-inventory-workspace-supplement]',
+      )
+      .forEach((surface) => surface.remove());
+  };
+
   const install = () => {
-    installLocalFoodServices();
-    installLocalMaterialsServices();
-    installLocalVenueEquipmentServices();
-    installLocalReferenceAdminServices();
-    installFoodWorkflow();
-    installMaterialsWorkflow();
-    installVenueEquipmentWorkflow();
-    installReferenceAdminWorkspace();
-    installLendingUsage();
-    installRoleExperience();
-    installInventoryWorkspaceSupplement();
-    renderRoleExperience();
-    installInternalShell();
-    installSharedMobileNav();
-    installReleaseConfirmation();
-    installCanvassQuality();
-    installDeliverableReceiving();
-    installLendingUsage();
     if (!isRequestOnly()) {
+      installLocalFoodServices();
+      installLocalMaterialsServices();
+      installLocalVenueEquipmentServices();
+      installLocalReferenceAdminServices();
+      installFoodWorkflow();
+      installMaterialsWorkflow();
+      installVenueEquipmentWorkflow();
+      installReferenceAdminWorkspace();
+      installLendingUsage();
+      installRoleExperience();
+      installInventoryWorkspaceSupplement();
+      renderRoleExperience();
+      installInternalShell();
+      installSharedMobileNav();
+      installReleaseConfirmation();
+      installCanvassQuality();
+      installDeliverableReceiving();
+      installLendingUsage();
       lending = createLendingController({ markFormClean });
       installLendingApproval();
+      mountSyncUi();
+      const statusFilter = document.querySelector('#inventoryStatusFilter');
+      if (statusFilter && !statusFilter.querySelector('[value="ARCHIVED"]'))
+        statusFilter.insertAdjacentHTML('beforeend', '<option value="ARCHIVED">Archived</option>');
+      const handlingFilter = document.querySelector('#inventoryHandlingFilter');
+      if (handlingFilter && !handlingFilter.querySelector('[value="Reusable Asset"]'))
+        handlingFilter.insertAdjacentHTML(
+          'beforeend',
+          '<option value="Reusable Asset">Reusable Asset</option><option value="Non Circulating">Non-circulating</option>',
+        );
     }
-    mountSyncUi();
-    const statusFilter = document.querySelector('#inventoryStatusFilter');
-    if (statusFilter && !statusFilter.querySelector('[value="ARCHIVED"]'))
-      statusFilter.insertAdjacentHTML('beforeend', '<option value="ARCHIVED">Archived</option>');
-    const handlingFilter = document.querySelector('#inventoryHandlingFilter');
-    if (handlingFilter && !handlingFilter.querySelector('[value="Reusable Asset"]'))
-      handlingFilter.insertAdjacentHTML(
-        'beforeend',
-        '<option value="Reusable Asset">Reusable Asset</option><option value="Non Circulating">Non-circulating</option>',
-      );
     document.querySelectorAll('form').forEach((form) => {
       if (isTrackableForm(form)) dirtyTracker.register(form);
     });
@@ -8352,6 +8369,10 @@ export function createRuntimeExtensions(options) {
         if (isTrackableForm(form)) markFormClean(form);
       });
       formSnapshotsInitialized = true;
+    }
+    if (isRequestOnly()) {
+      clearRequestOnlyInternalSurfaces();
+      return;
     }
     syncSharedMobileNav();
     renderRoleExperience();

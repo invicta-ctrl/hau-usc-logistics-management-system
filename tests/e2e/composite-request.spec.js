@@ -147,7 +147,7 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
 
   const materialsQueue = page.locator('#materialsCommitteeQueue');
   await expect(materialsQueue).toBeVisible();
-  await expect(materialsQueue).toContainText('PENDING_DECISION');
+  await expect(materialsQueue).toContainText('Pending Decision');
   await materialsQueue.getByRole('button', { name: 'Manage' }).click();
   const materialsWorkflow = page.locator('#materialsWorkflowForm');
   await expect(materialsWorkflow).toBeVisible();
@@ -166,7 +166,7 @@ test('submits selected composite sections as one visible parent hierarchy', asyn
 
   const venueEquipmentQueue = page.locator('#venueEquipmentQueue');
   await expect(venueEquipmentQueue).toBeVisible();
-  await expect(venueEquipmentQueue).toContainText('PENDING_CONFIRMATION');
+  await expect(venueEquipmentQueue).toContainText('Pending Confirmation');
   await venueEquipmentQueue.getByRole('button', { name: 'Manage' }).click();
   const venueEquipmentWorkflow = page.locator('#venueEquipmentWorkflowForm');
   await expect(venueEquipmentWorkflow).toBeVisible();
