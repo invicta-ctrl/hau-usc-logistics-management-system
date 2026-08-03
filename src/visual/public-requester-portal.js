@@ -1,3 +1,4 @@
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
 import { brandLockupMarkup } from './brand-assets.js';
 import {
   bindPublicPolicyDialogs,
@@ -15,12 +16,16 @@ function escapeHtml(value) {
 }
 
 const clientRequestId = () => `public-request:${crypto.randomUUID()}`;
-const REQUEST_TYPE_LABELS = Object.freeze({
-  EVENT_LOGISTICS: 'Event Logistics Request',
-  CATALOG_RESTOCK: 'Catalog / Office Restock Request',
+const REQUEST_PURPOSES = Object.freeze({
+  EVENT_ACTIVITY_SUPPORT: 'EVENT_ACTIVITY_SUPPORT',
+  OFFICE_INVENTORY_PANTRY: 'OFFICE_INVENTORY_PANTRY',
+});
+const REQUEST_PURPOSE_LABELS = Object.freeze({
+  [REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT]: 'Event or activity support',
+  [REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY]: 'Office inventory or pantry',
 });
 const STEP_LABELS = Object.freeze([
-  'Request Type',
+  'Request Purpose',
   'Requester',
   'Event & Schedule',
   'Requirements',
@@ -80,8 +85,8 @@ export async function mountPublicRequesterPortal({ root, client }) {
             <h2 id="requestStep1Title">What do you need?</h2>
             <p>Choose one workflow. The following steps show only the relevant source-grounded fields.</p>
             <div class="public-request-types">
-              <label><input type="radio" name="requestType" value="EVENT_LOGISTICS" checked><span><strong>Event Logistics Request</strong><small>For an approved event series and sub-event.</small></span></label>
-              <label><input type="radio" name="requestType" value="CATALOG_RESTOCK"><span><strong>Catalog / Office Restock Request</strong><small>For an approved inventory or pantry area.</small></span></label>
+              <label><input type="radio" name="requestPurpose" value="EVENT_ACTIVITY_SUPPORT" checked><span><strong>Event or activity support</strong><small>For an approved event series and sub-event.</small></span></label>
+              <label><input type="radio" name="requestPurpose" value="OFFICE_INVENTORY_PANTRY"><span><strong>Office inventory or pantry</strong><small>For approved office inventory or pantry needs.</small></span></label>
             </div>
           </section>
 
@@ -169,7 +174,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
             <label class="public-check"><input name="evidenceConsentAcknowledged" type="checkbox" required><span><strong>Evidence and photo acknowledgment</strong><small>If evidence is later requested through a protected workflow, I will share only relevant content I am authorized to provide and have consent for.</small></span></label>
           </section>
 
-          <p class="borrower-form-message" role="status" aria-live="polite"></p>
+          <p class="borrower-form-message" data-request-message role="status" aria-live="polite"></p>
           <div class="public-step-actions">
             <button class="secondary" type="button" data-step-previous hidden>Previous</button>
             <button class="primary" type="button" data-step-next>Continue</button>
@@ -206,9 +211,11 @@ export async function mountPublicRequesterPortal({ root, client }) {
   const fields = root.querySelector('[data-line-fields]');
   const lineList = root.querySelector('[data-request-lines]');
   const lineCount = root.querySelector('[data-line-count]');
-  const message = form.querySelector('.borrower-form-message');
+  const message = form.querySelector('[data-request-message]');
 
-  const requestType = () => form.elements.requestType.value;
+  const requestPurpose = () => form.elements.requestPurpose.value;
+  const eventPurposeSelected = () => requestPurpose() === REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT;
+  const requestType = () => (eventPurposeSelected() ? 'EVENT_LOGISTICS' : 'CATALOG_RESTOCK');
   const purposeValue = () =>
     requestType() === 'EVENT_LOGISTICS'
       ? form.elements.eventPurpose.value
@@ -216,7 +223,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
 
   const renderFields = () => {
     if (category.value === 'Inventory Item') {
-      fields.innerHTML = `<label>Approved inventory item<select name="itemId" required><option value="">Select an item</option>${options.items.map((item) => `<option value="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" data-unit="${escapeHtml(item.unit)}">${escapeHtml(item.name)} · ${escapeHtml(item.category)} (${escapeHtml(item.unit)})</option>`).join('')}</select></label><label>Quantity<input name="lineQuantity" type="number" min="1" step="1" value="1" required></label><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`;
+      fields.innerHTML = `<label>Approved inventory item<select name="itemId" required><option value="">Select an item</option>${options.items.map((item) => `<option value="${escapeHtml(item.id)}" data-name="${escapeHtml(item.name)}" data-unit="${escapeHtml(item.unit)}">${escapeHtml(item.name)} · ${escapeHtml(item.category)} (${escapeHtml(item.unit)})</option>`).join('')}</select></label><label>Quantity<input name="lineQuantity" type="number" inputmode="numeric" min="1" step="1" value="1" required></label><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`;
       return;
     }
     if (['Venue / Facility', 'Logistics / Equipment'].includes(category.value)) {
@@ -224,11 +231,11 @@ export async function mountPublicRequesterPortal({ root, client }) {
         category.value === 'Venue / Facility' ? ['Venues / Facilities'] : ['Logistics', 'Equipment'];
       const references = options.references.filter((reference) => groups.includes(reference.group));
       fields.innerHTML = references.length
-        ? `<fieldset class="public-reference-choices"><legend>Approved ${escapeHtml(groups.join(' / '))}</legend>${references.map((reference) => `<label class="public-check"><input type="checkbox" name="referenceId" value="${escapeHtml(reference.id)}" data-name="${escapeHtml(reference.name)}" data-unit="${escapeHtml(reference.unit)}"><span><strong>${escapeHtml(reference.name)}</strong><small>${escapeHtml(reference.category)} · ${escapeHtml(reference.unit)}</small></span></label>`).join('')}</fieldset><label>Quantity for each selected row<input name="lineQuantity" type="number" min="1" step="1" value="1" required></label><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`
+        ? `<fieldset class="public-reference-choices"><legend>Approved ${escapeHtml(groups.join(' / '))}</legend>${references.map((reference) => `<label class="public-check"><input type="checkbox" name="referenceId" value="${escapeHtml(reference.id)}" data-name="${escapeHtml(reference.name)}" data-unit="${escapeHtml(reference.unit)}"><span><strong>${escapeHtml(reference.name)}</strong><small>${escapeHtml(reference.category)} · ${escapeHtml(reference.unit)}</small></span></label>`).join('')}</fieldset><label>Quantity for each selected row<input name="lineQuantity" type="number" inputmode="numeric" min="1" step="1" value="1" required></label><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`
         : `<p class="empty">No approved ${escapeHtml(groups.join(' or ').toLowerCase())} references are available. Use Other only when the need is not represented.</p>`;
       return;
     }
-    fields.innerHTML = `<label>Description<input name="lineDescription" maxlength="240" required></label><div class="public-line-pair"><label>Quantity<input name="lineQuantity" type="number" min="1" step="1" value="1" required></label><label>Unit<input name="lineUnit" maxlength="40" placeholder="piece, pack, service" required></label></div><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`;
+    fields.innerHTML = `<label>Description<input name="lineDescription" maxlength="240" required></label><div class="public-line-pair"><label>Quantity<input name="lineQuantity" type="number" inputmode="numeric" min="1" step="1" value="1" required></label><label>Unit<input name="lineUnit" maxlength="40" placeholder="piece, pack, service" required></label></div><label>Specification / notes<textarea name="lineSpecification" maxlength="1000"></textarea></label>`;
   };
 
   const renderLines = () => {
@@ -299,7 +306,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
   };
 
   const syncRequestContext = () => {
-    const event = requestType() === 'EVENT_LOGISTICS';
+    const event = eventPurposeSelected();
     root.querySelector('[data-event-context]').hidden = !event;
     root.querySelector('[data-restock-context]').hidden = event;
     root
@@ -351,7 +358,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
         : `${values.stockArea || 'No area'} · needed ${values.neededDate || 'date not specified'}${values.relatedRequestId ? ` · related ${values.relatedRequestId}` : ''}`;
     root.querySelector('[data-request-review]').innerHTML = `
       <div class="public-review-grid">
-        <article><span>Request type</span><strong>${escapeHtml(REQUEST_TYPE_LABELS[requestType()])}</strong><button type="button" data-edit-step="1">Edit</button></article>
+        <article><span>Request purpose</span><strong>${escapeHtml(REQUEST_PURPOSE_LABELS[requestPurpose()])}</strong><button type="button" data-edit-step="1">Edit</button></article>
         <article><span>Requester</span><strong>${escapeHtml(values.requesterName)}</strong><small>${escapeHtml(values.requesterType)} · ${escapeHtml(values.organization)} · ${escapeHtml(values.email)}</small><button type="button" data-edit-step="2">Edit</button></article>
         <article><span>Event / restock context</span><strong>${escapeHtml(context)}</strong><small>${escapeHtml(purposeValue())}</small><button type="button" data-edit-step="3">Edit</button></article>
         <article><span>Requested items</span><strong>${lines.length} line${lines.length === 1 ? '' : 's'}</strong><ul>${lines.map((line) => `<li>${escapeHtml(lineLabel(line))}</li>`).join('')}</ul><button type="button" data-edit-step="4">Edit</button></article>
@@ -408,7 +415,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
     renderRestockReferences();
     syncRequestContext();
   });
-  [...form.elements.requestType].forEach((radio) => radio.addEventListener('change', syncRequestContext));
+  [...form.elements.requestPurpose].forEach((radio) => radio.addEventListener('change', syncRequestContext));
 
   renderFields();
   renderLines();
@@ -416,11 +423,15 @@ export async function mountPublicRequesterPortal({ root, client }) {
   showStep(1);
 
   root.querySelector('[data-add-request-line]').addEventListener('click', () => {
-    const quantity = Number(form.elements.lineQuantity?.value);
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      form.elements.lineQuantity?.reportValidity();
+    const quantityInput = form.elements.lineQuantity;
+    const quantity = Number(quantityInput?.value);
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+      quantityInput?.setCustomValidity('Enter a whole-number quantity of at least 1.');
+      quantityInput?.reportValidity();
+      message.textContent = 'Quantity must be a whole number of at least 1.';
       return;
     }
+    quantityInput.setCustomValidity('');
     const specification = form.elements.lineSpecification?.value ?? '';
     if (category.value === 'Inventory Item') {
       const selected = form.elements.itemId.selectedOptions[0];
@@ -535,7 +546,8 @@ export async function mountPublicRequesterPortal({ root, client }) {
     try {
       const result = await client.request('/api/public/request', {
         body: {
-          requestType: values.requestType,
+          requestPurpose: values.requestPurpose,
+          requestType: requestType(),
           requesterName: values.requesterName,
           requesterType: values.requesterType,
           organization: values.organization,

@@ -1,3 +1,4 @@
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
 const escapeHtml = (value) =>
   String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -16,17 +17,22 @@ export function mountPublicAdvertisementCarousel({ root, advertisements, interva
 
   let index = 0;
   let timer = null;
-  let paused = false;
+  let userPaused = false;
+  let hoverPaused = false;
+  let focusPaused = false;
   let pointerStart = null;
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const motionPreference = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let reducedMotion = motionPreference?.matches === true;
+  userPaused = reducedMotion;
   root.innerHTML = `
     <section class="panel public-announcements${reducedMotion ? ' reduced-motion' : ''}" aria-labelledby="publicAnnouncementsTitle">
       <div class="panel-head"><div><p class="eyebrow">Official updates</p><h2 id="publicAnnouncementsTitle">USC Announcements</h2></div><span class="pill" data-announcement-position></span></div>
-      <div class="public-announcement-stage" data-announcement-stage aria-live="polite"></div>
+      <div class="public-announcement-stage" data-announcement-stage></div>
       <div class="public-announcement-controls" data-announcement-controls>
-        <button class="secondary mini" type="button" data-announcement-previous aria-label="Previous announcement">Previous</button>
-        <div data-announcement-indicators aria-label="Choose announcement"></div>
-        <button class="secondary mini" type="button" data-announcement-next aria-label="Next announcement">Next</button>
+        <button class="secondary" type="button" data-announcement-previous aria-label="Previous announcement">Previous</button>
+        <div class="public-announcement-indicators" data-announcement-indicators aria-label="Choose announcement"></div>
+        <button class="secondary" type="button" data-announcement-toggle aria-controls="publicAnnouncementStage" aria-pressed="${reducedMotion ? 'true' : 'false'}">${reducedMotion ? 'Resume' : 'Pause'}</button>
+        <button class="secondary" type="button" data-announcement-next aria-label="Next announcement">Next</button>
       </div>
     </section>`;
 
@@ -35,6 +41,17 @@ export function mountPublicAdvertisementCarousel({ root, advertisements, interva
   const position = root.querySelector('[data-announcement-position]');
   const controls = root.querySelector('[data-announcement-controls]');
   const indicators = root.querySelector('[data-announcement-indicators]');
+  const toggle = root.querySelector('[data-announcement-toggle]');
+  stage.id = 'publicAnnouncementStage';
+
+  const updateToggle = () => {
+    toggle.textContent = userPaused ? 'Resume' : 'Pause';
+    toggle.setAttribute('aria-pressed', String(userPaused));
+    toggle.setAttribute(
+      'aria-label',
+      userPaused ? 'Resume automatic announcements' : 'Pause automatic announcements',
+    );
+  };
 
   const render = () => {
     const item = items[index];
@@ -60,7 +77,7 @@ export function mountPublicAdvertisementCarousel({ root, advertisements, interva
   };
   const start = () => {
     stop();
-    if (items.length <= 1 || paused || document.hidden || reducedMotion) return;
+    if (items.length <= 1 || userPaused || hoverPaused || focusPaused || document.hidden) return;
     timer = setInterval(() => {
       index = (index + 1) % items.length;
       render();
@@ -75,25 +92,38 @@ export function mountPublicAdvertisementCarousel({ root, advertisements, interva
   controls.hidden = items.length === 1;
   root.querySelector('[data-announcement-previous]').addEventListener('click', () => show(index - 1));
   root.querySelector('[data-announcement-next]').addEventListener('click', () => show(index + 1));
+  toggle.addEventListener('click', () => {
+    userPaused = !userPaused;
+    updateToggle();
+    start();
+  });
   indicators.addEventListener('click', (event) => {
     const button = event.target.closest('[data-announcement-index]');
     if (button) show(Number(button.dataset.announcementIndex));
   });
+  indicators.addEventListener('keydown', (event) => {
+    if (!event.target.closest('[data-announcement-index]')) return;
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    show(index + (event.key === 'ArrowRight' ? 1 : -1));
+    indicators.querySelector(`[data-announcement-index="${index}"]`)?.focus();
+  });
   container.addEventListener('mouseenter', () => {
-    paused = true;
+    hoverPaused = true;
     stop();
   });
   container.addEventListener('mouseleave', () => {
-    paused = false;
+    hoverPaused = false;
     start();
   });
   container.addEventListener('focusin', () => {
-    paused = true;
+    focusPaused = true;
     stop();
   });
   container.addEventListener('focusout', (event) => {
     if (container.contains(event.relatedTarget)) return;
-    paused = false;
+    focusPaused = false;
     start();
   });
   container.addEventListener('keydown', (event) => {
@@ -116,13 +146,23 @@ export function mountPublicAdvertisementCarousel({ root, advertisements, interva
     if (Math.abs(distance) >= 45) show(index + (distance < 0 ? 1 : -1));
   });
   const visibilityHandler = () => (document.hidden ? stop() : start());
+  const motionPreferenceHandler = (event) => {
+    reducedMotion = event.matches;
+    container.classList.toggle('reduced-motion', reducedMotion);
+    if (reducedMotion) userPaused = true;
+    updateToggle();
+    start();
+  };
   document.addEventListener('visibilitychange', visibilityHandler);
   render();
+  updateToggle();
   start();
+  motionPreference?.addEventListener?.('change', motionPreferenceHandler);
   return {
     destroy() {
       stop();
       document.removeEventListener('visibilitychange', visibilityHandler);
+      motionPreference?.removeEventListener?.('change', motionPreferenceHandler);
     },
   };
 }
