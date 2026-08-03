@@ -2,6 +2,7 @@ PRAGMA foreign_keys = ON;
 
 ALTER TABLE accounts ADD COLUMN username_normalized TEXT;
 ALTER TABLE accounts ADD COLUMN verified_email_fingerprint TEXT;
+ALTER TABLE accounts ADD COLUMN profile_department_id TEXT REFERENCES requester_departments(id);
 ALTER TABLE accounts ADD COLUMN profile_course_id TEXT;
 ALTER TABLE accounts ADD COLUMN profile_year_level INTEGER CHECK (
   profile_year_level IS NULL OR (profile_year_level >= 1 AND profile_year_level <= 20)
@@ -50,6 +51,7 @@ CREATE TABLE account_applications (
   id TEXT PRIMARY KEY,
   application_code TEXT NOT NULL UNIQUE,
   email_fingerprint TEXT NOT NULL,
+  identity_class_id TEXT NOT NULL,
   protected_email_envelope TEXT NOT NULL,
   protected_profile_envelope TEXT NOT NULL,
   department_id TEXT NOT NULL,

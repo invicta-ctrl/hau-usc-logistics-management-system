@@ -49,6 +49,8 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
       handling: 'Consumable',
       unit: 'piece',
       reorderThreshold: 6,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 6,
       status: 'ACTIVE',
       catalogType: 'OFFICE_INVENTORY',
     },

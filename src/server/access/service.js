@@ -103,7 +103,7 @@ function assertAdministrator(actor) {
   return actor;
 }
 
-function secureTemporaryPassword() {
+export function secureTemporaryPassword() {
   const bytes = globalThis.crypto.getRandomValues(new Uint8Array(24));
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -127,7 +127,7 @@ function safeAccount(account) {
     lastAccessIdChange: account.lastAccessIdChangedAt ?? '',
     passwordChangedAt: account.passwordChangedAt ?? '',
     lastPasswordResetAt: account.lastPasswordResetAt ?? '',
-    departmentId: account.departmentId ?? '',
+    departmentId: account.profileDepartmentId || account.departmentId || '',
     departmentDisplayName: account.departmentDisplayName ?? '',
     lendingEligible: account.lendingEligible === true,
   };
@@ -135,7 +135,7 @@ function safeAccount(account) {
 
 function oneTimeCredential(account, temporaryPassword, generatedAt) {
   return {
-    departmentId: account.departmentId ?? '',
+    departmentId: account.profileDepartmentId || account.departmentId || '',
     department: account.departmentDisplayName ?? '',
     accessId: account.accessIdNormalized,
     temporaryPassword,
@@ -152,13 +152,14 @@ export function accessIdCollisionKey(value) {
 export function createAccessManagementService({
   repository,
   passwordKdf,
+  tokenCrypto,
   environment = 'DEVELOPMENT',
   clock = Date,
   createId = () => globalThis.crypto.randomUUID(),
   createTemporaryPassword = secureTemporaryPassword,
 } = {}) {
-  if (!repository || !passwordKdf) {
-    throw new Error('Access-management repository and password KDF are required.');
+  if (!repository || !passwordKdf || !tokenCrypto) {
+    throw new Error('Access-management repository, password KDF, and token crypto are required.');
   }
 
   const nowIso = () => new Date(clock.now()).toISOString();
@@ -727,6 +728,7 @@ export function createAccessManagementService({
       const replayResult = { unlocked: true, correlationId: mutationCorrelationId };
       await repository.unlockAccount({
         account,
+        limiterIdentity: await tokenCrypto.digest(account.accessIdNormalized.toLowerCase()),
         actor,
         changedAt,
         reason,

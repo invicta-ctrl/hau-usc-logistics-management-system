@@ -13,6 +13,7 @@ function applicationFromRow(row) {
     id: row.id,
     applicationCode: row.application_code,
     emailFingerprint: row.email_fingerprint,
+    identityClassId: row.identity_class_id,
     protectedEmailEnvelope: row.protected_email_envelope,
     protectedProfileEnvelope: row.protected_profile_envelope,
     departmentId: row.department_id ?? '',
@@ -36,6 +37,7 @@ function applicationFromRow(row) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     archivedAt: row.archived_at ?? '',
+    changeRequestSummary: row.state === 'CHANGES_REQUESTED' ? (row.change_request_summary ?? '') : '',
   };
 }
 
@@ -174,20 +176,21 @@ function applicationInsertStatement(db, application) {
   return db
     .prepare(
       `INSERT INTO account_applications (
-         id, application_code, email_fingerprint, protected_email_envelope,
+         id, application_code, email_fingerprint, identity_class_id, protected_email_envelope,
          protected_profile_envelope, department_id, course_id, year_level,
          requested_username_normalized, pending_password_credential_json,
          requested_access_json, state, revision, status_token_digest,
          status_token_expires_at, client_request_id, administrator_reviewer_id,
          administrator_reviewed_at, director_reviewer_id, director_reviewed_at,
          approved_account_id, expires_at, created_at, updated_at, archived_at
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
-                 ?14, ?15, ?16, NULL, NULL, NULL, NULL, NULL, ?17, ?18, ?18, NULL)`,
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14,
+                 ?15, ?16, ?17, NULL, NULL, NULL, NULL, NULL, ?18, ?19, ?19, NULL)`,
     )
     .bind(
       application.id,
       application.applicationCode,
       application.emailFingerprint,
+      application.identityClassId,
       application.protectedEmailEnvelope,
       application.protectedProfileEnvelope,
       application.departmentId || null,
@@ -216,11 +219,11 @@ function starterAccountStatement(db, account) {
          onboarding_completed_at, profile_email_verified_at, created_at, updated_at,
          locked_at, last_access_id_changed_at, lending_eligible, institution_id,
          department_id, password_changed_at, last_password_reset_at,
-         username_normalized, verified_email_fingerprint, profile_course_id,
-         profile_year_level, avatar_asset_key, avatar_updated_at
+         username_normalized, verified_email_fingerprint, profile_department_id,
+         profile_course_id, profile_year_level, avatar_asset_key, avatar_updated_at
        ) VALUES (?1, ?2, 'STARTER', ?3, ?4, NULL, NULL, NULL, NULL, ?5, 1,
-                 NULL, NULL, ?6, ?6, NULL, NULL, ?7, ?8, ?9, NULL, NULL,
-                 ?10, ?11, ?12, ?13, NULL, NULL)`,
+                 NULL, NULL, ?6, ?6, NULL, NULL, ?7, ?8, NULL, NULL, NULL,
+                 ?9, ?10, ?11, ?12, ?13, NULL, NULL)`,
     )
     .bind(
       account.id,
@@ -231,9 +234,9 @@ function starterAccountStatement(db, account) {
       account.createdAt,
       account.lendingEligible ? 1 : 0,
       account.institutionId ?? '',
-      account.departmentId || null,
       account.usernameNormalized || null,
       account.verifiedEmailFingerprint || null,
+      account.profileDepartmentId || null,
       account.profileCourseId || null,
       account.profileYearLevel ?? null,
     );
@@ -290,7 +293,15 @@ function starterAccountStatements(db, account, actorAccountId) {
 }
 
 function applicationSelect(whereClause) {
-  return `SELECT application.*, approved_account.access_id_normalized AS approved_account_code
+  return `SELECT application.*, approved_account.access_id_normalized AS approved_account_code,
+                 (
+                   SELECT history.reason
+                   FROM account_application_history history
+                   WHERE history.application_id = application.id
+                     AND history.to_state = 'CHANGES_REQUESTED'
+                   ORDER BY history.created_at DESC, history.id DESC
+                   LIMIT 1
+                 ) AS change_request_summary
           FROM account_applications application
           LEFT JOIN accounts approved_account ON approved_account.id = application.approved_account_id
           WHERE ${whereClause}`;
@@ -610,6 +621,12 @@ export function createD1AccountApplicationRepository(db) {
       );
     },
 
+    async getApplicationByApprovedAccountId(accountId) {
+      return applicationFromRow(
+        await db.prepare(applicationSelect('application.approved_account_id = ?1')).bind(accountId).first(),
+      );
+    },
+
     async getApplicationByClientRequestId(clientRequestId) {
       return applicationFromRow(
         await db
@@ -617,6 +634,77 @@ export function createD1AccountApplicationRepository(db) {
           .bind(clientRequestId)
           .first(),
       );
+    },
+
+    async listHistoryByApplicationId(applicationId) {
+      const result = await db
+        .prepare(
+          `SELECT *
+           FROM account_application_history
+           WHERE application_id = ?1
+           ORDER BY created_at, id
+           LIMIT 100`,
+        )
+        .bind(applicationId)
+        .all();
+      return result.results.map(historyFromRow);
+    },
+
+    async usernameCollides(username, excludeApplicationId = '') {
+      const collisionKey = String(username ?? '').replaceAll(/[._-]/gu, '');
+      const row = await db
+        .prepare(
+          `SELECT CASE
+             WHEN EXISTS (
+               SELECT 1 FROM accounts account
+               WHERE account.username_normalized = ?1
+                  OR lower(account.access_id_normalized) = ?1
+             )
+             OR EXISTS (
+               SELECT 1 FROM access_id_reservations reservation
+               WHERE lower(reservation.collision_key) = lower(?2)
+             )
+             OR EXISTS (
+               SELECT 1 FROM account_applications application
+               WHERE application.id <> ?3
+                 AND application.requested_username_normalized = ?1
+                 AND application.state IN (
+                   'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                   'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                 )
+             )
+             THEN 1 ELSE 0
+           END AS collides`,
+        )
+        .bind(username, collisionKey, excludeApplicationId)
+        .first();
+      return Number(row?.collides ?? 0) === 1;
+    },
+
+    async identityCollides(emailFingerprint, excludeApplicationId = '') {
+      const row = await db
+        .prepare(
+          `SELECT CASE
+             WHEN EXISTS (
+               SELECT 1 FROM accounts account
+               WHERE account.verified_email_fingerprint = ?1
+                 AND account.status IN ('ACTIVE', 'STARTER')
+             )
+             OR EXISTS (
+               SELECT 1 FROM account_applications application
+               WHERE application.id <> ?2
+                 AND application.email_fingerprint = ?1
+                 AND application.state IN (
+                   'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                   'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                 )
+             )
+             THEN 1 ELSE 0
+           END AS collides`,
+        )
+        .bind(emailFingerprint, excludeApplicationId)
+        .first();
+      return Number(row?.collides ?? 0) === 1;
     },
 
     async getApplicationReplayByIdempotencyKey(idempotencyKey) {
@@ -681,10 +769,16 @@ export function createD1AccountApplicationRepository(db) {
                      'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
                    )
                )
-               AND NOT EXISTS (
-                 SELECT 1 FROM accounts account
-                 WHERE account.username_normalized = ?7
-               )
+                AND NOT EXISTS (
+                  SELECT 1 FROM accounts account
+                  WHERE account.username_normalized = ?7
+                     OR lower(account.access_id_normalized) = ?7
+                )
+                AND NOT EXISTS (
+                  SELECT 1 FROM access_id_reservations reservation
+                  WHERE lower(reservation.collision_key) =
+                    lower(replace(replace(replace(?7, '.', ''), '_', ''), '-', ''))
+                )
                AND NOT EXISTS (
                  SELECT 1
                  FROM account_applications existing_application
@@ -693,6 +787,10 @@ export function createD1AccountApplicationRepository(db) {
                      'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
                      'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
                    )
+               )
+               AND EXISTS (
+                 SELECT 1 FROM requester_departments department
+                 WHERE department.id = ?8 AND department.active = 1
                )
                THEN 1
                ELSE json_extract('ACCOUNT_APPLICATION_SUBMISSION_GUARD_FAILED', '$')
@@ -706,6 +804,7 @@ export function createD1AccountApplicationRepository(db) {
             eligibilityApproved ? 1 : 0,
             application.emailFingerprint,
             application.requestedUsernameNormalized,
+            application.departmentId,
           ),
         db
           .prepare(
@@ -722,6 +821,112 @@ export function createD1AccountApplicationRepository(db) {
         auditStatement(db, audit),
       ]);
       return repository.getApplicationById(application.id);
+    },
+
+    async resubmitApplication({
+      applicationId,
+      expectedRevision,
+      idempotencyKey,
+      occurredAt,
+      eligibilityApproved,
+      emailFingerprint,
+      updates,
+      history,
+      audit,
+    }) {
+      await db.batch([
+        db
+          .prepare(
+            `SELECT CASE
+               WHEN EXISTS (
+                 SELECT 1 FROM account_applications application
+                 WHERE application.id = ?1
+                   AND application.state = 'CHANGES_REQUESTED'
+                   AND application.revision = ?2
+                   AND application.email_fingerprint = ?3
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM account_application_history WHERE idempotency_key = ?4
+               )
+               AND ?5 = 1
+               AND NOT EXISTS (
+                 SELECT 1 FROM accounts account
+                 WHERE account.verified_email_fingerprint = ?3
+                   AND account.status IN ('ACTIVE', 'STARTER')
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM account_applications existing_application
+                 WHERE existing_application.id <> ?1
+                   AND existing_application.email_fingerprint = ?3
+                   AND existing_application.state IN (
+                     'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                     'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                   )
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM accounts account
+                 WHERE account.username_normalized = ?6
+                    OR lower(account.access_id_normalized) = ?6
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM access_id_reservations reservation
+                 WHERE lower(reservation.collision_key) =
+                   lower(replace(replace(replace(?6, '.', ''), '_', ''), '-', ''))
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM account_applications existing_application
+                 WHERE existing_application.id <> ?1
+                   AND existing_application.requested_username_normalized = ?6
+                   AND existing_application.state IN (
+                     'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                     'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                   )
+               )
+               AND EXISTS (
+                 SELECT 1 FROM requester_departments department
+                 WHERE department.id = ?7 AND department.active = 1
+               )
+               THEN 1
+               ELSE json_extract('ACCOUNT_APPLICATION_RESUBMISSION_GUARD_FAILED', '$')
+             END AS allowed`,
+          )
+          .bind(
+            applicationId,
+            expectedRevision,
+            emailFingerprint,
+            idempotencyKey,
+            eligibilityApproved ? 1 : 0,
+            updates.requestedUsernameNormalized,
+            updates.departmentId,
+          ),
+        db
+          .prepare(
+            `UPDATE account_applications
+             SET protected_profile_envelope = ?1, department_id = ?2, course_id = ?3,
+                 year_level = ?4, requested_username_normalized = ?5,
+                 pending_password_credential_json = ?6, requested_access_json = ?7,
+                 state = 'PENDING_ADMIN_REVIEW', revision = revision + 1,
+                 administrator_reviewer_id = NULL, administrator_reviewed_at = NULL,
+                 director_reviewer_id = NULL, director_reviewed_at = NULL,
+                 updated_at = ?8
+             WHERE id = ?9 AND state = 'CHANGES_REQUESTED' AND revision = ?10`,
+          )
+          .bind(
+            updates.protectedProfileEnvelope,
+            updates.departmentId || null,
+            updates.courseId || null,
+            updates.yearLevel ?? null,
+            updates.requestedUsernameNormalized,
+            JSON.stringify(updates.pendingPasswordCredential),
+            JSON.stringify(updates.requestedAccess),
+            occurredAt,
+            applicationId,
+            expectedRevision,
+          ),
+        historyStatement(db, history),
+        auditStatement(db, audit),
+      ]);
+      return repository.getApplicationById(applicationId);
     },
 
     async transitionApplication({

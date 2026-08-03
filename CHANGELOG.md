@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.7.2 - Unreleased
+
+### Added
+
+- Added the protected staff account-application state machine, private status
+  receipt, Administrator and Director review, audited owner override, starter
+  activation handoff, and authenticated My Profile controls.
+- Added schema 0030 for applications/history/profile, canonical Link Registry,
+  announcements, integer and low-stock controls, and supporting audit state.
+- Added public registration/status UI and authenticated profile/account-review
+  UI with bounded accessibility and privacy behavior.
+
+### Changed
+
+- Separated staff profile affiliation from legacy department requester identity
+  while preserving requester behavior.
+- Made Link Registry additive to the existing second-review Routing workspace.
+- Updated runtime, package, Wrangler, private config generation, and release
+  workflows to identify v0.7.2.
+- Aligned account unlock with the privacy-preserving login limiter identity.
+
+### Verified boundary
+
+- Local verification passes 109 test files / 726 tests, 136 browser tests with
+  356 intentional skips, 39/39 local Worker/D1 tests, deterministic generated
+  parity, and a fresh schema-30 migration integrity rehearsal.
+- Pre-production and production remain blocked by the missing owner-approved
+  email provider and private identity-class configuration. No external v0.7.2
+  release write has occurred.
+
 ## 0.7.1 - 2026-08-03
 
 ### Released

@@ -3,10 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const repositoryRoot = resolve(import.meta.dirname, '../..');
-const migrationPath = resolve(
-  repositoryRoot,
-  'migrations/0030_production_access_and_operations.sql',
-);
+const migrationPath = resolve(repositoryRoot, 'migrations/0030_production_access_and_operations.sql');
 
 describe('v0.7.2 additive migration contract', () => {
   it('is the next migration after the accepted schema-29 baseline', async () => {
@@ -36,6 +33,7 @@ describe('v0.7.2 additive migration contract', () => {
       "'account_application.admin_review'",
       "'account_application.director_decide'",
       "'account_application.owner_override'",
+      'ADD COLUMN profile_department_id',
       "SET value = '30'",
     ]) {
       expect(sql).toContain(fragment);
@@ -84,6 +82,7 @@ describe('v0.7.2 additive migration contract', () => {
     expect(sql).toContain('secret_digest TEXT NOT NULL UNIQUE');
     expect(sql).toContain('verification_receipt_digest TEXT UNIQUE');
     expect(sql).toContain('status_token_digest TEXT NOT NULL UNIQUE');
+    expect(sql).toMatch(/CREATE TABLE account_applications[\s\S]*identity_class_id TEXT NOT NULL/u);
     expect(sql).toContain('protected_email_envelope TEXT NOT NULL');
     expect(sql).toContain('inventory_low_stock_insert_guard');
     expect(sql).toContain('inventory_low_stock_update_guard');

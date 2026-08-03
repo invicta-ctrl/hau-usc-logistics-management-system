@@ -84,6 +84,8 @@ describe('v0.7 environment and observability foundation', () => {
         'TRACKING_LINK_SECRET_MISSING',
         'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING',
         'ROSTER_DATA_ENCRYPTION_KEY_MISSING',
+        'ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING',
+        'ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_CONFIGURED',
       ]),
     );
     expect(
@@ -186,7 +188,7 @@ describe('v0.7 environment and observability foundation', () => {
     );
     expect(pair.staging).toMatchObject({
       name: 'hau-usc-logistics-staging',
-      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.1' },
+      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.2' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
@@ -194,7 +196,7 @@ describe('v0.7 environment and observability foundation', () => {
     });
     expect(pair.production).toMatchObject({
       name: 'hau-usc-logistics-production',
-      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.1' },
+      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.2' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-production-evidence' },

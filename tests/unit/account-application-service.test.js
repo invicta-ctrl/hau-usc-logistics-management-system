@@ -98,6 +98,42 @@ function createRepository() {
       );
     },
 
+    async usernameCollides(username, excludeApplicationId = '') {
+      const collisionKey = String(username).replaceAll(/[._-]/gu, '');
+      return (
+        [...accounts.values()].some(
+          (account) =>
+            account.usernameNormalized === username ||
+            String(account.accessIdNormalized ?? '').toLowerCase() === username ||
+            String(account.accessIdNormalized ?? '')
+              .replaceAll(/[^A-Za-z0-9]/gu, '')
+              .toLowerCase() === collisionKey,
+        ) ||
+        [...applications.values()].some(
+          (application) =>
+            application.id !== excludeApplicationId &&
+            nonterminalApplicationStates.has(application.state) &&
+            application.requestedUsernameNormalized === username,
+        )
+      );
+    },
+
+    async identityCollides(emailFingerprint, excludeApplicationId = '') {
+      return (
+        [...accounts.values()].some(
+          (account) =>
+            ['ACTIVE', 'STARTER'].includes(account.status) &&
+            account.verifiedEmailFingerprint === emailFingerprint,
+        ) ||
+        [...applications.values()].some(
+          (application) =>
+            application.id !== excludeApplicationId &&
+            nonterminalApplicationStates.has(application.state) &&
+            application.emailFingerprint === emailFingerprint,
+        )
+      );
+    },
+
     async createSubmittedApplication({
       application,
       verificationReceiptDigest,
@@ -165,12 +201,67 @@ function createRepository() {
       return clone(application);
     },
 
+    async listHistoryByApplicationId(applicationId) {
+      return clone(history.filter((entry) => entry.applicationId === applicationId));
+    },
+
     async getApplicationByStatusTokenDigest(digest, now) {
       return clone(
         [...applications.values()].find(
           (application) => application.statusTokenDigest === digest && application.statusTokenExpiresAt > now,
         ),
       );
+    },
+
+    async resubmitApplication({
+      applicationId,
+      expectedRevision,
+      idempotencyKey,
+      occurredAt,
+      eligibilityApproved,
+      emailFingerprint,
+      updates,
+      history: entry,
+      audit,
+    }) {
+      const application = applications.get(applicationId);
+      if (
+        !application ||
+        application.state !== 'CHANGES_REQUESTED' ||
+        application.revision !== expectedRevision ||
+        application.emailFingerprint !== emailFingerprint ||
+        eligibilityApproved !== true ||
+        history.some((candidate) => candidate.idempotencyKey === idempotencyKey) ||
+        [...accounts.values()].some(
+          (account) =>
+            ['ACTIVE', 'STARTER'].includes(account.status) &&
+            (account.verifiedEmailFingerprint === emailFingerprint ||
+              account.usernameNormalized === updates.requestedUsernameNormalized ||
+              String(account.accessIdNormalized ?? '').toLowerCase() === updates.requestedUsernameNormalized),
+        ) ||
+        [...applications.values()].some(
+          (candidate) =>
+            candidate.id !== applicationId &&
+            nonterminalApplicationStates.has(candidate.state) &&
+            (candidate.emailFingerprint === emailFingerprint ||
+              candidate.requestedUsernameNormalized === updates.requestedUsernameNormalized),
+        )
+      ) {
+        throw new Error('resubmission guard conflict');
+      }
+      Object.assign(application, clone(updates), {
+        state: 'PENDING_ADMIN_REVIEW',
+        revision: application.revision + 1,
+        administratorReviewerId: '',
+        administratorReviewedAt: '',
+        directorReviewerId: '',
+        directorReviewedAt: '',
+        changeRequestSummary: '',
+        updatedAt: occurredAt,
+      });
+      history.push(clone(entry));
+      audits.push(clone(audit));
+      return clone(application);
     },
 
     async getApplicationReplayByIdempotencyKey(idempotencyKey) {
@@ -208,6 +299,7 @@ function createRepository() {
         account.status = 'REVOKED';
       }
       Object.assign(application, clone(updates), { state: toState, revision: application.revision + 1 });
+      if (toState === 'CHANGES_REQUESTED') application.changeRequestSummary = entry.reason;
       history.push(clone(entry));
       audits.push(clone(audit));
       return clone(application);
@@ -330,6 +422,16 @@ function testContext({ providerConfigured = true, eligibilityDecision } = {}) {
             claimFingerprint: 'ROSTER-POLICY-CLAIM-SYNTHETIC',
           }
         );
+      },
+    },
+    reviewDisclosure: {
+      async reveal() {
+        return {
+          verifiedEmail: 'eligible@example.test',
+          legalName: 'Synthetic Applicant Name',
+          contactNumber: '+63 917 000 0000',
+          identityVerification: { rosterMatched: true, legalNameMatched: true },
+        };
       },
     },
     activationHandoff: {
@@ -505,6 +607,30 @@ describe('account-application service', () => {
     ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_INVALID' });
     expect(pendingDuplicate.repository.inspect().applications).toHaveLength(1);
     expect(pendingDuplicate.repository.inspect().challenges.at(-1)).toMatchObject({ state: 'VERIFIED' });
+
+    const usernameConflict = testContext();
+    usernameConflict.repository.seedAccount({
+      id: 'ACCOUNT-USERNAME-001',
+      status: 'ACTIVE',
+      usernameNormalized: 'synthetic.applicant',
+      verifiedEmailFingerprint: 'KEYED-FINGERPRINT-OTHER',
+    });
+    await usernameConflict.service.startEmailVerification({ email: 'eligible@example.test' });
+    const usernameConfirmation = await usernameConflict.service.confirmEmailVerification({
+      email: 'eligible@example.test',
+      code: usernameConflict.sent[0].verificationCode,
+    });
+    await expect(
+      usernameConflict.service.submitApplication(
+        applicationCommand(usernameConfirmation.verificationReceipt, 'submit-username-conflict-0001'),
+      ),
+    ).rejects.toMatchObject({
+      code: 'ACCOUNT_APPLICATION_USERNAME_TAKEN',
+      details: {
+        field: 'requestedUsername',
+        usernameSuggestions: ['synthetic.applicant.01', 'synthetic.applicant.02', 'synthetic.applicant.03'],
+      },
+    });
   });
 
   it('enforces expected revision and returns an idempotent withdrawal replay without a second transition', async () => {
@@ -535,6 +661,63 @@ describe('account-application service', () => {
     expect(withdrawn).toMatchObject({ state: ACCOUNT_APPLICATION_STATE.WITHDRAWN, revision: 3 });
     expect(replayed).toEqual(withdrawn);
     expect(context.repository.inspect().history).toHaveLength(3);
+  });
+
+  it('returns a safe change summary and revalidates an applicant resubmission idempotently', async () => {
+    const context = testContext();
+    const { submitted } = await submittedApplication(context);
+    const applicationId = context.repository.inspect().applications[0].id;
+    const admin = {
+      id: 'ADMIN-SYNTHETIC-001',
+      capabilities: [ACCOUNT_APPLICATION_CAPABILITY.ADMIN_REVIEW],
+    };
+    await context.service.adminRequestChanges({
+      actor: admin,
+      applicationId,
+      expectedRevision: 2,
+      reason: 'Please correct the requested username and contact details.',
+      reviewEvidence: {
+        evidenceFingerprint: 'EVIDENCE-FINGERPRINT-RESUBMIT',
+        protectedReviewEnvelope: 'v1.synthetic.review-envelope-resubmit',
+      },
+      clientRequestId: 'admin-changes-resubmit-0001',
+    });
+
+    await expect(context.service.getStatus({ statusToken: submitted.statusToken })).resolves.toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.CHANGES_REQUESTED,
+      revision: 3,
+      changeRequestSummary: 'Please correct the requested username and contact details.',
+    });
+
+    const command = {
+      ...applicationCommand('', 'applicant-resubmit-0001'),
+      statusToken: submitted.statusToken,
+      expectedRevision: 3,
+      requestedUsername: 'synthetic.updated',
+      contactNumber: '+63 917 000 0042',
+    };
+    const resubmitted = await context.service.resubmitApplication(command);
+    const replayed = await context.service.resubmitApplication(command);
+
+    expect(resubmitted).toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+      revision: 4,
+    });
+    expect(resubmitted).not.toHaveProperty('statusToken');
+    expect(resubmitted).not.toHaveProperty('changeRequestSummary');
+    expect(replayed).toEqual(resubmitted);
+    expect(context.eligibilityCalls.at(-1)).toMatchObject({
+      emailFingerprint: 'KEYED-FINGERPRINT-ELIGIBLE',
+      identityClassId: 'SYNTHETIC_APPROVED_STAFF',
+      requestedUsernameNormalized: 'synthetic.updated',
+    });
+    expect(context.repository.inspect().applications[0]).toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+      requestedUsernameNormalized: 'synthetic.updated',
+      administratorReviewerId: '',
+      directorReviewerId: '',
+    });
+    expect(context.repository.inspect().history).toHaveLength(4);
   });
 
   it('requires distinct Administrator and Director review, then preserves a one-time private activation handoff', async () => {
@@ -573,7 +756,21 @@ describe('account-application service', () => {
         id: applicationId,
         requestedUsername: 'synthetic.applicant',
         requestedAccess: { requestedRoleId: 'REQUESTER' },
+        verifiedEmail: 'eligible@example.test',
+        legalName: 'Synthetic Applicant Name',
+        contactNumber: '+63 917 000 0000',
+        identityVerification: { rosterMatched: true, legalNameMatched: true },
         review: { administrator: { completed: false }, director: { completed: false } },
+        history: [
+          {
+            toState: ACCOUNT_APPLICATION_STATE.DRAFT,
+            resultingRevision: 1,
+          },
+          {
+            toState: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+            resultingRevision: 2,
+          },
+        ],
       },
     });
     expect(redactedAdminReview).not.toContain('KEYED-FINGERPRINT-ELIGIBLE');

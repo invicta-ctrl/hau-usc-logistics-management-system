@@ -2,6 +2,22 @@
 
 ## Current resume block
 
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
+- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations`; draft PR #15; freeze commit pending; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- **Current phase/stage:** repository candidate ready; exact-SHA review/CI next; pre-production blocked on private provider configuration.
+- **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md` and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+- **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
+- **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
+- **Tests verified:** `npm run check` 109 files / 726 tests; Playwright 136 passed / 356 intentional skips; local Worker/D1 39/39; migration 0001-0030 integrity `ok` and zero foreign-key findings.
+- **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
+- **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
+- **Blocker:** owner-approved live email provider implementation/configuration and private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` are absent; readiness intentionally fails closed.
+- **Next three actions:** freeze and independently review the exact candidate; push and verify exact-head PR CI; after private provider inputs exist, run isolated pre-production with no mandatory `UNRUN` before using the already-recorded production authorization.
+- **Resume commands:** `git status --short --branch`; `git rev-parse HEAD`; `git fetch origin --prune`; `git rev-list --left-right --count HEAD...@{upstream}`; inspect PR #15; follow the v0.7.2 handoff.
+- **Prohibited actions:** no invented provider/identity values, secret/PII disclosure, fail-open readiness, production-first testing, migration without backup, or production deploy before pre-production acceptance.
+
+## Historical v0.7.1 production resume block
+
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve the governed local `.codegraph/` index and owner-authorized v0.7.1 launch-report PDF.
 - **Branch/HEAD/upstream:** canonical `main`; exact v0.7.1 release/tag SHA `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`; `origin/main` matched at reconciliation with `0/0` ahead/behind.
 - **Current phase/stage:** v0.7.1 repository, staging, production, domains, backup, rollback preparation, reconciliation, tag, and release are complete; production is operational.

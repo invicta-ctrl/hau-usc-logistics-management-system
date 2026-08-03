@@ -624,12 +624,20 @@ function assertBorrowerPortalAccount(account) {
 
 function assertRequesterPortalAccount(account) {
   const authorization = assertCapability(account, CAPABILITIES.REQUEST_CREATE);
-  if (authorization.roleId !== 'REQUESTER' || !account.departmentId || !account.departmentDisplayName) {
+  if (
+    authorization.roleId !== 'REQUESTER' ||
+    !requesterDepartmentId(account) ||
+    !account.departmentDisplayName
+  ) {
     throw new ApiError('REQUESTER_PORTAL_REQUIRED', 'This account cannot use the requester portal.', {
       status: 403,
     });
   }
   return authorization;
+}
+
+function requesterDepartmentId(account) {
+  return account?.profileDepartmentId || account?.departmentId || '';
 }
 
 function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
@@ -993,21 +1001,21 @@ const itemDto = (row, requestOnly = false) => ({
     : {
         onHand: Number(row.on_hand ?? 0),
         reserved: Number(row.reserved ?? 0),
-         availableToPromise: Number(row.available_to_promise ?? 0),
-         storageLocation: row.storage_location,
-         reorderThreshold: Number(row.reorder_threshold ?? 0),
-         lowStockAlertEnabled: row.low_stock_alert_enabled === 1,
-         lowStockThreshold:
-           row.low_stock_threshold === null || row.low_stock_threshold === undefined
-             ? null
-             : Number(row.low_stock_threshold),
-         lowStockState:
-           row.low_stock_alert_enabled !== 1 || row.low_stock_threshold === null
-             ? 'DISABLED'
-             : Number(row.on_hand ?? 0) <= Number(row.low_stock_threshold)
-               ? 'LOW'
-               : 'NORMAL',
-       }),
+        availableToPromise: Number(row.available_to_promise ?? 0),
+        storageLocation: row.storage_location,
+        reorderThreshold: Number(row.reorder_threshold ?? 0),
+        lowStockAlertEnabled: row.low_stock_alert_enabled === 1,
+        lowStockThreshold:
+          row.low_stock_threshold === null || row.low_stock_threshold === undefined
+            ? null
+            : Number(row.low_stock_threshold),
+        lowStockState:
+          row.low_stock_alert_enabled !== 1 || row.low_stock_threshold === null
+            ? 'DISABLED'
+            : Number(row.on_hand ?? 0) <= Number(row.low_stock_threshold)
+              ? 'LOW'
+              : 'NORMAL',
+      }),
   status: row.status,
   catalogType: row.catalog_type,
   lendingAudience: row.lending_audience,
@@ -1289,7 +1297,7 @@ async function revision(db, scope = 'global') {
 export function createD1OperationalService({
   db,
   environment = 'DEVELOPMENT',
-  appVersion = '0.7.1',
+  appVersion = '0.7.2',
   schemaVersion = '1.0.0',
   evidenceStore = null,
 }) {
@@ -3452,6 +3460,7 @@ export function createD1OperationalService({
 
   async function requesterRequestPortal({ account, correlationId }) {
     assertRequesterPortalAccount(account);
+    const departmentId = requesterDepartmentId(account);
     const eventSeries = await rows(
       db,
       `SELECT id, code, name
@@ -3482,7 +3491,7 @@ export function createD1OperationalService({
          AND request.requester_department_id = ?2
          AND request.archived_at IS NULL
        ORDER BY request.updated_at DESC`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     const requestLines = await rows(
       db,
@@ -3493,7 +3502,7 @@ export function createD1OperationalService({
        WHERE request.requester_account_id = ?1
          AND request.requester_department_id = ?2
        ORDER BY line.created_at, line.id`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     const history = await rows(
       db,
@@ -3504,14 +3513,14 @@ export function createD1OperationalService({
          WHERE requester_account_id = ?1 AND requester_department_id = ?2
        )
        ORDER BY changed_at DESC LIMIT 200`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     return {
       ok: true,
       correlationId,
       profile: {
         displayName: account.departmentDisplayName,
-        departmentId: account.departmentId,
+        departmentId,
       },
       eventSeries: eventSeries.map((series) => ({
         id: series.id,
@@ -3565,6 +3574,7 @@ export function createD1OperationalService({
 
   async function submitRequesterRequest({ account, command, correlationId }) {
     assertRequesterPortalAccount(account);
+    const departmentId = requesterDepartmentId(account);
     const mutation = await replay(db, 'submitRequesterRequest', command.clientRequestId, account.id, command);
     if (mutation.replayed) return { ...mutation.value, replayed: true };
     const requestType = requiredText(command.requestType, 'requestType', 20).toUpperCase();
@@ -3600,7 +3610,7 @@ export function createD1OperationalService({
              AND status NOT IN ('CANCELLED', 'REJECTED', 'COMPLETED')
            ORDER BY created_at LIMIT 1`,
         )
-        .bind(account.departmentId, eventSeriesId, eventId)
+        .bind(departmentId, eventSeriesId, eventId)
         .first();
       if (duplicate) {
         throw new ApiError(
@@ -3618,7 +3628,7 @@ export function createD1OperationalService({
              AND event_series_id = ?4 AND event_id = ?5 AND archived_at IS NULL
              AND status NOT IN ('CANCELLED', 'REJECTED')`,
         )
-        .bind(parentRequestId, account.id, account.departmentId, eventSeriesId, eventId)
+        .bind(parentRequestId, account.id, departmentId, eventSeriesId, eventId)
         .first();
       if (!parent) {
         throw new ApiError(
@@ -3719,7 +3729,7 @@ export function createD1OperationalService({
           purpose,
           mutation.key,
           timestamp,
-          account.departmentId,
+          departmentId,
         ),
     ];
     lines.forEach((line, index) => {
@@ -3767,7 +3777,7 @@ export function createD1OperationalService({
           status: 'FOR_REVIEW',
           requestType,
           parentRequestId: parent?.id ?? '',
-          departmentId: account.departmentId,
+          departmentId,
           lineCount: lines.length,
         },
       }),
@@ -6389,7 +6399,7 @@ export function createD1OperationalService({
     const result = { itemId, status, updatedAt: timestamp, correlationId };
     const guardedStatement = db
       .prepare(
-         `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
+        `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
            storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
            reorder_threshold = ?9, low_stock_alert_enabled = ?10, low_stock_threshold = ?11,
            lending_audience = ?12, default_loan_days = ?13, maximum_loan_quantity = ?14,
@@ -6927,10 +6937,10 @@ export function createD1OperationalService({
     const existingAssetCount = Number(current.asset_count ?? 0);
     let requestedAssetCount;
     try {
-      requestedAssetCount = operationalInteger(
-        command.assetInstanceCountIfReusable ?? existingAssetCount,
-        { field: 'assetInstanceCountIfReusable', min: 0 },
-      );
+      requestedAssetCount = operationalInteger(command.assetInstanceCountIfReusable ?? existingAssetCount, {
+        field: 'assetInstanceCountIfReusable',
+        min: 0,
+      });
     } catch {
       throw new ApiError(
         'VALIDATION_FAILED',

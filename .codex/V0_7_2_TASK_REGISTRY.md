@@ -30,8 +30,8 @@ or `CANCELLED`.
 | ID | Status | Objective | Evidence |
 | --- | --- | --- | --- |
 | PARENT-CONTRACT | ACCEPTED | Adopt repository specification and lock source/API/state/data/access contracts. | Spec commit `39ea6a2`; governance and diff checks passed; draft PR #15 |
-| PARENT-INTEGRATION | RUNNING | Review mapper output, resolve contradictions, and create the first implementation slice. | `.codex/V0_7_2_SOURCE_MAP_AND_CONTRACT_LOCK.md` |
-| DATA-0030 | RUNNING | Add the forward-only schema-30 identity, operations, Link Registry, and Announcement structures and prove a clean local migration rehearsal. | Fresh local D1 applied migrations 0001-0030; direct SQLite `integrity_check=ok`, zero foreign-key findings, schema 30, eight required tables, and valid defaults; static contract tests 4/4 |
+| PARENT-INTEGRATION | ACCEPTED | Integrate identity/access, operations, Link Registry/Announcement, release identity, tests, generated artifacts, and durable candidate handoff. | `npm run check` 109 files / 726 tests; browser 136 / 356 intentional skips; local Worker/D1 39/39 |
+| DATA-0030 | ACCEPTED | Add the forward-only schema-30 identity, operations, Link Registry, and Announcement structures and prove a clean local migration rehearsal. | Fresh local D1 applied migrations 0001-0030; direct SQLite `integrity_check=ok`, zero foreign-key findings, schema 30, required tables/columns, and valid defaults |
 | PARENT-PROVIDER-GATE | BLOCKED | Prove owner-approved identity classes and email provider in private pre-production configuration. | No provider/domain values found in Git; implementation must remain fail closed |
 
 ## Queue after mapping
@@ -53,9 +53,9 @@ or `CANCELLED`.
 
 | ID | Status | Exact base | Isolated ownership | Required verification |
 | --- | --- | --- | --- | --- |
-| IDENTITY-CORE | RUNNING | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-identity-core`; new `src/server/account-application/*`, new D1 repository, new focused tests only | State/transition, replay, revision, privacy, enumeration, and repository-contract tests |
-| OPERATIONS-DOMAIN | RUNNING | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-operations-domain`; new `src/domain/operational-integers.js`, `src/domain/request-purpose.js`, new focused tests only | Strict integer matrix and contradictory request-branch validation |
-| REFERENCE-LINK-SERVER | PLANNED | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-reference-link-server`; new Link Registry service/repository and new focused tests only | Queued because the runtime thread limit remained occupied by the completed mapping thread; start after one writer slot releases |
+| IDENTITY-CORE | ACCEPTED | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated account-application service/repository result, reviewed and integrated by the parent. | State/transition, replay, revision, privacy, enumeration, queue/detail, and repository contracts pass. |
+| OPERATIONS-DOMAIN | ACCEPTED | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated operational integer/request-purpose result, reviewed and integrated by the parent. | Strict integer and contradictory request-branch validation pass. |
+| REFERENCE-LINK-SERVER | ACCEPTED | `e44625316404bce3e293eb4cf71195f7052e04f1` | Link Registry server and public portal/announcement integration reviewed and integrated by the parent. | Local Worker Link Registry and announcement lifecycle plus browser portal coverage pass. |
 
 ## Integration rules
 

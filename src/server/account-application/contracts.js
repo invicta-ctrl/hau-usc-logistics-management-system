@@ -229,6 +229,17 @@ function reviewProgressDto(application) {
   return { administrator, director };
 }
 
+function reviewHistoryDto(entries) {
+  if (!Array.isArray(entries)) return [];
+  return entries.slice(0, 100).map((entry) => ({
+    fromState: safeReviewText(entry.fromState, { max: 64 }),
+    toState: safeReviewText(entry.toState, { max: 64 }),
+    reason: safeReviewText(entry.reason, { max: 500 }),
+    resultingRevision: Number.isSafeInteger(entry.resultingRevision) ? entry.resultingRevision : null,
+    createdAt: safeReviewText(entry.createdAt, { max: 64 }),
+  }));
+}
+
 export function redactedReviewApplicationListDto(application) {
   if (!application) return null;
   const requestedAccess = redactedRequestedAccessDto(application.requestedAccess);
@@ -256,6 +267,14 @@ export function redactedReviewApplicationDetailDto(application) {
     requestedUsername: safeReviewText(application.requestedUsernameNormalized, { max: 64 }),
     requestedAccess: redactedRequestedAccessDto(application.requestedAccess),
     review: reviewProgressDto(application),
+    history: reviewHistoryDto(application.history),
+    verifiedEmail: safeReviewText(application.verifiedEmail, { max: 254 }),
+    legalName: safeReviewText(application.legalName, { max: 200 }),
+    contactNumber: safeReviewText(application.contactNumber, { max: 64 }),
+    identityVerification: {
+      rosterMatched: application.identityVerification?.rosterMatched === true,
+      legalNameMatched: application.identityVerification?.legalNameMatched === true,
+    },
   };
   if (application.accountCode) dto.accountCode = safeReviewText(application.accountCode, { max: 128 });
   return dto;

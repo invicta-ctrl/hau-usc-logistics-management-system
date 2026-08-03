@@ -703,6 +703,7 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let referenceLinkRegistryOpen = false;
   let adminControlSurface = 'reference';
   let accessDirectory = null;
   let accessDirectoryPromise = null;
@@ -2946,7 +2947,7 @@ export function createRuntimeExtensions(options) {
     const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
     const status = root.querySelector('[name="referenceAdminStatus"]')?.value ?? 'ALL';
     referenceAdminPromise =
-      referenceAdminDomain === 'ROUTING'
+      referenceLinkRegistryOpen
         ? services.listReferenceLinks({
             query,
             ...(status === 'ALL' ? {} : { status }),
@@ -2962,7 +2963,7 @@ export function createRuntimeExtensions(options) {
     try {
       const workspace = await referenceAdminPromise;
       referenceAdminWorkspace =
-        referenceAdminDomain === 'ROUTING'
+        referenceLinkRegistryOpen
           ? {
               ...workspace,
               contract: 'canonical-link-registry',
@@ -3096,7 +3097,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openReferenceAdminChange = (record, action = record ? 'UPDATE' : 'ADD') => {
-    if (referenceAdminDomain === 'ROUTING') return openReferenceLinkForm(record);
+    if (referenceLinkRegistryOpen) return openReferenceLinkForm(record);
     const targetId = record?.id ?? '';
     openModal(
       `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${presentationLabel(referenceAdminDomain)}`,
@@ -3252,7 +3253,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.1'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.7.2'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -3883,6 +3884,12 @@ export function createRuntimeExtensions(options) {
       control.classList.toggle('active', active);
       control.setAttribute('aria-pressed', String(active));
     });
+    const referenceLinkRegistryControl = root.querySelector('[data-reference-admin-link-registry]');
+    if (referenceLinkRegistryControl) {
+      const active = adminControlSurface === 'reference' && referenceLinkRegistryOpen;
+      referenceLinkRegistryControl.classList.toggle('active', active);
+      referenceLinkRegistryControl.setAttribute('aria-pressed', String(active));
+    }
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       const active = control.dataset.adminControlSurface === adminControlSurface;
       control.classList.toggle('active', active);
@@ -3900,7 +3907,7 @@ export function createRuntimeExtensions(options) {
       renderAdminControlSurface();
       return;
     }
-    if (referenceAdminDomain === 'ROUTING') {
+    if (referenceLinkRegistryOpen) {
       root.querySelector('[data-reference-admin-pending-panel]').hidden = true;
       root.querySelector('[data-reference-admin-add]').hidden = !workspace?.writesEnabled;
       results.innerHTML =
@@ -3979,6 +3986,7 @@ export function createRuntimeExtensions(options) {
     root.querySelector('[name="referenceAdminDomain"]').addEventListener('change', (event) => {
       advertisementAdminOpen = false;
       adminControlSurface = 'reference';
+      referenceLinkRegistryOpen = false;
       referenceAdminDomain = event.target.value;
       referenceAdminWorkspace = null;
       void refreshReferenceAdminWorkspace({ force: true });
@@ -3995,11 +4003,21 @@ export function createRuntimeExtensions(options) {
       control.addEventListener('click', () => {
         advertisementAdminOpen = false;
         adminControlSurface = 'reference';
+        referenceLinkRegistryOpen = false;
         referenceAdminDomain = control.dataset.referenceAdminControlDomain;
         root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
         referenceAdminWorkspace = null;
         void refreshReferenceAdminWorkspace({ force: true });
       });
+    });
+    root.querySelector('[data-reference-admin-link-registry]')?.addEventListener('click', () => {
+      advertisementAdminOpen = false;
+      adminControlSurface = 'reference';
+      referenceLinkRegistryOpen = true;
+      referenceAdminDomain = 'ROUTING';
+      root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
     });
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       control.addEventListener('click', () => {
@@ -6011,7 +6029,7 @@ export function createRuntimeExtensions(options) {
       document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
     }
     const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
-    const version = String(state.appVersion ?? '0.7.1');
+    const version = String(state.appVersion ?? '0.7.2');
     internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');

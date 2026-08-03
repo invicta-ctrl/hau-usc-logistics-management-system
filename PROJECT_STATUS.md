@@ -1,5 +1,25 @@
 # Project Status
 
+## v0.7.2 repository candidate ready; pre-production blocked
+
+- Branch `release/v0.7.2-production-access-operations` contains the integrated
+  Production Access and Operations candidate for draft PR #15, based on clean
+  `main` SHA `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- Account application/review/activation, access separation, My Profile,
+  Request/integer/low-stock contracts, public Lending tracking, additive Link
+  Registry, announcement governance, and release identity `0.7.2` are locally
+  complete.
+- Additive migration 0030 rehearsed from migrations 0001-0030 with SQLite
+  integrity `ok`, zero foreign-key findings, and operational schema 30.
+- Final local gates pass: `npm run check` at 109 files / 726 tests; full browser
+  136 passed / 356 intentional skips; local Worker/D1 39/39.
+- The owner supplied `AUTHORIZE V0.7.2 PRODUCTION`; no second confirmation wait
+  is required. Deployment is nevertheless blocked before pre-production by the
+  absent approved email provider and private identity-class configuration.
+- No v0.7.2 staging, production, provider, database, storage, Google, domain,
+  merge, tag, release, or rollout write has occurred. Durable evidence:
+  `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+
 ## v0.7.1 production operational and closed
 
 - Canonical `main`, `origin/main`, annotated tag `v0.7.1`, and the published

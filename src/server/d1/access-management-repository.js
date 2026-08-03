@@ -44,10 +44,11 @@ async function accessProfile(db, accountId) {
 
 async function accountFromRow(db, row) {
   if (!row) return undefined;
-  const department = row.department_id
+  const profileDepartmentId = row.profile_department_id ?? row.department_id ?? '';
+  const department = profileDepartmentId
     ? await db
         .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
-        .bind(row.department_id)
+        .bind(profileDepartmentId)
         .first()
     : null;
   return {
@@ -77,6 +78,7 @@ async function accountFromRow(db, row) {
     lendingEligible: row.lending_eligible === 1,
     institutionId: row.institution_id ?? '',
     departmentId: row.department_id ?? '',
+    profileDepartmentId: row.profile_department_id ?? '',
     departmentDisplayName: department?.display_name ?? '',
     passwordChangedAt: row.password_changed_at ?? '',
     lastPasswordResetAt: row.last_password_reset_at ?? '',
@@ -137,8 +139,8 @@ function safeAuditState(value) {
   }, {});
 }
 
-function limiterPattern(accessId) {
-  return `${escapeLike(accessId)}:%`;
+function limiterPattern(limiterIdentity) {
+  return `${escapeLike(limiterIdentity)}:%`;
 }
 
 export function createD1AccessManagementRepository(db) {
@@ -891,14 +893,23 @@ export function createD1AccessManagementRepository(db) {
       ]);
     },
 
-    async unlockAccount({ account, actor, changedAt, reason, correlationId, auditId, idempotency }) {
+    async unlockAccount({
+      account,
+      limiterIdentity,
+      actor,
+      changedAt,
+      reason,
+      correlationId,
+      auditId,
+      idempotency,
+    }) {
       await db.batch([
         db
           .prepare('UPDATE accounts SET locked_at = NULL, updated_at = ?1 WHERE id = ?2')
           .bind(changedAt, account.id),
         db
           .prepare("DELETE FROM auth_rate_limit_events WHERE limiter_key LIKE ?1 ESCAPE '\\'")
-          .bind(limiterPattern(account.accessIdNormalized)),
+          .bind(limiterPattern(limiterIdentity)),
         auditStatement(db, {
           id: auditId,
           createdAt: changedAt,

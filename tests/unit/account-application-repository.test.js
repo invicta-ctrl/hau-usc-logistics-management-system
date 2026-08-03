@@ -6,6 +6,7 @@ function applicationRow(overrides = {}) {
     id: 'APP-SYNTHETIC-001',
     application_code: 'AAP-SYNTHETIC-001',
     email_fingerprint: 'KEYED-EMAIL-FP',
+    identity_class_id: 'SYNTHETIC_STAFF',
     protected_email_envelope: 'v1.synthetic.email-envelope',
     protected_profile_envelope: 'v1.synthetic.profile-envelope',
     department_id: 'USC-DEPT-DOL',
@@ -135,6 +136,7 @@ function starterAccount() {
     lendingEligible: false,
     institutionId: '',
     departmentId: '',
+    profileDepartmentId: 'USC-DEPT-DOL',
     usernameNormalized: 'synthetic.applicant',
     verifiedEmailFingerprint: 'KEYED-EMAIL-FP',
     profileCourseId: 'COURSE-SYNTHETIC',
@@ -147,6 +149,7 @@ function submittedApplication() {
     id: 'APP-SYNTHETIC-001',
     applicationCode: 'AAP-SYNTHETIC-001',
     emailFingerprint: 'KEYED-EMAIL-FP',
+    identityClassId: 'SYNTHETIC_STAFF',
     protectedEmailEnvelope: 'v1.synthetic.email-envelope',
     protectedProfileEnvelope: 'v1.synthetic.profile-envelope',
     departmentId: 'USC-DEPT-DOL',
@@ -301,6 +304,7 @@ describe('D1 account-application repository contract', () => {
       0,
       application.emailFingerprint,
       application.requestedUsernameNormalized,
+      application.departmentId,
     ]);
     expect(probe.firstCalls).toEqual([]);
   });
@@ -328,6 +332,56 @@ describe('D1 account-application repository contract', () => {
     const sql = probe.batches[0].map((statement) => statement.sql);
     expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_TRANSITION_GUARD_FAILED'");
     expect(sql[1]).toContain('UPDATE account_applications');
+    expect(sql[2]).toContain('INSERT INTO account_application_history');
+    expect(sql[3]).toContain('INSERT INTO audit_log');
+    expect(probe.firstCalls).toEqual([]);
+  });
+
+  it('guards applicant resubmission, duplicate identities, and reviewer reset in one D1 batch', async () => {
+    const probe = d1Probe({ batchError: new Error('ACCOUNT_APPLICATION_RESUBMISSION_GUARD_FAILED') });
+    const repository = createD1AccountApplicationRepository(probe.db);
+    const entry = history({
+      id: 'HISTORY-RESUBMIT-001',
+      idempotencyKey: 'applicant-resubmit-repository-001',
+      fromState: 'CHANGES_REQUESTED',
+      toState: 'PENDING_ADMIN_REVIEW',
+      expectedRevision: 3,
+      resultingRevision: 4,
+    });
+
+    await expect(
+      repository.resubmitApplication({
+        applicationId: 'APP-SYNTHETIC-001',
+        expectedRevision: 3,
+        idempotencyKey: entry.idempotencyKey,
+        occurredAt: timestamp,
+        eligibilityApproved: false,
+        emailFingerprint: 'KEYED-EMAIL-FP',
+        updates: {
+          protectedProfileEnvelope: 'v1.synthetic.updated-profile-envelope',
+          departmentId: 'USC-DEPT-DOL',
+          courseId: 'COURSE-SYNTHETIC',
+          yearLevel: 3,
+          requestedUsernameNormalized: 'synthetic.updated',
+          pendingPasswordCredential: { hash: 'synthetic-updated-hash' },
+          requestedAccess: { requestedRoleId: 'REQUESTER' },
+        },
+        history: entry,
+        audit: audit({ id: 'AUDIT-RESUBMIT-001', action: 'ACCOUNT_APPLICATION_RESUBMITTED' }),
+      }),
+    ).rejects.toThrow('ACCOUNT_APPLICATION_RESUBMISSION_GUARD_FAILED');
+
+    expect(probe.batches).toHaveLength(1);
+    const sql = probe.batches[0].map((statement) => statement.sql);
+    expect(sql[0]).toContain("application.state = 'CHANGES_REQUESTED'");
+    expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_RESUBMISSION_GUARD_FAILED'");
+    expect(sql[0]).toContain('existing_application.id <> ?1');
+    expect(sql[0]).toContain('account.verified_email_fingerprint = ?3');
+    expect(sql[0]).toContain('account.username_normalized = ?6');
+    expect(sql[0]).toContain('department.id = ?7');
+    expect(sql[1]).toContain("state = 'PENDING_ADMIN_REVIEW'");
+    expect(sql[1]).toContain('administrator_reviewer_id = NULL');
+    expect(sql[1]).toContain('director_reviewer_id = NULL');
     expect(sql[2]).toContain('INSERT INTO account_application_history');
     expect(sql[3]).toContain('INSERT INTO audit_log');
     expect(probe.firstCalls).toEqual([]);
@@ -367,6 +421,9 @@ describe('D1 account-application repository contract', () => {
     expect(sql[0]).toContain('application.administrator_reviewer_id <> ?4');
     expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_APPROVAL_GUARD_FAILED'");
     expect(sql[1]).toContain('INSERT INTO accounts');
+    expect(sql[1]).toContain('profile_department_id');
+    expect(probe.batches[0][1].values).toHaveLength(13);
+    expect(probe.batches[0][1].values[10]).toBe('USC-DEPT-DOL');
     expect(sql[2]).toContain('INSERT INTO access_id_reservations');
     expect(
       sql.some(

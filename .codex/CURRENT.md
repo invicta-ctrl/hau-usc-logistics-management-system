@@ -3,7 +3,7 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `MAPPING_ACCEPTED - FIRST_ISOLATED_IMPLEMENTATION_WAVE_READY`.
+- Status: `REPOSITORY_CANDIDATE_READY - PREPRODUCTION_BLOCKED_PRIVATE_PROVIDER_CONFIGURATION`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
 - Starting clean `main` / `origin/main` SHA:
   `589970d31d0dab4fe876107276d9b808eb44b9c3`.
@@ -11,16 +11,20 @@
   `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
 - Accepted specification:
   `.codex/specs/v0.7.2-production-access-operations.md`.
-- Current work unit: run the three non-overlapping isolated writer tasks in
-  `.codex/V0_7_2_TASK_REGISTRY.md` while the parent owns migration 0030 and
-  shared integration; then review and integrate one exact result at a time.
-- Concurrency: the owner-approved ceiling is 16 children; the current runtime
-  supports three children plus the parent, so three is the practical maximum.
-  Children must not spawn grandchildren.
-- Production boundary: implementation, CI, and isolated pre-production are
-  authorized. Production deployment remains prohibited until the exact frozen
-  candidate is presented and the owner replies exactly
-  `AUTHORIZE V0.7.2 PRODUCTION`.
+- Current work unit: freeze the integrated candidate, complete exact-SHA R2
+  review and PR CI, then stop before pre-production until the approved private
+  identity classes and email-provider implementation/configuration exist.
+- Verification: schema-30 rehearsal passed; `npm run check` passes 109 files /
+  726 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
+  39/39.
+- Production boundary: the owner supplied `AUTHORIZE V0.7.2 PRODUCTION` and no
+  second confirmation wait is required. Production is still prohibited until
+  the exact target, provider, pre-production, backup, rollback, and
+  reconciliation gates pass. No v0.7.2 external release write has occurred.
+- Blocking inputs: owner-approved live email provider and private
+  `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON`. Readiness remains intentionally
+  fail closed.
+- Candidate handoff: `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 - Predecessor handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
 - Local evidence boundary: preserve `.codegraph/` and
   `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both remain local-only ignored

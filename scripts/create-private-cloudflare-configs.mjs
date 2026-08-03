@@ -44,7 +44,7 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
     triggers: { crons: ['*/5 * * * *'] },
     vars: {
       ENVIRONMENT: environment,
-      APP_VERSION: '0.7.1',
+      APP_VERSION: '0.7.2',
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
@@ -107,7 +107,7 @@ async function run() {
       { flag: 'wx', mode: 0o600 },
     ),
   ]);
-  console.log('Distinct v0.7.1 staging and production Wrangler configs created outside Git.');
+  console.log('Distinct v0.7.2 staging and production Wrangler configs created outside Git.');
   console.log('No private provider identifiers were printed.');
 }
 

@@ -1,5 +1,5 @@
 import { timingSafeEqual, webcrypto } from 'node:crypto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CAPABILITIES, COMMITTEES } from '../../src/domain/permissions.js';
 import { ACCOUNT_STATUS } from '../../src/server/auth/contracts.js';
 import { createPasswordKdf, createTokenCrypto } from '../../src/server/auth/crypto.js';
@@ -9,7 +9,7 @@ import {
 } from '../../src/server/auth/repository.js';
 import { createAuthService } from '../../src/server/auth/service.js';
 
-function testContext({ loginLimit = 10 } = {}) {
+function testContext({ loginLimit = 10, activationLifecycle, rateLimiter } = {}) {
   let timestamp = Date.parse('2026-07-21T08:00:00.000Z');
   let sequence = 0;
   const clock = {
@@ -30,7 +30,8 @@ function testContext({ loginLimit = 10 } = {}) {
     repository,
     passwordKdf,
     tokenCrypto,
-    rateLimiter: createSlidingWindowRateLimiter({ limit: loginLimit, windowMs: 60_000 }),
+    rateLimiter: rateLimiter ?? createSlidingWindowRateLimiter({ limit: loginLimit, windowMs: 60_000 }),
+    activationLifecycle,
     clock,
     createId: () => `SYNTHETIC-ID-${String(++sequence).padStart(4, '0')}`,
   });
@@ -114,6 +115,106 @@ describe('v0.6 authentication and onboarding service', () => {
         networkKey: 'verified-email-network',
       }),
     ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
+  });
+
+  it('enforces an injected approved-email activation lifecycle and completes its follow-up', async () => {
+    const activationLifecycle = {
+      validateProfile: vi.fn(async ({ profile }) => profile.email === 'approved@example.test'),
+      complete: vi.fn(async () => ({ linked: true, reconciled: true })),
+      reconcile: vi.fn(async () => ({ linked: true, reconciled: false })),
+    };
+    const { service } = testContext({ activationLifecycle });
+    await service.createStarterAccount({
+      accessId: 'HAU-APPROVED-001',
+      temporaryPassword: 'Starter!Password9472',
+      roleId: 'ADMINISTRATOR',
+    });
+    const login = await service.login({
+      accessId: 'HAU-APPROVED-001',
+      password: 'Starter!Password9472',
+    });
+    await expect(
+      service.activateStarter({
+        activationToken: login.activationToken,
+        csrfToken: login.csrfToken,
+        profile: {
+          fullName: 'Approved Applicant',
+          mobileNumber: '+639170000001',
+          email: 'different@example.test',
+        },
+        password: 'Activated!Password9472',
+        confirmPassword: 'Activated!Password9472',
+      }),
+    ).rejects.toMatchObject({ code: 'ONBOARDING_INVALID' });
+
+    const activated = await service.activateStarter({
+      activationToken: login.activationToken,
+      csrfToken: login.csrfToken,
+      profile: {
+        fullName: 'Approved Applicant',
+        mobileNumber: '+639170000001',
+        email: 'approved@example.test',
+      },
+      password: 'Activated!Password9472',
+      confirmPassword: 'Activated!Password9472',
+    });
+    expect(activationLifecycle.complete).toHaveBeenCalledOnce();
+    await expect(
+      service.authorizeSession({ sessionToken: activated.sessionToken, mutation: false }),
+    ).resolves.toMatchObject({ authorization: { active: true } });
+  });
+
+  it('does not issue an authenticated session when activation reconciliation fails', async () => {
+    const activationLifecycle = {
+      validateProfile: vi.fn(async () => true),
+      complete: vi.fn(async () => {
+        throw new Error('synthetic reconciliation failure');
+      }),
+    };
+    const { service, repository } = testContext({ activationLifecycle });
+    await service.createStarterAccount({
+      accessId: 'HAU-ACTIVATION-FAIL-001',
+      temporaryPassword: 'Starter!Password9472',
+      roleId: 'ADMINISTRATOR',
+    });
+    const login = await service.login({
+      accessId: 'HAU-ACTIVATION-FAIL-001',
+      password: 'Starter!Password9472',
+    });
+
+    await expect(
+      service.activateStarter({
+        activationToken: login.activationToken,
+        csrfToken: login.csrfToken,
+        profile: {
+          fullName: 'Synthetic Activation Failure',
+          mobileNumber: '+639170000001',
+          email: 'approved@example.test',
+        },
+        password: 'Activated!Password9472',
+        confirmPassword: 'Activated!Password9472',
+      }),
+    ).rejects.toMatchObject({ code: 'ACTIVATION_INVALID' });
+    expect(repository.inspect().sessions).toEqual([]);
+  });
+
+  it('signs in with a mutable username while keeping limiter keys free of the raw identifier', async () => {
+    const consume = vi.fn(async () => ({ allowed: true }));
+    const reset = vi.fn(async () => undefined);
+    const { service, repository } = testContext({ rateLimiter: { consume, reset } });
+    const active = await activate(service, { accessId: 'HAU-USERNAME-001' });
+    const account = repository.inspect().accounts[0];
+    await repository.saveAccount({ ...account, usernameNormalized: 'approved.user' });
+
+    await expect(
+      service.login({
+        accessId: 'approved.user',
+        password: 'Activated!Password9472',
+        networkKey: 'synthetic-network',
+      }),
+    ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
+    expect(consume.mock.calls.at(-1)[0]).not.toContain('approved.user');
+    expect(active.activated.state).toBe('AUTHENTICATED');
   });
 
   it('does not allow ordinary starter-account creation to assign System Owner', async () => {

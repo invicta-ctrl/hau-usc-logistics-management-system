@@ -123,6 +123,7 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
   const service = createAccessManagementService({
     repository,
     passwordKdf: { hash: vi.fn(async () => ({ algorithm: 'PBKDF2-SHA-256', iterations: 100_000 })) },
+    tokenCrypto: { digest: vi.fn(async (value) => `DIGEST:${value}`) },
     environment: 'STAGING',
     clock: { now: () => Date.parse('2026-07-22T08:00:00.000Z') },
     createId: () => `ID-${++id}`,
@@ -484,5 +485,26 @@ describe('access management service', () => {
       }),
     ).rejects.toMatchObject({ code: 'OWNER_APPROVAL_REQUIRED', status: 403 });
     expect(repository.updateAccessPolicy).not.toHaveBeenCalled();
+  });
+
+  it('unlocks the privacy-preserving limiter identity used by authentication', async () => {
+    const target = account({ lockedAt: '2026-07-22T07:00:00.000Z' });
+    const { service, repository } = context({ accounts: [target] });
+
+    await expect(
+      service.unlockAccount({
+        actor,
+        correlationId: 'REQ-UNLOCK',
+        command: {
+          currentAccessId: target.accessIdNormalized,
+          confirmCurrentAccessId: target.accessIdNormalized,
+          reason: 'Reset the synthetic account lock and limiter state.',
+          clientRequestId: 'access-unlock-synthetic-0001',
+        },
+      }),
+    ).resolves.toMatchObject({ unlocked: true, replayed: false });
+    expect(repository.unlockAccount).toHaveBeenCalledWith(
+      expect.objectContaining({ limiterIdentity: `DIGEST:${target.accessIdNormalized.toLowerCase()}` }),
+    );
   });
 });

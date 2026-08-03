@@ -1,6 +1,6 @@
 {
   "name": "hau-usc-logistics-management-system",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -21,7 +21,7 @@
     "production:authorization:init": "node scripts/production-authorization.mjs init",
     "production:authorization:check": "node scripts/production-authorization.mjs check",
     "production:preflight": "node scripts/production-launch-preflight.mjs",
-    "release:candidate:manifest": "node scripts/create-release-candidate-manifest.mjs .release/v0.7.1-candidate.json",
+    "release:candidate:manifest": "node scripts/create-release-candidate-manifest.mjs .release/v0.7.2-candidate.json",
     "cloudflare:preflight": "node scripts/cloudflare-environment-preflight.mjs",
     "cloudflare:private-configs:init": "node scripts/create-private-cloudflare-configs.mjs",
     "cloudflare:secrets": "node scripts/cloudflare-secret-package.mjs",

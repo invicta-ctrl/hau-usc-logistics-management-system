@@ -2,15 +2,15 @@
 
 INTENT: FEATURE, MIGRATION, TESTING, DEPLOYMENT PREPARATION
 SECONDARY INTENTS: SECURITY, ACCESSIBILITY, OPERATIONS, RELEASE
-MODE: execute one accepted v0.7.2 work unit at a time
+MODE: freeze and review the exact repository candidate; stop before blocked pre-production
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
 SKILLS: lean-ctx; Hallmark audit for bounded critical-screen polish; Cloudflare deployment workflow only at accepted pre-production/production stages; GitHub release workflow for branch/PR integration
 AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; owner-approved v0.7.2 final plan and MAX16 execution prompt; repository invariants; complete v0.7.1 production handoff
 RISK: critical because identity, authorization, migration, providers, and production are in scope
-DELIVERABLE: exact reviewed v0.7.2 candidate, isolated pre-production acceptance, owner-gated production rollout, reconciliation, and durable handoff
+DELIVERABLE: exact reviewed/pushed v0.7.2 repository candidate and truthful blocked pre-production handoff
 VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
-STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1; absent exact production phrase
-STATUS: MAPPING_ACCEPTED_FIRST_ISOLATED_IMPLEMENTATION_WAVE_READY
+STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1
+STATUS: REPOSITORY_CANDIDATE_READY_PREPRODUCTION_BLOCKED_PRIVATE_PROVIDER_CONFIGURATION
 
 Starting SHA: `589970d31d0dab4fe876107276d9b808eb44b9c3`
 
@@ -19,17 +19,23 @@ Branch: `release/v0.7.2-production-access-operations`
 Accepted specification:
 `.codex/specs/v0.7.2-production-access-operations.md`
 
-Current exact action: create three isolated worktrees from the accepted mapping
-checkpoint for `IDENTITY-CORE`, `OPERATIONS-DOMAIN`, and
-`REFERENCE-LINK-SERVER`; keep migration 0030 and all shared integration under
-the parent; review, test, and integrate one child commit at a time.
+Current exact action: freeze the integrated repository candidate, run the fresh
+R2 review, push and verify exact-head PR CI, then stop before external mutation
+because the approved email provider and private identity-class configuration
+are absent.
 
 Concurrency: no more than three child tasks are possible alongside the parent in
 this environment, despite the owner's higher ceiling. Children may not spawn
 grandchildren. The parent remains release-branch integration owner.
 
-Production remains untouched until the exact frozen candidate is shown and the
-owner replies exactly `AUTHORIZE V0.7.2 PRODUCTION`.
+The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION` and waived another
+confirmation wait. Production remains untouched because mandatory provider,
+pre-production, backup, rollback, and reconciliation gates have not passed.
+
+Local acceptance: schema 30 migration integrity `ok` with zero foreign-key
+findings; `npm run check` 109 files / 726 tests; browser 136 passed / 356
+intentional skips; local Worker/D1 39/39. Handoff:
+`.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 
 ---
 

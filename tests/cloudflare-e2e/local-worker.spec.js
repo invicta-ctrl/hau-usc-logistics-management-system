@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '29' },
+    database: { connected: true, schemaVersion: '30' },
   });
 
   await page.goto('/');
@@ -1406,11 +1406,13 @@ test('Lending Usage and advertisement management enforce role and media boundari
     },
   });
   expect(draft.status()).toBe(200);
+  const draftResult = await draft.json();
 
   const invalidMedia = await admin.post('/api/admin/advertisements/upload', {
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: draftResult.revision,
       contentType: 'image/png',
       base64: Buffer.alloc(40, 1).toString('base64'),
       clientRequestId: `advertisement-invalid-media-${crypto.randomUUID()}`,
@@ -1426,12 +1428,14 @@ test('Lending Usage and advertisement management enforce role and media boundari
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: draftResult.revision,
       contentType: 'image/png',
       base64: pngBytes.toString('base64'),
       clientRequestId: `advertisement-media-${crypto.randomUUID()}`,
     },
   });
   expect(uploaded.status()).toBe(200);
+  const uploadedResult = await uploaded.json();
 
   const activateCommand = {
     id: advertisementId,
@@ -1442,6 +1446,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     destinationUrl: 'https://example.invalid/announcement',
     status: 'ACTIVE',
     displayOrder: 99,
+    expectedRevision: uploadedResult.revision,
     clientRequestId: `advertisement-activate-${crypto.randomUUID()}`,
   };
   const activated = await admin.post('/api/admin/advertisements/save', {
@@ -1449,6 +1454,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     data: activateCommand,
   });
   expect(activated.status()).toBe(200);
+  const activatedResult = await activated.json();
   const publicAdvertisements = await (await request.get('/api/public/advertisements')).json();
   expect(publicAdvertisements.items.find((item) => item.id === advertisementId)).toEqual(
     expect.objectContaining({
@@ -1464,6 +1470,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: activatedResult.revision,
       clientRequestId: `advertisement-archive-${crypto.randomUUID()}`,
     },
   });

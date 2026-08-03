@@ -299,6 +299,372 @@
   font-size: 0.82rem;
 }
 
+.auth-account-links,
+.account-application-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin-top: 1.25rem;
+}
+.auth-account-links a,
+.account-application-links a {
+  color: #6b1117;
+  font-weight: 750;
+  text-underline-offset: 0.18rem;
+}
+.account-application-card {
+  width: min(100%, 52rem);
+}
+.account-application-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0 0 1.2rem;
+}
+.account-application-progress span {
+  min-height: 2.75rem;
+  padding: 0.65rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.65rem;
+  color: #6d625f;
+  background: #f8f1e6;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: center;
+}
+.account-application-progress .current {
+  border-color: #78151b;
+  color: #fff;
+  background: #78151b;
+}
+.account-application-progress .complete {
+  border-color: #8a6a2a;
+  color: #5e0d12;
+  background: #f3e1ad;
+}
+.auth-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem 1rem;
+}
+.auth-form-grid label,
+.auth-form-grid > div {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+}
+.auth-form select,
+.auth-form textarea {
+  width: 100%;
+}
+.account-application-fieldset {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.8rem;
+  background: #fffaf1;
+}
+.account-application-fieldset legend {
+  padding: 0 0.35rem;
+  color: #5e0d12;
+  font-weight: 800;
+}
+.account-application-check {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+  line-height: 1.4;
+}
+.account-application-check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.15rem 0 0;
+  accent-color: #78151b;
+}
+.account-application-acknowledgment {
+  margin: 1rem 0 0.35rem;
+  padding: 0.9rem;
+  border-radius: 0.65rem;
+  background: #f8f1e6;
+}
+.account-application-receipt,
+.account-application-status-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.8rem;
+  background: #fffaf1;
+}
+.account-application-receipt p,
+.account-application-status-card > p {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 0.75rem;
+  margin: 0;
+}
+.account-application-receipt span,
+.account-application-status-card span {
+  color: #6d625f;
+}
+.account-application-receipt textarea,
+.account-application-receipt code {
+  overflow-wrap: anywhere;
+  padding: 0.7rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.55rem;
+  background: #fff;
+}
+.account-application-change-summary {
+  padding: 0.9rem;
+  border-left: 0.3rem solid #b57a14;
+  background: #fff3d6;
+}
+.account-application-change-summary p {
+  margin: 0.35rem 0 0;
+}
+.account-application-resubmit,
+.account-application-withdraw {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #dbc9a8;
+}
+.account-application-withdraw summary {
+  min-height: 2.75rem;
+  color: #78151b;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .auth-form-grid,
+  .account-application-progress {
+    grid-template-columns: 1fr;
+  }
+  .account-application-receipt p,
+  .account-application-status-card > p {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+}
+
+.account-control-dialog {
+  width: min(62rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: 0;
+  border: 1px solid #dbc9a8;
+  border-radius: 1rem;
+  color: #382725;
+  background: #fffdf8;
+  box-shadow: 0 1.5rem 4rem rgba(32, 5, 7, 0.35);
+}
+.account-control-dialog::backdrop {
+  background: rgba(32, 5, 7, 0.72);
+}
+.account-control-dialog-head {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e4d6bd;
+  background: #fffdf8;
+}
+.account-control-dialog-head h2 {
+  margin: 0.2rem 0 0;
+  color: #5e0d12;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.account-control-dialog-body {
+  padding: 1.25rem;
+}
+.account-profile-overview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 1rem;
+}
+.account-profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  color: #fff;
+  background: #78151b;
+  font-size: 1.35rem;
+  font-weight: 850;
+}
+.account-profile-overview h3,
+.account-profile-overview p {
+  margin: 0 0 0.25rem;
+}
+.account-profile-overview dl,
+.account-review-detail dl,
+.account-review-card dl {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0;
+}
+.account-profile-overview dl div,
+.account-review-detail dl div,
+.account-review-card dl div {
+  padding: 0.7rem;
+  border-radius: 0.6rem;
+  background: #f8f1e6;
+}
+.account-profile-overview dt,
+.account-review-detail dt,
+.account-review-card dt {
+  color: #6d625f;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.account-profile-overview dd,
+.account-review-detail dd,
+.account-review-card dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+.account-profile-overview .auth-help {
+  grid-column: 1 / -1;
+}
+.account-profile-actions,
+.account-review-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.account-profile-actions details,
+.account-owner-override {
+  padding: 0.85rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.7rem;
+}
+.account-profile-actions summary,
+.account-owner-override summary {
+  min-height: 2.75rem;
+  color: #5e0d12;
+  font-weight: 800;
+  cursor: pointer;
+}
+.account-control-status {
+  min-height: 1.5rem;
+  margin-top: 0.75rem;
+  color: #326642;
+  font-weight: 750;
+}
+.account-control-status.error {
+  color: #9b1721;
+}
+.account-review-queue-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.account-review-queue-tabs [aria-pressed='true'] {
+  color: #fff;
+  background: #78151b;
+}
+.account-review-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid #e4d6bd;
+  border-radius: 0.8rem;
+  background: #fffaf1;
+}
+.account-review-card > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+.account-review-card dl {
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.account-review-card button {
+  align-self: start;
+}
+.account-review-detail {
+  margin: 0.75rem 0 1rem;
+}
+.account-review-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.account-review-detail-head h3 {
+  margin: 0.2rem 0 0;
+}
+.account-review-history {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  border: 1px solid #e4d6bd;
+  border-radius: 0.75rem;
+  background: #fffaf1;
+}
+.account-review-history h4,
+.account-review-history ol,
+.account-review-history p {
+  margin: 0;
+}
+.account-review-history ol {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.75rem 0 0 1.2rem;
+}
+.account-review-history li span {
+  display: block;
+  color: #6d625f;
+  font-size: 0.82rem;
+}
+.account-review-history li p {
+  margin-top: 0.25rem;
+}
+.account-review-decision,
+.account-owner-override {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dbc9a8;
+}
+.account-control-result {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dbc9a8;
+  border-radius: 0.8rem;
+  background: #fffaf1;
+}
+.account-control-result h3,
+.account-control-result p {
+  margin: 0;
+}
+.account-activation-handoff textarea {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .account-profile-overview dl,
+  .account-review-detail dl,
+  .account-review-card dl {
+    grid-template-columns: 1fr;
+  }
+  .account-review-card {
+    grid-template-columns: 1fr;
+  }
+}
+
 .borrower-portal {
   width: min(100%, 76rem);
   min-height: 100vh;

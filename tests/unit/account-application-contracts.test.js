@@ -123,6 +123,23 @@ describe('account-application contracts', () => {
       createdAt: '2026-08-03T00:00:00.000Z',
       updatedAt: '2026-08-03T01:00:00.000Z',
       expiresAt: '2026-09-03T00:00:00.000Z',
+      history: [
+        {
+          id: 'HISTORY-NOT-PUBLIC',
+          applicationId: 'APP-SYNTHETIC-001',
+          fromState: 'DRAFT',
+          toState: 'PENDING_ADMIN_REVIEW',
+          actorAccountId: 'ADMIN-NOT-PUBLIC',
+          applicantAuthorityFingerprint: 'fp-not-public',
+          reason: 'Submitted for governed review.',
+          before: { hidden: 'not-public' },
+          after: { hidden: 'not-public' },
+          resultingRevision: 2,
+          idempotencyKey: 'retry-not-public',
+          correlationId: 'CORRELATION-NOT-PUBLIC',
+          createdAt: '2026-08-03T00:00:00.000Z',
+        },
+      ],
     };
     const list = redactedReviewApplicationListDto(application);
     const detail = redactedReviewApplicationDetailDto(application);
@@ -138,6 +155,15 @@ describe('account-application contracts', () => {
       requestedUsername: 'synthetic.applicant',
       requestedAccess: { requestedCommitteeIds: ['DOL'], requestedWorkspaceIds: ['REQUEST_CENTER'] },
       review: { administrator: { completed: true }, director: { completed: false } },
+      history: [
+        {
+          fromState: 'DRAFT',
+          toState: 'PENDING_ADMIN_REVIEW',
+          reason: 'Submitted for governed review.',
+          resultingRevision: 2,
+          createdAt: '2026-08-03T00:00:00.000Z',
+        },
+      ],
     });
     const serialized = JSON.stringify({ list, detail });
     for (const forbidden of [

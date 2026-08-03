@@ -5,6 +5,7 @@ function clone(value) {
 export function createInMemoryAuthRepository(seedAccounts = []) {
   const accounts = new Map();
   const accessIndex = new Map();
+  const usernameIndex = new Map();
   const verifiedEmailIndex = new Map();
   const sessions = new Map();
   const resetTokens = new Map();
@@ -13,12 +14,16 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
   const saveAccount = async (account) => {
     const next = clone(account);
     const prior = accounts.get(next.id);
+    const nextUsername = next.usernameNormalized?.toLowerCase() ?? '';
+    const assignedUsername = nextUsername ? usernameIndex.get(nextUsername) : '';
+    if (assignedUsername && assignedUsername !== next.id) throw new Error('Username is already assigned.');
     if (prior?.accessIdNormalized && prior.accessIdNormalized !== next.accessIdNormalized) {
       accessIndex.delete(prior.accessIdNormalized);
     }
     if (prior?.profileEmailVerifiedAt && prior.profile?.email) {
       verifiedEmailIndex.delete(prior.profile.email.toLowerCase());
     }
+    if (prior?.usernameNormalized) usernameIndex.delete(prior.usernameNormalized.toLowerCase());
     if (next.profileEmailVerifiedAt && next.profile?.email) {
       const email = next.profile.email.toLowerCase();
       const assigned = verifiedEmailIndex.get(email);
@@ -27,6 +32,7 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
     }
     accounts.set(next.id, next);
     accessIndex.set(next.accessIdNormalized, next.id);
+    if (nextUsername) usernameIndex.set(nextUsername, next.id);
     return clone(next);
   };
 
@@ -39,7 +45,11 @@ export function createInMemoryAuthRepository(seedAccounts = []) {
       return clone(id ? accounts.get(id) : undefined);
     },
     async getAccountByLoginIdentifier(identifier) {
-      const id = accessIndex.get(identifier) ?? verifiedEmailIndex.get(identifier);
+      const value = String(identifier ?? '');
+      const id =
+        accessIndex.get(value.toUpperCase()) ??
+        usernameIndex.get(value.toLowerCase()) ??
+        verifiedEmailIndex.get(value.toLowerCase());
       return clone(id ? accounts.get(id) : undefined);
     },
     async getAccountById(accountId) {

@@ -5,8 +5,8 @@ import { navigateToView } from './navigation.js';
 const releaseIdentity = (environment = 'STAGING') => ({
   ok: true,
   environment,
-  appVersion: '0.7.1',
-  releaseVersion: '0.7.1',
+  appVersion: '0.7.2',
+  releaseVersion: '0.7.2',
   candidateSha: 'a'.repeat(40),
 });
 
@@ -52,7 +52,7 @@ test('portal selection and login identity use the authoritative Worker release',
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto('/portals');
     await expect(page.getByRole('heading', { name: 'Choose a logistics portal' })).toBeVisible();
-    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.1');
+    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.2');
     await expect(page.locator('[data-release-identity]')).toHaveAttribute('data-environment', 'PRODUCTION');
     await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
     await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
@@ -188,7 +188,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
   await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
-  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.1/u);
+  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.2/u);
   await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
@@ -510,7 +510,7 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await expect(accessId).toHaveAttribute('type', 'text');
   await expect(accessId).toHaveAttribute('inputmode', 'text');
   await expect(accessId).toHaveAttribute('autocomplete', 'username');
-  await expect(accessId).toHaveAttribute('autocapitalize', 'characters');
+  await expect(accessId).toHaveAttribute('autocapitalize', 'none');
   await expect(password).toHaveAttribute('autocomplete', 'current-password');
   await expect(accessId).not.toBeFocused();
   await accessId.evaluate((element) => {

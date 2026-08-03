@@ -29,7 +29,7 @@ function mapProfile(row, committeeIds = []) {
     username: row.username_normalized ?? '',
     courseId: row.profile_course_id ?? '',
     yearLevel: row.profile_year_level ?? null,
-    departmentId: row.department_id ?? '',
+    departmentId: row.profile_department_id ?? row.department_id ?? '',
     departmentDisplayName: row.department_display_name ?? '',
     institutionId: row.institution_id ?? '',
     avatarAssetKey: row.avatar_asset_key ?? '',
@@ -91,10 +91,11 @@ function profileSelect() {
     a.profile_email_verified_at, a.username_normalized, a.profile_course_id,
     a.profile_year_level, a.avatar_asset_key, a.avatar_updated_at,
     a.password_credential_json, a.credential_version, a.updated_at,
-    a.department_id, a.institution_id,
+    a.department_id, a.profile_department_id, a.institution_id,
     department.display_name AS department_display_name
     FROM accounts a
-    LEFT JOIN requester_departments department ON department.id = a.department_id
+    LEFT JOIN requester_departments department
+      ON department.id = COALESCE(a.profile_department_id, a.department_id)
     WHERE a.id = ?1`;
 }
 
@@ -139,17 +140,30 @@ export function createD1ProfileRepository(db) {
     },
 
     async findUsername(username, excludeAccountId) {
-      const result = await db
-        .prepare(
-          `SELECT id
-           FROM accounts
-           WHERE (username_normalized = ?1 OR lower(access_id_normalized) = ?1)
-             AND id <> ?2
-           LIMIT 1`,
-        )
-        .bind(username, requiredAccountId(excludeAccountId))
-        .first();
-      return result?.id ?? null;
+      const accountId = requiredAccountId(excludeAccountId);
+      const collisionKey = String(username ?? '').replaceAll(/[._-]/gu, '');
+      const [account, reservation] = await Promise.all([
+        db
+          .prepare(
+            `SELECT id
+             FROM accounts
+             WHERE (username_normalized = ?1 OR lower(access_id_normalized) = ?1)
+               AND id <> ?2
+             LIMIT 1`,
+          )
+          .bind(username, accountId)
+          .first(),
+        db
+          .prepare(
+            `SELECT account_id
+             FROM access_id_reservations
+             WHERE lower(collision_key) = lower(?1)
+             LIMIT 1`,
+          )
+          .bind(collisionKey)
+          .first(),
+      ]);
+      return account?.id ?? reservation?.account_id ?? null;
     },
 
     async getIdentityCorrectionByClientRequest(clientRequestId) {

@@ -1,8 +1,7 @@
 const SHA = /^[0-9a-f]{40}$/iu;
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u;
 const ENVIRONMENTS = new Set(['DEVELOPMENT', 'STAGING', 'PRODUCTION']);
-const WORKERS_DEV_HOSTNAME =
-  /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+workers\.dev$/u;
+const WORKERS_DEV_HOSTNAME = /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+workers\.dev$/u;
 
 export const REQUIRED_PROTECTED_ENV = Object.freeze([
   'PASSWORD_PEPPER',
@@ -12,7 +11,9 @@ export const REQUIRED_PROTECTED_ENV = Object.freeze([
 ]);
 
 export function normalizeEnvironment(environment) {
-  const value = String(environment ?? '').trim().toUpperCase();
+  const value = String(environment ?? '')
+    .trim()
+    .toUpperCase();
   return ENVIRONMENTS.has(value) ? value : 'UNKNOWN';
 }
 
@@ -23,6 +24,25 @@ export function isValidRecoveryHostname(value) {
     value === value.toLowerCase() &&
     WORKERS_DEV_HOSTNAME.test(value)
   );
+}
+
+function hasAccountApplicationIdentityClasses(value) {
+  try {
+    const parsed = JSON.parse(String(value ?? ''));
+    return (
+      Array.isArray(parsed) &&
+      parsed.length > 0 &&
+      parsed.every(
+        (entry) =>
+          typeof entry?.id === 'string' &&
+          entry.id.trim() &&
+          Array.isArray(entry.domains) &&
+          entry.domains.length > 0,
+      )
+    );
+  } catch {
+    return false;
+  }
 }
 
 export function safeReleaseIdentity(env) {
@@ -55,6 +75,11 @@ export function environmentReadinessIssues(env) {
     for (const key of REQUIRED_PROTECTED_ENV) {
       if (typeof env?.[key] !== 'string' || env[key].length < 32) issues.push(`${key}_MISSING`);
     }
+    if (!hasAccountApplicationIdentityClasses(env?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON)) {
+      issues.push('ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING');
+    }
+    // No provider has been owner-approved or implemented. Keep deployed readiness closed until both are true.
+    issues.push('ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_CONFIGURED');
   }
   return issues;
 }

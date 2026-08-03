@@ -1,10 +1,10 @@
+import { canonicalUsername, isGovernedUsername } from '../../domain/username.js';
 import { ACCOUNT_STATUS, accountAuthorization } from '../auth/contracts.js';
 import { validateNewPassword } from '../auth/crypto.js';
 import { ApiError } from '../d1/operational-service.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const MOBILE_PATTERN = /^\+?[0-9][0-9 ()-]{7,19}$/u;
-const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]{3,63}$/u;
 
 function fail(code, message, { status = 422, details } = {}) {
   throw new ApiError(code, message, { status, details });
@@ -78,11 +78,9 @@ function normalizeContact(command) {
 }
 
 function normalizeUsername(value) {
-  const username = String(value ?? '')
-    .trim()
-    .toLowerCase();
-  if (!USERNAME_PATTERN.test(username)) {
-    fail('USERNAME_INVALID', 'Use 4–64 lowercase letters, numbers, periods, underscores, or hyphens.', {
+  const username = canonicalUsername(value);
+  if (!isGovernedUsername(username)) {
+    fail('USERNAME_INVALID', 'Use 4-32 letters or numbers with single periods, underscores, or hyphens.', {
       details: { field: 'username' },
     });
   }
@@ -323,6 +321,9 @@ export function createProfileService({
     }
     const username = normalizeUsername(command.username ?? command.newUsername);
     if (username === profile.username) fail('USERNAME_UNCHANGED', 'Choose a different username.');
+    if (username === String(profile.accessId ?? '').toLowerCase()) {
+      fail('USERNAME_TAKEN', 'That username is already in use.', { status: 409 });
+    }
     if (await repository.findUsername(username, currentActor.id)) {
       fail('USERNAME_TAKEN', 'That username is already in use.', { status: 409 });
     }

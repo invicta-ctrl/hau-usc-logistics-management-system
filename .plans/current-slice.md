@@ -7,9 +7,9 @@
 > `.codex/specs/v0.7.2-production-access-operations.md`. The historical
 > material below remains evidence only and does not override `.codex/CURRENT.md`.
 
-CURRENT SLICE: v0.7.2 first isolated implementation wave
+CURRENT SLICE: v0.7.2 exact repository candidate freeze
 
-CURRENT STAGE: MAPPING_ACCEPTED_FIRST_ISOLATED_IMPLEMENTATION_WAVE_READY
+CURRENT STAGE: REPOSITORY_CANDIDATE_READY_PREPRODUCTION_BLOCKED
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
@@ -17,24 +17,21 @@ Release branch: `release/v0.7.2-production-access-operations`
 
 Current bounded plan:
 
-1. Map exact current code, migrations, tests, provider adapters, and accepted
-   v0.7.1 overlap using CodeGraph and targeted reads.
-2. Lock state, API/DTO, data, authorization, migration, rollback, UI, and test
-   contracts; create the live child-task registry and file-ownership ledger.
-3. Run a dependency-ready read-only mapping wave with at most three children
-   plus the parent; children may not spawn grandchildren.
-4. Implement and integrate verified backend foundations, access/profile,
-   critical UI, and operational P0 slices one at a time.
-5. Pass R1, operational P0, generated parity, the complete repository gate,
-   R2, and isolated pre-production acceptance.
-6. Freeze one exact candidate and present the production GO package. Do not
-   deploy production until the owner replies exactly
-   `AUTHORIZE V0.7.2 PRODUCTION`.
+1. Freeze the integrated source, migration, tests, generated artifacts, release
+   identity, and current handoff in one candidate commit.
+2. Run the required fresh R2 review against that exact product SHA; repair and
+   refreeze if any P0/P1 is found.
+3. Push the branch and verify exact-head PR #15 CI.
+4. Stop before pre-production until the owner-approved live email provider and
+   private identity-class configuration exist.
+5. After those inputs exist, rerun exact-SHA gates and complete isolated
+   pre-production, backup, rollback, reconciliation, and only then production.
 
-The parent is release-branch integration owner. The practical concurrency limit
-is three children because the current environment supports four active agents
-total; the owner ceiling of sixteen is retained as policy but cannot be reached
-here.
+The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION`; no second confirmation
+wait is required. The authorization does not clear the blocked provider and
+pre-production gates. Local acceptance is 109 files / 726 tests, browser 136 /
+356 intentional skips, local Worker/D1 39/39, and schema-30 integrity `ok` with
+zero foreign-key findings.
 
 ---
 
