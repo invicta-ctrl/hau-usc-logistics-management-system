@@ -976,7 +976,7 @@ describe('account-application service', () => {
       }),
     ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_OVERRIDE_INVALID' });
 
-    const result = await context.service.ownerOverride({
+    const command = {
       actor: owner,
       applicationId,
       expectedRevision: submitted.revision,
@@ -989,7 +989,8 @@ describe('account-application service', () => {
         sessionImpactFingerprint: 'SESSION-FP',
         followUpReviewReference: 'FOLLOW-UP-001',
       },
-    });
+    };
+    const result = await context.service.ownerOverride(command);
     expect(result).toMatchObject({ state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL, revision: 3 });
     expect(context.repository.inspect().history.at(-1).after).toMatchObject({
       ownerOverride: true,
@@ -997,5 +998,81 @@ describe('account-application service', () => {
       sessionImpactFingerprint: 'SESSION-FP',
       followUpReviewReference: 'FOLLOW-UP-001',
     });
+    await expect(context.service.ownerOverride(command)).resolves.toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+      revision: 3,
+      replayed: true,
+    });
+    await expect(
+      context.service.ownerOverride({
+        ...command,
+        override: {
+          ...command.override,
+          currentState: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
+  });
+
+  it('replays an exact owner approval and binds its state and action confirmation', async () => {
+    const context = testContext();
+    const { submitted } = await submittedApplication(context);
+    const applicationId = context.repository.inspect().applications[0].id;
+    const owner = {
+      id: 'OWNER-SYNTHETIC-APPROVER',
+      capabilities: [ACCOUNT_APPLICATION_CAPABILITY.OWNER_OVERRIDE],
+    };
+    await context.service.ownerOverride({
+      actor: owner,
+      applicationId,
+      expectedRevision: submitted.revision,
+      reason: 'System Owner forwards the documented exception for final review.',
+      clientRequestId: 'owner-override-approve-forward-001',
+      override: {
+        action: 'FORWARD',
+        currentState: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+        effectiveAccessFingerprint: 'ACCESS-FP-APPROVE',
+        sessionImpactFingerprint: 'SESSION-FP-APPROVE',
+        followUpReviewReference: 'FOLLOW-UP-APPROVE',
+      },
+    });
+    const command = {
+      actor: owner,
+      applicationId,
+      expectedRevision: 3,
+      reason: 'System Owner approves the documented exception with follow-up evidence.',
+      reviewEvidence: {
+        evidenceFingerprint: 'OWNER-APPROVAL-EVIDENCE-FP',
+        protectedReviewEnvelope: 'v1.owner-approval-review',
+      },
+      clientRequestId: 'owner-override-approve-0001',
+      override: {
+        action: 'APPROVE',
+        currentState: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+        effectiveAccessFingerprint: 'ACCESS-FP-APPROVE',
+        sessionImpactFingerprint: 'SESSION-FP-APPROVE',
+        followUpReviewReference: 'FOLLOW-UP-APPROVE',
+      },
+    };
+
+    const approved = await context.service.ownerOverride(command);
+    expect(approved).toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+      revision: 4,
+    });
+    await expect(context.service.ownerOverride(command)).resolves.toMatchObject({
+      state: ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+      revision: 4,
+      replayed: true,
+    });
+    await expect(
+      context.service.ownerOverride({
+        ...command,
+        override: {
+          ...command.override,
+          currentState: ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
   });
 });

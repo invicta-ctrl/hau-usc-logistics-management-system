@@ -116,13 +116,24 @@ a stale account snapshot rolls back without a receipt. The changed-status path
 also reconciles a raced identical commit through the durable receipt. A fresh
 exact-SHA review remains mandatory.
 
+The fifth fresh exact-SHA review rejected
+`36a27cc635d762e233bff2c27b10e8a8ec2e263b` before push with one P2. Owner-
+override handling compared the caller's confirmed current state with the
+already-advanced application before checking the durable replay receipt, so an
+exact retry failed. The same current-state/action confirmation was absent from
+the request fingerprint. The replacement repair binds both fields into forward,
+request-changes, reject, and approve fingerprints; performs exact replay before
+current-state validation; and retains fail-closed validation for new writes.
+Focused proof covers exact forwarding and approval replays plus changed-state
+key conflicts. A fresh exact-SHA review remains mandatory.
+
 ## Verification evidence
 
 - Focused identity/access: 14 files / 73 tests passed; focused lint passed.
 - Focused final regressions: 2 files / 12 tests and 14 browser tests passed
   with 8 intentional skips.
 - Release identity: 3 files / 15 tests and 10/10 focused browser tests passed.
-- Final `npm run check`: 113 files / 773 tests passed; lint, two deterministic
+- Final `npm run check`: 113 files / 774 tests passed; lint, two deterministic
   builds, 34 Apps Script sources / 57 required functions, generated parity,
   Cloudflare type/dry-run checks, and all standalone artifacts passed.
 - Full browser matrix: 136 passed / 356 intentionally scoped skips / 0 failed.
@@ -131,6 +142,8 @@ exact-SHA review remains mandatory.
   Worker tests, and 1/1 department Worker test passed.
 - Focused fourth-cycle no-op idempotency regressions: 2 files / 32 tests and
   focused lint passed, including real D1 success and stale rollback proof.
+- Focused fifth-cycle owner-override replay regressions: 1 file / 8 tests and
+  focused lint passed, including forward and approval exact-retry proof.
 - Explicit migration 0030 rehearsal: 1/1 passed against migrations 0001-0030.
 - `git diff --check`: passed before freeze.
 
@@ -162,6 +175,14 @@ evidence:
 - `2026-08-03T15-28-09-243Z-local-worker-d1-v072-r2-noop-idempotency.log`
 - `2026-08-03T15-30-00-211Z-full-playwright-v072-r2-noop-idempotency.log`
 - `2026-08-03T15-33-00-867Z-migration-0030-rehearsal-r2-noop-idempotency.log`
+- `2026-08-03T15-41-18-212Z-r2-owner-override-replay-focused.log`
+- `2026-08-03T15-41-19-699Z-r2-owner-override-replay-lint.log`
+- `2026-08-03T15-41-27-267Z-full-repository-check-v072-r2-owner-override.log`
+- `2026-08-03T15-42-28-713Z-local-worker-d1-v072-r2-owner-override.log`
+- `2026-08-03T15-44-04-635Z-full-playwright-v072-r2-owner-override.log`
+- `2026-08-03T15-47-06-474Z-focused-browser-v072-owner-override-announcement-retry.log`
+- `2026-08-03T15-47-18-979Z-full-playwright-v072-r2-owner-override-retry.log`
+- `2026-08-03T15-50-11-296Z-migration-0030-rehearsal-r2-owner-override.log`
 
 ## Blocking pre-production gate
 

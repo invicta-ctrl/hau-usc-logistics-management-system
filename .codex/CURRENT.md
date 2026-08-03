@@ -16,12 +16,12 @@
   private identity classes and email-provider implementation/configuration
   exist.
 - Verification: schema-30 rehearsal passed; `npm run check` passes 113 files /
-  773 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
-  39/39. Four candidate review/audit cycles rejected earlier SHAs; their
+  774 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
+  39/39. Five candidate review/audit cycles rejected earlier SHAs; their
   schema/runtime, reconciliation, transaction, account-revision, stale-write,
-  identifier, login-identity, actor/request replay binding, no-op retry
-  receipts, mutation idempotency, and public-replay findings are repaired
-  locally and require a fresh exact-SHA review.
+  identifier, login-identity, actor/request replay binding, owner-override
+  confirmation binding, no-op retry receipts, mutation idempotency, and public-
+  replay findings are repaired locally and require a fresh exact-SHA review.
 - Production boundary: the owner supplied `AUTHORIZE V0.7.2 PRODUCTION` and no
   second confirmation wait is required. Production is still prohibited until
   the exact target, provider, pre-production, backup, rollback, and

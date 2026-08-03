@@ -758,6 +758,9 @@ export function createAccountApplicationService({
       { actorAccountId: approver.id, requestFingerprint },
     );
     if (replayed) return reviewResult(replayed, { replayed: true });
+    if (ownerOverride && ownerOverride.currentState !== application.state) {
+      fail('ACCOUNT_APPLICATION_OVERRIDE_INVALID', { status: 409 });
+    }
     if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
     if (!ownerOverride && application.administratorReviewerId === approver.id) {
       fail('ACCOUNT_APPLICATION_SAME_REVIEWER', { status: 403 });
@@ -1451,12 +1454,11 @@ export function createAccountApplicationService({
       const application = await repository.getApplicationById(applicationId);
       if (!application) fail('ACCOUNT_APPLICATION_NOT_FOUND', { status: 404 });
       const capture = safeOverrideCapture(override);
-      if (String(override?.currentState ?? '') !== application.state) {
-        fail('ACCOUNT_APPLICATION_OVERRIDE_INVALID', { status: 409 });
-      }
+      const currentState = String(override?.currentState ?? '');
       const action = String(override?.action ?? '').toUpperCase();
+      const overrideRequest = Object.freeze({ action, currentState, ...capture });
       if (action === 'APPROVE') {
-        return approve({ actor: owner, applicationId, command, ownerOverride: capture });
+        return approve({ actor: owner, applicationId, command, ownerOverride: overrideRequest });
       }
       const targetByAction = Object.freeze({
         REQUEST_CHANGES: ACCOUNT_APPLICATION_STATE.CHANGES_REQUESTED,
@@ -1475,13 +1477,16 @@ export function createAccountApplicationService({
         expectedRevision: revision,
         toState,
         reason: normalizedReason,
-        ownerOverride: capture,
+        ownerOverride: overrideRequest,
       });
       const replayed = await replayFor(application.id, idempotencyKey, toState, {
         actorAccountId: owner.id,
         requestFingerprint,
       });
       if (replayed) return reviewResult(replayed, { replayed: true });
+      if (currentState !== application.state) {
+        fail('ACCOUNT_APPLICATION_OVERRIDE_INVALID', { status: 409 });
+      }
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       const result = await transition({
         application,
