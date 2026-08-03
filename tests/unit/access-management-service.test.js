@@ -137,7 +137,7 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
         result: replay.result,
       });
     }),
-    setAccountStatus: vi.fn(async ({ account: target, nextStatus, changedAt }) => {
+    setAccountStatus: vi.fn(async ({ account: target, nextStatus, changedAt, idempotency: replay }) => {
       const next = {
         ...target,
         status: nextStatus,
@@ -146,6 +146,11 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
       };
       byAccountId.set(target.id, next);
       byAccessId.set(next.accessIdNormalized, next);
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
     }),
     revokeSessions: vi.fn(async ({ account: target, changedAt, idempotency: replay }) => {
       const next = { ...target, credentialVersion: target.credentialVersion + 1, updatedAt: changedAt };
@@ -192,6 +197,7 @@ function targetCommand(target, overrides = {}) {
     accountId: target.id,
     expectedRevision: `${target.credentialVersion}:${target.updatedAt}`,
     confirmCurrentAccessId: target.accessIdNormalized,
+    clientRequestId: 'access-target-command-0001',
     ...overrides,
   };
 }
@@ -345,6 +351,29 @@ describe('access management service', () => {
       changed: true,
       revision: '2:2026-07-22T08:00:00.000Z',
     });
+  });
+
+  it('replays an identical account status request and rejects retry-key payload changes', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = targetCommand(target, {
+      status: ACCOUNT_STATUS.DISABLED,
+      reason: 'Disable the synthetic account with retry safety.',
+      clientRequestId: 'access-status-retry-0001',
+    });
+
+    const first = await service.setAccountStatus({ actor, command });
+    await expect(service.setAccountStatus({ actor, command })).resolves.toMatchObject({
+      ...first,
+      replayed: true,
+    });
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: { ...command, status: ACCOUNT_STATUS.REVOKED },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
+    expect(repository.setAccountStatus).toHaveBeenCalledTimes(1);
   });
 
   it('protects the last active Administrator from a consequential status change', async () => {

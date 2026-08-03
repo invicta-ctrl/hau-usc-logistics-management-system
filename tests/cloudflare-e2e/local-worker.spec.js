@@ -2264,6 +2264,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'DISABLED',
         reason: 'Synthetic disable account lifecycle proof.',
+        clientRequestId: 'local-access-status-disable-0001',
       },
     });
     expect(disable.status()).toBe(200);
@@ -2283,6 +2284,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
         reason: 'Synthetic enable account lifecycle proof.',
+        clientRequestId: 'local-access-status-enable-0001',
       },
     });
     expect(enable.status()).toBe(200);
@@ -2298,6 +2300,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         status: 'REVOKED',
         lifecycleAction: 'ARCHIVE',
         reason: 'Synthetic archive preserves account and audit history.',
+        clientRequestId: 'local-access-status-archive-0001',
       },
     });
     expect(archived.status()).toBe(200);
@@ -2323,6 +2326,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
         reason: 'Synthetic restore after archive lifecycle proof.',
+        clientRequestId: 'local-access-status-restore-0001',
       },
     });
     expect(restoreArchived.status()).toBe(200);
@@ -2549,6 +2553,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
         confirmCurrentAccessId: 'DOL_2026',
         status: 'REVOKED',
         reason: 'Verify immediate department account revocation.',
+        clientRequestId: 'local-department-status-revoke-0001',
       },
     });
     expect(revoked.status()).toBe(200);
@@ -2571,6 +2576,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
         reason: 'Verify governed department account restoration.',
+        clientRequestId: 'local-department-status-restore-0001',
       },
     });
     expect(restored.status()).toBe(403);
@@ -2583,6 +2589,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
         reason: 'Verify governed department account restoration.',
+        clientRequestId: 'local-department-status-restore-0001',
       },
     });
     expect(restoredWithCsrf.status()).toBe(200);

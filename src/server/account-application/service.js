@@ -456,6 +456,7 @@ export function createAccountApplicationService({
     typeof identityProtection.protectApplicationProfile !== 'function' ||
     typeof identityProtection.fingerprintRequestedAccess !== 'function' ||
     typeof passwordKdf.hash !== 'function' ||
+    typeof passwordKdf.verify !== 'function' ||
     typeof tokenCrypto.createToken !== 'function' ||
     typeof tokenCrypto.digest !== 'function' ||
     typeof rateLimiter.consume !== 'function' ||
@@ -516,10 +517,29 @@ export function createAccountApplicationService({
     }
   }
 
-  async function replayFor(applicationId, idempotencyKey, expectedToState) {
+  async function mutationFingerprint(value) {
+    const fingerprint = await identityProtection.fingerprintRequestedAccess({
+      accountApplicationMutation: value,
+    });
+    if (!String(fingerprint ?? '').trim()) fail('ACCOUNT_APPLICATION_INVALID');
+    return String(fingerprint).trim();
+  }
+
+  async function replayFor(
+    applicationId,
+    idempotencyKey,
+    expectedToState,
+    { actorAccountId = '', applicantAuthorityFingerprint = '', requestFingerprint = '' } = {},
+  ) {
     const replay = await repository.getApplicationReplayByIdempotencyKey?.(idempotencyKey);
     if (!replay) return null;
-    if (replay.application?.id !== applicationId || replay.history?.toState !== expectedToState) {
+    if (
+      replay.application?.id !== applicationId ||
+      replay.history?.toState !== expectedToState ||
+      String(replay.history?.actorAccountId ?? '') !== actorAccountId ||
+      String(replay.history?.applicantAuthorityFingerprint ?? '') !== applicantAuthorityFingerprint ||
+      String(replay.history?.after?.requestFingerprint ?? '') !== requestFingerprint
+    ) {
       fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
     }
     return replay.application;
@@ -536,10 +556,12 @@ export function createAccountApplicationService({
     updates = {},
     after = {},
     auditAfter = after,
+    requestFingerprint,
     requireDistinctFromAdministrator = false,
     revokeApprovedStarter = false,
   }) {
-    const replayed = await replayFor(application.id, idempotencyKey, toState);
+    const replayBinding = { actorAccountId, applicantAuthorityFingerprint, requestFingerprint };
+    const replayed = await replayFor(application.id, idempotencyKey, toState, replayBinding);
     if (replayed) return { application: replayed, replayed: true };
     assertAccountApplicationTransition(application.state, toState);
     const occurredAt = nowIso(clock);
@@ -553,7 +575,7 @@ export function createAccountApplicationService({
       applicantAuthorityFingerprint,
       reason,
       before: { state: application.state, revision: application.revision },
-      after,
+      after: { ...after, requestFingerprint },
       expectedRevision: application.revision,
       resultingRevision: application.revision + 1,
       idempotencyKey,
@@ -590,7 +612,7 @@ export function createAccountApplicationService({
         replayed: false,
       };
     } catch {
-      const racedReplay = await replayFor(application.id, idempotencyKey, toState);
+      const racedReplay = await replayFor(application.id, idempotencyKey, toState, replayBinding);
       if (racedReplay) return { application: racedReplay, replayed: true };
       fail('ACCOUNT_APPLICATION_WRITE_CONFLICT', { status: 409 });
     }
@@ -606,9 +628,21 @@ export function createAccountApplicationService({
     const idempotencyKey = requiredIdempotencyKey(command.clientRequestId);
     const reason = requiredReason(command.reason);
     const evidence = safeReviewEvidence(command.reviewEvidence);
+    const requestFingerprint = await mutationFingerprint({
+      operation: action,
+      applicationId,
+      actorAccountId: reviewer.id,
+      expectedRevision: revision,
+      toState,
+      reason,
+      reviewEvidence: evidence,
+    });
     const application = await repository.getApplicationById(applicationId);
     if (!application) fail('ACCOUNT_APPLICATION_NOT_FOUND', { status: 404 });
-    const replayed = await replayFor(application.id, idempotencyKey, toState);
+    const replayed = await replayFor(application.id, idempotencyKey, toState, {
+      actorAccountId: reviewer.id,
+      requestFingerprint,
+    });
     if (replayed) return reviewResult(replayed, { replayed: true });
     if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
     if (reviewerKind === 'DIRECTOR' && application.administratorReviewerId === reviewer.id) {
@@ -625,6 +659,7 @@ export function createAccountApplicationService({
       idempotencyKey,
       reason,
       action,
+      requestFingerprint,
       updates: reviewerUpdates,
       after: {
         state: toState,
@@ -702,12 +737,25 @@ export function createAccountApplicationService({
     const idempotencyKey = requiredIdempotencyKey(command.clientRequestId);
     const reason = requiredReason(command.reason);
     const evidence = safeReviewEvidence(command.reviewEvidence);
+    const requestFingerprint = await mutationFingerprint({
+      operation: ownerOverride
+        ? 'ACCOUNT_APPLICATION_OWNER_OVERRIDE_APPROVE'
+        : 'ACCOUNT_APPLICATION_DIRECTOR_APPROVED',
+      applicationId,
+      actorAccountId: approver.id,
+      expectedRevision: revision,
+      toState: ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+      reason,
+      reviewEvidence: evidence,
+      ownerOverride: ownerOverride ?? null,
+    });
     const application = await repository.getApplicationById(applicationId);
     if (!application) fail('ACCOUNT_APPLICATION_NOT_FOUND', { status: 404 });
     const replayed = await replayFor(
       application.id,
       idempotencyKey,
       ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+      { actorAccountId: approver.id, requestFingerprint },
     );
     if (replayed) return reviewResult(replayed, { replayed: true });
     if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
@@ -757,6 +805,7 @@ export function createAccountApplicationService({
         accountCode: starterAccount.accessIdNormalized,
         reviewEvidenceFingerprint: evidence.evidenceFingerprint,
         protectedReviewEnvelope: evidence.protectedReviewEnvelope,
+        requestFingerprint,
         ...overrideAfter,
       },
       expectedRevision: application.revision,
@@ -815,6 +864,7 @@ export function createAccountApplicationService({
         application.id,
         idempotencyKey,
         ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+        { actorAccountId: approver.id, requestFingerprint },
       );
       if (racedReplay) return reviewResult(racedReplay, { replayed: true });
       fail('ACCOUNT_APPLICATION_WRITE_CONFLICT', { status: 409 });
@@ -901,19 +951,16 @@ export function createAccountApplicationService({
       if (!verificationReceipt) fail('VERIFICATION_INVALID');
       const verificationReceiptDigest = await tokenCrypto.digest(verificationReceipt);
       const existing = await repository.getApplicationByClientRequestId?.(clientRequestId);
-      if (existing) {
-        const receipt = await repository.getVerificationChallengeByReceiptDigest?.(verificationReceiptDigest);
-        if (
-          receipt?.state !== EMAIL_VERIFICATION_CHALLENGE_STATE.CONSUMED ||
-          receipt.emailFingerprint !== existing.emailFingerprint
-        ) {
-          fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
-        }
-        return publicSubmissionDto(existing, '', { replayed: true });
-      }
       const verifiedChallenge =
         await repository.getVerificationChallengeByReceiptDigest?.(verificationReceiptDigest);
-      if (verifiedChallenge?.state !== EMAIL_VERIFICATION_CHALLENGE_STATE.VERIFIED) {
+      if (
+        existing &&
+        (verifiedChallenge?.state !== EMAIL_VERIFICATION_CHALLENGE_STATE.CONSUMED ||
+          verifiedChallenge.emailFingerprint !== existing.emailFingerprint)
+      ) {
+        fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
+      }
+      if (!existing && verifiedChallenge?.state !== EMAIL_VERIFICATION_CHALLENGE_STATE.VERIFIED) {
         fail('VERIFICATION_INVALID');
       }
       if (String(command.password ?? '') !== String(command.confirmPassword ?? '')) {
@@ -942,6 +989,35 @@ export function createAccountApplicationService({
         !String(requestedAccessFingerprint ?? '').trim()
       ) {
         fail('ACCOUNT_APPLICATION_INVALID');
+      }
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_SUBMITTED',
+        applicantAuthorityFingerprint: verificationReceiptDigest,
+        expectedRevision: 1,
+        profileFingerprint: protectedProfile.profileFingerprint,
+        requestedAccessFingerprint,
+        departmentId,
+        courseId,
+        yearLevel,
+        requestedUsernameNormalized,
+      });
+      if (existing) {
+        const replayed = await replayFor(
+          existing.id,
+          clientRequestId,
+          ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+          { applicantAuthorityFingerprint: verificationReceiptDigest, requestFingerprint },
+        );
+        let passwordMatches = false;
+        try {
+          passwordMatches = Boolean(
+            replayed && (await passwordKdf.verify(command.password, replayed.pendingPasswordCredential)),
+          );
+        } catch {
+          passwordMatches = false;
+        }
+        if (!passwordMatches) fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
+        return publicSubmissionDto(replayed, '', { replayed: true });
       }
       const eligibility = await approvedSubmissionEligibility({
         emailFingerprint,
@@ -1008,6 +1084,7 @@ export function createAccountApplicationService({
           state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
           requestedAccessFingerprint,
           submissionEligibilityClaim: eligibility.claimFingerprint,
+          requestFingerprint,
         },
         expectedRevision: 1,
         resultingRevision: 2,
@@ -1039,7 +1116,22 @@ export function createAccountApplicationService({
         const raced = await repository.getApplicationByClientRequestId?.(clientRequestId);
         const receipt = await repository.getVerificationChallengeByReceiptDigest?.(verificationReceiptDigest);
         if (raced && receipt?.emailFingerprint === raced.emailFingerprint) {
-          return publicSubmissionDto(raced, '', { replayed: true });
+          const replayed = await replayFor(
+            raced.id,
+            clientRequestId,
+            ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+            { applicantAuthorityFingerprint: verificationReceiptDigest, requestFingerprint },
+          );
+          let passwordMatches = false;
+          try {
+            passwordMatches = Boolean(
+              replayed && (await passwordKdf.verify(command.password, replayed.pendingPasswordCredential)),
+            );
+          } catch {
+            passwordMatches = false;
+          }
+          if (passwordMatches) return publicSubmissionDto(replayed, '', { replayed: true });
+          fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
         }
         await assertIdentityAvailable(repository, emailFingerprint);
         await assertUsernameAvailable(repository, requestedUsernameNormalized);
@@ -1054,19 +1146,6 @@ export function createAccountApplicationService({
       if (!application) fail('ACCOUNT_APPLICATION_STATUS_TOKEN_INVALID', { status: 404 });
       const revision = expectedRevision(command.expectedRevision);
       const idempotencyKey = requiredIdempotencyKey(command.clientRequestId);
-      const replayed = await replayFor(
-        application.id,
-        idempotencyKey,
-        ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
-      );
-      if (replayed) return publicApplicationStatusDto(replayed);
-      if (application.revision !== revision) {
-        fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
-      }
-      if (application.state !== ACCOUNT_APPLICATION_STATE.CHANGES_REQUESTED) {
-        fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
-      }
-      assertAccountApplicationTransition(application.state, ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW);
       if (String(command.password ?? '') !== String(command.confirmPassword ?? '')) {
         fail('ACCOUNT_APPLICATION_INVALID');
       }
@@ -1096,6 +1175,44 @@ export function createAccountApplicationService({
       ) {
         fail('ACCOUNT_APPLICATION_INVALID');
       }
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_RESUBMITTED',
+        applicationId: application.id,
+        applicantAuthorityFingerprint: application.statusTokenDigest,
+        expectedRevision: revision,
+        profileFingerprint: protectedProfile.profileFingerprint,
+        requestedAccessFingerprint,
+        departmentId,
+        courseId,
+        yearLevel,
+        requestedUsernameNormalized,
+      });
+      const replayed = await replayFor(
+        application.id,
+        idempotencyKey,
+        ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+        {
+          applicantAuthorityFingerprint: application.statusTokenDigest,
+          requestFingerprint,
+        },
+      );
+      if (replayed) {
+        let passwordMatches = false;
+        try {
+          passwordMatches = await passwordKdf.verify(command.password, replayed.pendingPasswordCredential);
+        } catch {
+          passwordMatches = false;
+        }
+        if (!passwordMatches) fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
+        return publicApplicationStatusDto(replayed);
+      }
+      if (application.revision !== revision) {
+        fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
+      }
+      if (application.state !== ACCOUNT_APPLICATION_STATE.CHANGES_REQUESTED) {
+        fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
+      }
+      assertAccountApplicationTransition(application.state, ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW);
       const eligibility = await approvedSubmissionEligibility({
         emailFingerprint: application.emailFingerprint,
         identityClassId,
@@ -1120,6 +1237,7 @@ export function createAccountApplicationService({
           profileFingerprint: protectedProfile.profileFingerprint,
           requestedAccessFingerprint,
           submissionEligibilityClaim: eligibility.claimFingerprint,
+          requestFingerprint,
         },
         expectedRevision: application.revision,
         resultingRevision: application.revision + 1,
@@ -1169,8 +1287,24 @@ export function createAccountApplicationService({
           application.id,
           idempotencyKey,
           ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+          {
+            applicantAuthorityFingerprint: application.statusTokenDigest,
+            requestFingerprint,
+          },
         );
-        if (racedReplay) return publicApplicationStatusDto(racedReplay);
+        if (racedReplay) {
+          let passwordMatches = false;
+          try {
+            passwordMatches = await passwordKdf.verify(
+              command.password,
+              racedReplay.pendingPasswordCredential,
+            );
+          } catch {
+            passwordMatches = false;
+          }
+          if (passwordMatches) return publicApplicationStatusDto(racedReplay);
+          fail('ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', { status: 409 });
+        }
         await assertIdentityAvailable(repository, application.emailFingerprint, application.id);
         await assertUsernameAvailable(repository, requestedUsernameNormalized, application.id);
         fail('ACCOUNT_APPLICATION_INVALID');
@@ -1190,7 +1324,18 @@ export function createAccountApplicationService({
       if (!application) fail('ACCOUNT_APPLICATION_STATUS_TOKEN_INVALID', { status: 404 });
       const revision = expectedRevision(commandRevision);
       const idempotencyKey = requiredIdempotencyKey(clientRequestId);
-      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.WITHDRAWN);
+      const normalizedReason = requiredReason(reason);
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_WITHDRAWN',
+        applicationId: application.id,
+        applicantAuthorityFingerprint: application.statusTokenDigest,
+        expectedRevision: revision,
+        reason: normalizedReason,
+      });
+      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.WITHDRAWN, {
+        applicantAuthorityFingerprint: application.statusTokenDigest,
+        requestFingerprint,
+      });
       if (replayed) return publicApplicationStatusDto(replayed);
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       if (!isNonterminalAccountApplicationState(application.state)) {
@@ -1201,8 +1346,9 @@ export function createAccountApplicationService({
         toState: ACCOUNT_APPLICATION_STATE.WITHDRAWN,
         applicantAuthorityFingerprint: application.statusTokenDigest,
         idempotencyKey,
-        reason: requiredReason(reason),
+        reason: normalizedReason,
         action: 'ACCOUNT_APPLICATION_WITHDRAWN',
+        requestFingerprint,
         after: { state: ACCOUNT_APPLICATION_STATE.WITHDRAWN },
         revokeApprovedStarter: application.state === ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
       });
@@ -1321,7 +1467,20 @@ export function createAccountApplicationService({
       if (!toState) fail('ACCOUNT_APPLICATION_OVERRIDE_INVALID');
       const revision = expectedRevision(command.expectedRevision);
       const idempotencyKey = requiredIdempotencyKey(command.clientRequestId);
-      const replayed = await replayFor(application.id, idempotencyKey, toState);
+      const normalizedReason = requiredReason(command.reason);
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_OWNER_OVERRIDE',
+        applicationId: application.id,
+        actorAccountId: owner.id,
+        expectedRevision: revision,
+        toState,
+        reason: normalizedReason,
+        ownerOverride: capture,
+      });
+      const replayed = await replayFor(application.id, idempotencyKey, toState, {
+        actorAccountId: owner.id,
+        requestFingerprint,
+      });
       if (replayed) return reviewResult(replayed, { replayed: true });
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       const result = await transition({
@@ -1329,8 +1488,9 @@ export function createAccountApplicationService({
         toState,
         actorAccountId: owner.id,
         idempotencyKey,
-        reason: requiredReason(command.reason),
+        reason: normalizedReason,
         action: 'ACCOUNT_APPLICATION_OWNER_OVERRIDE',
+        requestFingerprint,
         updates:
           toState === ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL
             ? { administratorReviewerId: owner.id, administratorReviewedAt: nowIso(clock) }
@@ -1354,9 +1514,17 @@ export function createAccountApplicationService({
       if (!application || application.approvedAccountId !== activationActor.id) {
         fail('ACCOUNT_APPLICATION_ACTIVATION_INVALID', { status: 403 });
       }
-      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.ACTIVE);
-      if (replayed) return reviewResult(replayed, { replayed: true });
       const revision = expectedRevision(commandRevision);
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_ACTIVATED',
+        applicationId: application.id,
+        actorAccountId: activationActor.id,
+      });
+      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.ACTIVE, {
+        actorAccountId: activationActor.id,
+        requestFingerprint,
+      });
+      if (replayed) return reviewResult(replayed, { replayed: true });
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       const result = await transition({
         application,
@@ -1364,6 +1532,7 @@ export function createAccountApplicationService({
         actorAccountId: activationActor.id,
         idempotencyKey,
         action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        requestFingerprint,
         after: { state: ACCOUNT_APPLICATION_STATE.ACTIVE, accountId: activationActor.id },
       });
       return reviewResult(result.application, { replayed: result.replayed });
@@ -1384,22 +1553,34 @@ export function createAccountApplicationService({
       if (!application) {
         fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
       }
-      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.EXPIRED);
+      const revision = expectedRevision(commandRevision);
+      const normalizedReason = requiredReason(reason);
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_EXPIRED',
+        applicationId: application.id,
+        actorAccountId: maintenanceActor.id,
+        expectedRevision: revision,
+        reason: normalizedReason,
+      });
+      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.EXPIRED, {
+        actorAccountId: maintenanceActor.id,
+        requestFingerprint,
+      });
       if (replayed) return reviewResult(replayed, { replayed: true });
       if (!isExpirableAccountApplicationState(application.state)) {
         fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
       }
       if (application.expiresAt > nowIso(clock))
         fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
-      const revision = expectedRevision(commandRevision);
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       const result = await transition({
         application,
         toState: ACCOUNT_APPLICATION_STATE.EXPIRED,
         actorAccountId: maintenanceActor.id,
         idempotencyKey,
-        reason: requiredReason(reason),
+        reason: normalizedReason,
         action: 'ACCOUNT_APPLICATION_EXPIRED',
+        requestFingerprint,
         after: { state: ACCOUNT_APPLICATION_STATE.EXPIRED },
         revokeApprovedStarter: application.state === ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
       });
@@ -1419,12 +1600,23 @@ export function createAccountApplicationService({
       if (!application) {
         fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
       }
-      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.ARCHIVED);
+      const revision = expectedRevision(commandRevision);
+      const normalizedReason = requiredReason(reason);
+      const requestFingerprint = await mutationFingerprint({
+        operation: 'ACCOUNT_APPLICATION_ARCHIVED',
+        applicationId: application.id,
+        actorAccountId: owner.id,
+        expectedRevision: revision,
+        reason: normalizedReason,
+      });
+      const replayed = await replayFor(application.id, idempotencyKey, ACCOUNT_APPLICATION_STATE.ARCHIVED, {
+        actorAccountId: owner.id,
+        requestFingerprint,
+      });
       if (replayed) return reviewResult(replayed, { replayed: true });
       if (!isRetainableTerminalAccountApplicationState(application.state)) {
         fail('ACCOUNT_APPLICATION_TRANSITION_INVALID', { status: 409 });
       }
-      const revision = expectedRevision(commandRevision);
       if (application.revision !== revision) fail('ACCOUNT_APPLICATION_REVISION_CONFLICT', { status: 409 });
       const archivedAt = nowIso(clock);
       const result = await transition({
@@ -1432,8 +1624,9 @@ export function createAccountApplicationService({
         toState: ACCOUNT_APPLICATION_STATE.ARCHIVED,
         actorAccountId: owner.id,
         idempotencyKey,
-        reason: requiredReason(reason),
+        reason: normalizedReason,
         action: 'ACCOUNT_APPLICATION_ARCHIVED',
+        requestFingerprint,
         updates: { archivedAt },
         after: { state: ACCOUNT_APPLICATION_STATE.ARCHIVED },
       });

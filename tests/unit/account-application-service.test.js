@@ -402,7 +402,10 @@ function testContext({ providerConfigured = true, eligibilityDecision } = {}) {
           profileFingerprint: 'KEYED-PROFILE-FINGERPRINT',
         };
       },
-      async fingerprintRequestedAccess() {
+      async fingerprintRequestedAccess(value) {
+        if (value?.accountApplicationMutation) {
+          return `KEYED-MUTATION-${Buffer.from(JSON.stringify(value.accountApplicationMutation)).toString('base64url')}`;
+        }
         return 'KEYED-ACCESS-FINGERPRINT';
       },
     },
@@ -545,6 +548,23 @@ describe('account-application service', () => {
     expect(serialized).not.toContain('Synthetic Applicant Name');
 
     await expect(
+      context.service.submitApplication(applicationCommand(confirmation.verificationReceipt)),
+    ).resolves.toMatchObject({ replayed: true, applicationCode: submitted.applicationCode });
+    await expect(
+      context.service.submitApplication({
+        ...applicationCommand(confirmation.verificationReceipt),
+        requestedUsername: 'different.applicant',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
+    await expect(
+      context.service.submitApplication({
+        ...applicationCommand(confirmation.verificationReceipt),
+        password: 'Different!Password9472',
+        confirmPassword: 'Different!Password9472',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
+
+    await expect(
       context.service.confirmEmailVerification({
         email: 'eligible@example.test',
         code: context.sent[0].verificationCode,
@@ -660,6 +680,14 @@ describe('account-application service', () => {
 
     expect(withdrawn).toMatchObject({ state: ACCOUNT_APPLICATION_STATE.WITHDRAWN, revision: 3 });
     expect(replayed).toEqual(withdrawn);
+    await expect(
+      context.service.withdraw({
+        statusToken: submitted.statusToken,
+        expectedRevision: 2,
+        reason: 'Applicant supplied a different retry payload.',
+        clientRequestId: 'withdraw-synthetic-0001',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
     expect(context.repository.inspect().history).toHaveLength(3);
   });
 
@@ -706,6 +734,16 @@ describe('account-application service', () => {
     expect(resubmitted).not.toHaveProperty('statusToken');
     expect(resubmitted).not.toHaveProperty('changeRequestSummary');
     expect(replayed).toEqual(resubmitted);
+    await expect(
+      context.service.resubmitApplication({ ...command, requestedUsername: 'synthetic.different' }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
+    await expect(
+      context.service.resubmitApplication({
+        ...command,
+        password: 'Different!Password9472',
+        confirmPassword: 'Different!Password9472',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
     expect(context.eligibilityCalls.at(-1)).toMatchObject({
       emailFingerprint: 'KEYED-FINGERPRINT-ELIGIBLE',
       identityClassId: 'SYNTHETIC_APPROVED_STAFF',
@@ -876,9 +914,40 @@ describe('account-application service', () => {
     });
     expect(replayed).toMatchObject({ replayed: true, activationReady: true });
     expect(replayed).not.toHaveProperty('activationHandoff');
+    await expect(
+      context.service.directorApprove({
+        actor: { ...director, id: 'DIRECTOR-SYNTHETIC-OTHER' },
+        applicationId,
+        expectedRevision: 3,
+        reason: 'Director approved the independently reviewed application.',
+        reviewEvidence: {
+          evidenceFingerprint: 'DIRECTOR-EVIDENCE-FP',
+          protectedReviewEnvelope: 'v1.director-review',
+        },
+        clientRequestId: 'director-approve-synthetic-002',
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_IDEMPOTENCY_CONFLICT', status: 409 });
     expect(persisted).not.toContain('ONE-TIME-PRIVATE-CREDENTIAL');
     expect(JSON.stringify(context.repository.inspect().audits)).not.toContain('v1.admin-review');
     expect(JSON.stringify(context.repository.inspect().audits)).not.toContain('v1.director-review');
+
+    const approvedApplication = context.repository.inspect().applications[0];
+    await expect(
+      context.service.activateApprovedApplication({
+        actor: { id: approvedApplication.approvedAccountId, activationCompleted: true },
+        applicationId,
+        expectedRevision: 4,
+        clientRequestId: `account-activation:${approvedApplication.approvedAccountId}`,
+      }),
+    ).resolves.toMatchObject({ state: ACCOUNT_APPLICATION_STATE.ACTIVE, revision: 5 });
+    await expect(
+      context.service.activateApprovedApplication({
+        actor: { id: approvedApplication.approvedAccountId, activationCompleted: true },
+        applicationId,
+        expectedRevision: 5,
+        clientRequestId: `account-activation:${approvedApplication.approvedAccountId}`,
+      }),
+    ).resolves.toMatchObject({ state: ACCOUNT_APPLICATION_STATE.ACTIVE, revision: 5, replayed: true });
   });
 
   it('requires owner override confirmation and durable safe follow-up capture', async () => {

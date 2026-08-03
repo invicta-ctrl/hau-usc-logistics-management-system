@@ -422,6 +422,14 @@ describe('D1 access-management repository guards', () => {
         reason: 'Synthetic last Administrator status demotion.',
         correlationId: 'COR-STATUS-LAST',
         auditId: 'AUDIT-STATUS-LAST',
+        idempotency: {
+          scope: 'access-set-account-status',
+          key: 'status-last-00000001',
+          actorAccountId: 'OWNER-1',
+          requestFingerprint: 'FP-STATUS-LAST',
+          result: { changed: true },
+          createdAt: AFTER,
+        },
       }),
     ).rejects.toMatchObject({ code: 'ACCESS_WRITE_CONFLICT', status: 409 });
     await expect(db.prepare('SELECT status, credential_version FROM accounts').first()).resolves.toEqual({
@@ -443,6 +451,14 @@ describe('D1 access-management repository guards', () => {
         reason: 'Synthetic concurrent Administrator demotion.',
         correlationId: `COR-${id}`,
         auditId,
+        idempotency: {
+          scope: 'access-set-account-status',
+          key: `status-${id}-00000001`,
+          actorAccountId: 'OWNER-1',
+          requestFingerprint: `FP-STATUS-${id}`,
+          result: { changed: true },
+          createdAt: AFTER,
+        },
       });
 
     const results = await Promise.allSettled([

@@ -960,6 +960,7 @@ export function createD1AccessManagementRepository(db) {
       correlationId,
       auditId,
       auditAction = 'ACCOUNT_STATUS_CHANGED',
+      idempotency,
     }) {
       const guardedStatement = db
         .prepare(
@@ -996,6 +997,7 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
+        idempotencyStatement(db, idempotency),
       ];
       await runAtomicRevisionGuardedBatch(db, {
         guardedStatement,

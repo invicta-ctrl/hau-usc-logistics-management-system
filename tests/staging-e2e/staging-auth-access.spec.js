@@ -649,6 +649,7 @@ test('deployed staging authentication and Access Management remain operational',
         confirmCurrentAccessId: renamedTargetAccessId,
         status: 'DISABLED',
         reason: 'Retain the authorized synthetic smoke account in a disabled staging-only state.',
+        clientRequestId: `staging-access-status-disable-${targetAccount.accountId}`,
       },
     });
     expect(disabled.status()).toBe(200);
@@ -691,6 +692,7 @@ test('deployed staging authentication and Access Management remain operational',
                 confirmCurrentAccessId: cleanupAccessId,
                 status: 'DISABLED',
                 reason: 'Fail-safe disable for the authorized synthetic deployed smoke account.',
+                clientRequestId: `staging-access-status-cleanup-disable-${cleanupAccount.accountId}`,
               },
             });
             expect.soft(cleanup.status()).toBe(200);
@@ -883,6 +885,7 @@ test('deployed staging Advanced Access Management assigns and enforces effective
           status: 'REVOKED',
           lifecycleAction: 'ARCHIVE',
           reason: 'Archive the live Phase 14 synthetic operator without deleting history.',
+          clientRequestId: `staging-access-status-archive-${targetAccount.accountId}`,
         },
       });
       expect(archived.status()).toBe(200);
@@ -932,6 +935,7 @@ test('deployed staging Advanced Access Management assigns and enforces effective
                 status: 'REVOKED',
                 lifecycleAction: 'ARCHIVE',
                 reason: 'Fail-safe archive for the live Phase 14 synthetic operator.',
+                clientRequestId: `staging-access-status-cleanup-archive-${cleanupAccount.accountId}`,
               },
             });
           }

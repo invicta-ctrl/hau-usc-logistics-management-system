@@ -90,8 +90,20 @@ replay. A final Worker integration failure also exposed that successful Access
 mutations returned the prior explicit revision even though D1 committed the
 next revision; the revision helper now derives from the authoritative
 credential version and update timestamp, with unit and real Worker regression
-coverage. A new independent review of the eventual freeze SHA is still
-required.
+coverage.
+
+The third exact-SHA audit rejected `84859cc8fe5685b1af3616309cbd4b88ca320dea`
+before push after identifying two remaining retry-safety gaps. Account-
+application replays were bound to application and target state but not to the
+actor and full canonical request; Access account-status mutations had no
+idempotency contract. The current repair binds initial application,
+resubmission, review, approval, activation, withdrawal, expiration, archive,
+and owner-override replays to canonical actor/request fingerprints while
+verifying replayed passwords against the persisted KDF credential. Access
+status mutations now require a client request ID, reject changed-payload reuse,
+and commit the idempotency record atomically with status, session, and audit
+writes. A new independent review of the eventual freeze SHA is still required;
+no acceptance from a superseded SHA is reused.
 
 ## Verification evidence
 
@@ -99,11 +111,14 @@ required.
 - Focused final regressions: 2 files / 12 tests and 14 browser tests passed
   with 8 intentional skips.
 - Release identity: 3 files / 15 tests and 10/10 focused browser tests passed.
-- Final `npm run check`: 113 files / 769 tests passed; lint, two deterministic
+- Final `npm run check`: 113 files / 770 tests passed; lint, two deterministic
   builds, 34 Apps Script sources / 57 required functions, generated parity,
   Cloudflare type/dry-run checks, and all standalone artifacts passed.
 - Full browser matrix: 136 passed / 356 intentionally scoped skips / 0 failed.
 - Local Worker/D1 matrix: 39/39 passed against schema 30.
+- Focused third-cycle regressions: 4 files / 40 tests, focused lint, 2/2 Access
+  Worker tests, and 1/1 department Worker test passed.
+- Explicit migration 0030 rehearsal: 1/1 passed against migrations 0001-0030.
 - `git diff --check`: passed before freeze.
 
 Primary capped logs are under `.codex/runtime/logs/` and remain ignored local
@@ -120,6 +135,14 @@ evidence:
 - `2026-08-03T14-33-28-681Z-full-playwright-v072-r2-round2-final.log`
 - `2026-08-03T14-30-38-821Z-local-worker-d1-v072-r2-round2-fixed.log`
 - `2026-08-03T14-36-03-563Z-migration-0030-rehearsal-r2-round2-final.log`
+- `2026-08-03T15-03-11-454Z-r2-final-replay-lint-2.log`
+- `2026-08-03T15-04-21-954Z-r2-final-replay-focused-unit-2.log`
+- `2026-08-03T15-01-03-766Z-r2-final-replay-worker-access.log`
+- `2026-08-03T15-01-45-294Z-r2-final-replay-worker-departments.log`
+- `2026-08-03T15-05-00-676Z-full-repository-check-v072-r2-final-replay-repair.log`
+- `2026-08-03T15-06-14-420Z-local-worker-d1-v072-r2-final-replay-repair.log`
+- `2026-08-03T15-07-56-008Z-full-playwright-v072-r2-final-replay-repair.log`
+- `2026-08-03T15-11-11-376Z-migration-0030-rehearsal-r2-final-replay-repair.log`
 
 ## Blocking pre-production gate
 

@@ -2685,7 +2685,7 @@ export function createRuntimeExtensions(options) {
             expectedRevision: account.revision,
             ...values,
             ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
-            ...(['unlock', 'revoke-sessions'].includes(action) ? { clientRequestId } : {}),
+            clientRequestId,
           };
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;

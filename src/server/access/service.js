@@ -751,7 +751,10 @@ export function createAccessManagementService({
 
     async setAccountStatus({ actor, command = {}, correlationId = '' } = {}) {
       assertAdministrator(actor);
-      const account = await accountForCommand(command);
+      const targetCommand = { ...command, accountId: requiredAccountId(command.accountId) };
+      const replay = await mutationReplay('access-set-account-status', actor, targetCommand);
+      if (replay.replayed) return { ...replay.result, replayed: true };
+      const account = await accountForCommand(targetCommand);
       const nextStatus = String(command.status ?? '').toUpperCase();
       if (![ACCOUNT_STATUS.ACTIVE, ACCOUNT_STATUS.DISABLED, ACCOUNT_STATUS.REVOKED].includes(nextStatus)) {
         fail('ACCOUNT_STATUS_INVALID');
@@ -775,8 +778,22 @@ export function createAccessManagementService({
         fail('ACCOUNT_STATUS_INVALID');
       }
       if (restoredStatus === account.status)
-        return { changed: false, status: restoredStatus, sessionsRevoked: false };
+        return { changed: false, status: restoredStatus, sessionsRevoked: false, replayed: false };
       const changedAt = nowIso();
+      const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
+      const replayResult = {
+        changed: true,
+        status: restoredStatus,
+        archived: lifecycleAction === 'ARCHIVE',
+        sessionsRevoked: true,
+        accountId: account.id,
+        revision: accountRevision({
+          ...account,
+          credentialVersion: Number(account.credentialVersion ?? 1) + 1,
+          updatedAt: changedAt,
+        }),
+        correlationId: mutationCorrelationId,
+      };
       try {
         await repository.setAccountStatus({
           account,
@@ -785,8 +802,16 @@ export function createAccessManagementService({
           changedAt,
           reason,
           auditAction: lifecycleAction === 'ARCHIVE' ? 'ACCOUNT_ARCHIVED' : 'ACCOUNT_STATUS_CHANGED',
-          correlationId: String(correlationId || `ACCESS_${createId()}`),
+          correlationId: mutationCorrelationId,
           auditId: createId(),
+          idempotency: {
+            scope: 'access-set-account-status',
+            key: replay.key,
+            actorAccountId: actor.id,
+            requestFingerprint: replay.fingerprint,
+            result: replayResult,
+            createdAt: changedAt,
+          },
         });
       } catch (error) {
         if (
@@ -798,16 +823,8 @@ export function createAccessManagementService({
         throw error;
       }
       return {
-        changed: true,
-        status: restoredStatus,
-        archived: lifecycleAction === 'ARCHIVE',
-        sessionsRevoked: true,
-        accountId: account.id,
-        revision: accountRevision({
-          ...account,
-          credentialVersion: Number(account.credentialVersion ?? 1) + 1,
-          updatedAt: changedAt,
-        }),
+        ...replayResult,
+        replayed: false,
       };
     },
 
