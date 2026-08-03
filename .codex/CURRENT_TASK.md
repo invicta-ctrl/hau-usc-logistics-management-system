@@ -10,7 +10,7 @@ RISK: critical because identity, authorization, migration, providers, and produc
 DELIVERABLE: exact reviewed v0.7.2 candidate, isolated pre-production acceptance, owner-gated production rollout, reconciliation, and durable handoff
 VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
 STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1; absent exact production phrase
-STATUS: SPECIFICATION_ACCEPTED_SOURCE_MAPPING_ACTIVE
+STATUS: CONTRACT_LOCKED_FIRST_READ_ONLY_MAPPING_WAVE_READY
 
 Starting SHA: `589970d31d0dab4fe876107276d9b808eb44b9c3`
 
@@ -19,11 +19,11 @@ Branch: `release/v0.7.2-production-access-operations`
 Accepted specification:
 `.codex/specs/v0.7.2-production-access-operations.md`
 
-Current exact action: use the existing CodeGraph index to map authentication,
-application/access, profile, Request/integer/low-stock, Link Registry,
-Announcement, migration, UI, and test paths; lock concrete DTO/status/storage
-contracts and non-overlapping file ownership; create the live task registry;
-then start the first dependency-ready read-only child wave.
+Current exact action: run the three read-only tasks in
+`.codex/V0_7_2_TASK_REGISTRY.md` against exact checkpoint `39ea6a2`, review the
+results against `.codex/V0_7_2_SOURCE_MAP_AND_CONTRACT_LOCK.md`, update the
+registry to accepted/rejected truth, and start only the first implementation
+slice whose dependencies and file ownership are then confirmed.
 
 Concurrency: no more than three child tasks are possible alongside the parent in
 this environment, despite the owner's higher ceiling. Children may not spawn

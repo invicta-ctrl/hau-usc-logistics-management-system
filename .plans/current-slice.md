@@ -7,9 +7,9 @@
 > `.codex/specs/v0.7.2-production-access-operations.md`. The historical
 > material below remains evidence only and does not override `.codex/CURRENT.md`.
 
-CURRENT SLICE: v0.7.2 repository adoption, mapping, and contract lock
+CURRENT SLICE: v0.7.2 read-only mapping wave and first implementation boundary
 
-CURRENT STAGE: SPECIFICATION_ACCEPTED_SOURCE_MAPPING_ACTIVE
+CURRENT STAGE: CONTRACT_LOCKED_FIRST_READ_ONLY_MAPPING_WAVE_READY
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
