@@ -4,8 +4,9 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 through 6 are accepted; wording,
-  naming, and Hallmark-bounded polish is active.
+  production truth audit passed; Slices 2 through 7 are accepted;
+  preview/pipeline/domain preparation and integrated release verification is
+  active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -48,7 +49,16 @@
   Worker proof, all repository gates, and the P1-triggered fresh re-review with
   no P0-P3. Handoff:
   `.codex/V0_7_1_SLICE_6_CANVASS_INVENTORY_HANDOFF.md`.
-- Active next slice: wording, naming, and Hallmark-bounded polish.
+- Accepted Slice 7 repair:
+  `9da6289de770a2d82083fbbaee815ae4a8b4e6b2`; centralized presentation
+  labels, truthful unavailable metrics, corrected runtime encoding, and
+  bounded Hallmark accessibility/responsive polish passed 555 tests, the
+  complete repository gate, and the real Inventory journey at 320, 375, 414,
+  and 768 pixels. The replacement exact-head Sol review found one localized
+  P2 numeric-coercion defect; Luna repaired it with direct coverage. Handoff:
+  `.codex/V0_7_1_SLICE_7_WORDING_POLISH_HANDOFF.md`.
+- Active next slice: preview/pipeline/domain preparation, integrated
+  verification, rollback, monitoring, and release documentation.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

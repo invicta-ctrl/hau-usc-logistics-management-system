@@ -2,22 +2,22 @@
 
 INTENT: PRODUCTION RECOVERY
 MODE: execute bounded v0.7.1 slices
-TARGET: centralized wording, naming, and Hallmark-bounded recovery polish
+TARGET: preview/pipeline/domain preparation and integrated release verification
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
-RISK: medium
-DELIVERABLE: user-facing labels and bounded presentation polish without changing routes, authorization, workflows, information architecture, or internal status values
-VERIFICATION: focused wording/accessibility/responsive tests; protected browser journeys; repository-required gates; exact base/head review
+RISK: high
+DELIVERABLE: release-candidate preparation, integrated verification, rollback and monitoring evidence, and owner-gated domain/deployment readiness without a production write
+VERIFICATION: preview/pipeline dry runs; host-routing and protected browser journeys; rollback and monitoring evidence; repository-required gates; one final fresh Sol release-candidate review
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted previous slice: Canvass and Inventory readiness at
-`55930e5fec7b0f359a77df0a6f9a8e7cfae1b92c`; full `npm run check` passes 85
-files / 551 tests, focused Canvass/Inventory Worker and mobile proofs pass,
-generated parity passes, and the P1-triggered fresh re-review reports no
-P0-P3.
+Accepted previous slice: wording, naming, and Hallmark-bounded polish at
+`9da6289de770a2d82083fbbaee815ae4a8b4e6b2`; full `npm run check` passes 86
+files / 555 tests, focused presentation and Inventory proofs pass, generated
+parity passes, and the replacement exact-head Sol review's localized P2 is
+repaired with direct regression coverage.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data
