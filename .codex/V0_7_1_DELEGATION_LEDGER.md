@@ -92,6 +92,13 @@ candidate.
   because confirmed P2 findings caused material inventory and preview-workflow
   changes and materially changed the reviewed SHA. Record its exact target and
   verdict; do not spawn a parallel verdict or fast-review agent while active.
+- Fresh Sol `/root/v071_final_rc_p2_correction_rereview` reviewed exact repaired
+  candidate `7338124554d5ad6f948587d69328dae731b38a6c` and returned PASS with no
+  P0-P3; both prior P2s and the prior P3 are closed.
+- No further Sol review was spawned. Exact reason: the only post-review change
+  is this docs-only verdict record; it does not materially change the reviewed
+  code SHA, workflow, authorization, artifacts, or deployable candidate, so no
+  user-defined re-review threshold is met.
 
 ## Wave 1 parent disposition
 

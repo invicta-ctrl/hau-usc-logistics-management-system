@@ -4,9 +4,9 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 through 8 are repository-accepted.
-  The first complete-candidate Sol review found two P2s and one P3; all three
-  are repaired and the policy-authorized fresh correction re-review is pending.
+  production truth audit passed; Slices 2 through 8 and the complete repository
+  release candidate are accepted. The policy-authorized fresh correction
+  re-review passed with no P0-P3 and all prior findings closed.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -68,9 +68,11 @@
   tests with 326 intentional skips, 38/38 local Worker/D1 tests, and a
   no-binding preview dry-run. Handoff:
   `.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md`.
-- Active next action: one fresh Sol correction re-review of the complete exact
-  committed repaired candidate. This additional review is necessary because
-  confirmed P2 findings caused material inventory and preview-workflow changes.
+- Reviewed deployable candidate:
+  `7338124554d5ad6f948587d69328dae731b38a6c`. Active next action is the
+  owner-gated upstream/PR/CI and private staging sequence in
+  `.codex/V0_7_1_OWNER_GATED_RELEASE_RUNBOOK.md`; no external action is
+  authorized by this pointer.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

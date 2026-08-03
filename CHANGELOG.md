@@ -43,6 +43,9 @@
   `42f1970efbccd8c275be2cc4bc77246b5a9c97ab` passes 88 Vitest files / 576
   tests, 130 browser tests with 326 intentional skips, 38/38 local Worker/D1
   tests, deterministic generated parity, and a binding-free preview dry-run.
+- Fresh Sol correction re-review passes at exact deployable SHA
+  `7338124554d5ad6f948587d69328dae731b38a6c` with no P0-P3; both prior P2s and
+  the prior P3 are closed.
 
 ### Boundary
 

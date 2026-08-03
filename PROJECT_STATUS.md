@@ -1,6 +1,6 @@
 # Project Status
 
-## v0.7.1 final-review findings repaired - correction review active
+## v0.7.1 release candidate reviewed and repository-accepted
 
 - Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
   `main` at `9fb1b4e6b4e956419fa65dee55268b10c0a55da6` under the accepted
@@ -27,8 +27,11 @@
   corrected to `*.hausc.org`.
 - Production was not deployed or changed. Domain activation, private staging
   and production configuration, deployment, migration, smoke, and monitoring
-  remain owner-gated. One fresh correction re-review remains, authorized only
-  because confirmed P2s caused material workflow changes.
+  remain owner-gated.
+- Fresh Sol correction re-review passes at exact deployable candidate
+  `7338124554d5ad6f948587d69328dae731b38a6c` with no P0-P3 and all prior
+  findings closed. The ignored local manifest binds that exact SHA to the
+  Worker, generated artifacts, Google mapping, and migration hashes.
 
 ## v0.7.0 production launch and closure accepted
 

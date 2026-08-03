@@ -1,4 +1,4 @@
-# HAU-USC v0.7.1 production recovery - final release-candidate review
+# HAU-USC v0.7.1 production recovery - reviewed release candidate
 
 > v0.7.1 authority update (2026-08-03): Slices 2 through 8 are locally
 > repository-accepted under
@@ -10,7 +10,7 @@
 
 CURRENT SLICE: v0.7.1 complete release candidate
 
-CURRENT STAGE: SLICE_8_P2_REPAIRED_FRESH_CORRECTION_REVIEW_ACTIVE
+CURRENT STAGE: SLICE_8_RELEASE_CANDIDATE_REVIEW_ACCEPTED_OWNER_GATES_REMAIN
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
@@ -18,8 +18,10 @@ Repaired release-candidate code/test head:
 `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Repository gates pass 576 tests;
 the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
 38/38; preview dry-run is binding-free. Production and external systems were
-untouched. The first final review's two P2s and one P3 are repaired; one fresh
-correction re-review remains because the P2s materially changed workflow.
+untouched. The first final review's two P2s and one P3 are repaired. Fresh Sol
+correction re-review passes at `7338124554d5ad6f948587d69328dae731b38a6c`
+with no P0-P3; repository-side work is complete and external activation remains
+owner-gated.
 
 ---
 

@@ -15,8 +15,8 @@ Date: 2026-08-03 (Asia/Manila)
   `5d04009235fca55a6495763ac0c7592f1220ddc0`.
 - Final-review P2/P3 repair:
   `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`.
-- The correction re-review target is the committed repaired closure record
-  containing this handoff; record its exact SHA in the delegation ledger.
+- Reviewed deployable candidate and manifest target:
+  `7338124554d5ad6f948587d69328dae731b38a6c`.
 
 ## Delivered scope
 
@@ -105,6 +105,10 @@ Date: 2026-08-03 (Asia/Manila)
 - One new fresh Sol correction re-review is required and permitted because the
   confirmed P2 repairs materially changed inventory and preview workflows. No
   separate verdict or fast-review agent is authorized while it is active.
+- Fresh Sol correction re-review passed at exact SHA `7338124` with no P0-P3;
+  both P2s and the P3 are closed. No further Sol review is required because the
+  only later change records this returned verdict and does not alter code,
+  workflow, authorization, or the reviewed deployable candidate.
 
 ## External state and owner gates
 
@@ -135,7 +139,7 @@ Date: 2026-08-03 (Asia/Manila)
 
 ## Next action
 
-Run one fresh Sol correction reviewer against the exact committed repaired
-release candidate. Do not start a parallel verdict or fast-review agent. The
-additional review is necessary because the confirmed P2 repairs materially
-changed inventory and preview workflows.
+Repository-side recovery is complete. Continue only through the owner-gated
+upstream/PR/CI, private staging, production authorization, domain activation,
+smoke, monitoring, and reconciliation sequence in the release runbook. Use
+exact reviewed candidate `7338124554d5ad6f948587d69328dae731b38a6c`.

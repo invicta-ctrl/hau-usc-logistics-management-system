@@ -1,13 +1,13 @@
 # Current Task
 
 INTENT: PRODUCTION RECOVERY
-MODE: correction re-review of complete v0.7.1 release candidate
-TARGET: exact committed release-candidate code, tests, workflows, and handoff
+MODE: repository complete; owner-gated release handoff
+TARGET: reviewed deployable candidate and private staging/production sequence
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: one policy-authorized fresh Sol correction re-review and truthful owner-gated handoff without a production write
-VERIFICATION: exact-SHA diff review; accepted-scope and invariant review; existing repository, browser, Worker, preview, rollback, and monitoring evidence
-STATUS: ACTIVE
+DELIVERABLE: reviewed release candidate and truthful owner-gated handoff without a production write
+VERIFICATION: exact-SHA correction re-review; repository, browser, Worker, preview, rollback, and monitoring evidence
+STATUS: COMPLETE_REPOSITORY_SIDE_OWNER_GATES_REMAIN
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
@@ -24,8 +24,10 @@ smoke was not bound to the deployed account/Worker, and one handoff domain was
 wrong. All are repaired. `npm run check` passes 88 files / 576 tests; browser
 130 passed / 326 intentional
 skips; local Worker/D1 38/38; preview dry-run has no bindings and performs no
-upload. One fresh correction re-review is the only remaining repository-side
-gate, permitted because the P2 repairs materially changed workflow behavior.
+upload. Fresh Sol correction re-review at
+`7338124554d5ad6f948587d69328dae731b38a6c` passes with no P0-P3 and all prior
+findings closed. Upstream/PR/CI, private configuration, staging, production,
+domain activation, external smoke, and monitoring remain owner-gated.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data
