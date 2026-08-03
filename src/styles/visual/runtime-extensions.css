@@ -1034,6 +1034,13 @@ body:not(.request-mode) .secondary {
   color: #8c1d18;
   background: #ffe1dc;
 }
+.canvass-quality-indicator.is-decision {
+  max-width: min(100%, 360px);
+  color: #154c79;
+  background: #e4f1fb;
+  line-height: 1.25;
+  white-space: normal;
+}
 .canvass-evidence-link {
   color: #154c79;
   background: #e4f1fb;

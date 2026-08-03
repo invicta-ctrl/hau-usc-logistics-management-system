@@ -1063,6 +1063,7 @@ const canvassDto = (row) => {
     linkedRestockId: row.linked_restock_id ?? '',
     supplierId: row.supplier_id ?? '',
     supplierName: row.supplier_name,
+    location: row.supplier_location ?? '',
     itemSpec: row.item_spec,
     price: Number(row.price ?? 0),
     unit: row.unit,
@@ -1081,6 +1082,39 @@ const canvassDto = (row) => {
     createdBy: row.created_by,
   };
 };
+
+const deliverableDto = (row) => ({
+  id: row.id,
+  requestId: row.request_id,
+  requestLineId: row.request_line_id,
+  eventSeriesId: row.event_series_id ?? '',
+  eventId: row.event_id ?? '',
+  itemId: row.inventory_match_id ?? '',
+  inventoryMatchId: row.inventory_match_id ?? '',
+  eventItemId: row.event_item_id ?? '',
+  itemSpec: row.item_spec,
+  quantity: Number(row.quantity_requested ?? 0),
+  quantityReceived: Number(row.quantity_received ?? 0),
+  quantityReleased: Number(row.quantity_released ?? 0),
+  unit: row.unit,
+  fulfillmentSource: row.fulfillment_source ?? '',
+  assignedCommittee: row.assigned_committee_id ?? '',
+  assignedStaff: row.assigned_account_id ?? '',
+  linkedCanvassIds: String(row.linked_canvass_ids ?? '')
+    .split('|')
+    .filter(Boolean),
+  preferredCanvassId: row.preferred_canvass_id ?? '',
+  budgetStatus: row.budget_status ?? '',
+  procurementStatus: row.procurement_status ?? '',
+  receiptStatus: row.receipt_status ?? '',
+  evidenceId: row.evidence_id ?? '',
+  neededAt: row.needed_at ?? '',
+  status: row.status,
+  notes: row.notes ?? '',
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  createdBy: row.created_by ?? '',
+});
 
 const eventActivityDto = (row) => ({
   id: row.id,
@@ -1626,13 +1660,14 @@ export function createD1OperationalService({
           canvassReferences: (
             await rows(
               db,
-              `SELECT canvass.*,
+              `SELECT canvass.*, supplier.location AS supplier_location,
                 (SELECT history.metadata_json FROM status_history history
                  WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
                    AND json_extract(history.metadata_json, '$.preferred') = 1
                  ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
-               FROM canvass_references canvass
+                FROM canvass_references canvass
              JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
+             LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
              WHERE ${restockScope.sql} ORDER BY canvass.updated_at DESC
              LIMIT ?${restockLimitIndex} OFFSET ?${restockLimitIndex + 1}`,
               [...restockScope.values, page.pageSize, page.offset],
@@ -1665,24 +1700,33 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          deliverables: await rows(
-            db,
-            `SELECT deliverable.* FROM deliverables deliverable
-             JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
-             WHERE ${deliverableScope.sql}
-             ORDER BY deliverable.updated_at DESC
-             LIMIT ?${deliverableLimitIndex} OFFSET ?${deliverableLimitIndex + 1}`,
-            [...deliverableScope.values, page.pageSize, page.offset],
-          ),
+          deliverables: (
+            await rows(
+              db,
+              `SELECT deliverable.*,
+                (SELECT GROUP_CONCAT(canvass.id, '|') FROM canvass_references canvass
+                 WHERE canvass.status = 'ACTIVE' AND (
+                   canvass.linked_deliverable_id = deliverable.id OR
+                   canvass.linked_request_line_id = deliverable.request_line_id
+                 )) AS linked_canvass_ids
+               FROM deliverables deliverable
+               JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
+               WHERE ${deliverableScope.sql}
+               ORDER BY deliverable.updated_at DESC
+               LIMIT ?${deliverableLimitIndex} OFFSET ?${deliverableLimitIndex + 1}`,
+              [...deliverableScope.values, page.pageSize, page.offset],
+            )
+          ).map(deliverableDto),
           canvassReferences: (
             await rows(
               db,
-              `SELECT canvass.*,
+              `SELECT canvass.*, supplier.location AS supplier_location,
                 (SELECT history.metadata_json FROM status_history history
                  WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
                    AND json_extract(history.metadata_json, '$.preferred') = 1
                  ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
-               FROM canvass_references canvass
+                FROM canvass_references canvass
+             LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
              LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
              LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
              LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id
@@ -2323,12 +2367,13 @@ export function createD1OperationalService({
   async function canvassRecord(canvassId, { activeOnly = true } = {}) {
     return db
       .prepare(
-        `SELECT canvass.*,
+        `SELECT canvass.*, supplier.location AS supplier_location,
            COALESCE(deliverable.assigned_committee_id, deliverable_request.owner_committee_id,
              line_request.owner_committee_id, restock.assigned_committee_id) AS committee_id,
            COALESCE(deliverable_request.requester_account_id, line_request.requester_account_id,
              restock_request.requester_account_id, restock.created_by) AS owner_account_id
          FROM canvass_references canvass
+         LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
          LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
          LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
          LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id

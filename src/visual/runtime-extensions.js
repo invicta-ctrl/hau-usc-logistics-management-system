@@ -1,7 +1,7 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
-import { quantityStep } from '../domain/quantity-units.js';
+import { KNOWN_QUANTITY_UNITS, quantityStep } from '../domain/quantity-units.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
@@ -127,7 +127,9 @@ export function withExpectedUpdatedAt(payload, item) {
 
 export function toFailClosedInventoryClassification(item = {}) {
   const classificationStatus =
-    String(item.classificationStatus ?? '').trim().toUpperCase() === 'CLASSIFIED'
+    String(item.classificationStatus ?? '')
+      .trim()
+      .toUpperCase() === 'CLASSIFIED'
       ? 'CLASSIFIED'
       : 'NEEDS_CLASSIFICATION';
   const handling = String(item.handlingCode ?? item.handling).toUpperCase();
@@ -140,7 +142,7 @@ export function toFailClosedInventoryClassification(item = {}) {
   const isLendable = classificationStatus === 'CLASSIFIED' && item.isLendable === true;
   return {
     ...item,
-    inventoryKind: classificationStatus === 'CLASSIFIED' ? item.inventoryKind ?? derivedKind : 'UNVERIFIED',
+    inventoryKind: classificationStatus === 'CLASSIFIED' ? (item.inventoryKind ?? derivedKind) : 'UNVERIFIED',
     classificationStatus,
     isLendable,
     lendingAudience: isLendable ? item.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
@@ -152,7 +154,11 @@ export function toFailClosedInventoryClassification(item = {}) {
   };
 }
 
-export function applyMockInventoryClassification(item, payload = {}, { now = new Date().toISOString() } = {}) {
+export function applyMockInventoryClassification(
+  item,
+  payload = {},
+  { now = new Date().toISOString() } = {},
+) {
   const previousStatus = item.classificationStatus ?? 'NEEDS_CLASSIFICATION';
   const previousKind = item.inventoryKind ?? 'UNVERIFIED';
   const before = {
@@ -561,6 +567,7 @@ export function createRuntimeExtensions(options) {
   let releaseFormObserver = null;
   let deliverableReceivingInstalled = false;
   const canvassObservedRoots = new WeakSet();
+  let canvassGovernanceInstalled = false;
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
 
@@ -993,7 +1000,7 @@ export function createRuntimeExtensions(options) {
     const evidence = (state.evidenceFiles ?? []).find((entry) => entry.id === quote.evidenceId);
     const links = canvassEvidenceLinks(quote, evidence);
     return {
-      fingerprint: JSON.stringify({ indicators, links }),
+      fingerprint: JSON.stringify({ indicators, links, rationale: quote?.preferredRationale ?? '' }),
       html: `${indicators
         .map(
           (indicator) =>
@@ -1004,8 +1011,200 @@ export function createRuntimeExtensions(options) {
           (link) =>
             `<a class="canvass-evidence-link" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.label)}</a>`,
         )
-        .join('')}`,
+        .join('')}${
+        quote?.preferred && quote?.preferredRationale
+          ? `<span class="canvass-quality-indicator is-decision" title="Preferred-quote decision reason">Decision: ${esc(quote.preferredRationale)}</span>`
+          : ''
+      }`,
     };
+  };
+
+  const canvassReference = (canvassId) =>
+    (getState()?.canvassReferences ?? []).find((entry) => entry.id === canvassId);
+
+  const canUseCanvassCapability = (capability) => can(getState()?.currentUser, capability);
+
+  const showCanvassError = (error) => toast(operationalErrorText(error), true);
+
+  const submitCanvassMutation = async ({ form, button, action, success }) => {
+    button.disabled = true;
+    const originalLabel = button.textContent;
+    button.textContent = 'Recordingâ€¦';
+    try {
+      const result = await action();
+      markFormClean(form);
+      closeModal();
+      await commit(`${success}${auditReferenceText(result)}`, 'success', result);
+    } catch (error) {
+      showCanvassError(error);
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  };
+
+  const openCanvassUpdate = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.canvass'))
+      return toast('You do not have permission to update canvass references.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    openModal(
+      `Edit ${quote.id}`,
+      `<form id="governedCanvassUpdateForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)}</strong>${quote.location ? ` Â· ${esc(quote.location)}` : ''}<br>Saving updates this active reference through the governed service. Earlier price checks and audit history remain append-only.</div>
+        <div class="form-grid section-gap">
+          <label>Supplier name<input name="supplierName" value="${esc(quote.supplierName)}" maxlength="160" required></label>
+          <label>Checked date<input name="checkedAt" type="date" value="${esc(String(quote.checkedAt ?? '').slice(0, 10))}" required></label>
+          <label class="span-2">Item / specification<input name="itemSpec" value="${esc(quote.itemSpec)}" maxlength="500" required></label>
+          <label>Price (â‚±)<input name="price" type="number" min="0.01" step="0.01" value="${esc(quote.price)}" required></label>
+          <label>Unit<select name="unit">${KNOWN_QUANTITY_UNITS.map((unit) => option(unit, unit, quote.unit)).join('')}</select></label>
+          <label>Receipt status<select name="receiptStatus">${option('NOT_CHECKED', 'Not checked', quote.receiptStatus)}${option('ORIGINAL_RECEIPT', 'Original receipt available', quote.receiptStatus)}${option('SALES_INVOICE', 'Sales invoice available', quote.receiptStatus)}${option('UNAVAILABLE', 'Unavailable / follow up', quote.receiptStatus)}</select></label>
+          <label>Reliability<select name="reliability">${option('UNRATED', 'Unrated', quote.reliability)}${option('RELIABLE', 'Reliable', quote.reliability)}${option('CONDITIONAL', 'Conditional', quote.reliability)}${option('FOLLOW_UP', 'Follow up required', quote.reliability)}</select></label>
+          <label class="span-2">Evidence / source URL<input name="sourceUrl" type="url" value="${esc(quote.sourceUrl ?? '')}" maxlength="500"></label>
+          <label class="span-2">Notes<textarea name="notes" maxlength="1000">${esc(quote.notes ?? '')}</textarea></label>
+          <label class="span-2">Reason for update<textarea name="reason" maxlength="500" required></textarea></label>
+        </div>
+        <button class="primary" type="submit">Save Governed Changes</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedCanvassUpdateForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.updateCanvassReference({
+                ...values,
+                canvassId: quote.id,
+                price: Number(values.price),
+                expectedUpdatedAt: quote.updatedAt,
+              }),
+            success: `${quote.id} updated with price history retained.`,
+          });
+        });
+      },
+    );
+  };
+
+  const openCanvassArchive = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.procure'))
+      return toast('You do not have permission to archive canvass references.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    if (quote.preferred)
+      return toast('Select another preferred quote before archiving this reference.', true);
+    openModal(
+      `Archive ${quote.id}`,
+      `<form id="governedCanvassArchiveForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)} Â· ${esc(quote.itemSpec)}</strong><br>Archiving removes this reference from active use without deleting its links, price history, or audit trail.</div>
+        <label class="section-gap">Required archive reason<textarea name="reason" maxlength="500" required></textarea></label>
+        <button class="danger" type="submit">Archive Reference</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedCanvassArchiveForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.archiveCanvassReference({
+                canvassId: quote.id,
+                expectedUpdatedAt: quote.updatedAt,
+                reason: new FormData(form).get('reason'),
+              }),
+            success: `${quote.id} archived without deleting history.`,
+          });
+        });
+      },
+    );
+  };
+
+  const openPreferredCanvassDecision = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.procure'))
+      return toast('You do not have permission to select a preferred quote.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    openModal(
+      `Select ${quote.id} as preferred`,
+      `<form id="governedPreferredCanvassForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)} Â· â‚±${esc(Number(quote.price).toLocaleString('en-PH'))} / ${esc(quote.unit)}</strong><br>The decision reason will be stored with the preferred-quote history and shown in comparison views.</div>
+        <label class="section-gap">Required decision reason<textarea name="rationale" maxlength="500" required></textarea></label>
+        <button class="primary" type="submit">Confirm Preferred Quote</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedPreferredCanvassForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.selectPreferredCanvass({
+                canvassId: quote.id,
+                rationale: new FormData(form).get('rationale'),
+              }),
+            success: `${quote.id} selected as the preferred quote.`,
+          });
+        });
+      },
+    );
+  };
+
+  const renderCanvassActionState = () => {
+    if (backendMode === 'mock') return;
+    const canEdit = canUseCanvassCapability('fulfillment.canvass');
+    const canDecide = canUseCanvassCapability('fulfillment.procure');
+    document.querySelectorAll('[data-canvass-edit]').forEach((button) => {
+      button.hidden = !canEdit;
+      button.disabled = !canEdit;
+    });
+    document.querySelectorAll('[data-canvass-archive]').forEach((button) => {
+      const quote = canvassReference(button.dataset.canvassArchive);
+      button.hidden = !canDecide;
+      button.disabled = !canDecide || quote?.preferred === true;
+      button.title = quote?.preferred ? 'Select another preferred quote before archiving.' : '';
+    });
+    document.querySelectorAll('[data-prefer-canvass]').forEach((button) => {
+      button.hidden = !canDecide;
+      button.disabled = !canDecide;
+    });
+    const createButton = document.querySelector('#canvassForm [type="submit"]');
+    if (createButton) {
+      createButton.hidden = !canEdit;
+      createButton.disabled = !canEdit;
+    }
+  };
+
+  const installCanvassGovernance = () => {
+    if (backendMode === 'mock' || canvassGovernanceInstalled) return;
+    document.addEventListener(
+      'click',
+      (event) => {
+        const edit = event.target.closest('[data-canvass-edit]');
+        const archive = event.target.closest('[data-canvass-archive]');
+        const preferred = event.target.closest('[data-prefer-canvass]');
+        const action = edit ?? archive ?? preferred;
+        if (!action) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (edit) openCanvassUpdate(edit.dataset.canvassEdit);
+        else if (archive) openCanvassArchive(archive.dataset.canvassArchive);
+        else openPreferredCanvassDecision(preferred.dataset.preferCanvass);
+      },
+      true,
+    );
+    canvassGovernanceInstalled = true;
   };
 
   const decorateCanvassHost = (host, quote, state) => {
@@ -1044,9 +1243,11 @@ export function createRuntimeExtensions(options) {
         state,
       );
     });
+    renderCanvassActionState();
   };
 
   const installCanvassQuality = () => {
+    installCanvassGovernance();
     ['#canvassLibrary', '#quoteComparison'].forEach((selector) => {
       const root = document.querySelector(selector);
       if (!root || canvassObservedRoots.has(root)) return;
@@ -4685,8 +4886,8 @@ export function createRuntimeExtensions(options) {
   const isTrackableForm = (form) =>
     Boolean(
       form &&
-        !form.matches('[data-dirty-ignore], [data-lending-usage-filters]') &&
-        form.querySelector('button[type="submit"], input[type="submit"]'),
+      !form.matches('[data-dirty-ignore], [data-lending-usage-filters]') &&
+      form.querySelector('button[type="submit"], input[type="submit"]'),
     );
   let discardDialog = null;
   let discardPromise = null;
@@ -6099,7 +6300,11 @@ export function createRuntimeExtensions(options) {
         availableToPromise: suppliedOnHand - suppliedReserved,
       };
     if (Number.isFinite(suppliedAvailable))
-      return { onHand: suppliedOnHand || 0, reserved: suppliedReserved || 0, availableToPromise: suppliedAvailable };
+      return {
+        onHand: suppliedOnHand || 0,
+        reserved: suppliedReserved || 0,
+        availableToPromise: suppliedAvailable,
+      };
     const onHand = (state.ledgerTransactions ?? [])
       .filter((movement) => movement?.itemId === item.id)
       .reduce(
@@ -6131,8 +6336,12 @@ export function createRuntimeExtensions(options) {
   };
 
   const inventoryReviewKind = (item) => {
-    const classification = String(item?.classificationStatus ?? '').trim().toUpperCase();
-    const inventoryKind = String(item?.inventoryKind ?? '').trim().toUpperCase();
+    const classification = String(item?.classificationStatus ?? '')
+      .trim()
+      .toUpperCase();
+    const inventoryKind = String(item?.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
     const handling = normalizeHandling(item?.handlingCode ?? item?.handling);
     if (classification !== 'CLASSIFIED' || inventoryKind === 'UNVERIFIED') return 'UNVERIFIED';
     if (inventoryKind === 'REUSABLE' || handling === 'REUSABLE_ASSET') return 'REUSABLE';
@@ -6140,12 +6349,13 @@ export function createRuntimeExtensions(options) {
     return 'OTHER';
   };
 
-  const inventoryOptions = (items, key, allLabel, label = (value) => value) => [
-    option('ALL', allLabel, inventoryAdvancedFilters[key]),
-    ...[...new Set(items.map((item) => String(item?.[key] ?? '').trim()).filter(Boolean))]
-      .sort((left, right) => left.localeCompare(right))
-      .map((value) => option(value, label(value), inventoryAdvancedFilters[key])),
-  ].join('');
+  const inventoryOptions = (items, key, allLabel, label = (value) => value) =>
+    [
+      option('ALL', allLabel, inventoryAdvancedFilters[key]),
+      ...[...new Set(items.map((item) => String(item?.[key] ?? '').trim()).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right))
+        .map((value) => option(value, label(value), inventoryAdvancedFilters[key])),
+    ].join('');
 
   const requestInventoryRerender = () => {
     const search = document.querySelector('#inventorySearch');
@@ -6177,7 +6387,11 @@ export function createRuntimeExtensions(options) {
     inventory.addEventListener(
       'input',
       (event) => {
-        if (event.target.closest('#inventorySearch,#inventoryAreaFilter,#inventoryHandlingFilter,#inventoryStatusFilter'))
+        if (
+          event.target.closest(
+            '#inventorySearch,#inventoryAreaFilter,#inventoryHandlingFilter,#inventoryStatusFilter',
+          )
+        )
           inventoryRuntimePage = 1;
         scheduleInventoryRuntimePresentation();
       },
@@ -6217,7 +6431,10 @@ export function createRuntimeExtensions(options) {
     scheduleInventoryRuntimePresentation();
   };
 
-  const inventoryRuntimeText = (value) => String(value ?? '').trim().toLowerCase();
+  const inventoryRuntimeText = (value) =>
+    String(value ?? '')
+      .trim()
+      .toLowerCase();
   const inventoryRuntimeQuantity = (value) =>
     Number(value ?? 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
   const inventoryRuntimeStatusLabel = (value) =>
@@ -6293,9 +6510,9 @@ export function createRuntimeExtensions(options) {
             return rightBalance.onHand - leftBalance.onHand || name;
           case 'REORDER_RISK':
             return (
-              leftBalance.availableToPromise - Number(left.reorderThreshold ?? 0) -
-                (rightBalance.availableToPromise - Number(right.reorderThreshold ?? 0)) ||
-              name
+              leftBalance.availableToPromise -
+                Number(left.reorderThreshold ?? 0) -
+                (rightBalance.availableToPromise - Number(right.reorderThreshold ?? 0)) || name
             );
           case 'UPDATED_DESC':
             return new Date(right.updatedAt ?? 0) - new Date(left.updatedAt ?? 0) || name;
@@ -6371,7 +6588,9 @@ export function createRuntimeExtensions(options) {
       const provenance = item.provenance?.originEventItemId
         ? `<code>${esc(item.provenance.originEventItemId)}</code><small>Event transfer origin</small>`
         : 'Standard catalog';
-      const evidenceLabel = evidence.length ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}` : 'None';
+      const evidenceLabel = evidence.length
+        ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
+        : 'None';
       return `<tr><td><strong>${esc(item.name)}</strong><code>${esc(item.id)}</code><small>${esc((item.aliases ?? []).join(', ') || 'No aliases')}<br>${esc(item.category)} · ${esc(item.unit)}</small></td><td>${esc(item.stockArea)}<small>${esc(item.handlingCode ?? item.handling)} · ${esc(item.catalogType === 'PANTRY' ? 'Pantry' : 'Office Inventory')}<br>${esc(item.storageLocation)}</small></td><td><strong>${inventoryRuntimeQuantity(balance.onHand)} ${esc(item.unit)}</strong></td><td>${inventoryRuntimeQuantity(balance.reserved)} ${esc(item.unit)}</td><td><strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)} ${esc(item.unit)}</strong><small class="${negative ? 'danger-text' : ''}">${atpNote}</small></td><td><span class="status ${inventoryRuntimeStatusClass(health)}">${esc(inventoryRuntimeStatusLabel(health))}</span><small>Reorder at ${inventoryRuntimeQuantity(item.reorderThreshold)} ${esc(item.unit)}</small></td><td>${provenance}<small>${esc(inventoryRuntimeMovementLabel(movement))}</small></td><td><span class="status ${evidence.length ? 'green' : 'gray'}">${esc(evidenceLabel)}</span></td><td>${inventoryRuntimeActions(item)}</td></tr>`;
     };
     const cardMarkup = (item) => {
@@ -6380,7 +6599,9 @@ export function createRuntimeExtensions(options) {
       const movement = inventoryRuntimeLatestMovement(state, item.id);
       const evidence = (state.evidenceFiles ?? []).filter((entry) => entry.itemId === item.id);
       const provenance = item.provenance?.originEventItemId ?? 'Standard catalog';
-      const evidenceLabel = evidence.length ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}` : 'None';
+      const evidenceLabel = evidence.length
+        ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
+        : 'None';
       return `<article class="data-card"><div class="button-row"><span class="status ${inventoryRuntimeStatusClass(inventoryHealth(state, item))}">${esc(inventoryRuntimeStatusLabel(inventoryHealth(state, item)))}</span><span class="pill">${esc(item.id)}</span></div><h4 style="margin-top:8px">${esc(item.name)}</h4><p>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.handlingCode ?? item.handling)}<br>On hand ${inventoryRuntimeQuantity(balance.onHand)} · Reserved ${inventoryRuntimeQuantity(balance.reserved)} · ATP <strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)}</strong> ${esc(item.unit)}${negative ? '<br><strong class="danger-text">Negative ATP — new allocations blocked</strong>' : ''}<br><small>Provenance ${esc(provenance)} · Latest movement ${esc(inventoryRuntimeMovementLabel(movement))} · Evidence ${esc(evidenceLabel)}</small></p>${inventoryRuntimeActions(item)}</article>`;
     };
     table.innerHTML = pageRows.length
@@ -7220,8 +7441,16 @@ export function createRuntimeExtensions(options) {
     const before = entry?.before && typeof entry.before === 'object' ? entry.before : {};
     const after = entry?.after && typeof entry.after === 'object' ? entry.after : {};
     const has = (source, key) => Object.prototype.hasOwnProperty.call(source, key);
-    const previous = (key, legacy) => (has(before, key) ? before[key] : has(entry, legacy) ? entry[legacy] : undefined);
-    const next = (key, legacy) => (has(after, key) ? after[key] : has(entry, legacy) ? entry[legacy] : has(entry, key) ? entry[key] : undefined);
+    const previous = (key, legacy) =>
+      has(before, key) ? before[key] : has(entry, legacy) ? entry[legacy] : undefined;
+    const next = (key, legacy) =>
+      has(after, key)
+        ? after[key]
+        : has(entry, legacy)
+          ? entry[legacy]
+          : has(entry, key)
+            ? entry[key]
+            : undefined;
     const display = (value) => {
       if (value === true) return 'Enabled';
       if (value === false) return 'Non-lendable';
@@ -7235,7 +7464,12 @@ export function createRuntimeExtensions(options) {
       ['Unit', 'unit', 'previousUnit', 'newUnit'],
       ['Reorder threshold', 'reorderThreshold', 'previousReorderThreshold', 'newReorderThreshold'],
       ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState'],
-      ['Maintenance review', 'maintenanceReviewState', 'previousMaintenanceReviewState', 'newMaintenanceReviewState'],
+      [
+        'Maintenance review',
+        'maintenanceReviewState',
+        'previousMaintenanceReviewState',
+        'newMaintenanceReviewState',
+      ],
       ['Lending', 'isLendable', 'previousIsLendable', 'newIsLendable'],
       ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience'],
       ['Traceable asset count', 'assetInstanceCount', 'previousAssetInstanceCount', 'newAssetInstanceCount'],

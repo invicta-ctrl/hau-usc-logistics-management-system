@@ -1,4 +1,4 @@
-const COUNTABLE_UNITS = new Set([
+export const COUNTABLE_QUANTITY_UNITS = Object.freeze([
   'bottle',
   'box',
   'can',
@@ -22,7 +22,7 @@ const COUNTABLE_UNITS = new Set([
   'unit',
 ]);
 
-const MEASURED_UNITS = new Set([
+export const MEASURED_QUANTITY_UNITS = Object.freeze([
   'gram',
   'kilogram',
   'liter',
@@ -30,6 +30,11 @@ const MEASURED_UNITS = new Set([
   'milliliter',
   'square meter',
 ]);
+
+export const KNOWN_QUANTITY_UNITS = Object.freeze([...COUNTABLE_QUANTITY_UNITS, ...MEASURED_QUANTITY_UNITS]);
+
+const COUNTABLE_UNITS = new Set(COUNTABLE_QUANTITY_UNITS);
+const MEASURED_UNITS = new Set(MEASURED_QUANTITY_UNITS);
 
 export function normalizeQuantityUnit(unit) {
   return String(unit ?? '')
@@ -55,11 +60,7 @@ export function quantityStep(unit) {
 
 export function isValidOperationalQuantity(value, { unit, allowZero = false } = {}) {
   const quantity = Number(value);
-  if (
-    !isKnownQuantityUnit(unit) ||
-    !Number.isFinite(quantity) ||
-    (allowZero ? quantity < 0 : quantity <= 0)
-  )
+  if (!isKnownQuantityUnit(unit) || !Number.isFinite(quantity) || (allowZero ? quantity < 0 : quantity <= 0))
     return false;
   return !isCountableUnit(unit) || Number.isInteger(quantity);
 }

@@ -2762,7 +2762,10 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(duplicateReturn.status()).toBe(409);
 });
 
-test('committee-scoped canvass, procurement, and cumulative receiving execute in D1', async ({ request }) => {
+test('committee-scoped canvass, procurement, and cumulative receiving execute in D1', async ({
+  page,
+  request,
+}) => {
   const materialsCsrf = await login(request, 'LOCAL.MATERIALS');
   const rejectedEvidence = await mutate(request, materialsCsrf, 'saveCanvassReference', {
     clientRequestId: 'local-e2e-canvass-evidence-rejected',
@@ -2905,6 +2908,91 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     preferred: true,
     preferredRationale: 'Alternate quote chosen after comparison',
   });
+
+  const uiQuote = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    supplierName: 'Synthetic UI Supplier',
+    location: 'Angeles City',
+    price: 150,
+    checkedAt: '2026-08-03',
+    clientRequestId: 'local-e2e-canvass-save-ui',
+  });
+  expect(uiQuote.status()).toBe(200);
+  const uiQuoteResult = await uiQuote.json();
+
+  await page.goto('/');
+  await page.getByLabel('Access ID').fill('LOCAL.MATERIALS');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.app-shell')).toBeVisible();
+  await page
+    .locator('[data-role-experience="materials"] [data-materials-destination="materials-canvassing"]')
+    .last()
+    .click();
+  await expect(page.locator('[data-proc-tab="canvass"]')).toHaveClass(/active/u);
+  const comparisonLineId = await page
+    .locator('#quoteCompareLine option')
+    .filter({ hasText: 'Synthetic Procurement Item' })
+    .getAttribute('value');
+  expect(comparisonLineId).toBeTruthy();
+  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
+
+  await page.locator(`[data-prefer-canvass="${uiQuoteResult.canvassId}"]:visible`).click();
+  const preferredForm = page.locator('#governedPreferredCanvassForm');
+  await expect(preferredForm).toBeVisible();
+  await preferredForm
+    .getByLabel('Required decision reason')
+    .fill('Selected in the governed browser comparison.');
+  await preferredForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
+  await expect(
+    page
+      .locator('#quoteComparison .canvass-quality-indicator:visible')
+      .filter({ hasText: 'Decision: Selected in the governed browser comparison.' }),
+  ).toBeVisible();
+
+  await page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`).click();
+  const updateForm = page.locator('#governedCanvassUpdateForm');
+  await expect(updateForm).toBeVisible();
+  await updateForm.getByLabel(/Price/u).fill('155');
+  await updateForm.getByLabel('Reason for update').fill('Updated through the governed browser form.');
+  await updateForm.getByRole('button', { name: 'Save Governed Changes' }).click();
+  await expect(page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`)).toBeVisible();
+
+  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
+  await page.locator(`[data-prefer-canvass="${secondResult.canvassId}"]:visible`).click();
+  const replacementForm = page.locator('#governedPreferredCanvassForm');
+  await replacementForm
+    .getByLabel('Required decision reason')
+    .fill('Restored the alternate quote after the UI lifecycle proof.');
+  await replacementForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
+
+  const archiveButton = page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]:visible`);
+  await expect(archiveButton).toBeEnabled();
+  await archiveButton.click();
+  const archiveForm = page.locator('#governedCanvassArchiveForm');
+  await archiveForm
+    .getByLabel('Required archive reason')
+    .fill('Superseded after the browser workflow proof.');
+  await archiveForm.getByRole('button', { name: 'Archive Reference' }).click();
+  await expect(page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]`)).toHaveCount(0);
+
+  const uiProcurement = await request.get('/api/procurement');
+  expect(uiProcurement.status()).toBe(200);
+  const uiQuoteReadback = (await uiProcurement.json()).data.canvassReferences.find(
+    (entry) => entry.id === uiQuoteResult.canvassId,
+  );
+  expect(uiQuoteReadback).toMatchObject({
+    status: 'ARCHIVED',
+    price: 155,
+    preferred: false,
+    preferredRationale: '',
+    location: 'Angeles City',
+    priceHistory: [
+      expect.objectContaining({ price: 150, checkedAt: '2026-08-03' }),
+      expect.objectContaining({ price: 155, checkedAt: '2026-08-03' }),
+    ],
+  });
+
   for (const [status, clientRequestId] of [
     ['WAITING_FOR_BUDGET', 'local-e2e-deliverable-budget'],
     ['TO_BE_PROCURED', 'local-e2e-deliverable-authorized'],
