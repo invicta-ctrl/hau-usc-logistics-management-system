@@ -1,11 +1,11 @@
 # Current Task
 
 INTENT: PRODUCTION RECOVERY
-MODE: review complete v0.7.1 release candidate
+MODE: correction re-review of complete v0.7.1 release candidate
 TARGET: exact committed release-candidate code, tests, workflows, and handoff
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: one final fresh Sol release-candidate review and truthful owner-gated handoff without a production write
+DELIVERABLE: one policy-authorized fresh Sol correction re-review and truthful owner-gated handoff without a production write
 VERIFICATION: exact-SHA diff review; accepted-scope and invariant review; existing repository, browser, Worker, preview, rollback, and monitoring evidence
 STATUS: ACTIVE
 
@@ -13,14 +13,19 @@ Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted release-candidate code/test head:
-`5d04009235fca55a6495763ac0c7592f1220ddc0`. Slice 8 adds safe static preview
+Repaired release-candidate code/test head:
+`42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Slice 8 adds safe static preview
 and exact-SHA packaging workflows, canonical fail-closed host routing, exact
 private recovery-host validation, request-only containment, opaque-origin Apps
 Script startup, and owner-gated deployment/domain/rollback/monitoring runbooks.
-`npm run check` passes 88 files / 575 tests; browser 130 passed / 326 intentional
+The first final Sol review of `d3d4cc8de84e9b37d151b41b59ff19422d9a7ee1`
+found two P2s and one P3: reusable assessments allowed `NOT_APPLICABLE`, preview
+smoke was not bound to the deployed account/Worker, and one handoff domain was
+wrong. All are repaired. `npm run check` passes 88 files / 576 tests; browser
+130 passed / 326 intentional
 skips; local Worker/D1 38/38; preview dry-run has no bindings and performs no
-upload. The final fresh Sol review is the only remaining repository-side gate.
+upload. One fresh correction re-review is the only remaining repository-side
+gate, permitted because the P2 repairs materially changed workflow behavior.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data

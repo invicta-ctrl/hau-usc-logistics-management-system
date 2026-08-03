@@ -13,7 +13,9 @@ Date: 2026-08-03 (Asia/Manila)
   `3bd7e20f63aa0fb95082bc1d080a335311bc5d83`.
 - Integrated Worker/browser contract alignment:
   `5d04009235fca55a6495763ac0c7592f1220ddc0`.
-- The final review target is the committed release-candidate closure record
+- Final-review P2/P3 repair:
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`.
+- The correction re-review target is the committed repaired closure record
   containing this handoff; record its exact SHA in the delegation ledger.
 
 ## Delivered scope
@@ -22,6 +24,10 @@ Date: 2026-08-03 (Asia/Manila)
   checked, binding-free, and limited to mock static assets. It contains no
   Worker entrypoint, D1/R2 binding, application environment, production secret,
   or production deploy command.
+- Preview smoke obtains the registered workers.dev account subdomain from the
+  authenticated Cloudflare account, combines it only with the fixed preview
+  Worker name, redacts deploy URLs, and records only the Worker name and target
+  SHA-256. Operator-supplied smoke targets are not accepted.
 - The release-candidate workflow checks out an exact requested SHA, runs the
   complete repository gate, and produces a SHA- and artifact-bound package. It
   has no provider credential or deploy command.
@@ -34,6 +40,11 @@ Date: 2026-08-03 (Asia/Manila)
   staging/production recovery. Explicit `DEVELOPMENT` remains unrestricted for
   local workerd tests; that exception has direct Worker-boundary coverage.
 - Existing host-scoped `__Host-` cookie behavior is preserved.
+- A reusable item can reach `CLASSIFIED` only with an actual condition outcome
+  (`NEW`, `GOOD`, `FAIR`, `POOR`, or `DAMAGED`) and maintenance outcome
+  (`CLEARED` or `MAINTENANCE_REQUIRED`). Pending reusable records may retain
+  `NOT_ASSESSED` but remain fail-closed and non-lendable; consumable semantics
+  are unchanged.
 - Request-only mode clears internal Inventory, Release, Lending, advanced
   classification, and supplemental surfaces before protected rendering.
 - Apps Script/offline startup handles the opaque-origin `history.replaceState`
@@ -46,17 +57,17 @@ Date: 2026-08-03 (Asia/Manila)
 ## Verification evidence
 
 - `npm run check`: PASS; governance and continuation checks, lint, 88 Vitest
-  files / 575 tests, deterministic builds, Apps Script validation, dist parity,
+  files / 576 tests, deterministic builds, Apps Script validation, dist parity,
   Cloudflare type generation, and local dry-run gates.
 - `npm run test:e2e`: PASS; 130 passed / 326 intentionally skipped / 0 failed
   across 456 configured cases.
 - `npm run test:e2e:cloudflare:local`: PASS; 38/38 Worker/D1/browser cases.
 - `npx wrangler deploy --dry-run --config cloudflare/wrangler.preview.jsonc
   --outdir .wrangler/preview-final`: PASS; no bindings; no upload.
-- Generated standalone: 767,391 bytes; SHA-256
-  `8bc8725db88b3840e67edba0d70ea75599b963941f7563520b736eafa0f8ed83`.
-- Generated Apps Script package: 639,095 bytes; SHA-256
-  `a034c8e6dce937b5686cc1efac75e88c76616691a67123512f750819b149c874`.
+- Generated standalone: 768,377 bytes; SHA-256
+  `7862c7d4ce54fb794db107d86dffcad887901baeb796d77f447b4640bf67d4b5`.
+- Generated Apps Script package: 640,081 bytes; SHA-256
+  `7f26505754e4eb6b286c3a19cbf9499ee334c3165601a338027fc670edb5707c`.
 - Protected visual baseline files remain unchanged. The untracked `.codegraph/`
   directory remains preserved.
 
@@ -77,6 +88,23 @@ Date: 2026-08-03 (Asia/Manila)
   review was active and no review threshold had been triggered. The one
   reserved fresh Sol reviewer is used only for the complete committed release
   candidate.
+
+## Final review disposition and repair
+
+- The single final fresh Sol review inspected exact SHA
+  `d3d4cc8de84e9b37d151b41b59ff19422d9a7ee1` and returned no P0/P1, two P2s,
+  and one P3.
+- P2 inventory: reusable items could use `NOT_APPLICABLE` physical outcomes and
+  become classified. Terra Max repaired the server, mock parity, individual
+  form, bulk form, and atomic regression coverage at `42f1970`.
+- P2 preview: an operator-supplied URL could attest a different Worker. Luna
+  Max repaired the workflow to derive the subdomain from the authenticated
+  Cloudflare account, use the fixed preview Worker, redact deploy output, and
+  withhold the complete target URL.
+- P3 documentation: corrected `*.hau-usc.org` to the accepted `*.hausc.org`.
+- One new fresh Sol correction re-review is required and permitted because the
+  confirmed P2 repairs materially changed inventory and preview workflows. No
+  separate verdict or fast-review agent is authorized while it is active.
 
 ## External state and owner gates
 
@@ -107,7 +135,7 @@ Date: 2026-08-03 (Asia/Manila)
 
 ## Next action
 
-Run one fresh Sol reviewer against the exact committed complete release
-candidate. Do not start a parallel verdict or fast-review agent. A new Sol
-re-review is allowed only if the final reviewer confirms a threshold finding
-defined by the user-approved orchestration policy.
+Run one fresh Sol correction reviewer against the exact committed repaired
+release candidate. Do not start a parallel verdict or fast-review agent. The
+additional review is necessary because the confirmed P2 repairs materially
+changed inventory and preview workflows.

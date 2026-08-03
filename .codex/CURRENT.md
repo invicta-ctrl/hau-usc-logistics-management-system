@@ -4,9 +4,9 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 through 8 are repository-accepted;
-  the complete locally verified release candidate is awaiting its single
-  final fresh Sol review.
+  production truth audit passed; Slices 2 through 8 are repository-accepted.
+  The first complete-candidate Sol review found two P2s and one P3; all three
+  are repaired and the policy-authorized fresh correction re-review is pending.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -59,17 +59,18 @@
   `.codex/V0_7_1_SLICE_7_WORDING_POLISH_HANDOFF.md`.
 - Accepted Slice 8 release-candidate preparation: implementation commits
   `4f753b2` and `3bd7e20`, with integrated test-contract alignment at
-  `5d04009235fca55a6495763ac0c7592f1220ddc0`. Safe static preview and
+  `5d04009235fca55a6495763ac0c7592f1220ddc0` and final-review repair at
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Safe static preview and
   exact-SHA packaging workflows, fail-closed canonical host routing, an exact
   private recovery-host contract, request-only data containment, opaque-origin
   Apps Script startup, owner-gated domain/deployment runbooks, and local
-  rollback/monitoring evidence pass 575 unit/integration tests, 130 browser
+  rollback/monitoring evidence pass 576 unit/integration tests, 130 browser
   tests with 326 intentional skips, 38/38 local Worker/D1 tests, and a
   no-binding preview dry-run. Handoff:
   `.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md`.
-- Active next action: one final fresh Sol review of the complete exact committed
-  release candidate, followed only by evidence recording unless a review
-  threshold requires repair and re-review.
+- Active next action: one fresh Sol correction re-review of the complete exact
+  committed repaired candidate. This additional review is necessary because
+  confirmed P2 findings caused material inventory and preview-workflow changes.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

@@ -1,6 +1,6 @@
 # Project Status
 
-## v0.7.1 release candidate locally verified - final review active
+## v0.7.1 final-review findings repaired - correction review active
 
 - Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
   `main` at `9fb1b4e6b4e956419fa65dee55268b10c0a55da6` under the accepted
@@ -12,17 +12,23 @@
   quantity contracts, Canvass and Inventory governance, presentation polish,
   and release pipeline/domain preparation.
 - Release-candidate code/test head
-  `5d04009235fca55a6495763ac0c7592f1220ddc0` passes `npm run check` with 88
-  Vitest files / 575 tests, the full browser matrix with 130 passes / 326
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab` passes `npm run check` with 88
+  Vitest files / 576 tests, the full browser matrix with 130 passes / 326
   intentional skips, the local Worker/D1 matrix 38/38, and a binding-free
   Cloudflare preview dry-run.
 - Static preview and exact-SHA package workflows contain no production
   bindings or deployment credentials. Canonical production hosts and the exact
   private workers.dev recovery hostname fail closed outside their accepted
   routes; request-only and opaque-origin runtime boundaries have direct proof.
+- The first complete-candidate Sol review at `d3d4cc8` found no P0/P1, two P2s,
+  and one P3. Reusable classified inventory now requires actual condition and
+  maintenance outcomes; preview smoke derives the fixed Worker target from the
+  authenticated Cloudflare account and withholds the URL; handoff domains are
+  corrected to `*.hausc.org`.
 - Production was not deployed or changed. Domain activation, private staging
   and production configuration, deployment, migration, smoke, and monitoring
-  remain owner-gated. One final fresh Sol exact-SHA review remains.
+  remain owner-gated. One fresh correction re-review remains, authorized only
+  because confirmed P2s caused material workflow changes.
 
 ## v0.7.0 production launch and closure accepted
 

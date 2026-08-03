@@ -80,10 +80,18 @@ candidate.
   artifact comparison, localized repair, or integrated test repair. Reason:
   Luna/Terra were suitable, no prior Slice 8 Sol reviewer remained active, and
   none of the user-defined re-review thresholds had yet been triggered.
-- Exactly one fresh Sol review remains scheduled for the complete committed
-  release candidate. This is the required final review, not an additional
-  slice verdict. Its exact target SHA and verdict must be appended after it
-  returns.
+- Final fresh Sol `/root/v071_final_rc_sol_review` reviewed exact SHA
+  `d3d4cc8de84e9b37d151b41b59ff19422d9a7ee1` against base `9fb1b4e6...` and
+  returned CHANGES REQUIRED: no P0/P1, two P2s (reusable physical-assessment
+  bypass and unbound preview smoke target), and one P3 (wrong handoff domain).
+- Terra Max `/root/v071_s8_terra_host_routing` repaired the material inventory
+  P2; Luna Max `/root/v071_s7_luna_polish` repaired the material preview P2 and
+  documentation P3. The repaired code/test SHA is
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`; complete gates pass.
+- One additional fresh Sol correction re-review is now necessary and permitted
+  because confirmed P2 findings caused material inventory and preview-workflow
+  changes and materially changed the reviewed SHA. Record its exact target and
+  verdict; do not spawn a parallel verdict or fast-review agent while active.
 
 ## Wave 1 parent disposition
 

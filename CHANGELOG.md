@@ -22,6 +22,11 @@
   contract, a binding-free static preview workflow, an exact-SHA release
   package workflow, and owner-gated domain/deployment/rollback/monitoring
   runbooks.
+- Repaired final-review findings by requiring recorded physical condition and
+  maintenance outcomes before reusable inventory can become classified,
+  deriving preview smoke from the authenticated Cloudflare account and fixed
+  Worker name without recording its URL, and correcting the handoff domains to
+  `*.hausc.org`.
 
 ### Verified
 
@@ -35,7 +40,7 @@
   dry-run. Auth browser, local-Worker, malformed-cookie, and release-identity
   proofs pass; fresh correction re-review reports no P0-P3.
 - The complete release-candidate code/test head
-  `5d04009235fca55a6495763ac0c7592f1220ddc0` passes 88 Vitest files / 575
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab` passes 88 Vitest files / 576
   tests, 130 browser tests with 326 intentional skips, 38/38 local Worker/D1
   tests, deterministic generated parity, and a binding-free preview dry-run.
 

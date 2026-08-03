@@ -10,15 +10,16 @@
 
 CURRENT SLICE: v0.7.1 complete release candidate
 
-CURRENT STAGE: SLICE_8_LOCALLY_ACCEPTED_FINAL_FRESH_SOL_REVIEW_ACTIVE
+CURRENT STAGE: SLICE_8_P2_REPAIRED_FRESH_CORRECTION_REVIEW_ACTIVE
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
-Release-candidate code/test head:
-`5d04009235fca55a6495763ac0c7592f1220ddc0`. Repository gates pass 575 tests;
+Repaired release-candidate code/test head:
+`42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Repository gates pass 576 tests;
 the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
 38/38; preview dry-run is binding-free. Production and external systems were
-untouched. One final fresh Sol exact-SHA review remains.
+untouched. The first final review's two P2s and one P3 are repaired; one fresh
+correction re-review remains because the P2s materially changed workflow.
 
 ---
 
