@@ -777,8 +777,42 @@ export function createAccessManagementService({
       ) {
         fail('ACCOUNT_STATUS_INVALID');
       }
-      if (restoredStatus === account.status)
-        return { changed: false, status: restoredStatus, sessionsRevoked: false, replayed: false };
+      if (restoredStatus === account.status) {
+        const recordedAt = nowIso();
+        const replayResult = {
+          changed: false,
+          status: restoredStatus,
+          sessionsRevoked: false,
+          accountId: account.id,
+          revision: accountRevision(account),
+          correlationId: String(correlationId || `ACCESS_${createId()}`),
+        };
+        try {
+          await repository.recordAccountStatusNoop({
+            account,
+            status: restoredStatus,
+            idempotency: {
+              scope: 'access-set-account-status',
+              key: replay.key,
+              actorAccountId: actor.id,
+              requestFingerprint: replay.fingerprint,
+              result: replayResult,
+              createdAt: recordedAt,
+            },
+          });
+        } catch (error) {
+          const racedReplay = await mutationReplay('access-set-account-status', actor, targetCommand);
+          if (racedReplay.replayed) return { ...racedReplay.result, replayed: true };
+          if (
+            error?.code === 'ACCESS_WRITE_CONFLICT' ||
+            /Account write conflict/iu.test(String(error?.message ?? error))
+          ) {
+            fail('ACCESS_WRITE_CONFLICT', 409);
+          }
+          throw error;
+        }
+        return { ...replayResult, replayed: false };
+      }
       const changedAt = nowIso();
       const mutationCorrelationId = String(correlationId || `ACCESS_${createId()}`);
       const replayResult = {
@@ -814,6 +848,8 @@ export function createAccessManagementService({
           },
         });
       } catch (error) {
+        const racedReplay = await mutationReplay('access-set-account-status', actor, targetCommand);
+        if (racedReplay.replayed) return { ...racedReplay.result, replayed: true };
         if (
           error?.code === 'ACCESS_WRITE_CONFLICT' ||
           /Account write conflict/iu.test(String(error?.message ?? error))

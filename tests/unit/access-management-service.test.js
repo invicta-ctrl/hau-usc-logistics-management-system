@@ -152,6 +152,13 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
         result: replay.result,
       });
     }),
+    recordAccountStatusNoop: vi.fn(async ({ idempotency: replay }) => {
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
     revokeSessions: vi.fn(async ({ account: target, changedAt, idempotency: replay }) => {
       const next = { ...target, credentialVersion: target.credentialVersion + 1, updatedAt: changedAt };
       byAccountId.set(target.id, next);
@@ -374,6 +381,36 @@ describe('access management service', () => {
       }),
     ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
     expect(repository.setAccountStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('binds a no-op account status result to its retry key', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = targetCommand(target, {
+      status: ACCOUNT_STATUS.ACTIVE,
+      reason: 'Keep this synthetic account active with retry safety.',
+      clientRequestId: 'access-status-noop-retry-0001',
+    });
+
+    const first = await service.setAccountStatus({ actor, command });
+    expect(first).toMatchObject({
+      changed: false,
+      status: ACCOUNT_STATUS.ACTIVE,
+      replayed: false,
+      accountId: target.id,
+    });
+    await expect(service.setAccountStatus({ actor, command })).resolves.toMatchObject({
+      ...first,
+      replayed: true,
+    });
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: { ...command, status: ACCOUNT_STATUS.DISABLED },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
+    expect(repository.recordAccountStatusNoop).toHaveBeenCalledTimes(1);
+    expect(repository.setAccountStatus).not.toHaveBeenCalled();
   });
 
   it('protects the last active Administrator from a consequential status change', async () => {

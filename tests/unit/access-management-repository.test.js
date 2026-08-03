@@ -438,6 +438,68 @@ describe('D1 access-management repository guards', () => {
     });
   });
 
+  it('atomically records a revision-guarded no-op account status receipt', async () => {
+    const db = await database();
+    const repository = createD1AccessManagementRepository(db);
+
+    await repository.recordAccountStatusNoop({
+      account: account(),
+      status: 'ACTIVE',
+      idempotency: {
+        scope: 'access-set-account-status',
+        key: 'status-noop-00000001',
+        actorAccountId: 'OWNER-1',
+        requestFingerprint: 'FP-STATUS-NOOP',
+        result: { changed: false, status: 'ACTIVE' },
+        createdAt: AFTER,
+      },
+    });
+
+    await expect(
+      db.prepare('SELECT status, credential_version, updated_at FROM accounts').first(),
+    ).resolves.toEqual({ status: 'ACTIVE', credential_version: 1, updated_at: BEFORE });
+    await expect(db.prepare('SELECT COUNT(*) AS count FROM sessions').first()).resolves.toEqual({ count: 1 });
+    await expect(db.prepare('SELECT COUNT(*) AS count FROM audit_log').first()).resolves.toEqual({
+      count: 0,
+    });
+    await expect(
+      db
+        .prepare(
+          `SELECT actor_account_id, request_fingerprint, result_json
+           FROM idempotency_keys
+           WHERE scope = 'access-set-account-status' AND idempotency_key = 'status-noop-00000001'`,
+        )
+        .first(),
+    ).resolves.toEqual({
+      actor_account_id: 'OWNER-1',
+      request_fingerprint: 'FP-STATUS-NOOP',
+      result_json: JSON.stringify({ changed: false, status: 'ACTIVE' }),
+    });
+  });
+
+  it('rolls back a no-op receipt when the account revision changed', async () => {
+    const db = await database({ credentialVersion: 2 });
+    const repository = createD1AccessManagementRepository(db);
+
+    await expect(
+      repository.recordAccountStatusNoop({
+        account: account(),
+        status: 'ACTIVE',
+        idempotency: {
+          scope: 'access-set-account-status',
+          key: 'status-noop-stale-0001',
+          actorAccountId: 'OWNER-1',
+          requestFingerprint: 'FP-STATUS-NOOP-STALE',
+          result: { changed: false, status: 'ACTIVE' },
+          createdAt: AFTER,
+        },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_WRITE_CONFLICT', status: 409 });
+    await expect(db.prepare('SELECT COUNT(*) AS count FROM idempotency_keys').first()).resolves.toEqual({
+      count: 0,
+    });
+  });
+
   it('allows only one of two concurrent Administrator demotions to commit', async () => {
     const db = await database({ roleId: 'ADMINISTRATOR' });
     await insertAccount(db, { id: 'ACCOUNT-2', accessId: 'HAU.ADMIN.002', roleId: 'ADMINISTRATOR' });

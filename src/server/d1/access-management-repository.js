@@ -1007,6 +1007,25 @@ export function createD1AccessManagementRepository(db) {
       });
     },
 
+    async recordAccountStatusNoop({ account, status, idempotency }) {
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET status = status
+           WHERE id = ?1
+             AND credential_version = ?2
+             AND updated_at = ?3
+             AND status = ?4`,
+        )
+        .bind(account.id, account.credentialVersion, account.updatedAt, status);
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements: [idempotencyStatement(db, idempotency)],
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
+    },
+
     async revokeSessions({ account, actor, changedAt, reason, correlationId, auditId, idempotency }) {
       const guardedStatement = db
         .prepare(

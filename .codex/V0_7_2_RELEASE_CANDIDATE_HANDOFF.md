@@ -105,19 +105,32 @@ and commit the idempotency record atomically with status, session, and audit
 writes. A new independent review of the eventual freeze SHA is still required;
 no acceptance from a superseded SHA is reused.
 
+The fourth fresh exact-SHA review rejected
+`d7ab28711bfaf06592d8d9a9cc76212fbc159013` before push with one P2. An account-
+status command that was already satisfied returned a no-op without reserving
+its retry key, so the same delayed command could become a later mutation after
+an intervening state change. The replacement repair records the no-op result
+in `idempotency_keys` through a revision-and-status-guarded atomic batch. Exact
+retries now replay the original no-op, changed-payload/key reuse conflicts, and
+a stale account snapshot rolls back without a receipt. The changed-status path
+also reconciles a raced identical commit through the durable receipt. A fresh
+exact-SHA review remains mandatory.
+
 ## Verification evidence
 
 - Focused identity/access: 14 files / 73 tests passed; focused lint passed.
 - Focused final regressions: 2 files / 12 tests and 14 browser tests passed
   with 8 intentional skips.
 - Release identity: 3 files / 15 tests and 10/10 focused browser tests passed.
-- Final `npm run check`: 113 files / 770 tests passed; lint, two deterministic
+- Final `npm run check`: 113 files / 773 tests passed; lint, two deterministic
   builds, 34 Apps Script sources / 57 required functions, generated parity,
   Cloudflare type/dry-run checks, and all standalone artifacts passed.
 - Full browser matrix: 136 passed / 356 intentionally scoped skips / 0 failed.
 - Local Worker/D1 matrix: 39/39 passed against schema 30.
 - Focused third-cycle regressions: 4 files / 40 tests, focused lint, 2/2 Access
   Worker tests, and 1/1 department Worker test passed.
+- Focused fourth-cycle no-op idempotency regressions: 2 files / 32 tests and
+  focused lint passed, including real D1 success and stale rollback proof.
 - Explicit migration 0030 rehearsal: 1/1 passed against migrations 0001-0030.
 - `git diff --check`: passed before freeze.
 
@@ -143,6 +156,12 @@ evidence:
 - `2026-08-03T15-06-14-420Z-local-worker-d1-v072-r2-final-replay-repair.log`
 - `2026-08-03T15-07-56-008Z-full-playwright-v072-r2-final-replay-repair.log`
 - `2026-08-03T15-11-11-376Z-migration-0030-rehearsal-r2-final-replay-repair.log`
+- `2026-08-03T15-26-02-400Z-r2-noop-idempotency-focused.log`
+- `2026-08-03T15-26-24-794Z-r2-noop-idempotency-lint.log`
+- `2026-08-03T15-26-46-169Z-full-repository-check-v072-r2-noop-idempotency-2.log`
+- `2026-08-03T15-28-09-243Z-local-worker-d1-v072-r2-noop-idempotency.log`
+- `2026-08-03T15-30-00-211Z-full-playwright-v072-r2-noop-idempotency.log`
+- `2026-08-03T15-33-00-867Z-migration-0030-rehearsal-r2-noop-idempotency.log`
 
 ## Blocking pre-production gate
 
