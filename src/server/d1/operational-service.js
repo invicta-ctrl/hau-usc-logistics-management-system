@@ -56,6 +56,7 @@ const METHOD_CAPABILITIES = Object.freeze({
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
   classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
+  bulkClassifyInventoryItems: CAPABILITIES.INVENTORY_CLASSIFY,
   createInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
   updateInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
   updateInventoryStorageContext: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
@@ -500,6 +501,8 @@ export function filterOperationalData(data, selected) {
       next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
         itemIds.has(entry.itemId ?? entry.item_id),
       );
+    if (Array.isArray(next.reservations))
+      next.reservations = next.reservations.filter((entry) => itemIds.has(entry.itemId ?? entry.item_id));
   }
   if (selected.kind === 'EVENT_SERIES') {
     next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
@@ -1330,7 +1333,7 @@ export function createD1OperationalService({
       FROM inventory_items item
       JOIN lending_catalog_availability availability ON availability.item_id = item.id
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
-    const itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
+    let itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
     if (module === 'request') {
       const eventScope = requestOnly
@@ -1370,8 +1373,62 @@ export function createD1OperationalService({
         inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
       };
     } else if (module === 'inventory') {
+      itemRows = await rows(
+        db,
+        `SELECT item.*, availability.on_hand, availability.reserved,
+           availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+           availability.overdue, availability.expected_return_at, availability.traceable_assets,
+           availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+           availability.lendable_available,
+           (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias WHERE alias.item_id = item.id) AS aliases
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE item.status = 'ACTIVE'
+         ORDER BY item.name, item.id`,
+      );
+      const classificationHistoryRows = await rows(
+        db,
+        `SELECT history.id, history.item_id, history.revision, history.previous_status,
+           history.new_status, history.previous_kind, history.new_kind, history.lendable_enabled,
+           history.lending_audience, history.condition_review_state,
+           history.maintenance_review_state, history.asset_instance_count,
+           history.classification_notes, history.evidence_id, history.bulk_group_id,
+           history.occurred_at, history.actor_account_id, history.correlation_id
+         FROM inventory_classification_history history
+         JOIN inventory_items item ON item.id = history.item_id
+         WHERE item.status = 'ACTIVE'
+         ORDER BY history.occurred_at DESC, history.id DESC`,
+      );
+      const classificationHistoryByItem = new Map();
+      for (const entry of classificationHistoryRows) {
+        if (!classificationHistoryByItem.has(entry.item_id))
+          classificationHistoryByItem.set(entry.item_id, []);
+        classificationHistoryByItem.get(entry.item_id).push({
+          id: entry.id,
+          revision: Number(entry.revision),
+          previousStatus: entry.previous_status,
+          newStatus: entry.new_status,
+          previousKind: entry.previous_kind,
+          newKind: entry.new_kind,
+          isLendable: entry.lendable_enabled === 1,
+          lendingAudience: entry.lending_audience,
+          conditionReviewState: entry.condition_review_state,
+          maintenanceReviewState: entry.maintenance_review_state,
+          assetInstanceCount: Number(entry.asset_instance_count),
+          classificationNotes: entry.classification_notes,
+          evidenceId: entry.evidence_id,
+          bulkGroupId: entry.bulk_group_id,
+          occurredAt: entry.occurred_at,
+          actorAccountId: entry.actor_account_id,
+          correlationId: entry.correlation_id,
+        });
+      }
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row)),
+        inventoryItems: itemRows.map((row) => ({
+          ...itemDto(row),
+          assetInstanceCount: Number(row.traceable_assets ?? 0),
+          classificationHistory: classificationHistoryByItem.get(row.id) ?? [],
+        })),
         inventoryAssets: await rows(
           db,
           `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
@@ -1402,7 +1459,7 @@ export function createD1OperationalService({
                     related_entity_type, related_entity_id, request_id, event_id, reversal_of,
                     status, notes, created_at
              FROM inventory_ledger
-             ORDER BY created_at DESC, id DESC LIMIT 100`,
+             ORDER BY created_at DESC, id DESC`,
           )
         ).map((row) => ({
           id: row.id,
@@ -1421,6 +1478,29 @@ export function createD1OperationalService({
           status: row.status,
           notes: row.notes,
           createdAt: row.created_at,
+        })),
+        reservations: (
+          await rows(
+            db,
+            `SELECT id, item_id, quantity, unit, request_line_id, lending_ticket_id,
+                    status, cleared_at, clear_reason, notes, created_at, updated_at, created_by
+             FROM reservations
+             ORDER BY created_at DESC, id DESC`,
+          )
+        ).map((row) => ({
+          id: row.id,
+          itemId: row.item_id,
+          quantity: Number(row.quantity),
+          unit: row.unit,
+          requestLineId: row.request_line_id,
+          lendingTicketId: row.lending_ticket_id,
+          status: row.status,
+          clearedAt: row.cleared_at,
+          clearReason: row.clear_reason,
+          notes: row.notes,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          createdBy: row.created_by,
         })),
       };
     } else if (module === 'lending') {
@@ -1811,12 +1891,20 @@ export function createD1OperationalService({
       requestOnly,
       module,
       data,
-      pagination: {
-        page: page.page,
-        pageSize: page.pageSize,
-        total: Number(totalRow?.count ?? 0),
-        hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
-      },
+      pagination:
+        module === 'inventory'
+          ? {
+              page: 1,
+              pageSize: data.inventoryItems.length,
+              total: data.inventoryItems.length,
+              hasMore: false,
+            }
+          : {
+              page: page.page,
+              pageSize: page.pageSize,
+              total: Number(totalRow?.count ?? 0),
+              hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
+            },
       revision: globalRevision,
       scopeRevision: scopeRevision
         ? { scope: module, token: scopeRevision.revision, updatedAt: scopeRevision.updatedAt }
@@ -6553,11 +6641,14 @@ export function createD1OperationalService({
     };
   }
 
-  async function classifyInventoryItem({ account, command, correlationId }) {
-    assertInventoryClassificationAccess(account);
+  async function prepareInventoryClassification({
+    account,
+    command,
+    correlationId,
+    bulkGroupId = '',
+    idempotencyKey,
+  }) {
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const mutation = await replay(db, 'classifyInventoryItem', command.clientRequestId, account.id, command);
-    if (mutation.replayed) return mutation.value;
     const current = await db
       .prepare(
         `SELECT item.*,
@@ -6749,7 +6840,6 @@ export function createD1OperationalService({
     }
     const timestamp = nowIso();
     const nextRevision = expectedRevision + 1;
-    const bulkGroupId = optionalText(command.bulkGroupId, 120);
     const handling =
       inventoryKind === 'REUSABLE'
         ? 'REUSABLE_ASSET'
@@ -6856,7 +6946,7 @@ export function createD1OperationalService({
         previousStatus: current.classification_status,
         newStatus: classificationStatus,
         accountId: account.id,
-        idempotencyKey: mutation.key,
+        idempotencyKey,
         reason: classificationNotes,
         metadata: { inventoryKind, isLendable, assetInstanceCount: requestedAssetCount },
       }),
@@ -6879,8 +6969,6 @@ export function createD1OperationalService({
           bulkGroupId,
         },
       }),
-      idempotencyStatement(db, 'classifyInventoryItem', mutation, account.id, result),
-      ...revisionStatements(db, ['inventory', 'lending']),
     ];
     for (const assetTag of assetTags) {
       const assetId = createId('AST');
@@ -6911,22 +6999,141 @@ export function createD1OperationalService({
           ),
       );
     }
+    return { result, statements };
+  }
+
+  function throwInventoryClassificationWriteError(error) {
+    if (String(error?.message ?? '').includes('inventory_classification_history.item_id')) {
+      throw new ApiError(
+        'CLASSIFICATION_REVISION_CONFLICT',
+        'This classification changed. Refresh the queue before saving.',
+        { status: 409 },
+      );
+    }
+    if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
+      throw new ApiError('ASSET_TAG_CONFLICT', 'An entered asset tag is already registered.', {
+        status: 409,
+      });
+    }
+    throw error;
+  }
+
+  async function classifyInventoryItem({ account, command, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    if (optionalText(command.bulkGroupId, 120)) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Bulk classification groups must use the atomic bulk classification action.',
+      );
+    }
+    const mutation = await replay(db, 'classifyInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const prepared = await prepareInventoryClassification({
+      account,
+      command,
+      correlationId,
+      idempotencyKey: mutation.key,
+    });
     try {
-      await db.batch(statements);
+      await db.batch([
+        ...prepared.statements,
+        idempotencyStatement(db, 'classifyInventoryItem', mutation, account.id, prepared.result),
+        ...revisionStatements(db, ['inventory', 'lending']),
+      ]);
     } catch (error) {
-      if (String(error?.message ?? '').includes('inventory_classification_history.item_id')) {
+      throwInventoryClassificationWriteError(error);
+    }
+    return prepared.result;
+  }
+
+  async function bulkClassifyInventoryItems({ account, command, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    if (command.similarityConfirmed !== true && command.similarityConfirmed !== 'true') {
+      throw new ApiError(
+        'BULK_SIMILARITY_CONFIRMATION_REQUIRED',
+        'Confirm that every selected item received the same physical classification review.',
+        { status: 409 },
+      );
+    }
+    if (!Array.isArray(command.items) || command.items.length < 2 || command.items.length > 50) {
+      throw new ApiError('VALIDATION_FAILED', 'Bulk classification requires between 2 and 50 items.');
+    }
+    requiredText(command.reason ?? command.items[0]?.classificationNotes, 'reason', 1000);
+    const itemIds = command.items.map((item) => requiredText(item?.itemId, 'itemId', 80));
+    if (new Set(itemIds).size !== itemIds.length) {
+      throw new ApiError('VALIDATION_FAILED', 'Each item may appear only once in a bulk classification.');
+    }
+    for (const item of command.items) {
+      if (optionalText(item.bulkGroupId, 120)) {
+        throw new ApiError('VALIDATION_FAILED', 'Bulk group identifiers are generated by the server.');
+      }
+      if (
+        String(item.classificationStatus ?? '')
+          .trim()
+          .toUpperCase() !== 'CLASSIFIED'
+      ) {
+        throw new ApiError('VALIDATION_FAILED', 'Bulk classification may only complete reviewed items.');
+      }
+      if (
+        item.isLendable === true ||
+        item.isLendable === 'true' ||
+        String(item.lendingAudience ?? 'NOT_AVAILABLE_FOR_LENDING')
+          .trim()
+          .toUpperCase() !== 'NOT_AVAILABLE_FOR_LENDING'
+      ) {
         throw new ApiError(
-          'CLASSIFICATION_REVISION_CONFLICT',
-          'This classification changed. Refresh the queue before saving.',
+          'BULK_LENDING_ENABLEMENT_BLOCKED',
+          'Bulk classification cannot enable lending for any selected item.',
           { status: 409 },
         );
       }
-      if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('ASSET_TAG_CONFLICT', 'An entered asset tag is already registered.', {
-          status: 409,
-        });
+      if (Array.isArray(item.assetTags) && item.assetTags.length) {
+        throw new ApiError(
+          'BULK_ASSET_CREATION_BLOCKED',
+          'Register new reusable asset instances through an individual classification review.',
+          { status: 409 },
+        );
       }
-      throw error;
+    }
+    const mutation = await replay(
+      db,
+      'bulkClassifyInventoryItems',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const bulkGroupId = createId('BCL');
+    const preparedItems = [];
+    for (const item of command.items) {
+      preparedItems.push(
+        await prepareInventoryClassification({
+          account,
+          command: item,
+          correlationId,
+          bulkGroupId,
+          idempotencyKey: mutation.key,
+        }),
+      );
+    }
+    const result = {
+      itemIds,
+      count: itemIds.length,
+      bulkGroupId,
+      correlationId,
+      classificationRevisions: Object.fromEntries(
+        preparedItems.map(({ result: item }) => [item.itemId, item.classificationRevision]),
+      ),
+      items: preparedItems.map(({ result: item }) => item),
+    };
+    try {
+      await db.batch([
+        ...preparedItems.flatMap((prepared) => prepared.statements),
+        idempotencyStatement(db, 'bulkClassifyInventoryItems', mutation, account.id, result),
+        ...revisionStatements(db, ['inventory', 'lending']),
+      ]);
+    } catch (error) {
+      throwInventoryClassificationWriteError(error);
     }
     return result;
   }
@@ -7816,6 +8023,7 @@ export function createD1OperationalService({
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     listInventoryClassifications,
     classifyInventoryItem,
+    bulkClassifyInventoryItems,
     createInventoryItem,
     updateInventoryItem,
     updateInventoryStorageContext,

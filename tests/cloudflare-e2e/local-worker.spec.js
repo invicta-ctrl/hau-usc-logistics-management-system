@@ -435,6 +435,147 @@ test('inventory classification is protected, audited, idempotent, and fail-close
   }
 });
 
+test('inventory bulk classification is atomic and bootstrap projects the complete governed catalog', async ({
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  try {
+    const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const marker = crypto.randomUUID();
+    const createdItems = [];
+    for (const suffix of ['A', 'B']) {
+      const createdResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+        clientRequestId: `bulk-classification-create-${suffix}-${marker}`,
+        itemName: `Bulk Classification ${marker} ${suffix}`,
+        aliases: [],
+        category: 'Synthetic bulk classification',
+        stockArea: 'OFFICE',
+        storageLocation: `Synthetic Bulk Shelf ${suffix}`,
+        handling: 'TO_CLASSIFY',
+        unit: 'piece',
+        catalogType: 'OFFICE_INVENTORY',
+        reorderThreshold: 0,
+        initialQuantity: 0,
+        notes: 'Synthetic atomic bulk classification proof',
+      });
+      expect(createdResponse.status()).toBe(200);
+      createdItems.push(await createdResponse.json());
+    }
+
+    const pendingResponse = await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+      status: 'NEEDS_CLASSIFICATION',
+      search: marker,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(pendingResponse.status()).toBe(200);
+    const pending = await pendingResponse.json();
+    expect(pending.items).toHaveLength(2);
+    const commands = pending.items.map((item) => ({
+      itemId: item.id,
+      expectedRevision: item.classificationRevision,
+      classificationStatus: 'CLASSIFIED',
+      inventoryKind: 'CONSUMABLE',
+      stockArea: item.stockArea,
+      storageLocation: item.storageLocation,
+      unit: item.unit,
+      reorderThreshold: item.reorderThreshold,
+      conditionReviewState: 'NOT_APPLICABLE',
+      maintenanceReviewState: 'NOT_APPLICABLE',
+      classificationNotes: `Physically reviewed together ${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      enableLendingConfirmed: false,
+      assetInstanceCountIfReusable: 0,
+      assetTrackingConfirmed: false,
+      assetTags: [],
+      evidenceId: '',
+    }));
+
+    const staleResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', {
+      clientRequestId: `bulk-classification-stale-${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      items: commands.map((item, index) =>
+        index === 1 ? { ...item, expectedRevision: item.expectedRevision - 1 } : item,
+      ),
+    });
+    expect(staleResponse.status()).toBe(409);
+    await expect(staleResponse.json()).resolves.toMatchObject({
+      code: 'CLASSIFICATION_REVISION_CONFLICT',
+    });
+    const afterStale = await (
+      await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+        status: 'NEEDS_CLASSIFICATION',
+        search: marker,
+        page: 1,
+        pageSize: 10,
+      })
+    ).json();
+    expect(afterStale.items).toHaveLength(2);
+    expect(afterStale.items.every((item) => item.classificationRevision === 1)).toBe(true);
+    expect(afterStale.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
+
+    const bulkCommand = {
+      clientRequestId: `bulk-classification-valid-${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      items: commands,
+    };
+    const bulkResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    expect(bulkResponse.status()).toBe(200);
+    const bulkResult = await bulkResponse.json();
+    expect(bulkResult).toMatchObject({
+      itemIds: expect.arrayContaining(createdItems.map((item) => item.itemId)),
+      count: 2,
+      bulkGroupId: expect.stringMatching(/^BCL-/u),
+      classificationRevisions: Object.fromEntries(createdItems.map((item) => [item.itemId, 2])),
+    });
+    const replay = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    expect(replay.status()).toBe(200);
+    await expect(replay.json()).resolves.toMatchObject(bulkResult);
+
+    const moduleResponse = await owner.post('/api/getBootstrapModule', {
+      data: { module: 'inventory', page: 1, pageSize: 1 },
+    });
+    expect(moduleResponse.status()).toBe(200);
+    const moduleData = await moduleResponse.json();
+    expect(moduleData.pagination).toEqual({
+      page: 1,
+      pageSize: moduleData.data.inventoryItems.length,
+      total: moduleData.data.inventoryItems.length,
+      hasMore: false,
+    });
+    expect(moduleData.data.inventoryItems.length).toBeGreaterThan(1);
+    expect(moduleData.data).toMatchObject({
+      reservations: expect.any(Array),
+      ledgerTransactions: expect.any(Array),
+    });
+    const projected = moduleData.data.inventoryItems.filter((item) =>
+      createdItems.some((created) => created.itemId === item.id),
+    );
+    expect(projected).toHaveLength(2);
+    for (const item of projected) {
+      expect(item).toMatchObject({
+        classificationStatus: 'CLASSIFIED',
+        inventoryKind: 'CONSUMABLE',
+        isLendable: false,
+        classificationRevision: 2,
+        classificationHistory: [
+          expect.objectContaining({
+            bulkGroupId: bulkResult.bulkGroupId,
+            correlationId: bulkResult.correlationId,
+          }),
+        ],
+      });
+    }
+  } finally {
+    await owner.dispose();
+  }
+});
+
 test('D1 catalog mutations enforce authority, quantity, revision, dependency, and lifecycle invariants', async ({
   baseURL,
 }) => {
