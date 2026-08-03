@@ -185,6 +185,46 @@ describe('essential bootstrap contract', () => {
     expect(merged.ledgerTransactions).toHaveLength(1);
   });
 
+  it('accepts the complete bounded Inventory projection, including reservations', () => {
+    const inventory = createBootstrapModuleFixture({ module: 'inventory', cacheSafe: false, rows: 500 });
+    inventory.data.reservations = [
+      {
+        id: 'SYNTHETIC-RESERVATION-001',
+        itemId: 'SYNTHETIC-ITEM-001',
+        quantity: 1,
+        unit: 'piece',
+        status: 'ACTIVE',
+      },
+    ];
+    inventory.pagination = { page: 1, pageSize: 500, total: 500, hasMore: false };
+
+    expect(validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' })).toBe(inventory);
+  });
+
+  it('keeps the 100-row and page-size bounds for non-Inventory modules', () => {
+    const request = createBootstrapModuleFixture({ module: 'request', cacheSafe: false, rows: 101 });
+    expect(() => validateBootstrapModule(request, { backendMode: 'mock', module: 'request' })).toThrowError(
+      expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }),
+    );
+
+    const inventory = createBootstrapModuleFixture({ module: 'inventory', cacheSafe: false, rows: 501 });
+    expect(() =>
+      validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' }),
+    ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
+
+    const requestPage = createBootstrapModuleFixture({ module: 'request', cacheSafe: false });
+    requestPage.pagination.pageSize = 101;
+    expect(() =>
+      validateBootstrapModule(requestPage, { backendMode: 'mock', module: 'request' }),
+    ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
+
+    const inventoryPage = createBootstrapModuleFixture({ module: 'inventory', cacheSafe: false });
+    inventoryPage.pagination.pageSize = 501;
+    expect(() =>
+      validateBootstrapModule(inventoryPage, { backendMode: 'mock', module: 'inventory' }),
+    ).toThrowError(expect.objectContaining({ code: 'BOOTSTRAP_CONTRACT_INVALID' }));
+  });
+
   it.each(['1.3.0', '1.6.0'])(
     'accepts additive schema %s and the overview dashboard projections',
     (schemaVersion) => {
