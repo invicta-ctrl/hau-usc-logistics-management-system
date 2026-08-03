@@ -4,9 +4,8 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 through 4 are accepted; canonical
-  workspace, integer quantity, borrower-selector, and dirty-form recovery is
-  active.
+  production truth audit passed; Slices 2 through 5 are accepted; Canvass and
+  Inventory readiness is active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -34,8 +33,14 @@
   audit references, 513 tests, full repository gates, real local-Worker/UI
   proof, and a fresh re-review PASS. Handoff:
   `.codex/V0_7_1_SLICE_4_DIRECTORY_ACCESS_HANDOFF.md`.
-- Active next slice: canonical workspace routing, integer quantities,
-  borrower-selector semantics, and dirty-form protection.
+- Accepted Slice 5 repair:
+  `4e40e79ad4ad626cba262e66187e1c4ba2220964`; canonical workspace/history
+  routes, route-synchronized module chrome, fail-closed authoritative quantity
+  units, preserved borrower semantics, and ordinary/modal dirty-form safety
+  passed 527 tests, focused browser and Worker proofs, all repository gates,
+  and a fresh exact-head review with no P0-P3. Handoff:
+  `.codex/V0_7_1_SLICE_5_WORKSPACE_QUANTITY_DIRTY_HANDOFF.md`.
+- Active next slice: Canvass and Inventory readiness.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.
