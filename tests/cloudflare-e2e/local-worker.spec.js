@@ -1033,7 +1033,7 @@ test('Request Center public APIs require an authenticated department session', a
   expect((await request.get('/api/portal/request')).status()).toBe(401);
 });
 
-test('public Lending Center submits both borrower types without exposing public tracking', async ({
+test('public Lending Center submits both borrower types with private tracking', async ({
   request,
   baseURL,
 }) => {
@@ -1124,7 +1124,8 @@ test('public Lending Center submits both borrower types without exposing public 
   const receipt = await submitted.json();
   expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
   expect(receipt.submissionId).toMatch(/^LBR-/u);
-  expect(receipt).not.toHaveProperty('trackingCode');
+  expect(receipt.trackingCode).toEqual(expect.any(String));
+  expect(receipt.trackingCode.length).toBeGreaterThan(32);
   expect(receipt).not.toHaveProperty('ticketId');
 
   const replay = await request.post('/api/public/lending', {
@@ -1133,14 +1134,31 @@ test('public Lending Center submits both borrower types without exposing public 
   });
   await expect(replay.json()).resolves.toMatchObject({
     submissionId: receipt.submissionId,
+    trackingCode: receipt.trackingCode,
     replayed: true,
   });
 
   const trackingRoute = await request.post('/api/public/lending/track', {
     headers: { origin: 'http://127.0.0.1:8787' },
-    data: { submissionId: receipt.submissionId, trackingCode: 'not-issued' },
+    data: { submissionId: receipt.submissionId, trackingCode: receipt.trackingCode },
   });
-  expect(trackingRoute.status()).toBe(404);
+  expect(trackingRoute.status()).toBe(200);
+  const tracked = await trackingRoute.json();
+  expect(tracked).toMatchObject({
+    submissionId: receipt.submissionId,
+    status: 'FOR_REVIEW',
+    lines: [expect.objectContaining({ status: 'FOR_REVIEW', quantity: 1 })],
+    history: [expect.objectContaining({ status: 'FOR_REVIEW' })],
+  });
+  expect(tracked).not.toHaveProperty('borrowerName');
+  expect(tracked).not.toHaveProperty('email');
+  expect(tracked).not.toHaveProperty('contactNumber');
+
+  const invalidTracking = await request.post('/api/public/lending/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { submissionId: receipt.submissionId, trackingCode: 'invalid-private-code' },
+  });
+  expect(invalidTracking.status()).toBe(404);
 
   const staffSubmitted = await request.post('/api/public/lending', {
     headers: { origin: 'http://127.0.0.1:8787' },

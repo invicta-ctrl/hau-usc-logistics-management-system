@@ -1,6 +1,7 @@
 import { ApiError } from './d1/operational-service.js';
 import { loadLendingCatalog } from './lending-catalog-service.js';
 import { USC_DEPARTMENT_NAMES } from '../domain/usc-departments.js';
+import { operationalInteger } from '../domain/operational-integers.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const OWNER_COMMITTEE_ID = 'COM_INVENTORY_PANTRY';
@@ -75,14 +76,14 @@ function dateOnly(value, field) {
 }
 
 function positiveInteger(value, field) {
-  const result = Number(value);
-  if (!Number.isSafeInteger(result) || result < 1 || result > 1000) {
+  try {
+    return operationalInteger(value, { field, min: 1, max: 1000 });
+  } catch {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a positive whole number.`, {
       status: 422,
       details: { field },
     });
   }
-  return result;
 }
 
 function base64Url(buffer) {
@@ -110,18 +111,22 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
   const nowIso = () => new Date(clock.now()).toISOString();
   const createId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
 
-  async function rateLimit(networkKey) {
+  async function rateLimit(networkKey, action = 'SUBMIT') {
     const now = clock.now();
     const windowMs = 60 * 60 * 1000;
-    const limiterKey = await hmac(trackingSecret, `SUBMIT:lending:${String(networkKey || 'untrusted')}`);
+    const limit = action === 'TRACK' ? 60 : 10;
+    const limiterKey = await hmac(
+      trackingSecret,
+      `${action}:lending:${String(networkKey || 'untrusted')}`,
+    );
     const recent = await db
       .prepare(
         `SELECT COUNT(*) AS count FROM public_lending_rate_limit_events
-         WHERE limiter_key = ?1 AND action = 'SUBMIT' AND attempted_at > ?2`,
+         WHERE limiter_key = ?1 AND action = ?2 AND attempted_at > ?3`,
       )
-      .bind(limiterKey, now - windowMs)
+      .bind(limiterKey, action, now - windowMs)
       .first();
-    if (Number(recent?.count ?? 0) >= 10) {
+    if (Number(recent?.count ?? 0) >= limit) {
       throw new ApiError('PUBLIC_RATE_LIMITED', 'Too many requests. Try again later.', { status: 429 });
     }
     await db.batch([
@@ -131,9 +136,9 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       db
         .prepare(
           `INSERT INTO public_lending_rate_limit_events (id, limiter_key, action, attempted_at)
-           VALUES (?1, ?2, 'SUBMIT', ?3)`,
+           VALUES (?1, ?2, ?3, ?4)`,
         )
-        .bind(createId('LRL'), limiterKey, now),
+        .bind(createId('LRL'), limiterKey, action, now),
     ]);
   }
 
@@ -198,18 +203,56 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
     return normalized;
   }
 
+  const trackingCodeFor = (submissionId, clientRequestId) =>
+    hmac(trackingSecret, `lending-code:${submissionId}:${clientRequestId}`);
+  const trackingDigestFor = (trackingCode) =>
+    hmac(trackingSecret, `lending-digest:${trackingCode}`);
+
+  async function trackedLines(submissionId) {
+    const result = await db
+      .prepare(
+        `SELECT ticket.status, ticket.ticket_type, ticket.quantity, ticket.unit,
+           ticket.due_at, item.name AS item_name
+         FROM public_lending_submission_tickets link
+         JOIN lending_tickets ticket ON ticket.id = link.lending_ticket_id
+         LEFT JOIN inventory_items item ON item.id = ticket.item_id
+         WHERE link.public_lending_submission_id = ?1
+         ORDER BY ticket.created_at, ticket.id`,
+      )
+      .bind(submissionId)
+      .all();
+    return (result.results ?? []).map((row) => ({
+      itemName: String(row.item_name ?? 'Requested item'),
+      ticketType: row.ticket_type,
+      quantity: row.quantity,
+      unit: row.unit,
+      status: row.status,
+      dueAt: row.due_at,
+    }));
+  }
+
+  function overallStatus(lines) {
+    const statuses = [...new Set(lines.map((line) => line.status).filter(Boolean))];
+    if (!statuses.length) return 'FOR_REVIEW';
+    return statuses.length === 1 ? statuses[0] : 'IN_PROGRESS';
+  }
+
   async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
     await rateLimit(networkKey);
     const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
     const existing = await db
-      .prepare('SELECT id FROM public_lending_submissions WHERE client_request_id = ?1')
+      .prepare(
+        'SELECT id, client_request_id FROM public_lending_submissions WHERE client_request_id = ?1',
+      )
       .bind(clientRequestId)
       .first();
     if (existing) {
+      const lines = await trackedLines(existing.id);
       return {
         ok: true,
         submissionId: existing.id,
-        status: 'FOR_REVIEW',
+        status: overallStatus(lines),
+        trackingCode: await trackingCodeFor(existing.id, existing.client_request_id),
         replayed: true,
         correlationId,
       };
@@ -296,10 +339,8 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
 
     const submissionId = createId('LBR');
     const timestamp = nowIso();
-    const receiptDigest = await hmac(
-      trackingSecret,
-      `lending-receipt:${submissionId}:${clientRequestId}:${timestamp}`,
-    );
+    const trackingCode = await trackingCodeFor(submissionId, clientRequestId);
+    const receiptDigest = await trackingDigestFor(trackingCode);
     const department = borrowerType === 'USC_STAFF' ? uscDepartment : academicDepartment;
     const statements = [
       db
@@ -435,11 +476,61 @@ export function createPublicLendingService({ db, trackingSecret, clock = Date } 
       ok: true,
       submissionId,
       status: 'FOR_REVIEW',
+      trackingCode,
       submittedAt: timestamp,
       replayed: false,
       correlationId,
     };
   }
 
-  return Object.freeze({ catalog, submit });
+  async function track({ command = {}, networkKey = '', correlationId = '' } = {}) {
+    await rateLimit(networkKey, 'TRACK');
+    const submissionId = requiredText(command.submissionId, 'submissionId', 80);
+    const trackingCode = requiredText(command.trackingCode, 'trackingCode', 128);
+    const receiptDigest = await trackingDigestFor(trackingCode);
+    const submission = await db
+      .prepare(
+        `SELECT id, created_at, updated_at
+         FROM public_lending_submissions
+         WHERE id = ?1 AND receipt_digest = ?2`,
+      )
+      .bind(submissionId, receiptDigest)
+      .first();
+    if (!submission) {
+      throw new ApiError('PUBLIC_LENDING_NOT_FOUND', 'The lending request or tracking code is invalid.', {
+        status: 404,
+      });
+    }
+    const [linesResult, historyResult] = await Promise.all([
+      trackedLines(submissionId),
+      db
+        .prepare(
+          `SELECT history.new_status, history.changed_at
+           FROM status_history history
+           JOIN public_lending_submission_tickets link
+             ON link.lending_ticket_id = history.entity_id
+           WHERE link.public_lending_submission_id = ?1
+             AND history.entity_type = 'LENDING'
+           ORDER BY history.changed_at, history.id
+           LIMIT 200`,
+        )
+        .bind(submissionId)
+        .all(),
+    ]);
+    return {
+      ok: true,
+      submissionId,
+      status: overallStatus(linesResult),
+      submittedAt: submission.created_at,
+      updatedAt: submission.updated_at,
+      lines: linesResult,
+      history: (historyResult.results ?? []).map((row) => ({
+        status: row.new_status,
+        changedAt: row.changed_at,
+      })),
+      correlationId,
+    };
+  }
+
+  return Object.freeze({ catalog, submit, track });
 }

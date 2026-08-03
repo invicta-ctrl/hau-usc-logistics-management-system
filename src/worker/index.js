@@ -371,6 +371,16 @@ async function handleApi(request, env, requestId, executionContext) {
     if (url.pathname === '/api/public/advertisements' && request.method === 'GET') {
       return json({ ...(await publicAdvertisements.list()), correlationId: requestId });
     }
+    if (url.pathname === '/api/public/lending/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicLending.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
     if (url.pathname === '/api/public/lending' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
       return json(
