@@ -103,7 +103,7 @@ function revisionScopesForOperation_(operation) {
   var groups = {
     request: ['submitRequest', 'reviewRequest', 'submitCompositeRequest', 'transitionCompositeComponent', 'cancelCompositeRequest', 'reopenCompositeRequest', 'amendCompositeRequest', 'addCompositeSection', 'assignCompositeComponent', 'escalateCompositeComponent', 'updateFoodComponent', 'updateMaterialsComponent', 'updateVenueEquipmentComponent'],
     lending: ['reserveStock', 'createLendingTicket', 'approveLendingTicket', 'confirmLendingHandoff', 'confirmReturn'],
-    restocking: ['saveCanvassReference', 'selectPreferredCanvass', 'transitionRestock', 'receiveRestock'],
+    restocking: ['saveCanvassReference', 'updateCanvassReference', 'archiveCanvassReference', 'selectPreferredCanvass', 'transitionRestock', 'receiveRestock'],
     procurement: ['receiveDeliverable', 'transitionDeliverable'],
     release: ['confirmRelease'],
     inventory: ['transferEventItemToInventory', 'postEmergencyIssue', 'postCycleCountAdjustment', 'createInventoryItem', 'updateInventoryItem', 'updateInventoryStorageContext', 'archiveInventoryItem', 'restoreInventoryItem'],

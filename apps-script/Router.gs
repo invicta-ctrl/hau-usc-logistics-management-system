@@ -33,6 +33,8 @@ function api_approveLendingTicket(command) { return guardMutationApi_('approveLe
 function api_confirmLendingHandoff(command) { return guardMutationApi_('confirmLendingHandoff', command, function(c) { return confirmLendingHandoff_(command, c); }); }
 function api_confirmReturn(command) { return guardMutationApi_('confirmReturn', command, function(c) { return confirmReturn_(command, c); }); }
 function api_saveCanvassReference(command) { return guardMutationApi_('saveCanvassReference', command, function(c) { return saveCanvassReference_(command, c); }); }
+function api_updateCanvassReference(command) { return guardMutationApi_('updateCanvassReference', command, function(c) { return updateCanvassReference_(command, c); }); }
+function api_archiveCanvassReference(command) { return guardMutationApi_('archiveCanvassReference', command, function(c) { return archiveCanvassReference_(command, c); }); }
 function api_selectPreferredCanvass(command) { return guardMutationApi_('selectPreferredCanvass', command, function(c) { return selectPreferredCanvass_(command, c); }); }
 function api_getRestockDetail(command) { return guardApi_('getRestockDetail', command || {}, function() { return getRestockDetail_(command || {}); }); }
 function api_transitionRestock(command) { return guardMutationApi_('transitionRestock', command, function(c) { return transitionRestock_(command, c); }); }

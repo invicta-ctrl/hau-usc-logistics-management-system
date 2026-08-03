@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { AppsScriptAdapter } from '../../src/services/apps-script-adapter.js';
 import { createLegacyRuntimeAdapter } from '../../src/services/legacy-runtime-adapter.js';
@@ -13,6 +15,18 @@ describe('Slice 6 Canvass service contract', () => {
     for (const prototype of [AppsScriptAdapter.prototype, RestService.prototype, MockAdapter.prototype]) {
       expect(typeof prototype.updateCanvassReference).toBe('function');
       expect(typeof prototype.archiveCanvassReference).toBe('function');
+    }
+  });
+
+  it('routes, authorizes, and revision-tracks both governed Apps Script mutations', () => {
+    const appScriptRoot = resolve(import.meta.dirname, '../../apps-script');
+    const router = readFileSync(resolve(appScriptRoot, 'Router.gs'), 'utf8');
+    const authorization = readFileSync(resolve(appScriptRoot, 'Authorization.gs'), 'utf8');
+    const revisions = readFileSync(resolve(appScriptRoot, 'DataRevisionService.gs'), 'utf8');
+    for (const method of ['updateCanvassReference', 'archiveCanvassReference']) {
+      expect(router).toContain(`guardMutationApi_('${method}'`);
+      expect(authorization).toContain(`${method}: HAU_CAPABILITIES_.FULFILL_CANVASS`);
+      expect(revisions).toContain(`'${method}'`);
     }
   });
 
