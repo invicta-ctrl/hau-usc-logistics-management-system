@@ -10,6 +10,8 @@ export class MockAdapter extends MockService {
   transferEventItemToInventory(command) { return this.transferEventItem(command); }
   uploadEvidence(command) { return this.finalizeEvidence(command); }
   saveCanvassReference() { return Promise.reject(new Error('Canvass writes are available in Apps Script staging.')); }
+  updateCanvassReference() { return Promise.reject(new Error('Canvass updates require a governed backend.')); }
+  archiveCanvassReference() { return Promise.reject(new Error('Canvass archival requires a governed backend.')); }
   selectPreferredCanvass() { return Promise.reject(new Error('Canvass selection is available in Apps Script staging.')); }
   getAuditTimeline({ entityType, entityId }) { return Promise.resolve({ ok: true, timeline: this.store.getState().auditLog.filter((row) => row.entityType === entityType && row.entityId === entityId) }); }
   listInventoryClassifications({ status = 'NEEDS_CLASSIFICATION', search = '' } = {}) {
@@ -33,4 +35,3 @@ export class MockAdapter extends MockService {
   }
   classifyInventoryItem() { return Promise.reject(new Error('Use the local preview classification workflow.')); }
 }
-

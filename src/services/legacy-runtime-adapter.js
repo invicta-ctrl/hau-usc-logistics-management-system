@@ -441,6 +441,18 @@ export function createLegacyRuntimeAdapter(
       );
       return { id: result.canvassId, ...result };
     },
+    async updateCanvassReference(payload) {
+      const command = await evidencePayload(payload, 'CANVASS_QUOTE');
+      const result = await mutationRequests.run('canvass-update', command, (tracked) =>
+        remote.updateCanvassReference(tracked),
+      );
+      return { id: result.canvassId, ...result };
+    },
+    archiveCanvassReference(payload) {
+      return mutationRequests.run('canvass-archive', payload, (command) =>
+        remote.archiveCanvassReference(command),
+      );
+    },
     selectPreferredCanvass(payload) {
       return mutationRequests.run('preferred-canvass', payload, (command) =>
         remote.selectPreferredCanvass(command),

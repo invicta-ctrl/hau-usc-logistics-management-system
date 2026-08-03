@@ -57,6 +57,8 @@ for (const method of [
   'confirmLendingHandoff',
   'confirmReturn',
   'saveCanvassReference',
+  'updateCanvassReference',
+  'archiveCanvassReference',
   'selectPreferredCanvass',
   'receiveDeliverable',
   'transitionDeliverable',

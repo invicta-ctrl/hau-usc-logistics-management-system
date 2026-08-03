@@ -34,6 +34,8 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'confirmLendingHandoff',
   'confirmReturn',
   'saveCanvassReference',
+  'updateCanvassReference',
+  'archiveCanvassReference',
   'selectPreferredCanvass',
   'getRestockDetail',
   'transitionRestock',

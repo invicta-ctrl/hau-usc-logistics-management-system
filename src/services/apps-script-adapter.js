@@ -36,6 +36,8 @@ const METHODS = Object.freeze({
   confirmLendingHandoff: 'api_confirmLendingHandoff',
   confirmReturn: 'api_confirmReturn',
   saveCanvassReference: 'api_saveCanvassReference',
+  updateCanvassReference: 'api_updateCanvassReference',
+  archiveCanvassReference: 'api_archiveCanvassReference',
   selectPreferredCanvass: 'api_selectPreferredCanvass',
   getRestockDetail: 'api_getRestockDetail',
   transitionRestock: 'api_transitionRestock',
