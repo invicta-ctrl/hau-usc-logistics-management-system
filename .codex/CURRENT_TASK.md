@@ -1,5 +1,41 @@
 # Current Task
 
+INTENT: FEATURE, MIGRATION, TESTING, DEPLOYMENT PREPARATION
+SECONDARY INTENTS: SECURITY, ACCESSIBILITY, OPERATIONS, RELEASE
+MODE: execute one accepted v0.7.2 work unit at a time
+TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
+SKILLS: lean-ctx; Hallmark audit for bounded critical-screen polish; Cloudflare deployment workflow only at accepted pre-production/production stages; GitHub release workflow for branch/PR integration
+AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; owner-approved v0.7.2 final plan and MAX16 execution prompt; repository invariants; complete v0.7.1 production handoff
+RISK: critical because identity, authorization, migration, providers, and production are in scope
+DELIVERABLE: exact reviewed v0.7.2 candidate, isolated pre-production acceptance, owner-gated production rollout, reconciliation, and durable handoff
+VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
+STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1; absent exact production phrase
+STATUS: SPECIFICATION_ACCEPTED_SOURCE_MAPPING_ACTIVE
+
+Starting SHA: `589970d31d0dab4fe876107276d9b808eb44b9c3`
+
+Branch: `release/v0.7.2-production-access-operations`
+
+Accepted specification:
+`.codex/specs/v0.7.2-production-access-operations.md`
+
+Current exact action: use the existing CodeGraph index to map authentication,
+application/access, profile, Request/integer/low-stock, Link Registry,
+Announcement, migration, UI, and test paths; lock concrete DTO/status/storage
+contracts and non-overlapping file ownership; create the live task registry;
+then start the first dependency-ready read-only child wave.
+
+Concurrency: no more than three child tasks are possible alongside the parent in
+this environment, despite the owner's higher ceiling. Children may not spawn
+grandchildren. The parent remains release-branch integration owner.
+
+Production remains untouched until the exact frozen candidate is shown and the
+owner replies exactly `AUTHORIZE V0.7.2 PRODUCTION`.
+
+---
+
+## Completed v0.7.1 predecessor task
+
 INTENT: PRODUCTION LAUNCH CLOSURE
 MODE: complete; ready for accepted v0.7.2 cold start
 TARGET: immutable v0.7.1 repository, staging, and production baseline

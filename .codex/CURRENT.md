@@ -2,28 +2,29 @@
 
 ## Active release pointer
 
-- Program: HAU-USC Logistics v0.7.1 production launch closure.
-- Status: `COMPLETE - V0.7.1 PRODUCTION OPERATIONAL`.
-- Canonical branch: `main`.
-- Exact release/tag SHA: `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
-- Upstream: `origin/main` at the same SHA; reconciliation was `0/0`.
-- Pull request/release: PR #13 merged; annotated tag and GitHub Release
-  `v0.7.1` published; required `validate`, `verify`, and `browser-smoke`
-  checks passed.
-- Runtime: staging and production were deployed and reconciled to the exact
-  release SHA. Cache-busted production health/readiness/version reads confirm
-  release `0.7.1`, schema 29 / migration 0029, ready true, and required
-  dependencies available.
-- Recovery: pre-write D1 exports, Time Travel bookmarks, Google evidence, and
-  prior Worker rollback targets are retained privately outside Git. No launch
-  rollback was required.
-- Durable handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
-- Local evidence boundary: preserve `.codegraph/` and the owner-authorized
-  `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both are excluded only in the
-  local Git information file and are not repository dependencies.
-- Next accepted action: begin v0.7.2 only from synchronized clean `main`,
-  create the repository-native accepted specification and task record, and
-  preserve the exact production-deployment owner gate.
+- Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
+- Status: `SPECIFICATION_ACCEPTED - SOURCE_MAPPING_AND_CONTRACT_LOCK_ACTIVE`.
+- Integration branch: `release/v0.7.2-production-access-operations`.
+- Starting clean `main` / `origin/main` SHA:
+  `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- Immutable predecessor release/tag SHA:
+  `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
+- Accepted specification:
+  `.codex/specs/v0.7.2-production-access-operations.md`.
+- Current work unit: map the current implementation and tests, lock the exact
+  v0.7.2 state/API/data/access contracts, create the live child-task registry,
+  and assign non-overlapping dependency-ready work.
+- Concurrency: the owner-approved ceiling is 16 children; the current runtime
+  supports three children plus the parent, so three is the practical maximum.
+  Children must not spawn grandchildren.
+- Production boundary: implementation, CI, and isolated pre-production are
+  authorized. Production deployment remains prohibited until the exact frozen
+  candidate is presented and the owner replies exactly
+  `AUTHORIZE V0.7.2 PRODUCTION`.
+- Predecessor handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
+- Local evidence boundary: preserve `.codegraph/` and
+  `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both remain local-only ignored
+  evidence and are not repository dependencies.
 
 ---
 

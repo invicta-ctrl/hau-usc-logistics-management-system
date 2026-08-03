@@ -1,27 +1,40 @@
-# HAU-USC v0.7.1 production recovery - reviewed release candidate
+# HAU-USC v0.7.2 Production Access and Operations
 
-> v0.7.1 authority update (2026-08-03): Slices 2 through 8 are locally
-> repository-accepted under
-> `.codex/specs/v0.7.1-production-recovery.md`. Routing/TOML preflight and the
-> read-only production truth audit passed from synchronized `main` at
-> `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`. Production remains operational
-> on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
-> historical Slice 13 material below does not override the active pointer.
+> v0.7.2 authority update (2026-08-03): the complete v0.7.1 production
+> predecessor handoff is accepted, clean `main` is synchronized at
+> `589970d31d0dab4fe876107276d9b808eb44b9c3`, and the owner-approved v0.7.2
+> plan and MAX16 execution prompt are adopted in
+> `.codex/specs/v0.7.2-production-access-operations.md`. The historical
+> material below remains evidence only and does not override `.codex/CURRENT.md`.
 
-CURRENT SLICE: v0.7.1 complete release candidate
+CURRENT SLICE: v0.7.2 repository adoption, mapping, and contract lock
 
-CURRENT STAGE: SLICE_8_RELEASE_CANDIDATE_REVIEW_ACCEPTED_OWNER_GATES_REMAIN
+CURRENT STAGE: SPECIFICATION_ACCEPTED_SOURCE_MAPPING_ACTIVE
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
-Repaired release-candidate code/test head:
-`42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Repository gates pass 576 tests;
-the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
-38/38; preview dry-run is binding-free. Production and external systems were
-untouched. The first final review's two P2s and one P3 are repaired. Fresh Sol
-correction re-review passes at `7338124554d5ad6f948587d69328dae731b38a6c`
-with no P0-P3; repository-side work is complete and external activation remains
-owner-gated.
+Release branch: `release/v0.7.2-production-access-operations`
+
+Current bounded plan:
+
+1. Map exact current code, migrations, tests, provider adapters, and accepted
+   v0.7.1 overlap using CodeGraph and targeted reads.
+2. Lock state, API/DTO, data, authorization, migration, rollback, UI, and test
+   contracts; create the live child-task registry and file-ownership ledger.
+3. Run a dependency-ready read-only mapping wave with at most three children
+   plus the parent; children may not spawn grandchildren.
+4. Implement and integrate verified backend foundations, access/profile,
+   critical UI, and operational P0 slices one at a time.
+5. Pass R1, operational P0, generated parity, the complete repository gate,
+   R2, and isolated pre-production acceptance.
+6. Freeze one exact candidate and present the production GO package. Do not
+   deploy production until the owner replies exactly
+   `AUTHORIZE V0.7.2 PRODUCTION`.
+
+The parent is release-branch integration owner. The practical concurrency limit
+is three children because the current environment supports four active agents
+total; the owner ceiling of sixteen is retained as policy but cannot be reached
+here.
 
 ---
 
