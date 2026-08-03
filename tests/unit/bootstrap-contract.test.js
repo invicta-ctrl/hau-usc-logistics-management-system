@@ -187,15 +187,19 @@ describe('essential bootstrap contract', () => {
 
   it('accepts the complete bounded Inventory projection, including reservations', () => {
     const inventory = createBootstrapModuleFixture({ module: 'inventory', cacheSafe: false, rows: 500 });
-    inventory.data.reservations = [
-      {
-        id: 'SYNTHETIC-RESERVATION-001',
-        itemId: 'SYNTHETIC-ITEM-001',
-        quantity: 1,
-        unit: 'piece',
-        status: 'ACTIVE',
-      },
-    ];
+    inventory.data.reservations = Array.from({ length: 500 }, (_, index) => ({
+      id: `SYNTHETIC-RESERVATION-${index}`,
+      itemId: 'SYNTHETIC-ITEM-001',
+      quantity: 1,
+      unit: 'piece',
+      status: 'ACTIVE',
+    }));
+    inventory.data.ledgerTransactions = Array.from({ length: 500 }, (_, index) => ({
+      id: `SYNTHETIC-LEDGER-${index}`,
+      itemId: 'SYNTHETIC-ITEM-001',
+      direction: 'IN',
+      quantity: 1,
+    }));
     inventory.pagination = { page: 1, pageSize: 500, total: 500, hasMore: false };
 
     expect(validateBootstrapModule(inventory, { backendMode: 'mock', module: 'inventory' })).toBe(inventory);

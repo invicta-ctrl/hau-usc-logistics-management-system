@@ -1471,7 +1471,7 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
       assetMovementHistory: expect.any(Array),
     },
   });
-  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(500);
   expect(moduleData.data.inventoryAssets.length).toBeLessThanOrEqual(100);
   expect(moduleData.data.assetMaintenanceHistory.length).toBeLessThanOrEqual(100);
   expect(moduleData.data.assetMovementHistory.length).toBeLessThanOrEqual(100);
@@ -3162,6 +3162,42 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
       expect.objectContaining({ price: 155, checkedAt: '2026-08-03' }),
     ],
   });
+
+  const concurrentQuotes = await Promise.all(
+    [
+      ['Concurrent Supplier B', 160, 'local-e2e-canvass-concurrent-b'],
+      ['Concurrent Supplier C', 165, 'local-e2e-canvass-concurrent-c'],
+    ].map(async ([supplierName, price, clientRequestId]) => {
+      const response = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+        ...saveCommand,
+        supplierName,
+        price,
+        clientRequestId,
+      });
+      expect(response.status()).toBe(200);
+      return response.json();
+    }),
+  );
+  const concurrentSelections = await Promise.all(
+    concurrentQuotes.map((quote, index) =>
+      mutate(request, materialsCsrf, 'selectPreferredCanvass', {
+        canvassId: quote.canvassId,
+        rationale: `Concurrent exclusive decision ${index + 1}`,
+        clientRequestId: `local-e2e-canvass-concurrent-preferred-${index + 1}`,
+      }),
+    ),
+  );
+  expect(concurrentSelections.map((response) => response.status())).toEqual([200, 200]);
+  const concurrentReadback = await request.get('/api/procurement');
+  expect(concurrentReadback.status()).toBe(200);
+  const concurrentIds = new Set(concurrentQuotes.map((quote) => quote.canvassId));
+  const concurrentGroup = (await concurrentReadback.json()).data.canvassReferences.filter(
+    (entry) => entry.linkedDeliverableId === 'DEL-LOCAL-CANVASS' && entry.status === 'ACTIVE',
+  );
+  const concurrentPreferred = concurrentGroup.filter((entry) => entry.preferred);
+  expect(concurrentPreferred).toHaveLength(1);
+  expect(concurrentIds.has(concurrentPreferred[0].id)).toBe(true);
+  expect(concurrentPreferred[0].preferredRationale).toMatch(/^Concurrent exclusive decision [12]$/u);
 
   for (const [status, clientRequestId] of [
     ['WAITING_FOR_BUDGET', 'local-e2e-deliverable-budget'],

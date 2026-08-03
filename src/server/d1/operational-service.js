@@ -1397,7 +1397,8 @@ export function createD1OperationalService({
          FROM inventory_classification_history history
          JOIN inventory_items item ON item.id = history.item_id
          WHERE item.status = 'ACTIVE'
-         ORDER BY history.occurred_at DESC, history.id DESC`,
+         ORDER BY history.occurred_at DESC, history.id DESC
+         LIMIT 500`,
       );
       const classificationHistoryByItem = new Map();
       for (const entry of classificationHistoryRows) {
@@ -1459,7 +1460,8 @@ export function createD1OperationalService({
                     related_entity_type, related_entity_id, request_id, event_id, reversal_of,
                     status, notes, created_at
              FROM inventory_ledger
-             ORDER BY created_at DESC, id DESC`,
+             ORDER BY created_at DESC, id DESC
+             LIMIT 500`,
           )
         ).map((row) => ({
           id: row.id,
@@ -1485,7 +1487,8 @@ export function createD1OperationalService({
             `SELECT id, item_id, quantity, unit, request_line_id, lending_ticket_id,
                     status, cleared_at, clear_reason, notes, created_at, updated_at, created_by
              FROM reservations
-             ORDER BY created_at DESC, id DESC`,
+             ORDER BY created_at DESC, id DESC
+             LIMIT 500`,
           )
         ).map((row) => ({
           id: row.id,
@@ -2899,7 +2902,33 @@ export function createD1OperationalService({
       updatedAt: timestamp,
       correlationId,
     };
-    const statements = [];
+    const groupDecision = {
+      selectedCanvassId: canvassId,
+      activeCanvassIds: groupRows.map((entry) => entry.id).sort(),
+      linkedRequestLineId: canvass.linked_request_line_id ?? null,
+      linkedDeliverableId: canvass.linked_deliverable_id ?? null,
+      linkedRestockId: canvass.linked_restock_id ?? null,
+      exclusivePreferenceApplied: true,
+    };
+    const statements = [
+      db
+        .prepare(
+          `UPDATE canvass_references
+           SET preferred = CASE WHEN id = ?1 THEN 1 ELSE 0 END, updated_at = ?2
+           WHERE status = 'ACTIVE' AND (
+             (?3 IS NOT NULL AND linked_request_line_id = ?3) OR
+             (?4 IS NOT NULL AND linked_deliverable_id = ?4) OR
+             (?5 IS NOT NULL AND linked_restock_id = ?5)
+           )`,
+        )
+        .bind(
+          canvassId,
+          timestamp,
+          canvass.linked_request_line_id,
+          canvass.linked_deliverable_id,
+          canvass.linked_restock_id,
+        ),
+    ];
     for (const row of groupRows.filter((entry) => entry.id === canvassId || entry.preferred === 1)) {
       const preferred = row.id === canvassId;
       const before = canvassDto(row);
@@ -2910,9 +2939,6 @@ export function createD1OperationalService({
         updatedAt: timestamp,
       };
       statements.push(
-        db
-          .prepare('UPDATE canvass_references SET preferred = ?1, updated_at = ?2 WHERE id = ?3')
-          .bind(preferred ? 1 : 0, timestamp, row.id),
         historyStatement(db, {
           entityType: 'CANVASS',
           entityId: row.id,
@@ -2924,6 +2950,7 @@ export function createD1OperationalService({
           metadata: {
             preferred,
             ...(preferred ? { rationale } : { selectedCanvassId: canvassId }),
+            groupDecision,
             before,
             after,
           },
@@ -2935,7 +2962,7 @@ export function createD1OperationalService({
           accountId: account.id,
           correlationId,
           before,
-          after,
+          after: { ...after, groupDecision },
         }),
       );
     }
