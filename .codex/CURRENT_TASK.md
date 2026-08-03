@@ -1,5 +1,31 @@
 # Current Task
 
+INTENT: PRODUCTION LAUNCH CLOSURE
+MODE: complete; ready for accepted v0.7.2 cold start
+TARGET: immutable v0.7.1 repository, staging, and production baseline
+AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; owner-authorized release runbook; repository invariants
+RISK: closed and reconciled
+DELIVERABLE: complete verifiable v0.7.1 predecessor handoff
+VERIFICATION: exact merge/tag/release identity; green PR checks; cache-busted production health/readiness/version; schema and recovery reconciliation
+STATUS: COMPLETE_V0_7_1_PRODUCTION_OPERATIONAL
+
+Release SHA: `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`
+
+Canonical branch/upstream: `main` / `origin/main`
+
+Durable handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`
+
+Next exact action: create and accept the repository-native v0.7.2
+Production Access and Operations specification, create
+`release/v0.7.2-production-access-operations` from current clean `main`, and
+start only dependency-ready work. Production deployment remains separately
+gated by the exact-candidate owner authorization required by the v0.7.2
+execution prompt.
+
+---
+
+## Historical v0.7.1 repository-side task
+
 INTENT: PRODUCTION RECOVERY
 MODE: repository complete; owner-gated release handoff
 TARGET: reviewed deployable candidate and private staging/production sequence

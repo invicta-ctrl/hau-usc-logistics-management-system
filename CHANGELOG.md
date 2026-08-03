@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased - v0.7.1 production recovery
+## 0.7.1 - 2026-08-03
+
+### Released
+
+- Merged PR #13 into canonical `main`, published annotated tag and GitHub
+  Release `v0.7.1`, and deployed the exact merge SHA to separated staging and
+  production resources through the owner-gated release runbook.
+- Activated and reconciled the production, Request, and Lending custom
+  domains; production health/readiness/version confirm release `0.7.1`, schema
+  29 / migration 0029, and the exact release SHA.
+- Preserved fresh D1 exports, Time Travel bookmarks, Google release evidence,
+  and prior Worker rollback targets privately outside Git. No launch rollback
+  was required.
 
 ### Fixed
 
@@ -49,11 +61,12 @@
 
 ### Boundary
 
-- Production remains operational on v0.7.0 and was not modified. No provider,
-  migration, deployment, domain, Google, or GitHub external write occurred.
-- Private environment values, upstream/PR/CI, staging and production rollout,
-  domain activation, migration, external smoke, and monitoring remain
-  explicitly owner-gated and unrun.
+- Production is operational on exact v0.7.1 SHA
+  `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`. No schema migration was
+  required; D1 remains schema 29.
+- Private environment, provider, recovery, credential, and evidence
+  identifiers remain outside Git. Future production changes require a new
+  exact-candidate owner gate.
 
 ## 0.7.0 - 2026-07-29
 

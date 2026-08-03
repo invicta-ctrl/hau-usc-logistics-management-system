@@ -1,6 +1,33 @@
 # Current Codex Work Pointer
 
-## Active v0.7.1 recovery pointer
+## Active release pointer
+
+- Program: HAU-USC Logistics v0.7.1 production launch closure.
+- Status: `COMPLETE - V0.7.1 PRODUCTION OPERATIONAL`.
+- Canonical branch: `main`.
+- Exact release/tag SHA: `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
+- Upstream: `origin/main` at the same SHA; reconciliation was `0/0`.
+- Pull request/release: PR #13 merged; annotated tag and GitHub Release
+  `v0.7.1` published; required `validate`, `verify`, and `browser-smoke`
+  checks passed.
+- Runtime: staging and production were deployed and reconciled to the exact
+  release SHA. Cache-busted production health/readiness/version reads confirm
+  release `0.7.1`, schema 29 / migration 0029, ready true, and required
+  dependencies available.
+- Recovery: pre-write D1 exports, Time Travel bookmarks, Google evidence, and
+  prior Worker rollback targets are retained privately outside Git. No launch
+  rollback was required.
+- Durable handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
+- Local evidence boundary: preserve `.codegraph/` and the owner-authorized
+  `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both are excluded only in the
+  local Git information file and are not repository dependencies.
+- Next accepted action: begin v0.7.2 only from synchronized clean `main`,
+  create the repository-native accepted specification and task record, and
+  preserve the exact production-deployment owner gate.
+
+---
+
+## Historical v0.7.1 recovery pointer
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
