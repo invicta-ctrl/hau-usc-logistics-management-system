@@ -101,6 +101,48 @@ describe('HttpApiAdapter', () => {
     }
   });
 
+  it('routes every governed announcement and Link Registry operation', async () => {
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      ),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    setAuthSession({ csrfToken: 'csrf-reference-contract', user: { id: 'USR-ADMIN' } });
+    const adapter = new HttpApiAdapter('');
+
+    for (const [method, path] of [
+      ['listAdvertisements', '/api/admin/advertisements/list'],
+      ['previewAdvertisement', '/api/admin/advertisements/preview'],
+      ['saveAdvertisement', '/api/admin/advertisements/save'],
+      ['uploadAdvertisementMedia', '/api/admin/advertisements/upload'],
+      ['publishAdvertisement', '/api/admin/advertisements/publish'],
+      ['scheduleAdvertisement', '/api/admin/advertisements/schedule'],
+      ['pauseAdvertisement', '/api/admin/advertisements/pause'],
+      ['resumeAdvertisement', '/api/admin/advertisements/resume'],
+      ['archiveAdvertisement', '/api/admin/advertisements/archive'],
+      ['listReferenceLinks', '/api/admin/reference-links/list'],
+      ['getReferenceLink', '/api/admin/reference-links/get'],
+      ['getReferenceLinkHistory', '/api/admin/reference-links/history'],
+      ['createReferenceLink', '/api/admin/reference-links/create'],
+      ['updateReferenceLink', '/api/admin/reference-links/update'],
+      ['transitionReferenceLink', '/api/admin/reference-links/transition'],
+    ]) {
+      await adapter[method]({ synthetic: true });
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        path,
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          headers: expect.objectContaining({ 'x-csrf-token': 'csrf-reference-contract' }),
+        }),
+      );
+    }
+  });
+
   it('preserves safe server errors and correlation references', async () => {
     vi.stubGlobal(
       'fetch',

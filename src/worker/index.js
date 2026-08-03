@@ -462,7 +462,10 @@ async function handleApi(request, env, requestId, executionContext) {
       });
     }
     if (url.pathname.startsWith('/api/admin/advertisements/') && request.method === 'POST') {
-      const mutation = url.pathname !== '/api/admin/advertisements/list';
+      const mutation = !new Set([
+        '/api/admin/advertisements/list',
+        '/api/admin/advertisements/preview',
+      ]).has(url.pathname);
       const actor = await authorize(request, auth, CAPABILITIES.ADVERTISEMENT_MANAGE, { mutation });
       const context = {
         account: actor.account,
@@ -472,15 +475,33 @@ async function handleApi(request, env, requestId, executionContext) {
       if (url.pathname === '/api/admin/advertisements/list') {
         return json(await advertisementAdmin.list(context));
       }
+      if (url.pathname === '/api/admin/advertisements/preview') {
+        return json(await advertisementAdmin.preview(context));
+      }
       if (url.pathname === '/api/admin/advertisements/save') {
         return json(await advertisementAdmin.save(context));
       }
       if (url.pathname === '/api/admin/advertisements/upload') {
         return json(await advertisementAdmin.upload(context));
       }
+      if (url.pathname === '/api/admin/advertisements/publish') {
+        return json(await advertisementAdmin.publish(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/schedule') {
+        return json(await advertisementAdmin.schedule(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/pause') {
+        return json(await advertisementAdmin.pause(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/resume') {
+        return json(await advertisementAdmin.resume(context));
+      }
       if (url.pathname === '/api/admin/advertisements/archive') {
         return json(await advertisementAdmin.archive(context));
       }
+      throw new ApiError('ADVERTISEMENT_ROUTE_NOT_FOUND', 'The announcement route was not found.', {
+        status: 404,
+      });
     }
     if (url.pathname.startsWith('/api/admin/reference-links/') && request.method === 'POST') {
       const readOnlyRoutes = new Set([
