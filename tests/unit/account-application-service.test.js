@@ -10,12 +10,22 @@ import { createAccountApplicationService } from '../../src/server/account-applic
 
 const clone = (value) => structuredClone(value);
 
+const nonterminalApplicationStates = new Set([
+  ACCOUNT_APPLICATION_STATE.EMAIL_UNVERIFIED,
+  ACCOUNT_APPLICATION_STATE.DRAFT,
+  ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+  ACCOUNT_APPLICATION_STATE.CHANGES_REQUESTED,
+  ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+  ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
+]);
+
 function createRepository() {
   const challenges = new Map();
   const applications = new Map();
   const accounts = new Map();
   const history = [];
   const audits = [];
+  const reviewQueries = [];
 
   const repository = {
     async createVerificationChallenge(challenge) {
@@ -88,7 +98,13 @@ function createRepository() {
       );
     },
 
-    async createSubmittedApplication({ application, verificationReceiptDigest, history: entries, audit }) {
+    async createSubmittedApplication({
+      application,
+      verificationReceiptDigest,
+      eligibilityApproved,
+      history: entries,
+      audit,
+    }) {
       const receipt = [...challenges.values()].find(
         (challenge) => challenge.verificationReceiptDigest === verificationReceiptDigest,
       );
@@ -101,6 +117,22 @@ function createRepository() {
       ) {
         throw new Error('application conflict');
       }
+      if (
+        eligibilityApproved !== true ||
+        [...accounts.values()].some(
+          (account) =>
+            ['ACTIVE', 'STARTER'].includes(account.status) &&
+            account.verifiedEmailFingerprint === application.emailFingerprint,
+        ) ||
+        [...applications.values()].some(
+          (candidate) =>
+            nonterminalApplicationStates.has(candidate.state) &&
+            (candidate.emailFingerprint === application.emailFingerprint ||
+              candidate.requestedUsernameNormalized === application.requestedUsernameNormalized),
+        )
+      ) {
+        throw new Error('submission guard conflict');
+      }
       receipt.state = 'CONSUMED';
       receipt.consumedAt = application.createdAt;
       applications.set(application.id, clone(application));
@@ -111,6 +143,26 @@ function createRepository() {
 
     async getApplicationById(applicationId) {
       return clone(applications.get(applicationId));
+    },
+
+    async listApplicationsForReview({ states, limit, offset }) {
+      reviewQueries.push(clone({ states, limit, offset }));
+      return clone(
+        [...applications.values()]
+          .filter((application) => states.includes(application.state))
+          .sort(
+            (left, right) =>
+              String(left.createdAt).localeCompare(String(right.createdAt)) ||
+              left.id.localeCompare(right.id),
+          )
+          .slice(offset, offset + limit),
+      );
+    },
+
+    async getApplicationForReview({ applicationId, states }) {
+      const application = applications.get(applicationId);
+      if (!application || !states.includes(application.state)) return undefined;
+      return clone(application);
     },
 
     async getApplicationByStatusTokenDigest(digest, now) {
@@ -205,16 +257,22 @@ function createRepository() {
         accounts: [...accounts.values()],
         history,
         audits,
+        reviewQueries,
       });
+    },
+
+    seedAccount(account) {
+      accounts.set(account.id, clone(account));
     },
   };
   return repository;
 }
 
-function testContext({ providerConfigured = true } = {}) {
+function testContext({ providerConfigured = true, eligibilityDecision } = {}) {
   let timestamp = Date.parse('2026-08-03T08:00:00.000Z');
   let sequence = 0;
   const sent = [];
+  const eligibilityCalls = [];
   const clock = { now: () => timestamp, advance: (milliseconds) => (timestamp += milliseconds) };
   const repository = createRepository();
   const tokenCrypto = createTokenCrypto({ cryptoProvider: webcrypto, timingSafeEqual });
@@ -263,6 +321,17 @@ function testContext({ providerConfigured = true } = {}) {
         return { allowed: true };
       },
     },
+    submissionEligibility: {
+      async evaluate(input) {
+        eligibilityCalls.push(clone(input));
+        return (
+          eligibilityDecision?.(input) ?? {
+            allowed: true,
+            claimFingerprint: 'ROSTER-POLICY-CLAIM-SYNTHETIC',
+          }
+        );
+      },
+    },
     activationHandoff: {
       async prepare({ approvedAt }) {
         return {
@@ -307,7 +376,7 @@ function testContext({ providerConfigured = true } = {}) {
     clock,
     createId: () => `SYNTHETIC-${String(++sequence).padStart(4, '0')}`,
   });
-  return { clock, repository, sent, service };
+  return { clock, eligibilityCalls, repository, sent, service };
 }
 
 const applicationCommand = (verificationReceipt, clientRequestId = 'submit-synthetic-0001') => ({
@@ -381,6 +450,63 @@ describe('account-application service', () => {
     ).rejects.toMatchObject({ code: 'VERIFICATION_INVALID' });
   });
 
+  it('fails closed and generically for protected-roster decisions and duplicate active or pending identities', async () => {
+    const rosterDenied = testContext({ eligibilityDecision: () => ({ allowed: false }) });
+    await rosterDenied.service.startEmailVerification({ email: 'eligible@example.test' });
+    const deniedConfirmation = await rosterDenied.service.confirmEmailVerification({
+      email: 'eligible@example.test',
+      code: rosterDenied.sent[0].verificationCode,
+    });
+    await expect(
+      rosterDenied.service.submitApplication(applicationCommand(deniedConfirmation.verificationReceipt)),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_INVALID' });
+    expect(rosterDenied.repository.inspect().applications).toEqual([]);
+    expect(rosterDenied.eligibilityCalls).toEqual([
+      {
+        emailFingerprint: 'KEYED-FINGERPRINT-ELIGIBLE',
+        identityClassId: 'SYNTHETIC_APPROVED_STAFF',
+        requestedUsernameNormalized: 'synthetic.applicant',
+        requestedAccessFingerprint: 'KEYED-ACCESS-FINGERPRINT',
+      },
+    ]);
+    expect(JSON.stringify(rosterDenied.eligibilityCalls)).not.toContain('eligible@example.test');
+    expect(JSON.stringify(rosterDenied.eligibilityCalls)).not.toContain('Applicant!Password9472');
+
+    const activeDuplicate = testContext();
+    activeDuplicate.repository.seedAccount({
+      id: 'ACCOUNT-EXISTING-001',
+      status: 'STARTER',
+      verifiedEmailFingerprint: 'KEYED-FINGERPRINT-ELIGIBLE',
+    });
+    await activeDuplicate.service.startEmailVerification({ email: 'eligible@example.test' });
+    const duplicateConfirmation = await activeDuplicate.service.confirmEmailVerification({
+      email: 'eligible@example.test',
+      code: activeDuplicate.sent[0].verificationCode,
+    });
+    await expect(
+      activeDuplicate.service.submitApplication(
+        applicationCommand(duplicateConfirmation.verificationReceipt),
+      ),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_INVALID' });
+    expect(activeDuplicate.repository.inspect().applications).toEqual([]);
+    expect(activeDuplicate.repository.inspect().challenges[0]).toMatchObject({ state: 'VERIFIED' });
+
+    const pendingDuplicate = testContext();
+    await submittedApplication(pendingDuplicate);
+    await pendingDuplicate.service.startEmailVerification({ email: 'eligible@example.test' });
+    const pendingConfirmation = await pendingDuplicate.service.confirmEmailVerification({
+      email: 'eligible@example.test',
+      code: pendingDuplicate.sent.at(-1).verificationCode,
+    });
+    await expect(
+      pendingDuplicate.service.submitApplication(
+        applicationCommand(pendingConfirmation.verificationReceipt, 'submit-synthetic-duplicate-0002'),
+      ),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_INVALID' });
+    expect(pendingDuplicate.repository.inspect().applications).toHaveLength(1);
+    expect(pendingDuplicate.repository.inspect().challenges.at(-1)).toMatchObject({ state: 'VERIFIED' });
+  });
+
   it('enforces expected revision and returns an idempotent withdrawal replay without a second transition', async () => {
     const context = testContext();
     const { submitted } = await submittedApplication(context);
@@ -419,6 +545,7 @@ describe('account-application service', () => {
       id: 'DIRECTOR-SYNTHETIC-001',
       capabilities: [ACCOUNT_APPLICATION_CAPABILITY.DIRECTOR_DECIDE],
     };
+    const applicationId = context.repository.inspect().applications[0].id;
     const dualRoleReviewer = {
       id: admin.id,
       capabilities: [
@@ -426,9 +553,53 @@ describe('account-application service', () => {
         ACCOUNT_APPLICATION_CAPABILITY.DIRECTOR_DECIDE,
       ],
     };
+    const adminQueue = await context.service.adminList({ actor: admin, limit: 1 });
+    const adminDetail = await context.service.adminGet({ actor: admin, applicationId });
+    const redactedAdminReview = JSON.stringify({ adminQueue, adminDetail });
+    expect(adminQueue).toMatchObject({
+      ok: true,
+      applications: [
+        {
+          id: applicationId,
+          state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+          requestedRoleId: 'REQUESTER',
+        },
+      ],
+      pagination: { limit: 1, offset: 0, hasMore: false, nextOffset: null },
+    });
+    expect(adminDetail).toMatchObject({
+      ok: true,
+      application: {
+        id: applicationId,
+        requestedUsername: 'synthetic.applicant',
+        requestedAccess: { requestedRoleId: 'REQUESTER' },
+        review: { administrator: { completed: false }, director: { completed: false } },
+      },
+    });
+    expect(redactedAdminReview).not.toContain('KEYED-FINGERPRINT-ELIGIBLE');
+    expect(redactedAdminReview).not.toContain('v1.synthetic');
+    expect(redactedAdminReview).not.toContain('Applicant!Password9472');
+    expect(redactedAdminReview).not.toContain('STATUS-DIGEST');
+    expect(redactedAdminReview).not.toContain('submit-synthetic-0001');
+    expect(context.repository.inspect().reviewQueries).toEqual([
+      {
+        states: [ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW],
+        limit: 2,
+        offset: 0,
+      },
+    ]);
+    await expect(context.service.directorList({ actor: admin })).rejects.toMatchObject({
+      code: 'ACCOUNT_APPLICATION_AUTHORITY_REQUIRED',
+    });
+    await expect(
+      context.service.adminList({
+        actor: admin,
+        filter: { state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCOUNT_APPLICATION_INVALID' });
     const forwarded = await context.service.adminForward({
       actor: admin,
-      applicationId: context.repository.inspect().applications[0].id,
+      applicationId,
       expectedRevision: submitted.revision,
       reason: 'Verified directory and proposed access were reviewed.',
       reviewEvidence: {
@@ -442,10 +613,29 @@ describe('account-application service', () => {
       revision: 3,
     });
 
+    await expect(context.service.adminGet({ actor: admin, applicationId })).rejects.toMatchObject({
+      code: 'ACCOUNT_APPLICATION_NOT_FOUND',
+    });
+    const directorQueue = await context.service.directorList({
+      actor: director,
+      state: 'PENDING_DIRECTOR_APPROVAL',
+    });
+    const directorDetail = await context.service.directorGet({ actor: director, applicationId });
+    expect(directorQueue).toMatchObject({
+      applications: [{ id: applicationId, state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL }],
+      pagination: { limit: 25, offset: 0, hasMore: false, nextOffset: null },
+    });
+    expect(directorDetail).toMatchObject({
+      application: {
+        id: applicationId,
+        review: { administrator: { completed: true }, director: { completed: false } },
+      },
+    });
+
     await expect(
       context.service.directorApprove({
         actor: dualRoleReviewer,
-        applicationId: context.repository.inspect().applications[0].id,
+        applicationId,
         expectedRevision: 3,
         reason: 'Attempting prohibited same-reviewer approval.',
         reviewEvidence: {
@@ -458,7 +648,7 @@ describe('account-application service', () => {
 
     const approved = await context.service.directorApprove({
       actor: director,
-      applicationId: context.repository.inspect().applications[0].id,
+      applicationId,
       expectedRevision: 3,
       reason: 'Director approved the independently reviewed application.',
       reviewEvidence: {
@@ -469,7 +659,7 @@ describe('account-application service', () => {
     });
     const replayed = await context.service.directorApprove({
       actor: director,
-      applicationId: context.repository.inspect().applications[0].id,
+      applicationId,
       expectedRevision: 3,
       reason: 'Director approved the independently reviewed application.',
       reviewEvidence: {

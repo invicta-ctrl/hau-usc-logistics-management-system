@@ -1,5 +1,6 @@
 import {
   ACCOUNT_APPLICATION_CAPABILITY,
+  ACCOUNT_APPLICATION_REVIEW_QUEUE,
   ACCOUNT_APPLICATION_STATE,
   EMAIL_VERIFICATION_CHALLENGE_STATE,
   EMAIL_VERIFICATION_PURPOSE,
@@ -9,6 +10,8 @@ import {
   isNonterminalAccountApplicationState,
   isRetainableTerminalAccountApplicationState,
   publicApplicationStatusDto,
+  redactedReviewApplicationDetailDto,
+  redactedReviewApplicationListDto,
 } from './contracts.js';
 import { isConfiguredEmailProvider } from './email-provider.js';
 
@@ -38,6 +41,9 @@ const DEFAULTS = Object.freeze({
   applicationMs: 30 * 24 * 60 * 60 * 1000,
   statusTokenMs: 30 * 24 * 60 * 60 * 1000,
 });
+
+const REVIEW_LIST_DEFAULT_LIMIT = 25;
+const REVIEW_LIST_MAX_LIMIT = 100;
 
 export class AccountApplicationError extends Error {
   constructor(code, { status = 400 } = {}) {
@@ -177,6 +183,48 @@ function safeOverrideCapture(value) {
     fail('ACCOUNT_APPLICATION_OVERRIDE_INVALID');
   }
   return Object.freeze({ effectiveAccessFingerprint, sessionImpactFingerprint, followUpReviewReference });
+}
+
+function reviewListQuery(query, queue) {
+  const filter = query?.filter;
+  if (filter !== undefined && (!filter || typeof filter !== 'object' || Array.isArray(filter))) {
+    fail('ACCOUNT_APPLICATION_INVALID');
+  }
+  if (filter && Object.keys(filter).some((key) => key !== 'state')) {
+    fail('ACCOUNT_APPLICATION_INVALID');
+  }
+  if (query?.state !== undefined && filter?.state !== undefined) {
+    fail('ACCOUNT_APPLICATION_INVALID');
+  }
+  const providedState = query?.state ?? filter?.state;
+  const states =
+    providedState === undefined
+      ? [queue.state]
+      : Array.isArray(providedState)
+        ? providedState
+        : [providedState];
+  if (
+    states.length !== 1 ||
+    String(states[0] ?? '').trim() !== queue.state ||
+    states.some((stateValue) => typeof stateValue !== 'string')
+  ) {
+    fail('ACCOUNT_APPLICATION_INVALID');
+  }
+  const limit = query?.limit ?? REVIEW_LIST_DEFAULT_LIMIT;
+  const offset = query?.offset ?? 0;
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > REVIEW_LIST_MAX_LIMIT) {
+    fail('ACCOUNT_APPLICATION_INVALID');
+  }
+  if (!Number.isSafeInteger(offset) || offset < 0) fail('ACCOUNT_APPLICATION_INVALID');
+  return Object.freeze({ states: [queue.state], limit, offset });
+}
+
+function submissionEligibilityClaim(decision) {
+  const claimFingerprint = String(decision?.claimFingerprint ?? '').trim();
+  if (decision?.allowed !== true || !/^[A-Za-z0-9][A-Za-z0-9._:-]{7,255}$/u.test(claimFingerprint)) {
+    return null;
+  }
+  return Object.freeze({ claimFingerprint });
 }
 
 function applicationCodeFrom(id) {
@@ -353,15 +401,23 @@ export function createAccountApplicationService({
   passwordKdf,
   tokenCrypto,
   rateLimiter,
+  submissionEligibility,
   activationHandoff,
   clock = { now: () => Date.now() },
   createId = () => globalThis.crypto.randomUUID(),
   createApplicationCode = applicationCodeFrom,
   config = {},
 } = {}) {
-  if (!repository || !identityProtection || !passwordKdf || !tokenCrypto || !rateLimiter) {
+  if (
+    !repository ||
+    !identityProtection ||
+    !passwordKdf ||
+    !tokenCrypto ||
+    !rateLimiter ||
+    !submissionEligibility
+  ) {
     throw new Error(
-      'Account-application repository, identity protection, crypto, and rate limiter adapters are required.',
+      'Account-application repository, identity protection, crypto, rate limiter, and submission eligibility adapters are required.',
     );
   }
   if (
@@ -371,9 +427,16 @@ export function createAccountApplicationService({
     typeof passwordKdf.hash !== 'function' ||
     typeof tokenCrypto.createToken !== 'function' ||
     typeof tokenCrypto.digest !== 'function' ||
-    typeof rateLimiter.consume !== 'function'
+    typeof rateLimiter.consume !== 'function' ||
+    typeof submissionEligibility.evaluate !== 'function'
   ) {
     throw new Error('Account-application adapter contract is incomplete.');
+  }
+  if (
+    typeof repository.listApplicationsForReview !== 'function' ||
+    typeof repository.getApplicationForReview !== 'function'
+  ) {
+    throw new Error('Account-application repository review-read contract is incomplete.');
   }
 
   const settings = Object.freeze({
@@ -408,6 +471,14 @@ export function createAccountApplicationService({
         identityClassId: String(prepared.identityClassId).trim(),
         providerDelivery: prepared.providerDelivery,
       });
+    } catch {
+      return null;
+    }
+  }
+
+  async function approvedSubmissionEligibility(input) {
+    try {
+      return submissionEligibilityClaim(await submissionEligibility.evaluate(Object.freeze({ ...input })));
     } catch {
       return null;
     }
@@ -537,6 +608,46 @@ export function createAccountApplicationService({
       requireDistinctFromAdministrator: reviewerKind === 'DIRECTOR',
     });
     return reviewResult(result.application, { replayed: result.replayed });
+  }
+
+  async function listReviewApplications({ actor, queue, query }) {
+    requireCapability(actor, queue.capability);
+    const pagination = reviewListQuery(query, queue);
+    const rows = await repository.listApplicationsForReview({
+      states: pagination.states,
+      limit: pagination.limit + 1,
+      offset: pagination.offset,
+    });
+    if (!Array.isArray(rows))
+      throw new Error('Account-application review repository returned an invalid list.');
+    const hasMore = rows.length > pagination.limit;
+    return {
+      ok: true,
+      applications: rows.slice(0, pagination.limit).map(redactedReviewApplicationListDto),
+      pagination: {
+        limit: pagination.limit,
+        offset: pagination.offset,
+        hasMore,
+        nextOffset: hasMore ? pagination.offset + pagination.limit : null,
+      },
+      correlationId: correlation(),
+    };
+  }
+
+  async function getReviewApplication({ actor, applicationId, queue }) {
+    requireCapability(actor, queue.capability);
+    const id = String(applicationId ?? '').trim();
+    if (!id) fail('ACCOUNT_APPLICATION_NOT_FOUND', { status: 404 });
+    const application = await repository.getApplicationForReview({
+      applicationId: id,
+      states: [queue.state],
+    });
+    if (!application) fail('ACCOUNT_APPLICATION_NOT_FOUND', { status: 404 });
+    return {
+      ok: true,
+      application: redactedReviewApplicationDetailDto(application),
+      correlationId: correlation(),
+    };
   }
 
   async function approve({ actor, applicationId, command, ownerOverride = null }) {
@@ -767,13 +878,18 @@ export function createAccountApplicationService({
       }
       const profile = applicationProfileCommand(command);
       const requestedAccess = requestedAccessFromCommand(command);
+      const departmentId = normalizedOptionalId(command.departmentId);
+      const courseId = normalizedOptionalId(command.courseId);
+      const yearLevel = normalizedYearLevel(command.yearLevel);
+      const requestedUsernameNormalized = normalizedUsername(command.requestedUsername);
+      const emailFingerprint = String(verifiedChallenge.emailFingerprint ?? '').trim();
+      const identityClassId = String(verifiedChallenge.identityClassId ?? '').trim();
+      if (!emailFingerprint || !identityClassId) fail('VERIFICATION_INVALID');
       let protectedProfile;
       let requestedAccessFingerprint;
-      let pendingPasswordCredential;
       try {
         protectedProfile = await identityProtection.protectApplicationProfile(profile);
         requestedAccessFingerprint = await identityProtection.fingerprintRequestedAccess(requestedAccess);
-        pendingPasswordCredential = await passwordKdf.hash(command.password);
       } catch {
         fail('ACCOUNT_APPLICATION_INVALID');
       }
@@ -784,6 +900,19 @@ export function createAccountApplicationService({
       ) {
         fail('ACCOUNT_APPLICATION_INVALID');
       }
+      const eligibility = await approvedSubmissionEligibility({
+        emailFingerprint,
+        identityClassId,
+        requestedUsernameNormalized,
+        requestedAccessFingerprint: String(requestedAccessFingerprint),
+      });
+      if (!eligibility) fail('ACCOUNT_APPLICATION_INVALID');
+      let pendingPasswordCredential;
+      try {
+        pendingPasswordCredential = await passwordKdf.hash(command.password);
+      } catch {
+        fail('ACCOUNT_APPLICATION_INVALID');
+      }
       const createdAt = nowIso(clock);
       const applicationId = createId();
       const statusToken = tokenCrypto.createToken();
@@ -791,13 +920,13 @@ export function createAccountApplicationService({
       const application = {
         id: applicationId,
         applicationCode: createApplicationCode(applicationId),
-        emailFingerprint: verifiedChallenge.emailFingerprint,
+        emailFingerprint,
         protectedEmailEnvelope: verifiedChallenge.protectedEmailEnvelope,
         protectedProfileEnvelope: String(protectedProfile.protectedProfileEnvelope),
-        departmentId: normalizedOptionalId(command.departmentId),
-        courseId: normalizedOptionalId(command.courseId),
-        yearLevel: normalizedYearLevel(command.yearLevel),
-        requestedUsernameNormalized: normalizedUsername(command.requestedUsername),
+        departmentId,
+        courseId,
+        yearLevel,
+        requestedUsernameNormalized,
         pendingPasswordCredential,
         requestedAccess,
         state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
@@ -829,7 +958,11 @@ export function createAccountApplicationService({
         toState: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
         applicantAuthorityFingerprint: verificationReceiptDigest,
         before: { state: ACCOUNT_APPLICATION_STATE.DRAFT, revision: 1 },
-        after: { state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW, requestedAccessFingerprint },
+        after: {
+          state: ACCOUNT_APPLICATION_STATE.PENDING_ADMIN_REVIEW,
+          requestedAccessFingerprint,
+          submissionEligibilityClaim: eligibility.claimFingerprint,
+        },
         expectedRevision: 1,
         resultingRevision: 2,
         idempotencyKey: clientRequestId,
@@ -851,6 +984,7 @@ export function createAccountApplicationService({
         created = await repository.createSubmittedApplication({
           application,
           verificationReceiptDigest,
+          eligibilityApproved: true,
           history: { draft: draftHistory, submission: submissionHistory },
           audit,
         });
@@ -860,7 +994,7 @@ export function createAccountApplicationService({
         if (raced && receipt?.emailFingerprint === raced.emailFingerprint) {
           return publicSubmissionDto(raced, '', { replayed: true });
         }
-        fail('ACCOUNT_APPLICATION_WRITE_CONFLICT', { status: 409 });
+        fail('ACCOUNT_APPLICATION_INVALID');
       }
       return publicSubmissionDto(created, statusToken);
     },
@@ -895,6 +1029,38 @@ export function createAccountApplicationService({
         revokeApprovedStarter: application.state === ACCOUNT_APPLICATION_STATE.APPROVED_ACTIVATION_REQUIRED,
       });
       return publicApplicationStatusDto(result.application);
+    },
+
+    async adminList({ actor, ...query } = {}) {
+      return listReviewApplications({
+        actor,
+        queue: ACCOUNT_APPLICATION_REVIEW_QUEUE.ADMINISTRATOR,
+        query,
+      });
+    },
+
+    async adminGet({ actor, applicationId } = {}) {
+      return getReviewApplication({
+        actor,
+        applicationId,
+        queue: ACCOUNT_APPLICATION_REVIEW_QUEUE.ADMINISTRATOR,
+      });
+    },
+
+    async directorList({ actor, ...query } = {}) {
+      return listReviewApplications({
+        actor,
+        queue: ACCOUNT_APPLICATION_REVIEW_QUEUE.DIRECTOR,
+        query,
+      });
+    },
+
+    async directorGet({ actor, applicationId } = {}) {
+      return getReviewApplication({
+        actor,
+        applicationId,
+        queue: ACCOUNT_APPLICATION_REVIEW_QUEUE.DIRECTOR,
+      });
     },
 
     async adminRequestChanges({ actor, applicationId, ...command } = {}) {

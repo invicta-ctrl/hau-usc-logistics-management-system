@@ -39,6 +39,27 @@ function applicationFromRow(row) {
   };
 }
 
+function reviewApplicationFromRow(row) {
+  if (!row) return undefined;
+  return {
+    id: row.id,
+    applicationCode: row.application_code,
+    departmentId: row.department_id ?? '',
+    courseId: row.course_id ?? '',
+    yearLevel: row.year_level === null || row.year_level === undefined ? null : Number(row.year_level),
+    requestedUsernameNormalized: row.requested_username_normalized ?? '',
+    requestedAccess: parseJson(row.requested_access_json, {}),
+    state: row.state,
+    revision: Number(row.revision),
+    administratorReviewedAt: row.administrator_reviewed_at ?? '',
+    directorReviewedAt: row.director_reviewed_at ?? '',
+    accountCode: row.approved_account_code ?? '',
+    expiresAt: row.expires_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 function challengeFromRow(row) {
   if (!row) return undefined;
   return {
@@ -273,6 +294,36 @@ function applicationSelect(whereClause) {
           FROM account_applications application
           LEFT JOIN accounts approved_account ON approved_account.id = application.approved_account_id
           WHERE ${whereClause}`;
+}
+
+function reviewApplicationSelect(whereClause) {
+  return `SELECT application.id, application.application_code, application.department_id,
+                 application.course_id, application.year_level, application.requested_username_normalized,
+                 application.requested_access_json, application.state, application.revision,
+                 application.administrator_reviewed_at, application.director_reviewed_at,
+                 application.expires_at, application.created_at, application.updated_at,
+                 approved_account.access_id_normalized AS approved_account_code
+          FROM account_applications application
+          LEFT JOIN accounts approved_account ON approved_account.id = application.approved_account_id
+          WHERE ${whereClause}`;
+}
+
+function reviewQueueQuery({ states, limit, offset }) {
+  const normalizedStates = Array.isArray(states)
+    ? [...new Set(states.map((stateValue) => String(stateValue ?? '').trim()).filter(Boolean))]
+    : [];
+  if (!normalizedStates.length) throw new Error('At least one account-application review state is required.');
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 101) {
+    throw new Error('Account-application review limit is invalid.');
+  }
+  if (!Number.isSafeInteger(offset) || offset < 0) {
+    throw new Error('Account-application review offset is invalid.');
+  }
+  return { states: normalizedStates, limit, offset };
+}
+
+function reviewQueuePlaceholders(states, start = 1) {
+  return states.map((_, index) => `?${start + index}`).join(', ');
 }
 
 function transitionUpdateStatement(
@@ -519,6 +570,33 @@ export function createD1AccountApplicationRepository(db) {
       );
     },
 
+    async listApplicationsForReview({ states, limit, offset }) {
+      const query = reviewQueueQuery({ states, limit, offset });
+      const placeholders = reviewQueuePlaceholders(query.states);
+      const limitParameter = query.states.length + 1;
+      const offsetParameter = query.states.length + 2;
+      const result = await db
+        .prepare(
+          `${reviewApplicationSelect(`application.state IN (${placeholders})`)}
+           ORDER BY application.created_at ASC, application.id ASC
+           LIMIT ?${limitParameter} OFFSET ?${offsetParameter}`,
+        )
+        .bind(...query.states, query.limit, query.offset)
+        .all();
+      return (result?.results ?? []).map(reviewApplicationFromRow);
+    },
+
+    async getApplicationForReview({ applicationId, states }) {
+      const query = reviewQueueQuery({ states, limit: 1, offset: 0 });
+      const placeholders = reviewQueuePlaceholders(query.states, 2);
+      return reviewApplicationFromRow(
+        await db
+          .prepare(reviewApplicationSelect(`application.id = ?1 AND application.state IN (${placeholders})`))
+          .bind(applicationId, ...query.states)
+          .first(),
+      );
+    },
+
     async getApplicationByStatusTokenDigest(statusTokenDigest, now) {
       return applicationFromRow(
         await db
@@ -564,7 +642,13 @@ export function createD1AccountApplicationRepository(db) {
       };
     },
 
-    async createSubmittedApplication({ application, verificationReceiptDigest, history, audit }) {
+    async createSubmittedApplication({
+      application,
+      verificationReceiptDigest,
+      eligibilityApproved,
+      history,
+      audit,
+    }) {
       await db.batch([
         db
           .prepare(
@@ -581,6 +665,35 @@ export function createD1AccountApplicationRepository(db) {
                AND NOT EXISTS (
                  SELECT 1 FROM account_application_history WHERE idempotency_key = ?4
                )
+               AND ?5 = 1
+               AND NOT EXISTS (
+                 SELECT 1
+                 FROM accounts account
+                 WHERE account.verified_email_fingerprint = ?6
+                   AND account.status IN ('ACTIVE', 'STARTER')
+               )
+               AND NOT EXISTS (
+                 SELECT 1
+                 FROM account_applications existing_application
+                 WHERE existing_application.email_fingerprint = ?6
+                   AND existing_application.state IN (
+                     'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                     'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                   )
+               )
+               AND NOT EXISTS (
+                 SELECT 1 FROM accounts account
+                 WHERE account.username_normalized = ?7
+               )
+               AND NOT EXISTS (
+                 SELECT 1
+                 FROM account_applications existing_application
+                 WHERE existing_application.requested_username_normalized = ?7
+                   AND existing_application.state IN (
+                     'EMAIL_UNVERIFIED', 'DRAFT', 'PENDING_ADMIN_REVIEW', 'CHANGES_REQUESTED',
+                     'PENDING_DIRECTOR_APPROVAL', 'APPROVED_ACTIVATION_REQUIRED'
+                   )
+               )
                THEN 1
                ELSE json_extract('ACCOUNT_APPLICATION_SUBMISSION_GUARD_FAILED', '$')
              END AS allowed`,
@@ -590,6 +703,9 @@ export function createD1AccountApplicationRepository(db) {
             application.createdAt,
             application.clientRequestId,
             history.submission.idempotencyKey,
+            eligibilityApproved ? 1 : 0,
+            application.emailFingerprint,
+            application.requestedUsernameNormalized,
           ),
         db
           .prepare(

@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACCOUNT_APPLICATION_NONTERMINAL_STATES,
+  ACCOUNT_APPLICATION_REVIEW_QUEUE,
   ACCOUNT_APPLICATION_STATE,
   ACCOUNT_APPLICATION_STATES,
   assertAccountApplicationTransition,
   canTransitionAccountApplication,
   publicApplicationStatusDto,
+  redactedReviewApplicationDetailDto,
+  redactedReviewApplicationListDto,
 } from '../../src/server/account-application/contracts.js';
 
 describe('account-application contracts', () => {
@@ -85,5 +88,69 @@ describe('account-application contracts', () => {
       accountCode: 'HAU-SYNTHETIC-001',
       activationReady: true,
     });
+  });
+
+  it('projects only authorized, redacted Administrator and Director review fields', () => {
+    const application = {
+      id: 'APP-SYNTHETIC-001',
+      applicationCode: 'AAP-SYNTHETIC-001',
+      state: ACCOUNT_APPLICATION_STATE.PENDING_DIRECTOR_APPROVAL,
+      revision: 3,
+      departmentId: 'USC-DEPT-DOL',
+      courseId: 'COURSE-SYNTHETIC',
+      yearLevel: 2,
+      requestedUsernameNormalized: 'synthetic.applicant',
+      requestedAccess: {
+        requestedAccountType: 'STAFF',
+        requestedRoleId: 'REQUESTER',
+        requestedCommitteeIds: ['DOL'],
+        requestedWorkspaceIds: ['REQUEST_CENTER'],
+        lendingSelfService: true,
+        internalLendingOperations: false,
+        requestCenterAccess: true,
+        hiddenPolicyInput: 'must-not-leak',
+      },
+      administratorReviewerId: 'ADMIN-NOT-PUBLIC',
+      administratorReviewedAt: '2026-08-03T01:00:00.000Z',
+      directorReviewerId: 'DIRECTOR-NOT-PUBLIC',
+      directorReviewedAt: '',
+      emailFingerprint: 'fp-not-public',
+      protectedEmailEnvelope: 'v1.not-public',
+      protectedProfileEnvelope: 'v1.not-public',
+      pendingPasswordCredential: { hash: 'not-public' },
+      statusTokenDigest: 'digest-not-public',
+      clientRequestId: 'retry-not-public',
+      createdAt: '2026-08-03T00:00:00.000Z',
+      updatedAt: '2026-08-03T01:00:00.000Z',
+      expiresAt: '2026-09-03T00:00:00.000Z',
+    };
+    const list = redactedReviewApplicationListDto(application);
+    const detail = redactedReviewApplicationDetailDto(application);
+
+    expect(ACCOUNT_APPLICATION_REVIEW_QUEUE.ADMINISTRATOR.state).toBe('PENDING_ADMIN_REVIEW');
+    expect(ACCOUNT_APPLICATION_REVIEW_QUEUE.DIRECTOR.state).toBe('PENDING_DIRECTOR_APPROVAL');
+    expect(list).toMatchObject({
+      id: 'APP-SYNTHETIC-001',
+      requestedRoleId: 'REQUESTER',
+      submittedAt: '2026-08-03T00:00:00.000Z',
+    });
+    expect(detail).toMatchObject({
+      requestedUsername: 'synthetic.applicant',
+      requestedAccess: { requestedCommitteeIds: ['DOL'], requestedWorkspaceIds: ['REQUEST_CENTER'] },
+      review: { administrator: { completed: true }, director: { completed: false } },
+    });
+    const serialized = JSON.stringify({ list, detail });
+    for (const forbidden of [
+      'ADMIN-NOT-PUBLIC',
+      'DIRECTOR-NOT-PUBLIC',
+      'fp-not-public',
+      'v1.not-public',
+      'not-public',
+      'digest-not-public',
+      'retry-not-public',
+      'must-not-leak',
+    ]) {
+      expect(serialized).not.toContain(forbidden);
+    }
   });
 });
