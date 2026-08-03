@@ -1,6 +1,6 @@
 # v0.7.2 Source Map and Contract Lock
 
-Status: `LOCKED_FOR_FIRST_READ_ONLY_MAPPING_WAVE`
+Status: `MAPPING_ACCEPTED - FIRST_IMPLEMENTATION_WAVE_READY`
 
 Date: 2026-08-03 (Asia/Manila)
 
@@ -410,3 +410,99 @@ gaps, contract risks, and a recommended non-overlapping implementation slice.
 It must not edit files, spawn another agent, expose private data, or broaden
 scope. Parent acceptance requires evidence against exact SHA
 `39ea6a285c3d52fd0da3fbabadf52f66c66481bc`.
+
+## 10. First-wave mapper reconciliation
+
+All three read-only mappers completed against clean, upstream-aligned
+`f81c8f2415df5bc50b44eb6295b205aac35ec01b`. No mapper edited files or ran an
+external write. Parent review accepts the following additional exact-source
+facts.
+
+### 10.1 Identity and access findings
+
+- Current starter activation marks a user-entered profile email verified
+  without an email-ownership challenge or protected roster match. It cannot be
+  reused as the v0.7.2 verification proof.
+- `access_id_normalized` currently serves as both mutable login identifier and
+  displayed operational code. The v0.7.2 migration/service split is required
+  before ordinary Access-ID rename can be retired.
+- Access directory DTOs target mutable Access ID and omit opaque account ID and
+  revision. v0.7.2 mutations must target opaque account ID plus expected
+  revision.
+- `createD1AuthRepository.runTransaction` is only a callback wrapper, not an
+  atomic D1 transaction. Application approval and activation require explicit
+  guarded batch/state transitions.
+- Current access-policy update executes the guarded account update and
+  dependent committee/profile/session/history/audit statements in one batch,
+  then checks the first result. A stale zero-row update can therefore allow
+  dependent writes before the conflict is reported. Repair must use a
+  fail-before-write guard pattern.
+- Last-active-Administrator protection counts before mutation. Concurrent
+  demotions of different Administrators can both pass. The data layer needs an
+  atomic invariant/guard and concurrency proof.
+- Login limiter keys can persist a normalized full email. New and repaired
+  login/verification limiter keys use a keyed fingerprint rather than the raw
+  identifier.
+- Login-identifier resolution needs explicit collision prevention and
+  precedence across username, account code, and uniquely verified email.
+
+### 10.2 Operations findings
+
+- Public Request already distinguishes `EVENT_LOGISTICS` and
+  `CATALOG_RESTOCK`, but authenticated Request is event-only/free-text. The
+  locked v0.7.2 purpose contract must converge these paths without removing
+  accepted detailed event choices.
+- The client hides irrelevant public Request fields, but the server does not
+  reject contradictory hidden-branch payloads.
+- Several services use permissive `Number(...)` parsing. Scientific/coercible
+  input and measured fractions remain possible outside countable units.
+- Existing `reorder_threshold` is not an explicit low-stock enablement model.
+  Default/zero values can be presented as meaningful; the new opt-in fields and
+  warning-only relevance rules are required.
+- Public Lending creates a receipt digest but exposes no working private status
+  token or tracking service/route. v0.7.2 must restore a usable non-enumerable
+  tracking lifecycle while preserving no submission-time stock movement.
+- Internal Lending, Release, correction, return, cycle-count, and ledger paths
+  preserve the accepted append-only movement invariants and require focused
+  regression proof rather than redesign.
+
+### 10.3 Link, Announcement, and UI findings
+
+- The production “Link Registry” control is confirmed dead/mislabeled: it opens
+  a generic route to a missing Worker operation and represents operational
+  routing rather than useful HTTPS links. The dedicated v0.7.2 D1 service and
+  route are mandatory.
+- Announcements have a working D1/R2/Worker base, but lack explicit preview,
+  audience, revision, expected-revision concurrency, and named pause/resume
+  behavior.
+- Announcement order uses permissive numeric parsing. Editing an archived row
+  can silently clear `archived_at`, and post-commit failure deleting replaced
+  R2 media can report a false failure while leaving an orphan. The repair must
+  classify restore explicitly and treat stale-object cleanup as non-authoritative
+  follow-up rather than replaying the canonical mutation.
+- Announcement carousel autoplay updates a polite live region without a visible
+  pause control. Some indicators/mini controls are below the intended touch
+  target, and current browser coverage omits 820 px and 200% zoom.
+- The authoritative visual/build pipeline is shared and deterministic; all UI
+  work continues from source and the parent regenerates derived artifacts.
+
+### 10.4 Accepted first writer-wave boundaries
+
+```text
+IDENTITY-CORE
+  new account-application contracts/service/provider-interface/repository/tests
+
+OPERATIONS-DOMAIN
+  new strict operational-integer and request-purpose domains/tests
+
+REFERENCE-LINK-SERVER
+  new Link Registry service/repository/tests
+
+PARENT
+  migration 0030, permissions, Worker routes, shared auth/contracts/adapters,
+  access hardening, integration, registry/status, and verification
+```
+
+Each writer uses an isolated worktree from the same accepted exact base. No two
+writers own the same file, and no child may edit parent-reserved integration
+files or spawn grandchildren.

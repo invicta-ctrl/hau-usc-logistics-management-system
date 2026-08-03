@@ -10,7 +10,7 @@ RISK: critical because identity, authorization, migration, providers, and produc
 DELIVERABLE: exact reviewed v0.7.2 candidate, isolated pre-production acceptance, owner-gated production rollout, reconciliation, and durable handoff
 VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
 STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1; absent exact production phrase
-STATUS: CONTRACT_LOCKED_FIRST_READ_ONLY_MAPPING_WAVE_READY
+STATUS: MAPPING_ACCEPTED_FIRST_ISOLATED_IMPLEMENTATION_WAVE_READY
 
 Starting SHA: `589970d31d0dab4fe876107276d9b808eb44b9c3`
 
@@ -19,11 +19,10 @@ Branch: `release/v0.7.2-production-access-operations`
 Accepted specification:
 `.codex/specs/v0.7.2-production-access-operations.md`
 
-Current exact action: run the three read-only tasks in
-`.codex/V0_7_2_TASK_REGISTRY.md` against exact checkpoint `39ea6a2`, review the
-results against `.codex/V0_7_2_SOURCE_MAP_AND_CONTRACT_LOCK.md`, update the
-registry to accepted/rejected truth, and start only the first implementation
-slice whose dependencies and file ownership are then confirmed.
+Current exact action: create three isolated worktrees from the accepted mapping
+checkpoint for `IDENTITY-CORE`, `OPERATIONS-DOMAIN`, and
+`REFERENCE-LINK-SERVER`; keep migration 0030 and all shared integration under
+the parent; review, test, and integrate one child commit at a time.
 
 Concurrency: no more than three child tasks are possible alongside the parent in
 this environment, despite the owner's higher ceiling. Children may not spawn

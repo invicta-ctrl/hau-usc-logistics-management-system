@@ -3,7 +3,7 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `CONTRACT_LOCKED - FIRST_READ_ONLY_MAPPING_WAVE_READY`.
+- Status: `MAPPING_ACCEPTED - FIRST_ISOLATED_IMPLEMENTATION_WAVE_READY`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
 - Starting clean `main` / `origin/main` SHA:
   `589970d31d0dab4fe876107276d9b808eb44b9c3`.
@@ -11,10 +11,9 @@
   `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
 - Accepted specification:
   `.codex/specs/v0.7.2-production-access-operations.md`.
-- Current work unit: run and review the three read-only mapper tasks recorded in
-  `.codex/V0_7_2_TASK_REGISTRY.md`, reconcile their exact-source findings into
-  `.codex/V0_7_2_SOURCE_MAP_AND_CONTRACT_LOCK.md`, and begin only the first
-  accepted dependency-ready implementation slice.
+- Current work unit: run the three non-overlapping isolated writer tasks in
+  `.codex/V0_7_2_TASK_REGISTRY.md` while the parent owns migration 0030 and
+  shared integration; then review and integrate one exact result at a time.
 - Concurrency: the owner-approved ceiling is 16 children; the current runtime
   supports three children plus the parent, so three is the practical maximum.
   Children must not spawn grandchildren.

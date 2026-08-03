@@ -4,7 +4,7 @@ Updated: 2026-08-03 (Asia/Manila)
 
 Parent integration branch: `release/v0.7.2-production-access-operations`
 
-Parent checkpoint SHA: `39ea6a285c3d52fd0da3fbabadf52f66c66481bc`
+Parent checkpoint SHA: `f81c8f2415df5bc50b44eb6295b205aac35ec01b`
 
 Owner child ceiling: 16
 
@@ -21,9 +21,9 @@ or `CANCELLED`.
 
 | ID | Class | Status | Mode | Objective | Read scope | Write ownership | Acceptance |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| MAP-IDENTITY | Explorer | PLANNED | Read only | Verify authentication, account application, access, profile, roster, migration, and directly covering test paths against the locked contract. | Auth/access/identity server, Worker routes, auth UI/client, relevant migrations/tests | None | Exact source map, gaps, risks, recommended implementation boundary |
-| MAP-OPERATIONS | Explorer | PLANNED | Read only | Verify Request purpose, strict integer, low stock, public/internal Lending, Release, return, and inventory paths. | Request/Lending/Inventory/Release domain, service, UI, adapter, migration, and tests | None | Exact source map, invariants, gaps, recommended implementation boundary |
-| MAP-REFERENCE-UI | Explorer | PLANNED | Read only | Verify Link Registry, Announcement, critical UI, generated pipeline, accessibility, and directly covering test paths. | Reference/advertisement services, UI/views/styles, adapters, build pipeline, browser/unit tests | None | Exact source map, dead/partial controls, test/a11y gaps, recommended boundary |
+| MAP-IDENTITY | Explorer | ACCEPTED | Read only | Verify authentication, account application, access, profile, roster, migration, and directly covering test paths against the locked contract. | Auth/access/identity server, Worker routes, auth UI/client, relevant migrations/tests | None | Exact clean source map accepted; application/profile absent; activation, concurrency, targeting, limiter, and access-separation gaps recorded |
+| MAP-OPERATIONS | Explorer | ACCEPTED | Read only | Verify Request purpose, strict integer, low stock, public/internal Lending, Release, return, and inventory paths. | Request/Lending/Inventory/Release domain, service, UI, adapter, migration, and tests | None | Exact clean source map accepted; purpose, hidden-field, integer, low-stock, and public-tracking gaps recorded |
+| MAP-REFERENCE-UI | Explorer | ACCEPTED | Read only | Verify Link Registry, Announcement, critical UI, generated pipeline, accessibility, and directly covering test paths. | Reference/advertisement services, UI/views/styles, adapters, build pipeline, browser/unit tests | None | Exact clean source map accepted; dead production Link Registry and Announcement/a11y gaps recorded |
 
 ## Parent-owned active work
 
@@ -47,6 +47,14 @@ or `CANCELLED`.
 | FREEZE-R2 | All implementation slices | Full repository gate, Hallmark audit, security/migration/accessibility review, R2 |
 | PREPROD | FREEZE-R2 + private provider/identity config | Isolated migration, complete acceptance matrix, recovery/rollback, reconciliation |
 | PROD-GO | PREPROD | Exact-candidate GO package; wait for exact owner phrase |
+
+## First isolated writer wave
+
+| ID | Status | Exact base | Isolated ownership | Required verification |
+| --- | --- | --- | --- | --- |
+| IDENTITY-CORE | PLANNED | Resulting accepted mapping checkpoint | New `src/server/account-application/*`, new D1 repository, new focused tests only | State/transition, replay, revision, privacy, enumeration, and repository-contract tests |
+| OPERATIONS-DOMAIN | PLANNED | Resulting accepted mapping checkpoint | New `src/domain/operational-integers.js`, `src/domain/request-purpose.js`, new focused tests only | Strict integer matrix and contradictory request-branch validation |
+| REFERENCE-LINK-SERVER | PLANNED | Resulting accepted mapping checkpoint | New Link Registry service/repository and new focused tests only | URL/access/state/version/revision/idempotency/privacy tests |
 
 ## Integration rules
 
