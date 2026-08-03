@@ -4,8 +4,8 @@
 
 - Program: HAU-USC Logistics v0.7.1 production recovery.
 - Status: specification accepted; routing/TOML preflight and read-only
-  production truth audit passed; Slices 2 through 5 are accepted; Canvass and
-  Inventory readiness is active.
+  production truth audit passed; Slices 2 through 6 are accepted; wording,
+  naming, and Hallmark-bounded polish is active.
 - Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
   `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
 - Active specification:
@@ -40,7 +40,15 @@
   passed 527 tests, focused browser and Worker proofs, all repository gates,
   and a fresh exact-head review with no P0-P3. Handoff:
   `.codex/V0_7_1_SLICE_5_WORKSPACE_QUANTITY_DIRTY_HANDOFF.md`.
-- Active next slice: Canvass and Inventory readiness.
+- Accepted Slice 6 repair:
+  `55930e5fec7b0f359a77df0a6f9a8e7cfae1b92c`; governed Canvass lifecycle,
+  exclusive preferred decisions, retry-stable archive, complete active
+  Inventory catalog, bounded history projections, governed catalog mutations,
+  and atomic fail-closed bulk classification passed 551 tests, focused mobile
+  Worker proof, all repository gates, and the P1-triggered fresh re-review with
+  no P0-P3. Handoff:
+  `.codex/V0_7_1_SLICE_6_CANVASS_INVENTORY_HANDOFF.md`.
+- Active next slice: wording, naming, and Hallmark-bounded polish.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.

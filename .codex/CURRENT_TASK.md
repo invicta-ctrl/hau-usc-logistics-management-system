@@ -2,21 +2,22 @@
 
 INTENT: PRODUCTION RECOVERY
 MODE: execute bounded v0.7.1 slices
-TARGET: canonical workspace routing, integer quantities, borrower selector, and dirty-form protection
+TARGET: centralized wording, naming, and Hallmark-bounded recovery polish
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
-RISK: high
-DELIVERABLE: canonical route-derived workspace state, whole-number countable quantities, accessible borrower selection, and complete unsaved-change interception
-VERIFICATION: focused route/quantity/borrower/dirty-state tests; protected browser journeys; repository-required gates; exact base/head review
+RISK: medium
+DELIVERABLE: user-facing labels and bounded presentation polish without changing routes, authorization, workflows, information architecture, or internal status values
+VERIFICATION: focused wording/accessibility/responsive tests; protected browser journeys; repository-required gates; exact base/head review
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted previous slice: Staff Directory and Access Management recovery at
-`6bec7d9be355b556fe0d93143a85127a99dd9740`; full `npm run check` passes 78
-files / 513 tests, focused real Worker/UI proofs pass, generated parity passes,
-and the P1-triggered fresh re-review reports no P0-P3.
+Accepted previous slice: Canvass and Inventory readiness at
+`55930e5fec7b0f359a77df0a6f9a8e7cfae1b92c`; full `npm run check` passes 85
+files / 551 tests, focused Canvass/Inventory Worker and mobile proofs pass,
+generated parity passes, and the P1-triggered fresh re-review reports no
+P0-P3.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data
