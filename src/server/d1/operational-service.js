@@ -35,6 +35,8 @@ const METHOD_CAPABILITIES = Object.freeze({
   reviewRequest: CAPABILITIES.REQUEST_REVIEW,
   reserveStock: CAPABILITIES.FULFILL_RESERVE,
   saveCanvassReference: CAPABILITIES.FULFILL_CANVASS,
+  updateCanvassReference: CAPABILITIES.FULFILL_CANVASS,
+  archiveCanvassReference: CAPABILITIES.FULFILL_PROCURE,
   getMaterialsWorkQueue: CAPABILITIES.VIEW_INTERNAL,
   selectPreferredCanvass: CAPABILITIES.FULFILL_PROCURE,
   transitionDeliverable: CAPABILITIES.FULFILL_PROCURE,
@@ -128,6 +130,54 @@ const optionalText = (value, max = 500) =>
   String(value ?? '')
     .trim()
     .slice(0, max);
+
+const canvassUnit = (value) => {
+  const unit = requiredText(value, 'unit', 40).toLowerCase();
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', 'Select a supported quantity unit.', {
+      details: { field: 'unit' },
+    });
+  }
+  return unit;
+};
+
+const canvassCheckedAt = (value) => {
+  const text = requiredText(value, 'checkedAt', 64);
+  const parsed = new Date(text);
+  const calendarDate = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/u.exec(text);
+  const calendarCheck = calendarDate
+    ? new Date(Date.UTC(Number(calendarDate[1]), Number(calendarDate[2]) - 1, Number(calendarDate[3])))
+    : null;
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    (calendarDate &&
+      (calendarCheck.getUTCFullYear() !== Number(calendarDate[1]) ||
+        calendarCheck.getUTCMonth() + 1 !== Number(calendarDate[2]) ||
+        calendarCheck.getUTCDate() !== Number(calendarDate[3])))
+  ) {
+    throw new ApiError('VALIDATION_FAILED', 'checkedAt must be a real date.', {
+      details: { field: 'checkedAt' },
+    });
+  }
+  return text;
+};
+
+const safeCanvassSourceUrl = (value) => {
+  const text = optionalText(value, 500);
+  if (!text) return '';
+  try {
+    const parsed = new URL(text);
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password)
+      throw new Error();
+  } catch {
+    throw new ApiError(
+      'VALIDATION_FAILED',
+      'sourceUrl must be a safe http(s) URL without embedded credentials.',
+      { details: { field: 'sourceUrl' } },
+    );
+  }
+  return text;
+};
 
 const positiveNumber = (value, field = 'quantity') => {
   const result = Number(value);
@@ -1004,6 +1054,34 @@ export const parseHistoryMetadata = (value) => {
   }
 };
 
+const canvassDto = (row) => {
+  const preferredMetadata = parseHistoryMetadata(row.preferred_metadata_json);
+  return {
+    id: row.id,
+    linkedLineIds: row.linked_request_line_id ? [row.linked_request_line_id] : [],
+    linkedDeliverableId: row.linked_deliverable_id ?? '',
+    linkedRestockId: row.linked_restock_id ?? '',
+    supplierId: row.supplier_id ?? '',
+    supplierName: row.supplier_name,
+    itemSpec: row.item_spec,
+    price: Number(row.price ?? 0),
+    unit: row.unit,
+    receiptStatus: row.receipt_status,
+    reliability: row.reliability,
+    checkedAt: row.checked_at,
+    sourceUrl: row.source_url,
+    evidenceId: row.evidence_id ?? '',
+    preferred: row.preferred === 1,
+    preferredRationale: row.preferred === 1 ? (preferredMetadata.rationale ?? '') : '',
+    status: row.status,
+    priceHistory: parseJsonArray(row.price_history_json),
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    createdBy: row.created_by,
+  };
+};
+
 const eventActivityDto = (row) => ({
   id: row.id,
   code: row.code || '',
@@ -1545,14 +1623,21 @@ export function createD1OperationalService({
              LIMIT ?${restockLimitIndex} OFFSET ?${restockLimitIndex + 1}`,
             [...restockScope.values, page.pageSize, page.offset],
           ),
-          canvassReferences: await rows(
-            db,
-            `SELECT canvass.* FROM canvass_references canvass
+          canvassReferences: (
+            await rows(
+              db,
+              `SELECT canvass.*,
+                (SELECT history.metadata_json FROM status_history history
+                 WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
+                   AND json_extract(history.metadata_json, '$.preferred') = 1
+                 ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
+               FROM canvass_references canvass
              JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
              WHERE ${restockScope.sql} ORDER BY canvass.updated_at DESC
              LIMIT ?${restockLimitIndex} OFFSET ?${restockLimitIndex + 1}`,
-            [...restockScope.values, page.pageSize, page.offset],
-          ),
+              [...restockScope.values, page.pageSize, page.offset],
+            )
+          ).map(canvassDto),
         };
       } else if (module === 'procurement') {
         const deliverableScope = multiScopeWhere(account, {
@@ -1589,9 +1674,15 @@ export function createD1OperationalService({
              LIMIT ?${deliverableLimitIndex} OFFSET ?${deliverableLimitIndex + 1}`,
             [...deliverableScope.values, page.pageSize, page.offset],
           ),
-          canvassReferences: await rows(
-            db,
-            `SELECT canvass.* FROM canvass_references canvass
+          canvassReferences: (
+            await rows(
+              db,
+              `SELECT canvass.*,
+                (SELECT history.metadata_json FROM status_history history
+                 WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
+                   AND json_extract(history.metadata_json, '$.preferred') = 1
+                 ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
+               FROM canvass_references canvass
              LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
              LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
              LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id
@@ -1600,8 +1691,9 @@ export function createD1OperationalService({
              WHERE ${canvassScope.sql}
              ORDER BY canvass.updated_at DESC
              LIMIT ?${canvassLimitIndex} OFFSET ?${canvassLimitIndex + 1}`,
-            [...canvassScope.values, page.pageSize, page.offset],
-          ),
+              [...canvassScope.values, page.pageSize, page.offset],
+            )
+          ).map(canvassDto),
         };
       } else if (module === 'overview') {
         const eventScope = multiScopeWhere(account, { committeeColumns: ['event.owner_committee_id'] });
@@ -2228,125 +2320,8 @@ export function createD1OperationalService({
     return result;
   }
 
-  async function saveCanvassReference({ account, command, correlationId }) {
-    assertCapability(account, METHOD_CAPABILITIES.saveCanvassReference);
-    const link = await canvassLinkContext(command);
-    assertEntityScope(account, {
-      committeeId: link.record.committee_id,
-      ownerAccountId: link.record.owner_account_id,
-    });
-    const evidenceId = await requireStoredEvidence(command, {
-      evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
-      relatedEntityIds: [link.linkedRequestLineId, link.linkedDeliverableId, link.linkedRestockId],
-    });
-    const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
-    if (mutation.replayed) return mutation.value;
-    const supplierName = requiredText(command.supplierName, 'supplierName', 160);
-    const normalizedName = supplierName.toLowerCase().replace(/\s+/gu, ' ');
-    let supplier = command.supplierId
-      ? await db
-          .prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1')
-          .bind(command.supplierId)
-          .first()
-      : await db
-          .prepare(
-            'SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1',
-          )
-          .bind(normalizedName)
-          .first();
-    if (command.supplierId && !supplier) {
-      throw new ApiError('SUPPLIER_NOT_FOUND', 'The selected supplier was not found.', { status: 404 });
-    }
-    const timestamp = nowIso();
-    const supplierId = supplier?.id ?? createId('SUP');
-    const canvassId = createId('CAN');
-    const price = nonNegativeNumber(command.price, 'price');
-    const checkedAt = optionalText(command.checkedAt, 64) || timestamp;
-    const result = {
-      canvassId,
-      id: canvassId,
-      supplierId,
-      linkedRequestLineId: link.linkedRequestLineId || null,
-      status: 'ACTIVE',
-      correlationId,
-    };
-    const statements = [];
-    if (!supplier) {
-      statements.push(
-        db
-          .prepare(
-            `INSERT INTO suppliers (
-               id, name, normalized_name, location, receipt_capability, reliability,
-               active, notes, created_at, updated_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?8, ?8)`,
-          )
-          .bind(
-            supplierId,
-            supplierName,
-            normalizedName,
-            optionalText(command.location, 240),
-            optionalText(command.receiptStatus, 80),
-            optionalText(command.reliability, 80),
-            optionalText(command.supplierNotes, 500),
-            timestamp,
-          ),
-      );
-    }
-    statements.push(
-      db
-        .prepare(
-          `INSERT INTO canvass_references (
-             id, linked_request_line_id, linked_deliverable_id, linked_restock_id,
-             supplier_id, supplier_name, item_spec, price, unit, receipt_status,
-             reliability, checked_at, source_url, evidence_id, preferred, status,
-             price_history_json, idempotency_key, notes, created_at, updated_at, created_by
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
-             ?13, ?14, 0, 'ACTIVE', ?15, ?16, ?17, ?18, ?18, ?19)`,
-        )
-        .bind(
-          canvassId,
-          link.linkedRequestLineId || null,
-          link.linkedDeliverableId || null,
-          link.linkedRestockId || null,
-          supplierId,
-          supplierName,
-          requiredText(command.itemSpec, 'itemSpec', 500),
-          price,
-          requiredText(command.unit, 'unit', 40),
-          optionalText(command.receiptStatus, 80),
-          optionalText(command.reliability, 80),
-          checkedAt,
-          optionalText(command.sourceUrl, 500),
-          evidenceId,
-          JSON.stringify([{ price, checkedAt }]),
-          mutation.key,
-          optionalText(command.notes, 1000),
-          timestamp,
-          account.id,
-        ),
-      auditStatement(db, {
-        action: 'CANVASS_REFERENCE_SAVED',
-        entityType: 'CANVASS',
-        entityId: canvassId,
-        accountId: account.id,
-        correlationId,
-        after: {
-          linkedRequestLineId: link.linkedRequestLineId || null,
-          linkedDeliverableId: link.linkedDeliverableId || null,
-          linkedRestockId: link.linkedRestockId || null,
-        },
-      }),
-      idempotencyStatement(db, 'saveCanvassReference', mutation, account.id, result),
-      ...revisionStatements(db, ['procurement', 'restocking']),
-    );
-    await db.batch(statements);
-    return result;
-  }
-
-  async function selectPreferredCanvass({ account, command, correlationId }) {
-    assertCapability(account, METHOD_CAPABILITIES.selectPreferredCanvass);
-    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
-    const canvass = await db
+  async function canvassRecord(canvassId, { activeOnly = true } = {}) {
+    return db
       .prepare(
         `SELECT canvass.*,
            COALESCE(deliverable.assigned_committee_id, deliverable_request.owner_committee_id,
@@ -2360,13 +2335,410 @@ export function createD1OperationalService({
          LEFT JOIN requests line_request ON line_request.id = line.request_id
          LEFT JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
          LEFT JOIN requests restock_request ON restock_request.id = restock.source_request_id
-         WHERE canvass.id = ?1 AND canvass.status = 'ACTIVE'`,
+         WHERE canvass.id = ?1 ${activeOnly ? "AND canvass.status = 'ACTIVE'" : ''}`,
       )
       .bind(canvassId)
       .first();
-    if (!canvass) {
-      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+  }
+
+  async function assertNoCanvassDuplicate(candidate, excludedId = '') {
+    const duplicate = await db
+      .prepare(
+        `SELECT id FROM canvass_references
+         WHERE status = 'ACTIVE' AND id <> ?1
+           AND COALESCE(linked_request_line_id, '') = ?2
+           AND COALESCE(linked_deliverable_id, '') = ?3
+           AND COALESCE(linked_restock_id, '') = ?4
+           AND LOWER(TRIM(supplier_name)) = ?5
+           AND LOWER(TRIM(item_spec)) = ?6
+           AND LOWER(TRIM(unit)) = ?7
+           AND checked_at = ?8
+         LIMIT 1`,
+      )
+      .bind(
+        excludedId,
+        candidate.linkedRequestLineId || '',
+        candidate.linkedDeliverableId || '',
+        candidate.linkedRestockId || '',
+        candidate.supplierName.toLowerCase(),
+        candidate.itemSpec.toLowerCase(),
+        candidate.unit.toLowerCase(),
+        candidate.checkedAt,
+      )
+      .first();
+    if (duplicate) {
+      throw new ApiError('CANVASS_DUPLICATE', 'An active matching canvass reference already exists.', {
+        status: 409,
+      });
     }
+  }
+
+  async function resolveCanvassSupplier(command, current = null) {
+    const requestedSupplierId = optionalText(command.supplierId, 80);
+    let supplier = requestedSupplierId
+      ? await db
+          .prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1')
+          .bind(requestedSupplierId)
+          .first()
+      : null;
+    if (requestedSupplierId && !supplier) {
+      throw new ApiError('SUPPLIER_NOT_FOUND', 'The selected supplier was not found.', { status: 404 });
+    }
+    const supplierName =
+      supplier?.name ?? requiredText(command.supplierName ?? current?.supplier_name, 'supplierName', 160);
+    const normalizedName = supplierName.toLowerCase().replace(/\s+/gu, ' ');
+    supplier ??= await db
+      .prepare(
+        'SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1',
+      )
+      .bind(normalizedName)
+      .first();
+    return { supplier, supplierName: supplier?.name ?? supplierName, normalizedName };
+  }
+
+  async function saveCanvassReference({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.saveCanvassReference);
+    const link = await canvassLinkContext(command);
+    assertEntityScope(account, {
+      committeeId: link.record.committee_id,
+      ownerAccountId: link.record.owner_account_id,
+    });
+    const evidenceId = await requireStoredEvidence(command, {
+      evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
+      relatedEntityIds: [link.linkedRequestLineId, link.linkedDeliverableId, link.linkedRestockId],
+    });
+    const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const supplierResolution = await resolveCanvassSupplier(command);
+    const timestamp = nowIso();
+    const supplierId = supplierResolution.supplier?.id ?? createId('SUP');
+    const canvassId = createId('CAN');
+    const candidate = {
+      linkedRequestLineId: link.linkedRequestLineId || '',
+      linkedDeliverableId: link.linkedDeliverableId || '',
+      linkedRestockId: link.linkedRestockId || '',
+      supplierName: supplierResolution.supplierName,
+      itemSpec: requiredText(command.itemSpec, 'itemSpec', 500).replace(/\s+/gu, ' '),
+      price: positiveNumber(command.price, 'price'),
+      unit: canvassUnit(command.unit),
+      receiptStatus: optionalText(command.receiptStatus, 80),
+      reliability: optionalText(command.reliability, 80),
+      checkedAt: canvassCheckedAt(command.checkedAt),
+      sourceUrl: safeCanvassSourceUrl(command.sourceUrl),
+      notes: optionalText(command.notes, 1000),
+    };
+    await assertNoCanvassDuplicate(candidate);
+    const priceHistory = [
+      {
+        price: candidate.price,
+        checkedAt: candidate.checkedAt,
+        recordedAt: timestamp,
+        recordedBy: account.id,
+      },
+    ];
+    const result = {
+      canvassId,
+      id: canvassId,
+      supplierId,
+      linkedRequestLineId: candidate.linkedRequestLineId || null,
+      status: 'ACTIVE',
+      updatedAt: timestamp,
+      correlationId,
+    };
+    const statements = [];
+    if (!supplierResolution.supplier) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO suppliers (
+               id, name, normalized_name, location, receipt_capability, reliability,
+               active, notes, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, ?7, ?8, ?8)`,
+          )
+          .bind(
+            supplierId,
+            candidate.supplierName,
+            supplierResolution.normalizedName,
+            optionalText(command.location, 240),
+            candidate.receiptStatus,
+            candidate.reliability,
+            optionalText(command.supplierNotes, 500),
+            timestamp,
+          ),
+      );
+    }
+    const after = {
+      ...candidate,
+      supplierId,
+      evidenceId,
+      preferred: false,
+      status: 'ACTIVE',
+      updatedAt: timestamp,
+    };
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO canvass_references (
+             id, linked_request_line_id, linked_deliverable_id, linked_restock_id,
+             supplier_id, supplier_name, item_spec, price, unit, receipt_status,
+             reliability, checked_at, source_url, evidence_id, preferred, status,
+             price_history_json, idempotency_key, notes, created_at, updated_at, created_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12,
+             ?13, ?14, 0, 'ACTIVE', ?15, ?16, ?17, ?18, ?18, ?19)`,
+        )
+        .bind(
+          canvassId,
+          candidate.linkedRequestLineId || null,
+          candidate.linkedDeliverableId || null,
+          candidate.linkedRestockId || null,
+          supplierId,
+          candidate.supplierName,
+          candidate.itemSpec,
+          candidate.price,
+          candidate.unit,
+          candidate.receiptStatus,
+          candidate.reliability,
+          candidate.checkedAt,
+          candidate.sourceUrl,
+          evidenceId,
+          JSON.stringify(priceHistory),
+          mutation.key,
+          candidate.notes,
+          timestamp,
+          account.id,
+        ),
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        newStatus: 'ACTIVE',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: 'Canvass reference created',
+        metadata: { before: null, after },
+      }),
+      auditStatement(db, {
+        action: 'CANVASS_REFERENCE_SAVED',
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        accountId: account.id,
+        correlationId,
+        after,
+      }),
+      idempotencyStatement(db, 'saveCanvassReference', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'restocking']),
+    );
+    await db.batch(statements);
+    return result;
+  }
+
+  async function updateCanvassReference({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.updateCanvassReference);
+    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+    assertEntityScope(account, {
+      committeeId: canvass.committee_id,
+      ownerAccountId: canvass.owner_account_id,
+    });
+    const mutation = await replay(db, 'updateCanvassReference', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 64);
+    if (expectedUpdatedAt !== canvass.updated_at) {
+      throw new ApiError('REVISION_CONFLICT', 'This canvass reference changed; refresh before updating.', {
+        status: 409,
+      });
+    }
+    const supplierResolution = await resolveCanvassSupplier(command, canvass);
+    const evidenceId =
+      (await requireStoredEvidence(command, {
+        evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
+        relatedEntityIds: [
+          canvass.linked_request_line_id,
+          canvass.linked_deliverable_id,
+          canvass.linked_restock_id,
+        ],
+      })) ?? canvass.evidence_id;
+    const candidate = {
+      linkedRequestLineId: canvass.linked_request_line_id || '',
+      linkedDeliverableId: canvass.linked_deliverable_id || '',
+      linkedRestockId: canvass.linked_restock_id || '',
+      supplierName: supplierResolution.supplierName,
+      itemSpec: requiredText(command.itemSpec ?? canvass.item_spec, 'itemSpec', 500).replace(/\s+/gu, ' '),
+      price: positiveNumber(command.price ?? canvass.price, 'price'),
+      unit: canvassUnit(command.unit ?? canvass.unit),
+      receiptStatus: optionalText(command.receiptStatus ?? canvass.receipt_status, 80),
+      reliability: optionalText(command.reliability ?? canvass.reliability, 80),
+      checkedAt: canvassCheckedAt(command.checkedAt ?? canvass.checked_at),
+      sourceUrl: safeCanvassSourceUrl(command.sourceUrl ?? canvass.source_url),
+      notes: optionalText(command.notes ?? canvass.notes, 1000),
+    };
+    await assertNoCanvassDuplicate(candidate, canvassId);
+    const timestamp = nowIso();
+    const supplierId = supplierResolution.supplier?.id ?? createId('SUP');
+    const priceHistory = parseJsonArray(canvass.price_history_json);
+    if (Number(canvass.price) !== candidate.price || canvass.checked_at !== candidate.checkedAt) {
+      priceHistory.push({
+        price: candidate.price,
+        checkedAt: candidate.checkedAt,
+        recordedAt: timestamp,
+        recordedBy: account.id,
+      });
+    }
+    const after = {
+      ...candidate,
+      supplierId,
+      evidenceId,
+      preferred: canvass.preferred === 1,
+      status: 'ACTIVE',
+      updatedAt: timestamp,
+    };
+    const result = { canvassId, id: canvassId, updatedAt: timestamp, correlationId };
+    const statements = [];
+    if (!supplierResolution.supplier) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO suppliers (
+               id, name, normalized_name, location, receipt_capability, reliability,
+               active, notes, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, '', ?7, ?7)`,
+          )
+          .bind(
+            supplierId,
+            candidate.supplierName,
+            supplierResolution.normalizedName,
+            optionalText(command.location, 240),
+            candidate.receiptStatus,
+            candidate.reliability,
+            timestamp,
+          ),
+      );
+    }
+    statements.push(
+      db
+        .prepare(
+          `UPDATE canvass_references SET supplier_id = ?1, supplier_name = ?2, item_spec = ?3,
+             price = ?4, unit = ?5, receipt_status = ?6, reliability = ?7, checked_at = ?8,
+             source_url = ?9, evidence_id = ?10, price_history_json = ?11, notes = ?12, updated_at = ?13
+           WHERE id = ?14 AND updated_at = ?15`,
+        )
+        .bind(
+          supplierId,
+          candidate.supplierName,
+          candidate.itemSpec,
+          candidate.price,
+          candidate.unit,
+          candidate.receiptStatus,
+          candidate.reliability,
+          candidate.checkedAt,
+          candidate.sourceUrl,
+          evidenceId,
+          JSON.stringify(priceHistory),
+          candidate.notes,
+          timestamp,
+          canvassId,
+          expectedUpdatedAt,
+        ),
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        previousStatus: 'ACTIVE',
+        newStatus: 'ACTIVE',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason, 500) || 'Canvass reference updated',
+        metadata: { before: canvassDto(canvass), after },
+      }),
+      auditStatement(db, {
+        action: 'CANVASS_REFERENCE_UPDATED',
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        accountId: account.id,
+        correlationId,
+        before: canvassDto(canvass),
+        after,
+      }),
+      idempotencyStatement(db, 'updateCanvassReference', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'restocking']),
+    );
+    await db.batch(statements);
+    return result;
+  }
+
+  async function archiveCanvassReference({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.archiveCanvassReference);
+    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+    assertEntityScope(account, {
+      committeeId: canvass.committee_id,
+      ownerAccountId: canvass.owner_account_id,
+    });
+    const mutation = await replay(
+      db,
+      'archiveCanvassReference',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 64);
+    if (expectedUpdatedAt !== canvass.updated_at) {
+      throw new ApiError('REVISION_CONFLICT', 'This canvass reference changed; refresh before archiving.', {
+        status: 409,
+      });
+    }
+    if (canvass.preferred === 1) {
+      throw new ApiError(
+        'PREFERRED_CANVASS_ARCHIVE_BLOCKED',
+        'Select another preferred canvass reference before archiving this one.',
+        { status: 409 },
+      );
+    }
+    const reason = requiredText(command.reason, 'reason', 500);
+    const timestamp = nowIso();
+    const after = { ...canvassDto(canvass), preferred: false, status: 'ARCHIVED', updatedAt: timestamp };
+    const result = { canvassId, id: canvassId, status: 'ARCHIVED', updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE canvass_references SET preferred = 0, status = 'ARCHIVED', updated_at = ?1
+           WHERE id = ?2 AND updated_at = ?3`,
+        )
+        .bind(timestamp, canvassId, expectedUpdatedAt),
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        previousStatus: 'ACTIVE',
+        newStatus: 'ARCHIVED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason,
+        metadata: { before: canvassDto(canvass), after },
+      }),
+      auditStatement(db, {
+        action: 'CANVASS_REFERENCE_ARCHIVED',
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        accountId: account.id,
+        correlationId,
+        before: canvassDto(canvass),
+        after,
+      }),
+      idempotencyStatement(db, 'archiveCanvassReference', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'restocking']),
+    ]);
+    return result;
+  }
+
+  async function selectPreferredCanvass({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.selectPreferredCanvass);
+    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
     assertEntityScope(account, {
       committeeId: canvass.committee_id,
       ownerAccountId: canvass.owner_account_id,
@@ -2375,32 +2747,65 @@ export function createD1OperationalService({
     const mutation = await replay(db, 'selectPreferredCanvass', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const timestamp = nowIso();
+    const groupRows = await rows(
+      db,
+      `SELECT canvass.* FROM canvass_references canvass
+       WHERE canvass.status = 'ACTIVE' AND (
+         (?1 IS NOT NULL AND canvass.linked_request_line_id = ?1) OR
+         (?2 IS NOT NULL AND canvass.linked_deliverable_id = ?2) OR
+         (?3 IS NOT NULL AND canvass.linked_restock_id = ?3)
+       )`,
+      [canvass.linked_request_line_id, canvass.linked_deliverable_id, canvass.linked_restock_id],
+    );
     const result = {
       canvassId,
       preferred: true,
+      rationale,
       deliverableId: canvass.linked_deliverable_id ?? null,
       restockId: canvass.linked_restock_id ?? null,
+      updatedAt: timestamp,
       correlationId,
     };
-    const statements = [
-      db
-        .prepare(
-          `UPDATE canvass_references
-           SET preferred = CASE WHEN id = ?1 THEN 1 ELSE 0 END, updated_at = ?5
-           WHERE status = 'ACTIVE' AND (
-             (?2 IS NOT NULL AND linked_request_line_id = ?2) OR
-             (?3 IS NOT NULL AND linked_deliverable_id = ?3) OR
-             (?4 IS NOT NULL AND linked_restock_id = ?4)
-           )`,
-        )
-        .bind(
-          canvassId,
-          canvass.linked_request_line_id,
-          canvass.linked_deliverable_id,
-          canvass.linked_restock_id,
-          timestamp,
-        ),
-    ];
+    const statements = [];
+    for (const row of groupRows.filter((entry) => entry.id === canvassId || entry.preferred === 1)) {
+      const preferred = row.id === canvassId;
+      const before = canvassDto(row);
+      const after = {
+        ...before,
+        preferred,
+        preferredRationale: preferred ? rationale : '',
+        updatedAt: timestamp,
+      };
+      statements.push(
+        db
+          .prepare('UPDATE canvass_references SET preferred = ?1, updated_at = ?2 WHERE id = ?3')
+          .bind(preferred ? 1 : 0, timestamp, row.id),
+        historyStatement(db, {
+          entityType: 'CANVASS',
+          entityId: row.id,
+          previousStatus: 'ACTIVE',
+          newStatus: 'ACTIVE',
+          accountId: account.id,
+          idempotencyKey: mutation.key,
+          reason: preferred ? rationale : `Preferred canvass changed to ${canvassId}`,
+          metadata: {
+            preferred,
+            ...(preferred ? { rationale } : { selectedCanvassId: canvassId }),
+            before,
+            after,
+          },
+        }),
+        auditStatement(db, {
+          action: preferred ? 'PREFERRED_CANVASS_SELECTED' : 'PREFERRED_CANVASS_DESELECTED',
+          entityType: 'CANVASS',
+          entityId: row.id,
+          accountId: account.id,
+          correlationId,
+          before,
+          after,
+        }),
+      );
+    }
     if (canvass.linked_deliverable_id || canvass.linked_request_line_id) {
       statements.push(
         db
@@ -2412,14 +2817,6 @@ export function createD1OperationalService({
       );
     }
     statements.push(
-      auditStatement(db, {
-        action: 'PREFERRED_CANVASS_SELECTED',
-        entityType: 'CANVASS',
-        entityId: canvassId,
-        accountId: account.id,
-        correlationId,
-        after: { rationale },
-      }),
       idempotencyStatement(db, 'selectPreferredCanvass', mutation, account.id, result),
       ...revisionStatements(db, ['procurement', 'restocking']),
     );
@@ -7354,6 +7751,8 @@ export function createD1OperationalService({
     reviewRequest,
     reserveStock,
     saveCanvassReference,
+    updateCanvassReference,
+    archiveCanvassReference,
     getMaterialsWorkQueue,
     selectPreferredCanvass,
     transitionDeliverable,

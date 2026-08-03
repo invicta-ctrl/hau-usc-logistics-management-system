@@ -2791,10 +2791,61 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
   };
   const saved = await mutate(request, materialsCsrf, 'saveCanvassReference', saveCommand);
   expect(saved.status()).toBe(200);
-  const canvassId = (await saved.json()).canvassId;
+  const savedResult = await saved.json();
+  const canvassId = savedResult.canvassId;
   const savedReplay = await mutate(request, materialsCsrf, 'saveCanvassReference', saveCommand);
   expect(savedReplay.status()).toBe(200);
   expect((await savedReplay.json()).canvassId).toBe(canvassId);
+
+  for (const [suffix, override] of [
+    ['date', { checkedAt: '2026-02-30' }],
+    ['unit', { unit: 'crate-of-unknown-size' }],
+    ['url', { sourceUrl: 'javascript:alert(1)' }],
+  ]) {
+    const invalid = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+      ...saveCommand,
+      ...override,
+      supplierName: `Invalid ${suffix} supplier`,
+      clientRequestId: `local-e2e-canvass-invalid-${suffix}`,
+    });
+    expect(invalid.status()).toBe(422);
+    await expect(invalid.json()).resolves.toMatchObject({ code: 'VALIDATION_FAILED' });
+  }
+
+  const duplicate = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    clientRequestId: 'local-e2e-canvass-duplicate',
+  });
+  expect(duplicate.status()).toBe(409);
+  await expect(duplicate.json()).resolves.toMatchObject({ code: 'CANVASS_DUPLICATE' });
+
+  const staleUpdate = await mutate(request, materialsCsrf, 'updateCanvassReference', {
+    canvassId,
+    price: 135,
+    expectedUpdatedAt: '2000-01-01T00:00:00.000Z',
+    clientRequestId: 'local-e2e-canvass-update-stale',
+  });
+  expect(staleUpdate.status()).toBe(409);
+  await expect(staleUpdate.json()).resolves.toMatchObject({ code: 'REVISION_CONFLICT' });
+
+  const updated = await mutate(request, materialsCsrf, 'updateCanvassReference', {
+    canvassId,
+    price: 135,
+    checkedAt: '2026-07-23T00:00:00.000Z',
+    expectedUpdatedAt: savedResult.updatedAt,
+    reason: 'Synthetic corrected quote',
+    clientRequestId: 'local-e2e-canvass-update',
+  });
+  expect(updated.status()).toBe(200);
+
+  const second = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    supplierName: 'Synthetic Alternate Supplier',
+    price: 140,
+    clientRequestId: 'local-e2e-canvass-save-alternate',
+  });
+  expect(second.status()).toBe(200);
+  const secondResult = await second.json();
 
   const preferred = await mutate(request, materialsCsrf, 'selectPreferredCanvass', {
     canvassId,
@@ -2802,6 +2853,58 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     clientRequestId: 'local-e2e-canvass-preferred',
   });
   expect(preferred.status()).toBe(200);
+  const preferredResult = await preferred.json();
+
+  const blockedArchive = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: preferredResult.updatedAt,
+    reason: 'Synthetic preferred archive guard',
+    clientRequestId: 'local-e2e-canvass-archive-preferred',
+  });
+  expect(blockedArchive.status()).toBe(409);
+  await expect(blockedArchive.json()).resolves.toMatchObject({
+    code: 'PREFERRED_CANVASS_ARCHIVE_BLOCKED',
+  });
+
+  const alternatePreferred = await mutate(request, materialsCsrf, 'selectPreferredCanvass', {
+    canvassId: secondResult.canvassId,
+    rationale: 'Alternate quote chosen after comparison',
+    clientRequestId: 'local-e2e-canvass-preferred-alternate',
+  });
+  expect(alternatePreferred.status()).toBe(200);
+  const alternatePreferredResult = await alternatePreferred.json();
+
+  const archived = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Superseded by the selected alternate quote',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archived.status()).toBe(200);
+  await expect(archived.json()).resolves.toMatchObject({ status: 'ARCHIVED' });
+
+  const procurement = await request.get('/api/procurement');
+  expect(procurement.status()).toBe(200);
+  const procurementData = await procurement.json();
+  const savedCanvass = procurementData.data.canvassReferences.find((entry) => entry.id === canvassId);
+  const alternateCanvass = procurementData.data.canvassReferences.find(
+    (entry) => entry.id === secondResult.canvassId,
+  );
+  expect(savedCanvass).toMatchObject({
+    status: 'ARCHIVED',
+    price: 135,
+    preferred: false,
+    preferredRationale: '',
+    priceHistory: [
+      expect.objectContaining({ price: 125, checkedAt: '2026-07-22T00:00:00.000Z' }),
+      expect.objectContaining({ price: 135, checkedAt: '2026-07-23T00:00:00.000Z' }),
+    ],
+  });
+  expect(alternateCanvass).toMatchObject({
+    status: 'ACTIVE',
+    preferred: true,
+    preferredRationale: 'Alternate quote chosen after comparison',
+  });
   for (const [status, clientRequestId] of [
     ['WAITING_FOR_BUDGET', 'local-e2e-deliverable-budget'],
     ['TO_BE_PROCURED', 'local-e2e-deliverable-authorized'],
