@@ -101,7 +101,7 @@ Date: 2026-08-03 (Asia/Manila)
   Max repaired the workflow to derive the subdomain from the authenticated
   Cloudflare account, use the fixed preview Worker, redact deploy output, and
   withhold the complete target URL.
-- P3 documentation: corrected `*.hau-usc.org` to the accepted `*.hausc.org`.
+- P3 documentation: the handoff now names the accepted `*.hausc.org` domain.
 - One new fresh Sol correction re-review is required and permitted because the
   confirmed P2 repairs materially changed inventory and preview workflows. No
   separate verdict or fast-review agent is authorized while it is active.
