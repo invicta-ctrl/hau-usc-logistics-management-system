@@ -183,6 +183,10 @@ describe('Apps Script governed Canvass mutations', () => {
       },
       'COR-PREFERRED-2',
     );
+    expect(firstRow).toMatchObject({ Preferred: false, Preferred_Rationale: '' });
+    expect(audit.map((entry) => entry[0])).toEqual(
+      expect.arrayContaining(['SELECT_PREFERRED_CANVASS', 'DESELECT_PREFERRED_CANVASS']),
+    );
     const archived = context.archiveCanvassReference_(
       { canvassId: first.canvassId, reason: 'Superseded and expired.', clientRequestId: 'SYN-ARCHIVE-1' },
       'COR-ARCHIVE',

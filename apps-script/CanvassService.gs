@@ -165,12 +165,15 @@ function selectPreferredCanvass_(command, correlationId) {
     var rationale = canvassText_(command.rationale, 'rationale', true, 1000), timestamp = nowIso_();
     var groupKey = canvassLinkKey_(canvass);
     readObjects_(HAU_SHEETS.CANVASS).filter(function(row) { return String(row.Status || 'ACTIVE').toUpperCase() === 'ACTIVE' && canvassLinkKey_(row) === groupKey; }).forEach(function(row) {
-      updateObject_(HAU_SHEETS.CANVASS, row._row, { Preferred: row.Canvass_ID === canvass.Canvass_ID, Preferred_Rationale: row.Canvass_ID === canvass.Canvass_ID ? rationale : row.Preferred_Rationale || '', Updated_At: timestamp, Revision: Number(row.Revision || 1) + 1 });
+      var preferred = row.Canvass_ID === canvass.Canvass_ID;
+      if (!preferred && !booleanValue_(row.Preferred, false)) return;
+      var patch = { Preferred: preferred, Preferred_Rationale: preferred ? rationale : '', Updated_At: timestamp, Revision: Number(row.Revision || 1) + 1 };
+      updateObject_(HAU_SHEETS.CANVASS, row._row, patch);
+      history_('CANVASS', row.Canvass_ID, row.Status, row.Status, user, preferred ? rationale : 'Preferred canvass changed to ' + canvass.Canvass_ID, { idempotencyKey: key, metadata: { preferred: preferred, rationale: preferred ? rationale : '', selectedCanvassId: canvass.Canvass_ID, before: row, after: patch } });
+      audit_(preferred ? 'SELECT_PREFERRED_CANVASS' : 'DESELECT_PREFERRED_CANVASS', 'CANVASS', row.Canvass_ID, user, correlationId, { before: row, after: patch, notes: preferred ? rationale : 'Preferred canvass changed to ' + canvass.Canvass_ID });
     });
     var deliverable = canvass.Linked_Deliverable_ID ? findOne_(HAU_SHEETS.DELIVERABLES, 'Deliverable_ID', canvass.Linked_Deliverable_ID) : findOne_(HAU_SHEETS.DELIVERABLES, 'Request_Line_ID', canvass.Linked_Request_Line_ID);
     if (deliverable) updateObject_(HAU_SHEETS.DELIVERABLES, deliverable._row, { Preferred_Canvass_ID: canvass.Canvass_ID, Updated_At: timestamp });
-    history_('CANVASS', canvass.Canvass_ID, canvass.Status, canvass.Status, user, 'Preferred canvass selected', { idempotencyKey: key, metadata: { preferred: true, rationale: rationale } });
-    audit_('SELECT_PREFERRED_CANVASS', 'CANVASS', canvass.Canvass_ID, user, correlationId, { before: canvass, after: { Preferred: true, Preferred_Rationale: rationale, Updated_At: timestamp }, notes: rationale });
     return recordIdempotency_(key, { canvassId: canvass.Canvass_ID, preferred: true, rationale: rationale, deliverableId: deliverable && deliverable.Deliverable_ID }, user, correlationId);
   });
 }
