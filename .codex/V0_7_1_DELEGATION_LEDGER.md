@@ -59,6 +59,32 @@ P2/P3 presentation and documentation changes are batched for one closure
 review. One final fresh Sol review is reserved for the complete release
 candidate.
 
+## Slice 8 routing and additional-Sol record
+
+- Luna Max `/root/v071_s7_luna_polish` handled routine Slice 8 audit, preview
+  workflow SHA/evidence repair, environment fixture alignment, stale browser
+  assertion mapping, schema expectation alignment, and a localized accessible
+  checkbox interaction repair. No production source or provider state was
+  changed by the final routine repair.
+- Terra Max `/root/v071_s8_terra_host_routing` handled complex host routing,
+  recovery-host hardening, request-only privacy containment, and the integrated
+  Worker failure classification. Its final Worker alignment changed tests only
+  and proved explicit `DEVELOPMENT` localhost dispatch without weakening
+  production unknown-host denial.
+- Terra Max `/root/v071_s8_terra_apps_runtime_replacement` and the earlier Apps
+  Script follow-up on `/root/v071_s8_terra_host_routing` stalled without a
+  usable cause or edit and were interrupted. The parent then used a bounded
+  opaque-origin diagnostic, removed the temporary instrumentation, and applied
+  the localized history fallback while preserving unrelated error propagation.
+- No additional Sol review was spawned for Slice 8 audits, test mapping,
+  artifact comparison, localized repair, or integrated test repair. Reason:
+  Luna/Terra were suitable, no prior Slice 8 Sol reviewer remained active, and
+  none of the user-defined re-review thresholds had yet been triggered.
+- Exactly one fresh Sol review remains scheduled for the complete committed
+  release candidate. This is the required final review, not an additional
+  slice verdict. Its exact target SHA and verdict must be appended after it
+  returns.
+
 ## Wave 1 parent disposition
 
 Accepted as confirmed source defects:

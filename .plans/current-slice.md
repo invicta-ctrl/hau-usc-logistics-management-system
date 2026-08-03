@@ -1,25 +1,24 @@
-# HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
+# HAU-USC v0.7.1 production recovery - final release-candidate review
 
-> v0.7.1 authority update (2026-08-02): the active slice is the accepted
-> client/runtime contract repair in
+> v0.7.1 authority update (2026-08-03): Slices 2 through 8 are locally
+> repository-accepted under
 > `.codex/specs/v0.7.1-production-recovery.md`. Routing/TOML preflight and the
 > read-only production truth audit passed from synchronized `main` at
 > `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`. Production remains operational
 > on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
 > historical Slice 13 material below does not override the active pointer.
 
-CURRENT SLICE: v0.7.1 Slice 4 - Staff Directory and Access Management
+CURRENT SLICE: v0.7.1 complete release candidate
 
-CURRENT STAGE: SLICE_3_ACCEPTED_SLICE_4_ACTIVE
+CURRENT STAGE: SLICE_8_LOCALLY_ACCEPTED_FINAL_FRESH_SOL_REVIEW_ACTIVE
 
-LAST UPDATED: 2026-08-02 (Asia/Manila)
+LAST UPDATED: 2026-08-03 (Asia/Manila)
 
-Slice 3 accepted repair:
-`de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`. Safe auth correlation/security
-headers, malformed-cookie failure closure, authoritative Worker release
-identity, and consistent public portal navigation pass 510 unit tests, focused
-browser/local-Worker proofs, final generated parity, and fresh re-review.
-Production and external systems were untouched.
+Release-candidate code/test head:
+`5d04009235fca55a6495763ac0c7592f1220ddc0`. Repository gates pass 575 tests;
+the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
+38/38; preview dry-run is binding-free. Production and external systems were
+untouched. One final fresh Sol exact-SHA review remains.
 
 ---
 

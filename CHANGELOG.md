@@ -13,6 +13,15 @@
   consistent Request/Lending/staff/portal-selection navigation.
 - Preserved the stronger 12–128 character, three-category password policy and
   normalized raw authentication transport failures to safe retryable errors.
+- Completed the remaining recovery slices: governed Staff Directory and Access
+  Management workflows; canonical workspace/history routes; authoritative
+  quantities; dirty-form safety; Canvass and Inventory governance; truthful
+  presentation; request-only data containment; and opaque-origin Apps Script
+  startup.
+- Added fail-closed canonical host routing with an exact private recovery-host
+  contract, a binding-free static preview workflow, an exact-SHA release
+  package workflow, and owner-gated domain/deployment/rollback/monitoring
+  runbooks.
 
 ### Verified
 
@@ -25,11 +34,18 @@
   preview shareables and `dist` deterministically aligned after Cloudflare
   dry-run. Auth browser, local-Worker, malformed-cookie, and release-identity
   proofs pass; fresh correction re-review reports no P0-P3.
+- The complete release-candidate code/test head
+  `5d04009235fca55a6495763ac0c7592f1220ddc0` passes 88 Vitest files / 575
+  tests, 130 browser tests with 326 intentional skips, 38/38 local Worker/D1
+  tests, deterministic generated parity, and a binding-free preview dry-run.
 
 ### Boundary
 
 - Production remains operational on v0.7.0 and was not modified. No provider,
   migration, deployment, domain, Google, or GitHub external write occurred.
+- Private environment values, upstream/PR/CI, staging and production rollout,
+  domain activation, migration, external smoke, and monitoring remain
+  explicitly owner-gated and unrun.
 
 ## 0.7.0 - 2026-07-29
 

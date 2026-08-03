@@ -1,23 +1,26 @@
 # Current Task
 
 INTENT: PRODUCTION RECOVERY
-MODE: execute bounded v0.7.1 slices
-TARGET: preview/pipeline/domain preparation and integrated release verification
+MODE: review complete v0.7.1 release candidate
+TARGET: exact committed release-candidate code, tests, workflows, and handoff
 AUTHORITY: `.codex/specs/v0.7.1-production-recovery.md`; accepted v0.7.0 specifications; repository invariants
 RISK: high
-DELIVERABLE: release-candidate preparation, integrated verification, rollback and monitoring evidence, and owner-gated domain/deployment readiness without a production write
-VERIFICATION: preview/pipeline dry runs; host-routing and protected browser journeys; rollback and monitoring evidence; repository-required gates; one final fresh Sol release-candidate review
+DELIVERABLE: one final fresh Sol release-candidate review and truthful owner-gated handoff without a production write
+VERIFICATION: exact-SHA diff review; accepted-scope and invariant review; existing repository, browser, Worker, preview, rollback, and monitoring evidence
 STATUS: ACTIVE
 
 Starting SHA: `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`
 
 Branch: `fix/v0.7.1-production-recovery`
 
-Accepted previous slice: wording, naming, and Hallmark-bounded polish at
-`9da6289de770a2d82083fbbaee815ae4a8b4e6b2`; full `npm run check` passes 86
-files / 555 tests, focused presentation and Inventory proofs pass, generated
-parity passes, and the replacement exact-head Sol review's localized P2 is
-repaired with direct regression coverage.
+Accepted release-candidate code/test head:
+`5d04009235fca55a6495763ac0c7592f1220ddc0`. Slice 8 adds safe static preview
+and exact-SHA packaging workflows, canonical fail-closed host routing, exact
+private recovery-host validation, request-only containment, opaque-origin Apps
+Script startup, and owner-gated deployment/domain/rollback/monitoring runbooks.
+`npm run check` passes 88 files / 575 tests; browser 130 passed / 326 intentional
+skips; local Worker/D1 38/38; preview dry-run has no bindings and performs no
+upload. The final fresh Sol review is the only remaining repository-side gate.
 
 Stop on an unaccepted migration need, wrong production binding, privacy or
 authorization uncertainty, unknown overlapping repository work, or a P0 data

@@ -1,23 +1,28 @@
 # Project Status
 
-## v0.7.1 production recovery active — login/session and portal slice accepted
+## v0.7.1 release candidate locally verified - final review active
 
 - Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
   `main` at `9fb1b4e6b4e956419fa65dee55268b10c0a55da6` under the accepted
   `.codex/specs/v0.7.1-production-recovery.md` contract.
 - Read-only provider truth shows production remains healthy on immutable
   v0.7.0, schema 29, with no verified staging D1/R2 binding incident.
-- Slice 2 at `8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2` restores the complete protected
-  Access Policy and Staff Directory browser-service contract.
-- Slice 3 accepted repair `de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`
-  completes safe auth correlation/security headers, malformed-cookie denial,
-  authoritative Worker release identity, and consistent public portal
-  navigation without weakening authorization or password policy.
-- Amended full `npm run check` passes 78 Vitest files / 510 tests and ends with
-  deterministic preview artifact parity after the Cloudflare dry-run. Focused
-  unit/browser/local-Worker proofs pass; fresh re-review reports no P0-P3.
-- Production was not deployed or changed. Staff Directory and Access
-  Management workflow completeness is the next bounded slice.
+- Slices 2 through 8 repair the client/runtime contract, authentication and
+  portal shell, Staff Directory/Access Management, canonical workspace and
+  quantity contracts, Canvass and Inventory governance, presentation polish,
+  and release pipeline/domain preparation.
+- Release-candidate code/test head
+  `5d04009235fca55a6495763ac0c7592f1220ddc0` passes `npm run check` with 88
+  Vitest files / 575 tests, the full browser matrix with 130 passes / 326
+  intentional skips, the local Worker/D1 matrix 38/38, and a binding-free
+  Cloudflare preview dry-run.
+- Static preview and exact-SHA package workflows contain no production
+  bindings or deployment credentials. Canonical production hosts and the exact
+  private workers.dev recovery hostname fail closed outside their accepted
+  routes; request-only and opaque-origin runtime boundaries have direct proof.
+- Production was not deployed or changed. Domain activation, private staging
+  and production configuration, deployment, migration, smoke, and monitoring
+  remain owner-gated. One final fresh Sol exact-SHA review remains.
 
 ## v0.7.0 production launch and closure accepted
 

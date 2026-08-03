@@ -1,25 +1,23 @@
 # Work Continuation
 
-## v0.7.1 current resume block
-
-- **Repository:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
-- **Branch:** `fix/v0.7.1-production-recovery`.
-- **Starting SHA:** `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
-- **Accepted slice:** Staff Directory and Access Management recovery at
-  `6bec7d9be355b556fe0d93143a85127a99dd9740`.
-- **Evidence:** full `npm run check` (78 files / 513 tests), focused real
-  local-Worker and UI proofs, final preview/dist parity, P1 repair, exact-head
-  fresh re-review PASS, and
-  `.codex/V0_7_1_SLICE_4_DIRECTORY_ACCESS_HANDOFF.md`.
-- **Current action:** audit and repair canonical workspace routing, integer
-  quantities, borrower-selector semantics, and dirty-form protection.
-- **Production:** operational on immutable v0.7.0; no production or provider
-  write occurred. Production deployment remains owner-gated.
-- **Preserve:** untracked `.codegraph/`; 397 fail-closed pending inventory rows;
-  append-only ledger/history/evidence; private identifiers and recovery
-  material outside Git; mock-preview isolation; host-scoped cookies.
-
 ## Current resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve untracked `.codegraph/`.
+- **Branch/HEAD/upstream:** `fix/v0.7.1-production-recovery`; release-candidate code/test head `5d04009235fca55a6495763ac0c7592f1220ddc0`; no upstream is configured for this local branch.
+- **Current phase/stage:** Slices 2–8 locally accepted; complete release candidate awaiting the single final fresh Sol exact-SHA review; production remains operational on immutable v0.7.0.
+- **Accepted scope:** `.codex/specs/v0.7.1-production-recovery.md`, the approved routing attestation amendment, accepted v0.7.0 invariants, and the user-approved reduced-Sol review orchestration.
+- **Completed work:** client/runtime parity; login/session/portal repair; Staff Directory and Access Management; canonical workspaces and quantities; Canvass and Inventory governance; wording/accessibility polish; safe preview and exact-SHA package workflows; canonical host routing; request-only containment; opaque-origin Apps Script startup; and owner-gated release runbooks.
+- **Files changed by purpose:** application and Worker source implement the accepted recovery; unit/browser/Worker suites prove contracts; GitHub workflows and Wrangler preview config package but do not deploy production; `.codex` and status records preserve release, rollback, monitoring, delegation, and continuation evidence.
+- **Tests verified at current SHA:** `npm run check` passes 88 Vitest files / 575 tests; `npm run test:e2e` passes 130 with 326 intentional skips; `npm run test:e2e:cloudflare:local` passes 38/38; preview `wrangler deploy --dry-run` passes with no bindings and no upload.
+- **Generated artifacts:** `dist/index.html` is 767,391 bytes / SHA-256 `8bc8725db88b3840e67edba0d70ea75599b963941f7563520b736eafa0f8ed83`; Apps Script package is 639,095 bytes / SHA-256 `a034c8e6dce937b5686cc1efac75e88c76616691a67123512f750819b149c874`; deterministic parity passes.
+- **External actions:** none in Slice 8; no provider, deployment, migration, domain, Google, GitHub, production, or staging write occurred. Read-only production truth from the starting audit remains unchanged.
+- **Rollback:** before any authorized rollout, retain the current immutable v0.7.0 production version and private schema-29 recovery material; on a failed authorized rollout, restore the prior Worker route/version, stop writes, preserve append-only evidence, and reconcile D1/R2/domain state per `.codex/V0_7_1_OWNER_GATED_RELEASE_RUNBOOK.md`.
+- **Blocker:** repository-side work is blocked only on the final fresh Sol review; activation remains separately blocked on owner-provided private configs, upstream/PR/CI, staging acceptance, production authorization, domain control, and monitoring access.
+- **Next three actions:** commit these closure records; run one final fresh Sol review against that exact committed SHA; record the verdict and hand the private staging/production sequence to the owner without executing it.
+- **Resume commands:** `git status --short --branch`; `git rev-parse HEAD`; `npm run check`; `npm run test:e2e`; `npm run test:e2e:cloudflare:local`; `npm run release:candidate:manifest`; follow `.codex/V0_7_1_OWNER_GATED_RELEASE_RUNBOOK.md` only after owner authorization.
+- **Prohibited actions:** no production/staging deploy, D1 migration/write, R2 write, secret/config disclosure, domain activation, Google write, merge/tag/release, or bypass of owner gates; do not discard `.codegraph/`, pending inventory safety, append-only records, or private recovery evidence.
+
+## v0.7.0 production closure resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`.
 - **Branch:** `main`; future work starts from current `main` on a short-lived
