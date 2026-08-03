@@ -12,7 +12,7 @@ function mapLink(row) {
   return {
     id: row.id,
     label: row.label,
-    url: row.url,
+    url: row.link_type === 'INTERNAL_ROUTE' ? row.route_id : row.url,
     linkType: row.link_type,
     audience: row.audience,
     status: row.status,
@@ -128,7 +128,8 @@ export function createD1ReferenceLinkRepository(db) {
         AND (?2 = '' OR audience = ?2)
         AND (
           ?3 = '' OR
-          lower(label || ' ' || url || ' ' || link_type) LIKE '%' || lower(?3) || '%' ESCAPE '\\'
+          lower(label || ' ' || url || ' ' || route_id || ' ' || link_type)
+            LIKE '%' || lower(?3) || '%' ESCAPE '\\'
         )`;
       const bindings = [status, audience, escapeLike(query)];
       const totalRow = await db
@@ -203,14 +204,15 @@ export function createD1ReferenceLinkRepository(db) {
         db
           .prepare(
             `INSERT INTO reference_links (
-               id, label, url, link_type, audience, status, revision, sync_state,
+               id, label, url, route_id, link_type, audience, status, revision, sync_state,
                created_by_account_id, updated_by_account_id, created_at, updated_at, archived_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`,
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
           )
           .bind(
             link.id,
             link.label,
-            link.url,
+            link.linkType === 'EXTERNAL_URL' ? link.url : '',
+            link.linkType === 'INTERNAL_ROUTE' ? link.url : '',
             link.linkType,
             link.audience,
             link.status,
@@ -235,16 +237,17 @@ export function createD1ReferenceLinkRepository(db) {
           db
             .prepare(
               `UPDATE reference_links
-               SET label = ?3, url = ?4, link_type = ?5, audience = ?6, status = ?7,
-                 revision = ?8, sync_state = ?9, updated_by_account_id = ?10,
-                 updated_at = ?11, archived_at = ?12
+               SET label = ?3, url = ?4, route_id = ?5, link_type = ?6, audience = ?7,
+                 status = ?8, revision = ?9, sync_state = ?10, updated_by_account_id = ?11,
+                 updated_at = ?12, archived_at = ?13
                WHERE id = ?1 AND revision = ?2`,
             )
             .bind(
               linkId,
               expectedRevision,
               next.label,
-              next.url,
+              next.linkType === 'EXTERNAL_URL' ? next.url : '',
+              next.linkType === 'INTERNAL_ROUTE' ? next.url : '',
               next.linkType,
               next.audience,
               next.status,

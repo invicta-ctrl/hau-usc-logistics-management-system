@@ -7,6 +7,7 @@ import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
+import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { createGoogleDriveEvidenceStore } from '../server/evidence/google-drive-store.js';
 import {
@@ -22,6 +23,7 @@ import { createBrandAssetService } from '../server/brand-asset-service.js';
 import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
+import { createReferenceLinkService } from '../server/reference-link-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
@@ -46,6 +48,17 @@ const BRAND_ASSET_KEYS = Object.freeze({
   '/brand/favicon': 'brand/favicon',
   '/brand/default-item-image': 'brand/default-item-image',
 });
+
+const APPROVED_REFERENCE_LINK_ROUTES = Object.freeze([
+  'PORTAL_REQUEST',
+  'PORTAL_LENDING',
+  'STAFF_SIGN_IN',
+  'APP_ADMINISTRATOR',
+  'APP_DIRECTOR',
+  'APP_INVENTORY',
+  'APP_FOOD',
+  'APP_MATERIALS',
+]);
 
 async function brandAsset(request, env, key, { governedSlot = false } = {}) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -240,6 +253,11 @@ function services(env) {
     db: env.DB,
     bucket: env.BRAND_ASSETS,
   });
+  const referenceLinks = createReferenceLinkService({
+    repository: createD1ReferenceLinkRepository(env.DB),
+    approvedInternalRoutes: APPROVED_REFERENCE_LINK_ROUTES,
+    syncConfigured: false,
+  });
   const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
   const identityRoster = createIdentityRosterService({
@@ -277,6 +295,7 @@ function services(env) {
     publicAdvertisements,
     publicLending,
     publicRequests,
+    referenceLinks,
   };
 }
 
@@ -347,6 +366,7 @@ async function handleApi(request, env, requestId, executionContext) {
     publicAdvertisements,
     publicLending,
     publicRequests,
+    referenceLinks,
   } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
@@ -461,6 +481,40 @@ async function handleApi(request, env, requestId, executionContext) {
       if (url.pathname === '/api/admin/advertisements/archive') {
         return json(await advertisementAdmin.archive(context));
       }
+    }
+    if (url.pathname.startsWith('/api/admin/reference-links/') && request.method === 'POST') {
+      const readOnlyRoutes = new Set([
+        '/api/admin/reference-links/list',
+        '/api/admin/reference-links/get',
+        '/api/admin/reference-links/history',
+      ]);
+      const mutation = !readOnlyRoutes.has(url.pathname);
+      const actor = await authorize(request, auth, CAPABILITIES.REFERENCE_MANAGE, { mutation });
+      const command = await body(request);
+      const context = { actor: actor.account, command, correlationId: requestId };
+      if (url.pathname === '/api/admin/reference-links/list') {
+        return json(await referenceLinks.list(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/get') {
+        return json(await referenceLinks.get({ actor: actor.account, id: command.id }));
+      }
+      if (url.pathname === '/api/admin/reference-links/history') {
+        return json(
+          await referenceLinks.history({ actor: actor.account, id: command.id, command }),
+        );
+      }
+      if (url.pathname === '/api/admin/reference-links/create') {
+        return json(await referenceLinks.create(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/update') {
+        return json(await referenceLinks.update(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/transition') {
+        return json(await referenceLinks.transition(context));
+      }
+      throw new ApiError('REFERENCE_LINK_ROUTE_NOT_FOUND', 'The Link Registry route was not found.', {
+        status: 404,
+      });
     }
     if (url.pathname.startsWith('/api/owner/brand-assets/') && request.method === 'POST') {
       const mutation = url.pathname !== '/api/owner/brand-assets/list';

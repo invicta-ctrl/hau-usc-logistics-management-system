@@ -1118,6 +1118,107 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
   expect((await request.get('/api/portal/request')).status()).toBe(401);
 });
 
+test('Link Registry is server-authorized, revision-guarded, versioned, and idempotent', async ({
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  try {
+    const csrf = await login(admin, 'LOCAL.ADMIN');
+    const post = (route, data) =>
+      admin.post(`/api/admin/reference-links/${route}`, {
+        headers: { 'x-csrf-token': csrf },
+        data,
+      });
+    const marker = crypto.randomUUID();
+    const createCommand = {
+      clientRequestId: `reference-create-${marker}`,
+      label: `Synthetic reference ${marker}`,
+      linkType: 'EXTERNAL_URL',
+      url: `https://example.invalid/reference/${marker}`,
+      audience: 'PUBLIC',
+      reason: 'Synthetic Link Registry acceptance proof.',
+    };
+    const createdResponse = await post('create', createCommand);
+    expect(createdResponse.status()).toBe(200);
+    const created = await createdResponse.json();
+    expect(created).toMatchObject({
+      link: {
+        id: expect.stringMatching(/^RLK-/u),
+        status: 'DRAFT',
+        revision: 1,
+        syncState: 'NOT_CONFIGURED',
+      },
+      replayed: false,
+    });
+    await expect((await post('create', createCommand)).json()).resolves.toMatchObject({
+      link: { id: created.link.id, revision: 1 },
+      replayed: true,
+    });
+
+    const updateCommand = {
+      ...createCommand,
+      clientRequestId: `reference-update-${marker}`,
+      id: created.link.id,
+      expectedRevision: 1,
+      label: `Updated synthetic reference ${marker}`,
+      reason: 'Synthetic governed metadata update.',
+    };
+    const updatedResponse = await post('update', updateCommand);
+    expect(updatedResponse.status()).toBe(200);
+    await expect(updatedResponse.json()).resolves.toMatchObject({
+      link: { id: created.link.id, revision: 2, status: 'DRAFT' },
+    });
+
+    const staleResponse = await post('update', {
+      ...updateCommand,
+      clientRequestId: `reference-stale-${marker}`,
+      label: 'This stale write must not win',
+    });
+    expect(staleResponse.status()).toBe(409);
+    await expect(staleResponse.json()).resolves.toMatchObject({
+      code: 'REFERENCE_LINK_REVISION_CONFLICT',
+    });
+
+    const activatedResponse = await post('transition', {
+      clientRequestId: `reference-activate-${marker}`,
+      id: created.link.id,
+      expectedRevision: 2,
+      status: 'ACTIVE',
+      reason: 'Synthetic publication approval.',
+    });
+    expect(activatedResponse.status()).toBe(200);
+    await expect(activatedResponse.json()).resolves.toMatchObject({
+      link: { revision: 3, status: 'ACTIVE' },
+    });
+
+    const historyResponse = await post('history', { id: created.link.id, page: 1, pageSize: 20 });
+    expect(historyResponse.status()).toBe(200);
+    await expect(historyResponse.json()).resolves.toMatchObject({
+      items: [
+        { revision: 3, action: 'ACTIVATED' },
+        { revision: 2, action: 'UPDATED' },
+        { revision: 1, action: 'CREATED' },
+      ],
+      pagination: { total: 3 },
+    });
+
+    const internalResponse = await post('create', {
+      clientRequestId: `reference-internal-${marker}`,
+      label: `Synthetic internal reference ${marker}`,
+      linkType: 'INTERNAL_ROUTE',
+      url: 'PORTAL_REQUEST',
+      audience: 'STAFF',
+      reason: 'Synthetic approved route proof.',
+    });
+    expect(internalResponse.status()).toBe(200);
+    await expect(internalResponse.json()).resolves.toMatchObject({
+      link: { linkType: 'INTERNAL_ROUTE', url: 'PORTAL_REQUEST' },
+    });
+  } finally {
+    await admin.dispose();
+  }
+});
+
 test('public Lending Center submits both borrower types with private tracking', async ({
   request,
   baseURL,

@@ -1,5 +1,6 @@
 import { accountAuthorization } from './auth/contracts.js';
 import { ApiError } from './d1/operational-service.js';
+import { operationalInteger } from '../domain/operational-integers.js';
 
 export const REFERENCE_LINK_TYPES = Object.freeze({
   EXTERNAL_URL: 'EXTERNAL_URL',
@@ -89,16 +90,11 @@ function enumValue(value, field, allowed) {
 }
 
 function positiveInteger(value, field, { max = Number.MAX_SAFE_INTEGER } = {}) {
-  const parsed =
-    typeof value === 'number' && Number.isSafeInteger(value)
-      ? value
-      : typeof value === 'string' && /^[1-9][0-9]*$/u.test(value)
-        ? Number(value)
-        : Number.NaN;
-  if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > max) {
+  try {
+    return operationalInteger(value, { field, min: 1, max });
+  } catch {
     throw validationError(`${field} must be a positive whole number.`, field);
   }
-  return parsed;
 }
 
 function safeLinkId(value) {

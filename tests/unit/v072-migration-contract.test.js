@@ -42,6 +42,9 @@ describe('v0.7.2 additive migration contract', () => {
     }
 
     expect(sql).not.toMatch(/^\s*(?:DROP|DELETE)\s+/imu);
+    expect(sql).not.toContain('CREATE TABLE reference_link_mutation_results');
+    expect(sql).toContain("link_type IN ('EXTERNAL_URL', 'INTERNAL_ROUTE')");
+    expect(sql).toContain("'CREATED', 'UPDATED', 'ACTIVATED', 'DEACTIVATED', 'ARCHIVED'");
   });
 
   it('locks application states and protects new history tables from mutation', async () => {

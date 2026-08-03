@@ -183,7 +183,7 @@ CREATE TABLE reference_links (
   url TEXT NOT NULL DEFAULT '',
   route_id TEXT NOT NULL DEFAULT '',
   link_type TEXT NOT NULL CHECK (
-    link_type IN ('RESOURCE', 'FORM', 'POLICY', 'SUPPORT', 'WORKFLOW', 'OTHER')
+    link_type IN ('EXTERNAL_URL', 'INTERNAL_ROUTE')
   ),
   audience TEXT NOT NULL CHECK (
     audience IN ('PUBLIC', 'STAFF', 'ADMINISTRATOR', 'DIRECTOR')
@@ -213,7 +213,9 @@ CREATE TABLE reference_link_versions (
   revision INTEGER NOT NULL CHECK (revision >= 1),
   before_json TEXT NOT NULL CHECK (json_valid(before_json)),
   after_json TEXT NOT NULL CHECK (json_valid(after_json)),
-  action TEXT NOT NULL CHECK (action IN ('CREATE', 'UPDATE', 'ARCHIVE', 'RESTORE')),
+  action TEXT NOT NULL CHECK (
+    action IN ('CREATED', 'UPDATED', 'ACTIVATED', 'DEACTIVATED', 'ARCHIVED')
+  ),
   actor_account_id TEXT NOT NULL REFERENCES accounts(id),
   reason TEXT NOT NULL,
   idempotency_key TEXT NOT NULL UNIQUE,
@@ -236,16 +238,6 @@ BEFORE DELETE ON reference_link_versions
 BEGIN
   SELECT RAISE(ABORT, 'reference link versions are append-only');
 END;
-
-CREATE TABLE reference_link_mutation_results (
-  actor_account_id TEXT NOT NULL REFERENCES accounts(id),
-  operation TEXT NOT NULL,
-  idempotency_key TEXT NOT NULL,
-  request_fingerprint TEXT NOT NULL,
-  result_json TEXT NOT NULL CHECK (json_valid(result_json)),
-  created_at TEXT NOT NULL,
-  PRIMARY KEY (actor_account_id, operation, idempotency_key)
-) STRICT;
 
 ALTER TABLE inventory_items ADD COLUMN low_stock_alert_enabled INTEGER NOT NULL DEFAULT 0 CHECK (
   low_stock_alert_enabled IN (0, 1)

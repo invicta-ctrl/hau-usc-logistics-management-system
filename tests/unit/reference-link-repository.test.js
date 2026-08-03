@@ -30,7 +30,8 @@ async function context() {
       PRIMARY KEY (scope, idempotency_key)
     ) STRICT`,
     `CREATE TABLE reference_links (
-      id TEXT PRIMARY KEY, label TEXT NOT NULL, url TEXT NOT NULL,
+      id TEXT PRIMARY KEY, label TEXT NOT NULL, url TEXT NOT NULL DEFAULT '',
+      route_id TEXT NOT NULL DEFAULT '',
       link_type TEXT NOT NULL CHECK (link_type IN ('EXTERNAL_URL', 'INTERNAL_ROUTE')),
       audience TEXT NOT NULL CHECK (audience IN ('PUBLIC', 'STAFF', 'ADMINISTRATOR', 'DIRECTOR')),
       status TEXT NOT NULL CHECK (status IN ('DRAFT', 'ACTIVE', 'INACTIVE', 'ARCHIVED')),
@@ -38,7 +39,8 @@ async function context() {
       sync_state TEXT NOT NULL CHECK (sync_state IN ('SYNCED', 'SYNC_PENDING', 'SYNC_FAILED', 'NOT_CONFIGURED')),
       created_by_account_id TEXT NOT NULL REFERENCES accounts(id),
       updated_by_account_id TEXT NOT NULL REFERENCES accounts(id),
-      created_at TEXT NOT NULL, updated_at TEXT NOT NULL, archived_at TEXT
+      created_at TEXT NOT NULL, updated_at TEXT NOT NULL, archived_at TEXT,
+      CHECK ((url <> '' AND route_id = '') OR (url = '' AND route_id <> ''))
     ) STRICT`,
     `CREATE TABLE reference_link_versions (
       id TEXT PRIMARY KEY, link_id TEXT NOT NULL REFERENCES reference_links(id),
@@ -123,6 +125,30 @@ function records(current, overrides = {}) {
 }
 
 describe('D1 Reference Link repository', () => {
+  it('stores an approved internal target separately from an external URL', async () => {
+    const { db, repository } = await context();
+    const internal = link({
+      id: 'RLK-SYNTHETIC-INTERNAL',
+      url: 'request-center',
+      linkType: 'INTERNAL_ROUTE',
+    });
+    await repository.create({ link: internal, ...records(internal) });
+
+    await expect(repository.getById(internal.id)).resolves.toMatchObject({
+      url: 'request-center',
+      linkType: 'INTERNAL_ROUTE',
+    });
+    await expect(repository.list({ query: 'request-center' })).resolves.toMatchObject({
+      items: [{ id: internal.id, url: 'request-center' }],
+      total: 1,
+    });
+    const stored = await db
+      .prepare('SELECT url, route_id FROM reference_links WHERE id = ?1')
+      .bind(internal.id)
+      .first();
+    expect(stored).toEqual({ url: '', route_id: 'request-center' });
+  });
+
   it('stores canonical state, append-only versions, audit, and replay in one mutation batch', async () => {
     const { db, repository } = await context();
     const initial = link();
