@@ -3054,7 +3054,26 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     clientRequestId: 'local-e2e-canvass-archive',
   });
   expect(archived.status()).toBe(200);
-  await expect(archived.json()).resolves.toMatchObject({ status: 'ARCHIVED' });
+  const archivedResult = await archived.json();
+  expect(archivedResult).toMatchObject({ status: 'ARCHIVED', canvassId });
+
+  const archivedReplay = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Superseded by the selected alternate quote',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archivedReplay.status()).toBe(200);
+  await expect(archivedReplay.json()).resolves.toEqual(archivedResult);
+
+  const archiveConflict = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Changed retry payload must conflict',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archiveConflict.status()).toBe(409);
+  await expect(archiveConflict.json()).resolves.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' });
 
   const procurement = await request.get('/api/procurement');
   expect(procurement.status()).toBe(200);

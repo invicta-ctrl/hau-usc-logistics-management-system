@@ -2805,13 +2805,6 @@ export function createD1OperationalService({
   async function archiveCanvassReference({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.archiveCanvassReference);
     const canvassId = requiredText(command.canvassId, 'canvassId', 80);
-    const canvass = await canvassRecord(canvassId);
-    if (!canvass)
-      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
-    assertEntityScope(account, {
-      committeeId: canvass.committee_id,
-      ownerAccountId: canvass.owner_account_id,
-    });
     const mutation = await replay(
       db,
       'archiveCanvassReference',
@@ -2820,6 +2813,13 @@ export function createD1OperationalService({
       command,
     );
     if (mutation.replayed) return mutation.value;
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+    assertEntityScope(account, {
+      committeeId: canvass.committee_id,
+      ownerAccountId: canvass.owner_account_id,
+    });
     const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 64);
     if (expectedUpdatedAt !== canvass.updated_at) {
       throw new ApiError('REVISION_CONFLICT', 'This canvass reference changed; refresh before archiving.', {
