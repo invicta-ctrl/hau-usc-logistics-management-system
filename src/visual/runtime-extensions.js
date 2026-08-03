@@ -2859,7 +2859,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.0'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.7.1'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -5578,7 +5578,7 @@ export function createRuntimeExtensions(options) {
       document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
     }
     const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
-    const version = String(state.appVersion ?? '0.7.0');
+    const version = String(state.appVersion ?? '0.7.1');
     internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');

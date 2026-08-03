@@ -35,6 +35,7 @@ const config = (environment, marker) => ({
   vars: {
     ENVIRONMENT: environment,
     CANDIDATE_SHA: sha,
+    RECOVERY_HOSTNAME: `hau-usc-logistics-${environment.toLowerCase()}-recovery.workers.dev`,
     GOOGLE_ROSTER_SPREADSHEET_ID: 'approved-private-roster-source',
     GOOGLE_ROSTER_RANGE: 'Official!A1:AA128',
     GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: `reader-${environment.toLowerCase()}@example.invalid`,

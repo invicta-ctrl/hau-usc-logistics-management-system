@@ -13,6 +13,7 @@ test-results/
 *.log
 .codex/runtime/
 .wrangler/
+.release/
 migration-private/
 *.private.sql
 *.private.ndjson

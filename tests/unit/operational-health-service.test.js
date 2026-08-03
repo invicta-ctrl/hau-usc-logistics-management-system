@@ -58,6 +58,7 @@ function context() {
     ENVIRONMENT: 'STAGING',
     APP_VERSION: '0.7.0',
     CANDIDATE_SHA: 'a'.repeat(40),
+    RECOVERY_HOSTNAME: 'hau-usc-logistics-staging-recovery.workers.dev',
     DB: db,
     ASSETS: { fetch() {} },
     BRAND_ASSETS: { get() {} },

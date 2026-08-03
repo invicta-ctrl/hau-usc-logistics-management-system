@@ -1,0 +1,128 @@
+name: Cloudflare static preview
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact 40-character commit SHA to preview
+        required: true
+        type: string
+      preview_url:
+        description: HTTPS workers.dev URL for the deployed static preview root
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-static-preview
+  cancel-in-progress: true
+
+jobs:
+  deploy-static-preview:
+    runs-on: ubuntu-latest
+    environment: cloudflare-preview
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          persist-credentials: false
+      - name: Verify exact candidate and preview target
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.candidate_sha }}
+          PREVIEW_URL: ${{ inputs.preview_url }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "candidate_sha must be an exact lowercase commit SHA" >&2
+            exit 1
+          fi
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          export PREVIEW_URL
+          node <<'NODE'
+          const value = process.env.PREVIEW_URL ?? '';
+          let url;
+          try {
+            url = new URL(value);
+          } catch {
+            console.error('preview_url must be an absolute HTTPS URL.');
+            process.exit(1);
+          }
+          const workersDevHost = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+workers\.dev$/u;
+          if (
+            url.protocol !== 'https:' ||
+            !workersDevHost.test(url.hostname) ||
+            url.pathname !== '/' ||
+            url.search ||
+            url.hash ||
+            url.username ||
+            url.password ||
+            url.port
+          ) {
+            console.error('preview_url must be an HTTPS workers.dev root URL without credentials, port, path, query, or fragment.');
+            process.exit(1);
+          }
+          NODE
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build isolated mock preview
+        run: npm run build
+      - name: Prove preview configuration has no protected bindings
+        run: npx wrangler deploy --dry-run --config cloudflare/wrangler.preview.jsonc --outdir .wrangler/preview-dry-run
+      - name: Deploy isolated static preview
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_PREVIEW_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_PREVIEW_ACCOUNT_ID }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: >-
+          npx wrangler deploy
+          --config cloudflare/wrangler.preview.jsonc
+          --strict
+          --tag "candidate-${CANDIDATE_SHA}"
+          --message "Static mock preview for ${CANDIDATE_SHA}"
+      - name: Smoke preview and record immutable evidence
+        shell: bash
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          PREVIEW_URL: ${{ inputs.preview_url }}
+        run: |
+          set -euo pipefail
+          preview_root='preview-root.html'
+          evidence='preview-evidence.txt'
+          curl --fail --silent --show-error --retry 3 --retry-delay 2 --max-time 30 \
+            --header 'Cache-Control: no-cache' \
+            "${PREVIEW_URL}?codex_candidate=${CANDIDATE_SHA}" \
+            --output "$preview_root"
+          local_sha="$(sha256sum dist/index.html | awk '{print $1}')"
+          fetched_sha="$(sha256sum "$preview_root" | awk '{print $1}')"
+          test "$local_sha" = "$fetched_sha"
+          fetched_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          {
+            echo "candidate_sha=$CANDIDATE_SHA"
+            echo "preview_url=$PREVIEW_URL"
+            echo "local_dist_index_sha256=$local_sha"
+            echo "fetched_root_html_sha256=$fetched_sha"
+            echo "fetched_at=$fetched_at"
+            echo 'result=PASS'
+          } > "$evidence"
+          {
+            echo '### Cloudflare static preview smoke'
+            echo
+            echo "- Candidate SHA: \`$CANDIDATE_SHA\`"
+            echo "- Preview URL: $PREVIEW_URL"
+            echo "- Local \`dist/index.html\` SHA-256: \`$local_sha\`"
+            echo "- Fetched root HTML SHA-256: \`$fetched_sha\`"
+            echo "- Result: PASS"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload preview smoke evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0.7.1-preview-evidence-${{ inputs.candidate_sha }}
+          path: preview-evidence.txt
+          if-no-files-found: error
+          retention-days: 14

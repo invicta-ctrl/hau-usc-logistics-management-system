@@ -1,0 +1,53 @@
+name: Release candidate package
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact 40-character commit SHA to package
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package-release-candidate:
+    runs-on: ubuntu-latest
+    environment: release-candidate
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          persist-credentials: false
+      - name: Verify exact candidate
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "candidate_sha must be an exact lowercase commit SHA" >&2
+            exit 1
+          fi
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run exact-head repository gates
+        run: npm run check
+      - name: Create bound release manifest
+        run: node scripts/create-release-candidate-manifest.mjs .release/v0.7.1-candidate.json
+      - name: Upload immutable candidate package
+        uses: actions/upload-artifact@v4
+        with:
+          name: v0.7.1-candidate-${{ inputs.candidate_sha }}
+          path: |
+            .release/v0.7.1-candidate.json
+            dist/index.html
+            HAU-USC_Logistics-Prototype-Shareable.html
+            apps-script/
+          if-no-files-found: error
+          retention-days: 14

@@ -3,6 +3,7 @@ import worker from '../../src/worker/index.js';
 
 function environment(asset) {
   return {
+    ENVIRONMENT: 'DEVELOPMENT',
     BRAND_ASSETS: {
       get: vi.fn().mockResolvedValue(asset),
     },

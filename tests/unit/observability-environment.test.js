@@ -20,7 +20,12 @@ const binding = (environment, name, databaseId, bucketName) => ({
     { binding: 'BRAND_ASSETS', bucket_name: bucketName },
     { binding: 'EVIDENCE_ASSETS', bucket_name: `${bucketName}-evidence` },
   ],
-  vars: { ENVIRONMENT: environment, APP_VERSION: '0.7.0', CANDIDATE_SHA: 'a'.repeat(40) },
+  vars: {
+    ENVIRONMENT: environment,
+    APP_VERSION: '0.7.0',
+    CANDIDATE_SHA: 'a'.repeat(40),
+    RECOVERY_HOSTNAME: `${environment.toLowerCase()}-recovery.workers.dev`,
+  },
 });
 
 describe('v0.7 environment and observability foundation', () => {
@@ -67,6 +72,7 @@ describe('v0.7 environment and observability foundation', () => {
       ENVIRONMENT: 'STAGING',
       APP_VERSION: '0.7.0',
       CANDIDATE_SHA: 'a'.repeat(40),
+      RECOVERY_HOSTNAME: 'staging-recovery.workers.dev',
       DB: { prepare() {} },
       ASSETS: { fetch() {} },
     });
@@ -83,6 +89,19 @@ describe('v0.7 environment and observability foundation', () => {
     expect(
       safeReleaseIdentity({ ENVIRONMENT: 'production', APP_VERSION: '0.7.0', CANDIDATE_SHA: 'b' }),
     ).toMatchObject({ environment: 'PRODUCTION', releaseVersion: '0.7.0' });
+  });
+
+  it('fails closed for missing or invalid runtime environment and recovery hostname', () => {
+    expect(safeReleaseIdentity({}).environment).toBe('UNKNOWN');
+    expect(environmentReadinessIssues({})).toEqual(
+      expect.arrayContaining(['ENVIRONMENT_INVALID', 'RECOVERY_HOSTNAME_INVALID']),
+    );
+    expect(
+      environmentReadinessIssues({
+        ENVIRONMENT: 'UNRECOGNIZED',
+        RECOVERY_HOSTNAME: 'wrong-recovery.example.test',
+      }),
+    ).toEqual(expect.arrayContaining(['ENVIRONMENT_INVALID', 'RECOVERY_HOSTNAME_INVALID']));
   });
 
   it('proves staging and production Worker, D1, and R2 configuration separation', () => {
@@ -122,12 +141,14 @@ describe('v0.7 environment and observability foundation', () => {
     production.preview_urls = true;
     production.vars.PASSWORD_PEPPER = 'must-not-be-plaintext';
     production.vars.CANDIDATE_SHA = 'b'.repeat(40);
+    production.vars.RECOVERY_HOSTNAME = 'wrong-recovery.example.test';
     const invalid = validateEnvironmentSeparation(staging, production, { expectedSha: 'a'.repeat(40) });
     expect(invalid.valid).toBe(false);
     expect(invalid.issues).toEqual(
       expect.arrayContaining([
         'PRODUCTION: preview_urls must not be enabled',
         'PRODUCTION: PASSWORD_PEPPER must be a protected secret, not a plaintext var',
+        'PRODUCTION: vars.RECOVERY_HOSTNAME must be an exact .workers.dev hostname',
         'Staging and production configs must bind the same frozen candidate SHA',
       ]),
     );
@@ -165,7 +186,7 @@ describe('v0.7 environment and observability foundation', () => {
     );
     expect(pair.staging).toMatchObject({
       name: 'hau-usc-logistics-staging',
-      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.0' },
+      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.1' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
@@ -173,12 +194,14 @@ describe('v0.7 environment and observability foundation', () => {
     });
     expect(pair.production).toMatchObject({
       name: 'hau-usc-logistics-production',
-      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.0' },
+      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.1' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-production-evidence' },
       ],
     });
+    expect(pair.staging.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
+    expect(pair.production.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
     expect(pair.staging.d1_databases[0].database_id).not.toBe(pair.production.d1_databases[0].database_id);
   });
 

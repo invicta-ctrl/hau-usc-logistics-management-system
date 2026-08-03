@@ -1259,7 +1259,7 @@ async function revision(db, scope = 'global') {
 export function createD1OperationalService({
   db,
   environment = 'DEVELOPMENT',
-  appVersion = '0.7.0',
+  appVersion = '0.7.1',
   schemaVersion = '1.0.0',
   evidenceStore = null,
 }) {
