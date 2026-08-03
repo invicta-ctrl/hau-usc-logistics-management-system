@@ -1,5 +1,89 @@
 # Current Codex Work Pointer
 
+## Active v0.7.1 recovery pointer
+
+- Program: HAU-USC Logistics v0.7.1 production recovery.
+- Status: specification accepted; routing/TOML preflight and read-only
+  production truth audit passed; Slices 2 through 8 and the complete repository
+  release candidate are accepted. The policy-authorized fresh correction
+  re-review passed with no P0-P3 and all prior findings closed.
+- Branch: `fix/v0.7.1-production-recovery` from synchronized `main` at
+  `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`.
+- Active specification:
+  `.codex/specs/v0.7.1-production-recovery.md`.
+- Current evidence:
+  `.codex/V0_7_1_ROUTING_AND_PRODUCTION_TRUTH_AUDIT.md` and
+  `.codex/V0_7_1_DELEGATION_LEDGER.md`.
+- Production remains operational on immutable v0.7.0 source
+  `dc98d670fdd63f649037616c5a2d51e5c62ca4ae`, schema 29. No staging-binding
+  incident was found.
+- Accepted Slice 2 implementation:
+  `8cec8fc6a39e697dcf4c1b5e1cc8f336597d69e2`; all nine protected Access
+  Policy/Staff Directory methods now have HTTP and legacy-runtime parity,
+  retry-stable mutations, focused browser proof, full repository gates, and a
+  fresh review PASS. Handoff:
+  `.codex/V0_7_1_SLICE_2_CLIENT_RUNTIME_CONTRACT_HANDOFF.md`.
+- Accepted Slice 3 repair:
+  `de7dfcf331a5e1fd512f13bdc8e97ea09dd05d79`; safe auth correlation and
+  malformed-cookie handling, authoritative release identity, consistent portal
+  navigation, final generated parity, 510 tests, and fresh re-review PASS.
+  Handoff: `.codex/V0_7_1_SLICE_3_LOGIN_SESSION_PORTAL_HANDOFF.md`.
+- Accepted Slice 4 repair:
+  `6bec7d9be355b556fe0d93143a85127a99dd9740`; Staff Directory and Access
+  Management now have complete filtering/state, retry-safe mutations, truthful
+  audit references, 513 tests, full repository gates, real local-Worker/UI
+  proof, and a fresh re-review PASS. Handoff:
+  `.codex/V0_7_1_SLICE_4_DIRECTORY_ACCESS_HANDOFF.md`.
+- Accepted Slice 5 repair:
+  `4e40e79ad4ad626cba262e66187e1c4ba2220964`; canonical workspace/history
+  routes, route-synchronized module chrome, fail-closed authoritative quantity
+  units, preserved borrower semantics, and ordinary/modal dirty-form safety
+  passed 527 tests, focused browser and Worker proofs, all repository gates,
+  and a fresh exact-head review with no P0-P3. Handoff:
+  `.codex/V0_7_1_SLICE_5_WORKSPACE_QUANTITY_DIRTY_HANDOFF.md`.
+- Accepted Slice 6 repair:
+  `55930e5fec7b0f359a77df0a6f9a8e7cfae1b92c`; governed Canvass lifecycle,
+  exclusive preferred decisions, retry-stable archive, complete active
+  Inventory catalog, bounded history projections, governed catalog mutations,
+  and atomic fail-closed bulk classification passed 551 tests, focused mobile
+  Worker proof, all repository gates, and the P1-triggered fresh re-review with
+  no P0-P3. Handoff:
+  `.codex/V0_7_1_SLICE_6_CANVASS_INVENTORY_HANDOFF.md`.
+- Accepted Slice 7 repair:
+  `9da6289de770a2d82083fbbaee815ae4a8b4e6b2`; centralized presentation
+  labels, truthful unavailable metrics, corrected runtime encoding, and
+  bounded Hallmark accessibility/responsive polish passed 555 tests, the
+  complete repository gate, and the real Inventory journey at 320, 375, 414,
+  and 768 pixels. The replacement exact-head Sol review found one localized
+  P2 numeric-coercion defect; Luna repaired it with direct coverage. Handoff:
+  `.codex/V0_7_1_SLICE_7_WORDING_POLISH_HANDOFF.md`.
+- Accepted Slice 8 release-candidate preparation: implementation commits
+  `4f753b2` and `3bd7e20`, with integrated test-contract alignment at
+  `5d04009235fca55a6495763ac0c7592f1220ddc0` and final-review repair at
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Safe static preview and
+  exact-SHA packaging workflows, fail-closed canonical host routing, an exact
+  private recovery-host contract, request-only data containment, opaque-origin
+  Apps Script startup, owner-gated domain/deployment runbooks, and local
+  rollback/monitoring evidence pass 576 unit/integration tests, 130 browser
+  tests with 326 intentional skips, 38/38 local Worker/D1 tests, and a
+  no-binding preview dry-run. Handoff:
+  `.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md`.
+- Release identity rule: after PR #13 passes required checks, closes every
+  review thread, and merges, its exact clean merge commit becomes the active
+  release candidate. Bind the release manifest, private staging package, and
+  private production package to that exact merge SHA; do not reuse the
+  superseded `7338124` candidate identity.
+- Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
+  inventory, ledger, history, evidence, privacy, backup, and rollback
+  invariants.
+- The owner explicitly authorized the v0.7.1 staging, production, domain, and
+  bounded Google release-evidence writes in the active execution session.
+  Continue sequentially through the private release runbook with verified
+  backups, rollback targets, staging acceptance, and post-launch
+  reconciliation. No schema migration is part of v0.7.1.
+
+---
+
 Program: HAU-USC Logistics v0.7.0 continuous production completion
 Phase: Phase 29 — Production Closure and v1 Readiness
 Required model: GPT-5.6 Sol — High

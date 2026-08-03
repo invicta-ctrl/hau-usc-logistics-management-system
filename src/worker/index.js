@@ -26,6 +26,7 @@ import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js'
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
+import { resolveHostRoute, responseForHostRoute } from './host-routing.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
   'cache-control': 'no-store',
@@ -211,7 +212,7 @@ function services(env) {
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-    appVersion: env.APP_VERSION ?? '0.7.0',
+    appVersion: env.APP_VERSION ?? '0.7.1',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
     evidenceStore: evidence,
   });
@@ -452,12 +453,16 @@ async function handleApi(request, env, requestId, executionContext) {
       return createAuthHttpHandler({
         service: auth,
         secureCookies: String(env.ENVIRONMENT).toUpperCase() !== 'DEVELOPMENT',
+        correlationId: requestId,
+        apiHeaders: API_SECURITY_HEADERS,
       })(alias);
     }
     if (url.pathname.startsWith('/api/auth/')) {
       return createAuthHttpHandler({
         service: auth,
         secureCookies: String(env.ENVIRONMENT).toUpperCase() !== 'DEVELOPMENT',
+        correlationId: requestId,
+        apiHeaders: API_SECURITY_HEADERS,
       })(request);
     }
 
@@ -827,6 +832,10 @@ async function handleApi(request, env, requestId, executionContext) {
 export default {
   async fetch(request, env, executionContext) {
     const url = new URL(request.url);
+    const hostRouteResponse = responseForHostRoute(
+      resolveHostRoute(url, env.ENVIRONMENT, env.RECOVERY_HOSTNAME),
+    );
+    if (hostRouteResponse) return hostRouteResponse;
     const brandKey = BRAND_ASSET_KEYS[url.pathname];
     if (brandKey) return brandAsset(request, env, brandKey, { governedSlot: true });
     if (url.pathname.startsWith('/brand/catalog/')) {

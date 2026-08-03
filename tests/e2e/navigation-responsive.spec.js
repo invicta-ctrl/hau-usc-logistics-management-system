@@ -29,6 +29,10 @@ test('request-only portal uses sanitized state and hides internal workspaces', a
   await expect(page.locator('.sidebar')).toBeHidden();
   await expect(page.locator('#inventoryTable')).toBeEmpty();
   await expect(page.locator('#releaseTickets')).toBeEmpty();
+  await expect(page.locator('#lendingTickets')).toBeEmpty();
+  await expect(page.locator('[data-inventory-advanced-controls]')).toHaveCount(0);
+  await expect(page.locator('[data-inventory-classification-queue]')).toHaveCount(0);
+  await expect(page.locator('[data-inventory-workspace-supplement]')).toHaveCount(0);
 });
 
 test('legacy preview state without Event Days still starts safely', async ({ page }, testInfo) => {

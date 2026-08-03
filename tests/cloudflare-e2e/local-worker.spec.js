@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '28' },
+    database: { connected: true, schemaVersion: '29' },
   });
 
   await page.goto('/');
@@ -84,9 +84,33 @@ test('unknown credentials return the safe authentication error instead of a serv
     data: { accessId: 'LOCAL.UNKNOWN', password: 'Synthetic!Invalid9472' },
   });
   expect(response.status()).toBe(401);
+  const correlationId = response.headers()['x-correlation-id'];
+  expect(correlationId).toMatch(/^REQ_[A-Za-z0-9_-]+$/u);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  expect(response.headers()['x-content-type-options']).toBe('nosniff');
+  expect(response.headers()['referrer-policy']).toBe('no-referrer');
+  expect(response.headers()['permissions-policy']).toContain('camera=()');
   await expect(response.json()).resolves.toMatchObject({
     code: 'AUTHENTICATION_FAILED',
     message: 'The Access ID or password is incorrect.',
+    correlationId,
+  });
+});
+
+test('malformed authentication cookies fail closed inside the correlated Worker boundary', async ({
+  request,
+}) => {
+  const response = await request.get('/api/session', {
+    headers: { cookie: '__Host-hau_session=%' },
+  });
+  expect(response.status()).toBe(401);
+  const correlationId = response.headers()['x-correlation-id'];
+  expect(correlationId).toMatch(/^REQ_[A-Za-z0-9_-]+$/u);
+  expect(response.headers()['cache-control']).toBe('no-store');
+  expect(response.headers()['x-content-type-options']).toBe('nosniff');
+  await expect(response.json()).resolves.toMatchObject({
+    code: 'SESSION_INVALID',
+    correlationId,
   });
 });
 
@@ -117,6 +141,48 @@ test('System Owner receives every module and a server-validated operational scop
   });
   expect(invalid.status()).toBe(403);
   await expect(invalid.json()).resolves.toMatchObject({ code: 'OPERATIONAL_SCOPE_INVALID' });
+
+  for (const [unit, quantity, message] of [
+    ['pair', 1.5, /whole number/u],
+    ['unsupported-fixture-unit', 1, /unsupported unit/u],
+  ]) {
+    const invalidQuantity = await mutate(owner, ownerCsrf, 'submitRequest', {
+      clientRequestId: `invalid-quantity-${unit}-${crypto.randomUUID()}`,
+      requestType: 'GENERAL_REQUEST',
+      purpose: 'Synthetic quantity validation proof',
+      lines: [
+        {
+          clientLineId: `invalid-quantity-line-${crypto.randomUUID()}`,
+          description: 'Synthetic countable quantity fixture',
+          quantity,
+          unit,
+          fulfillmentSource: 'FOR_CANVASSING',
+        },
+      ],
+    });
+    expect(invalidQuantity.status()).toBe(422);
+    await expect(invalidQuantity.json()).resolves.toMatchObject({
+      code: 'VALIDATION_FAILED',
+      message: expect.stringMatching(message),
+    });
+  }
+  const mismatchedCatalogUnit = await mutate(owner, ownerCsrf, 'submitRequest', {
+    clientRequestId: `mismatched-catalog-unit-${crypto.randomUUID()}`,
+    requestType: 'GENERAL_REQUEST',
+    purpose: 'Synthetic authoritative unit validation proof',
+    lines: [
+      {
+        clientLineId: `mismatched-catalog-unit-line-${crypto.randomUUID()}`,
+        itemId: 'ITM-LOCAL-001',
+        description: 'Synthetic catalog unit fixture',
+        quantity: 1,
+        unit: 'pair',
+        fulfillmentSource: 'FOR_CANVASSING',
+      },
+    ],
+  });
+  expect(mismatchedCatalogUnit.status()).toBe(422);
+  await expect(mismatchedCatalogUnit.json()).resolves.toMatchObject({ code: 'UNIT_MISMATCH' });
 
   expect(
     (
@@ -327,6 +393,31 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       assetTags: [`PHASE17-${crypto.randomUUID()}`],
       classificationNotes: 'Synthetic local physical classification proof',
     };
+    const incompleteReusableResponse = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', {
+      ...command,
+      clientRequestId: `classification-incomplete-reusable-${crypto.randomUUID()}`,
+      conditionReviewState: 'NOT_APPLICABLE',
+      maintenanceReviewState: 'NOT_APPLICABLE',
+    });
+    expect(incompleteReusableResponse.status()).toBe(409);
+    await expect(incompleteReusableResponse.json()).resolves.toMatchObject({
+      code: 'PHYSICAL_REVIEW_REQUIRED',
+    });
+    const stillPendingResponse = await mutate(inventory, inventoryCsrf, 'listInventoryClassifications', {
+      status: 'NEEDS_CLASSIFICATION',
+      search: fixture.id,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(stillPendingResponse.status()).toBe(200);
+    const stillPending = await stillPendingResponse.json();
+    expect(stillPending.items).toContainEqual(
+      expect.objectContaining({
+        id: fixture.id,
+        classificationRevision: fixture.classificationRevision,
+        classificationHistory: [],
+      }),
+    );
     const classifiedResponse = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', command);
     expect(classifiedResponse.status()).toBe(200);
     const classified = await classifiedResponse.json();
@@ -366,6 +457,448 @@ test('inventory classification is protected, audited, idempotent, and fail-close
     expect(publicCatalog.items).toContainEqual(expect.objectContaining({ id: fixture.id }));
   } finally {
     await Promise.all([inventory.dispose(), food.dispose()]);
+  }
+});
+
+test('inventory bulk classification is atomic and bootstrap projects the complete governed catalog', async ({
+  baseURL,
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const owner = await apiRequest.newContext({ baseURL });
+  try {
+    const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const marker = crypto.randomUUID();
+    const createdItems = [];
+    for (const suffix of ['A', 'B']) {
+      const createdResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+        clientRequestId: `bulk-classification-create-${suffix}-${marker}`,
+        itemName: `Bulk Classification ${marker} ${suffix}`,
+        aliases: [],
+        category: 'Synthetic bulk classification',
+        stockArea: 'OFFICE',
+        storageLocation: `Synthetic Bulk Shelf ${suffix}`,
+        handling: 'TO_CLASSIFY',
+        unit: 'piece',
+        catalogType: 'OFFICE_INVENTORY',
+        reorderThreshold: 0,
+        initialQuantity: 0,
+        notes: 'Synthetic atomic bulk classification proof',
+      });
+      expect(createdResponse.status()).toBe(200);
+      createdItems.push(await createdResponse.json());
+    }
+
+    const pendingResponse = await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+      status: 'NEEDS_CLASSIFICATION',
+      search: marker,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(pendingResponse.status()).toBe(200);
+    const pending = await pendingResponse.json();
+    expect(pending.items).toHaveLength(2);
+    const commands = pending.items.map((item) => ({
+      itemId: item.id,
+      expectedRevision: item.classificationRevision,
+      classificationStatus: 'CLASSIFIED',
+      inventoryKind: 'CONSUMABLE',
+      stockArea: item.stockArea,
+      storageLocation: item.storageLocation,
+      unit: item.unit,
+      reorderThreshold: item.reorderThreshold,
+      conditionReviewState: 'NOT_APPLICABLE',
+      maintenanceReviewState: 'NOT_APPLICABLE',
+      classificationNotes: `Physically reviewed together ${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      enableLendingConfirmed: false,
+      assetInstanceCountIfReusable: 0,
+      assetTrackingConfirmed: false,
+      assetTags: [],
+      evidenceId: '',
+    }));
+
+    const incompleteReusableResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', {
+      clientRequestId: `bulk-classification-incomplete-reusable-${marker}`,
+      reason: `Incomplete reusable physical review ${marker}`,
+      similarityConfirmed: true,
+      items: commands.map((item) => ({
+        ...item,
+        inventoryKind: 'REUSABLE',
+        conditionReviewState: 'NOT_APPLICABLE',
+        maintenanceReviewState: 'NOT_APPLICABLE',
+      })),
+    });
+    expect(incompleteReusableResponse.status()).toBe(409);
+    await expect(incompleteReusableResponse.json()).resolves.toMatchObject({
+      code: 'PHYSICAL_REVIEW_REQUIRED',
+    });
+    const afterIncompleteReusable = await (
+      await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+        status: 'NEEDS_CLASSIFICATION',
+        search: marker,
+        page: 1,
+        pageSize: 10,
+      })
+    ).json();
+    expect(afterIncompleteReusable.items).toHaveLength(2);
+    expect(afterIncompleteReusable.items.every((item) => item.classificationRevision === 1)).toBe(true);
+    expect(afterIncompleteReusable.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
+
+    const staleResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', {
+      clientRequestId: `bulk-classification-stale-${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      items: commands.map((item, index) =>
+        index === 1 ? { ...item, expectedRevision: item.expectedRevision - 1 } : item,
+      ),
+    });
+    expect(staleResponse.status()).toBe(409);
+    await expect(staleResponse.json()).resolves.toMatchObject({
+      code: 'CLASSIFICATION_REVISION_CONFLICT',
+    });
+    const afterStale = await (
+      await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+        status: 'NEEDS_CLASSIFICATION',
+        search: marker,
+        page: 1,
+        pageSize: 10,
+      })
+    ).json();
+    expect(afterStale.items).toHaveLength(2);
+    expect(afterStale.items.every((item) => item.classificationRevision === 1)).toBe(true);
+    expect(afterStale.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
+
+    const bulkCommand = {
+      clientRequestId: `bulk-classification-valid-${marker}`,
+      reason: `Physically reviewed together ${marker}`,
+      similarityConfirmed: true,
+      items: commands,
+    };
+    const bulkResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    expect(bulkResponse.status()).toBe(200);
+    const bulkResult = await bulkResponse.json();
+    expect(bulkResult).toMatchObject({
+      itemIds: expect.arrayContaining(createdItems.map((item) => item.itemId)),
+      count: 2,
+      bulkGroupId: expect.stringMatching(/^BCL-/u),
+      classificationRevisions: Object.fromEntries(createdItems.map((item) => [item.itemId, 2])),
+    });
+    const replay = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    expect(replay.status()).toBe(200);
+    await expect(replay.json()).resolves.toMatchObject(bulkResult);
+
+    const moduleResponse = await owner.post('/api/getBootstrapModule', {
+      data: { module: 'inventory', page: 1, pageSize: 1 },
+    });
+    expect(moduleResponse.status()).toBe(200);
+    const moduleData = await moduleResponse.json();
+    expect(moduleData.pagination).toEqual({
+      page: 1,
+      pageSize: moduleData.data.inventoryItems.length,
+      total: moduleData.data.inventoryItems.length,
+      hasMore: false,
+    });
+    expect(moduleData.data.inventoryItems.length).toBeGreaterThan(1);
+    expect(moduleData.data).toMatchObject({
+      reservations: expect.any(Array),
+      ledgerTransactions: expect.any(Array),
+    });
+    const projected = moduleData.data.inventoryItems.filter((item) =>
+      createdItems.some((created) => created.itemId === item.id),
+    );
+    expect(projected).toHaveLength(2);
+    for (const item of projected) {
+      expect(item).toMatchObject({
+        classificationStatus: 'CLASSIFIED',
+        inventoryKind: 'CONSUMABLE',
+        isLendable: false,
+        classificationRevision: 2,
+        classificationHistory: [
+          expect.objectContaining({
+            bulkGroupId: bulkResult.bulkGroupId,
+            correlationId: bulkResult.correlationId,
+          }),
+        ],
+      });
+    }
+
+    await page.goto('/app/inventory');
+    await page.getByLabel('Access ID').fill('LOCAL.INVENTORY');
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+    const panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
+    await panel
+      .locator('.role-experience-actions [data-inventory-destination="inventory-management"]')
+      .click();
+    const queue = page.locator('[data-inventory-classification-queue]');
+    await queue.locator('[data-classification-status]').selectOption('ALL');
+    await queue.getByLabel('Search classification queue').fill(marker);
+    const classificationSelections = queue.locator('[data-classification-select]');
+    await expect(classificationSelections).toHaveCount(2);
+    for (const selection of [classificationSelections.first(), classificationSelections.nth(1)]) {
+      await selection.locator('xpath=ancestor::label[1]').click();
+      await expect(selection).toBeChecked();
+    }
+    await queue.getByRole('button', { name: 'Bulk classify selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Bulk classify 2 items' })).toBeVisible();
+    const bulkForm = page.locator('#bulkInventoryClassificationForm');
+    const inventoryKind = bulkForm.getByLabel('Inventory kind');
+    const conditionReview = bulkForm.getByLabel('Condition review');
+    const maintenanceReview = bulkForm.getByLabel('Maintenance review');
+    await expect(conditionReview).toBeDisabled();
+    await expect(maintenanceReview).toBeDisabled();
+    await inventoryKind.selectOption('REUSABLE');
+    await expect(conditionReview).toBeEnabled();
+    await expect(maintenanceReview).toBeEnabled();
+    await expect(conditionReview).toHaveValue('');
+    await expect(maintenanceReview).toHaveValue('');
+    await expect(conditionReview).toHaveAttribute('required', '');
+    await expect(maintenanceReview).toHaveAttribute('required', '');
+    await inventoryKind.selectOption('CONSUMABLE');
+    await expect(conditionReview).toBeDisabled();
+    await expect(maintenanceReview).toBeDisabled();
+    await page.getByLabel('Classification notes').fill(`Second physical review ${marker}`);
+    await page.getByLabel(/I physically reviewed the selected items/u).check();
+    const uiBulkResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/bulkClassifyInventoryItems') && response.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Classify Selected as Non-lendable' }).click();
+    expect((await uiBulkResponse).status()).toBe(200);
+    await expect(page.getByText('2 non-lendable classifications recorded.')).toBeVisible();
+  } finally {
+    await owner.dispose();
+  }
+});
+
+test('D1 catalog mutations enforce authority, quantity, revision, dependency, and lifecycle invariants', async ({
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  const food = await apiRequest.newContext({ baseURL });
+  try {
+    const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const foodCsrf = await login(food, 'LOCAL.FOOD');
+    const marker = crypto.randomUUID();
+    const createCommand = {
+      clientRequestId: `catalog-create-${marker}`,
+      itemName: `A Synthetic Catalog Item ${marker}`,
+      aliases: [`Catalog alias ${marker}`, `catalog alias ${marker}`],
+      category: 'Synthetic supplies',
+      stockArea: 'OFFICE',
+      storageLocation: 'Synthetic Shelf A',
+      handling: 'CONSUMABLE',
+      unit: 'piece',
+      catalogType: 'OFFICE_INVENTORY',
+      reorderThreshold: 1,
+      maximumLoanQuantity: 2,
+      initialQuantity: 2,
+      notes: 'Synthetic D1 catalog lifecycle proof',
+    };
+
+    const denied = await mutate(food, foodCsrf, 'createInventoryItem', {
+      ...createCommand,
+      clientRequestId: `catalog-denied-${marker}`,
+    });
+    expect(denied.status()).toBe(403);
+    await expect(denied.json()).resolves.toMatchObject({ code: 'CAPABILITY_REQUIRED' });
+
+    for (const invalid of [
+      { unit: 'piece', reorderThreshold: 0.5 },
+      { unit: 'piece', initialQuantity: 1.5 },
+      { unit: 'unsupported-unit' },
+    ]) {
+      const response = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+        ...createCommand,
+        ...invalid,
+        clientRequestId: `catalog-invalid-${crypto.randomUUID()}`,
+      });
+      expect(response.status()).toBe(422);
+      await expect(response.json()).resolves.toMatchObject({ code: 'VALIDATION_FAILED' });
+    }
+
+    const createdResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
+    expect(createdResponse.status()).toBe(200);
+    const created = await createdResponse.json();
+    expect(created).toMatchObject({
+      itemId: expect.stringMatching(/^ITM-/u),
+      status: 'ACTIVE',
+      updatedAt: expect.any(String),
+      transactionId: expect.stringMatching(/^TXN-/u),
+      initialQuantityPosted: 2,
+    });
+    const createReplay = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
+    expect(createReplay.status()).toBe(200);
+    await expect(createReplay.json()).resolves.toMatchObject(created);
+
+    const updateCommand = {
+      clientRequestId: `catalog-update-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      itemName: `A Synthetic Catalog Item Updated ${marker}`,
+      aliases: [`Updated alias ${marker}`, `Second alias ${marker}`],
+      reorderThreshold: 2,
+      maximumLoanQuantity: 1,
+      reason: 'Synthetic catalog metadata update',
+    };
+    const updatedResponse = await mutate(owner, ownerCsrf, 'updateInventoryItem', updateCommand);
+    expect(updatedResponse.status()).toBe(200);
+    const updated = await updatedResponse.json();
+    expect(updated).toMatchObject({
+      itemId: created.itemId,
+      status: 'ACTIVE',
+      updatedAt: expect.any(String),
+    });
+    expect(updated.updatedAt).not.toBe(created.updatedAt);
+    const updateReplay = await mutate(owner, ownerCsrf, 'updateInventoryItem', updateCommand);
+    expect(updateReplay.status()).toBe(200);
+    await expect(updateReplay.json()).resolves.toMatchObject(updated);
+
+    const staleUpdate = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-stale-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      notes: 'This stale write must not win.',
+    });
+    expect(staleUpdate.status()).toBe(409);
+    await expect(staleUpdate.json()).resolves.toMatchObject({ code: 'CATALOG_REVISION_CONFLICT' });
+
+    const blockedUnitChange = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-unit-change-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: updated.updatedAt,
+      unit: 'box',
+    });
+    expect(blockedUnitChange.status()).toBe(409);
+    await expect(blockedUnitChange.json()).resolves.toMatchObject({
+      code: 'HISTORICAL_UNIT_CHANGE_BLOCKED',
+      details: expect.objectContaining({ ledger: 1 }),
+    });
+
+    const blockedArchive = await mutate(owner, ownerCsrf, 'archiveInventoryItem', {
+      clientRequestId: `catalog-archive-blocked-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: updated.updatedAt,
+      reason: 'Synthetic positive-balance archive denial',
+    });
+    expect(blockedArchive.status()).toBe(409);
+    await expect(blockedArchive.json()).resolves.toMatchObject({
+      code: 'ARCHIVE_NOT_ALLOWED',
+      details: expect.objectContaining({ onHand: 2 }),
+    });
+
+    const moduleResponse = await owner.post('/api/getBootstrapModule', {
+      data: { module: 'inventory', page: 1, pageSize: 50 },
+    });
+    expect(moduleResponse.status()).toBe(200);
+    const moduleData = await moduleResponse.json();
+    expect(moduleData.data.inventoryItems).toContainEqual(
+      expect.objectContaining({
+        id: created.itemId,
+        name: updateCommand.itemName,
+        aliases: expect.arrayContaining(updateCommand.aliases),
+        unit: 'piece',
+        onHand: 2,
+        reorderThreshold: 2,
+        updatedAt: updated.updatedAt,
+        inventoryKind: 'UNVERIFIED',
+        classificationStatus: 'NEEDS_CLASSIFICATION',
+        isLendable: false,
+        lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      }),
+    );
+    expect(moduleData.data.ledgerTransactions).toContainEqual(
+      expect.objectContaining({
+        id: created.transactionId,
+        transactionType: 'OPENING_BALANCE',
+        itemId: created.itemId,
+        quantity: 2,
+        unit: 'piece',
+        status: 'POSTED',
+      }),
+    );
+
+    const zeroCreateResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+      clientRequestId: `catalog-zero-create-${marker}`,
+      itemName: `A Synthetic Zero Balance Item ${marker}`,
+      aliases: [`Zero alias ${marker}`],
+      category: 'Synthetic supplies',
+      stockArea: 'OFFICE',
+      storageLocation: 'Synthetic Shelf B',
+      handling: 'NON_CIRCULATING',
+      unit: 'piece',
+      reorderThreshold: 0,
+      initialQuantity: 0,
+      verificationNote: 'Physical verification is still required.',
+    });
+    expect(zeroCreateResponse.status()).toBe(200);
+    const zeroCreated = await zeroCreateResponse.json();
+    expect(zeroCreated).toMatchObject({ transactionId: null, initialQuantityPosted: 0 });
+
+    const storageCommand = {
+      clientRequestId: `catalog-storage-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: zeroCreated.updatedAt,
+      stockArea: 'PANTRY',
+      storageLocation: 'Synthetic Shelf C',
+      note: 'Synthetic storage-context change',
+    };
+    const storageResponse = await mutate(owner, ownerCsrf, 'updateInventoryStorageContext', storageCommand);
+    expect(storageResponse.status()).toBe(200);
+    const stored = await storageResponse.json();
+    expect(stored).toMatchObject({
+      itemId: zeroCreated.itemId,
+      stockArea: 'PANTRY',
+      storageLocation: 'Synthetic Shelf C',
+      updatedAt: expect.any(String),
+    });
+    const storageReplay = await mutate(owner, ownerCsrf, 'updateInventoryStorageContext', storageCommand);
+    expect(storageReplay.status()).toBe(200);
+    await expect(storageReplay.json()).resolves.toMatchObject(stored);
+
+    const archiveCommand = {
+      clientRequestId: `catalog-archive-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: stored.updatedAt,
+      reason: 'Synthetic zero-balance archive',
+    };
+    const archivedResponse = await mutate(owner, ownerCsrf, 'archiveInventoryItem', archiveCommand);
+    expect(archivedResponse.status()).toBe(200);
+    const archived = await archivedResponse.json();
+    expect(archived).toMatchObject({
+      itemId: zeroCreated.itemId,
+      status: 'ARCHIVED',
+      updatedAt: expect.any(String),
+    });
+    const archiveReplay = await mutate(owner, ownerCsrf, 'archiveInventoryItem', archiveCommand);
+    expect(archiveReplay.status()).toBe(200);
+    await expect(archiveReplay.json()).resolves.toMatchObject(archived);
+
+    const restoreCommand = {
+      clientRequestId: `catalog-restore-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: archived.updatedAt,
+      status: 'ACTIVE',
+      reason: 'Synthetic fail-closed restore',
+    };
+    const restoredResponse = await mutate(owner, ownerCsrf, 'restoreInventoryItem', restoreCommand);
+    expect(restoredResponse.status()).toBe(200);
+    const restored = await restoredResponse.json();
+    expect(restored).toMatchObject({
+      itemId: zeroCreated.itemId,
+      status: 'VERIFY',
+      updatedAt: expect.any(String),
+    });
+    const restoreReplay = await mutate(owner, ownerCsrf, 'restoreInventoryItem', restoreCommand);
+    expect(restoreReplay.status()).toBe(200);
+    await expect(restoreReplay.json()).resolves.toMatchObject(restored);
+  } finally {
+    await Promise.all([owner.dispose(), food.dispose()]);
   }
 });
 
@@ -439,6 +972,9 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await rosterControl.click();
   await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
   await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
+  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Activity')).toBeVisible();
+  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Verification')).toBeVisible();
+  await expect(ownerPage.locator('[data-roster-directory]')).toHaveAttribute('aria-live', 'polite');
   const systemStatusControl = ownerPage.locator('[data-admin-control-surface="system-status"]');
   await expect(systemStatusControl).toBeVisible();
   await systemStatusControl.click();
@@ -566,6 +1102,20 @@ test('public Lending Center submits both borrower types without exposing public 
     lines: [{ itemId: item.id, quantity: 1 }],
     clientRequestId,
   };
+  const fractionalCountable = await request.post('/api/public/lending', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: {
+      ...command,
+      lines: [{ itemId: item.id, quantity: 1.5 }],
+      clientRequestId: `public-lending-fractional-${crypto.randomUUID()}`,
+    },
+  });
+  expect(fractionalCountable.status()).toBe(422);
+  await expect(fractionalCountable.json()).resolves.toMatchObject({
+    code: 'VALIDATION_FAILED',
+    message: expect.stringMatching(/whole number/u),
+  });
+
   const submitted = await request.post('/api/public/lending', {
     headers: { origin: 'http://127.0.0.1:8787' },
     data: command,
@@ -939,7 +1489,7 @@ test('System Owner changes governed operational scope without losing identity or
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
 
   await workspace.selectOption('materials');
-  await expect(page).toHaveURL(/\/app\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
+  await expect(page).toHaveURL(/\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(
     'Viewing: Materials & Documentation',
@@ -992,7 +1542,7 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
       assetMovementHistory: expect.any(Array),
     },
   });
-  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(100);
+  expect(moduleData.data.ledgerTransactions.length).toBeLessThanOrEqual(500);
   expect(moduleData.data.inventoryAssets.length).toBeLessThanOrEqual(100);
   expect(moduleData.data.assetMaintenanceHistory.length).toBeLessThanOrEqual(100);
   expect(moduleData.data.assetMovementHistory.length).toBeLessThanOrEqual(100);
@@ -1023,6 +1573,23 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   await classificationQueue.locator('[data-classification-status]').selectOption('ALL');
   await classificationQueue.getByLabel('Search classification queue').fill('ITM-LOCAL-CLASSIFY');
   await expect(classificationQueue).toContainText('ITM-LOCAL-CLASSIFY');
+  const classificationSelection = classificationQueue.getByLabel(
+    'Select Synthetic Classification Fixture for bulk classification',
+  );
+  await expect(classificationSelection).toBeVisible();
+  await expect(classificationSelection).not.toBeChecked();
+  const selectionLabel = classificationSelection.locator('xpath=ancestor::label[1]');
+  await expect(selectionLabel).toHaveClass(/classification-select/u);
+  await expect(selectionLabel.getByRole('button')).toHaveCount(0);
+  await selectionLabel.click();
+  await expect(classificationSelection).toBeChecked();
+  for (const width of [320, 375, 414, 768]) {
+    await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+    const labelBox = await selectionLabel.boundingBox();
+    expect(labelBox?.width).toBeGreaterThanOrEqual(44);
+    expect(labelBox?.height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
   await classificationQueue.getByRole('button', { name: 'Review' }).first().click();
   await expect(page.getByRole('heading', { name: /Classify ITM-LOCAL-CLASSIFY/u })).toBeVisible();
   await expect(page.getByLabel('Review status')).toBeVisible();
@@ -1110,6 +1677,19 @@ test('starter activation rotates into a normal session and logout revokes it', a
   await shell.locator('.shell-account > summary').click();
   await shell.getByRole('button', { name: 'Sign out' }).click();
   await expect(page.getByLabel('Access ID')).toBeVisible();
+  const sessionAfterLogout = await page.evaluate(async () => {
+    const response = await fetch('/api/session', { credentials: 'include' });
+    return { status: response.status, body: await response.json() };
+  });
+  expect(sessionAfterLogout).toMatchObject({
+    status: 401,
+    body: { code: 'SESSION_REQUIRED' },
+  });
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/app\//u);
+  await page.goto('/');
+  await expect(page.getByLabel('Access ID')).toBeVisible();
+  await expect(page.locator('.app-shell')).toBeHidden();
 });
 
 test('Administrator Access Management renames an Access ID once and revokes prior sessions', async () => {
@@ -1361,7 +1941,7 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
     });
 
     await page.goto('/app/materials');
-    await expect(page).toHaveURL(/\/app\/food$/u);
+    await expect(page).toHaveURL(/\/food$/u);
     await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
     const workspace = page.locator('[data-internal-shell-context]').getByLabel('Workspace');
     await expect(workspace).toHaveValue('food');
@@ -1515,6 +2095,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic revoke sessions lifecycle proof.',
+        clientRequestId: 'local-revoke-sessions-0001',
       },
     });
     expect(revoked.status()).toBe(200);
@@ -1528,6 +2109,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
+        clientRequestId: 'local-reset-password-0001',
       },
     });
     expect(reset.status()).toBe(200);
@@ -1538,6 +2120,22 @@ test('Administrator Access Management governs the staging account lifecycle and 
       sessionsRevoked: true,
     });
     const generatedResetPassword = resetResult.credential.temporaryPassword;
+    const resetReplay = await admin.post('/api/admin/access/reset-password', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        currentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
+        reason: 'Synthetic temporary password reset lifecycle proof.',
+        clientRequestId: 'local-reset-password-0001',
+      },
+    });
+    expect(resetReplay.status()).toBe(200);
+    await expect(resetReplay.json()).resolves.toMatchObject({
+      reset: true,
+      replayed: true,
+      credentialUnavailable: true,
+      correlationId: resetResult.correlationId,
+    });
 
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const wrong = await anonymous.post('/api/auth/login', {
@@ -1556,6 +2154,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic unlock and rate-limit reset lifecycle proof.',
+        clientRequestId: 'local-unlock-account-0001',
       },
     });
     expect(unlocked.status()).toBe(200);
@@ -1738,6 +2337,7 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Generate one governed replacement department credential.',
+        clientRequestId: 'department-reset-password-0001',
       },
     });
     expect(reset.status()).toBe(200);
@@ -1793,6 +2393,7 @@ test('Administrator UI shows department identity and a one-time server-generated
   await expect(page.getByRole('heading', { name: 'Temporary password generated' })).toBeVisible();
   await expect(page.locator('.credential-handoff')).toContainText('Access ID: DOL_2026');
   await expect(page.locator('.credential-handoff')).toContainText('Initial password: Hau!9');
+  await expect(page.getByText(/Audit reference: REQ_/u)).toBeVisible();
   await expect(page.getByRole('button', { name: 'Download access codes' })).toBeVisible();
 });
 
@@ -1811,6 +2412,7 @@ test('requester portals keep request and lending records self-scoped', async () 
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Prepare the governed department account for authenticated Request Center coverage.',
+        clientRequestId: `department-requester-reset-${suffix}`,
       },
     });
     expect(departmentReset.status()).toBe(200);
@@ -2100,7 +2702,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(requestLines.map((line) => line.status).sort()).toEqual(['FOR_CANVASSING', 'READY_TO_RESERVE']);
   expect(
     procurementData.data.deliverables.some(
-      (deliverable) => deliverable.request_id === requestId && deliverable.status === 'FOR_CANVASSING',
+      (deliverable) => deliverable.requestId === requestId && deliverable.status === 'FOR_CANVASSING',
     ),
   ).toBe(true);
   const stockLine = requestLines.find((line) => line.status === 'READY_TO_RESERVE');
@@ -2418,7 +3020,10 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(duplicateReturn.status()).toBe(409);
 });
 
-test('committee-scoped canvass, procurement, and cumulative receiving execute in D1', async ({ request }) => {
+test('committee-scoped canvass, procurement, and cumulative receiving execute in D1', async ({
+  page,
+  request,
+}) => {
   const materialsCsrf = await login(request, 'LOCAL.MATERIALS');
   const rejectedEvidence = await mutate(request, materialsCsrf, 'saveCanvassReference', {
     clientRequestId: 'local-e2e-canvass-evidence-rejected',
@@ -2447,10 +3052,61 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
   };
   const saved = await mutate(request, materialsCsrf, 'saveCanvassReference', saveCommand);
   expect(saved.status()).toBe(200);
-  const canvassId = (await saved.json()).canvassId;
+  const savedResult = await saved.json();
+  const canvassId = savedResult.canvassId;
   const savedReplay = await mutate(request, materialsCsrf, 'saveCanvassReference', saveCommand);
   expect(savedReplay.status()).toBe(200);
   expect((await savedReplay.json()).canvassId).toBe(canvassId);
+
+  for (const [suffix, override] of [
+    ['date', { checkedAt: '2026-02-30' }],
+    ['unit', { unit: 'crate-of-unknown-size' }],
+    ['url', { sourceUrl: 'javascript:alert(1)' }],
+  ]) {
+    const invalid = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+      ...saveCommand,
+      ...override,
+      supplierName: `Invalid ${suffix} supplier`,
+      clientRequestId: `local-e2e-canvass-invalid-${suffix}`,
+    });
+    expect(invalid.status()).toBe(422);
+    await expect(invalid.json()).resolves.toMatchObject({ code: 'VALIDATION_FAILED' });
+  }
+
+  const duplicate = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    clientRequestId: 'local-e2e-canvass-duplicate',
+  });
+  expect(duplicate.status()).toBe(409);
+  await expect(duplicate.json()).resolves.toMatchObject({ code: 'CANVASS_DUPLICATE' });
+
+  const staleUpdate = await mutate(request, materialsCsrf, 'updateCanvassReference', {
+    canvassId,
+    price: 135,
+    expectedUpdatedAt: '2000-01-01T00:00:00.000Z',
+    clientRequestId: 'local-e2e-canvass-update-stale',
+  });
+  expect(staleUpdate.status()).toBe(409);
+  await expect(staleUpdate.json()).resolves.toMatchObject({ code: 'REVISION_CONFLICT' });
+
+  const updated = await mutate(request, materialsCsrf, 'updateCanvassReference', {
+    canvassId,
+    price: 135,
+    checkedAt: '2026-07-23T00:00:00.000Z',
+    expectedUpdatedAt: savedResult.updatedAt,
+    reason: 'Synthetic corrected quote',
+    clientRequestId: 'local-e2e-canvass-update',
+  });
+  expect(updated.status()).toBe(200);
+
+  const second = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    supplierName: 'Synthetic Alternate Supplier',
+    price: 140,
+    clientRequestId: 'local-e2e-canvass-save-alternate',
+  });
+  expect(second.status()).toBe(200);
+  const secondResult = await second.json();
 
   const preferred = await mutate(request, materialsCsrf, 'selectPreferredCanvass', {
     canvassId,
@@ -2458,6 +3114,198 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
     clientRequestId: 'local-e2e-canvass-preferred',
   });
   expect(preferred.status()).toBe(200);
+  const preferredResult = await preferred.json();
+
+  const blockedArchive = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: preferredResult.updatedAt,
+    reason: 'Synthetic preferred archive guard',
+    clientRequestId: 'local-e2e-canvass-archive-preferred',
+  });
+  expect(blockedArchive.status()).toBe(409);
+  await expect(blockedArchive.json()).resolves.toMatchObject({
+    code: 'PREFERRED_CANVASS_ARCHIVE_BLOCKED',
+  });
+
+  const alternatePreferred = await mutate(request, materialsCsrf, 'selectPreferredCanvass', {
+    canvassId: secondResult.canvassId,
+    rationale: 'Alternate quote chosen after comparison',
+    clientRequestId: 'local-e2e-canvass-preferred-alternate',
+  });
+  expect(alternatePreferred.status()).toBe(200);
+  const alternatePreferredResult = await alternatePreferred.json();
+
+  const archived = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Superseded by the selected alternate quote',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archived.status()).toBe(200);
+  const archivedResult = await archived.json();
+  expect(archivedResult).toMatchObject({ status: 'ARCHIVED', canvassId });
+
+  const archivedReplay = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Superseded by the selected alternate quote',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archivedReplay.status()).toBe(200);
+  await expect(archivedReplay.json()).resolves.toEqual(archivedResult);
+
+  const archiveConflict = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId,
+    expectedUpdatedAt: alternatePreferredResult.updatedAt,
+    reason: 'Changed retry payload must conflict',
+    clientRequestId: 'local-e2e-canvass-archive',
+  });
+  expect(archiveConflict.status()).toBe(409);
+  await expect(archiveConflict.json()).resolves.toMatchObject({ code: 'IDEMPOTENCY_CONFLICT' });
+
+  const procurement = await request.get('/api/procurement');
+  expect(procurement.status()).toBe(200);
+  const procurementData = await procurement.json();
+  const savedCanvass = procurementData.data.canvassReferences.find((entry) => entry.id === canvassId);
+  const alternateCanvass = procurementData.data.canvassReferences.find(
+    (entry) => entry.id === secondResult.canvassId,
+  );
+  expect(savedCanvass).toMatchObject({
+    status: 'ARCHIVED',
+    price: 135,
+    preferred: false,
+    preferredRationale: '',
+    priceHistory: [
+      expect.objectContaining({ price: 125, checkedAt: '2026-07-22T00:00:00.000Z' }),
+      expect.objectContaining({ price: 135, checkedAt: '2026-07-23T00:00:00.000Z' }),
+    ],
+  });
+  expect(alternateCanvass).toMatchObject({
+    status: 'ACTIVE',
+    preferred: true,
+    preferredRationale: 'Alternate quote chosen after comparison',
+  });
+
+  const uiQuote = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+    ...saveCommand,
+    supplierName: 'Synthetic UI Supplier',
+    location: 'Angeles City',
+    price: 150,
+    checkedAt: '2026-08-03',
+    clientRequestId: 'local-e2e-canvass-save-ui',
+  });
+  expect(uiQuote.status()).toBe(200);
+  const uiQuoteResult = await uiQuote.json();
+
+  await page.goto('/');
+  await page.getByLabel('Access ID').fill('LOCAL.MATERIALS');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.app-shell')).toBeVisible();
+  await page
+    .locator('[data-role-experience="materials"] [data-materials-destination="materials-canvassing"]')
+    .last()
+    .click();
+  await expect(page.locator('[data-proc-tab="canvass"]')).toHaveClass(/active/u);
+  const comparisonLineId = await page
+    .locator('#quoteCompareLine option')
+    .filter({ hasText: 'Synthetic Procurement Item' })
+    .getAttribute('value');
+  expect(comparisonLineId).toBeTruthy();
+  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
+
+  await page.locator(`[data-prefer-canvass="${uiQuoteResult.canvassId}"]:visible`).click();
+  const preferredForm = page.locator('#governedPreferredCanvassForm');
+  await expect(preferredForm).toBeVisible();
+  await preferredForm
+    .getByLabel('Required decision reason')
+    .fill('Selected in the governed browser comparison.');
+  await preferredForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
+  await expect(
+    page
+      .locator('#quoteComparison .canvass-quality-indicator:visible')
+      .filter({ hasText: 'Decision: Selected in the governed browser comparison.' }),
+  ).toBeVisible();
+
+  await page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`).click();
+  const updateForm = page.locator('#governedCanvassUpdateForm');
+  await expect(updateForm).toBeVisible();
+  await updateForm.getByLabel(/Price/u).fill('155');
+  await updateForm.getByLabel('Reason for update').fill('Updated through the governed browser form.');
+  await updateForm.getByRole('button', { name: 'Save Governed Changes' }).click();
+  await expect(page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`)).toBeVisible();
+
+  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
+  await page.locator(`[data-prefer-canvass="${secondResult.canvassId}"]:visible`).click();
+  const replacementForm = page.locator('#governedPreferredCanvassForm');
+  await replacementForm
+    .getByLabel('Required decision reason')
+    .fill('Restored the alternate quote after the UI lifecycle proof.');
+  await replacementForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
+
+  const archiveButton = page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]:visible`);
+  await expect(archiveButton).toBeEnabled();
+  await archiveButton.click();
+  const archiveForm = page.locator('#governedCanvassArchiveForm');
+  await archiveForm
+    .getByLabel('Required archive reason')
+    .fill('Superseded after the browser workflow proof.');
+  await archiveForm.getByRole('button', { name: 'Archive Reference' }).click();
+  await expect(page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]`)).toHaveCount(0);
+
+  const uiProcurement = await request.get('/api/procurement');
+  expect(uiProcurement.status()).toBe(200);
+  const uiQuoteReadback = (await uiProcurement.json()).data.canvassReferences.find(
+    (entry) => entry.id === uiQuoteResult.canvassId,
+  );
+  expect(uiQuoteReadback).toMatchObject({
+    status: 'ARCHIVED',
+    price: 155,
+    preferred: false,
+    preferredRationale: '',
+    location: 'Angeles City',
+    priceHistory: [
+      expect.objectContaining({ price: 150, checkedAt: '2026-08-03' }),
+      expect.objectContaining({ price: 155, checkedAt: '2026-08-03' }),
+    ],
+  });
+
+  const concurrentQuotes = await Promise.all(
+    [
+      ['Concurrent Supplier B', 160, 'local-e2e-canvass-concurrent-b'],
+      ['Concurrent Supplier C', 165, 'local-e2e-canvass-concurrent-c'],
+    ].map(async ([supplierName, price, clientRequestId]) => {
+      const response = await mutate(request, materialsCsrf, 'saveCanvassReference', {
+        ...saveCommand,
+        supplierName,
+        price,
+        clientRequestId,
+      });
+      expect(response.status()).toBe(200);
+      return response.json();
+    }),
+  );
+  const concurrentSelections = await Promise.all(
+    concurrentQuotes.map((quote, index) =>
+      mutate(request, materialsCsrf, 'selectPreferredCanvass', {
+        canvassId: quote.canvassId,
+        rationale: `Concurrent exclusive decision ${index + 1}`,
+        clientRequestId: `local-e2e-canvass-concurrent-preferred-${index + 1}`,
+      }),
+    ),
+  );
+  expect(concurrentSelections.map((response) => response.status())).toEqual([200, 200]);
+  const concurrentReadback = await request.get('/api/procurement');
+  expect(concurrentReadback.status()).toBe(200);
+  const concurrentIds = new Set(concurrentQuotes.map((quote) => quote.canvassId));
+  const concurrentGroup = (await concurrentReadback.json()).data.canvassReferences.filter(
+    (entry) => entry.linkedDeliverableId === 'DEL-LOCAL-CANVASS' && entry.status === 'ACTIVE',
+  );
+  const concurrentPreferred = concurrentGroup.filter((entry) => entry.preferred);
+  expect(concurrentPreferred).toHaveLength(1);
+  expect(concurrentIds.has(concurrentPreferred[0].id)).toBe(true);
+  expect(concurrentPreferred[0].preferredRationale).toMatch(/^Concurrent exclusive decision [12]$/u);
+
   for (const [status, clientRequestId] of [
     ['WAITING_FOR_BUDGET', 'local-e2e-deliverable-budget'],
     ['TO_BE_PROCURED', 'local-e2e-deliverable-authorized'],

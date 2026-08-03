@@ -87,4 +87,106 @@ describe('authentication HTTP boundary', () => {
     expect(body).not.toContain('secret-value');
     expect(body).not.toContain('HAU-ADMIN-001');
   });
+
+  it('keeps correlation and security headers aligned without dropping cookies', async () => {
+    const service = {
+      login: vi.fn().mockResolvedValue({
+        state: 'AUTHENTICATED',
+        sessionToken: 'raw-session-token',
+        csrfToken: 'csrf-token',
+        user: { accountId: 'SYNTHETIC-001' },
+      }),
+    };
+    const handle = createAuthHttpHandler({
+      service,
+      correlationId: 'REQ_AUTHBOUNDARY123',
+      apiHeaders: {
+        'x-content-type-options': 'nosniff',
+        'referrer-policy': 'no-referrer',
+        'permissions-policy': 'camera=(), geolocation=(), microphone=()',
+      },
+    });
+    const success = await handle(
+      new Request('https://logistics.example.test/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accessId: 'SYNTHETIC', password: 'not-logged' }),
+      }),
+    );
+
+    expect(success.headers.get('x-correlation-id')).toBe('REQ_AUTHBOUNDARY123');
+    expect(success.headers.get('cache-control')).toBe('no-store');
+    expect(success.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(success.headers.get('referrer-policy')).toBe('no-referrer');
+    expect(success.headers.get('permissions-policy')).toContain('camera=()');
+    expect(success.headers.get('set-cookie')).toContain('__Host-hau_session=raw-session-token');
+
+    const denied = createAuthHttpHandler({
+      service: { login: vi.fn().mockRejectedValue(new AuthError('AUTHENTICATION_FAILED')) },
+      correlationId: 'REQ_AUTHBOUNDARY456',
+      apiHeaders: { 'x-content-type-options': 'nosniff' },
+    });
+    const failure = await denied(
+      new Request('https://logistics.example.test/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ accessId: 'SYNTHETIC', password: 'not-logged' }),
+      }),
+    );
+
+    expect(failure.headers.get('x-correlation-id')).toBe('REQ_AUTHBOUNDARY456');
+    await expect(failure.json()).resolves.toMatchObject({
+      code: 'AUTHENTICATION_FAILED',
+      correlationId: 'REQ_AUTHBOUNDARY456',
+    });
+  });
+
+  it('fails closed with a safe correlated response for malformed cookies', async () => {
+    const service = { getSession: vi.fn() };
+    const handle = createAuthHttpHandler({
+      service,
+      correlationId: 'REQ_BADCOOKIE123',
+      apiHeaders: { 'x-content-type-options': 'nosniff' },
+    });
+    const response = await handle(
+      new Request('https://logistics.example.test/api/auth/session', {
+        headers: { cookie: '__Host-hau_session=%' },
+      }),
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('x-correlation-id')).toBe('REQ_BADCOOKIE123');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'SESSION_INVALID',
+      correlationId: 'REQ_BADCOOKIE123',
+    });
+    expect(service.getSession).not.toHaveBeenCalled();
+  });
+
+  it('keeps password-reset completion inside the safe correlated HTTP boundary', async () => {
+    const service = {
+      completePasswordReset: vi.fn().mockResolvedValue({ ok: true, sessionsRevoked: 2 }),
+    };
+    const handle = createAuthHttpHandler({ service, correlationId: 'REQ_RESETBOUNDARY123' });
+    const response = await handle(
+      new Request('https://logistics.example.test/api/auth/reset/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          resetToken: 'not-returned',
+          password: 'Good!Pass123',
+          confirmPassword: 'Good!Pass123',
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('x-correlation-id')).toBe('REQ_RESETBOUNDARY123');
+    await expect(response.json()).resolves.toEqual({ ok: true, sessionsRevoked: 2 });
+    expect(service.completePasswordReset).toHaveBeenCalledWith(
+      expect.objectContaining({ resetToken: 'not-returned' }),
+    );
+  });
 });

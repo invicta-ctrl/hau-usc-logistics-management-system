@@ -18,7 +18,7 @@ const backendMode =
   isCloudflareBuild && configuredBackendMode === 'mock' ? 'unconfigured' : configuredBackendMode;
 
 export const config = Object.freeze({
-  appVersion: '0.7.0',
+  appVersion: '0.7.1',
   schemaVersion: 3,
   previewMode: backendMode === 'mock',
   backendMode,

@@ -107,6 +107,36 @@ function auditStatement(
     );
 }
 
+function idempotencyStatement(db, idempotency) {
+  return db
+    .prepare(
+      `INSERT INTO idempotency_keys (
+         scope, idempotency_key, actor_account_id, request_fingerprint, result_json, created_at
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+    )
+    .bind(
+      idempotency.scope,
+      idempotency.key,
+      idempotency.actorAccountId,
+      idempotency.requestFingerprint,
+      JSON.stringify(idempotency.result),
+      idempotency.createdAt,
+    );
+}
+
+function safeAuditState(value) {
+  let parsed;
+  try {
+    parsed = value ? JSON.parse(value) : {};
+  } catch {
+    return {};
+  }
+  return ['accessId', 'roleId', 'status', 'locked', 'sessionsRevoked'].reduce((safe, key) => {
+    if (Object.hasOwn(parsed, key)) safe[key] = parsed[key];
+    return safe;
+  }, {});
+}
+
 function limiterPattern(accessId) {
   return `${escapeLike(accessId)}:%`;
 }
@@ -202,10 +232,10 @@ export function createD1AccessManagementRepository(db) {
 
     async getAccessPolicyChangeByIdempotency(idempotencyKey) {
       const row = await db
-        .prepare('SELECT after_json FROM access_policy_changes WHERE idempotency_key = ?1')
+        .prepare('SELECT after_json, correlation_id FROM access_policy_changes WHERE idempotency_key = ?1')
         .bind(idempotencyKey)
         .first();
-      return row ? { after: parseJson(row.after_json, {}) } : null;
+      return row ? { after: parseJson(row.after_json, {}), correlationId: row.correlation_id } : null;
     },
 
     async updateAccessPolicy({
@@ -366,7 +396,7 @@ export function createD1AccessManagementRepository(db) {
       const sortColumns = {
         accessId: 'a.access_id_normalized',
         department:
-          "(SELECT department.display_name FROM requester_departments department WHERE department.id = a.department_id)",
+          '(SELECT department.display_name FROM requester_departments department WHERE department.id = a.department_id)',
         role: 'a.role_id',
         status: 'a.status',
         lastLogin: 'last_successful_login',
@@ -454,7 +484,7 @@ export function createD1AccessManagementRepository(db) {
     async listAccountAuditHistory(accountId, limit) {
       const result = await db
         .prepare(
-          `SELECT created_at, action, correlation_id, notes
+          `SELECT created_at, action, correlation_id, notes, before_json, after_json
            FROM audit_log
            WHERE entity_type = 'ACCOUNT' AND entity_id = ?1
            ORDER BY created_at DESC
@@ -467,13 +497,32 @@ export function createD1AccessManagementRepository(db) {
         changedAt: row.created_at,
         correlationId: row.correlation_id,
         reason: row.notes,
+        before: safeAuditState(row.before_json),
+        after: safeAuditState(row.after_json),
       }));
+    },
+
+    async getIdempotency(scope, key) {
+      const row = await db
+        .prepare(
+          `SELECT actor_account_id, request_fingerprint, result_json
+           FROM idempotency_keys WHERE scope = ?1 AND idempotency_key = ?2`,
+        )
+        .bind(scope, key)
+        .first();
+      return row
+        ? {
+            actorAccountId: row.actor_account_id,
+            requestFingerprint: row.request_fingerprint,
+            result: JSON.parse(row.result_json),
+          }
+        : null;
     },
 
     async getAccessIdHistoryByIdempotency(idempotencyKey) {
       const row = await db
         .prepare(
-          `SELECT account_id, old_access_id_normalized, new_access_id_normalized
+          `SELECT account_id, old_access_id_normalized, new_access_id_normalized, correlation_id
            FROM access_id_history
            WHERE idempotency_key = ?1`,
         )
@@ -484,6 +533,7 @@ export function createD1AccessManagementRepository(db) {
             accountId: row.account_id,
             oldAccessId: row.old_access_id_normalized,
             newAccessId: row.new_access_id_normalized,
+            correlationId: row.correlation_id,
           }
         : undefined;
     },
@@ -754,6 +804,7 @@ export function createD1AccessManagementRepository(db) {
       reason,
       correlationId,
       auditId,
+      idempotency,
     }) {
       const results = await db.batch([
         db
@@ -782,6 +833,7 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
+        idempotencyStatement(db, idempotency),
       ]);
       if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
     },
@@ -821,7 +873,7 @@ export function createD1AccessManagementRepository(db) {
       if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
     },
 
-    async revokeSessions({ account, actor, changedAt, reason, correlationId, auditId }) {
+    async revokeSessions({ account, actor, changedAt, reason, correlationId, auditId, idempotency }) {
       await db.batch([
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
         auditStatement(db, {
@@ -835,10 +887,11 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
+        idempotencyStatement(db, idempotency),
       ]);
     },
 
-    async unlockAccount({ account, actor, changedAt, reason, correlationId, auditId }) {
+    async unlockAccount({ account, actor, changedAt, reason, correlationId, auditId, idempotency }) {
       await db.batch([
         db
           .prepare('UPDATE accounts SET locked_at = NULL, updated_at = ?1 WHERE id = ?2')
@@ -857,6 +910,7 @@ export function createD1AccessManagementRepository(db) {
           correlationId,
           notes: reason,
         }),
+        idempotencyStatement(db, idempotency),
       ]);
     },
   });

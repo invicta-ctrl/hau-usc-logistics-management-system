@@ -32,7 +32,7 @@
   "triggers": { "crons": ["*/5 * * * *"] },
   "vars": {
     "ENVIRONMENT": "DEVELOPMENT",
-    "APP_VERSION": "0.7.0",
+    "APP_VERSION": "0.7.1",
     "SCHEMA_VERSION": "1.0.0",
     "BOOTSTRAP_CONTRACT_VERSION": "2",
     "CANDIDATE_SHA": "LOCAL_UNFROZEN"
@@ -63,10 +63,11 @@
       "triggers": { "crons": ["*/5 * * * *"] },
       "vars": {
         "ENVIRONMENT": "STAGING",
-        "APP_VERSION": "0.7.0",
+        "APP_VERSION": "0.7.1",
         "SCHEMA_VERSION": "1.0.0",
         "BOOTSTRAP_CONTRACT_VERSION": "2",
-        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE"
+        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE",
+        "RECOVERY_HOSTNAME": "REPLACE_PRIVATELY_RECOVERY_HOSTNAME"
       }
     },
     "production": {
@@ -94,10 +95,11 @@
       "triggers": { "crons": ["*/5 * * * *"] },
       "vars": {
         "ENVIRONMENT": "PRODUCTION",
-        "APP_VERSION": "0.7.0",
+        "APP_VERSION": "0.7.1",
         "SCHEMA_VERSION": "1.0.0",
         "BOOTSTRAP_CONTRACT_VERSION": "2",
-        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE"
+        "CANDIDATE_SHA": "REPLACE_AT_CANDIDATE_FREEZE",
+        "RECOVERY_HOSTNAME": "REPLACE_PRIVATELY_RECOVERY_HOSTNAME"
       }
     }
   }

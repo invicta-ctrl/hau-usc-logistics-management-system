@@ -1,6 +1,7 @@
 import { statusChip, escapeHtml } from '../../components/status-chip.js';
 import { permissionsFor } from '../../domain/permissions.js';
 import { openConfirmation } from '../../components/modal.js';
+import { presentationLabel } from '../../domain/presentation-labels.js';
 
 const reportTypes = [
   'OSA inventory form preparation',
@@ -39,7 +40,7 @@ export function renderReports(ctx) {
             0,
           )}</strong><small>Across preview entities</small></article><article class="card metric"><span>Warnings</span><strong>${warnings.length}</strong><small>Data quality checks</small></article></div><div class="alert section-gap"><div><strong>Last correlation ID</strong><p>${ctx.state.lastCorrelationId}</p></div></div><div class="button-row section-gap"><button class="secondary" data-export-state>Export demo state</button><button class="danger" data-reset-state>Reset demo state</button></div>`
       : '<div class="alert"><div><strong>Administrator preview role required</strong><p>Role switching only demonstrates visibility; production authorization must be server-enforced.</p></div></div>'
-  }</section><section class="panel"><div class="panel-head"><div><h2>Data-quality warnings</h2><p>Raw exceptions are retained for audit views.</p></div><span class="pill">${warnings.length}</span></div><div class="list">${warnings.map((warning) => `<div class="list-item"><span><strong>${warning.code.replaceAll('_', ' ')}</strong><small>${warning.entityId}${warning.value !== undefined ? ` · raw ${warning.value}` : ''}</small></span>${statusChip('FOR_REVIEW')}</div>`).join('') || '<div class="empty-state"><h3>No detected data-quality exceptions</h3><p>Duplicate IDs, negative stock, orphan reservations, and stale quotes are monitored.</p></div>'}</div></section></div>`;
+  }</section><section class="panel"><div class="panel-head"><div><h2>Data-quality warnings</h2><p>Raw exceptions are retained for audit views.</p></div><span class="pill">${warnings.length}</span></div><div class="list">${warnings.map((warning) => `<div class="list-item"><span><strong>${presentationLabel(warning.code)}</strong><small>${warning.entityId}${warning.value !== undefined ? ` · raw ${warning.value}` : ''}</small></span>${statusChip('FOR_REVIEW')}</div>`).join('') || '<div class="empty-state"><h3>No detected data-quality exceptions</h3><p>Duplicate IDs, negative stock, orphan reservations, and stale quotes are monitored.</p></div>'}</div></section></div>`;
 }
 
 export function mountReports(ctx, root) {

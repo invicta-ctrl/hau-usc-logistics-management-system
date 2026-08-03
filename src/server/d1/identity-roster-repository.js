@@ -73,15 +73,30 @@ function insertEntryStatement(db, entry) {
     );
 }
 
+function idempotencyStatement(db, idempotency) {
+  return db
+    .prepare(
+      `INSERT INTO idempotency_keys (
+         scope, idempotency_key, actor_account_id, request_fingerprint, result_json, created_at
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+    )
+    .bind(
+      idempotency.scope,
+      idempotency.key,
+      idempotency.actorAccountId,
+      idempotency.requestFingerprint,
+      JSON.stringify(idempotency.result),
+      idempotency.createdAt,
+    );
+}
+
 export function createD1IdentityRosterRepository(db) {
   if (!db) throw new Error('D1 database binding is required.');
 
   return Object.freeze({
     async latestRun() {
       return mapRun(
-        await db
-          .prepare('SELECT * FROM identity_roster_sync_runs ORDER BY created_at DESC LIMIT 1')
-          .first(),
+        await db.prepare('SELECT * FROM identity_roster_sync_runs ORDER BY created_at DESC LIMIT 1').first(),
       );
     },
 
@@ -110,9 +125,7 @@ export function createD1IdentityRosterRepository(db) {
     },
 
     async listEntries() {
-      const result = await db
-        .prepare('SELECT * FROM identity_roster_entries ORDER BY identity_key')
-        .all();
+      const result = await db.prepare('SELECT * FROM identity_roster_entries ORDER BY identity_key').all();
       return result.results.map(mapEntry);
     },
 
@@ -122,6 +135,23 @@ export function createD1IdentityRosterRepository(db) {
         .bind(identityKey)
         .first();
       return row ? mapEntry(row) : null;
+    },
+
+    async getIdempotency(scope, key) {
+      const row = await db
+        .prepare(
+          `SELECT actor_account_id, request_fingerprint, result_json
+           FROM idempotency_keys WHERE scope = ?1 AND idempotency_key = ?2`,
+        )
+        .bind(scope, key)
+        .first();
+      return row
+        ? {
+            actorAccountId: row.actor_account_id,
+            requestFingerprint: row.request_fingerprint,
+            result: JSON.parse(row.result_json),
+          }
+        : null;
     },
 
     async createPreview(run) {
@@ -213,7 +243,7 @@ export function createD1IdentityRosterRepository(db) {
       }
     },
 
-    async rollbackRun({ run, entries, actor, rolledBackAt, correlationId, auditId, reason }) {
+    async rollbackRun({ run, entries, actor, rolledBackAt, correlationId, auditId, reason, idempotency }) {
       const snapshot = await db
         .prepare(
           'SELECT protected_snapshot_envelope FROM identity_roster_rollback_snapshots WHERE run_id = ?1',
@@ -258,6 +288,7 @@ export function createD1IdentityRosterRepository(db) {
           correlationId,
           notes: reason,
         }),
+        idempotencyStatement(db, idempotency),
       ];
       const results = await db.batch(statements);
       const updateResult = results[2 + entries.length];

@@ -1,9 +1,13 @@
 import { AUTH_STATE } from '../auth/http-contract.js';
+import { AppError } from '../app/errors.js';
+import { setRuntimeReleaseIdentity } from '../app/release-identity.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
 import { mountRequesterPortal } from './requester-portal.js';
 import { brandLockupMarkup } from './brand-assets.js';
+import { portalNavigationMarkup, portalSelectionMarkup, releaseIdentityMarkup } from './portal-navigation.js';
+import { isInternalWorkspacePath, WORKSPACE_ROUTES, workspaceRouteFromPath } from './workspace-routes.js';
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -25,26 +29,15 @@ function gatewayRoot() {
   return root;
 }
 
-const WORKSPACE_PATHS = Object.freeze({
-  administrator: '/app/admin',
-  director: '/app/director',
-  food: '/app/food',
-  'inventory-pantry': '/app/inventory',
-  materials: '/app/materials',
-});
-
 function authorizedWorkspacePath(user) {
   const defaultWorkspaceId = user?.authorization?.defaultWorkspaceId || user?.experienceId;
-  return WORKSPACE_PATHS[defaultWorkspaceId] ?? '/login';
+  return WORKSPACE_ROUTES[defaultWorkspaceId]?.path ?? '/login';
 }
 
 function routedExperience(user) {
   const allowed = new Set(user?.authorization?.workspaceIds ?? []);
-  const route = Object.entries(WORKSPACE_PATHS).find(
-    ([id, path]) =>
-      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
-  );
-  if (route) return route[0];
+  const route = workspaceRouteFromPath(location.pathname);
+  if (allowed.has(route.workspaceId)) return route.workspaceId;
   return user?.experienceId ?? '';
 }
 
@@ -54,7 +47,7 @@ function routeAuthorizedWorkspace(user) {
     if (
       location.pathname === '/login' ||
       location.pathname === '/' ||
-      location.pathname.startsWith('/app/')
+      isInternalWorkspacePath(location.pathname)
     ) {
       history.replaceState(null, '', target);
     }
@@ -62,17 +55,19 @@ function routeAuthorizedWorkspace(user) {
   }
   const target = authorizedWorkspacePath(user);
   const allowed = new Set(user?.authorization?.workspaceIds ?? []);
-  const validInternalWorkspace = Object.entries(WORKSPACE_PATHS).some(
-    ([id, path]) =>
-      allowed.has(id) && (location.pathname === path || location.pathname.startsWith(`${path}/`)),
-  );
-  if (validInternalWorkspace) return;
+  const routed = workspaceRouteFromPath(location.pathname);
+  const validInternalWorkspace = allowed.has(routed.workspaceId);
+  if (validInternalWorkspace && !routed.legacy) return;
+  if (validInternalWorkspace && routed.legacy) {
+    history.replaceState(history.state, '', `${routed.canonicalPath}${location.search}${location.hash}`);
+    return;
+  }
   const alreadyInAuthorizedWorkspace =
     location.pathname === target || location.pathname.startsWith(`${target}/`);
   if (
     location.pathname === '/login' ||
     location.pathname === '/' ||
-    (location.pathname.startsWith('/app/') && !alreadyInAuthorizedWorkspace)
+    (isInternalWorkspacePath(location.pathname) && !alreadyInAuthorizedWorkspace)
   ) {
     history.replaceState(null, '', target);
   }
@@ -88,6 +83,16 @@ function setWorkspaceVisibility(authenticated) {
 
 function fieldError(error, field) {
   return escapeHtml(error?.details?.fieldErrors?.[field] ?? '');
+}
+
+const SUPPORT_REFERENCE = /^(?:REQ_[A-Za-z0-9_-]{8,64}|INC-[A-Z0-9-]{4,64})$/u;
+
+function safeAuthErrorText(error) {
+  if (!(error instanceof AppError)) return 'The authentication service is temporarily unavailable.';
+  const reference = SUPPORT_REFERENCE.test(String(error.correlationId ?? ''))
+    ? ` Reference: ${error.correlationId}`
+    : '';
+  return `${error.message}${reference}`;
 }
 
 const EYE_ICON = `
@@ -141,7 +146,8 @@ function attachRecoveryHelp(container) {
 }
 
 function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
-  const message = error ? escapeHtml(error.message) : '';
+  const message = error ? escapeHtml(safeAuthErrorText(error)) : '';
+  const currentPortal = portal ? 'lending' : requestPortal ? 'request' : 'staff';
   return `
     <section class="auth-card" aria-labelledby="authTitle">
       <div class="auth-brand-lockup">
@@ -150,6 +156,7 @@ function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
       </div>
       <p class="eyebrow">Holy Angel University</p>
       <h1 id="authTitle">${portal ? 'Office Lending' : requestPortal ? 'Request Center' : 'Staff sign in'}</h1>
+      ${releaseIdentityMarkup()}
       <p class="auth-intro">${portal ? 'Sign in with your institution-approved Access ID to submit and track your own lending requests.' : requestPortal ? 'Sign in with your requester Access ID to submit and track your own logistics requests.' : 'Sign in with the Access ID issued by the Department of Logistics.'}</p>
       <div class="auth-alert" role="alert" data-auth-login-error ${error ? '' : 'hidden'}>${message}</div>
       <form id="authLoginForm" class="auth-form" autocomplete="on">
@@ -166,7 +173,7 @@ function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
         <p>Contact an authorized Administrator to revoke active sessions and issue a one-time temporary password. Your role and committee scope cannot be changed from this page.</p>
       </div>
       <p class="auth-help">${portal ? 'Borrower eligibility is assigned by the server. This portal never provides internal staff access.' : requestPortal ? 'This portal shows only your own requests. Roles and committee access are assigned by the server.' : 'Roles and committee access are assigned by the server. They cannot be selected here.'}</p>
-      <nav class="auth-portal-links" aria-label="Public logistics portals">${portal ? '<a href="/request">Request Center</a>' : '<a href="/request">Request Center</a> <span aria-hidden="true">·</span> <a href="/lending">Lending Center</a>'}</nav>
+      ${portalNavigationMarkup({ current: currentPortal })}
     </section>`;
 }
 
@@ -184,8 +191,9 @@ function activationMarkup(error) {
     <section class="auth-card auth-card-wide" aria-labelledby="authTitle">
       <p class="eyebrow">First login activation</p>
       <h1 id="authTitle">Secure your account</h1>
+      ${releaseIdentityMarkup()}
       <p class="auth-intro">Confirm your contact information and replace the temporary password. Your assigned role and committee scope will not change.</p>
-      ${error ? `<div class="auth-alert" role="alert">${escapeHtml(error.message)}</div>` : ''}
+      ${error ? `<div class="auth-alert" role="alert">${escapeHtml(safeAuthErrorText(error))}</div>` : ''}
       <form id="authActivationForm" class="auth-form">
         <label for="authFullName">Full name</label>
         <input id="authFullName" name="fullName" autocomplete="name" required maxlength="120" aria-describedby="authFullNameError">
@@ -202,6 +210,7 @@ function activationMarkup(error) {
         <small id="authConfirmError" class="auth-field-error">${fieldError(error, 'confirmPassword')}</small>
         <button class="primary" type="submit">Activate account</button>
       </form>
+      ${portalNavigationMarkup({ current: 'staff' })}
     </section>`;
 }
 
@@ -254,6 +263,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   }
   const lendingPortal = location.pathname === '/lending';
   const requesterPortal = location.pathname === '/request';
+  const portalSelection = location.pathname === '/portals';
   if (backendMode !== 'rest' || requestOnly) {
     start();
     return;
@@ -261,6 +271,15 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const client = new AuthApiClient(baseUrl);
   const root = gatewayRoot();
   setWorkspaceVisibility(false);
+  try {
+    setRuntimeReleaseIdentity(await client.getReleaseIdentity());
+  } catch {
+    setRuntimeReleaseIdentity(null);
+  }
+  if (portalSelection) {
+    root.innerHTML = portalSelectionMarkup();
+    return;
+  }
   if (lendingPortal) {
     await mountPublicLendingPortal({ root, client });
     return;
@@ -317,7 +336,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
       });
     }
     const alert = root.querySelector('[data-auth-login-error]');
-    alert.textContent = error?.message ?? '';
+    alert.textContent = error ? safeAuthErrorText(error) : '';
     alert.hidden = !error;
     setBusy(form, false);
   };

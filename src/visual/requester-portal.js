@@ -1,4 +1,5 @@
 import { brandLockupMarkup } from './brand-assets.js';
+import { portalNavigationMarkup, releaseIdentityMarkup } from './portal-navigation.js';
 import {
   bindPublicPolicyDialogs,
   publicPolicyDialogsMarkup,
@@ -18,9 +19,7 @@ const requestKey = (scope) => `${scope}:${crypto.randomUUID()}`;
 const displayStatus = (value) => String(value ?? '').replaceAll('_', ' ');
 const autocompleteThreshold = 8;
 const formatDate = (value) =>
-  value
-    ? new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })
-    : '';
+  value ? new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
 function option(value, label = value) {
   return `<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`;
@@ -135,10 +134,7 @@ function requestCard(request, { expanded = false } = {}) {
 
 export async function mountRequesterPortal({ root, client, session, onLogout }) {
   const logout = async () => onLogout();
-  if (
-    session?.user?.authorization?.roleId !== 'REQUESTER' ||
-    !session.user.requesterDepartment?.id
-  ) {
+  if (session?.user?.authorization?.roleId !== 'REQUESTER' || !session.user.requesterDepartment?.id) {
     root.innerHTML = `
       <section class="auth-card" aria-labelledby="requesterTitle">
         <p class="eyebrow">Request Center</p>
@@ -162,16 +158,13 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
   const render = () => {
     const parentOptions = portal.requests
       .filter(
-        (request) =>
-          request.requestType === 'NEW' &&
-          !['CANCELLED', 'REJECTED'].includes(request.status),
+        (request) => request.requestType === 'NEW' && !['CANCELLED', 'REJECTED'].includes(request.status),
       )
-      .map(
-        (request) =>
-          option(
-            request.id,
-            `${request.id} — ${request.event} / ${request.subEvent} — ${displayStatus(request.status)}`,
-          ),
+      .map((request) =>
+        option(
+          request.id,
+          `${request.id} — ${request.event} / ${request.subEvent} — ${displayStatus(request.status)}`,
+        ),
       )
       .join('');
     const categoryOptions = Object.keys(portal.choices)
@@ -190,9 +183,10 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
     root.innerHTML = `
       <main class="borrower-portal requester-portal authenticated-request-center" aria-labelledby="requesterPortalTitle">
         <header class="borrower-portal-header">
-          <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="requesterPortalTitle">Request Center</h1><p>Authenticated department requests and private status.</p></div></div>
+          <div class="public-portal-identity">${brandLockupMarkup({ compact: true })}<div><p class="eyebrow">HAU-USC Logistics</p><h1 id="requesterPortalTitle">Request Center</h1><p>Authenticated department requests and private status.</p>${releaseIdentityMarkup()}</div></div>
           <div class="borrower-profile"><strong>${escapeHtml(portal.profile.displayName)}</strong><small>Department requester</small><button class="secondary" type="button" data-requester-logout>Sign out</button></div>
         </header>
+        ${portalNavigationMarkup({ current: 'request' })}
         <nav class="public-mode-tabs" aria-label="Request Center mode">
           <button class="public-mode-tab active" type="button" data-center-tab="create" aria-selected="true">Create Request</button>
           <button class="public-mode-tab" type="button" data-center-tab="track" aria-selected="false">Track Existing Request</button>
@@ -221,7 +215,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
               <label>Category<select name="lineCategory">${categoryOptions}</select></label>
               <label>Approved item<select name="lineChoice"></select></label>
               <label data-custom-name hidden>Custom item name<input name="lineCustomName" maxlength="240"></label>
-              <label>Quantity<input name="lineQuantity" type="number" min="0.01" max="100000" step="0.01" value="1"></label>
+              <label>Quantity<input name="lineQuantity" type="number" min="1" max="100000" step="1" value="1"></label>
               <label>Unit<select name="lineUnit">${unitOptions}</select></label>
               <label class="span-2">Optional note / specifications<textarea name="lineSpecification" maxlength="1000"></textarea></label>
               <button class="secondary" type="button" data-add-request-line>Add requested item</button>
@@ -281,8 +275,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
       const normalized = input.value.trim().toLocaleLowerCase();
       const match = records.find(
         (record) =>
-          record.name.toLocaleLowerCase() === normalized ||
-          record.id.toLocaleLowerCase() === normalized,
+          record.name.toLocaleLowerCase() === normalized || record.id.toLocaleLowerCase() === normalized,
       );
       if (!match) return;
       select.value = match.id;
@@ -348,13 +341,11 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
     form.querySelector('[data-add-request-line]').addEventListener('click', () => {
       const category = categorySelect.value;
       const custom = category === 'Other';
-      const description = String(
-        custom ? form.elements.lineCustomName.value : choiceSelect.value,
-      ).trim();
+      const description = String(custom ? form.elements.lineCustomName.value : choiceSelect.value).trim();
       const quantity = Number(form.elements.lineQuantity.value);
       const unit = form.elements.lineUnit.value;
-      if (!description || !Number.isFinite(quantity) || quantity <= 0 || !unit) {
-        message.textContent = 'Choose or name an item, then enter a valid quantity and unit.';
+      if (!description || !Number.isInteger(quantity) || quantity <= 0 || !unit) {
+        message.textContent = 'Choose or name an item, then enter a whole-number quantity and unit.';
         return;
       }
       if (

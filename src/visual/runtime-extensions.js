@@ -1,5 +1,9 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
+import { AppError } from '../app/errors.js';
+import { KNOWN_QUANTITY_UNITS, quantityStep } from '../domain/quantity-units.js';
+import { createFormDirtyTracker } from './form-dirty-state.js';
+import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
   evaluateLendingEligibility,
   lendingAudienceLabel,
@@ -16,6 +20,7 @@ import {
 import {
   buildCatalogUpdateCommand,
   canManageCatalog,
+  validateCatalogQuantities,
   validateCatalogDraft,
 } from '../domain/catalog-management.js';
 import {
@@ -43,6 +48,13 @@ import {
   previewReferenceAdminChange,
 } from '../domain/reference-administration.js';
 import { canvassEvidenceLinks, canvassQualityIndicators } from '../domain/canvass-quality.js';
+import {
+  inventoryLabel,
+  presentationLabel,
+  presentationNumber,
+  statusLabel,
+  sumPresentationNumbers,
+} from '../domain/presentation-labels.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -54,6 +66,57 @@ const esc = (value) =>
 
 const option = (value, label, selected) =>
   `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(label)}</option>`;
+
+const REUSABLE_CONDITION_REVIEW_STATES = new Set(['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']);
+const REUSABLE_MAINTENANCE_REVIEW_STATES = new Set(['CLEARED', 'MAINTENANCE_REQUIRED']);
+
+const normalizedReviewState = (value) => String(value ?? '').trim().toUpperCase();
+
+const isReusableConditionReviewState = (value) =>
+  REUSABLE_CONDITION_REVIEW_STATES.has(normalizedReviewState(value));
+
+const isReusableMaintenanceReviewState = (value) =>
+  REUSABLE_MAINTENANCE_REVIEW_STATES.has(normalizedReviewState(value));
+
+const assertReusablePhysicalAssessment = (
+  classificationStatus,
+  inventoryKind,
+  conditionReviewState,
+  maintenanceReviewState,
+) => {
+  if (
+    normalizedReviewState(classificationStatus) !== 'CLASSIFIED' ||
+    normalizedReviewState(inventoryKind) !== 'REUSABLE' ||
+    (isReusableConditionReviewState(conditionReviewState) &&
+      isReusableMaintenanceReviewState(maintenanceReviewState))
+  ) {
+    return;
+  }
+  const error = new Error(
+    'Reusable classification requires recorded physical condition and maintenance outcomes.',
+  );
+  error.code = 'PHYSICAL_REVIEW_REQUIRED';
+  throw error;
+};
+
+const safeReference = (value) => {
+  const reference = String(value ?? '').trim();
+  return /^(?:REQ_[A-Za-z0-9_-]{8,64}|INC-[A-Z0-9-]{4,64}|ACCESS_[A-Za-z0-9_-]{4,64})$/u.test(reference)
+    ? reference
+    : '';
+};
+
+const operationalErrorText = (error) => {
+  const message = error instanceof AppError ? error.message : 'The service is temporarily unavailable.';
+  const reference = safeReference(error?.correlationId);
+  return reference ? `${message} Reference: ${reference}` : message;
+};
+
+const auditReferenceText = (result) => {
+  if (result?.changed === false) return ' No new audit record was created.';
+  const reference = safeReference(result?.correlationId);
+  return reference ? ` Audit reference: ${reference}.` : '';
+};
 
 const statusText = {
   synced: 'Near-live · updated just now',
@@ -70,6 +133,274 @@ function localDueValue(days) {
   due.setHours(17, 0, 0, 0);
   const pad = (value) => String(value).padStart(2, '0');
   return `${due.getFullYear()}-${pad(due.getMonth() + 1)}-${pad(due.getDate())}T${pad(due.getHours())}:${pad(due.getMinutes())}`;
+}
+
+function quantityInputBounds(unit, { allowZero = false } = {}) {
+  const step = quantityStep(unit);
+  return `min="${allowZero ? '0' : step === '1' ? '1' : '0.01'}" step="${step}"`;
+}
+
+export function syncUnitBoundInputs(form, fields) {
+  const unit = String(form?.elements?.unit?.value ?? '');
+  for (const { name, allowZero = false } of fields) {
+    const input = form?.elements?.[name];
+    if (!input) continue;
+    const step = quantityStep(unit);
+    input.step = step;
+    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
+    input.dataset.quantityUnit = unit;
+  }
+}
+
+export function bindUnitBoundInputs(form, fields) {
+  const sync = () => syncUnitBoundInputs(form, fields);
+  form?.elements?.unit?.addEventListener('input', sync);
+  form?.elements?.unit?.addEventListener('change', sync);
+  sync();
+  return sync;
+}
+
+export function withExpectedUpdatedAt(payload, item) {
+  return { ...payload, expectedUpdatedAt: String(item?.updatedAt ?? '') };
+}
+
+export function toFailClosedInventoryClassification(item = {}) {
+  const classificationStatus =
+    String(item.classificationStatus ?? '')
+      .trim()
+      .toUpperCase() === 'CLASSIFIED'
+      ? 'CLASSIFIED'
+      : 'NEEDS_CLASSIFICATION';
+  const handling = String(item.handlingCode ?? item.handling).toUpperCase();
+  const derivedKind =
+    handling.includes('REUSABLE') || handling.includes('LOAN')
+      ? 'REUSABLE'
+      : handling.includes('CONSUMABLE')
+        ? 'CONSUMABLE'
+        : 'UNVERIFIED';
+  const isLendable = classificationStatus === 'CLASSIFIED' && item.isLendable === true;
+  return {
+    ...item,
+    inventoryKind: classificationStatus === 'CLASSIFIED' ? (item.inventoryKind ?? derivedKind) : 'UNVERIFIED',
+    classificationStatus,
+    isLendable,
+    lendingAudience: isLendable ? item.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
+    conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
+    maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
+    classificationRevision: Number(item.classificationRevision ?? 1),
+    assetInstanceCount: Number(item.traceableAssets ?? 0),
+    classificationHistory: item.classificationHistory ?? [],
+  };
+}
+
+export function applyMockInventoryClassification(
+  item,
+  payload = {},
+  { now = new Date().toISOString() } = {},
+) {
+  const previousStatus = item.classificationStatus ?? 'NEEDS_CLASSIFICATION';
+  const previousKind = item.inventoryKind ?? 'UNVERIFIED';
+  const before = {
+    classificationStatus: previousStatus,
+    inventoryKind: previousKind,
+    stockArea: item.stockArea ?? '',
+    storageLocation: item.storageLocation ?? '',
+    unit: item.unit ?? '',
+    reorderThreshold: item.reorderThreshold ?? 0,
+    conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
+    maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
+    isLendable: item.isLendable === true,
+    lendingAudience: item.lendingAudience ?? 'NOT_AVAILABLE_FOR_LENDING',
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+  };
+  const classificationStatus =
+    payload.classificationStatus === 'CLASSIFIED' ? 'CLASSIFIED' : 'NEEDS_CLASSIFICATION';
+  assertReusablePhysicalAssessment(
+    classificationStatus,
+    payload.inventoryKind,
+    payload.conditionReviewState,
+    payload.maintenanceReviewState,
+  );
+  const isLendable =
+    classificationStatus === 'CLASSIFIED' &&
+    payload.isLendable === true &&
+    payload.enableLendingConfirmed === true;
+  Object.assign(item, {
+    inventoryKind: payload.inventoryKind,
+    classificationStatus,
+    conditionReviewState: payload.conditionReviewState,
+    maintenanceReviewState: payload.maintenanceReviewState,
+    stockArea: payload.stockArea,
+    storageLocation: payload.storageLocation,
+    unit: payload.unit,
+    reorderThreshold: Number(payload.reorderThreshold),
+    assetInstanceCount: Number(payload.assetInstanceCountIfReusable ?? 0),
+    isLendable,
+    lendingAudience: isLendable ? payload.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
+    handling:
+      payload.inventoryKind === 'REUSABLE'
+        ? 'REUSABLE_ASSET'
+        : payload.inventoryKind === 'CONSUMABLE'
+          ? 'CONSUMABLE'
+          : 'TO_CLASSIFY',
+    classificationNotes: payload.classificationNotes,
+    classificationEvidenceId: payload.evidenceId,
+    classificationRevision: Number(item.classificationRevision ?? 1) + 1,
+    classifiedAt: classificationStatus === 'CLASSIFIED' ? now : null,
+  });
+  const after = {
+    classificationStatus: item.classificationStatus,
+    inventoryKind: item.inventoryKind,
+    stockArea: item.stockArea,
+    storageLocation: item.storageLocation,
+    unit: item.unit,
+    reorderThreshold: item.reorderThreshold,
+    conditionReviewState: item.conditionReviewState,
+    maintenanceReviewState: item.maintenanceReviewState,
+    isLendable: item.isLendable,
+    lendingAudience: item.lendingAudience,
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+  };
+  item.classificationHistory ??= [];
+  item.classificationHistory.unshift({
+    revision: item.classificationRevision,
+    previousStatus,
+    newStatus: item.classificationStatus,
+    previousKind,
+    newKind: item.inventoryKind,
+    isLendable: item.isLendable,
+    lendingAudience: item.lendingAudience,
+    conditionReviewState: item.conditionReviewState,
+    maintenanceReviewState: item.maintenanceReviewState,
+    assetInstanceCount: item.assetInstanceCount ?? item.traceableAssets ?? 0,
+    before,
+    after,
+    occurredAt: now,
+    actorAccountId: 'LOCAL_PREVIEW',
+    evidenceId: payload.evidenceId,
+  });
+  return {
+    itemId: item.id,
+    classificationRevision: item.classificationRevision,
+    correlationId: 'LOCAL-PREVIEW',
+  };
+}
+
+export function applyMockBulkInventoryClassification(
+  items,
+  payload = {},
+  { now = new Date().toISOString() } = {},
+) {
+  if (!Array.isArray(items) || items.length < 2) {
+    const error = new Error('Select at least two inventory items for bulk classification.');
+    error.code = 'VALIDATION_FAILED';
+    throw error;
+  }
+  if (!Array.isArray(payload.items) || payload.items.length !== items.length) {
+    const error = new Error('Bulk classification requires one complete command for every selected item.');
+    error.code = 'VALIDATION_FAILED';
+    throw error;
+  }
+  const commands = payload.items;
+  const seen = new Set();
+  const bulkGroupId = `LOCAL-BULK-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+  const clone = (value) =>
+    typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+  const drafts = items.map((source, index) => {
+    const itemId = String(source?.id ?? '').trim();
+    if (!itemId || seen.has(itemId)) {
+      const error = new Error('Bulk classification requires unique inventory items.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    seen.add(itemId);
+    const command = { ...(payload ?? {}), ...(commands[index] ?? {}) };
+    if (String(command.itemId ?? '').trim() !== itemId) {
+      const error = new Error('Bulk classification item references must match the selected items.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const inventoryKind = String(command.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
+    const classificationStatus = String(command.classificationStatus ?? 'CLASSIFIED')
+      .trim()
+      .toUpperCase();
+    const expectedRevision = Number(command.expectedRevision ?? source.classificationRevision ?? 1);
+    if (
+      !Number.isInteger(expectedRevision) ||
+      expectedRevision !== Number(source.classificationRevision ?? 1)
+    ) {
+      const error = new Error('This classification changed. Refresh the queue before saving.');
+      error.code = 'CLASSIFICATION_REVISION_CONFLICT';
+      throw error;
+    }
+    if (classificationStatus !== 'CLASSIFIED' || !['CONSUMABLE', 'REUSABLE'].includes(inventoryKind)) {
+      const error = new Error(
+        'Bulk classification requires a completed consumable or reusable classification.',
+      );
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const reason = String(command.reason ?? command.classificationNotes ?? payload.reason ?? '').trim();
+    if (!reason) {
+      const error = new Error('A classification reason is required.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    if (command.similarityConfirmed !== true && command.similarityConfirmed !== 'true') {
+      const error = new Error('Confirm that the selected inventory items are genuinely similar.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const draft = {
+      ...command,
+      itemId,
+      expectedRevision,
+      classificationStatus,
+      inventoryKind,
+      stockArea: command.stockArea ?? source.stockArea ?? '',
+      storageLocation: command.storageLocation ?? source.storageLocation ?? '',
+      unit: command.unit ?? source.unit ?? '',
+      reorderThreshold: Number(command.reorderThreshold ?? source.reorderThreshold ?? 0),
+      conditionReviewState:
+        command.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED'),
+      maintenanceReviewState:
+        command.maintenanceReviewState ??
+        (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED'),
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      enableLendingConfirmed: false,
+      assetInstanceCountIfReusable: Number(
+        command.assetInstanceCountIfReusable ?? source.assetInstanceCount ?? source.traceableAssets ?? 0,
+      ),
+      assetTrackingConfirmed: false,
+      assetTags: [],
+      reason,
+      similarityConfirmed: true,
+      classificationNotes: command.classificationNotes ?? reason,
+    };
+    const next = clone(source);
+    const result = applyMockInventoryClassification(next, draft, { now });
+    if (next.classificationHistory?.[0]) next.classificationHistory[0].bulkGroupId = bulkGroupId;
+    return { source, next, result };
+  });
+  drafts.forEach(({ source, next }) => Object.assign(source, next));
+  return {
+    itemIds: drafts.map(({ result }) => result.itemId),
+    count: drafts.length,
+    bulkGroupId,
+    items: drafts.map(({ source, result }) => ({
+      itemId: result.itemId,
+      classificationStatus: source.classificationStatus,
+      inventoryKind: source.inventoryKind,
+      isLendable: source.isLendable,
+      lendingAudience: source.lendingAudience,
+      assetInstanceCount: source.assetInstanceCount ?? source.traceableAssets ?? 0,
+      classificationRevision: result.classificationRevision,
+    })),
+    correlationId: 'LOCAL-PREVIEW',
+  };
 }
 
 function createLendingController({ markFormClean }) {
@@ -160,7 +491,7 @@ function createLendingController({ markFormClean }) {
           const eligibility = eligibilityFor(item);
           return `<div id="lending-suggestion-${index}" class="suggestion ${eligibility.selectable ? '' : 'disabled'}" role="option" aria-selected="false" aria-disabled="${eligibility.selectable ? 'false' : 'true'}" data-lending-item="${esc(item.id)}">
           <strong>${esc(item.name)}</strong>
-          <code>${esc(item.id)} · ${esc(item.category)} · ${esc(normalizeHandling(item.handlingCode || item.handling).replaceAll('_', ' '))} · ${esc(item.unit)}</code>
+          <code>${esc(item.id)} · ${esc(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${esc(presentationLabel(normalizeHandling(item.handlingCode || item.handling), { context: 'handling', missing: 'Handling not reported' }))} · ${esc(item.unit || 'Unit not recorded')}</code>
           <span class="stock"><b>${esc(eligibility.message)}</b>${esc(lendingAudienceLabel(item.lendingAudience))}</span>
         </div>`;
         })
@@ -299,13 +630,13 @@ function catalogFormHtml(item = null) {
       <label>Storage location<input name="storageLocation" value="${esc(current.storageLocation)}" required></label>
       <label>Handling<select name="handling">${option('CONSUMABLE', 'Consumable', current.handlingCode || current.handling)}${option('LOANABLE', 'Loanable', current.handlingCode || current.handling)}${option('REUSABLE_ASSET', 'Reusable Asset', current.handlingCode || current.handling)}${option('NON_CIRCULATING', 'Non-circulating', current.handlingCode || current.handling)}</select></label>
       <label>Unit<input name="unit" value="${esc(current.unit)}" required><small>Changing a historical unit is blocked by the server.</small></label>
-      <label>Reorder threshold<input name="reorderThreshold" type="number" min="0" step="0.01" value="${esc(current.reorderThreshold ?? 0)}" required></label>
+      <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="${esc(current.reorderThreshold ?? 0)}" required></label>
       <label>Lending audience<select name="lendingAudience">${option('NOT_AVAILABLE_FOR_LENDING', 'Not available in Lending Hub', current.lendingAudience)}${option('USC_STAFF_ONLY', 'USC officers and staff only', current.lendingAudience)}${option('STUDENTS_AND_STAFF', 'Students and USC staff', current.lendingAudience)}${option('DOL_INTERNAL_ONLY', 'Eligible DOL users only', current.lendingAudience)}</select></label>
       <label>Default loan days<input name="defaultLoanDays" type="number" min="1" step="1" value="${esc(current.defaultLoanDays ?? '')}"></label>
-      <label>Maximum lending quantity<input name="maximumLoanQuantity" type="number" min="0.01" step="0.01" value="${esc(current.maximumLoanQuantity ?? '')}"></label>
+      <label>Maximum lending quantity<input name="maximumLoanQuantity" type="number" ${quantityInputBounds(current.unit)} value="${esc(current.maximumLoanQuantity ?? '')}"></label>
       <label>Approval required<select name="approvalRequired">${option('true', 'Yes', String(current.approvalRequired))}${option('false', 'No', String(current.approvalRequired))}</select></label>
       <label>Active / verification status<select name="status">${option('ACTIVE', 'Active', current.status)}${option('VERIFY', 'Verification required', current.status)}${option('INACTIVE', 'Inactive', current.status)}</select></label>
-      ${create ? '<label>Initial quantity<input name="initialQuantity" type="number" min="0" step="0.01" value="0"></label><label>Creation reason<input name="reason" value="Administrative catalog creation" required></label>' : ''}
+      ${create ? `<label>Initial quantity<input name="initialQuantity" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="0"></label><label>Creation reason<input name="reason" value="Administrative catalog creation" required></label>` : ''}
       <label class="span-2">Notes<textarea name="notes">${esc(current.notes ?? '')}</textarea></label>
     </div>
     <button class="primary" type="submit">${create ? 'Create Inventory Item' : 'Save Item Settings'}</button>
@@ -328,8 +659,10 @@ export function createRuntimeExtensions(options) {
     getActiveModule = () => 'overview',
     refreshActiveModule = null,
     changeOperationalScope = null,
+    changeWorkspace = null,
+    clearUnsavedRuntimeState = () => {},
   } = options;
-  const dirtyForms = new Set();
+  const dirtyTracker = createFormDirtyTracker();
   const acceptedRevisions = new Map();
   let pendingRevision = null;
   let refreshPromise = null;
@@ -384,14 +717,55 @@ export function createRuntimeExtensions(options) {
   let eventManagementPromise = null;
   let eventManagementOpen = false;
   let internalShellBar = null;
+  let acceptedLocation = `${location.pathname}${location.search}${location.hash}`;
+  const routeHistoryIndexKey = '__hauRouteIndex';
+  const initialRouteHistoryIndex = Number(history.state?.[routeHistoryIndexKey]);
+  let routeHistorySequence = Number.isFinite(initialRouteHistoryIndex) ? initialRouteHistoryIndex : 0;
+  let acceptedHistoryIndex = routeHistorySequence;
+  let restoringRejectedHistory = false;
   let accountControlObserver = null;
   let lendingApprovalRoot = null;
   let releaseConfirmationInstalled = false;
   let releaseFormObserver = null;
   let deliverableReceivingInstalled = false;
   const canvassObservedRoots = new WeakSet();
+  let canvassGovernanceInstalled = false;
   let lastActiveAt = Date.now();
   let lastUpdatedAt = '';
+
+  const currentLocation = () => `${location.pathname}${location.search}${location.hash}`;
+  const indexedHistoryState = (index) => ({
+    ...(history.state && typeof history.state === 'object' ? history.state : {}),
+    [routeHistoryIndexKey]: index,
+  });
+  const ensureCurrentHistoryEntry = () => {
+    const index = Number(history.state?.[routeHistoryIndexKey]);
+    if (Number.isFinite(index)) return index;
+    const target = currentLocation();
+    try {
+      if (target) history.replaceState(indexedHistoryState(routeHistorySequence), '', target);
+      else history.replaceState(indexedHistoryState(routeHistorySequence), '');
+    } catch (error) {
+      if (location.origin !== 'null' || error?.name !== 'SecurityError') throw error;
+    }
+    return routeHistorySequence;
+  };
+  const acceptCurrentLocation = () => {
+    acceptedLocation = currentLocation();
+    const index = Number(history.state?.[routeHistoryIndexKey]);
+    if (Number.isFinite(index)) acceptedHistoryIndex = index;
+    return acceptedLocation;
+  };
+  const pushRouteLocation = (target, { accept = true } = {}) => {
+    routeHistorySequence += 1;
+    history.pushState(indexedHistoryState(routeHistorySequence), '', target);
+    if (accept) acceptCurrentLocation();
+  };
+  const replaceRouteLocation = (target, index = acceptedHistoryIndex, { accept = true } = {}) => {
+    history.replaceState(indexedHistoryState(index), '', target);
+    routeHistorySequence = Math.max(routeHistorySequence, index);
+    if (accept) acceptCurrentLocation();
+  };
 
   const foodRequestsEnabled = config.foodRequestsEnabled === true;
   const materialsRequestsEnabled = config.materialsRequestsEnabled === true;
@@ -426,7 +800,7 @@ export function createRuntimeExtensions(options) {
           }
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
-          button.textContent = 'Approvingâ€¦';
+          button.textContent = 'Approving…';
           try {
             const result = await services.approveLendingTicket(ticket.id, identityVerification);
             if (backendMode === 'mock') {
@@ -440,7 +814,7 @@ export function createRuntimeExtensions(options) {
             closeModal();
             await commit(`Ticket ${ticket.id} is ready to claim.`, 'success', result);
           } catch (error) {
-            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
             button.disabled = false;
             button.textContent = 'Verify Identity and Approve';
           }
@@ -490,7 +864,7 @@ export function createRuntimeExtensions(options) {
             <option value="SUBSTITUTE">Approve a substitute</option>
             <option value="REJECT">Reject</option>
           </select></label>
-          <label>Approved quantity<input name="approvedQuantity" type="number" min="0.01" max="${esc(ticket.requestedQuantity || ticket.quantity)}" step="0.01" value="${esc(ticket.requestedQuantity || ticket.quantity)}"></label>
+          <label>Approved quantity<input name="approvedQuantity" type="number" ${quantityInputBounds(ticket.unit)} max="${esc(ticket.requestedQuantity || ticket.quantity)}" value="${esc(ticket.requestedQuantity || ticket.quantity)}"></label>
           <label class="span-2" data-substitution-wrap>Substitute item<select name="substitutionItemId">${itemOptions}</select></label>
           <label class="span-2" data-review-reason-wrap>Decision reason<textarea name="reviewReason" maxlength="500"></textarea></label>
           <label class="span-2">Internal review note<textarea name="reviewNotes" maxlength="500"></textarea></label>
@@ -643,9 +1017,9 @@ export function createRuntimeExtensions(options) {
         <div class="mode-note"><strong>${esc(ticket.quantity)} ${esc(ticket.unit)}</strong> must be fully reconciled as returned, lost, or damaged beyond use.</div>
         <div class="form-grid section-gap">
           <label>Inspection condition<select name="conditionLabel"><option>GOOD</option><option>FAIR</option><option>POOR</option><option>DAMAGED</option><option>MAINTENANCE</option><option>LOST</option><option>DAMAGED_BEYOND_USE</option></select></label>
-          <label>Returned quantity<input name="returnedQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="${esc(ticket.quantity)}" required></label>
-          <label>Lost quantity<input name="lostQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
-          <label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" min="0" max="${esc(ticket.quantity)}" step="0.01" value="0" required></label>
+          <label>Returned quantity<input name="returnedQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="${esc(ticket.quantity)}" required></label>
+          <label>Lost quantity<input name="lostQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="0" required></label>
+          <label>Damaged beyond use<input name="damagedBeyondUseQuantity" type="number" ${quantityInputBounds(ticket.unit, { allowZero: true })} max="${esc(ticket.quantity)}" value="0" required></label>
           <label class="span-2">Inspection note<textarea name="notes" maxlength="500" required>Return inspected and reconciled.</textarea></label>
           <label class="span-2">Governed evidence asset key, when already uploaded<input name="assetEvidenceKey" maxlength="160"></label>
         </div>
@@ -689,13 +1063,13 @@ export function createRuntimeExtensions(options) {
     const history = (ticket.history ?? [])
       .map(
         (entry) =>
-          `<article class="request-line"><div><strong>${esc(entry.newStatus)}</strong><small>${esc(entry.changedAt)} · ${esc(entry.changedBy)}</small>${entry.reason ? `<small>${esc(entry.reason)}</small>` : ''}</div></article>`,
+          `<article class="request-line"><div><strong>${esc(statusLabel(entry.newStatus, { missing: 'Status not reported' }))}</strong><small>${esc(entry.changedAt)} · ${esc(entry.changedBy)}</small>${entry.reason ? `<small>${esc(entry.reason)}</small>` : ''}</div></article>`,
       )
       .join('');
     openModal(
       `${ticket.id} · ${ticket.borrowerName}`,
       `${lendingApplicantHtml(ticket)}
-       <div class="mode-note section-gap"><strong>Requested</strong><br>${esc(ticket.requestedQuantity || ticket.quantity)} of ${esc(ticket.requestedItemId || ticket.itemId)}<br><strong>Current approved line</strong><br>${esc(ticket.quantity)} of ${esc(ticket.itemId)} · ${esc(ticket.status)}</div>
+       <div class="mode-note section-gap"><strong>Requested</strong><br>${esc(ticket.requestedQuantity || ticket.quantity)} of ${esc(ticket.requestedItemId || ticket.itemId)}<br><strong>Current approved line</strong><br>${esc(ticket.quantity)} of ${esc(ticket.itemId)} · ${esc(statusLabel(ticket.status, { missing: 'Status not reported' }))}</div>
        <div class="section-kicker section-gap">Review and status history</div>
        <div class="line-list">${history || '<div class="empty">No status history is available.</div>'}</div>`,
     );
@@ -794,7 +1168,7 @@ export function createRuntimeExtensions(options) {
     const evidence = (state.evidenceFiles ?? []).find((entry) => entry.id === quote.evidenceId);
     const links = canvassEvidenceLinks(quote, evidence);
     return {
-      fingerprint: JSON.stringify({ indicators, links }),
+      fingerprint: JSON.stringify({ indicators, links, rationale: quote?.preferredRationale ?? '' }),
       html: `${indicators
         .map(
           (indicator) =>
@@ -805,8 +1179,200 @@ export function createRuntimeExtensions(options) {
           (link) =>
             `<a class="canvass-evidence-link" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.label)}</a>`,
         )
-        .join('')}`,
+        .join('')}${
+        quote?.preferred && quote?.preferredRationale
+          ? `<span class="canvass-quality-indicator is-decision" title="Preferred-quote decision reason">Decision: ${esc(quote.preferredRationale)}</span>`
+          : ''
+      }`,
     };
+  };
+
+  const canvassReference = (canvassId) =>
+    (getState()?.canvassReferences ?? []).find((entry) => entry.id === canvassId);
+
+  const canUseCanvassCapability = (capability) => can(getState()?.currentUser, capability);
+
+  const showCanvassError = (error) => toast(operationalErrorText(error), true);
+
+  const submitCanvassMutation = async ({ form, button, action, success }) => {
+    button.disabled = true;
+    const originalLabel = button.textContent;
+    button.textContent = 'Recording…';
+    try {
+      const result = await action();
+      markFormClean(form);
+      closeModal();
+      await commit(`${success}${auditReferenceText(result)}`, 'success', result);
+    } catch (error) {
+      showCanvassError(error);
+      button.disabled = false;
+      button.textContent = originalLabel;
+    }
+  };
+
+  const openCanvassUpdate = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.canvass'))
+      return toast('You do not have permission to update canvass references.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    openModal(
+      `Edit ${quote.id}`,
+      `<form id="governedCanvassUpdateForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)}</strong>${quote.location ? ` · ${esc(quote.location)}` : ''}<br>Saving updates this active reference through the governed service. Earlier price checks and audit history remain append-only.</div>
+        <div class="form-grid section-gap">
+          <label>Supplier name<input name="supplierName" value="${esc(quote.supplierName)}" maxlength="160" required></label>
+          <label>Checked date<input name="checkedAt" type="date" value="${esc(String(quote.checkedAt ?? '').slice(0, 10))}" required></label>
+          <label class="span-2">Item / specification<input name="itemSpec" value="${esc(quote.itemSpec)}" maxlength="500" required></label>
+          <label>Price (₱)<input name="price" type="number" min="0.01" step="0.01" value="${esc(quote.price)}" required></label>
+          <label>Unit<select name="unit">${KNOWN_QUANTITY_UNITS.map((unit) => option(unit, unit, quote.unit)).join('')}</select></label>
+          <label>Receipt status<select name="receiptStatus">${option('NOT_CHECKED', 'Not checked', quote.receiptStatus)}${option('ORIGINAL_RECEIPT', 'Original receipt available', quote.receiptStatus)}${option('SALES_INVOICE', 'Sales invoice available', quote.receiptStatus)}${option('UNAVAILABLE', 'Unavailable / follow up', quote.receiptStatus)}</select></label>
+          <label>Reliability<select name="reliability">${option('UNRATED', 'Unrated', quote.reliability)}${option('RELIABLE', 'Reliable', quote.reliability)}${option('CONDITIONAL', 'Conditional', quote.reliability)}${option('FOLLOW_UP', 'Follow up required', quote.reliability)}</select></label>
+          <label class="span-2">Evidence / source URL<input name="sourceUrl" type="url" value="${esc(quote.sourceUrl ?? '')}" maxlength="500"></label>
+          <label class="span-2">Notes<textarea name="notes" maxlength="1000">${esc(quote.notes ?? '')}</textarea></label>
+          <label class="span-2">Reason for update<textarea name="reason" maxlength="500" required></textarea></label>
+        </div>
+        <button class="primary" type="submit">Save Governed Changes</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedCanvassUpdateForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const values = Object.fromEntries(new FormData(form).entries());
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.updateCanvassReference({
+                ...values,
+                canvassId: quote.id,
+                price: Number(values.price),
+                expectedUpdatedAt: quote.updatedAt,
+              }),
+            success: `${quote.id} updated with price history retained.`,
+          });
+        });
+      },
+    );
+  };
+
+  const openCanvassArchive = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.procure'))
+      return toast('You do not have permission to archive canvass references.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    if (quote.preferred)
+      return toast('Select another preferred quote before archiving this reference.', true);
+    openModal(
+      `Archive ${quote.id}`,
+      `<form id="governedCanvassArchiveForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)} · ${esc(quote.itemSpec)}</strong><br>Archiving removes this reference from active use without deleting its links, price history, or audit trail.</div>
+        <label class="section-gap">Required archive reason<textarea name="reason" maxlength="500" required></textarea></label>
+        <button class="danger" type="submit">Archive Reference</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedCanvassArchiveForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.archiveCanvassReference({
+                canvassId: quote.id,
+                expectedUpdatedAt: quote.updatedAt,
+                reason: new FormData(form).get('reason'),
+              }),
+            success: `${quote.id} archived without deleting history.`,
+          });
+        });
+      },
+    );
+  };
+
+  const openPreferredCanvassDecision = (canvassId) => {
+    if (!canUseCanvassCapability('fulfillment.procure'))
+      return toast('You do not have permission to select a preferred quote.', true);
+    const quote = canvassReference(canvassId);
+    if (!quote || quote.status !== 'ACTIVE')
+      return toast('The active canvass reference was not found.', true);
+    openModal(
+      `Select ${quote.id} as preferred`,
+      `<form id="governedPreferredCanvassForm">
+        <div class="mode-note"><strong>${esc(quote.supplierName)} · ₱${esc(Number(quote.price).toLocaleString('en-PH'))} / ${esc(quote.unit)}</strong><br>The decision reason will be stored with the preferred-quote history and shown in comparison views.</div>
+        <label class="section-gap">Required decision reason<textarea name="rationale" maxlength="500" required></textarea></label>
+        <button class="primary" type="submit">Confirm Preferred Quote</button>
+      </form>`,
+      (modal) => {
+        const form = modal.querySelector('#governedPreferredCanvassForm');
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = event.submitter ?? form.querySelector('[type="submit"]');
+          void submitCanvassMutation({
+            form,
+            button,
+            action: () =>
+              services.selectPreferredCanvass({
+                canvassId: quote.id,
+                rationale: new FormData(form).get('rationale'),
+              }),
+            success: `${quote.id} selected as the preferred quote.`,
+          });
+        });
+      },
+    );
+  };
+
+  const renderCanvassActionState = () => {
+    if (backendMode === 'mock') return;
+    const canEdit = canUseCanvassCapability('fulfillment.canvass');
+    const canDecide = canUseCanvassCapability('fulfillment.procure');
+    document.querySelectorAll('[data-canvass-edit]').forEach((button) => {
+      button.hidden = !canEdit;
+      button.disabled = !canEdit;
+    });
+    document.querySelectorAll('[data-canvass-archive]').forEach((button) => {
+      const quote = canvassReference(button.dataset.canvassArchive);
+      button.hidden = !canDecide;
+      button.disabled = !canDecide || quote?.preferred === true;
+      button.title = quote?.preferred ? 'Select another preferred quote before archiving.' : '';
+    });
+    document.querySelectorAll('[data-prefer-canvass]').forEach((button) => {
+      button.hidden = !canDecide;
+      button.disabled = !canDecide;
+    });
+    const createButton = document.querySelector('#canvassForm [type="submit"]');
+    if (createButton) {
+      createButton.hidden = !canEdit;
+      createButton.disabled = !canEdit;
+    }
+  };
+
+  const installCanvassGovernance = () => {
+    if (backendMode === 'mock' || canvassGovernanceInstalled) return;
+    document.addEventListener(
+      'click',
+      (event) => {
+        const edit = event.target.closest('[data-canvass-edit]');
+        const archive = event.target.closest('[data-canvass-archive]');
+        const preferred = event.target.closest('[data-prefer-canvass]');
+        const action = edit ?? archive ?? preferred;
+        if (!action) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (edit) openCanvassUpdate(edit.dataset.canvassEdit);
+        else if (archive) openCanvassArchive(archive.dataset.canvassArchive);
+        else openPreferredCanvassDecision(preferred.dataset.preferCanvass);
+      },
+      true,
+    );
+    canvassGovernanceInstalled = true;
   };
 
   const decorateCanvassHost = (host, quote, state) => {
@@ -845,9 +1411,11 @@ export function createRuntimeExtensions(options) {
         state,
       );
     });
+    renderCanvassActionState();
   };
 
   const installCanvassQuality = () => {
+    installCanvassGovernance();
     ['#canvassLibrary', '#quoteComparison'].forEach((selector) => {
       const root = document.querySelector(selector);
       if (!root || canvassObservedRoots.has(root)) return;
@@ -1438,7 +2006,7 @@ export function createRuntimeExtensions(options) {
       items
         .map(
           (item) =>
-            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(item.status)} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
+            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
         )
         .join('') || '<div class="empty">No advertisements match these filters.</div>';
     const pagination = advertisementDirectory?.pagination ?? {
@@ -1449,7 +2017,7 @@ export function createRuntimeExtensions(options) {
     const pager = root.querySelector('[data-advertisement-pagination]');
     pager.hidden = pagination.totalPages <= 1;
     pager.querySelector('[data-advertisement-page-summary]').textContent =
-      `Page ${pagination.page} of ${pagination.totalPages} Â· ${pagination.total} records`;
+      `Page ${pagination.page} of ${pagination.totalPages} · ${pagination.total} records`;
     pager.querySelector('[data-advertisement-page="previous"]').disabled = pagination.page <= 1;
     pager.querySelector('[data-advertisement-page="next"]').disabled =
       pagination.page >= pagination.totalPages;
@@ -1460,7 +2028,7 @@ export function createRuntimeExtensions(options) {
     if (!root || !advertisementManagementAllowed()) return;
     if (!force && advertisementDirectory?.pagination?.page === advertisementPage) return;
     root.querySelector('[data-advertisement-results]').innerHTML =
-      '<div class="empty">Loading authorized advertisementsâ€¦</div>';
+      '<div class="empty">Loading authorized advertisements…</div>';
     try {
       advertisementDirectory = await services.listAdvertisements({
         query: root.querySelector('[name="advertisementSearch"]')?.value ?? '',
@@ -1545,7 +2113,7 @@ export function createRuntimeExtensions(options) {
       items
         .map((account) => {
           const stateLabels = [
-            account.status,
+            statusLabel(account.status, { missing: 'Status not reported' }),
             account.firstLoginPending ? 'Pending first login' : 'Onboarding complete',
             account.locked ? 'Locked' : '',
           ].filter(Boolean);
@@ -1567,7 +2135,7 @@ export function createRuntimeExtensions(options) {
           const workspaceLine = (accessProfile.workspaceIds ?? []).length
             ? `${accessProfile.workspaceIds.join(', ')}; default ${accessProfile.defaultWorkspaceId || 'not set'}`
             : 'No internal workspace';
-          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>Workspaces: ${esc(workspaceLine)} &middot; Preset: ${esc(accessProfile.presetId || 'CUSTOM')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="policy" data-access-id="${esc(account.accessId)}">Edit access</button><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
+          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(presentationLabel(account.roleId, { context: 'role', missing: 'Role not reported' }))} &middot; ${esc((account.committeeIds ?? []).map((id) => presentationLabel(id, { context: 'committee' })).join(', ') || 'All / no committee')}</small><small>Workspaces: ${esc(workspaceLine)} &middot; Preset: ${esc(accessProfile.presetId || 'CUSTOM')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="policy" data-access-id="${esc(account.accessId)}">Edit access</button><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
         })
         .join('') || '<div class="empty">No accounts match the authorized filters.</div>';
     const pagination = accessDirectory?.pagination ?? { page: 1, totalPages: 1, total: items.length };
@@ -1656,7 +2224,7 @@ export function createRuntimeExtensions(options) {
       <div class="form-grid section-gap">
         <label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label>
         <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, profile.presetId || 'CUSTOM')).join('')}</select></label>
-        <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), account.roleId)).join('')}</select></label>
+        <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD', 'READ_ONLY_AUDITOR'].map((value) => option(value, presentationLabel(value, { context: 'role' }), account.roleId)).join('')}</select></label>
         <label>Default workspace<select name="defaultWorkspaceId"><option value="">No internal workspace</option>${options.workspaces.map((entry) => option(entry.id, entry.label, profile.defaultWorkspaceId)).join('')}</select></label>
         <fieldset class="span-2"><legend>Authorized workspaces</legend>${accessCheckboxes('workspaceIds', options.workspaces, workspaceIds)}</fieldset>
         <fieldset class="span-2"><legend>Committee scopes</legend>${accessCheckboxes('committeeIds', options.committees, committeeIds)}</fieldset>
@@ -1707,12 +2275,15 @@ export function createRuntimeExtensions(options) {
       ['Explicit denies', preview.explicitDenies?.join(', ') || 'None'],
       ['Sensitive capabilities', preview.sensitiveCapabilities?.join(', ') || 'None'],
     ];
-    return `<dl class="access-effective-preview">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
+    const current = preview.account ?? {};
+    const proposed = preview.proposedAccount ?? {};
+    return `<div class="mode-note"><strong>Target: ${esc(current.accessId || 'Unknown account')}</strong><br>Current: ${esc(presentationLabel(current.roleId, { context: 'role', missing: 'Role not reported' }))} / ${esc(statusLabel(current.status, { missing: 'Status not reported' }))}<br>Proposed: ${esc(presentationLabel(proposed.roleId || preview.roleId, { context: 'role', missing: 'Role not reported' }))} / ${esc(statusLabel(proposed.status || current.status, { missing: 'Status not reported' }))}</div><dl class="access-effective-preview section-gap">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
   };
 
   const openAccessPolicyEditor = async (account) => {
     try {
       const options = await ensureAccessPolicyOptions();
+      const idempotencyKey = `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
       openModal(
         `Edit effective access · ${account.accessId}`,
         accessPolicyFormMarkup(account, options),
@@ -1749,15 +2320,15 @@ export function createRuntimeExtensions(options) {
                     .addEventListener('click', async (confirmEvent) => {
                       confirmEvent.currentTarget.disabled = true;
                       try {
-                        await services.updateAccessPolicy({
+                        const result = await services.updateAccessPolicy({
                           ...command,
-                          idempotencyKey: `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                          idempotencyKey,
                         });
                         closeModal();
                         accessDirectory = null;
                         await refreshAccessDirectory({ force: true });
                         toast(
-                          'Effective access updated; active sessions were revoked and audit history was appended.',
+                          `Effective access updated; active sessions were revoked and audit history was appended.${auditReferenceText(result)}`,
                         );
                       } catch (error) {
                         toast(error.message, true);
@@ -1793,6 +2364,10 @@ export function createRuntimeExtensions(options) {
             .join('') || '<div class="empty">No Access ID changes have been recorded.</div>'
         }</div><h3 class="section-gap">Safe account audit history</h3><div class="line-list">${
           (result.auditHistory ?? [])
+            .map((entry) => ({
+              ...entry,
+              reason: `Before: ${JSON.stringify(entry.before ?? {})}; After: ${JSON.stringify(entry.after ?? {})}; ${entry.reason || 'No reason recorded'}`,
+            }))
             .map(
               (entry) =>
                 `<div class="request-line"><div><strong>${esc(entry.action)}</strong><small>${esc(accessDate(entry.changedAt))} · ${esc(entry.correlationId || 'No correlation ID')}</small><small>${esc(entry.reason || 'No reason recorded')}</small></div></div>`,
@@ -1806,6 +2381,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessIdChange = (account) => {
+    const idempotencyKey = `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Change Access ID · ${account.accessId}`,
       `<form id="accessIdChangeForm"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
@@ -1821,24 +2397,26 @@ export function createRuntimeExtensions(options) {
             const preview = await services.previewAccessIdChange(command);
             openModal(
               'Confirm Access ID change',
-              `<div class="mode-note"><strong>${esc(account.accessId)} → ${esc(preview.normalizationPreview)}</strong><br>All active sessions will be revoked. The previous Access ID remains reserved and cannot be reused. Role, capability, and historical ownership links are unchanged.</div><button class="danger section-gap" type="button" data-access-confirm-change>Confirm and revoke sessions</button>`,
+              `<div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current Access ID: ${esc(account.accessId)}<br>Proposed Access ID: ${esc(preview.normalizationPreview)}<br>Result: all active sessions revoked; previous Access ID reserved. Role, capability, and historical ownership links remain unchanged.</div><button class="danger section-gap" type="button" data-access-confirm-change>Confirm and revoke sessions</button>`,
               (confirmModal) => {
                 confirmModal
                   .querySelector('[data-access-confirm-change]')
                   .addEventListener('click', async (confirmEvent) => {
                     confirmEvent.currentTarget.disabled = true;
                     try {
-                      await services.changeAccessId({
+                      const result = await services.changeAccessId({
                         ...command,
                         proposedAccessId: preview.proposedAccessId,
-                        idempotencyKey: `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+                        idempotencyKey,
                       });
                       closeModal();
                       accessDirectory = null;
                       await refreshAccessDirectory({ force: true });
-                      toast('Access ID changed; prior sessions were revoked and history was appended.');
+                      toast(
+                        `Access ID changed; prior sessions were revoked and history was appended.${auditReferenceText(result)}`,
+                      );
                     } catch (error) {
-                      toast(error.message, true);
+                      toast(operationalErrorText(error), true);
                       confirmEvent.currentTarget.disabled = false;
                     }
                   });
@@ -1854,6 +2432,7 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessReasonAction = (account, action) => {
+    const clientRequestId = `access-${action}-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     const definitions = {
       disable: { title: 'Disable account', button: 'Disable and revoke sessions', status: 'DISABLED' },
       enable: { title: 'Enable account', button: 'Enable account', status: 'ACTIVE' },
@@ -1870,7 +2449,7 @@ export function createRuntimeExtensions(options) {
     const definition = definitions[action];
     openModal(
       `${definition.title} · ${account.accessId}`,
-      `<form id="accessReasonActionForm"><div class="mode-note">This is a consequential account action and will be recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${['disable', 'archive'].includes(action) ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
+      `<form id="accessReasonActionForm"><div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current state: ${esc(account.status)}${account.locked ? ' / locked' : ''}<br>Proposed result: ${esc(definition.status ?? (action === 'unlock' ? 'unlocked' : 'all sessions revoked'))}. This action is recorded in the append-only audit log.</div><label class="section-gap">Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="section-gap">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label><button class="${['disable', 'archive'].includes(action) ? 'danger' : 'primary'}" type="submit">${definition.button}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessReasonActionForm');
         form.addEventListener('submit', async (event) => {
@@ -1881,24 +2460,26 @@ export function createRuntimeExtensions(options) {
             currentAccessId: account.accessId,
             ...values,
             ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
+            ...(['unlock', 'revoke-sessions'].includes(action) ? { clientRequestId } : {}),
           };
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
+            let result;
             if (definition.status)
-              await services.setAccessAccountStatus({ ...command, status: definition.status });
-            else if (action === 'unlock') await services.unlockAccessAccount(command);
-            else await services.revokeAccessSessions(command);
+              result = await services.setAccessAccountStatus({ ...command, status: definition.status });
+            else if (action === 'unlock') result = await services.unlockAccessAccount(command);
+            else result = await services.revokeAccessSessions(command);
             closeModal();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
             toast(
               action === 'archive'
-                ? 'Account archived without deleting history; active sessions were revoked.'
-                : `${definition.title} completed.`,
+                ? `Account archived without deleting history; active sessions were revoked.${auditReferenceText(result)}`
+                : `${definition.title} completed.${auditReferenceText(result)}`,
             );
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -1921,11 +2502,11 @@ export function createRuntimeExtensions(options) {
       'These one-time credentials must be delivered through an approved private channel.',
     ].join('\r\n');
 
-  const openOneTimeCredentialHandoff = (title, credentials) => {
+  const openOneTimeCredentialHandoff = (title, credentials, result) => {
     const text = credentialsText(credentials);
     openModal(
       title,
-      `<div class="alert warning"><strong>One-time credential display.</strong> Save this export now. Passwords are not stored in plaintext and cannot be reconstructed after this dialog closes.</div><pre class="credential-handoff section-gap">${esc(text)}</pre><div class="button-row section-gap"><button class="secondary" type="button" data-copy-credentials>Copy access codes</button><button class="primary" type="button" data-download-credentials>Download access codes</button></div>`,
+      `<div class="alert warning"><strong>One-time credential display.</strong> Save this export now. Passwords are not stored in plaintext and cannot be reconstructed after this dialog closes.${esc(auditReferenceText(result))}</div><pre class="credential-handoff section-gap">${esc(text)}</pre><div class="button-row section-gap"><button class="secondary" type="button" data-copy-credentials>Copy access codes</button><button class="primary" type="button" data-download-credentials>Download access codes</button></div>`,
       (modal) => {
         modal.querySelector('[data-copy-credentials]').addEventListener('click', async () => {
           await navigator.clipboard.writeText(text);
@@ -1944,9 +2525,10 @@ export function createRuntimeExtensions(options) {
   };
 
   const openAccessPasswordReset = (account) => {
+    const clientRequestId = `access-reset-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Reset temporary password · ${account.accessId}`,
-      `<form id="accessPasswordResetForm"><div class="mode-note">The server will generate a cryptographically secure one-time password. The account will return to first-login activation and all existing sessions will be revoked.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Generate reset credential and revoke sessions</button></form>`,
+      `<form id="accessPasswordResetForm"><div class="mode-note"><strong>Target: ${esc(account.accessId)}</strong><br>Current state: ${esc(account.status)}<br>Proposed result: STARTER / pending first login / sessions revoked. The server generates a cryptographically secure one-time password.</div><div class="form-grid section-gap"><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Generate reset credential and revoke sessions</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessPasswordResetForm');
         form.addEventListener('submit', async (event) => {
@@ -1958,13 +2540,21 @@ export function createRuntimeExtensions(options) {
             const result = await services.resetAccessPassword({
               currentAccessId: account.accessId,
               ...Object.fromEntries(new FormData(form).entries()),
+              clientRequestId,
             });
             form.reset();
             accessDirectory = null;
             await refreshAccessDirectory({ force: true });
-            openOneTimeCredentialHandoff('Temporary password generated', [result.credential]);
+            if (result.credential) {
+              openOneTimeCredentialHandoff('Temporary password generated', [result.credential], result);
+            } else {
+              openModal(
+                'Password reset completed',
+                `<div class="alert warning">The reset was already completed, but its one-time plaintext credential cannot be displayed again. Start a new confirmed reset if a replacement credential is required.${esc(auditReferenceText(result))}</div>`,
+              );
+            }
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -1981,7 +2571,7 @@ export function createRuntimeExtensions(options) {
           <label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label>
           <label class="checkbox"><input name="generateAccessId" type="checkbox"> Generate DOL-YYYY-NNNN Access ID</label>
           <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, 'CUSTOM')).join('')}</select></label>
-          <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD'].map((value) => option(value, value.replaceAll('_', ' '), 'REQUESTER')).join('')}</select></label>
+          <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD'].map((value) => option(value, presentationLabel(value, { context: 'role' }), 'REQUESTER')).join('')}</select></label>
           <label>Department<select name="departmentId"><option value="">Not mapped</option>${USC_DEPARTMENT_REGISTRY.map((department) => option(department.id, department.displayName)).join('')}</select></label>
           <label>Account status<select name="status"><option value="STARTER">Starter — first-login activation required</option><option value="DISABLED">Disabled — credential cannot be used yet</option></select></label>
           <label>Temporary credential expiry<select name="temporaryPasswordHours"><option value="24">24 hours</option><option value="48">48 hours</option><option value="72" selected>72 hours</option><option value="168">7 days</option></select></label>
@@ -2102,9 +2692,9 @@ export function createRuntimeExtensions(options) {
     if (domain === 'VENUES' || domain === 'EQUIPMENT')
       return `${common}<label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}" required></label><label>Location<input name="location" maxlength="160" value="${esc(payload.location ?? '')}"></label><label>Unit<select name="unit">${['service', 'piece', 'set', 'unit'].map((value) => option(value, value, payload.unit)).join('')}</select></label><label>Requestability<select name="requestability">${option('REQUESTABLE', 'Requestable - confirmation required', payload.requestability)}${option('NOT_REQUESTABLE', 'Not requestable', payload.requestability)}</select></label><label>Contact role<input name="contactRole" maxlength="120" value="${esc(payload.contactRole ?? '')}"></label><label>Route ID<input name="routeId" maxlength="100" value="${esc(payload.routeId ?? '')}" required></label>${domain === 'EQUIPMENT' ? `<label class="checkbox"><input name="returnRequired" type="checkbox" ${payload.returnRequired ? 'checked' : ''}> Return required</label>` : ''}<label class="span-2">Notes<textarea name="notes" maxlength="500">${esc(payload.notes ?? '')}</textarea></label>`;
     if (domain === 'ROUTING')
-      return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, value, payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, value.replaceAll('_', ' '), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
+      return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, presentationLabel(value, { context: 'generic' }), payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, presentationLabel(value, { context: 'committee' }), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
     if (domain === 'PERMISSIONS')
-      return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
+      return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, presentationLabel(value, { context: 'role' }), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
     return `${common}<label class="span-2">Description<textarea name="description" maxlength="500">${esc(payload.description ?? '')}</textarea></label>`;
   };
 
@@ -2160,7 +2750,7 @@ export function createRuntimeExtensions(options) {
   const openReferenceAdminChange = (record, action = record ? 'UPDATE' : 'ADD') => {
     const targetId = record?.id ?? '';
     openModal(
-      `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${referenceAdminDomain.replaceAll('_', ' ')}`,
+      `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${presentationLabel(referenceAdminDomain)}`,
       `<form id="referenceAdminChangeForm"><div class="mode-note">Controlled fields only. Roster-owned identity is read-only; permission and cross-office routing changes require a distinct reviewer.</div><div class="form-grid" style="margin-top:14px"><label>Stable ID<input name="targetId" maxlength="100" value="${esc(targetId)}" ${record ? 'readonly' : ''} required></label>${action === 'UPDATE' || action === 'ADD' ? referenceAdminFields(referenceAdminDomain, record) : `<label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`}</div><button class="primary" type="submit">Preview change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#referenceAdminChangeForm');
@@ -2313,7 +2903,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.0'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.7.1'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -2516,9 +3106,11 @@ export function createRuntimeExtensions(options) {
     if (!root || root.hidden || !evidenceSystemStatusAllowed()) return;
     const status = evidenceSystemStatus;
     if (!status) return;
-    const pending = Number(status.pendingDriveBackups ?? 0);
-    const failed = Number(status.failedDriveBackups ?? 0);
-    const restoreRequired = Number(status.filesRequiringRestoration ?? 0);
+    const numberMetric = presentationNumber;
+    const sumMetricValues = sumPresentationNumbers;
+    const pending = numberMetric(status, 'pendingDriveBackups');
+    const failed = numberMetric(status, 'failedDriveBackups');
+    const restoreRequired = numberMetric(status, 'filesRequiringRestoration');
     const primaryAvailable = String(status.primaryR2Status ?? '').toUpperCase() === 'AVAILABLE';
     const release = status.release ?? {};
     const database = status.database ?? {};
@@ -2529,21 +3121,31 @@ export function createRuntimeExtensions(options) {
     const storage = status.storage ?? {};
     const inventory = status.inventory ?? {};
     const recovery = status.recovery ?? {};
-    const rateLimitTotal =
-      Number(authentication.authRateLimitEvents24h ?? 0) +
-      Number(authentication.publicRequestRateLimitEvents24h ?? 0) +
-      Number(authentication.publicLendingRateLimitEvents24h ?? 0);
+    const rateLimitTotal = sumMetricValues([
+      numberMetric(authentication, 'authRateLimitEvents24h'),
+      numberMetric(authentication, 'publicRequestRateLimitEvents24h'),
+      numberMetric(authentication, 'publicLendingRateLimitEvents24h'),
+    ]);
+    const evidenceFailures = sumMetricValues([failed, restoreRequired]);
+    const loginAndRateLimitTotal = sumMetricValues([
+      numberMetric(authentication, 'failedLoginEvents24h'),
+      rateLimitTotal,
+    ]);
+    const inventoryAlertTotal = sumMetricValues([
+      numberMetric(inventory, 'negativeBalanceAlerts'),
+      numberMetric(inventory, 'lowStockAlerts'),
+    ]);
     root.querySelector('[data-system-status-metrics]').innerHTML = [
-      ['Overall', status.overallStatus ?? 'Not assessed', 'Truthful aggregate; attention is not hidden'],
+      ['Overall', statusLabel(status.overallStatus, { missing: 'Not assessed' }), 'Truthful aggregate; attention is not hidden'],
       [
         'Worker / API',
-        status.workerApi?.status ?? 'Not reported',
-        `${status.workerApi?.readinessIssueCount ?? 0} readiness issue(s)`,
+        statusLabel(status.workerApi?.status, { missing: 'Not reported' }),
+        `${numberMetric(status.workerApi, 'readinessIssueCount')} readiness issue(s)`,
       ],
       [
         'Deployed release',
         `v${release.releaseVersion ?? 'Not reported'}`,
-        `${release.environment ?? 'Unknown'} · ${String(release.candidateSha ?? 'Not reported').slice(0, 12)}`,
+        `${presentationLabel(release.environment, { missing: 'Not reported' })} · ${String(release.candidateSha ?? 'Not reported').slice(0, 12)}`,
       ],
       [
         'D1 schema',
@@ -2561,39 +3163,39 @@ export function createRuntimeExtensions(options) {
       ],
       [
         'Authentication',
-        authentication.status ?? 'Not reported',
-        `${authentication.activeAccounts ?? 0} active account(s) · ${authentication.activeSessions ?? 0} active session(s)`,
+        statusLabel(authentication.status, { missing: 'Not reported' }),
+        `${numberMetric(authentication, 'activeAccounts')} active account(s) · ${numberMetric(authentication, 'activeSessions')} active session(s)`,
       ],
       [
         'Email verification',
-        emailVerification.status ?? 'Not reported',
+        statusLabel(emailVerification.status, { missing: 'Not reported' }),
         emailVerification.note ?? 'Provider state unavailable',
       ],
       [
         'Identity roster sync',
-        roster.status ?? 'Not reported',
-        `${roster.latestApplyStatus ?? 'Not recorded'} · ${roster.activeIdentities ?? 0} active identities`,
+        statusLabel(roster.status, { missing: 'Not reported' }),
+        `${statusLabel(roster.latestApplyStatus, { missing: 'Not recorded' })} · ${numberMetric(roster, 'activeIdentities')} active identities`,
       ],
-      ['Google Drive backup', storage.googleDrive ?? 'Not reported', 'Private evidence recovery copy'],
+      ['Google Drive backup', statusLabel(storage.googleDrive, { missing: 'Not reported' }), 'Private evidence recovery copy'],
       [
         'R2 storage',
         primaryAvailable && storage.brandR2 === 'AVAILABLE' ? 'Available' : 'Attention',
-        `Brand ${storage.brandR2 ?? 'unknown'} · Evidence ${storage.evidenceR2 ?? 'unknown'}`,
+        `Brand ${statusLabel(storage.brandR2, { missing: 'Not reported' })} · Evidence ${statusLabel(storage.evidenceR2, { missing: 'Not reported' })}`,
       ],
       [
         'Evidence failures',
-        failed + restoreRequired,
+        evidenceFailures,
         `${pending} pending · ${restoreRequired} require restoration`,
       ],
       [
         'Login / rate limits',
-        Number(authentication.failedLoginEvents24h ?? 0) + rateLimitTotal,
-        `${authentication.failedLoginEvents24h ?? 0} failed login event(s) · ${rateLimitTotal} rate-limit event(s), last 24h`,
+        loginAndRateLimitTotal,
+        `${numberMetric(authentication, 'failedLoginEvents24h')} failed login event(s) · ${rateLimitTotal} rate-limit event(s), last 24h`,
       ],
       [
         'Inventory alerts',
-        Number(inventory.negativeBalanceAlerts ?? 0) + Number(inventory.lowStockAlerts ?? 0),
-        `${inventory.negativeBalanceAlerts ?? 0} negative · ${inventory.lowStockAlerts ?? 0} low stock · ${inventory.classificationPending ?? 0} pending classification`,
+        inventoryAlertTotal,
+        `${numberMetric(inventory, 'negativeBalanceAlerts')} negative · ${numberMetric(inventory, 'lowStockAlerts')} low stock · ${numberMetric(inventory, 'classificationPending')} pending classification`,
       ],
       [
         'Last successful backup',
@@ -2610,7 +3212,7 @@ export function createRuntimeExtensions(options) {
       [
         'Last rollback rehearsal',
         recovery.lastRollbackRehearsalAt ? accessDate(recovery.lastRollbackRehearsalAt) : 'Not recorded',
-        recovery.rollbackRehearsalStatus ?? 'Recovery rehearsal status unavailable',
+        statusLabel(recovery.rollbackRehearsalStatus, { missing: 'Recovery rehearsal status unavailable' }),
       ],
     ]
       .map(
@@ -2646,7 +3248,7 @@ export function createRuntimeExtensions(options) {
       ],
       [
         'Authentication totals',
-        `${authentication.totalAccounts ?? 0} total · ${authentication.starterAccounts ?? 0} starter · ${authentication.inactiveAccounts ?? 0} inactive`,
+        `${numberMetric(authentication, 'totalAccounts')} total · ${numberMetric(authentication, 'starterAccounts')} starter · ${numberMetric(authentication, 'inactiveAccounts')} inactive`,
         'Aggregate counts only; account identifiers are omitted',
       ],
       [
@@ -2701,14 +3303,15 @@ export function createRuntimeExtensions(options) {
       sourceState.textContent = `Sync remains fail-closed. Missing private configuration: ${(source?.missingConfiguration ?? []).join(', ') || 'status unavailable'}.`;
     }
     const latest = identityRosterStatus?.latestRun;
+    const latestApplied = identityRosterStatus?.latestAppliedRun;
     const directory = identityRosterStatus?.directory ?? { total: 0, active: 0 };
     root.querySelector('[data-roster-metrics]').innerHTML = [
       ['Protected identities', directory.total, 'Owner directory only'],
       ['Active identities', directory.active, 'D1 last-known projection'],
       [
         'Last sync',
-        latest?.appliedAt ? accessDate(latest.appliedAt) : 'Not applied',
-        latest?.applyStatus ?? 'No run',
+        latestApplied?.appliedAt ? accessDate(latestApplied.appliedAt) : 'Not applied',
+        latestApplied?.applyStatus ?? 'No applied run',
       ],
       ['Source fingerprint', latest?.sourceFingerprint ?? 'Not recorded', 'Opaque content fingerprint'],
     ]
@@ -2736,7 +3339,7 @@ export function createRuntimeExtensions(options) {
           toast('USC Officer and Staff Directory applied and reconciled.');
           await refreshIdentityRoster({ force: true });
         } catch (error) {
-          toast(error.message, true);
+          toast(operationalErrorText(error), true);
           button.disabled = false;
         }
       });
@@ -2762,7 +3365,6 @@ export function createRuntimeExtensions(options) {
     pager.querySelector('[data-roster-page="previous"]').disabled = pagination.page <= 1;
     pager.querySelector('[data-roster-page="next"]').disabled = pagination.page >= pagination.totalPages;
 
-    const latestApplied = (identityRosterStatus?.runs ?? []).find((run) => run.applyStatus === 'APPLIED');
     root.querySelector('[data-roster-history]').innerHTML =
       (identityRosterStatus?.runs ?? [])
         .map(
@@ -2787,6 +3389,8 @@ export function createRuntimeExtensions(options) {
         services.getIdentityRosterStatus({}),
         services.listIdentityRoster({
           query: root.querySelector('[name="identityRosterSearch"]')?.value ?? '',
+          active: root.querySelector('[name="identityRosterActive"]')?.value ?? 'ALL',
+          verificationResult: root.querySelector('[name="identityRosterVerification"]')?.value ?? 'ALL',
           page: identityRosterPage,
           pageSize: 25,
         }),
@@ -2794,7 +3398,12 @@ export function createRuntimeExtensions(options) {
       renderIdentityRoster();
     } catch (error) {
       root.querySelector('[data-roster-directory]').innerHTML =
-        `<div class="alert error">${esc(error.message)}</div>`;
+        `<div class="alert error"><strong>Directory unavailable.</strong><p>${esc(operationalErrorText(error))}</p><button class="secondary mini" type="button" data-roster-retry>Retry</button></div>`;
+      root.querySelector('[data-roster-retry]')?.addEventListener('click', () => {
+        identityRosterStatus = null;
+        identityRosterDirectory = null;
+        void refreshIdentityRoster({ force: true });
+      });
     }
   };
 
@@ -2809,13 +3418,14 @@ export function createRuntimeExtensions(options) {
       await refreshIdentityRoster({ force: true });
       toast('USC Officer and Staff Directory preview completed.');
     } catch (error) {
-      toast(error.message, true);
+      toast(operationalErrorText(error), true);
     } finally {
       button.disabled = false;
     }
   };
 
   const openIdentityRosterRollback = (runId, sourceFingerprint) => {
+    const clientRequestId = `roster-rollback-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       'Roll back the latest directory update',
       `<form data-roster-rollback-form><div class="alert warning">Rollback restores the protected pre-apply D1 snapshot. It does not change the private Google Sheet.</div><div class="form-grid section-gap"><input type="hidden" name="runId" value="${esc(runId)}"><label class="span-2">Confirm exact source fingerprint<input name="confirmSourceFingerprint" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="danger" type="submit">Restore protected snapshot</button></form>`,
@@ -2831,14 +3441,17 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           try {
-            await services.rollbackIdentityRosterSync(Object.fromEntries(new FormData(form).entries()));
+            const result = await services.rollbackIdentityRosterSync({
+              ...Object.fromEntries(new FormData(form).entries()),
+              clientRequestId,
+            });
             closeModal();
             identityRosterStatus = null;
             identityRosterDirectory = null;
             await refreshIdentityRoster({ force: true });
-            toast('The latest directory update was rolled back and reconciled.');
+            toast(`The latest directory update was rolled back and reconciled.${auditReferenceText(result)}`);
           } catch (error) {
-            toast(error.message, true);
+            toast(operationalErrorText(error), true);
             button.disabled = false;
           }
         });
@@ -3060,6 +3673,13 @@ export function createRuntimeExtensions(options) {
         void refreshIdentityRoster({ force: true });
       }, 180);
     });
+    ['identityRosterActive', 'identityRosterVerification'].forEach((name) => {
+      root.querySelector(`[name="${name}"]`).addEventListener('change', () => {
+        identityRosterPage = 1;
+        identityRosterDirectory = null;
+        void refreshIdentityRoster({ force: true });
+      });
+    });
     root.querySelector('[data-roster-pagination]').addEventListener('click', (event) => {
       const control = event.target.closest('[data-roster-page]');
       if (!control) return;
@@ -3251,7 +3871,7 @@ export function createRuntimeExtensions(options) {
     if (!root || !lendingUsageAllowed()) return;
     const form = root.querySelector('[data-lending-usage-filters]');
     root.querySelector('[data-lending-usage-results]').innerHTML =
-      '<div class="empty">Loading authorized Lending Hub activityâ€¦</div>';
+      '<div class="empty">Loading authorized Lending Hub activity…</div>';
     try {
       lendingUsageReport = await services.getLendingUsage(Object.fromEntries(new FormData(form).entries()));
       const department = form.elements.department.value;
@@ -3751,8 +4371,7 @@ export function createRuntimeExtensions(options) {
     if (!force && materialsQueueItems !== null) return;
     materialsQueuePromise = (async () => {
       const operationalScope =
-        new URL(location.href).searchParams.get('scope') ??
-        getState()?.operationalContext?.selected?.value;
+        new URL(location.href).searchParams.get('scope') ?? getState()?.operationalContext?.selected?.value;
       const result = await services.getMaterialsWorkQueue(operationalScope ? { operationalScope } : {});
       materialsQueueItems = Array.isArray(result?.items) ? result.items : [];
       renderMaterialsQueue();
@@ -3777,7 +4396,7 @@ export function createRuntimeExtensions(options) {
       materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee · canonical D1 projection</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials Queue</h3><p>Exact specifications, stable event/request/deliverable identities, quote evidence, budget, cumulative receiving, and release quantities remain connected.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}${materialsQueueGroupsMarkup(items, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}`;
       return;
     }
-    materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} Â· ${esc(item.materials?.fulfillmentPath || 'PENDING_DECISION')} Â· ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
+    materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} · ${esc(presentationLabel(item.materials?.fulfillmentPath, { context: 'fulfillment', missing: 'Not recorded' }))} · ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(statusLabel(item.status, { missing: 'Not reported' }))}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
   };
 
   const openMaterialsWorkflow = (componentId) => {
@@ -3793,7 +4412,7 @@ export function createRuntimeExtensions(options) {
           if (!form.reportValidity()) return;
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
-          button.textContent = 'Savingâ€¦';
+          button.textContent = 'Saving…';
           try {
             const values = Object.fromEntries(new FormData(form).entries());
             let fulfillmentEvidenceId = item.materials?.fulfillmentEvidenceId ?? '';
@@ -3833,7 +4452,7 @@ export function createRuntimeExtensions(options) {
             await commit(`${item.componentId} Materials workflow updated.`, 'success', result);
             await refreshMaterialsQueue({ force: true });
           } catch (error) {
-            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
             button.disabled = false;
             button.textContent = 'Save Materials Workflow';
           }
@@ -3857,7 +4476,7 @@ export function createRuntimeExtensions(options) {
     if (!fields.querySelector('[name="materialsMaterialCategory"]')) {
       fields.insertAdjacentHTML(
         'beforeend',
-        `<label>Controlled category<select name="materialsMaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        `<label>Controlled category<select name="materialsMaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label>
         <label>Required by<input name="materialsRequiredBy" type="date" required></label>
         <label class="span-2">Exact specification<input name="materialsSpecification" maxlength="500" placeholder="Enter the exact material specification" required></label>
         <label class="span-2">Usage / purpose<input name="materialsUsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required></label>
@@ -4089,7 +4708,7 @@ export function createRuntimeExtensions(options) {
       ? venueEquipmentLines
           .map(
             (line, index) =>
-              `<div class="request-line"><div><strong>${esc(line.label)}</strong><small>${esc(line.referenceId || 'Controlled Other')} &middot; ${esc(line.category.replaceAll('_', ' '))} &middot; ${esc(line.unit)}</small><span>${line.referenceId ? 'Requestable - confirmation required; not a booking guarantee' : 'Pending classification - no booking or stock promise'}</span></div><div class="request-line-actions"><label>Quantity<input type="number" min="1" step="1" value="${esc(line.quantity)}" data-venue-equipment-quantity="${index}" aria-label="Quantity for ${esc(line.label)}"></label><button class="ghost mini" type="button" data-venue-equipment-remove="${index}">Remove</button></div></div>`,
+              `<div class="request-line"><div><strong>${esc(line.label)}</strong><small>${esc(line.referenceId || 'Controlled Other')} &middot; ${esc(presentationLabel(line.category, { context: 'category', missing: 'Category not recorded' }))} &middot; ${esc(line.unit)}</small><span>${line.referenceId ? 'Requestable - confirmation required; not a booking guarantee' : 'Pending classification - no booking or stock promise'}</span></div><div class="request-line-actions"><label>Quantity<input type="number" min="1" step="1" value="${esc(line.quantity)}" data-venue-equipment-quantity="${index}" aria-label="Quantity for ${esc(line.label)}"></label><button class="ghost mini" type="button" data-venue-equipment-remove="${index}">Remove</button></div></div>`,
           )
           .join('')
       : '<div class="empty">Search and add a requestable venue or equipment reference, or add a constrained Other line.</div>';
@@ -4115,10 +4734,10 @@ export function createRuntimeExtensions(options) {
             const previous = index ? `${references[index - 1].type}|${references[index - 1].category}` : '';
             if (group !== previous)
               rows.push(
-                `<p class="eyebrow">${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</p>`,
+              `<p class="eyebrow">${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</p>`,
               );
             rows.push(
-              `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
+              `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
             );
             return rows;
           }, [])
@@ -4201,7 +4820,7 @@ export function createRuntimeExtensions(options) {
       items
         .map(
           (item) =>
-            `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.ownerCommitteeId)} &middot; ${esc(item.venueEquipment?.confirmationStatus || 'PENDING_CONFIRMATION')} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
+            `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(presentationLabel(item.ownerCommitteeId, { context: 'committee', missing: 'Committee not reported' }))} &middot; ${esc(presentationLabel(item.venueEquipment?.confirmationStatus, { context: 'status', missing: 'Confirmation status not reported' }))} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(statusLabel(item.status, { missing: 'Status not reported' }))}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
         )
         .join('') ||
       '<div class="empty">No Venue &amp; Equipment work is in the current authorized scope.</div>'
@@ -4290,7 +4909,7 @@ export function createRuntimeExtensions(options) {
       fields.insertAdjacentHTML(
         'beforeend',
         `<label>Reference type<select name="venueEquipmentTypeFilter"><option value="">Venue and equipment</option><option value="VENUE">Venue</option><option value="EQUIPMENT">Equipment</option></select></label>
-        <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label>
         <label class="span-2">Search approved references<input name="venueEquipmentSearch" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="venueEquipmentReferenceResults" aria-expanded="false" placeholder="Search canonical name, alias, category, or location"><small>Results show requestability only. Confirmation is still required.</small></label>
         <div id="venueEquipmentReferenceResults" class="autocomplete-panel show span-2" role="listbox" data-venue-equipment-results><div class="empty">Enter a search term.</div></div>
         <label>Quantity to add<input name="venueEquipmentAddQuantity" type="number" min="1" step="1" value="1"></label>
@@ -4442,19 +5061,80 @@ export function createRuntimeExtensions(options) {
     }
   };
 
-  const cleanAbandonedForms = () => {
-    const modalOpen = document.querySelector('#modalBackdrop')?.classList.contains('show');
-    for (const form of dirtyForms) {
-      if (!form.isConnected || (!modalOpen && form.closest('#modal'))) dirtyForms.delete(form);
-    }
-  };
-  const isDirty = () => {
-    cleanAbandonedForms();
-    return (
-      dirtyForms.size > 0 ||
-      document.querySelector('#modalBackdrop')?.classList.contains('show') ||
-      hasUnsavedRuntimeState()
+  const isDirty = (root = null, { includeRuntime = true } = {}) =>
+    dirtyTracker.isDirty(root) || (includeRuntime && hasUnsavedRuntimeState());
+  const isTrackableForm = (form) =>
+    Boolean(
+      form &&
+      !form.matches('[data-dirty-ignore], [data-lending-usage-filters]') &&
+      form.querySelector('button[type="submit"], input[type="submit"]'),
     );
+  let discardDialog = null;
+  let discardPromise = null;
+  let formSnapshotsInitialized = false;
+  let afterRenderCount = 0;
+  const ensureDiscardDialog = () => {
+    if (discardDialog) return discardDialog;
+    discardDialog = document.createElement('div');
+    discardDialog.className = 'unsaved-changes-backdrop';
+    discardDialog.hidden = true;
+    discardDialog.innerHTML = `<section class="unsaved-changes-dialog" role="alertdialog" aria-modal="true" aria-labelledby="unsavedChangesTitle" aria-describedby="unsavedChangesDescription">
+      <p class="eyebrow">Unsaved changes</p>
+      <h2 id="unsavedChangesTitle">Discard unsaved changes?</h2>
+      <p id="unsavedChangesDescription">Your latest edits have not been saved. Continue editing to keep them, or discard them before leaving.</p>
+      <div class="button-row">
+        <button class="primary" type="button" data-unsaved-continue>Continue editing</button>
+        <button class="danger" type="button" data-unsaved-discard>Discard changes</button>
+      </div>
+    </section>`;
+    document.body.append(discardDialog);
+    return discardDialog;
+  };
+  const requestDiscard = ({ root = null, includeRuntime = true } = {}) => {
+    if (!isDirty(root, { includeRuntime })) return Promise.resolve(true);
+    if (discardPromise) return discardPromise;
+    const dialog = ensureDiscardDialog();
+    const continueButton = dialog.querySelector('[data-unsaved-continue]');
+    const discardButton = dialog.querySelector('[data-unsaved-discard]');
+    const returnFocus = document.activeElement;
+    dialog.hidden = false;
+    discardPromise = new Promise((resolve) => {
+      const finish = (discarded) => {
+        dialog.hidden = true;
+        dialog.removeEventListener('keydown', onKeydown);
+        continueButton.removeEventListener('click', continueEditing);
+        discardButton.removeEventListener('click', discardChanges);
+        discardPromise = null;
+        if (!discarded) returnFocus?.focus?.({ preventScroll: true });
+        resolve(discarded);
+      };
+      const continueEditing = () => finish(false);
+      const discardChanges = () => finish(true);
+      const onKeydown = (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          continueEditing();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const buttons = [continueButton, discardButton];
+        const first = buttons[0];
+        const last = buttons.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      };
+      dialog.addEventListener('keydown', onKeydown);
+      continueButton.addEventListener('click', continueEditing);
+      discardButton.addEventListener('click', discardChanges);
+      continueButton.focus();
+    });
+    return discardPromise;
   };
   const setSyncStatus = (status, detail = {}) => {
     if (!syncIndicator) return;
@@ -4483,10 +5163,41 @@ export function createRuntimeExtensions(options) {
     setSyncStatus(failure ? 'delayed' : 'updates-available');
   };
   const markFormClean = (form) => {
-    if (form) dirtyForms.delete(form);
+    dirtyTracker.markClean(form);
   };
   const markAllClean = () => {
-    dirtyForms.clear();
+    dirtyTracker.markAllClean();
+  };
+  const syncQuantityControl = (input, unit, { allowZero = false } = {}) => {
+    if (!input || !unit) return;
+    const step = quantityStep(unit);
+    input.step = step;
+    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
+    input.dataset.quantityUnit = String(unit);
+  };
+  const syncRenderedQuantityControls = (root = document) => {
+    const state = getState() ?? {};
+    root.querySelectorAll?.('input[type="number"][name^="qty_"]').forEach((input) => {
+      const lineId = input.name.slice(4);
+      const line = (state.requestLines ?? []).find((entry) => entry.id === lineId);
+      syncQuantityControl(input, line?.unit);
+    });
+    for (const formId of ['restockReceiveForm', 'deliverableReceiveForm']) {
+      const form =
+        (root.matches?.(`#${formId}`) ? root : root.querySelector?.(`#${formId}`)) ??
+        document.querySelector(`#${formId}`);
+      if (form) syncQuantityControl(form.elements.quantity, form.elements.unit?.value);
+    }
+    const correctionForm =
+      (root.matches?.('#releaseCorrectionForm') ? root : root.querySelector?.('#releaseCorrectionForm')) ??
+      document.querySelector('#releaseCorrectionForm');
+    if (correctionForm) {
+      const confirmationId = correctionForm.elements.releaseConfirmationId?.value;
+      const line = (state.releaseConfirmations ?? [])
+        .flatMap((release) => release.lineReleases ?? [])
+        .find((entry) => entry.confirmationId === confirmationId);
+      syncQuantityControl(correctionForm.elements.quantity, line?.unit);
+    }
   };
   const acceptScopedRevision = (revision) => {
     if (!revision?.scope) return;
@@ -4603,18 +5314,25 @@ export function createRuntimeExtensions(options) {
   };
 
   const runCatalogMutation = async (kind, payload) => {
-    if (backendMode === 'mock') return mockCatalogMutation(kind, payload);
-    if (kind === 'create') return services.createInventoryItem(payload);
-    if (kind === 'update') return services.updateInventoryItem(payload);
-    if (kind === 'storage') return services.updateInventoryStorageContext(payload);
-    if (kind === 'archive') return services.archiveInventoryItem(payload.itemId, payload);
-    if (kind === 'restore') return services.restoreInventoryItem(payload.itemId, payload);
+    const currentItem = (getState()?.inventoryItems ?? []).find((item) => item.id === payload.itemId);
+    const mutationPayload = kind === 'create' ? payload : withExpectedUpdatedAt(payload, currentItem);
+    if (backendMode === 'mock') return mockCatalogMutation(kind, mutationPayload);
+    if (kind === 'create') return services.createInventoryItem(mutationPayload);
+    if (kind === 'update') return services.updateInventoryItem(mutationPayload);
+    if (kind === 'storage') return services.updateInventoryStorageContext(mutationPayload);
+    if (kind === 'archive') return services.archiveInventoryItem(mutationPayload.itemId, mutationPayload);
+    if (kind === 'restore') return services.restoreInventoryItem(mutationPayload.itemId, mutationPayload);
     throw new Error('Unsupported catalog mutation.');
   };
 
   const openCatalogForm = (item = null) => {
     openModal(item ? `View / Edit ${item.id}` : 'Create Inventory Item', catalogFormHtml(item), (modal) => {
       const form = modal.querySelector('#catalogItemForm');
+      bindUnitBoundInputs(form, [
+        { name: 'reorderThreshold', allowZero: true },
+        { name: 'maximumLoanQuantity' },
+        { name: 'initialQuantity', allowZero: true },
+      ]);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!form.reportValidity()) return;
@@ -4713,20 +5431,35 @@ export function createRuntimeExtensions(options) {
   };
 
   const workspaceDefinitions = Object.freeze({
-    administrator: { initial: 'A', label: 'Administrator', purpose: 'Control Center', path: '/app/admin' },
-    director: { initial: 'D', label: 'Director', purpose: 'Department oversight', path: '/app/director' },
-    food: { initial: 'F', label: 'Food Committee', purpose: 'Food operations', path: '/app/food' },
+    administrator: {
+      initial: 'A',
+      label: 'Administrator',
+      purpose: 'Control Center',
+      path: WORKSPACE_ROUTES.administrator.path,
+    },
+    director: {
+      initial: 'D',
+      label: 'Director',
+      purpose: 'Department oversight',
+      path: WORKSPACE_ROUTES.director.path,
+    },
+    food: {
+      initial: 'F',
+      label: 'Food Committee',
+      purpose: 'Food operations',
+      path: WORKSPACE_ROUTES.food.path,
+    },
     'inventory-pantry': {
       initial: 'I',
       label: 'Inventory & Pantry',
       purpose: 'Stock and lending',
-      path: '/app/inventory',
+      path: WORKSPACE_ROUTES['inventory-pantry'].path,
     },
     materials: {
       initial: 'M',
       label: 'Materials & Documentation',
       purpose: 'Procurement and evidence',
-      path: '/app/materials',
+      path: WORKSPACE_ROUTES.materials.path,
     },
   });
   const releaseWorkspaceScopes = Object.freeze({
@@ -4736,6 +5469,31 @@ export function createRuntimeExtensions(options) {
     'inventory-pantry': 'COMMITTEE:COM_INVENTORY_PANTRY',
     materials: 'COMMITTEE:COM_MATERIALS',
   });
+  const clearWorkspaceCaches = () => {
+    foodQueueItems = null;
+    materialsQueueItems = null;
+    venueEquipmentQueueItems = null;
+    accessDirectory = null;
+    referenceAdminWorkspace = null;
+    pendingRevision = null;
+    acceptedRevisions.clear();
+  };
+  const reloadRoutedWorkspace = async (reason) => {
+    clearWorkspaceCaches();
+    const route = workspaceRouteFromPath(location.pathname);
+    if (typeof changeWorkspace === 'function') {
+      await changeWorkspace({ ...route, reason });
+    } else {
+      acceptState(await loadAuthoritativeState(isRequestOnly()));
+    }
+    syncRoutedExperience();
+    renderRoleExperience();
+    renderInternalShell();
+    acceptCurrentLocation();
+    const announcement = internalShellBar?.querySelector('[data-shell-context-announcement]');
+    if (announcement)
+      announcement.textContent = `${workspaceDefinitions[route.workspaceId]?.label ?? 'Workspace'} loaded.`;
+  };
 
   const isAdministrator = () =>
     ['ADMINISTRATOR', 'SYSTEM_OWNER'].includes(
@@ -4753,11 +5511,7 @@ export function createRuntimeExtensions(options) {
     return isAdministrator() ? Object.keys(workspaceDefinitions) : [];
   };
 
-  const workspaceFromPath = () =>
-    Object.entries(workspaceDefinitions).find(
-      ([, definition]) =>
-        location.pathname === definition.path || location.pathname.startsWith(`${definition.path}/`),
-    )?.[0] ?? '';
+  const workspaceFromPath = () => workspaceRouteFromPath(location.pathname).workspaceId;
 
   const workspaceForCurrentUser = () => {
     const routedWorkspace = workspaceFromPath();
@@ -4868,7 +5622,7 @@ export function createRuntimeExtensions(options) {
       document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
     }
     const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
-    const version = String(state.appVersion ?? '0.7.0');
+    const version = String(state.appVersion ?? '0.7.1');
     internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');
@@ -4930,6 +5684,8 @@ export function createRuntimeExtensions(options) {
   const installInternalShell = () => {
     if (isRequestOnly() || internalShellBar || document.querySelector('[data-internal-shell-context]'))
       return;
+    ensureCurrentHistoryEntry();
+    acceptCurrentLocation();
     const header = document.querySelector('.app-header');
     if (!header) return;
     internalShellBar = document.createElement('section');
@@ -4973,23 +5729,32 @@ export function createRuntimeExtensions(options) {
     header.before(internalShellBar);
     internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
       if (authorizedWorkspaceIds().includes(event.target.value) && workspaceDefinitions[event.target.value]) {
-        const releaseRoute = location.pathname.split('/')[3] === 'release';
+        const previousLocation = acceptedLocation;
+        const previousHistoryIndex = acceptedHistoryIndex;
+        const previousWorkspace = workspaceForCurrentUser();
+        if (!(await requestDiscard())) {
+          event.target.value = previousWorkspace;
+          return;
+        }
+        dirtyTracker.discard();
+        clearUnsavedRuntimeState();
+        const releaseRoute = workspaceRouteFromPath(location.pathname).module === 'release';
         const target = new URL(
-          `${workspaceDefinitions[event.target.value].path}${releaseRoute ? '/release' : ''}`,
+          workspacePath(event.target.value, releaseRoute ? 'release' : ''),
           location.origin,
         );
         target.search = location.search;
         if (releaseRoute) target.searchParams.set('scope', releaseWorkspaceScopes[event.target.value]);
-        history.pushState(history.state, '', `${target.pathname}${target.search}`);
-        syncRoutedExperience();
-        renderRoleExperience();
-        renderInternalShell();
-        if (releaseRoute && changeOperationalScope) {
-          try {
-            await changeOperationalScope(releaseWorkspaceScopes[event.target.value]);
-          } catch (error) {
-            toast(error?.message || 'The Release Desk context could not be changed.', true);
-          }
+        pushRouteLocation(`${target.pathname}${target.search}`, { accept: false });
+        try {
+          await reloadRoutedWorkspace('workspace-change');
+        } catch (error) {
+          replaceRouteLocation(previousLocation, previousHistoryIndex);
+          syncRoutedExperience();
+          renderRoleExperience();
+          renderInternalShell();
+          event.target.value = previousWorkspace;
+          toast(error?.message || 'The workspace could not be changed.', true);
         }
         return;
       }
@@ -5044,10 +5809,35 @@ export function createRuntimeExtensions(options) {
       accountControlObserver = new MutationObserver(() => adoptAccountControls());
       accountControlObserver.observe(tools, { childList: true });
     }
-    addEventListener('popstate', () => {
-      syncRoutedExperience();
-      renderRoleExperience();
-      renderInternalShell();
+    addEventListener('popstate', async (event) => {
+      if (restoringRejectedHistory) {
+        restoringRejectedHistory = false;
+        return;
+      }
+      const attemptedLocation = currentLocation();
+      const attemptedHistoryIndex = Number(event.state?.[routeHistoryIndexKey]);
+      if (!(await requestDiscard())) {
+        const delta = acceptedHistoryIndex - attemptedHistoryIndex;
+        if (Number.isFinite(delta) && delta !== 0) {
+          restoringRejectedHistory = true;
+          history.go(delta);
+        } else {
+          pushRouteLocation(acceptedLocation);
+        }
+        renderInternalShell();
+        return;
+      }
+      dirtyTracker.discard();
+      clearUnsavedRuntimeState();
+      try {
+        await reloadRoutedWorkspace('history-navigation');
+      } catch (error) {
+        replaceRouteLocation(acceptedLocation, acceptedHistoryIndex);
+        toast(error?.message || 'The previous workspace could not be restored.', true);
+        return;
+      }
+      acceptedLocation = attemptedLocation;
+      if (Number.isFinite(attemptedHistoryIndex)) acceptedHistoryIndex = attemptedHistoryIndex;
     });
     renderInternalShell();
     applyProductionShellCopy();
@@ -5594,11 +6384,7 @@ export function createRuntimeExtensions(options) {
     }).format(date);
   };
 
-  const foodStatusLabel = (value) =>
-    String(value ?? 'FOR_REVIEW')
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/^./u, (character) => character.toUpperCase());
+  const foodStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
 
   const foodDietaryLabel = (food = {}) => {
     if (food.dietarySummary === 'ATTENTION_REQUIRED')
@@ -5683,12 +6469,18 @@ export function createRuntimeExtensions(options) {
     const suppliedOnHand = Number(item?.onHand);
     const suppliedReserved = Number(item?.reserved);
     const suppliedAvailable = Number(item?.availableToPromise);
-    if (
-      Number.isFinite(suppliedOnHand) &&
-      Number.isFinite(suppliedReserved) &&
-      Number.isFinite(suppliedAvailable)
-    )
-      return { onHand: suppliedOnHand, reserved: suppliedReserved, availableToPromise: suppliedAvailable };
+    if (Number.isFinite(suppliedOnHand) && Number.isFinite(suppliedReserved))
+      return {
+        onHand: suppliedOnHand,
+        reserved: suppliedReserved,
+        availableToPromise: suppliedOnHand - suppliedReserved,
+      };
+    if (Number.isFinite(suppliedAvailable))
+      return {
+        onHand: suppliedOnHand || 0,
+        reserved: suppliedReserved || 0,
+        availableToPromise: suppliedAvailable,
+      };
     const onHand = (state.ledgerTransactions ?? [])
       .filter((movement) => movement?.itemId === item.id)
       .reduce(
@@ -5701,6 +6493,295 @@ export function createRuntimeExtensions(options) {
       .filter((reservation) => reservation?.itemId === item.id && reservation?.status === 'ACTIVE')
       .reduce((total, reservation) => total + Number(reservation?.quantity ?? 0), 0);
     return { onHand, reserved, availableToPromise: onHand - reserved };
+  };
+
+  const inventoryAdvancedDefaults = Object.freeze({
+    classification: 'ALL',
+    category: 'ALL',
+    unit: 'ALL',
+    lendingAudience: 'ALL',
+    lifecycle: 'ALL',
+    sort: 'NAME_ASC',
+  });
+  const inventoryAdvancedFilters = { ...inventoryAdvancedDefaults };
+  let inventoryRuntimePresentationTimer = null;
+
+  const scheduleInventoryRuntimePresentation = () => {
+    clearTimeout(inventoryRuntimePresentationTimer);
+    inventoryRuntimePresentationTimer = setTimeout(() => renderInventoryRuntimePresentation(), 180);
+  };
+
+  const inventoryReviewKind = (item) => {
+    const classification = String(item?.classificationStatus ?? '')
+      .trim()
+      .toUpperCase();
+    const inventoryKind = String(item?.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
+    const handling = normalizeHandling(item?.handlingCode ?? item?.handling);
+    if (classification !== 'CLASSIFIED' || inventoryKind === 'UNVERIFIED') return 'UNVERIFIED';
+    if (inventoryKind === 'REUSABLE' || handling === 'REUSABLE_ASSET') return 'REUSABLE';
+    if (handling === 'NON_CIRCULATING') return 'NON_CIRCULATING';
+    return 'OTHER';
+  };
+
+  const inventoryOptions = (items, key, allLabel, label = (value) => value) =>
+    [
+      option('ALL', allLabel, inventoryAdvancedFilters[key]),
+      ...[...new Set(items.map((item) => String(item?.[key] ?? '').trim()).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right))
+        .map((value) => option(value, label(value), inventoryAdvancedFilters[key])),
+    ].join('');
+
+  const requestInventoryRerender = () => {
+    const search = document.querySelector('#inventorySearch');
+    search?.dispatchEvent(new Event('input', { bubbles: true }));
+    scheduleInventoryRuntimePresentation();
+  };
+
+  const ensureInventoryControls = (items = []) => {
+    const inventory = document.querySelector('#inventory');
+    const table = inventory?.querySelector('#inventoryTable');
+    if (!inventory || !table) return;
+    let host = inventory.querySelector('[data-inventory-advanced-controls]');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'toolbar inventory-runtime-controls';
+      host.dataset.inventoryAdvancedControls = '';
+      table.before(host);
+    }
+    host.innerHTML = `<label>Classification<select data-inventory-advanced-filter="classification">${option('ALL', 'All review states', inventoryAdvancedFilters.classification)}${option('REUSABLE', 'Reusable', inventoryAdvancedFilters.classification)}${option('NON_CIRCULATING', 'Non-circulating', inventoryAdvancedFilters.classification)}${option('UNVERIFIED', 'Unverified / needs classification', inventoryAdvancedFilters.classification)}</select></label><label>Category<select data-inventory-advanced-filter="category">${inventoryOptions(items, 'category', 'All categories')}</select></label><label>Unit<select data-inventory-advanced-filter="unit">${inventoryOptions(items, 'unit', 'All units')}</select></label><label>Lending audience<select data-inventory-advanced-filter="lendingAudience">${inventoryOptions(items, 'lendingAudience', 'All lending audiences', lendingAudienceLabel)}</select></label><label>Lifecycle<select data-inventory-advanced-filter="lifecycle">${option('ALL', 'All lifecycle states', inventoryAdvancedFilters.lifecycle)}${option('ACTIVE', 'Active', inventoryAdvancedFilters.lifecycle)}${option('VERIFY', 'Verification required', inventoryAdvancedFilters.lifecycle)}${option('INACTIVE', 'Inactive', inventoryAdvancedFilters.lifecycle)}${option('ARCHIVED', 'Archived', inventoryAdvancedFilters.lifecycle)}</select></label><label>Sort<select data-inventory-advanced-filter="sort">${option('NAME_ASC', 'Name A–Z', inventoryAdvancedFilters.sort)}${option('NAME_DESC', 'Name Z–A', inventoryAdvancedFilters.sort)}${option('ATP_ASC', 'ATP: lowest first', inventoryAdvancedFilters.sort)}${option('ATP_DESC', 'ATP: highest first', inventoryAdvancedFilters.sort)}${option('ON_HAND_ASC', 'On hand: lowest first', inventoryAdvancedFilters.sort)}${option('ON_HAND_DESC', 'On hand: highest first', inventoryAdvancedFilters.sort)}${option('REORDER_RISK', 'Reorder risk first', inventoryAdvancedFilters.sort)}${option('UPDATED_DESC', 'Recently updated', inventoryAdvancedFilters.sort)}</select></label>`;
+    if (host.dataset.inventoryAdvancedBound === 'true') return;
+    host.dataset.inventoryAdvancedBound = 'true';
+    host.addEventListener('change', (event) => {
+      const field = event.target.closest('[data-inventory-advanced-filter]');
+      if (!field) return;
+      inventoryAdvancedFilters[field.dataset.inventoryAdvancedFilter] = field.value;
+      inventoryRuntimePage = 1;
+      requestInventoryRerender();
+    });
+    inventory.addEventListener(
+      'input',
+      (event) => {
+        if (
+          event.target.closest(
+            '#inventorySearch,#inventoryAreaFilter,#inventoryHandlingFilter,#inventoryStatusFilter',
+          )
+        )
+          inventoryRuntimePage = 1;
+        scheduleInventoryRuntimePresentation();
+      },
+      true,
+    );
+    inventory.addEventListener(
+      'click',
+      (event) => {
+        if (event.target.closest('#clearInventoryFilters')) resetInventoryControls();
+      },
+      true,
+    );
+    document.addEventListener(
+      'click',
+      (event) => {
+        if (
+          event.target.closest(
+            '[data-view="inventory"],[data-inventory-destination="inventory-management"],[data-inventory-destination="inventory-pantry-stock"]',
+          )
+        )
+          scheduleInventoryRuntimePresentation();
+      },
+      true,
+    );
+  };
+
+  const inventoryFilterValues = () => ({ ...inventoryAdvancedFilters });
+
+  let inventoryRuntimePage = 1;
+
+  const resetInventoryControls = () => {
+    Object.assign(inventoryAdvancedFilters, inventoryAdvancedDefaults);
+    inventoryRuntimePage = 1;
+    document.querySelectorAll('[data-inventory-advanced-filter]').forEach((input) => {
+      input.value = inventoryAdvancedFilters[input.dataset.inventoryAdvancedFilter];
+    });
+    scheduleInventoryRuntimePresentation();
+  };
+
+  const inventoryRuntimeText = (value) =>
+    String(value ?? '')
+      .trim()
+      .toLowerCase();
+  const inventoryRuntimeQuantity = (value) =>
+    Number(value ?? 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
+  const inventoryRuntimeStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
+  const inventoryRuntimeStatusClass = (value) => {
+    const status = String(value ?? '').toUpperCase();
+    if (['IN_STOCK', 'ACTIVE'].includes(status)) return 'green';
+    if (['LOW_STOCK'].includes(status)) return 'amber';
+    if (['OUT_OF_STOCK', 'VERIFY'].includes(status)) return 'red';
+    return 'gray';
+  };
+  const inventoryRuntimeQuery = (item) =>
+    [
+      item?.id,
+      item?.name,
+      ...(item?.aliases ?? []),
+      item?.category,
+      item?.stockArea,
+      item?.unit,
+      item?.lendingAudience,
+      item?.provenance?.originEventItemId,
+    ]
+      .join(' ')
+      .toLowerCase();
+  const inventoryRuntimeControls = () => ({
+    query: inventoryRuntimeText(document.querySelector('#inventorySearch')?.value),
+    area: document.querySelector('#inventoryAreaFilter')?.value ?? 'ALL',
+    handling: document.querySelector('#inventoryHandlingFilter')?.value ?? 'ALL',
+    status: document.querySelector('#inventoryStatusFilter')?.value ?? 'ALL',
+  });
+  const inventoryRuntimeMatches = (state, item, controls) => {
+    const status = String(item?.status ?? '').toUpperCase();
+    const health = inventoryHealth(state, item);
+    const lifecycleIncludesArchived = inventoryAdvancedFilters.lifecycle === 'ARCHIVED';
+    const archivedIncluded = controls.status === 'ARCHIVED' || lifecycleIncludesArchived;
+    return (
+      (archivedIncluded ? status === 'ARCHIVED' : status !== 'ARCHIVED') &&
+      (!controls.query || inventoryRuntimeQuery(item).includes(controls.query)) &&
+      (controls.area === 'ALL' || item.stockArea === controls.area) &&
+      (controls.handling === 'ALL' ||
+        normalizeHandling(item.handlingCode ?? item.handling) === normalizeHandling(controls.handling)) &&
+      (controls.status === 'ALL' || controls.status === 'ARCHIVED' || health === controls.status) &&
+      (inventoryAdvancedFilters.lifecycle === 'ALL' || status === inventoryAdvancedFilters.lifecycle) &&
+      (inventoryAdvancedFilters.classification === 'ALL' ||
+        inventoryReviewKind(item) === inventoryAdvancedFilters.classification) &&
+      (inventoryAdvancedFilters.category === 'ALL' || item.category === inventoryAdvancedFilters.category) &&
+      (inventoryAdvancedFilters.unit === 'ALL' || item.unit === inventoryAdvancedFilters.unit) &&
+      (inventoryAdvancedFilters.lendingAudience === 'ALL' ||
+        item.lendingAudience === inventoryAdvancedFilters.lendingAudience)
+    );
+  };
+  const inventoryRuntimeRows = (state) => {
+    const controls = inventoryRuntimeControls();
+    return [...(state.inventoryItems ?? [])]
+      .filter((item) => inventoryRuntimeMatches(state, item, controls))
+      .sort((left, right) => {
+        const leftBalance = inventoryBalance(state, left);
+        const rightBalance = inventoryBalance(state, right);
+        const name = String(left.name ?? '').localeCompare(String(right.name ?? ''));
+        switch (inventoryAdvancedFilters.sort) {
+          case 'NAME_DESC':
+            return -name;
+          case 'ATP_ASC':
+            return leftBalance.availableToPromise - rightBalance.availableToPromise || name;
+          case 'ATP_DESC':
+            return rightBalance.availableToPromise - leftBalance.availableToPromise || name;
+          case 'ON_HAND_ASC':
+            return leftBalance.onHand - rightBalance.onHand || name;
+          case 'ON_HAND_DESC':
+            return rightBalance.onHand - leftBalance.onHand || name;
+          case 'REORDER_RISK':
+            return (
+              leftBalance.availableToPromise -
+                Number(left.reorderThreshold ?? 0) -
+                (rightBalance.availableToPromise - Number(right.reorderThreshold ?? 0)) || name
+            );
+          case 'UPDATED_DESC':
+            return new Date(right.updatedAt ?? 0) - new Date(left.updatedAt ?? 0) || name;
+          default:
+            return name;
+        }
+      });
+  };
+  const inventoryRuntimeLatestMovement = (state, itemId) =>
+    [...(state.ledgerTransactions ?? [])]
+      .filter((movement) => movement?.itemId === itemId)
+      .sort((left, right) => new Date(right.createdAt ?? 0) - new Date(left.createdAt ?? 0))[0];
+  const inventoryRuntimeMovementLabel = (movement) => {
+    if (!movement) return 'No movement';
+    const type = movement.type ?? movement.transactionType ?? 'Movement';
+    const createdAt = movement.createdAt ? new Date(movement.createdAt).toLocaleString('en-PH') : '';
+    return `${type}${createdAt ? ` · ${createdAt}` : ''}`;
+  };
+  const inventoryActionMarkup = (item) => {
+    const user = getState()?.currentUser;
+    const itemId = esc(item.id);
+    const active = String(item.status).toUpperCase() !== 'ARCHIVED';
+    const catalog =
+      canManageCatalog(user) && active
+        ? `<button class="secondary mini" type="button" data-inventory-action="edit" data-item-id="${itemId}">View / Edit</button>`
+        : '';
+    const history = can(user, 'view.inventory')
+      ? `<button class="secondary mini" type="button" data-inventory-action="history" data-item-id="${itemId}">Ledger</button>`
+      : '';
+    const operational = active
+      ? `${can(user, 'request.create') ? `<button class="ghost mini" type="button" data-inventory-action="restock" data-item-id="${itemId}">Restock</button>` : ''}${can(user, 'fulfillment.reserve') ? `<button class="ghost mini" type="button" data-inventory-action="context" data-item-id="${itemId}">Reserve / Release</button>` : ''}${canManageCatalog(user) ? `<button class="ghost mini" type="button" data-inventory-action="transfer" data-item-id="${itemId}">Transfer</button>` : ''}`
+      : '';
+    const lifecycle = canManageCatalog(user)
+      ? active
+        ? `<button class="danger mini" type="button" data-inventory-action="archive" data-item-id="${itemId}">Archive</button>`
+        : `<button class="secondary mini" type="button" data-inventory-action="restore" data-item-id="${itemId}">Restore Item</button>`
+      : '';
+    return `${catalog}${history}${operational}${lifecycle}`;
+  };
+  const inventoryRuntimeActions = (item) => {
+    const actions = inventoryActionMarkup(item);
+    return actions ? `<div class="button-row">${actions}</div>` : '';
+  };
+  const inventoryRuntimePagination = (current, total) => {
+    const pagination = document.querySelector('#inventoryPagination');
+    if (!pagination) return;
+    pagination.innerHTML = `<button class="secondary mini" type="button" data-inventory-runtime-page="previous" ${current <= 1 ? 'disabled' : ''}>Previous</button><span class="pill">Page ${current} of ${total}</span><button class="secondary mini" type="button" data-inventory-runtime-page="next" ${current >= total ? 'disabled' : ''}>Next</button>`;
+    if (pagination.dataset.inventoryRuntimePaginationBound === 'true') return;
+    pagination.dataset.inventoryRuntimePaginationBound = 'true';
+    pagination.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-inventory-runtime-page]');
+      if (!button) return;
+      inventoryRuntimePage += button.dataset.inventoryRuntimePage === 'next' ? 1 : -1;
+      renderInventoryRuntimePresentation();
+    });
+  };
+  const renderInventoryRuntimePresentation = () => {
+    const state = getState() ?? {};
+    const table = document.querySelector('#inventoryTable');
+    if (!table) return;
+    const rows = inventoryRuntimeRows(state);
+    const pageSize = 20;
+    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+    inventoryRuntimePage = Math.min(Math.max(inventoryRuntimePage, 1), pageCount);
+    const pageRows = rows.slice((inventoryRuntimePage - 1) * pageSize, inventoryRuntimePage * pageSize);
+    const rowMarkup = (item) => {
+      const balance = inventoryBalance(state, item);
+      const negative = balance.availableToPromise < 0;
+      const health = inventoryHealth(state, item);
+      const atpNote = negative ? 'Negative ATP — new allocations blocked' : 'Available to promise';
+      const movement = inventoryRuntimeLatestMovement(state, item.id);
+      const evidence = (state.evidenceFiles ?? []).filter((entry) => entry.itemId === item.id);
+      const provenance = item.provenance?.originEventItemId
+        ? `<code>${esc(item.provenance.originEventItemId)}</code><small>Event transfer origin</small>`
+        : 'Standard catalog';
+      const evidenceLabel = evidence.length
+        ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
+        : 'None';
+      return `<tr><td><strong>${esc(item.name)}</strong><code>${esc(item.id)}</code><small>${esc((item.aliases ?? []).join(', ') || 'No aliases')}<br>${esc(item.category)} · ${esc(item.unit)}</small></td><td>${esc(item.stockArea)}<small>${esc(item.handlingCode ?? item.handling)} · ${esc(item.catalogType === 'PANTRY' ? 'Pantry' : 'Office Inventory')}<br>${esc(item.storageLocation)}</small></td><td><strong>${inventoryRuntimeQuantity(balance.onHand)} ${esc(item.unit)}</strong></td><td>${inventoryRuntimeQuantity(balance.reserved)} ${esc(item.unit)}</td><td><strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)} ${esc(item.unit)}</strong><small class="${negative ? 'danger-text' : ''}">${atpNote}</small></td><td><span class="status ${inventoryRuntimeStatusClass(health)}">${esc(inventoryRuntimeStatusLabel(health))}</span><small>Reorder at ${inventoryRuntimeQuantity(item.reorderThreshold)} ${esc(item.unit)}</small></td><td>${provenance}<small>${esc(inventoryRuntimeMovementLabel(movement))}</small></td><td><span class="status ${evidence.length ? 'green' : 'gray'}">${esc(evidenceLabel)}</span></td><td>${inventoryRuntimeActions(item)}</td></tr>`;
+    };
+    const cardMarkup = (item) => {
+      const balance = inventoryBalance(state, item);
+      const negative = balance.availableToPromise < 0;
+      const movement = inventoryRuntimeLatestMovement(state, item.id);
+      const evidence = (state.evidenceFiles ?? []).filter((entry) => entry.itemId === item.id);
+      const provenance = item.provenance?.originEventItemId ?? 'Standard catalog';
+      const evidenceLabel = evidence.length
+        ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
+        : 'None';
+      return `<article class="data-card"><div class="button-row"><span class="status ${inventoryRuntimeStatusClass(inventoryHealth(state, item))}">${esc(inventoryRuntimeStatusLabel(inventoryHealth(state, item)))}</span><span class="pill">${esc(item.id)}</span></div><h4 style="margin-top:8px">${esc(item.name)}</h4><p>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.handlingCode ?? item.handling)}<br>On hand ${inventoryRuntimeQuantity(balance.onHand)} · Reserved ${inventoryRuntimeQuantity(balance.reserved)} · ATP <strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)}</strong> ${esc(item.unit)}${negative ? '<br><strong class="danger-text">Negative ATP — new allocations blocked</strong>' : ''}<br><small>Provenance ${esc(provenance)} · Latest movement ${esc(inventoryRuntimeMovementLabel(movement))} · Evidence ${esc(evidenceLabel)}</small></p>${inventoryRuntimeActions(item)}</article>`;
+    };
+    table.innerHTML = pageRows.length
+      ? `<div class="table-wrap desktop-table"><table><thead><tr><th>Product</th><th>Catalog / Handling</th><th>On Hand</th><th>Reserved</th><th>Raw ATP</th><th>Status / Reorder</th><th>Provenance / Movement</th><th>Evidence</th><th></th></tr></thead><tbody>${pageRows.map(rowMarkup).join('')}</tbody></table></div><div class="mobile-cards">${pageRows.map(cardMarkup).join('')}</div>`
+      : '<div class="empty">No inventory products match these filters.</div>';
+    const count = document.querySelector('#inventoryCount');
+    if (count) count.textContent = `${rows.length} matching product${rows.length === 1 ? '' : 's'}`;
+    inventoryRuntimePagination(inventoryRuntimePage, pageCount);
   };
 
   const inventoryHealth = (state, item) => {
@@ -5873,11 +6954,7 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
-  const materialsStatusLabel = (value) =>
-    String(value ?? 'FOR_REVIEW')
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/^./u, (character) => character.toUpperCase());
+  const materialsStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
 
   const materialsQuantityLabel = (item) => {
     const requested = Number(item?.quantityRequested ?? item?.lines?.[0]?.quantity ?? 0);
@@ -6021,7 +7098,7 @@ export function createRuntimeExtensions(options) {
   const eventDayForm = (seriesId, day = null) => `<form id="eventDayForm">
     <div class="form-grid">
       <label>Event date<input name="date" type="date" value="${esc(day?.date ?? '')}" required></label>
-      <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), day?.status ?? 'UPCOMING')).join('')}</select></label>
+      <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, statusLabel(status), day?.status ?? 'UPCOMING')).join('')}</select></label>
       <label class="span-2">Day label <small>Optional; a date label is generated when blank.</small><input name="name" value="${esc(day?.name ?? '')}"></label>
       <label class="span-2">Notes<textarea name="notes">${esc(day?.notes ?? '')}</textarea></label>
       <label class="span-2">Correction reason<input name="reason" value="${esc(day ? 'Audited event-day correction' : 'Approved event day creation')}" required minlength="8"></label>
@@ -6040,7 +7117,7 @@ export function createRuntimeExtensions(options) {
         <label>Venue<input name="venue" value="${esc(activity?.venue ?? '')}" required></label>
         <label class="span-2">Included games or program items <small>Comma-separated; leave blank when not applicable.</small><input name="includedItems" value="${esc((activity?.includedItems ?? []).join(', '))}"></label>
         <label>Time status<select name="timeStatus">${option('TBA', 'TBA', activity?.timeStatus ?? 'TBA')}${option('SCHEDULED', 'Scheduled', activity?.timeStatus)}</select></label>
-        <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), activity?.status ?? 'UPCOMING')).join('')}</select></label>
+        <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, statusLabel(status), activity?.status ?? 'UPCOMING')).join('')}</select></label>
         <label>Starts at<input name="startAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.startAt))}"></label>
         <label>Ends at<input name="endAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.endAt))}"></label>
         <label>Responsible committee<select name="responsibleCommitteeId"><option value="">Not added yet</option>${committees.map((entry) => option(entry.id, entry.name, activity?.responsibleCommitteeId)).join('')}</select></label>
@@ -6161,7 +7238,7 @@ export function createRuntimeExtensions(options) {
       if (!activity) return;
       openModal(
         `Link operational record to ${activity.name}`,
-        `<form id="eventLinkForm"><div class="form-grid"><label>Record type<select name="linkType">${['REQUEST', 'FOOD_REQUIREMENT', 'MATERIAL', 'PROCUREMENT', 'INVENTORY_REQUIREMENT', 'RELEASE'].map((type) => option(type, type.replaceAll('_', ' '))).join('')}</select></label><label>Authoritative record ID<input name="linkedEntityId" required></label><label class="span-2">Notes<textarea name="notes"></textarea></label><label class="span-2">Reason<input name="reason" value="Link operational record to approved activity" required minlength="8"></label></div><button class="primary" type="submit">Create Audited Link</button></form>`,
+        `<form id="eventLinkForm"><div class="form-grid"><label>Record type<select name="linkType">${['REQUEST', 'FOOD_REQUIREMENT', 'MATERIAL', 'PROCUREMENT', 'INVENTORY_REQUIREMENT', 'RELEASE'].map((type) => option(type, presentationLabel(type, { context: 'eventLink' }))).join('')}</select></label><label>Authoritative record ID<input name="linkedEntityId" required></label><label class="span-2">Notes<textarea name="notes"></textarea></label><label class="span-2">Reason<input name="reason" value="Link operational record to approved activity" required minlength="8"></label></div><button class="primary" type="submit">Create Audited Link</button></form>`,
       );
       const form = document.querySelector('#eventLinkForm');
       form?.addEventListener('submit', async (event) => {
@@ -6200,7 +7277,7 @@ export function createRuntimeExtensions(options) {
           ? 'TBA'
           : `${new Date(activity.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}–${new Date(activity.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
       const activityLinks = (directory.links ?? []).filter((entry) => entry.activityId === activity.id);
-      return `<article class="event-activity-card"><div class="panel-head"><div><p class="eyebrow">${esc(activity.code)} · ${esc(activity.activityType)}</p><h4>${esc(activity.name)}</h4><p>${esc(time)} · ${esc(activity.venue)}</p>${activity.includedItems?.length ? `<p><strong>Included:</strong> ${esc(activity.includedItems.join(', '))}</p>` : ''}</div><span class="pill">${esc(activity.ownerReviewStatus.replaceAll('_', ' '))}</span></div><dl class="event-truth-grid"><div><dt>Responsible committee</dt><dd>${esc(activity.responsibleCommitteeName ?? 'Not added yet')}</dd></div><div><dt>Supporting committees</dt><dd>${esc(activity.supportingCommitteeIds.length ? activity.supportingCommitteeIds.join(', ') : 'Not added yet')}</dd></div><div><dt>Preparation deadline</dt><dd>${esc(pendingEventValue(activity.preparationDeadline))}</dd></div><div><dt>Request window</dt><dd>${esc(activity.requestWindowOpensAt && activity.requestWindowClosesAt ? `${activity.requestWindowOpensAt} – ${activity.requestWindowClosesAt}` : 'Not added yet')}</dd></div><div><dt>Release deadline</dt><dd>${esc(pendingEventValue(activity.releaseDeadline))}</dd></div><div><dt>Readiness</dt><dd>${esc(readiness)}</dd></div><div><dt>Preparation progress</dt><dd>${esc(progress)}</dd></div><div><dt>Additional notes</dt><dd>${esc(activity.notes ?? 'Not added yet')}</dd></div></dl><div class="button-row"><button class="secondary" type="button" data-event-action="activity-edit" data-event-id="${esc(activity.id)}">Edit audited fields</button><button class="secondary" type="button" data-event-action="activity-link" data-event-id="${esc(activity.id)}">Link operational record</button><span class="pill">${esc(activityLinks.length)} linked</span></div></article>`;
+      return `<article class="event-activity-card"><div class="panel-head"><div><p class="eyebrow">${esc(activity.code)} · ${esc(presentationLabel(activity.activityType, { context: 'eventLink', missing: 'Activity type not recorded' }))}</p><h4>${esc(activity.name)}</h4><p>${esc(time)} · ${esc(activity.venue)}</p>${activity.includedItems?.length ? `<p><strong>Included:</strong> ${esc(activity.includedItems.join(', '))}</p>` : ''}</div><span class="pill">${esc(statusLabel(activity.ownerReviewStatus, { missing: 'Review status not reported' }))}</span></div><dl class="event-truth-grid"><div><dt>Responsible committee</dt><dd>${esc(activity.responsibleCommitteeName ?? 'Not added yet')}</dd></div><div><dt>Supporting committees</dt><dd>${esc(activity.supportingCommitteeIds.length ? activity.supportingCommitteeIds.join(', ') : 'Not added yet')}</dd></div><div><dt>Preparation deadline</dt><dd>${esc(pendingEventValue(activity.preparationDeadline))}</dd></div><div><dt>Request window</dt><dd>${esc(activity.requestWindowOpensAt && activity.requestWindowClosesAt ? `${activity.requestWindowOpensAt} – ${activity.requestWindowClosesAt}` : 'Not added yet')}</dd></div><div><dt>Release deadline</dt><dd>${esc(pendingEventValue(activity.releaseDeadline))}</dd></div><div><dt>Readiness</dt><dd>${esc(readiness)}</dd></div><div><dt>Preparation progress</dt><dd>${esc(progress)}</dd></div><div><dt>Additional notes</dt><dd>${esc(activity.notes ?? 'Not added yet')}</dd></div></dl><div class="button-row"><button class="secondary" type="button" data-event-action="activity-edit" data-event-id="${esc(activity.id)}">Edit audited fields</button><button class="secondary" type="button" data-event-action="activity-link" data-event-id="${esc(activity.id)}">Link operational record</button><span class="pill">${esc(activityLinks.length)} linked</span></div></article>`;
     };
     root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Protected Admin and Director workflow</p><h2>Event Management</h2><p>Main Events → Event Days → Activities. Missing operational values remain truthful and visible in owner review.</p></div><button class="primary" type="button" data-event-action="series-create">Create Main Event</button></div><div class="event-series-stack section-gap">${
       directory.eventSeries
@@ -6226,7 +7303,7 @@ export function createRuntimeExtensions(options) {
         .slice(0, 100)
         .map(
           (entry) =>
-            `<div class="request-line"><div><strong>${esc(entry.action.replaceAll('_', ' '))} · ${esc(entry.entityType.replaceAll('_', ' '))}</strong><small>${esc(entry.reason)} · ${esc(entry.actorName ?? entry.actorId)} · ${esc(new Date(entry.occurredAt).toLocaleString())}</small></div><span class="pill">${esc(entry.entityId)}</span></div>`,
+            `<div class="request-line"><div><strong>${esc(presentationLabel(entry.action))} · ${esc(presentationLabel(entry.entityType))}</strong><small>${esc(entry.reason)} · ${esc(entry.actorName ?? entry.actorId)} · ${esc(new Date(entry.occurredAt).toLocaleString())}</small></div><span class="pill">${esc(entry.entityId)}</span></div>`,
         )
         .join('') || '<div class="empty">No event history has been recorded.</div>'
     }</div></section>`;
@@ -6463,44 +7540,22 @@ export function createRuntimeExtensions(options) {
   const localClassificationDirectory = () => {
     const all = (getState()?.inventoryItems ?? [])
       .filter((item) => item.status !== 'ARCHIVED')
-      .map((item) => ({
-        ...item,
-        inventoryKind:
-          item.inventoryKind ??
-          (String(item.handlingCode ?? item.handling)
-            .toUpperCase()
-            .includes('REUSABLE') ||
-          String(item.handlingCode ?? item.handling)
-            .toUpperCase()
-            .includes('LOAN')
-            ? 'REUSABLE'
-            : String(item.handlingCode ?? item.handling)
-                  .toUpperCase()
-                  .includes('CONSUMABLE')
-              ? 'CONSUMABLE'
-              : 'UNVERIFIED'),
-        classificationStatus:
-          item.classificationStatus ??
-          (['', 'TO_CLASSIFY'].includes(
-            String(item.handlingCode ?? item.handling)
-              .trim()
-              .toUpperCase(),
-          )
-            ? 'NEEDS_CLASSIFICATION'
-            : 'CLASSIFIED'),
-        conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
-        maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
-        classificationRevision: Number(item.classificationRevision ?? 1),
-        assetInstanceCount: Number(item.traceableAssets ?? 0),
-        classificationHistory: item.classificationHistory ?? [],
-      }));
+      .map(toFailClosedInventoryClassification);
     const matches = all.filter(
       (item) =>
         (inventoryClassificationStatus === 'ALL' ||
           item.classificationStatus === inventoryClassificationStatus) &&
         (inventoryClassificationKind === 'ALL' || item.inventoryKind === inventoryClassificationKind) &&
         (!inventoryClassificationSearch ||
-          [item.id, item.name, item.category, item.stockArea]
+          [
+            item.id,
+            item.name,
+            ...(item.aliases ?? []),
+            item.category,
+            item.stockArea,
+            item.unit,
+            item.lendingAudience,
+          ]
             .join(' ')
             .toLowerCase()
             .includes(inventoryClassificationSearch.toLowerCase())),
@@ -6550,8 +7605,68 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const classificationHistoryChangeMarkup = (entry) => {
+    const before = entry?.before && typeof entry.before === 'object' ? entry.before : {};
+    const after = entry?.after && typeof entry.after === 'object' ? entry.after : {};
+    const has = (source, key) => Object.prototype.hasOwnProperty.call(source, key);
+    const previous = (key, legacy) =>
+      has(before, key) ? before[key] : has(entry, legacy) ? entry[legacy] : undefined;
+    const next = (key, legacy) =>
+      has(after, key)
+        ? after[key]
+        : has(entry, legacy)
+          ? entry[legacy]
+          : has(entry, key)
+            ? entry[key]
+            : undefined;
+    const display = (value, context = 'generic') => {
+      if (value === true) return 'Enabled';
+      if (value === false) return 'Non-lendable';
+      return presentationLabel(value, { context, missing: 'Not recorded' });
+    };
+    const fields = [
+      ['Review status', 'classificationStatus', 'previousStatus', 'newStatus', 'classificationStatus'],
+      ['Inventory kind', 'inventoryKind', 'previousKind', 'newKind', 'inventoryKind'],
+      ['Stock area', 'stockArea', 'previousStockArea', 'newStockArea'],
+      ['Storage location', 'storageLocation', 'previousStorageLocation', 'newStorageLocation'],
+      ['Unit', 'unit', 'previousUnit', 'newUnit'],
+      ['Reorder threshold', 'reorderThreshold', 'previousReorderThreshold', 'newReorderThreshold'],
+      ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState', 'condition'],
+      [
+        'Maintenance review',
+        'maintenanceReviewState',
+        'previousMaintenanceReviewState',
+        'newMaintenanceReviewState',
+        'maintenance',
+      ],
+      ['Lending', 'isLendable', 'previousIsLendable', 'newIsLendable'],
+      ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience', 'lendingAudience'],
+      ['Traceable asset count', 'assetInstanceCount', 'previousAssetInstanceCount', 'newAssetInstanceCount'],
+    ];
+    const changes = fields
+      .map(([label, key, previousKey, nextKey, context]) => {
+        const from = previous(key, previousKey);
+        const to = next(key, nextKey);
+        if (from === undefined && to === undefined) return '';
+        return `<li><strong>${esc(label)}</strong>: ${esc(display(from, context))} → ${esc(display(to, context))}</li>`;
+      })
+      .filter(Boolean);
+    return changes.length ? `<ul class="classification-history-changes">${changes.join('')}</ul>` : '';
+  };
+
   const classificationFormHtml = (item) => {
     const history = item.classificationHistory ?? [];
+    const inventoryKind = normalizedReviewState(item.inventoryKind);
+    const reusable = inventoryKind === 'REUSABLE';
+    const classifiedReusable = reusable && normalizedReviewState(item.classificationStatus) === 'CLASSIFIED';
+    const reviewState = (value, isAllowed) => {
+      const normalized = normalizedReviewState(value);
+      if (!reusable) return '';
+      if (classifiedReusable) return isAllowed(normalized) ? normalized : '';
+      return normalized === 'NOT_ASSESSED' || isAllowed(normalized) ? normalized : 'NOT_ASSESSED';
+    };
+    const conditionReviewState = reviewState(item.conditionReviewState, isReusableConditionReviewState);
+    const maintenanceReviewState = reviewState(item.maintenanceReviewState, isReusableMaintenanceReviewState);
     return `<form id="inventoryClassificationForm">
       <div class="mode-note"><strong>${esc(item.id)} · ${esc(item.name)}</strong><br>On hand ${esc(item.onHand ?? 0)}; reserved ${esc(item.reserved ?? 0)}; available ${esc(item.availableToPromise ?? 0)} ${esc(item.unit)}. Quantity is ledger-derived and cannot be edited here.</div>
       <div class="form-grid section-gap">
@@ -6560,9 +7675,9 @@ export function createRuntimeExtensions(options) {
         <label>Stock area<input name="stockArea" value="${esc(item.stockArea ?? '')}" required></label>
         <label>Storage location<input name="storageLocation" value="${esc(item.storageLocation ?? '')}" required></label>
         <label>Unit<input name="unit" value="${esc(item.unit ?? '')}" required><small>Historical units cannot be changed after ledger activity.</small></label>
-        <label>Reorder threshold<input name="reorderThreshold" type="number" min="0" step="0.01" value="${esc(item.reorderThreshold ?? 0)}" required></label>
-        <label>Condition review<select name="conditionReviewState">${option('NOT_ASSESSED', 'Not assessed', item.conditionReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.conditionReviewState)}${option('NEW', 'New', item.conditionReviewState)}${option('GOOD', 'Good', item.conditionReviewState)}${option('FAIR', 'Fair', item.conditionReviewState)}${option('POOR', 'Poor / quarantine', item.conditionReviewState)}${option('DAMAGED', 'Damaged', item.conditionReviewState)}</select></label>
-        <label>Maintenance review<select name="maintenanceReviewState">${option('NOT_ASSESSED', 'Not assessed', item.maintenanceReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.maintenanceReviewState)}${option('CLEARED', 'Cleared', item.maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', item.maintenanceReviewState)}</select></label>
+        <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(item.unit, { allowZero: true })} value="${esc(item.reorderThreshold ?? 0)}" required></label>
+        <label>Condition review<select name="conditionReviewState"><option value="" ${conditionReviewState ? '' : 'selected'} disabled>Select physically reviewed condition</option>${option('NOT_ASSESSED', 'Not assessed', conditionReviewState)}${option('NEW', 'New', conditionReviewState)}${option('GOOD', 'Good', conditionReviewState)}${option('FAIR', 'Fair', conditionReviewState)}${option('POOR', 'Poor / quarantine', conditionReviewState)}${option('DAMAGED', 'Damaged', conditionReviewState)}</select></label>
+        <label>Maintenance review<select name="maintenanceReviewState"><option value="" ${maintenanceReviewState ? '' : 'selected'} disabled>Select physical maintenance outcome</option>${option('NOT_ASSESSED', 'Not assessed', maintenanceReviewState)}${option('CLEARED', 'Cleared', maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', maintenanceReviewState)}</select></label>
         <label class="checkbox span-2"><input name="isLendable" type="checkbox" value="true" ${item.isLendable ? 'checked' : ''}> Enable lending after this review</label>
         <label>Lending audience<select name="lendingAudience">${option('NOT_AVAILABLE_FOR_LENDING', 'Not available for lending', item.lendingAudience)}${option('USC_STAFF_ONLY', 'USC officers and staff only', item.lendingAudience)}${option('STUDENTS_AND_STAFF', 'Students and USC staff', item.lendingAudience)}${option('DOL_INTERNAL_ONLY', 'DOL internal only', item.lendingAudience)}</select></label>
         <label class="checkbox"><input name="enableLendingConfirmed" type="checkbox" value="true"> I explicitly confirm lending may be enabled</label>
@@ -6577,59 +7692,17 @@ export function createRuntimeExtensions(options) {
         history
           .map(
             (entry) =>
-              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(entry.newStatus)}</strong><small>${esc(entry.newKind)} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small></div></div>`,
+              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(statusLabel(entry.newStatus, { context: 'classificationStatus', missing: 'Not reported' }))}</strong><small>${esc(inventoryLabel(entry.newKind, 'inventoryKind', { missing: 'Not recorded' }))} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small>${classificationHistoryChangeMarkup(entry)}</div></div>`,
           )
           .join('') || '<div class="empty">No classification history has been recorded.</div>'
       }</div></section>
     </form>`;
   };
 
-  const mockClassifyInventoryItem = (item, payload) => {
-    const now = new Date().toISOString();
-    const previousStatus = item.classificationStatus ?? 'NEEDS_CLASSIFICATION';
-    const previousKind = item.inventoryKind ?? 'UNVERIFIED';
-    Object.assign(item, {
-      inventoryKind: payload.inventoryKind,
-      classificationStatus: payload.classificationStatus,
-      conditionReviewState: payload.conditionReviewState,
-      maintenanceReviewState: payload.maintenanceReviewState,
-      stockArea: payload.stockArea,
-      storageLocation: payload.storageLocation,
-      unit: payload.unit,
-      reorderThreshold: Number(payload.reorderThreshold),
-      isLendable: payload.isLendable === true,
-      lendingAudience: payload.isLendable ? payload.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
-      handling:
-        payload.inventoryKind === 'REUSABLE'
-          ? 'REUSABLE_ASSET'
-          : payload.inventoryKind === 'CONSUMABLE'
-            ? 'CONSUMABLE'
-            : 'TO_CLASSIFY',
-      classificationNotes: payload.classificationNotes,
-      classificationEvidenceId: payload.evidenceId,
-      classificationRevision: Number(item.classificationRevision ?? 1) + 1,
-      classifiedAt: payload.classificationStatus === 'CLASSIFIED' ? now : null,
-    });
-    item.classificationHistory ??= [];
-    item.classificationHistory.unshift({
-      revision: item.classificationRevision,
-      previousStatus,
-      newStatus: item.classificationStatus,
-      previousKind,
-      newKind: item.inventoryKind,
-      isLendable: item.isLendable,
-      occurredAt: now,
-      actorAccountId: 'LOCAL_PREVIEW',
-      evidenceId: payload.evidenceId,
-    });
-    return {
-      itemId: item.id,
-      classificationRevision: item.classificationRevision,
-      correlationId: 'LOCAL-PREVIEW',
-    };
-  };
+  const mockClassifyInventoryItem = applyMockInventoryClassification;
+  const mockBulkClassifyInventoryItems = applyMockBulkInventoryClassification;
 
-  const submitInventoryClassification = async (item, draft, { bulkGroupId = '' } = {}) => {
+  const submitInventoryClassification = async (item, draft) => {
     const payload = {
       itemId: item.id,
       expectedRevision: Number(item.classificationRevision ?? 1),
@@ -6660,20 +7733,99 @@ export function createRuntimeExtensions(options) {
         .filter(Boolean),
       classificationNotes: draft.classificationNotes ?? '',
       evidenceId: draft.evidenceId ?? '',
-      bulkGroupId,
     };
-    if (backendMode === 'mock') return mockClassifyInventoryItem(item, payload);
+    if (backendMode === 'mock') {
+      const target = (getState()?.inventoryItems ?? []).find((candidate) => candidate.id === item.id) ?? item;
+      return mockClassifyInventoryItem(target, payload);
+    }
     return services.classifyInventoryItem(payload);
+  };
+
+  const submitBulkInventoryClassification = async (items, draft) => {
+    const inventoryKind = String(draft.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
+    const reason = String(draft.classificationNotes ?? '').trim();
+    const conditionReviewState =
+      draft.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : '');
+    const maintenanceReviewState =
+      draft.maintenanceReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : '');
+    const payload = {
+      reason,
+      similarityConfirmed: draft.similarityConfirmed === true || draft.similarityConfirmed === 'true',
+      items: items.map((item) => ({
+        itemId: item.id,
+        expectedRevision: Number(item.classificationRevision ?? 1),
+        classificationStatus: 'CLASSIFIED',
+        inventoryKind,
+        conditionReviewState,
+        maintenanceReviewState,
+        stockArea: item.stockArea,
+        storageLocation: item.storageLocation,
+        unit: item.unit,
+        reorderThreshold: Number(item.reorderThreshold ?? 0),
+        isLendable: false,
+        lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+        enableLendingConfirmed: false,
+        assetInstanceCountIfReusable: Number(item.assetInstanceCount ?? item.traceableAssets ?? 0),
+        assetTrackingConfirmed: false,
+        assetTags: [],
+        classificationNotes: reason,
+        evidenceId: draft.evidenceId ?? '',
+        reason,
+        similarityConfirmed: true,
+      })),
+    };
+    if (backendMode === 'mock') {
+      const targets = items.map(
+        (item) => (getState()?.inventoryItems ?? []).find((candidate) => candidate.id === item.id) ?? item,
+      );
+      return mockBulkClassifyInventoryItems(targets, payload);
+    }
+    return services.bulkClassifyInventoryItems(payload);
   };
 
   const openInventoryClassification = (item) => {
     openModal(`Classify ${item.id}`, classificationFormHtml(item), (modal) => {
       const form = modal.querySelector('#inventoryClassificationForm');
+      bindUnitBoundInputs(form, [{ name: 'reorderThreshold', allowZero: true }]);
       const sync = () => {
         const reusable = form.elements.inventoryKind.value === 'REUSABLE';
-        const lendable = form.elements.isLendable.checked;
-        form.elements.conditionReviewState.disabled = !reusable;
-        form.elements.maintenanceReviewState.disabled = !reusable;
+        const classified = form.elements.classificationStatus.value === 'CLASSIFIED';
+        const classifiedReusable = reusable && classified;
+        const conditionReviewState = form.elements.conditionReviewState;
+        const maintenanceReviewState = form.elements.maintenanceReviewState;
+        const conditionNotAssessed = conditionReviewState.querySelector('option[value="NOT_ASSESSED"]');
+        const maintenanceNotAssessed = maintenanceReviewState.querySelector('option[value="NOT_ASSESSED"]');
+        if (!classified) form.elements.isLendable.checked = false;
+        form.elements.isLendable.disabled = !classified;
+        const lendable = classified && form.elements.isLendable.checked;
+        conditionReviewState.disabled = !reusable;
+        maintenanceReviewState.disabled = !reusable;
+        conditionReviewState.required = classifiedReusable;
+        maintenanceReviewState.required = classifiedReusable;
+        conditionNotAssessed.disabled = classifiedReusable;
+        maintenanceNotAssessed.disabled = classifiedReusable;
+        if (classifiedReusable) {
+          if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
+          if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
+        } else if (reusable) {
+          if (
+            conditionReviewState.value !== 'NOT_ASSESSED' &&
+            !isReusableConditionReviewState(conditionReviewState.value)
+          ) {
+            conditionReviewState.value = 'NOT_ASSESSED';
+          }
+          if (
+            maintenanceReviewState.value !== 'NOT_ASSESSED' &&
+            !isReusableMaintenanceReviewState(maintenanceReviewState.value)
+          ) {
+            maintenanceReviewState.value = 'NOT_ASSESSED';
+          }
+        } else {
+          conditionReviewState.value = '';
+          maintenanceReviewState.value = '';
+        }
         form.elements.assetInstanceCountIfReusable.disabled = !reusable;
         form.elements.assetTags.disabled = !reusable;
         form.elements.assetTrackingConfirmed.disabled = !reusable;
@@ -6681,6 +7833,7 @@ export function createRuntimeExtensions(options) {
         form.elements.enableLendingConfirmed.disabled = !lendable;
         if (!lendable) form.elements.lendingAudience.value = 'NOT_AVAILABLE_FOR_LENDING';
       };
+      form.elements.classificationStatus.addEventListener('change', sync);
       form.elements.inventoryKind.addEventListener('change', sync);
       form.elements.isLendable.addEventListener('change', sync);
       sync();
@@ -6693,6 +7846,12 @@ export function createRuntimeExtensions(options) {
         draft.isLendable = form.elements.isLendable.checked;
         draft.enableLendingConfirmed = form.elements.enableLendingConfirmed.checked;
         draft.assetTrackingConfirmed = form.elements.assetTrackingConfirmed.checked;
+        const quantityValidation = validateCatalogQuantities(draft);
+        if (!quantityValidation.valid) {
+          toast(quantityValidation.message, true);
+          button.disabled = false;
+          return;
+        }
         try {
           const result = await submitInventoryClassification(item, draft);
           markFormClean(form);
@@ -6710,16 +7869,23 @@ export function createRuntimeExtensions(options) {
   const openBulkInventoryClassification = (items) => {
     openModal(
       `Bulk classify ${items.length} items`,
-      `<form id="bulkInventoryClassificationForm"><div class="mode-note"><strong>Safe bulk path: non-lendable only.</strong><br>Use this only after physically verifying that every selected item is genuinely similar. Existing stock area, storage location, unit, reorder threshold, and asset records are preserved.</div><div class="form-grid section-gap"><label>Inventory kind<select name="inventoryKind"><option value="CONSUMABLE">Consumable</option><option value="REUSABLE">Reusable</option></select></label><label>Condition review<select name="conditionReviewState"><option value="NOT_APPLICABLE">Not applicable</option><option value="NEW">New</option><option value="GOOD">Good</option><option value="FAIR">Fair</option><option value="POOR">Poor / quarantine</option><option value="DAMAGED">Damaged</option></select></label><label>Maintenance review<select name="maintenanceReviewState"><option value="NOT_APPLICABLE">Not applicable</option><option value="CLEARED">Cleared</option><option value="MAINTENANCE_REQUIRED">Maintenance required</option></select></label><label class="span-2">Classification notes<textarea name="classificationNotes" maxlength="1000" required></textarea></label><label class="checkbox span-2"><input name="similarityConfirmed" type="checkbox" value="true" required> I physically reviewed the selected items, confirm they are genuinely similar, and understand this action cannot enable lending.</label></div><button class="primary" type="submit">Classify Selected as Non-lendable</button></form>`,
+      `<form id="bulkInventoryClassificationForm"><div class="mode-note"><strong>Safe bulk path: non-lendable only.</strong><br>Use this only after physically verifying that every selected item is genuinely similar. Existing stock area, storage location, unit, reorder threshold, and asset records are preserved.</div><div class="form-grid section-gap"><label>Inventory kind<select name="inventoryKind"><option value="CONSUMABLE">Consumable</option><option value="REUSABLE">Reusable</option></select></label><label>Condition review<select name="conditionReviewState"><option value="" selected disabled>Select physically reviewed condition</option><option value="NEW">New</option><option value="GOOD">Good</option><option value="FAIR">Fair</option><option value="POOR">Poor / quarantine</option><option value="DAMAGED">Damaged</option></select></label><label>Maintenance review<select name="maintenanceReviewState"><option value="" selected disabled>Select physical maintenance outcome</option><option value="CLEARED">Cleared</option><option value="MAINTENANCE_REQUIRED">Maintenance required</option></select></label><label class="span-2">Classification notes<textarea name="classificationNotes" maxlength="1000" required></textarea></label><label class="checkbox span-2"><input name="similarityConfirmed" type="checkbox" value="true" required> I physically reviewed the selected items, confirm they are genuinely similar, and understand this action cannot enable lending.</label></div><button class="primary" type="submit">Classify Selected as Non-lendable</button></form>`,
       (modal) => {
         const form = modal.querySelector('#bulkInventoryClassificationForm');
         const sync = () => {
           const reusable = form.elements.inventoryKind.value === 'REUSABLE';
-          form.elements.conditionReviewState.disabled = !reusable;
-          form.elements.maintenanceReviewState.disabled = !reusable;
+          const conditionReviewState = form.elements.conditionReviewState;
+          const maintenanceReviewState = form.elements.maintenanceReviewState;
+          conditionReviewState.disabled = !reusable;
+          maintenanceReviewState.disabled = !reusable;
+          conditionReviewState.required = reusable;
+          maintenanceReviewState.required = reusable;
           if (!reusable) {
-            form.elements.conditionReviewState.value = 'NOT_APPLICABLE';
-            form.elements.maintenanceReviewState.value = 'NOT_APPLICABLE';
+            conditionReviewState.value = '';
+            maintenanceReviewState.value = '';
+          } else {
+            if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
+            if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
           }
         };
         form.elements.inventoryKind.addEventListener('change', sync);
@@ -6730,25 +7896,11 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           const draft = Object.fromEntries(new FormData(form));
-          const bulkGroupId = `BULK-${crypto.randomUUID()}`;
           try {
-            let lastResult = null;
-            for (const item of items) {
-              lastResult = await submitInventoryClassification(
-                item,
-                {
-                  ...draft,
-                  classificationStatus: 'CLASSIFIED',
-                  isLendable: false,
-                  lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
-                  assetInstanceCountIfReusable: item.assetInstanceCount ?? 0,
-                },
-                { bulkGroupId },
-              );
-            }
+            const result = await submitBulkInventoryClassification(items, draft);
             markFormClean(form);
             closeModal();
-            await commit(`${items.length} non-lendable classifications recorded.`, 'success', lastResult);
+            await commit(`${items.length} non-lendable classifications recorded.`, 'success', result);
             await loadInventoryClassificationDirectory({ force: true });
           } catch (error) {
             toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
@@ -6772,7 +7924,7 @@ export function createRuntimeExtensions(options) {
       directory.items
         .map(
           (item) =>
-            `<label class="request-line classification-row"><input type="checkbox" data-classification-select value="${esc(item.id)}"><div><strong>${esc(item.id)} · ${esc(item.name)}</strong><small>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.unit)}</small><small>${esc(item.inventoryKind)} · ${esc(item.conditionReviewState)} · ${esc(item.maintenanceReviewState)} · ${item.isLendable ? 'Lending enabled' : 'Non-lendable'}</small></div><span><span class="pill">${esc(item.classificationStatus.replaceAll('_', ' '))}</span><button class="secondary mini" type="button" data-classification-review="${esc(item.id)}">Review</button></span></label>`,
+            `<div class="request-line classification-row"><label class="classification-select" for="classification-select-${esc(item.id)}"><span class="sr-only">Select ${esc(item.name)} for bulk classification</span><input id="classification-select-${esc(item.id)}" type="checkbox" data-classification-select value="${esc(item.id)}"></label><div><strong>${esc(item.id)} · ${esc(item.name)}</strong><small>${esc(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${esc(item.stockArea || 'Stock area not recorded')} · ${esc(item.unit || 'Unit not recorded')}</small><small>${esc(inventoryLabel(item.inventoryKind, 'inventoryKind', { missing: 'Inventory kind not recorded' }))} · ${esc(inventoryLabel(item.conditionReviewState, 'condition', { missing: 'Condition not reported' }))} · ${esc(inventoryLabel(item.maintenanceReviewState, 'maintenance', { missing: 'Maintenance status not reported' }))} · ${item.isLendable ? 'Lending enabled' : 'Non-lendable'}</small></div><div class="classification-actions"><span class="pill">${esc(statusLabel(item.classificationStatus, { context: 'classificationStatus', missing: 'Review status not reported' }))}</span><button class="secondary mini" type="button" data-classification-review="${esc(item.id)}">Review</button></div></div>`,
         )
         .join('') || '<div class="empty">No items match this classification view.</div>'
     }</div><div class="button-row section-gap"><button class="secondary" type="button" data-classification-page="${directory.page - 1}" ${directory.page <= 1 ? 'disabled' : ''}>Previous</button><span class="pill">Page ${directory.page} of ${totalPages}</span><button class="secondary" type="button" data-classification-page="${directory.page + 1}" ${directory.page >= totalPages ? 'disabled' : ''}>Next</button></div>`;
@@ -6928,7 +8080,7 @@ export function createRuntimeExtensions(options) {
     const alertRows = [
       ...stock.map((item) => {
         const balance = inventoryBalance(state, item);
-        return `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+        return `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(statusLabel(inventoryHealth(state, item), { missing: 'Inventory health not reported' }))}</span></div>`;
       }),
       ...condition.itemSignals.map(
         (item) =>
@@ -7077,7 +8229,7 @@ export function createRuntimeExtensions(options) {
               .slice(0, 12)
               .map((item) => {
                 const balance = inventoryBalance(state, item);
-                return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(item.handling ?? item.handlingCode ?? 'Handling not reported')}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+                return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(presentationLabel(item.handling ?? item.handlingCode, { context: 'handling', missing: 'Handling not reported' }))}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(statusLabel(inventoryHealth(state, item), { missing: 'Inventory health not reported' }))}</span></div>`;
               })
               .join('') ||
             '<div class="empty">No stock exceptions are in the current authorized projection.</div>'
@@ -7132,56 +8284,156 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const clearRequestOnlyInternalSurfaces = () => {
+    for (const selector of ['#inventoryTable', '#inventoryCount', '#inventoryPagination', '#releaseTickets', '#lendingTickets']) {
+      document.querySelector(selector)?.replaceChildren();
+    }
+    document
+      .querySelectorAll(
+        '[data-inventory-advanced-controls],[data-inventory-classification-queue],[data-inventory-workspace-supplement]',
+      )
+      .forEach((surface) => surface.remove());
+  };
+
   const install = () => {
-    installLocalFoodServices();
-    installLocalMaterialsServices();
-    installLocalVenueEquipmentServices();
-    installLocalReferenceAdminServices();
-    installFoodWorkflow();
-    installMaterialsWorkflow();
-    installVenueEquipmentWorkflow();
-    installReferenceAdminWorkspace();
-    installLendingUsage();
-    installRoleExperience();
-    installInventoryWorkspaceSupplement();
-    renderRoleExperience();
-    installInternalShell();
-    installSharedMobileNav();
-    installReleaseConfirmation();
-    installCanvassQuality();
-    installDeliverableReceiving();
-    installLendingUsage();
     if (!isRequestOnly()) {
+      installLocalFoodServices();
+      installLocalMaterialsServices();
+      installLocalVenueEquipmentServices();
+      installLocalReferenceAdminServices();
+      installFoodWorkflow();
+      installMaterialsWorkflow();
+      installVenueEquipmentWorkflow();
+      installReferenceAdminWorkspace();
+      installLendingUsage();
+      installRoleExperience();
+      installInventoryWorkspaceSupplement();
+      renderRoleExperience();
+      installInternalShell();
+      installSharedMobileNav();
+      installReleaseConfirmation();
+      installCanvassQuality();
+      installDeliverableReceiving();
+      installLendingUsage();
       lending = createLendingController({ markFormClean });
       installLendingApproval();
+      mountSyncUi();
+      const statusFilter = document.querySelector('#inventoryStatusFilter');
+      if (statusFilter && !statusFilter.querySelector('[value="ARCHIVED"]'))
+        statusFilter.insertAdjacentHTML('beforeend', '<option value="ARCHIVED">Archived</option>');
+      const handlingFilter = document.querySelector('#inventoryHandlingFilter');
+      if (handlingFilter && !handlingFilter.querySelector('[value="Reusable Asset"]'))
+        handlingFilter.insertAdjacentHTML(
+          'beforeend',
+          '<option value="Reusable Asset">Reusable Asset</option><option value="Non Circulating">Non-circulating</option>',
+        );
     }
-    mountSyncUi();
-    const statusFilter = document.querySelector('#inventoryStatusFilter');
-    if (statusFilter && !statusFilter.querySelector('[value="ARCHIVED"]'))
-      statusFilter.insertAdjacentHTML('beforeend', '<option value="ARCHIVED">Archived</option>');
-    const handlingFilter = document.querySelector('#inventoryHandlingFilter');
-    if (handlingFilter && !handlingFilter.querySelector('[value="Reusable Asset"]'))
-      handlingFilter.insertAdjacentHTML(
-        'beforeend',
-        '<option value="Reusable Asset">Reusable Asset</option><option value="Non Circulating">Non-circulating</option>',
-      );
+    document.querySelectorAll('form').forEach((form) => {
+      if (isTrackableForm(form)) dirtyTracker.register(form);
+    });
+    new MutationObserver((records) => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.matches('form') && isTrackableForm(node)) dirtyTracker.register(node);
+          node.querySelectorAll?.('form').forEach((form) => {
+            if (isTrackableForm(form)) dirtyTracker.register(form);
+          });
+          syncRenderedQuantityControls(node);
+        }
+      }
+    }).observe(document.body, { childList: true, subtree: true });
+    const updateDirtyForm = (event) => {
+      const form = event.target.closest('form');
+      if (isTrackableForm(form) && !event.target.closest('[data-passive-sync]')) dirtyTracker.update(form);
+      syncRenderedQuantityControls(form ?? document);
+    };
+    document.addEventListener('input', updateDirtyForm, true);
+    document.addEventListener('change', updateDirtyForm, true);
     document.addEventListener(
-      'input',
+      'focusin',
       (event) => {
-        const form = event.target.closest('form');
-        if (form && !event.target.closest('[data-passive-sync]')) dirtyForms.add(form);
-      },
-      true,
-    );
-    document.addEventListener(
-      'change',
-      (event) => {
-        const form = event.target.closest('form');
-        if (form && !event.target.closest('[data-passive-sync]')) dirtyForms.add(form);
+        if (event.target.matches?.('input[type="number"]'))
+          syncRenderedQuantityControls(event.target.form ?? document);
       },
       true,
     );
     document.addEventListener('reset', (event) => setTimeout(() => markFormClean(event.target), 0), true);
+    document.addEventListener(
+      'click',
+      (event) => {
+        const modal = document.querySelector('#modal');
+        const modalBackdrop = document.querySelector('#modalBackdrop');
+        const modalClose =
+          event.target.closest('[data-close-modal]') ||
+          (event.target === modalBackdrop ? modalBackdrop : null);
+        if (modalClose && modal && isDirty(modal, { includeRuntime: false })) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          void requestDiscard({ root: modal, includeRuntime: false }).then((discarded) => {
+            if (!discarded) return;
+            dirtyTracker.discard(modal);
+            clearUnsavedRuntimeState('modal');
+            closeModal();
+          });
+          return;
+        }
+        const cancelEdit = event.target.closest('#cancelLineEdit');
+        if (cancelEdit) {
+          const form = cancelEdit.closest('form');
+          if (form && isDirty(form, { includeRuntime: false })) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            void requestDiscard({ root: form, includeRuntime: false }).then((discarded) => {
+              if (!discarded) return;
+              dirtyTracker.discard(form);
+              cancelEdit.click();
+            });
+            return;
+          }
+        }
+        const navigation = event.target.closest(
+          '#primaryNav [data-view], [data-go], [data-shared-mobile-view], [data-shared-more-view]',
+        );
+        if (navigation && isDirty()) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          void requestDiscard().then((discarded) => {
+            if (!discarded) return;
+            dirtyTracker.discard();
+            clearUnsavedRuntimeState('all');
+            navigation.click();
+          });
+        }
+      },
+      true,
+    );
+    document.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key !== 'Escape' || discardPromise) return;
+        const modal = document.querySelector('#modal');
+        if (
+          !document.querySelector('#modalBackdrop')?.classList.contains('show') ||
+          !isDirty(modal, { includeRuntime: false })
+        )
+          return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        void requestDiscard({ root: modal, includeRuntime: false }).then((discarded) => {
+          if (!discarded) return;
+          dirtyTracker.discard(modal);
+          clearUnsavedRuntimeState('modal');
+          closeModal();
+        });
+      },
+      true,
+    );
+    addEventListener('beforeunload', (event) => {
+      if (!isDirty()) return;
+      event.preventDefault();
+      event.returnValue = '';
+    });
     ['pointerdown', 'keydown'].forEach((eventName) => {
       document.addEventListener(
         eventName,
@@ -7195,6 +8447,18 @@ export function createRuntimeExtensions(options) {
   };
 
   const afterRender = () => {
+    afterRenderCount += 1;
+    syncRenderedQuantityControls();
+    if (!formSnapshotsInitialized && afterRenderCount >= 2) {
+      document.querySelectorAll('form').forEach((form) => {
+        if (isTrackableForm(form)) markFormClean(form);
+      });
+      formSnapshotsInitialized = true;
+    }
+    if (isRequestOnly()) {
+      clearRequestOnlyInternalSurfaces();
+      return;
+    }
     syncSharedMobileNav();
     renderRoleExperience();
     installInternalShell();
@@ -7214,10 +8478,11 @@ export function createRuntimeExtensions(options) {
       catalogButton.disabled = !allowed;
       catalogButton.setAttribute('aria-hidden', String(!allowed));
     }
+    ensureInventoryControls(getState()?.inventoryItems ?? []);
+    renderInventoryRuntimePresentation();
     renderFoodQueue();
     renderMaterialsQueue();
-    if (normalizedExperience() === 'materials' && materialsQueueItems === null)
-      void refreshMaterialsQueue();
+    if (normalizedExperience() === 'materials' && materialsQueueItems === null) void refreshMaterialsQueue();
     renderVenueEquipmentQueue();
     installInventoryClassificationQueue();
     renderInventoryWorkspaceSupplement();
@@ -7275,6 +8540,9 @@ export function createRuntimeExtensions(options) {
     start,
     afterRender,
     markFormClean,
+    acceptCurrentLocation,
+    pushRouteLocation,
+    replaceRouteLocation,
     refreshAuthoritative,
     async refreshAfterMutation(result = {}) {
       const scope = getActiveModule();
@@ -7319,6 +8587,10 @@ export function createRuntimeExtensions(options) {
     get lending() {
       return lending;
     },
+    ensureInventoryControls,
+    inventoryFilterValues,
+    inventoryReviewKind,
+    resetInventoryControls,
     showRecordedRefreshFailure({ correlationId, error }) {
       const suffix = correlationId ? ` Correlation ID: ${correlationId}.` : '';
       showBanner(
@@ -7327,25 +8599,7 @@ export function createRuntimeExtensions(options) {
       );
     },
     inventoryActions(item) {
-      const user = getState()?.currentUser;
-      const allowed = canManageCatalog(user);
-      const catalog =
-        allowed && item.status !== 'ARCHIVED'
-          ? `<button class="secondary mini" data-inventory-action="edit" data-item-id="${esc(item.id)}">View / Edit</button>`
-          : '';
-      const lifecycle = allowed
-        ? item.status === 'ARCHIVED'
-          ? `<button class="secondary mini" data-inventory-action="restore" data-item-id="${esc(item.id)}">Restore Item</button>`
-          : `<button class="danger mini" data-inventory-action="archive" data-item-id="${esc(item.id)}">Archive</button>`
-        : '';
-      const operational =
-        item.status === 'ARCHIVED'
-          ? ''
-          : `${can(user, 'request.create') ? `<button class="ghost mini" data-inventory-action="restock" data-item-id="${esc(item.id)}">Restock</button>` : ''}${can(user, 'fulfillment.reserve') ? `<button class="ghost mini" data-inventory-action="context" data-item-id="${esc(item.id)}">Reserve / Release</button>` : ''}${allowed ? `<button class="ghost mini" data-inventory-action="transfer" data-item-id="${esc(item.id)}">Transfer</button>` : ''}`;
-      const history = can(user, 'view.inventory')
-        ? `<button class="secondary mini" data-inventory-action="history" data-item-id="${esc(item.id)}">Ledger</button>`
-        : '';
-      return `${catalog}${history}${operational}${lifecycle}`;
+      return inventoryActionMarkup(item);
     },
     openCatalogItem(itemId) {
       const item = getState().inventoryItems.find((candidate) => candidate.id === itemId);

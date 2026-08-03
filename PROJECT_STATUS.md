@@ -1,5 +1,38 @@
 # Project Status
 
+## v0.7.1 release candidate reviewed and repository-accepted
+
+- Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
+  `main` at `9fb1b4e6b4e956419fa65dee55268b10c0a55da6` under the accepted
+  `.codex/specs/v0.7.1-production-recovery.md` contract.
+- Read-only provider truth shows production remains healthy on immutable
+  v0.7.0, schema 29, with no verified staging D1/R2 binding incident.
+- Slices 2 through 8 repair the client/runtime contract, authentication and
+  portal shell, Staff Directory/Access Management, canonical workspace and
+  quantity contracts, Canvass and Inventory governance, presentation polish,
+  and release pipeline/domain preparation.
+- Release-candidate code/test head
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab` passes `npm run check` with 88
+  Vitest files / 576 tests, the full browser matrix with 130 passes / 326
+  intentional skips, the local Worker/D1 matrix 38/38, and a binding-free
+  Cloudflare preview dry-run.
+- Static preview and exact-SHA package workflows contain no production
+  bindings or deployment credentials. Canonical production hosts and the exact
+  private workers.dev recovery hostname fail closed outside their accepted
+  routes; request-only and opaque-origin runtime boundaries have direct proof.
+- The first complete-candidate Sol review at `d3d4cc8` found no P0/P1, two P2s,
+  and one P3. Reusable classified inventory now requires actual condition and
+  maintenance outcomes; preview smoke derives the fixed Worker target from the
+  authenticated Cloudflare account and withholds the URL; handoff domains are
+  corrected to `*.hausc.org`.
+- Production was not deployed or changed. Domain activation, private staging
+  and production configuration, deployment, migration, smoke, and monitoring
+  remain owner-gated.
+- Fresh Sol correction re-review passes at exact deployable candidate
+  `7338124554d5ad6f948587d69328dae731b38a6c` with no P0-P3 and all prior
+  findings closed. The ignored local manifest binds that exact SHA to the
+  Worker, generated artifacts, Google mapping, and migration hashes.
+
 ## v0.7.0 production launch and closure accepted
 
 - Production source, annotated `v0.7.0` tag, and published release are exact

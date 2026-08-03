@@ -24,6 +24,9 @@ export const BOOTSTRAP_MODULES = Object.freeze([
   'inventory',
 ]);
 
+const MAX_STANDARD_MODULE_ROWS = 100;
+const MAX_INVENTORY_MODULE_ROWS = 500;
+
 const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'eventSeries',
   'eventDays',
@@ -96,6 +99,7 @@ const MODULE_DATA_KEYS = Object.freeze({
   ]),
   inventory: Object.freeze([
     'inventoryItems',
+    'reservations',
     'ledgerTransactions',
     'inventoryAssets',
     'assetMaintenanceHistory',
@@ -525,11 +529,12 @@ function assertNoSensitiveKeys(value, seen = new WeakSet()) {
   seen.delete(value);
 }
 
-function assertPagination(value) {
+function assertPagination(value, { module } = {}) {
   if (!isPlainObject(value)) fail();
   assertAllowedKeys(value, new Set(['page', 'pageSize', 'total', 'hasMore']));
   if (!Number.isInteger(value.page) || value.page < 1) fail();
-  if (!Number.isInteger(value.pageSize) || value.pageSize < 1 || value.pageSize > 100) fail();
+  const maxPageSize = module === 'inventory' ? MAX_INVENTORY_MODULE_ROWS : MAX_STANDARD_MODULE_ROWS;
+  if (!Number.isInteger(value.pageSize) || value.pageSize < 1 || value.pageSize > maxPageSize) fail();
   assertNonNegativeInteger(value.total);
   assertBoolean(value.hasMore);
 }
@@ -564,10 +569,11 @@ export function validateBootstrapModule(value, { backendMode = 'mock', module } 
   const allowedData = new Set(MODULE_DATA_KEYS[value.module]);
   assertAllowedKeys(value.data, allowedData);
   Object.entries(value.data).forEach(([_key, rows]) => {
-    if (!Array.isArray(rows) || rows.length > 100) fail();
+    const maxRows = value.module === 'inventory' ? MAX_INVENTORY_MODULE_ROWS : MAX_STANDARD_MODULE_ROWS;
+    if (!Array.isArray(rows) || rows.length > maxRows) fail();
   });
   if (value.requestOnly) assertNoSensitiveKeys(value.data);
-  assertPagination(value.pagination);
+  assertPagination(value.pagination, { module: value.module });
   assertRevision(value.revision);
   assertScopeRevision(value.scopeRevision, value.module, { requestOnly: value.requestOnly });
   assertCache(value.cache);

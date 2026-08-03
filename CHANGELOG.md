@@ -1,5 +1,60 @@
 # Changelog
 
+## Unreleased - v0.7.1 production recovery
+
+### Fixed
+
+- Restored the three protected Access Policy and six Staff Directory client
+  methods across the active HTTP and legacy-runtime adapter layers.
+- Preserved CSRF, safe correlated server errors, and retry-stable mutation IDs
+  for policy update and roster apply/rollback operations.
+- Added safe correlated auth responses with standard security headers,
+  malformed-cookie failure closure, authoritative Worker release identity, and
+  consistent Request/Lending/staff/portal-selection navigation.
+- Preserved the stronger 12–128 character, three-category password policy and
+  normalized raw authentication transport failures to safe retryable errors.
+- Completed the remaining recovery slices: governed Staff Directory and Access
+  Management workflows; canonical workspace/history routes; authoritative
+  quantities; dirty-form safety; Canvass and Inventory governance; truthful
+  presentation; request-only data containment; and opaque-origin Apps Script
+  startup.
+- Added fail-closed canonical host routing with an exact private recovery-host
+  contract, a binding-free static preview workflow, an exact-SHA release
+  package workflow, and owner-gated domain/deployment/rollback/monitoring
+  runbooks.
+- Repaired final-review findings by requiring recorded physical condition and
+  maintenance outcomes before reusable inventory can become classified,
+  deriving preview smoke from the authenticated Cloudflare account and fixed
+  Worker name without recording its URL, and correcting the handoff domains to
+  `*.hausc.org`.
+
+### Verified
+
+- Added explicit remote/runtime contract assertions and focused regression
+  coverage; full `npm run check` passes 77 Vitest files / 502 tests and every
+  deterministic build, Apps Script, dist, and Cloudflare dry-run gate.
+- Focused local-Worker Access Management and Staff Directory UI journeys pass
+  2/2. Fresh exact-SHA R2 review reports no P0-P3.
+- Slice 3's amended full gate passes 78 Vitest files / 510 tests and now leaves
+  preview shareables and `dist` deterministically aligned after Cloudflare
+  dry-run. Auth browser, local-Worker, malformed-cookie, and release-identity
+  proofs pass; fresh correction re-review reports no P0-P3.
+- The complete release-candidate code/test head
+  `42f1970efbccd8c275be2cc4bc77246b5a9c97ab` passes 88 Vitest files / 576
+  tests, 130 browser tests with 326 intentional skips, 38/38 local Worker/D1
+  tests, deterministic generated parity, and a binding-free preview dry-run.
+- Fresh Sol correction re-review passes at exact deployable SHA
+  `7338124554d5ad6f948587d69328dae731b38a6c` with no P0-P3; both prior P2s and
+  the prior P3 are closed.
+
+### Boundary
+
+- Production remains operational on v0.7.0 and was not modified. No provider,
+  migration, deployment, domain, Google, or GitHub external write occurred.
+- Private environment values, upstream/PR/CI, staging and production rollout,
+  domain activation, migration, external smoke, and monitoring remain
+  explicitly owner-gated and unrun.
+
 ## 0.7.0 - 2026-07-29
 
 ### Released

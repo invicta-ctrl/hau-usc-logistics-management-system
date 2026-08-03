@@ -194,7 +194,7 @@
           </p>
         </details>
       </div>
-      <div class="alert warning" data-roster-source-state>
+      <div class="alert warning" data-roster-source-state aria-live="polite">
         Checking the private roster source configuration.
       </div>
       <div class="grid-4 section-gap" data-roster-metrics></div>
@@ -206,8 +206,24 @@
             maxlength="160"
             placeholder="Student ID, HAU email, name, or verification"
         /></label>
+        <label
+          >Activity<select name="identityRosterActive">
+            <option value="ALL">All activity states</option>
+            <option value="ACTIVE">Active</option>
+            <option value="INACTIVE">Inactive</option>
+          </select></label
+        >
+        <label
+          >Verification<select name="identityRosterVerification">
+            <option value="ALL">All verification states</option>
+            <option value="VERIFIED">Verified</option>
+            <option value="PENDING">Pending</option>
+            <option value="NOT_VERIFIED">Not verified</option>
+            <option value="REJECTED">Rejected</option>
+          </select></label
+        >
       </div>
-      <div class="line-list section-gap" data-roster-directory>
+      <div class="line-list section-gap" data-roster-directory aria-live="polite">
         <div class="empty">Open the USC Officer and Staff Directory to load protected records.</div>
       </div>
       <div class="access-pagination section-gap" data-roster-pagination hidden>

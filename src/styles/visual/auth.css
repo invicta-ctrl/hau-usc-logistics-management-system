@@ -231,6 +231,48 @@
 .auth-portal-links a {
   font-weight: 700;
 }
+.auth-environment {
+  width: fit-content;
+  margin: 0.75rem 0 1rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #d6c29c;
+  border-radius: 999px;
+  background: #fff8e9;
+  color: #5e0d12;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+.portal-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+.portal-navigation a,
+.portal-navigation span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d6c29c;
+  border-radius: 0.65rem;
+  background: #fffdf8;
+  color: #5e0d12;
+  font-weight: 750;
+  line-height: 1.2;
+}
+.portal-navigation [aria-current='page'] {
+  border-color: #7b1113;
+  background: #7b1113;
+  color: #fff;
+}
+.portal-navigation a:focus-visible {
+  outline: 3px solid #d5a928;
+  outline-offset: 2px;
+}
+.portal-selection .portal-navigation {
+  margin-top: 1.5rem;
+}
 .auth-form small {
   color: #706360;
   line-height: 1.35;
@@ -1164,6 +1206,13 @@
   }
   .auth-brand-lockup .brand-media-lockup-compact {
     --brand-mark-size: 2.7rem;
+  }
+  .portal-navigation {
+    display: grid;
+  }
+  .portal-navigation a,
+  .portal-navigation span {
+    width: 100%;
   }
   .public-portal-identity {
     display: grid;

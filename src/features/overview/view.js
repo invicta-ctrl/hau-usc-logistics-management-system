@@ -1,6 +1,7 @@
 import { statusChip, escapeHtml } from '../../components/status-chip.js';
 import { taskRisk } from '../../domain/tasks.js';
 import { renderTaskTracker } from '../tasks/view.js';
+import { presentationLabel, statusLabel } from '../../domain/presentation-labels.js';
 
 const percent = (value, total) => (total ? Math.round((value / total) * 100) : 0);
 
@@ -17,7 +18,7 @@ export function renderOverview(ctx) {
   const upcoming = state.events.filter((event) => event.status === 'UPCOMING');
   const attention = [
     ...warnings.slice(0, 4).map((warning) => ({
-      title: warning.code.replaceAll('_', ' '),
+      title: presentationLabel(warning.code),
       detail: `${warning.entityId}${warning.value !== undefined ? ` · raw value ${warning.value}` : ''}`,
       view: warning.code.includes('QUOTE') ? 'procurement' : 'inventory',
     })),
@@ -53,7 +54,7 @@ export function renderOverview(ctx) {
       const ready = lines.filter((line) => ['READY_TO_RELEASE', 'COMPLETED'].includes(line.status));
       const totalQuantity = lines.reduce((sum, line) => sum + Number(line.quantity), 0);
       const readyQuantity = ready.reduce((sum, line) => sum + Number(line.quantity), 0);
-      return `<article class="card"><div class="button-row"><span class="pill">${escapeHtml(event.startDate)}</span>${statusChip(event.status, 'Upcoming')}</div><h3 class="section-gap">${escapeHtml(event.name)}</h3><p class="muted">${escapeHtml(event.venue)} · ${escapeHtml(event.committee)}</p><div class="grid-2 section-gap"><div class="metric"><span>Line readiness</span><strong>${percent(ready.length, lines.length)}%</strong><small>${ready.length}/${lines.length || 0} lines</small></div><div class="metric"><span>Quantity readiness</span><strong>${percent(readyQuantity, totalQuantity)}%</strong><small>${readyQuantity}/${totalQuantity || 0} units</small></div></div><div class="button-row section-gap">${['FOR_REVIEW', 'FOR_CANVASSING', 'TO_BE_PROCURED', 'READY_TO_RELEASE', 'COMPLETED'].map((status) => statusChip(status, `${lines.filter((line) => line.status === status).length} ${status.replaceAll('_', ' ').toLowerCase()}`)).join('')}</div></article>`;
+      return `<article class="card"><div class="button-row"><span class="pill">${escapeHtml(event.startDate)}</span>${statusChip(event.status, 'Upcoming')}</div><h3 class="section-gap">${escapeHtml(event.name)}</h3><p class="muted">${escapeHtml(event.venue)} · ${escapeHtml(event.committee)}</p><div class="grid-2 section-gap"><div class="metric"><span>Line readiness</span><strong>${percent(ready.length, lines.length)}%</strong><small>${ready.length}/${lines.length || 0} lines</small></div><div class="metric"><span>Quantity readiness</span><strong>${percent(readyQuantity, totalQuantity)}%</strong><small>${readyQuantity}/${totalQuantity || 0} units</small></div></div><div class="button-row section-gap">${['FOR_REVIEW', 'FOR_CANVASSING', 'TO_BE_PROCURED', 'READY_TO_RELEASE', 'COMPLETED'].map((status) => statusChip(status, `${lines.filter((line) => line.status === status).length} ${statusLabel(status).toLocaleLowerCase('en-US')}`)).join('')}</div></article>`;
     })
     .join('')}</div></section>
   ${renderTaskTracker(state)}<section class="grid-4"><article class="card metric"><span>Inventory products</span><strong>${state.inventoryItems.filter((item) => item.status === 'ACTIVE').length}</strong><small>Paginated catalog</small></article><article class="card metric"><span>Active reservations</span><strong>${state.reservations.filter((row) => row.status === 'ACTIVE').length}</strong><small>Allocation controls</small></article><article class="card metric"><span>Ledger movements</span><strong>${state.ledgerTransactions.length}</strong><small>Immutable preview rows</small></article><article class="card metric"><span>Audit records</span><strong>${state.auditLog.length}</strong><small>Correlation-backed</small></article></section>

@@ -63,14 +63,54 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
       status: 'ACTIVE',
       catalogType: 'PANTRY',
     },
+    {
+      id: 'SYNTHETIC-REUSABLE-NEGATIVE',
+      name: 'Synthetic Reusable Negative ATP',
+      aliases: ['negative asset', 'equipment fixture'],
+      category: 'Equipment',
+      stockArea: 'Inventory',
+      handling: 'Reusable Asset',
+      handlingCode: 'REUSABLE_ASSET',
+      unit: 'piece',
+      reorderThreshold: 1,
+      status: 'ACTIVE',
+      catalogType: 'OFFICE_INVENTORY',
+      classificationStatus: 'CLASSIFIED',
+      inventoryKind: 'REUSABLE',
+      isLendable: true,
+      lendingAudience: 'USC_STAFF_ONLY',
+      provenance: { type: 'EVENT_TRANSFER', originEventItemId: 'EIT-SYNTHETIC-0001' },
+      updatedAt: '2026-08-03T10:00:00.000Z',
+    },
+    {
+      id: 'SYNTHETIC-ARCHIVED',
+      name: 'Synthetic Archived Stock',
+      category: 'Office Supplies',
+      stockArea: 'Inventory',
+      handling: 'Consumable',
+      unit: 'piece',
+      reorderThreshold: 1,
+      status: 'ARCHIVED',
+      catalogType: 'OFFICE_INVENTORY',
+      updatedAt: '2026-08-03T09:00:00.000Z',
+    },
   ];
   bootstrap.ledgerTransactions = [
     { id: 'SYNTHETIC-LEDGER-IN', itemId: 'SYNTHETIC-ITEM-LOW', direction: 'IN', quantity: 10, unit: 'piece', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T08:00:00.000Z' },
     { id: 'SYNTHETIC-LEDGER-OUT', itemId: 'SYNTHETIC-ITEM-LOW', direction: 'OUT', quantity: 2, unit: 'piece', transactionType: 'ISSUE', status: 'POSTED', createdAt: '2026-07-26T08:00:00.000Z' },
     { id: 'SYNTHETIC-PANTRY-IN', itemId: 'SYNTHETIC-PANTRY-1', direction: 'IN', quantity: 3, unit: 'pack', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T09:00:00.000Z' },
+    { id: 'SYNTHETIC-NEGATIVE-IN', itemId: 'SYNTHETIC-REUSABLE-NEGATIVE', direction: 'IN', quantity: 3, unit: 'piece', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T10:00:00.000Z' },
   ];
   bootstrap.reservations = [
     { id: 'SYNTHETIC-RESERVATION-1', itemId: 'SYNTHETIC-ITEM-LOW', quantity: 2, status: 'ACTIVE' },
+    { id: 'SYNTHETIC-NEGATIVE-RESERVATION', itemId: 'SYNTHETIC-REUSABLE-NEGATIVE', quantity: 5, status: 'ACTIVE' },
+  ];
+  bootstrap.evidenceFiles = [
+    {
+      id: 'SYNTHETIC-EVIDENCE-1',
+      itemId: 'SYNTHETIC-REUSABLE-NEGATIVE',
+      fileName: 'synthetic-inventory-evidence.pdf',
+    },
   ];
   bootstrap.inventoryAssets = [
     { id: 'SYNTHETIC-ASSET-1', item_id: 'SYNTHETIC-ITEM-LOW', asset_tag: 'SYN-ASSET-001', condition_label: 'DAMAGED', lifecycle_status: 'MAINTENANCE' },
@@ -151,7 +191,7 @@ test('Inventory & Pantry exposes every accepted destination and distinct stock t
   }
   await expect(panel).toContainText('SYNTHETIC-ITEM-LOW');
   await expect(panel).toContainText('On hand 8 · Reserved 2 · ATP 6 piece');
-  await expect(panel).toContainText('LOW STOCK');
+  await expect(panel).toContainText('Low Stock');
   await expect(panel.getByRole('button', { name: /^Overdue 1 /u })).toBeVisible();
 });
 
@@ -222,4 +262,53 @@ test('Inventory receiving projection fails closed without its server capability'
   await expect(receivingActions.first()).toBeDisabled();
   await expect(receivingActions.last()).toBeDisabled();
   await expect(page.locator('#restocking')).not.toHaveClass(/active/u);
+});
+
+test('Inventory extension filters, sorts, and exposes negative raw ATP without changing allocation safety', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-1366', 'One desktop proof is sufficient.');
+  await openInventory(page);
+  await page
+    .locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-management"]')
+    .click();
+  await expect(page.locator('#inventory')).toHaveClass(/active/u);
+
+  const controls = page.locator('[data-inventory-advanced-controls]');
+  await expect(controls).toBeVisible();
+  await expect(controls.locator('[data-inventory-advanced-filter="classification"]')).toContainText('Reusable');
+  await expect(controls.locator('[data-inventory-advanced-filter="lendingAudience"]')).toContainText('USC officers and staff only');
+
+  await controls.locator('[data-inventory-advanced-filter="classification"]').selectOption('REUSABLE');
+  await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-REUSABLE-NEGATIVE');
+  await expect(page.locator('#inventoryTable')).not.toContainText('SYNTHETIC-ITEM-LOW');
+  await expect(page.locator('#inventoryTable')).toContainText('-2 piece');
+  await expect(page.locator('#inventoryTable')).toContainText('Negative ATP — new allocations blocked');
+  await expect(page.locator('#inventoryTable thead')).toContainText('Provenance / Movement');
+  await expect(page.locator('#inventoryTable thead')).toContainText('Evidence');
+  await expect(page.locator('#inventoryTable')).toContainText('EIT-SYNTHETIC-0001');
+  await expect(page.locator('#inventoryTable')).toContainText('1 file');
+  await expect(page.locator('#inventoryTable').getByRole('button', { name: 'View / Edit' })).toHaveCount(0);
+  await expect(page.locator('#inventoryTable').getByRole('button', { name: 'Transfer' })).toHaveCount(0);
+  await expect(page.locator('#inventoryTable').getByRole('button', { name: 'Archive' })).toHaveCount(0);
+
+  await controls.locator('[data-inventory-advanced-filter="category"]').selectOption('Equipment');
+  await controls.locator('[data-inventory-advanced-filter="unit"]').selectOption('piece');
+  await controls.locator('[data-inventory-advanced-filter="lendingAudience"]').selectOption('USC_STAFF_ONLY');
+  await expect(page.locator('#inventoryCount')).toHaveText('1 matching product');
+
+  await controls.locator('[data-inventory-advanced-filter="classification"]').selectOption('ALL');
+  await controls.locator('[data-inventory-advanced-filter="category"]').selectOption('ALL');
+  await controls.locator('[data-inventory-advanced-filter="unit"]').selectOption('ALL');
+  await controls.locator('[data-inventory-advanced-filter="lendingAudience"]').selectOption('ALL');
+  await controls.locator('[data-inventory-advanced-filter="sort"]').selectOption('ATP_ASC');
+  await expect(page.locator('#inventoryTable tbody tr').first().locator('td').first().locator('code')).toHaveText(
+    'SYNTHETIC-REUSABLE-NEGATIVE',
+  );
+
+  await controls.locator('[data-inventory-advanced-filter="lifecycle"]').selectOption('ARCHIVED');
+  await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-ARCHIVED');
+  await expect(page.locator('#inventoryTable')).not.toContainText('SYNTHETIC-REUSABLE-NEGATIVE');
+
+  await page.locator('#clearInventoryFilters').click();
+  await expect(controls.locator('[data-inventory-advanced-filter="lifecycle"]')).toHaveValue('ALL');
+  await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-REUSABLE-NEGATIVE');
 });

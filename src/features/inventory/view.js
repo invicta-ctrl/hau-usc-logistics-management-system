@@ -1,6 +1,7 @@
 import { statusChip, escapeHtml } from '../../components/status-chip.js';
 import { dataTable } from '../../components/data-table.js';
 import { mobileCardList } from '../../components/mobile-card-list.js';
+import { presentationLabel } from '../../domain/presentation-labels.js';
 import { overflowMenu } from '../../components/overflow-menu.js';
 import { paginate, pagination } from '../../components/pagination.js';
 import { availableToPromise } from '../../domain/inventory.js';
@@ -28,7 +29,7 @@ export function renderInventory(ctx) {
       recentDemand: 20,
       leadTimeDays: 7,
     });
-    return `<tr><td><strong>${escapeHtml(item.name)}</strong><code>${item.id}</code><small>${escapeHtml(item.category)} · ${item.unit}</small></td><td>${onHand}<small>Raw audit balance</small></td><td>${reserved}</td><td><strong class="${atp < 0 ? 'danger-text' : ''}">${atp}</strong><small>${atp < 0 ? 'Allocation blocked' : 'Available to promise'}</small></td><td>${suggestion ? statusChip('FOR_REVIEW', `Suggest ${suggestion}`) : statusChip('COMPLETED', 'Sufficient')}<small>Reorder at ${item.reorderThreshold}</small></td><td><button class="secondary" data-ledger-history="${item.id}">Ledger history</button></td></tr>`;
+    return `<tr><td><strong>${escapeHtml(item.name)}</strong><code>${item.id}</code><small>${escapeHtml(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${item.unit}</small></td><td>${onHand}<small>Raw audit balance</small></td><td>${reserved}</td><td><strong class="${atp < 0 ? 'danger-text' : ''}">${atp}</strong><small>${atp < 0 ? 'Allocation blocked' : 'Available to promise'}</small></td><td>${suggestion ? statusChip('FOR_REVIEW', `Suggest ${suggestion}`) : statusChip('COMPLETED', 'Sufficient')}<small>Reorder at ${item.reorderThreshold}</small></td><td><button class="secondary" data-ledger-history="${item.id}">Ledger history</button></td></tr>`;
   };
   return `<div class="view-grid"><section class="panel hero"><p class="eyebrow">Inventory Management</p><h2>Catalog metadata is separate from quantity truth.</h2><p>On-hand comes only from immutable ledger movements. Raw negative exceptions remain visible while new allocations are blocked.</p></section><section class="panel"><div class="panel-head"><div><h2>Catalog and balances</h2><p>Search, filters, scalable pagination, ledger context, cycle count, labels, and archive controls.</p></div><span class="pill">${filtered.length} active products</span></div><div class="toolbar"><input data-inventory-search value="${escapeHtml(ctx.ui.inventorySearch ?? '')}" placeholder="Search Product ID, name, alias, category, area, or specification" aria-label="Search inventory" /><select data-inventory-area><option value="ALL">All areas</option><option>Inventory</option><option>Pantry</option><option>Event-Specific</option></select><button class="secondary" data-clear-inventory>Clear all</button></div>${dataTable({ caption: 'Inventory catalog with ledger-derived balances', columns: ['Product', 'On hand', 'Reserved', 'Available', 'Reorder', 'Actions'], rows: page.rows, rowRenderer: row })}${mobileCardList(
     page.rows,
@@ -36,7 +37,7 @@ export function renderInventory(ctx) {
       const onHand = indexes.onHand.get(item.id) ?? 0;
       const reserved = indexes.reserved.get(item.id) ?? 0;
       const atp = availableToPromise(item.id, indexes);
-      return `<article class="card"><div class="button-row"><span class="pill">${item.id}</span>${statusChip(atp <= 0 ? 'FOR_REVIEW' : 'COMPLETED', atp <= 0 ? 'Verify' : 'Available')}</div><h3 class="section-gap">${escapeHtml(item.name)}</h3><p>${escapeHtml(item.category)} · ${item.area} · ${item.handling}</p><p><strong>On hand ${onHand}</strong> · Reserved ${reserved} · ATP <span class="${atp < 0 ? 'danger-text' : ''}">${atp}</span> ${item.unit}</p>${overflowMenu(
+      return `<article class="card"><div class="button-row"><span class="pill">${item.id}</span>${statusChip(atp <= 0 ? 'FOR_REVIEW' : 'COMPLETED', atp <= 0 ? 'Verify' : 'Available')}</div><h3 class="section-gap">${escapeHtml(item.name)}</h3><p>${escapeHtml(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${item.area} · ${escapeHtml(presentationLabel(item.handling, { context: 'handling', missing: 'Handling not reported' }))}</p><p><strong>On hand ${onHand}</strong> · Reserved ${reserved} · ATP <span class="${atp < 0 ? 'danger-text' : ''}">${atp}</span> ${item.unit}</p>${overflowMenu(
         item.id,
         [
           { action: 'ledger-history', label: `Open ${item.name} ledger history` },
@@ -98,7 +99,7 @@ export function mountInventory(ctx, root) {
       const item = ctx.state.inventoryItems.find((row) => row.id === button.dataset.id);
       openModal({
         title: `Label preview ${item.id}`,
-        body: `<div class="panel"><p class="eyebrow">HAU-USC Logistics</p><h2>${escapeHtml(item.name)}</h2><p>${item.id} · ${item.unit} · ${escapeHtml(item.storage)}</p><div class="empty-state section-gap"><strong>QR / barcode placeholder</strong><p>Production label service not connected.</p></div></div>`,
+        body: `<div class="panel"><p class="eyebrow">HAU-USC Logistics</p><h2>${escapeHtml(item.name)}</h2><p>${item.id} · ${item.unit} · ${escapeHtml(item.storage)}</p><div class="empty-state section-gap"><strong>Item label unavailable</strong><p>Label generation is not available in this workspace. No QR or barcode has been created.</p></div></div>`,
       });
     }),
   );
@@ -124,7 +125,7 @@ function showLedger(ctx, itemId) {
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   openDrawer({
     title: `${item.id} · ${escapeHtml(item.name)}`,
-    body: `<div class="grid-3"><div class="card metric"><span>On hand</span><strong>${indexes.onHand.get(itemId) ?? 0}</strong></div><div class="card metric"><span>Reserved</span><strong>${indexes.reserved.get(itemId) ?? 0}</strong></div><div class="card metric"><span>ATP</span><strong>${availableToPromise(itemId, indexes)}</strong></div></div><div class="list section-gap">${rows.map((txn) => `<div class="list-item"><span><strong>${txn.type} · ${txn.direction === 'IN' ? '+' : '-'}${txn.quantity}</strong><small>${txn.id} · ${txn.timestamp}<br>${escapeHtml(txn.note)}</small></span><code>${txn.auditCorrelationId}</code></div>`).join('')}</div>`,
+    body: `<div class="grid-3"><div class="card metric"><span>On hand</span><strong>${indexes.onHand.get(itemId) ?? 0}</strong></div><div class="card metric"><span>Reserved</span><strong>${indexes.reserved.get(itemId) ?? 0}</strong></div><div class="card metric"><span>ATP</span><strong>${availableToPromise(itemId, indexes)}</strong></div></div><div class="list section-gap">${rows.map((txn) => `<div class="list-item"><span><strong>${presentationLabel(txn.type)} · ${txn.direction === 'IN' ? '+' : '-'}${txn.quantity}</strong><small>${txn.id} · ${txn.timestamp}<br>${escapeHtml(txn.note)}</small></span><code>${txn.auditCorrelationId}</code></div>`).join('')}</div>`,
   });
 }
 

@@ -8,6 +8,7 @@ import {
   REQUEST_CENTER_UNITS,
 } from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
+import { isCountableUnit, isKnownQuantityUnit } from '../../domain/quantity-units.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -34,6 +35,8 @@ const METHOD_CAPABILITIES = Object.freeze({
   reviewRequest: CAPABILITIES.REQUEST_REVIEW,
   reserveStock: CAPABILITIES.FULFILL_RESERVE,
   saveCanvassReference: CAPABILITIES.FULFILL_CANVASS,
+  updateCanvassReference: CAPABILITIES.FULFILL_CANVASS,
+  archiveCanvassReference: CAPABILITIES.FULFILL_PROCURE,
   getMaterialsWorkQueue: CAPABILITIES.VIEW_INTERNAL,
   selectPreferredCanvass: CAPABILITIES.FULFILL_PROCURE,
   transitionDeliverable: CAPABILITIES.FULFILL_PROCURE,
@@ -53,6 +56,12 @@ const METHOD_CAPABILITIES = Object.freeze({
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
   classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
+  bulkClassifyInventoryItems: CAPABILITIES.INVENTORY_CLASSIFY,
+  createInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  updateInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  updateInventoryStorageContext: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  archiveInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  restoreInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
   getEventManagement: CAPABILITIES.EVENT_MANAGE,
   saveEventSeries: CAPABILITIES.EVENT_MANAGE,
   saveEventDay: CAPABILITIES.EVENT_MANAGE,
@@ -123,6 +132,54 @@ const optionalText = (value, max = 500) =>
     .trim()
     .slice(0, max);
 
+const canvassUnit = (value) => {
+  const unit = requiredText(value, 'unit', 40).toLowerCase();
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', 'Select a supported quantity unit.', {
+      details: { field: 'unit' },
+    });
+  }
+  return unit;
+};
+
+const canvassCheckedAt = (value) => {
+  const text = requiredText(value, 'checkedAt', 64);
+  const parsed = new Date(text);
+  const calendarDate = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/u.exec(text);
+  const calendarCheck = calendarDate
+    ? new Date(Date.UTC(Number(calendarDate[1]), Number(calendarDate[2]) - 1, Number(calendarDate[3])))
+    : null;
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    (calendarDate &&
+      (calendarCheck.getUTCFullYear() !== Number(calendarDate[1]) ||
+        calendarCheck.getUTCMonth() + 1 !== Number(calendarDate[2]) ||
+        calendarCheck.getUTCDate() !== Number(calendarDate[3])))
+  ) {
+    throw new ApiError('VALIDATION_FAILED', 'checkedAt must be a real date.', {
+      details: { field: 'checkedAt' },
+    });
+  }
+  return text;
+};
+
+const safeCanvassSourceUrl = (value) => {
+  const text = optionalText(value, 500);
+  if (!text) return '';
+  try {
+    const parsed = new URL(text);
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password)
+      throw new Error();
+  } catch {
+    throw new ApiError(
+      'VALIDATION_FAILED',
+      'sourceUrl must be a safe http(s) URL without embedded credentials.',
+      { details: { field: 'sourceUrl' } },
+    );
+  }
+  return text;
+};
+
 const positiveNumber = (value, field = 'quantity') => {
   const result = Number(value);
   if (!Number.isFinite(result) || result <= 0) {
@@ -133,11 +190,41 @@ const positiveNumber = (value, field = 'quantity') => {
   return result;
 };
 
+const positiveOperationalQuantity = (value, unit, field = 'quantity') => {
+  const result = positiveNumber(value, field);
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
+  if (isCountableUnit(unit) && !Number.isInteger(result)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
+  return result;
+};
+
 const nonNegativeNumber = (value, field = 'value') => {
   const result = Number(value);
   if (!Number.isFinite(result) || result < 0) {
     throw new ApiError('VALIDATION_FAILED', `${field} must be zero or greater.`, {
       details: { field },
+    });
+  }
+  return result;
+};
+
+const nonNegativeOperationalQuantity = (value, unit, field = 'quantity') => {
+  const result = nonNegativeNumber(value, field);
+  if (!isKnownQuantityUnit(unit)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
+      details: { field, unit: String(unit ?? '') },
+    });
+  }
+  if (isCountableUnit(unit) && !Number.isInteger(result)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+      details: { field, unit: String(unit ?? '') },
     });
   }
   return result;
@@ -414,6 +501,8 @@ export function filterOperationalData(data, selected) {
       next.ledgerTransactions = next.ledgerTransactions.filter((entry) =>
         itemIds.has(entry.itemId ?? entry.item_id),
       );
+    if (Array.isArray(next.reservations))
+      next.reservations = next.reservations.filter((entry) => itemIds.has(entry.itemId ?? entry.item_id));
   }
   if (selected.kind === 'EVENT_SERIES') {
     next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
@@ -599,7 +688,10 @@ export function enrichOperationalAuditAfter(after, operationalContext, timestamp
   };
 }
 
-function auditStatement(db, { action, entityType, entityId, accountId, correlationId, after = {} }) {
+function auditStatement(
+  db,
+  { action, entityType, entityId, accountId, correlationId, before = {}, after = {} },
+) {
   const timestamp = nowIso();
   const operationalContext = operationalAuditContexts.get(correlationId);
   return db
@@ -607,7 +699,7 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
       `INSERT INTO audit_log (
          id, created_at, action, entity_type, entity_id, actor_account_id,
          before_json, after_json, correlation_id, notes
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, '{}', ?7, ?8, '')`,
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '')`,
     )
     .bind(
       createId('AUD'),
@@ -616,6 +708,7 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
       entityType,
       entityId,
       accountId,
+      JSON.stringify(before),
       JSON.stringify(enrichOperationalAuditAfter(after, operationalContext, timestamp, correlationId)),
       correlationId,
     );
@@ -706,6 +799,32 @@ function revisionStatements(db, scopes, timestamp = nowIso()) {
   );
 }
 
+export async function runAtomicRevisionGuardedBatch(
+  db,
+  { beforeGuardStatements = [], guardedStatement, dependentStatements, conflictCode, conflictMessage },
+) {
+  try {
+    return await db.batch([
+      ...beforeGuardStatements,
+      guardedStatement,
+      // D1 returns batch results only after every statement has run. This strict
+      // NOT NULL assertion makes a zero-row guarded update abort and roll back
+      // the complete batch before any dependent records can commit.
+      db.prepare(
+        `UPDATE data_revisions
+         SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+         WHERE scope = 'global'`,
+      ),
+      ...dependentStatements,
+    ]);
+  } catch (error) {
+    if (String(error?.message ?? '').includes('NOT NULL constraint failed: data_revisions.updated_at')) {
+      throw new ApiError(conflictCode, conflictMessage, { status: 409 });
+    }
+    throw error;
+  }
+}
+
 async function replay(db, scope, key, actorId, command) {
   const idempotencyKey = requiredText(key, 'clientRequestId', 128);
   const requestFingerprint = await fingerprint(command);
@@ -752,6 +871,15 @@ async function rows(db, sql, bindings = []) {
 const INVENTORY_CLASSIFICATION_ROLES = new Set(['SYSTEM_OWNER', 'ADMINISTRATOR', 'DIRECTOR']);
 const INVENTORY_KINDS = new Set(['UNVERIFIED', 'REUSABLE', 'CONSUMABLE']);
 const CLASSIFICATION_STATUSES = new Set(['NEEDS_CLASSIFICATION', 'CLASSIFIED']);
+const INVENTORY_HANDLING = new Set([
+  'CONSUMABLE',
+  'LOANABLE',
+  'REUSABLE_ASSET',
+  'NON_CIRCULATING',
+  'TO_CLASSIFY',
+]);
+const INVENTORY_CATALOG_TYPES = new Set(['OFFICE_INVENTORY', 'PANTRY', 'EVENT_SPECIFIC']);
+const INVENTORY_STATUSES = new Set(['ACTIVE', 'VERIFY', 'INACTIVE']);
 const CONDITION_REVIEW_STATES = new Set([
   'NOT_ASSESSED',
   'NOT_APPLICABLE',
@@ -767,12 +895,72 @@ const MAINTENANCE_REVIEW_STATES = new Set([
   'CLEARED',
   'MAINTENANCE_REQUIRED',
 ]);
+const REUSABLE_CONDITION_REVIEW_STATES = new Set(['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']);
+const REUSABLE_MAINTENANCE_REVIEW_STATES = new Set(['CLEARED', 'MAINTENANCE_REQUIRED']);
 const LENDING_AUDIENCES = new Set([
   'NOT_AVAILABLE_FOR_LENDING',
   'USC_STAFF_ONLY',
   'STUDENTS_AND_STAFF',
   'DOL_INTERNAL_ONLY',
 ]);
+
+const normalizedCatalogEnum = (value, allowed, field, fallback = '') => {
+  const normalized = String(value ?? fallback)
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/gu, '_');
+  if (!allowed.has(normalized)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} is not supported.`, {
+      details: { field, value: String(value ?? '') },
+    });
+  }
+  return normalized;
+};
+
+const normalizedHandling = (value) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/gu, '_');
+  const aliased =
+    { REUSABLE: 'REUSABLE_ASSET', REUSABLEASSET: 'REUSABLE_ASSET', NONCIRCULATING: 'NON_CIRCULATING' }[
+      normalized
+    ] ?? normalized;
+  return normalizedCatalogEnum(aliased, INVENTORY_HANDLING, 'handling');
+};
+
+const normalizedAliases = (value) => {
+  const aliases = (Array.isArray(value) ? value : String(value ?? '').split(/[|,]/u))
+    .map((alias) => String(alias).normalize('NFKC').trim().replace(/\s+/gu, ' '))
+    .filter(Boolean);
+  if (aliases.length > 24 || aliases.some((alias) => alias.length > 120)) {
+    throw new ApiError('VALIDATION_FAILED', 'Aliases are limited to 24 values of 120 characters each.');
+  }
+  const unique = new Map();
+  for (const alias of aliases) unique.set(alias.toLocaleLowerCase('en-US'), alias);
+  return [...unique.entries()].map(([normalizedAlias, displayAlias]) => ({
+    normalizedAlias,
+    displayAlias,
+  }));
+};
+
+const optionalPositiveInteger = (value, field) => {
+  if (value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a positive integer.`, {
+      details: { field },
+    });
+  }
+  return number;
+};
+
+const booleanInput = (value, fallback = false) => {
+  if (value === '' || value === null || value === undefined) return fallback;
+  if (value === true || value === 1 || String(value).toLowerCase() === 'true') return true;
+  if (value === false || value === 0 || String(value).toLowerCase() === 'false') return false;
+  throw new ApiError('VALIDATION_FAILED', 'A boolean catalog value is invalid.');
+};
 
 function assertInventoryClassificationAccess(account) {
   assertCapability(account, CAPABILITIES.INVENTORY_CLASSIFY);
@@ -836,6 +1024,7 @@ const itemDto = (row, requestOnly = false) => ({
   imageUrl: row.image_asset_key ? `/brand/catalog/${encodeURIComponent(row.image_asset_key)}` : '',
   conditionTracked: row.condition_tracking === 1,
   approvalRequired: row.approval_required === 1,
+  updatedAt: row.updated_at,
   ...(requestOnly
     ? {}
     : {
@@ -895,6 +1084,68 @@ export const parseHistoryMetadata = (value) => {
     return {};
   }
 };
+
+const canvassDto = (row) => {
+  const preferredMetadata = parseHistoryMetadata(row.preferred_metadata_json);
+  return {
+    id: row.id,
+    linkedLineIds: row.linked_request_line_id ? [row.linked_request_line_id] : [],
+    linkedDeliverableId: row.linked_deliverable_id ?? '',
+    linkedRestockId: row.linked_restock_id ?? '',
+    supplierId: row.supplier_id ?? '',
+    supplierName: row.supplier_name,
+    location: row.supplier_location ?? '',
+    itemSpec: row.item_spec,
+    price: Number(row.price ?? 0),
+    unit: row.unit,
+    receiptStatus: row.receipt_status,
+    reliability: row.reliability,
+    checkedAt: row.checked_at,
+    sourceUrl: row.source_url,
+    evidenceId: row.evidence_id ?? '',
+    preferred: row.preferred === 1,
+    preferredRationale: row.preferred === 1 ? (preferredMetadata.rationale ?? '') : '',
+    status: row.status,
+    priceHistory: parseJsonArray(row.price_history_json),
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    createdBy: row.created_by,
+  };
+};
+
+const deliverableDto = (row) => ({
+  id: row.id,
+  requestId: row.request_id,
+  requestLineId: row.request_line_id,
+  eventSeriesId: row.event_series_id ?? '',
+  eventId: row.event_id ?? '',
+  itemId: row.inventory_match_id ?? '',
+  inventoryMatchId: row.inventory_match_id ?? '',
+  eventItemId: row.event_item_id ?? '',
+  itemSpec: row.item_spec,
+  quantity: Number(row.quantity_requested ?? 0),
+  quantityReceived: Number(row.quantity_received ?? 0),
+  quantityReleased: Number(row.quantity_released ?? 0),
+  unit: row.unit,
+  fulfillmentSource: row.fulfillment_source ?? '',
+  assignedCommittee: row.assigned_committee_id ?? '',
+  assignedStaff: row.assigned_account_id ?? '',
+  linkedCanvassIds: String(row.linked_canvass_ids ?? '')
+    .split('|')
+    .filter(Boolean),
+  preferredCanvassId: row.preferred_canvass_id ?? '',
+  budgetStatus: row.budget_status ?? '',
+  procurementStatus: row.procurement_status ?? '',
+  receiptStatus: row.receipt_status ?? '',
+  evidenceId: row.evidence_id ?? '',
+  neededAt: row.needed_at ?? '',
+  status: row.status,
+  notes: row.notes ?? '',
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+  createdBy: row.created_by ?? '',
+});
 
 const eventActivityDto = (row) => ({
   id: row.id,
@@ -1036,7 +1287,7 @@ async function revision(db, scope = 'global') {
 export function createD1OperationalService({
   db,
   environment = 'DEVELOPMENT',
-  appVersion = '0.7.0',
+  appVersion = '0.7.1',
   schemaVersion = '1.0.0',
   evidenceStore = null,
 }) {
@@ -1110,7 +1361,7 @@ export function createD1OperationalService({
       FROM inventory_items item
       JOIN lending_catalog_availability availability ON availability.item_id = item.id
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
-    const itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
+    let itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
     if (module === 'request') {
       const eventScope = requestOnly
@@ -1150,8 +1401,63 @@ export function createD1OperationalService({
         inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
       };
     } else if (module === 'inventory') {
+      itemRows = await rows(
+        db,
+        `SELECT item.*, availability.on_hand, availability.reserved,
+           availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+           availability.overdue, availability.expected_return_at, availability.traceable_assets,
+           availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+           availability.lendable_available,
+           (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias WHERE alias.item_id = item.id) AS aliases
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE item.status = 'ACTIVE'
+         ORDER BY item.name, item.id`,
+      );
+      const classificationHistoryRows = await rows(
+        db,
+        `SELECT history.id, history.item_id, history.revision, history.previous_status,
+           history.new_status, history.previous_kind, history.new_kind, history.lendable_enabled,
+           history.lending_audience, history.condition_review_state,
+           history.maintenance_review_state, history.asset_instance_count,
+           history.classification_notes, history.evidence_id, history.bulk_group_id,
+           history.occurred_at, history.actor_account_id, history.correlation_id
+         FROM inventory_classification_history history
+         JOIN inventory_items item ON item.id = history.item_id
+         WHERE item.status = 'ACTIVE'
+         ORDER BY history.occurred_at DESC, history.id DESC
+         LIMIT 500`,
+      );
+      const classificationHistoryByItem = new Map();
+      for (const entry of classificationHistoryRows) {
+        if (!classificationHistoryByItem.has(entry.item_id))
+          classificationHistoryByItem.set(entry.item_id, []);
+        classificationHistoryByItem.get(entry.item_id).push({
+          id: entry.id,
+          revision: Number(entry.revision),
+          previousStatus: entry.previous_status,
+          newStatus: entry.new_status,
+          previousKind: entry.previous_kind,
+          newKind: entry.new_kind,
+          isLendable: entry.lendable_enabled === 1,
+          lendingAudience: entry.lending_audience,
+          conditionReviewState: entry.condition_review_state,
+          maintenanceReviewState: entry.maintenance_review_state,
+          assetInstanceCount: Number(entry.asset_instance_count),
+          classificationNotes: entry.classification_notes,
+          evidenceId: entry.evidence_id,
+          bulkGroupId: entry.bulk_group_id,
+          occurredAt: entry.occurred_at,
+          actorAccountId: entry.actor_account_id,
+          correlationId: entry.correlation_id,
+        });
+      }
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row)),
+        inventoryItems: itemRows.map((row) => ({
+          ...itemDto(row),
+          assetInstanceCount: Number(row.traceable_assets ?? 0),
+          classificationHistory: classificationHistoryByItem.get(row.id) ?? [],
+        })),
         inventoryAssets: await rows(
           db,
           `SELECT id, item_id, asset_tag, serial_number, condition_label, lifecycle_status,
@@ -1182,7 +1488,8 @@ export function createD1OperationalService({
                     related_entity_type, related_entity_id, request_id, event_id, reversal_of,
                     status, notes, created_at
              FROM inventory_ledger
-             ORDER BY created_at DESC, id DESC LIMIT 100`,
+             ORDER BY created_at DESC, id DESC
+             LIMIT 500`,
           )
         ).map((row) => ({
           id: row.id,
@@ -1201,6 +1508,30 @@ export function createD1OperationalService({
           status: row.status,
           notes: row.notes,
           createdAt: row.created_at,
+        })),
+        reservations: (
+          await rows(
+            db,
+            `SELECT id, item_id, quantity, unit, request_line_id, lending_ticket_id,
+                    status, cleared_at, clear_reason, notes, created_at, updated_at, created_by
+             FROM reservations
+             ORDER BY created_at DESC, id DESC
+             LIMIT 500`,
+          )
+        ).map((row) => ({
+          id: row.id,
+          itemId: row.item_id,
+          quantity: Number(row.quantity),
+          unit: row.unit,
+          requestLineId: row.request_line_id,
+          lendingTicketId: row.lending_ticket_id,
+          status: row.status,
+          clearedAt: row.cleared_at,
+          clearReason: row.clear_reason,
+          notes: row.notes,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          createdBy: row.created_by,
         })),
       };
     } else if (module === 'lending') {
@@ -1437,14 +1768,22 @@ export function createD1OperationalService({
              LIMIT ?${restockLimitIndex} OFFSET ?${restockLimitIndex + 1}`,
             [...restockScope.values, page.pageSize, page.offset],
           ),
-          canvassReferences: await rows(
-            db,
-            `SELECT canvass.* FROM canvass_references canvass
+          canvassReferences: (
+            await rows(
+              db,
+              `SELECT canvass.*, supplier.location AS supplier_location,
+                (SELECT history.metadata_json FROM status_history history
+                 WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
+                   AND json_extract(history.metadata_json, '$.preferred') = 1
+                 ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
+                FROM canvass_references canvass
              JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
+             LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
              WHERE ${restockScope.sql} ORDER BY canvass.updated_at DESC
              LIMIT ?${restockLimitIndex} OFFSET ?${restockLimitIndex + 1}`,
-            [...restockScope.values, page.pageSize, page.offset],
-          ),
+              [...restockScope.values, page.pageSize, page.offset],
+            )
+          ).map(canvassDto),
         };
       } else if (module === 'procurement') {
         const deliverableScope = multiScopeWhere(account, {
@@ -1472,18 +1811,33 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          deliverables: await rows(
-            db,
-            `SELECT deliverable.* FROM deliverables deliverable
-             JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
-             WHERE ${deliverableScope.sql}
-             ORDER BY deliverable.updated_at DESC
-             LIMIT ?${deliverableLimitIndex} OFFSET ?${deliverableLimitIndex + 1}`,
-            [...deliverableScope.values, page.pageSize, page.offset],
-          ),
-          canvassReferences: await rows(
-            db,
-            `SELECT canvass.* FROM canvass_references canvass
+          deliverables: (
+            await rows(
+              db,
+              `SELECT deliverable.*,
+                (SELECT GROUP_CONCAT(canvass.id, '|') FROM canvass_references canvass
+                 WHERE canvass.status = 'ACTIVE' AND (
+                   canvass.linked_deliverable_id = deliverable.id OR
+                   canvass.linked_request_line_id = deliverable.request_line_id
+                 )) AS linked_canvass_ids
+               FROM deliverables deliverable
+               JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
+               WHERE ${deliverableScope.sql}
+               ORDER BY deliverable.updated_at DESC
+               LIMIT ?${deliverableLimitIndex} OFFSET ?${deliverableLimitIndex + 1}`,
+              [...deliverableScope.values, page.pageSize, page.offset],
+            )
+          ).map(deliverableDto),
+          canvassReferences: (
+            await rows(
+              db,
+              `SELECT canvass.*, supplier.location AS supplier_location,
+                (SELECT history.metadata_json FROM status_history history
+                 WHERE history.entity_type = 'CANVASS' AND history.entity_id = canvass.id
+                   AND json_extract(history.metadata_json, '$.preferred') = 1
+                 ORDER BY history.changed_at DESC, history.id DESC LIMIT 1) AS preferred_metadata_json
+                FROM canvass_references canvass
+             LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
              LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
              LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
              LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id
@@ -1492,8 +1846,9 @@ export function createD1OperationalService({
              WHERE ${canvassScope.sql}
              ORDER BY canvass.updated_at DESC
              LIMIT ?${canvassLimitIndex} OFFSET ?${canvassLimitIndex + 1}`,
-            [...canvassScope.values, page.pageSize, page.offset],
-          ),
+              [...canvassScope.values, page.pageSize, page.offset],
+            )
+          ).map(canvassDto),
         };
       } else if (module === 'overview') {
         const eventScope = multiScopeWhere(account, { committeeColumns: ['event.owner_committee_id'] });
@@ -1567,12 +1922,20 @@ export function createD1OperationalService({
       requestOnly,
       module,
       data,
-      pagination: {
-        page: page.page,
-        pageSize: page.pageSize,
-        total: Number(totalRow?.count ?? 0),
-        hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
-      },
+      pagination:
+        module === 'inventory'
+          ? {
+              page: 1,
+              pageSize: data.inventoryItems.length,
+              total: data.inventoryItems.length,
+              hasMore: false,
+            }
+          : {
+              page: page.page,
+              pageSize: page.pageSize,
+              total: Number(totalRow?.count ?? 0),
+              hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
+            },
       revision: globalRevision,
       scopeRevision: scopeRevision
         ? { scope: module, token: scopeRevision.revision, updatedAt: scopeRevision.updatedAt }
@@ -2120,6 +2483,83 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function canvassRecord(canvassId, { activeOnly = true } = {}) {
+    return db
+      .prepare(
+        `SELECT canvass.*, supplier.location AS supplier_location,
+           COALESCE(deliverable.assigned_committee_id, deliverable_request.owner_committee_id,
+             line_request.owner_committee_id, restock.assigned_committee_id) AS committee_id,
+           COALESCE(deliverable_request.requester_account_id, line_request.requester_account_id,
+             restock_request.requester_account_id, restock.created_by) AS owner_account_id
+         FROM canvass_references canvass
+         LEFT JOIN suppliers supplier ON supplier.id = canvass.supplier_id
+         LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
+         LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
+         LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id
+         LEFT JOIN requests line_request ON line_request.id = line.request_id
+         LEFT JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
+         LEFT JOIN requests restock_request ON restock_request.id = restock.source_request_id
+         WHERE canvass.id = ?1 ${activeOnly ? "AND canvass.status = 'ACTIVE'" : ''}`,
+      )
+      .bind(canvassId)
+      .first();
+  }
+
+  async function assertNoCanvassDuplicate(candidate, excludedId = '') {
+    const duplicate = await db
+      .prepare(
+        `SELECT id FROM canvass_references
+         WHERE status = 'ACTIVE' AND id <> ?1
+           AND COALESCE(linked_request_line_id, '') = ?2
+           AND COALESCE(linked_deliverable_id, '') = ?3
+           AND COALESCE(linked_restock_id, '') = ?4
+           AND LOWER(TRIM(supplier_name)) = ?5
+           AND LOWER(TRIM(item_spec)) = ?6
+           AND LOWER(TRIM(unit)) = ?7
+           AND checked_at = ?8
+         LIMIT 1`,
+      )
+      .bind(
+        excludedId,
+        candidate.linkedRequestLineId || '',
+        candidate.linkedDeliverableId || '',
+        candidate.linkedRestockId || '',
+        candidate.supplierName.toLowerCase(),
+        candidate.itemSpec.toLowerCase(),
+        candidate.unit.toLowerCase(),
+        candidate.checkedAt,
+      )
+      .first();
+    if (duplicate) {
+      throw new ApiError('CANVASS_DUPLICATE', 'An active matching canvass reference already exists.', {
+        status: 409,
+      });
+    }
+  }
+
+  async function resolveCanvassSupplier(command, current = null) {
+    const requestedSupplierId = optionalText(command.supplierId, 80);
+    let supplier = requestedSupplierId
+      ? await db
+          .prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1')
+          .bind(requestedSupplierId)
+          .first()
+      : null;
+    if (requestedSupplierId && !supplier) {
+      throw new ApiError('SUPPLIER_NOT_FOUND', 'The selected supplier was not found.', { status: 404 });
+    }
+    const supplierName =
+      supplier?.name ?? requiredText(command.supplierName ?? current?.supplier_name, 'supplierName', 160);
+    const normalizedName = supplierName.toLowerCase().replace(/\s+/gu, ' ');
+    supplier ??= await db
+      .prepare(
+        'SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1',
+      )
+      .bind(normalizedName)
+      .first();
+    return { supplier, supplierName: supplier?.name ?? supplierName, normalizedName };
+  }
+
   async function saveCanvassReference({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.saveCanvassReference);
     const link = await canvassLinkContext(command);
@@ -2133,37 +2573,44 @@ export function createD1OperationalService({
     });
     const mutation = await replay(db, 'saveCanvassReference', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
-    const supplierName = requiredText(command.supplierName, 'supplierName', 160);
-    const normalizedName = supplierName.toLowerCase().replace(/\s+/gu, ' ');
-    let supplier = command.supplierId
-      ? await db
-          .prepare('SELECT * FROM suppliers WHERE id = ?1 AND active = 1')
-          .bind(command.supplierId)
-          .first()
-      : await db
-          .prepare(
-            'SELECT * FROM suppliers WHERE normalized_name = ?1 AND active = 1 ORDER BY updated_at DESC LIMIT 1',
-          )
-          .bind(normalizedName)
-          .first();
-    if (command.supplierId && !supplier) {
-      throw new ApiError('SUPPLIER_NOT_FOUND', 'The selected supplier was not found.', { status: 404 });
-    }
+    const supplierResolution = await resolveCanvassSupplier(command);
     const timestamp = nowIso();
-    const supplierId = supplier?.id ?? createId('SUP');
+    const supplierId = supplierResolution.supplier?.id ?? createId('SUP');
     const canvassId = createId('CAN');
-    const price = nonNegativeNumber(command.price, 'price');
-    const checkedAt = optionalText(command.checkedAt, 64) || timestamp;
+    const candidate = {
+      linkedRequestLineId: link.linkedRequestLineId || '',
+      linkedDeliverableId: link.linkedDeliverableId || '',
+      linkedRestockId: link.linkedRestockId || '',
+      supplierName: supplierResolution.supplierName,
+      itemSpec: requiredText(command.itemSpec, 'itemSpec', 500).replace(/\s+/gu, ' '),
+      price: positiveNumber(command.price, 'price'),
+      unit: canvassUnit(command.unit),
+      receiptStatus: optionalText(command.receiptStatus, 80),
+      reliability: optionalText(command.reliability, 80),
+      checkedAt: canvassCheckedAt(command.checkedAt),
+      sourceUrl: safeCanvassSourceUrl(command.sourceUrl),
+      notes: optionalText(command.notes, 1000),
+    };
+    await assertNoCanvassDuplicate(candidate);
+    const priceHistory = [
+      {
+        price: candidate.price,
+        checkedAt: candidate.checkedAt,
+        recordedAt: timestamp,
+        recordedBy: account.id,
+      },
+    ];
     const result = {
       canvassId,
       id: canvassId,
       supplierId,
-      linkedRequestLineId: link.linkedRequestLineId || null,
+      linkedRequestLineId: candidate.linkedRequestLineId || null,
       status: 'ACTIVE',
+      updatedAt: timestamp,
       correlationId,
     };
     const statements = [];
-    if (!supplier) {
+    if (!supplierResolution.supplier) {
       statements.push(
         db
           .prepare(
@@ -2174,16 +2621,24 @@ export function createD1OperationalService({
           )
           .bind(
             supplierId,
-            supplierName,
-            normalizedName,
+            candidate.supplierName,
+            supplierResolution.normalizedName,
             optionalText(command.location, 240),
-            optionalText(command.receiptStatus, 80),
-            optionalText(command.reliability, 80),
+            candidate.receiptStatus,
+            candidate.reliability,
             optionalText(command.supplierNotes, 500),
             timestamp,
           ),
       );
     }
+    const after = {
+      ...candidate,
+      supplierId,
+      evidenceId,
+      preferred: false,
+      status: 'ACTIVE',
+      updatedAt: timestamp,
+    };
     statements.push(
       db
         .prepare(
@@ -2197,36 +2652,41 @@ export function createD1OperationalService({
         )
         .bind(
           canvassId,
-          link.linkedRequestLineId || null,
-          link.linkedDeliverableId || null,
-          link.linkedRestockId || null,
+          candidate.linkedRequestLineId || null,
+          candidate.linkedDeliverableId || null,
+          candidate.linkedRestockId || null,
           supplierId,
-          supplierName,
-          requiredText(command.itemSpec, 'itemSpec', 500),
-          price,
-          requiredText(command.unit, 'unit', 40),
-          optionalText(command.receiptStatus, 80),
-          optionalText(command.reliability, 80),
-          checkedAt,
-          optionalText(command.sourceUrl, 500),
+          candidate.supplierName,
+          candidate.itemSpec,
+          candidate.price,
+          candidate.unit,
+          candidate.receiptStatus,
+          candidate.reliability,
+          candidate.checkedAt,
+          candidate.sourceUrl,
           evidenceId,
-          JSON.stringify([{ price, checkedAt }]),
+          JSON.stringify(priceHistory),
           mutation.key,
-          optionalText(command.notes, 1000),
+          candidate.notes,
           timestamp,
           account.id,
         ),
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        newStatus: 'ACTIVE',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: 'Canvass reference created',
+        metadata: { before: null, after },
+      }),
       auditStatement(db, {
         action: 'CANVASS_REFERENCE_SAVED',
         entityType: 'CANVASS',
         entityId: canvassId,
         accountId: account.id,
         correlationId,
-        after: {
-          linkedRequestLineId: link.linkedRequestLineId || null,
-          linkedDeliverableId: link.linkedDeliverableId || null,
-          linkedRestockId: link.linkedRestockId || null,
-        },
+        after,
       }),
       idempotencyStatement(db, 'saveCanvassReference', mutation, account.id, result),
       ...revisionStatements(db, ['procurement', 'restocking']),
@@ -2235,30 +2695,220 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function updateCanvassReference({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.updateCanvassReference);
+    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+    assertEntityScope(account, {
+      committeeId: canvass.committee_id,
+      ownerAccountId: canvass.owner_account_id,
+    });
+    const mutation = await replay(db, 'updateCanvassReference', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 64);
+    if (expectedUpdatedAt !== canvass.updated_at) {
+      throw new ApiError('REVISION_CONFLICT', 'This canvass reference changed; refresh before updating.', {
+        status: 409,
+      });
+    }
+    const supplierResolution = await resolveCanvassSupplier(command, canvass);
+    const evidenceId =
+      (await requireStoredEvidence(command, {
+        evidenceTypes: ['CANVASS_QUOTE', 'CANVASS_PHOTO'],
+        relatedEntityIds: [
+          canvass.linked_request_line_id,
+          canvass.linked_deliverable_id,
+          canvass.linked_restock_id,
+        ],
+      })) ?? canvass.evidence_id;
+    const candidate = {
+      linkedRequestLineId: canvass.linked_request_line_id || '',
+      linkedDeliverableId: canvass.linked_deliverable_id || '',
+      linkedRestockId: canvass.linked_restock_id || '',
+      supplierName: supplierResolution.supplierName,
+      itemSpec: requiredText(command.itemSpec ?? canvass.item_spec, 'itemSpec', 500).replace(/\s+/gu, ' '),
+      price: positiveNumber(command.price ?? canvass.price, 'price'),
+      unit: canvassUnit(command.unit ?? canvass.unit),
+      receiptStatus: optionalText(command.receiptStatus ?? canvass.receipt_status, 80),
+      reliability: optionalText(command.reliability ?? canvass.reliability, 80),
+      checkedAt: canvassCheckedAt(command.checkedAt ?? canvass.checked_at),
+      sourceUrl: safeCanvassSourceUrl(command.sourceUrl ?? canvass.source_url),
+      notes: optionalText(command.notes ?? canvass.notes, 1000),
+    };
+    await assertNoCanvassDuplicate(candidate, canvassId);
+    const timestamp = nowIso();
+    const supplierId = supplierResolution.supplier?.id ?? createId('SUP');
+    const priceHistory = parseJsonArray(canvass.price_history_json);
+    if (Number(canvass.price) !== candidate.price || canvass.checked_at !== candidate.checkedAt) {
+      priceHistory.push({
+        price: candidate.price,
+        checkedAt: candidate.checkedAt,
+        recordedAt: timestamp,
+        recordedBy: account.id,
+      });
+    }
+    const after = {
+      ...candidate,
+      supplierId,
+      evidenceId,
+      preferred: canvass.preferred === 1,
+      status: 'ACTIVE',
+      updatedAt: timestamp,
+    };
+    const result = { canvassId, id: canvassId, updatedAt: timestamp, correlationId };
+    const beforeGuardStatements = [];
+    if (!supplierResolution.supplier) {
+      beforeGuardStatements.push(
+        db
+          .prepare(
+            `INSERT INTO suppliers (
+               id, name, normalized_name, location, receipt_capability, reliability,
+               active, notes, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 1, '', ?7, ?7)`,
+          )
+          .bind(
+            supplierId,
+            candidate.supplierName,
+            supplierResolution.normalizedName,
+            optionalText(command.location, 240),
+            candidate.receiptStatus,
+            candidate.reliability,
+            timestamp,
+          ),
+      );
+    }
+    const guardedStatement = db
+      .prepare(
+        `UPDATE canvass_references SET supplier_id = ?1, supplier_name = ?2, item_spec = ?3,
+           price = ?4, unit = ?5, receipt_status = ?6, reliability = ?7, checked_at = ?8,
+           source_url = ?9, evidence_id = ?10, price_history_json = ?11, notes = ?12, updated_at = ?13
+         WHERE id = ?14 AND updated_at = ?15`,
+      )
+      .bind(
+        supplierId,
+        candidate.supplierName,
+        candidate.itemSpec,
+        candidate.price,
+        candidate.unit,
+        candidate.receiptStatus,
+        candidate.reliability,
+        candidate.checkedAt,
+        candidate.sourceUrl,
+        evidenceId,
+        JSON.stringify(priceHistory),
+        candidate.notes,
+        timestamp,
+        canvassId,
+        expectedUpdatedAt,
+      );
+    const dependentStatements = [
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        previousStatus: 'ACTIVE',
+        newStatus: 'ACTIVE',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason, 500) || 'Canvass reference updated',
+        metadata: { before: canvassDto(canvass), after },
+      }),
+      auditStatement(db, {
+        action: 'CANVASS_REFERENCE_UPDATED',
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        accountId: account.id,
+        correlationId,
+        before: canvassDto(canvass),
+        after,
+      }),
+      idempotencyStatement(db, 'updateCanvassReference', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'restocking']),
+    ];
+    await runAtomicRevisionGuardedBatch(db, {
+      beforeGuardStatements,
+      guardedStatement,
+      dependentStatements,
+      conflictCode: 'REVISION_CONFLICT',
+      conflictMessage: 'This canvass reference changed; refresh before updating.',
+    });
+    return result;
+  }
+
+  async function archiveCanvassReference({ account, command, correlationId }) {
+    assertCapability(account, METHOD_CAPABILITIES.archiveCanvassReference);
+    const canvassId = requiredText(command.canvassId, 'canvassId', 80);
+    const mutation = await replay(
+      db,
+      'archiveCanvassReference',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
+      throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
+    assertEntityScope(account, {
+      committeeId: canvass.committee_id,
+      ownerAccountId: canvass.owner_account_id,
+    });
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 64);
+    if (expectedUpdatedAt !== canvass.updated_at) {
+      throw new ApiError('REVISION_CONFLICT', 'This canvass reference changed; refresh before archiving.', {
+        status: 409,
+      });
+    }
+    if (canvass.preferred === 1) {
+      throw new ApiError(
+        'PREFERRED_CANVASS_ARCHIVE_BLOCKED',
+        'Select another preferred canvass reference before archiving this one.',
+        { status: 409 },
+      );
+    }
+    const reason = requiredText(command.reason, 'reason', 500);
+    const timestamp = nowIso();
+    const after = { ...canvassDto(canvass), preferred: false, status: 'ARCHIVED', updatedAt: timestamp };
+    const result = { canvassId, id: canvassId, status: 'ARCHIVED', updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE canvass_references SET preferred = 0, status = 'ARCHIVED', updated_at = ?1
+           WHERE id = ?2 AND updated_at = ?3`,
+        )
+        .bind(timestamp, canvassId, expectedUpdatedAt),
+      historyStatement(db, {
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        previousStatus: 'ACTIVE',
+        newStatus: 'ARCHIVED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason,
+        metadata: { before: canvassDto(canvass), after },
+      }),
+      auditStatement(db, {
+        action: 'CANVASS_REFERENCE_ARCHIVED',
+        entityType: 'CANVASS',
+        entityId: canvassId,
+        accountId: account.id,
+        correlationId,
+        before: canvassDto(canvass),
+        after,
+      }),
+      idempotencyStatement(db, 'archiveCanvassReference', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'restocking']),
+    ]);
+    return result;
+  }
+
   async function selectPreferredCanvass({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.selectPreferredCanvass);
     const canvassId = requiredText(command.canvassId, 'canvassId', 80);
-    const canvass = await db
-      .prepare(
-        `SELECT canvass.*,
-           COALESCE(deliverable.assigned_committee_id, deliverable_request.owner_committee_id,
-             line_request.owner_committee_id, restock.assigned_committee_id) AS committee_id,
-           COALESCE(deliverable_request.requester_account_id, line_request.requester_account_id,
-             restock_request.requester_account_id, restock.created_by) AS owner_account_id
-         FROM canvass_references canvass
-         LEFT JOIN deliverables deliverable ON deliverable.id = canvass.linked_deliverable_id
-         LEFT JOIN requests deliverable_request ON deliverable_request.id = deliverable.request_id
-         LEFT JOIN request_lines line ON line.id = canvass.linked_request_line_id
-         LEFT JOIN requests line_request ON line_request.id = line.request_id
-         LEFT JOIN restock_requests restock ON restock.id = canvass.linked_restock_id
-         LEFT JOIN requests restock_request ON restock_request.id = restock.source_request_id
-         WHERE canvass.id = ?1 AND canvass.status = 'ACTIVE'`,
-      )
-      .bind(canvassId)
-      .first();
-    if (!canvass) {
+    const canvass = await canvassRecord(canvassId);
+    if (!canvass)
       throw new ApiError('CANVASS_NOT_FOUND', 'The canvass reference was not found.', { status: 404 });
-    }
     assertEntityScope(account, {
       committeeId: canvass.committee_id,
       ownerAccountId: canvass.owner_account_id,
@@ -2267,32 +2917,89 @@ export function createD1OperationalService({
     const mutation = await replay(db, 'selectPreferredCanvass', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const timestamp = nowIso();
+    const groupRows = await rows(
+      db,
+      `SELECT canvass.* FROM canvass_references canvass
+       WHERE canvass.status = 'ACTIVE' AND (
+         (?1 IS NOT NULL AND canvass.linked_request_line_id = ?1) OR
+         (?2 IS NOT NULL AND canvass.linked_deliverable_id = ?2) OR
+         (?3 IS NOT NULL AND canvass.linked_restock_id = ?3)
+       )`,
+      [canvass.linked_request_line_id, canvass.linked_deliverable_id, canvass.linked_restock_id],
+    );
     const result = {
       canvassId,
       preferred: true,
+      rationale,
       deliverableId: canvass.linked_deliverable_id ?? null,
       restockId: canvass.linked_restock_id ?? null,
+      updatedAt: timestamp,
       correlationId,
+    };
+    const groupDecision = {
+      selectedCanvassId: canvassId,
+      activeCanvassIds: groupRows.map((entry) => entry.id).sort(),
+      linkedRequestLineId: canvass.linked_request_line_id ?? null,
+      linkedDeliverableId: canvass.linked_deliverable_id ?? null,
+      linkedRestockId: canvass.linked_restock_id ?? null,
+      exclusivePreferenceApplied: true,
     };
     const statements = [
       db
         .prepare(
           `UPDATE canvass_references
-           SET preferred = CASE WHEN id = ?1 THEN 1 ELSE 0 END, updated_at = ?5
+           SET preferred = CASE WHEN id = ?1 THEN 1 ELSE 0 END, updated_at = ?2
            WHERE status = 'ACTIVE' AND (
-             (?2 IS NOT NULL AND linked_request_line_id = ?2) OR
-             (?3 IS NOT NULL AND linked_deliverable_id = ?3) OR
-             (?4 IS NOT NULL AND linked_restock_id = ?4)
+             (?3 IS NOT NULL AND linked_request_line_id = ?3) OR
+             (?4 IS NOT NULL AND linked_deliverable_id = ?4) OR
+             (?5 IS NOT NULL AND linked_restock_id = ?5)
            )`,
         )
         .bind(
           canvassId,
+          timestamp,
           canvass.linked_request_line_id,
           canvass.linked_deliverable_id,
           canvass.linked_restock_id,
-          timestamp,
         ),
     ];
+    for (const row of groupRows.filter((entry) => entry.id === canvassId || entry.preferred === 1)) {
+      const preferred = row.id === canvassId;
+      const before = canvassDto(row);
+      const after = {
+        ...before,
+        preferred,
+        preferredRationale: preferred ? rationale : '',
+        updatedAt: timestamp,
+      };
+      statements.push(
+        historyStatement(db, {
+          entityType: 'CANVASS',
+          entityId: row.id,
+          previousStatus: 'ACTIVE',
+          newStatus: 'ACTIVE',
+          accountId: account.id,
+          idempotencyKey: mutation.key,
+          reason: preferred ? rationale : `Preferred canvass changed to ${canvassId}`,
+          metadata: {
+            preferred,
+            ...(preferred ? { rationale } : { selectedCanvassId: canvassId }),
+            groupDecision,
+            before,
+            after,
+          },
+        }),
+        auditStatement(db, {
+          action: preferred ? 'PREFERRED_CANVASS_SELECTED' : 'PREFERRED_CANVASS_DESELECTED',
+          entityType: 'CANVASS',
+          entityId: row.id,
+          accountId: account.id,
+          correlationId,
+          before,
+          after: { ...after, groupDecision },
+        }),
+      );
+    }
     if (canvass.linked_deliverable_id || canvass.linked_request_line_id) {
       statements.push(
         db
@@ -2304,14 +3011,6 @@ export function createD1OperationalService({
       );
     }
     statements.push(
-      auditStatement(db, {
-        action: 'PREFERRED_CANVASS_SELECTED',
-        entityType: 'CANVASS',
-        entityId: canvassId,
-        accountId: account.id,
-        correlationId,
-        after: { rationale },
-      }),
       idempotencyStatement(db, 'selectPreferredCanvass', mutation, account.id, result),
       ...revisionStatements(db, ['procurement', 'restocking']),
     );
@@ -2670,7 +3369,30 @@ export function createD1OperationalService({
           timestamp,
         ),
     ];
-    lines.forEach((line, index) => {
+    for (let index = 0; index < lines.length; index += 1) {
+      const line = lines[index];
+      const itemId = optionalText(line.itemId, 80) || null;
+      let unit = requiredText(line.unit, `lines[${index}].unit`, 40);
+      if (itemId) {
+        const item = await db
+          .prepare("SELECT unit FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
+          .bind(itemId)
+          .first();
+        if (!item) {
+          throw new ApiError('ITEM_NOT_FOUND', `lines[${index}].itemId is unavailable.`, { status: 404 });
+        }
+        if (String(unit).trim().toLowerCase() !== String(item.unit).trim().toLowerCase()) {
+          throw new ApiError('UNIT_MISMATCH', `lines[${index}].unit must match the catalog item.`, {
+            details: { field: `lines[${index}].unit` },
+          });
+        }
+        unit = item.unit;
+      }
+      const quantity = positiveOperationalQuantity(
+        line.quantity ?? line.requestedQuantity,
+        unit,
+        `lines[${index}].quantity`,
+      );
       statements.push(
         db
           .prepare(
@@ -2685,12 +3407,12 @@ export function createD1OperationalService({
             createId('LIN'),
             requestId,
             optionalText(line.eventId ?? command.eventId, 80) || null,
-            optionalText(line.itemId, 80) || null,
+            itemId,
             requiredText(line.description ?? line.itemName, `lines[${index}].description`, 240),
             optionalText(line.specification, 1000),
             optionalText(line.category, 120),
-            positiveNumber(line.quantity ?? line.requestedQuantity, `lines[${index}].quantity`),
-            requiredText(line.unit, `lines[${index}].unit`, 40),
+            quantity,
+            unit,
             requiredText(line.fulfillmentSource ?? 'FOR_CANVASSING', `lines[${index}].fulfillmentSource`, 64),
             optionalText(line.splitGroupId, 80) || null,
             optionalText(line.neededAt, 64) || null,
@@ -2701,7 +3423,7 @@ export function createD1OperationalService({
             account.id,
           ),
       );
-    });
+    }
     statements.push(
       historyStatement(db, {
         entityType: 'REQUEST',
@@ -2943,7 +3665,7 @@ export function createD1OperationalService({
       lines.push({
         category,
         description,
-        quantity: positiveNumber(source.quantity, `lines[${index}].quantity`),
+        quantity: positiveOperationalQuantity(source.quantity, unit, `lines[${index}].quantity`),
         unit,
         specification: optionalText(source.specification, 1000),
       });
@@ -3126,7 +3848,6 @@ export function createD1OperationalService({
   async function reserveStock({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.reserveStock);
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const quantity = positiveNumber(command.quantity);
     const requestLineId = optionalText(command.requestLineId, 80);
     if (entityScope(account).mode !== 'ALL' && !requestLineId) {
       throw new ApiError('ENTITY_SCOPE_REQUIRED', 'A scoped request line is required for this reservation.', {
@@ -3156,6 +3877,7 @@ export function createD1OperationalService({
       .bind(itemId, 'ACTIVE')
       .first();
     if (!item) throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
+    const quantity = positiveOperationalQuantity(command.quantity, item.unit);
     const reservationId = createId('RSV');
     const result = { reservationId, id: reservationId, itemId, quantity, status: 'ACTIVE', correlationId };
     const inserted = db
@@ -3274,7 +3996,7 @@ export function createD1OperationalService({
           optionalText(command.department ?? command.departmentOrganization, 120),
           optionalText(command.contact, 120),
           itemId,
-          positiveNumber(command.quantity),
+          positiveOperationalQuantity(command.quantity, catalogItem.unit),
           requiredText(command.unit, 'unit', 40),
           requiredText(command.purpose, 'purpose', 500),
           optionalText(command.dueAt, 64) || null,
@@ -3384,7 +4106,7 @@ export function createD1OperationalService({
         status: 404,
       });
     }
-    const quantity = positiveNumber(command.quantity);
+    const quantity = positiveOperationalQuantity(command.quantity, item.lending_unit || item.unit);
     if (item.maximum_loan_quantity && quantity > Number(item.maximum_loan_quantity)) {
       throw new ApiError(
         'LENDING_QUANTITY_EXCEEDED',
@@ -3785,7 +4507,9 @@ export function createD1OperationalService({
     }
     const requestedQuantity = Number(ticket.requested_quantity ?? ticket.quantity);
     const approvedQuantity =
-      command.approvedQuantity == null ? requestedQuantity : positiveNumber(command.approvedQuantity);
+      command.approvedQuantity == null
+        ? requestedQuantity
+        : positiveOperationalQuantity(command.approvedQuantity, ticket.unit);
     if (approvedQuantity > requestedQuantity) {
       throw new ApiError(
         'LENDING_APPROVED_QUANTITY_INVALID',
@@ -4223,17 +4947,20 @@ export function createD1OperationalService({
     const returnId = createId('RTN');
     const returnCondition = requiredText(command.conditionLabel, 'conditionLabel', 80).toUpperCase();
     const ticketQuantity = Number(ticket.quantity);
-    const lostQuantity = nonNegativeNumber(
+    const lostQuantity = nonNegativeOperationalQuantity(
       command.lostQuantity ?? (returnCondition.includes('LOST') ? ticketQuantity : 0),
+      ticket.unit,
       'lostQuantity',
     );
-    const damagedBeyondUseQuantity = nonNegativeNumber(
+    const damagedBeyondUseQuantity = nonNegativeOperationalQuantity(
       command.damagedBeyondUseQuantity ??
         (returnCondition.includes('DAMAGED_BEYOND_USE') ? ticketQuantity : 0),
+      ticket.unit,
       'damagedBeyondUseQuantity',
     );
-    const returnedQuantity = nonNegativeNumber(
+    const returnedQuantity = nonNegativeOperationalQuantity(
       command.returnedQuantity ?? ticketQuantity - lostQuantity - damagedBeyondUseQuantity,
+      ticket.unit,
       'returnedQuantity',
     );
     if (Math.abs(returnedQuantity + lostQuantity + damagedBeyondUseQuantity - ticketQuantity) > 0.000001) {
@@ -4634,7 +5361,6 @@ export function createD1OperationalService({
     for (let index = 0; index < lines.length; index += 1) {
       const input = lines[index];
       const lineId = requiredText(input.requestLineId, `lines[${index}].requestLineId`, 80);
-      const quantity = positiveNumber(input.quantity, `lines[${index}].quantity`);
       const line = await db.prepare('SELECT * FROM request_lines WHERE id = ?1').bind(lineId).first();
       if (!line || line.request_id !== requestId) {
         throw new ApiError(
@@ -4643,6 +5369,7 @@ export function createD1OperationalService({
           { status: 409 },
         );
       }
+      const quantity = positiveOperationalQuantity(input.quantity, line.unit, `lines[${index}].quantity`);
       if (!['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(line.status)) {
         throw new ApiError('RELEASE_STATE_CONFLICT', 'A release line is not ready for physical handoff.', {
           status: 409,
@@ -4846,7 +5573,6 @@ export function createD1OperationalService({
       );
     }
     const releaseConfirmationId = requiredText(command.releaseConfirmationId, 'releaseConfirmationId', 100);
-    const quantity = positiveNumber(command.quantity, 'quantity');
     const reason = requiredText(command.reason, 'reason', 500);
     const confirmation = await db
       .prepare(
@@ -4867,6 +5593,7 @@ export function createD1OperationalService({
         status: 404,
       });
     }
+    const quantity = positiveOperationalQuantity(command.quantity, confirmation.unit, 'quantity');
     assertEntityScope(account, {
       committeeId: confirmation.owner_committee_id,
       ownerAccountId: confirmation.requester_account_id,
@@ -5050,7 +5777,6 @@ export function createD1OperationalService({
       kind === 'RESTOCK' ? 'restockId' : 'deliverableId',
       80,
     );
-    const quantity = positiveNumber(command.quantity ?? command.quantityReceived, 'quantity');
     const table = kind === 'RESTOCK' ? 'restock_requests' : 'deliverables';
     const entity = await db.prepare(`SELECT * FROM ${table} WHERE id = ?1`).bind(entityId).first();
     if (!entity) {
@@ -5058,6 +5784,11 @@ export function createD1OperationalService({
         status: 404,
       });
     }
+    const quantity = positiveOperationalQuantity(
+      command.quantity ?? command.quantityReceived,
+      entity.unit,
+      'quantity',
+    );
     let scopeRecord;
     if (kind === 'RESTOCK') {
       scopeRecord = await db
@@ -5244,6 +5975,619 @@ export function createD1OperationalService({
     return result;
   }
 
+  const catalogItemSnapshot = (row) => ({
+    ...itemDto(row),
+    verificationNote: row.verification_note ?? '',
+    notes: row.notes ?? '',
+    updatedAt: row.updated_at,
+  });
+
+  const loadCatalogItem = async (itemId) =>
+    db
+      .prepare(
+        `SELECT item.*, availability.on_hand, availability.reserved,
+           availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+           availability.overdue, availability.expected_return_at, availability.traceable_assets,
+           availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+           availability.lendable_available,
+           (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias
+             WHERE alias.item_id = item.id) AS aliases,
+           (SELECT COUNT(*) FROM inventory_ledger ledger WHERE ledger.item_id = item.id) AS ledger_count,
+           (SELECT COUNT(*) FROM reservations reservation WHERE reservation.item_id = item.id) AS reservation_count,
+           (SELECT COUNT(*) FROM lending_tickets ticket WHERE ticket.item_id = item.id) AS lending_ticket_count,
+           (SELECT COUNT(*) FROM request_lines line WHERE line.item_id = item.id) AS request_line_count,
+           (SELECT COUNT(*) FROM restock_requests restock WHERE restock.item_id = item.id) AS restock_count,
+           (SELECT COUNT(*) FROM inventory_asset_instances asset WHERE asset.item_id = item.id) AS asset_count
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE item.id = ?1`,
+      )
+      .bind(itemId)
+      .first();
+
+  const requireCatalogItem = async (itemId) => {
+    const item = await loadCatalogItem(itemId);
+    if (!item) throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
+    return item;
+  };
+
+  const requireCatalogRevision = (command, current) => {
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 80);
+    if (expectedUpdatedAt !== current.updated_at) {
+      throw new ApiError('CATALOG_REVISION_CONFLICT', 'This catalog item changed. Refresh before saving.', {
+        status: 409,
+      });
+    }
+  };
+
+  const nextCatalogTimestamp = (current = '') => {
+    const timestamp = nowIso();
+    if (!current || timestamp !== current) return timestamp;
+    return new Date(Date.parse(timestamp) + 1).toISOString();
+  };
+
+  const aliasStatements = (itemId, aliases, { replace = false } = {}) => [
+    ...(replace ? [db.prepare('DELETE FROM item_aliases WHERE item_id = ?1').bind(itemId)] : []),
+    ...aliases.map(({ normalizedAlias, displayAlias }) =>
+      db
+        .prepare(
+          `INSERT INTO item_aliases (item_id, normalized_alias, display_alias)
+           VALUES (?1, ?2, ?3)`,
+        )
+        .bind(itemId, normalizedAlias, displayAlias),
+    ),
+  ];
+
+  const catalogUnitDependencies = (current) => ({
+    ledger: Number(current.ledger_count ?? 0),
+    reservations: Number(current.reservation_count ?? 0),
+    lendingTickets: Number(current.lending_ticket_count ?? 0),
+    requestLines: Number(current.request_line_count ?? 0),
+    restockRecords: Number(current.restock_count ?? 0),
+    assets: Number(current.asset_count ?? 0),
+  });
+
+  const validateCatalogQuantities = ({ unit, reorderThreshold, maximumLoanQuantity, initialQuantity }) => ({
+    reorderThreshold: nonNegativeOperationalQuantity(reorderThreshold ?? 0, unit, 'reorderThreshold'),
+    maximumLoanQuantity:
+      maximumLoanQuantity === '' || maximumLoanQuantity === null || maximumLoanQuantity === undefined
+        ? null
+        : positiveOperationalQuantity(maximumLoanQuantity, unit, 'maximumLoanQuantity'),
+    initialQuantity:
+      initialQuantity === undefined
+        ? undefined
+        : nonNegativeOperationalQuantity(initialQuantity, unit, 'initialQuantity'),
+  });
+
+  async function createInventoryItem({ account, command, correlationId }) {
+    const authorization = assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'createInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = createId('ITM');
+    const name = requiredText(command.itemName ?? command.name, 'itemName', 240);
+    const category = requiredText(command.category, 'category', 120);
+    const stockArea = requiredText(command.stockArea, 'stockArea', 120);
+    const storageLocation = requiredText(command.storageLocation ?? 'TO_BE_ASSIGNED', 'storageLocation', 160);
+    const handling = normalizedHandling(command.handling ?? 'NON_CIRCULATING');
+    const unit = requiredText(command.unit, 'unit', 40).toLowerCase();
+    if (!isKnownQuantityUnit(unit)) {
+      throw new ApiError('VALIDATION_FAILED', `Catalog item uses an unsupported unit: ${unit}.`);
+    }
+    const status = normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status', 'ACTIVE');
+    const catalogType = normalizedCatalogEnum(
+      command.catalogType,
+      INVENTORY_CATALOG_TYPES,
+      'catalogType',
+      stockArea.toUpperCase() === 'PANTRY' ? 'PANTRY' : 'OFFICE_INVENTORY',
+    );
+    const quantities = validateCatalogQuantities({
+      unit,
+      reorderThreshold: command.reorderThreshold,
+      maximumLoanQuantity: command.maximumLoanQuantity,
+      initialQuantity: command.initialQuantity ?? command.quantity ?? 0,
+    });
+    if (
+      quantities.initialQuantity > 0 &&
+      !authorization.capabilities.includes(CAPABILITIES.FULFILL_RECEIVE) &&
+      !authorization.capabilities.includes(CAPABILITIES.INVENTORY_ADJUST) &&
+      !authorization.capabilities.includes(CAPABILITIES.SYSTEM_ADMIN)
+    ) {
+      throw new ApiError(
+        'CAPABILITY_REQUIRED',
+        'Receiving or inventory-adjustment permission is required to post initial stock.',
+        { status: 403 },
+      );
+    }
+    const aliases = normalizedAliases(command.aliases);
+    const defaultLoanDays = optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays');
+    const approvalRequired = booleanInput(command.approvalRequired, true);
+    const verificationNote = optionalText(command.verificationNote, 1000);
+    const notes = optionalText(command.notes, 2000);
+    const timestamp = nowIso();
+    const after = {
+      id: itemId,
+      name,
+      aliases: aliases.map((alias) => alias.displayAlias),
+      category,
+      stockArea,
+      storageLocation,
+      handling,
+      unit,
+      status,
+      catalogType,
+      reorderThreshold: quantities.reorderThreshold,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      defaultLoanDays,
+      maximumLoanQuantity: quantities.maximumLoanQuantity,
+      approvalRequired,
+      verificationNote,
+      notes,
+      inventoryKind: 'UNVERIFIED',
+      classificationStatus: 'NEEDS_CLASSIFICATION',
+      isLendable: false,
+      updatedAt: timestamp,
+    };
+    const transactionId = quantities.initialQuantity > 0 ? createId('TXN') : null;
+    const result = {
+      itemId,
+      status,
+      updatedAt: timestamp,
+      transactionId,
+      initialQuantityPosted: quantities.initialQuantity,
+      correlationId,
+    };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO inventory_items (
+             id, name, category, stock_area, handling, unit, opening_quantity, status,
+             catalog_type, storage_location, reorder_threshold, lending_audience,
+             default_loan_days, maximum_loan_quantity, approval_required, legacy_source_sheet,
+             verification_note, notes, created_at, updated_at, updated_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, ?9, ?10,
+             'NOT_AVAILABLE_FOR_LENDING', ?11, ?12, ?13, '', ?14, ?15, ?16, ?16, ?17)`,
+        )
+        .bind(
+          itemId,
+          name,
+          category,
+          stockArea,
+          handling,
+          unit,
+          status,
+          catalogType,
+          storageLocation,
+          quantities.reorderThreshold,
+          defaultLoanDays,
+          quantities.maximumLoanQuantity,
+          approvalRequired ? 1 : 0,
+          verificationNote,
+          notes,
+          timestamp,
+          account.id,
+        ),
+      ...aliasStatements(itemId, aliases),
+    ];
+    if (transactionId) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_ledger (
+               id, created_at, transaction_type, direction, item_id, quantity, unit,
+               signed_quantity, related_entity_type, related_entity_id, actor_account_id,
+               idempotency_key, status, notes
+             ) VALUES (?1, ?2, 'OPENING_BALANCE', 'IN', ?3, ?4, ?5, ?4,
+               'INVENTORY_ITEM', ?3, ?6, ?7, 'POSTED', ?8)`,
+          )
+          .bind(
+            transactionId,
+            timestamp,
+            itemId,
+            quantities.initialQuantity,
+            unit,
+            account.id,
+            `${mutation.key}:opening`,
+            optionalText(command.reason ?? command.notes ?? 'Catalog item creation', 1000),
+          ),
+      );
+    }
+    statements.push(
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Catalog item created', 500),
+        metadata: { before: {}, after },
+      }),
+      auditStatement(db, {
+        action: 'CREATE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before: {},
+        after,
+      }),
+      idempotencyStatement(db, 'createInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    );
+    await db.batch(statements);
+    return result;
+  }
+
+  async function updateInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'updateInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('ITEM_ARCHIVED', 'Restore this item before editing it.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const before = catalogItemSnapshot(current);
+    const has = (field) => Object.prototype.hasOwnProperty.call(command, field);
+    const name =
+      has('itemName') || has('name')
+        ? requiredText(command.itemName ?? command.name, 'itemName', 240)
+        : current.name;
+    const category = has('category') ? requiredText(command.category, 'category', 120) : current.category;
+    const stockArea = has('stockArea')
+      ? requiredText(command.stockArea, 'stockArea', 120)
+      : current.stock_area;
+    const storageLocation = has('storageLocation')
+      ? requiredText(command.storageLocation, 'storageLocation', 160)
+      : current.storage_location;
+    const handling = has('handling') ? normalizedHandling(command.handling) : current.handling;
+    const unit = has('unit') ? requiredText(command.unit, 'unit', 40).toLowerCase() : current.unit;
+    if (!isKnownQuantityUnit(unit)) {
+      throw new ApiError('VALIDATION_FAILED', `Catalog item uses an unsupported unit: ${unit}.`);
+    }
+    if (unit !== current.unit) {
+      const dependencies = catalogUnitDependencies(current);
+      if (Object.values(dependencies).some((count) => count > 0)) {
+        throw new ApiError(
+          'HISTORICAL_UNIT_CHANGE_BLOCKED',
+          'The unit cannot change because historical or active records depend on it.',
+          { status: 409, details: dependencies },
+        );
+      }
+    }
+    if (
+      handling !== current.handling &&
+      current.classification_status === 'CLASSIFIED' &&
+      handling !==
+        (current.inventory_kind === 'REUSABLE'
+          ? 'REUSABLE_ASSET'
+          : current.inventory_kind === 'CONSUMABLE'
+            ? 'CONSUMABLE'
+            : 'TO_CLASSIFY')
+    ) {
+      throw new ApiError(
+        'CLASSIFICATION_CONTROLLED_FIELD',
+        'Handling for a classified item must be changed through physical classification review.',
+        { status: 409 },
+      );
+    }
+    const status = has('status')
+      ? normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status')
+      : current.status;
+    const catalogType = has('catalogType')
+      ? normalizedCatalogEnum(command.catalogType, INVENTORY_CATALOG_TYPES, 'catalogType')
+      : current.catalog_type;
+    const quantities = validateCatalogQuantities({
+      unit,
+      reorderThreshold: has('reorderThreshold') ? command.reorderThreshold : current.reorder_threshold,
+      maximumLoanQuantity: has('maximumLoanQuantity')
+        ? command.maximumLoanQuantity
+        : current.maximum_loan_quantity,
+    });
+    const defaultLoanDays = has('defaultLoanDays')
+      ? optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays')
+      : current.default_loan_days;
+    const approvalRequired = has('approvalRequired')
+      ? booleanInput(command.approvalRequired, true)
+      : current.approval_required === 1;
+    let lendingAudience = has('lendingAudience')
+      ? normalizedCatalogEnum(command.lendingAudience, LENDING_AUDIENCES, 'lendingAudience')
+      : current.lending_audience;
+    const isLendable =
+      current.is_lendable === 1 &&
+      current.classification_status === 'CLASSIFIED' &&
+      status === 'ACTIVE' &&
+      handling !== 'NON_CIRCULATING';
+    if (!isLendable) lendingAudience = 'NOT_AVAILABLE_FOR_LENDING';
+    const verificationNote = has('verificationNote')
+      ? optionalText(command.verificationNote, 1000)
+      : current.verification_note;
+    const notes = has('notes') ? optionalText(command.notes, 2000) : current.notes;
+    const aliases = has('aliases') ? normalizedAliases(command.aliases) : normalizedAliases(current.aliases);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      name,
+      aliases: aliases.map((alias) => alias.displayAlias),
+      category,
+      stockArea,
+      storageLocation,
+      handling,
+      unit,
+      status,
+      catalogType,
+      reorderThreshold: quantities.reorderThreshold,
+      lendingAudience,
+      defaultLoanDays,
+      maximumLoanQuantity: handling === 'NON_CIRCULATING' ? null : quantities.maximumLoanQuantity,
+      approvalRequired,
+      verificationNote,
+      notes,
+      isLendable,
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status, updatedAt: timestamp, correlationId };
+    const guardedStatement = db
+      .prepare(
+        `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
+           storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
+           reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
+           maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
+           notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
+           updated_at = ?18, updated_by = ?19
+         WHERE id = ?20 AND updated_at = ?21`,
+      )
+      .bind(
+        name,
+        category,
+        stockArea,
+        storageLocation,
+        handling,
+        unit,
+        status,
+        catalogType,
+        quantities.reorderThreshold,
+        lendingAudience,
+        defaultLoanDays,
+        after.maximumLoanQuantity,
+        approvalRequired ? 1 : 0,
+        verificationNote,
+        notes,
+        isLendable ? 1 : 0,
+        isLendable ? 'ACTIVE' : 'NOT_LENDABLE',
+        timestamp,
+        account.id,
+        itemId,
+        current.updated_at,
+      );
+    const dependentStatements = [
+      ...(has('aliases') ? aliasStatements(itemId, aliases, { replace: true }) : []),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Catalog item updated', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'UPDATE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'updateInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ];
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement,
+      dependentStatements,
+      conflictCode: 'CATALOG_REVISION_CONFLICT',
+      conflictMessage: 'This catalog item changed. Refresh before saving.',
+    });
+    return result;
+  }
+
+  async function updateInventoryStorageContext({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(
+      db,
+      'updateInventoryStorageContext',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('ITEM_ARCHIVED', 'Restore this item before changing its storage context.', {
+        status: 409,
+      });
+    }
+    requireCatalogRevision(command, current);
+    const before = catalogItemSnapshot(current);
+    const stockArea = requiredText(command.stockArea, 'stockArea', 120);
+    const storageLocation = requiredText(command.storageLocation, 'storageLocation', 160);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = { ...before, stockArea, storageLocation, updatedAt: timestamp };
+    const result = { itemId, stockArea, storageLocation, updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET stock_area = ?1, storage_location = ?2,
+             updated_at = ?3, updated_by = ?4 WHERE id = ?5 AND updated_at = ?6`,
+        )
+        .bind(stockArea, storageLocation, timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: current.status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.note ?? command.reason ?? 'Storage context updated', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'UPDATE_INVENTORY_STORAGE',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'updateInventoryStorageContext', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory']),
+    ]);
+    return result;
+  }
+
+  async function archiveInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'archiveInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('INVALID_TRANSITION', 'This item is already archived.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const dependencies = await db
+      .prepare(
+        `SELECT balance.on_hand, balance.reserved,
+           (SELECT COUNT(*) FROM lending_tickets ticket WHERE ticket.item_id = item.id
+             AND ticket.status NOT IN ('RETURNED', 'COMPLETED', 'REJECTED', 'CANCELLED')) AS open_lending,
+           (SELECT COUNT(*) FROM request_lines line WHERE line.item_id = item.id
+             AND line.status NOT IN ('COMPLETED', 'REJECTED', 'CANCELLED')) AS active_lines,
+           (SELECT COUNT(*) FROM restock_requests restock WHERE restock.item_id = item.id
+             AND restock.status NOT IN ('RESTOCKED', 'COMPLETED', 'REJECTED', 'CANCELLED')) AS open_restocks,
+           (SELECT COUNT(*) FROM inventory_asset_instances asset WHERE asset.item_id = item.id
+             AND asset.lifecycle_status <> 'ARCHIVED') AS active_assets
+         FROM inventory_items item JOIN inventory_balances balance ON balance.item_id = item.id
+         WHERE item.id = ?1`,
+      )
+      .bind(itemId)
+      .first();
+    const dependencySummary = {
+      onHand: Number(dependencies?.on_hand ?? 0),
+      activeReservations: Number(dependencies?.reserved ?? 0),
+      openLendingTickets: Number(dependencies?.open_lending ?? 0),
+      activeRequestLines: Number(dependencies?.active_lines ?? 0),
+      openRestockRequests: Number(dependencies?.open_restocks ?? 0),
+      activeAssets: Number(dependencies?.active_assets ?? 0),
+    };
+    if (Object.values(dependencySummary).some((value) => value !== 0)) {
+      throw new ApiError(
+        'ARCHIVE_NOT_ALLOWED',
+        'Archive requires zero balance and no active reservation, lending, request, restock, or asset dependencies.',
+        { status: 409, details: dependencySummary },
+      );
+    }
+    const before = catalogItemSnapshot(current);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      status: 'ARCHIVED',
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status: 'ARCHIVED', updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET status = 'ARCHIVED', is_lendable = 0,
+             lending_audience = 'NOT_AVAILABLE_FOR_LENDING', lending_status = 'NOT_LENDABLE',
+             updated_at = ?1, updated_by = ?2 WHERE id = ?3 AND updated_at = ?4`,
+        )
+        .bind(timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: 'ARCHIVED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Item archived', 500),
+        metadata: { before, after, dependencies: dependencySummary },
+      }),
+      auditStatement(db, {
+        action: 'ARCHIVE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'archiveInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ]);
+    return result;
+  }
+
+  async function restoreInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'restoreInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status !== 'ARCHIVED') {
+      throw new ApiError('INVALID_TRANSITION', 'Only archived items may be restored.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const requestedStatus = normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status', 'ACTIVE');
+    const status = current.verification_note ? 'VERIFY' : requestedStatus;
+    const before = catalogItemSnapshot(current);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      status,
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status, updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET status = ?1, is_lendable = 0,
+             lending_audience = 'NOT_AVAILABLE_FOR_LENDING', lending_status = 'NOT_LENDABLE',
+             updated_at = ?2, updated_by = ?3 WHERE id = ?4 AND updated_at = ?5`,
+        )
+        .bind(status, timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: 'ARCHIVED',
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Item restored', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'RESTORE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'restoreInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ]);
+    return result;
+  }
+
   async function listInventoryClassifications({ account, command = {}, correlationId }) {
     assertInventoryClassificationAccess(account);
     const page = pageInput(command);
@@ -5363,11 +6707,14 @@ export function createD1OperationalService({
     };
   }
 
-  async function classifyInventoryItem({ account, command, correlationId }) {
-    assertInventoryClassificationAccess(account);
+  async function prepareInventoryClassification({
+    account,
+    command,
+    correlationId,
+    bulkGroupId = '',
+    idempotencyKey,
+  }) {
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const mutation = await replay(db, 'classifyInventoryItem', command.clientRequestId, account.id, command);
-    if (mutation.replayed) return mutation.value;
     const current = await db
       .prepare(
         `SELECT item.*,
@@ -5426,11 +6773,12 @@ export function createD1OperationalService({
     if (
       classificationStatus === 'CLASSIFIED' &&
       inventoryKind === 'REUSABLE' &&
-      (conditionReviewState === 'NOT_ASSESSED' || maintenanceReviewState === 'NOT_ASSESSED')
+      (!REUSABLE_CONDITION_REVIEW_STATES.has(conditionReviewState) ||
+        !REUSABLE_MAINTENANCE_REVIEW_STATES.has(maintenanceReviewState))
     ) {
       throw new ApiError(
         'PHYSICAL_REVIEW_REQUIRED',
-        'Reusable classification requires a physical condition and maintenance review.',
+        'Reusable classification requires recorded physical condition and maintenance outcomes.',
         { status: 409 },
       );
     }
@@ -5480,8 +6828,20 @@ export function createD1OperationalService({
       );
     }
     const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
-    if (!Number.isFinite(reorderThreshold) || reorderThreshold < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'Reorder threshold must be zero or greater.');
+    if (
+      !isKnownQuantityUnit(unit) ||
+      !Number.isFinite(reorderThreshold) ||
+      reorderThreshold < 0 ||
+      (isCountableUnit(unit) && !Number.isInteger(reorderThreshold))
+    ) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        !isKnownQuantityUnit(unit)
+          ? `Reorder threshold uses an unsupported unit: ${unit}.`
+          : isCountableUnit(unit)
+            ? `Reorder threshold must be a whole number for ${unit}.`
+            : 'Reorder threshold must be zero or greater.',
+      );
     }
     const classificationNotes = optionalText(command.classificationNotes, 1000);
     const evidenceId = optionalText(command.evidenceId, 120);
@@ -5547,7 +6907,6 @@ export function createD1OperationalService({
     }
     const timestamp = nowIso();
     const nextRevision = expectedRevision + 1;
-    const bulkGroupId = optionalText(command.bulkGroupId, 120);
     const handling =
       inventoryKind === 'REUSABLE'
         ? 'REUSABLE_ASSET'
@@ -5654,7 +7013,7 @@ export function createD1OperationalService({
         previousStatus: current.classification_status,
         newStatus: classificationStatus,
         accountId: account.id,
-        idempotencyKey: mutation.key,
+        idempotencyKey,
         reason: classificationNotes,
         metadata: { inventoryKind, isLendable, assetInstanceCount: requestedAssetCount },
       }),
@@ -5677,8 +7036,6 @@ export function createD1OperationalService({
           bulkGroupId,
         },
       }),
-      idempotencyStatement(db, 'classifyInventoryItem', mutation, account.id, result),
-      ...revisionStatements(db, ['inventory', 'lending']),
     ];
     for (const assetTag of assetTags) {
       const assetId = createId('AST');
@@ -5709,22 +7066,144 @@ export function createD1OperationalService({
           ),
       );
     }
+    return { result, statements };
+  }
+
+  function throwInventoryClassificationWriteError(error) {
+    if (String(error?.message ?? '').includes('inventory_classification_history.item_id')) {
+      throw new ApiError(
+        'CLASSIFICATION_REVISION_CONFLICT',
+        'This classification changed. Refresh the queue before saving.',
+        { status: 409 },
+      );
+    }
+    if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
+      throw new ApiError('ASSET_TAG_CONFLICT', 'An entered asset tag is already registered.', {
+        status: 409,
+      });
+    }
+    throw error;
+  }
+
+  async function classifyInventoryItem({ account, command, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    if (optionalText(command.bulkGroupId, 120)) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Bulk classification groups must use the atomic bulk classification action.',
+      );
+    }
+    const mutation = await replay(db, 'classifyInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const prepared = await prepareInventoryClassification({
+      account,
+      command,
+      correlationId,
+      idempotencyKey: mutation.key,
+    });
     try {
-      await db.batch(statements);
+      await db.batch([
+        ...prepared.statements,
+        idempotencyStatement(db, 'classifyInventoryItem', mutation, account.id, prepared.result),
+        ...revisionStatements(db, ['inventory', 'lending']),
+      ]);
     } catch (error) {
-      if (String(error?.message ?? '').includes('inventory_classification_history.item_id')) {
+      throwInventoryClassificationWriteError(error);
+    }
+    return prepared.result;
+  }
+
+  async function bulkClassifyInventoryItems({ account, command, correlationId }) {
+    assertInventoryClassificationAccess(account);
+    if (command.similarityConfirmed !== true && command.similarityConfirmed !== 'true') {
+      throw new ApiError(
+        'BULK_SIMILARITY_CONFIRMATION_REQUIRED',
+        'Confirm that every selected item received the same physical classification review.',
+        { status: 409 },
+      );
+    }
+    if (!Array.isArray(command.items) || command.items.length < 2 || command.items.length > 50) {
+      throw new ApiError('VALIDATION_FAILED', 'Bulk classification requires between 2 and 50 items.');
+    }
+    const bulkReason = requiredText(command.reason ?? command.items[0]?.classificationNotes, 'reason', 1000);
+    const itemIds = command.items.map((item) => requiredText(item?.itemId, 'itemId', 80));
+    if (new Set(itemIds).size !== itemIds.length) {
+      throw new ApiError('VALIDATION_FAILED', 'Each item may appear only once in a bulk classification.');
+    }
+    for (const item of command.items) {
+      if (optionalText(item.bulkGroupId, 120)) {
+        throw new ApiError('VALIDATION_FAILED', 'Bulk group identifiers are generated by the server.');
+      }
+      if (
+        String(item.classificationStatus ?? '')
+          .trim()
+          .toUpperCase() !== 'CLASSIFIED'
+      ) {
+        throw new ApiError('VALIDATION_FAILED', 'Bulk classification may only complete reviewed items.');
+      }
+      if (
+        item.isLendable === true ||
+        item.isLendable === 'true' ||
+        String(item.lendingAudience ?? 'NOT_AVAILABLE_FOR_LENDING')
+          .trim()
+          .toUpperCase() !== 'NOT_AVAILABLE_FOR_LENDING'
+      ) {
         throw new ApiError(
-          'CLASSIFICATION_REVISION_CONFLICT',
-          'This classification changed. Refresh the queue before saving.',
+          'BULK_LENDING_ENABLEMENT_BLOCKED',
+          'Bulk classification cannot enable lending for any selected item.',
           { status: 409 },
         );
       }
-      if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('ASSET_TAG_CONFLICT', 'An entered asset tag is already registered.', {
-          status: 409,
-        });
+      if (Array.isArray(item.assetTags) && item.assetTags.length) {
+        throw new ApiError(
+          'BULK_ASSET_CREATION_BLOCKED',
+          'Register new reusable asset instances through an individual classification review.',
+          { status: 409 },
+        );
       }
-      throw error;
+    }
+    const mutation = await replay(
+      db,
+      'bulkClassifyInventoryItems',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const bulkGroupId = createId('BCL');
+    const preparedItems = [];
+    for (const item of command.items) {
+      preparedItems.push(
+        await prepareInventoryClassification({
+          account,
+          command: {
+            ...item,
+            classificationNotes: optionalText(item.classificationNotes, 1000) || bulkReason,
+          },
+          correlationId,
+          bulkGroupId,
+          idempotencyKey: mutation.key,
+        }),
+      );
+    }
+    const result = {
+      itemIds,
+      count: itemIds.length,
+      bulkGroupId,
+      correlationId,
+      classificationRevisions: Object.fromEntries(
+        preparedItems.map(({ result: item }) => [item.itemId, item.classificationRevision]),
+      ),
+      items: preparedItems.map(({ result: item }) => item),
+    };
+    try {
+      await db.batch([
+        ...preparedItems.flatMap((prepared) => prepared.statements),
+        idempotencyStatement(db, 'bulkClassifyInventoryItems', mutation, account.id, result),
+        ...revisionStatements(db, ['inventory', 'lending']),
+      ]);
+    } catch (error) {
+      throwInventoryClassificationWriteError(error);
     }
     return result;
   }
@@ -5732,17 +7211,23 @@ export function createD1OperationalService({
   async function postCycleCountAdjustment({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.postCycleCountAdjustment);
     const itemId = requiredText(command.itemId, 'itemId', 80);
-    const countedQuantity = Number(command.countedQuantity);
-    if (!Number.isFinite(countedQuantity) || countedQuantity < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'countedQuantity must be zero or greater.');
-    }
     const balance = await db
-      .prepare('SELECT on_hand FROM inventory_balances WHERE item_id = ?1')
+      .prepare(
+        `SELECT balance.on_hand, item.unit
+         FROM inventory_balances balance
+         JOIN inventory_items item ON item.id = balance.item_id
+         WHERE balance.item_id = ?1`,
+      )
       .bind(itemId)
       .first();
     if (!balance) {
       throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
     }
+    const countedQuantity = nonNegativeOperationalQuantity(
+      command.countedQuantity,
+      balance.unit,
+      'countedQuantity',
+    );
     const delta = countedQuantity - Number(balance.on_hand);
     if (delta === 0) {
       throw new ApiError('NO_ADJUSTMENT_REQUIRED', 'The count already matches authoritative stock.');
@@ -6588,6 +8073,8 @@ export function createD1OperationalService({
     reviewRequest,
     reserveStock,
     saveCanvassReference,
+    updateCanvassReference,
+    archiveCanvassReference,
     getMaterialsWorkQueue,
     selectPreferredCanvass,
     transitionDeliverable,
@@ -6606,6 +8093,12 @@ export function createD1OperationalService({
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     listInventoryClassifications,
     classifyInventoryItem,
+    bulkClassifyInventoryItems,
+    createInventoryItem,
+    updateInventoryItem,
+    updateInventoryStorageContext,
+    archiveInventoryItem,
+    restoreInventoryItem,
     getEventManagement,
     saveEventSeries,
     saveEventDay,

@@ -1,4 +1,29 @@
-# HAU-USC V1 Autonomous Program - Slice 13 readiness checkpoint
+# HAU-USC v0.7.1 production recovery - reviewed release candidate
+
+> v0.7.1 authority update (2026-08-03): Slices 2 through 8 are locally
+> repository-accepted under
+> `.codex/specs/v0.7.1-production-recovery.md`. Routing/TOML preflight and the
+> read-only production truth audit passed from synchronized `main` at
+> `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`. Production remains operational
+> on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
+> historical Slice 13 material below does not override the active pointer.
+
+CURRENT SLICE: v0.7.1 complete release candidate
+
+CURRENT STAGE: SLICE_8_RELEASE_CANDIDATE_REVIEW_ACCEPTED_OWNER_GATES_REMAIN
+
+LAST UPDATED: 2026-08-03 (Asia/Manila)
+
+Repaired release-candidate code/test head:
+`42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Repository gates pass 576 tests;
+the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
+38/38; preview dry-run is binding-free. Production and external systems were
+untouched. The first final review's two P2s and one P3 are repaired. Fresh Sol
+correction re-review passes at `7338124554d5ad6f948587d69328dae731b38a6c`
+with no P0-P3; repository-side work is complete and external activation remains
+owner-gated.
+
+---
 
 > v0.6 authority update (2026-07-21): Phase 1 is complete at implementation checkpoint `c07e6e6ad5777710a68bef4d1d2aa553b964c108`. The active cross-version pointer is `.codex/CURRENT.md`; this file preserves the v0.5 Slice 13 staging record and does not authorize bypassing its distinct-identity acceptance blocker.
 

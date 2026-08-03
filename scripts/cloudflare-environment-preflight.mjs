@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isValidRecoveryHostname } from '../src/server/environment.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
@@ -28,6 +29,8 @@ function requiredEnvironment(config, expected, issues) {
   if (actual !== expected) issues.push(`${expected}: vars.ENVIRONMENT must be ${expected}`);
   if (!SHA.test(String(config.vars?.CANDIDATE_SHA ?? '')))
     issues.push(`${expected}: vars.CANDIDATE_SHA must be an exact 40-character commit SHA`);
+  if (!isValidRecoveryHostname(config.vars?.RECOVERY_HOSTNAME))
+    issues.push(`${expected}: vars.RECOVERY_HOSTNAME must be an exact .workers.dev hostname`);
   if (config.preview_urls === true) issues.push(`${expected}: preview_urls must not be enabled`);
   if (!config.observability?.logs?.enabled) issues.push(`${expected}: Workers Logs must be enabled`);
   if (!config.observability?.traces?.enabled) issues.push(`${expected}: Workers Traces must be enabled`);

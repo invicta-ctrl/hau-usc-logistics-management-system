@@ -69,6 +69,8 @@ const requiredFunctions = [
   'applyAuthorizationMapping',
   'api_submitRequest',
   'api_reviewRequest',
+  'api_updateCanvassReference',
+  'api_archiveCanvassReference',
   'api_confirmRelease',
   'api_uploadEvidence',
   'api_getDataRevision',
