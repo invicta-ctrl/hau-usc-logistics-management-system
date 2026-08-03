@@ -52,6 +52,18 @@ describe('production host routing', () => {
     });
   });
 
+  it('passes Wrangler local development requests to static dispatch', async () => {
+    const assetsFetch = vi.fn().mockResolvedValue(new Response('local asset'));
+    const response = await worker.fetch(new Request('http://127.0.0.1:8787/'), {
+      ENVIRONMENT: 'DEVELOPMENT',
+      ASSETS: { fetch: assetsFetch },
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('local asset');
+    expect(assetsFetch).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects accepted and recovery hosts when the environment is missing or unknown', () => {
     for (const environment of [undefined, 'UNRECOGNIZED']) {
       for (const hostname of [

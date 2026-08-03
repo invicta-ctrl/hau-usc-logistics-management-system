@@ -37,7 +37,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '28' },
+    database: { connected: true, schemaVersion: '29' },
   });
 
   await page.goto('/');
@@ -586,9 +586,12 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
     const queue = page.locator('[data-inventory-classification-queue]');
     await queue.locator('[data-classification-status]').selectOption('ALL');
     await queue.getByLabel('Search classification queue').fill(marker);
-    await expect(queue.locator('[data-classification-select]')).toHaveCount(2);
-    await queue.locator('[data-classification-select]').first().check();
-    await queue.locator('[data-classification-select]').nth(1).check();
+    const classificationSelections = queue.locator('[data-classification-select]');
+    await expect(classificationSelections).toHaveCount(2);
+    for (const selection of [classificationSelections.first(), classificationSelections.nth(1)]) {
+      await selection.locator('xpath=ancestor::label[1]').click();
+      await expect(selection).toBeChecked();
+    }
     await queue.getByRole('button', { name: 'Bulk classify selected' }).click();
     await expect(page.getByRole('heading', { name: 'Bulk classify 2 items' })).toBeVisible();
     await page.getByLabel('Classification notes').fill(`Second physical review ${marker}`);
@@ -901,8 +904,8 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await rosterControl.click();
   await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
   await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
-  await expect(ownerPage.getByLabel('Activity')).toBeVisible();
-  await expect(ownerPage.getByLabel('Verification')).toBeVisible();
+  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Activity')).toBeVisible();
+  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Verification')).toBeVisible();
   await expect(ownerPage.locator('[data-roster-directory]')).toHaveAttribute('aria-live', 'polite');
   const systemStatusControl = ownerPage.locator('[data-admin-control-surface="system-status"]');
   await expect(systemStatusControl).toBeVisible();
@@ -1418,7 +1421,7 @@ test('System Owner changes governed operational scope without losing identity or
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
 
   await workspace.selectOption('materials');
-  await expect(page).toHaveURL(/\/app\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
+  await expect(page).toHaveURL(/\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(
     'Viewing: Materials & Documentation',
@@ -1870,7 +1873,7 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
     });
 
     await page.goto('/app/materials');
-    await expect(page).toHaveURL(/\/app\/food$/u);
+    await expect(page).toHaveURL(/\/food$/u);
     await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
     const workspace = page.locator('[data-internal-shell-context]').getByLabel('Workspace');
     await expect(workspace).toHaveValue('food');
@@ -2631,7 +2634,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(requestLines.map((line) => line.status).sort()).toEqual(['FOR_CANVASSING', 'READY_TO_RESERVE']);
   expect(
     procurementData.data.deliverables.some(
-      (deliverable) => deliverable.request_id === requestId && deliverable.status === 'FOR_CANVASSING',
+      (deliverable) => deliverable.requestId === requestId && deliverable.status === 'FOR_CANVASSING',
     ),
   ).toBe(true);
   const stockLine = requestLines.find((line) => line.status === 'READY_TO_RESERVE');
