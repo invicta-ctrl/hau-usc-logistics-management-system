@@ -25,8 +25,8 @@ Date: 2026-08-03 (Asia/Manila)
 - The release-candidate workflow checks out an exact requested SHA, runs the
   complete repository gate, and produces a SHA- and artifact-bound package. It
   has no provider credential or deploy command.
-- `logistics.hau-usc.org`, `request.hau-usc.org`, and
-  `lending.hau-usc.org` route only to their accepted entry points. Request and
+- `logistics.hausc.org`, `request.hausc.org`, and
+  `lending.hausc.org` route only to their accepted entry points. Request and
   Lending root routes redirect on the same host while deep links remain valid.
   Unknown hosts, missing/unknown environments, and unconfigured recovery hosts
   fail closed before API or asset dispatch.

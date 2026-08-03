@@ -67,6 +67,38 @@ const esc = (value) =>
 const option = (value, label, selected) =>
   `<option value="${esc(value)}" ${String(value) === String(selected) ? 'selected' : ''}>${esc(label)}</option>`;
 
+const REUSABLE_CONDITION_REVIEW_STATES = new Set(['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']);
+const REUSABLE_MAINTENANCE_REVIEW_STATES = new Set(['CLEARED', 'MAINTENANCE_REQUIRED']);
+
+const normalizedReviewState = (value) => String(value ?? '').trim().toUpperCase();
+
+const isReusableConditionReviewState = (value) =>
+  REUSABLE_CONDITION_REVIEW_STATES.has(normalizedReviewState(value));
+
+const isReusableMaintenanceReviewState = (value) =>
+  REUSABLE_MAINTENANCE_REVIEW_STATES.has(normalizedReviewState(value));
+
+const assertReusablePhysicalAssessment = (
+  classificationStatus,
+  inventoryKind,
+  conditionReviewState,
+  maintenanceReviewState,
+) => {
+  if (
+    normalizedReviewState(classificationStatus) !== 'CLASSIFIED' ||
+    normalizedReviewState(inventoryKind) !== 'REUSABLE' ||
+    (isReusableConditionReviewState(conditionReviewState) &&
+      isReusableMaintenanceReviewState(maintenanceReviewState))
+  ) {
+    return;
+  }
+  const error = new Error(
+    'Reusable classification requires recorded physical condition and maintenance outcomes.',
+  );
+  error.code = 'PHYSICAL_REVIEW_REQUIRED';
+  throw error;
+};
+
 const safeReference = (value) => {
   const reference = String(value ?? '').trim();
   return /^(?:REQ_[A-Za-z0-9_-]{8,64}|INC-[A-Z0-9-]{4,64}|ACCESS_[A-Za-z0-9_-]{4,64})$/u.test(reference)
@@ -183,6 +215,12 @@ export function applyMockInventoryClassification(
   };
   const classificationStatus =
     payload.classificationStatus === 'CLASSIFIED' ? 'CLASSIFIED' : 'NEEDS_CLASSIFICATION';
+  assertReusablePhysicalAssessment(
+    classificationStatus,
+    payload.inventoryKind,
+    payload.conditionReviewState,
+    payload.maintenanceReviewState,
+  );
   const isLendable =
     classificationStatus === 'CLASSIFIED' &&
     payload.isLendable === true &&
@@ -7618,6 +7656,17 @@ export function createRuntimeExtensions(options) {
 
   const classificationFormHtml = (item) => {
     const history = item.classificationHistory ?? [];
+    const inventoryKind = normalizedReviewState(item.inventoryKind);
+    const reusable = inventoryKind === 'REUSABLE';
+    const classifiedReusable = reusable && normalizedReviewState(item.classificationStatus) === 'CLASSIFIED';
+    const reviewState = (value, isAllowed) => {
+      const normalized = normalizedReviewState(value);
+      if (!reusable) return '';
+      if (classifiedReusable) return isAllowed(normalized) ? normalized : '';
+      return normalized === 'NOT_ASSESSED' || isAllowed(normalized) ? normalized : 'NOT_ASSESSED';
+    };
+    const conditionReviewState = reviewState(item.conditionReviewState, isReusableConditionReviewState);
+    const maintenanceReviewState = reviewState(item.maintenanceReviewState, isReusableMaintenanceReviewState);
     return `<form id="inventoryClassificationForm">
       <div class="mode-note"><strong>${esc(item.id)} · ${esc(item.name)}</strong><br>On hand ${esc(item.onHand ?? 0)}; reserved ${esc(item.reserved ?? 0)}; available ${esc(item.availableToPromise ?? 0)} ${esc(item.unit)}. Quantity is ledger-derived and cannot be edited here.</div>
       <div class="form-grid section-gap">
@@ -7627,8 +7676,8 @@ export function createRuntimeExtensions(options) {
         <label>Storage location<input name="storageLocation" value="${esc(item.storageLocation ?? '')}" required></label>
         <label>Unit<input name="unit" value="${esc(item.unit ?? '')}" required><small>Historical units cannot be changed after ledger activity.</small></label>
         <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(item.unit, { allowZero: true })} value="${esc(item.reorderThreshold ?? 0)}" required></label>
-        <label>Condition review<select name="conditionReviewState">${option('NOT_ASSESSED', 'Not assessed', item.conditionReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.conditionReviewState)}${option('NEW', 'New', item.conditionReviewState)}${option('GOOD', 'Good', item.conditionReviewState)}${option('FAIR', 'Fair', item.conditionReviewState)}${option('POOR', 'Poor / quarantine', item.conditionReviewState)}${option('DAMAGED', 'Damaged', item.conditionReviewState)}</select></label>
-        <label>Maintenance review<select name="maintenanceReviewState">${option('NOT_ASSESSED', 'Not assessed', item.maintenanceReviewState)}${option('NOT_APPLICABLE', 'Not applicable', item.maintenanceReviewState)}${option('CLEARED', 'Cleared', item.maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', item.maintenanceReviewState)}</select></label>
+        <label>Condition review<select name="conditionReviewState"><option value="" ${conditionReviewState ? '' : 'selected'} disabled>Select physically reviewed condition</option>${option('NOT_ASSESSED', 'Not assessed', conditionReviewState)}${option('NEW', 'New', conditionReviewState)}${option('GOOD', 'Good', conditionReviewState)}${option('FAIR', 'Fair', conditionReviewState)}${option('POOR', 'Poor / quarantine', conditionReviewState)}${option('DAMAGED', 'Damaged', conditionReviewState)}</select></label>
+        <label>Maintenance review<select name="maintenanceReviewState"><option value="" ${maintenanceReviewState ? '' : 'selected'} disabled>Select physical maintenance outcome</option>${option('NOT_ASSESSED', 'Not assessed', maintenanceReviewState)}${option('CLEARED', 'Cleared', maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', maintenanceReviewState)}</select></label>
         <label class="checkbox span-2"><input name="isLendable" type="checkbox" value="true" ${item.isLendable ? 'checked' : ''}> Enable lending after this review</label>
         <label>Lending audience<select name="lendingAudience">${option('NOT_AVAILABLE_FOR_LENDING', 'Not available for lending', item.lendingAudience)}${option('USC_STAFF_ONLY', 'USC officers and staff only', item.lendingAudience)}${option('STUDENTS_AND_STAFF', 'Students and USC staff', item.lendingAudience)}${option('DOL_INTERNAL_ONLY', 'DOL internal only', item.lendingAudience)}</select></label>
         <label class="checkbox"><input name="enableLendingConfirmed" type="checkbox" value="true"> I explicitly confirm lending may be enabled</label>
@@ -7698,9 +7747,9 @@ export function createRuntimeExtensions(options) {
       .toUpperCase();
     const reason = String(draft.classificationNotes ?? '').trim();
     const conditionReviewState =
-      draft.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED');
+      draft.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : '');
     const maintenanceReviewState =
-      draft.maintenanceReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED');
+      draft.maintenanceReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : '');
     const payload = {
       reason,
       similarityConfirmed: draft.similarityConfirmed === true || draft.similarityConfirmed === 'true',
@@ -7743,11 +7792,40 @@ export function createRuntimeExtensions(options) {
       const sync = () => {
         const reusable = form.elements.inventoryKind.value === 'REUSABLE';
         const classified = form.elements.classificationStatus.value === 'CLASSIFIED';
+        const classifiedReusable = reusable && classified;
+        const conditionReviewState = form.elements.conditionReviewState;
+        const maintenanceReviewState = form.elements.maintenanceReviewState;
+        const conditionNotAssessed = conditionReviewState.querySelector('option[value="NOT_ASSESSED"]');
+        const maintenanceNotAssessed = maintenanceReviewState.querySelector('option[value="NOT_ASSESSED"]');
         if (!classified) form.elements.isLendable.checked = false;
         form.elements.isLendable.disabled = !classified;
         const lendable = classified && form.elements.isLendable.checked;
-        form.elements.conditionReviewState.disabled = !reusable;
-        form.elements.maintenanceReviewState.disabled = !reusable;
+        conditionReviewState.disabled = !reusable;
+        maintenanceReviewState.disabled = !reusable;
+        conditionReviewState.required = classifiedReusable;
+        maintenanceReviewState.required = classifiedReusable;
+        conditionNotAssessed.disabled = classifiedReusable;
+        maintenanceNotAssessed.disabled = classifiedReusable;
+        if (classifiedReusable) {
+          if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
+          if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
+        } else if (reusable) {
+          if (
+            conditionReviewState.value !== 'NOT_ASSESSED' &&
+            !isReusableConditionReviewState(conditionReviewState.value)
+          ) {
+            conditionReviewState.value = 'NOT_ASSESSED';
+          }
+          if (
+            maintenanceReviewState.value !== 'NOT_ASSESSED' &&
+            !isReusableMaintenanceReviewState(maintenanceReviewState.value)
+          ) {
+            maintenanceReviewState.value = 'NOT_ASSESSED';
+          }
+        } else {
+          conditionReviewState.value = '';
+          maintenanceReviewState.value = '';
+        }
         form.elements.assetInstanceCountIfReusable.disabled = !reusable;
         form.elements.assetTags.disabled = !reusable;
         form.elements.assetTrackingConfirmed.disabled = !reusable;
@@ -7791,16 +7869,23 @@ export function createRuntimeExtensions(options) {
   const openBulkInventoryClassification = (items) => {
     openModal(
       `Bulk classify ${items.length} items`,
-      `<form id="bulkInventoryClassificationForm"><div class="mode-note"><strong>Safe bulk path: non-lendable only.</strong><br>Use this only after physically verifying that every selected item is genuinely similar. Existing stock area, storage location, unit, reorder threshold, and asset records are preserved.</div><div class="form-grid section-gap"><label>Inventory kind<select name="inventoryKind"><option value="CONSUMABLE">Consumable</option><option value="REUSABLE">Reusable</option></select></label><label>Condition review<select name="conditionReviewState"><option value="NOT_APPLICABLE">Not applicable</option><option value="NEW">New</option><option value="GOOD">Good</option><option value="FAIR">Fair</option><option value="POOR">Poor / quarantine</option><option value="DAMAGED">Damaged</option></select></label><label>Maintenance review<select name="maintenanceReviewState"><option value="NOT_APPLICABLE">Not applicable</option><option value="CLEARED">Cleared</option><option value="MAINTENANCE_REQUIRED">Maintenance required</option></select></label><label class="span-2">Classification notes<textarea name="classificationNotes" maxlength="1000" required></textarea></label><label class="checkbox span-2"><input name="similarityConfirmed" type="checkbox" value="true" required> I physically reviewed the selected items, confirm they are genuinely similar, and understand this action cannot enable lending.</label></div><button class="primary" type="submit">Classify Selected as Non-lendable</button></form>`,
+      `<form id="bulkInventoryClassificationForm"><div class="mode-note"><strong>Safe bulk path: non-lendable only.</strong><br>Use this only after physically verifying that every selected item is genuinely similar. Existing stock area, storage location, unit, reorder threshold, and asset records are preserved.</div><div class="form-grid section-gap"><label>Inventory kind<select name="inventoryKind"><option value="CONSUMABLE">Consumable</option><option value="REUSABLE">Reusable</option></select></label><label>Condition review<select name="conditionReviewState"><option value="" selected disabled>Select physically reviewed condition</option><option value="NEW">New</option><option value="GOOD">Good</option><option value="FAIR">Fair</option><option value="POOR">Poor / quarantine</option><option value="DAMAGED">Damaged</option></select></label><label>Maintenance review<select name="maintenanceReviewState"><option value="" selected disabled>Select physical maintenance outcome</option><option value="CLEARED">Cleared</option><option value="MAINTENANCE_REQUIRED">Maintenance required</option></select></label><label class="span-2">Classification notes<textarea name="classificationNotes" maxlength="1000" required></textarea></label><label class="checkbox span-2"><input name="similarityConfirmed" type="checkbox" value="true" required> I physically reviewed the selected items, confirm they are genuinely similar, and understand this action cannot enable lending.</label></div><button class="primary" type="submit">Classify Selected as Non-lendable</button></form>`,
       (modal) => {
         const form = modal.querySelector('#bulkInventoryClassificationForm');
         const sync = () => {
           const reusable = form.elements.inventoryKind.value === 'REUSABLE';
-          form.elements.conditionReviewState.disabled = !reusable;
-          form.elements.maintenanceReviewState.disabled = !reusable;
+          const conditionReviewState = form.elements.conditionReviewState;
+          const maintenanceReviewState = form.elements.maintenanceReviewState;
+          conditionReviewState.disabled = !reusable;
+          maintenanceReviewState.disabled = !reusable;
+          conditionReviewState.required = reusable;
+          maintenanceReviewState.required = reusable;
           if (!reusable) {
-            form.elements.conditionReviewState.value = 'NOT_APPLICABLE';
-            form.elements.maintenanceReviewState.value = 'NOT_APPLICABLE';
+            conditionReviewState.value = '';
+            maintenanceReviewState.value = '';
+          } else {
+            if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
+            if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
           }
         };
         form.elements.inventoryKind.addEventListener('change', sync);

@@ -393,6 +393,31 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       assetTags: [`PHASE17-${crypto.randomUUID()}`],
       classificationNotes: 'Synthetic local physical classification proof',
     };
+    const incompleteReusableResponse = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', {
+      ...command,
+      clientRequestId: `classification-incomplete-reusable-${crypto.randomUUID()}`,
+      conditionReviewState: 'NOT_APPLICABLE',
+      maintenanceReviewState: 'NOT_APPLICABLE',
+    });
+    expect(incompleteReusableResponse.status()).toBe(409);
+    await expect(incompleteReusableResponse.json()).resolves.toMatchObject({
+      code: 'PHYSICAL_REVIEW_REQUIRED',
+    });
+    const stillPendingResponse = await mutate(inventory, inventoryCsrf, 'listInventoryClassifications', {
+      status: 'NEEDS_CLASSIFICATION',
+      search: fixture.id,
+      page: 1,
+      pageSize: 10,
+    });
+    expect(stillPendingResponse.status()).toBe(200);
+    const stillPending = await stillPendingResponse.json();
+    expect(stillPending.items).toContainEqual(
+      expect.objectContaining({
+        id: fixture.id,
+        classificationRevision: fixture.classificationRevision,
+        classificationHistory: [],
+      }),
+    );
     const classifiedResponse = await mutate(inventory, inventoryCsrf, 'classifyInventoryItem', command);
     expect(classifiedResponse.status()).toBe(200);
     const classified = await classifiedResponse.json();
@@ -496,6 +521,33 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
       evidenceId: '',
     }));
 
+    const incompleteReusableResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', {
+      clientRequestId: `bulk-classification-incomplete-reusable-${marker}`,
+      reason: `Incomplete reusable physical review ${marker}`,
+      similarityConfirmed: true,
+      items: commands.map((item) => ({
+        ...item,
+        inventoryKind: 'REUSABLE',
+        conditionReviewState: 'NOT_APPLICABLE',
+        maintenanceReviewState: 'NOT_APPLICABLE',
+      })),
+    });
+    expect(incompleteReusableResponse.status()).toBe(409);
+    await expect(incompleteReusableResponse.json()).resolves.toMatchObject({
+      code: 'PHYSICAL_REVIEW_REQUIRED',
+    });
+    const afterIncompleteReusable = await (
+      await mutate(owner, ownerCsrf, 'listInventoryClassifications', {
+        status: 'NEEDS_CLASSIFICATION',
+        search: marker,
+        page: 1,
+        pageSize: 10,
+      })
+    ).json();
+    expect(afterIncompleteReusable.items).toHaveLength(2);
+    expect(afterIncompleteReusable.items.every((item) => item.classificationRevision === 1)).toBe(true);
+    expect(afterIncompleteReusable.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
+
     const staleResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', {
       clientRequestId: `bulk-classification-stale-${marker}`,
       reason: `Physically reviewed together ${marker}`,
@@ -594,6 +646,22 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
     }
     await queue.getByRole('button', { name: 'Bulk classify selected' }).click();
     await expect(page.getByRole('heading', { name: 'Bulk classify 2 items' })).toBeVisible();
+    const bulkForm = page.locator('#bulkInventoryClassificationForm');
+    const inventoryKind = bulkForm.getByLabel('Inventory kind');
+    const conditionReview = bulkForm.getByLabel('Condition review');
+    const maintenanceReview = bulkForm.getByLabel('Maintenance review');
+    await expect(conditionReview).toBeDisabled();
+    await expect(maintenanceReview).toBeDisabled();
+    await inventoryKind.selectOption('REUSABLE');
+    await expect(conditionReview).toBeEnabled();
+    await expect(maintenanceReview).toBeEnabled();
+    await expect(conditionReview).toHaveValue('');
+    await expect(maintenanceReview).toHaveValue('');
+    await expect(conditionReview).toHaveAttribute('required', '');
+    await expect(maintenanceReview).toHaveAttribute('required', '');
+    await inventoryKind.selectOption('CONSUMABLE');
+    await expect(conditionReview).toBeDisabled();
+    await expect(maintenanceReview).toBeDisabled();
     await page.getByLabel('Classification notes').fill(`Second physical review ${marker}`);
     await page.getByLabel(/I physically reviewed the selected items/u).check();
     const uiBulkResponse = page.waitForResponse(

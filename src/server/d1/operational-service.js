@@ -869,6 +869,8 @@ const MAINTENANCE_REVIEW_STATES = new Set([
   'CLEARED',
   'MAINTENANCE_REQUIRED',
 ]);
+const REUSABLE_CONDITION_REVIEW_STATES = new Set(['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']);
+const REUSABLE_MAINTENANCE_REVIEW_STATES = new Set(['CLEARED', 'MAINTENANCE_REQUIRED']);
 const LENDING_AUDIENCES = new Set([
   'NOT_AVAILABLE_FOR_LENDING',
   'USC_STAFF_ONLY',
@@ -6734,11 +6736,12 @@ export function createD1OperationalService({
     if (
       classificationStatus === 'CLASSIFIED' &&
       inventoryKind === 'REUSABLE' &&
-      (conditionReviewState === 'NOT_ASSESSED' || maintenanceReviewState === 'NOT_ASSESSED')
+      (!REUSABLE_CONDITION_REVIEW_STATES.has(conditionReviewState) ||
+        !REUSABLE_MAINTENANCE_REVIEW_STATES.has(maintenanceReviewState))
     ) {
       throw new ApiError(
         'PHYSICAL_REVIEW_REQUIRED',
-        'Reusable classification requires a physical condition and maintenance review.',
+        'Reusable classification requires recorded physical condition and maintenance outcomes.',
         { status: 409 },
       );
     }

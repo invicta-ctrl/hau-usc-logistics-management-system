@@ -192,4 +192,22 @@ describe('local preview bulk classification', () => {
     expect(items.every((entry) => entry.classificationStatus === 'NEEDS_CLASSIFICATION')).toBe(true);
     expect(items.every((entry) => entry.classificationRevision === 1)).toBe(true);
   });
+
+  it('rejects reusable bulk classification without recorded physical assessments atomically', () => {
+    const items = [item('ITM-001'), item('ITM-002')];
+    const incompleteReusablePayload = bulkPayload({
+      items: bulkPayload().items.map((entry) => ({
+        ...entry,
+        inventoryKind: 'REUSABLE',
+        conditionReviewState: 'NOT_APPLICABLE',
+        maintenanceReviewState: 'NOT_APPLICABLE',
+      })),
+    });
+
+    expect(() => applyMockBulkInventoryClassification(items, incompleteReusablePayload)).toThrow(
+      'Reusable classification requires recorded physical condition and maintenance outcomes.',
+    );
+    expect(items.every((entry) => entry.classificationStatus === 'NEEDS_CLASSIFICATION')).toBe(true);
+    expect(items.every((entry) => entry.classificationRevision === 1)).toBe(true);
+  });
 });

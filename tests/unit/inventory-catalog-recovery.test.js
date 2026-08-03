@@ -97,7 +97,7 @@ describe('Slice 6 extension-owned quantity and classification behavior', () => {
     expect(maximumLoanQuantity).toMatchObject({ min: '0.01', step: '0.01' });
   });
 
-  it('fails closed for mock classification and records complete before/after history', () => {
+  it('keeps pending reusable mock classification fail-closed with unknown assessments and records complete history', () => {
     const pending = toFailClosedInventoryClassification({
       id: 'SYNTHETIC-UNVERIFIED',
       handling: 'Loanable',
@@ -123,8 +123,8 @@ describe('Slice 6 extension-owned quantity and classification behavior', () => {
         storageLocation: 'Synthetic shelf',
         unit: 'piece',
         reorderThreshold: '2',
-        conditionReviewState: 'GOOD',
-        maintenanceReviewState: 'CLEARED',
+        conditionReviewState: 'NOT_ASSESSED',
+        maintenanceReviewState: 'NOT_ASSESSED',
         assetInstanceCountIfReusable: '2',
       },
       { now: '2026-08-03T00:00:00.000Z' },
@@ -132,6 +132,9 @@ describe('Slice 6 extension-owned quantity and classification behavior', () => {
 
     expect(pending).toMatchObject({
       classificationStatus: 'NEEDS_CLASSIFICATION',
+      inventoryKind: 'REUSABLE',
+      conditionReviewState: 'NOT_ASSESSED',
+      maintenanceReviewState: 'NOT_ASSESSED',
       isLendable: false,
       lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
     });
