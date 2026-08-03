@@ -1,5 +1,11 @@
 import { ApiError } from './d1/operational-service.js';
-import { isCountableUnit, isKnownQuantityUnit } from '../domain/quantity-units.js';
+import { operationalInteger } from '../domain/operational-integers.js';
+import {
+  REQUEST_PURPOSES,
+  REQUEST_PURPOSE_VALUES,
+  validateRequestPurpose,
+} from '../domain/request-purpose.js';
+import { isKnownQuantityUnit } from '../domain/quantity-units.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const CATEGORIES = Object.freeze([
@@ -11,6 +17,14 @@ const CATEGORIES = Object.freeze([
   'Other',
 ]);
 const REQUEST_TYPES = Object.freeze(['EVENT_LOGISTICS', 'CATALOG_RESTOCK']);
+const REQUEST_TYPE_BY_PURPOSE = Object.freeze({
+  [REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT]: 'EVENT_LOGISTICS',
+  [REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY]: 'CATALOG_RESTOCK',
+});
+const REQUEST_PURPOSE_BY_TYPE = Object.freeze({
+  EVENT_LOGISTICS: REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT,
+  CATALOG_RESTOCK: REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY,
+});
 const REQUESTER_TYPES = Object.freeze([
   'HAU student / Angelite',
   'HAU office / department',
@@ -41,33 +55,41 @@ const optionalText = (value, max) =>
     .trim()
     .slice(0, max);
 
-const positiveNumber = (value, field) => {
-  const result = Number(value);
-  if (!Number.isFinite(result) || result <= 0 || result > 100000) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be greater than zero.`, {
-      status: 422,
-      details: { field },
-    });
+function translateDomainValidation(error, fallbackField = 'requestPurpose') {
+  const fieldErrors = error?.fieldErrors ?? {};
+  const fields = Object.keys(fieldErrors);
+  const field = fields[0] ?? error?.details?.field ?? fallbackField;
+  const message = fieldErrors[field] ?? 'The submitted value is invalid.';
+  throw new ApiError('VALIDATION_FAILED', message, {
+    status: 422,
+    details: {
+      field,
+      ...(fields.length > 1 ? { fields } : {}),
+    },
+  });
+}
+
+function validatePublicOperationalInteger(value, field) {
+  try {
+    return operationalInteger(value, { field, min: 1, max: 100000 });
+  } catch (error) {
+    return translateDomainValidation(error, field);
   }
-  return result;
-};
+}
 
 const operationalQuantity = (value, unit, field) => {
-  const result = positiveNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       status: 422,
       details: { field, unit },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
-      status: 422,
-      details: { field, unit },
-    });
-  }
-  return result;
+  return validatePublicOperationalInteger(value, field);
 };
+
+function requestPurposeFromType(requestType) {
+  return REQUEST_PURPOSE_BY_TYPE[requestType] ?? null;
+}
 
 function email(value) {
   const result = requiredText(value, 'email', 254).toLowerCase();
@@ -217,6 +239,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     return {
       ok: true,
       requestTypes: REQUEST_TYPES,
+      requestPurposes: REQUEST_PURPOSE_VALUES,
       requesterTypes: REQUESTER_TYPES,
       categories: CATEGORIES,
       items: items.map((item) => ({
@@ -318,7 +341,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
     const existing = await db
       .prepare(
-        `SELECT id, status FROM requests
+        `SELECT id, status, request_type FROM requests
          WHERE created_by = ?1 AND client_request_id = ?2 LIMIT 1`,
       )
       .bind(PUBLIC_ACTOR_ID, clientRequestId)
@@ -328,6 +351,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         ok: true,
         requestId: existing.id,
         status: existing.status,
+        requestPurpose: requestPurposeFromType(existing.request_type),
         trackingCode: await hmac(trackingSecret, `request-code:${existing.id}:${clientRequestId}`),
         replayed: true,
         correlationId,
@@ -352,13 +376,35 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const requesterEmail = email(command.email);
     const contactNumber = phone(command.contactNumber);
     const purpose = requiredText(command.purpose, 'purpose', 500);
-    const requestType = requiredText(command.requestType, 'requestType', 40);
-    if (!REQUEST_TYPES.includes(requestType)) {
-      throw new ApiError('VALIDATION_FAILED', 'requestType is invalid.', {
-        status: 422,
-        details: { field: 'requestType' },
-      });
+    const hasExplicitRequestPurpose = Object.prototype.hasOwnProperty.call(command, 'requestPurpose');
+    let requestType = '';
+    const requestPurposeInput = hasExplicitRequestPurpose
+      ? command.requestPurpose
+      : (() => {
+          if (!Object.prototype.hasOwnProperty.call(command, 'requestType')) {
+            const canonicalPurpose =
+              typeof command.purpose === 'string' ? command.purpose.trim().toUpperCase() : '';
+            if (REQUEST_PURPOSE_VALUES.includes(canonicalPurpose)) return canonicalPurpose;
+          }
+          requestType = requiredText(command.requestType, 'requestType', 40);
+          if (!REQUEST_TYPES.includes(requestType)) {
+            throw new ApiError('VALIDATION_FAILED', 'requestType is invalid.', {
+              status: 422,
+              details: { field: 'requestType' },
+            });
+          }
+          return requestPurposeFromType(requestType);
+        })();
+    let requestPurpose;
+    try {
+      requestPurpose = validateRequestPurpose(
+        { ...command, requestPurpose: requestPurposeInput },
+        { purposeKey: 'requestPurpose' },
+      );
+    } catch (error) {
+      translateDomainValidation(error);
     }
+    requestType = REQUEST_TYPE_BY_PURPOSE[requestPurpose];
     const isEvent = requestType === 'EVENT_LOGISTICS';
     const startDate = dateOnly(command.startDate, 'startDate');
     const endDate = dateOnly(command.endDate, 'endDate');
@@ -567,7 +613,15 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       }
       throw error;
     }
-    return { ok: true, requestId, status: 'FOR_REVIEW', trackingCode, replayed: false, correlationId };
+    return {
+      ok: true,
+      requestId,
+      requestPurpose,
+      status: 'FOR_REVIEW',
+      trackingCode,
+      replayed: false,
+      correlationId,
+    };
   }
 
   async function track({ command = {}, networkKey = '', correlationId = '' } = {}) {
@@ -577,7 +631,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const digest = await hmac(trackingSecret, `request-digest:${trackingCode}`);
     const access = await db
       .prepare(
-        `SELECT request.id, request.status, request.created_at, request.updated_at
+        `SELECT request.id, request.request_type, request.status, request.created_at, request.updated_at
          FROM public_request_access access
          JOIN requests request ON request.id = access.request_id
          WHERE access.request_id = ?1 AND access.tracking_digest = ?2`,
@@ -608,6 +662,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       correlationId,
       request: {
         id: access.id,
+        requestPurpose: requestPurposeFromType(access.request_type),
         status: access.status,
         createdAt: access.created_at,
         updatedAt: access.updated_at,
@@ -642,6 +697,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       correlationId,
       reference: {
         id: reference.id,
+        requestPurpose: requestPurposeFromType(reference.request_type),
         requestType: reference.request_type,
         seriesId: reference.event_series_id,
         eventId: reference.event_id,
