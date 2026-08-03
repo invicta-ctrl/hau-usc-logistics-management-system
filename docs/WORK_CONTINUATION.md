@@ -2,6 +2,23 @@
 
 ## Current resume block
 
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve the governed local `.codegraph/` index and owner-authorized v0.7.1 launch-report PDF.
+- **Branch/HEAD/upstream:** canonical `main`; exact v0.7.1 release/tag SHA `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`; `origin/main` matched at reconciliation with `0/0` ahead/behind.
+- **Current phase/stage:** v0.7.1 repository, staging, production, domains, backup, rollback preparation, reconciliation, tag, and release are complete; production is operational.
+- **Accepted scope:** `.codex/specs/v0.7.1-production-recovery.md`, the owner-gated release runbook, accepted v0.7.0 invariants, and `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
+- **Completed work:** PR #13 merged; annotated tag and GitHub Release `v0.7.1` published; separated staging and production deployed; custom domains activated; public and protected smoke/reconciliation completed; private recovery and Google release evidence retained.
+- **Files changed by purpose:** the accepted v0.7.1 range contains 129 files covering recovery source, tests, generated artifacts, workflows, release scripts, and durable handoffs. The production-closeout checkpoint changes documentation only.
+- **Tests verified at release:** PR checks `validate`, `verify`, and `browser-smoke` passed. Exact CI records 88 test files with 578 passed / 1 skipped, 130 browser passes / 326 intentional skips, deterministic generated parity, and Apps Script validation. Accepted local release evidence records 38/38 Worker/D1 tests and final review with no P0-P3.
+- **External actions:** exact-candidate staging and production deployment, domain activation, backup/recovery capture, Google release evidence, smoke, and reconciliation completed. No schema migration was needed.
+- **Live state:** cache-busted production health/readiness/version reads on 2026-08-03 return HTTP 200, production release `0.7.1`, exact release SHA, schema 29 / migration 0029, ready true, and required dependencies available; Request and Lending hosts return HTTP 200.
+- **Rollback:** prior immutable staging and production Worker targets, fresh D1 exports, Time Travel bookmarks, and required recovery evidence remain private outside Git. No rollback was required.
+- **Blocker:** none for the v0.7.2 repository cold start. Production deployment in v0.7.2 remains separately blocked until the exact-candidate production GO package is accepted with the required owner authorization phrase.
+- **Next three actions:** synchronize clean `main`; create and accept the repository-native v0.7.2 specification and current-task record; create `release/v0.7.2-production-access-operations` and lock contracts/dependency ownership before implementation.
+- **Resume commands:** `git fetch origin --prune`; `git status --short --branch`; `git rev-list --left-right --count HEAD...@{upstream}`; verify `v0.7.1` and `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`; follow the v0.7.2 accepted specification.
+- **Prohibited actions:** no secret/PII disclosure, force-push, unknown-work deletion, immutable-history rewrite, production-first testing, or v0.7.2 production deployment before the exact-candidate owner gate.
+
+## Historical v0.7.1 repository-candidate resume block
+
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve untracked `.codegraph/`.
 - **Branch/HEAD/upstream:** `fix/v0.7.1-production-recovery`; reviewed deployable candidate `7338124554d5ad6f948587d69328dae731b38a6c`; no upstream is configured for this local branch; the later docs-only closure commit records the verdict without changing the candidate.
 - **Current phase/stage:** Slices 2–8 and the complete repository release candidate are accepted; fresh Sol correction re-review passes with no P0-P3; production remains operational on immutable v0.7.0.

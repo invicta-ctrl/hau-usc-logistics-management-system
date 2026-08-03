@@ -1,5 +1,27 @@
 # Project Status
 
+## v0.7.1 production operational and closed
+
+- Canonical `main`, `origin/main`, annotated tag `v0.7.1`, and the published
+  GitHub Release identify exact SHA
+  `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`; PR #13 is merged.
+- Required PR checks passed: `validate`, `verify`, and `browser-smoke`.
+  Exact CI evidence records 88 test files with 578 passed / 1 skipped, 130
+  browser passes / 326 intentional skips, deterministic generated parity,
+  Apps Script validation, and a final fresh review with no P0-P3.
+- Exact-candidate staging and production deployment, domain activation,
+  backup, rollback preparation, D1 reconciliation, Google release evidence,
+  smoke, and monitoring completed through the owner-gated runbook.
+- Cache-busted production health/readiness/version reads on 2026-08-03
+  returned HTTP 200, production release `0.7.1`, the exact release SHA,
+  schema 29 / migration 0029, ready true, and required dependencies available.
+- Public Request and Lending hosts returned HTTP 200. Private provider,
+  recovery, credential, and evidence identifiers remain outside Git.
+- Durable predecessor handoff:
+  `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
+- v0.7.2 must start from current synchronized clean `main` through the
+  accepted specification and exact-candidate production owner gate.
+
 ## v0.7.1 release candidate reviewed and repository-accepted
 
 - Recovery branch `fix/v0.7.1-production-recovery` started from synchronized
