@@ -142,6 +142,12 @@ class FakeDatabase {
       record.image_asset_key = values[1];
       record.updated_by = values[2];
       record.updated_at = values[3];
+    } else if (sql.includes('SET status = ?2')) {
+      record.status = values[1];
+      record.publish_at = values[2];
+      record.expire_at = values[3];
+      record.updated_by = values[4];
+      record.updated_at = values[5];
     } else {
       record.title = values[1];
       record.description = values[2];
@@ -300,6 +306,36 @@ describe('v0.7.2 advertisement contracts', () => {
         },
       }),
     ).rejects.toMatchObject({ code: 'VALIDATION_FAILED', details: { field: 'publishAt' } });
+  });
+
+  it('resumes only an inactive announcement with its own guarded idempotency operation', async () => {
+    const db = new FakeDatabase([row({ status: 'ACTIVE', image_asset_key: 'advertisements/one.png' })]);
+    const service = adminService(db);
+    await expect(
+      service.pause({
+        account: ADMIN,
+        command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'pause-before-resume' },
+      }),
+    ).resolves.toMatchObject({ status: 'INACTIVE', revision: 2 });
+    await expect(
+      service.resume({
+        account: ADMIN,
+        command: { id: 'ADV-ONE', expectedRevision: 2, clientRequestId: 'resume' },
+      }),
+    ).resolves.toMatchObject({ status: 'ACTIVE', revision: 3 });
+    await expect(
+      service.resume({
+        account: ADMIN,
+        command: { id: 'ADV-ONE', expectedRevision: 3, clientRequestId: 'resume-again' },
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_TRANSITION', status: 409 });
+    const draftDb = new FakeDatabase([row({ status: 'DRAFT', image_asset_key: 'advertisements/one.png' })]);
+    await expect(
+      adminService(draftDb).resume({
+        account: ADMIN,
+        command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'resume-draft' },
+      }),
+    ).rejects.toMatchObject({ code: 'INVALID_TRANSITION', status: 409 });
   });
 
   it('keeps idempotency replays stable and rejects key reuse with different values', async () => {

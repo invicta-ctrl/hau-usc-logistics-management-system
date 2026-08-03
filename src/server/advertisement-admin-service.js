@@ -583,7 +583,7 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
 
   async function transition(
     { account, command = {}, correlationId = '' } = {},
-    { operation, action, status, schedule = false },
+    { operation, action, status, schedule = false, resumeFromInactive = false },
   ) {
     assertAdmin(account);
     const replayState = await replay(db, account, operation, command);
@@ -591,6 +591,12 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
     const id = safeId(command.id);
     const record = await db.prepare('SELECT * FROM public_advertisements WHERE id = ?1').bind(id).first();
     assertMutableRecord(record);
+    if (resumeFromInactive && record.status !== 'INACTIVE') {
+      throw new ApiError('INVALID_TRANSITION', 'Only inactive announcements can be resumed.', {
+        status: 409,
+        details: { field: 'status', currentStatus: record.status },
+      });
+    }
     const expected = expectedRevision(command, record);
     const timestamp = nowIso();
     let publishAt = record.publish_at ?? null;
@@ -708,6 +714,15 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
     });
   }
 
+  async function resume(context = {}) {
+    return transition(context, {
+      operation: 'RESUME',
+      action: 'ADVERTISEMENT_RESUMED',
+      status: 'ACTIVE',
+      resumeFromInactive: true,
+    });
+  }
+
   async function archive({ account, command = {}, correlationId = '' } = {}) {
     assertAdmin(account);
     const operation = 'ARCHIVE';
@@ -767,5 +782,5 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
     return result;
   }
 
-  return Object.freeze({ list, preview, save, upload, publish, schedule, pause, archive });
+  return Object.freeze({ list, preview, save, upload, publish, schedule, pause, resume, archive });
 }
