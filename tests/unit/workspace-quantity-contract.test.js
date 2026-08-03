@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import {
   isCountableUnit,
   isKnownQuantityUnit,
@@ -32,6 +34,18 @@ describe('canonical workspace routes', () => {
       canonicalPath: '/director/release',
       legacy: true,
     });
+  });
+
+  it('synchronizes route-derived module chrome before accepting a reloaded workspace', async () => {
+    const runtime = await readFile(
+      resolve(import.meta.dirname, '../../src/visual/runtime.js'),
+      'utf8',
+    );
+    expect(runtime).toContain('applyEssentialNavigation(next);acceptAuthoritativeState(next)');
+    expect(runtime).toContain(
+      "button.classList.toggle('active',button.dataset.view===ui.view)",
+    );
+    expect(runtime).toContain("safeText(byId('pageTitle'),VIEW_TITLES[ui.view]||'Logistics')");
   });
 });
 
@@ -77,5 +91,18 @@ describe('countable operational quantities', () => {
     expect(quantityStep('unsupported-fixture-unit')).toBe('1');
     expect(isValidOperationalQuantity(1, { unit: 'unsupported-fixture-unit' })).toBe(false);
     expect(() => positiveOperationalQuantity(1, 'unsupported-fixture-unit')).toThrow(/supported unit/u);
+  });
+
+  it('normalizes catalog-backed preview lines before mutating local request state', async () => {
+    const runtime = await readFile(
+      resolve(import.meta.dirname, '../../src/visual/runtime.js'),
+      'utf8',
+    );
+    const validation = runtime.indexOf('const lines=payload.lines.map');
+    const mutation = runtime.indexOf('state.requests.push(record)', validation);
+    expect(validation).toBeGreaterThan(-1);
+    expect(runtime.slice(validation, mutation)).toContain('getItem(draft.itemId)');
+    expect(runtime.slice(validation, mutation)).toContain('request unit must match the catalog item');
+    expect(runtime.slice(validation, mutation)).toContain('isValidOperationalQuantity(quantity,{unit})');
   });
 });

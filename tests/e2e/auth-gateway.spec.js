@@ -295,6 +295,10 @@ test('authenticated Administrator switches real workspace routes without changin
   await shell.getByLabel('Workspace').selectOption('food');
   await discardDialog.getByRole('button', { name: 'Discard changes' }).click();
   await expect(page).toHaveURL(/\/food$/u);
+  await expect(page.locator('#primaryNav [data-view="overview"]')).toHaveClass(/active/u);
+  await expect(page.locator('#primaryNav [data-view="request"]')).not.toHaveClass(/active/u);
+  await expect(page.locator('#pageTitle')).toHaveText('Operations Overview');
+  await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Overview');
   await shell.getByLabel('Workspace').selectOption('materials');
   await expect(page).toHaveURL(/\/materials$/u);
   await expect(page.locator('.app-shell')).not.toContainText(
@@ -410,14 +414,18 @@ test('authenticated System Owner keeps owner identity across every workspace and
 
   await navigateToView(page, 'release');
   await expect(page.locator('#release')).toHaveClass(/active/u);
-  await expect(page).toHaveURL(/\/app\/materials\/release$/u);
+  await expect(page).toHaveURL(/\/materials\/release$/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await page.reload();
   await expect(page.locator('#release')).toHaveClass(/active/u);
-  await expect(page).toHaveURL(/\/app\/materials\/release$/u);
+  await expect(page.locator('#primaryNav [data-view="release"]')).toHaveClass(/active/u);
+  await expect(page.locator('#pageTitle')).toHaveText('Release Desk');
+  await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Release Desk');
+  await expect(page).toHaveTitle(/Materials & Documentation.*Release Desk.*HAU-USC Logistics/u);
+  await expect(page).toHaveURL(/\/materials\/release$/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await shell.getByLabel('Workspace').selectOption('food');
-  await expect(page).toHaveURL(/\/app\/food\/release\?scope=COMMITTEE%3ACOM_FOOD$/u);
+  await expect(page).toHaveURL(/\/food\/release\?scope=COMMITTEE%3ACOM_FOOD$/u);
   await expect(page.locator('#release')).toHaveClass(/active/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   await navigateToView(page, 'lending');

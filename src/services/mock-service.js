@@ -307,8 +307,19 @@ export class MockService {
         };
         state.requests.push(request);
         for (const draftLine of command.lines) {
-          const quantity = positiveOperationalQuantity(draftLine.quantity, draftLine.unit);
-          controlledUnit(draftLine.unit);
+          const item = draftLine.itemId
+            ? state.inventoryItems.find((row) => row.id === draftLine.itemId)
+            : null;
+          if (draftLine.itemId && !item)
+            throw new AppError('ITEM_NOT_FOUND', 'The selected inventory item is unavailable.');
+          if (
+            item &&
+            String(draftLine.unit).trim().toLowerCase() !== String(item.unit).trim().toLowerCase()
+          )
+            throw new AppError('UNIT_MISMATCH', 'The request unit must match the catalog item.');
+          const unit = item?.unit ?? draftLine.unit;
+          const quantity = positiveOperationalQuantity(draftLine.quantity, unit);
+          controlledUnit(unit);
           if (!draftLine.itemId) controlledCategory(draftLine.category);
           state.requestLines.push({
             id: allocateSimpleId(state, 'RL'),
@@ -316,7 +327,7 @@ export class MockService {
             itemId: draftLine.itemId || null,
             description: requiredText(draftLine.description, 'description', 'Item description'),
             category: draftLine.category,
-            unit: draftLine.unit,
+            unit,
             quantity,
             releasedQuantity: 0,
             fulfillmentSource: type === 'CATALOG_RESTOCK' ? 'RESTOCK' : 'PENDING_DECISION',

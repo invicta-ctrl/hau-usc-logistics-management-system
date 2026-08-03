@@ -78,6 +78,23 @@ describe('guided workflows', () => {
     expect(lines.reduce((sum, line) => sum + line.quantity, 0)).toBe(60);
   });
 
+  it('rejects a caller unit that does not match the selected catalog item', async () => {
+    await expect(
+      service.submitRequest(
+        requestCommand('unit-mismatch', {
+          itemId: 'ITM-0001',
+          description: 'Ballpen - Black',
+          category: 'OFFICE_SUPPLIES',
+          unit: 'liter',
+          quantity: 1.5,
+        }),
+      ),
+    ).rejects.toMatchObject({ code: 'UNIT_MISMATCH' });
+    expect(store.getState().requests).not.toContainEqual(
+      expect.objectContaining({ purpose: 'Integration unit-mismatch' }),
+    );
+  });
+
   it('keeps sibling restock lines open after a line-level final receipt', async () => {
     const result = await service.receiveRestock({
       restockRequestId: 'RRQ-RL-0004',
