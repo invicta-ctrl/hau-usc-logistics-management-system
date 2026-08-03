@@ -435,6 +435,232 @@ test('inventory classification is protected, audited, idempotent, and fail-close
   }
 });
 
+test('D1 catalog mutations enforce authority, quantity, revision, dependency, and lifecycle invariants', async ({
+  baseURL,
+}) => {
+  const owner = await apiRequest.newContext({ baseURL });
+  const food = await apiRequest.newContext({ baseURL });
+  try {
+    const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const foodCsrf = await login(food, 'LOCAL.FOOD');
+    const marker = crypto.randomUUID();
+    const createCommand = {
+      clientRequestId: `catalog-create-${marker}`,
+      itemName: `A Synthetic Catalog Item ${marker}`,
+      aliases: [`Catalog alias ${marker}`, `catalog alias ${marker}`],
+      category: 'Synthetic supplies',
+      stockArea: 'OFFICE',
+      storageLocation: 'Synthetic Shelf A',
+      handling: 'CONSUMABLE',
+      unit: 'piece',
+      catalogType: 'OFFICE_INVENTORY',
+      reorderThreshold: 1,
+      maximumLoanQuantity: 2,
+      initialQuantity: 2,
+      notes: 'Synthetic D1 catalog lifecycle proof',
+    };
+
+    const denied = await mutate(food, foodCsrf, 'createInventoryItem', {
+      ...createCommand,
+      clientRequestId: `catalog-denied-${marker}`,
+    });
+    expect(denied.status()).toBe(403);
+    await expect(denied.json()).resolves.toMatchObject({ code: 'CAPABILITY_REQUIRED' });
+
+    for (const invalid of [
+      { unit: 'piece', reorderThreshold: 0.5 },
+      { unit: 'piece', initialQuantity: 1.5 },
+      { unit: 'unsupported-unit' },
+    ]) {
+      const response = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+        ...createCommand,
+        ...invalid,
+        clientRequestId: `catalog-invalid-${crypto.randomUUID()}`,
+      });
+      expect(response.status()).toBe(422);
+      await expect(response.json()).resolves.toMatchObject({ code: 'VALIDATION_FAILED' });
+    }
+
+    const createdResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
+    expect(createdResponse.status()).toBe(200);
+    const created = await createdResponse.json();
+    expect(created).toMatchObject({
+      itemId: expect.stringMatching(/^ITM-/u),
+      status: 'ACTIVE',
+      updatedAt: expect.any(String),
+      transactionId: expect.stringMatching(/^TXN-/u),
+      initialQuantityPosted: 2,
+    });
+    const createReplay = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
+    expect(createReplay.status()).toBe(200);
+    await expect(createReplay.json()).resolves.toMatchObject(created);
+
+    const updateCommand = {
+      clientRequestId: `catalog-update-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      itemName: `A Synthetic Catalog Item Updated ${marker}`,
+      aliases: [`Updated alias ${marker}`, `Second alias ${marker}`],
+      reorderThreshold: 2,
+      maximumLoanQuantity: 1,
+      reason: 'Synthetic catalog metadata update',
+    };
+    const updatedResponse = await mutate(owner, ownerCsrf, 'updateInventoryItem', updateCommand);
+    expect(updatedResponse.status()).toBe(200);
+    const updated = await updatedResponse.json();
+    expect(updated).toMatchObject({
+      itemId: created.itemId,
+      status: 'ACTIVE',
+      updatedAt: expect.any(String),
+    });
+    expect(updated.updatedAt).not.toBe(created.updatedAt);
+    const updateReplay = await mutate(owner, ownerCsrf, 'updateInventoryItem', updateCommand);
+    expect(updateReplay.status()).toBe(200);
+    await expect(updateReplay.json()).resolves.toMatchObject(updated);
+
+    const staleUpdate = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-stale-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      notes: 'This stale write must not win.',
+    });
+    expect(staleUpdate.status()).toBe(409);
+    await expect(staleUpdate.json()).resolves.toMatchObject({ code: 'CATALOG_REVISION_CONFLICT' });
+
+    const blockedUnitChange = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-unit-change-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: updated.updatedAt,
+      unit: 'box',
+    });
+    expect(blockedUnitChange.status()).toBe(409);
+    await expect(blockedUnitChange.json()).resolves.toMatchObject({
+      code: 'HISTORICAL_UNIT_CHANGE_BLOCKED',
+      details: expect.objectContaining({ ledger: 1 }),
+    });
+
+    const blockedArchive = await mutate(owner, ownerCsrf, 'archiveInventoryItem', {
+      clientRequestId: `catalog-archive-blocked-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: updated.updatedAt,
+      reason: 'Synthetic positive-balance archive denial',
+    });
+    expect(blockedArchive.status()).toBe(409);
+    await expect(blockedArchive.json()).resolves.toMatchObject({
+      code: 'ARCHIVE_NOT_ALLOWED',
+      details: expect.objectContaining({ onHand: 2 }),
+    });
+
+    const moduleResponse = await owner.post('/api/getBootstrapModule', {
+      data: { module: 'inventory', page: 1, pageSize: 50 },
+    });
+    expect(moduleResponse.status()).toBe(200);
+    const moduleData = await moduleResponse.json();
+    expect(moduleData.data.inventoryItems).toContainEqual(
+      expect.objectContaining({
+        id: created.itemId,
+        name: updateCommand.itemName,
+        aliases: expect.arrayContaining(updateCommand.aliases),
+        unit: 'piece',
+        onHand: 2,
+        reorderThreshold: 2,
+        updatedAt: updated.updatedAt,
+        inventoryKind: 'UNVERIFIED',
+        classificationStatus: 'NEEDS_CLASSIFICATION',
+        isLendable: false,
+        lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      }),
+    );
+    expect(moduleData.data.ledgerTransactions).toContainEqual(
+      expect.objectContaining({
+        id: created.transactionId,
+        transactionType: 'OPENING_BALANCE',
+        itemId: created.itemId,
+        quantity: 2,
+        unit: 'piece',
+        status: 'POSTED',
+      }),
+    );
+
+    const zeroCreateResponse = await mutate(owner, ownerCsrf, 'createInventoryItem', {
+      clientRequestId: `catalog-zero-create-${marker}`,
+      itemName: `A Synthetic Zero Balance Item ${marker}`,
+      aliases: [`Zero alias ${marker}`],
+      category: 'Synthetic supplies',
+      stockArea: 'OFFICE',
+      storageLocation: 'Synthetic Shelf B',
+      handling: 'NON_CIRCULATING',
+      unit: 'piece',
+      reorderThreshold: 0,
+      initialQuantity: 0,
+      verificationNote: 'Physical verification is still required.',
+    });
+    expect(zeroCreateResponse.status()).toBe(200);
+    const zeroCreated = await zeroCreateResponse.json();
+    expect(zeroCreated).toMatchObject({ transactionId: null, initialQuantityPosted: 0 });
+
+    const storageCommand = {
+      clientRequestId: `catalog-storage-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: zeroCreated.updatedAt,
+      stockArea: 'PANTRY',
+      storageLocation: 'Synthetic Shelf C',
+      note: 'Synthetic storage-context change',
+    };
+    const storageResponse = await mutate(owner, ownerCsrf, 'updateInventoryStorageContext', storageCommand);
+    expect(storageResponse.status()).toBe(200);
+    const stored = await storageResponse.json();
+    expect(stored).toMatchObject({
+      itemId: zeroCreated.itemId,
+      stockArea: 'PANTRY',
+      storageLocation: 'Synthetic Shelf C',
+      updatedAt: expect.any(String),
+    });
+    const storageReplay = await mutate(owner, ownerCsrf, 'updateInventoryStorageContext', storageCommand);
+    expect(storageReplay.status()).toBe(200);
+    await expect(storageReplay.json()).resolves.toMatchObject(stored);
+
+    const archiveCommand = {
+      clientRequestId: `catalog-archive-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: stored.updatedAt,
+      reason: 'Synthetic zero-balance archive',
+    };
+    const archivedResponse = await mutate(owner, ownerCsrf, 'archiveInventoryItem', archiveCommand);
+    expect(archivedResponse.status()).toBe(200);
+    const archived = await archivedResponse.json();
+    expect(archived).toMatchObject({
+      itemId: zeroCreated.itemId,
+      status: 'ARCHIVED',
+      updatedAt: expect.any(String),
+    });
+    const archiveReplay = await mutate(owner, ownerCsrf, 'archiveInventoryItem', archiveCommand);
+    expect(archiveReplay.status()).toBe(200);
+    await expect(archiveReplay.json()).resolves.toMatchObject(archived);
+
+    const restoreCommand = {
+      clientRequestId: `catalog-restore-${marker}`,
+      itemId: zeroCreated.itemId,
+      expectedUpdatedAt: archived.updatedAt,
+      status: 'ACTIVE',
+      reason: 'Synthetic fail-closed restore',
+    };
+    const restoredResponse = await mutate(owner, ownerCsrf, 'restoreInventoryItem', restoreCommand);
+    expect(restoredResponse.status()).toBe(200);
+    const restored = await restoredResponse.json();
+    expect(restored).toMatchObject({
+      itemId: zeroCreated.itemId,
+      status: 'VERIFY',
+      updatedAt: expect.any(String),
+    });
+    const restoreReplay = await mutate(owner, ownerCsrf, 'restoreInventoryItem', restoreCommand);
+    expect(restoreReplay.status()).toBe(200);
+    await expect(restoreReplay.json()).resolves.toMatchObject(restored);
+  } finally {
+    await Promise.all([owner.dispose(), food.dispose()]);
+  }
+});
+
 test('identity roster is owner-only, metadata-safe, explicit-preview-only, and absent from login reads', async ({
   baseURL,
 }) => {

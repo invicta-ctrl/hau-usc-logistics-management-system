@@ -54,6 +54,11 @@ const METHOD_CAPABILITIES = Object.freeze({
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
   classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
+  createInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  updateInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  updateInventoryStorageContext: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  archiveInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
+  restoreInventoryItem: CAPABILITIES.REFERENCE_CATALOG_MANAGE,
   getEventManagement: CAPABILITIES.EVENT_MANAGE,
   saveEventSeries: CAPABILITIES.EVENT_MANAGE,
   saveEventDay: CAPABILITIES.EVENT_MANAGE,
@@ -630,7 +635,10 @@ export function enrichOperationalAuditAfter(after, operationalContext, timestamp
   };
 }
 
-function auditStatement(db, { action, entityType, entityId, accountId, correlationId, after = {} }) {
+function auditStatement(
+  db,
+  { action, entityType, entityId, accountId, correlationId, before = {}, after = {} },
+) {
   const timestamp = nowIso();
   const operationalContext = operationalAuditContexts.get(correlationId);
   return db
@@ -638,7 +646,7 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
       `INSERT INTO audit_log (
          id, created_at, action, entity_type, entity_id, actor_account_id,
          before_json, after_json, correlation_id, notes
-       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, '{}', ?7, ?8, '')`,
+       ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, '')`,
     )
     .bind(
       createId('AUD'),
@@ -647,6 +655,7 @@ function auditStatement(db, { action, entityType, entityId, accountId, correlati
       entityType,
       entityId,
       accountId,
+      JSON.stringify(before),
       JSON.stringify(enrichOperationalAuditAfter(after, operationalContext, timestamp, correlationId)),
       correlationId,
     );
@@ -783,6 +792,15 @@ async function rows(db, sql, bindings = []) {
 const INVENTORY_CLASSIFICATION_ROLES = new Set(['SYSTEM_OWNER', 'ADMINISTRATOR', 'DIRECTOR']);
 const INVENTORY_KINDS = new Set(['UNVERIFIED', 'REUSABLE', 'CONSUMABLE']);
 const CLASSIFICATION_STATUSES = new Set(['NEEDS_CLASSIFICATION', 'CLASSIFIED']);
+const INVENTORY_HANDLING = new Set([
+  'CONSUMABLE',
+  'LOANABLE',
+  'REUSABLE_ASSET',
+  'NON_CIRCULATING',
+  'TO_CLASSIFY',
+]);
+const INVENTORY_CATALOG_TYPES = new Set(['OFFICE_INVENTORY', 'PANTRY', 'EVENT_SPECIFIC']);
+const INVENTORY_STATUSES = new Set(['ACTIVE', 'VERIFY', 'INACTIVE']);
 const CONDITION_REVIEW_STATES = new Set([
   'NOT_ASSESSED',
   'NOT_APPLICABLE',
@@ -804,6 +822,64 @@ const LENDING_AUDIENCES = new Set([
   'STUDENTS_AND_STAFF',
   'DOL_INTERNAL_ONLY',
 ]);
+
+const normalizedCatalogEnum = (value, allowed, field, fallback = '') => {
+  const normalized = String(value ?? fallback)
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/gu, '_');
+  if (!allowed.has(normalized)) {
+    throw new ApiError('VALIDATION_FAILED', `${field} is not supported.`, {
+      details: { field, value: String(value ?? '') },
+    });
+  }
+  return normalized;
+};
+
+const normalizedHandling = (value) => {
+  const normalized = String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[\s-]+/gu, '_');
+  const aliased =
+    { REUSABLE: 'REUSABLE_ASSET', REUSABLEASSET: 'REUSABLE_ASSET', NONCIRCULATING: 'NON_CIRCULATING' }[
+      normalized
+    ] ?? normalized;
+  return normalizedCatalogEnum(aliased, INVENTORY_HANDLING, 'handling');
+};
+
+const normalizedAliases = (value) => {
+  const aliases = (Array.isArray(value) ? value : String(value ?? '').split(/[|,]/u))
+    .map((alias) => String(alias).normalize('NFKC').trim().replace(/\s+/gu, ' '))
+    .filter(Boolean);
+  if (aliases.length > 24 || aliases.some((alias) => alias.length > 120)) {
+    throw new ApiError('VALIDATION_FAILED', 'Aliases are limited to 24 values of 120 characters each.');
+  }
+  const unique = new Map();
+  for (const alias of aliases) unique.set(alias.toLocaleLowerCase('en-US'), alias);
+  return [...unique.entries()].map(([normalizedAlias, displayAlias]) => ({
+    normalizedAlias,
+    displayAlias,
+  }));
+};
+
+const optionalPositiveInteger = (value, field) => {
+  if (value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a positive integer.`, {
+      details: { field },
+    });
+  }
+  return number;
+};
+
+const booleanInput = (value, fallback = false) => {
+  if (value === '' || value === null || value === undefined) return fallback;
+  if (value === true || value === 1 || String(value).toLowerCase() === 'true') return true;
+  if (value === false || value === 0 || String(value).toLowerCase() === 'false') return false;
+  throw new ApiError('VALIDATION_FAILED', 'A boolean catalog value is invalid.');
+};
 
 function assertInventoryClassificationAccess(account) {
   assertCapability(account, CAPABILITIES.INVENTORY_CLASSIFY);
@@ -867,6 +943,7 @@ const itemDto = (row, requestOnly = false) => ({
   imageUrl: row.image_asset_key ? `/brand/catalog/${encodeURIComponent(row.image_asset_key)}` : '',
   conditionTracked: row.condition_tracking === 1,
   approvalRequired: row.approval_required === 1,
+  updatedAt: row.updated_at,
   ...(requestOnly
     ? {}
     : {
@@ -5307,6 +5384,614 @@ export function createD1OperationalService({
     return result;
   }
 
+  const catalogItemSnapshot = (row) => ({
+    ...itemDto(row),
+    verificationNote: row.verification_note ?? '',
+    notes: row.notes ?? '',
+    updatedAt: row.updated_at,
+  });
+
+  const loadCatalogItem = async (itemId) =>
+    db
+      .prepare(
+        `SELECT item.*, availability.on_hand, availability.reserved,
+           availability.available_to_promise, availability.ready_to_claim, availability.on_loan,
+           availability.overdue, availability.expected_return_at, availability.traceable_assets,
+           availability.available_assets, availability.damaged_assets, availability.maintenance_assets,
+           availability.lendable_available,
+           (SELECT GROUP_CONCAT(display_alias, '|') FROM item_aliases alias
+             WHERE alias.item_id = item.id) AS aliases,
+           (SELECT COUNT(*) FROM inventory_ledger ledger WHERE ledger.item_id = item.id) AS ledger_count,
+           (SELECT COUNT(*) FROM reservations reservation WHERE reservation.item_id = item.id) AS reservation_count,
+           (SELECT COUNT(*) FROM lending_tickets ticket WHERE ticket.item_id = item.id) AS lending_ticket_count,
+           (SELECT COUNT(*) FROM request_lines line WHERE line.item_id = item.id) AS request_line_count,
+           (SELECT COUNT(*) FROM restock_requests restock WHERE restock.item_id = item.id) AS restock_count,
+           (SELECT COUNT(*) FROM inventory_asset_instances asset WHERE asset.item_id = item.id) AS asset_count
+         FROM inventory_items item
+         JOIN lending_catalog_availability availability ON availability.item_id = item.id
+         WHERE item.id = ?1`,
+      )
+      .bind(itemId)
+      .first();
+
+  const requireCatalogItem = async (itemId) => {
+    const item = await loadCatalogItem(itemId);
+    if (!item) throw new ApiError('ITEM_NOT_FOUND', 'The inventory item was not found.', { status: 404 });
+    return item;
+  };
+
+  const requireCatalogRevision = (command, current) => {
+    const expectedUpdatedAt = requiredText(command.expectedUpdatedAt, 'expectedUpdatedAt', 80);
+    if (expectedUpdatedAt !== current.updated_at) {
+      throw new ApiError('CATALOG_REVISION_CONFLICT', 'This catalog item changed. Refresh before saving.', {
+        status: 409,
+      });
+    }
+  };
+
+  const nextCatalogTimestamp = (current = '') => {
+    const timestamp = nowIso();
+    if (!current || timestamp !== current) return timestamp;
+    return new Date(Date.parse(timestamp) + 1).toISOString();
+  };
+
+  const aliasStatements = (itemId, aliases, { replace = false } = {}) => [
+    ...(replace ? [db.prepare('DELETE FROM item_aliases WHERE item_id = ?1').bind(itemId)] : []),
+    ...aliases.map(({ normalizedAlias, displayAlias }) =>
+      db
+        .prepare(
+          `INSERT INTO item_aliases (item_id, normalized_alias, display_alias)
+           VALUES (?1, ?2, ?3)`,
+        )
+        .bind(itemId, normalizedAlias, displayAlias),
+    ),
+  ];
+
+  const catalogUnitDependencies = (current) => ({
+    ledger: Number(current.ledger_count ?? 0),
+    reservations: Number(current.reservation_count ?? 0),
+    lendingTickets: Number(current.lending_ticket_count ?? 0),
+    requestLines: Number(current.request_line_count ?? 0),
+    restockRecords: Number(current.restock_count ?? 0),
+    assets: Number(current.asset_count ?? 0),
+  });
+
+  const validateCatalogQuantities = ({ unit, reorderThreshold, maximumLoanQuantity, initialQuantity }) => ({
+    reorderThreshold: nonNegativeOperationalQuantity(reorderThreshold ?? 0, unit, 'reorderThreshold'),
+    maximumLoanQuantity:
+      maximumLoanQuantity === '' || maximumLoanQuantity === null || maximumLoanQuantity === undefined
+        ? null
+        : positiveOperationalQuantity(maximumLoanQuantity, unit, 'maximumLoanQuantity'),
+    initialQuantity:
+      initialQuantity === undefined
+        ? undefined
+        : nonNegativeOperationalQuantity(initialQuantity, unit, 'initialQuantity'),
+  });
+
+  async function createInventoryItem({ account, command, correlationId }) {
+    const authorization = assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'createInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = createId('ITM');
+    const name = requiredText(command.itemName ?? command.name, 'itemName', 240);
+    const category = requiredText(command.category, 'category', 120);
+    const stockArea = requiredText(command.stockArea, 'stockArea', 120);
+    const storageLocation = requiredText(command.storageLocation ?? 'TO_BE_ASSIGNED', 'storageLocation', 160);
+    const handling = normalizedHandling(command.handling ?? 'NON_CIRCULATING');
+    const unit = requiredText(command.unit, 'unit', 40).toLowerCase();
+    if (!isKnownQuantityUnit(unit)) {
+      throw new ApiError('VALIDATION_FAILED', `Catalog item uses an unsupported unit: ${unit}.`);
+    }
+    const status = normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status', 'ACTIVE');
+    const catalogType = normalizedCatalogEnum(
+      command.catalogType,
+      INVENTORY_CATALOG_TYPES,
+      'catalogType',
+      stockArea.toUpperCase() === 'PANTRY' ? 'PANTRY' : 'OFFICE_INVENTORY',
+    );
+    const quantities = validateCatalogQuantities({
+      unit,
+      reorderThreshold: command.reorderThreshold,
+      maximumLoanQuantity: command.maximumLoanQuantity,
+      initialQuantity: command.initialQuantity ?? command.quantity ?? 0,
+    });
+    if (
+      quantities.initialQuantity > 0 &&
+      !authorization.capabilities.includes(CAPABILITIES.FULFILL_RECEIVE) &&
+      !authorization.capabilities.includes(CAPABILITIES.INVENTORY_ADJUST) &&
+      !authorization.capabilities.includes(CAPABILITIES.SYSTEM_ADMIN)
+    ) {
+      throw new ApiError(
+        'CAPABILITY_REQUIRED',
+        'Receiving or inventory-adjustment permission is required to post initial stock.',
+        { status: 403 },
+      );
+    }
+    const aliases = normalizedAliases(command.aliases);
+    const defaultLoanDays = optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays');
+    const approvalRequired = booleanInput(command.approvalRequired, true);
+    const verificationNote = optionalText(command.verificationNote, 1000);
+    const notes = optionalText(command.notes, 2000);
+    const timestamp = nowIso();
+    const after = {
+      id: itemId,
+      name,
+      aliases: aliases.map((alias) => alias.displayAlias),
+      category,
+      stockArea,
+      storageLocation,
+      handling,
+      unit,
+      status,
+      catalogType,
+      reorderThreshold: quantities.reorderThreshold,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      defaultLoanDays,
+      maximumLoanQuantity: quantities.maximumLoanQuantity,
+      approvalRequired,
+      verificationNote,
+      notes,
+      inventoryKind: 'UNVERIFIED',
+      classificationStatus: 'NEEDS_CLASSIFICATION',
+      isLendable: false,
+      updatedAt: timestamp,
+    };
+    const transactionId = quantities.initialQuantity > 0 ? createId('TXN') : null;
+    const result = {
+      itemId,
+      status,
+      updatedAt: timestamp,
+      transactionId,
+      initialQuantityPosted: quantities.initialQuantity,
+      correlationId,
+    };
+    const statements = [
+      db
+        .prepare(
+          `INSERT INTO inventory_items (
+             id, name, category, stock_area, handling, unit, opening_quantity, status,
+             catalog_type, storage_location, reorder_threshold, lending_audience,
+             default_loan_days, maximum_loan_quantity, approval_required, legacy_source_sheet,
+             verification_note, notes, created_at, updated_at, updated_by
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, ?9, ?10,
+             'NOT_AVAILABLE_FOR_LENDING', ?11, ?12, ?13, '', ?14, ?15, ?16, ?16, ?17)`,
+        )
+        .bind(
+          itemId,
+          name,
+          category,
+          stockArea,
+          handling,
+          unit,
+          status,
+          catalogType,
+          storageLocation,
+          quantities.reorderThreshold,
+          defaultLoanDays,
+          quantities.maximumLoanQuantity,
+          approvalRequired ? 1 : 0,
+          verificationNote,
+          notes,
+          timestamp,
+          account.id,
+        ),
+      ...aliasStatements(itemId, aliases),
+    ];
+    if (transactionId) {
+      statements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_ledger (
+               id, created_at, transaction_type, direction, item_id, quantity, unit,
+               signed_quantity, related_entity_type, related_entity_id, actor_account_id,
+               idempotency_key, status, notes
+             ) VALUES (?1, ?2, 'OPENING_BALANCE', 'IN', ?3, ?4, ?5, ?4,
+               'INVENTORY_ITEM', ?3, ?6, ?7, 'POSTED', ?8)`,
+          )
+          .bind(
+            transactionId,
+            timestamp,
+            itemId,
+            quantities.initialQuantity,
+            unit,
+            account.id,
+            `${mutation.key}:opening`,
+            optionalText(command.reason ?? command.notes ?? 'Catalog item creation', 1000),
+          ),
+      );
+    }
+    statements.push(
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Catalog item created', 500),
+        metadata: { before: {}, after },
+      }),
+      auditStatement(db, {
+        action: 'CREATE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before: {},
+        after,
+      }),
+      idempotencyStatement(db, 'createInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    );
+    await db.batch(statements);
+    return result;
+  }
+
+  async function updateInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'updateInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('ITEM_ARCHIVED', 'Restore this item before editing it.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const before = catalogItemSnapshot(current);
+    const has = (field) => Object.prototype.hasOwnProperty.call(command, field);
+    const name =
+      has('itemName') || has('name')
+        ? requiredText(command.itemName ?? command.name, 'itemName', 240)
+        : current.name;
+    const category = has('category') ? requiredText(command.category, 'category', 120) : current.category;
+    const stockArea = has('stockArea')
+      ? requiredText(command.stockArea, 'stockArea', 120)
+      : current.stock_area;
+    const storageLocation = has('storageLocation')
+      ? requiredText(command.storageLocation, 'storageLocation', 160)
+      : current.storage_location;
+    const handling = has('handling') ? normalizedHandling(command.handling) : current.handling;
+    const unit = has('unit') ? requiredText(command.unit, 'unit', 40).toLowerCase() : current.unit;
+    if (!isKnownQuantityUnit(unit)) {
+      throw new ApiError('VALIDATION_FAILED', `Catalog item uses an unsupported unit: ${unit}.`);
+    }
+    if (unit !== current.unit) {
+      const dependencies = catalogUnitDependencies(current);
+      if (Object.values(dependencies).some((count) => count > 0)) {
+        throw new ApiError(
+          'HISTORICAL_UNIT_CHANGE_BLOCKED',
+          'The unit cannot change because historical or active records depend on it.',
+          { status: 409, details: dependencies },
+        );
+      }
+    }
+    if (
+      handling !== current.handling &&
+      current.classification_status === 'CLASSIFIED' &&
+      handling !==
+        (current.inventory_kind === 'REUSABLE'
+          ? 'REUSABLE_ASSET'
+          : current.inventory_kind === 'CONSUMABLE'
+            ? 'CONSUMABLE'
+            : 'TO_CLASSIFY')
+    ) {
+      throw new ApiError(
+        'CLASSIFICATION_CONTROLLED_FIELD',
+        'Handling for a classified item must be changed through physical classification review.',
+        { status: 409 },
+      );
+    }
+    const status = has('status')
+      ? normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status')
+      : current.status;
+    const catalogType = has('catalogType')
+      ? normalizedCatalogEnum(command.catalogType, INVENTORY_CATALOG_TYPES, 'catalogType')
+      : current.catalog_type;
+    const quantities = validateCatalogQuantities({
+      unit,
+      reorderThreshold: has('reorderThreshold') ? command.reorderThreshold : current.reorder_threshold,
+      maximumLoanQuantity: has('maximumLoanQuantity')
+        ? command.maximumLoanQuantity
+        : current.maximum_loan_quantity,
+    });
+    const defaultLoanDays = has('defaultLoanDays')
+      ? optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays')
+      : current.default_loan_days;
+    const approvalRequired = has('approvalRequired')
+      ? booleanInput(command.approvalRequired, true)
+      : current.approval_required === 1;
+    let lendingAudience = has('lendingAudience')
+      ? normalizedCatalogEnum(command.lendingAudience, LENDING_AUDIENCES, 'lendingAudience')
+      : current.lending_audience;
+    const isLendable =
+      current.is_lendable === 1 &&
+      current.classification_status === 'CLASSIFIED' &&
+      status === 'ACTIVE' &&
+      handling !== 'NON_CIRCULATING';
+    if (!isLendable) lendingAudience = 'NOT_AVAILABLE_FOR_LENDING';
+    const verificationNote = has('verificationNote')
+      ? optionalText(command.verificationNote, 1000)
+      : current.verification_note;
+    const notes = has('notes') ? optionalText(command.notes, 2000) : current.notes;
+    const aliases = has('aliases') ? normalizedAliases(command.aliases) : normalizedAliases(current.aliases);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      name,
+      aliases: aliases.map((alias) => alias.displayAlias),
+      category,
+      stockArea,
+      storageLocation,
+      handling,
+      unit,
+      status,
+      catalogType,
+      reorderThreshold: quantities.reorderThreshold,
+      lendingAudience,
+      defaultLoanDays,
+      maximumLoanQuantity: handling === 'NON_CIRCULATING' ? null : quantities.maximumLoanQuantity,
+      approvalRequired,
+      verificationNote,
+      notes,
+      isLendable,
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status, updatedAt: timestamp, correlationId };
+    const statements = [
+      db
+        .prepare(
+          `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
+             storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
+             reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
+             maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
+             notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
+             updated_at = ?18, updated_by = ?19
+           WHERE id = ?20 AND updated_at = ?21`,
+        )
+        .bind(
+          name,
+          category,
+          stockArea,
+          storageLocation,
+          handling,
+          unit,
+          status,
+          catalogType,
+          quantities.reorderThreshold,
+          lendingAudience,
+          defaultLoanDays,
+          after.maximumLoanQuantity,
+          approvalRequired ? 1 : 0,
+          verificationNote,
+          notes,
+          isLendable ? 1 : 0,
+          isLendable ? 'ACTIVE' : 'NOT_LENDABLE',
+          timestamp,
+          account.id,
+          itemId,
+          current.updated_at,
+        ),
+      ...(has('aliases') ? aliasStatements(itemId, aliases, { replace: true }) : []),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Catalog item updated', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'UPDATE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'updateInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ];
+    await db.batch(statements);
+    return result;
+  }
+
+  async function updateInventoryStorageContext({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(
+      db,
+      'updateInventoryStorageContext',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('ITEM_ARCHIVED', 'Restore this item before changing its storage context.', {
+        status: 409,
+      });
+    }
+    requireCatalogRevision(command, current);
+    const before = catalogItemSnapshot(current);
+    const stockArea = requiredText(command.stockArea, 'stockArea', 120);
+    const storageLocation = requiredText(command.storageLocation, 'storageLocation', 160);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = { ...before, stockArea, storageLocation, updatedAt: timestamp };
+    const result = { itemId, stockArea, storageLocation, updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET stock_area = ?1, storage_location = ?2,
+             updated_at = ?3, updated_by = ?4 WHERE id = ?5 AND updated_at = ?6`,
+        )
+        .bind(stockArea, storageLocation, timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: current.status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.note ?? command.reason ?? 'Storage context updated', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'UPDATE_INVENTORY_STORAGE',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'updateInventoryStorageContext', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory']),
+    ]);
+    return result;
+  }
+
+  async function archiveInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'archiveInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status === 'ARCHIVED') {
+      throw new ApiError('INVALID_TRANSITION', 'This item is already archived.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const dependencies = await db
+      .prepare(
+        `SELECT balance.on_hand, balance.reserved,
+           (SELECT COUNT(*) FROM lending_tickets ticket WHERE ticket.item_id = item.id
+             AND ticket.status NOT IN ('RETURNED', 'COMPLETED', 'REJECTED', 'CANCELLED')) AS open_lending,
+           (SELECT COUNT(*) FROM request_lines line WHERE line.item_id = item.id
+             AND line.status NOT IN ('COMPLETED', 'REJECTED', 'CANCELLED')) AS active_lines,
+           (SELECT COUNT(*) FROM restock_requests restock WHERE restock.item_id = item.id
+             AND restock.status NOT IN ('RESTOCKED', 'COMPLETED', 'REJECTED', 'CANCELLED')) AS open_restocks,
+           (SELECT COUNT(*) FROM inventory_asset_instances asset WHERE asset.item_id = item.id
+             AND asset.lifecycle_status <> 'ARCHIVED') AS active_assets
+         FROM inventory_items item JOIN inventory_balances balance ON balance.item_id = item.id
+         WHERE item.id = ?1`,
+      )
+      .bind(itemId)
+      .first();
+    const dependencySummary = {
+      onHand: Number(dependencies?.on_hand ?? 0),
+      activeReservations: Number(dependencies?.reserved ?? 0),
+      openLendingTickets: Number(dependencies?.open_lending ?? 0),
+      activeRequestLines: Number(dependencies?.active_lines ?? 0),
+      openRestockRequests: Number(dependencies?.open_restocks ?? 0),
+      activeAssets: Number(dependencies?.active_assets ?? 0),
+    };
+    if (Object.values(dependencySummary).some((value) => value !== 0)) {
+      throw new ApiError(
+        'ARCHIVE_NOT_ALLOWED',
+        'Archive requires zero balance and no active reservation, lending, request, restock, or asset dependencies.',
+        { status: 409, details: dependencySummary },
+      );
+    }
+    const before = catalogItemSnapshot(current);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      status: 'ARCHIVED',
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status: 'ARCHIVED', updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET status = 'ARCHIVED', is_lendable = 0,
+             lending_audience = 'NOT_AVAILABLE_FOR_LENDING', lending_status = 'NOT_LENDABLE',
+             updated_at = ?1, updated_by = ?2 WHERE id = ?3 AND updated_at = ?4`,
+        )
+        .bind(timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: current.status,
+        newStatus: 'ARCHIVED',
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Item archived', 500),
+        metadata: { before, after, dependencies: dependencySummary },
+      }),
+      auditStatement(db, {
+        action: 'ARCHIVE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'archiveInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ]);
+    return result;
+  }
+
+  async function restoreInventoryItem({ account, command, correlationId }) {
+    assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
+    const mutation = await replay(db, 'restoreInventoryItem', command.clientRequestId, account.id, command);
+    if (mutation.replayed) return mutation.value;
+    const itemId = requiredText(command.itemId, 'itemId', 80);
+    const current = await requireCatalogItem(itemId);
+    if (current.status !== 'ARCHIVED') {
+      throw new ApiError('INVALID_TRANSITION', 'Only archived items may be restored.', { status: 409 });
+    }
+    requireCatalogRevision(command, current);
+    const requestedStatus = normalizedCatalogEnum(command.status, INVENTORY_STATUSES, 'status', 'ACTIVE');
+    const status = current.verification_note ? 'VERIFY' : requestedStatus;
+    const before = catalogItemSnapshot(current);
+    const timestamp = nextCatalogTimestamp(current.updated_at);
+    const after = {
+      ...before,
+      status,
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      updatedAt: timestamp,
+    };
+    const result = { itemId, status, updatedAt: timestamp, correlationId };
+    await db.batch([
+      db
+        .prepare(
+          `UPDATE inventory_items SET status = ?1, is_lendable = 0,
+             lending_audience = 'NOT_AVAILABLE_FOR_LENDING', lending_status = 'NOT_LENDABLE',
+             updated_at = ?2, updated_by = ?3 WHERE id = ?4 AND updated_at = ?5`,
+        )
+        .bind(status, timestamp, account.id, itemId, current.updated_at),
+      historyStatement(db, {
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        previousStatus: 'ARCHIVED',
+        newStatus: status,
+        accountId: account.id,
+        idempotencyKey: mutation.key,
+        reason: optionalText(command.reason ?? 'Item restored', 500),
+        metadata: { before, after },
+      }),
+      auditStatement(db, {
+        action: 'RESTORE_INVENTORY_ITEM',
+        entityType: 'INVENTORY_ITEM',
+        entityId: itemId,
+        accountId: account.id,
+        correlationId,
+        before,
+        after,
+      }),
+      idempotencyStatement(db, 'restoreInventoryItem', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'lending']),
+    ]);
+    return result;
+  }
+
   async function listInventoryClassifications({ account, command = {}, correlationId }) {
     assertInventoryClassificationAccess(account);
     const page = pageInput(command);
@@ -5554,8 +6239,8 @@ export function createD1OperationalService({
         !isKnownQuantityUnit(unit)
           ? `Reorder threshold uses an unsupported unit: ${unit}.`
           : isCountableUnit(unit)
-          ? `Reorder threshold must be a whole number for ${unit}.`
-          : 'Reorder threshold must be zero or greater.',
+            ? `Reorder threshold must be a whole number for ${unit}.`
+            : 'Reorder threshold must be zero or greater.',
       );
     }
     const classificationNotes = optionalText(command.classificationNotes, 1000);
@@ -6687,6 +7372,11 @@ export function createD1OperationalService({
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     listInventoryClassifications,
     classifyInventoryItem,
+    createInventoryItem,
+    updateInventoryItem,
+    updateInventoryStorageContext,
+    archiveInventoryItem,
+    restoreInventoryItem,
     getEventManagement,
     saveEventSeries,
     saveEventDay,
