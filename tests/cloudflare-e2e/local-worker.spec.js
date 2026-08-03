@@ -383,6 +383,8 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       storageLocation: fixture.storageLocation,
       unit: fixture.unit,
       reorderThreshold: fixture.reorderThreshold,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
       conditionReviewState: 'GOOD',
       maintenanceReviewState: 'CLEARED',
       isLendable: true,
@@ -426,6 +428,8 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       classificationStatus: 'CLASSIFIED',
       inventoryKind: 'REUSABLE',
       isLendable: true,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
       assetInstanceCount: 1,
       classificationRevision: fixture.classificationRevision + 1,
     });
@@ -445,6 +449,9 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       id: fixture.id,
       classificationStatus: 'CLASSIFIED',
       assetInstanceCount: 1,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
+      lowStockState: expect.stringMatching(/^(LOW|NORMAL)$/u),
       classificationHistory: [
         expect.objectContaining({
           previousStatus: 'NEEDS_CLASSIFICATION',
@@ -711,6 +718,9 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
     for (const invalid of [
       { unit: 'piece', reorderThreshold: 0.5 },
       { unit: 'piece', initialQuantity: 1.5 },
+      { unit: 'meter', reorderThreshold: 2.02 },
+      { unit: 'meter', initialQuantity: 2.03 },
+      { unit: 'meter', maximumLoanQuantity: 0.06 },
       { unit: 'unsupported-unit' },
     ]) {
       const response = await mutate(owner, ownerCsrf, 'createInventoryItem', {
@@ -735,6 +745,18 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
     const createReplay = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
     expect(createReplay.status()).toBe(200);
     await expect(createReplay.json()).resolves.toMatchObject(created);
+
+    const prematureLowStock = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-low-stock-premature-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 2,
+    });
+    expect(prematureLowStock.status()).toBe(409);
+    await expect(prematureLowStock.json()).resolves.toMatchObject({
+      code: 'LOW_STOCK_NOT_APPLICABLE',
+    });
 
     const updateCommand = {
       clientRequestId: `catalog-update-${marker}`,
@@ -805,6 +827,8 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
         unit: 'piece',
         onHand: 2,
         reorderThreshold: 2,
+        lowStockAlertEnabled: false,
+        lowStockThreshold: null,
         updatedAt: updated.updatedAt,
         inventoryKind: 'UNVERIFIED',
         classificationStatus: 'NEEDS_CLASSIFICATION',

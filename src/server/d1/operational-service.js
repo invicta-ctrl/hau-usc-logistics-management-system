@@ -8,7 +8,8 @@ import {
   REQUEST_CENTER_UNITS,
 } from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
-import { isCountableUnit, isKnownQuantityUnit } from '../../domain/quantity-units.js';
+import { isKnownQuantityUnit } from '../../domain/quantity-units.js';
+import { operationalInteger } from '../../domain/operational-integers.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -191,43 +192,33 @@ const positiveNumber = (value, field = 'quantity') => {
 };
 
 const positiveOperationalQuantity = (value, unit, field = 'quantity') => {
-  const result = positiveNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+  try {
+    return operationalInteger(value, { field, min: 1 });
+  } catch {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a positive whole number.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  return result;
-};
-
-const nonNegativeNumber = (value, field = 'value') => {
-  const result = Number(value);
-  if (!Number.isFinite(result) || result < 0) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be zero or greater.`, {
-      details: { field },
-    });
-  }
-  return result;
 };
 
 const nonNegativeOperationalQuantity = (value, unit, field = 'quantity') => {
-  const result = nonNegativeNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+  try {
+    return operationalInteger(value, { field, min: 0 });
+  } catch {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number zero or greater.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  return result;
 };
 
 const nowIso = () => new Date().toISOString();
@@ -946,13 +937,13 @@ const normalizedAliases = (value) => {
 
 const optionalPositiveInteger = (value, field) => {
   if (value === '' || value === null || value === undefined) return null;
-  const number = Number(value);
-  if (!Number.isInteger(number) || number < 1) {
+  try {
+    return operationalInteger(value, { field, min: 1 });
+  } catch {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a positive integer.`, {
       details: { field },
     });
   }
-  return number;
 };
 
 const booleanInput = (value, fallback = false) => {
@@ -1002,10 +993,21 @@ const itemDto = (row, requestOnly = false) => ({
     : {
         onHand: Number(row.on_hand ?? 0),
         reserved: Number(row.reserved ?? 0),
-        availableToPromise: Number(row.available_to_promise ?? 0),
-        storageLocation: row.storage_location,
-        reorderThreshold: Number(row.reorder_threshold ?? 0),
-      }),
+         availableToPromise: Number(row.available_to_promise ?? 0),
+         storageLocation: row.storage_location,
+         reorderThreshold: Number(row.reorder_threshold ?? 0),
+         lowStockAlertEnabled: row.low_stock_alert_enabled === 1,
+         lowStockThreshold:
+           row.low_stock_threshold === null || row.low_stock_threshold === undefined
+             ? null
+             : Number(row.low_stock_threshold),
+         lowStockState:
+           row.low_stock_alert_enabled !== 1 || row.low_stock_threshold === null
+             ? 'DISABLED'
+             : Number(row.on_hand ?? 0) <= Number(row.low_stock_threshold)
+               ? 'LOW'
+               : 'NORMAL',
+       }),
   status: row.status,
   catalogType: row.catalog_type,
   lendingAudience: row.lending_audience,
@@ -6059,6 +6061,40 @@ export function createD1OperationalService({
         : nonNegativeOperationalQuantity(initialQuantity, unit, 'initialQuantity'),
   });
 
+  const validateLowStockControl = ({
+    unit,
+    enabled,
+    threshold,
+    fallbackEnabled = false,
+    fallbackThreshold = null,
+    applicable = true,
+  }) => {
+    const lowStockAlertEnabled = booleanInput(enabled, fallbackEnabled);
+    const sourceThreshold = threshold === undefined ? fallbackThreshold : threshold;
+    const lowStockThreshold =
+      sourceThreshold === '' || sourceThreshold === null || sourceThreshold === undefined
+        ? null
+        : nonNegativeOperationalQuantity(sourceThreshold, unit, 'lowStockThreshold');
+    if (lowStockAlertEnabled && !applicable) {
+      throw new ApiError(
+        'LOW_STOCK_NOT_APPLICABLE',
+        'Low-stock alerts can be enabled only for an active classified stocked item.',
+        { status: 409, details: { field: 'lowStockAlertEnabled' } },
+      );
+    }
+    if (lowStockAlertEnabled && lowStockThreshold === null) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Enter a whole-number low-stock threshold before enabling the alert.',
+        { details: { field: 'lowStockThreshold' } },
+      );
+    }
+    return {
+      lowStockAlertEnabled,
+      lowStockThreshold: lowStockAlertEnabled ? lowStockThreshold : null,
+    };
+  };
+
   async function createInventoryItem({ account, command, correlationId }) {
     const authorization = assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
     const mutation = await replay(db, 'createInventoryItem', command.clientRequestId, account.id, command);
@@ -6085,6 +6121,12 @@ export function createD1OperationalService({
       reorderThreshold: command.reorderThreshold,
       maximumLoanQuantity: command.maximumLoanQuantity,
       initialQuantity: command.initialQuantity ?? command.quantity ?? 0,
+    });
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled: command.lowStockAlertEnabled,
+      threshold: command.lowStockThreshold,
+      applicable: false,
     });
     if (
       quantities.initialQuantity > 0 &&
@@ -6116,6 +6158,8 @@ export function createD1OperationalService({
       status,
       catalogType,
       reorderThreshold: quantities.reorderThreshold,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
       defaultLoanDays,
       maximumLoanQuantity: quantities.maximumLoanQuantity,
@@ -6141,11 +6185,13 @@ export function createD1OperationalService({
         .prepare(
           `INSERT INTO inventory_items (
              id, name, category, stock_area, handling, unit, opening_quantity, status,
-             catalog_type, storage_location, reorder_threshold, lending_audience,
-             default_loan_days, maximum_loan_quantity, approval_required, legacy_source_sheet,
-             verification_note, notes, created_at, updated_at, updated_by
+             catalog_type, storage_location, reorder_threshold, low_stock_alert_enabled,
+             low_stock_threshold, lending_audience, default_loan_days, maximum_loan_quantity,
+             approval_required, legacy_source_sheet, verification_note, notes,
+             created_at, updated_at, updated_by
            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, ?9, ?10,
-             'NOT_AVAILABLE_FOR_LENDING', ?11, ?12, ?13, '', ?14, ?15, ?16, ?16, ?17)`,
+             ?11, ?12, 'NOT_AVAILABLE_FOR_LENDING', ?13, ?14, ?15, '', ?16, ?17,
+             ?18, ?18, ?19)`,
         )
         .bind(
           itemId,
@@ -6158,6 +6204,8 @@ export function createD1OperationalService({
           catalogType,
           storageLocation,
           quantities.reorderThreshold,
+          lowStock.lowStockAlertEnabled ? 1 : 0,
+          lowStock.lowStockThreshold,
           defaultLoanDays,
           quantities.maximumLoanQuantity,
           approvalRequired ? 1 : 0,
@@ -6284,6 +6332,16 @@ export function createD1OperationalService({
         ? command.maximumLoanQuantity
         : current.maximum_loan_quantity,
     });
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled: has('lowStockAlertEnabled')
+        ? command.lowStockAlertEnabled
+        : current.low_stock_alert_enabled === 1,
+      threshold: has('lowStockThreshold') ? command.lowStockThreshold : undefined,
+      fallbackEnabled: current.low_stock_alert_enabled === 1,
+      fallbackThreshold: current.low_stock_threshold,
+      applicable: current.classification_status === 'CLASSIFIED' && status === 'ACTIVE',
+    });
     const defaultLoanDays = has('defaultLoanDays')
       ? optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays')
       : current.default_loan_days;
@@ -6317,6 +6375,8 @@ export function createD1OperationalService({
       status,
       catalogType,
       reorderThreshold: quantities.reorderThreshold,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       lendingAudience,
       defaultLoanDays,
       maximumLoanQuantity: handling === 'NON_CIRCULATING' ? null : quantities.maximumLoanQuantity,
@@ -6329,13 +6389,14 @@ export function createD1OperationalService({
     const result = { itemId, status, updatedAt: timestamp, correlationId };
     const guardedStatement = db
       .prepare(
-        `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
+         `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
            storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
-           reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
-           maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
-           notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
-           updated_at = ?18, updated_by = ?19
-         WHERE id = ?20 AND updated_at = ?21`,
+           reorder_threshold = ?9, low_stock_alert_enabled = ?10, low_stock_threshold = ?11,
+           lending_audience = ?12, default_loan_days = ?13, maximum_loan_quantity = ?14,
+           approval_required = ?15, verification_note = ?16, notes = ?17,
+           is_lendable = ?18, lending_status = ?19, lending_unit = ?6,
+           updated_at = ?20, updated_by = ?21
+         WHERE id = ?22 AND updated_at = ?23`,
       )
       .bind(
         name,
@@ -6347,6 +6408,8 @@ export function createD1OperationalService({
         status,
         catalogType,
         quantities.reorderThreshold,
+        lowStock.lowStockAlertEnabled ? 1 : 0,
+        lowStock.lowStockThreshold,
         lendingAudience,
         defaultLoanDays,
         after.maximumLoanQuantity,
@@ -6827,22 +6890,22 @@ export function createD1OperationalService({
         { status: 409 },
       );
     }
-    const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
-    if (
-      !isKnownQuantityUnit(unit) ||
-      !Number.isFinite(reorderThreshold) ||
-      reorderThreshold < 0 ||
-      (isCountableUnit(unit) && !Number.isInteger(reorderThreshold))
-    ) {
-      throw new ApiError(
-        'VALIDATION_FAILED',
-        !isKnownQuantityUnit(unit)
-          ? `Reorder threshold uses an unsupported unit: ${unit}.`
-          : isCountableUnit(unit)
-            ? `Reorder threshold must be a whole number for ${unit}.`
-            : 'Reorder threshold must be zero or greater.',
-      );
-    }
+    const reorderThreshold = nonNegativeOperationalQuantity(
+      command.reorderThreshold ?? current.reorder_threshold,
+      unit,
+      'reorderThreshold',
+    );
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled:
+        command.lowStockAlertEnabled === undefined
+          ? current.low_stock_alert_enabled === 1
+          : command.lowStockAlertEnabled,
+      threshold: command.lowStockThreshold,
+      fallbackEnabled: current.low_stock_alert_enabled === 1,
+      fallbackThreshold: current.low_stock_threshold,
+      applicable: classificationStatus === 'CLASSIFIED' && current.status === 'ACTIVE',
+    });
     const classificationNotes = optionalText(command.classificationNotes, 1000);
     const evidenceId = optionalText(command.evidenceId, 120);
     if (evidenceId) {
@@ -6862,9 +6925,18 @@ export function createD1OperationalService({
       }
     }
     const existingAssetCount = Number(current.asset_count ?? 0);
-    const requestedAssetCount = Number(command.assetInstanceCountIfReusable ?? existingAssetCount);
-    if (!Number.isInteger(requestedAssetCount) || requestedAssetCount < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'Asset instance count must be a whole number zero or greater.');
+    let requestedAssetCount;
+    try {
+      requestedAssetCount = operationalInteger(
+        command.assetInstanceCountIfReusable ?? existingAssetCount,
+        { field: 'assetInstanceCountIfReusable', min: 0 },
+      );
+    } catch {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Asset instance count must be a whole number zero or greater.',
+        { details: { field: 'assetInstanceCountIfReusable' } },
+      );
     }
     const assetTags = Array.isArray(command.assetTags)
       ? command.assetTags.map((tag) => requiredText(tag, 'assetTag', 80).toUpperCase())
@@ -6919,6 +6991,8 @@ export function createD1OperationalService({
       inventoryKind,
       isLendable,
       lendingAudience,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       assetInstanceCount: requestedAssetCount,
       classificationRevision: nextRevision,
       correlationId,
@@ -6936,15 +7010,16 @@ export function createD1OperationalService({
         .prepare(
           `UPDATE inventory_items SET
              stock_area = ?1, storage_location = ?2, handling = ?3, unit = ?4,
-             reorder_threshold = ?5, inventory_kind = ?6, classification_status = ?7,
-             condition_review_state = ?8, maintenance_review_state = ?9,
-             classification_notes = ?10, classification_evidence_id = ?11,
-             classification_revision = ?12, classified_at = ?13, classified_by = ?14,
-             is_lendable = ?15, lending_audience = ?16, lending_kind = ?17,
-             lending_status = ?18, lending_unit = ?4, due_date_required = ?19,
-             condition_tracking = ?20, eligibility_rule = ?21,
-             lending_handling_notes = ?10, updated_at = ?22, updated_by = ?14
-           WHERE id = ?23 AND classification_revision = ?24`,
+             reorder_threshold = ?5, low_stock_alert_enabled = ?6, low_stock_threshold = ?7,
+             inventory_kind = ?8, classification_status = ?9,
+             condition_review_state = ?10, maintenance_review_state = ?11,
+             classification_notes = ?12, classification_evidence_id = ?13,
+             classification_revision = ?14, classified_at = ?15, classified_by = ?16,
+             is_lendable = ?17, lending_audience = ?18, lending_kind = ?19,
+             lending_status = ?20, lending_unit = ?4, due_date_required = ?21,
+             condition_tracking = ?22, eligibility_rule = ?23,
+             lending_handling_notes = ?12, updated_at = ?24, updated_by = ?16
+           WHERE id = ?25 AND classification_revision = ?26`,
         )
         .bind(
           stockArea,
@@ -6952,6 +7027,8 @@ export function createD1OperationalService({
           handling,
           unit,
           reorderThreshold,
+          lowStock.lowStockAlertEnabled ? 1 : 0,
+          lowStock.lowStockThreshold,
           inventoryKind,
           classificationStatus,
           conditionReviewState,
