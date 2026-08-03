@@ -68,16 +68,18 @@
   tests with 326 intentional skips, 38/38 local Worker/D1 tests, and a
   no-binding preview dry-run. Handoff:
   `.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md`.
-- Reviewed deployable candidate:
-  `7338124554d5ad6f948587d69328dae731b38a6c`. Active next action is the
-  owner-gated upstream/PR/CI and private staging sequence in
-  `.codex/V0_7_1_OWNER_GATED_RELEASE_RUNBOOK.md`; no external action is
-  authorized by this pointer.
+- Active release candidate: the exact clean merge commit produced by PR #13
+  after required checks and review-thread closure. Bind the release manifest,
+  private staging package, and private production package to that exact merge
+  SHA; do not reuse the superseded `7338124` candidate identity.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.
-- No production, deployment, migration, domain, Google, or destructive
-  external write is authorized by this pointer.
+- The owner explicitly authorized the v0.7.1 staging, production, domain, and
+  bounded Google release-evidence writes in the active execution session.
+  Continue sequentially through the private release runbook with verified
+  backups, rollback targets, staging acceptance, and post-launch
+  reconciliation. No schema migration is part of v0.7.1.
 
 ---
 

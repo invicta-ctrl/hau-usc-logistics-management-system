@@ -799,6 +799,32 @@ function revisionStatements(db, scopes, timestamp = nowIso()) {
   );
 }
 
+export async function runAtomicRevisionGuardedBatch(
+  db,
+  { beforeGuardStatements = [], guardedStatement, dependentStatements, conflictCode, conflictMessage },
+) {
+  try {
+    return await db.batch([
+      ...beforeGuardStatements,
+      guardedStatement,
+      // D1 returns batch results only after every statement has run. This strict
+      // NOT NULL assertion makes a zero-row guarded update abort and roll back
+      // the complete batch before any dependent records can commit.
+      db.prepare(
+        `UPDATE data_revisions
+         SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+         WHERE scope = 'global'`,
+      ),
+      ...dependentStatements,
+    ]);
+  } catch (error) {
+    if (String(error?.message ?? '').includes('NOT NULL constraint failed: data_revisions.updated_at')) {
+      throw new ApiError(conflictCode, conflictMessage, { status: 409 });
+    }
+    throw error;
+  }
+}
+
 async function replay(db, scope, key, actorId, command) {
   const idempotencyKey = requiredText(key, 'clientRequestId', 128);
   const requestFingerprint = await fingerprint(command);
@@ -2732,9 +2758,9 @@ export function createD1OperationalService({
       updatedAt: timestamp,
     };
     const result = { canvassId, id: canvassId, updatedAt: timestamp, correlationId };
-    const statements = [];
+    const beforeGuardStatements = [];
     if (!supplierResolution.supplier) {
-      statements.push(
+      beforeGuardStatements.push(
         db
           .prepare(
             `INSERT INTO suppliers (
@@ -2753,31 +2779,31 @@ export function createD1OperationalService({
           ),
       );
     }
-    statements.push(
-      db
-        .prepare(
-          `UPDATE canvass_references SET supplier_id = ?1, supplier_name = ?2, item_spec = ?3,
-             price = ?4, unit = ?5, receipt_status = ?6, reliability = ?7, checked_at = ?8,
-             source_url = ?9, evidence_id = ?10, price_history_json = ?11, notes = ?12, updated_at = ?13
-           WHERE id = ?14 AND updated_at = ?15`,
-        )
-        .bind(
-          supplierId,
-          candidate.supplierName,
-          candidate.itemSpec,
-          candidate.price,
-          candidate.unit,
-          candidate.receiptStatus,
-          candidate.reliability,
-          candidate.checkedAt,
-          candidate.sourceUrl,
-          evidenceId,
-          JSON.stringify(priceHistory),
-          candidate.notes,
-          timestamp,
-          canvassId,
-          expectedUpdatedAt,
-        ),
+    const guardedStatement = db
+      .prepare(
+        `UPDATE canvass_references SET supplier_id = ?1, supplier_name = ?2, item_spec = ?3,
+           price = ?4, unit = ?5, receipt_status = ?6, reliability = ?7, checked_at = ?8,
+           source_url = ?9, evidence_id = ?10, price_history_json = ?11, notes = ?12, updated_at = ?13
+         WHERE id = ?14 AND updated_at = ?15`,
+      )
+      .bind(
+        supplierId,
+        candidate.supplierName,
+        candidate.itemSpec,
+        candidate.price,
+        candidate.unit,
+        candidate.receiptStatus,
+        candidate.reliability,
+        candidate.checkedAt,
+        candidate.sourceUrl,
+        evidenceId,
+        JSON.stringify(priceHistory),
+        candidate.notes,
+        timestamp,
+        canvassId,
+        expectedUpdatedAt,
+      );
+    const dependentStatements = [
       historyStatement(db, {
         entityType: 'CANVASS',
         entityId: canvassId,
@@ -2799,8 +2825,14 @@ export function createD1OperationalService({
       }),
       idempotencyStatement(db, 'updateCanvassReference', mutation, account.id, result),
       ...revisionStatements(db, ['procurement', 'restocking']),
-    );
-    await db.batch(statements);
+    ];
+    await runAtomicRevisionGuardedBatch(db, {
+      beforeGuardStatements,
+      guardedStatement,
+      dependentStatements,
+      conflictCode: 'REVISION_CONFLICT',
+      conflictMessage: 'This canvass reference changed; refresh before updating.',
+    });
     return result;
   }
 
@@ -6295,40 +6327,40 @@ export function createD1OperationalService({
       updatedAt: timestamp,
     };
     const result = { itemId, status, updatedAt: timestamp, correlationId };
-    const statements = [
-      db
-        .prepare(
-          `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
-             storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
-             reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
-             maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
-             notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
-             updated_at = ?18, updated_by = ?19
-           WHERE id = ?20 AND updated_at = ?21`,
-        )
-        .bind(
-          name,
-          category,
-          stockArea,
-          storageLocation,
-          handling,
-          unit,
-          status,
-          catalogType,
-          quantities.reorderThreshold,
-          lendingAudience,
-          defaultLoanDays,
-          after.maximumLoanQuantity,
-          approvalRequired ? 1 : 0,
-          verificationNote,
-          notes,
-          isLendable ? 1 : 0,
-          isLendable ? 'ACTIVE' : 'NOT_LENDABLE',
-          timestamp,
-          account.id,
-          itemId,
-          current.updated_at,
-        ),
+    const guardedStatement = db
+      .prepare(
+        `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
+           storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
+           reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
+           maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
+           notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
+           updated_at = ?18, updated_by = ?19
+         WHERE id = ?20 AND updated_at = ?21`,
+      )
+      .bind(
+        name,
+        category,
+        stockArea,
+        storageLocation,
+        handling,
+        unit,
+        status,
+        catalogType,
+        quantities.reorderThreshold,
+        lendingAudience,
+        defaultLoanDays,
+        after.maximumLoanQuantity,
+        approvalRequired ? 1 : 0,
+        verificationNote,
+        notes,
+        isLendable ? 1 : 0,
+        isLendable ? 'ACTIVE' : 'NOT_LENDABLE',
+        timestamp,
+        account.id,
+        itemId,
+        current.updated_at,
+      );
+    const dependentStatements = [
       ...(has('aliases') ? aliasStatements(itemId, aliases, { replace: true }) : []),
       historyStatement(db, {
         entityType: 'INVENTORY_ITEM',
@@ -6352,7 +6384,12 @@ export function createD1OperationalService({
       idempotencyStatement(db, 'updateInventoryItem', mutation, account.id, result),
       ...revisionStatements(db, ['inventory', 'lending']),
     ];
-    await db.batch(statements);
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement,
+      dependentStatements,
+      conflictCode: 'CATALOG_REVISION_CONFLICT',
+      conflictMessage: 'This catalog item changed. Refresh before saving.',
+    });
     return result;
   }
 
