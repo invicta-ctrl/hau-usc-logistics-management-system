@@ -68,10 +68,11 @@
   tests with 326 intentional skips, 38/38 local Worker/D1 tests, and a
   no-binding preview dry-run. Handoff:
   `.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md`.
-- Active release candidate: the exact clean merge commit produced by PR #13
-  after required checks and review-thread closure. Bind the release manifest,
-  private staging package, and private production package to that exact merge
-  SHA; do not reuse the superseded `7338124` candidate identity.
+- Release identity rule: after PR #13 passes required checks, closes every
+  review thread, and merges, its exact clean merge commit becomes the active
+  release candidate. Bind the release manifest, private staging package, and
+  private production package to that exact merge SHA; do not reuse the
+  superseded `7338124` candidate identity.
 - Preserve the untracked `.codegraph/` directory and all v0.7.0 safety,
   inventory, ledger, history, evidence, privacy, backup, and rollback
   invariants.
