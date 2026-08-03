@@ -487,8 +487,13 @@ describe('access management service', () => {
     expect(repository.updateAccessPolicy).not.toHaveBeenCalled();
   });
 
-  it('unlocks the privacy-preserving limiter identity used by authentication', async () => {
-    const target = account({ lockedAt: '2026-07-22T07:00:00.000Z' });
+  it('unlocks every privacy-preserving limiter identity used by authentication', async () => {
+    const target = account({
+      lockedAt: '2026-07-22T07:00:00.000Z',
+      usernameNormalized: 'food.operator',
+      profileEmailVerifiedAt: '2026-07-22T00:00:00.000Z',
+      profile: { fullName: 'Synthetic Food Operator', email: 'Food.Operator@example.test' },
+    });
     const { service, repository } = context({ accounts: [target] });
 
     await expect(
@@ -504,7 +509,16 @@ describe('access management service', () => {
       }),
     ).resolves.toMatchObject({ unlocked: true, replayed: false });
     expect(repository.unlockAccount).toHaveBeenCalledWith(
-      expect.objectContaining({ limiterIdentity: `DIGEST:${target.accessIdNormalized.toLowerCase()}` }),
+      expect.objectContaining({
+        limiterIdentities: [
+          `DIGEST:${target.accessIdNormalized.toLowerCase()}`,
+          'DIGEST:food.operator',
+          'DIGEST:food.operator@example.test',
+        ],
+      }),
+    );
+    expect(JSON.stringify(repository.unlockAccount.mock.calls[0][0].limiterIdentities)).not.toContain(
+      'Food.Operator@example.test',
     );
   });
 });

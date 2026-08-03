@@ -1,3 +1,5 @@
+import { runAtomicRevisionGuardedBatch } from './operational-service.js';
+
 const parseJson = (value, fallback = null) => {
   if (!value) return fallback;
   try {
@@ -82,6 +84,9 @@ async function accountFromRow(db, row) {
     departmentDisplayName: department?.display_name ?? '',
     passwordChangedAt: row.password_changed_at ?? '',
     lastPasswordResetAt: row.last_password_reset_at ?? '',
+    usernameNormalized: row.username_normalized ?? '',
+    profileEmailVerifiedAt: row.profile_email_verified_at ?? null,
+    profileEmail: row.profile_email ?? '',
   };
 }
 
@@ -265,25 +270,42 @@ export function createD1AccessManagementRepository(db) {
         accessProfile: profile,
         sessionsRevoked: true,
       };
-      const statements = [
-        db
-          .prepare(
-            `UPDATE accounts
-             SET role_id = ?1, default_committee_id = ?2,
-                 credential_version = credential_version + 1, updated_at = ?3
-             WHERE id = ?4 AND credential_version = ?5`,
-          )
-          .bind(
-            nextAccount.roleId,
-            nextAccount.defaultCommitteeId || null,
-            changedAt,
-            account.id,
-            account.credentialVersion,
-          ),
+      const guardedStatement = db
+        .prepare(
+          `UPDATE accounts
+           SET role_id = ?1, default_committee_id = ?2,
+               credential_version = credential_version + 1, updated_at = ?3
+           WHERE id = ?4
+             AND credential_version = ?5
+             AND updated_at = ?6
+             AND NOT (
+               role_id = 'ADMINISTRATOR'
+               AND status = 'ACTIVE'
+               AND locked_at IS NULL
+               AND ?7 <> 'ADMINISTRATOR'
+               AND (
+                 SELECT COUNT(*)
+                 FROM accounts
+                 WHERE role_id = 'ADMINISTRATOR'
+                   AND status = 'ACTIVE'
+                   AND locked_at IS NULL
+               ) <= 1
+             )`,
+        )
+        .bind(
+          nextAccount.roleId,
+          nextAccount.defaultCommitteeId || null,
+          changedAt,
+          account.id,
+          account.credentialVersion,
+          account.updatedAt,
+          nextAccount.roleId,
+        );
+      const dependentStatements = [
         db.prepare('DELETE FROM account_committees WHERE account_id = ?1').bind(account.id),
       ];
       for (const committeeId of nextAccount.committeeIds) {
-        statements.push(
+        dependentStatements.push(
           db
             .prepare(
               `INSERT INTO account_committees (
@@ -293,7 +315,7 @@ export function createD1AccessManagementRepository(db) {
             .bind(account.id, committeeId),
         );
       }
-      statements.push(
+      dependentStatements.push(
         db
           .prepare(
             `INSERT INTO account_access_profiles (
@@ -357,8 +379,12 @@ export function createD1AccessManagementRepository(db) {
           notes: reason,
         }),
       );
-      const results = await db.batch(statements);
-      if (Number(results[0]?.meta?.changes ?? 0) !== 1) throw new Error('Account write conflict.');
+      await runAtomicRevisionGuardedBatch(db, {
+        guardedStatement,
+        dependentStatements,
+        conflictCode: 'ACCESS_WRITE_CONFLICT',
+        conflictMessage: 'The account changed before this request completed. Refresh and try again.',
+      });
     },
 
     async listAccounts({ query, role, committee, status, sort, direction, page, pageSize }) {
@@ -895,7 +921,7 @@ export function createD1AccessManagementRepository(db) {
 
     async unlockAccount({
       account,
-      limiterIdentity,
+      limiterIdentities = [],
       actor,
       changedAt,
       reason,
@@ -903,13 +929,19 @@ export function createD1AccessManagementRepository(db) {
       auditId,
       idempotency,
     }) {
+      const identities = (Array.isArray(limiterIdentities) ? limiterIdentities : [])
+        .map((value) => String(value ?? '').trim())
+        .filter(Boolean)
+        .filter((value, index, values) => values.indexOf(value) === index);
       await db.batch([
         db
           .prepare('UPDATE accounts SET locked_at = NULL, updated_at = ?1 WHERE id = ?2')
           .bind(changedAt, account.id),
-        db
-          .prepare("DELETE FROM auth_rate_limit_events WHERE limiter_key LIKE ?1 ESCAPE '\\'")
-          .bind(limiterPattern(limiterIdentity)),
+        ...identities.map((identity) =>
+          db
+            .prepare("DELETE FROM auth_rate_limit_events WHERE limiter_key LIKE ?1 ESCAPE '\\'")
+            .bind(limiterPattern(identity)),
+        ),
         auditStatement(db, {
           id: auditId,
           createdAt: changedAt,

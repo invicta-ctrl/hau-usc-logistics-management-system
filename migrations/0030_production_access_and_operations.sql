@@ -36,7 +36,7 @@ CREATE TABLE email_verification_challenges (
   attempt_count INTEGER NOT NULL DEFAULT 0 CHECK (attempt_count >= 0),
   resend_count INTEGER NOT NULL DEFAULT 0 CHECK (resend_count >= 0),
   created_at TEXT NOT NULL,
-  last_sent_at TEXT NOT NULL,
+  last_sent_at TEXT,
   verified_at TEXT,
   consumed_at TEXT
 ) STRICT;

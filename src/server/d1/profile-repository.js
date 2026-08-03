@@ -78,9 +78,42 @@ function assertChanged(results) {
   const first = Array.isArray(results) ? results[0] : results;
   const changes = Number(first?.meta?.changes ?? first?.changes ?? 0);
   if (changes !== 1) {
-    const error = new Error('The account changed before this request completed.');
-    error.code = 'REVISION_CONFLICT';
-    error.status = 409;
+    throw revisionConflictError();
+  }
+}
+
+function revisionConflictError() {
+  const error = new Error('The account changed before this request completed.');
+  error.code = 'REVISION_CONFLICT';
+  error.status = 409;
+  return error;
+}
+
+function revisionGuardAbortStatement(db) {
+  return db.prepare(
+    `UPDATE data_revisions
+     SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+     WHERE scope = 'global'`,
+  );
+}
+
+async function runAtomicProfileMutation(db, guardedStatement, dependentStatements) {
+  try {
+    const results = await db.batch([
+      guardedStatement,
+      // D1 only returns batch results after every statement has run. Force a
+      // NOT NULL failure when the optimistic update changed zero rows so the
+      // complete transaction rolls back before evidence or session writes can
+      // commit.
+      revisionGuardAbortStatement(db),
+      ...dependentStatements,
+    ]);
+    assertChanged(results);
+  } catch (error) {
+    if (error?.code === 'REVISION_CONFLICT') throw error;
+    if (String(error?.message ?? '').includes('NOT NULL constraint failed: data_revisions.updated_at')) {
+      throw revisionConflictError();
+    }
     throw error;
   }
 }
@@ -192,7 +225,8 @@ export function createD1ProfileRepository(db) {
 
     async updateContact({ accountId, expectedUpdatedAt, mobileNumber, changedAt, evidence }) {
       const id = requiredAccountId(accountId);
-      const writeResults = await db.batch([
+      await runAtomicProfileMutation(
+        db,
         db
           .prepare(
             `UPDATE accounts
@@ -200,9 +234,8 @@ export function createD1ProfileRepository(db) {
              WHERE id = ?3 AND status = 'ACTIVE' AND updated_at = ?4`,
           )
           .bind(mobileNumber, changedAt, id, expectedUpdatedAt),
-      ]);
-      assertChanged(writeResults);
-      await db.batch([auditStatement(db, evidence.audit), idempotencyStatement(db, evidence.idempotency)]);
+        [auditStatement(db, evidence.audit), idempotencyStatement(db, evidence.idempotency)],
+      );
       return repository.getProfile(id);
     },
 
@@ -217,7 +250,8 @@ export function createD1ProfileRepository(db) {
       evidence,
     }) {
       const id = requiredAccountId(accountId);
-      const writeResults = await db.batch([
+      await runAtomicProfileMutation(
+        db,
         db
           .prepare(
             `UPDATE accounts
@@ -226,30 +260,29 @@ export function createD1ProfileRepository(db) {
              WHERE id = ?3 AND status = 'ACTIVE' AND updated_at = ?4`,
           )
           .bind(newUsername, changedAt, id, expectedUpdatedAt),
-      ]);
-      assertChanged(writeResults);
-      await db.batch([
-        db
-          .prepare(
-            `INSERT INTO username_history (
-               id, account_id, old_username_normalized, new_username_normalized,
-               changed_by_account_id, reason, idempotency_key, correlation_id, changed_at
-             ) VALUES (?1, ?2, ?3, ?4, ?2, ?5, ?6, ?7, ?8)`,
-          )
-          .bind(
-            historyId,
-            id,
-            oldUsername,
-            newUsername,
-            reason,
-            evidence.idempotency.key,
-            evidence.audit.correlationId,
-            changedAt,
-          ),
-        db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(id),
-        auditStatement(db, evidence.audit),
-        idempotencyStatement(db, evidence.idempotency),
-      ]);
+        [
+          db
+            .prepare(
+              `INSERT INTO username_history (
+                 id, account_id, old_username_normalized, new_username_normalized,
+                 changed_by_account_id, reason, idempotency_key, correlation_id, changed_at
+               ) VALUES (?1, ?2, ?3, ?4, ?2, ?5, ?6, ?7, ?8)`,
+            )
+            .bind(
+              historyId,
+              id,
+              oldUsername,
+              newUsername,
+              reason,
+              evidence.idempotency.key,
+              evidence.audit.correlationId,
+              changedAt,
+            ),
+          db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(id),
+          auditStatement(db, evidence.audit),
+          idempotencyStatement(db, evidence.idempotency),
+        ],
+      );
       return repository.getProfile(id);
     },
 
@@ -262,7 +295,8 @@ export function createD1ProfileRepository(db) {
       evidence,
     }) {
       const id = requiredAccountId(accountId);
-      const writeResults = await db.batch([
+      await runAtomicProfileMutation(
+        db,
         db
           .prepare(
             `UPDATE accounts
@@ -279,13 +313,12 @@ export function createD1ProfileRepository(db) {
             expectedCredentialVersion,
             expectedUpdatedAt,
           ),
-      ]);
-      assertChanged(writeResults);
-      await db.batch([
-        db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(id),
-        auditStatement(db, evidence.audit),
-        idempotencyStatement(db, evidence.idempotency),
-      ]);
+        [
+          db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(id),
+          auditStatement(db, evidence.audit),
+          idempotencyStatement(db, evidence.idempotency),
+        ],
+      );
       return repository.getProfile(id);
     },
 

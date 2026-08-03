@@ -1,6 +1,6 @@
 # Project Status
 
-## v0.7.2 repository candidate ready; pre-production blocked
+## v0.7.2 R2 repair candidate ready; exact-SHA review and pre-production blocked
 
 - Branch `release/v0.7.2-production-access-operations` contains the integrated
   Production Access and Operations candidate for draft PR #15, based on clean
@@ -11,7 +11,12 @@
   complete.
 - Additive migration 0030 rehearsed from migrations 0001-0030 with SQLite
   integrity `ok`, zero foreign-key findings, and operational schema 30.
-- Final local gates pass: `npm run check` at 109 files / 726 tests; full browser
+- The first complete-candidate R2 review rejected the prior SHA. Its
+  schema/runtime, activation reconciliation, profile/access/announcement
+  atomicity, last-Administrator, and limiter-alias findings are repaired with
+  focused rollback/failure-injection coverage. Fresh exact-SHA R2 and PR CI are
+  still mandatory.
+- Final local gates pass: `npm run check` at 112 files / 740 tests; full browser
   136 passed / 356 intentional skips; local Worker/D1 39/39.
 - The owner supplied `AUTHORIZE V0.7.2 PRODUCTION`; no second confirmation wait
   is required. Deployment is nevertheless blocked before pre-production by the

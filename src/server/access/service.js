@@ -210,6 +210,23 @@ export function createAccessManagementService({
     }
   }
 
+  async function limiterIdentitiesFor(account) {
+    const values = [account?.accessIdNormalized, account?.usernameNormalized];
+    if (account?.profileEmailVerifiedAt) {
+      values.push(account?.profile?.email ?? account?.profileEmail);
+    }
+    const identities = new Set();
+    for (const value of values) {
+      const normalized = String(value ?? '')
+        .trim()
+        .toLowerCase();
+      if (!normalized) continue;
+      const digest = await tokenCrypto.digest(normalized);
+      if (digest) identities.add(digest);
+    }
+    return [...identities];
+  }
+
   async function previewAccessIdChange({ actor, command = {} } = {}) {
     assertAdministrator(actor);
     const account = await accountByAccessId(command.currentAccessId);
@@ -290,17 +307,22 @@ export function createAccessManagementService({
         await protectAdministrator(actor, account);
       }
       const changedAt = nowIso();
-      await repository.updateAccessPolicy({
-        account,
-        nextAccount: normalized.account,
-        actor,
-        changedAt,
-        reason,
-        correlationId: String(correlationId || `ACCESS_${createId()}`),
-        idempotencyKey,
-        changeId: createId(),
-        auditId: createId(),
-      });
+      try {
+        await repository.updateAccessPolicy({
+          account,
+          nextAccount: normalized.account,
+          actor,
+          changedAt,
+          reason,
+          correlationId: String(correlationId || `ACCESS_${createId()}`),
+          idempotencyKey,
+          changeId: createId(),
+          auditId: createId(),
+        });
+      } catch (error) {
+        if (error?.code === 'ACCESS_WRITE_CONFLICT') fail('ACCESS_WRITE_CONFLICT', 409);
+        throw error;
+      }
       return { changed: true, replayed: false, sessionsRevoked: true, preview: normalized.preview };
     },
 
@@ -728,7 +750,7 @@ export function createAccessManagementService({
       const replayResult = { unlocked: true, correlationId: mutationCorrelationId };
       await repository.unlockAccount({
         account,
-        limiterIdentity: await tokenCrypto.digest(account.accessIdNormalized.toLowerCase()),
+        limiterIdentities: await limiterIdentitiesFor(account),
         actor,
         changedAt,
         reason,

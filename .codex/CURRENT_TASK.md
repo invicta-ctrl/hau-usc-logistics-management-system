@@ -10,7 +10,7 @@ RISK: critical because identity, authorization, migration, providers, and produc
 DELIVERABLE: exact reviewed/pushed v0.7.2 repository candidate and truthful blocked pre-production handoff
 VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
 STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1
-STATUS: REPOSITORY_CANDIDATE_READY_PREPRODUCTION_BLOCKED_PRIVATE_PROVIDER_CONFIGURATION
+STATUS: REPOSITORY_REPAIR_CANDIDATE_READY_EXACT_SHA_R2_AND_PREPRODUCTION_BLOCKED
 
 Starting SHA: `589970d31d0dab4fe876107276d9b808eb44b9c3`
 
@@ -19,10 +19,10 @@ Branch: `release/v0.7.2-production-access-operations`
 Accepted specification:
 `.codex/specs/v0.7.2-production-access-operations.md`
 
-Current exact action: freeze the integrated repository candidate, run the fresh
-R2 review, push and verify exact-head PR CI, then stop before external mutation
-because the approved email provider and private identity-class configuration
-are absent.
+Current exact action: freeze the R2-repaired repository candidate, run the
+fresh exact-SHA R2 review, push and verify exact-head PR CI, then stop before
+external mutation because the approved email provider and private
+identity-class configuration are absent.
 
 Concurrency: no more than three child tasks are possible alongside the parent in
 this environment, despite the owner's higher ceiling. Children may not spawn
@@ -32,8 +32,14 @@ The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION` and waived another
 confirmation wait. Production remains untouched because mandatory provider,
 pre-production, backup, rollback, and reconciliation gates have not passed.
 
+The first complete-candidate R2 review rejected the prior SHA on one schema /
+runtime mismatch and fail-open or non-atomic account activation, profile,
+access, announcement, Administrator-invariant, and limiter paths. Those
+findings are repaired locally with rollback/failure-injection coverage; the
+repair tree is not accepted until fresh exact-SHA R2 completes.
+
 Local acceptance: schema 30 migration integrity `ok` with zero foreign-key
-findings; `npm run check` 109 files / 726 tests; browser 136 passed / 356
+findings; `npm run check` 112 files / 740 tests; browser 136 passed / 356
 intentional skips; local Worker/D1 39/39. Handoff:
 `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 

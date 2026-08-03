@@ -113,6 +113,42 @@ function assertChanged(result, expected, current) {
   if (changedRows(result) === 0) revisionConflict(expected, rowRevision(current));
 }
 
+function revisionGuardStatement(db, id, expectedRevision) {
+  return db
+    .prepare(
+      `SELECT CASE
+         WHEN EXISTS (
+           SELECT 1 FROM public_advertisements
+           WHERE id = ?1 AND revision = ?2 AND archived_at IS NULL
+         ) THEN 1
+         ELSE json_extract('ADVERTISEMENT_REVISION_GUARD_FAILED', '$')
+       END AS allowed`,
+    )
+    .bind(id, expectedRevision);
+}
+
+async function guardedMutation(db, { id, expectedRevision, current, statements }) {
+  try {
+    const results = await db.batch([revisionGuardStatement(db, id, expectedRevision), ...statements]);
+    assertChanged(results[1], expectedRevision, current);
+    return results;
+  } catch (error) {
+    const latest = await db
+      .prepare('SELECT revision, archived_at FROM public_advertisements WHERE id = ?1')
+      .bind(id)
+      .first();
+    if (
+      error?.code === 'ADVERTISEMENT_REVISION_GUARD_FAILED' ||
+      !latest ||
+      latest.archived_at ||
+      rowRevision(latest) !== expectedRevision
+    ) {
+      revisionConflict(expectedRevision, latest ? rowRevision(latest) : rowRevision(current));
+    }
+    throw error;
+  }
+}
+
 function announcementDto(row, { preview = false } = {}) {
   return {
     id: row.id,
@@ -432,12 +468,7 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
             account.id,
             timestamp,
           );
-    if (current) {
-      const writeResult = await db.batch([write]);
-      assertChanged(writeResult, expected, current);
-    }
-    await db.batch([
-      ...(current ? [] : [write]),
+    const evidenceStatements = [
       auditStatement(db, {
         account,
         action: current ? 'ADVERTISEMENT_UPDATED' : 'ADVERTISEMENT_CREATED',
@@ -452,7 +483,17 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
         result,
         createdAt: timestamp,
       }),
-    ]);
+    ];
+    if (current) {
+      await guardedMutation(db, {
+        id,
+        expectedRevision: expected,
+        current,
+        statements: [write, ...evidenceStatements],
+      });
+    } else {
+      await db.batch([write, ...evidenceStatements]);
+    }
     return result;
   }
 
@@ -512,39 +553,13 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
       imageUrl: `/media/advertisements/${encodeURIComponent(id)}`,
       audience: normalizedAudience(record.audience),
       revision: rowRevision(record) + 1,
-      cleanupPending: false,
+      cleanupPending: Boolean(
+        record.image_asset_key &&
+        record.image_asset_key !== 'advertisements/executive-staff-applications.jpg',
+      ),
       updatedAt: timestamp,
       replayed: false,
     };
-    try {
-      const writeResult = await db.batch([
-        db
-          .prepare(
-            `UPDATE public_advertisements
-             SET image_asset_key = ?2, updated_by = ?3, updated_at = ?4, revision = revision + 1
-             WHERE id = ?1 AND revision = ?5 AND archived_at IS NULL`,
-          )
-          .bind(id, assetKey, account.id, timestamp, expected),
-      ]);
-      assertChanged(writeResult, expected, record);
-    } catch (error) {
-      try {
-        await bucket.delete(`catalog/${assetKey}`);
-      } catch {
-        // The canonical row was not proven updated; retain the original error.
-      }
-      throw error;
-    }
-    if (
-      record.image_asset_key &&
-      record.image_asset_key !== 'advertisements/executive-staff-applications.jpg'
-    ) {
-      try {
-        await bucket.delete(`catalog/${record.image_asset_key}`);
-      } catch {
-        result.cleanupPending = true;
-      }
-    }
     result.item = announcementDto(
       {
         ...record,
@@ -554,22 +569,65 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
       },
       {},
     );
-    await db.batch([
-      auditStatement(db, {
-        account,
-        action: 'ADVERTISEMENT_MEDIA_REPLACED',
+    try {
+      await guardedMutation(db, {
         id,
-        after: { contentType, byteLength: bytes.length, cleanupPending: result.cleanupPending },
-        correlationId,
-      }),
-      idempotencyStatement(db, {
-        account,
-        operation,
-        replayState,
-        result,
-        createdAt: timestamp,
-      }),
-    ]);
+        expectedRevision: expected,
+        current: record,
+        statements: [
+          db
+            .prepare(
+              `UPDATE public_advertisements
+             SET image_asset_key = ?2, updated_by = ?3, updated_at = ?4, revision = revision + 1
+             WHERE id = ?1 AND revision = ?5 AND archived_at IS NULL`,
+            )
+            .bind(id, assetKey, account.id, timestamp, expected),
+          auditStatement(db, {
+            account,
+            action: 'ADVERTISEMENT_MEDIA_REPLACED',
+            id,
+            after: { contentType, byteLength: bytes.length, cleanupPending: result.cleanupPending },
+            correlationId,
+          }),
+          idempotencyStatement(db, {
+            account,
+            operation,
+            replayState,
+            result,
+            createdAt: timestamp,
+          }),
+        ],
+      });
+    } catch (error) {
+      try {
+        await bucket.delete(`catalog/${assetKey}`);
+      } catch {
+        // The canonical row was not proven updated; retain the original error.
+      }
+      throw error;
+    }
+    if (result.cleanupPending) {
+      try {
+        await bucket.delete(`catalog/${record.image_asset_key}`);
+        result.cleanupPending = false;
+        try {
+          await db.batch([
+            db
+              .prepare(
+                `UPDATE advertisement_mutation_results
+                 SET result_json = ?1
+                 WHERE actor_account_id = ?2 AND operation = ?3
+                   AND idempotency_key = ?4 AND request_hash = ?5`,
+              )
+              .bind(JSON.stringify(result), account.id, operation, replayState.key, replayState.hash),
+          ]);
+        } catch {
+          // A stale cleanup hint is conservative and must not fail the authoritative mutation.
+        }
+      } catch {
+        result.cleanupPending = true;
+      }
+    }
     return result;
   }
 
@@ -647,17 +705,14 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
       updatedAt: timestamp,
       replayed: false,
     };
-    const writeResult = await db.batch([
-      db
-        .prepare(
-          `UPDATE public_advertisements
+    const write = db
+      .prepare(
+        `UPDATE public_advertisements
            SET status = ?2, publish_at = ?3, expire_at = ?4, updated_by = ?5,
              updated_at = ?6, revision = revision + 1
            WHERE id = ?1 AND revision = ?7 AND archived_at IS NULL`,
-        )
-        .bind(id, status, publishAt, expireAt, account.id, timestamp, expected),
-    ]);
-    assertChanged(writeResult, expected, record);
+      )
+      .bind(id, status, publishAt, expireAt, account.id, timestamp, expected);
     const item = announcementDto(
       {
         ...record,
@@ -670,22 +725,28 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
       {},
     );
     result.item = item;
-    await db.batch([
-      auditStatement(db, {
-        account,
-        action,
-        id,
-        after: { status, publishAt, expireAt, revision: nextRevision },
-        correlationId,
-      }),
-      idempotencyStatement(db, {
-        account,
-        operation,
-        replayState,
-        result,
-        createdAt: timestamp,
-      }),
-    ]);
+    await guardedMutation(db, {
+      id,
+      expectedRevision: expected,
+      current: record,
+      statements: [
+        write,
+        auditStatement(db, {
+          account,
+          action,
+          id,
+          after: { status, publishAt, expireAt, revision: nextRevision },
+          correlationId,
+        }),
+        idempotencyStatement(db, {
+          account,
+          operation,
+          replayState,
+          result,
+          createdAt: timestamp,
+        }),
+      ],
+    });
     return result;
   }
 
@@ -752,33 +813,36 @@ export function createAdvertisementAdminService({ db, bucket, clock = Date } = {
       },
       {},
     );
-    const writeResult = await db.batch([
-      db
-        .prepare(
-          `UPDATE public_advertisements
+    const write = db
+      .prepare(
+        `UPDATE public_advertisements
            SET status = 'ARCHIVED', archived_at = ?2, updated_at = ?2, updated_by = ?3,
              revision = revision + 1
            WHERE id = ?1 AND revision = ?4 AND archived_at IS NULL`,
-        )
-        .bind(id, timestamp, account.id, expected),
-    ]);
-    assertChanged(writeResult, expected, record);
-    await db.batch([
-      auditStatement(db, {
-        account,
-        action: 'ADVERTISEMENT_ARCHIVED',
-        id,
-        after: { status: 'ARCHIVED', revision: result.revision },
-        correlationId,
-      }),
-      idempotencyStatement(db, {
-        account,
-        operation,
-        replayState,
-        result,
-        createdAt: timestamp,
-      }),
-    ]);
+      )
+      .bind(id, timestamp, account.id, expected);
+    await guardedMutation(db, {
+      id,
+      expectedRevision: expected,
+      current: record,
+      statements: [
+        write,
+        auditStatement(db, {
+          account,
+          action: 'ADVERTISEMENT_ARCHIVED',
+          id,
+          after: { status: 'ARCHIVED', revision: result.revision },
+          correlationId,
+        }),
+        idempotencyStatement(db, {
+          account,
+          operation,
+          replayState,
+          result,
+          createdAt: timestamp,
+        }),
+      ],
+    });
     return result;
   }
 

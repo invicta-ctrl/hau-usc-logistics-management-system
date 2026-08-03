@@ -74,8 +74,12 @@ describe('v0.7.2 profile D1 repository', () => {
       }),
     ).rejects.toMatchObject({ code: 'REVISION_CONFLICT', status: 409 });
     expect(db.batchCalls).toHaveLength(1);
-    expect(db.batchCalls[0]).toHaveLength(1);
+    expect(db.batchCalls[0]).toHaveLength(4);
     expect(db.batchCalls[0][0].sql).toContain('updated_at = ?4');
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('INSERT INTO audit_log'))).toBe(true);
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('INSERT INTO idempotency_keys'))).toBe(
+      true,
+    );
   });
 
   it('guards password changes with credential_version and updated_at, then revokes sessions', async () => {
@@ -89,10 +93,14 @@ describe('v0.7.2 profile D1 repository', () => {
       changedAt: '2026-08-03T12:01:00.000Z',
       evidence,
     });
-    expect(db.batchCalls).toHaveLength(2);
+    expect(db.batchCalls).toHaveLength(1);
     expect(db.batchCalls[0][0].sql).toContain('credential_version = ?4');
     expect(db.batchCalls[0][0].sql).toContain('updated_at = ?5');
-    expect(db.batchCalls[1].some((statement) => statement.sql.includes('DELETE FROM sessions'))).toBe(true);
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('DELETE FROM sessions'))).toBe(true);
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('INSERT INTO audit_log'))).toBe(true);
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('INSERT INTO idempotency_keys'))).toBe(
+      true,
+    );
   });
 
   it('writes username history and keeps audit evidence free of username values', async () => {
@@ -112,10 +120,12 @@ describe('v0.7.2 profile D1 repository', () => {
         idempotency: { ...evidence.idempotency, scope: 'PROFILE_USERNAME_CHANGE' },
       },
     });
-    expect(db.batchCalls[1].some((statement) => statement.sql.includes('INSERT INTO username_history'))).toBe(
+    expect(db.batchCalls).toHaveLength(1);
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('INSERT INTO username_history'))).toBe(
       true,
     );
-    const auditStatement = db.batchCalls[1].find((statement) =>
+    expect(db.batchCalls[0].some((statement) => statement.sql.includes('DELETE FROM sessions'))).toBe(true);
+    const auditStatement = db.batchCalls[0].find((statement) =>
       statement.sql.includes('INSERT INTO audit_log'),
     );
     expect(JSON.stringify(auditStatement.values)).not.toContain('new.user');

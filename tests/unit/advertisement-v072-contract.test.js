@@ -37,6 +37,7 @@ class FakeDatabase {
     this.batchCalls = [];
     this.prepareCalls = [];
     this.forceZeroUpdate = false;
+    this.failSqlIncludes = '';
   }
 
   prepare(sql) {
@@ -81,12 +82,47 @@ class FakeDatabase {
 
   async batch(statements) {
     this.batchCalls.push(statements);
-    return statements.map((statement) => this.execute(statement));
+    const snapshot = {
+      rows: new Map([...this.rows].map(([id, record]) => [id, { ...record }])),
+      mutations: new Map([...this.mutations].map(([key, value]) => [key, { ...value }])),
+      audit: this.audit.map((entry) => ({ ...entry })),
+    };
+    try {
+      return statements.map((statement) => this.execute(statement));
+    } catch (error) {
+      this.rows = snapshot.rows;
+      this.mutations = snapshot.mutations;
+      this.audit = snapshot.audit;
+      throw error;
+    }
   }
 
   execute(statement) {
     const { sql, values } = statement;
+    if (this.failSqlIncludes && sql.includes(this.failSqlIncludes)) {
+      throw new Error(`synthetic batch failure: ${this.failSqlIncludes}`);
+    }
+    if (sql.includes('ADVERTISEMENT_REVISION_GUARD_FAILED')) {
+      const record = this.rows.get(values[0]);
+      if (
+        !record ||
+        Number(record.revision) !== Number(values[1]) ||
+        record.archived_at ||
+        this.forceZeroUpdate
+      ) {
+        const error = new Error('synthetic revision guard failure');
+        error.code = 'ADVERTISEMENT_REVISION_GUARD_FAILED';
+        throw error;
+      }
+      return { meta: { changes: 0 } };
+    }
     if (sql.includes('UPDATE public_advertisements')) return this.update(values, sql);
+    if (sql.includes('UPDATE advertisement_mutation_results')) {
+      const key = `${values[1]}|${values[2]}|${values[3]}`;
+      const mutation = this.mutations.get(key);
+      if (mutation?.request_hash === values[4]) mutation.result_json = values[0];
+      return { meta: { changes: mutation ? 1 : 0 } };
+    }
     if (sql.includes('INSERT INTO public_advertisements')) {
       const record = row({
         id: values[0],
@@ -249,7 +285,7 @@ describe('v0.7.2 advertisement contracts', () => {
     await expect(
       service.save({ account: ADMIN, command: command({ expectedRevision: 1, clientRequestId: 'race' }) }),
     ).rejects.toMatchObject({ code: 'REVISION_CONFLICT', status: 409 });
-    expect(db.batchCalls.at(-1)).toHaveLength(1);
+    expect(db.batchCalls.at(-1)).toHaveLength(4);
   });
 
   it('does not restore or mutate archived announcements', async () => {
@@ -370,6 +406,89 @@ describe('v0.7.2 advertisement contracts', () => {
         },
       }),
     ).resolves.toMatchObject({ cleanupPending: true, revision: 2 });
+  });
+
+  it.each([
+    ['save', row(), (service) => service.save({ account: ADMIN, command: command({ expectedRevision: 1 }) })],
+    [
+      'upload',
+      row({ image_asset_key: 'advertisements/old.png' }),
+      (service) =>
+        service.upload({
+          account: ADMIN,
+          command: {
+            id: 'ADV-ONE',
+            expectedRevision: 1,
+            clientRequestId: 'atomic-upload',
+            contentType: 'image/png',
+            base64: pngBase64,
+          },
+        }),
+    ],
+    [
+      'publish',
+      row({ image_asset_key: 'advertisements/one.png' }),
+      (service) =>
+        service.publish({
+          account: ADMIN,
+          command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'atomic-publish' },
+        }),
+    ],
+    [
+      'schedule',
+      row({ image_asset_key: 'advertisements/one.png' }),
+      (service) =>
+        service.schedule({
+          account: ADMIN,
+          command: {
+            id: 'ADV-ONE',
+            expectedRevision: 1,
+            clientRequestId: 'atomic-schedule',
+            publishAt: '2026-08-04T00:00:00.000Z',
+          },
+        }),
+    ],
+    [
+      'pause',
+      row({ status: 'ACTIVE', image_asset_key: 'advertisements/one.png' }),
+      (service) =>
+        service.pause({
+          account: ADMIN,
+          command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'atomic-pause' },
+        }),
+    ],
+    [
+      'resume',
+      row({ status: 'INACTIVE', image_asset_key: 'advertisements/one.png' }),
+      (service) =>
+        service.resume({
+          account: ADMIN,
+          command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'atomic-resume' },
+        }),
+    ],
+    [
+      'archive',
+      row(),
+      (service) =>
+        service.archive({
+          account: ADMIN,
+          command: { id: 'ADV-ONE', expectedRevision: 1, clientRequestId: 'atomic-archive' },
+        }),
+    ],
+  ])('rolls back %s when audit persistence fails', async (_operation, initial, mutate) => {
+    const db = new FakeDatabase([initial]);
+    const bucket = new FakeBucket();
+    bucket.objects.set('catalog/advertisements/old.png', new Uint8Array([1]));
+    db.failSqlIncludes = 'INSERT INTO audit_log';
+
+    await expect(mutate(adminService(db, bucket))).rejects.toThrow('synthetic batch failure');
+
+    expect(db.rows.get(initial.id)).toEqual(initial);
+    expect(db.audit).toEqual([]);
+    expect(db.mutations.size).toBe(0);
+    if (_operation === 'upload') {
+      expect([...bucket.objects.keys()]).toEqual(['catalog/advertisements/old.png']);
+    }
   });
 
   it('filters public audience in SQL and hides provider keys', async () => {

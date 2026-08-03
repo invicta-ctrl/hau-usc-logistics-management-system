@@ -170,6 +170,9 @@ describe('v0.6 authentication and onboarding service', () => {
       complete: vi.fn(async () => {
         throw new Error('synthetic reconciliation failure');
       }),
+      reconcile: vi.fn(async () => {
+        throw new Error('synthetic reconciliation failure');
+      }),
     };
     const { service, repository } = testContext({ activationLifecycle });
     await service.createStarterAccount({
@@ -196,6 +199,22 @@ describe('v0.6 authentication and onboarding service', () => {
       }),
     ).rejects.toMatchObject({ code: 'ACTIVATION_INVALID' });
     expect(repository.inspect().sessions).toEqual([]);
+
+    await expect(
+      service.login({
+        accessId: 'HAU-ACTIVATION-FAIL-001',
+        password: 'Activated!Password9472',
+      }),
+    ).rejects.toMatchObject({ code: 'ACTIVATION_INVALID' });
+    expect(repository.inspect().sessions).toEqual([]);
+
+    activationLifecycle.reconcile.mockResolvedValueOnce({ linked: true, reconciled: true });
+    await expect(
+      service.login({
+        accessId: 'HAU-ACTIVATION-FAIL-001',
+        password: 'Activated!Password9472',
+      }),
+    ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
   });
 
   it('signs in with a mutable username while keeping limiter keys free of the raw identifier', async () => {

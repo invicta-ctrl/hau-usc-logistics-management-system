@@ -245,6 +245,7 @@ export function createAuthService({
         await activationLifecycle.reconcile({ account });
       } catch {
         await audit('ACCOUNT_APPLICATION_ACTIVATION_RECONCILIATION_FAILED', account.id);
+        throw new AuthError('ACTIVATION_INVALID');
       }
     }
     const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);

@@ -3,7 +3,7 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `REPOSITORY_CANDIDATE_READY - PREPRODUCTION_BLOCKED_PRIVATE_PROVIDER_CONFIGURATION`.
+- Status: `REPOSITORY_REPAIR_CANDIDATE_READY - EXACT_SHA_R2_AND_PREPRODUCTION_BLOCKED`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
 - Starting clean `main` / `origin/main` SHA:
   `589970d31d0dab4fe876107276d9b808eb44b9c3`.
@@ -11,12 +11,15 @@
   `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
 - Accepted specification:
   `.codex/specs/v0.7.2-production-access-operations.md`.
-- Current work unit: freeze the integrated candidate, complete exact-SHA R2
-  review and PR CI, then stop before pre-production until the approved private
-  identity classes and email-provider implementation/configuration exist.
-- Verification: schema-30 rehearsal passed; `npm run check` passes 109 files /
-  726 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
-  39/39.
+- Current work unit: freeze the R2-repaired candidate, complete fresh exact-SHA
+  R2 review and PR CI, then stop before pre-production until the approved
+  private identity classes and email-provider implementation/configuration
+  exist.
+- Verification: schema-30 rehearsal passed; `npm run check` passes 112 files /
+  740 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
+  39/39. The first complete-candidate R2 review rejected the prior SHA; its
+  schema/runtime, reconciliation, transaction, invariant, and limiter findings
+  are repaired locally and require fresh exact-SHA review.
 - Production boundary: the owner supplied `AUTHORIZE V0.7.2 PRODUCTION` and no
   second confirmation wait is required. Production is still prohibited until
   the exact target, provider, pre-production, backup, rollback, and

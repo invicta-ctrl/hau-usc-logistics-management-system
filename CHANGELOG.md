@@ -20,10 +20,16 @@
 - Updated runtime, package, Wrangler, private config generation, and release
   workflows to identify v0.7.2.
 - Aligned account unlock with the privacy-preserving login limiter identity.
+- Repaired complete-candidate review findings by aligning the verification
+  schema/runtime contract, keeping activation reconciliation fail closed, and
+  making profile, access-policy, and announcement mutations atomic with their
+  audit/history/idempotency/session evidence.
+- Moved last-active-Administrator protection into the guarded SQL mutation and
+  clear every digested login alias during an authorized account unlock.
 
 ### Verified boundary
 
-- Local verification passes 109 test files / 726 tests, 136 browser tests with
+- Local verification passes 112 test files / 740 tests, 136 browser tests with
   356 intentional skips, 39/39 local Worker/D1 tests, deterministic generated
   parity, and a fresh schema-30 migration integrity rehearsal.
 - Pre-production and production remain blocked by the missing owner-approved
