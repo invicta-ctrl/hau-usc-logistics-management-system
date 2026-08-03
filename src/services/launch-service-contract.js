@@ -49,6 +49,7 @@ export const LAUNCH_SERVICE_METHODS = Object.freeze([
   'getInventoryItem',
   'listInventoryClassifications',
   'classifyInventoryItem',
+  'bulkClassifyInventoryItems',
   'getEventManagement',
   'saveEventSeries',
   'saveEventDay',

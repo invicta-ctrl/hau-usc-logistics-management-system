@@ -5,6 +5,7 @@ function api_runAuthorizationMappingDryRun() { return runAuthorizationMappingDry
 function api_applyAuthorizationMapping(command) { return applyAuthorizationMapping(command || {}); }
 function api_searchCatalog(command) { return guardApi_('searchCatalog', command || {}, function() { var user=resolveRequesterUser_(),includeSensitive=canPermission_(user,'Can_Review');return { items: searchCatalog_(command || {},includeSensitive), availabilityProtected:!includeSensitive }; }); }
 function api_getInventoryItem(command) { return guardApi_('getInventoryItem', command || {}, function() { return getInventoryItem_(command || {}); }); }
+function api_bulkClassifyInventoryItems(command) { return guardMutationApi_('bulkClassifyInventoryItems', command || {}, function() { throw appError_('FEATURE_NOT_CONFIGURED', 'Bulk inventory classification requires the canonical Worker runtime.', false, { reason: 'CANONICAL_WORKER_REQUIRED' }); }); }
 function api_submitRequest(command) { return guardMutationApi_('submitRequest', command, function(c) { return submitRequest_(command, c); }); }
 function api_reviewRequest(command) { return guardMutationApi_('reviewRequest', command, function(c) { return reviewRequest_(command, c); }); }
 function api_submitCompositeRequest(command) { return guardMutationApi_('submitCompositeRequest', command, function(c) { return submitCompositeRequest_(command, c); }); }

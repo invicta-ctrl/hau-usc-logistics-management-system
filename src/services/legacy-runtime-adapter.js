@@ -494,6 +494,11 @@ export function createLegacyRuntimeAdapter(
         remote.classifyInventoryItem(command),
       );
     },
+    async bulkClassifyInventoryItems(payload) {
+      return mutationRequests.run('bulk-classify-inventory', payload, (command) =>
+        remote.bulkClassifyInventoryItems(command),
+      );
+    },
     async getEventManagement(payload = {}) {
       return remote.getEventManagement(payload);
     },

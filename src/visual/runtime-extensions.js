@@ -241,6 +241,123 @@ export function applyMockInventoryClassification(
   };
 }
 
+export function applyMockBulkInventoryClassification(
+  items,
+  payload = {},
+  { now = new Date().toISOString() } = {},
+) {
+  if (!Array.isArray(items) || items.length < 2) {
+    const error = new Error('Select at least two inventory items for bulk classification.');
+    error.code = 'VALIDATION_FAILED';
+    throw error;
+  }
+  if (!Array.isArray(payload.items) || payload.items.length !== items.length) {
+    const error = new Error('Bulk classification requires one complete command for every selected item.');
+    error.code = 'VALIDATION_FAILED';
+    throw error;
+  }
+  const commands = payload.items;
+  const seen = new Set();
+  const bulkGroupId = `LOCAL-BULK-${globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+  const clone = (value) =>
+    typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+  const drafts = items.map((source, index) => {
+    const itemId = String(source?.id ?? '').trim();
+    if (!itemId || seen.has(itemId)) {
+      const error = new Error('Bulk classification requires unique inventory items.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    seen.add(itemId);
+    const command = { ...(payload ?? {}), ...(commands[index] ?? {}) };
+    if (String(command.itemId ?? '').trim() !== itemId) {
+      const error = new Error('Bulk classification item references must match the selected items.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const inventoryKind = String(command.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
+    const classificationStatus = String(command.classificationStatus ?? 'CLASSIFIED')
+      .trim()
+      .toUpperCase();
+    const expectedRevision = Number(command.expectedRevision ?? source.classificationRevision ?? 1);
+    if (
+      !Number.isInteger(expectedRevision) ||
+      expectedRevision !== Number(source.classificationRevision ?? 1)
+    ) {
+      const error = new Error('This classification changed. Refresh the queue before saving.');
+      error.code = 'CLASSIFICATION_REVISION_CONFLICT';
+      throw error;
+    }
+    if (classificationStatus !== 'CLASSIFIED' || !['CONSUMABLE', 'REUSABLE'].includes(inventoryKind)) {
+      const error = new Error(
+        'Bulk classification requires a completed consumable or reusable classification.',
+      );
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const reason = String(command.reason ?? command.classificationNotes ?? payload.reason ?? '').trim();
+    if (!reason) {
+      const error = new Error('A classification reason is required.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    if (command.similarityConfirmed !== true && command.similarityConfirmed !== 'true') {
+      const error = new Error('Confirm that the selected inventory items are genuinely similar.');
+      error.code = 'VALIDATION_FAILED';
+      throw error;
+    }
+    const draft = {
+      ...command,
+      itemId,
+      expectedRevision,
+      classificationStatus,
+      inventoryKind,
+      stockArea: command.stockArea ?? source.stockArea ?? '',
+      storageLocation: command.storageLocation ?? source.storageLocation ?? '',
+      unit: command.unit ?? source.unit ?? '',
+      reorderThreshold: Number(command.reorderThreshold ?? source.reorderThreshold ?? 0),
+      conditionReviewState:
+        command.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED'),
+      maintenanceReviewState:
+        command.maintenanceReviewState ??
+        (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED'),
+      isLendable: false,
+      lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+      enableLendingConfirmed: false,
+      assetInstanceCountIfReusable: Number(
+        command.assetInstanceCountIfReusable ?? source.assetInstanceCount ?? source.traceableAssets ?? 0,
+      ),
+      assetTrackingConfirmed: false,
+      assetTags: [],
+      reason,
+      similarityConfirmed: true,
+      classificationNotes: command.classificationNotes ?? reason,
+    };
+    const next = clone(source);
+    const result = applyMockInventoryClassification(next, draft, { now });
+    if (next.classificationHistory?.[0]) next.classificationHistory[0].bulkGroupId = bulkGroupId;
+    return { source, next, result };
+  });
+  drafts.forEach(({ source, next }) => Object.assign(source, next));
+  return {
+    itemIds: drafts.map(({ result }) => result.itemId),
+    count: drafts.length,
+    bulkGroupId,
+    items: drafts.map(({ source, result }) => ({
+      itemId: result.itemId,
+      classificationStatus: source.classificationStatus,
+      inventoryKind: source.inventoryKind,
+      isLendable: source.isLendable,
+      lendingAudience: source.lendingAudience,
+      assetInstanceCount: source.assetInstanceCount ?? source.traceableAssets ?? 0,
+      classificationRevision: result.classificationRevision,
+    })),
+    correlationId: 'LOCAL-PREVIEW',
+  };
+}
+
 function createLendingController({ markFormClean }) {
   const original = document.querySelector('#lendingItem');
   if (!original) return null;
@@ -7520,8 +7637,9 @@ export function createRuntimeExtensions(options) {
   };
 
   const mockClassifyInventoryItem = applyMockInventoryClassification;
+  const mockBulkClassifyInventoryItems = applyMockBulkInventoryClassification;
 
-  const submitInventoryClassification = async (item, draft, { bulkGroupId = '' } = {}) => {
+  const submitInventoryClassification = async (item, draft) => {
     const payload = {
       itemId: item.id,
       expectedRevision: Number(item.classificationRevision ?? 1),
@@ -7552,10 +7670,56 @@ export function createRuntimeExtensions(options) {
         .filter(Boolean),
       classificationNotes: draft.classificationNotes ?? '',
       evidenceId: draft.evidenceId ?? '',
-      bulkGroupId,
     };
-    if (backendMode === 'mock') return mockClassifyInventoryItem(item, payload);
+    if (backendMode === 'mock') {
+      const target = (getState()?.inventoryItems ?? []).find((candidate) => candidate.id === item.id) ?? item;
+      return mockClassifyInventoryItem(target, payload);
+    }
     return services.classifyInventoryItem(payload);
+  };
+
+  const submitBulkInventoryClassification = async (items, draft) => {
+    const inventoryKind = String(draft.inventoryKind ?? '')
+      .trim()
+      .toUpperCase();
+    const reason = String(draft.classificationNotes ?? '').trim();
+    const conditionReviewState =
+      draft.conditionReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED');
+    const maintenanceReviewState =
+      draft.maintenanceReviewState ?? (inventoryKind === 'CONSUMABLE' ? 'NOT_APPLICABLE' : 'NOT_ASSESSED');
+    const payload = {
+      reason,
+      similarityConfirmed: draft.similarityConfirmed === true || draft.similarityConfirmed === 'true',
+      items: items.map((item) => ({
+        itemId: item.id,
+        expectedRevision: Number(item.classificationRevision ?? 1),
+        classificationStatus: 'CLASSIFIED',
+        inventoryKind,
+        conditionReviewState,
+        maintenanceReviewState,
+        stockArea: item.stockArea,
+        storageLocation: item.storageLocation,
+        unit: item.unit,
+        reorderThreshold: Number(item.reorderThreshold ?? 0),
+        isLendable: false,
+        lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
+        enableLendingConfirmed: false,
+        assetInstanceCountIfReusable: Number(item.assetInstanceCount ?? item.traceableAssets ?? 0),
+        assetTrackingConfirmed: false,
+        assetTags: [],
+        classificationNotes: reason,
+        evidenceId: draft.evidenceId ?? '',
+        reason,
+        similarityConfirmed: true,
+      })),
+    };
+    if (backendMode === 'mock') {
+      const targets = items.map(
+        (item) => (getState()?.inventoryItems ?? []).find((candidate) => candidate.id === item.id) ?? item,
+      );
+      return mockBulkClassifyInventoryItems(targets, payload);
+    }
+    return services.bulkClassifyInventoryItems(payload);
   };
 
   const openInventoryClassification = (item) => {
@@ -7633,25 +7797,11 @@ export function createRuntimeExtensions(options) {
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
           const draft = Object.fromEntries(new FormData(form));
-          const bulkGroupId = `BULK-${crypto.randomUUID()}`;
           try {
-            let lastResult = null;
-            for (const item of items) {
-              lastResult = await submitInventoryClassification(
-                item,
-                {
-                  ...draft,
-                  classificationStatus: 'CLASSIFIED',
-                  isLendable: false,
-                  lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
-                  assetInstanceCountIfReusable: item.assetInstanceCount ?? 0,
-                },
-                { bulkGroupId },
-              );
-            }
+            const result = await submitBulkInventoryClassification(items, draft);
             markFormClean(form);
             closeModal();
-            await commit(`${items.length} non-lendable classifications recorded.`, 'success', lastResult);
+            await commit(`${items.length} non-lendable classifications recorded.`, 'success', result);
             await loadInventoryClassificationDirectory({ force: true });
           } catch (error) {
             toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);

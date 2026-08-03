@@ -54,6 +54,7 @@ const METHODS = Object.freeze({
   getInventoryItem: 'api_getInventoryItem',
   listInventoryClassifications: 'api_listInventoryClassifications',
   classifyInventoryItem: 'api_classifyInventoryItem',
+  bulkClassifyInventoryItems: 'api_bulkClassifyInventoryItems',
   getEventManagement: 'api_getEventManagement',
   saveEventSeries: 'api_saveEventSeries',
   saveEventDay: 'api_saveEventDay',

@@ -72,6 +72,7 @@ for (const method of [
   'finalizeEvidence',
   'postEmergencyIssue',
   'postCycleCountAdjustment',
+  'bulkClassifyInventoryItems',
 ])
   RestService.prototype[method] = function post(command) {
     return this._post(`/api/${method}`, command);

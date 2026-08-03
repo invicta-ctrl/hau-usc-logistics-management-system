@@ -48,6 +48,7 @@ for (const [client, server] of Object.entries({
   finalizeEvidence: 'api_finalizeEvidence',
   postEmergencyIssue: 'api_postEmergencyIssue',
   postCycleCountAdjustment: 'api_postCycleCountAdjustment',
+  bulkClassifyInventoryItems: 'api_bulkClassifyInventoryItems',
 }))
   AppsScriptService.prototype[client] = function call(command) {
     return this._call(server, command);
