@@ -4,7 +4,7 @@ Updated: 2026-08-03 (Asia/Manila)
 
 Parent integration branch: `release/v0.7.2-production-access-operations`
 
-Parent checkpoint SHA: `f81c8f2415df5bc50b44eb6295b205aac35ec01b`
+Parent checkpoint SHA: `e44625316404bce3e293eb4cf71195f7052e04f1`
 
 Owner child ceiling: 16
 
@@ -31,13 +31,14 @@ or `CANCELLED`.
 | --- | --- | --- | --- |
 | PARENT-CONTRACT | ACCEPTED | Adopt repository specification and lock source/API/state/data/access contracts. | Spec commit `39ea6a2`; governance and diff checks passed; draft PR #15 |
 | PARENT-INTEGRATION | RUNNING | Review mapper output, resolve contradictions, and create the first implementation slice. | `.codex/V0_7_2_SOURCE_MAP_AND_CONTRACT_LOCK.md` |
+| DATA-0030 | RUNNING | Add the forward-only schema-30 identity, operations, Link Registry, and Announcement structures and prove a clean local migration rehearsal. | Fresh local D1 applied migrations 0001-0030; direct SQLite `integrity_check=ok`, zero foreign-key findings, schema 30, eight required tables, and valid defaults; static contract tests 4/4 |
 | PARENT-PROVIDER-GATE | BLOCKED | Prove owner-approved identity classes and email provider in private pre-production configuration. | No provider/domain values found in Git; implementation must remain fail closed |
 
 ## Queue after mapping
 
 | ID | Dependency | Planned result |
 | --- | --- | --- |
-| DATA-0030 | MAP-IDENTITY + MAP-OPERATIONS + MAP-REFERENCE-UI | Additive migration and fresh/upgrade/recovery tests |
+| DATA-0030 | MAP-IDENTITY + MAP-OPERATIONS + MAP-REFERENCE-UI | Additive migration and fresh/upgrade/recovery tests (active parent work) |
 | IDENTITY-CORE | DATA-0030 | Verification/application state machine and repository |
 | ACCESS-PROFILE | IDENTITY-CORE | Review, activation, access separation, username/profile/security |
 | IDENTITY-UI | ACCESS-PROFILE | Login/register/status/Admin/Director/Profile critical UI |
@@ -52,9 +53,9 @@ or `CANCELLED`.
 
 | ID | Status | Exact base | Isolated ownership | Required verification |
 | --- | --- | --- | --- | --- |
-| IDENTITY-CORE | PLANNED | Resulting accepted mapping checkpoint | New `src/server/account-application/*`, new D1 repository, new focused tests only | State/transition, replay, revision, privacy, enumeration, and repository-contract tests |
-| OPERATIONS-DOMAIN | PLANNED | Resulting accepted mapping checkpoint | New `src/domain/operational-integers.js`, `src/domain/request-purpose.js`, new focused tests only | Strict integer matrix and contradictory request-branch validation |
-| REFERENCE-LINK-SERVER | PLANNED | Resulting accepted mapping checkpoint | New Link Registry service/repository and new focused tests only | URL/access/state/version/revision/idempotency/privacy tests |
+| IDENTITY-CORE | RUNNING | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-identity-core`; new `src/server/account-application/*`, new D1 repository, new focused tests only | State/transition, replay, revision, privacy, enumeration, and repository-contract tests |
+| OPERATIONS-DOMAIN | RUNNING | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-operations-domain`; new `src/domain/operational-integers.js`, `src/domain/request-purpose.js`, new focused tests only | Strict integer matrix and contradictory request-branch validation |
+| REFERENCE-LINK-SERVER | PLANNED | `e44625316404bce3e293eb4cf71195f7052e04f1` | Isolated `task/v072-reference-link-server`; new Link Registry service/repository and new focused tests only | Queued because the runtime thread limit remained occupied by the completed mapping thread; start after one writer slot releases |
 
 ## Integration rules
 
