@@ -41,6 +41,11 @@ describe('v0.7.1 presentation labels', () => {
     expect(presentationNumber({ count: '0' }, 'count')).toBe(0);
     expect(presentationNumber({}, 'count')).toBe('Not reported');
     expect(presentationNumber({ count: 'not-a-number' }, 'count')).toBe('Not reported');
+    expect(presentationNumber({ count: false }, 'count')).toBe('Not reported');
+    expect(presentationNumber({ count: '   ' }, 'count')).toBe('Not reported');
+    expect(presentationNumber({ count: [] }, 'count')).toBe('Not reported');
+    expect(presentationNumber({ count: [0] }, 'count')).toBe('Not reported');
+    expect(presentationNumber({ count: {} }, 'count')).toBe('Not reported');
     expect(sumPresentationNumbers([0, 2])).toBe(2);
     expect(sumPresentationNumbers([0, 'Not reported'])).toBe('Not reported');
   });

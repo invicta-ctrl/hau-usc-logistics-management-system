@@ -146,8 +146,11 @@ export const inventoryLabel = (value, context = 'generic', options = {}) =>
 
 export function presentationNumber(source, key, missing = 'Not reported') {
   const value = source?.[key];
-  if (value === null || value === undefined || value === '') return missing;
-  const numeric = Number(value);
+  if (typeof value === 'number') return Number.isFinite(value) ? value : missing;
+  if (typeof value !== 'string') return missing;
+  const normalized = value.trim();
+  if (normalized === '') return missing;
+  const numeric = Number(normalized);
   return Number.isFinite(numeric) ? numeric : missing;
 }
 
