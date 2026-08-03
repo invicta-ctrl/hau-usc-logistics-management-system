@@ -3,6 +3,7 @@ import { receiptTotals } from '../../domain/receiving.js';
 import { quoteFreshness } from '../../domain/procurement.js';
 import { openModal, openConfirmation } from '../../components/modal.js';
 import { paginate, pagination } from '../../components/pagination.js';
+import { statusLabel } from '../../domain/presentation-labels.js';
 
 function renderDeliverables(ctx) {
   const next = {
@@ -91,7 +92,7 @@ export function mountProcurement(ctx, root) {
     button.addEventListener('click', () =>
       openConfirmation({
         title: `Move ${button.dataset.deliverableTransition}`,
-        summary: `Transition to ${button.dataset.nextStatus.replaceAll('_', ' ')} in preview mode.`,
+        summary: `Transition to ${statusLabel(button.dataset.nextStatus)} in preview mode.`,
         effects: [
           'Validate the explicit procurement transition map',
           'Retain budget as a placeholder only',

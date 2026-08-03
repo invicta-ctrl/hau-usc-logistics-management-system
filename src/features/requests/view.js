@@ -7,6 +7,7 @@ import { consolidateDraftLines, routingDecision } from '../../domain/requests.js
 import { meetsLeadTime } from '../../domain/dates.js';
 import { announce } from '../../app/events.js';
 import { config } from '../../app/config.js';
+import { presentationLabel, statusLabel } from '../../domain/presentation-labels.js';
 
 const templateLines = {
   OFFICE: [
@@ -49,7 +50,7 @@ function foodFields(key) {
 }
 
 function materialsFields(key) {
-  return `<div class="form-grid span-2" data-materials-fields><label>Controlled category<select name="${key}MaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label><label>Required by<input name="${key}RequiredBy" type="date" required /></label><label class="span-2">Exact specification<input name="${key}Specification" maxlength="500" placeholder="Enter the exact material specification" required /></label><label class="span-2">Usage / purpose<input name="${key}UsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required /></label><label>Sourcing preference<select name="${key}SourcingPreference" required><option value="STOCK_REVIEW">Review available stock</option><option value="PROCUREMENT_REQUIRED">Procurement required</option></select></label><p class="muted span-2">Exact-only is the default. The Materials Committee records one stock-issue or procurement-receipt path; substitutions require a recorded approval.</p></div>`;
+  return `<div class="form-grid span-2" data-materials-fields><label>Controlled category<select name="${key}MaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label><label>Required by<input name="${key}RequiredBy" type="date" required /></label><label class="span-2">Exact specification<input name="${key}Specification" maxlength="500" placeholder="Enter the exact material specification" required /></label><label class="span-2">Usage / purpose<input name="${key}UsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required /></label><label>Sourcing preference<select name="${key}SourcingPreference" required><option value="STOCK_REVIEW">Review available stock</option><option value="PROCUREMENT_REQUIRED">Procurement required</option></select></label><p class="muted span-2">Exact-only is the default. The Materials Committee records one stock-issue or procurement-receipt path; substitutions require a recorded approval.</p></div>`;
 }
 
 function renderCompositeSection([type, title, key]) {
@@ -75,7 +76,7 @@ function renderCompositePanel(state) {
 function compositeResultHtml(request) {
   if (!request) return '';
   const children = request.children ?? [];
-  return `<strong>${escapeHtml(request.requestId ?? 'Composite request')} · ${escapeHtml(request.status ?? 'FOR_REVIEW')}</strong><ul>${children.map((child) => `<li><strong>${escapeHtml(child.componentType)}</strong> · ${escapeHtml(child.status)} · ${escapeHtml(child.componentId)}</li>`).join('')}</ul>`;
+  return `<strong>${escapeHtml(request.requestId ?? 'Composite request')} · ${escapeHtml(statusLabel(request.status, { missing: 'Status not reported' }))}</strong><ul>${children.map((child) => `<li><strong>${escapeHtml(presentationLabel(child.componentType))}</strong> · ${escapeHtml(statusLabel(child.status, { missing: 'Status not reported' }))} · ${escapeHtml(child.componentId)}</li>`).join('')}</ul>`;
 }
 
 export function renderRequests(ctx) {

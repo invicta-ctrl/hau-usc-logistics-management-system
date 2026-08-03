@@ -1,4 +1,4 @@
-import { STATUS_LABELS } from '../domain/constants.js';
+import { statusLabel } from '../domain/presentation-labels.js';
 
 export function statusTone(status) {
   if (['COMPLETED', 'RESTOCKED', 'RETURNED', 'READY_TO_RELEASE'].includes(status)) return 'success';
@@ -16,7 +16,7 @@ export function statusTone(status) {
   return 'info';
 }
 
-export function statusChip(status, label = STATUS_LABELS[status] ?? String(status).replaceAll('_', ' ')) {
+export function statusChip(status, label = statusLabel(status, { missing: 'Not reported' })) {
   return `<span class="status-chip" data-tone="${statusTone(status)}">${escapeHtml(label)}</span>`;
 }
 

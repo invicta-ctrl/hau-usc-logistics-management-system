@@ -1502,6 +1502,23 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   await classificationQueue.locator('[data-classification-status]').selectOption('ALL');
   await classificationQueue.getByLabel('Search classification queue').fill('ITM-LOCAL-CLASSIFY');
   await expect(classificationQueue).toContainText('ITM-LOCAL-CLASSIFY');
+  const classificationSelection = classificationQueue.getByLabel(
+    'Select Synthetic Classification Fixture for bulk classification',
+  );
+  await expect(classificationSelection).toBeVisible();
+  await expect(classificationSelection).not.toBeChecked();
+  const selectionLabel = classificationSelection.locator('xpath=ancestor::label[1]');
+  await expect(selectionLabel).toHaveClass(/classification-select/u);
+  await expect(selectionLabel.getByRole('button')).toHaveCount(0);
+  await selectionLabel.click();
+  await expect(classificationSelection).toBeChecked();
+  for (const width of [320, 375, 414, 768]) {
+    await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+    const labelBox = await selectionLabel.boundingBox();
+    expect(labelBox?.width).toBeGreaterThanOrEqual(44);
+    expect(labelBox?.height).toBeGreaterThanOrEqual(44);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
   await classificationQueue.getByRole('button', { name: 'Review' }).first().click();
   await expect(page.getByRole('heading', { name: /Classify ITM-LOCAL-CLASSIFY/u })).toBeVisible();
   await expect(page.getByLabel('Review status')).toBeVisible();

@@ -48,6 +48,13 @@ import {
   previewReferenceAdminChange,
 } from '../domain/reference-administration.js';
 import { canvassEvidenceLinks, canvassQualityIndicators } from '../domain/canvass-quality.js';
+import {
+  inventoryLabel,
+  presentationLabel,
+  presentationNumber,
+  statusLabel,
+  sumPresentationNumbers,
+} from '../domain/presentation-labels.js';
 
 const esc = (value) =>
   String(value ?? '')
@@ -446,7 +453,7 @@ function createLendingController({ markFormClean }) {
           const eligibility = eligibilityFor(item);
           return `<div id="lending-suggestion-${index}" class="suggestion ${eligibility.selectable ? '' : 'disabled'}" role="option" aria-selected="false" aria-disabled="${eligibility.selectable ? 'false' : 'true'}" data-lending-item="${esc(item.id)}">
           <strong>${esc(item.name)}</strong>
-          <code>${esc(item.id)} · ${esc(item.category)} · ${esc(normalizeHandling(item.handlingCode || item.handling).replaceAll('_', ' '))} · ${esc(item.unit)}</code>
+          <code>${esc(item.id)} · ${esc(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${esc(presentationLabel(normalizeHandling(item.handlingCode || item.handling), { context: 'handling', missing: 'Handling not reported' }))} · ${esc(item.unit || 'Unit not recorded')}</code>
           <span class="stock"><b>${esc(eligibility.message)}</b>${esc(lendingAudienceLabel(item.lendingAudience))}</span>
         </div>`;
         })
@@ -749,7 +756,7 @@ export function createRuntimeExtensions(options) {
           }
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
-          button.textContent = 'Approvingâ€¦';
+          button.textContent = 'Approving…';
           try {
             const result = await services.approveLendingTicket(ticket.id, identityVerification);
             if (backendMode === 'mock') {
@@ -763,7 +770,7 @@ export function createRuntimeExtensions(options) {
             closeModal();
             await commit(`Ticket ${ticket.id} is ready to claim.`, 'success', result);
           } catch (error) {
-            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
             button.disabled = false;
             button.textContent = 'Verify Identity and Approve';
           }
@@ -1012,13 +1019,13 @@ export function createRuntimeExtensions(options) {
     const history = (ticket.history ?? [])
       .map(
         (entry) =>
-          `<article class="request-line"><div><strong>${esc(entry.newStatus)}</strong><small>${esc(entry.changedAt)} · ${esc(entry.changedBy)}</small>${entry.reason ? `<small>${esc(entry.reason)}</small>` : ''}</div></article>`,
+          `<article class="request-line"><div><strong>${esc(statusLabel(entry.newStatus, { missing: 'Status not reported' }))}</strong><small>${esc(entry.changedAt)} · ${esc(entry.changedBy)}</small>${entry.reason ? `<small>${esc(entry.reason)}</small>` : ''}</div></article>`,
       )
       .join('');
     openModal(
       `${ticket.id} · ${ticket.borrowerName}`,
       `${lendingApplicantHtml(ticket)}
-       <div class="mode-note section-gap"><strong>Requested</strong><br>${esc(ticket.requestedQuantity || ticket.quantity)} of ${esc(ticket.requestedItemId || ticket.itemId)}<br><strong>Current approved line</strong><br>${esc(ticket.quantity)} of ${esc(ticket.itemId)} · ${esc(ticket.status)}</div>
+       <div class="mode-note section-gap"><strong>Requested</strong><br>${esc(ticket.requestedQuantity || ticket.quantity)} of ${esc(ticket.requestedItemId || ticket.itemId)}<br><strong>Current approved line</strong><br>${esc(ticket.quantity)} of ${esc(ticket.itemId)} · ${esc(statusLabel(ticket.status, { missing: 'Status not reported' }))}</div>
        <div class="section-kicker section-gap">Review and status history</div>
        <div class="line-list">${history || '<div class="empty">No status history is available.</div>'}</div>`,
     );
@@ -1146,7 +1153,7 @@ export function createRuntimeExtensions(options) {
   const submitCanvassMutation = async ({ form, button, action, success }) => {
     button.disabled = true;
     const originalLabel = button.textContent;
-    button.textContent = 'Recordingâ€¦';
+    button.textContent = 'Recording…';
     try {
       const result = await action();
       markFormClean(form);
@@ -1168,12 +1175,12 @@ export function createRuntimeExtensions(options) {
     openModal(
       `Edit ${quote.id}`,
       `<form id="governedCanvassUpdateForm">
-        <div class="mode-note"><strong>${esc(quote.supplierName)}</strong>${quote.location ? ` Â· ${esc(quote.location)}` : ''}<br>Saving updates this active reference through the governed service. Earlier price checks and audit history remain append-only.</div>
+        <div class="mode-note"><strong>${esc(quote.supplierName)}</strong>${quote.location ? ` · ${esc(quote.location)}` : ''}<br>Saving updates this active reference through the governed service. Earlier price checks and audit history remain append-only.</div>
         <div class="form-grid section-gap">
           <label>Supplier name<input name="supplierName" value="${esc(quote.supplierName)}" maxlength="160" required></label>
           <label>Checked date<input name="checkedAt" type="date" value="${esc(String(quote.checkedAt ?? '').slice(0, 10))}" required></label>
           <label class="span-2">Item / specification<input name="itemSpec" value="${esc(quote.itemSpec)}" maxlength="500" required></label>
-          <label>Price (â‚±)<input name="price" type="number" min="0.01" step="0.01" value="${esc(quote.price)}" required></label>
+          <label>Price (₱)<input name="price" type="number" min="0.01" step="0.01" value="${esc(quote.price)}" required></label>
           <label>Unit<select name="unit">${KNOWN_QUANTITY_UNITS.map((unit) => option(unit, unit, quote.unit)).join('')}</select></label>
           <label>Receipt status<select name="receiptStatus">${option('NOT_CHECKED', 'Not checked', quote.receiptStatus)}${option('ORIGINAL_RECEIPT', 'Original receipt available', quote.receiptStatus)}${option('SALES_INVOICE', 'Sales invoice available', quote.receiptStatus)}${option('UNAVAILABLE', 'Unavailable / follow up', quote.receiptStatus)}</select></label>
           <label>Reliability<select name="reliability">${option('UNRATED', 'Unrated', quote.reliability)}${option('RELIABLE', 'Reliable', quote.reliability)}${option('CONDITIONAL', 'Conditional', quote.reliability)}${option('FOLLOW_UP', 'Follow up required', quote.reliability)}</select></label>
@@ -1218,7 +1225,7 @@ export function createRuntimeExtensions(options) {
     openModal(
       `Archive ${quote.id}`,
       `<form id="governedCanvassArchiveForm">
-        <div class="mode-note"><strong>${esc(quote.supplierName)} Â· ${esc(quote.itemSpec)}</strong><br>Archiving removes this reference from active use without deleting its links, price history, or audit trail.</div>
+        <div class="mode-note"><strong>${esc(quote.supplierName)} · ${esc(quote.itemSpec)}</strong><br>Archiving removes this reference from active use without deleting its links, price history, or audit trail.</div>
         <label class="section-gap">Required archive reason<textarea name="reason" maxlength="500" required></textarea></label>
         <button class="danger" type="submit">Archive Reference</button>
       </form>`,
@@ -1253,7 +1260,7 @@ export function createRuntimeExtensions(options) {
     openModal(
       `Select ${quote.id} as preferred`,
       `<form id="governedPreferredCanvassForm">
-        <div class="mode-note"><strong>${esc(quote.supplierName)} Â· â‚±${esc(Number(quote.price).toLocaleString('en-PH'))} / ${esc(quote.unit)}</strong><br>The decision reason will be stored with the preferred-quote history and shown in comparison views.</div>
+        <div class="mode-note"><strong>${esc(quote.supplierName)} · ₱${esc(Number(quote.price).toLocaleString('en-PH'))} / ${esc(quote.unit)}</strong><br>The decision reason will be stored with the preferred-quote history and shown in comparison views.</div>
         <label class="section-gap">Required decision reason<textarea name="rationale" maxlength="500" required></textarea></label>
         <button class="primary" type="submit">Confirm Preferred Quote</button>
       </form>`,
@@ -1955,7 +1962,7 @@ export function createRuntimeExtensions(options) {
       items
         .map(
           (item) =>
-            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(item.status)} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
+            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
         )
         .join('') || '<div class="empty">No advertisements match these filters.</div>';
     const pagination = advertisementDirectory?.pagination ?? {
@@ -1966,7 +1973,7 @@ export function createRuntimeExtensions(options) {
     const pager = root.querySelector('[data-advertisement-pagination]');
     pager.hidden = pagination.totalPages <= 1;
     pager.querySelector('[data-advertisement-page-summary]').textContent =
-      `Page ${pagination.page} of ${pagination.totalPages} Â· ${pagination.total} records`;
+      `Page ${pagination.page} of ${pagination.totalPages} · ${pagination.total} records`;
     pager.querySelector('[data-advertisement-page="previous"]').disabled = pagination.page <= 1;
     pager.querySelector('[data-advertisement-page="next"]').disabled =
       pagination.page >= pagination.totalPages;
@@ -1977,7 +1984,7 @@ export function createRuntimeExtensions(options) {
     if (!root || !advertisementManagementAllowed()) return;
     if (!force && advertisementDirectory?.pagination?.page === advertisementPage) return;
     root.querySelector('[data-advertisement-results]').innerHTML =
-      '<div class="empty">Loading authorized advertisementsâ€¦</div>';
+      '<div class="empty">Loading authorized advertisements…</div>';
     try {
       advertisementDirectory = await services.listAdvertisements({
         query: root.querySelector('[name="advertisementSearch"]')?.value ?? '',
@@ -2062,7 +2069,7 @@ export function createRuntimeExtensions(options) {
       items
         .map((account) => {
           const stateLabels = [
-            account.status,
+            statusLabel(account.status, { missing: 'Status not reported' }),
             account.firstLoginPending ? 'Pending first login' : 'Onboarding complete',
             account.locked ? 'Locked' : '',
           ].filter(Boolean);
@@ -2084,7 +2091,7 @@ export function createRuntimeExtensions(options) {
           const workspaceLine = (accessProfile.workspaceIds ?? []).length
             ? `${accessProfile.workspaceIds.join(', ')}; default ${accessProfile.defaultWorkspaceId || 'not set'}`
             : 'No internal workspace';
-          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(account.roleId)} &middot; ${esc((account.committeeIds ?? []).join(', ') || 'All / no committee')}</small><small>Workspaces: ${esc(workspaceLine)} &middot; Preset: ${esc(accessProfile.presetId || 'CUSTOM')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="policy" data-access-id="${esc(account.accessId)}">Edit access</button><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
+          return `<div class="request-line access-account-row"><div><strong>${esc(account.accessId)}</strong>${departmentLine}<small>${esc(account.displayName)} &middot; ${esc(presentationLabel(account.roleId, { context: 'role', missing: 'Role not reported' }))} &middot; ${esc((account.committeeIds ?? []).map((id) => presentationLabel(id, { context: 'committee' })).join(', ') || 'All / no committee')}</small><small>Workspaces: ${esc(workspaceLine)} &middot; Preset: ${esc(accessProfile.presetId || 'CUSTOM')}</small><small>${esc(stateLabels.join(' · '))} &middot; Last login: ${esc(accessDate(account.lastSuccessfulLogin))} &middot; Created: ${esc(accessDate(account.createdAt))}</small><small>Password changed: ${esc(accessDate(account.passwordChangedAt))} &middot; Last reset: ${esc(accessDate(account.lastPasswordResetAt))} &middot; Last Access ID change: ${esc(accessDate(account.lastAccessIdChange))}</small></div><div class="request-line-actions access-account-actions"><button class="secondary mini" type="button" data-access-action="policy" data-access-id="${esc(account.accessId)}">Edit access</button><button class="secondary mini" type="button" data-access-action="history" data-access-id="${esc(account.accessId)}">History</button><button class="secondary mini" type="button" data-access-action="rename" data-access-id="${esc(account.accessId)}">Change Access ID</button><button class="secondary mini" type="button" data-access-action="reset" data-access-id="${esc(account.accessId)}">Reset password</button><button class="secondary mini" type="button" data-access-action="revoke-sessions" data-access-id="${esc(account.accessId)}">Revoke sessions</button>${lifecycleAction}${account.locked ? `<button class="secondary mini" type="button" data-access-action="unlock" data-access-id="${esc(account.accessId)}">Unlock</button>` : ''}</div></div>`;
         })
         .join('') || '<div class="empty">No accounts match the authorized filters.</div>';
     const pagination = accessDirectory?.pagination ?? { page: 1, totalPages: 1, total: items.length };
@@ -2173,7 +2180,7 @@ export function createRuntimeExtensions(options) {
       <div class="form-grid section-gap">
         <label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label>
         <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, profile.presetId || 'CUSTOM')).join('')}</select></label>
-        <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), account.roleId)).join('')}</select></label>
+        <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD', 'READ_ONLY_AUDITOR'].map((value) => option(value, presentationLabel(value, { context: 'role' }), account.roleId)).join('')}</select></label>
         <label>Default workspace<select name="defaultWorkspaceId"><option value="">No internal workspace</option>${options.workspaces.map((entry) => option(entry.id, entry.label, profile.defaultWorkspaceId)).join('')}</select></label>
         <fieldset class="span-2"><legend>Authorized workspaces</legend>${accessCheckboxes('workspaceIds', options.workspaces, workspaceIds)}</fieldset>
         <fieldset class="span-2"><legend>Committee scopes</legend>${accessCheckboxes('committeeIds', options.committees, committeeIds)}</fieldset>
@@ -2226,7 +2233,7 @@ export function createRuntimeExtensions(options) {
     ];
     const current = preview.account ?? {};
     const proposed = preview.proposedAccount ?? {};
-    return `<div class="mode-note"><strong>Target: ${esc(current.accessId || 'Unknown account')}</strong><br>Current: ${esc(current.roleId || 'Unknown role')} / ${esc(current.status || 'Unknown status')}<br>Proposed: ${esc(proposed.roleId || preview.roleId || 'Unknown role')} / ${esc(proposed.status || current.status || 'Unknown status')}</div><dl class="access-effective-preview section-gap">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
+    return `<div class="mode-note"><strong>Target: ${esc(current.accessId || 'Unknown account')}</strong><br>Current: ${esc(presentationLabel(current.roleId, { context: 'role', missing: 'Role not reported' }))} / ${esc(statusLabel(current.status, { missing: 'Status not reported' }))}<br>Proposed: ${esc(presentationLabel(proposed.roleId || preview.roleId, { context: 'role', missing: 'Role not reported' }))} / ${esc(statusLabel(proposed.status || current.status, { missing: 'Status not reported' }))}</div><dl class="access-effective-preview section-gap">${rows.map(([label, value]) => `<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl><details class="section-gap"><summary>Allowed actions (${preview.allowedActions?.length ?? 0})</summary><p>${esc(preview.allowedActions?.join(', ') || 'No actions')}</p></details><div class="alert warning section-gap">All active sessions will be revoked when this policy is saved.</div>`;
   };
 
   const openAccessPolicyEditor = async (account) => {
@@ -2520,7 +2527,7 @@ export function createRuntimeExtensions(options) {
           <label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label>
           <label class="checkbox"><input name="generateAccessId" type="checkbox"> Generate DOL-YYYY-NNNN Access ID</label>
           <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, 'CUSTOM')).join('')}</select></label>
-          <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD'].map((value) => option(value, value.replaceAll('_', ' '), 'REQUESTER')).join('')}</select></label>
+          <label>Role<select name="roleId">${['REQUESTER', 'ADMINISTRATOR', 'DIRECTOR', 'DOL_STAFF', 'COMMITTEE_HEAD'].map((value) => option(value, presentationLabel(value, { context: 'role' }), 'REQUESTER')).join('')}</select></label>
           <label>Department<select name="departmentId"><option value="">Not mapped</option>${USC_DEPARTMENT_REGISTRY.map((department) => option(department.id, department.displayName)).join('')}</select></label>
           <label>Account status<select name="status"><option value="STARTER">Starter — first-login activation required</option><option value="DISABLED">Disabled — credential cannot be used yet</option></select></label>
           <label>Temporary credential expiry<select name="temporaryPasswordHours"><option value="24">24 hours</option><option value="48">48 hours</option><option value="72" selected>72 hours</option><option value="168">7 days</option></select></label>
@@ -2641,9 +2648,9 @@ export function createRuntimeExtensions(options) {
     if (domain === 'VENUES' || domain === 'EQUIPMENT')
       return `${common}<label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}" required></label><label>Location<input name="location" maxlength="160" value="${esc(payload.location ?? '')}"></label><label>Unit<select name="unit">${['service', 'piece', 'set', 'unit'].map((value) => option(value, value, payload.unit)).join('')}</select></label><label>Requestability<select name="requestability">${option('REQUESTABLE', 'Requestable - confirmation required', payload.requestability)}${option('NOT_REQUESTABLE', 'Not requestable', payload.requestability)}</select></label><label>Contact role<input name="contactRole" maxlength="120" value="${esc(payload.contactRole ?? '')}"></label><label>Route ID<input name="routeId" maxlength="100" value="${esc(payload.routeId ?? '')}" required></label>${domain === 'EQUIPMENT' ? `<label class="checkbox"><input name="returnRequired" type="checkbox" ${payload.returnRequired ? 'checked' : ''}> Return required</label>` : ''}<label class="span-2">Notes<textarea name="notes" maxlength="500">${esc(payload.notes ?? '')}</textarea></label>`;
     if (domain === 'ROUTING')
-      return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, value, payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, value.replaceAll('_', ' '), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
+      return `<label>Match kind<select name="matchKind">${['REFERENCE', 'CATEGORY', 'OTHER'].map((value) => option(value, presentationLabel(value, { context: 'generic' }), payload.matchKind)).join('')}</select></label><label>Reference ID<input name="referenceId" maxlength="100" value="${esc(payload.referenceId ?? '')}"></label><label>Reference type<input name="referenceType" maxlength="40" value="${esc(payload.referenceType ?? '')}"></label><label>Category<input name="category" maxlength="80" value="${esc(payload.category ?? '')}"></label><label>Owner committee<select name="ownerCommitteeId">${['COM_FOOD', 'COM_INVENTORY_PANTRY', 'COM_MATERIALS'].map((value) => option(value, presentationLabel(value, { context: 'committee' }), payload.ownerCommitteeId)).join('')}</select></label><label>Owner user ID<input name="ownerUserId" maxlength="100" value="${esc(payload.ownerUserId ?? '')}"></label><label>Responsible office ID<input name="responsibleOfficeId" maxlength="100" value="${esc(payload.responsibleOfficeId ?? '')}" required></label><label>Approving authority ID<input name="approvingAuthorityId" maxlength="100" value="${esc(payload.approvingAuthorityId ?? '')}" required></label><label>Lead time (business days)<input name="leadTimeBusinessDays" type="number" min="1" max="90" value="${esc(payload.leadTimeBusinessDays ?? 1)}" required></label><label class="span-2">Instructions<textarea name="instructions" maxlength="500" required>${esc(payload.instructions ?? '')}</textarea></label><label>Effective from<input name="effectiveFrom" type="date" value="${esc(payload.effectiveFrom ?? record.effectiveFrom ?? '')}"></label><label>Effective to<input name="effectiveTo" type="date" value="${esc(payload.effectiveTo ?? record.effectiveTo ?? '')}"></label>`;
     if (domain === 'PERMISSIONS')
-      return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, value.replaceAll('_', ' '), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
+      return `<label>Role<select name="roleId">${['REQUESTER', 'DOL_STAFF', 'COMMITTEE_HEAD', 'DIRECTOR', 'ADMINISTRATOR', 'READ_ONLY_AUDITOR'].map((value) => option(value, presentationLabel(value, { context: 'role' }), payload.roleId)).join('')}</select></label><label>Committee IDs<input name="committeeIds" maxlength="260" value="${esc((payload.committeeIds ?? []).join(' | '))}"></label><label class="checkbox"><input name="active" type="checkbox" ${payload.active !== false ? 'checked' : ''}> Active access</label><label class="checkbox"><input name="emergencyRevocation" type="checkbox"> Emergency revocation only</label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`;
     return `${common}<label class="span-2">Description<textarea name="description" maxlength="500">${esc(payload.description ?? '')}</textarea></label>`;
   };
 
@@ -2699,7 +2706,7 @@ export function createRuntimeExtensions(options) {
   const openReferenceAdminChange = (record, action = record ? 'UPDATE' : 'ADD') => {
     const targetId = record?.id ?? '';
     openModal(
-      `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${referenceAdminDomain.replaceAll('_', ' ')}`,
+      `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${presentationLabel(referenceAdminDomain)}`,
       `<form id="referenceAdminChangeForm"><div class="mode-note">Controlled fields only. Roster-owned identity is read-only; permission and cross-office routing changes require a distinct reviewer.</div><div class="form-grid" style="margin-top:14px"><label>Stable ID<input name="targetId" maxlength="100" value="${esc(targetId)}" ${record ? 'readonly' : ''} required></label>${action === 'UPDATE' || action === 'ADD' ? referenceAdminFields(referenceAdminDomain, record) : `<label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`}</div><button class="primary" type="submit">Preview change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#referenceAdminChangeForm');
@@ -3055,9 +3062,11 @@ export function createRuntimeExtensions(options) {
     if (!root || root.hidden || !evidenceSystemStatusAllowed()) return;
     const status = evidenceSystemStatus;
     if (!status) return;
-    const pending = Number(status.pendingDriveBackups ?? 0);
-    const failed = Number(status.failedDriveBackups ?? 0);
-    const restoreRequired = Number(status.filesRequiringRestoration ?? 0);
+    const numberMetric = presentationNumber;
+    const sumMetricValues = sumPresentationNumbers;
+    const pending = numberMetric(status, 'pendingDriveBackups');
+    const failed = numberMetric(status, 'failedDriveBackups');
+    const restoreRequired = numberMetric(status, 'filesRequiringRestoration');
     const primaryAvailable = String(status.primaryR2Status ?? '').toUpperCase() === 'AVAILABLE';
     const release = status.release ?? {};
     const database = status.database ?? {};
@@ -3068,21 +3077,31 @@ export function createRuntimeExtensions(options) {
     const storage = status.storage ?? {};
     const inventory = status.inventory ?? {};
     const recovery = status.recovery ?? {};
-    const rateLimitTotal =
-      Number(authentication.authRateLimitEvents24h ?? 0) +
-      Number(authentication.publicRequestRateLimitEvents24h ?? 0) +
-      Number(authentication.publicLendingRateLimitEvents24h ?? 0);
+    const rateLimitTotal = sumMetricValues([
+      numberMetric(authentication, 'authRateLimitEvents24h'),
+      numberMetric(authentication, 'publicRequestRateLimitEvents24h'),
+      numberMetric(authentication, 'publicLendingRateLimitEvents24h'),
+    ]);
+    const evidenceFailures = sumMetricValues([failed, restoreRequired]);
+    const loginAndRateLimitTotal = sumMetricValues([
+      numberMetric(authentication, 'failedLoginEvents24h'),
+      rateLimitTotal,
+    ]);
+    const inventoryAlertTotal = sumMetricValues([
+      numberMetric(inventory, 'negativeBalanceAlerts'),
+      numberMetric(inventory, 'lowStockAlerts'),
+    ]);
     root.querySelector('[data-system-status-metrics]').innerHTML = [
-      ['Overall', status.overallStatus ?? 'Not assessed', 'Truthful aggregate; attention is not hidden'],
+      ['Overall', statusLabel(status.overallStatus, { missing: 'Not assessed' }), 'Truthful aggregate; attention is not hidden'],
       [
         'Worker / API',
-        status.workerApi?.status ?? 'Not reported',
-        `${status.workerApi?.readinessIssueCount ?? 0} readiness issue(s)`,
+        statusLabel(status.workerApi?.status, { missing: 'Not reported' }),
+        `${numberMetric(status.workerApi, 'readinessIssueCount')} readiness issue(s)`,
       ],
       [
         'Deployed release',
         `v${release.releaseVersion ?? 'Not reported'}`,
-        `${release.environment ?? 'Unknown'} · ${String(release.candidateSha ?? 'Not reported').slice(0, 12)}`,
+        `${presentationLabel(release.environment, { missing: 'Not reported' })} · ${String(release.candidateSha ?? 'Not reported').slice(0, 12)}`,
       ],
       [
         'D1 schema',
@@ -3100,39 +3119,39 @@ export function createRuntimeExtensions(options) {
       ],
       [
         'Authentication',
-        authentication.status ?? 'Not reported',
-        `${authentication.activeAccounts ?? 0} active account(s) · ${authentication.activeSessions ?? 0} active session(s)`,
+        statusLabel(authentication.status, { missing: 'Not reported' }),
+        `${numberMetric(authentication, 'activeAccounts')} active account(s) · ${numberMetric(authentication, 'activeSessions')} active session(s)`,
       ],
       [
         'Email verification',
-        emailVerification.status ?? 'Not reported',
+        statusLabel(emailVerification.status, { missing: 'Not reported' }),
         emailVerification.note ?? 'Provider state unavailable',
       ],
       [
         'Identity roster sync',
-        roster.status ?? 'Not reported',
-        `${roster.latestApplyStatus ?? 'Not recorded'} · ${roster.activeIdentities ?? 0} active identities`,
+        statusLabel(roster.status, { missing: 'Not reported' }),
+        `${statusLabel(roster.latestApplyStatus, { missing: 'Not recorded' })} · ${numberMetric(roster, 'activeIdentities')} active identities`,
       ],
-      ['Google Drive backup', storage.googleDrive ?? 'Not reported', 'Private evidence recovery copy'],
+      ['Google Drive backup', statusLabel(storage.googleDrive, { missing: 'Not reported' }), 'Private evidence recovery copy'],
       [
         'R2 storage',
         primaryAvailable && storage.brandR2 === 'AVAILABLE' ? 'Available' : 'Attention',
-        `Brand ${storage.brandR2 ?? 'unknown'} · Evidence ${storage.evidenceR2 ?? 'unknown'}`,
+        `Brand ${statusLabel(storage.brandR2, { missing: 'Not reported' })} · Evidence ${statusLabel(storage.evidenceR2, { missing: 'Not reported' })}`,
       ],
       [
         'Evidence failures',
-        failed + restoreRequired,
+        evidenceFailures,
         `${pending} pending · ${restoreRequired} require restoration`,
       ],
       [
         'Login / rate limits',
-        Number(authentication.failedLoginEvents24h ?? 0) + rateLimitTotal,
-        `${authentication.failedLoginEvents24h ?? 0} failed login event(s) · ${rateLimitTotal} rate-limit event(s), last 24h`,
+        loginAndRateLimitTotal,
+        `${numberMetric(authentication, 'failedLoginEvents24h')} failed login event(s) · ${rateLimitTotal} rate-limit event(s), last 24h`,
       ],
       [
         'Inventory alerts',
-        Number(inventory.negativeBalanceAlerts ?? 0) + Number(inventory.lowStockAlerts ?? 0),
-        `${inventory.negativeBalanceAlerts ?? 0} negative · ${inventory.lowStockAlerts ?? 0} low stock · ${inventory.classificationPending ?? 0} pending classification`,
+        inventoryAlertTotal,
+        `${numberMetric(inventory, 'negativeBalanceAlerts')} negative · ${numberMetric(inventory, 'lowStockAlerts')} low stock · ${numberMetric(inventory, 'classificationPending')} pending classification`,
       ],
       [
         'Last successful backup',
@@ -3149,7 +3168,7 @@ export function createRuntimeExtensions(options) {
       [
         'Last rollback rehearsal',
         recovery.lastRollbackRehearsalAt ? accessDate(recovery.lastRollbackRehearsalAt) : 'Not recorded',
-        recovery.rollbackRehearsalStatus ?? 'Recovery rehearsal status unavailable',
+        statusLabel(recovery.rollbackRehearsalStatus, { missing: 'Recovery rehearsal status unavailable' }),
       ],
     ]
       .map(
@@ -3185,7 +3204,7 @@ export function createRuntimeExtensions(options) {
       ],
       [
         'Authentication totals',
-        `${authentication.totalAccounts ?? 0} total · ${authentication.starterAccounts ?? 0} starter · ${authentication.inactiveAccounts ?? 0} inactive`,
+        `${numberMetric(authentication, 'totalAccounts')} total · ${numberMetric(authentication, 'starterAccounts')} starter · ${numberMetric(authentication, 'inactiveAccounts')} inactive`,
         'Aggregate counts only; account identifiers are omitted',
       ],
       [
@@ -3808,7 +3827,7 @@ export function createRuntimeExtensions(options) {
     if (!root || !lendingUsageAllowed()) return;
     const form = root.querySelector('[data-lending-usage-filters]');
     root.querySelector('[data-lending-usage-results]').innerHTML =
-      '<div class="empty">Loading authorized Lending Hub activityâ€¦</div>';
+      '<div class="empty">Loading authorized Lending Hub activity…</div>';
     try {
       lendingUsageReport = await services.getLendingUsage(Object.fromEntries(new FormData(form).entries()));
       const department = form.elements.department.value;
@@ -4333,7 +4352,7 @@ export function createRuntimeExtensions(options) {
       materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee · canonical D1 projection</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials Queue</h3><p>Exact specifications, stable event/request/deliverable identities, quote evidence, budget, cumulative receiving, and release quantities remain connected.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}${materialsQueueGroupsMarkup(items, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}`;
       return;
     }
-    materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} Â· ${esc(item.materials?.fulfillmentPath || 'PENDING_DECISION')} Â· ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
+    materialsQueue.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Materials Committee</p><h3 id="materialsCommitteeQueueTitle">Scoped Materials work queue</h3><p>Exact quantities, units, provenance, and one authoritative fulfillment path.</p></div><span class="pill">${items.length} item${items.length === 1 ? '' : 's'}</span></div>${error ? `<div class="alert">${esc(error)}</div>` : ''}<div class="line-list">${items.map((item) => `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.materials?.materialCategory || 'Materials')} · ${esc(presentationLabel(item.materials?.fulfillmentPath, { context: 'fulfillment', missing: 'Not recorded' }))} · ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(statusLabel(item.status, { missing: 'Not reported' }))}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-materials-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`).join('') || '<div class="empty">No Materials work is in the current authorized scope.</div>'}</div>`;
   };
 
   const openMaterialsWorkflow = (componentId) => {
@@ -4349,7 +4368,7 @@ export function createRuntimeExtensions(options) {
           if (!form.reportValidity()) return;
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
-          button.textContent = 'Savingâ€¦';
+          button.textContent = 'Saving…';
           try {
             const values = Object.fromEntries(new FormData(form).entries());
             let fulfillmentEvidenceId = item.materials?.fulfillmentEvidenceId ?? '';
@@ -4389,7 +4408,7 @@ export function createRuntimeExtensions(options) {
             await commit(`${item.componentId} Materials workflow updated.`, 'success', result);
             await refreshMaterialsQueue({ force: true });
           } catch (error) {
-            toast(`${error.message}${error.correlationId ? ` Â· ${error.correlationId}` : ''}`, true);
+            toast(`${error.message}${error.correlationId ? ` · ${error.correlationId}` : ''}`, true);
             button.disabled = false;
             button.textContent = 'Save Materials Workflow';
           }
@@ -4413,7 +4432,7 @@ export function createRuntimeExtensions(options) {
     if (!fields.querySelector('[name="materialsMaterialCategory"]')) {
       fields.insertAdjacentHTML(
         'beforeend',
-        `<label>Controlled category<select name="materialsMaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        `<label>Controlled category<select name="materialsMaterialCategory" required>${['OFFICE_SUPPLIES', 'PRINTING_SIGNAGE', 'EVENT_MATERIALS', 'CLEANING_SUPPLIES', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label>
         <label>Required by<input name="materialsRequiredBy" type="date" required></label>
         <label class="span-2">Exact specification<input name="materialsSpecification" maxlength="500" placeholder="Enter the exact material specification" required></label>
         <label class="span-2">Usage / purpose<input name="materialsUsagePurpose" maxlength="500" placeholder="Describe the approved logistics use" required></label>
@@ -4645,7 +4664,7 @@ export function createRuntimeExtensions(options) {
       ? venueEquipmentLines
           .map(
             (line, index) =>
-              `<div class="request-line"><div><strong>${esc(line.label)}</strong><small>${esc(line.referenceId || 'Controlled Other')} &middot; ${esc(line.category.replaceAll('_', ' '))} &middot; ${esc(line.unit)}</small><span>${line.referenceId ? 'Requestable - confirmation required; not a booking guarantee' : 'Pending classification - no booking or stock promise'}</span></div><div class="request-line-actions"><label>Quantity<input type="number" min="1" step="1" value="${esc(line.quantity)}" data-venue-equipment-quantity="${index}" aria-label="Quantity for ${esc(line.label)}"></label><button class="ghost mini" type="button" data-venue-equipment-remove="${index}">Remove</button></div></div>`,
+              `<div class="request-line"><div><strong>${esc(line.label)}</strong><small>${esc(line.referenceId || 'Controlled Other')} &middot; ${esc(presentationLabel(line.category, { context: 'category', missing: 'Category not recorded' }))} &middot; ${esc(line.unit)}</small><span>${line.referenceId ? 'Requestable - confirmation required; not a booking guarantee' : 'Pending classification - no booking or stock promise'}</span></div><div class="request-line-actions"><label>Quantity<input type="number" min="1" step="1" value="${esc(line.quantity)}" data-venue-equipment-quantity="${index}" aria-label="Quantity for ${esc(line.label)}"></label><button class="ghost mini" type="button" data-venue-equipment-remove="${index}">Remove</button></div></div>`,
           )
           .join('')
       : '<div class="empty">Search and add a requestable venue or equipment reference, or add a constrained Other line.</div>';
@@ -4671,10 +4690,10 @@ export function createRuntimeExtensions(options) {
             const previous = index ? `${references[index - 1].type}|${references[index - 1].category}` : '';
             if (group !== previous)
               rows.push(
-                `<p class="eyebrow">${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</p>`,
+              `<p class="eyebrow">${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</p>`,
               );
             rows.push(
-              `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(reference.type)} &middot; ${esc(reference.category.replaceAll('_', ' '))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
+              `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
             );
             return rows;
           }, [])
@@ -4757,7 +4776,7 @@ export function createRuntimeExtensions(options) {
       items
         .map(
           (item) =>
-            `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(item.ownerCommitteeId)} &middot; ${esc(item.venueEquipment?.confirmationStatus || 'PENDING_CONFIRMATION')} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(item.status || 'FOR_REVIEW')}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
+            `<div class="request-line"><div><strong>${esc(item.componentId)}</strong><small>${esc(presentationLabel(item.ownerCommitteeId, { context: 'committee', missing: 'Committee not reported' }))} &middot; ${esc(presentationLabel(item.venueEquipment?.confirmationStatus, { context: 'status', missing: 'Confirmation status not reported' }))} &middot; ${esc(item.lines?.length || 0)} line(s)</small></div><div class="request-line-actions"><span class="pill">${esc(statusLabel(item.status, { missing: 'Status not reported' }))}</span>${['COMPLETED', 'REJECTED', 'CANCELLED'].includes(item.status) ? '' : `<button class="secondary mini" type="button" data-venue-equipment-manage="${esc(item.componentId)}">Manage</button>`}</div></div>`,
         )
         .join('') ||
       '<div class="empty">No Venue &amp; Equipment work is in the current authorized scope.</div>'
@@ -4846,7 +4865,7 @@ export function createRuntimeExtensions(options) {
       fields.insertAdjacentHTML(
         'beforeend',
         `<label>Reference type<select name="venueEquipmentTypeFilter"><option value="">Venue and equipment</option><option value="VENUE">Venue</option><option value="EQUIPMENT">Equipment</option></select></label>
-        <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${category.replaceAll('_', ' ')}</option>`).join('')}</select></label>
+        <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label>
         <label class="span-2">Search approved references<input name="venueEquipmentSearch" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="venueEquipmentReferenceResults" aria-expanded="false" placeholder="Search canonical name, alias, category, or location"><small>Results show requestability only. Confirmation is still required.</small></label>
         <div id="venueEquipmentReferenceResults" class="autocomplete-panel show span-2" role="listbox" data-venue-equipment-results><div class="empty">Enter a search term.</div></div>
         <label>Quantity to add<input name="venueEquipmentAddQuantity" type="number" min="1" step="1" value="1"></label>
@@ -6321,11 +6340,7 @@ export function createRuntimeExtensions(options) {
     }).format(date);
   };
 
-  const foodStatusLabel = (value) =>
-    String(value ?? 'FOR_REVIEW')
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/^./u, (character) => character.toUpperCase());
+  const foodStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
 
   const foodDietaryLabel = (food = {}) => {
     if (food.dietarySummary === 'ATTENTION_REQUIRED')
@@ -6554,11 +6569,7 @@ export function createRuntimeExtensions(options) {
       .toLowerCase();
   const inventoryRuntimeQuantity = (value) =>
     Number(value ?? 0).toLocaleString('en-PH', { maximumFractionDigits: 2 });
-  const inventoryRuntimeStatusLabel = (value) =>
-    String(value ?? '')
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/(^|\s)\S/g, (part) => part.toUpperCase());
+  const inventoryRuntimeStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
   const inventoryRuntimeStatusClass = (value) => {
     const status = String(value ?? '').toUpperCase();
     if (['IN_STOCK', 'ACTIVE'].includes(status)) return 'green';
@@ -6899,11 +6910,7 @@ export function createRuntimeExtensions(options) {
     ];
   };
 
-  const materialsStatusLabel = (value) =>
-    String(value ?? 'FOR_REVIEW')
-      .replaceAll('_', ' ')
-      .toLowerCase()
-      .replace(/^./u, (character) => character.toUpperCase());
+  const materialsStatusLabel = (value) => statusLabel(value, { missing: 'Status not reported' });
 
   const materialsQuantityLabel = (item) => {
     const requested = Number(item?.quantityRequested ?? item?.lines?.[0]?.quantity ?? 0);
@@ -7047,7 +7054,7 @@ export function createRuntimeExtensions(options) {
   const eventDayForm = (seriesId, day = null) => `<form id="eventDayForm">
     <div class="form-grid">
       <label>Event date<input name="date" type="date" value="${esc(day?.date ?? '')}" required></label>
-      <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), day?.status ?? 'UPCOMING')).join('')}</select></label>
+      <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, statusLabel(status), day?.status ?? 'UPCOMING')).join('')}</select></label>
       <label class="span-2">Day label <small>Optional; a date label is generated when blank.</small><input name="name" value="${esc(day?.name ?? '')}"></label>
       <label class="span-2">Notes<textarea name="notes">${esc(day?.notes ?? '')}</textarea></label>
       <label class="span-2">Correction reason<input name="reason" value="${esc(day ? 'Audited event-day correction' : 'Approved event day creation')}" required minlength="8"></label>
@@ -7066,7 +7073,7 @@ export function createRuntimeExtensions(options) {
         <label>Venue<input name="venue" value="${esc(activity?.venue ?? '')}" required></label>
         <label class="span-2">Included games or program items <small>Comma-separated; leave blank when not applicable.</small><input name="includedItems" value="${esc((activity?.includedItems ?? []).join(', '))}"></label>
         <label>Time status<select name="timeStatus">${option('TBA', 'TBA', activity?.timeStatus ?? 'TBA')}${option('SCHEDULED', 'Scheduled', activity?.timeStatus)}</select></label>
-        <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, status.replaceAll('_', ' '), activity?.status ?? 'UPCOMING')).join('')}</select></label>
+        <label>Status<select name="status">${['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED', 'ARCHIVED'].map((status) => option(status, statusLabel(status), activity?.status ?? 'UPCOMING')).join('')}</select></label>
         <label>Starts at<input name="startAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.startAt))}"></label>
         <label>Ends at<input name="endAt" type="datetime-local" value="${esc(eventDateTimeValue(activity?.endAt))}"></label>
         <label>Responsible committee<select name="responsibleCommitteeId"><option value="">Not added yet</option>${committees.map((entry) => option(entry.id, entry.name, activity?.responsibleCommitteeId)).join('')}</select></label>
@@ -7187,7 +7194,7 @@ export function createRuntimeExtensions(options) {
       if (!activity) return;
       openModal(
         `Link operational record to ${activity.name}`,
-        `<form id="eventLinkForm"><div class="form-grid"><label>Record type<select name="linkType">${['REQUEST', 'FOOD_REQUIREMENT', 'MATERIAL', 'PROCUREMENT', 'INVENTORY_REQUIREMENT', 'RELEASE'].map((type) => option(type, type.replaceAll('_', ' '))).join('')}</select></label><label>Authoritative record ID<input name="linkedEntityId" required></label><label class="span-2">Notes<textarea name="notes"></textarea></label><label class="span-2">Reason<input name="reason" value="Link operational record to approved activity" required minlength="8"></label></div><button class="primary" type="submit">Create Audited Link</button></form>`,
+        `<form id="eventLinkForm"><div class="form-grid"><label>Record type<select name="linkType">${['REQUEST', 'FOOD_REQUIREMENT', 'MATERIAL', 'PROCUREMENT', 'INVENTORY_REQUIREMENT', 'RELEASE'].map((type) => option(type, presentationLabel(type, { context: 'eventLink' }))).join('')}</select></label><label>Authoritative record ID<input name="linkedEntityId" required></label><label class="span-2">Notes<textarea name="notes"></textarea></label><label class="span-2">Reason<input name="reason" value="Link operational record to approved activity" required minlength="8"></label></div><button class="primary" type="submit">Create Audited Link</button></form>`,
       );
       const form = document.querySelector('#eventLinkForm');
       form?.addEventListener('submit', async (event) => {
@@ -7226,7 +7233,7 @@ export function createRuntimeExtensions(options) {
           ? 'TBA'
           : `${new Date(activity.startAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}–${new Date(activity.endAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
       const activityLinks = (directory.links ?? []).filter((entry) => entry.activityId === activity.id);
-      return `<article class="event-activity-card"><div class="panel-head"><div><p class="eyebrow">${esc(activity.code)} · ${esc(activity.activityType)}</p><h4>${esc(activity.name)}</h4><p>${esc(time)} · ${esc(activity.venue)}</p>${activity.includedItems?.length ? `<p><strong>Included:</strong> ${esc(activity.includedItems.join(', '))}</p>` : ''}</div><span class="pill">${esc(activity.ownerReviewStatus.replaceAll('_', ' '))}</span></div><dl class="event-truth-grid"><div><dt>Responsible committee</dt><dd>${esc(activity.responsibleCommitteeName ?? 'Not added yet')}</dd></div><div><dt>Supporting committees</dt><dd>${esc(activity.supportingCommitteeIds.length ? activity.supportingCommitteeIds.join(', ') : 'Not added yet')}</dd></div><div><dt>Preparation deadline</dt><dd>${esc(pendingEventValue(activity.preparationDeadline))}</dd></div><div><dt>Request window</dt><dd>${esc(activity.requestWindowOpensAt && activity.requestWindowClosesAt ? `${activity.requestWindowOpensAt} – ${activity.requestWindowClosesAt}` : 'Not added yet')}</dd></div><div><dt>Release deadline</dt><dd>${esc(pendingEventValue(activity.releaseDeadline))}</dd></div><div><dt>Readiness</dt><dd>${esc(readiness)}</dd></div><div><dt>Preparation progress</dt><dd>${esc(progress)}</dd></div><div><dt>Additional notes</dt><dd>${esc(activity.notes ?? 'Not added yet')}</dd></div></dl><div class="button-row"><button class="secondary" type="button" data-event-action="activity-edit" data-event-id="${esc(activity.id)}">Edit audited fields</button><button class="secondary" type="button" data-event-action="activity-link" data-event-id="${esc(activity.id)}">Link operational record</button><span class="pill">${esc(activityLinks.length)} linked</span></div></article>`;
+      return `<article class="event-activity-card"><div class="panel-head"><div><p class="eyebrow">${esc(activity.code)} · ${esc(presentationLabel(activity.activityType, { context: 'eventLink', missing: 'Activity type not recorded' }))}</p><h4>${esc(activity.name)}</h4><p>${esc(time)} · ${esc(activity.venue)}</p>${activity.includedItems?.length ? `<p><strong>Included:</strong> ${esc(activity.includedItems.join(', '))}</p>` : ''}</div><span class="pill">${esc(statusLabel(activity.ownerReviewStatus, { missing: 'Review status not reported' }))}</span></div><dl class="event-truth-grid"><div><dt>Responsible committee</dt><dd>${esc(activity.responsibleCommitteeName ?? 'Not added yet')}</dd></div><div><dt>Supporting committees</dt><dd>${esc(activity.supportingCommitteeIds.length ? activity.supportingCommitteeIds.join(', ') : 'Not added yet')}</dd></div><div><dt>Preparation deadline</dt><dd>${esc(pendingEventValue(activity.preparationDeadline))}</dd></div><div><dt>Request window</dt><dd>${esc(activity.requestWindowOpensAt && activity.requestWindowClosesAt ? `${activity.requestWindowOpensAt} – ${activity.requestWindowClosesAt}` : 'Not added yet')}</dd></div><div><dt>Release deadline</dt><dd>${esc(pendingEventValue(activity.releaseDeadline))}</dd></div><div><dt>Readiness</dt><dd>${esc(readiness)}</dd></div><div><dt>Preparation progress</dt><dd>${esc(progress)}</dd></div><div><dt>Additional notes</dt><dd>${esc(activity.notes ?? 'Not added yet')}</dd></div></dl><div class="button-row"><button class="secondary" type="button" data-event-action="activity-edit" data-event-id="${esc(activity.id)}">Edit audited fields</button><button class="secondary" type="button" data-event-action="activity-link" data-event-id="${esc(activity.id)}">Link operational record</button><span class="pill">${esc(activityLinks.length)} linked</span></div></article>`;
     };
     root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Protected Admin and Director workflow</p><h2>Event Management</h2><p>Main Events → Event Days → Activities. Missing operational values remain truthful and visible in owner review.</p></div><button class="primary" type="button" data-event-action="series-create">Create Main Event</button></div><div class="event-series-stack section-gap">${
       directory.eventSeries
@@ -7252,7 +7259,7 @@ export function createRuntimeExtensions(options) {
         .slice(0, 100)
         .map(
           (entry) =>
-            `<div class="request-line"><div><strong>${esc(entry.action.replaceAll('_', ' '))} · ${esc(entry.entityType.replaceAll('_', ' '))}</strong><small>${esc(entry.reason)} · ${esc(entry.actorName ?? entry.actorId)} · ${esc(new Date(entry.occurredAt).toLocaleString())}</small></div><span class="pill">${esc(entry.entityId)}</span></div>`,
+            `<div class="request-line"><div><strong>${esc(presentationLabel(entry.action))} · ${esc(presentationLabel(entry.entityType))}</strong><small>${esc(entry.reason)} · ${esc(entry.actorName ?? entry.actorId)} · ${esc(new Date(entry.occurredAt).toLocaleString())}</small></div><span class="pill">${esc(entry.entityId)}</span></div>`,
         )
         .join('') || '<div class="empty">No event history has been recorded.</div>'
     }</div></section>`;
@@ -7568,35 +7575,36 @@ export function createRuntimeExtensions(options) {
           : has(entry, key)
             ? entry[key]
             : undefined;
-    const display = (value) => {
+    const display = (value, context = 'generic') => {
       if (value === true) return 'Enabled';
       if (value === false) return 'Non-lendable';
-      return value == null || value === '' ? 'Not recorded' : String(value).replaceAll('_', ' ');
+      return presentationLabel(value, { context, missing: 'Not recorded' });
     };
     const fields = [
-      ['Review status', 'classificationStatus', 'previousStatus', 'newStatus'],
-      ['Inventory kind', 'inventoryKind', 'previousKind', 'newKind'],
+      ['Review status', 'classificationStatus', 'previousStatus', 'newStatus', 'classificationStatus'],
+      ['Inventory kind', 'inventoryKind', 'previousKind', 'newKind', 'inventoryKind'],
       ['Stock area', 'stockArea', 'previousStockArea', 'newStockArea'],
       ['Storage location', 'storageLocation', 'previousStorageLocation', 'newStorageLocation'],
       ['Unit', 'unit', 'previousUnit', 'newUnit'],
       ['Reorder threshold', 'reorderThreshold', 'previousReorderThreshold', 'newReorderThreshold'],
-      ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState'],
+      ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState', 'condition'],
       [
         'Maintenance review',
         'maintenanceReviewState',
         'previousMaintenanceReviewState',
         'newMaintenanceReviewState',
+        'maintenance',
       ],
       ['Lending', 'isLendable', 'previousIsLendable', 'newIsLendable'],
-      ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience'],
+      ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience', 'lendingAudience'],
       ['Traceable asset count', 'assetInstanceCount', 'previousAssetInstanceCount', 'newAssetInstanceCount'],
     ];
     const changes = fields
-      .map(([label, key, previousKey, nextKey]) => {
+      .map(([label, key, previousKey, nextKey, context]) => {
         const from = previous(key, previousKey);
         const to = next(key, nextKey);
         if (from === undefined && to === undefined) return '';
-        return `<li><strong>${esc(label)}</strong>: ${esc(display(from))} → ${esc(display(to))}</li>`;
+        return `<li><strong>${esc(label)}</strong>: ${esc(display(from, context))} → ${esc(display(to, context))}</li>`;
       })
       .filter(Boolean);
     return changes.length ? `<ul class="classification-history-changes">${changes.join('')}</ul>` : '';
@@ -7629,7 +7637,7 @@ export function createRuntimeExtensions(options) {
         history
           .map(
             (entry) =>
-              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(entry.newStatus)}</strong><small>${esc(entry.newKind)} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small>${classificationHistoryChangeMarkup(entry)}</div></div>`,
+              `<div class="request-line"><div><strong>Revision ${esc(entry.revision)} · ${esc(statusLabel(entry.newStatus, { context: 'classificationStatus', missing: 'Not reported' }))}</strong><small>${esc(inventoryLabel(entry.newKind, 'inventoryKind', { missing: 'Not recorded' }))} · ${entry.isLendable ? 'Lending enabled' : 'Non-lendable'} · ${esc(entry.occurredAt)}</small><small>Actor ${esc(entry.actorAccountId)}${entry.evidenceId ? ' · Evidence linked' : ''}</small>${classificationHistoryChangeMarkup(entry)}</div></div>`,
           )
           .join('') || '<div class="empty">No classification history has been recorded.</div>'
       }</div></section>
@@ -7825,7 +7833,7 @@ export function createRuntimeExtensions(options) {
       directory.items
         .map(
           (item) =>
-            `<label class="request-line classification-row"><input type="checkbox" data-classification-select value="${esc(item.id)}"><div><strong>${esc(item.id)} · ${esc(item.name)}</strong><small>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.unit)}</small><small>${esc(item.inventoryKind)} · ${esc(item.conditionReviewState)} · ${esc(item.maintenanceReviewState)} · ${item.isLendable ? 'Lending enabled' : 'Non-lendable'}</small></div><span><span class="pill">${esc(item.classificationStatus.replaceAll('_', ' '))}</span><button class="secondary mini" type="button" data-classification-review="${esc(item.id)}">Review</button></span></label>`,
+            `<div class="request-line classification-row"><label class="classification-select" for="classification-select-${esc(item.id)}"><span class="sr-only">Select ${esc(item.name)} for bulk classification</span><input id="classification-select-${esc(item.id)}" type="checkbox" data-classification-select value="${esc(item.id)}"></label><div><strong>${esc(item.id)} · ${esc(item.name)}</strong><small>${esc(presentationLabel(item.category, { context: 'category', missing: 'Category not recorded' }))} · ${esc(item.stockArea || 'Stock area not recorded')} · ${esc(item.unit || 'Unit not recorded')}</small><small>${esc(inventoryLabel(item.inventoryKind, 'inventoryKind', { missing: 'Inventory kind not recorded' }))} · ${esc(inventoryLabel(item.conditionReviewState, 'condition', { missing: 'Condition not reported' }))} · ${esc(inventoryLabel(item.maintenanceReviewState, 'maintenance', { missing: 'Maintenance status not reported' }))} · ${item.isLendable ? 'Lending enabled' : 'Non-lendable'}</small></div><div class="classification-actions"><span class="pill">${esc(statusLabel(item.classificationStatus, { context: 'classificationStatus', missing: 'Review status not reported' }))}</span><button class="secondary mini" type="button" data-classification-review="${esc(item.id)}">Review</button></div></div>`,
         )
         .join('') || '<div class="empty">No items match this classification view.</div>'
     }</div><div class="button-row section-gap"><button class="secondary" type="button" data-classification-page="${directory.page - 1}" ${directory.page <= 1 ? 'disabled' : ''}>Previous</button><span class="pill">Page ${directory.page} of ${totalPages}</span><button class="secondary" type="button" data-classification-page="${directory.page + 1}" ${directory.page >= totalPages ? 'disabled' : ''}>Next</button></div>`;
@@ -7981,7 +7989,7 @@ export function createRuntimeExtensions(options) {
     const alertRows = [
       ...stock.map((item) => {
         const balance = inventoryBalance(state, item);
-        return `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+        return `<div class="request-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(statusLabel(inventoryHealth(state, item), { missing: 'Inventory health not reported' }))}</span></div>`;
       }),
       ...condition.itemSignals.map(
         (item) =>
@@ -8130,7 +8138,7 @@ export function createRuntimeExtensions(options) {
               .slice(0, 12)
               .map((item) => {
                 const balance = inventoryBalance(state, item);
-                return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(item.handling ?? item.handlingCode ?? 'Handling not reported')}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(inventoryHealth(state, item).replaceAll('_', ' '))}</span></div>`;
+                return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(presentationLabel(item.handling ?? item.handlingCode, { context: 'handling', missing: 'Handling not reported' }))}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(statusLabel(inventoryHealth(state, item), { missing: 'Inventory health not reported' }))}</span></div>`;
               })
               .join('') ||
             '<div class="empty">No stock exceptions are in the current authorized projection.</div>'
