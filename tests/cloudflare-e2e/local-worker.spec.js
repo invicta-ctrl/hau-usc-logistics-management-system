@@ -437,7 +437,9 @@ test('inventory classification is protected, audited, idempotent, and fail-close
 
 test('inventory bulk classification is atomic and bootstrap projects the complete governed catalog', async ({
   baseURL,
+  page,
 }) => {
+  test.setTimeout(60_000);
   const owner = await apiRequest.newContext({ baseURL });
   try {
     const ownerCsrf = await login(owner, 'LOCAL.OWNER');
@@ -571,6 +573,33 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
         ],
       });
     }
+
+    await page.goto('/app/inventory');
+    await page.getByLabel('Access ID').fill('LOCAL.INVENTORY');
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
+    const panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
+    await panel
+      .locator('.role-experience-actions [data-inventory-destination="inventory-management"]')
+      .click();
+    const queue = page.locator('[data-inventory-classification-queue]');
+    await queue.locator('[data-classification-status]').selectOption('ALL');
+    await queue.getByLabel('Search classification queue').fill(marker);
+    await expect(queue.locator('[data-classification-select]')).toHaveCount(2);
+    await queue.locator('[data-classification-select]').first().check();
+    await queue.locator('[data-classification-select]').nth(1).check();
+    await queue.getByRole('button', { name: 'Bulk classify selected' }).click();
+    await expect(page.getByRole('heading', { name: 'Bulk classify 2 items' })).toBeVisible();
+    await page.getByLabel('Classification notes').fill(`Second physical review ${marker}`);
+    await page.getByLabel(/I physically reviewed the selected items/u).check();
+    const uiBulkResponse = page.waitForResponse(
+      (response) =>
+        response.url().endsWith('/api/bulkClassifyInventoryItems') && response.request().method() === 'POST',
+    );
+    await page.getByRole('button', { name: 'Classify Selected as Non-lendable' }).click();
+    expect((await uiBulkResponse).status()).toBe(200);
+    await expect(page.getByText('2 non-lendable classifications recorded.')).toBeVisible();
   } finally {
     await owner.dispose();
   }

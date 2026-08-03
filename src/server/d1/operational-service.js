@@ -7058,7 +7058,7 @@ export function createD1OperationalService({
     if (!Array.isArray(command.items) || command.items.length < 2 || command.items.length > 50) {
       throw new ApiError('VALIDATION_FAILED', 'Bulk classification requires between 2 and 50 items.');
     }
-    requiredText(command.reason ?? command.items[0]?.classificationNotes, 'reason', 1000);
+    const bulkReason = requiredText(command.reason ?? command.items[0]?.classificationNotes, 'reason', 1000);
     const itemIds = command.items.map((item) => requiredText(item?.itemId, 'itemId', 80));
     if (new Set(itemIds).size !== itemIds.length) {
       throw new ApiError('VALIDATION_FAILED', 'Each item may appear only once in a bulk classification.');
@@ -7109,7 +7109,10 @@ export function createD1OperationalService({
       preparedItems.push(
         await prepareInventoryClassification({
           account,
-          command: item,
+          command: {
+            ...item,
+            classificationNotes: optionalText(item.classificationNotes, 1000) || bulkReason,
+          },
           correlationId,
           bulkGroupId,
           idempotencyKey: mutation.key,
