@@ -1019,17 +1019,78 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await Promise.all([ownerPage.close(), adminPage.close()]);
 });
 
-test('Request Center public APIs require an authenticated department session', async ({ request }) => {
-  for (const [method, route] of [
-    ['get', '/api/public/request/options'],
-    ['post', '/api/public/request'],
-    ['post', '/api/public/request/track'],
-    ['post', '/api/public/request/related'],
-  ]) {
-    const response = await request[method](route, method === 'post' ? { data: {} } : undefined);
-    expect(response.status()).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({ code: 'SESSION_REQUIRED' });
-  }
+test('Request Center public APIs enforce the two-purpose private-tracking contract', async ({ request }) => {
+  const optionsResponse = await request.get('/api/public/request/options');
+  expect(optionsResponse.status()).toBe(200);
+  const options = await optionsResponse.json();
+  expect(options.requestPurposes).toEqual([
+    'EVENT_ACTIVITY_SUPPORT',
+    'OFFICE_INVENTORY_PANTRY',
+  ]);
+  const event = options.events[0];
+  const item = options.items[0];
+  expect(event).toBeTruthy();
+  expect(item).toBeTruthy();
+
+  const command = {
+    clientRequestId: `public-request-${crypto.randomUUID()}`,
+    requesterName: 'Synthetic Public Requester',
+    organization: 'Synthetic Organization',
+    requesterType: 'HAU office / department',
+    email: `public-request-${crypto.randomUUID()}@example.invalid`,
+    contactNumber: '+63 917 000 0030',
+    purpose: 'Synthetic event support request.',
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    eventSeriesId: event.seriesId,
+    eventId: event.id,
+    startDate: '',
+    endDate: '',
+    location: event.venue ?? '',
+    dataUseAcknowledged: true,
+    acceptableUseAcknowledged: true,
+    evidenceConsentAcknowledged: true,
+    lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 1 }],
+  };
+  const submittedResponse = await request.post('/api/public/request', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: command,
+  });
+  expect(submittedResponse.status()).toBe(200);
+  const submitted = await submittedResponse.json();
+  expect(submitted).toMatchObject({
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    status: 'FOR_REVIEW',
+    replayed: false,
+  });
+  expect(submitted.trackingCode).toEqual(expect.any(String));
+
+  const trackedResponse = await request.post('/api/public/request/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
+  });
+  expect(trackedResponse.status()).toBe(200);
+  const tracked = await trackedResponse.json();
+  expect(tracked.request).toMatchObject({
+    id: submitted.requestId,
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    status: 'FOR_REVIEW',
+  });
+  expect(JSON.stringify(tracked)).not.toContain(command.requesterName);
+  expect(JSON.stringify(tracked)).not.toContain(command.email);
+
+  const relatedResponse = await request.post('/api/public/request/related', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
+  });
+  expect(relatedResponse.status()).toBe(200);
+  await expect(relatedResponse.json()).resolves.toMatchObject({
+    reference: {
+      id: submitted.requestId,
+      requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+      requestType: 'EVENT_LOGISTICS',
+    },
+  });
+
   expect((await request.get('/api/portal/request')).status()).toBe(401);
 });
 

@@ -346,6 +346,7 @@ async function handleApi(request, env, requestId, executionContext) {
     operations,
     publicAdvertisements,
     publicLending,
+    publicRequests,
   } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
@@ -355,14 +356,37 @@ async function handleApi(request, env, requestId, executionContext) {
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
     }
-    if (url.pathname.startsWith('/api/public/request')) {
+    if (url.pathname === '/api/public/request/options' && request.method === 'GET') {
+      return json({ ...(await publicRequests.options()), correlationId: requestId });
+    }
+    if (url.pathname === '/api/public/request' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
       return json(
-        {
-          code: 'SESSION_REQUIRED',
-          message: 'Sign in with a department requester account to use the Request Center.',
+        await publicRequests.submit({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
           correlationId: requestId,
-        },
-        401,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/related' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.related({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
       );
     }
     if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
