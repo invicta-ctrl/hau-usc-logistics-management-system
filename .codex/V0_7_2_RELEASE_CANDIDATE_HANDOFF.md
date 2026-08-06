@@ -1,10 +1,72 @@
 # v0.7.2 Release-Candidate Handoff
 
-Updated: 2026-08-03 (Asia/Manila)
+Updated: 2026-08-07 (Asia/Manila)
 
 ## Status
 
-`REPOSITORY_REPAIR_CANDIDATE_READY - EXACT_SHA_R2_AND_PREPRODUCTION_BLOCKED`
+`RV_01_REPAIRED - EXACT_SHA_REVIEW_AND_PREPRODUCTION_BLOCKED`
+
+## RV-01 request-visibility repair (2026-08-07)
+
+Owner-approved amendment `v0.7.2-RV-01` is recorded at
+`.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`.
+
+The audit was reclassified against exact head
+`9e6181b9de9134a22e6cf8b61121988bbc56023c` before any change. Findings 1-4, 7
+(partial), 8, 9, and 10 were confirmed in that head; findings 6, 13, 14, and 15
+were already repaired and proven and were not redone.
+
+Repairs, all migration-free:
+
+- The `request` module's server projection and the strict client allowlist both
+  omitted `requests` and `requestLines`. Both now carry the canonical review
+  queue, scoped by the existing capability/effective-scope model, while a new
+  containment guard keeps the public request-only contract free of internal
+  collections.
+- Every non-inventory module derived `total`/`hasMore` from a count of active
+  inventory items. Request now owns its total, uses a deterministic
+  `updated_at DESC, id DESC` order, and excludes archived requests.
+- The scoped-revision poller was gated to the Apps Script runtime, so a
+  REST-backed Main Hub never detected a public submission. It now runs for the
+  REST/HTTP production backend, and public submission bumps `overview` in
+  addition to `global` and `request`. Release, Procurement, and Restocking are
+  intentionally not bumped at submission.
+- Request review accepted one whole-request decision and implicitly routed
+  every non-stock, non-restock line to procurement. It now requires one
+  explicit server-validated decision per line, derives the parent status from
+  the line outcomes, and bumps only the scopes whose objects changed.
+- The Deliverables queue re-ran a whole-request review in REST mode, which
+  could never succeed once the parent left `FOR_REVIEW`; it now transitions the
+  deliverable it already owns.
+
+Two pre-existing time-dependent fixtures with hardcoded lending pickup/due
+dates were repaired. They made the previously recorded 39/39 Worker and 136
+browser results non-reproducible on any date after 2026-08-03.
+
+### RV-01 verification
+
+- `npm run check`: 114 files / 782 tests passed, including governance, lint,
+  two deterministic builds, Apps Script checks, dist verification, and the
+  Cloudflare type/dry-run checks.
+- Browser matrix: 136 passed / 356 intentional skips / 0 failed.
+- Local Worker/D1: 40/40, including the mandatory two-context regression
+  `public request becomes visible to an already-open authorized Main Hub and
+  routes each line exactly once`, which proves atomic D1 effects, revision
+  advance for an already-open session, downstream exclusion of fresh lines,
+  fail-closed accept without line decisions, foreign/invalid route rejection,
+  exactly one deliverable per procurement line, retry safety, and unrelated
+  committee denial.
+- No migration was added; schema target remains 30.
+
+### RV-01 remaining gaps
+
+- The full RV-01.3 authorization matrix is proven for central-owner read,
+  unrelated-committee denial, and requester self-scope. Director, explicit
+  deny, disabled, and archived contexts are not yet separately exercised.
+- Request-owned search/saved-filter metadata beyond total, page, `hasMore`,
+  order, and archive defaults is not implemented.
+- A fresh independent exact-SHA security and transaction review of the repair
+  head has not been run.
 
 The v0.7.2 product, schema, generated artifacts, and local verification are
 complete at the R2-repaired release-branch working tree prepared for candidate
@@ -186,11 +248,16 @@ evidence:
 
 ## Blocking pre-production gate
 
-Pre-production is fail-closed because both of these mandatory private inputs
-are absent/unapproved:
+Pre-production is fail-closed because this mandatory private input is absent:
 
-1. an owner-approved and implemented live email-delivery provider; and
-2. approved private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` values.
+1. an owner-approved and implemented live email-delivery provider.
+
+The identity-qualification policy is decided. On 2026-08-07 the owner selected
+Option A: automatic qualification requires an exact normalized verified-email
+match against the protected active USC Officer and Staff Directory projection,
+and unmatched applicants remain fail closed for governed manual review. No
+private identity classes are required for Option A, and no domain is invented
+or hardcoded.
 
 The Worker intentionally reports
 `ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_CONFIGURED` and, when absent,
@@ -214,8 +281,13 @@ tag/release, staging rebaseline, and DOL rollout are not started.
 
 ## Next exact action
 
-Owner/operator provides the approved private identity-class configuration and
-selects/authorizes an email provider implementation. Then implement and test
-that provider in the repository, rerun the complete exact-SHA gates, execute
-isolated pre-production acceptance with no mandatory `UNRUN`, and only then use
-the already-recorded production authorization for the verified exact target.
+Run a fresh independent exact-SHA security/authorization and
+transaction/idempotency review of the RV-01 repair head and verify exact-head
+PR CI. Then the owner/operator selects and authorizes one live email-provider
+implementation. Implement and test that provider in the repository, rerun the
+complete exact-SHA gates, execute isolated pre-production acceptance with no
+mandatory `UNRUN`, and only then use the already-recorded production
+authorization for the verified exact target.
+
+Identity policy no longer blocks: Option A is decided and requires no private
+identity-class configuration.

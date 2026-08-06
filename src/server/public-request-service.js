@@ -599,7 +599,12 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         ),
       db
         .prepare(
-          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request')",
+          // RV-01.4: a public submission makes new work visible in both the
+          // Request review queue and the Overview counters, so both scope
+          // revisions move with the global one. Release, Deliverables/
+          // Procurement, and Restocking are intentionally excluded because no
+          // object in those modules changed at submission.
+          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request', 'overview')",
         )
         .bind(timestamp),
     );

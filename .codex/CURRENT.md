@@ -3,18 +3,39 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `REPOSITORY_REPAIR_CANDIDATE_READY - EXACT_SHA_R2_AND_PREPRODUCTION_BLOCKED`.
+- Status: `RV_01_REPAIRED - EXACT_SHA_REVIEW_AND_PREPRODUCTION_BLOCKED`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
+- Accepted amendment: `v0.7.2-RV-01` Public Request Visibility, Review
+  Ownership, and Deterministic Line Routing, recorded at
+  `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`.
+- RV-01 repair (2026-08-07): the authenticated Request module now independently
+  projects the canonical parent/line review queue with its own pagination total;
+  public submission bumps the `overview` scope revision as well as `global` and
+  `request`; the scoped-revision poller now runs for the REST/HTTP production
+  backend instead of Apps Script only, so an already-open Main Hub refreshes
+  without a hard reload or re-login; and request review requires one explicit
+  server-validated route decision per line, replacing the implicit
+  "everything else becomes procurement" default. No migration was introduced.
+- RV-01 verification: `npm run check` 114 files / 782 tests; browser 136 passed
+  / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new
+  two-context regression `public request becomes visible to an already-open
+  authorized Main Hub and routes each line exactly once`.
+- RV-01 also repaired two pre-existing time-dependent fixtures (hardcoded
+  lending pickup/due dates) that made the recorded 39/39 Worker and 136 browser
+  evidence non-reproducible after 2026-08-03.
+- Owner decision 2026-08-07: identity qualification uses Option A, exact
+  protected-directory verified-email match only; unmatched applicants remain
+  fail closed for governed manual review.
 - Starting clean `main` / `origin/main` SHA:
   `589970d31d0dab4fe876107276d9b808eb44b9c3`.
 - Immutable predecessor release/tag SHA:
   `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
 - Accepted specification:
   `.codex/specs/v0.7.2-production-access-operations.md`.
-- Current work unit: freeze the R2-repaired candidate, complete fresh exact-SHA
-  R2 review and PR CI, then stop before pre-production until the approved
-  private identity classes and email-provider implementation/configuration
-  exist.
+- Current work unit: complete a fresh independent exact-SHA review of the RV-01
+  repair head and PR CI, then stop before pre-production until the approved
+  email-provider implementation/configuration exists. Identity policy is
+  decided (Option A) but the live provider remains absent.
 - Verification: schema-30 rehearsal passed; `npm run check` passes 113 files /
   774 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
   39/39. Five candidate review/audit cycles rejected earlier SHAs; their

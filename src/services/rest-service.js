@@ -32,6 +32,10 @@ export class RestService {
 }
 
 for (const method of [
+  // RV-01.4: the already-open REST session needs the existing revision
+  // endpoints to detect a public submission without a hard refresh.
+  'getDataRevision',
+  'getScopedRevision',
   'submitRequest',
   'submitCompositeRequest',
   'getCompositeRequest',

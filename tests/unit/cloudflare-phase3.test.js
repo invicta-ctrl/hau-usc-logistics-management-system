@@ -109,7 +109,10 @@ describe('Phase 3 Cloudflare and D1 foundation', () => {
       expect(operations).toContain(mutation);
     }
     expect(runtime).toContain("const useEssentialBootstrap=backendMode!=='mock'");
-    expect(extensions).toContain("if (isRequestOnly() || backendMode !== 'apps-script'");
+    // RV-01.4: revision polling must run for the REST production backend as
+    // well as Apps Script, so an already-open Main Hub refreshes itself.
+    expect(extensions).toContain("!['apps-script', 'rest', 'http'].includes(backendMode)");
+    expect(extensions).toContain('isRequestOnly() ||');
   });
 
   it('defines the complete operational model and database-enforced append-only guards', async () => {

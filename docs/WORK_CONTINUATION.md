@@ -4,11 +4,11 @@
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
 - **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations`; draft PR #15; freeze commit pending; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
-- **Current phase/stage:** repository candidate ready; exact-SHA review/CI next; pre-production blocked on private provider configuration.
-- **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md` and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+- **Current phase/stage:** RV-01 request-visibility repair complete on the release branch; fresh independent exact-SHA review and PR CI next; pre-production blocked on the absent live email provider (identity policy decided: Option A, exact protected-directory match only).
+- **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md`, accepted amendment `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`, and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 - **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
 - **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
-- **Tests verified:** `npm run check` 113 files / 774 tests; Playwright 136 passed / 356 intentional skips; local Worker/D1 39/39; migration 0001-0030 integrity `ok` and zero foreign-key findings.
+- **Tests verified (RV-01 head, 2026-08-07):** `npm run check` 114 files / 782 tests; Playwright 136 passed / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new two-context regression; migration 0001-0030 integrity `ok` and zero foreign-key findings. RV-01 introduced no migration.
 - **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
 - **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
 - **Blocker:** owner-approved live email provider implementation/configuration and private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` are absent; readiness intentionally fails closed.

@@ -8972,7 +8972,15 @@ export function createRuntimeExtensions(options) {
   };
 
   const start = () => {
-    if (isRequestOnly() || backendMode !== 'apps-script' || typeof services.getScopedRevision !== 'function')
+    // RV-01.4: the revision poller was previously limited to the Apps Script
+    // runtime, so a REST-backed Main Hub never noticed a public submission and
+    // needed a hard refresh or re-login. REST is the production backend and
+    // uses the same scoped-revision contract.
+    if (
+      isRequestOnly() ||
+      !['apps-script', 'rest', 'http'].includes(backendMode) ||
+      typeof services.getScopedRevision !== 'function'
+    )
       return;
     poller = createRevisionPoller({
       readRevision: (scope) => services.getScopedRevision(scope),

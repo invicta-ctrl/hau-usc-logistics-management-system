@@ -930,8 +930,11 @@ test('public Lending Center classifies borrowers and returns private tracking', 
   await form.getByLabel('College, school, or academic department').fill('School of Computing');
   await form.getByLabel('Contact number').fill('+63 917 000 0010');
   await form.getByLabel('Email address').fill('synthetic@gmail.com');
-  await form.getByLabel('Requested pickup date').fill('2026-08-03');
-  await form.getByLabel('Requested due date').fill('2026-08-10');
+  // Pickup and due dates are validated against the current date, so they must
+  // be derived at run time rather than pinned to the week this was written.
+  const lendingDay = (days) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+  await form.getByLabel('Requested pickup date').fill(lendingDay(1));
+  await form.getByLabel('Requested due date').fill(lendingDay(8));
   await form.getByLabel('Purpose').fill('Synthetic public lending browser proof.');
   await form.getByLabel('Responsibility acknowledgment').check();
   await form.getByLabel('Privacy acknowledgment').check();

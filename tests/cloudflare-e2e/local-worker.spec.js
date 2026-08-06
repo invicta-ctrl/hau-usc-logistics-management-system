@@ -1,6 +1,14 @@
 import { expect, request as apiRequest, test } from '@playwright/test';
 import { navigateToAdminView } from '../e2e/navigation.js';
 
+// Lending pickup/due dates are validated against the current date, so they must
+// be derived at run time. Hardcoded calendar dates made this suite pass only
+// during the week it was written.
+const dayOffset = (days) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+const PICKUP_DATE = dayOffset(1);
+const DUE_DATE = dayOffset(8);
+const DUE_AT = `${dayOffset(8)}T12:00:00+08:00`;
+
 const PASSWORD = `LocalOnly${String.fromCharCode(33)}Pass2026`;
 const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
 const ACTIVATED_PASSWORD = `Activated${String.fromCharCode(33)}Local9472`;
@@ -238,7 +246,7 @@ test('System Owner receives every module and a server-validated operational scop
     quantity: 1,
     unit: 'piece',
     purpose: 'System Owner operational-context audit proof',
-    dueAt: '2026-08-10T12:00:00+08:00',
+    dueAt: DUE_AT,
     ticketType: 'LOAN',
     operationalScope: 'COMMITTEE:COM_FOOD',
     activeWorkspace: 'inventory',
@@ -367,7 +375,7 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       quantity: 1,
       unit: fixture.unit,
       purpose: 'Fail-closed classification proof',
-      dueAt: '2026-08-10T12:00:00+08:00',
+      dueAt: DUE_AT,
       ticketType: 'LOAN',
     });
     expect(unsafeTicket.status()).toBe(409);
@@ -1275,8 +1283,8 @@ test('public Lending Center submits both borrower types with private tracking', 
     contactNumber: '+63 917 000 0010',
     email: `lending-${crypto.randomUUID()}@gmail.com`,
     purpose: 'Synthetic public lending acceptance proof.',
-    pickupDate: '2026-08-03',
-    dueDate: '2026-08-10',
+    pickupDate: PICKUP_DATE,
+    dueDate: DUE_DATE,
     responsibilityAcknowledged: true,
     dataUseAcknowledged: true,
     acceptableUseAcknowledged: true,
@@ -2962,11 +2970,52 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(submitted.status()).toBe(200);
   const requestId = (await submitted.json()).requestId;
 
+  // RV-01.2: the authenticated Request module independently projects the
+  // canonical review queue, so the reviewer reads the lines from it directly
+  // rather than depending on Overview or another module.
+  const requestModule = await request.get('/api/requests');
+  expect(requestModule.status()).toBe(200);
+  const requestModuleData = await requestModule.json();
+  expect(requestModuleData.data.requests.some((row) => row.id === requestId)).toBe(true);
+  const reviewableLines = requestModuleData.data.requestLines.filter(
+    (line) => line.requestId === requestId,
+  );
+  expect(reviewableLines).toHaveLength(2);
+  // RV-01.5: Request owns its pagination total. On a single page the total is
+  // exactly the number of visible requests, not the Inventory catalog count.
+  if (!requestModuleData.pagination.hasMore) {
+    expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
+  }
+  const inventoryModule = await request.get('/api/inventory');
+  expect(inventoryModule.status()).toBe(200);
+  const inventoryCount = (await inventoryModule.json()).data.inventoryItems.length;
+  expect(requestModuleData.pagination.total).not.toBe(inventoryCount);
+
+  // RV-01.6: every accepted line carries one explicit route decision. The
+  // implicit "everything else becomes procurement" default no longer exists.
+  const stockDecisionLine = reviewableLines.find((line) => line.itemId);
+  const procurementDecisionLine = reviewableLines.find((line) => !line.itemId);
+  expect(stockDecisionLine).toBeTruthy();
+  expect(procurementDecisionLine).toBeTruthy();
+
+  const missingDecisions = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Synthetic acceptance without line decisions',
+    clientRequestId: 'local-e2e-request-review-missing-decisions',
+  });
+  expect(missingDecisions.status()).toBe(422);
+  expect((await missingDecisions.json()).code).toBe('LINE_DECISIONS_REQUIRED');
+
   const review = await mutate(request, csrfToken, 'reviewRequest', {
     requestId,
     decision: 'ACCEPT',
     note: 'Synthetic acceptance',
     clientRequestId: 'local-e2e-request-review',
+    lineDecisions: [
+      { lineId: stockDecisionLine.id, decision: 'ISSUE_FROM_STOCK' },
+      { lineId: procurementDecisionLine.id, decision: 'PROCUREMENT' },
+    ],
   });
   expect(review.status()).toBe(200);
 
@@ -3667,8 +3716,8 @@ test('traceable reusable assets preserve assignment, condition, and maintenance 
     quantity: 1,
     unit: 'piece',
     purpose: 'Synthetic traceable asset lifecycle',
-    pickupDate: '2026-08-03',
-    dueAt: '2026-08-10T12:00:00+08:00',
+    pickupDate: PICKUP_DATE,
+    dueAt: DUE_AT,
     ticketType: 'LOAN',
   });
   expect(lending.status()).toBe(200);
@@ -3769,7 +3818,7 @@ test('a returned reusable asset can be assigned to a later lending ticket withou
       quantity: 1,
       unit: 'piece',
       purpose: `Synthetic ${suffix} reusable assignment`,
-      dueAt: '2026-08-10T12:00:00+08:00',
+      dueAt: DUE_AT,
       ticketType: 'LOAN',
       clientRequestId: `local-reuse-ticket-${suffix}`,
     });

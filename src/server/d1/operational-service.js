@@ -879,6 +879,20 @@ const INVENTORY_HANDLING = new Set([
 ]);
 const INVENTORY_CATALOG_TYPES = new Set(['OFFICE_INVENTORY', 'PANTRY', 'EVENT_SPECIFIC']);
 const INVENTORY_STATUSES = new Set(['ACTIVE', 'VERIFY', 'INACTIVE']);
+
+// RV-01.6: the explicit per-line route decisions a reviewer may issue, and the
+// canonical request-line status each one commits. Exactly one active downstream
+// owner is created per accepted line; a stock route creates none at review.
+const LINE_ROUTE_STATUS = Object.freeze({
+  ISSUE_FROM_STOCK: 'READY_TO_RESERVE',
+  PROCUREMENT: 'FOR_CANVASSING',
+  RESTOCK: 'FOR_CANVASSING',
+  REJECT: 'REJECTED',
+  MISSING_INFORMATION: 'NEEDS_INFORMATION',
+});
+const LINE_ROUTE_DECISIONS = new Set(Object.keys(LINE_ROUTE_STATUS));
+// Mirrors the client child-collection cap in src/app/bootstrap-contract.js.
+const MAX_REQUEST_LINE_ROWS = 500;
 const CONDITION_REVIEW_STATES = new Set([
   'NOT_ASSESSED',
   'NOT_APPLICABLE',
@@ -1070,6 +1084,7 @@ const requestDto = (row) => ({
   ownerCommitteeId: row.owner_committee_id,
   catalogType: row.catalog_type,
   department: row.department,
+  requesterName: row.requester_name,
   priority: row.priority,
   purpose: row.purpose,
   status: row.status,
@@ -1373,6 +1388,9 @@ export function createD1OperationalService({
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
     let itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
+    // Set by a module that owns its own pagination total. Null keeps the
+    // legacy Inventory-derived count for modules not yet migrated.
+    let moduleTotal = null;
     if (module === 'request') {
       const eventScope = requestOnly
         ? { sql: '1 = 1', values: [] }
@@ -1410,6 +1428,52 @@ export function createD1OperationalService({
         })),
         inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
       };
+      // RV-01.2: the authenticated Request module independently projects the
+      // canonical review queue. It must not depend on Overview loading first.
+      // RV-01.8 keeps the public request-only contract purpose-limited.
+      if (!requestOnly) {
+        const queueScope = scopedWhere(account, {
+          committeeColumn: 'owner_committee_id',
+          ownerColumn: 'requester_account_id',
+          alias: 'request',
+        });
+        const queueLimitIndex = queueScope.values.length + 1;
+        const queueRows = await rows(
+          db,
+          `SELECT request.* FROM requests request
+           WHERE ${queueScope.sql} AND request.archived_at IS NULL
+           ORDER BY request.updated_at DESC, request.id DESC
+           LIMIT ?${queueLimitIndex} OFFSET ?${queueLimitIndex + 1}`,
+          [...queueScope.values, page.pageSize, page.offset],
+        );
+        // RV-01.5: Request owns its own total. It must not reuse Inventory's.
+        const queueTotalStatement = db.prepare(
+          `SELECT COUNT(*) AS count FROM requests request
+           WHERE ${queueScope.sql} AND request.archived_at IS NULL`,
+        );
+        const queueTotalRow = await (queueScope.values.length
+          ? queueTotalStatement.bind(...queueScope.values)
+          : queueTotalStatement
+        ).first();
+        moduleTotal = Number(queueTotalRow?.count ?? 0);
+        const queueParentIds = queueRows.map((row) => row.id);
+        // Lines are fetched for exactly the parents on this page, so the page
+        // stays internally consistent. The bound matches the client child
+        // collection cap; a page that somehow exceeded it fails the strict
+        // contract closed rather than rendering a partial queue.
+        const queueLineRows = queueParentIds.length
+          ? await rows(
+              db,
+              `SELECT line.* FROM request_lines line
+               WHERE line.request_id IN (${queueParentIds.map((_, index) => `?${index + 1}`).join(', ')})
+               ORDER BY line.request_id, line.created_at, line.id
+               LIMIT ${MAX_REQUEST_LINE_ROWS + 1}`,
+              queueParentIds,
+            )
+          : [];
+        data.requests = queueRows.map(requestDto);
+        data.requestLines = queueLineRows.map(lineDto);
+      }
     } else if (module === 'inventory') {
       itemRows = await rows(
         db,
@@ -1943,8 +2007,8 @@ export function createD1OperationalService({
           : {
               page: page.page,
               pageSize: page.pageSize,
-              total: Number(totalRow?.count ?? 0),
-              hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
+              total: moduleTotal ?? Number(totalRow?.count ?? 0),
+              hasMore: page.offset + page.pageSize < (moduleTotal ?? Number(totalRow?.count ?? 0)),
             },
       revision: globalRevision,
       scopeRevision: scopeRevision
@@ -5219,35 +5283,134 @@ export function createD1OperationalService({
        WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
       [requestId],
     );
-    const result = { requestId, id: requestId, status: nextStatus, correlationId };
+    // RV-01.6: an accepted review requires one explicit permitted decision for
+    // every reviewable line. The previous implicit default silently routed each
+    // non-preclassified line to procurement.
+    const lineRoutes = new Map();
+    if (nextStatus === 'ACCEPTED') {
+      const submitted = Array.isArray(command.lineDecisions) ? command.lineDecisions : null;
+      if (!submitted || !submitted.length) {
+        throw new ApiError(
+          'LINE_DECISIONS_REQUIRED',
+          'Accepting a request requires an explicit decision for every line.',
+        );
+      }
+      if (submitted.length > 100) throw new ApiError('VALIDATION_FAILED', 'Too many line decisions.');
+      for (let index = 0; index < submitted.length; index += 1) {
+        const entry = submitted[index] ?? {};
+        const lineId = requiredText(entry.lineId, `lineDecisions[${index}].lineId`, 80);
+        const routeDecision = requiredText(
+          entry.decision,
+          `lineDecisions[${index}].decision`,
+          40,
+        ).toUpperCase();
+        if (!LINE_ROUTE_DECISIONS.has(routeDecision)) {
+          throw new ApiError('LINE_DECISION_INVALID', 'The line route decision is not permitted.');
+        }
+        if (lineRoutes.has(lineId)) {
+          throw new ApiError('DUPLICATE_LINE_DECISION', 'Each line accepts exactly one decision.');
+        }
+        const line = requestLines.find((row) => row.id === lineId);
+        if (!line) {
+          throw new ApiError(
+            'LINE_DECISION_SCOPE_MISMATCH',
+            'Every decision must target a reviewable line of this request.',
+            { status: 409 },
+          );
+        }
+        if (routeDecision === 'ISSUE_FROM_STOCK' && !line.item_id) {
+          throw new ApiError(
+            'LINE_ROUTE_NOT_ALLOWED',
+            'A stock route requires an exact catalog item.',
+            { status: 409 },
+          );
+        }
+        if (routeDecision === 'RESTOCK') {
+          if (!line.item_id) {
+            throw new ApiError('LINE_ROUTE_NOT_ALLOWED', 'A restock route requires an exact catalog item.', {
+              status: 409,
+            });
+          }
+          if (
+            current.request_type !== 'CATALOG_RESTOCK' &&
+            !['OFFICE_INVENTORY', 'PANTRY'].includes(current.catalog_type)
+          ) {
+            throw new ApiError(
+              'LINE_ROUTE_NOT_ALLOWED',
+              'A restock route requires a catalog restock or Office Inventory/Pantry request.',
+              { status: 409 },
+            );
+          }
+        }
+        if (routeDecision === 'PROCUREMENT' && current.request_type === 'CATALOG_RESTOCK') {
+          throw new ApiError(
+            'LINE_ROUTE_NOT_ALLOWED',
+            'A catalog restock request cannot create an event procurement item.',
+            { status: 409 },
+          );
+        }
+        lineRoutes.set(lineId, routeDecision);
+      }
+      const uncovered = requestLines.filter((line) => !lineRoutes.has(line.id));
+      if (uncovered.length) {
+        throw new ApiError(
+          'LINE_DECISIONS_INCOMPLETE',
+          'Every reviewable line requires an explicit decision.',
+          { status: 409 },
+        );
+      }
+    }
+
+    // RV-01.6: the parent is derived from the accepted line outcomes.
+    const routeValues = [...lineRoutes.values()];
+    const derivedStatus =
+      nextStatus !== 'ACCEPTED'
+        ? nextStatus
+        : routeValues.every((route) => route === 'REJECT')
+          ? 'REJECTED'
+          : routeValues.includes('MISSING_INFORMATION')
+            ? 'NEEDS_INFORMATION'
+            : 'ACCEPTED';
+    const result = { requestId, id: requestId, status: derivedStatus, correlationId };
     const statements = [
       db
         .prepare(
           `UPDATE requests SET status = ?2, updated_at = ?3
            WHERE id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
         )
-        .bind(requestId, nextStatus, timestamp),
-      db
-        .prepare(
-          `UPDATE request_lines
-           SET status = CASE
-             WHEN ?2 = 'ACCEPTED' AND item_id IS NOT NULL
-               AND fulfillment_source IN ('ISSUE_FROM_STOCK', 'SPLIT_FULFILLMENT')
-               THEN 'READY_TO_RESERVE'
-             WHEN ?2 = 'ACCEPTED' THEN 'FOR_CANVASSING'
-             WHEN ?2 = 'REJECTED' THEN 'REJECTED'
-             ELSE 'NEEDS_INFORMATION' END,
-             updated_at = ?3
-           WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
-        )
-        .bind(requestId, nextStatus, timestamp),
+        .bind(requestId, derivedStatus, timestamp),
     ];
     if (nextStatus === 'ACCEPTED') {
       for (const line of requestLines) {
-        const routesFromStock =
-          line.item_id && ['ISSUE_FROM_STOCK', 'SPLIT_FULFILLMENT'].includes(line.fulfillment_source);
-        if (routesFromStock) continue;
-        if (current.request_type === 'CATALOG_RESTOCK' || line.fulfillment_source === 'RESTOCK') {
+        statements.push(
+          db
+            .prepare(
+              `UPDATE request_lines SET status = ?2, updated_at = ?3
+               WHERE id = ?1 AND request_id = ?4 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+            )
+            .bind(line.id, LINE_ROUTE_STATUS[lineRoutes.get(line.id)], timestamp, requestId),
+        );
+      }
+    } else {
+      statements.push(
+        db
+          .prepare(
+            `UPDATE request_lines SET status = ?2, updated_at = ?3
+             WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+          )
+          .bind(requestId, nextStatus === 'REJECTED' ? 'REJECTED' : 'NEEDS_INFORMATION', timestamp),
+      );
+    }
+    // RV-01.4: only modules whose objects actually changed bump their revision.
+    const changedScopes = new Set(['request', 'overview']);
+    if (nextStatus === 'ACCEPTED') {
+      for (const line of requestLines) {
+        const route = lineRoutes.get(line.id);
+        // RV-01.6: a stock route creates no downstream owner at review. Release
+        // eligibility follows reservation and accepted readiness rules.
+        if (route === 'ISSUE_FROM_STOCK' || route === 'REJECT' || route === 'MISSING_INFORMATION') continue;
+        if (route === 'RESTOCK') {
+          changedScopes.add('restocking');
           statements.push(
             db
               .prepare(
@@ -5272,6 +5435,7 @@ export function createD1OperationalService({
               ),
           );
         } else {
+          changedScopes.add('procurement');
           statements.push(
             db
               .prepare(
@@ -5310,21 +5474,24 @@ export function createD1OperationalService({
         entityType: 'REQUEST',
         entityId: requestId,
         previousStatus: current.status,
-        newStatus: nextStatus,
+        newStatus: derivedStatus,
         accountId: account.id,
         idempotencyKey: mutation.key,
         reason: optionalText(command.note, 500),
       }),
       auditStatement(db, {
-        action: `REQUEST_${nextStatus}`,
+        action: `REQUEST_${derivedStatus}`,
         entityType: 'REQUEST',
         entityId: requestId,
         accountId: account.id,
         correlationId,
-        after: { status: nextStatus },
+        after: {
+          status: derivedStatus,
+          lineRoutes: [...lineRoutes.entries()].map(([lineId, route]) => ({ lineId, route })),
+        },
       }),
       idempotencyStatement(db, 'reviewRequest', mutation, account.id, result),
-      ...revisionStatements(db, ['request']),
+      ...revisionStatements(db, [...changedScopes]),
     );
     const outcomes = await db.batch(statements);
     if (Number(outcomes[0]?.meta?.changes ?? 0) !== 1) {
