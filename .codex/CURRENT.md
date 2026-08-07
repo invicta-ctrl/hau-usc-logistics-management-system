@@ -3,7 +3,7 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `RV_01_REPAIRED - EXACT_SHA_REVIEW_AND_PREPRODUCTION_BLOCKED`.
+- Status: `RV_01_REVIEW_FAIL - REVIEWER_UI_GAP_OPEN - RV_02_NOT_STARTED`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
 - Accepted amendment: `v0.7.2-RV-01` Public Request Visibility, Review
   Ownership, and Deterministic Line Routing, recorded at
@@ -16,10 +16,18 @@
   without a hard reload or re-login; and request review requires one explicit
   server-validated route decision per line, replacing the implicit
   "everything else becomes procurement" default. No migration was introduced.
-- RV-01 repair head: `ae46c1f85622c3c933fcb771f0bbf8e721e4195c`
-  (`a18e8fc` repair, `6a11641` generated-artifact correction, `ae46c1f`
-  handoff note). PR #15 head matches; `MERGEABLE` / `CLEAN`; exact-head checks
-  `validate`, `verify`, and `browser-smoke` all `SUCCESS`.
+- RV-01 repair head: `375ac1221c5ddad1e60dcee15154acf45f0724c2`. PR #15 head
+  matches; `MERGEABLE` / `CLEAN`; exact-head `validate`, `verify`, and
+  `browser-smoke` all `SUCCESS`.
+- **RV-01 does not carry a PASS.** Both independent exact-SHA reviews ran and
+  are recorded in the candidate handoff; both returned FAIL. Every P0 and P1
+  they raised is repaired (batch atomicity, stranded routes, derived-reject
+  bypass, idempotency key binding, inert revision polling), but the RV-01.6
+  reviewer UI gap remains open and no review round has yet returned PASS.
+- Two earlier claims were overstated and are corrected in the handoff: the DENY
+  short-circuits are latent defence in depth rather than a live repair, and the
+  RV-01.4 refresh claim had been supported only by server-side token advance
+  while the client poller was disabled by a hardcoded `enabled: false`.
 - RV-01 verification: `npm run check` 114 files / 782 tests; browser 136 passed
   / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new
   two-context regression `public request becomes visible to an already-open
