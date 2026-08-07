@@ -632,3 +632,83 @@ test('a larger requested page size cannot skip rows', async ({ request }) => {
     expect(secondIds).toEqual(paged.data.requests.map((row) => row.id));
   }
 });
+
+test('two concurrent reviewers cannot both route the same line', async ({ request }) => {
+  // The parent guard must be a compare-and-swap, not a state-membership test.
+  // NEEDS_INFORMATION is both an accepted from-state and a state a mixed review
+  // produces, so a membership guard let two reviewers holding different decision
+  // sets each commit, giving one line two downstream owners.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-race-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Race Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-race-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0034',
+        purpose: 'Synthetic RV-01 concurrent review proof.',
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Other', description: 'Race line', quantity: 1, unit: 'piece' }],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests')).json();
+  const parent = queue.data.requests.find((row) => row.purpose === 'Synthetic RV-01 concurrent review proof.');
+  expect(parent).toBeTruthy();
+  const line = queue.data.requestLines.find((row) => row.requestId === parent.id);
+  expect(line).toBeTruthy();
+
+  // Two distinct decision sets, so they do not collide on the idempotency key
+  // and must be separated by the state guard alone.
+  const [first, second] = await Promise.all([
+    mutate(request, csrfToken, 'reviewRequest', {
+      requestId: parent.id,
+      decision: 'ACCEPT',
+      note: 'Racer A',
+      clientRequestId: `rv01-race-a-${parent.id}`,
+      lineDecisions: [{ lineId: line.id, decision: 'PROCUREMENT' }],
+    }),
+    mutate(request, csrfToken, 'reviewRequest', {
+      requestId: parent.id,
+      decision: 'ACCEPT',
+      note: 'Racer B',
+      clientRequestId: `rv01-race-b-${parent.id}`,
+      lineDecisions: [{ lineId: line.id, decision: 'MISSING_INFORMATION' }],
+    }),
+  ]);
+
+  const codes = [first.status(), second.status()].sort();
+  // Exactly one may win; the loser must fail closed.
+  expect(codes[0]).toBe(200);
+  expect(codes[1]).toBe(409);
+
+  // The decisive invariant: the line never gains two downstream owners.
+  const procurement = await (await request.get('/api/procurement')).json();
+  const deliverables = (procurement.data.deliverables ?? []).filter(
+    (entry) => entry.requestLineId === line.id,
+  );
+  expect(deliverables.length).toBeLessThanOrEqual(1);
+  const restocking = await (await request.get('/api/restocking')).json();
+  expect(
+    (restocking.data.restockRequests ?? []).filter((entry) => entry.sourceRequestLineId === line.id),
+  ).toHaveLength(0);
+});

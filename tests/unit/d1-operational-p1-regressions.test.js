@@ -147,8 +147,13 @@ describe('D1 operational P1 invariants', () => {
     expect(review).toContain("conflictCode: 'REQUEST_STATE_CONFLICT'");
     expect(review).not.toContain('outcomes[0]?.meta?.changes');
     expect(review).not.toMatch(/const outcomes = await db\.batch\(/u);
-    // The parent transition must be the guarded statement.
+    // The parent transition must be the guarded statement, and it must be a
+    // compare-and-swap against the snapshot that was read. A membership test
+    // lets two reviewers holding different decision sets both commit, because
+    // NEEDS_INFORMATION is both an accepted from-state and a producible state.
     expect(review).toMatch(/guardedStatement[\s\S]*?UPDATE requests SET status/u);
+    expect(review).toMatch(/WHERE id = \?1 AND status = \?4 AND updated_at = \?5/u);
+    expect(review).toMatch(/\.bind\(requestId, derivedStatus, timestamp, current\.status, current\.updated_at\)/u);
   });
 
   it('refuses a whole-request reject once some lines are already routed', () => {
@@ -158,9 +163,13 @@ describe('D1 operational P1 invariants', () => {
     // already owning a Deliverables/Restocking item. A later whole-request
     // REJECT would strand those active owners under a rejected parent.
     expect(review).toContain('REQUEST_ALREADY_ROUTED');
-    // The probe counts only lines that own a live downstream item, so a merely
-    // REJECTED line does not make the parent permanently un-rejectable.
-    expect(review).toMatch(/status IN \('FOR_CANVASSING', 'READY_TO_RESERVE'\)/u);
+    // The probe counts only lines that own a live downstream item. A REJECTED
+    // line owns nothing, and a stock route creates no reservation at review, so
+    // neither may make the parent permanently un-rejectable.
+    expect(review).toMatch(/COUNT\(\*\) AS count FROM request_lines[\s\S]*?status = 'FOR_CANVASSING'/u);
+    // A reject must still close stock-ready lines, or stock could be reserved
+    // for a rejected request.
+    expect(review).toMatch(/'FOR_REVIEW', 'NEEDS_INFORMATION', 'READY_TO_RESERVE'/u);
     // The guard must key off the DERIVED outcome as well as the submitted
     // decision: an ACCEPT whose remaining decisions are all REJECT derives a
     // REJECTED parent and strands routed lines exactly like a whole-request
@@ -177,7 +186,10 @@ describe('D1 operational P1 invariants', () => {
     // permanent IDEMPOTENCY_CONFLICT. Sorting makes order insignificant.
     expect(review).toContain('normalizedLineDecisions');
     expect(review).toMatch(/normalizedLineDecisions[\s\S]*?\.sort\(\)/u);
-    expect(review).toMatch(/command\.clientRequestId \?\?[\s\S]*?fingerprint\(normalizedLineDecisions\)/u);
+    // The key must cover every field the replay fingerprint compares, or a
+    // second missing-information notice differing only by note locks out.
+    expect(review).toMatch(/command\.clientRequestId \?\?[\s\S]*?fingerprint\(/u);
+    expect(review).toMatch(/normalizedLineDecisions\}\|\$\{optionalText\(command\.note, 500\)/u);
   });
 
   it('replaces the preferred canvass with one set-based active-group update', () => {

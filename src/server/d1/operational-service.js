@@ -5380,7 +5380,9 @@ export function createD1OperationalService({
       : '';
     const key =
       command.clientRequestId ??
-      `review-${requestId}-${decision}-${await fingerprint(normalizedLineDecisions)}`;
+      `review-${requestId}-${decision}-${await fingerprint(
+        `${normalizedLineDecisions}|${optionalText(command.note, 500)}`,
+      )}`;
     const current = await db.prepare('SELECT * FROM requests WHERE id = ?1').bind(requestId).first();
     if (!current) throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     assertEntityScope(account, {
@@ -5406,13 +5408,16 @@ export function createD1OperationalService({
     // item. A later whole-request REJECT or MISSING_INFORMATION only touches
     // still-reviewable lines, so it would strand those active owners under a
     // rejected parent. Require the remaining lines to be decided individually.
-    // The probe counts only lines that own a live downstream item or an active
-    // stock reservation. A line that is merely REJECTED owns nothing, so it must
-    // not make the parent permanently un-rejectable.
+    // Count only lines that actually own a live downstream item. A REJECTED line
+    // owns nothing, and a READY_TO_RESERVE line owns nothing either: a stock
+    // route creates no reservation at review. Counting it here made a request
+    // whose only routed line was stock-ready permanently un-rejectable. Those
+    // lines are instead swept to REJECTED alongside the parent below, so no line
+    // is left stock-ready under a rejected request.
     const routedRow = await db
       .prepare(
         `SELECT COUNT(*) AS count FROM request_lines
-         WHERE request_id = ?1 AND status IN ('FOR_CANVASSING', 'READY_TO_RESERVE')`,
+         WHERE request_id = ?1 AND status = 'FOR_CANVASSING'`,
       )
       .bind(requestId)
       .first();
@@ -5525,12 +5530,19 @@ export function createD1OperationalService({
     // `changes()` check cannot stop the route inserts below from committing when
     // a concurrent reviewer already moved the request out of FOR_REVIEW. The
     // guard must therefore live inside the batch.
+    // A membership test is not enough. NEEDS_INFORMATION is both an accepted
+    // from-state and a state this command can produce, so two reviewers holding
+    // different decision sets could each satisfy `status IN (...)` and both
+    // commit, giving one line two downstream owners. Compare-and-swap against
+    // the exact snapshot read above instead: any interleaved commit changes the
+    // status or updated_at, the guarded update matches zero rows, and the
+    // in-batch sentinel rolls the whole batch back as REQUEST_STATE_CONFLICT.
     const guardedStatement = db
       .prepare(
         `UPDATE requests SET status = ?2, updated_at = ?3
-         WHERE id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+         WHERE id = ?1 AND status = ?4 AND updated_at = ?5`,
       )
-      .bind(requestId, derivedStatus, timestamp);
+      .bind(requestId, derivedStatus, timestamp, current.status, current.updated_at);
     const statements = [];
     if (nextStatus === 'ACCEPTED') {
       for (const line of requestLines) {
@@ -5547,8 +5559,15 @@ export function createD1OperationalService({
       statements.push(
         db
           .prepare(
-            `UPDATE request_lines SET status = ?2, updated_at = ?3
-             WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+            nextStatus === 'REJECTED'
+              ? // READY_TO_RESERVE lines own no downstream item, but reserveStock
+                // keys off that status, so leaving them behind would let stock be
+                // reserved for a rejected request.
+                `UPDATE request_lines SET status = ?2, updated_at = ?3
+                 WHERE request_id = ?1
+                   AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION', 'READY_TO_RESERVE')`
+              : `UPDATE request_lines SET status = ?2, updated_at = ?3
+                 WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
           )
           .bind(requestId, nextStatus === 'REJECTED' ? 'REJECTED' : 'NEEDS_INFORMATION', timestamp),
       );
