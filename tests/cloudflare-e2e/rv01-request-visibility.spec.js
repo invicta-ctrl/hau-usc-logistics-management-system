@@ -829,3 +829,78 @@ test('a reject is refused after procurement advances the deliverable past its fi
   );
   expect(afterParent.status).toBe('REJECTED');
 });
+
+test('a requester cannot review their own request and an Administrator can', async ({ request }) => {
+  // Owner decisions B1 and B2: ADMINISTRATOR holds REQUEST_REVIEW for central
+  // review, and no actor may review a request they submitted, even holding
+  // request.review.
+  const ownerCsrf = await login(request, 'LOCAL.OWNER');
+
+  const clientRequestId = `rv01-sod-${crypto.randomUUID()}`;
+  const submitted = await mutate(request, ownerCsrf, 'submitRequest', {
+    clientRequestId,
+    requestType: 'GENERAL_REQUEST',
+    purpose: 'Synthetic separation-of-duties proof',
+    lines: [
+      {
+        clientLineId: `rv01-sod-line-${crypto.randomUUID()}`,
+        description: 'Synthetic self-review fixture',
+        quantity: 1,
+        unit: 'piece',
+        fulfillmentSource: 'FOR_CANVASSING',
+      },
+    ],
+  });
+  expect(submitted.status()).toBe(200);
+  const requestId = (await submitted.json()).requestId;
+  expect(requestId).toBeTruthy();
+
+  const queue = await (await request.get('/api/requests')).json();
+  const line = queue.data.requestLines.find((row) => row.requestId === requestId);
+  expect(line).toBeTruthy();
+
+  // The submitter holds request.review but must still be refused.
+  const selfReview = await mutate(request, ownerCsrf, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Self review attempt',
+    clientRequestId: `rv01-sod-self-${requestId}`,
+    lineDecisions: [{ lineId: line.id, decision: 'PROCUREMENT' }],
+  });
+  expect(selfReview.status()).toBe(403);
+  const selfBody = await selfReview.json();
+  expect(selfBody.code).toBe('SELF_REVIEW_FORBIDDEN');
+  // The denial must not leak protected requester details.
+  expect(JSON.stringify(selfBody)).not.toContain('@');
+
+  // Nothing was routed by the refused attempt.
+  const afterSelf = await (await request.get('/api/procurement')).json();
+  expect(
+    (afterSelf.data.deliverables ?? []).filter((entry) => entry.requestId === requestId),
+  ).toHaveLength(0);
+
+  // A different central reviewer — an Administrator — can review it.
+  const admin = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const adminQueue = await admin.get('/api/requests');
+    expect(adminQueue.status()).toBe(200);
+    expect((await adminQueue.json()).data.requests.some((row) => row.id === requestId)).toBe(true);
+
+    const reviewed = await mutate(admin, adminCsrf, 'reviewRequest', {
+      requestId,
+      decision: 'ACCEPT',
+      note: 'Administrator central review',
+      clientRequestId: `rv01-sod-admin-${requestId}`,
+      lineDecisions: [{ lineId: line.id, decision: 'PROCUREMENT' }],
+    });
+    expect(reviewed.status()).toBe(200);
+  } finally {
+    await admin.dispose();
+  }
+
+  const afterAdmin = await (await request.get('/api/procurement')).json();
+  expect(
+    (afterAdmin.data.deliverables ?? []).filter((entry) => entry.requestId === requestId),
+  ).toHaveLength(1);
+});

@@ -1529,6 +1529,26 @@ export function createD1OperationalService({
               ` OR instr(lower(request.requester_name), ?${idIndex + 2}) > 0)`,
           );
         }
+        // RV-01.5: the selected operational scope must narrow the authoritative
+        // query, not a post-query pass. filterOperationalData runs after the
+        // total is computed, so a LOCATION/EVENT scope would otherwise leave
+        // `total` and `hasMore` describing rows the reviewer cannot see.
+        const selectedScope = operationalContext?.selected;
+        if (selectedScope && selectedScope.kind === 'EVENT') {
+          queueFilters.push(`request.event_id = ?${nextIndex()}`);
+          queueValues.push(selectedScope.id);
+        } else if (selectedScope && selectedScope.kind === 'EVENT_SERIES') {
+          queueFilters.push(`request.event_series_id = ?${nextIndex()}`);
+          queueValues.push(selectedScope.id);
+        } else if (selectedScope && selectedScope.kind === 'LOCATION') {
+          queueFilters.push(
+            `EXISTS (SELECT 1 FROM request_lines scoped_line
+                       JOIN inventory_items scoped_item ON scoped_item.id = scoped_line.item_id
+                      WHERE scoped_line.request_id = request.id
+                        AND scoped_item.storage_location = ?${nextIndex()})`,
+          );
+          queueValues.push(selectedScope.id);
+        }
         const fromDate = safeDateBoundary(command.from);
         if (fromDate) {
           queueFilters.push(`request.created_at >= ?${nextIndex()}`);
@@ -5422,6 +5442,18 @@ export function createD1OperationalService({
       eventId: current.event_id ?? '',
       eventSeriesId: current.event_series_id ?? '',
     });
+    // Separation of duties: a requester must never review their own request,
+    // even if an unusual account configuration grants request.review. Compared
+    // on the canonical opaque account id, never on a display name or email. The
+    // denial reveals nothing about the requester beyond the caller's own
+    // identity, which they already hold.
+    if (current.requester_account_id && current.requester_account_id === account.id) {
+      throw new ApiError(
+        'SELF_REVIEW_FORBIDDEN',
+        'A request cannot be reviewed by the person who submitted it.',
+        { status: 403 },
+      );
+    }
     const mutation = await replay(db, 'reviewRequest', key, account.id, command);
     if (mutation.replayed) return mutation.value;
     if (!['FOR_REVIEW', 'NEEDS_INFORMATION'].includes(current.status)) {

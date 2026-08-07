@@ -163,6 +163,11 @@ const ROLE_REGISTRY = Object.freeze({
     scopeMode: 'ALL',
     capabilities: [
       CAPABILITIES.VIEW_REQUEST,
+      // RV-01.3 requires an Administrator with verified central capability to
+      // read and review unassigned work. Without this the shipped reviewer
+      // surface is hidden for Administrators and reviewRequest returns
+      // CAPABILITY_REQUIRED unless a per-account grant is configured.
+      CAPABILITIES.REQUEST_REVIEW,
       CAPABILITIES.VIEW_INTERNAL,
       CAPABILITIES.VIEW_ALL_SUMMARY,
       CAPABILITIES.VIEW_AUDIT,

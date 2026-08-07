@@ -2986,10 +2986,18 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   if (!requestModuleData.pagination.hasMore) {
     expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
   }
-  const inventoryModule = await request.get('/api/inventory');
-  expect(inventoryModule.status()).toBe(200);
-  const inventoryCount = (await inventoryModule.json()).data.inventoryItems.length;
-  expect(requestModuleData.pagination.total).not.toBe(inventoryCount);
+  // Ownership is proven by the total tracking the visible request set above.
+  // A bare "total !== inventoryCount" check is coincidence-prone: the two
+  // counts can be equal by chance, which made this assertion flake.
+  if (!requestModuleData.pagination.hasMore) {
+    expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
+  } else {
+    // The queue clamps its page, so on a full page the total must exceed it.
+    expect(requestModuleData.pagination.total).toBeGreaterThan(
+      requestModuleData.data.requests.length,
+    );
+    expect(requestModuleData.data.requests.length).toBe(requestModuleData.pagination.pageSize);
+  }
 
   // RV-01.6: every accepted line carries one explicit route decision. The
   // implicit "everything else becomes procurement" default no longer exists.
@@ -2998,7 +3006,22 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(stockDecisionLine).toBeTruthy();
   expect(procurementDecisionLine).toBeTruthy();
 
-  const missingDecisions = await mutate(request, csrfToken, 'reviewRequest', {
+  // Separation of duties: LOCAL.DIRECTOR submitted this request, so it must be
+  // reviewed by a different central reviewer. LOCAL.ADMIN holds REQUEST_REVIEW.
+  const reviewer = await apiRequest.newContext({ baseURL });
+  const reviewerCsrf = await login(reviewer, 'LOCAL.ADMIN');
+
+  const selfReview = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Submitter attempts self review',
+    clientRequestId: 'local-e2e-request-self-review',
+    lineDecisions: [{ lineId: stockDecisionLine.id, decision: 'ISSUE_FROM_STOCK' }],
+  });
+  expect(selfReview.status()).toBe(403);
+  expect((await selfReview.json()).code).toBe('SELF_REVIEW_FORBIDDEN');
+
+  const missingDecisions = await mutate(reviewer, reviewerCsrf, 'reviewRequest', {
     requestId,
     decision: 'ACCEPT',
     note: 'Synthetic acceptance without line decisions',
@@ -3007,7 +3030,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(missingDecisions.status()).toBe(422);
   expect((await missingDecisions.json()).code).toBe('LINE_DECISIONS_REQUIRED');
 
-  const review = await mutate(request, csrfToken, 'reviewRequest', {
+  const review = await mutate(reviewer, reviewerCsrf, 'reviewRequest', {
     requestId,
     decision: 'ACCEPT',
     note: 'Synthetic acceptance',
