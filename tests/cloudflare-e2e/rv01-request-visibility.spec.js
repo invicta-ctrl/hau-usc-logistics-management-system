@@ -417,3 +417,170 @@ test('a partially routed request cannot be rejected as a whole', async ({ reques
   );
   expect(settledParent.status).toBe('NEEDS_INFORMATION');
 });
+
+test('a reviewer routes each line of a public request through the shipped Main Hub UI', async ({
+  page,
+  request,
+}) => {
+  // RV-01.6 shipped-UI proof. Context A submits publicly through a separate
+  // API context; Context B is an already-open authenticated Main Hub that must
+  // surface the request and let a human route every line without re-login.
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  let submittedId;
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    const item = options.items[0];
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-ui-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 UI Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-ui-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0033',
+        purpose: 'Synthetic RV-01 shipped reviewer UI proof.',
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [
+          { category: 'Inventory Item', itemId: item.id, quantity: 1 },
+          { category: 'Other', description: 'UI proof procurement line', quantity: 2, unit: 'piece' },
+        ],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+    submittedId = (await submitted.json()).requestId;
+  } finally {
+    await publicContext.dispose();
+  }
+  expect(submittedId).toBeTruthy();
+
+  // Context B: authenticated Main Hub.
+  await page.goto('/app/admin');
+  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
+  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.app-shell')).toBeVisible();
+
+  await page.goto('/app/admin/requests');
+  await expect(page.locator('#request')).toBeVisible();
+
+  // The shipped reviewer surface exists and shows the new request.
+  const queue = page.locator('#requestReviewQueue');
+  await expect(queue).toBeVisible();
+  await expect(queue).toContainText(submittedId);
+
+  // Open the per-line decision surface.
+  // The queue renders a desktop table and mobile cards; click whichever the
+  // active viewport actually shows.
+  await queue.locator(`[data-review-request="${submittedId}"]:visible`).first().click();
+  const form = page.locator('#requestReviewForm');
+  await expect(form).toBeVisible();
+
+  // Exactly one explicit decision control per reviewable line.
+  const decisions = form.locator('[data-line-decision]');
+  await expect(decisions).toHaveCount(2);
+
+  // A line with no catalog item must not offer a stock route.
+  const optionSets = await decisions.evaluateAll((nodes) =>
+    nodes.map((n) => [...n.options].map((o) => o.value)),
+  );
+  const stockCapable = optionSets.filter((set) => set.includes('ISSUE_FROM_STOCK'));
+  expect(stockCapable).toHaveLength(1);
+  expect(optionSets.every((set) => set.includes('REJECT'))).toBe(true);
+
+  // Route the catalog line from stock and the free-text line to procurement.
+  for (let index = 0; index < optionSets.length; index += 1) {
+    await decisions
+      .nth(index)
+      .selectOption(optionSets[index].includes('ISSUE_FROM_STOCK') ? 'ISSUE_FROM_STOCK' : 'PROCUREMENT');
+  }
+  await form.getByRole('button', { name: 'Submit review' }).click();
+
+  // The modal closes and the queue reflects canonical refreshed server truth.
+  await expect(form).toBeHidden();
+  await expect(queue).not.toContainText(submittedId, { timeout: 15_000 });
+
+  // Downstream ownership is exactly one procurement item, created only by review.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  expect(csrfToken).toBeTruthy();
+  const procurement = await (await request.get('/api/procurement')).json();
+  const deliverables = (procurement.data.deliverables ?? []).filter(
+    (entry) => entry.requestId === submittedId,
+  );
+  expect(deliverables).toHaveLength(1);
+  const routed = procurement.data.requestLines.filter((line) => line.requestId === submittedId);
+  expect(routed.map((line) => line.status).sort()).toEqual(['FOR_CANVASSING', 'READY_TO_RESERVE']);
+
+  const restocking = await (await request.get('/api/restocking')).json();
+  expect(
+    (restocking.data.restockRequests ?? []).filter((entry) => entry.sourceRequestId === submittedId),
+  ).toHaveLength(0);
+});
+
+test('the shipped reviewer UI stays hidden from the public request portal', async ({ page }) => {
+  // RV-01.8: the public Request Center must never render internal review work.
+  await page.goto('/?request=1');
+  await expect(page.locator('#request')).toBeVisible();
+  const queue = page.locator('#requestReviewQueue');
+  expect(await queue.count()).toBeLessThanOrEqual(1);
+  if (await queue.count()) await expect(queue).toBeHidden();
+  await expect(page.locator('body')).not.toContainText('Requests awaiting your decision');
+});
+
+test('an ALL-scope reviewer keeps central scope even while holding a committee', async ({ request }) => {
+  // RV-01.3 gap A: including committeeRestricted in boundedScope suppressed the
+  // ALL option, demoting an ALL-scope role to committee scope so unassigned
+  // requests vanished from the queue and the review command failed.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const essential = await request.post('/api/getEssentialBootstrapData', {
+    headers: { 'x-csrf-token': csrfToken },
+    data: {},
+  });
+  expect(essential.status()).toBe(200);
+  const context = (await essential.json()).operationalContext;
+  expect(context).toBeTruthy();
+  expect(context.options.some((option) => option.kind === 'ALL' && option.available)).toBe(true);
+  expect(context.selected.kind).toBe('ALL');
+
+  const queue = await (await request.get('/api/requests')).json();
+  expect(queue.data.requests.some((row) => !row.ownerCommitteeId)).toBe(true);
+});
+
+test('the Request page is bounded so its lines can never exceed the child cap', async ({ request }) => {
+  // RV-01.5 gap C: a 50-parent page could carry more than the 500-line child cap
+  // and fail the strict contract closed for every reviewer.
+  await login(request, 'LOCAL.OWNER');
+  const requested = await (await request.get('/api/requests?pageSize=50')).json();
+  expect(requested.pagination.pageSize).toBeLessThanOrEqual(10);
+  expect(requested.data.requests.length).toBeLessThanOrEqual(requested.pagination.pageSize);
+  // A single public submission may carry 50 lines, so the bound must keep the
+  // worst case within the contract maximum.
+  expect(requested.pagination.pageSize * 50).toBeLessThanOrEqual(500);
+  expect(requested.data.requestLines.length).toBeLessThanOrEqual(500);
+  // hasMore must describe the clamped page, not the requested one.
+  const expectedHasMore = requested.pagination.pageSize < requested.pagination.total;
+  expect(requested.pagination.hasMore).toBe(expectedHasMore);
+});
+
+test('an over-long search term is bounded server-side', async ({ request }) => {
+  // RV-01.5 gap D: the 80-character cap lived only in the client, which a direct
+  // GET bypasses entirely.
+  await login(request, 'LOCAL.OWNER');
+  const oversized = 'x'.repeat(5000);
+  const response = await request.get(`/api/requests?query=${oversized}`);
+  expect([200, 422]).toContain(response.status());
+  if (response.status() === 200) {
+    const body = await response.json();
+    expect(body.data.requests).toHaveLength(0);
+    expect(body.pagination.total).toBe(0);
+  }
+});

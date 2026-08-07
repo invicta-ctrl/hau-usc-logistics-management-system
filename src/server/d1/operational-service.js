@@ -378,7 +378,13 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
   const visibleLocations = locationRows.filter(
     (entry) => !allowedLocationIds.size || allowedLocationIds.has(entry.id),
   );
-  const boundedScope = committeeRestricted || eventRestricted || allowedLocationIds.size > 0;
+  // RV-01.3: holding a committee assignment must not remove central scope from
+  // an ALL-scope role. Including `committeeRestricted` here suppressed the ALL
+  // option, so the fallback resolved to a committee and unassigned requests
+  // (owner_committee_id IS NULL) disappeared from the reviewer's queue while the
+  // review command failed ENTITY_SCOPE_REQUIRED. Event and location bounds are
+  // genuine restrictions and still apply.
+  const boundedScope = eventRestricted || allowedLocationIds.size > 0;
   const options = [
     ...(allScope && !boundedScope
       ? [
@@ -905,6 +911,11 @@ const LINE_ROUTE_STATUS = Object.freeze({
 const LINE_ROUTE_DECISIONS = new Set(Object.keys(LINE_ROUTE_STATUS));
 // Mirrors the client child-collection cap in src/app/bootstrap-contract.js.
 const MAX_REQUEST_LINE_ROWS = 500;
+// A single public submission may carry up to 50 lines, so a page of parents is
+// bounded such that worst-case lines still fit the child cap and the module can
+// never fail the strict contract closed purely because of page size.
+const MAX_REQUEST_LINES_PER_PARENT = 50;
+const MAX_REQUEST_PAGE_PARENTS = Math.floor(MAX_REQUEST_LINE_ROWS / MAX_REQUEST_LINES_PER_PARENT);
 
 // RV-01.5: accepts only a bare ISO calendar day so a date filter can never
 // carry arbitrary text into the query. Returns '' when absent or malformed.
@@ -1411,7 +1422,12 @@ export function createD1OperationalService({
     // Set by a module that owns its own pagination total. Null keeps the
     // legacy Inventory-derived count for modules not yet migrated.
     let moduleTotal = null;
+    // Set when a module clamps its own page size below the requested value.
+    let modulePageSize = null;
     if (module === 'request') {
+      const protectCatalogAvailability =
+        requestOnly ||
+        !accountAuthorization(account).capabilities.includes(CAPABILITIES.VIEW_INVENTORY);
       const eventScope = requestOnly
         ? { sql: '1 = 1', values: [] }
         : multiScopeWhere(account, { committeeColumns: ['event.owner_committee_id'] });
@@ -1446,7 +1462,11 @@ export function createD1OperationalService({
           ...(requestOnly ? {} : { venue: row.venue }),
           status: row.status,
         })),
-        inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
+        // RV-01.8: the Request module is reachable by any actor holding
+        // VIEW_REQUEST, which includes requester-only accounts. Availability is
+        // internal stock data, so it is redacted by capability rather than by
+        // `requestOnly`. Staff holding VIEW_INVENTORY are unaffected.
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
       };
       // RV-01.2: the authenticated Request module independently projects the
       // canonical review queue. It must not depend on Overview loading first.
@@ -1469,15 +1489,22 @@ export function createD1OperationalService({
         if (archiveFilter === 'ARCHIVED') queueFilters.push('request.archived_at IS NOT NULL');
         else if (archiveFilter === 'ALL') queueFilters.push('1 = 1');
         else queueFilters.push('request.archived_at IS NULL');
-        const search = String(command.query ?? '').trim();
+        // RV-01.5: the 80-character bound existed only in the client, which a
+        // direct GET bypasses entirely.
+        const search = optionalText(command.query, 80).trim();
         if (search) {
-          const term = `%${search.replace(/[\\%_]/gu, (match) => `\\${match}`)}%`;
+          // instr() rather than LIKE: the search term is arbitrary user input,
+          // and D1 rejects long LIKE patterns with "pattern too complex", which
+          // surfaced as a 500. instr() has no pattern-complexity limit and no
+          // wildcard or escape semantics, so `%` and `_` are matched literally
+          // instead of silently behaving as wildcards.
+          const term = search.toLowerCase();
           const idIndex = nextIndex();
           queueValues.push(term, term, term);
           queueFilters.push(
-            `(request.id LIKE ?${idIndex} ESCAPE '\\'` +
-              ` OR request.purpose LIKE ?${idIndex + 1} ESCAPE '\\'` +
-              ` OR request.requester_name LIKE ?${idIndex + 2} ESCAPE '\\')`,
+            `(instr(lower(request.id), ?${idIndex}) > 0` +
+              ` OR instr(lower(request.purpose), ?${idIndex + 1}) > 0` +
+              ` OR instr(lower(request.requester_name), ?${idIndex + 2}) > 0)`,
           );
         }
         const fromDate = safeDateBoundary(command.from);
@@ -1493,13 +1520,19 @@ export function createD1OperationalService({
         }
         const queueWhere = queueFilters.join(' AND ');
         const queueLimitIndex = queueValues.length + 1;
+        // RV-01.5: a parent page must never be able to carry more child lines
+        // than the contract allows, or the whole module fails closed. Bound the
+        // parent page by the child cap divided by the worst-case lines a single
+        // public submission can create, so the page always validates.
+        const queuePageSize = Math.max(1, Math.min(page.pageSize, MAX_REQUEST_PAGE_PARENTS));
+        modulePageSize = queuePageSize;
         const queueRows = await rows(
           db,
           `SELECT request.* FROM requests request
            WHERE ${queueWhere}
            ORDER BY request.updated_at DESC, request.id DESC
            LIMIT ?${queueLimitIndex} OFFSET ?${queueLimitIndex + 1}`,
-          [...queueValues, page.pageSize, page.offset],
+          [...queueValues, queuePageSize, page.offset],
         );
         // RV-01.5: Request owns its own total. It must not reuse Inventory's.
         const queueTotalStatement = db.prepare(
@@ -2058,12 +2091,16 @@ export function createD1OperationalService({
               total: data.inventoryItems.length,
               hasMore: false,
             }
-          : {
-              page: page.page,
-              pageSize: page.pageSize,
-              total: moduleTotal ?? Number(totalRow?.count ?? 0),
-              hasMore: page.offset + page.pageSize < (moduleTotal ?? Number(totalRow?.count ?? 0)),
-            },
+          : (() => {
+              const effectivePageSize = modulePageSize ?? page.pageSize;
+              const effectiveTotal = moduleTotal ?? Number(totalRow?.count ?? 0);
+              return {
+                page: page.page,
+                pageSize: effectivePageSize,
+                total: effectiveTotal,
+                hasMore: page.offset + effectivePageSize < effectiveTotal,
+              };
+            })(),
       revision: globalRevision,
       scopeRevision: scopeRevision
         ? { scope: module, token: scopeRevision.revision, updatedAt: scopeRevision.updatedAt }

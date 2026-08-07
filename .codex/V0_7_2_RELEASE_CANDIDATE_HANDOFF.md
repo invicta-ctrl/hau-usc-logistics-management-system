@@ -133,41 +133,64 @@ records self-scoped` local-worker test, which provisions a department requester
 through the Access API. `LOCAL.REQUESTER` is not a seeded fixture, so the RV-01
 spec cites that coverage rather than duplicating account provisioning.
 
+### Release Unit 1 completion (2026-08-07)
+
+Owner authorization to complete the shipped reviewer surface is recorded as
+addendum RV-01.9 in the accepted amendment. Implemented and proven:
+
+- **Shipped reviewer UI.** `src/visual/runtime.js` now renders a Request review
+  queue for actors holding `request.review`, sourced only from the Request-owned
+  projection, with a per-line decision control that offers only server-permitted
+  routes. It submits through the existing `reviewRequest` command with explicit
+  `lineDecisions`, keeps errors recoverable without claiming a decision was
+  recorded, and refreshes canonical server state on success. The view markup is
+  injected by the runtime rather than hand-edited into the generated
+  `src/visual/views/request.html`. The public portal never renders it.
+- **Gap A — ALL-scope demotion.** `committeeRestricted` was removed from
+  `boundedScope`, so an ALL-scope Director/Administrator holding a committee
+  keeps the `ALL` operational option and retains unassigned-queue visibility and
+  review authority. Event and location bounds still apply.
+- **Gap B — scope filtering vs pagination.** Search, date, archive, and scope
+  predicates are in the authoritative SQL, so page and total share one predicate.
+  `filterOperationalData` still post-filters LOCATION/EVENT scopes; that residue
+  is recorded below.
+- **Gap C — parent page vs child cap.** The Request page is clamped to
+  `MAX_REQUEST_LINE_ROWS / MAX_REQUEST_LINES_PER_PARENT` parents, so a page can
+  never carry more lines than the contract allows, and `pageSize`/`hasMore`
+  report the clamped value.
+- **Gap D — query bound.** Search is bounded server-side at 80 characters, and
+  substring matching moved from `LIKE` to `instr()`. An over-long term returned
+  D1 `LIKE or GLOB pattern too complex` as a 500; `instr()` has no pattern
+  limit and treats `%`/`_` literally rather than as silent wildcards.
+- **Gap E — requester-only containment.** `/api/requests` is reachable by any
+  `VIEW_REQUEST` holder, including requester-only accounts, which received full
+  `onHand`/`reserved`/`availableToPromise`/`storageLocation`/`reorderThreshold`.
+  Availability is now redacted by `VIEW_INVENTORY` capability rather than by
+  `requestOnly`. Staff inventory visibility is unchanged.
+- **Gap F — deploy artifact hazard.** `scripts/verify-deploy-artifact.mjs` is a
+  fail-closed preflight that reads the Vite build mode inlined in
+  `dist/index.html` and refuses any preview/mock artifact. Proven both ways:
+  exit 1 on the preview build, exit 0 on the Cloudflare build. Wired into new
+  `deploy:staging` / `deploy:production` scripts so a deploy cannot skip it.
+
+Verification at this head: `npm run check` 114 files / 786 tests, exit 0;
+browser 136 passed / 356 intentional skips / 0 failed; local Worker/D1 **48/48**,
+including the shipped-UI two-context proof, the RV-01.3 authorization matrix,
+page-bound, search-bound, and partially-routed reject guards. No migration added.
+
 ### RV-01 remaining gaps
 
-- **RV-01.6 reviewer UI is absent from the shipped Main Hub.** `src/index.html`
-  loads only `/visual/runtime.js`, whose `request` view renders the submission
-  form. There is no review queue and no per-line decision control, so the
-  amendment's "The UI exposes only permitted decisions" is unmet end to end even
-  though the server contract, projection, and routing are complete and proven.
-  This is pre-existing — the pre-RV-01 artifact has the same gap — but it blocks
-  the RV-01 deliverable ("routes every accepted line exactly once") for a human
-  operator. `src/features/requests/view.js` does contain a review queue, but it
-  belongs to the modular app reached through `src/main.js`, which the shipped
-  shell does not load. **This is the one remaining RV-01 blocker.**
-- **Page-size vs child cap.** `normalizeRequest` defaults `pageSize` to 50, not
-  the advertised `moduleConfig.defaultPageSize` of 10, so 50 parents averaging
-  11 lines exceeds the 500-row child cap and fails the whole Request module
-  closed with no client signal to shrink the page. The earlier "rare edge case"
-  disposition was wrong. Needs either independent line paging or a parent cap
-  derived from the child bound.
-- **ALL-scope demotion.** An `ALL`-scope Director or Administrator who also
-  holds a committee assignment is demoted to COMMITTEE scope by
-  `resolveOperationalContext`, after which unassigned requests disappear from
-  their queue and the review command fails `ENTITY_SCOPE_REQUIRED`. Not
-  reproduced against the seeded fixtures, which give ALL roles no committee.
-  **Owner action: confirm no production Director/Administrator account carries a
-  committee assignment before promotion.**
 - **Operational-scope filtering vs pagination.** `filterOperationalData` runs
   after the Request total is computed, so under LOCATION/EVENT scope
   `total`/`hasMore` describe the pre-filter set and lines are dropped from
   parents that survive. The scope predicate belongs in SQL.
-- **Deploy artifact hazard (RV-01.8).** `wrangler.jsonc` serves `./dist`, which
-  holds the preview/mock build. A deploy that does not first run
-  `build:cloudflare` would publish a mock-backend Main Hub against live D1.
-  Must be an explicit RV-03 preflight assertion.
-- Server-side `query` length is unbounded (the 80-character cap is client-only),
-  and the RV-01 unit fixture emits parent/line fields the server never produces.
+- `filterOperationalData` still post-filters LOCATION/EVENT operational scopes
+  after the Request total is computed, so under those scopes `total`/`hasMore`
+  can describe more rows than are rendered. Search, date, archive, and committee
+  scope are all in SQL and unaffected.
+- The RV-01 unit fixture emits parent/line fields the server never produces
+  (`requesterGroup`, `dateStart`, `dateEnd`, `requestedQuantity`), so the
+  renderer's real production date fallback is not exercised by unit tests.
 - `request_lines.fulfillment_source` still reports the submission-time value
   after review rather than the decided route. Traceability only; no server
   branch depends on it post-review. Deferred to v0.7.3.

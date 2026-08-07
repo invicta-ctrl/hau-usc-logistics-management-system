@@ -460,8 +460,70 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
     if(useEssentialBootstrap){void loadAndRenderModule(name);return;}
     renderAll();
   }
-  function renderActiveModule(){if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}if(ui.view==='overview')renderOverview();else if(ui.view==='request'){renderRequestSelectors();renderRequestDraft();}else if(ui.view==='lending')renderLending();else if(ui.view==='release')renderReleaseDesk();else if(ui.view==='restocking')renderRestocking();else if(ui.view==='procurement')renderProcurement();else if(ui.view==='inventory')renderInventory();else renderOverview();}
-  function renderAll(){if(useEssentialBootstrap){renderActiveModule();return;}if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}renderOverview();renderRequestSelectors();renderRequestDraft();renderLending();renderReleaseDesk();renderRestocking();renderProcurement();renderInventory();
+  // RV-01.6 reviewer surface. The canonical review contract, projection, and
+  // per-line routing already exist server-side; this is the smallest shipped
+  // UI that lets a real reviewer operate them. It reuses the existing shell,
+  // panel/table/status components and modal, adds no new data source, and never
+  // decides legality itself — the server remains authoritative.
+  const REVIEW_ROUTE_LABELS={ISSUE_FROM_STOCK:'Issue from stock',PROCUREMENT:'Procurement / canvass',RESTOCK:'Catalog restock',REJECT:'Reject',MISSING_INFORMATION:'Missing information'};
+  const REVIEWABLE_LINE_STATUSES=['FOR_REVIEW','NEEDS_INFORMATION'];
+  function reviewCapabilities(){const a=state.currentUser?.authorization;return Array.isArray(a?.capabilities)?a.capabilities:[]}
+  function canReviewRequests(){return backendMode!=='mock'?reviewCapabilities().includes('request.review'):Boolean(state.currentUser?.permissions?.review)}
+  function reviewableLinesFor(id){return (state.requestLines||[]).filter(l=>l.requestId===id&&REVIEWABLE_LINE_STATUSES.includes(l.status))}
+  function reviewQueueRows(){return (state.requests||[]).filter(r=>REVIEWABLE_LINE_STATUSES.includes(r.status)).slice().sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||''))||String(b.id).localeCompare(String(a.id)))}
+  // Presentational filtering only. The server revalidates every decision and is
+  // the single source of truth for what is legal.
+  function permittedRoutes(request,line){
+    const routes=[];
+    if(line.itemId)routes.push('ISSUE_FROM_STOCK');
+    if(request.type!=='CATALOG_RESTOCK')routes.push('PROCUREMENT');
+    if(line.itemId&&(request.type==='CATALOG_RESTOCK'||['OFFICE_INVENTORY','PANTRY'].includes(request.catalogType)))routes.push('RESTOCK');
+    routes.push('REJECT','MISSING_INFORMATION');
+    return routes;
+  }
+  function reviewQueueHost(){
+    const view=byId('request');if(!view)return null;
+    let host=byId('requestReviewQueue');
+    if(!host){host=document.createElement('article');host.id='requestReviewQueue';host.className='panel stack section-gap';view.appendChild(host)}
+    return host;
+  }
+  function renderRequestReviewQueue(){
+    const host=reviewQueueHost();if(!host)return;
+    if(document.body.classList.contains('request-mode')||!canReviewRequests()){host.hidden=true;host.innerHTML='';return}
+    host.hidden=false;
+    const rows=reviewQueueRows();
+    const body=rows.length?`<div class="table-wrap desktop-table medium"><table><thead><tr><th scope="col">Request</th><th scope="col">Requester</th><th scope="col">Lines</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody>${rows.map(r=>{const lines=reviewableLinesFor(r.id);return `<tr><td><strong>${esc(r.id)}</strong><small>${esc(r.purpose||'No purpose recorded')}</small></td><td>${esc(r.requesterName||'Not reported')}<small>${esc(r.department||'')}</small></td><td>${lines.length}</td><td>${statusChip(r.status)}</td><td><button class="primary mini" type="button" data-review-request="${esc(r.id)}"${lines.length?'':' disabled'}>Review lines</button></td></tr>`}).join('')}</tbody></table></div><div class="mobile-cards">${rows.map(r=>{const lines=reviewableLinesFor(r.id);return `<article class="data-card"><div class="button-row">${statusChip(r.status)}<span class="pill">${esc(r.id)}</span></div><h4 style="margin-top:8px">${esc(r.purpose||'No purpose recorded')}</h4><p>${esc(r.requesterName||'Not reported')} · ${lines.length} line${lines.length===1?'':'s'} awaiting a decision</p><div class="button-row" style="margin-top:10px"><button class="primary mini" type="button" data-review-request="${esc(r.id)}"${lines.length?'':' disabled'}>Review lines</button></div></article>`}).join('')}</div>`:'<div class="empty">No requests are awaiting review in your scope.</div>';
+    host.innerHTML=`<div class="panel-head"><div><div class="section-kicker">Review queue</div><h2 id="requestReviewQueueTitle">Requests awaiting your decision</h2><p>Accepting a request records one explicit route for every line. Submission never moves physical stock.</p></div><span class="pill" aria-live="polite">${rows.length} request${rows.length===1?'':'s'}</span></div>${body}`;
+    host.setAttribute('aria-labelledby','requestReviewQueueTitle');
+    host.querySelectorAll('[data-review-request]').forEach(b=>b.onclick=()=>openRequestReviewModal(b.dataset.reviewRequest));
+  }
+  function openRequestReviewModal(requestId){
+    const request=(state.requests||[]).find(r=>r.id===requestId);if(!request)return toast('That request is no longer available.',true);
+    const lines=reviewableLinesFor(requestId);
+    if(!lines.length)return toast('That request has no lines awaiting a decision.',true);
+    const fields=lines.map((line,index)=>{const options=permittedRoutes(request,line);const id=`reviewLine${index}`;return `<div class="panel inset stack"><div><strong>${esc(line.description||line.specification||'Request line')}</strong><small>${qty(line.quantity)} ${esc(line.unit||'')}${line.itemId?` · catalog ${esc(line.itemId)}`:' · no exact catalog item'}</small></div><label for="${id}">Route decision<select id="${id}" data-line-decision data-line-id="${esc(line.id)}" required>${options.map(o=>`<option value="${o}">${esc(REVIEW_ROUTE_LABELS[o])}</option>`).join('')}</select></label></div>`}).join('');
+    openModal(`Review ${request.id}`,`<div class="mode-note"><strong>${esc(request.purpose||'No purpose recorded')}</strong><br>${lines.length} line${lines.length===1?'':'s'} require an explicit decision. Stock routes reserve availability only; nothing is physically released here.</div><form id="requestReviewForm" class="stack" style="margin-top:14px" novalidate>${fields}<label>Review note (optional)<input name="reviewNote" maxlength="500" placeholder="Recorded in the request history"></label><div class="button-row"><button class="primary" type="submit">Submit review</button><button class="secondary" type="button" data-review-cancel>Cancel</button></div><p class="small muted" data-review-error role="alert"></p></form>`,m=>{
+      m.querySelector('[data-review-cancel]').onclick=()=>closeModal();
+      m.querySelector('#requestReviewForm').onsubmit=async e=>{
+        e.preventDefault();
+        const form=e.currentTarget,submit=form.querySelector('[type=submit]'),error=form.querySelector('[data-review-error]');
+        const lineDecisions=[...form.querySelectorAll('[data-line-decision]')].map(s=>({lineId:s.dataset.lineId,decision:s.value}));
+        submit.disabled=true;error.textContent='';
+        try{
+          const result=await services.reviewRequest(requestId,'ACCEPT',form.elements.reviewNote.value||'',lineDecisions);
+          closeModal();
+          await commit(`${requestId} reviewed. Each line now has one owner.`,'success',result);
+        }catch(err){
+          // Stale, conflicting, and unauthorized outcomes stay recoverable and
+          // never claim a decision was recorded.
+          error.textContent=`${err.message}${err.correlationId?` · ${err.correlationId}`:''}`;
+          submit.disabled=false;
+        }
+      };
+    });
+  }
+  function renderActiveModule(){if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}if(ui.view==='overview')renderOverview();else if(ui.view==='request'){renderRequestSelectors();renderRequestDraft();renderRequestReviewQueue();}else if(ui.view==='lending')renderLending();else if(ui.view==='release')renderReleaseDesk();else if(ui.view==='restocking')renderRestocking();else if(ui.view==='procurement')renderProcurement();else if(ui.view==='inventory')renderInventory();else renderOverview();}
+  function renderAll(){if(useEssentialBootstrap){renderActiveModule();return;}if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}renderOverview();renderRequestSelectors();renderRequestDraft();renderRequestReviewQueue();renderLending();renderReleaseDesk();renderRestocking();renderProcurement();renderInventory();
   }
   function toast(message,error=false){const el=byId('toast');el.textContent=message;el.className=`show ${error?'error':'success'}`;clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.className='',4500)}
   let layerReturnFocus=null;
