@@ -90,9 +90,25 @@ was corrected.
 | P3 | `request_lines.fulfillment_source` is not updated to the decided route. | **Confirmed** — traceability only; no server branch depends on it after review. | **Deferred to v0.7.3** and recorded. |
 | P3 | Date and search filtering absent from the queue projection. | **Confirmed.** | **Fixed** — see the adjudication table below. |
 
-Independent review 2 (security/authorization/privacy/target identity) was
-terminated by an infrastructure limit before producing findings and **must be
-re-run**. RV-01 does not carry a PASS until it is recorded.
+### Independent review round 2 (2026-08-07) — security/authorization/privacy
+
+Independent security review of `a0a4ee8` returned **FAIL**. It explicitly
+cleared the public/internal boundary, scope correctness (including
+`operationalScope` escalation), SQL/LIKE/date query safety and placeholder
+arithmetic, PII and search enumeration, review-command authorization ordering,
+and poller authentication. Material findings and dispositions:
+
+| Sev | Finding | Verified? | Disposition |
+|---|---|---|---|
+| P1 | The `REQUEST_ALREADY_ROUTED` guard ran only when `nextStatus !== 'ACCEPTED'`, but an ACCEPT whose remaining decisions are all REJECT derives a REJECTED parent — reproducing the exact stranding the round-1 fix claimed to close. | **Confirmed.** | **Fixed.** The guard now keys off the derived outcome, so any path that yields a REJECTED parent while a routed line exists is refused. Proven against real D1. |
+| P1-equivalent | `/api/getScopedRevision` hardcoded `enabled: false`, so `createRevisionPoller` permanently disables itself after the first check and then refuses route return, focus, and reconnect. The RV-01.4 near-live refresh therefore did not exist at the client, even though the server revisions advanced. | **Confirmed** — the round-1 e2e only proved server-side token advance and never drove the poller. | **Fixed.** REST now reports the mechanism enabled, and every scoped-revision assertion in the RV-01 spec checks the flag. |
+| P2 | The DENY short-circuits are unreachable, and the supporting test is a source-text grep. | **Confirmed.** | **Handoff corrected** — see the adjudication row above. Branches retained as defence in depth, no longer described as a live repair. |
+| P2 | An `ALL`-scope Director/Administrator who also holds a committee assignment is demoted to COMMITTEE scope by `resolveOperationalContext` and then cannot see or command unassigned requests. | **Not reproduced here** — seeded fixtures have no committee on ALL roles, and production account shapes were not inspected. | **Open, recorded below.** Reachable by configuration; needs an owner check of real account shapes before promotion. |
+| P2 | `filterOperationalData` runs after `moduleTotal`, so under LOCATION/EVENT scope `total`/`hasMore` describe pre-filter rows and lines are dropped from surviving parents. | **Confirmed by inspection.** | **Open, recorded below.** |
+| P2 | The effective default page size is 50 parents, not the advertised 10, so the 500-line child cap is far easier to hit than the earlier "rare edge case" disposition assumed. | **Confirmed.** | **Open, recorded below** with the disposition corrected. |
+| P2 | `wrangler.jsonc` serves `./dist`, which holds the preview/mock artifact; a deploy without `build:cloudflare` would publish a mock-backend hub against live D1. | **Confirmed.** | **Open, recorded below** — a real RV-01.8 target-identity hazard for RV-03 preflight. |
+| P3 | `REQUEST_ALREADY_ROUTED` also triggered on merely REJECTED lines that own nothing. | **Confirmed.** | **Fixed** — the probe now counts only `FOR_CANVASSING`/`READY_TO_RESERVE`. |
+| P3 | Queue fixture emits fields the server never produces; unbounded server-side `query` length; requester-only accounts receive full inventory availability via `/api/requests` (pre-existing). | **Confirmed.** | **Open, recorded below.** |
 
 ### RV-01 criterion adjudication (2026-08-07)
 
@@ -104,7 +120,7 @@ its reason and disposition.
 | Criterion | Amendment basis | Mandatory? | Disposition |
 |---|---|---|---|
 | Director authorization coverage | RV-01.3 table: "Director with verified central capability — Yes / Yes" | **Yes** | **Implemented.** `LOCAL.DIRECTOR` now proves read access to unassigned central review work in `tests/cloudflare-e2e/rv01-request-visibility.spec.js`. |
-| Explicit-deny coverage | RV-01.3 table: "Explicit deny, disabled, archived — No / No" | **Yes** | **Defect found and repaired.** Auditing this criterion instead of waiving it exposed that `'DENY'` was never handled anywhere in `src/server/d1/operational-service.js`. `scopedWhere`, `multiScopeWhere`, and `assertEntityScope` all treated DENY as "not ALL, not SELF" and fell through to the committee branch. Because `scopeMode` and `committeeIds` are independent fields, a revoked account that still carried committee grants would have received **committee-scoped read and command access instead of denial** — a direct breach of RV-01.3 and of the "UI hiding is not authorization" invariant. All three helpers now short-circuit DENY (`1 = 0` for the two query builders, `OUT_OF_SCOPE` 403 for the command guard) ahead of the ALL and committee branches, with regression coverage in `tests/unit/d1-operational-p1-regressions.test.js`. The unauthenticated case is separately proven (401/403 with the request id absent from the body). |
+| Explicit-deny coverage | RV-01.3 table: "Explicit deny, disabled, archived — No / No" | **Yes** | **Satisfied by capability denial, not by scope mode. Earlier claim in this handoff was overstated and is corrected here.** Explicit deny is modelled as a capability deny in `src/server/access/policy.js` and enforced by `assertCapability`, which refuses the module before any scope predicate runs. `accountAuthorization` in `src/server/auth/contracts.js` only ever emits `COMMITTEE`, `SELF`, or `ALL`, so a `'DENY'` scope mode is **not currently reachable** server-side. DENY short-circuits were added to `scopedWhere`, `multiScopeWhere`, and `assertEntityScope` and are retained as defence in depth against a future producer, but they are **latent, not a live repair** — an earlier revision of this handoff wrongly described them as closing an exploitable hole. Their test is a source-structure assertion and proves textual presence and ordering only. Note also that `entityScope`'s operational-context COMMITTEE override precedes the DENY branch, so if a DENY producer is ever introduced the branch must be hoisted above that override. The unauthenticated case is proven directly (401/403 with the request id absent from the body). |
 | Disabled-account coverage | RV-01.3 table, same row | **Yes, as behaviour** | **Covered upstream of the queue.** A disabled account cannot hold a session: login fails, so `/api/requests` is never reached. This is already proven by `Administrator Access Management governs the staging account lifecycle and safe audit history` in `tests/cloudflare-e2e/local-worker.spec.js`. Not duplicated in the RV-01 spec. |
 | Archived-account coverage | RV-01.3 table, same row | **Yes, as behaviour** | **Same mechanism as disabled** — archived accounts fail authentication before any module read. Covered by the same Access-lifecycle test. |
 | Request-owned search | RV-01.5: "active/archive/date/**search**/scope filtering" | **Yes** | **Implemented.** The client already normalised and sent `query`/`filter`, but the server ignored both for every module — the contract advertised filtering it did not honour. The Request queue now applies escaped `LIKE` search across request id, purpose, and requester name, plus `from`/`to` date boundaries and an active/archive/all selector, with the identical predicate driving `total` and `hasMore`. Proven by `the Request module owns its search, date, archive, and scope filtering`. |
@@ -129,9 +145,29 @@ spec cites that coverage rather than duplicating account provisioning.
   operator. `src/features/requests/view.js` does contain a review queue, but it
   belongs to the modular app reached through `src/main.js`, which the shipped
   shell does not load. **This is the one remaining RV-01 blocker.**
-- A page whose request lines exceed the 500-row child-collection cap fails the
-  strict contract closed rather than degrading, with no client signal to reduce
-  the page size. Bounded and intentional; graceful degradation deferred.
+- **Page-size vs child cap.** `normalizeRequest` defaults `pageSize` to 50, not
+  the advertised `moduleConfig.defaultPageSize` of 10, so 50 parents averaging
+  11 lines exceeds the 500-row child cap and fails the whole Request module
+  closed with no client signal to shrink the page. The earlier "rare edge case"
+  disposition was wrong. Needs either independent line paging or a parent cap
+  derived from the child bound.
+- **ALL-scope demotion.** An `ALL`-scope Director or Administrator who also
+  holds a committee assignment is demoted to COMMITTEE scope by
+  `resolveOperationalContext`, after which unassigned requests disappear from
+  their queue and the review command fails `ENTITY_SCOPE_REQUIRED`. Not
+  reproduced against the seeded fixtures, which give ALL roles no committee.
+  **Owner action: confirm no production Director/Administrator account carries a
+  committee assignment before promotion.**
+- **Operational-scope filtering vs pagination.** `filterOperationalData` runs
+  after the Request total is computed, so under LOCATION/EVENT scope
+  `total`/`hasMore` describe the pre-filter set and lines are dropped from
+  parents that survive. The scope predicate belongs in SQL.
+- **Deploy artifact hazard (RV-01.8).** `wrangler.jsonc` serves `./dist`, which
+  holds the preview/mock build. A deploy that does not first run
+  `build:cloudflare` would publish a mock-backend Main Hub against live D1.
+  Must be an explicit RV-03 preflight assertion.
+- Server-side `query` length is unbounded (the 80-character cap is client-only),
+  and the RV-01 unit fixture emits parent/line fields the server never produces.
 - `request_lines.fulfillment_source` still reports the submission-time value
   after review rather than the decided route. Traceability only; no server
   branch depends on it post-review. Deferred to v0.7.3.

@@ -1103,7 +1103,11 @@ async function handleApi(request, env, requestId, executionContext) {
         data: {
           contract: 'scoped-revision',
           contractVersion: 1,
-          enabled: false,
+          // RV-01.4: the poller disables itself permanently when this is false,
+          // after which route return, focus, and reconnect are all refused, and
+          // an already-open Main Hub never notices a public submission. Near-
+          // live refresh is a v0.7.2 requirement, so REST reports it enabled.
+          enabled: true,
           scope,
           token: value.revision,
           globalRevision: (await operations.revision('global')).revision,

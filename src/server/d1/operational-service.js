@@ -5355,22 +5355,26 @@ export function createD1OperationalService({
     // item. A later whole-request REJECT or MISSING_INFORMATION only touches
     // still-reviewable lines, so it would strand those active owners under a
     // rejected parent. Require the remaining lines to be decided individually.
-    if (nextStatus !== 'ACCEPTED') {
-      const routed = await db
-        .prepare(
-          `SELECT COUNT(*) AS count FROM request_lines
-           WHERE request_id = ?1 AND status NOT IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
-        )
-        .bind(requestId)
-        .first();
-      if (Number(routed?.count ?? 0) > 0) {
-        throw new ApiError(
-          'REQUEST_ALREADY_ROUTED',
-          'This request already has routed lines. Decide the remaining lines individually.',
-          { status: 409 },
-        );
-      }
-    }
+    // The probe counts only lines that own a live downstream item or an active
+    // stock reservation. A line that is merely REJECTED owns nothing, so it must
+    // not make the parent permanently un-rejectable.
+    const routedRow = await db
+      .prepare(
+        `SELECT COUNT(*) AS count FROM request_lines
+         WHERE request_id = ?1 AND status IN ('FOR_CANVASSING', 'READY_TO_RESERVE')`,
+      )
+      .bind(requestId)
+      .first();
+    const routedLineCount = Number(routedRow?.count ?? 0);
+    const rejectStrandsRoutes = () => {
+      if (routedLineCount === 0) return;
+      throw new ApiError(
+        'REQUEST_ALREADY_ROUTED',
+        'This request already has routed lines. Decide the remaining lines individually.',
+        { status: 409 },
+      );
+    };
+    if (nextStatus !== 'ACCEPTED') rejectStrandsRoutes();
     // RV-01.6: an accepted review requires one explicit permitted decision for
     // every reviewable line. The previous implicit default silently routed each
     // non-preclassified line to procurement.
@@ -5459,6 +5463,11 @@ export function createD1OperationalService({
           : routeValues.includes('MISSING_INFORMATION')
             ? 'NEEDS_INFORMATION'
             : 'ACCEPTED';
+    // An ACCEPT whose remaining decisions are all REJECT derives a REJECTED
+    // parent, which would strand any line routed by an earlier mixed review just
+    // as a whole-request REJECT would. The guard therefore keys off the derived
+    // outcome, not the submitted decision.
+    if (derivedStatus === 'REJECTED') rejectStrandsRoutes();
     const result = { requestId, id: requestId, status: derivedStatus, correlationId };
     // RV-01.6 atomicity: the parent transition is the guarded statement. D1
     // returns batch results only after every statement has run, so a post-batch

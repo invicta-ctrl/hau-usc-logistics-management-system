@@ -28,6 +28,10 @@ async function scopedToken(context, csrfToken, scope) {
   expect(response.status()).toBe(200);
   const body = (await response.json()).data;
   expect(body.contract).toBe('scoped-revision');
+  // RV-01.4: the poller permanently disables itself when `enabled` is false,
+  // after which route return, focus, and reconnect are all refused. Near-live
+  // refresh only exists if REST reports the mechanism enabled.
+  expect(body.enabled).toBe(true);
   return Number(body.token);
 }
 
@@ -389,6 +393,19 @@ test('a partially routed request cannot be rejected as a whole', async ({ reques
   });
   expect(reject.status()).toBe(409);
   expect((await reject.json()).code).toBe('REQUEST_ALREADY_ROUTED');
+
+  // The same protection must key off the DERIVED outcome, not the submitted
+  // decision: an ACCEPT whose remaining decisions are all REJECT derives a
+  // REJECTED parent and would strand the routed line just the same.
+  const derivedReject = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'ACCEPT',
+    note: 'Accept that derives a rejected parent',
+    clientRequestId: `rv01-derived-reject-${parent.id}`,
+    lineDecisions: [{ lineId: lines[1].id, decision: 'REJECT' }],
+  });
+  expect(derivedReject.status()).toBe(409);
+  expect((await derivedReject.json()).code).toBe('REQUEST_ALREADY_ROUTED');
 
   // The routed line and its deliverable are untouched.
   const settled = await (await request.get('/api/procurement')).json();

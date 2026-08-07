@@ -157,10 +157,16 @@ describe('D1 operational P1 invariants', () => {
     // RV-01.6: a mixed review can leave the parent NEEDS_INFORMATION with lines
     // already owning a Deliverables/Restocking item. A later whole-request
     // REJECT would strand those active owners under a rejected parent.
-    expect(review).toContain("REQUEST_ALREADY_ROUTED");
-    expect(review).toMatch(
-      /nextStatus !== 'ACCEPTED'[\s\S]*?status NOT IN \('FOR_REVIEW', 'NEEDS_INFORMATION'\)/u,
-    );
+    expect(review).toContain('REQUEST_ALREADY_ROUTED');
+    // The probe counts only lines that own a live downstream item, so a merely
+    // REJECTED line does not make the parent permanently un-rejectable.
+    expect(review).toMatch(/status IN \('FOR_CANVASSING', 'READY_TO_RESERVE'\)/u);
+    // The guard must key off the DERIVED outcome as well as the submitted
+    // decision: an ACCEPT whose remaining decisions are all REJECT derives a
+    // REJECTED parent and strands routed lines exactly like a whole-request
+    // REJECT would.
+    expect(review).toMatch(/derivedStatus === 'REJECTED'\) rejectStrandsRoutes\(\)/u);
+    expect(review).toMatch(/nextStatus !== 'ACCEPTED'\) rejectStrandsRoutes\(\)/u);
   });
 
   it('binds the fallback review idempotency key to the normalized line decisions', () => {
