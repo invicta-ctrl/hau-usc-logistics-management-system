@@ -904,3 +904,314 @@ test('a requester cannot review their own request and an Administrator can', asy
     (afterAdmin.data.deliverables ?? []).filter((entry) => entry.requestId === requestId),
   ).toHaveLength(1);
 });
+
+test('a partly released stock request stays reservable and completes despite a rejected line', async ({
+  request,
+}) => {
+  // Two regressions in one sequence, both caused by the D1 layer using a
+  // different parent-status vocabulary from src/domain/.
+  //
+  // P1: reserveStock gated on 'PARTIALLY_FULFILLED', which no server path ever
+  //     writes. Releasing the first line moves the parent to PARTIALLY_RELEASED,
+  //     so every remaining line became permanently unreservable — and nothing
+  //     transitions a parent back out of that status, so there was no operator
+  //     recovery path and the requester never received the rest of the order.
+  // P2: the COMPLETED derivation counted REJECTED lines as outstanding work, so
+  //     a mixed request could never leave PARTIALLY_RELEASED even once every
+  //     routable line was fully released.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const marker = `Synthetic RV-01 partial-release reservation proof ${crypto.randomUUID()}`;
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  let itemId;
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    const item =
+      (options.items ?? []).find((entry) => entry.id === 'ITM-LOCAL-001') ?? options.items[0];
+    expect(item).toBeTruthy();
+    itemId = item.id;
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-partial-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Partial Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-partial-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0036',
+        purpose: marker,
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [
+          { category: 'Inventory Item', itemId, quantity: 1 },
+          { category: 'Inventory Item', itemId, quantity: 1 },
+          { category: 'Other', description: 'Partial rejected line', quantity: 1, unit: 'piece' },
+        ],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests')).json();
+  const parent = queue.data.requests.find((row) => row.purpose === marker);
+  expect(parent).toBeTruthy();
+  const lines = queue.data.requestLines.filter((row) => row.requestId === parent.id);
+  expect(lines).toHaveLength(3);
+  const stockLines = lines.filter((row) => row.itemId === itemId);
+  const rejectedLine = lines.find((row) => !row.itemId);
+  expect(stockLines).toHaveLength(2);
+  expect(rejectedLine).toBeTruthy();
+  const [firstStockLine, secondStockLine] = stockLines;
+
+  const review = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'ACCEPT',
+    note: 'Partial-release reservation proof',
+    clientRequestId: `rv01-partial-review-${parent.id}`,
+    lineDecisions: [
+      { lineId: firstStockLine.id, decision: 'ISSUE_FROM_STOCK' },
+      { lineId: secondStockLine.id, decision: 'ISSUE_FROM_STOCK' },
+      { lineId: rejectedLine.id, decision: 'REJECT' },
+    ],
+  });
+  expect(review.status()).toBe(200);
+
+  const parentStatus = async () => {
+    const all = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+    return all.data.requests.find((row) => row.id === parent.id)?.status;
+  };
+  expect(await parentStatus()).toBe('ACCEPTED');
+
+  const evidenceBytes = new Uint8Array([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...new TextEncoder().encode('synthetic-partial-release-evidence'),
+  ]);
+  const uploaded = await mutate(request, csrfToken, 'uploadEvidence', {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    originalFileName: 'synthetic-partial-release.png',
+    mimeType: 'image/png',
+    base64: btoa(String.fromCharCode(...evidenceBytes)),
+    relatedEntityType: 'RELEASE_REQUEST',
+    relatedEntityId: parent.id,
+    requestId: parent.id,
+    clientRequestId: `rv01-partial-evidence-${parent.id}`,
+  });
+  expect(uploaded.status()).toBe(200);
+  const { evidenceId } = await uploaded.json();
+
+  // Reserve and fully release only the first stock line.
+  const firstReserve = await mutate(request, csrfToken, 'reserveStock', {
+    itemId,
+    requestLineId: firstStockLine.id,
+    quantity: 1,
+    clientRequestId: `rv01-partial-reserve-1-${parent.id}`,
+  });
+  expect(firstReserve.status()).toBe(200);
+
+  const firstRelease = await mutate(request, csrfToken, 'confirmRelease', {
+    requestId: parent.id,
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Recipient',
+    recipientRole: 'Synthetic Tester',
+    department: 'Synthetic Department',
+    evidenceId,
+    lines: [{ requestLineId: firstStockLine.id, quantity: 1 }],
+    clientRequestId: `rv01-partial-release-1-${parent.id}`,
+  });
+  expect(firstRelease.status()).toBe(200);
+
+  // The parent is now PARTIALLY_RELEASED — the exact state the old gate refused,
+  // which stranded the remaining line permanently.
+  expect(await parentStatus()).toBe('PARTIALLY_RELEASED');
+
+  const secondReserve = await mutate(request, csrfToken, 'reserveStock', {
+    itemId,
+    requestLineId: secondStockLine.id,
+    quantity: 1,
+    clientRequestId: `rv01-partial-reserve-2-${parent.id}`,
+  });
+  expect(secondReserve.status()).toBe(200);
+
+  const secondRelease = await mutate(request, csrfToken, 'confirmRelease', {
+    requestId: parent.id,
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Recipient',
+    recipientRole: 'Synthetic Tester',
+    department: 'Synthetic Department',
+    evidenceId,
+    lines: [{ requestLineId: secondStockLine.id, quantity: 1 }],
+    clientRequestId: `rv01-partial-release-2-${parent.id}`,
+  });
+  expect(secondRelease.status()).toBe(200);
+
+  // Every routable line is released and the rejected line has no downstream
+  // owner, so the parent must complete rather than stay PARTIALLY_RELEASED.
+  expect(await parentStatus()).toBe('COMPLETED');
+});
+
+test('an event-bounded reviewer is refused on a record outside its event scope', async ({ request }) => {
+  // RV-01.3 requires "unrelated committee/event/location -> No" for the command
+  // path, not only for the read path.
+  //
+  // assertEntityScope defaulted eventId to '' and only compared when the caller
+  // supplied it, so of sixteen call sites the one that passed event context
+  // (reviewRequest) was guarded and the fifteen physical-movement commands
+  // behind it were not. The bound is now a positive match evaluated before any
+  // committee or ALL-scope logic, so an omitted context fails closed.
+  //
+  // Scope of this test, stated precisely: it pins that an event bound is
+  // enforced, takes precedence, and produces OUT_OF_SCOPE. It does not by itself
+  // demonstrate the downstream-command hole, because the local fixture seeds a
+  // single event, so the only out-of-scope record available is an eventless one
+  // — which the committee guard also refused under the old code, with
+  // ENTITY_SCOPE_REQUIRED. The fifteen downstream call sites now pass real event
+  // context (see the SELECTs in transitionDeliverable, transitionRestock,
+  // confirmRelease, correctRelease, receiveEntity and reserveStock); covering
+  // each of them behaviorally needs a second seeded event and is tracked for
+  // v0.7.3 rather than left silently unstated.
+  const ownerCsrf = await login(request, 'LOCAL.OWNER');
+
+  // A non-event (office/pantry) submission carries no event id, so it is outside
+  // an actor bounded to EVT-LOCAL.
+  const marker = `Synthetic RV-01 event-bound refusal proof ${crypto.randomUUID()}`;
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const stockArea = (options.stockAreas ?? [])[0];
+    expect(stockArea).toBeTruthy();
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-bound-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Bound Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-bound-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0037',
+        purpose: marker,
+        requestPurpose: "OFFICE_INVENTORY_PANTRY",
+        stockArea,
+        neededDate: "2026-12-01",
+        startDate: '',
+        endDate: '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Other', description: 'Bound proof line', quantity: 1, unit: 'piece' }],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests?pageSize=10')).json();
+  const parent = queue.data.requests.find((row) => row.purpose === marker);
+  expect(parent).toBeTruthy();
+  const line = queue.data.requestLines.find((row) => row.requestId === parent.id);
+  expect(line).toBeTruthy();
+
+  const directory = await request.post('/api/admin/access/directory', {
+    headers: { 'x-csrf-token': ownerCsrf },
+    data: { query: 'LOCAL.ADMIN', status: 'ALL', page: 1, pageSize: 20 },
+  });
+  expect(directory.status()).toBe(200);
+  const admin = (await directory.json()).items.find((entry) => entry.accessId === 'LOCAL.ADMIN');
+  expect(admin).toBeTruthy();
+
+  const policyCommand = (eventScopeIds, revision, idempotencyKey) => ({
+    idempotencyKey,
+    accountId: admin.accountId,
+    expectedRevision: revision,
+    currentAccessId: admin.accessId,
+    confirmCurrentAccessId: admin.accessId,
+    presetId: admin.accessProfile?.presetId ?? 'CUSTOM',
+    roleId: admin.roleId,
+    committeeIds: admin.committeeIds ?? [],
+    defaultCommitteeId: admin.defaultCommitteeId ?? (admin.committeeIds ?? [])[0] ?? '',
+    workspaceIds: admin.accessProfile?.workspaceIds ?? [],
+    defaultWorkspaceId: admin.accessProfile?.defaultWorkspaceId ?? '',
+    locationScopeIds: admin.accessProfile?.locationScopeIds ?? [],
+    eventSeriesScopeIds: admin.accessProfile?.eventSeriesScopeIds ?? [],
+    eventScopeIds,
+    capabilityGrants: admin.accessProfile?.capabilityGrants ?? [],
+    capabilityDenies: admin.accessProfile?.capabilityDenies ?? [],
+    reason: 'RV-01.3 event-bound command-path regression.',
+  });
+
+  const bound = await request.post('/api/admin/access/update-policy', {
+    headers: { 'x-csrf-token': ownerCsrf },
+    data: policyCommand(['EVT-LOCAL'], admin.revision, `rv01-bound-bind-${parent.id}`),
+  });
+  expect(bound.status()).toBe(200);
+
+  try {
+    const adminContext = await apiRequest.newContext({ baseURL: BASE_URL });
+    try {
+      const adminCsrf = await login(adminContext, 'LOCAL.ADMIN');
+      const refused = await mutate(adminContext, adminCsrf, 'reviewRequest', {
+        requestId: parent.id,
+        decision: 'ACCEPT',
+        note: 'Bounded actor reviewing outside its events',
+        clientRequestId: `rv01-bound-review-${parent.id}`,
+        lineDecisions: [{ lineId: line.id, decision: 'RESTOCK' }],
+      });
+      expect(refused.status()).toBe(403);
+      expect((await refused.json()).code).toBe('OUT_OF_SCOPE');
+    } finally {
+      await adminContext.dispose();
+    }
+  } finally {
+    // Restore the unbounded policy so no later test inherits the bound.
+    const refreshed = await request.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { query: 'LOCAL.ADMIN', status: 'ALL', page: 1, pageSize: 20 },
+    });
+    const current = (await refreshed.json()).items.find((entry) => entry.accessId === 'LOCAL.ADMIN');
+    const restored = await request.post('/api/admin/access/update-policy', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: policyCommand([], current.revision, `rv01-bound-restore-${parent.id}`),
+    });
+    expect(restored.status()).toBe(200);
+  }
+
+  // Positive control: with the bound removed, the identical command from the
+  // identical account clears authorization and reaches business validation
+  // instead. That proves the refusal above came from the event bound and not
+  // from a missing capability, an inactive session, or committee scope — which
+  // would all still fail here.
+  const restoredContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const restoredCsrf = await login(restoredContext, 'LOCAL.ADMIN');
+    const allowed = await mutate(restoredContext, restoredCsrf, 'reviewRequest', {
+      requestId: parent.id,
+      decision: 'ACCEPT',
+      note: 'Unbounded central review',
+      clientRequestId: `rv01-bound-review-ok-${parent.id}`,
+      lineDecisions: [{ lineId: line.id, decision: 'RESTOCK' }],
+    });
+    expect(allowed.status()).not.toBe(403);
+    // A catalog-restock line still needs an exact catalog item, which this
+    // synthetic line deliberately lacks; reaching that check is the proof.
+    expect((await allowed.json()).code).toBe('LINE_ROUTE_NOT_ALLOWED');
+  } finally {
+    await restoredContext.dispose();
+  }
+});

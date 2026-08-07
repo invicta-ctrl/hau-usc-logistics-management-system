@@ -71,6 +71,13 @@ const METHOD_CAPABILITIES = Object.freeze({
   getMigrationStatus: CAPABILITIES.SYSTEM_DIAGNOSTICS,
 });
 
+// Parent request statuses this service actually writes. `src/domain/` carries a
+// wider vocabulary (PARTIALLY_FULFILLED, IN_PROGRESS, READY_FOR_HANDOFF) that
+// the D1 layer has never written, and `requests.status` has no CHECK
+// constraint, so gating against a domain-only name compiles, stores, and
+// silently never matches. Reserve gates must be built from this list.
+const RESERVABLE_PARENT_STATUSES = Object.freeze(['ACCEPTED', 'PARTIALLY_RELEASED']);
+
 const DELIVERABLE_TRANSITIONS = Object.freeze({
   FOR_CANVASSING: Object.freeze(['WAITING_FOR_BUDGET', 'CANCELLED']),
   WAITING_FOR_BUDGET: Object.freeze(['TO_BE_PROCURED', 'CANCELLED']),
@@ -583,23 +590,41 @@ function entityScope(account) {
 
 function assertEntityScope(
   account,
-  { committeeId = '', ownerAccountId = '', eventId = '', eventSeriesId = '' } = {},
+  { committeeId = '', ownerAccountId = '', eventId = '', eventSeriesId = '', locationId = '' } = {},
 ) {
   const scope = entityScope(account);
-  // RV-01.3: an account bounded to specific events or series must not command
-  // records outside them. These bounds were previously consulted only when
-  // building the operational-context option list, so they narrowed what an actor
-  // could see while leaving the command path fully open.
+  // RV-01.3 requires "unrelated committee/event/location -> No" for the command
+  // path, not only for the read path.
+  //
+  // The previous form compared only when the caller happened to supply the ids
+  // (`boundedEventIds.size && eventId && ...`). Because `eventId` defaults to
+  // '', every call site that omitted it disabled its own check silently, and
+  // exactly one of sixteen passed it. A bounded actor was therefore refused on
+  // `reviewRequest` and admitted on every physical-movement command behind it.
+  //
+  // The bound is now a positive match: a bounded actor must prove the record is
+  // inside its scope. An omitted argument fails closed instead of open, so a
+  // future call site that forgets the context is refused rather than exempted.
   const authorization = accountAuthorization(account);
   const boundedEventIds = new Set(authorization.eventScopeIds ?? []);
   const boundedSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
-  if (boundedEventIds.size && eventId && !boundedEventIds.has(eventId)) {
-    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
-      status: 403,
-    });
+  const boundedLocationIds = new Set(authorization.locationScopeIds ?? []);
+  if (boundedEventIds.size || boundedSeriesIds.size) {
+    const withinEvent =
+      (boundedEventIds.size > 0 && eventId !== '' && boundedEventIds.has(eventId)) ||
+      (boundedSeriesIds.size > 0 && eventSeriesId !== '' && boundedSeriesIds.has(eventSeriesId));
+    if (!withinEvent) {
+      throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+        status: 403,
+      });
+    }
   }
-  if (boundedSeriesIds.size && eventSeriesId && !boundedSeriesIds.has(eventSeriesId)) {
-    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+  // Location bounds were read only when building the operational-context option
+  // list (`resolveOperationalContext`) and were never consulted by any command,
+  // so `locationScopeIds` narrowed the scope picker while leaving every mutation
+  // open. Same positive-match rule.
+  if (boundedLocationIds.size && (locationId === '' || !boundedLocationIds.has(locationId))) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized location scope.', {
       status: 403,
     });
   }
@@ -1446,10 +1471,17 @@ export function createD1OperationalService({
     let modulePageSize = null;
     // Offset actually used, derived from the clamped page size.
     let moduleOffset = null;
+    // RV-01.3 "explicit deny -> No". Availability is internal stock data, so it
+    // is redacted by capability rather than by module. This was previously
+    // computed inside the `request` branch only, which meant an actor holding an
+    // explicit `view.inventory` deny still received on-hand, reserved,
+    // available-to-promise, storage location, and reorder state through the
+    // lending, release, restocking, and overview bootstraps — the exact fields
+    // the deny exists to withhold. `capabilityDenies` is a live mechanism in
+    // both deployed environments, so this is reachable configuration, not theory.
+    const protectCatalogAvailability =
+      requestOnly || !accountAuthorization(account).capabilities.includes(CAPABILITIES.VIEW_INVENTORY);
     if (module === 'request') {
-      const protectCatalogAvailability =
-        requestOnly ||
-        !accountAuthorization(account).capabilities.includes(CAPABILITIES.VIEW_INVENTORY);
       const eventScope = requestOnly
         ? { sql: '1 = 1', values: [] }
         : multiScopeWhere(account, { committeeColumns: ['event.owner_committee_id'] });
@@ -1793,7 +1825,7 @@ export function createD1OperationalService({
         scope.values,
       );
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row)),
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,
@@ -1934,7 +1966,7 @@ export function createD1OperationalService({
             venue: row.venue,
             status: row.status,
           })),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
           lendingTickets: lendingRows.map((row) => ({
@@ -1966,7 +1998,7 @@ export function createD1OperationalService({
         });
         const restockLimitIndex = restockScope.values.length + 1;
         data = {
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
           restockRequests: await rows(
             db,
             `SELECT restock.* FROM restock_requests restock WHERE ${restockScope.sql}
@@ -2087,7 +2119,7 @@ export function createD1OperationalService({
           events: eventRows.map(eventActivityDto),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -2104,7 +2136,7 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -3245,7 +3277,8 @@ export function createD1OperationalService({
     const deliverable = await db
       .prepare(
         `SELECT deliverable.*, request.owner_committee_id,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM deliverables deliverable
          JOIN requests request ON request.id = deliverable.request_id
          WHERE deliverable.id = ?1`,
@@ -3258,6 +3291,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: deliverable.assigned_committee_id ?? deliverable.owner_committee_id,
       ownerAccountId: deliverable.owner_account_id,
+      eventId: deliverable.event_id ?? '',
+      eventSeriesId: deliverable.event_series_id ?? '',
     });
     if (!DELIVERABLE_TRANSITIONS[deliverable.status]?.includes(target)) {
       throw new ApiError(
@@ -3342,7 +3377,8 @@ export function createD1OperationalService({
     const restock = await db
       .prepare(
         `SELECT restock.*, line.workflow_revision, line.received_quantity AS line_received_quantity,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM restock_requests restock
          LEFT JOIN request_lines line ON line.id = restock.source_request_line_id
          LEFT JOIN requests request ON request.id = restock.source_request_id
@@ -3360,6 +3396,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: restock.assigned_committee_id,
       ownerAccountId: restock.owner_account_id ?? restock.created_by,
+      eventId: restock.event_id ?? '',
+      eventSeriesId: restock.event_series_id ?? '',
     });
     const receipt = await db
       .prepare(
@@ -3422,7 +3460,8 @@ export function createD1OperationalService({
     const restock = await db
       .prepare(
         `SELECT restock.*, line.status AS line_status, line.workflow_revision,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM restock_requests restock
          LEFT JOIN request_lines line ON line.id = restock.source_request_line_id
          LEFT JOIN requests request ON request.id = restock.source_request_id
@@ -3443,6 +3482,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: restock.assigned_committee_id,
       ownerAccountId: restock.owner_account_id ?? restock.created_by,
+      eventId: restock.event_id ?? '',
+      eventSeriesId: restock.event_series_id ?? '',
     });
     const currentStatus = restock.line_status ?? restock.status;
     if (!rule.from.includes(currentStatus)) {
@@ -4075,10 +4116,19 @@ export function createD1OperationalService({
         status: 403,
       });
     }
+    // The reserved item's storage location is the location bound's subject, so it
+    // is resolved before the guard rather than with the later unit lookup, which
+    // runs after `replay` and could not gate a replayed mutation.
+    const reservedLocation = await db
+      .prepare("SELECT storage_location FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
+      .bind(itemId)
+      .first();
+    let parentRequestId = '';
     if (requestLineId) {
       const requestScope = await db
         .prepare(
-          `SELECT request.owner_committee_id, request.requester_account_id, request.status
+          `SELECT request.id AS request_id, request.owner_committee_id, request.requester_account_id,
+             request.status, request.event_id, request.event_series_id
            FROM request_lines line JOIN requests request ON request.id = line.request_id
            WHERE line.id = ?1`,
         )
@@ -4086,15 +4136,24 @@ export function createD1OperationalService({
         .first();
       if (!requestScope)
         throw new ApiError('REQUEST_LINE_NOT_FOUND', 'The request line was not found.', { status: 404 });
+      parentRequestId = String(requestScope.request_id ?? '');
       assertEntityScope(account, {
         committeeId: requestScope.owner_committee_id,
         ownerAccountId: requestScope.requester_account_id,
+        eventId: requestScope.event_id ?? '',
+        eventSeriesId: requestScope.event_series_id ?? '',
+        locationId: reservedLocation?.storage_location ?? '',
       });
       // RV-01.6: a reservation consumes availability, so it may only exist under
       // a parent that is actually accepted. Without this a line left stock-ready
       // by a mixed review could be reserved while the parent was still awaiting
       // information, or after it was rejected.
-      if (!['ACCEPTED', 'PARTIALLY_FULFILLED'].includes(String(requestScope.status))) {
+      //
+      // PARTIALLY_RELEASED must be reservable: releasing the first line of a
+      // multi-line stock request moves the parent there, and excluding it left
+      // every remaining line permanently unreservable with no operator recovery
+      // path, because nothing transitions a parent back out of that status.
+      if (!RESERVABLE_PARENT_STATUSES.includes(String(requestScope.status))) {
         throw new ApiError(
           'REQUEST_STATE_CONFLICT',
           'Stock can only be reserved for an accepted request.',
@@ -4141,6 +4200,29 @@ export function createD1OperationalService({
              WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
           )
           .bind(requestLineId, nowIso()),
+        // Every other line-status writer bumps the parent. `reserveStock` was the
+        // exception, and `reviewRequest`'s stranding probe is only safe because
+        // its compare-and-swap pins `requests.updated_at` against exactly these
+        // owner-creating commands. Bumping here removes the one gap in that
+        // invariant and keeps the queue's `updated_at DESC` order honest.
+        ...(parentRequestId
+          ? [
+              db
+                .prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1')
+                .bind(parentRequestId, nowIso()),
+            ]
+          : []),
+        // The audit row was previously a second batch issued after this one
+        // committed, so an eviction or D1 fault between them left an ACTIVE
+        // reservation holding stock with no audit record that it happened.
+        auditStatement(db, {
+          action: 'STOCK_RESERVED',
+          entityType: 'RESERVATION',
+          entityId: reservationId,
+          accountId: account.id,
+          correlationId,
+          after: { itemId, quantity },
+        }),
         idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
         ...revisionStatements(db, ['inventory', 'request']),
       ]);
@@ -4152,16 +4234,6 @@ export function createD1OperationalService({
       }
       throw error;
     }
-    await db.batch([
-      auditStatement(db, {
-        action: 'STOCK_RESERVED',
-        entityType: 'RESERVATION',
-        entityId: reservationId,
-        accountId: account.id,
-        correlationId,
-        after: { itemId, quantity },
-      }),
-    ]);
     return result;
   }
 
@@ -5776,13 +5848,18 @@ export function createD1OperationalService({
     }
     const requestId = requiredText(command.requestId, 'requestId', 80);
     const requestScope = await db
-      .prepare('SELECT owner_committee_id, requester_account_id FROM requests WHERE id = ?1')
+      .prepare(
+        `SELECT owner_committee_id, requester_account_id, event_id, event_series_id
+         FROM requests WHERE id = ?1`,
+      )
       .bind(requestId)
       .first();
     if (!requestScope) throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     assertEntityScope(account, {
       committeeId: requestScope.owner_committee_id,
       ownerAccountId: requestScope.requester_account_id,
+      eventId: requestScope.event_id ?? '',
+      eventSeriesId: requestScope.event_series_id ?? '',
     });
     const lines = Array.isArray(command.lines) ? command.lines : [];
     if (!lines.length || lines.length > 50) {
@@ -5966,11 +6043,17 @@ export function createD1OperationalService({
     statements.push(
       db
         .prepare(
+          // A REJECTED or CANCELLED line has no downstream owner and can never
+          // become COMPLETED, so counting it as outstanding work left any mixed
+          // request permanently PARTIALLY_RELEASED after its last routable line
+          // was fully released. `src/domain/requests.js` excludes both from the
+          // active set for the same reason; this matches it.
           `UPDATE requests
            SET status = CASE
              WHEN NOT EXISTS (
                SELECT 1 FROM request_lines line
-               WHERE line.request_id = requests.id AND line.status <> 'COMPLETED'
+               WHERE line.request_id = requests.id
+                 AND line.status NOT IN ('COMPLETED', 'REJECTED', 'CANCELLED')
              ) THEN 'COMPLETED' ELSE 'PARTIALLY_RELEASED' END,
              updated_at = ?2
            WHERE id = ?1`,
@@ -6022,6 +6105,7 @@ export function createD1OperationalService({
     const confirmation = await db
       .prepare(
         `SELECT confirmation.*, request.owner_committee_id, request.requester_account_id,
+                request.event_id, request.event_series_id,
                 line.requested_quantity, line.released_quantity, line.status AS line_status,
                 ledger.id AS original_ledger_id
          FROM release_confirmations confirmation
@@ -6042,6 +6126,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: confirmation.owner_committee_id,
       ownerAccountId: confirmation.requester_account_id,
+      eventId: confirmation.event_id ?? '',
+      eventSeriesId: confirmation.event_series_id ?? '',
     });
     const mutation = await replay(db, 'correctRelease', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -6239,7 +6325,8 @@ export function createD1OperationalService({
       scopeRecord = await db
         .prepare(
           `SELECT restock.assigned_committee_id AS committee_id,
-             request.requester_account_id AS owner_account_id
+             request.requester_account_id AS owner_account_id,
+             request.event_id, request.event_series_id
            FROM restock_requests restock
            LEFT JOIN requests request ON request.id = restock.source_request_id
            WHERE restock.id = ?1`,
@@ -6250,7 +6337,8 @@ export function createD1OperationalService({
       scopeRecord = await db
         .prepare(
           `SELECT COALESCE(deliverable.assigned_committee_id, request.owner_committee_id) AS committee_id,
-             request.requester_account_id AS owner_account_id
+             request.requester_account_id AS owner_account_id,
+             request.event_id, request.event_series_id
            FROM deliverables deliverable
            JOIN requests request ON request.id = deliverable.request_id
            WHERE deliverable.id = ?1`,
@@ -6261,6 +6349,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: scopeRecord?.committee_id,
       ownerAccountId: scopeRecord?.owner_account_id,
+      eventId: scopeRecord?.event_id ?? '',
+      eventSeriesId: scopeRecord?.event_series_id ?? '',
     });
     const evidenceId = await requireStoredEvidence(command, {
       evidenceTypes:

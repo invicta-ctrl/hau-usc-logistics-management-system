@@ -66,9 +66,18 @@ const environment = config?.vars?.ENVIRONMENT;
 if (environment !== expected.environment)
   fail(`the config declares ENVIRONMENT "${environment}", not ${expected.environment}.`);
 
-// 2. It must carry a real, resolved D1 binding.
-const database = (config.d1_databases ?? [])[0];
-if (!database) fail('the config declares no D1 binding.');
+// 2. It must carry exactly one real, resolved D1 binding, and it must be the
+//    binding the Worker actually reads. Checking only d1_databases[0] would let
+//    a config whose first entry looks right bind `DB` to the other
+//    environment's database on a later entry — the exact target confusion this
+//    script exists to prevent, and the same rule R2 already enforces below.
+const databases = config.d1_databases ?? [];
+if (!databases.length) fail('the config declares no D1 binding.');
+if (databases.length !== 1)
+  fail(`the config declares ${databases.length} D1 bindings; exactly one (DB) is allowed.`);
+const [database] = databases;
+if (database.binding !== 'DB')
+  fail(`the config binds D1 as "${database.binding}", but the Worker reads env.DB.`);
 if (database.database_name !== expected.d1)
   fail(`the config binds D1 "${database.database_name}", not the ${target} database.`);
 if (!database.database_id || database.database_id === PLACEHOLDER_ID)
