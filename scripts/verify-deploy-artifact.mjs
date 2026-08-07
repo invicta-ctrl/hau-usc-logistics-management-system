@@ -60,9 +60,13 @@ if (!cloudflareModes.length) {
   );
 }
 
-if (target && !cloudflareModes.includes(target) && !cloudflareModes.includes('staging')) {
+// The declared build mode must equal the deploy target. Accepting a staging
+// artifact for a production deploy would ship a bundle whose baked-in
+// appEnvironment says "staging", defeating the RV-01.8 identity proof.
+if (target && !cloudflareModes.includes(target)) {
   throw new Error(
-    `dist/index.html declares build mode "${cloudflareModes[0]}", which does not satisfy the ${target} deploy.`,
+    `dist/index.html declares build mode "${cloudflareModes[0]}", which does not satisfy the ${target} deploy. ` +
+      `Rebuild with the ${target} Cloudflare build path.`,
   );
 }
 

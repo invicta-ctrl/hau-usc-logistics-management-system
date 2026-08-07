@@ -584,3 +584,51 @@ test('an over-long search term is bounded server-side', async ({ request }) => {
     expect(body.pagination.total).toBe(0);
   }
 });
+
+test('reviewable work sorts ahead of already-reviewed requests on the queue page', async ({
+  request,
+}) => {
+  // RV-01.3: reviewing bumps updated_at, so a pure recency order would let
+  // freshly accepted requests fill the only page the queue loads and hide
+  // still-pending review work from every authorized owner.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const page = await (await request.get('/api/requests')).json();
+  const statuses = page.data.requests.map((row) => row.status);
+  const reviewable = (status) => ['FOR_REVIEW', 'NEEDS_INFORMATION'].includes(status);
+  const lastReviewable = statuses.map(reviewable).lastIndexOf(true);
+  const firstReviewed = statuses.map(reviewable).indexOf(false);
+  if (lastReviewable !== -1 && firstReviewed !== -1) {
+    expect(lastReviewable).toBeLessThan(firstReviewed);
+  }
+
+  // Any request still awaiting review must be reachable on the first page while
+  // the page is not full.
+  if (page.data.requests.length < page.pagination.pageSize) {
+    const everything = await (await request.get('/api/requests?filter=ALL')).json();
+    const pendingEverywhere = everything.data.requests.filter((row) => reviewable(row.status));
+    const pendingOnPage = new Set(
+      page.data.requests.filter((row) => reviewable(row.status)).map((row) => row.id),
+    );
+    for (const pending of pendingEverywhere) expect(pendingOnPage.has(pending.id)).toBe(true);
+  }
+  expect(csrfToken).toBeTruthy();
+});
+
+test('a larger requested page size cannot skip rows', async ({ request }) => {
+  // The offset must follow the clamped page size, or pageSize=50&page=2 reads
+  // OFFSET 50 while returning a 10-row window and rows 10-49 become unreachable.
+  await login(request, 'LOCAL.OWNER');
+  const first = await (await request.get('/api/requests?filter=ALL&pageSize=50&page=1')).json();
+  const second = await (await request.get('/api/requests?filter=ALL&pageSize=50&page=2')).json();
+  expect(first.pagination.pageSize).toBeLessThanOrEqual(10);
+  expect(second.pagination.pageSize).toBe(first.pagination.pageSize);
+
+  if (first.pagination.total > first.pagination.pageSize) {
+    // Page 2 must continue immediately after page 1, with no gap and no overlap.
+    const firstIds = first.data.requests.map((row) => row.id);
+    const secondIds = second.data.requests.map((row) => row.id);
+    expect(secondIds.some((id) => firstIds.includes(id))).toBe(false);
+    const paged = await (await request.get('/api/requests?filter=ALL&pageSize=10&page=2')).json();
+    expect(secondIds).toEqual(paged.data.requests.map((row) => row.id));
+  }
+});

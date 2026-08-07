@@ -1424,6 +1424,8 @@ export function createD1OperationalService({
     let moduleTotal = null;
     // Set when a module clamps its own page size below the requested value.
     let modulePageSize = null;
+    // Offset actually used, derived from the clamped page size.
+    let moduleOffset = null;
     if (module === 'request') {
       const protectCatalogAvailability =
         requestOnly ||
@@ -1526,13 +1528,24 @@ export function createD1OperationalService({
         // public submission can create, so the page always validates.
         const queuePageSize = Math.max(1, Math.min(page.pageSize, MAX_REQUEST_PAGE_PARENTS));
         modulePageSize = queuePageSize;
+        // The offset must follow the clamped size, or requesting a larger page
+        // skips rows: pageSize=50&page=2 would read OFFSET 50 while returning a
+        // 10-row window, leaving rows 10-49 unreachable at every page value.
+        const queueOffset = (page.page - 1) * queuePageSize;
+        moduleOffset = queueOffset;
         const queueRows = await rows(
           db,
+          // RV-01.3: reviewable work sorts first. Reviewing a request bumps its
+          // updated_at, so a pure recency order lets freshly accepted requests
+          // occupy the whole first page and push still-pending review work out
+          // of the only page the queue loads, which would hide unassigned
+          // FOR_REVIEW requests from every authorized owner.
           `SELECT request.* FROM requests request
            WHERE ${queueWhere}
-           ORDER BY request.updated_at DESC, request.id DESC
+           ORDER BY CASE WHEN request.status IN ('FOR_REVIEW', 'NEEDS_INFORMATION') THEN 0 ELSE 1 END,
+                    request.updated_at DESC, request.id DESC
            LIMIT ?${queueLimitIndex} OFFSET ?${queueLimitIndex + 1}`,
-          [...queueValues, queuePageSize, page.offset],
+          [...queueValues, queuePageSize, queueOffset],
         );
         // RV-01.5: Request owns its own total. It must not reuse Inventory's.
         const queueTotalStatement = db.prepare(
@@ -2094,11 +2107,12 @@ export function createD1OperationalService({
           : (() => {
               const effectivePageSize = modulePageSize ?? page.pageSize;
               const effectiveTotal = moduleTotal ?? Number(totalRow?.count ?? 0);
+              const effectiveOffset = moduleOffset ?? page.offset;
               return {
                 page: page.page,
                 pageSize: effectivePageSize,
                 total: effectiveTotal,
-                hasMore: page.offset + effectivePageSize < effectiveTotal,
+                hasMore: effectiveOffset + effectivePageSize < effectiveTotal,
               };
             })(),
       revision: globalRevision,
