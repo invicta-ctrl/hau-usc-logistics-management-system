@@ -178,6 +178,21 @@ browser 136 passed / 356 intentional skips / 0 failed; local Worker/D1 **48/48**
 including the shipped-UI two-context proof, the RV-01.3 authorization matrix,
 page-bound, search-bound, and partially-routed reject guards. No migration added.
 
+### Independent review round 5 (2026-08-07) — both reviewers, SHA 67eef18
+
+Both fresh reviews returned **FAIL**. Repairs landed at `18edbdc`.
+
+| Sev | Finding | Disposition |
+|---|---|---|
+| **P0** | The reject guard probed `request_lines` for a status literal, but `transitionDeliverable`/`transitionRestock` advance the line status in lockstep with their downstream item. Once procurement moved a deliverable past `FOR_CANVASSING` the probe counted zero, a whole-request REJECT succeeded, and the deliverable stayed live through receiving to `confirmRelease` — which resolves the parent without checking its status. **Physical stock could be issued against a REJECTED request.** | **Fixed.** The guard now tests the owner tables directly (unclosed deliverable, unclosed restock, ACTIVE reservation). Probing line statuses was the wrong shape. |
+| P1 | The `READY_TO_RESERVE` sweep lived only in the non-accept branch, so a derived-REJECTED accept left a stock-ready line reservable. | **Fixed** — sweep keyed off the derived outcome. |
+| P1 | `reserveStock` never checked the parent request status, so a stock-ready line could consume availability under a `NEEDS_INFORMATION` or `REJECTED` parent. | **Fixed** — requires an accepted parent. |
+| P1 | The shipped queue rendered its own row count with no pager while the server clamps to ten parents, so the eleventh pending request onward was invisible to every reviewer. | **Fixed** — true server total plus prev/next paging. |
+| P1 | `eventScopeIds`/`eventSeriesScopeIds` were consulted only for operational-context options, leaving the command path open. | **Fixed for the review command**; other commands recorded below. |
+| P2/P3 | `filterOperationalData` post-filter vs total under LOCATION/EVENT scope; `deploy:*` scripts resolve committed placeholder `wrangler.jsonc` rather than the private config; tracked `dist/` artifact; SELF-scope self-approval if `request.review` is granted to a requester; `/api/getScopedRevision` scope not capability-checked; ADMINISTRATOR lacks `REQUEST_REVIEW` by default. | **Recorded below.** |
+
+Also split `tests/e2e/inventory-workspace.spec.js:200` at the release boundary. It ran 36 sequential navigations and used 17.7s of a 30s budget in isolation, exceeding it under load. No assertion weakened; the browser matrix is green at 138 passed / 0 failed.
+
 ### RV-01 remaining gaps
 
 - **Operational-scope filtering vs pagination.** `filterOperationalData` runs
@@ -194,8 +209,23 @@ page-bound, search-bound, and partially-routed reject guards. No migration added
 - `request_lines.fulfillment_source` still reports the submission-time value
   after review rather than the decided route. Traceability only; no server
   branch depends on it post-review. Deferred to v0.7.3.
-- Independent security/authorization review of the repair head must still be
-  recorded before RV-01 can carry a PASS.
+- **RV-01 still has no PASS.** Five review rounds have run; every one found real
+  defects, round 5 including a P0. The repairs at `18edbdc` postdate both round-5
+  reviews, so a fresh round on `18edbdc` is required before RV-01 can close.
+- **Deploy scripts resolve the committed placeholder `wrangler.jsonc`.**
+  `deploy:staging`/`deploy:production` run `wrangler deploy --env <env>` with no
+  `-c`, so they target `REPLACE_PRIVATELY_*_D1` and the all-zero `database_id`.
+  The only command that reaches a real target uses a private config and skips the
+  artifact preflight. Must be reconciled before any environment write.
+- `dist/` is tracked and currently holds a Cloudflare-mode artifact, so a bare
+  `wrangler deploy` bypassing the npm scripts uploads it with no preflight.
+- Event/series scope is enforced on the review command only; `reserveStock`,
+  `confirmRelease`, and other commands still ignore those bounds (pre-existing).
+- A SELF-scope account granted `request.review` could approve its own request;
+  there is no actor-vs-requester separation-of-duties check.
+- `ADMINISTRATOR` does not hold `REQUEST_REVIEW` in the role registry, so the
+  reviewer surface is hidden for Administrators unless explicitly granted.
+  Owner confirmation needed on whether that is intended.
 
 The v0.7.2 product, schema, generated artifacts, and local verification are
 complete at the R2-repaired release-branch working tree prepared for candidate
