@@ -3,7 +3,7 @@
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
-- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations`; draft PR #15; freeze commit pending; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations` / `origin/release/v0.7.2-production-access-operations`; draft PR #15 at `ae46c1f85622c3c933fcb771f0bbf8e721e4195c`, `MERGEABLE`/`CLEAN`, exact-head `validate`/`verify`/`browser-smoke` all `SUCCESS`; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
 - **Current phase/stage:** RV-01 request-visibility repair complete on the release branch; fresh independent exact-SHA review and PR CI next; pre-production blocked on the absent live email provider (identity policy decided: Option A, exact protected-directory match only).
 - **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md`, accepted amendment `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`, and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 - **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.

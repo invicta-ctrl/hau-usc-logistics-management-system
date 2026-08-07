@@ -16,10 +16,18 @@
   without a hard reload or re-login; and request review requires one explicit
   server-validated route decision per line, replacing the implicit
   "everything else becomes procurement" default. No migration was introduced.
+- RV-01 repair head: `ae46c1f85622c3c933fcb771f0bbf8e721e4195c`
+  (`a18e8fc` repair, `6a11641` generated-artifact correction, `ae46c1f`
+  handoff note). PR #15 head matches; `MERGEABLE` / `CLEAN`; exact-head checks
+  `validate`, `verify`, and `browser-smoke` all `SUCCESS`.
 - RV-01 verification: `npm run check` 114 files / 782 tests; browser 136 passed
   / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new
   two-context regression `public request becomes visible to an already-open
   authorized Main Hub and routes each line exactly once`.
+- Generated-artifact hazard recorded: the local Worker acceptance suite rebuilds
+  `dist/index.html` with `--mode staging`, so `npm run build` must be re-run
+  immediately before staging a commit. `verify:dist` does not compare the
+  committed artifact against a fresh build.
 - RV-01 also repaired two pre-existing time-dependent fixtures (hardcoded
   lending pickup/due dates) that made the recorded 39/39 Worker and 136 browser
   evidence non-reproducible after 2026-08-03.
