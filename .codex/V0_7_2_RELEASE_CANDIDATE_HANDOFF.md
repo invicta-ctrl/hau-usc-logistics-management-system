@@ -58,6 +58,22 @@ browser results non-reproducible on any date after 2026-08-03.
   committee denial.
 - No migration was added; schema target remains 30.
 
+### Generated-artifact build-order hazard
+
+`scripts/start-local-worker-acceptance.mjs` runs `vite build --mode staging`,
+which overwrites `dist/index.html`. `npm run build` produces the preview
+artifact that must be committed alongside the shareable and Apps Script bundles
+generated in the same invocation.
+
+Running the local Worker acceptance suite **after** `npm run check` therefore
+leaves `dist/index.html` in the staging variant. Always re-run `npm run build`
+(or `npm run check`) immediately before staging a commit, and confirm
+`dist/index.html` matches a fresh preview build. The build itself is
+deterministic: three consecutive `npm run build` invocations produce a
+byte-identical file. `verify:dist` validates structure and does not compare the
+committed file against a fresh build, so this class of drift is not caught by
+CI.
+
 ### RV-01 remaining gaps
 
 - The full RV-01.3 authorization matrix is proven for central-owner read,
