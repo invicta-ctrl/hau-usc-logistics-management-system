@@ -163,13 +163,19 @@ describe('D1 operational P1 invariants', () => {
     // already owning a Deliverables/Restocking item. A later whole-request
     // REJECT would strand those active owners under a rejected parent.
     expect(review).toContain('REQUEST_ALREADY_ROUTED');
-    // The probe counts only lines that own a live downstream item. A REJECTED
-    // line owns nothing, and a stock route creates no reservation at review, so
-    // neither may make the parent permanently un-rejectable.
-    expect(review).toMatch(/COUNT\(\*\) AS count FROM request_lines[\s\S]*?status = 'FOR_CANVASSING'/u);
-    // A reject must still close stock-ready lines, or stock could be reserved
-    // for a rejected request.
-    expect(review).toMatch(/'FOR_REVIEW', 'NEEDS_INFORMATION', 'READY_TO_RESERVE'/u);
+    // The probe must test the owner tables, not line statuses. transitionDeliverable
+    // and transitionRestock advance request_lines.status in lockstep with their
+    // downstream item, so any status-literal test stops matching once procurement
+    // moves the item on, and a reject would strand a live owner through to
+    // physical release.
+    expect(review).toMatch(/FROM deliverables[\s\S]*?NOT IN \('CANCELLED', 'COMPLETED'\)/u);
+    expect(review).toMatch(/FROM restock_requests[\s\S]*?source_request_id/u);
+    expect(review).toMatch(/FROM reservations[\s\S]*?status = 'ACTIVE'/u);
+    expect(review).not.toMatch(/COUNT\(\*\) AS count FROM request_lines\s+WHERE request_id = \?1 AND status/u);
+    // A reject must close stock-ready lines on EVERY reject path, including a
+    // derived-REJECTED accept, or stock stays reservable under a rejected parent.
+    expect(review).toMatch(/sweepStockReadyOnReject/u);
+    expect(review).toMatch(/derivedStatus !== 'REJECTED'\) return/u);
     // The guard must key off the DERIVED outcome as well as the submitted
     // decision: an ACCEPT whose remaining decisions are all REJECT derives a
     // REJECTED parent and strands routed lines exactly like a whole-request

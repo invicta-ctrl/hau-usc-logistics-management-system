@@ -485,9 +485,17 @@ test('a reviewer routes each line of a public request through the shipped Main H
   const form = page.locator('#requestReviewForm');
   await expect(form).toBeVisible();
 
+  // The queue reports the server's true total, not the rows on screen, so
+  // review work past the first page is not silently unreachable.
+  await expect(queue).toContainText(/\d+ requests? awaiting review/u);
+
   // Exactly one explicit decision control per reviewable line.
   const decisions = form.locator('[data-line-decision]');
   await expect(decisions).toHaveCount(2);
+
+  // No route is pre-selected: RV-01.6 requires an explicit decision per line.
+  const preselected = await decisions.evaluateAll((nodes) => nodes.map((n) => n.value));
+  expect(preselected.every((value) => value === '')).toBe(true);
 
   // A line with no catalog item must not offer a stock route.
   const optionSets = await decisions.evaluateAll((nodes) =>
@@ -711,4 +719,113 @@ test('two concurrent reviewers cannot both route the same line', async ({ reques
   expect(
     (restocking.data.restockRequests ?? []).filter((entry) => entry.sourceRequestLineId === line.id),
   ).toHaveLength(0);
+});
+
+test('a reject is refused after procurement advances the deliverable past its first state', async ({
+  request,
+}) => {
+  // P0 regression. transitionDeliverable advances request_lines.status in
+  // lockstep with the deliverable, so a status-literal probe stops matching once
+  // procurement moves the item on. A reject would then strand a live owner that
+  // continues to receiving and physical release under a REJECTED request.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-p0-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 P0 Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-p0-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0035',
+        purpose: 'Synthetic RV-01 advanced-deliverable reject proof.',
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [
+          { category: 'Other', description: 'P0 procurement line', quantity: 2, unit: 'piece' },
+          { category: 'Other', description: 'P0 pending line', quantity: 1, unit: 'piece' },
+        ],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests')).json();
+  const parent = queue.data.requests.find(
+    (row) => row.purpose === 'Synthetic RV-01 advanced-deliverable reject proof.',
+  );
+  expect(parent).toBeTruthy();
+  const lines = queue.data.requestLines.filter((row) => row.requestId === parent.id);
+  expect(lines).toHaveLength(2);
+
+  // Mixed review: one line routed to procurement, one returned for information.
+  const mixed = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'ACCEPT',
+    note: 'P0 mixed review',
+    clientRequestId: `rv01-p0-review-${parent.id}`,
+    lineDecisions: [
+      { lineId: lines[0].id, decision: 'PROCUREMENT' },
+      { lineId: lines[1].id, decision: 'MISSING_INFORMATION' },
+    ],
+  });
+  expect(mixed.status()).toBe(200);
+
+  const procurement = await (await request.get('/api/procurement')).json();
+  const deliverable = (procurement.data.deliverables ?? []).find(
+    (entry) => entry.requestId === parent.id,
+  );
+  expect(deliverable).toBeTruthy();
+  expect(deliverable.status).toBe('FOR_CANVASSING');
+
+  // While the deliverable is live, a whole-request reject must be refused.
+  const blocked = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'REJECT',
+    note: 'P0 reject while owner is live',
+    clientRequestId: `rv01-p0-reject-live-${parent.id}`,
+  });
+  expect(blocked.status()).toBe(409);
+  expect((await blocked.json()).code).toBe('REQUEST_ALREADY_ROUTED');
+
+  // Cancelling the deliverable closes the ownership. The probe must key off the
+  // deliverable's own status, not the request line's, so the reject is now
+  // allowed. Advancing (rather than cancelling) leaves the deliverable live and
+  // must keep blocking; that direction is asserted structurally in
+  // tests/unit/d1-operational-p1-regressions.test.js because WAITING_FOR_BUDGET
+  // additionally requires a preferred canvass.
+  const cancelled = await mutate(request, csrfToken, 'transitionDeliverable', {
+    deliverableId: deliverable.id,
+    status: 'CANCELLED',
+    note: 'P0 cancel',
+    clientRequestId: `rv01-p0-cancel-${parent.id}`,
+  });
+  expect(cancelled.status()).toBe(200);
+
+  const allowed = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'REJECT',
+    note: 'P0 reject after ownership closed',
+    clientRequestId: `rv01-p0-reject-closed-${parent.id}`,
+  });
+  expect(allowed.status()).toBe(200);
+
+  const afterParent = (await (await request.get('/api/requests?filter=ALL')).json()).data.requests.find(
+    (row) => row.id === parent.id,
+  );
+  expect(afterParent.status).toBe('REJECTED');
 });

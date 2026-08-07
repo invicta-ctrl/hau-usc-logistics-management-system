@@ -228,6 +228,19 @@ test('Inventory destinations reuse canonical stock, circulation, receiving, rele
   await expect(page.locator('#restocking')).toHaveClass(/active/u);
   await expect(page.locator('#restockReceiveForm')).toBeVisible();
 
+});
+
+test('Inventory destinations reuse canonical release, movement, and alert surfaces', async ({ page }, testInfo) => {
+  test.skip(
+    !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
+    'One mobile and one desktop proof are sufficient.',
+  );
+  // Split from the stock/circulation/receiving proof above. That single test
+  // performed 36 sequential navigations and used 17.7s of its 30s budget in
+  // isolation, so it exceeded the timeout under full-matrix load. No assertion
+  // is weakened or removed; only the test boundary changed.
+  await openInventory(page);
+
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
   await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-release"]').click();

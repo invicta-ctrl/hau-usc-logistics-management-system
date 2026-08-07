@@ -581,8 +581,28 @@ function entityScope(account) {
   };
 }
 
-function assertEntityScope(account, { committeeId = '', ownerAccountId = '' } = {}) {
+function assertEntityScope(
+  account,
+  { committeeId = '', ownerAccountId = '', eventId = '', eventSeriesId = '' } = {},
+) {
   const scope = entityScope(account);
+  // RV-01.3: an account bounded to specific events or series must not command
+  // records outside them. These bounds were previously consulted only when
+  // building the operational-context option list, so they narrowed what an actor
+  // could see while leaving the command path fully open.
+  const authorization = accountAuthorization(account);
+  const boundedEventIds = new Set(authorization.eventScopeIds ?? []);
+  const boundedSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
+  if (boundedEventIds.size && eventId && !boundedEventIds.has(eventId)) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+      status: 403,
+    });
+  }
+  if (boundedSeriesIds.size && eventSeriesId && !boundedSeriesIds.has(eventSeriesId)) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+      status: 403,
+    });
+  }
   // RV-01.3: an explicit DENY is refused before any committee comparison, so a
   // revoked actor cannot command a record through a retained committee grant.
   if (scope.mode === 'DENY') {
@@ -4038,7 +4058,7 @@ export function createD1OperationalService({
     if (requestLineId) {
       const requestScope = await db
         .prepare(
-          `SELECT request.owner_committee_id, request.requester_account_id
+          `SELECT request.owner_committee_id, request.requester_account_id, request.status
            FROM request_lines line JOIN requests request ON request.id = line.request_id
            WHERE line.id = ?1`,
         )
@@ -4050,6 +4070,17 @@ export function createD1OperationalService({
         committeeId: requestScope.owner_committee_id,
         ownerAccountId: requestScope.requester_account_id,
       });
+      // RV-01.6: a reservation consumes availability, so it may only exist under
+      // a parent that is actually accepted. Without this a line left stock-ready
+      // by a mixed review could be reserved while the parent was still awaiting
+      // information, or after it was rejected.
+      if (!['ACCEPTED', 'PARTIALLY_FULFILLED'].includes(String(requestScope.status))) {
+        throw new ApiError(
+          'REQUEST_STATE_CONFLICT',
+          'Stock can only be reserved for an accepted request.',
+          { status: 409 },
+        );
+      }
     }
     const mutation = await replay(db, 'reserveStock', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -5388,6 +5419,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: current.owner_committee_id,
       ownerAccountId: current.requester_account_id,
+      eventId: current.event_id ?? '',
+      eventSeriesId: current.event_series_id ?? '',
     });
     const mutation = await replay(db, 'reviewRequest', key, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -5408,16 +5441,27 @@ export function createD1OperationalService({
     // item. A later whole-request REJECT or MISSING_INFORMATION only touches
     // still-reviewable lines, so it would strand those active owners under a
     // rejected parent. Require the remaining lines to be decided individually.
-    // Count only lines that actually own a live downstream item. A REJECTED line
-    // owns nothing, and a READY_TO_RESERVE line owns nothing either: a stock
-    // route creates no reservation at review. Counting it here made a request
-    // whose only routed line was stock-ready permanently un-rejectable. Those
-    // lines are instead swept to REJECTED alongside the parent below, so no line
-    // is left stock-ready under a rejected request.
+    // Probe the owner tables directly rather than guessing line statuses.
+    // transitionDeliverable and transitionRestock advance request_lines.status in
+    // lockstep with their downstream item, so any status-literal test silently
+    // stops matching as soon as procurement moves the item past its first state,
+    // and a reject would then strand a live owner all the way through to
+    // physical release. Existence of an unclosed deliverable, restock, or active
+    // reservation is the invariant that actually matters.
     const routedRow = await db
       .prepare(
-        `SELECT COUNT(*) AS count FROM request_lines
-         WHERE request_id = ?1 AND status = 'FOR_CANVASSING'`,
+        `SELECT
+           (SELECT COUNT(*) FROM deliverables deliverable
+              JOIN request_lines line ON line.id = deliverable.request_line_id
+             WHERE line.request_id = ?1
+               AND deliverable.status NOT IN ('CANCELLED', 'COMPLETED'))
+         + (SELECT COUNT(*) FROM restock_requests restock
+             WHERE restock.source_request_id = ?1
+               AND restock.status NOT IN ('CANCELLED', 'REJECTED', 'RESTOCKED'))
+         + (SELECT COUNT(*) FROM reservations reservation
+              JOIN request_lines line ON line.id = reservation.request_line_id
+             WHERE line.request_id = ?1 AND reservation.status = 'ACTIVE')
+           AS count`,
       )
       .bind(requestId)
       .first();
@@ -5544,6 +5588,22 @@ export function createD1OperationalService({
       )
       .bind(requestId, derivedStatus, timestamp, current.status, current.updated_at);
     const statements = [];
+    // A derived-REJECTED parent (an ACCEPT whose remaining decisions are all
+    // REJECT) takes the ACCEPTED branch, which historically never ran the
+    // stock-ready sweep. That left an earlier mixed review's READY_TO_RESERVE
+    // line reservable under a rejected parent, so the sweep is keyed off the
+    // derived outcome and applied on every path that rejects.
+    const sweepStockReadyOnReject = () => {
+      if (derivedStatus !== 'REJECTED') return;
+      statements.push(
+        db
+          .prepare(
+            `UPDATE request_lines SET status = 'REJECTED', updated_at = ?2
+             WHERE request_id = ?1 AND status = 'READY_TO_RESERVE'`,
+          )
+          .bind(requestId, timestamp),
+      );
+    };
     if (nextStatus === 'ACCEPTED') {
       for (const line of requestLines) {
         statements.push(
@@ -5572,6 +5632,7 @@ export function createD1OperationalService({
           .bind(requestId, nextStatus === 'REJECTED' ? 'REJECTED' : 'NEEDS_INFORMATION', timestamp),
       );
     }
+    sweepStockReadyOnReject();
     // RV-01.4: only modules whose objects actually changed bump their revision.
     const changedScopes = new Set(['request', 'overview']);
     if (nextStatus === 'ACCEPTED') {
