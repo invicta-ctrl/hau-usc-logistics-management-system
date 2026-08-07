@@ -74,15 +74,69 @@ byte-identical file. `verify:dist` validates structure and does not compare the
 committed file against a fresh build, so this class of drift is not caught by
 CI.
 
+### Independent review round 1 (2026-08-07) — findings and dispositions
+
+Independent transaction/idempotency review of `c4df282` returned **FAIL**. Every
+finding was verified against source before acting; one attribution in the report
+was corrected.
+
+| Sev | Finding | Verified? | Disposition |
+|---|---|---|---|
+| P0 | `reviewRequest` checked `outcomes[0].meta.changes` **after** `db.batch()`. D1 runs every batch statement before returning, so a zero-row parent UPDATE could not stop the `deliverables`/`restock_requests` INSERTs from committing. Two reviewers accepting concurrently produced a duplicate deliverable while the second caller received a 409. | **Confirmed.** The repository's own `runAtomicRevisionGuardedBatch` documents exactly this hazard. | **Fixed.** Review now runs through `runAtomicRevisionGuardedBatch` with the parent transition as the guarded statement; the post-batch check is removed. |
+| P1 | A parent left `NEEDS_INFORMATION` by a mixed review could later be whole-request REJECTED, stranding already-routed lines and their live Deliverables item under a rejected parent. | **Confirmed** — reachable only via the new partial-derivation path. | **Fixed.** A whole-request REJECT/MISSING_INFORMATION is refused with `REQUEST_ALREADY_ROUTED` (409) when any line has left the reviewable set. Proven against real D1. |
+| P1 | No shipped client path can issue `reviewRequest` with `lineDecisions`, so a reviewer cannot route anything in the deployed product. | **Confirmed as a gap, attribution corrected.** The report implied a working review UI was removed. It was not: `dist/index.html` at the pre-RV-01 head `9e6181b` also contains zero review-queue markers, and the shipped `request` view renders only `renderRequestSelectors()` + `renderRequestDraft()` — a submission form. The path RV-01 removed was the Deliverables ACCEPT shortcut, which was already dead in REST mode because deliverables are created `FOR_CANVASSING`, so its `FOR_REVIEW`-only buttons never rendered. | **Open — see RV-01 remaining gaps.** Pre-existing product gap, not an RV-01 regression. |
+| P2 | The fallback idempotency key `review-${requestId}-${decision}` was not bound to the line payload, so a second legitimate review of a `NEEDS_INFORMATION` parent could be locked out by a permanent `IDEMPOTENCY_CONFLICT`. | **Confirmed.** | **Fixed.** The fallback key now includes a fingerprint of the line decisions, sorted by line id so reordering is the same mutation. |
+| P2 | A page whose lines exceed the child-collection cap fails the strict contract closed with no client signal to shrink the page. | **Confirmed as intentional fail-closed.** | **Accepted as designed.** Recorded below as a known bound; graceful degradation deferred. |
+| P3 | `request_lines.fulfillment_source` is not updated to the decided route. | **Confirmed** — traceability only; no server branch depends on it after review. | **Deferred to v0.7.3** and recorded. |
+| P3 | Date and search filtering absent from the queue projection. | **Confirmed.** | **Fixed** — see the adjudication table below. |
+
+Independent review 2 (security/authorization/privacy/target identity) was
+terminated by an infrastructure limit before producing findings and **must be
+re-run**. RV-01 does not carry a PASS until it is recorded.
+
+### RV-01 criterion adjudication (2026-08-07)
+
+Each item below was checked against the accepted amendment
+`.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`. Nothing is waived
+silently; every criterion is either implemented with coverage or recorded with
+its reason and disposition.
+
+| Criterion | Amendment basis | Mandatory? | Disposition |
+|---|---|---|---|
+| Director authorization coverage | RV-01.3 table: "Director with verified central capability — Yes / Yes" | **Yes** | **Implemented.** `LOCAL.DIRECTOR` now proves read access to unassigned central review work in `tests/cloudflare-e2e/rv01-request-visibility.spec.js`. |
+| Explicit-deny coverage | RV-01.3 table: "Explicit deny, disabled, archived — No / No" | **Yes** | **Defect found and repaired.** Auditing this criterion instead of waiving it exposed that `'DENY'` was never handled anywhere in `src/server/d1/operational-service.js`. `scopedWhere`, `multiScopeWhere`, and `assertEntityScope` all treated DENY as "not ALL, not SELF" and fell through to the committee branch. Because `scopeMode` and `committeeIds` are independent fields, a revoked account that still carried committee grants would have received **committee-scoped read and command access instead of denial** — a direct breach of RV-01.3 and of the "UI hiding is not authorization" invariant. All three helpers now short-circuit DENY (`1 = 0` for the two query builders, `OUT_OF_SCOPE` 403 for the command guard) ahead of the ALL and committee branches, with regression coverage in `tests/unit/d1-operational-p1-regressions.test.js`. The unauthenticated case is separately proven (401/403 with the request id absent from the body). |
+| Disabled-account coverage | RV-01.3 table, same row | **Yes, as behaviour** | **Covered upstream of the queue.** A disabled account cannot hold a session: login fails, so `/api/requests` is never reached. This is already proven by `Administrator Access Management governs the staging account lifecycle and safe audit history` in `tests/cloudflare-e2e/local-worker.spec.js`. Not duplicated in the RV-01 spec. |
+| Archived-account coverage | RV-01.3 table, same row | **Yes, as behaviour** | **Same mechanism as disabled** — archived accounts fail authentication before any module read. Covered by the same Access-lifecycle test. |
+| Request-owned search | RV-01.5: "active/archive/date/**search**/scope filtering" | **Yes** | **Implemented.** The client already normalised and sent `query`/`filter`, but the server ignored both for every module — the contract advertised filtering it did not honour. The Request queue now applies escaped `LIKE` search across request id, purpose, and requester name, plus `from`/`to` date boundaries and an active/archive/all selector, with the identical predicate driving `total` and `hasMore`. Proven by `the Request module owns its search, date, archive, and scope filtering`. |
+| Saved-filter metadata beyond total/page/`hasMore`/order/archive | **Not present in the amendment.** RV-01.5 enumerates total, page/page-size or cursor, `hasMore`, stable ordering with tie-breaker, and active/archive/date/search/scope filtering. "Saved filters" appears only in the execution prompt's RV1.5 verification checklist. | **No** | **Not required, and not implemented.** No saved-filter feature exists anywhere in the product, so there is no persisted filter state to expose metadata for. Building one would add a new product capability, which the amendment explicitly forbids ("It does not authorize a new product domain or broad redesign"). Deferred to v0.7.3+ if the owner wants saved views. |
+
+### Requester-only and Lending-only separation
+
+Both remain proven by the existing `requester portals keep request and lending
+records self-scoped` local-worker test, which provisions a department requester
+through the Access API. `LOCAL.REQUESTER` is not a seeded fixture, so the RV-01
+spec cites that coverage rather than duplicating account provisioning.
+
 ### RV-01 remaining gaps
 
-- The full RV-01.3 authorization matrix is proven for central-owner read,
-  unrelated-committee denial, and requester self-scope. Director, explicit
-  deny, disabled, and archived contexts are not yet separately exercised.
-- Request-owned search/saved-filter metadata beyond total, page, `hasMore`,
-  order, and archive defaults is not implemented.
-- A fresh independent exact-SHA security and transaction review of the repair
-  head has not been run.
+- **RV-01.6 reviewer UI is absent from the shipped Main Hub.** `src/index.html`
+  loads only `/visual/runtime.js`, whose `request` view renders the submission
+  form. There is no review queue and no per-line decision control, so the
+  amendment's "The UI exposes only permitted decisions" is unmet end to end even
+  though the server contract, projection, and routing are complete and proven.
+  This is pre-existing — the pre-RV-01 artifact has the same gap — but it blocks
+  the RV-01 deliverable ("routes every accepted line exactly once") for a human
+  operator. `src/features/requests/view.js` does contain a review queue, but it
+  belongs to the modular app reached through `src/main.js`, which the shipped
+  shell does not load. **This is the one remaining RV-01 blocker.**
+- A page whose request lines exceed the 500-row child-collection cap fails the
+  strict contract closed rather than degrading, with no client signal to reduce
+  the page size. Bounded and intentional; graceful degradation deferred.
+- `request_lines.fulfillment_source` still reports the submission-time value
+  after review rather than the decided route. Traceability only; no server
+  branch depends on it post-review. Deferred to v0.7.3.
+- Independent security/authorization review of the repair head must still be
+  recorded before RV-01 can carry a PASS.
 
 The v0.7.2 product, schema, generated artifacts, and local verification are
 complete at the R2-repaired release-branch working tree prepared for candidate

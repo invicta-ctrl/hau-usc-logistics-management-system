@@ -109,6 +109,71 @@ describe('D1 operational P1 invariants', () => {
     expect(catalog).toContain("conflictCode: 'CATALOG_REVISION_CONFLICT'");
   });
 
+  it('short-circuits an explicit DENY scope before any committee comparison', () => {
+    // RV-01.3: scopeMode and committeeIds are independent fields, so a revoked
+    // account can still carry committee grants. Without an explicit DENY branch
+    // these helpers fall through to the committee logic and hand a denied actor
+    // committee-scoped read and command access.
+    const scoped = between('function scopedWhere', 'function multiScopeWhere');
+    const multi = between('function multiScopeWhere', 'const operationalAuditContexts');
+    const assertScope = between('function assertEntityScope', 'function ownerCommitteeId');
+
+    for (const [name, body] of [
+      ['scopedWhere', scoped],
+      ['multiScopeWhere', multi],
+    ]) {
+      expect(body, name).toContain("scope.mode === 'DENY'");
+      // The DENY branch must precede the ALL branch and the committee fallback.
+      expect(body.indexOf("scope.mode === 'DENY'"), name).toBeLessThan(
+        body.indexOf("scope.mode === 'ALL'"),
+      );
+      expect(body, name).toMatch(/scope\.mode === 'DENY'\)[\s\S]{0,80}sql: '1 = 0'/u);
+    }
+
+    expect(assertScope).toContain("scope.mode === 'DENY'");
+    expect(assertScope.indexOf("scope.mode === 'DENY'")).toBeLessThan(
+      assertScope.indexOf("scope.mode === 'ALL'"),
+    );
+    expect(assertScope).toMatch(/scope\.mode === 'DENY'\)[\s\S]{0,160}OUT_OF_SCOPE/u);
+  });
+
+  it('routes request review through the in-batch atomic guard, not a post-batch check', () => {
+    const review = between('async function reviewRequest', 'async function confirmRelease');
+
+    // RV-01.6: D1 runs every batch statement before returning results, so a
+    // post-batch changes() check cannot stop the deliverable/restock inserts
+    // from committing when a concurrent reviewer already moved the request.
+    expect(review).toContain('runAtomicRevisionGuardedBatch(db');
+    expect(review).toContain("conflictCode: 'REQUEST_STATE_CONFLICT'");
+    expect(review).not.toContain('outcomes[0]?.meta?.changes');
+    expect(review).not.toMatch(/const outcomes = await db\.batch\(/u);
+    // The parent transition must be the guarded statement.
+    expect(review).toMatch(/guardedStatement[\s\S]*?UPDATE requests SET status/u);
+  });
+
+  it('refuses a whole-request reject once some lines are already routed', () => {
+    const review = between('async function reviewRequest', 'async function confirmRelease');
+
+    // RV-01.6: a mixed review can leave the parent NEEDS_INFORMATION with lines
+    // already owning a Deliverables/Restocking item. A later whole-request
+    // REJECT would strand those active owners under a rejected parent.
+    expect(review).toContain("REQUEST_ALREADY_ROUTED");
+    expect(review).toMatch(
+      /nextStatus !== 'ACCEPTED'[\s\S]*?status NOT IN \('FOR_REVIEW', 'NEEDS_INFORMATION'\)/u,
+    );
+  });
+
+  it('binds the fallback review idempotency key to the normalized line decisions', () => {
+    const review = between('async function reviewRequest', 'async function confirmRelease');
+
+    // RV-01.6: without this, two different decision sets for the same request
+    // collide on one key and the second legitimate review is locked out by a
+    // permanent IDEMPOTENCY_CONFLICT. Sorting makes order insignificant.
+    expect(review).toContain('normalizedLineDecisions');
+    expect(review).toMatch(/normalizedLineDecisions[\s\S]*?\.sort\(\)/u);
+    expect(review).toMatch(/command\.clientRequestId \?\?[\s\S]*?fingerprint\(normalizedLineDecisions\)/u);
+  });
+
   it('replaces the preferred canvass with one set-based active-group update', () => {
     const method = between('async function selectPreferredCanvass', 'async function transitionDeliverable');
 

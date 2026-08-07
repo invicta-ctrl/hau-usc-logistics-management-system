@@ -577,6 +577,11 @@ function entityScope(account) {
 
 function assertEntityScope(account, { committeeId = '', ownerAccountId = '' } = {}) {
   const scope = entityScope(account);
+  // RV-01.3: an explicit DENY is refused before any committee comparison, so a
+  // revoked actor cannot command a record through a retained committee grant.
+  if (scope.mode === 'DENY') {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized scope.', { status: 403 });
+  }
   if (scope.mode === 'ALL') return;
   if (scope.mode === 'SELF') {
     if (ownerAccountId && ownerAccountId === scope.accountId) return;
@@ -643,6 +648,11 @@ function requesterDepartmentId(account) {
 function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
   const scope = entityScope(account);
   const prefix = alias ? `${alias}.` : '';
+  // RV-01.3: an explicit DENY must match nothing regardless of any committee
+  // grants the account still carries. scopeMode and committeeIds are
+  // independent fields, so falling through to the committee branch would turn a
+  // revoked actor into a committee-scoped reader.
+  if (scope.mode === 'DENY') return { sql: '1 = 0', values: [] };
   if (scope.mode === 'ALL') return { sql: '1 = 1', values: [] };
   if (scope.mode === 'SELF') {
     return { sql: `${prefix}${ownerColumn} = ?1`, values: [scope.accountId] };
@@ -657,6 +667,8 @@ function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
 
 function multiScopeWhere(account, { committeeColumns = [], ownerColumns = [] } = {}) {
   const scope = entityScope(account);
+  // RV-01.3: explicit DENY matches nothing. See scopedWhere.
+  if (scope.mode === 'DENY') return { sql: '1 = 0', values: [] };
   if (scope.mode === 'ALL') return { sql: '1 = 1', values: [] };
   if (scope.mode === 'SELF') {
     if (!ownerColumns.length) return { sql: '1 = 0', values: [] };
@@ -893,6 +905,14 @@ const LINE_ROUTE_STATUS = Object.freeze({
 const LINE_ROUTE_DECISIONS = new Set(Object.keys(LINE_ROUTE_STATUS));
 // Mirrors the client child-collection cap in src/app/bootstrap-contract.js.
 const MAX_REQUEST_LINE_ROWS = 500;
+
+// RV-01.5: accepts only a bare ISO calendar day so a date filter can never
+// carry arbitrary text into the query. Returns '' when absent or malformed.
+function safeDateBoundary(value) {
+  const text = String(value ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(text)) return '';
+  return Number.isNaN(Date.parse(`${text}T00:00:00.000Z`)) ? '' : text;
+}
 const CONDITION_REVIEW_STATES = new Set([
   'NOT_ASSESSED',
   'NOT_APPLICABLE',
@@ -1437,22 +1457,56 @@ export function createD1OperationalService({
           ownerColumn: 'requester_account_id',
           alias: 'request',
         });
-        const queueLimitIndex = queueScope.values.length + 1;
+        // RV-01.5: the Request module owns its own active/archive, date, search,
+        // and scope filtering. The same predicate drives both the page and the
+        // total so they can never disagree.
+        const queueFilters = [queueScope.sql];
+        const queueValues = [...queueScope.values];
+        const nextIndex = () => queueValues.length + 1;
+        const archiveFilter = String(command.filter ?? '')
+          .trim()
+          .toUpperCase();
+        if (archiveFilter === 'ARCHIVED') queueFilters.push('request.archived_at IS NOT NULL');
+        else if (archiveFilter === 'ALL') queueFilters.push('1 = 1');
+        else queueFilters.push('request.archived_at IS NULL');
+        const search = String(command.query ?? '').trim();
+        if (search) {
+          const term = `%${search.replace(/[\\%_]/gu, (match) => `\\${match}`)}%`;
+          const idIndex = nextIndex();
+          queueValues.push(term, term, term);
+          queueFilters.push(
+            `(request.id LIKE ?${idIndex} ESCAPE '\\'` +
+              ` OR request.purpose LIKE ?${idIndex + 1} ESCAPE '\\'` +
+              ` OR request.requester_name LIKE ?${idIndex + 2} ESCAPE '\\')`,
+          );
+        }
+        const fromDate = safeDateBoundary(command.from);
+        if (fromDate) {
+          queueFilters.push(`request.created_at >= ?${nextIndex()}`);
+          queueValues.push(fromDate);
+        }
+        const toDate = safeDateBoundary(command.to);
+        if (toDate) {
+          // Inclusive upper bound across the whole local day.
+          queueFilters.push(`request.created_at <= ?${nextIndex()}`);
+          queueValues.push(`${toDate}T23:59:59.999Z`);
+        }
+        const queueWhere = queueFilters.join(' AND ');
+        const queueLimitIndex = queueValues.length + 1;
         const queueRows = await rows(
           db,
           `SELECT request.* FROM requests request
-           WHERE ${queueScope.sql} AND request.archived_at IS NULL
+           WHERE ${queueWhere}
            ORDER BY request.updated_at DESC, request.id DESC
            LIMIT ?${queueLimitIndex} OFFSET ?${queueLimitIndex + 1}`,
-          [...queueScope.values, page.pageSize, page.offset],
+          [...queueValues, page.pageSize, page.offset],
         );
         // RV-01.5: Request owns its own total. It must not reuse Inventory's.
         const queueTotalStatement = db.prepare(
-          `SELECT COUNT(*) AS count FROM requests request
-           WHERE ${queueScope.sql} AND request.archived_at IS NULL`,
+          `SELECT COUNT(*) AS count FROM requests request WHERE ${queueWhere}`,
         );
-        const queueTotalRow = await (queueScope.values.length
-          ? queueTotalStatement.bind(...queueScope.values)
+        const queueTotalRow = await (queueValues.length
+          ? queueTotalStatement.bind(...queueValues)
           : queueTotalStatement
         ).first();
         moduleTotal = Number(queueTotalRow?.count ?? 0);
@@ -5262,7 +5316,20 @@ export function createD1OperationalService({
       MISSING_INFORMATION: 'NEEDS_INFORMATION',
     }[decision];
     if (!nextStatus) throw new ApiError('VALIDATION_FAILED', 'The review decision is invalid.');
-    const key = command.clientRequestId ?? `review-${requestId}-${decision}`;
+    // RV-01.6 idempotency: the fallback key must include the line payload.
+    // Without it two different decision sets for the same request collide on one
+    // key, and the fingerprint check then turns the second legitimate review of
+    // a NEEDS_INFORMATION parent into a permanent IDEMPOTENCY_CONFLICT.
+    // Decisions are sorted by line so reordering is the same mutation.
+    const normalizedLineDecisions = Array.isArray(command.lineDecisions)
+      ? [...command.lineDecisions]
+          .map((entry) => `${String(entry?.lineId ?? '')}:${String(entry?.decision ?? '').toUpperCase()}`)
+          .sort()
+          .join(',')
+      : '';
+    const key =
+      command.clientRequestId ??
+      `review-${requestId}-${decision}-${await fingerprint(normalizedLineDecisions)}`;
     const current = await db.prepare('SELECT * FROM requests WHERE id = ?1').bind(requestId).first();
     if (!current) throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     assertEntityScope(account, {
@@ -5283,6 +5350,27 @@ export function createD1OperationalService({
        WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
       [requestId],
     );
+    // RV-01.6: a mixed review can leave the parent in NEEDS_INFORMATION while
+    // some lines are already routed and own a live Deliverables or Restocking
+    // item. A later whole-request REJECT or MISSING_INFORMATION only touches
+    // still-reviewable lines, so it would strand those active owners under a
+    // rejected parent. Require the remaining lines to be decided individually.
+    if (nextStatus !== 'ACCEPTED') {
+      const routed = await db
+        .prepare(
+          `SELECT COUNT(*) AS count FROM request_lines
+           WHERE request_id = ?1 AND status NOT IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+        )
+        .bind(requestId)
+        .first();
+      if (Number(routed?.count ?? 0) > 0) {
+        throw new ApiError(
+          'REQUEST_ALREADY_ROUTED',
+          'This request already has routed lines. Decide the remaining lines individually.',
+          { status: 409 },
+        );
+      }
+    }
     // RV-01.6: an accepted review requires one explicit permitted decision for
     // every reviewable line. The previous implicit default silently routed each
     // non-preclassified line to procurement.
@@ -5372,14 +5460,18 @@ export function createD1OperationalService({
             ? 'NEEDS_INFORMATION'
             : 'ACCEPTED';
     const result = { requestId, id: requestId, status: derivedStatus, correlationId };
-    const statements = [
-      db
-        .prepare(
-          `UPDATE requests SET status = ?2, updated_at = ?3
-           WHERE id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
-        )
-        .bind(requestId, derivedStatus, timestamp),
-    ];
+    // RV-01.6 atomicity: the parent transition is the guarded statement. D1
+    // returns batch results only after every statement has run, so a post-batch
+    // `changes()` check cannot stop the route inserts below from committing when
+    // a concurrent reviewer already moved the request out of FOR_REVIEW. The
+    // guard must therefore live inside the batch.
+    const guardedStatement = db
+      .prepare(
+        `UPDATE requests SET status = ?2, updated_at = ?3
+         WHERE id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+      )
+      .bind(requestId, derivedStatus, timestamp);
+    const statements = [];
     if (nextStatus === 'ACCEPTED') {
       for (const line of requestLines) {
         statements.push(
@@ -5493,10 +5585,12 @@ export function createD1OperationalService({
       idempotencyStatement(db, 'reviewRequest', mutation, account.id, result),
       ...revisionStatements(db, [...changedScopes]),
     );
-    const outcomes = await db.batch(statements);
-    if (Number(outcomes[0]?.meta?.changes ?? 0) !== 1) {
-      throw new ApiError('REQUEST_STATE_CONFLICT', 'The request changed during review.', { status: 409 });
-    }
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement,
+      dependentStatements: statements,
+      conflictCode: 'REQUEST_STATE_CONFLICT',
+      conflictMessage: 'The request changed during review.',
+    });
     return result;
   }
 

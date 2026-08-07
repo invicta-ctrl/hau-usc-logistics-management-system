@@ -36,7 +36,31 @@ function normalizeRequest(module, params, maxPageSize) {
   if (committeeId.length > 40 || (committeeId && !/^[A-Z0-9_]+$/i.test(committeeId))) throw controllerError('MODULE_QUERY_INVALID', 'The committee context is invalid.');
   const operationalScope = params.operationalScope === undefined ? '' : String(params.operationalScope).trim();
   if (operationalScope.length > 120 || (operationalScope && !/^[A-Z0-9_.:-]+$/i.test(operationalScope))) throw controllerError('MODULE_QUERY_INVALID', 'The operational context is invalid.');
-  return { page, pageSize, query, filter, committeeId, operationalScope, requestOnly: params.requestOnly === true };
+  // RV-01.5: bare ISO calendar days only, so a date boundary is part of the
+  // cache key and can never carry arbitrary text to the server.
+  const isoDay = (value, label) => {
+    if (value === undefined || value === null || value === '') return '';
+    const text = String(value).trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/u.test(text)) throw controllerError('MODULE_QUERY_INVALID', `The ${label} date is invalid.`);
+    return text;
+  };
+  const from = isoDay(params.from, 'start');
+  const to = isoDay(params.to, 'end');
+  if (from && to && from > to) throw controllerError('MODULE_QUERY_INVALID', 'The date range is inverted.');
+  // Date boundaries are omitted when unset so the ordinary module query keeps
+  // its existing wire shape; an unused optional filter must not change the
+  // payload every caller sends.
+  return {
+    page,
+    pageSize,
+    query,
+    filter,
+    committeeId,
+    operationalScope,
+    ...(from ? { from } : {}),
+    ...(to ? { to } : {}),
+    requestOnly: params.requestOnly === true,
+  };
 }
 
 function cacheKey(module, request) {
