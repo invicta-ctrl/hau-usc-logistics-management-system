@@ -28,10 +28,12 @@
   short-circuits are latent defence in depth rather than a live repair, and the
   RV-01.4 refresh claim had been supported only by server-side token advance
   while the client poller was disabled by a hardcoded `enabled: false`.
-- RV-01 verification: `npm run check` 114 files / 782 tests; browser 136 passed
-  / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new
-  two-context regression `public request becomes visible to an already-open
-  authorized Main Hub and routes each line exactly once`.
+- RV-01 verification at `375ac12`: `npm run check` 114 files / 786 tests,
+  exit 0; browser 136 passed / 356 intentional skips / 0 failed; local
+  Worker/D1 43/43, including the two-context regression `public request becomes
+  visible to an already-open authorized Main Hub and routes each line exactly
+  once`, Request-owned search/date/archive filtering, the RV-01.3 authorization
+  matrix, and the partially-routed reject guard.
 - Generated-artifact hazard recorded: the local Worker acceptance suite rebuilds
   `dist/index.html` with `--mode staging`, so `npm run build` must be re-run
   immediately before staging a commit. `verify:dist` does not compare the
