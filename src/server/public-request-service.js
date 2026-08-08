@@ -33,6 +33,7 @@ const REQUESTER_TYPES = Object.freeze([
 ]);
 const encoder = new TextEncoder();
 const PUBLIC_POLICY_VERSION = '2026-07-28';
+const PUBLIC_REQUEST_IDEMPOTENCY_SCOPE = 'public-request-submit';
 
 function requireAcknowledgment(command, field, message) {
   if (command[field] !== true) {
@@ -142,6 +143,23 @@ async function hmac(secret, value) {
   return base64Url(await crypto.subtle.sign('HMAC', key, encoder.encode(value)));
 }
 
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map((entry) => stableValue(entry));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, stableValue(value[key])]),
+    );
+  }
+  return value;
+}
+
+async function publicRequestFingerprint(secret, command) {
+  const { clientRequestId: _clientRequestId, ...payload } = command;
+  return hmac(secret, `public-request-fingerprint:${JSON.stringify(stableValue(payload))}`);
+}
+
 function parseReference(row) {
   try {
     const payload = JSON.parse(row.payload_json);
@@ -176,6 +194,54 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
   if (String(trackingSecret ?? '').length < 32) throw new Error('A protected tracking secret is required.');
   const nowIso = () => new Date(clock.now()).toISOString();
   const createId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
+
+  const conflict = () =>
+    new ApiError('PUBLIC_REQUEST_CONFLICT', 'This retry key is already bound to another submission.', {
+      status: 409,
+    });
+
+  async function replaySubmission(clientRequestId, requestFingerprint, correlationId) {
+    const receipt = await db
+      .prepare(
+        `SELECT actor_account_id, request_fingerprint, result_json
+         FROM idempotency_keys
+         WHERE scope = ?1 AND idempotency_key = ?2`,
+      )
+      .bind(PUBLIC_REQUEST_IDEMPOTENCY_SCOPE, clientRequestId)
+      .first();
+    if (!receipt) return null;
+    if (
+      receipt.actor_account_id !== PUBLIC_ACTOR_ID ||
+      receipt.request_fingerprint !== requestFingerprint
+    ) {
+      throw conflict();
+    }
+    let result;
+    try {
+      result = JSON.parse(receipt.result_json);
+    } catch {
+      throw conflict();
+    }
+    if (
+      !result?.requestId ||
+      !REQUEST_PURPOSE_VALUES.includes(result.requestPurpose) ||
+      typeof result.status !== 'string'
+    ) {
+      throw conflict();
+    }
+    return {
+      ok: true,
+      requestId: result.requestId,
+      status: result.status,
+      requestPurpose: result.requestPurpose,
+      trackingCode: await hmac(
+        trackingSecret,
+        `request-code:${result.requestId}:${clientRequestId}`,
+      ),
+      replayed: true,
+      correlationId,
+    };
+  }
 
   async function rateLimit(networkKey, action) {
     const now = clock.now();
@@ -339,24 +405,20 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
   async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
     await rateLimit(networkKey, 'SUBMIT');
     const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
+    const requestFingerprint = await publicRequestFingerprint(trackingSecret, command);
+    const replayed = await replaySubmission(clientRequestId, requestFingerprint, correlationId);
+    if (replayed) return replayed;
     const existing = await db
       .prepare(
-        `SELECT id, status, request_type FROM requests
+        `SELECT id FROM requests
          WHERE created_by = ?1 AND client_request_id = ?2 LIMIT 1`,
       )
       .bind(PUBLIC_ACTOR_ID, clientRequestId)
       .first();
-    if (existing) {
-      return {
-        ok: true,
-        requestId: existing.id,
-        status: existing.status,
-        requestPurpose: requestPurposeFromType(existing.request_type),
-        trackingCode: await hmac(trackingSecret, `request-code:${existing.id}:${clientRequestId}`),
-        replayed: true,
-        correlationId,
-      };
-    }
+    // Historical submissions predate durable payload fingerprints. Returning a
+    // tracking token for one of those keys would disclose the prior request to
+    // a caller whose payload cannot be proven identical, so fail closed.
+    if (existing) throw conflict();
     requireAcknowledgment(command, 'dataUseAcknowledged', 'Privacy acknowledgment is required.');
     requireAcknowledgment(command, 'acceptableUseAcknowledged', 'Acceptable Use acknowledgment is required.');
     requireAcknowledgment(
@@ -489,6 +551,11 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const trackingCode = await hmac(trackingSecret, `request-code:${requestId}:${clientRequestId}`);
     const trackingDigest = await hmac(trackingSecret, `request-digest:${trackingCode}`);
     const timestamp = nowIso();
+    const storedResult = {
+      requestId,
+      requestPurpose,
+      status: 'FOR_REVIEW',
+    };
     const statements = [
       db
         .prepare(
@@ -607,22 +674,38 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
           "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request', 'overview')",
         )
         .bind(timestamp),
+      db
+        .prepare(
+          `INSERT INTO idempotency_keys (
+             scope, idempotency_key, actor_account_id, request_fingerprint, result_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+        )
+        .bind(
+          PUBLIC_REQUEST_IDEMPOTENCY_SCOPE,
+          clientRequestId,
+          PUBLIC_ACTOR_ID,
+          requestFingerprint,
+          JSON.stringify(storedResult),
+          timestamp,
+        ),
     );
     try {
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('PUBLIC_REQUEST_CONFLICT', 'This submission is already being processed.', {
-          status: 409,
-        });
+        const concurrentReplay = await replaySubmission(
+          clientRequestId,
+          requestFingerprint,
+          correlationId,
+        );
+        if (concurrentReplay) return concurrentReplay;
+        throw conflict();
       }
       throw error;
     }
     return {
       ok: true,
-      requestId,
-      requestPurpose,
-      status: 'FOR_REVIEW',
+      ...storedResult,
       trackingCode,
       replayed: false,
       correlationId,

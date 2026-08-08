@@ -10,6 +10,7 @@ function createDb() {
     requestId: null,
     requestType: null,
     clientRequestId: null,
+    idempotency: new Map(),
   };
 
   const db = {
@@ -23,6 +24,9 @@ function createDb() {
         },
         async first() {
           if (statement.sql.includes('COUNT(*)')) return { count: 0 };
+          if (statement.sql.includes('FROM idempotency_keys')) {
+            return state.idempotency.get(`${statement.values[0]}:${statement.values[1]}`) ?? null;
+          }
           if (statement.sql.includes('WHERE created_by = ?1')) {
             return state.clientRequestId && statement.values[1] === state.clientRequestId
               ? { id: state.requestId, status: 'FOR_REVIEW', request_type: state.requestType }
@@ -82,6 +86,16 @@ function createDb() {
         state.requestId = requestInsert.values[0];
         state.requestType = requestInsert.values[1];
         state.clientRequestId = requestInsert.values[12];
+      }
+      const idempotencyInsert = statements.find((statement) =>
+        statement.sql.includes('INSERT INTO idempotency_keys'),
+      );
+      if (idempotencyInsert) {
+        state.idempotency.set(`${idempotencyInsert.values[0]}:${idempotencyInsert.values[1]}`, {
+          actor_account_id: idempotencyInsert.values[2],
+          request_fingerprint: idempotencyInsert.values[3],
+          result_json: idempotencyInsert.values[4],
+        });
       }
       return [];
     },
@@ -144,6 +158,12 @@ describe('v0.7.2 public Request contract', () => {
       .flat()
       .find((statement) => statement.sql.includes('INSERT INTO requests'));
     expect(requestInsert.values[1]).toBe('EVENT_LOGISTICS');
+    const submissionBatch = state.batches.find((batch) =>
+      batch.some((statement) => statement.sql.includes('INSERT INTO requests')),
+    );
+    expect(submissionBatch.some((statement) => statement.sql.includes('INSERT INTO idempotency_keys'))).toBe(
+      true,
+    );
   });
 
   it('accepts office inventory/pantry and legacy requestType-only submissions', async () => {
@@ -202,8 +222,11 @@ describe('v0.7.2 public Request contract', () => {
 
   it('accepts one and never writes a stock movement during submission', async () => {
     const { service, state } = serviceAndState();
+    const oneCommand = command({
+      lines: [{ category: 'Other', description: 'One', quantity: 1, unit: 'kilogram' }],
+    });
     const result = await service.submit({
-      command: command({ lines: [{ category: 'Other', description: 'One', quantity: 1, unit: 'kilogram' }] }),
+      command: oneCommand,
       networkKey: 'contract-one-network',
     });
     expect(result.requestPurpose).toBe(REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT);
@@ -214,10 +237,23 @@ describe('v0.7.2 public Request contract', () => {
     expect(sql).not.toMatch(/(?:inventory|reservation|ledger)/iu);
 
     const replay = await service.submit({
-      command: command({ clientRequestId: 'public-v072-contract-1' }),
+      command: oneCommand,
       networkKey: 'contract-replay-network',
     });
     expect(replay).toMatchObject({ replayed: true, requestPurpose: REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT });
+    expect(
+      state.batches.flat().filter((statement) => statement.sql.includes('INSERT INTO requests')),
+    ).toHaveLength(1);
+
+    await expect(
+      service.submit({
+        command: command({
+          clientRequestId: 'public-v072-contract-1',
+          purpose: 'A changed public request payload.',
+        }),
+        networkKey: 'contract-changed-replay-network',
+      }),
+    ).rejects.toMatchObject({ code: 'PUBLIC_REQUEST_CONFLICT', status: 409 });
     expect(
       state.batches.flat().filter((statement) => statement.sql.includes('INSERT INTO requests')),
     ).toHaveLength(1);
@@ -235,6 +271,23 @@ describe('v0.7.2 public Request contract', () => {
     });
     expect(tracked.request).toMatchObject({ requestPurpose: REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT });
     expect(tracked.request).not.toHaveProperty('trackingCode');
+  });
+
+  it('fails closed for a historical retry key without a durable payload fingerprint', async () => {
+    const { service, state } = serviceAndState();
+    state.requestId = 'REQ-HISTORICAL-PUBLIC';
+    state.requestType = 'EVENT_LOGISTICS';
+    state.clientRequestId = 'public-v072-historical-1';
+
+    await expect(
+      service.submit({
+        command: command({ clientRequestId: state.clientRequestId }),
+        networkKey: 'contract-historical-network',
+      }),
+    ).rejects.toMatchObject({ code: 'PUBLIC_REQUEST_CONFLICT', status: 409 });
+    expect(
+      state.batches.flat().some((statement) => statement.sql.includes('INSERT INTO requests')),
+    ).toBe(false);
   });
 
   it('rejects event requests carrying non-empty office-only fields', async () => {

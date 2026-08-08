@@ -2,15 +2,15 @@
 
 INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
 SECONDARY INTENTS: SECURITY, TRANSACTIONAL_INTEGRITY, OPERATIONS, RELEASE
-MODE: execute the bounded N-1 repair, freeze/review the exact candidate, then continue only through passed release gates
+MODE: repair the two exact-SHA P1 review findings, freeze/review the replacement candidate, then continue only through passed release gates
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
 SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
 AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`; owner-supplied v0.7.2 Codex resume prompt; repository invariants
 RISK: critical because reservation concurrency, inventory availability, migration, providers, and production are in scope
-DELIVERABLE: repair `reserveStock` without weakening concurrency, add real Worker/D1 workflow regressions, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
+DELIVERABLE: bind reservations to the request line's authoritative item, bind public request retries to actor and payload before returning tracking access, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
 VERIFICATION: two pre-fix behavioral failures; existing concurrent reservation proof; focused unit/Worker tests; full repository, Worker/D1, and browser gates; deterministic default artifact; fresh same-SHA security and transaction reviews; exact-head CI; staged backup/migration/readiness/reconciliation before production
 STOP CONDITIONS: unknown work or target; capacity invariant cannot be expressed atomically; contract/spec conflict; unresolved P0/P1; missing identity class/private config/backup/rollback; provider or target mismatch; privacy/secret risk; external MFA or owner-only browser action
-STATUS: LOCAL_N1_REPAIR_VERIFIED_AWAITING_EXACT_SHA_REVIEW
+STATUS: LOCAL_P1_REPAIR_VERIFIED_AWAITING_REPLACEMENT_SHA_REVIEW
 
 Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
@@ -22,9 +22,32 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: commit and push the verified N-1 repair, then run fresh
-security/privacy and transaction/idempotency reviews against that exact SHA.
-Zero unresolved P0/P1 is required before any staging operation.
+Current exact action: commit and push the locally verified repair for the two
+P1 findings from the exact review of
+`5ef9421494ab51af8e0524b694ff0f3ff81503f0`, then repeat fresh
+security/privacy and transaction/idempotency reviews against the replacement
+exact SHA. Zero unresolved P0/P1 is required before any staging operation.
+
+Exact-SHA review blockers being repaired:
+
+- `reserveStock` accepted a caller-selected active item without proving it was
+  the item assigned to the request line. A wrong-item reservation could hold
+  unrelated ATP while preventing the authoritative item from ever releasing.
+- public Request replay returned a prior tracking token by public actor and
+  retry key before proving the new payload matched. The existing
+  `idempotency_keys` table will bind actor, protected fingerprint, and safe
+  result in the same atomic submission batch.
+
+Local repair proof on 2026-08-08:
+
+- focused unit contracts: 22/22;
+- focused real Worker/D1 regressions: 2/2;
+- `npm run check`: 117 files / 811 tests;
+- `npm run test:e2e:cloudflare:local`: 58/58;
+- `npx playwright test --workers=2`: 138 passed / 360 intentional skips;
+- `npm run build`: deterministic preview artifact restored;
+- staging artifact preflight: expected exit 1 because the tracked artifact is
+  the safe preview build, not a live D1 deployable.
 
 N-1 repair: `reserveStock` now evaluates requested reservation quantity against
 `requested_quantity - released_quantity - SUM(ACTIVE reservations)` before the

@@ -4207,7 +4207,7 @@ export function createD1OperationalService({
       const requestScope = await db
         .prepare(
           `SELECT request.id AS request_id, request.owner_committee_id, request.requester_account_id,
-             request.status, request.event_id, request.event_series_id
+             request.status, request.event_id, request.event_series_id, line.item_id AS line_item_id
            FROM request_lines line JOIN requests request ON request.id = line.request_id
            WHERE line.id = ?1`,
         )
@@ -4223,6 +4223,13 @@ export function createD1OperationalService({
         eventSeriesId: requestScope.event_series_id ?? '',
         locationId: reservedLocation?.storage_location ?? '',
       });
+      if (!requestScope.line_item_id || String(requestScope.line_item_id) !== itemId) {
+        throw new ApiError(
+          'RESERVATION_ITEM_MISMATCH',
+          'The selected inventory item does not match the request line.',
+          { status: 409 },
+        );
+      }
       // RV-01.6: a reservation consumes availability, so it may only exist under
       // a parent that is actually accepted. Without this a line left stock-ready
       // by a mixed review could be reserved while the parent was still awaiting

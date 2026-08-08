@@ -1159,6 +1159,45 @@ test('a procurement line at READY_TO_RELEASE can be reserved and released', asyn
   const ready = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
   expect(ready.data.requestLines.find((row) => row.id === line.id)?.status).toBe('READY_TO_RELEASE');
 
+  const inventoryBeforeMismatch = await (await request.get('/api/inventory?pageSize=50')).json();
+  const wrongItem = (inventoryBeforeMismatch.data.inventoryItems ?? []).find(
+    (entry) =>
+      entry.id !== item.id &&
+      Number(entry.availableToPromise) >= 1 &&
+      entry.id === 'ITM-LOCAL-CLASSIFY',
+  );
+  expect(wrongItem).toBeTruthy();
+  const wrongItemAtp = Number(wrongItem.availableToPromise);
+  expect(
+    (inventoryBeforeMismatch.data.reservations ?? []).filter(
+      (entry) => entry.requestLineId === line.id && entry.status === 'ACTIVE',
+    ),
+  ).toHaveLength(0);
+
+  const mismatchedReservation = await mutate(request, csrfToken, 'reserveStock', {
+    itemId: wrongItem.id,
+    requestLineId: line.id,
+    quantity: 1,
+    clientRequestId: `rv01-procurement-wrong-item-${parent.id}`,
+  });
+  expect(mismatchedReservation.status()).toBe(409);
+  await expect(mismatchedReservation.json()).resolves.toMatchObject({
+    code: 'RESERVATION_ITEM_MISMATCH',
+  });
+
+  const inventoryAfterMismatch = await (await request.get('/api/inventory?pageSize=50')).json();
+  expect(
+    Number(
+      inventoryAfterMismatch.data.inventoryItems.find((entry) => entry.id === wrongItem.id)
+        .availableToPromise,
+    ),
+  ).toBe(wrongItemAtp);
+  expect(
+    (inventoryAfterMismatch.data.reservations ?? []).filter(
+      (entry) => entry.requestLineId === line.id && entry.status === 'ACTIVE',
+    ),
+  ).toHaveLength(0);
+
   const reserved = await mutate(request, csrfToken, 'reserveStock', {
     itemId: item.id,
     requestLineId: line.id,

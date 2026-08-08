@@ -1052,6 +1052,10 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
 });
 
 test('Request Center public APIs enforce the two-purpose private-tracking contract', async ({ request }) => {
+  const submissionHeaders = {
+    origin: 'http://127.0.0.1:8787',
+    'cf-connecting-ip': '192.0.2.30',
+  };
   const optionsResponse = await request.get('/api/public/request/options');
   expect(optionsResponse.status()).toBe(200);
   const options = await optionsResponse.json();
@@ -1081,7 +1085,7 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
     lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 1 }],
   };
   const submittedResponse = await request.post('/api/public/request', {
-    headers: { origin: 'http://127.0.0.1:8787' },
+    headers: submissionHeaders,
     data: command,
   });
   expect(submittedResponse.status()).toBe(200);
@@ -1092,6 +1096,27 @@ test('Request Center public APIs enforce the two-purpose private-tracking contra
     replayed: false,
   });
   expect(submitted.trackingCode).toEqual(expect.any(String));
+
+  const replayedResponse = await request.post('/api/public/request', {
+    headers: submissionHeaders,
+    data: command,
+  });
+  expect(replayedResponse.status()).toBe(200);
+  await expect(replayedResponse.json()).resolves.toMatchObject({
+    requestId: submitted.requestId,
+    trackingCode: submitted.trackingCode,
+    replayed: true,
+  });
+
+  const changedReplayResponse = await request.post('/api/public/request', {
+    headers: submissionHeaders,
+    data: { ...command, purpose: 'A changed payload must not inherit private tracking access.' },
+  });
+  expect(changedReplayResponse.status()).toBe(409);
+  const changedReplay = await changedReplayResponse.json();
+  expect(changedReplay).toMatchObject({ code: 'PUBLIC_REQUEST_CONFLICT' });
+  expect(changedReplay).not.toHaveProperty('trackingCode');
+  expect(JSON.stringify(changedReplay)).not.toContain(submitted.trackingCode);
 
   const trackedResponse = await request.post('/api/public/request/track', {
     headers: { origin: 'http://127.0.0.1:8787' },
