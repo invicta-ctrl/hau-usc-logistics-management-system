@@ -42,3 +42,75 @@ Before edits, record repository root, branch, HEAD, upstream, and git status --s
 - Production promotion, provider writes, database mutation, migration application, access seeding, Drive/Sheet changes, and PR/branch cleanup require the exact authorization and runbook named by the accepted task.
 - Run focused checks for changed code. Documentation-only work uses the relevant governance and continuity checks; do not claim runtime verification that did not run.
 - Before a handoff, review the logical diff; update PROJECT_STATUS.md, CHANGELOG.md, docs/WORK_CONTINUATION.md, and the current chain with verified facts; then report unrun checks and external-state uncertainty honestly.
+
+## Front-end design iterations
+
+Owner instruction, 2026-08-09. This section is authoritative on the
+`frontend-design-integration` branch and governs every future front-end design
+iteration.
+
+### Baseline
+
+**The current production front end on `main` is the baseline for all future
+design iterations.**
+
+It is not the legacy prototype, and it is not any earlier design preview. The
+front end has barely changed since v0.7.0, so the shipped front end is the
+truthful starting point; deriving a new iteration from an older artifact
+reintroduces drift that was already resolved.
+
+Concretely, at the start of an iteration:
+
+- Read the current front end from `main` - `src/`, the generated
+  `dist/index.html`, and `package.json` version.
+- Capture its visual and functional baseline before the first edit.
+- Treat `docs/design/PRODUCTION_FRONTEND_PARITY_BASELINE.md` as the
+  must-not-regress contract, refreshed against the then-current `main`.
+
+The following remain **historical reference only** and must not be used as a
+starting point:
+
+- `legacy/HAU-USC_Logistics-Prototype.original.html` - preserved artifact.
+- `prototypes/impeccable-whole-site-redesign{,-v2,-v3,-v4,-v5}/` - the
+  Impeccable preview programme.
+- The `output/design/` preview exports, backups, and screenshot evidence.
+
+They stay in the repository as provenance. They are not design authority.
+
+### Naming
+
+Future iterations are named:
+
+```
+front end design v<current front-end version from main> r<revision number>
+```
+
+- `v` is the front-end version read from `main` at the time the iteration
+  starts, taken from `package.json`. It is not invented and not incremented by
+  design work.
+- `r` is the revision number of the design iteration, starting at `r1`.
+- When `main`'s front-end version changes, the revision resets to `r1` under
+  the new version.
+
+At the time of writing, `main` is at front-end version **0.7.2**, so the next
+iteration is **`front end design v0.7.2 r1`**.
+
+Use this name consistently for the branch or worktree, the iteration's design
+records under `docs/design/`, any generated preview export, and the continuity
+records under `.codex/`.
+
+This supersedes the earlier preview naming - `v1` through `v5`, `v0.4.1`,
+`v0.4.2`, and `Impeccable vN`. Those names are not reused; existing artifacts
+that carry them are historical and are not renamed retroactively.
+
+### Consequence to resolve, not to assume
+
+`tests/unit/visual-baseline.test.js` currently pins `src/styles/visual/*.css`
+byte-for-byte to `legacy/HAU-USC_Logistics-Prototype.original.html`. If the
+current front end is the design baseline, that guard - which anchors styling to
+the superseded prototype - is the main obstacle to iterating.
+
+Do not remove or weaken it on that reasoning alone. The sanctioned pattern is
+to append after the preserved cascade, proven on `tokens-base.css` and
+`overlays.css`. Re-pointing or retiring the guard is an owner decision and
+needs its own accepted specification.
