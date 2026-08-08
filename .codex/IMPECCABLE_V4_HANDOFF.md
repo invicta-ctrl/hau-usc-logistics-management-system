@@ -1,84 +1,134 @@
-# Impeccable whole-site redesign v4 - handoff
+# Claude handoff — HAU-USC Logistics front-end preview v4.1
 
 ## Outcome
 
-The v4 modular preview expresses the pinned **Operational Choreography / Route
-Console** direction as a modern-minimal Map / Diagram. It preserves the v3
-registry shape and product vocabulary while adding route geometry, an N13
-authenticated command pill, an N5 public floating bar, a Ft5 statement close,
-and finite state choreography.
+V4.1 is complete and independently reviewed with `disposition: ship`. It is a
+substantial front-end redesign rather than an incremental reskin. The result
+preserves the complete 33-route / 53-state preview model while replacing the
+public tutorial, flat overview, generic controls, and public Request form with
+an institutional gateway, editorial operations workbench, production-grounded
+Request Center, and authored motion/control system.
 
-The local candidate is front-end-only and preview-only. It has not changed the
-application runtime, backend, provider, migration, authentication, deployment,
-release, or production state.
+This checkpoint is front-end preview only. It did not alter application
+runtime code, Worker behavior, D1, R2, migrations, Google/provider settings,
+authentication, staging, deployment, release branches, or production. Do not
+merge or deploy from this handoff.
 
-The fresh finish reviewer returned `fix` on five material findings. They were
-repaired in one batch, the same 12 cases were recaptured, and the reviewer
-scored every finding resolved with final disposition **ship**. The shipped
-documenter then refreshed `DESIGN.md` and `.impeccable/design.json` from the
-built v4 system.
+## Repository and artifact checkpoint
 
-## Exact checkpoint and artifact map
-
-- Worktree: `D:\Documents\Codex\HAU-USC Logistics\worktrees\design-impeccable-whole-site-preview`
-- Branch: `design/impeccable-whole-site-preview`
-- Starting SHA: `182cea85fd40adb23e2efa9672295de50526f0ca`
+- Worktree:
+  `D:\Documents\Codex\HAU-USC Logistics\worktrees\design-impeccable-whole-site-preview`
+- Branch/upstream: `design/impeccable-whole-site-preview` /
+  `origin/design/impeccable-whole-site-preview`
+- V4.1 start: `a8f7923169cd18cf1e50cd34587a9e60226a4149`
+- Implementation: `a413824af98624c089560135f6168672aa86b656`
 - Source: `prototypes/impeccable-whole-site-redesign-v4/`
-- Export: `output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`
-- Verification: `output/design/verify-results.json`
-- Motion: `output/design/impeccable-redesign-v4-motion-results.json`
-- Screens: `output/design/impeccable-redesign-v4-screens/`
-- Curated review captures: `output/design/impeccable-redesign-v4-review-shots/`
-- Review verdict: `output/design/IMPECCABLE_REDESIGN_V4_REVIEW.md`
+- Offline export:
+  `output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`
+- Review: `output/design/IMPECCABLE_REDESIGN_V4_1_REVIEW.md`
+- Curated screenshots:
+  `output/design/impeccable-redesign-v4-v4-1-review-final/`
+- Six-width screenshots:
+  `output/design/impeccable-redesign-v4-v4-1-verify-final/`
+- Before/after comparisons:
+  `output/design/impeccable-redesign-v4-visual-delta-v4-1-final/comparisons/`
+- Motion: `output/design/impeccable-redesign-v4-motion-v4-1-final.json`
 - Design record: `DESIGN.md` and `.impeccable/design.json`
-- Supporting records: `docs/design/IMPECCABLE_V4_*.md`
 
-The registry parity is **33 routes / 53 state variants**, with v4 matching v3's
-route, state, and navigation shape.
+The original v4 closure (`20af331...` implementation and `a8f7923...`
+documentation follow-up) remains historical. Its 10-motion, 12-capture,
+three-detector-warning, and five-fix evidence must not be reused as v4.1 truth.
 
-## Commands and recorded evidence
+## Owner-required final report
 
-Regenerate the derived export with:
-
-```powershell
-node prototypes\impeccable-whole-site-redesign-v4\tools\export.mjs
+```text
+SUBSTANTIAL_REDESIGN_GATE: PASS
+MAJOR_FRONTEND_CHANGES: 12
+COMPOSITIONAL_CHANGES: 5
+HALLMARK_COMMANDS_USED: study; audit; redesign
+IMPECCABLE_COMMANDS_USED: critique; bolder; animate; layout; typeset; colorize; delight; adapt; harden; audit; polish
+REFERENCE_DNA_APPLIED: docs/design/IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md
+THEME_TOGGLE_REDESIGN: both endpoints visible; moving 32px plate; 120ms press; 240ms travel; 240–280ms surface crossfade; truthful persistence and reduced-motion state
+MENU_REDESIGN: three kinetic lines; 180–240ms transform/opacity; drawer state remains recognizable; one hover signal
+BACK_CONTROL_REDESIGN: compact asymmetric glass control; 3px/180ms arrow travel; 120ms press compression; 44px minimum target
+LOADING_REDESIGN: context-preserving skeletons; updating status; atomic count reveal; finite progress/row reveal; no fake percentage, stale count, or loop
+BEFORE_AFTER_SCREENSHOTS: 8/8 required v3/v4.1 pairs; zero capture failures; output/design/impeccable-redesign-v4-visual-delta-v4-1-final/
+VISUAL_DELTA_JUDGMENT: PASS — within two seconds and with logos/labels discounted, the campus gateway, asymmetric workbench, route-coded shell, Request Center, and mobile navigation are structurally distinct from v3
+FRONTEND_ONLY_CONFIRMED: diff and review contain only preview source, local asset, derived export/evidence, design records, and continuity docs; no backend/provider/auth/migration/deploy/release/production change
 ```
 
-Use the v4 tools from the repository root with `PLAYWRIGHT_PATH` set to the
-existing Playwright module:
+The twelve major changes are decorative-line removal; glass public identity
+bar; celestial theme control; kinetic menu; compact back control; dedicated
+lending icon; USC campus gateway; Request Center rebuild; local profile image
+preview; committee scope removal; role picker dialog; and overview/loading
+workbench. The five compositional changes are public landing, Request Center,
+authenticated overview, rail/topbar command shell, and mobile navigation.
 
-```powershell
-node prototypes\impeccable-whole-site-redesign-v4\tools\registry-parity.mjs
-node prototypes\impeccable-whole-site-redesign-v4\tools\verify.mjs `
-  output\design\HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html `
-  output\design\impeccable-redesign-v4-screens
-node prototypes\impeccable-whole-site-redesign-v4\tools\contrast.mjs `
-  output\design\HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html
-node prototypes\impeccable-whole-site-redesign-v4\tools\theme-test.mjs `
-  output\design\HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html
-node prototypes\impeccable-whole-site-redesign-v4\tools\motion-test.mjs `
-  output\design\HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html `
-  output\design\impeccable-redesign-v4-motion-results.json
-node prototypes\impeccable-whole-site-redesign-v4\tools\review-shots.mjs `
-  output\design\HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html `
-  output\design\impeccable-redesign-v4-review-shots
-```
+## Hallmark command-equivalent record
 
-Recorded results: verify has zero findings/errors/external requests at all six
-widths; contrast has zero failures; theme is green; motion is 10/10; and the
-curated review set is 12/12. The detector ran exactly once, emitted three
-warnings, all were repaired, and it was not rerun.
+| COMMAND | TARGET | FINDING | IMPLEMENTED CHANGE |
+| --- | --- | --- | --- |
+| `hallmark study` | User-owned v3 preview plus the required external references | V3 retained identity and workflows but still read as tutorial/card wall plus generic dashboard controls. | Extracted transferable DNA in `IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md`; preserved identity/type/workflows while choosing an editorial Map/Diagram structure. |
+| `hallmark audit` | Final modular source and export | Initial audit exposed nested metric treatment, multi-signal hovers, spacing drift, control states, reduced-motion gaps, side-tab accent, and provenance gaps. | Repaired each issue; final source/export audit is 58/58. |
+| `hallmark redesign` | Landing, overview, Request Center, shell, and mobile navigation | Token edits alone could not pass the two-second delta test. | Rebuilt five compositions and authored the celestial/menu/back/loading system while retaining all routes and workflows. |
 
-The final review disposition is `ship`; all five material findings are
-resolved. The absent QUALITY BAR card limits only card-relative ceiling
-scoring. The document sidecar parses as schema 2 with nine components and no
-duplicated primitive token array.
+No Hallmark CLI was installed; these are the installed Hallmark skill’s exact
+study/audit/redesign workflows and evidence contracts, not invented shell
+executions.
 
-## Handoff status and stop boundary
+## Impeccable command record
 
-Review and documentation are closed. Implementation commit
-`20af331b0a749fa5a88f897f084fa8d29f645bdd` is pushed to
-`origin/design/impeccable-whole-site-preview`; this handoff update is the
-documentation-only closure follow-up. Preserve unrelated `.impeccable/` state.
-Do not open a PR, merge, deploy, write operational data, or touch production
-under this preview authorization.
+| COMMAND | TARGET | FINDING | IMPLEMENTED CHANGE |
+| --- | --- | --- | --- |
+| critique | v4 shell and representative surfaces | Tutorial landing, conventional panel wall, decorative elbows, and generic controls preserved too much prior fingerprint. | Removed non-semantic geometry and pinned macro recompositions plus distinctive controls. |
+| bolder | Landing and overview | No decisive institutional focal point or dominant operational decision line. | Added the campus-backed USC hero and asymmetric decision brief/workbench. |
+| animate | Theme, menu, back, route, and loading | State feedback was generic and did not express the visual world. | Added finite celestial, kinetic-menu, back-travel, campus-arrival, route, progress, and row choreography with reduced-motion paths. |
+| layout | Landing, Request Center, overview, and shell | Repeated equal containers and linear stacking flattened priority. | Rebuilt hero/action hierarchy, tabbed request flow, decision brief, route rail, command topbar, and mobile navigation. |
+| typeset | Institutional and operational hierarchy | Scale did not separate public institution, task heading, and dense operations strongly enough. | Strengthened bounded Bricolage display scales while retaining Plex operations text and Newsreader wordmark roles. |
+| colorize | Light/dark materials and controls | Oxblood/gold often read as decoration; floating/state chrome lacked material hierarchy. | Reserved gold for active signal, authored warm-paper and charcoal ladders, and localized glass to floating controls. |
+| delight | Theme, menu, back, portal, and profile | Functional controls lacked branded tactile feedback. | Added moving celestial plate, line geometry, arrow nudge, campus settle, action-arrow response, and local image preview. |
+| adapt | 320–1440 layouts | Desktop compositions and dense forms risked cramped mobile behavior. | Reflowed hero, Request composer, profile, overview/support rail, drawer, compact harness, and safe-area bottom navigation. |
+| harden | Local state, privacy, and export | Theme rerender could lose state; role/profile/request actions could imply persistence; campus image could create a network dependency. | Mutated theme in place, validated local files, excluded file restoration, stated preview boundaries, removed scope cycling, secured external links, and embedded the image. |
+| audit | Registry, export, accessibility, and evidence | Complete shape, containment, motion, and a genuine visual delta required proof. | Verified 33/53 parity, six widths, contrast, theme, 13 motion scenarios, 21 curated captures, 8 comparisons, source/export parity, and Git containment. |
+| polish | Hover signals and narrow preview chrome | Parent/child hover feedback could stack; the harness consumed too much mobile viewport. | Reduced hover to one visible signal, neutralized generic lifts, compacted the harness, repaired the side-tab, and captured bottom-nav clearance. |
+
+The installed Impeccable skill was used for each named pass. No standalone
+Impeccable slash-command executable was available, so the table records the
+equivalent skill workflows and their concrete results.
+
+## Verification evidence
+
+- `registry-parity.mjs`: pass, 33 routes, 53 variants, operations 8,
+  administration 6, tabs 5.
+- `theme-test.mjs`: all 13 checks pass; plate mid-travel is observed; reduced
+  motion keeps state and removes long travel.
+- `motion-test.mjs`: 13 passed, 0 failed.
+- `verify.mjs`: zero findings/errors/external requests at 320, 375, 414, 768,
+  1024, and 1440; keyboard focus and 200% zoom pass.
+- `contrast.mjs`: zero failures.
+- `review-shots.mjs`: 21/21 with no manifest failure.
+- `visual-delta.mjs`: 8/8 required pairs with no failure.
+- Hallmark: 58/58.
+- Dual Impeccable review: Assessment A 29/40 before repairs; Assessment B
+  31/40 after repairs and PASS.
+- Finish review: `disposition: ship`; no material fix.
+- `npm run check:governance`: pass.
+- `npm run lint`: not green because the repository config reports 640 existing
+  browser/Node-global errors across all historical preview generations. This
+  was not expanded into a configuration refactor. Target JavaScript syntax and
+  browser execution are green.
+
+The Impeccable detector was invoked exactly once across source and export. It
+exited 1 and its large JSON array was truncated, so no total is claimed. The
+only visible primary warning, a generic 4px side-tab, was repaired and the
+export regenerated. Visible radius/font-size/color items were advisory. The
+detector was not rerun.
+
+## Claude continuation boundary
+
+Treat this checkpoint as closed. Start by verifying branch, HEAD, upstream,
+and status; preserve unknown `.impeccable/` and historical output directories.
+Open the shareable export or modular source for review. Do not hand-edit the
+export, rerun the detector, delete historical evidence, open a PR, merge,
+deploy, release, or touch production. A new visual/behavior change requires a
+new owner-approved amendment and a fresh evidence cycle.

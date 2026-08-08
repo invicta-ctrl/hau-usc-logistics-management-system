@@ -1,18 +1,30 @@
 # Current Task
 
-INTENT: FRONTEND REDESIGN ARTIFACT
-MODE: execute, verify, document, commit, and push the design branch; stop before PR, merge, deploy, or production mutation
-TARGET: HAU-USC Logistics whole-site redesign preview v4
+INTENT: FRONTEND REDESIGN ARTIFACT — V4.1 SUBSTANTIAL REDESIGN CLOSURE
+MODE: complete, reviewed, committed; push the design branch and stop before PR, merge, deploy, or production mutation
+TARGET: HAU-USC Logistics whole-site redesign preview v4.1
 SKILLS: Hallmark; Impeccable; lean-ctx
-AUTHORITY: owner v4 continuation packet; accepted v3/product constraints; repository AGENTS.md; PRODUCT.md; DESIGN.md
+AUTHORITY: owner browser feedback and follow-up instructions; docs/design/IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md; accepted v4/product constraints; repository AGENTS.md; PRODUCT.md; DESIGN.md
 RISK: medium because the artifact spans every representative surface but is isolated from runtime code
-DELIVERABLE: modular v4 source, single-file export, 33-route/53-variant parity, responsive screenshots, research/decision/motion records, independent finish verdict, recorded design system, and pushed design-branch handoff
+DELIVERABLE: refined modular v4 source, embedded single-file export, 33-route/53-variant parity, responsive screenshots, updated research/decision/motion records, independent finish verdict, refreshed design system, and pushed Claude handoff
 VERIFICATION: six-width Chromium audit; contrast sweep; theme persistence and reduced-motion test; finite motion test; screenshot inspection; registry parity; source/export parity; independent reviewer verdict; documenter validation; Git containment
 STOP CONDITIONS: any backend/provider/deployment/release mutation; missing route/state; privacy or workflow contradiction; unknown overlapping work; unverified reviewer or commit claim
-STATUS: V4_COMPLETE_REVIEWED_DOCUMENTED_AND_PUSHED
+STATUS: V4_1_SUBSTANTIAL_REDESIGN_SHIP
+
+Accepted amendment:
+`docs/design/IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md`.
+
+Current action: push the implementation and documentation closure commits,
+verify upstream parity, then stop before PR, merge, deploy, release, or
+production mutation.
+
+Prior v4 closure evidence is historical and is not reused as v4.1 truth.
 
 Starting branch/SHA: `design/impeccable-whole-site-preview` at
-`182cea85fd40adb23e2efa9672295de50526f0ca`.
+`a8f7923169cd18cf1e50cd34587a9e60226a4149`.
+
+Implementation commit:
+`a413824af98624c089560135f6168672aa86b656`.
 
 Operational pointer: `.codex/IMPECCABLE_V4_CURRENT.md`.
 
@@ -20,14 +32,22 @@ Source: `prototypes/impeccable-whole-site-redesign-v4/`.
 
 Export: `output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`.
 
-Recorded evidence: verify zero findings/errors/external requests at 320, 375,
-414, 768, 1024, and 1440; contrast zero; theme green; motion 10/10; review
-captures 12/12. The detector ran exactly once with three warnings repaired and
-was not rerun. The fresh finish reviewer scored all five findings resolved and
-returned `ship`; the documenter refreshed `DESIGN.md` and
-`.impeccable/design.json`. Implementation commit
-`20af331b0a749fa5a88f897f084fa8d29f645bdd` was pushed to the design branch;
-this record is the documentation-only closure follow-up.
+Recorded v4.1 evidence: registry 33/53; Hallmark 58/58; theme 13/13;
+motion 13/13; verify zero findings/errors/external requests at 320, 375, 414,
+768, 1024, and 1440; contrast zero; curated captures 21/21; required visual
+delta 8/8; dual Impeccable assessment PASS; finish reviewer `ship` with no
+material fix; `DESIGN.md` and `.impeccable/design.json` refreshed.
+
+The Impeccable detector ran exactly once across source/export. Its large JSON
+was truncated, so no raw total is claimed. The only visible primary side-tab
+warning was repaired; visible radius/font-size/color entries were advisory.
+It was not rerun.
+
+Substantial redesign: PASS, 12 major changes and 5 compositional changes.
+Frontend-only containment confirmed. Governance passes. Repository-wide lint
+remains unsuitable for these historical previews because it reports 640
+existing browser/Node-global errors across v1-v4; targeted syntax/browser
+gates are green.
 
 ---
 

@@ -115,3 +115,21 @@ The following additions are mandatory and are not optional polish:
 No application-runtime edit, backend/provider/authentication change, migration,
 deployment, PR, merge, release, or production mutation. Stop after a verified
 commit and push of the design branch plus the Claude continuation packet.
+
+## Implementation acceptance — 2026-08-08
+
+- Implementation commit:
+  `a413824af98624c089560135f6168672aa86b656`.
+- Review: `output/design/IMPECCABLE_REDESIGN_V4_1_REVIEW.md`, disposition
+  `ship`, no material fix.
+- Evidence: 33/53 parity; Hallmark 58/58; theme 13/13; motion 13/13; six-width
+  verify zero; contrast zero; curated captures 21/21; exact visual delta 8/8.
+- Substantial redesign: PASS, 12 major front-end changes and 5 compositional
+  changes; two-second and logo/label-discounted judgment PASS.
+- Design record: `DESIGN.md`, `.impeccable/design.json`, and the dual critique
+  snapshot are refreshed from the built v4.1 system.
+- Front-end-only containment: confirmed. No application runtime, Worker, D1,
+  R2, migration, provider, authentication, staging, deployment, release, or
+  production change was made.
+- Closure commit: the documentation-only commit containing this acceptance and
+  the Claude handoff; verify its exact SHA from Git before continuation.

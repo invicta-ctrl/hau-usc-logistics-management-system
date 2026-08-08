@@ -1,82 +1,86 @@
-# Impeccable whole-site redesign v4 - current
+# Impeccable whole-site redesign v4.1 — current
 
-Status: local v4 candidate built, independently reviewed with disposition
-`ship`, and recorded in `DESIGN.md` plus `.impeccable/design.json`. The
-implementation checkpoint `20af331b0a749fa5a88f897f084fa8d29f645bdd`
-is pushed to `origin/design/impeccable-whole-site-preview`; this record is the
-documentation-only closure follow-up.
+Status: implementation, evidence, dual Impeccable assessment, Hallmark audit,
+finish review, design-system record, and shareable export are complete. The
+implementation commit is `a413824af98624c089560135f6168672aa86b656`.
+This record and the Claude handoff form the documentation-only closure commit.
 
 ## Repository checkpoint
 
-- Worktree: `D:\Documents\Codex\HAU-USC Logistics\worktrees\design-impeccable-whole-site-preview`
-- Branch: `design/impeccable-whole-site-preview`
-- Starting SHA: `182cea85fd40adb23e2efa9672295de50526f0ca`
-- Upstream: `origin/design/impeccable-whole-site-preview`
-- The worktree also contains other in-progress v4 source/evidence and local
-  `.impeccable/` state. Preserve those paths; do not clean, reset, or overwrite
-  unrelated work.
+- Worktree:
+  `D:\Documents\Codex\HAU-USC Logistics\worktrees\design-impeccable-whole-site-preview`
+- Branch/upstream: `design/impeccable-whole-site-preview` /
+  `origin/design/impeccable-whole-site-preview`
+- V4.1 starting SHA: `a8f7923169cd18cf1e50cd34587a9e60226a4149`
+- Implementation SHA: `a413824af98624c089560135f6168672aa86b656`
+- Original v4 baseline SHA: `182cea85fd40adb23e2efa9672295de50526f0ca`
+  (historical only)
+- Accepted amendment:
+  `docs/design/IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md`
+- Primary study/DNA:
+  `docs/design/IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md`
 
-## Source, export, and evidence
+Unknown and historical local evidence directories plus
+`.impeccable/hook.cache.json` remain preserved. Do not clean or reset them.
 
-- Authoritative v4 source:
-  `prototypes/impeccable-whole-site-redesign-v4/`
-- Generated offline export:
+## Authoritative source and artifacts
+
+- Modular source: `prototypes/impeccable-whole-site-redesign-v4/`
+- Shareable export:
   `output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`
-- Responsive/a11y result:
-  `output/design/verify-results.json`
 - Motion result:
-  `output/design/impeccable-redesign-v4-motion-results.json`
-- Six-width screenshots:
-  `output/design/impeccable-redesign-v4-screens/`
-- Review rounds:
-  `output/design/impeccable-redesign-v4-round1/` and
-  `output/design/impeccable-redesign-v4-round2/`
-- Final screenshot set:
-  `output/design/impeccable-redesign-v4-screens-final/`
-- Curated finish-review captures:
-  `output/design/impeccable-redesign-v4-review-shots/`
-- Independent review record:
-  `output/design/IMPECCABLE_REDESIGN_V4_REVIEW.md`
-- Recorded v4 system: `DESIGN.md` and `.impeccable/design.json`
+  `output/design/impeccable-redesign-v4-motion-v4-1-final.json`
+- Six-width captures:
+  `output/design/impeccable-redesign-v4-v4-1-verify-final/`
+- Curated 21-case set:
+  `output/design/impeccable-redesign-v4-v4-1-review-final/`
+- Exact eight-pair delta:
+  `output/design/impeccable-redesign-v4-visual-delta-v4-1-final/`
+- Independent finish record:
+  `output/design/IMPECCABLE_REDESIGN_V4_1_REVIEW.md`
+- Design system: `DESIGN.md` and `.impeccable/design.json`
+- Dual critique snapshot: `.impeccable/critique/`
 
-## V4 shape and boundary
+## Final evidence
 
-- Registry parity: **33 routes / 53 state variants** in v4, matching the v3
-  registry shape (`registry-parity.mjs` reports `pass: true`).
-- Direction: modern-minimal, Map / Diagram, Operational Choreography / Route
-  Console; oxblood/gold; N13 authenticated command pill; N5 public floating
-  bar; Ft5 statement close.
-- Front-end-only and strict preview-only. No application source, generated
-  product artifact, backend, provider, migration, binding, authentication,
-  deployment, release, production data, or production state may change.
-- `.impeccable/` is local tool state and must be preserved.
+- Registry parity: 33 routes / 53 state variants; operations 8,
+  administration 6, mobile tabs 5.
+- Theme: all 13 checks pass, including visible mid-travel, persistence,
+  first-run system preference, stored override, and reduced motion.
+- Motion: 13/13 scenarios, including drawer truth, focus, command keyboard,
+  Request Center state, profile file safety, form persistence, finite motion,
+  and reduced-motion fallback.
+- Responsive/a11y: zero findings, console errors, and external requests at 320,
+  375, 414, 768, 1024, and 1440; keyboard dialog focus and restoration pass;
+  200% zoom has no overflow.
+- Contrast: zero failures across both themes.
+- Curated review: 21/21 with no error or external request, including a
+  bottom-scroll capture proving fixed-nav clearance.
+- Visual delta: 8/8 exact v3/v4.1 pairs with zero capture failure.
+- Hallmark study/audit/redesign equivalents: 58/58 audit gates pass.
+- Impeccable Assessment A: 29/40 before its four evidence-backed repairs.
+  Assessment B: 31/40 after repairs; substantial-redesign judgment PASS.
+- Impeccable detector: run exactly once, one invocation across source/export.
+  It exited 1 with JSON truncated at the tool boundary, so no raw count is
+  invented. Its only visible primary warning (generic side-tab accent) was
+  repaired in source/export. Visible radius/font-size/color entries were
+  advisory. It was not rerun.
+- Finish reviewer: `disposition: ship`, no material fix, substantial redesign
+  and logo/label-discounted two-second delta both PASS.
+- Governance: `npm run check:governance` passes.
+- Repository-wide `npm run lint` is not an acceptance gate for this artifact:
+  it reports 640 existing browser/Node-global errors across all historical
+  preview generations. V4.1 JavaScript syntax and browser execution pass.
 
-## Completed verification recorded at this checkpoint
+## Final gate summary
 
-- `verify.mjs`: zero findings, browser errors, and external requests at 320,
-  375, 414, 768, 1024, and 1440 CSS pixels; keyboard focus moved in/trapped/
-  restored; 200% zoom overflow is empty.
-- `contrast.mjs`: zero failures across light and dark themes.
-- `theme-test.mjs`: green theme cycle, persistence, first-run system default,
-  stored preference, and reduced-motion behavior.
-- `motion-test.mjs`: **10/10** scenarios, including finite animation,
-  focus/overlay behavior, history, reduced motion, and unsupported View
-  Transition fallback.
-- Curated finish-review capture set: **12/12** captures with no browser errors
-  or external requests.
-- Impeccable detector: run exactly once; it reported three warnings and all
-  three were repaired. It was not rerun, so no second detector verdict is
-  claimed.
-- Fresh finish review: initial disposition `fix`; all five findings were
-  repaired in one batch, the same 12 cases were recaptured, and the verdict
-  scored each resolved with final disposition `ship`. No QUALITY BAR card was
-  available, so card-relative ceiling is unscorable only.
-- Fresh Impeccable documenter: `DESIGN.md` now records the v4 system in the
-  canonical eight-section format; `.impeccable/design.json` parses as schema 2
-  with nine self-contained components and extensions-only metadata.
+`SUBSTANTIAL_REDESIGN_GATE: PASS`
 
-## Closed boundary
+Twelve major front-end changes and five compositional changes are recorded in
+the handoff. No workflow was removed. The work is strictly front-end preview
+scope; application runtime, Worker, D1, R2, migrations, authentication,
+providers, staging, deployment, release, and production were not changed.
 
-Implementation, finish review, design-system documentation, commit, and branch
-push are complete. Stop before PR creation, merge, deployment, release, or
-production mutation.
+Stop before PR creation, merge, deployment, release, or production mutation.
+Any new visual or behavior request requires a new accepted amendment and fresh
+evidence; do not silently reopen this closed v4.1 checkpoint.
