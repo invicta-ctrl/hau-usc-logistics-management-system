@@ -25,6 +25,7 @@ const TARGETS = Object.freeze({
     d1: 'hau-usc-logistics-staging',
     buckets: ['hau-usc-logistics-staging-assets', 'hau-usc-logistics-staging-evidence'],
     build: 'build:cloudflare',
+    artifactDirectory: '.wrangler/build/staging',
   },
   production: {
     worker: 'hau-usc-logistics-production',
@@ -32,6 +33,7 @@ const TARGETS = Object.freeze({
     d1: 'hau-usc-logistics-production',
     buckets: ['hau-usc-logistics-production-assets', 'hau-usc-logistics-production-evidence'],
     build: 'build:cloudflare:production',
+    artifactDirectory: '.wrangler/build/production',
   },
 });
 
@@ -42,7 +44,12 @@ function fail(message) {
 }
 
 const [target, ...rest] = process.argv.slice(2);
-const expected = TARGETS[String(target ?? '').trim().toLowerCase()];
+const expected =
+  TARGETS[
+    String(target ?? '')
+      .trim()
+      .toLowerCase()
+  ];
 if (!expected) fail('the first argument must be "staging" or "production".');
 
 const configIndex = rest.indexOf('--config');
@@ -55,11 +62,14 @@ if (!configPath || !path.isAbsolute(configPath)) {
   );
 }
 
-const raw = await readFile(configPath, 'utf8').catch(() => fail(`the private config at ${configPath} could not be read.`));
+const raw = await readFile(configPath, 'utf8').catch(() =>
+  fail(`the private config at ${configPath} could not be read.`),
+);
 const config = parseJsonConfig(raw);
 
 // 1. The private config must describe the intended environment.
-if (config.name !== expected.worker) fail(`the config targets Worker "${config.name}", not the ${target} Worker.`);
+if (config.name !== expected.worker)
+  fail(`the config targets Worker "${config.name}", not the ${target} Worker.`);
 const environment = config?.vars?.ENVIRONMENT;
 if (environment !== expected.environment)
   fail(`the config declares ENVIRONMENT "${environment}", not ${expected.environment}.`);
@@ -88,7 +98,8 @@ const buckets = (config.r2_buckets ?? []).map((entry) => entry.bucket_name);
 for (const bucket of expected.buckets)
   if (!buckets.includes(bucket)) fail(`the config is missing the ${target} R2 bucket ${bucket}.`);
 const foreign = buckets.filter((bucket) => !expected.buckets.includes(bucket));
-if (foreign.length) fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
+if (foreign.length)
+  fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
 
 // 4. The candidate SHA must be resolved and match the tree being deployed.
 const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -104,9 +115,11 @@ if (status) fail('the working tree is dirty. Deploy only a committed, frozen can
 // 5. Rebuild deterministically, so a stale or tracked dist can never be the
 //    deployment authority, then assert the artifact is the right build mode.
 execFileSync('npm', ['run', expected.build], { stdio: 'inherit', shell: process.platform === 'win32' });
-execFileSync('node', ['scripts/verify-deploy-artifact.mjs', target], { stdio: 'inherit' });
+execFileSync('node', ['scripts/verify-deploy-artifact.mjs', target, expected.artifactDirectory], {
+  stdio: 'inherit',
+});
 
-const artifact = await readFile('dist/index.html', 'utf8');
+const artifact = await readFile(path.join(expected.artifactDirectory, 'index.html'), 'utf8');
 const digest = createHash('sha256').update(artifact).digest('hex');
 
 process.stdout.write(
@@ -121,7 +134,7 @@ process.stdout.write(
 if (dryRun) {
   process.stdout.write('Dry run requested; no upload performed.\n');
 } else {
-  execFileSync('npx', ['wrangler', 'deploy', '-c', configPath], {
+  execFileSync('npx', ['wrangler', 'deploy', '-c', configPath, '--assets', expected.artifactDirectory], {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });

@@ -1,21 +1,21 @@
 # Current Bounded Task
 
-INTENT: REPOSITORY_MAINTENANCE
+INTENT: REPOSITORY_MAINTENANCE + TESTING + STAGING_SANDBOX
 MODE: EXECUTE
-OBJECTIVE: Normalize governance, continuity, status, documentation, and deterministic handoff validation for V0.7.2.1 without changing runtime or external state.
+OBJECTIVE: Apply the accepted source/build/CI cleanup and implement fail-closed permanent-staging repository safeguards without changing production.
 TARGET: maintenance/v0.7.2.1-repository-normalization
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.2.1-repository-normalization-and-staging-sandbox.md
 AUTHORITY: Earl approval; accepted V0.7.2.1 specification; AGENTS.md; current continuity chain
-REQUIRED_MODEL: GPT-5.6 Terra for governance/documentation; escalate security, data, authorization, migration, recovery, or production-boundary decisions
+REQUIRED_MODEL: CODEX for bounded implementation; Sol review before integration; escalate security, data, authorization, migration, recovery, or production-boundary decisions
 ACTIVE_WRITER: CODEX
 GIT_UPSTREAM: NONE - sanctioned local no-push maintenance branch
-RISK: MEDIUM - continuity errors can misroute later work; production remains excluded
-SCOPE: Canonical governance chain, compact current/task/handoff records, continuation/status/readme/plan normalization, validators, and handoff verification only.
-OUT_OF_SCOPE: Runtime source, generated artifacts, CI simplification, providers, databases, production, Git remote writes, branch/PR/worktree cleanup, and unapproved archival moves.
-VERIFICATION: npm run handoff:verify; npm run check:governance; focused governance tests; git diff --check
-STOP_CONDITIONS: Unexpected dirty overlap, authority/specification conflict, secret/private-value exposure, production crossover, migration need, or unresolved protected-boundary decision.
-NEXT_EXACT_ACTION: Review and commit the bounded governance normalization, then continue only the accepted V0.7.2.1 maintenance batch.
+RISK: HIGH - artifact mode, email containment, and staging reset boundaries are safety-critical; production remains excluded
+SCOPE: Approved unused-source/export removal; preview-only tracked dist; isolated staging/production/local Worker artifacts; duplicate CI removal; CodeQL/Renovate integration; staging status/seed/reset guards; exact recipient containment; staging-only release banner; focused and complete repository verification.
+OUT_OF_SCOPE: Production mutation or deployment, schema/migration changes, hard deletion or rewriting of immutable records, protected roster mutation, borrower/canvass refactors, protected design-worktree changes, and branch/PR/worktree cleanup before merge.
+VERIFICATION: Accepted specification exact acceptance; focused unit/browser/Worker tests; npm run check; git diff --check; independent Sol review.
+STOP_CONDITIONS: Production crossover; unclassified staging rows; missing backup/restore proof; missing or ambiguous recipient allowlist; privacy/auth/ledger/history uncertainty; migration need; artifact/SHA mismatch; unknown dirty overlap; unresolved P0/P1.
+NEXT_EXACT_ACTION: Implement and verify the approved dead-code cleanup, isolated non-preview artifacts, CI simplification, staging guards, mail containment, and staging identity banner.
 
-The accepted specification commits the initial local branch state at 4181d869275fc81fc05631a38320fd68a232db8d. Exact runtime-release evidence remains valid only because this batch does not change source, generated artifacts, configuration, or external state.
+Live read-only aggregate classification found non-synthetic/unclassified staging operational rows, so staging reset/deploy is blocked before mutation. Repository implementation and local verification remain authorized; production is untouched.

@@ -79,12 +79,3 @@ export function optionalOperationalInteger(value, options = {}) {
   if (value === undefined || value === null) return undefined;
   return operationalInteger(value, options);
 }
-
-export const isCanonicalOperationalInteger = (value) => {
-  try {
-    operationalInteger(value);
-    return true;
-  } catch {
-    return false;
-  }
-};

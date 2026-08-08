@@ -20,9 +20,3 @@ export function storeResult(state, { key, action, result, correlationId }) {
     createdAt: new Date().toISOString(),
   });
 }
-
-export function alreadyPostedError(record) {
-  return new AppError('ALREADY_POSTED', 'This command was already completed.', {
-    correlationId: record.correlationId,
-  });
-}

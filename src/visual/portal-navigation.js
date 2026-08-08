@@ -16,7 +16,7 @@ export function portalNavigationMarkup({ current = '' } = {}) {
 
 export function releaseIdentityMarkup() {
   const identity = getRuntimeReleaseIdentity();
-  return `<p class="auth-environment" data-release-identity data-environment="${identity.environment}" data-release-sha="${identity.candidateSha}">${releaseIdentityLabel(identity)}</p>`;
+  return `<p class="auth-environment" data-release-identity data-environment="${identity.environment}" data-release-sha="${identity.candidateSha}" data-release-schema="${identity.schemaVersion}">${releaseIdentityLabel(identity)}</p>`;
 }
 
 export function portalSelectionMarkup() {

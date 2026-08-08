@@ -1646,4 +1646,16 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 
 ### Boundary
 
-- Documentation and validation only; no runtime source, generated artifact, provider, database, production, or remote Git mutation.
+- The initial governance commit changed documentation and validation only. Later repository-maintenance work below changed source and regenerated tracked preview artifacts, but performed no provider, database, production, or remote Git mutation.
+
+### Repository maintenance
+
+- Removed five zero-reference source modules and declaration-only compatibility aliases proven unused.
+- Made tracked `dist/` preview-only, added fresh isolated preview parity, and moved staging, production, dry-run, deployment, and local Worker assets to isolated directories.
+- Removed the duplicate Apps Script workflow/full-check loop and integrated the reviewed CodeQL and Renovate configuration from superseded draft PR #10.
+- Added staging target/classification/reset guards, exact-recipient email containment, safe status reporting, and a staging-only version/SHA/schema warning.
+- Archived superseded v0.6 governance/specifications, v0.7.2 candidate handoffs, and stale V1 planning while retaining historical evidence.
+
+### Staging hard stop
+
+- Read-only aggregate classification found non-synthetic or unclassified state in the existing staging D1. Reset, seed, deployment, provider sends, and production changes were stopped before mutation pending an owner-approved disposition or new isolated staging D1.

@@ -1,10 +1,12 @@
 # Launch Runbook
 
-## v0.7.0 production baseline
+## v0.7.2 production baseline
 
-Production release `v0.7.0` is operational from exact source
-`dc98d670fdd63f649037616c5a2d51e5c62ca4ae`. The detailed launch transaction is
-closed in `.codex/V0_7_PHASE_28_PRODUCTION_LAUNCH_HANDOFF.md`.
+Production release `v0.7.2` is operational from exact source
+`84eacfcdb47a3985fed48e3ba14bb413946d4410` at schema 30 / migration
+`0030_production_access_and_operations.sql`. The release tag, GitHub Release,
+recovery, smoke, and reconciliation evidence are closed. Maintenance v0.7.2.1
+does not authorize a production deployment.
 
 For any subsequent production change:
 

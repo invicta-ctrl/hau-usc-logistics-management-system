@@ -1,0 +1,51 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["npm", "github-actions"],
+  "dependencyDashboard": true,
+  "schedule": ["before 5am on Monday"],
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 1,
+  "automerge": false,
+  "rangeStrategy": "auto",
+  "separateMajorMinor": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on Monday"]
+  },
+  "packageRules": [
+    {
+      "description": "Group compatible development-tool updates",
+      "matchManagers": ["npm"],
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["digest", "minor", "patch"],
+      "groupName": "development tooling"
+    },
+    {
+      "description": "Group compatible GitHub Action updates",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["digest", "minor", "patch"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "Require dashboard approval for major updates",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Require dashboard approval for application-critical tooling",
+      "matchPackageNames": [
+        "vite",
+        "vitest",
+        "@playwright/test",
+        "playwright",
+        "wrangler",
+        "eslint",
+        "prettier"
+      ],
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}

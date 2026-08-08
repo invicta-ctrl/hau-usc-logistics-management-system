@@ -16,7 +16,10 @@ export function decodeJsonBuffer(buffer) {
   return buffer.toString('utf8').replace(/^\uFEFF/u, '');
 }
 
-function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket, evidenceR2Bucket }) {
+function baseConfig(
+  source,
+  { name, environment, candidateSha, candidateBranch, d1, brandR2Bucket, evidenceR2Bucket },
+) {
   return {
     name,
     main: source.main,
@@ -57,15 +60,23 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
+      CANDIDATE_BRANCH: candidateBranch,
       RECOVERY_HOSTNAME: '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
       GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
       GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
       GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
+      ...(environment === 'STAGING'
+        ? {
+            SANDBOX_RESET_ALLOWED: false,
+            SANDBOX_BASE_URL: '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '<REPLACE_PRIVATELY_EXACT_RECIPIENT_ARRAY>',
+          }
+        : {}),
     },
   };
 }
 
-export function createConfigPair(source, databases, candidateSha) {
+export function createConfigPair(source, databases, candidateSha, candidateBranch = 'UNKNOWN') {
   const stagingD1 = databases.find((database) => database.name === 'hau-usc-logistics-staging');
   const productionD1 = databases.find((database) => database.name === 'hau-usc-logistics-production');
   if (!stagingD1 || !productionD1)
@@ -75,6 +86,7 @@ export function createConfigPair(source, databases, candidateSha) {
       name: 'hau-usc-logistics-staging',
       environment: 'STAGING',
       candidateSha,
+      candidateBranch,
       d1: stagingD1,
       brandR2Bucket: 'hau-usc-logistics-staging-assets',
       evidenceR2Bucket: 'hau-usc-logistics-staging-evidence',
@@ -83,6 +95,7 @@ export function createConfigPair(source, databases, candidateSha) {
       name: 'hau-usc-logistics-production',
       environment: 'PRODUCTION',
       candidateSha,
+      candidateBranch,
       d1: productionD1,
       brandR2Bucket: 'hau-usc-logistics-production-assets',
       evidenceR2Bucket: 'hau-usc-logistics-production-evidence',
@@ -102,7 +115,11 @@ async function run() {
     readFile(d1InventoryPath).then(decodeJsonBuffer).then(JSON.parse),
   ]);
   const candidateSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-  const pair = createConfigPair(source, databases, candidateSha);
+  const candidateBranch = execFileSync('git', ['branch', '--show-current'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).trim();
+  const pair = createConfigPair(source, databases, candidateSha, candidateBranch);
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
     writeFile(

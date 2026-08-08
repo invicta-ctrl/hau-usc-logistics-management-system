@@ -1,6 +1,9 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { readFile, readdir, rm, mkdtemp } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import path, { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { assertGuidedDemoShareable } from './guided-demo.mjs';
 import { shareableModules } from './shareable-module-registry.mjs';
 
@@ -8,6 +11,7 @@ const html = await readFile(resolve('dist/index.html'), 'utf8');
 const shareable = await readFile(resolve('HAU-USC_Logistics-Prototype-Shareable.html'), 'utf8');
 const guidedDemo = await readFile(resolve('hau-usc-logistics-guided-demo.html'), 'utf8');
 const moduleDirectory = resolve('shareable-html-modules');
+const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const requiredMarkers = [
   'id="primaryNav"',
   'id="requestForm"',
@@ -89,6 +93,53 @@ for (const module of shareableModules) {
   }
 }
 
+async function artifactFiles(directory, relative = '') {
+  const entries = await readdir(path.join(directory, relative), { withFileTypes: true });
+  const found = [];
+  for (const entry of entries) {
+    const child = path.join(relative, entry.name);
+    if (entry.isDirectory()) found.push(...(await artifactFiles(directory, child)));
+    else if (entry.isFile()) found.push(child.replaceAll('\\', '/'));
+  }
+  return found.sort();
+}
+
+const privateRoot = await mkdtemp(path.join(tmpdir(), 'hau-usc-preview-parity-'));
+const freshDist = path.join(privateRoot, 'dist');
+try {
+  const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
+  execFileSync(process.execPath, [vite, 'build', '--mode', 'preview', '--outDir', freshDist], {
+    cwd: repoRoot,
+    stdio: 'pipe',
+    windowsHide: true,
+  });
+  const [canonicalFiles, freshFiles] = await Promise.all([
+    artifactFiles(resolve('dist')),
+    artifactFiles(freshDist),
+  ]);
+  if (JSON.stringify(canonicalFiles) !== JSON.stringify(freshFiles)) {
+    throw new Error('Tracked dist file set differs from a fresh isolated preview build.');
+  }
+  for (const relative of canonicalFiles) {
+    const [canonical, fresh] = await Promise.all([
+      readFile(path.join(resolve('dist'), relative)),
+      readFile(path.join(freshDist, relative)),
+    ]);
+    if (!canonical.equals(fresh)) {
+      throw new Error(`Tracked dist/${relative} differs from a fresh isolated preview build.`);
+    }
+  }
+  const freshHtml = await readFile(path.join(freshDist, 'index.html'), 'utf8');
+  if (!/["']preview["']\s*\)?\s*\.trim\(\)\s*\.toLowerCase\(\)/u.test(freshHtml)) {
+    throw new Error('Fresh canonical preview artifact does not declare preview build mode.');
+  }
+  if (/["'](?:staging|production)["']\s*\)?\s*\.trim\(\)\s*\.toLowerCase\(\)/u.test(freshHtml)) {
+    throw new Error('Fresh canonical preview artifact contains a deployable build mode.');
+  }
+} finally {
+  await rm(privateRoot, { recursive: true, force: true });
+}
+
 console.log(
-  `Verified the all-in-one standalone (${Buffer.byteLength(html).toLocaleString()} bytes), guided demo, and ${shareableModules.length} module shareables.`,
+  `Verified fresh preview parity, the all-in-one standalone (${Buffer.byteLength(html).toLocaleString()} bytes), guided demo, and ${shareableModules.length} module shareables.`,
 );

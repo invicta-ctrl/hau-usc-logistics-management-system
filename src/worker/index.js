@@ -455,6 +455,22 @@ async function health(env, requestId, readiness = false) {
   );
 }
 
+async function version(env, requestId) {
+  const schema = await env.DB.prepare(
+    "SELECT value FROM app_metadata WHERE key = 'operational_schema_version'",
+  ).first();
+  const migration = await env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1').first();
+  return json({
+    ok: true,
+    correlationId: requestId,
+    ...safeReleaseIdentity(env),
+    database: {
+      schemaVersion: schema?.value ?? '0',
+      latestMigration: migration?.name ?? '',
+    },
+  });
+}
+
 async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
   const {
@@ -481,7 +497,7 @@ async function handleApi(request, env, requestId, executionContext) {
       return health(env, requestId, true);
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
-      return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
+      return version(env, requestId);
     }
     if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
       assertPublicMutationOrigin(request);

@@ -1,7 +1,8 @@
 # v0.7.2 Account Application and Approval Guide
 
-Status: repository candidate; live use begins only after email-provider and
-pre-production acceptance pass.
+Status: production operational at v0.7.2. Staging remains an isolated test
+environment and accepts outbound verification only for its private exact
+recipient allowlist.
 
 ## Applicant flow
 

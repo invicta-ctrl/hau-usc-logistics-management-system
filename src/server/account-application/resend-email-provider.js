@@ -88,6 +88,7 @@ export function createResendEmailProvider({
   from,
   verifyUrl = '',
   timeoutMs,
+  recipientAllowlist = null,
   fetchImpl = globalThis.fetch,
 } = {}) {
   if (!isResendProviderConfigured({ apiKey, from }) || typeof fetchImpl !== 'function') return null;
@@ -96,15 +97,25 @@ export function createResendEmailProvider({
   const sender = String(from).trim();
   const link = String(verifyUrl ?? '').trim();
   const budgetMs = boundedTimeout(timeoutMs);
+  const allowedRecipients = Array.isArray(recipientAllowlist)
+    ? new Set(recipientAllowlist.map((value) => String(value).trim().toLowerCase()))
+    : null;
 
   return Object.freeze({
     configured: true,
     providerId: RESEND_PROVIDER_ID,
 
     async sendVerification({ delivery, verificationCode, expiresAt, correlationId } = {}) {
-      const recipient = String(delivery?.institutionalEmail ?? '').trim();
+      const recipient = String(delivery?.institutionalEmail ?? '')
+        .trim()
+        .toLowerCase();
       const code = String(verificationCode ?? '').trim();
-      if (!RECIPIENT_PATTERN.test(recipient) || recipient.length > 254 || !code) {
+      if (
+        !RECIPIENT_PATTERN.test(recipient) ||
+        recipient.length > 254 ||
+        !code ||
+        (allowedRecipients && !allowedRecipients.has(recipient))
+      ) {
         throw providerError('EMAIL_PROVIDER_REJECTED');
       }
 

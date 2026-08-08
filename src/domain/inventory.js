@@ -1,5 +1,3 @@
-import { AppError } from '../app/errors.js';
-
 const signedQuantity = (txn) => (txn.direction === 'IN' ? Number(txn.quantity) : -Number(txn.quantity));
 
 export function buildInventoryIndexes(state) {
@@ -52,14 +50,6 @@ export function availableToPromise(itemId, indexes) {
 }
 export function allocationBalance(itemId, indexes) {
   return Math.max(0, availableToPromise(itemId, indexes));
-}
-export function assertAllocatable(itemId, quantity, indexes) {
-  const raw = availableToPromise(itemId, indexes);
-  if (raw < quantity)
-    throw new AppError(
-      raw < 0 ? 'NEGATIVE_BALANCE_BLOCK' : 'INSUFFICIENT_AVAILABLE',
-      `Only ${Math.max(0, raw)} is available to promise.`,
-    );
 }
 
 export function qualityWarnings(state, indexes = buildInventoryIndexes(state)) {
