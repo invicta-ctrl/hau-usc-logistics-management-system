@@ -1,26 +1,23 @@
 # Current Bounded Task
 
-INTENT: DEPLOYMENT
-SECONDARY INTENTS: MIGRATION + TESTING + REPOSITORY_MAINTENANCE
-MODE: EXECUTE
-OBJECTIVE: Complete owner-approved isolated staging identity and delivery acceptance, finish the existing normalization, pass one final gate and review, merge through protected GitHub, safely reconcile proven stale topology, and close to v0.7.3.
-TARGET: maintenance/v0.7.2.1-repository-normalization
-SKILLS: cloudflare-deploy + github:yeet + lean-ctx
+INTENT: OWNER_DECISION
+MODE: PLAN
+OBJECTIVE: Hold the completed v0.7.2.1 repository and environments steady until Earl accepts the first bounded v0.7.3 specification.
+TARGET: main at verified remote truth
+SKILLS: none for this read-only intake packet; select and record the smallest applicable workflow when the bounded implementation specification is adopted
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.2.1-repository-normalization-and-staging-sandbox.md
-AUTHORITY: Owner approval; accepted V0.7.2.1 specification; AGENTS.md; current continuity chain
-REQUIRED_MODEL: CODEX for bounded implementation; fresh Sol review before integration; escalate security, identity, data, authorization, migration, recovery, or production-boundary decisions
-ACTIVE_WRITER: CODEX
-GIT_UPSTREAM: origin/maintenance/v0.7.2.1-repository-normalization
-RISK: HIGH - protected identity eligibility and external email delivery remain safety-critical; production remains excluded
-DELIVERABLE: One exact allowlisted delivery/redemption proof through the approved private staging identity fixture, final repository gate/review, protected PR merge, manifest-proven safe cleanup, cold-start continuity, and a v0.7.3 pointer.
-SCOPE: Generic private staging-only exact identity fixture; one positive delivery/redemption proof; invalidated focused checks; existing normalization completion; final gate/review; GitHub push/PR/merge; safe manifest cleanup; continuity closeout.
-OUT_OF_SCOPE: Production mutation/deployment; old staging D1 mutation; production-data cloning; roster-rule weakening; domain-only authorization; migration/history/evidence rewrite; runtime release/tag; production promotion; v0.7.3 feature work.
-VERIFICATION: Exact allowlist and protected identity match; provider-accepted challenge only for the allowlisted recipient; negative recipient remains pre-network; exact SHA/readiness/banner; fresh final review; governance/handoff checks.
-STOP_CONDITIONS: Ambiguous identity source; production or old-staging reachability; protected roster uncertainty; secret/recipient exposure; non-allowlisted delivery; provider mismatch; exact-SHA drift; unresolved P0/P1.
-NEXT_EXACT_ACTION: Deploy this acceptance-record head to isolated staging, verify exact SHA and required PR checks, mark PR #17 ready, and merge through protected GitHub without a runtime release tag.
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-product-work-intake.md
+AUTHORITY: Earl's next product objective; the accepted v0.7.3 intake specification; AGENTS.md; current continuity chain
+REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
+ACTIVE_WRITER: NONE
+GIT_UPSTREAM: origin/main
+RISK: MEDIUM - the repository is stable, but production and protected identity/data boundaries remain critical
+DELIVERABLE: One accepted, bounded v0.7.3 task packet before any implementation or environment mutation
+SCOPE: Read-only handshake, owner intake, specification adoption, writer-lock claim, and bounded v0.7.3 planning
+OUT_OF_SCOPE: Any v0.7.3 implementation; production write/deploy; staging reset during active identity/application state; release/tag creation; deletion of preserved unique work
+VERIFICATION: Confirm main equals origin/main, clean worktree, ACTIVE_WRITER NONE, production v0.7.2, isolated staging readiness, and an accepted next specification
+STOP_CONDITIONS: Missing or contradictory v0.7.3 specification; unexpected dirty work; production/staging identity uncertainty; private-value exposure; unclaimed writer lock
+NEXT_EXACT_ACTION: Ask Earl for the first bounded v0.7.3 product objective, then adopt a task-specific implementation specification before claiming the writer lock or changing code or an environment.
 
-Completed in this slice: exact target preflight and rollback capture; isolated D1/R2; canonical 0001-0030 migrations; private exact identity/recipient/sender secrets; exact-SHA Worker; deterministic backup-first reset/reseed through generation 4; restore integrity/FK/invariants; inherited Google/Drive binding removal; direct routes and banners; owner login, permission/disabled denials; critical workflow reads; negative zero-challenge containment; provider-accepted delivery; successful one-time redemption; same-code replay and altered-code denial; final repository gate; fresh Sol review with its bounded P1 repair; and draft PR #17.
-
-Protected boundaries remain unchanged. The prior operational staging D1 is read-only evidence. Production received no write, deploy, migration, seed, reset, route, secret, or binding change. Raw provider IDs, private paths, recipient values, credentials, protected identity material, exports, hashes, and recovery data stay outside Git and logs.
+V0.7.2.1 is complete: PR #17 merged at `6a30ab482a1e9884870fcfb6e88b7c57f879a44c`; production stayed on v0.7.2; isolated staging acceptance passed at `c4fa46f267733eeceb5d82a825431c6337f8e4e0`; approved-recipient delivery/redemption/replay controls passed; required local and remote gates passed; safe topology cleanup completed; unique/dirty work remains preserved.

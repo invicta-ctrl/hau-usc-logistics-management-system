@@ -1,32 +1,32 @@
 # Current Work Pointer
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: V0.7.2.1 Repository Normalization and Permanent Staging Sandbox
-STATUS: ACTIVE - STAGING ACCEPTED; PROTECTED MERGE AND CLOSEOUT REMAIN
+MILESTONE: V0.7.3 Product Work Intake
+STATUS: READY - V0.7.2.1 COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: GIT_UPSTREAM
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: CODEX
-WRITER_LOCK: CODEX retains the maintenance-branch lock through staging acceptance, final gates, protected merge, and closeout
-REQUIRED_MODEL: GPT-5.6 Terra for governance/documentation; escalate protected-boundary decisions
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED - a future writer must claim the lock before changing the repository or an environment
+REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after an accepted v0.7.3 task exists
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.2.1-repository-normalization-and-staging-sandbox.md
-LAST_VALID_RUNTIME_EVIDENCE: The exact maintenance head is deployed to the isolated staging Worker with schema 30 / migration 0030, readiness and protected configuration true, generation 4 synthetic-only state, fresh restore integrity/FK proof, private exact identity/allowlist containment, owner and denial checks, critical workflow reads, provider-accepted delivery, successful one-time redemption, same-code replay denial, and altered-code denial. Final repository gate, exact-head CI, and fresh Sol review pass. Production and the protected prior staging D1 remain unchanged.
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-product-work-intake.md
+MAINTENANCE_MERGE_SHA: 6a30ab482a1e9884870fcfb6e88b7c57f879a44c
+LAST_VALID_VERIFICATION_SHA: c4fa46f267733eeceb5d82a825431c6337f8e4e0
+LAST_VALID_RUNTIME_EVIDENCE: Isolated staging runs v0.7.2 at c4fa46f267733eeceb5d82a825431c6337f8e4e0 with schema 30 / migration 0030, readiness and protected configuration true, private exact identity/recipient containment, provider-accepted delivery, successful one-time redemption, same-code replay denial, altered-code denial, and a synthetic-only generation 4 dataset. Production remains the canonical v0.7.2 runtime and has no blocker.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Deploy this acceptance-record head to isolated staging, verify exact SHA and required PR checks, mark PR #17 ready, and merge through protected GitHub without a runtime release tag.
-HANDOFF_STATUS: ACTIVE
+NEXT_EXACT_ACTION: Ask Earl for the first bounded v0.7.3 product objective, then adopt a task-specific implementation specification before claiming the writer lock or changing code or an environment.
+HANDOFF_STATUS: READY_FOR_HANDOFF
 
-Resolve BRANCH, HEAD, UPSTREAM, and WORKTREE_STATE during the Git handshake; markers avoid a continuity edit invalidating its own commit identity. The accepted specification remains the controlling implementation authority.
+Resolve BRANCH, HEAD, UPSTREAM, and WORKTREE_STATE during the Git handshake. The accepted v0.7.3 intake specification authorizes planning only; it does not authorize implementation or an environment write.
 
-The owner-selected permanent sandbox uses Worker `hau-usc-logistics-staging`, D1 `hau-usc-logistics-staging-sandbox-v0721`, and R2 buckets `hau-usc-logistics-staging-sandbox-v0721-assets` and `hau-usc-logistics-staging-sandbox-v0721-evidence`. Full resource IDs, the prior Worker rollback version, recipient, credentials, exports, and recovery bookmarks remain in the owner-private manifest outside Git. Safe D1 fingerprint: `c50b9b3d`.
+PR #17 merged through protected `main`; its temporary maintenance branch was deleted locally and remotely. Exact-head repository verification, browser smoke, CodeQL, secret/PII scans, governance checks, handoff verification, and fresh Sol review passed. No runtime v0.7.2.1 tag or release was created.
 
-Canonical migrations 0001-0030 are applied only to the new D1. Generation 4 contains 11 visibly synthetic actors (10 active, 1 disabled), 36 active inventory items, 3 requests, 3 deliverables, 2 lending tickets, and 1 event. Prior generations are disabled/archived with append-only ledger reversals. Current balances have zero negatives. A fresh export restores at schema 30 with all 30 migrations, integrity `ok`, and zero foreign-key violations.
+The permanent sandbox uses Worker `hau-usc-logistics-staging`, D1 `hau-usc-logistics-staging-sandbox-v0721`, and R2 buckets `hau-usc-logistics-staging-sandbox-v0721-assets` and `hau-usc-logistics-staging-sandbox-v0721-evidence`. Full IDs, recipient, credentials, secrets, provider references, exports, bookmarks, rollback versions, and recovery hashes remain owner-private outside Git. The protected prior staging D1 remains read-only evidence.
 
-Reset/reseed captured a private pre-reset export and manifest, proved the isolated restore, archived generation 2, revoked its active access, appended ledger reversals, and seeded generation 3 without deleting immutable history. Direct `/login`, `/portals`, `/request`, `/lending`, and `/app/admin` staging routes serve through the canonical SPA fallback. Synthetic owner login, exact staging banner, owner-only denial (`403`), and disabled-login denial (`403`) passed.
+Post-merge cleanup removed the two clean contained Phase 18 worktrees, three clean patch-equivalent v0.7.2 task worktrees/branches, the clean tooling worktree, the maintenance branch, and merged release/docs/integration branches. PR #10 was closed as superseded; its useful CodeQL and Renovate content is on `main`, while its unique branch commit remains preserved locally and remotely. The dirty unique design worktree/branch was retained untouched.
 
-Email containment, sender, and the exact identity fixture are Worker secrets. The fixture is active only in staging and production ignores it. A non-allowlisted same-domain probe produced the generic response with zero additional challenges/provider calls. The approved private recipient passed delivery and one-time redemption. Same-code replay and an altered code failed closed. The verified challenge keeps sandbox reset fail-closed until its lifecycle is terminal. No code or receipt is retained in Git or handoff text.
-
-Rollback: use the privately captured prior Worker version to restore the previous staging bindings, verify its exact release and binding fingerprints, and leave the new resources isolated. Do not delete any new resource automatically. Removal requires exact private ID/name re-verification, zero-binding proof, recovery/evidence review, and fresh owner approval. Production is never a rollback target. The old operational staging D1 remains protected read-only evidence and was not migrated, seeded, reset, reclassified, or modified.
+Rollback uses the private pre-reset export and manifest, the verified isolated restore (`integrity_check = ok`, zero foreign-key violations), and the retained prior staging Worker version. Production is never a rollback target. Sandbox reset remains fail-closed while verification/application lifecycle state is active.
