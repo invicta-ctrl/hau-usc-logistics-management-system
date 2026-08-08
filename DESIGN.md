@@ -81,6 +81,18 @@ typography:
     fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
     fontSize: "10px"
     fontWeight: 600
+typographyDrift: >-
+  This ramp is the INTENDED scale, not an inventory of what production
+  currently renders. src/styles/**.css presently uses twenty distinct literal
+  sizes - 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 25, 27, 29,
+  30, 36, 38 - accumulated per surface over time. Detector findings against
+  the off-ramp values are TRUE POSITIVES and are deliberately left visible.
+  Documenting all twenty here would silence them by legitimising the drift,
+  which is the opposite of a design system. Consolidating them onto this ramp
+  is outstanding work under section 17 of the accepted specification. Many of
+  the smallest values also sit inside the byte-for-byte cascade preserved from
+  legacy/HAU-USC_Logistics-Prototype.original.html, so they cannot be changed
+  until that guard is addressed for the module concerned.
 rounded:
   xs: "6px"
   sm: "12px"
