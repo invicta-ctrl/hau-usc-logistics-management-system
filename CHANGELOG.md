@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
+
+### Fixed
+
+- Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
+
+### Verification boundary
+
+- Generation 3, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, and negative email containment pass. Positive delivery remains stopped because the approved recipient is not eligible under the protected identity source; no provider call or challenge was created.
+
 ## 0.7.2 - 2026-08-08
 
 ### Released
