@@ -2,7 +2,7 @@
 
 INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
 SECONDARY INTENTS: SECURITY, TRANSACTIONAL_INTEGRITY, OPERATIONS, RELEASE
-MODE: repair the two exact-SHA P1 review findings, freeze/review the replacement candidate, then continue only through passed release gates
+MODE: repair the consumed-reservation P1 from the replacement exact-SHA review, freeze/review the next candidate, then continue only through passed release gates
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
 SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
 AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`; owner-supplied v0.7.2 Codex resume prompt; repository invariants
@@ -10,7 +10,7 @@ RISK: critical because reservation concurrency, inventory availability, migratio
 DELIVERABLE: bind reservations to the request line's authoritative item, bind public request retries to actor and payload before returning tracking access, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
 VERIFICATION: two pre-fix behavioral failures; existing concurrent reservation proof; focused unit/Worker tests; full repository, Worker/D1, and browser gates; deterministic default artifact; fresh same-SHA security and transaction reviews; exact-head CI; staged backup/migration/readiness/reconciliation before production
 STOP CONDITIONS: unknown work or target; capacity invariant cannot be expressed atomically; contract/spec conflict; unresolved P0/P1; missing identity class/private config/backup/rollback; provider or target mismatch; privacy/secret risk; external MFA or owner-only browser action
-STATUS: LOCAL_P1_REPAIR_VERIFIED_AWAITING_REPLACEMENT_SHA_REVIEW
+STATUS: LOCAL_CONSUMED_RESERVATION_REPAIR_VERIFIED_AWAITING_EXACT_SHA_REVIEW
 
 Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
@@ -22,11 +22,11 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: commit and push the locally verified repair for the two
-P1 findings from the exact review of
-`5ef9421494ab51af8e0524b694ff0f3ff81503f0`, then repeat fresh
-security/privacy and transaction/idempotency reviews against the replacement
-exact SHA. Zero unresolved P0/P1 is required before any staging operation.
+Current exact action: commit and push the locally verified repair for the
+blocking transaction finding from the exact review of
+`4ed88ae7cf84037a14a0b397062821a83769a58e`, then repeat both exact-SHA
+reviews and exact-head CI. Zero unresolved P0/P1 is required before any staging
+operation.
 
 Exact-SHA review blockers being repaired:
 
@@ -37,6 +37,10 @@ Exact-SHA review blockers being repaired:
   retry key before proving the new payload matched. The existing
   `idempotency_keys` table will bind actor, protected fingerprint, and safe
   result in the same atomic submission batch.
+- the first replacement review confirmed both prior P1s closed, but found the
+  capacity guard still counted fully consumed ACTIVE reservations. A partial
+  release could therefore make the remaining same-line demand permanently
+  unreservable even though authoritative remaining coverage was zero.
 
 Local repair proof on 2026-08-08:
 
@@ -49,9 +53,22 @@ Local repair proof on 2026-08-08:
 - staging artifact preflight: expected exit 1 because the tracked artifact is
   the safe preview build, not a live D1 deployable.
 
+Consumed-reservation correction proof on 2026-08-08:
+
+- pre-fix real Worker/D1 sequence request 4 -> reserve 1 -> release 1 ->
+  restock -> reserve remaining 3 returned 409 at the remainder reservation;
+- post-fix the same sequence succeeds, an additional reservation returns 409,
+  and releasing the remaining 3 completes the request;
+- focused unit contracts: 31/31;
+- repeated `npm run check`: 117 files / 811 tests;
+- repeated local Worker/D1: 58/58;
+- repeated browser matrix: 138 passed / 360 intentional skips;
+- deterministic preview artifact restored and staging preflight again failed
+  closed with expected exit 1.
+
 N-1 repair: `reserveStock` now evaluates requested reservation quantity against
-`requested_quantity - released_quantity - SUM(ACTIVE reservations)` before the
-new reservation is inserted. The guarded batch accepts the reachable
+`requested_quantity - released_quantity - SUM(unconsumed ACTIVE reservation
+coverage)` before the new reservation is inserted. The guarded batch accepts the reachable
 `READY_TO_RESERVE`, `READY_TO_RELEASE`, and `PARTIALLY_RELEASED` line states,
 preserves `PARTIALLY_RELEASED`, and keeps the insert, audit, idempotency receipt,
 parent timestamp, and revision bumps in one atomic batch.

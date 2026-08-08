@@ -1322,6 +1322,49 @@ test('a partial reservation can be topped up after restock without exceeding dem
   };
   expect(await activeReservationQuantity()).toBe(1);
 
+  const evidenceBytes = new Uint8Array([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...new TextEncoder().encode('synthetic-consumed-reservation-top-up-evidence'),
+  ]);
+  const uploaded = await mutate(request, csrfToken, 'uploadEvidence', {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    originalFileName: 'synthetic-consumed-reservation-top-up.png',
+    mimeType: 'image/png',
+    base64: btoa(String.fromCharCode(...evidenceBytes)),
+    relatedEntityType: 'RELEASE_REQUEST',
+    relatedEntityId: stockParent.id,
+    requestId: stockParent.id,
+    clientRequestId: `rv01-top-up-evidence-${stockParent.id}`,
+  });
+  expect(uploaded.status()).toBe(200);
+  const { evidenceId } = await uploaded.json();
+
+  const firstRelease = await mutate(request, csrfToken, 'confirmRelease', {
+    requestId: stockParent.id,
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Top-up Recipient',
+    recipientRole: 'Synthetic Tester',
+    department: 'Synthetic Department',
+    evidenceId,
+    lines: [{ requestLineId: stockLine.id, quantity: 1 }],
+    clientRequestId: `rv01-top-up-release-first-${stockParent.id}`,
+  });
+  expect(firstRelease.status()).toBe(200);
+  const partiallyReleased = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+  expect(partiallyReleased.data.requestLines.find((row) => row.id === stockLine.id)?.status).toBe(
+    'PARTIALLY_RELEASED',
+  );
+  expect(partiallyReleased.data.requests.find((row) => row.id === stockParent.id)?.status).toBe(
+    'PARTIALLY_RELEASED',
+  );
+
   const restockContext = await apiRequest.newContext({ baseURL: BASE_URL });
   try {
     const restockSubmitted = await restockContext.post('/api/public/request', {
@@ -1435,6 +1478,21 @@ test('a partial reservation can be topped up after restock without exceeding dem
   });
   expect(overReservation.status()).toBe(409);
   expect(await activeReservationQuantity()).toBe(4);
+
+  const finalRelease = await mutate(request, csrfToken, 'confirmRelease', {
+    requestId: stockParent.id,
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Top-up Recipient',
+    recipientRole: 'Synthetic Tester',
+    department: 'Synthetic Department',
+    evidenceId,
+    lines: [{ requestLineId: stockLine.id, quantity: 3 }],
+    clientRequestId: `rv01-top-up-release-remainder-${stockParent.id}`,
+  });
+  expect(finalRelease.status()).toBe(200);
+  const completed = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+  expect(completed.data.requestLines.find((row) => row.id === stockLine.id)?.status).toBe('COMPLETED');
+  expect(completed.data.requests.find((row) => row.id === stockParent.id)?.status).toBe('COMPLETED');
 });
 
 test('an event-bounded reviewer is refused on a record outside its event scope', async ({ request }) => {

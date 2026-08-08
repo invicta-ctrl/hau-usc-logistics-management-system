@@ -6,8 +6,10 @@ Repair the two P1 findings from the exact-SHA review of
 `5ef9421494ab51af8e0524b694ff0f3ff81503f0`: bind every request-line
 reservation to the line's authoritative catalog item, and bind public request
 idempotency keys to a canonical payload fingerprint without disclosing an
-unrelated tracking token. Preserve the accepted atomic reservation-capacity
-guard and public request transaction.
+unrelated tracking token. The replacement review of
+`4ed88ae7cf84037a14a0b397062821a83769a58e` added one blocking correction:
+the atomic capacity guard must count only unconsumed reservation coverage.
+Preserve the accepted public request transaction.
 
 ## Type
 
@@ -29,13 +31,15 @@ required by `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`.
 | 5 | Same-key/different-payload public retries must fail without exposing the prior tracking token. | 2, 3 |
 | 6 | Historical public requests lacking a durable fingerprint must fail closed. | 2, 3 |
 | 7 | Full repository, Worker/D1, browser, artifact, review, and exact-head CI gates must pass. | 4 |
+| 8 | Consumed reservation quantity must not block same-line remaining demand. | 5 |
 
-Coverage: 7 of 7 requirements mapped.
+Coverage: 8 of 8 requirements mapped.
 
 ## Status
 
-Implementation and focused verification complete. Full local gates are green;
-exact-SHA reviews and exact-head CI remain release gates.
+All three repairs and focused verification are complete. Repeated full local
+gates are green; replacement exact-SHA reviews and exact-head CI remain release
+gates.
 
 ## Context
 
@@ -138,6 +142,17 @@ No applicable `CLAUDE.md` exists under the repository or affected directories.
 - Commit/push, run fresh exact-SHA security and transaction reviews, and require
   exact-head CI green.
 
+### Step 5: Count only remaining reservation coverage
+
+**Files:** `src/server/d1/operational-service.js` and the RV-01 Worker/D1 suite.
+
+- Match the authoritative `inventory_balances` and `confirmRelease` semantics
+  by subtracting append-only `reservation_consumptions` from each ACTIVE
+  reservation in the line-capacity predicate.
+- Prove request 4 -> reserve 1 -> release 1 -> restock -> reserve remaining 3
+  succeeds, while one additional unit still returns 409.
+- Repeat Step 4 against the replacement exact SHA.
+
 ## Removal Specification
 
 - Remove the unsafe request-table-only public replay branch that returns a
@@ -163,4 +178,5 @@ No applicable `CLAUDE.md` exists under the repository or affected directories.
 - [x] Public exact retry returns the original result.
 - [x] Changed-payload and legacy-key collision fail closed without tracking
       disclosure.
+- [x] Consumed ACTIVE reservations no longer block remaining same-line demand.
 - [ ] Full gates, deterministic artifact, exact reviews, and CI pass.

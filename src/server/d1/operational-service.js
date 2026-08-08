@@ -4323,7 +4323,11 @@ export function createD1OperationalService({
                WHERE id = ?1
                  AND status IN ('READY_TO_RESERVE', 'READY_TO_RELEASE', 'PARTIALLY_RELEASED')
                  AND ?3 <= requested_quantity - released_quantity - COALESCE((
-                   SELECT SUM(reservation.quantity)
+                   SELECT SUM(MAX(reservation.quantity - COALESCE((
+                     SELECT SUM(consumption.quantity)
+                     FROM reservation_consumptions consumption
+                     WHERE consumption.reservation_id = reservation.id
+                   ), 0), 0))
                    FROM reservations reservation
                    WHERE reservation.request_line_id = request_lines.id
                      AND reservation.status = 'ACTIVE'
