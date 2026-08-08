@@ -16,10 +16,13 @@
 ### Changed
 
 - Merged the v0.7.2.1 repository-normalization and permanent-sandbox maintenance candidate through protected PR #17, released the writer lock, and advanced the canonical continuity pointer to v0.7.3 product intake without starting v0.7.3 implementation or changing the v0.7.2 runtime.
+- Closed the owner-accepted v0.7.3 rollout-stabilization intake as `NO RUNTIME PATCH REQUIRED`. Focused Account, Request/RV-01, Lending, Inventory/Release, route, privacy, and safe-error acceptance found no eligible blocker, so product version remains 0.7.2 and no v0.7.3 runtime tag, release, staging deployment, or production action was created.
+- Merged the documentation-only v0.7.3 no-op closeout through protected PR #19 at `8b4ad05c6754b3de627535577d24216023dca8ca` after resolving its review thread, then deleted the temporary release branch; the merge made no runtime, provider, database, migration, staging, or production change.
 
 ### Verification boundary
 
 - Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, negative zero-challenge containment, provider delivery, one-time redemption, same-code replay denial, and altered-code denial pass. Exact-head repository verification, browser smoke, CodeQL, governance, handoff, secret/PII scans, and fresh Sol review also pass.
+- V0.7.3 focused evidence passed: 89 unit tests, 19 RV-01 Worker/D1 tests, ten coherent core Worker/D1 cases, and six Account/Public portal UI cases. Production and staging remain ready/protected at their unchanged exact SHAs and schema 30/0030. Four missing isolated-staging brand-image endpoints were recorded as a cosmetic, out-of-scope asset-population observation; daily-use shells remain available.
 
 ## 0.7.2 - 2026-08-08
 
