@@ -1,0 +1,160 @@
+{
+  "passed": 13,
+  "failed": 0,
+  "results": [
+    {
+      "name": "route registry is visible",
+      "pass": true,
+      "evidence": {
+        "surfaces": 33,
+        "title": "HAU-USC Logistics · Whole-site redesign preview v4.1"
+      }
+    },
+    {
+      "name": "desktop rail semantics are truthful",
+      "pass": true,
+      "evidence": {
+        "before": "true",
+        "after": {
+          "expanded": "false",
+          "rail": "collapsed",
+          "drawer": "closed"
+        }
+      }
+    },
+    {
+      "name": "mobile drawer semantics and request detail work",
+      "pass": true,
+      "evidence": {
+        "before": "false",
+        "open": {
+          "expanded": "true",
+          "drawer": "open"
+        },
+        "detailTitle": "Sound system and stage materials"
+      }
+    },
+    {
+      "name": "command palette filters, focuses, navigates, and restores",
+      "pass": true,
+      "evidence": {
+        "opened": {
+          "active": "command-input",
+          "workspaceInert": true,
+          "previewInert": true,
+          "options": 10
+        },
+        "filtered": 3,
+        "selected": "inventory.overview"
+      }
+    },
+    {
+      "name": "confirmation overlay traps meaningful focus and restores it",
+      "pass": true,
+      "evidence": {
+        "opened": {
+          "active": "confirm-done",
+          "workspaceInert": true,
+          "open": true
+        },
+        "tabInside": true,
+        "closed": {
+          "open": false,
+          "restored": "confirm-accept"
+        }
+      }
+    },
+    {
+      "name": "role picker uses a focused dialog and changes preview only",
+      "pass": true,
+      "evidence": {
+        "opened": {
+          "active": "role-view-select",
+          "copy": "This changes the visible preview perspective only. It does not change an account, permission, committee scope, or server authorization.",
+          "workspaceInert": true
+        },
+        "applied": {
+          "role": "Requester",
+          "focus": "open-menu",
+          "toast": "Preview role: Requester. Authorization was not changed."
+        }
+      }
+    },
+    {
+      "name": "Request Center mirrors governed create and track setup",
+      "pass": true,
+      "evidence": {
+        "boundary": "\n      Request Center\n        Production uses an authenticated department session. This preview mirrors that setup with an illustrative, non-persistent identity.\n      Illustrative Executive Council\n    ",
+        "draft": {
+          "items": 1,
+          "submitDisabled": false,
+          "description": "Illustrative folding table"
+        },
+        "toast": "Preview only: no request was submitted, reserved, or recorded."
+      }
+    },
+    {
+      "name": "profile image stays local and survives a theme rerender",
+      "pass": true,
+      "evidence": {
+        "preview": true,
+        "note": "Local preview only. The image is not uploaded, saved, or sent anywhere.",
+        "fileValue": ""
+      }
+    },
+    {
+      "name": "form values survive theme and overlay rerenders",
+      "pass": true,
+      "evidence": {
+        "afterTheme": "Preserved local draft",
+        "afterOverlay": "Preserved local draft"
+      }
+    },
+    {
+      "name": "route animation is scoped and all animation is finite",
+      "pass": true,
+      "evidence": {
+        "routeRun": "true",
+        "afterTheme": {
+          "routeRun": "true",
+          "transitionState": null,
+          "infinite": 0,
+          "activeRouteAnimations": 0
+        },
+        "loadingInfinite": 0
+      }
+    },
+    {
+      "name": "browser history restores prior routes",
+      "pass": true,
+      "evidence": {
+        "restored": "admin.overview"
+      }
+    },
+    {
+      "name": "reduced motion reaches final state immediately",
+      "pass": true,
+      "evidence": {
+        "reduce": true,
+        "active": "command-input",
+        "transitionState": null,
+        "maxDuration": 0.08
+      }
+    },
+    {
+      "name": "unsupported View Transition fallback is complete",
+      "pass": true,
+      "evidence": {
+        "surface": "admin.overview",
+        "theme": "dark",
+        "command": true,
+        "active": "command-input",
+        "fallbackCleared": true,
+        "routeMotion": {
+          "fallback": "route",
+          "animation": "v4-fallback-arrive"
+        }
+      }
+    }
+  ]
+}

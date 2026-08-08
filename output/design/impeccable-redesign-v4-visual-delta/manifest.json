@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-08T13:27:49.306Z",
+  "beforeArtifact": "HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v3.html",
+  "afterArtifact": "HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html",
+  "privacySanitization": "Rendered comparison evidence only; source artifacts were not changed.",
+  "requiredPairs": 8,
+  "failures": 0,
+  "cases": [
+    {
+      "id": "overview-light-1440",
+      "label": "Overview · light · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "surface": "admin.overview",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\overview-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "3a0a1f3db082c8c9c06b7e0e0871aee4b1e0815e869a6da4ca4c69b4ef547659"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\overview-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "84e8ea4568cfa65e0c01f3c207bb39d0f629fe24b5d3188a4bf44205d4e186fd"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\overview-light-1440.png",
+        "sha256": "4599adf842f9936e9cd358b161aa141f86a7bdbbc670fcea882839ce3ecfab91"
+      }
+    },
+    {
+      "id": "overview-dark-1440",
+      "label": "Overview · dark · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "surface": "admin.overview",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\overview-dark-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "2ffe1eb72b0605818ea23f92acb86bf3dc5c1714972a132291383a1d4308a9fb"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\overview-dark-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "9f889be62efd271b2471e5b2c6ad55e7a5c34b259e3784a549d2203bff59fec0"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\overview-dark-1440.png",
+        "sha256": "83210b71ebb6ad724fd1d0624105030c2a4197d3c7b3b2828d72bd2f3d9ba463"
+      }
+    },
+    {
+      "id": "request-center-light-1440",
+      "label": "Request Center · light · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "surface": "public.request-intake",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\request-center-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "8f5b63beba64f75d63bc772a7ff94664107cf9f6a51f8cfbe60d5398351d9eb9"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\request-center-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "1711ebf266b475d07cd064ac5051e8a47b92bab33aff1e342855d7bf7586b0b8"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\request-center-light-1440.png",
+        "sha256": "871bdfc6b69f73419c18ccb932ff2728deda3501dad39ae19f5708aaccf17799"
+      }
+    },
+    {
+      "id": "inventory-light-1440",
+      "label": "Inventory · light · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "surface": "inventory.catalog",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\inventory-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "108ca811e9e89357f5d51843b1a179f6f875cbbbe9b8f8ede6d71917990fc457"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\inventory-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "42bcd27dbfb335a654b04dfb77fbaaa5d99612792a0ee96cccd5d4692eea6cb4"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\inventory-light-1440.png",
+        "sha256": "c6cd7b8ff3064fc5c265fddddaae899765d458678ba0fbb9505dfec7cd4aa21a"
+      }
+    },
+    {
+      "id": "release-lending-dark-1440",
+      "label": "Release / Lending · dark · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "dark",
+      "surface": "lending.queue",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\release-lending-dark-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "4f619764b97ba8d0c796c052d07f81e9b0e19db3d73a0bf71c55d4637b1bba6c"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\release-lending-dark-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "7df46813be157daa723d4d1501e396562be0409358d668bb43078dfd2edd3fc7"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\release-lending-dark-1440.png",
+        "sha256": "21cd088117b6c1c9d003dd5f27ecc3ca361062b53ae5c3455e87bd2666506c3b"
+      }
+    },
+    {
+      "id": "public-portal-light-1440",
+      "label": "Public portal · light · 1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "surface": "public.landing",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\public-portal-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "549d0aed67d990d47e23ad6bb0112f59b82cd19835c7c03aa879fcabc4fa5e34"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\public-portal-light-1440.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "4b0964f5ce90b969f6c6d10abe4911fdcf531d0bdc9e1e22657e73fb33158c90"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\public-portal-light-1440.png",
+        "sha256": "8cdb7c13dd6ff840bfd8f5e0e574b11c8f656289b3f9ffedbfd44908461eb30a"
+      }
+    },
+    {
+      "id": "overview-light-390",
+      "label": "Overview · light · 390",
+      "width": 390,
+      "height": 900,
+      "theme": "light",
+      "surface": "admin.overview",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\overview-light-390.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "857b860b3f5eb6f7c8572012e82410953af73b523d3a177f2c1165618abd845a"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\overview-light-390.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "df2bce353283f30c82fe786e9e7702e6da267b99011f41a5dc45c48fc8e4ae90"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\overview-light-390.png",
+        "sha256": "72cff306defcbb7a1029da6af743953add0ba77d171448ff7bba1df39ff17d89"
+      }
+    },
+    {
+      "id": "overview-dark-390",
+      "label": "Overview · dark · 390",
+      "width": 390,
+      "height": 900,
+      "theme": "dark",
+      "surface": "admin.overview",
+      "before": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\before-v3\\overview-dark-390.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "d7416e6309fa2ea3357942661526671f62feea79252def2333f6e2f5a01c3d2d"
+      },
+      "after": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\after-v4.1\\overview-dark-390.png",
+        "errors": [],
+        "externalRequests": [],
+        "sha256": "4b74cc4ce17584c19a5632c52ae322c956b13d484527a8fabd8491536a8fba9a"
+      },
+      "comparison": {
+        "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-visual-delta\\comparisons\\overview-dark-390.png",
+        "sha256": "e3ad92b64c8fe70407638f4bc7a699aa906a03cf4083390393f14cd81e6a426c"
+      }
+    }
+  ]
+}

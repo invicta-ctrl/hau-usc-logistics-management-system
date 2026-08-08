@@ -1,0 +1,250 @@
+/* Responsive layer — driven by container queries on `.frame`, so the preview's
+   viewport switcher reflows the real layout and browser resizing does too.
+   `container-type: inline-size` also makes `.frame` the containing block for
+   fixed-position descendants, which keeps the mobile drawer, tab bar and
+   action bar inside the simulated device.
+
+   Priority rule from the brief: narrow layouts REORDER and STACK.
+   Operational columns (status, quantity, readiness) survive;
+   reference ids and secondary metadata are the first to go. */
+
+/* ---- 1180px: detail leaves the split and becomes a drawer ---- */
+@container app (max-width: 1180px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .split__detail {
+    display: none;
+  }
+
+  .split[data-detail-mode="inline"] .split__detail {
+    display: block;
+    position: static;
+  }
+}
+
+/* ---- 1023px: rail goes off-canvas ---- */
+@container app (max-width: 1023px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    position: fixed;
+    top: var(--preview-bar-h, 0px);
+    bottom: 0;
+    left: 0;
+    z-index: 140;
+    width: min(86%, 300px);
+    height: auto;
+    max-height: none;
+    box-shadow: var(--elev-raised-strong);
+    transform: translateX(-102%);
+    transition: transform var(--dur-move) var(--ease);
+  }
+
+  .shell[data-drawer="open"] .rail {
+    transform: translateX(0);
+  }
+
+  .rail__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    display: block;
+    border: 0;
+    background: rgba(20, 10, 12, 0.55);
+    opacity: 0;
+    /* visibility:hidden — not just opacity:0 — so the closed scrim leaves the
+       accessibility tree and the tab order instead of lingering as an
+       invisible control. */
+    visibility: hidden;
+    transition: opacity var(--dur-move) var(--ease), visibility 0s linear var(--dur-move);
+  }
+
+  .shell[data-drawer="open"] .rail__scrim {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--dur-move) var(--ease), visibility 0s;
+  }
+
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---- 900px: attention band becomes 2x2 ---- */
+@container app (max-width: 900px) {
+  .attention {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attention__item:nth-child(3),
+  .attention__item:nth-child(4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .attention__item:nth-child(odd) {
+    border-left: 0;
+  }
+}
+
+/* ---- 767px: mobile ---- */
+@container app (max-width: 767px) {
+  .main {
+    padding: var(--s-5) 16px calc(var(--s-10) + 76px);
+  }
+
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-3);
+  }
+
+  .page-head__actions {
+    justify-content: flex-start;
+  }
+
+  /* Lowest-priority columns leave first. Never status or quantity. */
+  table.q .col-p3 {
+    display: none;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .detail__body {
+    max-height: none;
+  }
+
+  /* Bottom tab bar */
+  .tabbar {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 120;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    padding: 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--paper);
+    box-shadow: var(--elev-raised);
+  }
+
+  .tabbar button {
+    display: grid;
+    place-items: center;
+    gap: 3px;
+    min-height: 48px;
+    padding: 5px 3px;
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .tabbar button .icon {
+    color: var(--icon-ink-muted);
+  }
+
+  .tabbar button[aria-current="page"] {
+    background: var(--gold-300);
+    color: var(--ox-900);
+  }
+
+  .tabbar button[aria-current="page"] .icon {
+    color: var(--ox-800);
+  }
+
+  /* Sticky primary action */
+  .action-bar {
+    position: fixed;
+    right: 0;
+    bottom: 74px;
+    left: 0;
+    z-index: 118;
+    display: flex;
+    gap: var(--s-2);
+    padding: 10px 12px;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .action-bar .btn {
+    flex: 1;
+  }
+
+  .toast-region {
+    right: 12px;
+    bottom: 140px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .menu {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+/* ---- 560px: second-priority columns leave ---- */
+@container app (max-width: 560px) {
+  table.q .col-p2 {
+    display: none;
+  }
+
+  .attention {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attention__item {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .attention__item:first-child {
+    border-top: 0;
+  }
+
+  .receipt__ref {
+    font-size: var(--t-lg);
+  }
+}
+
+/* ---- 380px: last tightening; nothing operational is removed ---- */
+@container app (max-width: 380px) {
+  .main {
+    padding-inline: 12px;
+  }
+
+  .topbar {
+    padding-inline: 12px;
+  }
+
+  .account-button__text {
+    display: none;
+  }
+
+  /* The shortcut hint is the first thing to go; the field itself stays usable. */
+  .search kbd {
+    display: none;
+  }
+
+  .stepper li span {
+    display: none;
+  }
+}

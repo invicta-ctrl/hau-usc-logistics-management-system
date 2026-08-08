@@ -1,0 +1,6460 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#610b0f" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>HAU-USC Logistics · Whole-site redesign preview</title>
+    <!--
+      Generated export. Do not edit.
+      Authoritative source: prototypes/impeccable-whole-site-redesign-v2/
+      Regenerate: node prototypes/impeccable-whole-site-redesign-v2/tools/export.mjs
+      Non-production design preview. No live service is contacted.
+      All data shown is illustrative and sanitized.
+    -->
+    <style>
+/* ===== styles/tokens.css ===== */
+/* v2 — Kinetic Institutional Operations · token layer.
+
+   The v1 defect this file fixes: --canvas and --paper were 1.5% apart in
+   relative luminance, so nothing on a page had a figure/ground relationship
+   and every surface read at one level. v2 opens a real surface ladder in both
+   themes, raises the type scale, restores radius variety, and adds a
+   documented motion system.
+
+   Identity ramp is preserved from the v0.7.2 reference. */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Identity ramp (preserved) ---- */
+  --ox-900: #40070a;
+  --ox-800: #610b0f;
+  --ox-700: #78141a;
+  --ox-600: #8d1f28;
+  --ox-500: #a62835;
+
+  --gold-700: #7d5518;
+  --gold-600: #a8761f;
+  --gold-500: #c8992f;
+  --gold-400: #e8b93c;
+  --gold-300: #f2d15c;
+  --gold-200: #f6e29a;
+  --gold-100: #faeecb;
+
+  /* ---- Surface ladder: ground < surface < raised < overlay ---- */
+  --canvas: #e9e0d0; /* page ground — sunken, warm sand */
+  --paper: #fffdf8; /* working surface */
+  --paper-2: #f7f0e2; /* inset / secondary */
+  --paper-3: #ffffff; /* elevated overlay */
+  --cream: #f6ecda;
+
+  --ink: #241416;
+  --ink-2: #4e3a3e;
+  /* Must clear 4.5:1 against the *ground* (#e9e0d0), not just paper — v2's
+     ground is deliberately darker than v1's, which pushed the v1 value to
+     4.23:1. Measured 4.82:1 on ground, 6.0:1 on paper. */
+  --muted: #6f5a60;
+  --line: #d8cbb6;
+  --line-strong: #bda98c;
+  --line-hair: #e6dcc9;
+  --white: #ffffff;
+
+  /* Compositional anchors — brand colour is a layout device in v2,
+     not just a button fill. */
+  --anchor: var(--ox-800);
+  --anchor-soft: color-mix(in srgb, var(--ox-800) 8%, var(--paper));
+  --anchor-line: color-mix(in srgb, var(--ox-800) 24%, var(--line));
+  --accent: var(--gold-400);
+  --accent-wash: color-mix(in srgb, var(--gold-300) 26%, var(--paper));
+  --accent-line: color-mix(in srgb, var(--gold-500) 46%, var(--line));
+
+  /* ---- Status tones: still exactly five ---- */
+  --tone-neutral-fg: #5d4a4f;
+  --tone-neutral-bg: #ece3d3;
+  --tone-neutral-line: #cdbfa7;
+
+  --tone-info-fg: #23557f;
+  --tone-info-bg: #e4eefa;
+  --tone-info-line: #b0cbe6;
+
+  --tone-progress-fg: #7d5518;
+  --tone-progress-bg: #fbeed2;
+  --tone-progress-line: #dcbe8a;
+
+  --tone-done-fg: #1f6b41;
+  --tone-done-bg: #e2f3e9;
+  --tone-done-line: #a8d3ba;
+
+  --tone-alert-fg: #9c2630;
+  --tone-alert-bg: #fbe6e8;
+  --tone-alert-line: #e3aeb3;
+
+  /* ---- Icon language (single brand ink preserved) ---- */
+  --icon-ink: var(--ox-800);
+  --icon-ink-muted: color-mix(in srgb, var(--ox-800) 66%, var(--muted));
+  --icon-surface: color-mix(in srgb, var(--gold-200) 42%, var(--paper));
+  --icon-surface-strong: color-mix(in srgb, var(--gold-200) 68%, var(--paper));
+  --icon-border: color-mix(in srgb, var(--gold-500) 40%, var(--line));
+
+  /* ---- Rail ---- */
+  --rail-from: #6b0e13;
+  --rail-to: #3d070a;
+  --rail-ink: #f7ecd9;
+  --rail-ink-dim: #d9bfae;
+  --rail-line: rgba(242, 209, 92, 0.22);
+
+  /* ---- Type: raised so sections assert ---- */
+  --font-body: "Aptos", "Segoe UI Variable", "Segoe UI", "Candara",
+    "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+  --t-2xs: 10px;
+  --t-xs: 11px;
+  --t-sm: 13px;
+  --t-md: 15px;
+  --t-lg: 20px; /* v1: 17 — section headings now assert */
+  --t-xl: 30px;
+  --t-2xl: 44px; /* v1: 32 — attention values carry the page */
+  --t-display: clamp(34px, 3.6vw, 54px);
+  --tracking-body: -0.01em;
+  --tracking-tight: -0.022em;
+  --tracking-label: 0.1em;
+
+  /* ---- Space ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 56px;
+
+  /* ---- Radius: variety restored, still no consumer-soft 20px on wide panels ---- */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+
+  /* ---- Elevation ladder ---- */
+  --elev-1: 0 1px 2px rgba(64, 30, 34, 0.05), 0 2px 8px rgba(64, 30, 34, 0.05);
+  --elev-2: 0 2px 6px rgba(64, 30, 34, 0.07), 0 10px 26px rgba(64, 30, 34, 0.08);
+  --elev-3: 0 8px 20px rgba(64, 30, 34, 0.12), 0 28px 60px rgba(64, 30, 34, 0.16);
+  --elev-inset: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  /* ---- Motion ---- */
+  --m-instant: 120ms;
+  --m-small: 200ms;
+  --m-surface: 280ms;
+  --m-overlay: 320ms;
+  --m-reveal: 400ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Compatibility aliases for rules carried over from v1. An undefined custom
+     property makes the whole declaration invalid, so these must exist. */
+  --dur-state: var(--m-instant);
+  --dur-move: var(--m-surface);
+  --elev-raised: var(--elev-2);
+  --elev-raised-strong: var(--elev-3);
+
+  /* ---- Layout ---- */
+  --rail-w: 272px;
+  --rail-w-collapsed: 76px;
+  --content-max: 1520px;
+  --focus-ring: 3px solid var(--gold-400);
+}
+
+/* ============================================================
+   Dark — designed, not inverted.
+   v1 defect fixed here: the rail was LIGHTER than the content ground, so
+   navigation advanced and content receded. v2 orders luminance
+   ground < rail < surface, so content sits above its ground.
+   ============================================================ */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ox-900: #4a1015;
+  --ox-800: #8e3038;
+  --ox-700: #a5424b;
+  --ox-600: #b8535d;
+  --ox-500: #c4626c;
+
+  --gold-700: #c9a45f;
+  --gold-600: #d9b56d;
+  --gold-500: #e3c37f;
+  --gold-400: #eed08a;
+  --gold-300: #f2dca6;
+  --gold-200: #f6e7c4;
+  --gold-100: #faf1de;
+
+  --canvas: #100b0c; /* deepest ground */
+  --paper: #1f1719; /* working surface — above the rail */
+  --paper-2: #281d20; /* raised */
+  --paper-3: #312428; /* overlay */
+  --cream: #e9dcc8;
+
+  --ink: #f7efe6;
+  --ink-2: #ddcbcd;
+  --muted: #b3a0a4;
+  --line: #3d2e31;
+  --line-strong: #5b4449;
+  --line-hair: #2c2124;
+  --white: #ffffff;
+
+  --anchor: var(--ox-700);
+  --anchor-soft: color-mix(in srgb, var(--ox-700) 22%, var(--paper));
+  --anchor-line: color-mix(in srgb, var(--ox-600) 42%, var(--line));
+  --accent: var(--gold-400);
+  --accent-wash: rgba(238, 208, 138, 0.12);
+  --accent-line: rgba(238, 208, 138, 0.32);
+
+  --tone-neutral-fg: #cbb9bc;
+  --tone-neutral-bg: rgba(255, 255, 255, 0.07);
+  --tone-neutral-line: rgba(255, 255, 255, 0.18);
+
+  --tone-info-fg: #a8cbf0;
+  --tone-info-bg: rgba(58, 104, 158, 0.26);
+  --tone-info-line: rgba(168, 203, 240, 0.38);
+
+  --tone-progress-fg: #eecb92;
+  --tone-progress-bg: rgba(150, 103, 30, 0.28);
+  --tone-progress-line: rgba(238, 203, 146, 0.38);
+
+  --tone-done-fg: #9ad9b2;
+  --tone-done-bg: rgba(45, 112, 72, 0.28);
+  --tone-done-line: rgba(154, 217, 178, 0.36);
+
+  --tone-alert-fg: #f6acb2;
+  --tone-alert-bg: rgba(166, 52, 60, 0.30);
+  --tone-alert-line: rgba(246, 172, 178, 0.36);
+
+  --icon-ink: var(--gold-300);
+  --icon-ink-muted: color-mix(in srgb, var(--gold-300) 62%, var(--muted));
+  --icon-surface: rgba(242, 220, 166, 0.10);
+  --icon-surface-strong: rgba(242, 220, 166, 0.18);
+  --icon-border: rgba(227, 195, 127, 0.26);
+
+  /* Rail sits between ground and surface. */
+  --rail-from: #2c1013;
+  --rail-to: #180a0c;
+  --rail-ink: #f4e6d2;
+  --rail-ink-dim: #c4a9ad;
+  --rail-line: rgba(242, 220, 166, 0.16);
+
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.32);
+  --elev-2: 0 2px 6px rgba(0, 0, 0, 0.46), 0 10px 26px rgba(0, 0, 0, 0.44);
+  --elev-3: 0 8px 20px rgba(0, 0, 0, 0.54), 0 28px 60px rgba(0, 0, 0, 0.6);
+  --elev-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+
+/* ===== styles/base.css ===== */
+/* Base element and utility layer. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-md);
+  line-height: 1.5;
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+svg {
+  display: block;
+}
+
+a {
+  color: var(--ox-700);
+  text-underline-offset: 3px;
+}
+
+/* Oxblood on a near-black ground measures ~2.7:1. Links re-tone to gold. */
+[data-theme="dark"] a {
+  color: var(--gold-300);
+}
+
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+/* Focus is never removed — only redirected to a visible ring. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Narrow, deliberate exception. On a route change focus moves to the main
+   region so screen readers land on the new surface. It is a programmatic
+   landing target with tabindex="-1", not an interactive control, and the page
+   heading already signals arrival — so the ring is suppressed here and only
+   here. Every real control keeps it. */
+#surface-main:focus,
+#surface-main:focus-visible {
+  outline: none;
+}
+
+.u-hidden {
+  display: none !important;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  z-index: 200;
+  padding: 10px 14px;
+  border-radius: var(--r-sm);
+  background: var(--ox-800);
+  color: var(--white);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  transform: translateY(-200%);
+  transition: transform var(--dur-state) var(--ease);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: var(--icon-ink);
+}
+
+.icon--sm {
+  width: 15px;
+  height: 15px;
+}
+
+.icon--muted {
+  color: var(--icon-ink-muted);
+}
+
+/* Numerals are the only place weight 900 is permitted. */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.label {
+  color: var(--muted);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wrap-anywhere {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ===== styles/shell.css ===== */
+/* Preview chrome + application shell.
+   Layout responds to the *frame* via container queries, so the viewport
+   switcher reflows the real layout and browser resizing does too. */
+
+/* ---------- Preview chrome (not part of the product design) ---------- */
+
+.preview-bar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 10px clamp(12px, 2vw, 20px);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.preview-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-right: auto;
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.preview-bar__tag {
+  padding: 3px 8px;
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--gold-300) 30%, transparent);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .preview-bar__tag {
+  color: var(--gold-300);
+}
+
+.preview-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+}
+
+.preview-group > button {
+  min-height: 32px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.preview-group > button:hover {
+  background: var(--paper);
+}
+
+.preview-group > button[aria-pressed="true"] {
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.preview-select {
+  min-height: 34px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+/* ---------- Frame: the container-query root ---------- */
+
+.frame {
+  container-type: inline-size;
+  container-name: app;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--canvas);
+  /* Width is deliberately not animated — that would thrash layout, and a
+     preview width change should settle instantly so the result can be judged. */
+}
+
+.frame[data-viewport="tablet"] {
+  max-width: 834px;
+}
+
+.frame[data-viewport="mobile"] {
+  max-width: 390px;
+}
+
+.frame[data-viewport="tablet"],
+.frame[data-viewport="mobile"] {
+  border-inline: 1px solid var(--line-strong);
+  box-shadow: var(--elev-raised);
+}
+
+/* ---------- Application shell ---------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 720px;
+}
+
+.shell[data-rail="collapsed"] {
+  --rail-w: var(--rail-w-collapsed);
+}
+
+/* Rail */
+
+.rail {
+  position: sticky;
+  /* --preview-bar-h is published by the preview chrome; it is 0 in any real
+     integration, where the shell owns the full viewport. */
+  top: var(--preview-bar-h, 0px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100vh - var(--preview-bar-h, 0px));
+  max-height: calc(100vh - var(--preview-bar-h, 0px));
+  min-height: 0;
+  overflow: hidden;
+  /* v2: rail sits between ground and working surface in both themes, so
+     content advances and navigation recedes. */
+  background: linear-gradient(168deg, var(--rail-from), var(--rail-to));
+  border-right: 1px solid var(--rail-line);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.06);
+  color: var(--rail-ink);
+}
+
+/* A single gold hairline down the rail edge — a compositional device, not
+   decoration: it marks where navigation ends and work begins. */
+.rail::after {
+  position: absolute;
+  top: 12%;
+  right: -1px;
+  bottom: 12%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 30%,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 70%,
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.rail__brand {
+  display: grid;
+  gap: 2px;
+  padding: var(--s-5) var(--s-4) var(--s-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+
+.rail__marks {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--s-3);
+}
+
+.rail__mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--gold-300);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+/* In dark mode --paper is near-black and --ox-800 lightens, so the light-mode
+   plaque would put dark red on dark. Invert the plaque instead. */
+[data-theme="dark"] .rail__mark {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gold-300);
+}
+
+.rail__kicker {
+  color: var(--gold-400);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rail__name {
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.rail__scroll {
+  display: grid;
+  align-content: start;
+  gap: var(--s-4);
+  min-height: 0;
+  padding: var(--s-4) var(--s-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.rail__section {
+  display: grid;
+  gap: 2px;
+}
+
+.rail__section > .label {
+  padding: 0 var(--s-2) 6px;
+  color: color-mix(in srgb, var(--cream) 76%, transparent);
+  font-size: var(--t-2xs);
+}
+
+.nav-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 44px;
+  padding: 7px var(--s-2);
+  border-radius: var(--r-sm);
+  color: var(--cream);
+  text-align: left;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--white);
+}
+
+.nav-item[aria-current="page"] {
+  background: var(--gold-300);
+  color: var(--ox-900);
+  font-weight: 700;
+}
+
+.nav-item[aria-current="page"] .icon {
+  color: var(--ox-800);
+}
+
+.nav-item .icon {
+  color: var(--gold-300);
+}
+
+.nav-item__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+
+.nav-item__text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--t-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail__foot {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-top: 1px solid color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+
+.scope-button {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 46px;
+  padding: 6px var(--s-2);
+  border: 1px solid color-mix(in srgb, var(--gold-300) 24%, transparent);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--white);
+  text-align: left;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.scope-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.scope-button__text {
+  display: grid;
+  min-width: 0;
+}
+
+.scope-button__text b {
+  overflow: hidden;
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scope-button__text span {
+  overflow: hidden;
+  color: var(--cream);
+  font-size: var(--t-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 900;
+}
+
+[data-theme="dark"] .avatar {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--gold-300);
+}
+
+[data-theme="dark"] .account-button .avatar {
+  background: var(--ox-700);
+  color: var(--white);
+}
+
+/* Workspace */
+
+.workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  background: var(--canvas);
+}
+
+.topbar {
+  position: sticky;
+  top: var(--preview-bar-h, 0px);
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 62px;
+  padding: 10px clamp(14px, 2.4vw, 28px);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--icon-ink);
+  transition: border-color var(--dur-state) var(--ease),
+    background var(--dur-state) var(--ease);
+}
+
+.icon-button:hover {
+  border-color: var(--line-strong);
+  background: var(--canvas);
+}
+
+.icon-button--round {
+  border-radius: 50%;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 460px;
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+}
+
+.search input {
+  min-width: 0;
+  /* Fill the label so the measured control matches the visible target. */
+  min-height: 34px;
+  flex: 1;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: var(--t-sm);
+}
+
+.search kbd {
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: var(--t-2xs);
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.notif {
+  position: relative;
+}
+
+.notif__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--paper);
+  border-radius: var(--r-pill);
+  background: var(--ox-600);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.account-button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: 2px 6px 2px 2px;
+  border-radius: var(--r-sm);
+}
+
+.account-button:hover {
+  background: var(--canvas);
+}
+
+.account-button .avatar {
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.account-button__text {
+  display: grid;
+  text-align: left;
+}
+
+.account-button__text b {
+  font-size: var(--t-sm);
+}
+
+.account-button__text span {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.main {
+  min-width: 0;
+  padding: var(--s-6) clamp(14px, 2.4vw, 28px) var(--s-10);
+}
+
+.main__inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* Mobile drawer + bottom nav (hidden until the container is narrow) */
+
+.rail__scrim {
+  display: none;
+}
+
+.tabbar {
+  display: none;
+}
+
+
+/* ===== styles/components.css ===== */
+/* Component layer. Containers are earned: hairline rules by default,
+   elevation reserved for genuinely floating layers. */
+
+/* ---------- Page header ---------- */
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-5);
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.page-head__title {
+  min-width: 0;
+}
+
+.page-head h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-display);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+.page-head p {
+  margin-top: 6px;
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: var(--t-md);
+}
+
+.page-head__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--s-2);
+  color: var(--muted);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.breadcrumbs b {
+  color: var(--ink-2);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  transition: background var(--dur-state) var(--ease),
+    border-color var(--dur-state) var(--ease);
+}
+
+.btn:hover {
+  border-color: var(--gold-600);
+  background: var(--cream);
+}
+
+[data-theme="dark"] .btn:hover {
+  background: var(--paper-2);
+}
+
+.btn--primary {
+  border-color: var(--ox-800);
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.btn--primary:hover {
+  border-color: var(--ox-700);
+  background: var(--ox-700);
+}
+
+.btn--primary .icon {
+  color: var(--white);
+}
+
+.btn--quiet {
+  border-color: transparent;
+  background: none;
+  color: var(--ink-2);
+}
+
+.btn--quiet:hover {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.btn--danger {
+  border-color: var(--tone-alert-line);
+  background: var(--tone-alert-bg);
+  color: var(--tone-alert-fg);
+}
+
+.btn--sm {
+  min-height: 32px;
+  padding: 5px 10px;
+  font-size: var(--t-xs);
+}
+
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.btn[data-state="loading"] .icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Status chip: five tones, always labelled ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border: 1px solid var(--tone-neutral-line);
+  border-radius: var(--r-pill);
+  background: var(--tone-neutral-bg);
+  color: var(--tone-neutral-fg);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chip[data-tone="info"] {
+  border-color: var(--tone-info-line);
+  background: var(--tone-info-bg);
+  color: var(--tone-info-fg);
+}
+
+.chip[data-tone="progress"] {
+  border-color: var(--tone-progress-line);
+  background: var(--tone-progress-bg);
+  color: var(--tone-progress-fg);
+}
+
+.chip[data-tone="done"] {
+  border-color: var(--tone-done-line);
+  background: var(--tone-done-bg);
+  color: var(--tone-done-fg);
+}
+
+.chip[data-tone="alert"] {
+  border-color: var(--tone-alert-line);
+  background: var(--tone-alert-bg);
+  color: var(--tone-alert-fg);
+}
+
+.chip .icon {
+  width: 13px;
+  height: 13px;
+  color: currentColor;
+}
+
+/* ---------- Attention band ---------- */
+
+/* The attention band is the page's visual anchor in v2. In v1 it was a flat
+   strip that read at the same level as the table beneath it. */
+.attention {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  box-shadow: var(--elev-2);
+  overflow: hidden;
+}
+
+/* No side stripe. A thick coloured bar down one edge of a card is a stock
+   AI-UI tell; the band already reads as the page anchor through elevation,
+   the display-serif numerals, and the alert-toned urgent cell. */
+
+.attention__item {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: var(--s-5) var(--s-5) var(--s-4);
+  border-left: 1px solid var(--line-hair);
+  text-align: left;
+  transition:
+    background-color var(--m-instant) var(--ease),
+    box-shadow var(--m-small) var(--ease);
+}
+
+.attention__item:first-child {
+  border-left: 0;
+}
+
+.attention__item:hover {
+  background: var(--accent-wash);
+  box-shadow: inset 0 -3px 0 var(--accent);
+}
+
+.attention__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.attention__value {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
+}
+
+/* Urgency reads as urgent — but the note text still carries the meaning, so
+   this is reinforcement, never colour-only. */
+.attention__item[data-urgent="true"] {
+  background: var(--tone-alert-bg);
+}
+
+.attention__item[data-urgent="true"] .attention__value,
+.attention__item[data-urgent="true"] .attention__label {
+  color: var(--tone-alert-fg);
+}
+
+.attention__item[data-urgent="true"]:hover {
+  box-shadow: inset 0 -3px 0 var(--tone-alert-fg);
+}
+
+.attention__note {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.context-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  margin-top: var(--s-3);
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.context-line b {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Section ---------- */
+
+.section {
+  margin-top: var(--s-8);
+}
+
+/* Editorial section rule: a short oxblood anchor followed by a hairline.
+   Replaces v1's uniform full-width hairline, which made every section equal. */
+.section__head {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--line-hair);
+}
+
+.section__head::after {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 56px;
+  height: 2px;
+  background: var(--anchor);
+  content: "";
+}
+
+.section__head h2 {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+
+.section__head h3 {
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+/* Panel-level heading. Always an <h2> so the outline stays h1 -> h2 -> h3. */
+.block-title {
+  margin-bottom: var(--s-3);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+/* Panels are a raised working surface over the sunken ground — v1 made them
+   flat, which is why nothing had depth. */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+.panel__body {
+  padding: var(--s-4);
+}
+
+/* ---------- Queue table ---------- */
+
+/* A queue is a working surface, not bare text on the page ground. */
+.table-wrap {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+/* Nested inside an existing surface it must not double up. */
+.panel .table-wrap,
+.detail__body .table-wrap {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+table.q caption {
+  padding: var(--s-3) var(--s-4) var(--s-2);
+}
+
+table.q thead th:first-child,
+table.q tbody th:first-child,
+table.q tbody td:first-child {
+  padding-left: var(--s-4);
+}
+
+table.q thead th:last-child,
+table.q tbody td:last-child {
+  padding-right: var(--s-4);
+}
+
+table.q tbody tr:last-child th,
+table.q tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.panel table.q caption,
+.detail__body table.q caption {
+  padding-inline: 0;
+}
+
+.panel table.q :is(th, td):first-child,
+.detail__body table.q :is(th, td):first-child {
+  padding-left: 10px;
+}
+
+table.q {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-sm);
+}
+
+table.q caption {
+  padding-bottom: var(--s-2);
+  color: var(--muted);
+  font-size: var(--t-xs);
+  text-align: left;
+}
+
+/* Scoped to thead: a row header (<th scope="row">) is content, not a column
+   label, and must not inherit the uppercase micro-label treatment. */
+table.q thead th {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+table.q td,
+table.q tbody th {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+table.q tbody th {
+  color: var(--ink);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-body);
+  text-align: left;
+  text-transform: none;
+}
+
+table.q tbody tr {
+  transition: background var(--dur-state) var(--ease);
+}
+
+table.q tbody tr:hover {
+  background: var(--cream);
+}
+
+[data-theme="dark"] table.q tbody tr:hover {
+  background: var(--paper-2);
+}
+
+/* The selected row grows an oxblood spine that visually connects it to the
+   detail pane beside it. */
+table.q tbody tr[aria-selected="true"] {
+  background: var(--accent-wash);
+  box-shadow: inset 4px 0 0 var(--anchor);
+}
+
+[data-theme="dark"] table.q tbody tr[aria-selected="true"] {
+  background: var(--accent-wash);
+  box-shadow: inset 4px 0 0 var(--gold-400);
+}
+
+.q__link {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+}
+
+.q__link b {
+  color: var(--ink);
+  font-size: var(--t-sm);
+}
+
+.q__link span {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.q__num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.q__ref {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  white-space: nowrap;
+}
+
+/* Dates are atomic: a wrapped "2026-08-\n19" is harder to scan than a
+   slightly narrower column. */
+.q__date {
+  white-space: nowrap;
+}
+
+/* Column priority: which columns survive a narrow container. */
+.col-p3 { /* first to go */ }
+.col-p2 { /* second to go */ }
+
+/* ---------- Split pane ---------- */
+
+/* The queue keeps the larger share. v2's detail pane carries more padding than
+   v1's, and an even split pushed queue titles and dates onto second lines. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.32fr) minmax(360px, 0.68fr);
+  gap: var(--s-5);
+  align-items: start;
+  margin-top: var(--s-5);
+}
+
+.split__detail {
+  position: sticky;
+  top: calc(var(--preview-bar-h, 0px) + 76px);
+  /* Without this the grid item's automatic minimum size is the detail table's
+     min-content width, which pushes the pane past the viewport. */
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--paper);
+  /* The detail pane is the active working surface — it sits above the queue. */
+  box-shadow: var(--elev-2);
+}
+
+.detail__body > * {
+  min-width: 0;
+}
+
+/* The detail head is the working context: it reads as a header, not as more
+   table. The anchor wash ties it to the selected row's oxblood spine. */
+.detail__head {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: linear-gradient(160deg, var(--anchor-soft), transparent 70%);
+}
+
+.detail__title h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+
+.detail__title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.detail__title h2 {
+  font-size: var(--t-lg);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.detail__body {
+  display: grid;
+  gap: var(--s-5);
+  max-height: min(62vh, 640px);
+  padding: var(--s-4);
+  overflow-y: auto;
+}
+
+.detail__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--line);
+  background: var(--paper-2);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3) var(--s-4);
+  margin: 0;
+}
+
+.facts > div {
+  min-width: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: var(--t-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.facts dd {
+  margin: 3px 0 0;
+  font-size: var(--t-sm);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Drawer ---------- */
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 130;
+  background: rgba(20, 10, 12, 0.55);
+  border: 0;
+  animation: fade-in var(--dur-state) var(--ease);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 140;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(560px, 100%);
+  background: var(--paper);
+  box-shadow: var(--elev-raised-strong);
+  animation: slide-in var(--dur-move) var(--ease);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(4%);
+    opacity: 0;
+  }
+}
+
+/* ---------- Dialog ---------- */
+
+.dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4);
+}
+
+.dialog__panel {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--elev-raised-strong);
+}
+
+.dialog__body {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-5);
+}
+
+.dialog__body h3 {
+  font-size: var(--t-lg);
+  font-weight: 700;
+}
+
+.dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-5);
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Menu ---------- */
+
+.menu {
+  position: absolute;
+  top: 52px;
+  right: clamp(14px, 2.4vw, 28px);
+  z-index: 100;
+  display: grid;
+  gap: 2px;
+  width: 214px;
+  padding: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--elev-raised);
+}
+
+.menu button {
+  padding: 9px 10px;
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: var(--t-sm);
+  text-align: left;
+}
+
+.menu button:hover {
+  background: var(--cream);
+}
+
+[data-theme="dark"] .menu button:hover {
+  background: var(--paper-2);
+}
+
+/* ---------- Forms ---------- */
+
+.field {
+  display: grid;
+  gap: 5px;
+}
+
+.field > label {
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.field__hint {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+/* Every text-like control, including password, search, file and tel.
+   Listing types individually silently drops the ones you forget. */
+.field input:not([type="checkbox"]):not([type="radio"]),
+.field select,
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  font-size: var(--t-sm);
+}
+
+/* File inputs carry a large intrinsic minimum width that overflows narrow
+   containers unless it is explicitly overridden. */
+.field input[type="file"] {
+  padding: 8px 10px;
+}
+
+/* 24px is the WCAG 2.2 AA minimum target size. */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  accent-color: var(--ox-800);
+}
+
+.field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.field[data-invalid="true"] input,
+.field[data-invalid="true"] select,
+.field[data-invalid="true"] textarea {
+  border-color: var(--tone-alert-fg);
+  background: var(--tone-alert-bg);
+}
+
+.field__error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--tone-alert-fg);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.field__error .icon {
+  color: currentColor;
+}
+
+.form-grid {
+  display: grid;
+  gap: var(--s-4);
+  max-width: 640px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+fieldset {
+  margin: 0;
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+legend {
+  padding: 0 6px;
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+/* ---------- Stepper ---------- */
+
+.stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-5);
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.stepper li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px 5px 5px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--muted);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.stepper li::before {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--canvas);
+  color: var(--muted);
+  content: counter(step);
+  counter-increment: step;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepper li[aria-current="step"] {
+  border-color: var(--ox-800);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.stepper li[aria-current="step"]::before {
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.stepper li[data-done="true"]::before {
+  background: var(--tone-done-fg);
+  color: var(--white);
+  content: "\2713";
+}
+
+/* ---------- Timeline ---------- */
+
+.timeline {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: var(--s-3);
+  padding-bottom: var(--s-4);
+}
+
+.timeline li:not(:last-child)::before {
+  position: absolute;
+  top: 20px;
+  bottom: 0;
+  left: 10px;
+  width: 1px;
+  background: var(--line-strong);
+  content: "";
+}
+
+.timeline__dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.timeline li[data-done="true"] .timeline__dot {
+  border-color: var(--tone-done-fg);
+  background: var(--tone-done-fg);
+}
+
+.timeline li[data-done="true"] .timeline__dot .icon {
+  width: 11px;
+  height: 11px;
+  color: var(--white);
+}
+
+.timeline li[data-current="true"] .timeline__dot {
+  border-color: var(--ox-800);
+  box-shadow: inset 0 0 0 3px var(--paper);
+  background: var(--ox-800);
+}
+
+.timeline__body b {
+  display: block;
+  font-size: var(--t-sm);
+}
+
+.timeline__body span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+/* ---------- Ledger ---------- */
+
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-xs);
+}
+
+.ledger th,
+.ledger td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.ledger th {
+  color: var(--muted);
+  font-size: var(--t-2xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ledger td:last-child,
+.ledger th:last-child {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ledger__in {
+  color: var(--tone-done-fg);
+  font-weight: 700;
+}
+
+.ledger__out {
+  color: var(--tone-alert-fg);
+  font-weight: 700;
+}
+
+/* ---------- Quantity ---------- */
+
+.qty {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.qty b {
+  font-size: var(--t-md);
+  font-weight: 900;
+}
+
+.qty span {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.meter {
+  display: block;
+  width: 100%;
+  max-width: 140px;
+  height: 5px;
+  margin-top: 5px;
+  border-radius: var(--r-pill);
+  background: var(--line);
+  overflow: hidden;
+}
+
+.meter > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--ox-600);
+  transform-origin: left center;
+}
+
+.meter[data-tone="done"] > span {
+  background: var(--tone-done-fg);
+}
+
+.meter[data-tone="alert"] > span {
+  background: var(--tone-alert-fg);
+}
+
+.meter[data-tone="progress"] > span {
+  background: var(--gold-600);
+}
+
+/* ---------- Composition bar (replaces the decorative donut) ---------- */
+
+.composition {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.composition > span {
+  height: 100%;
+}
+
+.composition-key {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.composition-key li {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-xs);
+}
+
+.composition-key i {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+.composition-key b {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Evidence ---------- */
+
+.evidence {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.evidence li {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.evidence__mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--icon-border);
+  border-radius: var(--r-sm);
+  background: var(--icon-surface);
+}
+
+.evidence b {
+  display: block;
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.evidence span {
+  display: block;
+  color: var(--muted);
+  font-size: var(--t-2xs);
+}
+
+/* ---------- States ---------- */
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-2);
+  padding: var(--s-10) var(--s-5);
+  text-align: center;
+}
+
+.state__mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--icon-border);
+  border-radius: 50%;
+  background: var(--icon-surface);
+}
+
+.state h2 {
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+.state p {
+  max-width: 46ch;
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+
+.notice {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--tone-info-line);
+  border-radius: var(--r-md);
+  background: var(--tone-info-bg);
+  color: var(--tone-info-fg);
+  font-size: var(--t-sm);
+}
+
+.notice .icon {
+  color: currentColor;
+}
+
+.notice b {
+  display: block;
+}
+
+.notice p {
+  margin-top: 3px;
+  color: inherit;
+  opacity: 0.92;
+}
+
+.notice[data-tone="alert"] {
+  border-color: var(--tone-alert-line);
+  background: var(--tone-alert-bg);
+  color: var(--tone-alert-fg);
+}
+
+.notice[data-tone="progress"] {
+  border-color: var(--tone-progress-line);
+  background: var(--tone-progress-bg);
+  color: var(--tone-progress-fg);
+}
+
+.notice[data-tone="done"] {
+  border-color: var(--tone-done-line);
+  background: var(--tone-done-bg);
+  color: var(--tone-done-fg);
+}
+
+/* Skeleton */
+
+.skeleton {
+  border-radius: 5px;
+  background: linear-gradient(
+    90deg,
+    var(--line) 25%,
+    color-mix(in srgb, var(--line) 45%, var(--paper)) 50%,
+    var(--line) 75%
+  );
+  background-size: 240% 100%;
+  animation: skeleton 1.3s linear infinite;
+}
+
+@keyframes skeleton {
+  to {
+    background-position: -240% 0;
+  }
+}
+
+/* ---------- Receipt ---------- */
+
+.receipt {
+  max-width: 560px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+
+.receipt__head {
+  display: grid;
+  gap: 5px;
+  padding: var(--s-5);
+  border-bottom: 1px dashed var(--line-strong);
+  text-align: center;
+}
+
+.receipt__ref {
+  font-family: var(--font-mono);
+  font-size: var(--t-xl);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.receipt__body {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-5);
+}
+
+/* ---------- Toast ---------- */
+
+.toast-region {
+  position: fixed;
+  right: var(--s-5);
+  bottom: var(--s-5);
+  z-index: 160;
+  display: grid;
+  gap: var(--s-2);
+  max-width: min(360px, calc(100% - 32px));
+}
+
+.toast {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: var(--s-2);
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--ox-800);
+  color: var(--white);
+  box-shadow: var(--elev-raised);
+  font-size: var(--t-sm);
+  animation: toast-in var(--dur-move) var(--ease);
+}
+
+.toast .icon {
+  color: var(--gold-300);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ---------- Sticky mobile action bar ---------- */
+
+.action-bar {
+  display: none;
+}
+
+/* ---------- Illustrative-data marker ---------- */
+
+.illustrative {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: var(--t-2xs);
+  font-style: italic;
+}
+
+
+/* ===== styles/surfaces.css ===== */
+/* Public / pre-authentication surfaces and the surface index.
+   Public is calmer, narrower and larger than internal by design. */
+
+.public {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 720px;
+  background: var(--canvas);
+}
+
+.public__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) clamp(16px, 4vw, 40px);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+.public__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.public__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.public__marks {
+  display: flex;
+  gap: 5px;
+}
+
+.public__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ox-800);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="dark"] .public__mark {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gold-300);
+}
+
+.public__wordmark b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.public__wordmark span {
+  display: block;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.public__main {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 56px) clamp(16px, 4vw, 40px) var(--s-10);
+}
+
+.public__main--wide {
+  max-width: 1000px;
+}
+
+.public__head {
+  margin-bottom: var(--s-6);
+}
+
+.public__head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+}
+
+.public__head p {
+  margin-top: var(--s-3);
+  max-width: 58ch;
+  color: var(--ink-2);
+  font-size: var(--t-lg);
+}
+
+.public__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-5) clamp(16px, 4vw, 40px);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+/* Portal selector cards — heterogeneous choices, so cards are earned here. */
+
+/* The lead action takes the full first row. v1 gave four identical cards, so
+   nothing told a first-time visitor where to start. */
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+/* The lead action runs the full width as a horizontal row, so it reads as the
+   primary path rather than as a taller version of the same card. */
+.portal-grid > :first-child {
+  grid-column: 1 / -1;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "mark title"
+    "mark sub";
+  align-items: center;
+  column-gap: var(--s-5);
+  row-gap: 2px;
+  padding: var(--s-5) var(--s-6);
+  border-color: var(--anchor-line);
+  background: linear-gradient(118deg, var(--anchor-soft), var(--paper) 62%);
+}
+
+.portal-grid > :first-child .portal-card__mark {
+  grid-area: mark;
+  align-self: center;
+}
+
+.portal-grid > :first-child b {
+  grid-area: title;
+}
+
+.portal-grid > :first-child span {
+  grid-area: sub;
+}
+
+.portal-grid > :first-child b {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+
+.portal-grid > :first-child .portal-card__mark {
+  width: 48px;
+  height: 48px;
+  border-color: var(--accent-line);
+  background: var(--icon-surface-strong);
+}
+
+@container app (max-width: 640px) {
+  .portal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Back to a stacked card so the mark and title do not crush at 320px. */
+  .portal-grid > :first-child {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "mark" "title" "sub";
+    align-items: start;
+    row-gap: var(--s-2);
+    padding: var(--s-5);
+  }
+}
+
+.portal-card {
+  display: grid;
+  align-content: start;
+  gap: var(--s-2);
+  padding: var(--s-5);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  /* A card is a destination, not inline link text — keep body ink. */
+  color: var(--ink);
+  text-decoration: none;
+  text-align: left;
+  transition: border-color var(--dur-state) var(--ease),
+    background var(--dur-state) var(--ease);
+}
+
+.portal-card:hover {
+  border-color: var(--gold-600);
+  background: var(--cream);
+}
+
+[data-theme="dark"] .portal-card:hover {
+  background: var(--paper-2);
+}
+
+.portal-card__mark {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--icon-border);
+  border-radius: var(--r-sm);
+  background: var(--icon-surface);
+}
+
+.portal-card b {
+  font-size: var(--t-md);
+}
+
+.portal-card span {
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+
+/* Auth card */
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: var(--s-6);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+}
+
+.auth-card h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 400;
+}
+
+.auth-card > p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+
+.auth-card form {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+}
+
+.auth-alt {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  text-align: center;
+}
+
+/* ---------- Surface index ---------- */
+
+.index-wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--s-8) clamp(16px, 4vw, 32px) var(--s-10);
+}
+
+.index-wrap h1 {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.index-wrap > p {
+  margin-top: var(--s-2);
+  max-width: 70ch;
+  color: var(--muted);
+}
+
+.index-group {
+  margin-top: var(--s-6);
+}
+
+.index-group h2 {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.index-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.index-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  text-align: left;
+  transition: border-color var(--dur-state) var(--ease),
+    background var(--dur-state) var(--ease);
+}
+
+.index-item:hover {
+  border-color: var(--gold-600);
+  background: var(--cream);
+}
+
+[data-theme="dark"] .index-item:hover {
+  background: var(--paper-2);
+}
+
+.index-item b {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.index-item span {
+  display: block;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.index-tier {
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.index-tier[data-tier="deep"] {
+  border-color: var(--gold-600);
+  color: var(--gold-700);
+}
+
+[data-theme="dark"] .index-tier[data-tier="deep"] {
+  color: var(--gold-300);
+}
+
+/* Two-column supporting rails on overview surfaces */
+
+.rails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--s-6);
+  margin-top: var(--s-6);
+}
+
+/* Deliberate asymmetry. v1 gave the three overview rails identical width, so
+   none of them led. Activity is the widest, readiness next, composition
+   narrowest — matching how often each is actually read. */
+.rails--overview {
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+@container app (max-width: 1023px) {
+  .rails--overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rails--overview > *:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@container app (max-width: 767px) {
+  .rails--overview,
+  .rails--overview > *:first-child {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.rail-block {
+  display: grid;
+  align-content: start;
+  gap: var(--s-3);
+}
+
+.rail-block__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.rail-block__head h3 {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.stack-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack-list > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-sm);
+}
+
+.stack-list > li:last-child {
+  border-bottom: 0;
+}
+
+.stack-list b {
+  display: block;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.stack-list span {
+  display: block;
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.health-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-3);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--t-sm);
+}
+
+.health-row:last-child {
+  border-bottom: 0;
+}
+
+
+/* ===== styles/motion.css ===== */
+/* v2 motion system.
+
+   Every animation here answers one question: what does it communicate?
+   Allowed answers: navigation, state, relationship, hierarchy, completion,
+   attention, progressive disclosure. Nothing ships on "it looks cool".
+
+   Budget: at most one continuous animation per visible viewport, preferably
+   zero. The only continuous animation in this system is the live status dot,
+   which reports a genuinely live connection.
+
+   Timings come from tokens.css:
+     --m-instant 120ms   feedback
+     --m-small   200ms   component motion
+     --m-surface 280ms   surface transition
+     --m-overlay 320ms   drawer / modal
+     --m-reveal  400ms   staged reveal
+   Easing is --ease cubic-bezier(.22,1,.36,1). No bounce. */
+
+/* ---------- Theme transition ----------
+   Communicates: the whole surface changed deliberately, not by a flash.
+   Scoped to colour properties only so layout never animates. */
+
+.theme-anim,
+.theme-anim .rail,
+.theme-anim .topbar,
+.theme-anim .panel,
+.theme-anim .attention,
+.theme-anim .split__detail,
+.theme-anim table.q tbody tr,
+.theme-anim .public__bar,
+.theme-anim .public,
+.theme-anim .btn,
+.theme-anim .chip {
+  transition:
+    background-color var(--m-surface) var(--ease),
+    border-color var(--m-surface) var(--ease),
+    color var(--m-surface) var(--ease),
+    box-shadow var(--m-surface) var(--ease);
+}
+
+/* ---------- Theme toggle icon ----------
+   Communicates: current theme state, and that pressing it transforms rather
+   than replaces. Sun in light, moon in dark. */
+
+.theme-toggle {
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle__icons {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.theme-toggle__icons > svg {
+  position: absolute;
+  inset: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--gold-600);
+  transition:
+    transform var(--m-small) var(--ease),
+    opacity var(--m-small) var(--ease);
+}
+
+[data-theme="dark"] .theme-toggle__icons > svg {
+  color: var(--gold-300);
+}
+
+/* Light: sun present, moon rotated away below. */
+.theme-toggle__sun {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle__moon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.4);
+}
+
+/* Dark: moon rotates in, sun rotates out. */
+[data-theme="dark"] .theme-toggle__sun {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.4);
+}
+
+[data-theme="dark"] .theme-toggle__moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle:hover .theme-toggle__icons > svg {
+  transform: rotate(0deg) scale(1.08);
+}
+
+/* Hover nudges only the icon that is actually visible; the hidden one keeps
+   its rotated-away position so the crossfade stays clean. */
+.theme-toggle:hover .theme-toggle__moon {
+  transform: rotate(-90deg) scale(0.4);
+}
+
+[data-theme="dark"] .theme-toggle:hover .theme-toggle__sun {
+  transform: rotate(90deg) scale(0.4);
+}
+
+[data-theme="dark"] .theme-toggle:hover .theme-toggle__moon {
+  transform: rotate(0deg) scale(1.08);
+}
+
+/* ---------- Surface transition ----------
+   Communicates: navigation. A new surface arrives rather than blinking in. */
+
+.surface-enter {
+  animation: surface-in var(--m-surface) var(--ease) both;
+}
+
+@keyframes surface-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ---------- Staged reveal ----------
+   Communicates: reading order — title, then attention, then work queue, then
+   supporting rails. Runs on surface change only, never on scroll. */
+
+.stage > * {
+  animation: stage-in var(--m-reveal) var(--ease) both;
+}
+
+.stage > *:nth-child(1) { animation-delay: 0ms; }
+.stage > *:nth-child(2) { animation-delay: 40ms; }
+.stage > *:nth-child(3) { animation-delay: 80ms; }
+.stage > *:nth-child(4) { animation-delay: 120ms; }
+.stage > *:nth-child(5) { animation-delay: 160ms; }
+.stage > *:nth-child(n + 6) { animation-delay: 200ms; }
+
+@keyframes stage-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ---------- Navigation active indicator ----------
+   Communicates: which route is active, and that the selection moved rather
+   than teleported. Transform-driven, so no layout animation. */
+
+.nav-item {
+  position: relative;
+}
+
+/* Scaled, not resized: animating height thrashes layout. */
+.nav-item::before {
+  position: absolute;
+  top: 19%;
+  left: 0;
+  width: 3px;
+  height: 62%;
+  border-radius: 0 3px 3px 0;
+  background: var(--gold-300);
+  content: "";
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform var(--m-small) var(--ease);
+}
+
+.nav-item[aria-current="page"]::before {
+  transform: scaleY(1);
+}
+
+/* ---------- Metric emphasis ----------
+   Communicates: this figure just changed. Fires on state change only —
+   never a counting loop, and never implies live data. */
+
+.metric-change {
+  animation: metric-ack var(--m-reveal) var(--ease) both;
+}
+
+@keyframes metric-ack {
+  0% {
+    transform: translateY(6px);
+    opacity: 0.4;
+  }
+  60% {
+    transform: translateY(-2px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Progress / readiness ----------
+   Communicates: progress moved from a previous value to a new one. */
+
+/* Scaled, not resized — same reason as the nav indicator. */
+.meter > span {
+  transition: transform var(--m-reveal) var(--ease);
+}
+
+/* ---------- Row state ----------
+   Communicates: selection, and that the detail beside it belongs to this row. */
+
+table.q tbody tr {
+  transition:
+    background-color var(--m-instant) var(--ease),
+    box-shadow var(--m-small) var(--ease);
+}
+
+table.q tbody tr[aria-selected="true"] {
+  animation: row-select var(--m-small) var(--ease) both;
+}
+
+@keyframes row-select {
+  from {
+    box-shadow: inset 0 0 0 var(--anchor);
+  }
+}
+
+/* ---------- Buttons ----------
+   Communicates: pressability, then acknowledgement. */
+
+.btn {
+  transition:
+    background-color var(--m-instant) var(--ease),
+    border-color var(--m-instant) var(--ease),
+    color var(--m-instant) var(--ease),
+    box-shadow var(--m-small) var(--ease),
+    transform var(--m-instant) var(--ease);
+}
+
+.btn:hover:not([disabled]):not([aria-disabled="true"]) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not([disabled]):not([aria-disabled="true"]) {
+  transform: translateY(0.5px);
+}
+
+.btn--danger:hover {
+  /* Destructive actions do not get a playful lift. */
+  transform: none;
+}
+
+/* ---------- Overlays ----------
+   Communicates: a layer arrived above the current context. */
+
+.drawer {
+  animation: drawer-in var(--m-overlay) var(--ease) both;
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.dialog__panel {
+  animation: dialog-in var(--m-overlay) var(--ease) both;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+
+.drawer-scrim {
+  animation: scrim-in var(--m-small) var(--ease) both;
+}
+
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.menu {
+  animation: menu-in var(--m-small) var(--ease) both;
+  transform-origin: top right;
+}
+
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+
+/* ---------- Toast ----------
+   Communicates: completion. Slide and fade, never bounce. */
+
+.toast {
+  animation: toast-in var(--m-overlay) var(--ease) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* ---------- Live status dot ----------
+   The single permitted continuous animation. It reports a genuinely live
+   connection; remove it wherever the state is not actually live. */
+
+.live-dot {
+  position: relative;
+  display: inline-grid;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone-done-fg);
+}
+
+.live-dot::after {
+  position: absolute;
+  inset: -3px;
+  border: 1px solid var(--tone-done-fg);
+  border-radius: 50%;
+  content: "";
+  opacity: 0;
+  animation: live-pulse 2.6s var(--ease) infinite;
+}
+
+@keyframes live-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.7);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+/* ---------- Reduced motion ----------
+   Spatial movement is removed. State feedback is kept, near-instant, so the
+   interface never becomes less informative — only less kinetic. */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The icon still swaps — only the rotation is dropped. The existing
+     light/dark opacity rules decide which glyph is visible. */
+  .theme-toggle__icons > svg {
+    transition: opacity 0.01ms !important;
+    transform: none !important;
+  }
+
+  .live-dot::after {
+    display: none;
+  }
+
+  .btn:hover,
+  .btn:active {
+    transform: none !important;
+  }
+}
+
+
+/* ===== styles/responsive.css ===== */
+/* Responsive layer — driven by container queries on `.frame`, so the preview's
+   viewport switcher reflows the real layout and browser resizing does too.
+   `container-type: inline-size` also makes `.frame` the containing block for
+   fixed-position descendants, which keeps the mobile drawer, tab bar and
+   action bar inside the simulated device.
+
+   Priority rule from the brief: narrow layouts REORDER and STACK.
+   Operational columns (status, quantity, readiness) survive;
+   reference ids and secondary metadata are the first to go. */
+
+/* ---- 1180px: detail leaves the split and becomes a drawer ---- */
+@container app (max-width: 1180px) {
+  .split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .split__detail {
+    display: none;
+  }
+
+  .split[data-detail-mode="inline"] .split__detail {
+    display: block;
+    position: static;
+  }
+}
+
+/* ---- 1023px: rail goes off-canvas ---- */
+@container app (max-width: 1023px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rail {
+    position: fixed;
+    top: var(--preview-bar-h, 0px);
+    bottom: 0;
+    left: 0;
+    z-index: 140;
+    width: min(86%, 300px);
+    height: auto;
+    max-height: none;
+    box-shadow: var(--elev-raised-strong);
+    transform: translateX(-102%);
+    transition: transform var(--dur-move) var(--ease);
+  }
+
+  .shell[data-drawer="open"] .rail {
+    transform: translateX(0);
+  }
+
+  .rail__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    display: block;
+    border: 0;
+    background: rgba(20, 10, 12, 0.55);
+    opacity: 0;
+    /* visibility:hidden — not just opacity:0 — so the closed scrim leaves the
+       accessibility tree and the tab order instead of lingering as an
+       invisible control. */
+    visibility: hidden;
+    transition: opacity var(--dur-move) var(--ease), visibility 0s linear var(--dur-move);
+  }
+
+  .shell[data-drawer="open"] .rail__scrim {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--dur-move) var(--ease), visibility 0s;
+  }
+
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ---- 900px: attention band becomes 2x2 ---- */
+@container app (max-width: 900px) {
+  .attention {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .attention__item:nth-child(3),
+  .attention__item:nth-child(4) {
+    border-top: 1px solid var(--line);
+  }
+
+  .attention__item:nth-child(odd) {
+    border-left: 0;
+  }
+}
+
+/* ---- 767px: mobile ---- */
+@container app (max-width: 767px) {
+  .main {
+    padding: var(--s-5) 16px calc(var(--s-10) + 76px);
+  }
+
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-3);
+  }
+
+  .page-head__actions {
+    justify-content: flex-start;
+  }
+
+  /* Lowest-priority columns leave first. Never status or quantity. */
+  table.q .col-p3 {
+    display: none;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .drawer {
+    width: 100%;
+  }
+
+  .detail__body {
+    max-height: none;
+  }
+
+  /* Bottom tab bar */
+  .tabbar {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    z-index: 120;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+    padding: 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-lg);
+    background: var(--paper);
+    box-shadow: var(--elev-3);
+  }
+
+  .tabbar button {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 4px;
+    min-height: 52px;
+    padding: 6px 3px;
+    border-radius: var(--r-sm);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    transition:
+      background-color var(--m-instant) var(--ease),
+      color var(--m-instant) var(--ease);
+  }
+
+  .tabbar button .icon {
+    color: var(--icon-ink-muted);
+    transition: transform var(--m-small) var(--ease);
+  }
+
+  .tabbar button[aria-current="page"] {
+    background: var(--anchor);
+    color: var(--gold-200);
+  }
+
+  .tabbar button[aria-current="page"] .icon {
+    color: var(--gold-300);
+    transform: translateY(-1px) scale(1.06);
+  }
+
+  /* Sticky primary action */
+  .action-bar {
+    position: fixed;
+    right: 0;
+    bottom: 74px;
+    left: 0;
+    z-index: 118;
+    display: flex;
+    gap: var(--s-2);
+    padding: 10px 12px;
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+
+  .action-bar .btn {
+    flex: 1;
+  }
+
+  .toast-region {
+    right: 12px;
+    bottom: 140px;
+    left: 12px;
+    max-width: none;
+  }
+
+  .menu {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+/* ---- 560px: second-priority columns leave ---- */
+@container app (max-width: 560px) {
+  table.q .col-p2 {
+    display: none;
+  }
+
+  .attention {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attention__item {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .attention__item:first-child {
+    border-top: 0;
+  }
+
+  .receipt__ref {
+    font-size: var(--t-lg);
+  }
+}
+
+/* ---- 380px: last tightening; nothing operational is removed ---- */
+@container app (max-width: 380px) {
+  .main {
+    padding-inline: 12px;
+  }
+
+  .topbar {
+    padding-inline: 12px;
+  }
+
+  .account-button__text {
+    display: none;
+  }
+
+  /* The shortcut hint is the first thing to go; the field itself stays usable. */
+  .search kbd {
+    display: none;
+  }
+
+  .stepper li span {
+    display: none;
+  }
+}
+
+    </style>
+  </head>
+  <body data-theme="light">
+    <a class="skip-link" href="#surface-main">Skip to main content</a>
+    <div id="app"></div>
+    <noscript>
+      <p style="padding: 24px">
+        This design preview needs JavaScript to switch between surfaces. It makes no
+        network requests.
+      </p>
+    </noscript>
+    <script>
+(function () {
+  var __mods = {};
+  var __cache = {};
+  function __req(id) {
+    if (__cache[id]) return __cache[id].exports;
+    var module = { exports: {} };
+    __cache[id] = module;
+    __mods[id](module, __req);
+    return module.exports;
+  }
+
+__mods["src/app.js"] = function (module, __req) {
+/* Preview application: shell, routing, state switching, and overlay behaviour.
+   All interaction is local. No network request is made from this preview. */
+
+const { icon, spriteMarkup } = __req("src/icons.js");
+const { esc, chip, themeToggle } = __req("src/components.js");
+const { GROUPS, NAV, NAV_ADMIN, SURFACES, TABS, byId } = __req("src/registry.js");
+const { setPublicTheme } = __req("src/surfaces/public.js");
+const { ROLE_VIEWS, SCOPES, WORKSPACES, NOTIFICATIONS } = __req("src/data/mock.js");
+
+const root = document.getElementById('app');
+
+/* Theme persistence. A file:// preview can have an opaque origin, so every
+   storage access is guarded and persistence degrades to session-only. */
+const THEME_KEY = 'hau-usc-v2-theme';
+const store = {
+  get(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      /* persistence is optional in an opaque-origin preview */
+    }
+  },
+};
+
+/* Stored preference wins. System preference is only the first-run default. */
+function initialTheme() {
+  const stored = store.get(THEME_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+const state = {
+  surface: 'index',
+  variant: 'populated',
+  theme: initialTheme(),
+  viewport: 'desktop',
+  role: 'ADMINISTRATOR',
+  workspace: 'administrator',
+  scope: 'ALL',
+  rail: 'expanded',
+  drawer: 'closed',
+  overlay: null, // 'menu' | 'command' | 'notifications' | 'confirm' | 'detail'
+};
+
+/* ---------------- Focus management ---------------- */
+
+/* render() replaces innerHTML, so a stored element reference is detached by the
+   time an overlay closes. Store a way to *find* the trigger again instead. */
+let lastFocusedSelector = null;
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function trapFocus(container) {
+  const nodes = [...container.querySelectorAll(FOCUSABLE)].filter(
+    (n) => n.offsetParent !== null || n === document.activeElement,
+  );
+  if (!nodes.length) return;
+  const first = nodes[0];
+  const last = nodes[nodes.length - 1];
+  container.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+  first.focus();
+}
+
+/* Move focus to the new surface without scrolling its own header out of view:
+   a plain .focus() on the main region scrolls it to the top of the viewport
+   and hides the sticky workspace topbar. */
+function focusMain() {
+  const main = document.getElementById('surface-main');
+  if (!main) return;
+  main.focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+function describeFocus(el) {
+  if (!el || el === document.body) return null;
+  if (el.id) return `#${CSS.escape(el.id)}`;
+  const act = el.dataset?.act;
+  if (!act) return null;
+  const ref = el.dataset.ref ? `[data-ref="${CSS.escape(el.dataset.ref)}"]` : '';
+  const id = el.dataset.id ? `[data-id="${CSS.escape(el.dataset.id)}"]` : '';
+  return `[data-act="${CSS.escape(act)}"]${ref}${id}`;
+}
+
+function openOverlay(name) {
+  lastFocusedSelector = describeFocus(document.activeElement);
+  state.overlay = name;
+  render();
+  const node = document.querySelector('[data-overlay-root]');
+  if (node) trapFocus(node);
+}
+
+function closeOverlay() {
+  state.overlay = null;
+  const selector = lastFocusedSelector;
+  lastFocusedSelector = null;
+  render();
+  const target = selector ? document.querySelector(selector) : null;
+  // Fall back to the main region so focus is never dropped on the body.
+  (target ?? document.getElementById('surface-main'))?.focus();
+}
+
+/* ---------------- Theme ----------------
+   Sun in light, moon in dark. Both glyphs are always in the DOM; CSS rotates
+   and crossfades between them so the press transforms the icon rather than
+   swapping it. The accessible name describes the ACTION; aria-pressed reports
+   whether dark is active, so the state stays truthful. */
+
+/* Colour-only transition, applied for one frame budget so the theme change
+   reads as deliberate rather than as a flash. Layout never animates. */
+let themeAnimTimer;
+function setTheme(next) {
+  state.theme = next;
+  store.set(THEME_KEY, next);
+  document.body.classList.add('theme-anim');
+  render();
+  clearTimeout(themeAnimTimer);
+  themeAnimTimer = setTimeout(() => document.body.classList.remove('theme-anim'), 400);
+}
+
+/* ---------------- Toast ---------------- */
+
+let toastTimer;
+function toast(message) {
+  const region = document.getElementById('toast-region');
+  if (!region) return;
+  region.innerHTML = `<div class="toast">${icon('check')}<span>${esc(message)}</span></div>`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    region.innerHTML = '';
+  }, 3600);
+}
+
+/* ---------------- Preview chrome ---------------- */
+
+function previewBar() {
+  const surface = byId(state.surface);
+  const variants = surface?.states ?? ['populated'];
+  return `<div class="preview-bar">
+    <div class="preview-bar__brand">
+      ${icon('box', 'icon--sm')}
+      <span>HAU-USC Logistics · Redesign preview</span>
+      <span class="preview-bar__tag">Not production</span>
+    </div>
+
+    <label class="visually-hidden" for="surface-picker">Surface</label>
+    <select class="preview-select" id="surface-picker" data-act="pick-surface">
+      <option value="index"${state.surface === 'index' ? ' selected' : ''}>— Surface index —</option>
+      ${GROUPS.map(
+        (g) => `<optgroup label="${esc(g)}">${SURFACES.filter((s) => s.group === g)
+          .map(
+            (s) =>
+              `<option value="${s.id}"${s.id === state.surface ? ' selected' : ''}>${esc(s.name)}</option>`,
+          )
+          .join('')}</optgroup>`,
+      ).join('')}
+    </select>
+
+    ${
+      variants.length > 1
+        ? `<label class="visually-hidden" for="state-picker">State</label>
+      <select class="preview-select" id="state-picker" data-act="pick-state">
+        ${variants
+          .map(
+            (v) =>
+              `<option value="${v}"${v === state.variant ? ' selected' : ''}>${esc(
+                v[0].toUpperCase() + v.slice(1),
+              )}</option>`,
+          )
+          .join('')}
+      </select>`
+        : ''
+    }
+
+    <div class="preview-group" role="group" aria-label="Preview width">
+      ${['desktop', 'tablet', 'mobile']
+        .map(
+          (v) =>
+            `<button type="button" data-act="viewport" data-v="${v}" aria-pressed="${
+              state.viewport === v
+            }">${v[0].toUpperCase() + v.slice(1)}</button>`,
+        )
+        .join('')}
+    </div>
+
+    <div class="preview-group" role="group" aria-label="Theme">
+      ${['light', 'dark']
+        .map(
+          (t) =>
+            `<button type="button" data-act="theme" data-v="${t}" aria-pressed="${
+              state.theme === t
+            }">${t[0].toUpperCase() + t.slice(1)}</button>`,
+        )
+        .join('')}
+    </div>
+
+    <a class="btn btn--sm" href="#/index">${icon('home', 'icon--sm')}Index</a>
+  </div>`;
+}
+
+/* ---------------- Surface index ---------------- */
+
+function indexPage() {
+  return `<div class="index-wrap">
+    <h1>Whole-site redesign preview</h1>
+    <p>Institutional Operations Editorial — the proposed v0.8.0 design baseline for the
+    HAU-USC Logistics Management System. Every surface below is a local preview.
+    Nothing here contacts a live service, and all figures are illustrative.</p>
+    <p style="margin-top:12px"><span class="illustrative">${icon(
+      'info',
+      'icon--sm icon--muted',
+    )}Use the width and theme controls above. Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> inside a workspace to open search.</span></p>
+    ${GROUPS.map(
+      (g) => `<section class="index-group">
+      <h2>${esc(g)}</h2>
+      <div class="index-list">
+        ${SURFACES.filter((s) => s.group === g)
+          .map(
+            (s) => `<a class="index-item" href="#/${s.id}">
+            <span><b>${esc(s.name)}</b><span>${s.states.length} state${
+              s.states.length > 1 ? 's' : ''
+            }</span></span>
+            <span class="index-tier" data-tier="${s.tier}">${s.tier}</span>
+          </a>`,
+          )
+          .join('')}
+      </div>
+    </section>`,
+    ).join('')}
+  </div>`;
+}
+
+/* ---------------- Internal shell ---------------- */
+
+function rail() {
+  const navItem = (n) =>
+    `<button class="nav-item" type="button" data-act="go" data-id="${n.id}"${
+      n.id === state.surface ? ' aria-current="page"' : ''
+    }>
+      <span class="nav-item__icon">${icon(n.icon)}</span>
+      <span class="nav-item__text">${esc(n.label)}</span>
+    </button>`;
+
+  const ws = WORKSPACES.find((w) => w.id === state.workspace);
+  const sc = SCOPES.find((s) => s.id === state.scope);
+
+  return `<aside class="rail" aria-label="Primary">
+    <div class="rail__brand">
+      <div class="rail__marks"><span class="rail__mark">HAU</span><span class="rail__mark">USC</span></div>
+      <span class="rail__kicker">Department of Logistics</span>
+      <span class="rail__name">HAU-USC Logistics</span>
+    </div>
+    <div class="rail__scroll">
+      <nav class="rail__section" aria-label="Operations">
+        <span class="label">Operations</span>
+        ${NAV.map(navItem).join('')}
+      </nav>
+      <nav class="rail__section" aria-label="Administration">
+        <span class="label">Administration</span>
+        ${NAV_ADMIN.map(navItem).join('')}
+      </nav>
+    </div>
+    <div class="rail__foot">
+      <button class="scope-button" type="button" data-act="cycle-workspace">
+        <span class="avatar">${esc((ws?.name ?? 'A')[0])}</span>
+        <span class="scope-button__text"><b>${esc(ws?.name ?? '')}</b><span>${esc(ws?.sub ?? '')}</span></span>
+        ${icon('chevron', 'icon--sm')}
+      </button>
+      <button class="scope-button" type="button" data-act="cycle-scope">
+        <span class="avatar">${icon('filter', 'icon--sm')}</span>
+        <span class="scope-button__text"><b>${esc(sc?.name ?? '')}</b><span>${esc(sc?.sub ?? '')}</span></span>
+        ${icon('chevron', 'icon--sm')}
+      </button>
+    </div>
+  </aside>
+  <button class="rail__scrim" type="button" data-act="close-drawer" aria-label="Close navigation"></button>`;
+}
+
+function topbar() {
+  const role = ROLE_VIEWS.find((r) => r.id === state.role);
+  return `<header class="topbar">
+    <button class="icon-button" type="button" data-act="toggle-rail"
+      aria-label="${state.drawer === 'open' ? 'Close navigation' : 'Toggle navigation'}">
+      ${icon('menu')}
+    </button>
+    <label class="search" for="q">
+      <span class="visually-hidden">Search requests, loans, items and events</span>
+      ${icon('search', 'icon--sm icon--muted')}
+      <input id="q" type="search" placeholder="Search requests, loans, items…" autocomplete="off"
+        data-act="open-command" readonly />
+      <kbd>Ctrl K</kbd>
+    </label>
+    <div class="topbar__actions">
+      ${themeToggle(state.theme === 'dark')}
+      <button class="icon-button notif" type="button" data-act="open-notifications"
+        aria-label="Notifications, 3 unread">
+        ${icon('bell')}<span class="notif__count" aria-hidden="true">3</span>
+      </button>
+      <button class="account-button" type="button" data-act="open-menu"
+        aria-haspopup="true" aria-expanded="${state.overlay === 'menu'}" aria-controls="account-menu">
+        <span class="avatar">LO</span>
+        <span class="account-button__text"><b>Logistics Office</b><span>${esc(role?.name ?? '')}</span></span>
+        ${icon('chevron', 'icon--sm')}
+      </button>
+    </div>
+  </header>`;
+}
+
+function tabbar() {
+  return `<nav class="tabbar" aria-label="Sections">
+    ${TABS.map(
+      (t) =>
+        `<button type="button" data-act="go" data-id="${t.id}"${
+          t.id === state.surface ? ' aria-current="page"' : ''
+        }>${icon(t.icon, 'icon--sm')}<span>${esc(t.label)}</span></button>`,
+    ).join('')}
+  </nav>`;
+}
+
+function overlays() {
+  if (state.overlay === 'menu') {
+    return `<div class="menu" id="account-menu" data-overlay-root role="menu" aria-label="Account">
+      <button type="button" role="menuitem" data-act="go" data-id="account.profile">My profile</button>
+      <button type="button" role="menuitem" data-act="cycle-role">Switch role view</button>
+      <button type="button" role="menuitem" data-act="close-overlay">Session details</button>
+      <button type="button" role="menuitem" data-act="close-overlay">Sign out</button>
+    </div>`;
+  }
+
+  if (state.overlay === 'notifications') {
+    return `<div class="menu" id="account-menu" data-overlay-root role="dialog"
+      aria-label="Notifications" style="width:320px">
+      ${NOTIFICATIONS.map(
+        (n) => `<div style="display:grid;gap:2px;padding:10px;border-radius:6px">
+        <b style="font-size:var(--t-sm)">${esc(n.title)}</b>
+        <span class="muted" style="font-size:var(--t-xs)">${esc(n.body)}</span></div>`,
+      ).join('')}
+      <button type="button" data-act="close-overlay" style="border-top:1px solid var(--line);margin-top:4px">Close</button>
+    </div>`;
+  }
+
+  if (state.overlay === 'command') {
+    const matches = SURFACES.slice(0, 8);
+    return `<div class="dialog" data-overlay-root role="dialog" aria-modal="true" aria-label="Search">
+      <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Close search"></button>
+      <div class="dialog__panel" style="width:min(560px,100%)">
+        <div style="padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center">
+          ${icon('search', 'icon--sm icon--muted')}
+          <input type="search" placeholder="Search surfaces, requests, items…"
+            style="flex:1;border:0;outline:0;background:none;font-size:var(--t-md)" aria-label="Search" />
+        </div>
+        <div style="max-height:320px;overflow:auto;padding:6px">
+          ${matches
+            .map(
+              (m) =>
+                `<button type="button" data-act="go" data-id="${m.id}"
+              style="display:grid;width:100%;gap:1px;padding:9px 10px;border-radius:6px;text-align:left">
+              <b style="font-size:var(--t-sm)">${esc(m.name)}</b>
+              <span class="muted" style="font-size:var(--t-xs)">${esc(m.group)}</span></button>`,
+            )
+            .join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (state.overlay === 'confirm') {
+    return `<div class="dialog" data-overlay-root role="dialog" aria-modal="true"
+      aria-labelledby="cd-t" aria-describedby="cd-b">
+      <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Cancel"></button>
+      <div class="dialog__panel">
+        <div class="dialog__body">
+          <h3 id="cd-t">Accept this request and reserve stock?</h3>
+          <p id="cd-b" class="muted" style="font-size:var(--t-sm)">
+            Accepting reserves 6 lines against authoritative stock. Reserving is not a release —
+            nothing physically leaves the office until you record a handoff at the Release Desk.</p>
+        </div>
+        <div class="dialog__foot">
+          <button class="btn btn--quiet" type="button" data-act="close-overlay">Cancel</button>
+          <button class="btn btn--primary" type="button" data-act="confirm-done">Accept and reserve</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (state.overlay === 'detail') {
+    return `<div data-overlay-root>
+      <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Close detail"></button>
+      <aside class="drawer" role="dialog" aria-modal="true" aria-label="Request detail">
+        <div class="detail__head">
+          <div class="detail__title"><h2>Sound system and stage materials</h2>
+            <button class="icon-button" type="button" data-act="close-overlay" aria-label="Close">${icon('close')}</button></div>
+          <p class="muted" style="font-size:var(--t-xs)">REQ-000318 · USC Executive Board</p>
+          <div>${chip('FOR_REVIEW')}</div>
+        </div>
+        <div class="detail__body">
+          <p style="font-size:var(--t-sm)">Six lines need one routing decision each. Two are still
+          pending a decision, so this request cannot be accepted yet.</p>
+        </div>
+        <div class="detail__foot">
+          <button class="btn btn--primary" type="button" data-act="confirm-accept">Accept and reserve</button>
+          <button class="btn btn--quiet" type="button" data-act="close-overlay">Close</button>
+        </div>
+      </aside>
+    </div>`;
+  }
+
+  return '';
+}
+
+/* ---------------- Render ---------------- */
+
+function render() {
+  const surface = byId(state.surface);
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.body.setAttribute('data-theme', state.theme);
+
+  let body;
+  if (state.surface === 'index') {
+    body = `<div class="frame" data-viewport="${state.viewport}">${indexPage()}</div>`;
+  } else if (surface.kind === 'public') {
+    setPublicTheme(state.theme === 'dark');
+    body = `<div class="frame" data-viewport="${state.viewport}">${surface.render({
+      state: state.variant,
+    })}</div>`;
+  } else {
+    body = `<div class="frame" data-viewport="${state.viewport}">
+      <div class="shell" data-rail="${state.rail}" data-drawer="${state.drawer}">
+        ${rail()}
+        <section class="workspace">
+          ${topbar()}
+          <main class="main" id="surface-main" tabindex="-1">
+            <div class="main__inner stage" key="${esc(state.surface)}-${esc(state.variant)}">
+              ${surface.render({ state: state.variant })}
+            </div>
+          </main>
+        </section>
+        ${tabbar()}
+        ${overlays()}
+      </div>
+    </div>`;
+  }
+
+  root.innerHTML = `${previewBar()}${body}
+    <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>`;
+
+  syncPreviewBarHeight();
+}
+
+/* The preview bar is preview chrome, not product chrome, but it still occupies
+   space above the shell. Publish its height so the sticky rail and topbar sit
+   under it instead of overflowing the viewport. */
+let barObserver;
+function syncPreviewBarHeight() {
+  const bar = root.querySelector('.preview-bar');
+  if (!bar) return;
+  const apply = () =>
+    document.documentElement.style.setProperty('--preview-bar-h', `${bar.offsetHeight}px`);
+  apply();
+  barObserver?.disconnect();
+  barObserver = new ResizeObserver(apply);
+  barObserver.observe(bar);
+}
+
+/* ---------------- Events ---------------- */
+
+function go(id) {
+  if (!byId(id) && id !== 'index') return;
+  state.surface = id;
+  const s = byId(id);
+  state.variant = s?.states?.[0] ?? 'populated';
+  state.overlay = null;
+  state.drawer = 'closed';
+  location.hash = `#/${id}`;
+  render();
+  focusMain();
+}
+
+document.addEventListener('click', (event) => {
+  const el = event.target.closest('[data-act]');
+  if (!el) {
+    if (state.overlay === 'menu' || state.overlay === 'notifications') closeOverlay();
+    return;
+  }
+  const act = el.dataset.act;
+
+  if (act === 'go') return go(el.dataset.id);
+  if (act.startsWith('go:')) return go(act.slice(3));
+  if (act === 'viewport') {
+    state.viewport = el.dataset.v;
+    return render();
+  }
+  if (act === 'theme') return setTheme(el.dataset.v);
+  if (act === 'toggle-theme') return setTheme(state.theme === 'dark' ? 'light' : 'dark');
+  if (act === 'toggle-rail') {
+    state.drawer = state.drawer === 'open' ? 'closed' : 'open';
+    state.rail = state.rail === 'expanded' ? 'collapsed' : 'expanded';
+    return render();
+  }
+  if (act === 'close-drawer') {
+    state.drawer = 'closed';
+    return render();
+  }
+  if (act === 'open-menu') return openOverlay('menu');
+  if (act === 'open-notifications') return openOverlay('notifications');
+  if (act === 'open-command') return openOverlay('command');
+  if (act === 'close-overlay') return closeOverlay();
+  if (act === 'confirm-accept') return openOverlay('confirm');
+  if (act === 'confirm-return') {
+    toast('Return recorded. Stock restored to inventory.');
+    return;
+  }
+  if (act === 'confirm-release') {
+    state.variant = 'success';
+    render();
+    toast('Partial release recorded and confirmed by the recipient.');
+    return;
+  }
+  if (act === 'confirm-done') {
+    closeOverlay();
+    toast('Request accepted. Six lines reserved — nothing has been released.');
+    return;
+  }
+  if (act === 'select:request' || act === 'select:release') {
+    const narrow = root.querySelector('.frame').clientWidth < 1181;
+    if (narrow) return openOverlay('detail');
+    toast('Detail shown beside the queue.');
+    return;
+  }
+  if (act === 'cycle-workspace') {
+    const i = WORKSPACES.findIndex((w) => w.id === state.workspace);
+    state.workspace = WORKSPACES[(i + 1) % WORKSPACES.length].id;
+    render();
+    toast(`Workspace: ${WORKSPACES.find((w) => w.id === state.workspace).name}`);
+    return;
+  }
+  if (act === 'cycle-scope') {
+    const i = SCOPES.findIndex((s) => s.id === state.scope);
+    state.scope = SCOPES[(i + 1) % SCOPES.length].id;
+    render();
+    toast(`Scope: ${SCOPES.find((s) => s.id === state.scope).name}`);
+    return;
+  }
+  if (act === 'cycle-role') {
+    const i = ROLE_VIEWS.findIndex((r) => r.id === state.role);
+    state.role = ROLE_VIEWS[(i + 1) % ROLE_VIEWS.length].id;
+    closeOverlay();
+    toast(`Viewing as ${ROLE_VIEWS.find((r) => r.id === state.role).name}`);
+    return;
+  }
+  if (act === 'refresh') {
+    toast('Refreshed.');
+    return;
+  }
+  if (act === 'filter') {
+    toast('Filters are illustrative in this preview.');
+  }
+});
+
+document.addEventListener('change', (event) => {
+  const el = event.target.closest('[data-act]');
+  if (!el) return;
+  if (el.dataset.act === 'pick-surface') return go(el.value);
+  if (el.dataset.act === 'pick-state') {
+    state.variant = el.value;
+    render();
+    focusMain();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    if (state.overlay) return closeOverlay();
+    if (state.drawer === 'open') {
+      state.drawer = 'closed';
+      render();
+    }
+    return;
+  }
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault();
+    if (state.surface !== 'index' && byId(state.surface)?.kind === 'internal') openOverlay('command');
+    return;
+  }
+  if (event.key === '/' && !typing) {
+    event.preventDefault();
+    if (state.surface !== 'index' && byId(state.surface)?.kind === 'internal') openOverlay('command');
+  }
+});
+
+window.addEventListener('hashchange', () => {
+  const id = location.hash.replace(/^#\/?/, '') || 'index';
+  if (id !== state.surface) go(id);
+});
+
+/* ---------------- Boot ---------------- */
+
+document.body.insertAdjacentHTML('afterbegin', spriteMarkup());
+const initial = location.hash.replace(/^#\/?/, '') || 'index';
+state.surface = byId(initial) ? initial : 'index';
+state.variant = byId(state.surface)?.states?.[0] ?? 'populated';
+render();
+
+module.exports = {  };
+};
+
+__mods["src/icons.js"] = function (module, __req) {
+/* Icon language, preserved from the v0.7.2 reference:
+   24x24 viewBox, fill=none, stroke=currentColor, stroke-width 1.8,
+   round caps and joins. One brand ink — status meaning lives in labels.
+   The duplicate box/cube symbol pair in the reference is collapsed to one. */
+
+const PATHS = {
+  home: '<path d="m4 10 8-6 8 6v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z" stroke-linejoin="round"/>',
+  inbox:
+    '<path d="M5 5h14l2 10v4H3v-4Z" stroke-linejoin="round"/><path d="M3 14h5l2 3h4l2-3h5" stroke-linejoin="round"/>',
+  repeat:
+    '<path d="M17 4h3v3M7 20H4v-3M20 7a7 7 0 0 0-12-2L4 8m0 9a7 7 0 0 0 12 2l4-3" stroke-linecap="round" stroke-linejoin="round"/>',
+  check: '<path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  'arrow-down':
+    '<path d="M12 4v15m-6-6 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>',
+  'arrow-left': '<path d="M19 12H5m6-6-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/>',
+  box: '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9Z" stroke-linejoin="round"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9" stroke-linejoin="round"/>',
+  calendar:
+    '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16" stroke-linecap="round"/>',
+  clipboard:
+    '<rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5.5V4h6v1.5M8 10h8M8 14h6" stroke-linecap="round"/>',
+  alert:
+    '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v5M12 16h.01" stroke-width="2" stroke-linecap="round"/>',
+  search: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 5 5" stroke-linecap="round"/>',
+  bell: '<path d="M6 17h12l-1.5-2v-4a4.5 4.5 0 0 0-9 0v4Z" stroke-linejoin="round"/><path d="M10 20h4" stroke-linecap="round"/>',
+  moon: '<path d="M19.5 15.5A7.5 7.5 0 0 1 8.5 4.5 7.5 7.5 0 1 0 19.5 15.5Z" stroke-linejoin="round"/>',
+  sun: '<circle cx="12" cy="12" r="4.5" stroke-linejoin="round"/><path d="M12 1v3M12 20v3M4.2 4.2l2 2M17.8 17.8l2 2M1 12h3M20 12h3M4.2 19.8l2-2M17.8 6.2l2-2" stroke-linecap="round"/>',
+  chevron: '<path d="m7 10 5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>',
+  'chevron-right': '<path d="m9 5 7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>',
+  menu: '<path d="M5 7h14M5 12h9M5 17h14" stroke-linecap="round"/>',
+  users:
+    '<circle cx="9" cy="9" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 7a2.5 2.5 0 0 1 0 5M16 14.5a4.5 4.5 0 0 1 4.5 4.5" stroke-linecap="round"/>',
+  settings:
+    '<circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.3 1a7 7 0 0 0-1.7-1L14.7 3h-4l-.3 2.1a7 7 0 0 0-1.7 1l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.3 2.1h4l.3-2.1a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z" stroke-width="1.4" stroke-linejoin="round"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2" stroke-linecap="round" stroke-linejoin="round"/>',
+  briefcase:
+    '<rect x="4" y="7" width="16" height="13" rx="2"/><path d="M9 7V5h6v2M4 12h16M10 12v2h4v-2" stroke-linecap="round" stroke-linejoin="round"/>',
+  close: '<path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/>',
+  info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01" stroke-width="2" stroke-linecap="round"/>',
+  lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" stroke-linecap="round"/>',
+  file: '<path d="M6 3h7l5 5v13H6Z" stroke-linejoin="round"/><path d="M13 3v5h5" stroke-linejoin="round"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 1 0-5.7-5.7L11 7.4" stroke-linecap="round"/><path d="M14 10a4 4 0 0 0-5.7 0l-2.6 2.6a4 4 0 1 0 5.7 5.7L13 16.6" stroke-linecap="round"/>',
+  shield: '<path d="M12 3 5 6v6c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6Z" stroke-linejoin="round"/>',
+  truck: '<path d="M3 7h11v9H3Z" stroke-linejoin="round"/><path d="M14 10h4l3 3v3h-7Z" stroke-linejoin="round"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>',
+  megaphone:
+    '<path d="M4 10v4l12 5V5L4 10Z" stroke-linejoin="round"/><path d="M16 9a3 3 0 0 1 0 6M7 15v3h3" stroke-linecap="round"/>',
+  activity: '<path d="M3 12h4l3 7 4-14 3 7h4" stroke-linecap="round" stroke-linejoin="round"/>',
+  plus: '<path d="M12 5v14M5 12h14" stroke-linecap="round"/>',
+  filter: '<path d="M4 6h16l-6 7v5l-4 2v-7Z" stroke-linejoin="round"/>',
+};
+
+const ICON_NAMES = Object.keys(PATHS);
+
+function spriteMarkup() {
+  return `<svg class="visually-hidden" aria-hidden="true" focusable="false"><defs>${Object.entries(
+    PATHS,
+  )
+    .map(
+      ([name, body]) =>
+        `<symbol id="i-${name}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${body}</symbol>`,
+    )
+    .join('')}</defs></svg>`;
+}
+
+/** Decorative by default — icons never carry meaning on their own. */
+function icon(name, className = '') {
+  const cls = className ? `icon ${className}` : 'icon';
+  return `<svg class="${cls}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
+}
+
+module.exports = { ICON_NAMES, spriteMarkup, icon };
+};
+
+__mods["src/components.js"] = function (module, __req) {
+/* Reusable preview primitives. Each returns an HTML string.
+   Accessibility contracts live here so every surface inherits them. */
+
+const { icon } = __req("src/icons.js");
+const { statusLabel, tone } = __req("src/data/vocabulary.js");
+
+const esc = (value) =>
+  String(value ?? '').replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+  );
+
+let uid = 0;
+const nextId = (prefix = 'x') => `${prefix}-${++uid}`;
+
+/* ---------- Theme toggle ----------
+   Sun in light, moon in dark. Both glyphs stay in the DOM; motion.css rotates
+   and crossfades between them so pressing transforms the icon rather than
+   swapping it. The accessible name describes the ACTION; aria-pressed reports
+   whether dark is active, so the announced state stays truthful. */
+
+function themeToggle(dark) {
+  return `<button class="icon-button theme-toggle" type="button" data-act="toggle-theme"
+    aria-pressed="${!!dark}"
+    aria-label="${dark ? 'Switch to light mode' : 'Switch to dark mode'}">
+    <span class="theme-toggle__icons">
+      ${icon('sun', 'theme-toggle__sun')}
+      ${icon('moon', 'theme-toggle__moon')}
+    </span>
+  </button>`;
+}
+
+/* ---------- Status chip: colour never travels alone ---------- */
+
+function chip(status) {
+  const t = tone(status);
+  const glyph = t === 'alert' ? icon('alert') : '';
+  return `<span class="chip" data-tone="${t}">${glyph}${esc(statusLabel(status))}</span>`;
+}
+
+/* ---------- Page header ---------- */
+
+function pageHead({ crumbs = [], title, lede = '', actions = '' }) {
+  const trail = crumbs.length
+    ? `<nav class="breadcrumbs" aria-label="Breadcrumb">${crumbs
+        .map((c, i) =>
+          i === crumbs.length - 1
+            ? `<b aria-current="page">${esc(c)}</b>`
+            : `<span>${esc(c)}</span><span aria-hidden="true">/</span>`,
+        )
+        .join('')}</nav>`
+    : '';
+  return `<header class="page-head">
+    <div class="page-head__title">${trail}<h1>${esc(title)}</h1>${
+      lede ? `<p>${esc(lede)}</p>` : ''
+    }</div>
+    ${actions ? `<div class="page-head__actions">${actions}</div>` : ''}
+  </header>`;
+}
+
+/* ---------- Attention band ---------- */
+
+function attentionBand(items) {
+  return `<section class="attention" aria-label="Attention summary">
+    ${items
+      .map(
+        (m) => `<button class="attention__item" type="button" data-urgent="${!!m.urgent}"
+        data-act="${esc(m.act ?? 'noop')}">
+        <span class="attention__label">${icon(m.icon, 'icon--sm icon--muted')}${esc(m.label)}</span>
+        <span class="attention__value num">${esc(m.value)}</span>
+        <span class="attention__note">${esc(m.note)}</span>
+      </button>`,
+      )
+      .join('')}
+  </section>`;
+}
+
+function contextLine(pairs) {
+  return `<p class="context-line">${pairs
+    .map((p) => `<span>${esc(p.label)} <b>${esc(p.value)}</b></span>`)
+    .join('')}<span class="illustrative">${icon(
+    'info',
+    'icon--sm icon--muted',
+  )}All figures are illustrative preview data.</span></p>`;
+}
+
+/* ---------- Queue table ----------
+   Semantic <table>. Rows are focusable buttons in the first cell so keyboard
+   users reach the detail without a synthetic row role. Column priority
+   classes decide what a narrow container drops — never status or quantity. */
+
+function queueTable({ caption, columns, rows, selectedRef = null }) {
+  return `<div class="table-wrap"><table class="q">
+    <caption>${esc(caption)}</caption>
+    <thead><tr>${columns
+      .map(
+        (c) =>
+          `<th scope="col"${c.priority ? ` class="col-p${c.priority}"` : ''}${
+            c.numeric ? ' style="text-align:right"' : ''
+          }>${esc(c.label)}</th>`,
+      )
+      .join('')}</tr></thead>
+    <tbody>${rows
+      .map(
+        (r) => `<tr${r.ref === selectedRef ? ' aria-selected="true"' : ''}>${r.cells
+          .map((cell, i) => {
+            const col = columns[i] ?? {};
+            // One class list. Emitting two class attributes silently drops the
+            // second, which is why numeric alignment was lost on any column
+            // that also had a priority.
+            const classes = [
+              col.priority ? `col-p${col.priority}` : '',
+              col.numeric ? 'q__num' : '',
+              col.nowrap ? 'q__date' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            const attr = classes ? ` class="${classes}"` : '';
+            const tag = i === 0 ? 'th scope="row"' : 'td';
+            return `<${tag}${attr}>${cell}</${i === 0 ? 'th' : 'td'}>`;
+          })
+          .join('')}</tr>`,
+      )
+      .join('')}</tbody>
+  </table></div>`;
+}
+
+function rowLink(ref, title, sub, act = 'open') {
+  return `<button class="q__link" type="button" data-act="${esc(act)}" data-ref="${esc(ref)}">
+    <b>${esc(title)}</b><span>${esc(sub)}</span>
+  </button>`;
+}
+
+/* ---------- Quantity ---------- */
+
+function qty(value, unit) {
+  if (value === null || value === undefined) return `<span class="muted">Not recorded</span>`;
+  return `<span class="qty"><b>${esc(value)}</b><span>${esc(unit)}</span></span>`;
+}
+
+function meter(done, total, toneName = 'progress') {
+  if (!total) return `<span class="muted">Not assessed</span>`;
+  const pct = Math.round((done / total) * 100);
+  // scaleX rather than width so progress animates without layout thrash.
+  return `<span class="qty"><b>${done}</b><span>of ${total}</span></span>
+    <span class="meter" data-tone="${toneName}" role="img"
+      aria-label="${pct}% complete"><span style="transform:scaleX(${pct / 100})"></span></span>`;
+}
+
+/* ---------- Facts ---------- */
+
+function facts(pairs) {
+  return `<dl class="facts">${pairs
+    .map(
+      (p) =>
+        `<div><dt>${esc(p.label)}</dt><dd>${p.html ?? esc(p.value ?? 'Not recorded')}</dd></div>`,
+    )
+    .join('')}</dl>`;
+}
+
+/* ---------- Timeline ---------- */
+
+function timeline(steps) {
+  return `<ol class="timeline">${steps
+    .map(
+      (s) => `<li data-done="${!!s.done}" data-current="${!!s.current}">
+      <span class="timeline__dot">${s.done ? icon('check') : ''}</span>
+      <span class="timeline__body"><b>${esc(s.title)}</b><span>${esc(s.meta)}</span></span>
+    </li>`,
+    )
+    .join('')}</ol>`;
+}
+
+/* ---------- Stepper ---------- */
+
+function stepper(steps, currentIndex) {
+  return `<ol class="stepper">${steps
+    .map(
+      (s, i) =>
+        `<li${i === currentIndex ? ' aria-current="step"' : ''} data-done="${
+          i < currentIndex
+        }"><span>${esc(s)}</span></li>`,
+    )
+    .join('')}</ol>`;
+}
+
+/* ---------- States ---------- */
+
+function emptyState({ title, body, action = '' }) {
+  return `<div class="state"><span class="state__mark">${icon(
+    'inbox',
+  )}</span><h2>${esc(title)}</h2><p>${esc(body)}</p>${action}</div>`;
+}
+
+function loadingState(rows = 5) {
+  return `<div class="table-wrap" aria-busy="true" aria-live="polite">
+    <p class="visually-hidden">Loading records.</p>
+    ${Array.from({ length: rows })
+      .map(
+        (_, i) =>
+          `<div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) 92px;gap:16px;padding:13px 10px;border-bottom:1px solid var(--line)">
+        <span class="skeleton" style="height:13px;width:${68 + ((i * 7) % 26)}%"></span>
+        <span class="skeleton" style="height:13px;width:52%"></span>
+        <span class="skeleton" style="height:20px;border-radius:999px"></span>
+      </div>`,
+      )
+      .join('')}
+  </div>`;
+}
+
+function notice({ tone: t = 'info', title, body, action = '' }) {
+  const glyph = t === 'alert' ? 'alert' : t === 'done' ? 'check' : 'info';
+  return `<div class="notice" data-tone="${t}" role="${
+    t === 'alert' ? 'alert' : 'status'
+  }">${icon(glyph)}<div><b>${esc(title)}</b><p>${esc(body)}</p>${action}</div></div>`;
+}
+
+function deniedState() {
+  return `<div class="state"><span class="state__mark">${icon('lock')}</span>
+    <h2>You do not have access to this area</h2>
+    <p>This workspace is limited to the System Owner. Your current role is Administrator.
+       Nothing was changed. Ask the System Owner if you need this view.</p>
+    <a class="btn" href="#/admin.overview">Return to your overview</a></div>`;
+}
+
+/* ---------- Evidence ---------- */
+
+function evidenceList(items) {
+  return `<ul class="evidence">${items
+    .map(
+      (e) => `<li><span class="evidence__mark">${icon('file')}</span>
+      <span><b>${esc(e.name)}</b><span>${esc(e.meta)}</span></span>
+      <span class="chip" data-tone="${e.tone}">${esc(e.state)}</span></li>`,
+    )
+    .join('')}</ul>`;
+}
+
+/* ---------- Form field ---------- */
+
+function field({
+  label: labelText,
+  name,
+  type = 'text',
+  value = '',
+  hint = '',
+  error = '',
+  required = false,
+  options = null,
+  textarea = false,
+}) {
+  const id = nextId('f');
+  const hintId = hint ? `${id}-hint` : '';
+  const errId = error ? `${id}-err` : '';
+  const describedBy = [hintId, errId].filter(Boolean).join(' ');
+  const describe = describedBy ? ` aria-describedby="${describedBy}"` : '';
+  const invalid = error ? ' aria-invalid="true"' : '';
+  const req = required ? ' required' : '';
+
+  let control;
+  if (options) {
+    control = `<select id="${id}" name="${esc(name)}"${describe}${invalid}${req}>${options
+      .map((o) => `<option${o === value ? ' selected' : ''}>${esc(o)}</option>`)
+      .join('')}</select>`;
+  } else if (textarea) {
+    control = `<textarea id="${id}" name="${esc(name)}"${describe}${invalid}${req}>${esc(
+      value,
+    )}</textarea>`;
+  } else {
+    control = `<input id="${id}" name="${esc(name)}" type="${esc(type)}" value="${esc(
+      value,
+    )}"${describe}${invalid}${req} />`;
+  }
+
+  return `<div class="field" data-invalid="${!!error}">
+    <label for="${id}">${esc(labelText)}${
+      required ? ' <span class="muted">(required)</span>' : ''
+    }</label>
+    ${control}
+    ${hint ? `<span class="field__hint" id="${hintId}">${esc(hint)}</span>` : ''}
+    ${
+      error
+        ? `<span class="field__error" id="${errId}">${icon(
+            'alert',
+            'icon--sm',
+          )}${esc(error)}</span>`
+        : ''
+    }
+  </div>`;
+}
+
+/* ---------- Composition bar (replaces the reference's decorative donut) ---------- */
+
+function composition(parts) {
+  const total = parts.reduce((s, p) => s + p.value, 0);
+  return `<div>
+    <div class="composition" role="img" aria-label="${esc(
+      parts.map((p) => `${p.label} ${Math.round((p.value / total) * 100)} percent`).join(', '),
+    )}">
+      ${parts
+        .map(
+          (p) =>
+            `<span style="width:${(p.value / total) * 100}%;background:${p.color}"></span>`,
+        )
+        .join('')}
+    </div>
+    <ul class="composition-key" style="margin-top:12px">
+      ${parts
+        .map(
+          (p) =>
+            `<li><i style="background:${p.color}"></i><span>${esc(p.label)}</span><b>${
+              p.value
+            } (${Math.round((p.value / total) * 100)}%)</b></li>`,
+        )
+        .join('')}
+    </ul>
+  </div>`;
+}
+
+/* ---------- Receipt ---------- */
+
+function receipt({ ref, title, lines, footer }) {
+  return `<div class="receipt">
+    <div class="receipt__head">
+      <span class="label">${esc(title)}</span>
+      <span class="receipt__ref">${esc(ref)}</span>
+      <span class="muted" style="font-size:var(--t-xs)">Keep this reference to track your request.</span>
+    </div>
+    <div class="receipt__body">${facts(lines)}${footer ?? ''}</div>
+  </div>`;
+}
+
+module.exports = { esc, nextId, themeToggle, chip, pageHead, attentionBand, contextLine, queueTable, rowLink, qty, meter, facts, timeline, stepper, emptyState, loadingState, notice, deniedState, evidenceList, field, composition, receipt };
+};
+
+__mods["src/data/vocabulary.js"] = function (module, __req) {
+/* User-facing vocabulary.
+   Mirrors src/domain/presentation-labels.js and src/domain/constants.js in the
+   product. No raw enum ever reaches the interface; unknown tokens fall back to
+   title case exactly as the product does. */
+
+const STATUS_LABELS = {
+  FOR_REVIEW: 'For Review',
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+  CANCELLED: 'Cancelled',
+  FOR_CANVASSING: 'For Canvassing',
+  WAITING_FOR_BUDGET: 'Waiting for Budget',
+  TO_BE_PROCURED: 'To Be Procured',
+  PROCURED: 'Procured',
+  PARTIALLY_RECEIVED: 'Partially Received',
+  READY_TO_RELEASE: 'Ready to Release',
+  PARTIALLY_RELEASED: 'Partially Released',
+  PARTIALLY_FULFILLED: 'Partially Fulfilled',
+  COMPLETED: 'Completed',
+  RESTOCKED: 'Restocked',
+  READY_TO_CLAIM: 'Ready to Claim',
+  ON_LOAN: 'On Loan',
+  RETURNED: 'Returned',
+  OVERDUE: 'Overdue',
+  ACTIVE: 'Active',
+  CLEARED: 'Cleared',
+  ARCHIVED: 'Archived',
+};
+
+/* Five tones only. See DESIGN.md. */
+const STATUS_TONE = {
+  ARCHIVED: 'neutral',
+  CLEARED: 'neutral',
+  RETURNED: 'neutral',
+  RESTOCKED: 'neutral',
+
+  FOR_REVIEW: 'info',
+  FOR_CANVASSING: 'info',
+  WAITING_FOR_BUDGET: 'info',
+  TO_BE_PROCURED: 'info',
+
+  ACCEPTED: 'progress',
+  PROCURED: 'progress',
+  PARTIALLY_RECEIVED: 'progress',
+  PARTIALLY_RELEASED: 'progress',
+  PARTIALLY_FULFILLED: 'progress',
+  READY_TO_RELEASE: 'progress',
+  READY_TO_CLAIM: 'progress',
+  ON_LOAN: 'progress',
+  ACTIVE: 'progress',
+
+  COMPLETED: 'done',
+
+  OVERDUE: 'alert',
+  REJECTED: 'alert',
+  CANCELLED: 'alert',
+};
+
+const ROLE_LABELS = {
+  SYSTEM_OWNER: 'System Owner',
+  ADMINISTRATOR: 'Administrator',
+  DIRECTOR: 'Director',
+  COMMITTEE_HEAD: 'Committee Head',
+  DOL_STAFF: 'DOL Staff',
+  REQUESTER: 'Requester',
+  READ_ONLY_AUDITOR: 'Read-only Auditor',
+};
+
+const COMMITTEE_LABELS = {
+  COM_FOOD: 'Food Committee',
+  COM_INVENTORY_PANTRY: 'Inventory and Pantry Committee',
+  COM_MATERIALS: 'Materials Committee',
+};
+
+const CATEGORY_LABELS = {
+  OFFICE_SUPPLIES: 'Office Supplies',
+  PANTRY_FOOD: 'Pantry Food',
+  EQUIPMENT: 'Equipment',
+  PRINTING_SIGNAGE: 'Printing and Signage',
+  EVENT_MATERIALS: 'Event Materials',
+  CLEANING_SUPPLIES: 'Cleaning Supplies',
+  OTHER_CONTROLLED: 'Other Controlled Materials',
+};
+
+const LEDGER_LABELS = {
+  OPENING_BALANCE: 'Opening Balance',
+  RECEIPT: 'Receipt',
+  ISSUE: 'Issue',
+  LOAN_OUT: 'Loan Out',
+  LOAN_RETURN: 'Loan Return',
+  ADJUSTMENT_IN: 'Adjustment In',
+  ADJUSTMENT_OUT: 'Adjustment Out',
+  TRANSFER_OUT_EVENT: 'Transfer Out (Event)',
+  TRANSFER_IN_INVENTORY: 'Transfer In (Inventory)',
+  EMERGENCY_ISSUE: 'Emergency Issue',
+};
+
+const titleCase = (value) =>
+  String(value)
+    .replaceAll('_', ' ')
+    .trim()
+    .toLowerCase()
+    .replace(/(^|\s|[-/])\p{L}/gu, (c) => c.toUpperCase());
+
+function label(value, map = STATUS_LABELS, missing = 'Not recorded') {
+  if (value === null || value === undefined || String(value).trim() === '') return missing;
+  return map[value] ?? titleCase(value);
+}
+
+const statusLabel = (v) => label(v, STATUS_LABELS);
+const tone = (v) => STATUS_TONE[v] ?? 'neutral';
+
+module.exports = { STATUS_LABELS, STATUS_TONE, ROLE_LABELS, COMMITTEE_LABELS, CATEGORY_LABELS, LEDGER_LABELS, label, statusLabel, tone };
+};
+
+__mods["src/registry.js"] = function (module, __req) {
+/* Surface registry. Ids and grouping mirror docs/design/IMPECCABLE_SURFACE_MATRIX.md.
+   `states` lists the state variants each surface can demonstrate. */
+
+const pub = __req("src/surfaces/public.js");
+const ops = __req("src/surfaces/operations.js");
+const adm = __req("src/surfaces/admin.js");
+
+const S = (id, name, group, tier, kind, render, states = ['populated']) => ({
+  id,
+  name,
+  group,
+  tier,
+  kind,
+  render,
+  states,
+});
+
+const SURFACES = [
+  /* Public and pre-authentication */
+  S('public.landing', 'Portal landing', 'Public', 'solid', 'public', pub.landing),
+  S('public.signin', 'Staff sign in', 'Public', 'deep', 'public', pub.signin, [
+    'populated',
+    'loading',
+    'error',
+    'unavailable',
+  ]),
+  S('public.register', 'Create staff account', 'Public', 'solid', 'public', pub.register),
+  S('public.verify', 'Email verification', 'Public', 'solid', 'public', pub.verify),
+  S('public.application', 'Account application', 'Public', 'solid', 'public', pub.application),
+  S('public.application-status', 'Application status', 'Public', 'solid', 'public', pub.applicationStatus),
+  S('public.request-intake', 'Public request intake', 'Public', 'deep', 'public', pub.requestIntake, [
+    'populated',
+    'error',
+  ]),
+  S('public.request-tracking', 'Public request tracking', 'Public', 'deep', 'public', pub.requestTracking, [
+    'populated',
+    'empty',
+    'success',
+  ]),
+  S('public.lending-intake', 'Public lending intake', 'Public', 'solid', 'public', pub.lendingIntake),
+  S('public.lending-tracking', 'Public lending tracking', 'Public', 'solid', 'public', pub.lendingTracking),
+  S('public.policy', 'Privacy and acceptable use', 'Public', 'solid', 'public', pub.policy),
+
+  /* Role overviews */
+  S('admin.overview', 'Administrator overview', 'Overviews', 'deep', 'internal', (c) => ops.overview('admin.overview', c), [
+    'populated',
+    'loading',
+    'empty',
+    'unavailable',
+  ]),
+  S('director.overview', 'Director overview', 'Overviews', 'solid', 'internal', (c) => ops.overview('director.overview', c)),
+  S('food.overview', 'Food committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('food.overview', c)),
+  S('inventory.overview', 'Inventory committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('inventory.overview', c)),
+  S('materials.overview', 'Materials committee', 'Overviews', 'solid', 'internal', (c) => ops.overview('materials.overview', c)),
+
+  /* Core operations */
+  S('request.queue', 'Request review queue', 'Operations', 'deep', 'internal', ops.requestQueue, [
+    'populated',
+    'loading',
+    'empty',
+    'stale',
+    'denied',
+  ]),
+  S('lending.queue', 'Lending hub', 'Operations', 'deep', 'internal', ops.lendingQueue, ['populated', 'empty']),
+  S('lending.detail', 'Loan detail', 'Operations', 'deep', 'internal', ops.lendingDetail),
+  S('release.desk', 'Release Desk', 'Operations', 'deep', 'internal', ops.releaseDesk, [
+    'populated',
+    'success',
+    'unavailable',
+  ]),
+  S('inventory.catalog', 'Inventory', 'Operations', 'deep', 'internal', ops.inventoryCatalog, ['populated', 'loading']),
+  S('inventory.item', 'Item and movement history', 'Operations', 'deep', 'internal', ops.inventoryItem),
+  S('restocking.queue', 'Restocking and receiving', 'Operations', 'solid', 'internal', ops.restockingQueue, [
+    'populated',
+    'partial',
+  ]),
+  S('procurement.board', 'Procurement', 'Operations', 'solid', 'internal', ops.procurementBoard),
+  S('events.series', 'Event series', 'Operations', 'solid', 'internal', ops.eventsSeries),
+  S('audit.activity', 'Recent activity', 'Operations', 'solid', 'internal', ops.auditActivity),
+
+  /* Administration */
+  S('admin.access', 'Accounts and access', 'Administration', 'solid', 'internal', adm.access, ['populated', 'denied']),
+  S('admin.directory', 'Staff directory', 'Administration', 'solid', 'internal', adm.directory),
+  S('admin.reference', 'Reference administration', 'Administration', 'solid', 'internal', adm.reference),
+  S('admin.links', 'Link registry', 'Administration', 'solid', 'internal', adm.links),
+  S('admin.brand', 'Brand and media', 'Administration', 'solid', 'internal', adm.brand),
+  S('account.profile', 'My profile', 'Administration', 'solid', 'internal', adm.profile),
+  S('owner.health', 'System status', 'Administration', 'solid', 'internal', ops.ownerHealth, ['populated', 'denied']),
+];
+
+const byId = (id) => SURFACES.find((s) => s.id === id);
+
+const GROUPS = ['Public', 'Overviews', 'Operations', 'Administration'];
+
+/* Rail navigation — mirrors the product's module list. */
+const NAV = [
+  { id: 'admin.overview', label: 'Overview', icon: 'home' },
+  { id: 'request.queue', label: 'Request Center', icon: 'clipboard' },
+  { id: 'lending.queue', label: 'Office Lending Hub', icon: 'repeat' },
+  { id: 'release.desk', label: 'Release Desk', icon: 'check' },
+  { id: 'restocking.queue', label: 'Restocking', icon: 'arrow-down' },
+  { id: 'procurement.board', label: 'Procurement', icon: 'briefcase' },
+  { id: 'inventory.catalog', label: 'Inventory', icon: 'box' },
+  { id: 'events.series', label: 'Events', icon: 'calendar' },
+];
+
+const NAV_ADMIN = [
+  { id: 'admin.access', label: 'Accounts and Access', icon: 'users' },
+  { id: 'admin.directory', label: 'Staff Directory', icon: 'users' },
+  { id: 'admin.reference', label: 'Reference Administration', icon: 'settings' },
+  { id: 'admin.links', label: 'Link Registry', icon: 'link' },
+  { id: 'admin.brand', label: 'Brand and Media', icon: 'megaphone' },
+  { id: 'owner.health', label: 'System status', icon: 'shield' },
+];
+
+const TABS = [
+  { id: 'admin.overview', label: 'Overview', icon: 'home' },
+  { id: 'request.queue', label: 'Requests', icon: 'clipboard' },
+  { id: 'lending.queue', label: 'Lending', icon: 'repeat' },
+  { id: 'inventory.catalog', label: 'Inventory', icon: 'box' },
+  { id: 'release.desk', label: 'Release', icon: 'check' },
+];
+
+module.exports = { SURFACES, byId, GROUPS, NAV, NAV_ADMIN, TABS };
+};
+
+__mods["src/surfaces/public.js"] = function (module, __req) {
+/* Public and pre-authentication surfaces.
+   Calmer, narrower, larger than internal. One action per screen.
+   Nothing here exposes protected stock, internal notes, roster data,
+   supplier evidence, or audit internals. */
+
+const { icon } = __req("src/icons.js");
+const {
+  chip,
+  esc,
+  facts,
+  field,
+  notice,
+  receipt,
+  stepper,
+  themeToggle,
+  timeline,
+} = __req("src/components.js");
+
+const marks = `<span class="public__marks"><span class="public__mark">HAU</span><span class="public__mark">USC</span></span>`;
+
+/* Public surfaces are plain render functions with no context argument, so the
+   shell reads the current theme from here. app.js sets it before each render.
+   Only the toggle's accessible name and pressed state depend on it — the icon
+   itself is switched by CSS from [data-theme]. */
+let publicDark = false;
+function setPublicTheme(dark) {
+  publicDark = !!dark;
+}
+
+function publicShell(inner, { wide = false, back = true, dark = publicDark } = {}) {
+  return `<div class="public">
+    <header class="public__bar">
+      <div class="public__brand">${marks}
+        <span class="public__wordmark"><b>HAU-USC Logistics</b><span>Department of Logistics</span></span>
+      </div>
+      <div class="public__bar-actions">
+        ${themeToggle(dark)}
+        ${
+          back
+            ? `<a class="btn btn--sm" href="#/public.landing">${icon('home', 'icon--sm')}Portals</a>`
+            : ''
+        }
+      </div>
+    </header>
+    <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${inner}</main>
+    <footer class="public__foot">
+      <span>© 2026 HAU-USC Logistics Management System</span>
+      <span><a href="#/public.policy">Privacy Notice and Acceptable Use</a></span>
+    </footer>
+  </div>`;
+}
+
+/* ---------- 1. Portal landing ---------- */
+
+const landing = () =>
+  publicShell(
+    `<div class="public__head">
+      <h1>What do you need from the Department of Logistics?</h1>
+      <p>Choose a portal to begin. You can track anything you submit with the reference number we give you.</p>
+    </div>
+    <div class="portal-grid">
+      <a class="portal-card" href="#/public.request-intake">
+        <span class="portal-card__mark">${icon('clipboard')}</span>
+        <b>Request items or materials</b>
+        <span>For events, office needs, and catalog restock.</span>
+      </a>
+      <a class="portal-card" href="#/public.lending-intake">
+        <span class="portal-card__mark">${icon('repeat')}</span>
+        <b>Borrow equipment</b>
+        <span>Library-style lending with a return date.</span>
+      </a>
+      <a class="portal-card" href="#/public.request-tracking">
+        <span class="portal-card__mark">${icon('search')}</span>
+        <b>Track a submission</b>
+        <span>Check status using your reference number.</span>
+      </a>
+      <a class="portal-card" href="#/public.signin">
+        <span class="portal-card__mark">${icon('lock')}</span>
+        <b>Staff sign in</b>
+        <span>For Department of Logistics staff and officers.</span>
+      </a>
+    </div>`,
+    { back: false },
+  );
+
+/* ---------- 2. Sign in ---------- */
+
+function signin({ state }) {
+  const invalid = state === 'error';
+  const unavailable = state === 'unavailable';
+  return publicShell(
+    `<div class="auth-card">
+      <h1>Staff sign in</h1>
+      <p>Department of Logistics accounts only.</p>
+      ${
+        unavailable
+          ? notice({
+              tone: 'alert',
+              title: 'Sign-in is temporarily unavailable',
+              body: 'We could not reach the account service. Nothing was submitted. Please try again in a few minutes.',
+            })
+          : ''
+      }
+      ${
+        invalid
+          ? notice({
+              tone: 'alert',
+              title: 'We could not sign you in',
+              body: 'The username or password did not match. Nothing was changed on your account.',
+            })
+          : ''
+      }
+      <form onsubmit="return false">
+        ${field({ label: 'Username', name: 'u', required: true, value: invalid ? 'logistics.office' : '' })}
+        ${field({
+          label: 'Password',
+          name: 'p',
+          type: 'password',
+          required: true,
+          error: invalid ? 'Enter your password to continue.' : '',
+        })}
+        <button class="btn btn--primary" type="submit"${
+          state === 'loading' ? ' data-state="loading" disabled' : ''
+        }>${icon('lock')}${state === 'loading' ? 'Signing in…' : 'Sign in'}</button>
+      </form>
+      <p class="auth-alt">No account yet? <a href="#/public.application">Apply for access</a></p>
+    </div>`,
+  );
+}
+
+/* ---------- 3. Create staff account ---------- */
+
+const register = () =>
+  publicShell(
+    `<div class="auth-card">
+      <h1>Create a staff account</h1>
+      <p>Your account is activated after review. You will not be able to sign in until it is approved.</p>
+      <form onsubmit="return false">
+        ${field({ label: 'Full name', name: 'n', required: true })}
+        ${field({ label: 'Institutional email', name: 'e', type: 'email', required: true, hint: 'Must match the protected directory exactly.' })}
+        ${field({ label: 'Username', name: 'u', required: true, hint: 'Letters, numbers, and dots only.' })}
+        ${field({ label: 'Password', name: 'p', type: 'password', required: true, hint: 'At least 12 characters.' })}
+        <button class="btn btn--primary" type="submit">Create account</button>
+      </form>
+      <p class="auth-alt">Already have one? <a href="#/public.signin">Sign in</a></p>
+    </div>`,
+  );
+
+/* ---------- 4. Email verification ---------- */
+
+const verify = () =>
+  publicShell(
+    `<div class="auth-card">
+      <h1>Confirm your email</h1>
+      <p>We sent a confirmation link to the institutional address you provided.</p>
+      ${notice({
+        tone: 'info',
+        title: 'Nothing is active yet',
+        body: 'Your account stays inactive until the link is opened and an administrator completes the review.',
+      })}
+      <div style="display:grid;gap:8px;margin-top:20px">
+        <button class="btn" type="button">Resend confirmation</button>
+        <a class="btn btn--quiet" href="#/public.signin">Back to sign in</a>
+      </div>
+    </div>`,
+  );
+
+/* ---------- 5. Account application ---------- */
+
+const application = () =>
+  publicShell(
+    `<div class="public__head">
+      <h1>Apply for access</h1>
+      <p>Tell us who you are and what you need to do. A Department of Logistics administrator reviews every application.</p>
+    </div>
+    ${stepper(['Identity', 'Purpose', 'Review'], 0)}
+    <form class="form-grid" onsubmit="return false">
+      <fieldset>
+        <legend>Your identity</legend>
+        <div style="display:grid;gap:16px">
+          ${field({ label: 'Full name', name: 'n', required: true })}
+          ${field({ label: 'Institutional email', name: 'e', type: 'email', required: true })}
+          ${field({
+            label: 'You are a',
+            name: 'kind',
+            options: ['USC officer', 'USC staff', 'Angelite student', 'Department of Logistics staff'],
+          })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>What you need</legend>
+        <div style="display:grid;gap:16px">
+          ${field({
+            label: 'Reason for access',
+            name: 'r',
+            textarea: true,
+            hint: 'Describe the work you need to do. Do not include personal records here.',
+            required: true,
+          })}
+        </div>
+      </fieldset>
+      <button class="btn btn--primary" type="submit">Continue to review</button>
+    </form>`,
+  );
+
+/* ---------- 6. Application status ---------- */
+
+const applicationStatus = () =>
+  publicShell(
+    `<div class="public__head">
+      <h1>Application status</h1>
+      <p>Reference <b>APP-00214</b></p>
+    </div>
+    <div class="panel"><div class="panel__body">
+      ${timeline([
+        { title: 'Application received', meta: '3 August 2026', done: true },
+        { title: 'Email confirmed', meta: '3 August 2026', done: true },
+        { title: 'Administrator review', meta: 'In progress', current: true },
+        { title: 'Director decision', meta: 'Not started' },
+        { title: 'Access activated', meta: 'Not started' },
+      ])}
+      ${notice({
+        tone: 'info',
+        title: 'What happens next',
+        body: 'An administrator checks your identity against the protected directory. If it does not match exactly, the application waits for manual review rather than being approved automatically.',
+      })}
+    </div></div>`,
+  );
+
+/* ---------- 7. Public request intake ---------- */
+
+function requestIntake({ state }) {
+  const invalid = state === 'error';
+  return publicShell(
+    `<div class="public__head">
+      <h1>Request items or materials</h1>
+      <p>Submitting a request does not reserve or deduct stock. The Department of Logistics reviews each line and decides how it will be fulfilled.</p>
+    </div>
+    ${stepper(['Who and when', 'What you need', 'Review and submit'], 1)}
+    ${
+      invalid
+        ? notice({
+            tone: 'alert',
+            title: 'Two fields need attention',
+            body: 'Nothing has been submitted yet. Fix the highlighted fields and try again.',
+          })
+        : ''
+    }
+    <form class="form-grid" onsubmit="return false">
+      <fieldset>
+        <legend>Request details</legend>
+        <div style="display:grid;gap:16px">
+          <div class="form-row">
+            ${field({ label: 'Requesting organisation', name: 'org', required: true, value: 'USC Executive Board' })}
+            ${field({
+              label: 'Date needed',
+              name: 'd',
+              type: 'date',
+              required: true,
+              error: invalid ? 'Choose a date at least three working days from today.' : '',
+            })}
+          </div>
+          ${field({
+            label: 'Linked event',
+            name: 'evt',
+            options: ['Not linked', 'Youth Development Days · Day 1', 'Youth Development Days · Day 2', 'General Assembly'],
+          })}
+          ${field({
+            label: 'Purpose',
+            name: 'p',
+            textarea: true,
+            required: true,
+            hint: 'Say what the items are for. Do not include personal or contact details.',
+            error: invalid ? 'Tell us what the items will be used for.' : '',
+          })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Items requested</legend>
+        <div style="display:grid;gap:16px">
+          <div class="form-row">
+            ${field({ label: 'Item', name: 'i1', value: 'Monobloc chair' })}
+            ${field({ label: 'Quantity', name: 'q1', type: 'number', value: '40' })}
+          </div>
+          <button class="btn btn--sm" type="button">${icon('plus', 'icon--sm')}Add another item</button>
+          ${notice({
+            tone: 'info',
+            title: 'Availability is confirmed after review',
+            body: 'We do not show live stock counts on public portals. Your request is checked against authoritative stock during review.',
+          })}
+        </div>
+      </fieldset>
+      <button class="btn btn--primary" type="submit">Review and submit</button>
+    </form>`,
+  );
+}
+
+/* ---------- 8. Public request tracking + receipt ---------- */
+
+function requestTracking({ state }) {
+  if (state === 'empty') {
+    return publicShell(
+      `<div class="public__head"><h1>Track a submission</h1>
+        <p>Enter the reference number from your receipt.</p></div>
+      <form class="form-grid" onsubmit="return false">
+        ${field({ label: 'Reference number', name: 'ref', hint: 'For example, REQ-000318.' })}
+        <button class="btn btn--primary" type="submit">${icon('search')}Track</button>
+      </form>
+      ${notice({
+        tone: 'info',
+        title: 'No reference number?',
+        body: 'We cannot look up submissions by name for privacy reasons. Check the confirmation you received when you submitted.',
+      })}`,
+    );
+  }
+
+  if (state === 'success') {
+    return publicShell(
+      `<div class="public__head"><h1>Request submitted</h1>
+        <p>Keep this reference. It is the only way to track this request.</p></div>
+      ${receipt({
+        ref: 'REQ-000318',
+        title: 'Submission receipt',
+        lines: [
+          { label: 'Submitted', value: '7 August 2026, 9:32 AM' },
+          { label: 'Organisation', value: 'USC Executive Board' },
+          { label: 'Event', value: 'Youth Development Days · Day 1' },
+          { label: 'Items', value: '6 lines' },
+          { label: 'Date needed', value: '19 August 2026' },
+          { label: 'Status', html: chip('FOR_REVIEW') },
+        ],
+        footer: notice({
+          tone: 'info',
+          title: 'Stock has not been reserved',
+          body: 'Reservation happens only after the Department of Logistics accepts your request.',
+        }),
+      })}
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <a class="btn" href="#/public.request-tracking">Track this request</a>
+        <a class="btn btn--quiet" href="#/public.landing">Back to portals</a>
+      </div>`,
+    );
+  }
+
+  return publicShell(
+    `<div class="public__head"><h1>Request REQ-000318</h1>
+      <p>Youth Development Days · Day 1 — submitted 7 August 2026</p></div>
+    <div class="panel"><div class="panel__body" style="display:grid;gap:24px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        ${chip('FOR_REVIEW')}<span class="muted" style="font-size:var(--t-sm)">Updated 2 hours ago</span>
+      </div>
+      ${timeline([
+        { title: 'Submitted', meta: '7 August 2026, 9:32 AM', done: true },
+        { title: 'Under review', meta: 'Each line is being routed', current: true },
+        { title: 'Accepted and reserved', meta: 'Not started' },
+        { title: 'Ready to release', meta: 'Not started' },
+        { title: 'Released to you', meta: 'Not started' },
+      ])}
+      ${notice({
+        tone: 'info',
+        title: 'What you need to do next',
+        body: 'Nothing right now. We will contact your organisation if a line needs more information.',
+      })}
+    </div></div>`,
+  );
+}
+
+/* ---------- 9. Public lending intake ---------- */
+
+const lendingIntake = () =>
+  publicShell(
+    `<div class="public__head">
+      <h1>Borrow equipment</h1>
+      <p>Borrowing is a loan with a return date. Some items require approved borrower identity evidence before handoff.</p>
+    </div>
+    ${stepper(['Who is borrowing', 'What and when', 'Review'], 0)}
+    <form class="form-grid" onsubmit="return false">
+      <fieldset>
+        <legend>Borrower</legend>
+        <div style="display:grid;gap:16px">
+          ${field({ label: 'Borrowing organisation', name: 'org', required: true })}
+          ${field({ label: 'You are a', name: 'k', options: ['USC officer', 'USC staff', 'Angelite student'] })}
+          ${field({
+            label: 'Identity evidence',
+            name: 'ev',
+            type: 'file',
+            hint: 'Required for student borrowers. Uploaded evidence is private and is not shown publicly.',
+          })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Loan</legend>
+        <div style="display:grid;gap:16px">
+          <div class="form-row">
+            ${field({ label: 'Item', name: 'i', options: ['Projector and screen', 'Portable PA system', 'Tent, 10 × 10', 'Megaphone'] })}
+            ${field({ label: 'Return by', name: 'r', type: 'date', required: true })}
+          </div>
+        </div>
+      </fieldset>
+      <button class="btn btn--primary" type="submit">Review and submit</button>
+    </form>`,
+  );
+
+/* ---------- 10. Public lending tracking ---------- */
+
+const lendingTracking = () =>
+  publicShell(
+    `<div class="public__head"><h1>Loan LOAN-00128</h1><p>Tent, 10 × 10 — requested 5 August 2026</p></div>
+    <div class="panel"><div class="panel__body" style="display:grid;gap:24px">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        ${chip('READY_TO_CLAIM')}<span class="muted" style="font-size:var(--t-sm)">Claim by 14 August 2026</span>
+      </div>
+      ${timeline([
+        { title: 'Requested', meta: '5 August 2026', done: true },
+        { title: 'Reviewed and approved', meta: '6 August 2026', done: true },
+        { title: 'Ready to claim', meta: 'Bring your approved identity evidence', current: true },
+        { title: 'Handed over', meta: 'Not started' },
+        { title: 'Returned', meta: 'Not started' },
+      ])}
+      ${notice({
+        tone: 'progress',
+        title: 'Bring identity evidence to the handoff',
+        body: 'Student borrowers must present the same approved evidence recorded on this loan. Staff confirm receipt at handoff.',
+      })}
+      ${facts([
+        { label: 'Return by', value: '14 August 2026' },
+        { label: 'Pickup point', value: 'Department of Logistics office' },
+      ])}
+    </div></div>`,
+  );
+
+/* ---------- 11. Privacy / acceptable use ---------- */
+
+const policy = () =>
+  publicShell(
+    `<div class="public__head"><h1>Privacy Notice and Acceptable Use</h1>
+      <p>What we record when you use the public portals, and what you agree to.</p></div>
+    <div class="panel"><div class="panel__body" style="display:grid;gap:20px">
+      <section>
+        <h2 style="font-size:var(--t-md);font-weight:700">What we record</h2>
+        <p class="muted" style="font-size:var(--t-sm);margin-top:6px">Your organisation, what you requested, when you need it, and the decisions staff make. Identity evidence you upload for lending is stored privately and is never shown on public pages.</p>
+      </section>
+      <section>
+        <h2 style="font-size:var(--t-md);font-weight:700">What we do not do</h2>
+        <p class="muted" style="font-size:var(--t-sm);margin-top:6px">We do not look up submissions by name, publish borrower identity, or expose internal notes, stock levels, supplier records, or audit history on public pages.</p>
+      </section>
+      <section>
+        <h2 style="font-size:var(--t-md);font-weight:700">Corrections</h2>
+        <p class="muted" style="font-size:var(--t-sm);margin-top:6px">Records that affect custody are corrected by adding a reversal, never by deleting history. Ask the Department of Logistics if something is wrong.</p>
+      </section>
+      <label style="display:flex;gap:10px;align-items:flex-start;padding-top:8px;border-top:1px solid var(--line)">
+        <input type="checkbox" style="margin-top:3px" />
+        <span style="font-size:var(--t-sm)">I have read the Privacy Notice and agree to the Acceptable Use terms.</span>
+      </label>
+      <button class="btn btn--primary" type="button" style="justify-self:start">Acknowledge and continue</button>
+    </div></div>`,
+  );
+
+module.exports = { setPublicTheme, publicShell, landing, signin, register, verify, application, applicationStatus, requestIntake, requestTracking, lendingIntake, lendingTracking, policy };
+};
+
+__mods["src/surfaces/operations.js"] = function (module, __req) {
+/* Internal operational surfaces.
+   Queue + detail is the default shape. Cards appear only where the content is
+   genuinely heterogeneous. Every action implies a capability the actor holds. */
+
+const { icon } = __req("src/icons.js");
+const {
+  attentionBand,
+  chip,
+  composition,
+  contextLine,
+  deniedState,
+  emptyState,
+  esc,
+  evidenceList,
+  facts,
+  loadingState,
+  meter,
+  notice,
+  pageHead,
+  qty,
+  queueTable,
+  rowLink,
+  timeline,
+} = __req("src/components.js");
+const {
+  ACTIVITY,
+  EVENTS,
+  HEALTH,
+  INVENTORY,
+  INVENTORY_COMPOSITION,
+  LEDGER,
+  LOANS,
+  PROCUREMENT,
+  RELEASES,
+  REQUESTS,
+  REQUEST_LINES,
+  RESTOCKING,
+} = __req("src/data/mock.js");
+const { LEDGER_LABELS, label, statusLabel } = __req("src/data/vocabulary.js");
+
+const refreshAction = `<button class="btn" type="button" data-act="refresh">${icon(
+  'repeat',
+)}Refresh</button>`;
+
+/* ================= Role overviews ================= */
+
+const OVERVIEW_CONFIG = {
+  'admin.overview': {
+    crumbs: ['Administrator', 'Overview'],
+    title: 'Control Centre',
+    lede: 'Exceptions first. Everything below needs a decision, a handoff, or a correction.',
+  },
+  'director.overview': {
+    crumbs: ['Director', 'Overview'],
+    title: 'Executive Overview',
+    lede: 'Where the department stands, and what only you can decide.',
+  },
+  'food.overview': {
+    crumbs: ['Food Committee', 'Overview'],
+    title: 'Food Committee',
+    lede: 'Deadline-first. Sourcing, receiving, and release for catered and pantry needs.',
+  },
+  'inventory.overview': {
+    crumbs: ['Inventory Committee', 'Overview'],
+    title: 'Inventory and Pantry',
+    lede: 'Authoritative stock, circulation, and the movements behind every balance.',
+  },
+  'materials.overview': {
+    crumbs: ['Materials Committee', 'Overview'],
+    title: 'Materials Committee',
+    lede: 'Canvassing, procurement, and event deliverables.',
+  },
+};
+
+function overview(id, { state }) {
+  const cfg = OVERVIEW_CONFIG[id];
+  const head = pageHead({ ...cfg, actions: refreshAction });
+
+  if (state === 'unavailable') {
+    return `${head}
+      ${notice({
+        tone: 'alert',
+        title: 'Some figures could not be loaded',
+        body: 'Queue counts are current. Event readiness and directory synchronisation are unavailable, so those panels are hidden rather than shown as zero. Nothing was changed.',
+      })}
+      ${attention()}
+      ${queueSection(state)}`;
+  }
+
+  return `${head}
+    ${attention()}
+    ${contextLine([
+      { label: 'Active event series', value: '3' },
+      { label: 'Sub-events', value: '12' },
+      { label: 'Open requests', value: '18' },
+      { label: 'Items tracked', value: '1,248' },
+    ])}
+    ${queueSection(state)}
+    ${rails(state)}`;
+}
+
+function attention() {
+  return attentionBand([
+    {
+      label: 'Loans overdue',
+      value: '2',
+      note: 'Oldest 4 days past due',
+      icon: 'clock',
+      urgent: true,
+      act: 'go:lending.queue',
+    },
+    {
+      label: 'Requests for review',
+      value: '2',
+      note: 'Each line needs one decision',
+      icon: 'clipboard',
+      act: 'go:request.queue',
+    },
+    {
+      label: 'Ready to release',
+      value: '1',
+      note: '60 units awaiting handoff',
+      icon: 'check',
+      act: 'go:release.desk',
+    },
+    {
+      label: 'Low or out of stock',
+      value: '4',
+      note: '1 item at zero',
+      icon: 'box',
+      act: 'go:inventory.catalog',
+    },
+  ]);
+}
+
+function queueSection(state) {
+  const rows = REQUESTS.filter((r) => r.status === 'FOR_REVIEW' || r.status === 'READY_TO_RELEASE');
+  return `<section class="section">
+    <div class="section__head">
+      <h2>Needs a decision today</h2>
+      <a class="btn btn--sm btn--quiet" href="#/request.queue">Open Request Center${icon(
+        'chevron-right',
+        'icon--sm',
+      )}</a>
+    </div>
+    ${
+      state === 'loading'
+        ? loadingState(3)
+        : state === 'empty'
+          ? emptyState({
+              title: 'Nothing is waiting on you',
+              body: 'No request or release in your scope needs a decision right now.',
+            })
+          : queueTable({
+              caption: 'Requests and releases awaiting a decision in your scope.',
+              columns: [
+                { label: 'Request' },
+                { label: 'Committee', priority: 3 },
+                { label: 'Needed', priority: 2, nowrap: true },
+                { label: 'Lines', numeric: true, priority: 2 },
+                { label: 'Status' },
+              ],
+              rows: rows.map((r) => ({
+                ref: r.ref,
+                cells: [
+                  rowLink(r.ref, r.title, `${r.ref} · ${r.org}`, 'go:request.detail'),
+                  esc(label(r.committee, { COM_FOOD: 'Food', COM_INVENTORY_PANTRY: 'Inventory', COM_MATERIALS: 'Materials' })),
+                  esc(r.needed),
+                  String(r.lines),
+                  chip(r.status),
+                ],
+              })),
+            })
+    }
+  </section>`;
+}
+
+function rails(state) {
+  if (state === 'empty') return '';
+  return `<div class="rails rails--overview">
+    <section class="rail-block">
+      <div class="rail-block__head"><h3>Recent activity</h3>
+        <a class="btn btn--sm btn--quiet" href="#/audit.activity">All</a></div>
+      <ul class="stack-list">
+        ${ACTIVITY.slice(0, 5)
+          .map(
+            (a) =>
+              `<li><span><b>${esc(a.text)}</b><span>${esc(a.kind)}</span></span><span class="muted" style="font-size:var(--t-xs);white-space:nowrap">${esc(
+                a.time,
+              )}</span></li>`,
+          )
+          .join('')}
+      </ul>
+    </section>
+    <section class="rail-block">
+      <div class="rail-block__head"><h3>Inventory composition</h3>
+        <a class="btn btn--sm btn--quiet" href="#/inventory.catalog">Open</a></div>
+      ${composition(INVENTORY_COMPOSITION)}
+    </section>
+    <section class="rail-block">
+      <div class="rail-block__head"><h3>Event readiness</h3>
+        <a class="btn btn--sm btn--quiet" href="#/events.series">All</a></div>
+      <ul class="stack-list">
+        ${EVENTS.map(
+          (e) =>
+            `<li><span><b>${esc(e.name)}</b><span>${esc(e.window)} · ${e.subEvents} sub-events</span></span>
+             <span style="text-align:right">${meter(
+               e.readiness,
+               100,
+               e.readiness >= 90 ? 'done' : e.readiness < 50 ? 'alert' : 'progress',
+             )}</span></li>`,
+        ).join('')}
+      </ul>
+    </section>
+  </div>`;
+}
+
+/* ================= Request Center ================= */
+
+function requestQueue({ state, selected }) {
+  const head = pageHead({
+    crumbs: ['Request Center', 'Review queue'],
+    title: 'Request Center',
+    lede: 'Every line needs one explicit routing decision. Nothing is routed by default.',
+    actions: `<button class="btn" type="button" data-act="filter">${icon('filter')}Filter</button>${refreshAction}`,
+  });
+
+  if (state === 'loading') return `${head}<div class="split"><div>${loadingState(6)}</div></div>`;
+  if (state === 'empty')
+    return `${head}<div class="split"><div class="panel">${emptyState({
+      title: 'No requests in this scope',
+      body: 'When a request is submitted through the portal or created internally, it appears here for review.',
+    })}</div></div>`;
+  if (state === 'denied') return `${head}${deniedState()}`;
+
+  const table = queueTable({
+    caption: 'Requests in your authorized scope, newest first.',
+    columns: [
+      { label: 'Request' },
+      { label: 'Committee', priority: 3 },
+      { label: 'Needed', priority: 2, nowrap: true },
+      { label: 'Routed', numeric: true, priority: 2 },
+      { label: 'Status' },
+    ],
+    selectedRef: selected ?? 'REQ-000318',
+    rows: REQUESTS.map((r) => ({
+      ref: r.ref,
+      cells: [
+        rowLink(r.ref, r.title, `${r.ref} · ${r.org}`, 'select:request'),
+        esc(label(r.committee, { COM_FOOD: 'Food', COM_INVENTORY_PANTRY: 'Inventory', COM_MATERIALS: 'Materials' })),
+        esc(r.needed),
+        `${r.routed} / ${r.lines}`,
+        chip(r.status),
+      ],
+    })),
+  });
+
+  return `${head}
+    <div class="split">
+      <div>${table}</div>
+      ${requestDetailPanel(state)}
+    </div>`;
+}
+
+function requestDetailPanel(state) {
+  const stale = state === 'stale';
+  return `<aside class="split__detail" aria-label="Request detail">
+    <div class="detail__head">
+      <div class="detail__title">
+        <h2>Sound system and stage materials</h2>
+        ${chip('FOR_REVIEW')}
+      </div>
+      <p class="muted" style="font-size:var(--t-xs)">REQ-000318 · USC Executive Board · needed 19 August 2026</p>
+    </div>
+    <div class="detail__body">
+      ${
+        stale
+          ? notice({
+              tone: 'alert',
+              title: 'This request changed while you were reading it',
+              body: 'Another reviewer routed two lines 40 seconds ago. Your decisions were not saved. Reload to see the current lines before deciding.',
+              action:
+                '<button class="btn btn--sm" type="button" style="margin-top:10px">Reload request</button>',
+            })
+          : ''
+      }
+      ${facts([
+        { label: 'Event', value: 'Youth Development Days · Day 1' },
+        { label: 'Committee', value: 'Materials' },
+        { label: 'Submitted', value: '7 August 2026' },
+        { label: 'Lines routed', value: '0 of 6' },
+      ])}
+      <section>
+        <div class="section__head" style="margin-bottom:10px"><h3>Lines</h3>
+          <span class="muted" style="font-size:var(--t-xs)">One decision each</span></div>
+        <div class="table-wrap"><table class="q">
+          <caption>Requested lines with authoritative stock on hand.</caption>
+          <thead><tr><th scope="col">Item</th><th scope="col" style="text-align:right">Requested</th>
+            <th scope="col" style="text-align:right" class="col-p2">On hand</th><th scope="col">Route</th></tr></thead>
+          <tbody>${REQUEST_LINES.map(
+            (l) => `<tr><th scope="row"><b style="font-size:var(--t-sm)">${esc(l.item)}</b></th>
+            <td class="q__num">${qty(l.qty, l.unit)}</td>
+            <td class="q__num col-p2">${l.onHand === 0 ? '<span class="muted">None</span>' : l.onHand}</td>
+            <td>${routeControl(l.route)}</td></tr>`,
+          ).join('')}</tbody>
+        </table></div>
+      </section>
+      <section>
+        <div class="section__head" style="margin-bottom:10px"><h3>Evidence</h3></div>
+        ${evidenceList([
+          { name: 'Approved activity proposal', meta: 'PDF · uploaded 7 August', state: 'Verified', tone: 'done' },
+        ])}
+      </section>
+    </div>
+    <div class="detail__foot">
+      <button class="btn btn--primary" type="button" data-act="confirm-accept"${
+        stale ? ' aria-disabled="true"' : ''
+      }>${icon('check')}Accept and reserve</button>
+      <button class="btn" type="button">Ask for information</button>
+      <button class="btn btn--quiet" type="button">Reject</button>
+    </div>
+  </aside>`;
+}
+
+function routeControl(route) {
+  const map = {
+    ISSUE_FROM_STOCK: 'Issue from Stock',
+    PROCUREMENT_REQUIRED: 'Procurement Required',
+    PENDING_DECISION: 'Pending Decision',
+    STOCK_REVIEW: 'Review Available Stock',
+  };
+  const pending = route === 'PENDING_DECISION';
+  return `<select aria-label="Routing decision" style="min-height:34px;padding:5px 8px;border:1px solid ${
+    pending ? 'var(--tone-alert-fg)' : 'var(--line-strong)'
+  };border-radius:var(--r-sm);background:${
+    pending ? 'var(--tone-alert-bg)' : 'var(--paper)'
+  };font-size:var(--t-xs);max-width:100%">
+    ${Object.entries(map)
+      .map(([k, v]) => `<option${k === route ? ' selected' : ''}>${esc(v)}</option>`)
+      .join('')}
+  </select>`;
+}
+
+/* ================= Office Lending Hub ================= */
+
+function lendingQueue({ state }) {
+  const head = pageHead({
+    crumbs: ['Office Lending Hub', 'Loans'],
+    title: 'Office Lending Hub',
+    lede: 'Review, ready-to-claim, handoff, on loan, overdue, and return are distinct states.',
+    actions: refreshAction,
+  });
+
+  if (state === 'empty')
+    return `${head}<div class="panel" style="margin-top:16px">${emptyState({
+      title: 'No loans in this scope',
+      body: 'Approved lending requests appear here once a borrower is confirmed.',
+    })}</div>`;
+
+  return `${head}
+    ${notice({
+      tone: 'alert',
+      title: '2 loans are overdue',
+      body: 'Follow up on returns before approving new loans for the same borrowers.',
+    })}
+    <div style="margin-top:16px">
+    ${queueTable({
+      caption: 'Loans in your authorized scope.',
+      columns: [
+        { label: 'Loan' },
+        { label: 'Borrower', priority: 3 },
+        { label: 'Return by', priority: 2, nowrap: true },
+        { label: 'Evidence', priority: 3 },
+        { label: 'Status' },
+      ],
+      rows: LOANS.map((l) => ({
+        ref: l.ref,
+        cells: [
+          rowLink(l.ref, l.item, `${l.ref}${l.days ? ` · ${l.days} days past due` : ''}`, 'go:lending.detail'),
+          esc(`${l.borrower} · ${l.kind}`),
+          esc(l.due),
+          l.evidence
+            ? '<span class="chip" data-tone="done">Recorded</span>'
+            : '<span class="chip">Not required</span>',
+          chip(l.status),
+        ],
+      })),
+    })}
+    </div>`;
+}
+
+function lendingDetail() {
+  return `${pageHead({
+    crumbs: ['Office Lending Hub', 'LOAN-00121'],
+    title: 'Portable PA system',
+    lede: 'Loan LOAN-00121 · College of Education Council',
+    actions: `<a class="btn btn--quiet" href="#/lending.queue">${icon('arrow-left')}Back to loans</a>`,
+  })}
+  ${notice({
+    tone: 'alert',
+    title: 'This loan is 4 days overdue',
+    body: 'Record the return when the item is physically back. Stock is restored by the return, not by closing this screen.',
+  })}
+  <div class="rails" style="margin-top:16px">
+    <div class="panel"><div class="panel__body">
+      <h2 class="block-title">Loan facts</h2>
+      ${facts([
+        { label: 'Status', html: chip('OVERDUE') },
+        { label: 'Return by', value: '3 August 2026' },
+        { label: 'Borrower type', value: 'USC officer' },
+        { label: 'Quantity', html: qty(1, 'set') },
+        { label: 'Handed over', value: '28 July 2026' },
+        { label: 'Condition at handoff', value: 'Good' },
+      ])}
+    </div></div>
+    <div class="panel"><div class="panel__body">
+      <h2 class="block-title">Custody timeline</h2>
+      ${timeline([
+        { title: 'Requested', meta: '26 July 2026', done: true },
+        { title: 'Approved', meta: '27 July 2026', done: true },
+        { title: 'Handed over', meta: '28 July 2026 · recipient confirmed', done: true },
+        { title: 'Overdue', meta: 'Since 3 August 2026', current: true },
+        { title: 'Returned', meta: 'Not recorded' },
+      ])}
+    </div></div>
+  </div>
+  <div class="panel" style="margin-top:16px"><div class="panel__body" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btn--primary" type="button" data-act="confirm-return">${icon('check')}Record return</button>
+    <button class="btn" type="button">Record partial return</button>
+    <button class="btn btn--quiet" type="button">Add note</button>
+  </div></div>`;
+}
+
+/* ================= Release Desk ================= */
+
+function releaseDesk({ state }) {
+  const head = pageHead({
+    crumbs: ['Release Desk'],
+    title: 'Release Desk',
+    lede: 'Release can be partial and cumulative. Every handoff is confirmed by the recipient.',
+    actions: refreshAction,
+  });
+
+  if (state === 'unavailable')
+    return `${head}${notice({
+      tone: 'alert',
+      title: 'Evidence storage is unavailable',
+      body: 'You can still record a release, but the handoff photo cannot be attached right now. The release will be recorded and the evidence marked as pending upload. Nothing is lost.',
+    })}<div style="margin-top:16px">${releaseTable()}</div>`;
+
+  if (state === 'success')
+    return `${head}${notice({
+      tone: 'done',
+      title: 'Partial release recorded for REQ-000305',
+      body: '18 of 42 units released and confirmed by the recipient. The remaining 24 units stay reserved and this request remains open.',
+    })}<div style="margin-top:16px">${releaseTable()}</div>`;
+
+  return `${head}
+    ${notice({
+      tone: 'info',
+      title: 'Stock moves only when you record a release',
+      body: 'Accepting a request reserves stock. The ledger records an issue at the moment of physical handoff.',
+    })}
+    <div style="margin-top:16px">${releaseTable()}</div>
+    ${partialPanel()}`;
+}
+
+function releaseTable() {
+  return queueTable({
+    caption: 'Requests reserved and awaiting or undergoing release.',
+    columns: [
+      { label: 'Request' },
+      { label: 'Recipient', priority: 3 },
+      { label: 'Released', numeric: true },
+      { label: 'Status' },
+    ],
+    rows: RELEASES.map((r) => ({
+      ref: r.ref,
+      cells: [
+        rowLink(r.ref, r.title, r.ref, 'select:release'),
+        esc(r.recipient),
+        meter(r.released, r.total, r.released === r.total ? 'done' : 'progress'),
+        chip(r.status),
+      ],
+    })),
+  });
+}
+
+function partialPanel() {
+  return `<section class="section">
+    <div class="section__head"><h2>Record a release · REQ-000305</h2></div>
+    <div class="panel" style="margin-top:12px"><div class="panel__body" style="display:grid;gap:16px">
+      ${facts([
+        { label: 'Reserved', html: qty(42, 'units') },
+        { label: 'Already released', html: qty(18, 'units') },
+        { label: 'Remaining', html: qty(24, 'units') },
+        { label: 'Recipient', value: 'Committee on Facilities' },
+      ])}
+      <div class="form-row" style="max-width:520px">
+        <div class="field"><label for="rel-q">Quantity to release now</label>
+          <input id="rel-q" type="number" value="12" max="24" aria-describedby="rel-q-h" />
+          <span class="field__hint" id="rel-q-h">Cannot exceed the 24 units still reserved.</span></div>
+        <div class="field"><label for="rel-c">Recipient confirming</label>
+          <input id="rel-c" type="text" value="Committee on Facilities" /></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn--primary" type="button" data-act="confirm-release">${icon('check')}Record release</button>
+        <button class="btn" type="button">Attach handoff evidence</button>
+      </div>
+    </div></div>
+  </section>`;
+}
+
+/* ================= Inventory ================= */
+
+function inventoryCatalog({ state }) {
+  const head = pageHead({
+    crumbs: ['Inventory Management'],
+    title: 'Inventory',
+    lede: 'Balances are derived from the movement ledger. They are not edited directly.',
+    actions: `<button class="btn" type="button" data-act="filter">${icon('filter')}Filter</button>${refreshAction}`,
+  });
+
+  if (state === 'loading') return `${head}<div style="margin-top:16px">${loadingState(7)}</div>`;
+
+  return `${head}
+    ${notice({
+      tone: 'progress',
+      title: '1 item needs classification',
+      body: 'Unclassified items cannot be lent or released until a committee head classifies them.',
+    })}
+    <div style="margin-top:16px">
+    ${queueTable({
+      caption: 'Active inventory in your authorized scope.',
+      columns: [
+        { label: 'Item' },
+        { label: 'Category', priority: 3 },
+        { label: 'Handling', priority: 3 },
+        { label: 'On hand', numeric: true },
+        { label: 'Reserved', numeric: true, priority: 2 },
+        { label: 'State' },
+      ],
+      rows: INVENTORY.map((i) => ({
+        ref: i.ref,
+        cells: [
+          rowLink(i.ref, i.name, i.ref, 'go:inventory.item'),
+          i.category
+            ? esc(label(i.category, {
+                OFFICE_SUPPLIES: 'Office Supplies',
+                PANTRY_FOOD: 'Pantry Food',
+                EQUIPMENT: 'Equipment',
+                PRINTING_SIGNAGE: 'Printing and Signage',
+                CLEANING_SUPPLIES: 'Cleaning Supplies',
+              }))
+            : '<span class="muted">Needs classification</span>',
+          esc(i.handling),
+          qty(i.onHand, i.unit),
+          i.reserved ? String(i.reserved) : '<span class="muted">—</span>',
+          i.onHand === 0
+            ? '<span class="chip" data-tone="alert">Out of stock</span>'
+            : i.low
+              ? '<span class="chip" data-tone="progress">Low stock</span>'
+              : chip('ACTIVE'),
+        ],
+      })),
+    })}
+    </div>`;
+}
+
+function inventoryItem() {
+  return `${pageHead({
+    crumbs: ['Inventory Management', 'ITM-00104'],
+    title: 'Extension cord, 10 m',
+    lede: 'Equipment · Reusable Asset · ITM-00104',
+    actions: `<a class="btn btn--quiet" href="#/inventory.catalog">${icon('arrow-left')}Back to inventory</a>`,
+  })}
+  <div class="rails" style="margin-top:16px">
+    <div class="panel"><div class="panel__body">
+      ${facts([
+        { label: 'On hand', html: qty(11, 'piece') },
+        { label: 'Reserved', html: qty(6, 'piece') },
+        { label: 'Available', html: qty(5, 'piece') },
+        { label: 'Condition', value: 'Good' },
+        { label: 'Lending audience', value: 'Eligible DOL users only' },
+        { label: 'Last counted', value: 'Not recorded' },
+      ])}
+      ${notice({
+        tone: 'info',
+        title: 'Balances cannot be edited here',
+        body: 'To change a balance, record a receipt, an issue, or an adjustment. The ledger below is append-only.',
+      })}
+    </div></div>
+    <div class="panel"><div class="panel__body">
+      <h2 class="block-title">Movement history</h2>
+      <div class="table-wrap"><table class="ledger">
+        <caption class="visually-hidden">Append-only movement history for ITM-00104.</caption>
+        <thead><tr><th scope="col">Date</th><th scope="col">Movement</th><th scope="col">Reference</th><th scope="col">Change</th></tr></thead>
+        <tbody>${LEDGER.map(
+          (m) => `<tr><td>${esc(m.date)}</td><td>${esc(LEDGER_LABELS[m.type] ?? m.type)}</td>
+          <td class="q__ref">${esc(m.ref)}</td>
+          <td class="${m.qty >= 0 ? 'ledger__in' : 'ledger__out'}">${m.qty >= 0 ? '+' : ''}${m.qty}</td></tr>`,
+        ).join('')}</tbody>
+      </table></div>
+    </div></div>
+  </div>`;
+}
+
+/* ================= Restocking, procurement, events, activity ================= */
+
+function restockingQueue({ state }) {
+  const head = pageHead({
+    crumbs: ['Restocking and receiving'],
+    title: 'Restocking',
+    lede: 'Requests to replenish stock, and what has physically arrived.',
+    actions: refreshAction,
+  });
+  if (state === 'partial')
+    return `${head}${notice({
+      tone: 'progress',
+      title: 'RST-00057 is partially received',
+      body: '12 of 24 bottles arrived and were added to stock. The remaining 12 stay on order. Record the rest when they arrive.',
+    })}<div style="margin-top:16px">${restockTable()}</div>`;
+  return `${head}<div style="margin-top:16px">${restockTable()}</div>`;
+}
+
+function restockTable() {
+  return queueTable({
+    caption: 'Restocking requests and receiving progress.',
+    columns: [
+      { label: 'Request' },
+      { label: 'Received', numeric: true },
+      { label: 'Status' },
+    ],
+    rows: RESTOCKING.map((r) => ({
+      ref: r.ref,
+      cells: [
+        rowLink(r.ref, r.item, `${r.ref} · ${r.requested} ${r.unit} requested`, 'noop'),
+        meter(r.received, r.requested, r.received === r.requested ? 'done' : 'progress'),
+        chip(r.status),
+      ],
+    })),
+  });
+}
+
+function procurementBoard() {
+  return `${pageHead({
+    crumbs: ['Procurement and deliverables'],
+    title: 'Procurement',
+    lede: 'Canvassing, supplier references, and event deliverables.',
+    actions: refreshAction,
+  })}
+  <div style="margin-top:16px">
+  ${queueTable({
+    caption: 'Canvass records and their procurement state.',
+    columns: [
+      { label: 'Canvass' },
+      { label: 'Quotes', numeric: true, priority: 2 },
+      { label: 'Preferred', priority: 3 },
+      { label: 'Status' },
+    ],
+    rows: PROCUREMENT.map((p) => ({
+      ref: p.ref,
+      cells: [
+        rowLink(p.ref, p.item, p.ref, 'noop'),
+        String(p.suppliers),
+        p.preferred === 'Not decided' ? '<span class="muted">Not decided</span>' : esc(p.preferred),
+        chip(p.status),
+      ],
+    })),
+  })}
+  </div>`;
+}
+
+function eventsSeries() {
+  return `${pageHead({
+    crumbs: ['Events'],
+    title: 'Event series',
+    lede: 'Series, sub-events, and the requests and deliverables attached to each.',
+  })}
+  <div style="margin-top:16px">
+  ${queueTable({
+    caption: 'Event series with readiness and linked requests.',
+    columns: [
+      { label: 'Series' },
+      { label: 'Sub-events', numeric: true, priority: 2 },
+      { label: 'Requests', numeric: true, priority: 2 },
+      { label: 'Readiness', numeric: true },
+      { label: 'Status' },
+    ],
+    rows: EVENTS.map((e) => ({
+      ref: e.name,
+      cells: [
+        rowLink(e.name, e.name, e.window, 'noop'),
+        String(e.subEvents),
+        String(e.requests),
+        meter(e.readiness, 100, e.readiness >= 90 ? 'done' : e.readiness < 50 ? 'alert' : 'progress'),
+        chip(e.status),
+      ],
+    })),
+  })}
+  </div>`;
+}
+
+function auditActivity() {
+  return `${pageHead({
+    crumbs: ['Recent activity'],
+    title: 'Activity',
+    lede: 'Consequential actions, with the actor and the record they touched.',
+  })}
+  <div class="panel" style="margin-top:16px"><div class="panel__body">
+    <ul class="stack-list">
+      ${ACTIVITY.map(
+        (a) =>
+          `<li><span><b>${esc(a.text)}</b><span>${esc(a.kind)}</span></span>
+           <span class="muted" style="font-size:var(--t-xs);white-space:nowrap">${esc(a.time)}</span></li>`,
+      ).join('')}
+    </ul>
+  </div></div>
+  ${notice({
+    tone: 'info',
+    title: 'History is never deleted',
+    body: 'Corrections are recorded as reversals so the original entry stays readable.',
+  })}`;
+}
+
+function ownerHealth({ state }) {
+  if (state === 'denied')
+    return `${pageHead({ crumbs: ['System'], title: 'System status' })}${deniedState()}`;
+
+  return `${pageHead({
+    crumbs: ['System'],
+    title: 'System status',
+    lede: 'Safe aggregates only. Unavailable services are reported as unavailable, never as zero.',
+    actions: refreshAction,
+  })}
+  <div class="panel" style="margin-top:16px"><div class="panel__body">
+    ${HEALTH.map(
+      (h) =>
+        `<div class="health-row"><span>${esc(h.name)}</span>
+         <span class="chip" data-tone="${h.tone}">${esc(h.value)}</span></div>`,
+    ).join('')}
+  </div></div>
+  ${notice({
+    tone: 'info',
+    title: 'Synchronisation is an operational detail',
+    body: 'External synchronisation status is reported here for operators. It is never the source of truth for stock or custody.',
+  })}`;
+}
+
+module.exports = { overview, requestQueue, lendingQueue, lendingDetail, releaseDesk, inventoryCatalog, inventoryItem, restockingQueue, procurementBoard, eventsSeries, auditActivity, ownerHealth };
+};
+
+__mods["src/data/mock.js"] = function (module, __req) {
+/* Sanitized illustrative data for the design preview.
+   Nothing here is a real record. No real names, emails, phone numbers,
+   student identifiers, supplier tax details, credentials, or provider
+   resource ids appear. Organisation names are generic; person entries are
+   role-labelled placeholders. Every figure shown in the interface is marked
+   illustrative at the surface level. */
+
+const WORKSPACES = [
+  { id: 'administrator', slug: 'admin', name: 'Administrator', sub: 'Control Centre' },
+  { id: 'director', slug: 'director', name: 'Director', sub: 'Executive Overview' },
+  { id: 'food', slug: 'food', name: 'Food Committee', sub: 'Sourcing and readiness' },
+  { id: 'inventory-pantry', slug: 'inventory', name: 'Inventory Committee', sub: 'Stock and circulation' },
+  { id: 'materials', slug: 'materials', name: 'Materials Committee', sub: 'Canvass and deliverables' },
+];
+
+const SCOPES = [
+  { id: 'ALL', name: 'All authorized operations', sub: 'Global authorized view' },
+  { id: 'COM_FOOD', name: 'Food Committee', sub: 'Committee scope' },
+  { id: 'COM_INVENTORY_PANTRY', name: 'Inventory and Pantry Committee', sub: 'Committee scope' },
+  { id: 'COM_MATERIALS', name: 'Materials Committee', sub: 'Committee scope' },
+  { id: 'EVT_YDD', name: 'Youth Development Days', sub: 'Event scope' },
+];
+
+const ROLE_VIEWS = [
+  { id: 'ADMINISTRATOR', name: 'Administrator' },
+  { id: 'DIRECTOR', name: 'Director' },
+  { id: 'COMMITTEE_HEAD', name: 'Committee Head' },
+  { id: 'DOL_STAFF', name: 'DOL Staff' },
+  { id: 'SYSTEM_OWNER', name: 'System Owner' },
+  { id: 'REQUESTER', name: 'Requester' },
+];
+
+const REQUESTS = [
+  {
+    ref: 'REQ-000318',
+    title: 'Sound system and stage materials',
+    org: 'USC Executive Board',
+    event: 'Youth Development Days · Day 1',
+    committee: 'COM_MATERIALS',
+    status: 'FOR_REVIEW',
+    lines: 6,
+    routed: 0,
+    needed: '2026-08-19',
+    age: '2 days',
+  },
+  {
+    ref: 'REQ-000317',
+    title: 'Pantry restock for volunteer briefing',
+    org: 'Committee on Student Welfare',
+    event: 'Youth Development Days · Day 2',
+    committee: 'COM_FOOD',
+    status: 'FOR_REVIEW',
+    lines: 4,
+    routed: 0,
+    needed: '2026-08-18',
+    age: '2 days',
+  },
+  {
+    ref: 'REQ-000314',
+    title: 'Printing and signage for registration',
+    org: 'College of Engineering Council',
+    event: 'Youth Development Days · Day 1',
+    committee: 'COM_MATERIALS',
+    status: 'FOR_CANVASSING',
+    lines: 3,
+    routed: 3,
+    needed: '2026-08-17',
+    age: '4 days',
+  },
+  {
+    ref: 'REQ-000309',
+    title: 'Monobloc chairs and folding tables',
+    org: 'USC Executive Board',
+    event: 'General Assembly',
+    committee: 'COM_INVENTORY_PANTRY',
+    status: 'READY_TO_RELEASE',
+    lines: 2,
+    routed: 2,
+    needed: '2026-08-12',
+    age: '9 days',
+  },
+  {
+    ref: 'REQ-000305',
+    title: 'Cleaning supplies for venue turnover',
+    org: 'Committee on Facilities',
+    event: 'General Assembly',
+    committee: 'COM_INVENTORY_PANTRY',
+    status: 'PARTIALLY_RELEASED',
+    lines: 5,
+    routed: 5,
+    needed: '2026-08-11',
+    age: '11 days',
+  },
+  {
+    ref: 'REQ-000298',
+    title: 'Extension cords and power strips',
+    org: 'College of Business Council',
+    event: 'Not linked',
+    committee: 'COM_INVENTORY_PANTRY',
+    status: 'WAITING_FOR_BUDGET',
+    lines: 2,
+    routed: 2,
+    needed: '2026-08-24',
+    age: '14 days',
+  },
+  {
+    ref: 'REQ-000291',
+    title: 'Refreshments for officer orientation',
+    org: 'Committee on Student Welfare',
+    event: 'Officer Orientation',
+    committee: 'COM_FOOD',
+    status: 'COMPLETED',
+    lines: 3,
+    routed: 3,
+    needed: '2026-08-04',
+    age: '19 days',
+  },
+  {
+    ref: 'REQ-000287',
+    title: 'Tarpaulin reprint after design change',
+    org: 'College of Nursing Council',
+    event: 'Youth Development Days · Day 2',
+    committee: 'COM_MATERIALS',
+    status: 'REJECTED',
+    lines: 1,
+    routed: 1,
+    needed: '2026-08-09',
+    age: '21 days',
+  },
+];
+
+const REQUEST_LINES = [
+  { item: 'Sound system (full set)', qty: 1, unit: 'set', route: 'ISSUE_FROM_STOCK', onHand: 2 },
+  { item: 'Wireless microphone', qty: 4, unit: 'piece', route: 'ISSUE_FROM_STOCK', onHand: 6 },
+  { item: 'Stage riser panel', qty: 8, unit: 'piece', route: 'PROCUREMENT_REQUIRED', onHand: 0 },
+  { item: 'Extension cord, 10 m', qty: 6, unit: 'piece', route: 'ISSUE_FROM_STOCK', onHand: 11 },
+  { item: 'Gaffer tape', qty: 4, unit: 'roll', route: 'PENDING_DECISION', onHand: 3 },
+  { item: 'Cable ramp', qty: 4, unit: 'piece', route: 'PENDING_DECISION', onHand: 0 },
+];
+
+const LOANS = [
+  {
+    ref: 'LOAN-00121',
+    item: 'Portable PA system',
+    borrower: 'College of Education Council',
+    kind: 'USC officer',
+    status: 'OVERDUE',
+    due: '2026-08-03',
+    days: 4,
+    evidence: true,
+  },
+  {
+    ref: 'LOAN-00119',
+    item: 'Folding table, 6 ft',
+    borrower: 'Committee on Sports',
+    kind: 'USC officer',
+    status: 'OVERDUE',
+    due: '2026-08-05',
+    days: 2,
+    evidence: true,
+  },
+  {
+    ref: 'LOAN-00126',
+    item: 'Projector and screen',
+    borrower: 'College of Arts Council',
+    kind: 'USC staff',
+    status: 'ON_LOAN',
+    due: '2026-08-12',
+    days: 0,
+    evidence: true,
+  },
+  {
+    ref: 'LOAN-00128',
+    item: 'Tent, 10 × 10',
+    borrower: 'Angelite student organisation',
+    kind: 'Student',
+    status: 'READY_TO_CLAIM',
+    due: '2026-08-14',
+    days: 0,
+    evidence: false,
+  },
+  {
+    ref: 'LOAN-00129',
+    item: 'Megaphone',
+    borrower: 'Committee on Student Welfare',
+    kind: 'USC officer',
+    status: 'FOR_REVIEW',
+    due: 'Not set',
+    days: 0,
+    evidence: false,
+  },
+  {
+    ref: 'LOAN-00115',
+    item: 'Monobloc chair (set of 20)',
+    borrower: 'College of Engineering Council',
+    kind: 'USC officer',
+    status: 'RETURNED',
+    due: '2026-07-30',
+    days: 0,
+    evidence: true,
+  },
+];
+
+const RELEASES = [
+  {
+    ref: 'REQ-000309',
+    title: 'Monobloc chairs and folding tables',
+    recipient: 'USC Executive Board',
+    status: 'READY_TO_RELEASE',
+    released: 0,
+    total: 60,
+  },
+  {
+    ref: 'REQ-000305',
+    title: 'Cleaning supplies for venue turnover',
+    recipient: 'Committee on Facilities',
+    status: 'PARTIALLY_RELEASED',
+    released: 18,
+    total: 42,
+  },
+  {
+    ref: 'REQ-000282',
+    title: 'Registration kits',
+    recipient: 'College of Business Council',
+    status: 'PARTIALLY_RELEASED',
+    released: 90,
+    total: 120,
+  },
+  {
+    ref: 'REQ-000291',
+    title: 'Refreshments for officer orientation',
+    recipient: 'Committee on Student Welfare',
+    status: 'COMPLETED',
+    released: 75,
+    total: 75,
+  },
+];
+
+const INVENTORY = [
+  {
+    ref: 'ITM-00056',
+    name: 'Monobloc chair',
+    category: 'EQUIPMENT',
+    handling: 'Reusable Asset',
+    onHand: 240,
+    reserved: 60,
+    unit: 'piece',
+    status: 'ACTIVE',
+    low: false,
+  },
+  {
+    ref: 'ITM-00061',
+    name: 'Folding table, 6 ft',
+    category: 'EQUIPMENT',
+    handling: 'Reusable Asset',
+    onHand: 34,
+    reserved: 12,
+    unit: 'piece',
+    status: 'ACTIVE',
+    low: false,
+  },
+  {
+    ref: 'ITM-00104',
+    name: 'Extension cord, 10 m',
+    category: 'EQUIPMENT',
+    handling: 'Reusable Asset',
+    onHand: 11,
+    reserved: 6,
+    unit: 'piece',
+    status: 'ACTIVE',
+    low: true,
+  },
+  {
+    ref: 'ITM-00212',
+    name: 'Bond paper, A4',
+    category: 'OFFICE_SUPPLIES',
+    handling: 'Consumable',
+    onHand: 8,
+    reserved: 0,
+    unit: 'ream',
+    status: 'ACTIVE',
+    low: true,
+  },
+  {
+    ref: 'ITM-00233',
+    name: 'Disinfectant solution',
+    category: 'CLEANING_SUPPLIES',
+    handling: 'Consumable',
+    onHand: 3,
+    reserved: 2,
+    unit: 'bottle',
+    status: 'ACTIVE',
+    low: true,
+  },
+  {
+    ref: 'ITM-00298',
+    name: 'Tarpaulin, 3 × 5 ft',
+    category: 'PRINTING_SIGNAGE',
+    handling: 'Consumable',
+    onHand: 0,
+    reserved: 0,
+    unit: 'piece',
+    status: 'ACTIVE',
+    low: true,
+  },
+  {
+    ref: 'ITM-00341',
+    name: 'Instant coffee sachet',
+    category: 'PANTRY_FOOD',
+    handling: 'Consumable',
+    onHand: 180,
+    reserved: 24,
+    unit: 'pack',
+    status: 'ACTIVE',
+    low: false,
+  },
+  {
+    ref: 'ITM-00377',
+    name: 'Portable PA system',
+    category: 'EQUIPMENT',
+    handling: 'Loanable',
+    onHand: 2,
+    reserved: 1,
+    unit: 'set',
+    status: 'ACTIVE',
+    low: false,
+  },
+  {
+    ref: 'ITM-00390',
+    name: 'Storage crate (unclassified)',
+    category: null,
+    handling: 'Unverified',
+    onHand: 14,
+    reserved: 0,
+    unit: 'piece',
+    status: 'ACTIVE',
+    low: false,
+  },
+];
+
+const LEDGER = [
+  { date: '2026-08-07', type: 'ISSUE', ref: 'REQ-000305', actor: 'Inventory staff', qty: -18, balance: 11 },
+  { date: '2026-08-05', type: 'RECEIPT', ref: 'RCV-00042', actor: 'Inventory staff', qty: 12, balance: 29 },
+  { date: '2026-08-02', type: 'LOAN_RETURN', ref: 'LOAN-00115', actor: 'Lending desk', qty: 4, balance: 17 },
+  { date: '2026-07-29', type: 'LOAN_OUT', ref: 'LOAN-00115', actor: 'Lending desk', qty: -4, balance: 13 },
+  { date: '2026-07-22', type: 'ADJUSTMENT_OUT', ref: 'ADJ-00008', actor: 'Committee head', qty: -2, balance: 17 },
+  { date: '2026-07-01', type: 'OPENING_BALANCE', ref: 'IMP-0001', actor: 'System', qty: 19, balance: 19 },
+];
+
+const EVENTS = [
+  {
+    name: 'Youth Development Days 2026',
+    window: '1–2 September 2026',
+    subEvents: 7,
+    readiness: 62,
+    requests: 9,
+    status: 'ACTIVE',
+  },
+  {
+    name: 'General Assembly',
+    window: '12 August 2026',
+    subEvents: 2,
+    readiness: 88,
+    requests: 4,
+    status: 'ACTIVE',
+  },
+  {
+    name: 'Officer Orientation',
+    window: '4 August 2026',
+    subEvents: 3,
+    readiness: 100,
+    requests: 3,
+    status: 'COMPLETED',
+  },
+];
+
+const ACTIVITY = [
+  { time: '09:32', text: 'Request REQ-000318 submitted through the public Request Center', kind: 'Request' },
+  { time: '09:15', text: 'Loan LOAN-00115 returned and stock restored', kind: 'Lending' },
+  { time: '08:47', text: 'Receiving RCV-00042 recorded 12 items against ITM-00104', kind: 'Receiving' },
+  { time: '08:30', text: 'Request REQ-000309 accepted and reserved', kind: 'Request' },
+  { time: 'Yesterday', text: 'Partial release recorded for REQ-000305 (18 of 42)', kind: 'Release' },
+  { time: 'Yesterday', text: 'Item ITM-00390 flagged as needing classification', kind: 'Inventory' },
+];
+
+const PROCUREMENT = [
+  { ref: 'CNV-00031', item: 'Stage riser panel', suppliers: 3, preferred: 'Supplier B', status: 'FOR_CANVASSING' },
+  { ref: 'CNV-00029', item: 'Tarpaulin, 3 × 5 ft', suppliers: 2, preferred: 'Not decided', status: 'WAITING_FOR_BUDGET' },
+  { ref: 'CNV-00026', item: 'Cable ramp', suppliers: 4, preferred: 'Supplier A', status: 'TO_BE_PROCURED' },
+  { ref: 'CNV-00021', item: 'Registration kit folder', suppliers: 3, preferred: 'Supplier C', status: 'PROCURED' },
+];
+
+const RESTOCKING = [
+  { ref: 'RST-00058', item: 'Bond paper, A4', requested: 20, received: 0, unit: 'ream', status: 'TO_BE_PROCURED' },
+  { ref: 'RST-00057', item: 'Disinfectant solution', requested: 24, received: 12, unit: 'bottle', status: 'PARTIALLY_RECEIVED' },
+  { ref: 'RST-00055', item: 'Instant coffee sachet', requested: 60, received: 60, unit: 'pack', status: 'RESTOCKED' },
+];
+
+const ACCOUNTS = [
+  { name: 'Logistics Office', role: 'ADMINISTRATOR', committee: null, status: 'ACTIVE', mapped: true },
+  { name: 'Department Director', role: 'DIRECTOR', committee: null, status: 'ACTIVE', mapped: true },
+  { name: 'Food Committee Head', role: 'COMMITTEE_HEAD', committee: 'COM_FOOD', status: 'ACTIVE', mapped: true },
+  { name: 'Inventory Staff A', role: 'DOL_STAFF', committee: 'COM_INVENTORY_PANTRY', status: 'ACTIVE', mapped: true },
+  { name: 'Materials Staff B', role: 'DOL_STAFF', committee: 'COM_MATERIALS', status: 'ACTIVE', mapped: true },
+  { name: 'Pending Applicant', role: 'REQUESTER', committee: null, status: 'FOR_REVIEW', mapped: false },
+];
+
+const HEALTH = [
+  { name: 'Release identity', value: 'v0.7.2 · schema 30', tone: 'done' },
+  { name: 'Database', value: 'Healthy', tone: 'done' },
+  { name: 'Evidence storage', value: 'Healthy', tone: 'done' },
+  { name: 'Recovery checkpoint', value: 'Recorded 2026-08-06', tone: 'done' },
+  { name: 'Email delivery', value: 'Not configured', tone: 'progress' },
+  { name: 'Directory synchronisation', value: 'Not run since 2026-08-05', tone: 'progress' },
+  { name: 'Background reconciliation', value: 'Unavailable', tone: 'alert' },
+];
+
+const NOTIFICATIONS = [
+  { title: '2 loans are overdue', body: 'Follow up on pending returns.', tone: 'alert' },
+  { title: '2 requests await review', body: 'Each line needs one routing decision.', tone: 'info' },
+  { title: '4 items are low or out of stock', body: 'Check restocking before the next event.', tone: 'progress' },
+];
+
+const INVENTORY_COMPOSITION = [
+  { label: 'Available', value: 842, color: 'var(--tone-done-fg)' },
+  { label: 'Reserved', value: 230, color: 'var(--gold-600)' },
+  { label: 'For canvassing', value: 96, color: 'var(--tone-info-fg)' },
+  { label: 'On loan', value: 80, color: 'var(--ox-600)' },
+];
+
+module.exports = { WORKSPACES, SCOPES, ROLE_VIEWS, REQUESTS, REQUEST_LINES, LOANS, RELEASES, INVENTORY, LEDGER, EVENTS, ACTIVITY, PROCUREMENT, RESTOCKING, ACCOUNTS, HEALTH, NOTIFICATIONS, INVENTORY_COMPOSITION };
+};
+
+__mods["src/surfaces/admin.js"] = function (module, __req) {
+/* Administration and supporting modules. */
+
+const { icon } = __req("src/icons.js");
+const {
+  chip,
+  deniedState,
+  esc,
+  facts,
+  field,
+  notice,
+  pageHead,
+  queueTable,
+  rowLink,
+} = __req("src/components.js");
+const { ACCOUNTS } = __req("src/data/mock.js");
+const { COMMITTEE_LABELS, ROLE_LABELS, label } = __req("src/data/vocabulary.js");
+
+function access({ state }) {
+  const head = pageHead({
+    crumbs: ['Administration', 'Accounts and access'],
+    title: 'Accounts and Access',
+    lede: 'Effective access is granted by role and committee scope. Hiding a control is not authorization.',
+    actions: `<button class="btn btn--primary" type="button">${icon('plus')}Invite account</button>`,
+  });
+
+  if (state === 'denied') return `${head}${deniedState()}`;
+
+  return `${head}
+  <div style="margin-top:16px">
+  ${queueTable({
+    caption: 'Accounts with their effective role and scope.',
+    columns: [
+      { label: 'Account' },
+      { label: 'Role' },
+      { label: 'Committee scope', priority: 3 },
+      { label: 'Mapping', priority: 2 },
+      { label: 'State' },
+    ],
+    rows: ACCOUNTS.map((a) => ({
+      ref: a.name,
+      cells: [
+        rowLink(a.name, a.name, a.mapped ? 'Mapped to directory' : 'Awaiting review', 'noop'),
+        esc(label(a.role, ROLE_LABELS)),
+        a.committee ? esc(label(a.committee, COMMITTEE_LABELS)) : '<span class="muted">All operations</span>',
+        a.mapped
+          ? '<span class="chip" data-tone="done">Mapped</span>'
+          : '<span class="chip" data-tone="progress">Unmatched</span>',
+        chip(a.status),
+      ],
+    })),
+  })}
+  </div>
+  ${notice({
+    tone: 'info',
+    title: 'Unmatched applicants stay closed',
+    body: 'An application whose verified email does not exactly match the protected directory waits for manual review. It is never approved automatically.',
+  })}`;
+}
+
+const directory = () => `${pageHead({
+  crumbs: ['Administration', 'Staff Directory'],
+  title: 'Staff Directory',
+  lede: 'A read-only projection of the protected institutional roster.',
+})}
+${notice({
+  tone: 'info',
+  title: 'This directory is read-only here',
+  body: 'Entries come from the protected institutional source. Corrections are made at the source and applied through a reviewed synchronisation.',
+})}
+<div class="panel" style="margin-top:16px"><div class="panel__body">
+  ${facts([
+    { label: 'Active entries', value: '37' },
+    { label: 'Quarantined source rows', value: '90' },
+    { label: 'Last synchronisation', value: '5 August 2026' },
+    { label: 'Inconsistent runs', value: '0' },
+  ])}
+</div></div>`;
+
+const reference = () => `${pageHead({
+  crumbs: ['Administration', 'Reference Administration'],
+  title: 'Reference Administration',
+  lede: 'Controlled lists that other modules depend on. Changes are audited.',
+  actions: `<button class="btn btn--primary" type="button">${icon('plus')}Add entry</button>`,
+})}
+<div style="margin-top:16px">
+${queueTable({
+  caption: 'Controlled reference catalogs.',
+  columns: [{ label: 'Catalog' }, { label: 'Entries', numeric: true, priority: 2 }, { label: 'State' }],
+  rows: [
+    { ref: 'cat', cells: [rowLink('cat', 'Item categories', '7 controlled values', 'noop'), '7', chip('ACTIVE')] },
+    { ref: 'unit', cells: [rowLink('unit', 'Units of measure', '10 controlled values', 'noop'), '10', chip('ACTIVE')] },
+    { ref: 'dep', cells: [rowLink('dep', 'USC departments', 'Source-controlled', 'noop'), '24', chip('ACTIVE')] },
+    { ref: 'sup', cells: [rowLink('sup', 'Supplier references', 'Materials committee only', 'noop'), '12', chip('ACTIVE')] },
+  ],
+})}
+</div>`;
+
+const links = () => `${pageHead({
+  crumbs: ['Administration', 'Reference Administration', 'Link Registry'],
+  title: 'Link Registry',
+  lede: 'Named destinations used across the system, so URLs are never hard-coded into content.',
+  actions: `<button class="btn btn--primary" type="button">${icon('plus')}Add link</button>`,
+})}
+<div style="margin-top:16px">
+${queueTable({
+  caption: 'Registered links and their publication state.',
+  columns: [{ label: 'Link' }, { label: 'Used by', priority: 3 }, { label: 'State' }],
+  rows: [
+    { ref: 'l1', cells: [rowLink('l1', 'Request Center guide', 'Public portals', 'noop'), 'Public request intake', chip('ACTIVE')] },
+    { ref: 'l2', cells: [rowLink('l2', 'Lending terms', 'Public portals', 'noop'), 'Public lending intake', chip('ACTIVE')] },
+    { ref: 'l3', cells: [rowLink('l3', 'Privacy Notice', 'All surfaces', 'noop'), 'Footer', chip('ACTIVE')] },
+    { ref: 'l4', cells: [rowLink('l4', 'Archived orientation deck', 'Retired', 'noop'), 'Not in use', chip('ARCHIVED')] },
+  ],
+})}
+</div>
+${notice({
+  tone: 'info',
+  title: 'Synchronisation is queued, not immediate',
+  body: 'Changes here publish to the system first. External synchronisation follows and is reported separately on System status.',
+})}`;
+
+const brand = () => `${pageHead({
+  crumbs: ['Administration', 'Brand and Media'],
+  title: 'Brand and Media',
+  lede: 'Versioned institutional assets. Publishing replaces the live asset; previous versions are retained.',
+  actions: `<button class="btn btn--primary" type="button">${icon('plus')}Upload version</button>`,
+})}
+<div style="margin-top:16px">
+${queueTable({
+  caption: 'Brand asset slots and their published version.',
+  columns: [{ label: 'Slot' }, { label: 'Version', numeric: true, priority: 2 }, { label: 'Published', priority: 3 }, { label: 'State' }],
+  rows: [
+    { ref: 'b1', cells: [rowLink('b1', 'Primary institutional mark', 'Used in the rail and public bar', 'noop'), '3', '2 August 2026', chip('ACTIVE')] },
+    { ref: 'b2', cells: [rowLink('b2', 'Council mark', 'Used beside the institutional mark', 'noop'), '2', '2 August 2026', chip('ACTIVE')] },
+    { ref: 'b3', cells: [rowLink('b3', 'Public portal banner', 'Public landing', 'noop'), '1', 'Not published', chip('ARCHIVED')] },
+  ],
+})}
+</div>`;
+
+const profile = () => `${pageHead({
+  crumbs: ['My profile'],
+  title: 'My profile',
+  lede: 'Your own details and sign-in security. You cannot change your own role or scope.',
+})}
+<div class="rails" style="margin-top:16px">
+  <div class="panel"><div class="panel__body">
+    <h2 class="block-title">Your access</h2>
+    ${facts([
+      { label: 'Role', value: 'Administrator' },
+      { label: 'Scope', value: 'All authorized operations' },
+      { label: 'Committee', value: 'Not applicable' },
+      { label: 'Account state', html: chip('ACTIVE') },
+    ])}
+    ${notice({
+      tone: 'info',
+      title: 'Role changes go through Accounts and Access',
+      body: 'Only an administrator can change a role, and every change is audited.',
+    })}
+  </div></div>
+  <div class="panel"><div class="panel__body">
+    <h2 class="block-title">Password</h2>
+    <form style="display:grid;gap:16px" onsubmit="return false">
+      ${field({ label: 'Current password', name: 'cur', type: 'password', required: true })}
+      ${field({ label: 'New password', name: 'nw', type: 'password', required: true, hint: 'At least 12 characters.' })}
+      <button class="btn btn--primary" type="submit" style="justify-self:start">Update password</button>
+    </form>
+  </div></div>
+</div>`;
+
+module.exports = { access, directory, reference, links, brand, profile };
+};
+
+  __req("src/app.js");
+})();
+    </script>
+  </body>
+</html>

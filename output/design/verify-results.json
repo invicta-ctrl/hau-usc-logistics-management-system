@@ -1,0 +1,65 @@
+{
+  "widths": {
+    "320": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "375": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "414": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "768": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "1024": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    },
+    "1440": {
+      "findings": [],
+      "consoleErrors": [],
+      "externalRequests": []
+    }
+  },
+  "keyboard": {
+    "reachedBody": 1,
+    "noOutlineNone": 0,
+    "sample": [
+      "button:btn:outline=solid",
+      "button:btn:outline=solid",
+      "button:q__link:outline=solid",
+      "button:q__link:outline=solid",
+      "button:q__link:outline=solid",
+      "button:q__link:outline=solid",
+      "button:q__link:outline=solid",
+      "button:q__link:outline=solid"
+    ],
+    "dialog": {
+      "before": "confirm-accept",
+      "open": true,
+      "focusMovedIn": true,
+      "focusedAction": "confirm-done"
+    },
+    "afterEscape": {
+      "stillOpen": false,
+      "restoredTo": "confirm-accept"
+    }
+  },
+  "reducedMotion": {
+    "matches": true,
+    "transitionDuration": "0.001s"
+  },
+  "zoom": {
+    "overflowAt200": []
+  }
+}
