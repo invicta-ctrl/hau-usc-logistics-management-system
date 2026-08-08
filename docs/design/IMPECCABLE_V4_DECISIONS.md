@@ -103,7 +103,9 @@ recapture batch it scored all five findings resolved and returned `ship`.
 **Reason:** evidence must distinguish completed checks, independent judgment,
 and Git closure.
 
-**Open work:** the documentation checkpoint commit/push remains pending at the
-time of writing. The Impeccable documenter completed `DESIGN.md` and the schema
-2 sidecar. The missing QUALITY BAR card limits card-relative ceiling scoring
-but is not an open material finding.
+**Closure:** implementation commit
+`20af331b0a749fa5a88f897f084fa8d29f645bdd` is pushed to the design branch.
+The Impeccable documenter completed `DESIGN.md` and the schema 2 sidecar. The
+missing QUALITY BAR card limits card-relative ceiling scoring but is not an
+open material finding. PR, merge, deployment, release, and production remain
+outside this checkpoint.

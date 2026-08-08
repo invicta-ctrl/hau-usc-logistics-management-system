@@ -2,7 +2,9 @@
 
 Status: local v4 candidate built, independently reviewed with disposition
 `ship`, and recorded in `DESIGN.md` plus `.impeccable/design.json`. The
-checkpoint commit/push is pending; this record does not claim a final commit.
+implementation checkpoint `20af331b0a749fa5a88f897f084fa8d29f645bdd`
+is pushed to `origin/design/impeccable-whole-site-preview`; this record is the
+documentation-only closure follow-up.
 
 ## Repository checkpoint
 
@@ -73,7 +75,8 @@ checkpoint commit/push is pending; this record does not claim a final commit.
   canonical eight-section format; `.impeccable/design.json` parses as schema 2
   with nine self-contained components and extensions-only metadata.
 
-## Pending
+## Closed boundary
 
-The documentation checkpoint commit and branch push remain pending. Stop before
-PR creation, merge, deployment, release, or production mutation.
+Implementation, finish review, design-system documentation, commit, and branch
+push are complete. Stop before PR creation, merge, deployment, release, or
+production mutation.

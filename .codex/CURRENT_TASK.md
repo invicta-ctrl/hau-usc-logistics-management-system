@@ -9,7 +9,7 @@ RISK: medium because the artifact spans every representative surface but is isol
 DELIVERABLE: modular v4 source, single-file export, 33-route/53-variant parity, responsive screenshots, research/decision/motion records, independent finish verdict, recorded design system, and pushed design-branch handoff
 VERIFICATION: six-width Chromium audit; contrast sweep; theme persistence and reduced-motion test; finite motion test; screenshot inspection; registry parity; source/export parity; independent reviewer verdict; documenter validation; Git containment
 STOP CONDITIONS: any backend/provider/deployment/release mutation; missing route/state; privacy or workflow contradiction; unknown overlapping work; unverified reviewer or commit claim
-STATUS: V4_REVIEW_SHIP_DOCUMENTED_COMMIT_PENDING
+STATUS: V4_COMPLETE_REVIEWED_DOCUMENTED_AND_PUSHED
 
 Starting branch/SHA: `design/impeccable-whole-site-preview` at
 `182cea85fd40adb23e2efa9672295de50526f0ca`.
@@ -25,7 +25,9 @@ Recorded evidence: verify zero findings/errors/external requests at 320, 375,
 captures 12/12. The detector ran exactly once with three warnings repaired and
 was not rerun. The fresh finish reviewer scored all five findings resolved and
 returned `ship`; the documenter refreshed `DESIGN.md` and
-`.impeccable/design.json`. The checkpoint commit/push remains pending.
+`.impeccable/design.json`. Implementation commit
+`20af331b0a749fa5a88f897f084fa8d29f645bdd` was pushed to the design branch;
+this record is the documentation-only closure follow-up.
 
 ---
 

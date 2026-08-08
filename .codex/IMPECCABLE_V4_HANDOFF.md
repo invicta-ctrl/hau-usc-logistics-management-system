@@ -76,7 +76,9 @@ duplicated primitive token array.
 
 ## Handoff status and stop boundary
 
-Review and documentation are closed. The documentation checkpoint commit/push
-is the only pending repository action. Preserve unrelated `.impeccable/` state.
+Review and documentation are closed. Implementation commit
+`20af331b0a749fa5a88f897f084fa8d29f645bdd` is pushed to
+`origin/design/impeccable-whole-site-preview`; this handoff update is the
+documentation-only closure follow-up. Preserve unrelated `.impeccable/` state.
 Do not open a PR, merge, deploy, write operational data, or touch production
 under this preview authorization.
