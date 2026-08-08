@@ -1066,6 +1066,338 @@ test('a partly released stock request stays reservable and completes despite a r
   expect(await parentStatus()).toBe('COMPLETED');
 });
 
+test('a procurement line at READY_TO_RELEASE can be reserved and released', async ({ request }) => {
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const marker = `Synthetic RV-01 procurement reservation proof ${crypto.randomUUID()}`;
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  let item;
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    item = (options.items ?? []).find((entry) => entry.id === 'ITM-LOCAL-001') ?? options.items[0];
+    expect(item).toBeTruthy();
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL, 'cf-connecting-ip': '192.0.2.40' },
+      data: {
+        clientRequestId: `rv01-procurement-reserve-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Procurement Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-procurement-reserve-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0040',
+        purpose: marker,
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 2 }],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests')).json();
+  const parent = queue.data.requests.find((row) => row.purpose === marker);
+  expect(parent).toBeTruthy();
+  const line = queue.data.requestLines.find((row) => row.requestId === parent.id);
+  expect(line).toBeTruthy();
+
+  const reviewed = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'ACCEPT',
+    note: 'Procurement reservation proof',
+    clientRequestId: `rv01-procurement-review-${parent.id}`,
+    lineDecisions: [{ lineId: line.id, decision: 'PROCUREMENT' }],
+  });
+  expect(reviewed.status()).toBe(200);
+
+  const procurement = await (await request.get('/api/procurement')).json();
+  const deliverable = (procurement.data.deliverables ?? []).find(
+    (entry) => entry.requestLineId === line.id,
+  );
+  expect(deliverable).toBeTruthy();
+
+  const canvass = await mutate(request, csrfToken, 'saveCanvassReference', {
+    linkedDeliverableId: deliverable.id,
+    supplierName: `Synthetic Procurement Supplier ${crypto.randomUUID()}`,
+    itemSpec: item.name,
+    price: 125,
+    unit: item.unit,
+    receiptStatus: 'VERIFIED',
+    reliability: 'SYNTHETIC',
+    checkedAt: '2026-08-08',
+    clientRequestId: `rv01-procurement-canvass-${parent.id}`,
+  });
+  expect(canvass.status()).toBe(200);
+  const canvassBody = await canvass.json();
+
+  const preferred = await mutate(request, csrfToken, 'selectPreferredCanvass', {
+    canvassId: canvassBody.canvassId,
+    rationale: 'Synthetic procurement reservation proof',
+    clientRequestId: `rv01-procurement-preferred-${parent.id}`,
+  });
+  expect(preferred.status()).toBe(200);
+
+  for (const status of ['WAITING_FOR_BUDGET', 'TO_BE_PROCURED', 'PROCURED', 'READY_TO_RELEASE']) {
+    const transitioned = await mutate(request, csrfToken, 'transitionDeliverable', {
+      deliverableId: deliverable.id,
+      status,
+      note: `Synthetic transition to ${status}`,
+      clientRequestId: `rv01-procurement-${status.toLowerCase()}-${parent.id}`,
+    });
+    expect(transitioned.status()).toBe(200);
+  }
+
+  const ready = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+  expect(ready.data.requestLines.find((row) => row.id === line.id)?.status).toBe('READY_TO_RELEASE');
+
+  const reserved = await mutate(request, csrfToken, 'reserveStock', {
+    itemId: item.id,
+    requestLineId: line.id,
+    quantity: 2,
+    clientRequestId: `rv01-procurement-reserve-stock-${parent.id}`,
+  });
+  expect(reserved.status()).toBe(200);
+
+  const evidenceBytes = new Uint8Array([
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    ...new TextEncoder().encode('synthetic-procurement-release-evidence'),
+  ]);
+  const uploaded = await mutate(request, csrfToken, 'uploadEvidence', {
+    evidenceType: 'RELEASE_CONFIRMATION_PHOTO',
+    originalFileName: 'synthetic-procurement-release.png',
+    mimeType: 'image/png',
+    base64: btoa(String.fromCharCode(...evidenceBytes)),
+    relatedEntityType: 'RELEASE_REQUEST',
+    relatedEntityId: parent.id,
+    requestId: parent.id,
+    clientRequestId: `rv01-procurement-evidence-${parent.id}`,
+  });
+  expect(uploaded.status()).toBe(200);
+  const { evidenceId } = await uploaded.json();
+
+  const released = await mutate(request, csrfToken, 'confirmRelease', {
+    requestId: parent.id,
+    recipientConfirmed: true,
+    recipientName: 'Synthetic Procurement Recipient',
+    recipientRole: 'Synthetic Tester',
+    department: 'Synthetic Department',
+    evidenceId,
+    lines: [{ requestLineId: line.id, quantity: 2 }],
+    clientRequestId: `rv01-procurement-release-${parent.id}`,
+  });
+  expect(released.status()).toBe(200);
+
+  const completed = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+  expect(completed.data.requestLines.find((row) => row.id === line.id)?.status).toBe('COMPLETED');
+  expect(completed.data.requests.find((row) => row.id === parent.id)?.status).toBe('COMPLETED');
+});
+
+test('a partial reservation can be topped up after restock without exceeding demand', async ({ request }) => {
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const stockMarker = `Synthetic RV-01 reservation top-up proof ${crypto.randomUUID()}`;
+  const restockMarker = `Synthetic RV-01 replenishment proof ${crypto.randomUUID()}`;
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  let event;
+  let item;
+  let stockArea;
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    event = options.events[0];
+    item = (options.items ?? []).find((entry) => entry.id === 'ITM-LOCAL-001') ?? options.items[0];
+    stockArea = (options.stockAreas ?? []).find((entry) => entry === 'Office Inventory') ?? options.stockAreas[0];
+    expect(item).toBeTruthy();
+    expect(stockArea).toBeTruthy();
+
+    const stockSubmitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL, 'cf-connecting-ip': '192.0.2.41' },
+      data: {
+        clientRequestId: `rv01-top-up-stock-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Top-up Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-top-up-stock-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0041',
+        purpose: stockMarker,
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 4 }],
+      },
+    });
+    expect(stockSubmitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const initialQueue = await (await request.get('/api/requests')).json();
+  const stockParent = initialQueue.data.requests.find((row) => row.purpose === stockMarker);
+  expect(stockParent).toBeTruthy();
+  const stockLine = initialQueue.data.requestLines.find((row) => row.requestId === stockParent.id);
+  expect(stockLine).toBeTruthy();
+
+  const stockReviewed = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: stockParent.id,
+    decision: 'ACCEPT',
+    note: 'Reservation top-up proof',
+    clientRequestId: `rv01-top-up-review-${stockParent.id}`,
+    lineDecisions: [{ lineId: stockLine.id, decision: 'ISSUE_FROM_STOCK' }],
+  });
+  expect(stockReviewed.status()).toBe(200);
+
+  const firstReservation = await mutate(request, csrfToken, 'reserveStock', {
+    itemId: item.id,
+    requestLineId: stockLine.id,
+    quantity: 1,
+    clientRequestId: `rv01-top-up-reserve-first-${stockParent.id}`,
+  });
+  expect(firstReservation.status()).toBe(200);
+
+  const activeReservationQuantity = async () => {
+    const inventory = await (await request.get('/api/inventory?pageSize=50')).json();
+    return (inventory.data.reservations ?? [])
+      .filter((entry) => entry.requestLineId === stockLine.id && entry.status === 'ACTIVE')
+      .reduce((sum, entry) => sum + Number(entry.quantity), 0);
+  };
+  expect(await activeReservationQuantity()).toBe(1);
+
+  const restockContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  try {
+    const restockSubmitted = await restockContext.post('/api/public/request', {
+      headers: { origin: BASE_URL, 'cf-connecting-ip': '192.0.2.42' },
+      data: {
+        clientRequestId: `rv01-top-up-restock-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Restock Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-top-up-restock-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0042',
+        purpose: restockMarker,
+        requestPurpose: 'OFFICE_INVENTORY_PANTRY',
+        stockArea,
+        neededDate: '2026-08-30',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 3 }],
+      },
+    });
+    expect(restockSubmitted.status()).toBe(200);
+  } finally {
+    await restockContext.dispose();
+  }
+
+  const restockQueue = await (await request.get('/api/requests')).json();
+  const restockParent = restockQueue.data.requests.find((row) => row.purpose === restockMarker);
+  expect(restockParent).toBeTruthy();
+  const restockLine = restockQueue.data.requestLines.find((row) => row.requestId === restockParent.id);
+  expect(restockLine).toBeTruthy();
+
+  const restockReviewed = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: restockParent.id,
+    decision: 'ACCEPT',
+    note: 'Restock for reservation top-up proof',
+    clientRequestId: `rv01-top-up-restock-review-${restockParent.id}`,
+    lineDecisions: [{ lineId: restockLine.id, decision: 'RESTOCK' }],
+  });
+  expect(restockReviewed.status()).toBe(200);
+
+  const restocking = await (await request.get('/api/restocking?pageSize=50')).json();
+  const restock = (restocking.data.restockRequests ?? []).find(
+    (entry) => (entry.sourceRequestId ?? entry.source_request_id) === restockParent.id,
+  );
+  expect(restock).toBeTruthy();
+
+  const canvass = await mutate(request, csrfToken, 'saveCanvassReference', {
+    linkedRestockId: restock.id,
+    supplierName: `Synthetic Restock Supplier ${crypto.randomUUID()}`,
+    itemSpec: item.name,
+    price: 75,
+    unit: item.unit,
+    receiptStatus: 'VERIFIED',
+    reliability: 'SYNTHETIC',
+    checkedAt: '2026-08-08',
+    clientRequestId: `rv01-top-up-restock-canvass-${restockParent.id}`,
+  });
+  expect(canvass.status()).toBe(200);
+  const canvassBody = await canvass.json();
+
+  const preferred = await mutate(request, csrfToken, 'selectPreferredCanvass', {
+    canvassId: canvassBody.canvassId,
+    rationale: 'Synthetic restock reservation top-up proof',
+    clientRequestId: `rv01-top-up-restock-preferred-${restockParent.id}`,
+  });
+  expect(preferred.status()).toBe(200);
+
+  const budgeted = await mutate(request, csrfToken, 'transitionRestock', {
+    restockRequestId: restock.id,
+    action: 'SEND_TO_BUDGET_REVIEW',
+    expectedRevision: restockLine.workflowRevision,
+    reason: 'Synthetic restock budget transition',
+    clientRequestId: `rv01-top-up-restock-budget-${restockParent.id}`,
+  });
+  expect(budgeted.status()).toBe(200);
+  const budgetedBody = await budgeted.json();
+
+  const authorized = await mutate(request, csrfToken, 'transitionRestock', {
+    restockRequestId: restock.id,
+    action: 'AUTHORIZE_PROCUREMENT',
+    expectedRevision: budgetedBody.workflowRevision,
+    reason: 'Synthetic restock authorization',
+    clientRequestId: `rv01-top-up-restock-authorize-${restockParent.id}`,
+  });
+  expect(authorized.status()).toBe(200);
+
+  const received = await mutate(request, csrfToken, 'receiveRestock', {
+    restockRequestId: restock.id,
+    quantity: 3,
+    unit: item.unit,
+    invoiceStatus: 'SYNTHETIC',
+    clientRequestId: `rv01-top-up-restock-receive-${restockParent.id}`,
+  });
+  expect(received.status()).toBe(200);
+
+  const remainderReservation = await mutate(request, csrfToken, 'reserveStock', {
+    itemId: item.id,
+    requestLineId: stockLine.id,
+    quantity: 3,
+    clientRequestId: `rv01-top-up-reserve-remainder-${stockParent.id}`,
+  });
+  expect(remainderReservation.status()).toBe(200);
+  expect(await activeReservationQuantity()).toBe(4);
+
+  const overReservation = await mutate(request, csrfToken, 'reserveStock', {
+    itemId: item.id,
+    requestLineId: stockLine.id,
+    quantity: 1,
+    clientRequestId: `rv01-top-up-reserve-over-${stockParent.id}`,
+  });
+  expect(overReservation.status()).toBe(409);
+  expect(await activeReservationQuantity()).toBe(4);
+});
+
 test('an event-bounded reviewer is refused on a record outside its event scope', async ({ request }) => {
   // RV-01.3 requires "unrelated committee/event/location -> No" for the command
   // path, not only for the read path.

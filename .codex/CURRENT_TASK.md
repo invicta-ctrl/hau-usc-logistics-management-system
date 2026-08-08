@@ -1,18 +1,18 @@
 # Current Task
 
-INTENT: FEATURE, MIGRATION, TESTING, DEPLOYMENT PREPARATION
-SECONDARY INTENTS: SECURITY, ACCESSIBILITY, OPERATIONS, RELEASE
-MODE: freeze and review the exact repository candidate; stop before blocked pre-production
+INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
+SECONDARY INTENTS: SECURITY, TRANSACTIONAL_INTEGRITY, OPERATIONS, RELEASE
+MODE: execute the bounded N-1 repair, freeze/review the exact candidate, then continue only through passed release gates
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
-SKILLS: lean-ctx; Hallmark audit for bounded critical-screen polish; Cloudflare deployment workflow only at accepted pre-production/production stages; GitHub release workflow for branch/PR integration
-AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; owner-approved v0.7.2 final plan and MAX16 execution prompt; repository invariants; complete v0.7.1 production handoff
-RISK: critical because identity, authorization, migration, providers, and production are in scope
-DELIVERABLE: exact reviewed/pushed v0.7.2 repository candidate and truthful blocked pre-production handoff
-VERIFICATION: state/API/access contracts; focused tests; full repository gates; generated parity; R1/R2 review; distinct pre-production migration and full matrix; recovery/rollback; exact-SHA CI; production canary/reconciliation only after exact owner GO
-STOP CONDITIONS: unknown work or target; contract/spec conflict; unaccepted destructive migration; missing recovery/rollback; email/roster/provider or sensitive-access uncertainty; privacy leak risk; external MFA; unresolved P0/P1
-STATUS: RV_01_REPAIRED_EXACT_SHA_REVIEW_AND_PREPRODUCTION_BLOCKED
+SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
+AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`; owner-supplied v0.7.2 Codex resume prompt; repository invariants
+RISK: critical because reservation concurrency, inventory availability, migration, providers, and production are in scope
+DELIVERABLE: repair `reserveStock` without weakening concurrency, add real Worker/D1 workflow regressions, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
+VERIFICATION: two pre-fix behavioral failures; existing concurrent reservation proof; focused unit/Worker tests; full repository, Worker/D1, and browser gates; deterministic default artifact; fresh same-SHA security and transaction reviews; exact-head CI; staged backup/migration/readiness/reconciliation before production
+STOP CONDITIONS: unknown work or target; capacity invariant cannot be expressed atomically; contract/spec conflict; unresolved P0/P1; missing identity class/private config/backup/rollback; provider or target mismatch; privacy/secret risk; external MFA or owner-only browser action
+STATUS: LOCAL_N1_REPAIR_VERIFIED_AWAITING_EXACT_SHA_REVIEW
 
-Starting SHA: `9e6181b9de9134a22e6cf8b61121988bbc56023c`
+Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
 Branch: `release/v0.7.2-production-access-operations`
 
@@ -22,29 +22,43 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: run a fresh independent exact-SHA review of the RV-01
-repair head, verify exact-head PR CI, then stop before external mutation
-because the approved live email provider is absent. Identity policy is decided
-(Option A, exact protected-directory match only).
+Current exact action: commit and push the verified N-1 repair, then run fresh
+security/privacy and transaction/idempotency reviews against that exact SHA.
+Zero unresolved P0/P1 is required before any staging operation.
 
-Concurrency: no more than three child tasks are possible alongside the parent in
-this environment, despite the owner's higher ceiling. Children may not spawn
-grandchildren. The parent remains release-branch integration owner.
+N-1 repair: `reserveStock` now evaluates requested reservation quantity against
+`requested_quantity - released_quantity - SUM(ACTIVE reservations)` before the
+new reservation is inserted. The guarded batch accepts the reachable
+`READY_TO_RESERVE`, `READY_TO_RELEASE`, and `PARTIALLY_RELEASED` line states,
+preserves `PARTIALLY_RELEASED`, and keeps the insert, audit, idempotency receipt,
+parent timestamp, and revision bumps in one atomic batch.
+
+Pre-fix behavioral proof:
+
+- procurement line at `READY_TO_RELEASE`: reached `reserveStock`, returned 409;
+- partial reservation after a completed restock: reached the remainder
+  `reserveStock`, returned 409.
+
+Post-fix focused proof:
+
+- `tests/unit/request-visibility-rv01.test.js`: 8/8;
+- real local Worker/D1 reservation selection: 4/4, including procurement
+  reserve/release, restock top-up, partly released parent, and concurrent one
+  winner / one safe 409 / one inventory effect.
+
+Complete local gates on 2026-08-08:
+
+- `npm run check`: 117 files / 810 tests;
+- `npm run test:e2e:cloudflare:local`: 58/58;
+- `npx playwright test --workers=2`: 138 passed / 360 intentional skips;
+- `npm run build`: deterministic preview artifact restored;
+- `node scripts/verify-deploy-artifact.mjs staging`: expected exit 1 because the
+  tracked artifact is the safe preview build.
 
 The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION` and waived another
-confirmation wait. Production remains untouched because mandatory provider,
-pre-production, backup, rollback, and reconciliation gates have not passed.
-
-The first complete-candidate R2 review rejected the prior SHA on one schema /
-runtime mismatch and fail-open or non-atomic account activation, profile,
-access, announcement, Administrator-invariant, and limiter paths. Those
-findings are repaired locally with rollback/failure-injection coverage; the
-repair tree is not accepted until fresh exact-SHA R2 completes.
-
-Local acceptance: schema 30 migration integrity `ok` with zero foreign-key
-findings; `npm run check` 112 files / 740 tests; browser 136 passed / 356
-intentional skips; local Worker/D1 39/39. Handoff:
-`.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+confirmation wait. Staging and production remain untouched because the fresh
+exact-SHA reviews, identity-class input, private configuration, backup,
+migration, readiness, rollback, and reconciliation gates have not passed.
 
 ---
 

@@ -4295,26 +4295,37 @@ export function createD1OperationalService({
     ];
     try {
       if (requestLineId) {
-        // The line transition is a compare-and-swap, but a plain batch does not
-        // abort when it matches zero rows: D1 runs every statement before
-        // returning, so two concurrent reservations for the same line both
-        // inserted an ACTIVE reservation while only one moved the line. The
-        // loser's reservation held available-to-promise forever, because no
-        // command clears a request-line reservation. Routing it through the
-        // in-batch sentinel makes the loser roll back entirely — one winner,
-        // one safe 409, one reservation, one inventory effect.
+        // Guard the remaining unreserved demand before inserting. A status-only
+        // compare-and-swap made reservations once-per-line: procurement lines
+        // already at READY_TO_RELEASE and stock lines awaiting a post-restock
+        // top-up could never acquire the coverage confirmRelease requires.
+        //
+        // The INSERT stays after the in-batch sentinel so the capacity subquery
+        // excludes this command's row. D1 executes the complete batch atomically,
+        // so concurrent callers serialize on the guarded update: only quantities
+        // that still fit requested - released - ACTIVE reservations can commit.
         await runAtomicRevisionGuardedBatch(db, {
-          beforeGuardStatements: [inserted],
           guardedStatement: db
             .prepare(
               `UPDATE request_lines
-               SET status = 'READY_TO_RELEASE', updated_at = ?2
-               WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
+               SET status = CASE
+                     WHEN status = 'PARTIALLY_RELEASED' THEN status
+                     ELSE 'READY_TO_RELEASE'
+                   END,
+                   updated_at = ?2
+               WHERE id = ?1
+                 AND status IN ('READY_TO_RESERVE', 'READY_TO_RELEASE', 'PARTIALLY_RELEASED')
+                 AND ?3 <= requested_quantity - released_quantity - COALESCE((
+                   SELECT SUM(reservation.quantity)
+                   FROM reservations reservation
+                   WHERE reservation.request_line_id = request_lines.id
+                     AND reservation.status = 'ACTIVE'
+                 ), 0)`,
             )
-            .bind(requestLineId, nowIso()),
-          dependentStatements: reserveDependents,
+            .bind(requestLineId, nowIso(), quantity),
+          dependentStatements: [inserted, ...reserveDependents],
           conflictCode: 'REQUEST_STATE_CONFLICT',
-          conflictMessage: 'The request line was already reserved. Refresh before reserving again.',
+          conflictMessage: 'The request line cannot accept that reservation quantity. Refresh before reserving again.',
         });
       } else {
         await db.batch([inserted, ...reserveDependents]);
