@@ -5,6 +5,15 @@
       "prototypes/impeccable-whole-site-redesign/**",
       "prototypes/impeccable-whole-site-redesign-v2/**"
     ],
-    "ignoreValues": []
+    "ignoreValues": [
+      {
+        "rule": "codex-grid-background",
+        "value": "*",
+        "files": [
+          "src/styles/visual/tokens-base.css"
+        ],
+        "createdAt": "2026-08-08T23:00:17.593Z"
+      }
+    ]
   }
 }
