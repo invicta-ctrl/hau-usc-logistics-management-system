@@ -109,3 +109,67 @@ The Impeccable documenter completed `DESIGN.md` and the schema 2 sidecar. The
 missing QUALITY BAR card limits card-relative ceiling scoring but is not an
 open material finding. PR, merge, deployment, release, and production remain
 outside this checkpoint.
+
+## D9 - Reopen the preview under the owner amendment
+
+**Decision:** treat the prior v4 closure as history and accept
+`IMPECCABLE_V4_1_FEEDBACK_AMENDMENT.md` as the current front-end authority.
+
+**Reason:** the owner rejected incremental reskinning and required an obvious
+two-second structural delta while preserving routes, content model, and
+workflow coverage.
+
+## D10 - Make the public landing an institutional gateway
+
+**Decision:** use the locally embedded production campus background, stable
+official USC description, official Facebook link, and direct governed portal
+actions; remove the tutorial.
+
+**Cost:** volatile officers, announcements, counts, and events cannot be
+hardcoded. Production identity is adapted, not cloned.
+
+## D11 - Follow production Request Center boundaries
+
+**Decision:** represent authenticated department identity, Create/Track,
+New/Additional, event/sub-event dependency, item composition, and For Review
+language. Preview state remains illustrative and non-persistent.
+
+## D12 - Keep the celestial toggle in one live DOM tree
+
+**Decision:** mutate theme state in place instead of wrapping it in a document
+View Transition. This preserves actual thumb travel, form values, file input
+safety, focus, and the surrounding scoped color crossfade.
+
+## D13 - Replace generic controls with authored kinetic controls
+
+**Decision:** retain immediately recognizable menu, theme, and back semantics
+while giving each one a single purposeful motion signal, truthful ARIA state,
+and reduced-motion substitute.
+
+## D14 - Recompose overview and loading together
+
+**Decision:** replace the equal metric wall with an editorial decision brief
+and workbench. During loading, suppress every operational count and context
+value until the atomic reveal.
+
+## D15 - Keep profile and role changes preview-safe
+
+**Decision:** profile images are local JPEG/PNG/WebP previews limited to 2MB;
+role selection is a labelled preview dialog; the redundant committee scope
+control is removed. None of these controls writes or claims authority.
+
+## D16 - Record each Impeccable pass
+
+| COMMAND | TARGET | FINDING | IMPLEMENTED CHANGE |
+| --- | --- | --- | --- |
+| critique | v4 shell and representative surfaces | Tutorial landing, conventional panel wall, decorative elbows, and generic controls preserved too much prior fingerprint. | Removed non-semantic geometry and pinned three macro recompositions plus distinctive controls. |
+| bolder | Landing and overview | No decisive institutional focal point or dominant operational decision line. | Added the campus-backed USC hero and asymmetric decision brief/workbench. |
+| animate | Theme, menu, back, route, and loading | State feedback was generic and did not express the visual world. | Added finite celestial, kinetic-menu, back-travel, campus-arrival, route, progress, and row choreography with reduced-motion paths. |
+| layout | Landing, Request Center, overview, and shell | Repeated equal containers and linear stacking flattened priority. | Rebuilt the hero/action hierarchy, tabbed request flow, decision brief, route rail, command topbar, and mobile navigation. |
+| typeset | Institutional and operational hierarchy | Existing scale did not separate public institution, task heading, and dense operations strongly enough. | Strengthened bounded Bricolage display scales while retaining Plex operations text and Newsreader wordmark roles. |
+| colorize | Light/dark materials and controls | Oxblood/gold often read as decoration; floating/state chrome lacked material hierarchy. | Reserved gold for active signal, authored warm-paper and charcoal ladders, and localized glass to floating controls. |
+| delight | Theme, menu, back, portal, and profile | Functional controls lacked branded tactile feedback. | Added the moving celestial plate, line geometry, arrow nudge, campus settle, action-arrow response, and local image preview. |
+| adapt | 320–1440 layouts | Desktop compositions and dense forms risked cramped mobile behavior. | Reflowed hero, Request composer, profile, overview/support rail, drawer, compact harness, and safe-area bottom navigation. |
+| harden | Local state, privacy, and export | Theme rerender could lose state; role/profile/request actions could imply persistence; the image could create a network dependency. | Mutated theme in place, validated local images, excluded file restoration, stated preview boundaries, removed scope cycling, secured external links, and embedded the campus image. |
+| audit | Registry, export, accessibility, and evidence | Complete shape, containment, motion, and a genuine visual delta needed proof. | Verified 33/53 parity, six widths, contrast, theme, 13 motion scenarios, 21 curated captures, 8 comparison pairs, source/export parity, and Git containment. |
+| polish | Hover signals and narrow preview chrome | Parent/child hover feedback could stack and the harness consumed too much mobile viewport. | Reduced hover to one visible signal, neutralized generic lifts, compacted the narrow harness, and captured bottom-nav clearance. |

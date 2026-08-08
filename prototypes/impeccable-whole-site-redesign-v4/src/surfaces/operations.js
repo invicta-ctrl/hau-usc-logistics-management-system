@@ -83,20 +83,75 @@ export function overview(id, { state }) {
         title: 'Some figures could not be loaded',
         body: 'Queue counts are current. Event readiness and directory synchronisation are unavailable, so those panels are hidden rather than shown as zero. Nothing was changed.',
       })}
-      ${attention()}
-      ${queueSection(state)}`;
+      ${overviewWorkbench(state)}`;
   }
 
-  return `${head}
-    ${attention()}
-    ${contextLine([
-      { label: 'Active event series', value: '3' },
-      { label: 'Sub-events', value: '12' },
-      { label: 'Open requests', value: '18' },
-      { label: 'Items tracked', value: '1,248' },
-    ])}
-    ${queueSection(state)}
-    ${rails(state)}`;
+  return `${head}${overviewWorkbench(state)}`;
+}
+
+function overviewWorkbench(state) {
+  const isLoading = state === 'loading';
+  return `<div class="overview-command">
+    <section class="overview-briefing" aria-labelledby="overview-briefing-title"${
+      isLoading ? ' aria-busy="true"' : ''
+    }>
+      <div class="overview-briefing__intro">
+        <span class="label">Operational brief · ${isLoading ? 'updating' : 'now'}</span>
+        <h2 id="overview-briefing-title">${
+          isLoading
+            ? 'Refreshing the decision line.'
+            : 'Decisions, custody, and release in one line of sight.'
+        }</h2>
+        <p>${
+          isLoading
+            ? 'Checking the latest illustrative records. Counts will appear together when this pass finishes.'
+            : 'Start with the exception that can block today’s work, then move through review, handoff, and stock.'
+        }</p>
+      </div>
+      ${isLoading ? overviewAttentionLoading() : attention()}
+    </section>
+    ${
+      isLoading
+        ? overviewContextLoading()
+        : contextLine([
+            { label: 'Active event series', value: '3' },
+            { label: 'Sub-events', value: '12' },
+            { label: 'Open requests', value: '18' },
+            { label: 'Items tracked', value: '1,248' },
+          ])
+    }
+    <div class="overview-workbench">
+      <div class="overview-workbench__primary">${queueSection(state)}</div>
+      <aside class="overview-workbench__support" aria-label="Operational context">
+        ${rails(state)}
+      </aside>
+    </div>
+  </div>`;
+}
+
+function overviewAttentionLoading() {
+  return `<div class="overview-loading-grid" aria-hidden="true">
+    ${Array.from({ length: 4 })
+      .map(
+        (_, index) => `<span class="overview-loading-card" style="--row:${index}">
+          <i class="skeleton skeleton--primary"></i>
+          <i class="skeleton skeleton--status"></i>
+          <i class="skeleton skeleton--secondary"></i>
+        </span>`,
+      )
+      .join('')}
+  </div>
+  <p class="visually-hidden" role="status">Updating illustrative operational counts.</p>`;
+}
+
+function overviewContextLoading() {
+  return `<div class="overview-context-loading" aria-hidden="true">
+    ${Array.from({ length: 4 })
+      .map(
+        () => `<span><i class="skeleton skeleton--secondary"></i><i class="skeleton skeleton--status"></i></span>`,
+      )
+      .join('')}
+  </div>`;
 }
 
 function attention() {
@@ -177,6 +232,19 @@ function queueSection(state) {
 
 function rails(state) {
   if (state === 'empty') return '';
+  if (state === 'loading') {
+    return `<div class="rails rails--overview overview-support-loading" aria-hidden="true">
+      ${Array.from({ length: 3 })
+        .map(
+          () => `<section class="rail-block">
+            <span class="skeleton skeleton--primary"></span>
+            <span class="skeleton skeleton--secondary"></span>
+            <span class="skeleton skeleton--secondary"></span>
+          </section>`,
+        )
+        .join('')}
+    </div>`;
+  }
   return `<div class="rails rails--overview">
     <section class="rail-block">
       <div class="rail-block__head"><h3>Recent activity</h3>

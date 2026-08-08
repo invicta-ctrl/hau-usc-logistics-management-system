@@ -20,6 +20,8 @@ const readToggle = () =>
     const btn = document.querySelector('.theme-toggle');
     const sun = document.querySelector('.theme-toggle__sun');
     const moon = document.querySelector('.theme-toggle__moon');
+    const track = document.querySelector('.theme-toggle__track');
+    const thumb = document.querySelector('.theme-toggle__thumb');
     const cs = (el) => getComputedStyle(el);
     return {
       theme: document.body.dataset.theme,
@@ -29,7 +31,12 @@ const readToggle = () =>
       moonOpacity: +cs(moon).opacity,
       sunTransform: cs(sun).transform,
       moonTransform: cs(moon).transform,
-      transition: cs(sun).transitionDuration,
+      thumbTransform: cs(thumb).transform,
+      thumbTransitionProperty: cs(thumb).transitionProperty,
+      thumbTransition: cs(thumb).transitionDuration,
+      trackWidth: track.getBoundingClientRect().width,
+      trackHeight: track.getBoundingClientRect().height,
+      endpointsVisible: +cs(sun).opacity > 0 && +cs(moon).opacity > 0,
     };
   })();
 
@@ -61,7 +68,8 @@ const readToggle = () =>
 
   /* mid-transition sample proves the icon animates rather than snapping */
   await page.evaluate(() => document.querySelector('.theme-toggle').click());
-  await page.waitForTimeout(60);
+  await page.waitForFunction(() => document.body.dataset.theme === 'dark');
+  await page.waitForTimeout(80);
   results.midTransition = await page.evaluate(readToggle);
   await ctx.close();
 }
@@ -133,4 +141,42 @@ for (const scheme of ['dark', 'light']) {
 }
 
 await browser.close();
+const [cycleLight, cycleDark, cycleLightAgain] = results.cycle;
+const transitionSeconds = (entry, property) => {
+  const properties = String(entry.thumbTransitionProperty).split(',').map((part) => part.trim());
+  const durations = String(entry.thumbTransition).split(',').map((part) => Number.parseFloat(part) || 0);
+  const index = properties.indexOf(property);
+  if (index < 0) return properties.includes('all') ? Math.max(...durations) : 0;
+  return durations[index % durations.length];
+};
+const checks = {
+  lightStateTruthful:
+    cycleLight.theme === 'light' && cycleLight.pressed === 'false' && cycleLight.label === 'Switch to dark mode',
+  darkStateTruthful:
+    cycleDark.theme === 'dark' && cycleDark.pressed === 'true' && cycleDark.label === 'Switch to light mode',
+  returnsToLight: cycleLightAgain.theme === 'light' && cycleLightAgain.pressed === 'false',
+  bothEndpointsRemainVisible: results.cycle.every((entry) => entry.endpointsVisible),
+  wideCelestialCapsule: cycleLight.trackWidth >= 70 && cycleLight.trackHeight >= 36,
+  plateChangesEndpoint: cycleLight.thumbTransform !== cycleDark.thumbTransform,
+  plateTravelIsAnimated:
+    results.midTransition.thumbTransform !== cycleLight.thumbTransform &&
+    results.midTransition.thumbTransform !== cycleDark.thumbTransform,
+  travelDurationWithinBudget:
+    transitionSeconds(cycleLight, 'transform') >= 0.2 &&
+    transitionSeconds(cycleLight, 'transform') <= 0.26,
+  persisted: results.persistedAfterCycle === 'light' && results.afterReload.theme === 'dark',
+  systemPreferenceHonored:
+    results.firstRun_system_dark.theme === 'dark' && results.firstRun_system_light.theme === 'light',
+  storedPreferenceWins: results.storedBeatsSystem === 'light',
+  reducedMotionKeepsState:
+    results.reducedMotion.before.theme !== results.reducedMotion.after.theme &&
+    results.reducedMotion.after.endpointsVisible,
+  reducedMotionRemovesLongTravel:
+    transitionSeconds(results.reducedMotion.after, 'transform') === 0,
+};
+results.acceptance = {
+  checks,
+  passed: Object.values(checks).every(Boolean),
+};
 console.log(JSON.stringify(results, null, 1));
+if (!results.acceptance.passed) process.exitCode = 1;

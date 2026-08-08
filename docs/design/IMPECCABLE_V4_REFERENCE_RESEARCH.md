@@ -77,3 +77,30 @@ finish reviewer resolved the fixture-safety finding and gave disposition
 **ship**. The artifact contacts no service and does not change application
 source, backend, providers, migrations, deployment, release, or production
 state.
+
+## V4.1 production and institutional grounding
+
+The v4 result above is historical. The accepted v4.1 amendment adds a fresh
+baseline pass without turning production into a template:
+
+- The current production login, portal selector, Request Center, and Lending
+  Hub were inspected at `https://logistics.hausc.org` on 2026-08-08. The
+  preview adapts its governed route boundaries, campus-at-dusk identity,
+  translucent cream material, and Request Center information architecture.
+- The campus asset is a local optimized copy of production
+  `/brand/login-background`; `export.mjs` embeds it as a data URL, so the
+  shareable HTML makes no external image request.
+- Stable Student Council facts come from the official HAU organization page:
+  `https://www.hau.edu.ph/organizations/356a192b7913b04c54574d18c28d46e6395428ab`.
+  Mission language was checked against
+  `https://www.hau.edu.ph/about/mission-vision`.
+- The landing links to the official USC Facebook page at
+  `https://www.facebook.com/holyangeluniversitysc`. It does not copy volatile
+  officers, engagement counts, or logged-out feed content.
+- The complete requested design-reference extraction lives in
+  `IMPECCABLE_V3_EXTERNAL_DESIGN_DNA.md`. Mobbin was unavailable in this
+  session and no Mobbin screen evidence is claimed.
+
+The production frontend is a workflow and material baseline. The public
+gateway, operational command brief, celestial theme control, kinetic menu,
+compact back control, and responsive shell remain authored for this preview.

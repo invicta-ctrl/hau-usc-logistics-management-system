@@ -51,7 +51,8 @@ svg {
 
 a {
   color: var(--ox-700);
-  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 /* Oxblood on a near-black ground measures ~2.7:1. Links re-tone to gold. */
@@ -101,7 +102,7 @@ a {
   top: var(--s-2);
   left: var(--s-2);
   z-index: 200;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: var(--r-sm);
   background: var(--ox-800);
   color: var(--white);

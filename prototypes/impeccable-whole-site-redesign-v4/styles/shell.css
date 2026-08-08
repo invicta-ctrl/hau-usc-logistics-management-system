@@ -12,7 +12,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--s-3);
-  padding: 10px clamp(12px, 2vw, 20px);
+  padding: 12px clamp(12px, 2vw, 20px);
   border-bottom: 1px solid var(--line-strong);
   background: var(--paper);
   color: var(--ink);
@@ -28,7 +28,7 @@
 }
 
 .preview-bar__tag {
-  padding: 3px 8px;
+  padding: 4px 8px;
   border: 1px solid var(--gold-500);
   border-radius: var(--r-pill);
   background: color-mix(in srgb, var(--gold-300) 30%, transparent);
@@ -47,7 +47,7 @@
   display: flex;
   align-items: center;
   gap: var(--s-1);
-  padding: 3px;
+  padding: 4px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--canvas);
@@ -55,7 +55,7 @@
 
 .preview-group > button {
   min-height: 32px;
-  padding: 5px 10px;
+  padding: 4px 12px;
   border-radius: 6px;
   color: var(--ink-2);
   font-size: var(--t-xs);
@@ -74,7 +74,7 @@
 
 .preview-select {
   min-height: 34px;
-  padding: 5px 9px;
+  padding: 4px 8px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--canvas);
@@ -164,14 +164,14 @@
 
 .rail__brand {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   padding: var(--s-5) var(--s-4) var(--s-4);
   border-bottom: 1px solid color-mix(in srgb, var(--gold-300) 22%, transparent);
 }
 
 .rail__marks {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: var(--s-3);
 }
 
@@ -216,11 +216,11 @@
 
 .rail__section {
   display: grid;
-  gap: 2px;
+  gap: 4px;
 }
 
 .rail__section > .label {
-  padding: 0 var(--s-2) 6px;
+  padding: 0 var(--s-2) 8px;
   color: color-mix(in srgb, var(--cream) 76%, transparent);
   font-size: var(--t-2xs);
 }
@@ -232,7 +232,7 @@
   gap: var(--s-3);
   width: 100%;
   min-height: 44px;
-  padding: 7px var(--s-2);
+  padding: 8px var(--s-2);
   border-radius: var(--r-sm);
   color: var(--cream);
   text-align: left;
@@ -287,7 +287,7 @@
   gap: var(--s-2);
   width: 100%;
   min-height: 46px;
-  padding: 6px var(--s-2);
+  padding: 8px var(--s-2);
   border: 1px solid color-mix(in srgb, var(--gold-300) 24%, transparent);
   border-radius: var(--r-sm);
   background: rgba(255, 255, 255, 0.05);
@@ -360,7 +360,7 @@
   align-items: center;
   gap: var(--s-3);
   min-height: 62px;
-  padding: 10px clamp(14px, 2.4vw, 28px);
+  padding: 12px clamp(16px, 2.4vw, 28px);
   border-bottom: 1px solid var(--line);
   background: var(--paper);
   box-shadow: var(--elev-1);
@@ -395,7 +395,7 @@
   width: 100%;
   max-width: 460px;
   min-height: 36px;
-  padding: 0 10px;
+  padding: 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--r-sm);
   background: var(--canvas);
@@ -413,7 +413,7 @@
 }
 
 .search kbd {
-  padding: 2px 6px;
+  padding: 4px 8px;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: var(--paper);
@@ -454,7 +454,7 @@
   align-items: center;
   gap: var(--s-2);
   min-height: 36px;
-  padding: 2px 6px 2px 2px;
+  padding: 4px 8px 4px 4px;
   border-radius: var(--r-sm);
 }
 
@@ -483,7 +483,7 @@
 
 .main {
   min-width: 0;
-  padding: var(--s-6) clamp(14px, 2.4vw, 28px) var(--s-10);
+  padding: var(--s-6) clamp(16px, 2.4vw, 28px) var(--s-10);
 }
 
 .main__inner {

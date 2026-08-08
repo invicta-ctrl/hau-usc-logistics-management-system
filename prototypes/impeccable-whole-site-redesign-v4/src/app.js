@@ -5,7 +5,7 @@ import { icon, spriteMarkup } from './icons.js';
 import { esc, chip, themeToggle } from './components.js';
 import { GROUPS, NAV, NAV_ADMIN, SURFACES, TABS, byId } from './registry.js';
 import { setPublicTheme } from './surfaces/public.js';
-import { ROLE_VIEWS, SCOPES, WORKSPACES, NOTIFICATIONS } from './data/mock.js';
+import { ROLE_VIEWS, WORKSPACES, NOTIFICATIONS } from './data/mock.js';
 
 const root = document.getElementById('app');
 
@@ -43,12 +43,16 @@ const state = {
   viewport: 'desktop',
   role: 'ADMINISTRATOR',
   workspace: 'administrator',
-  scope: 'ALL',
   rail: 'expanded',
   drawer: 'closed',
   commandQuery: '',
   commandIndex: 0,
-  overlay: null, // 'menu' | 'command' | 'notifications' | 'confirm' | 'detail'
+  profileImage: '',
+  requestDraft: [],
+  requestMode: 'create',
+  requestType: 'NEW',
+  requestSeries: '',
+  overlay: null, // 'menu' | 'command' | 'notifications' | 'confirm' | 'detail' | 'role'
 };
 
 const reducedMotion = () =>
@@ -62,7 +66,8 @@ function captureFormSnapshot() {
   return {
     focusedIndex,
     controls: controls.map((control) => ({
-      value: control.value,
+      value: control instanceof HTMLInputElement && control.type === 'file' ? '' : control.value,
+      file: control instanceof HTMLInputElement && control.type === 'file',
       checked: 'checked' in control ? control.checked : null,
       selectedIndex: control instanceof HTMLSelectElement ? control.selectedIndex : null,
     })),
@@ -75,7 +80,9 @@ function restoreFormSnapshot(snapshot) {
   controls.forEach((control, index) => {
     const saved = snapshot.controls[index];
     if (!saved) return;
-    if (saved.selectedIndex !== null && control instanceof HTMLSelectElement) {
+    if (saved.file) {
+      return;
+    } else if (saved.selectedIndex !== null && control instanceof HTMLSelectElement) {
       control.selectedIndex = saved.selectedIndex;
     } else {
       control.value = saved.value;
@@ -191,7 +198,8 @@ function describeFocus(el) {
 }
 
 function openOverlay(name) {
-  lastFocusedSelector = describeFocus(document.activeElement);
+  lastFocusedSelector =
+    name === 'role' ? '[data-act="open-menu"]' : describeFocus(document.activeElement);
   updateView(
     'overlay',
     () => {
@@ -209,6 +217,7 @@ function openOverlay(name) {
         notifications: '[data-act="close-overlay"]',
         confirm: '[data-act="confirm-done"]',
         detail: '[data-act="confirm-accept"]',
+        role: '#role-view-select',
       }[name];
       if (node) trapFocus(node, preferred ?? null);
     },
@@ -232,20 +241,34 @@ function closeOverlay() {
 }
 
 /* ---------------- Theme ----------------
-   Sun in light, moon in dark. Both glyphs are always in the DOM; CSS rotates
-   and crossfades between them so the press transforms the icon rather than
-   swapping it. The accessible name describes the ACTION; aria-pressed reports
-   whether dark is active, so the state stays truthful. */
+   The theme is updated in place so the celestial plate remains the same DOM
+   element while it travels. Rebuilding #app here would turn the requested
+   motion into a crossfade and would also discard focus and form state. */
 
 /* Colour-only transition, applied for one frame budget so the theme change
    reads as deliberate rather than as a flash. Layout never animates. */
 let themeAnimTimer;
 function setTheme(next) {
-  document.body.classList.add('theme-anim');
-  updateView('theme', () => {
+  const dark = next === 'dark';
+  const commit = () => {
     state.theme = next;
     store.set(THEME_KEY, next);
-  });
+    document.body.dataset.theme = next;
+    document.querySelectorAll('[data-act="toggle-theme"]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(dark));
+      button.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    });
+    document.querySelectorAll('[data-act="theme"]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.v === next));
+    });
+  };
+
+  document.body.classList.add('theme-anim');
+  /* A document View Transition snapshots the control and prevents its live
+     thumb from travelling. Commit directly so the same DOM node animates;
+     the scoped colour transitions above still crossfade the surrounding UI. */
+  commit();
+
   clearTimeout(themeAnimTimer);
   themeAnimTimer = setTimeout(() => document.body.classList.remove('theme-anim'), 400);
 }
@@ -253,10 +276,13 @@ function setTheme(next) {
 /* ---------------- Toast ---------------- */
 
 let toastTimer;
-function toast(message) {
+function toast(message, tone = 'info') {
   const region = document.getElementById('toast-region');
   if (!region) return;
-  region.innerHTML = `<div class="toast">${icon('check')}<span>${esc(message)}</span></div>`;
+  const error = tone === 'error';
+  region.innerHTML = `<div class="toast" data-tone="${error ? 'error' : 'info'}"${
+    error ? ' role="alert"' : ''
+  }>${icon(error ? 'alert' : 'info')}<span>${esc(message)}</span></div>`;
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => {
     region.innerHTML = '';
@@ -271,7 +297,7 @@ function previewBar() {
   return `<div class="preview-bar"${state.overlay ? ' inert aria-hidden="true"' : ''}>
     <div class="preview-bar__brand">
       ${icon('box', 'icon--sm')}
-      <span>HAU-USC Logistics · Animated redesign preview v4</span>
+      <span>HAU-USC Logistics · Animated redesign preview v4.1</span>
       <span class="preview-bar__tag">Not production</span>
     </div>
 
@@ -383,7 +409,6 @@ function rail() {
     </button>`;
 
   const ws = WORKSPACES.find((w) => w.id === state.workspace);
-  const sc = SCOPES.find((s) => s.id === state.scope);
 
   return `<aside class="rail" id="primary-navigation" aria-label="Primary"${
     state.overlay ? ' inert aria-hidden="true"' : ''
@@ -393,7 +418,6 @@ function rail() {
       <span class="rail__name">HAU-USC Logistics<span class="rail__department">Department of Logistics</span></span>
       <span class="rail__system-code">ROUTE CONSOLE · 04</span>
     </div>
-    <div class="rail__signal" aria-hidden="true"><span></span><i></i><i></i><i></i></div>
     <div class="rail__scroll">
       <nav class="rail__section" aria-label="Operations">
         <span class="label"><b>Operations</b><i>O-BANK</i></span>
@@ -410,11 +434,6 @@ function rail() {
         <span class="scope-button__text"><b>${esc(ws?.name ?? '')}</b><span>${esc(ws?.sub ?? '')}</span></span>
         ${icon('chevron', 'icon--sm')}
       </button>
-      <button class="scope-button" type="button" data-act="cycle-scope">
-        <span class="avatar">${icon('filter', 'icon--sm')}</span>
-        <span class="scope-button__text"><b>${esc(sc?.name ?? '')}</b><span>${esc(sc?.sub ?? '')}</span></span>
-        ${icon('chevron', 'icon--sm')}
-      </button>
     </div>
   </aside>
   <button class="rail__scrim" type="button" data-act="close-drawer" aria-label="Close navigation"></button>`;
@@ -427,16 +446,18 @@ function topbar() {
   const navOpen = narrow ? state.drawer === 'open' : state.rail === 'expanded';
   return `<header class="topbar">
     <button class="menu-control" type="button" data-act="toggle-rail"
+      data-drawer-open="${narrow && state.drawer === 'open'}"
       aria-expanded="${navOpen}" aria-controls="primary-navigation"
       aria-label="${narrow ? (navOpen ? 'Close navigation' : 'Open navigation') : navOpen ? 'Collapse navigation' : 'Expand navigation'}">
       <span class="menu-control__glyph" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="menu-control__label">Menu</span>
+      <span class="menu-control__label">Navigate</span>
     </button>
     <div class="topbar__route" aria-label="Current route">
       <span>${routeCode(state.surface)}</span>
       <b>${esc(surface?.name ?? 'Workspace')}</b>
     </div>
     <button class="searchpill" type="button" data-act="open-command"
+      aria-label="Search routes, requests, and items"
       aria-haspopup="dialog" aria-expanded="${state.overlay === 'command'}" aria-controls="command-dialog">
       ${icon('search', 'icon--sm icon--muted')}
       <span>Search routes, requests, items…</span>
@@ -474,7 +495,7 @@ function commandMatches(query = '') {
   return SURFACES.filter((surface) => {
     if (!needle) return true;
     return `${surface.name} ${surface.group} ${surface.id}`.toLowerCase().includes(needle);
-  }).slice(0, 10);
+  }).slice(0, 6);
 }
 
 function commandResults(query = state.commandQuery, active = state.commandIndex) {
@@ -523,9 +544,33 @@ function overlays() {
   if (state.overlay === 'menu') {
     return `<div class="menu" id="account-menu" data-overlay-root role="menu" aria-label="Account">
       <button type="button" role="menuitem" data-act="go" data-id="account.profile">My profile</button>
-      <button type="button" role="menuitem" data-act="cycle-role">Switch role view</button>
+      <button type="button" role="menuitem" data-act="open-role-dialog">Choose role view…</button>
       <button type="button" role="menuitem" data-act="close-overlay">Session details</button>
       <button type="button" role="menuitem" data-act="close-overlay">Sign out</button>
+    </div>`;
+  }
+
+  if (state.overlay === 'role') {
+    return `<div class="dialog role-dialog" data-overlay-root role="dialog" aria-modal="true"
+      aria-labelledby="role-dialog-title" aria-describedby="role-dialog-copy">
+      <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Cancel role selection"></button>
+      <div class="dialog__panel">
+        <div class="dialog__body">
+          <h3 id="role-dialog-title">Choose a preview role</h3>
+          <p id="role-dialog-copy">This changes the visible preview perspective only. It does not change an account, permission, committee scope, or server authorization.</p>
+          <label class="role-dialog__field" for="role-view-select">Role view
+            <select id="role-view-select" data-act="role-view-select">
+              ${ROLE_VIEWS.map(
+                (role) => `<option value="${esc(role.id)}"${role.id === state.role ? ' selected' : ''}>${esc(role.name)}</option>`,
+              ).join('')}
+            </select>
+          </label>
+        </div>
+        <div class="dialog__foot">
+          <button class="btn btn--quiet" type="button" data-act="close-overlay">Cancel</button>
+          <button class="btn btn--primary" type="button" data-act="apply-role-view">Apply role view</button>
+        </div>
+      </div>
     </div>`;
   }
 
@@ -617,15 +662,21 @@ function render() {
   const surface = byId(state.surface);
   document.documentElement.setAttribute('data-theme', state.theme);
   document.body.setAttribute('data-theme', state.theme);
+  const surfaceContext = {
+    state: state.variant,
+    profileImage: state.profileImage,
+    requestDraft: state.requestDraft,
+    requestMode: state.requestMode,
+    requestType: state.requestType,
+    requestSeries: state.requestSeries,
+  };
 
   let body;
   if (state.surface === 'index') {
     body = `<div class="frame" data-viewport="${state.viewport}">${indexPage()}</div>`;
   } else if (surface.kind === 'public') {
     setPublicTheme(state.theme === 'dark');
-    body = `<div class="frame" data-viewport="${state.viewport}">${surface.render({
-      state: state.variant,
-    })}</div>`;
+    body = `<div class="frame" data-viewport="${state.viewport}">${surface.render(surfaceContext)}</div>`;
   } else {
     const routeSequence = renderReason === 'boot' || renderReason === 'route';
     body = `<div class="frame" data-viewport="${state.viewport}">
@@ -640,7 +691,7 @@ function render() {
           </div>
           <main class="main" id="surface-main" tabindex="-1">
             <div class="main__inner stage" key="${esc(state.surface)}-${esc(state.variant)}">
-              ${surface.render({ state: state.variant })}
+              ${surface.render(surfaceContext)}
             </div>
           </main>
         </section>
@@ -719,6 +770,7 @@ document.addEventListener('click', (event) => {
     });
   }
   if (act === 'open-menu') return openOverlay('menu');
+  if (act === 'open-role-dialog') return openOverlay('role');
   if (act === 'open-notifications') return openOverlay('notifications');
   if (act === 'open-command') return openOverlay('command');
   if (act === 'close-overlay') return closeOverlay();
@@ -733,7 +785,6 @@ document.addEventListener('click', (event) => {
       () => {
         state.variant = 'success';
       },
-      () => toast('Partial release recorded and confirmed by the recipient.'),
     );
   }
   if (act === 'confirm-done') {
@@ -754,33 +805,103 @@ document.addEventListener('click', (event) => {
       () => {
         state.workspace = WORKSPACES[(i + 1) % WORKSPACES.length].id;
       },
-      () => toast(`Workspace: ${WORKSPACES.find((w) => w.id === state.workspace).name}`),
     );
   }
-  if (act === 'cycle-scope') {
-    const i = SCOPES.findIndex((s) => s.id === state.scope);
-    return updateView(
-      'state',
-      () => {
-        state.scope = SCOPES[(i + 1) % SCOPES.length].id;
-      },
-      () => toast(`Scope: ${SCOPES.find((s) => s.id === state.scope).name}`),
-    );
-  }
-  if (act === 'cycle-role') {
-    const i = ROLE_VIEWS.findIndex((r) => r.id === state.role);
+  if (act === 'apply-role-view') {
+    const selected = document.getElementById('role-view-select')?.value;
+    const nextRole = ROLE_VIEWS.find((role) => role.id === selected);
+    if (!nextRole) return;
     lastFocusedSelector = null;
     return updateView(
       'overlay',
       () => {
-        state.role = ROLE_VIEWS[(i + 1) % ROLE_VIEWS.length].id;
+        state.role = nextRole.id;
         state.overlay = null;
       },
       () => {
         document.querySelector('[data-act="open-menu"]')?.focus();
-        toast(`Viewing as ${ROLE_VIEWS.find((r) => r.id === state.role).name}`);
+        toast(`Preview role: ${nextRole.name}. Authorization was not changed.`);
       },
     );
+  }
+  if (act === 'profile-image-remove') {
+    return updateView(
+      'local',
+      () => {
+        state.profileImage = '';
+      },
+      () => {
+        document.getElementById('profile-image-input')?.focus();
+      },
+    );
+  }
+  if (act === 'request-mode') {
+    const nextMode = el.dataset.mode === 'track' ? 'track' : 'create';
+    return updateView(
+      'local',
+      () => {
+        state.requestMode = nextMode;
+      },
+      () => document.querySelector(`[data-act="request-mode"][data-mode="${nextMode}"]`)?.focus(),
+    );
+  }
+  if (act === 'request-add-line') {
+    const form = document.getElementById('request-center-form');
+    if (!form) return;
+    const description = String(form.elements.lineDescription?.value ?? '').trim();
+    const quantity = Number(form.elements.lineQuantity?.value);
+    const category = String(form.elements.lineCategory?.value ?? 'Other');
+    const unit = String(form.elements.lineUnit?.value ?? 'piece');
+    const specification = String(form.elements.lineSpecification?.value ?? '').trim();
+    if (!description || !Number.isInteger(quantity) || quantity < 1) {
+      form.elements.lineDescription?.focus();
+      toast('Name an item and enter a whole-number quantity of at least one.', 'error');
+      return;
+    }
+    if (
+      state.requestDraft.some(
+        (line) =>
+          line.category.toLowerCase() === category.toLowerCase() &&
+          line.description.toLowerCase() === description.toLowerCase(),
+      )
+    ) {
+      toast('That requested item is already in the preview list.', 'error');
+      return;
+    }
+    return updateView(
+      'local',
+      () => state.requestDraft.push({ category, description, quantity, unit, specification }),
+      () => {
+        const nextForm = document.getElementById('request-center-form');
+        if (nextForm) {
+          nextForm.elements.lineDescription.value = '';
+          nextForm.elements.lineSpecification.value = '';
+          nextForm.elements.lineDescription.focus();
+        }
+      },
+    );
+  }
+  if (act === 'request-remove-line') {
+    const index = Number(el.dataset.index);
+    if (!Number.isInteger(index) || !state.requestDraft[index]) return;
+    return updateView(
+      'local',
+      () => state.requestDraft.splice(index, 1),
+    );
+  }
+  if (act === 'request-preview-submit') {
+    const form = document.getElementById('request-center-form');
+    if (!form?.elements.acknowledged?.checked) {
+      form?.elements.acknowledged?.focus();
+      toast('Confirm the privacy and no-reservation acknowledgment first.', 'error');
+      return;
+    }
+    toast('Preview only: no request was submitted, reserved, or recorded.');
+    return;
+  }
+  if (act === 'request-preview-track') {
+    toast('Preview only: no live request lookup was performed.');
+    return;
   }
   if (act === 'refresh') {
     toast('Illustrative records checked. No live service was contacted.');
@@ -794,6 +915,62 @@ document.addEventListener('click', (event) => {
 document.addEventListener('change', (event) => {
   const el = event.target.closest('[data-act]');
   if (!el) return;
+  if (el.dataset.act === 'profile-image') {
+    const file = el.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      el.value = '';
+      toast('Choose a JPEG, PNG, or WebP image.', 'error');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      el.value = '';
+      toast('Choose an image no larger than 2 MB.', 'error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      if (typeof reader.result !== 'string') return;
+      updateView(
+        'local',
+        () => {
+          state.profileImage = reader.result;
+        },
+        () => {
+          document.getElementById('profile-image-input')?.focus();
+        },
+      );
+    });
+    reader.addEventListener('error', () =>
+      toast('The image could not be read. Choose another file.', 'error'),
+    );
+    reader.readAsDataURL(file);
+    return;
+  }
+  if (el.dataset.act === 'request-type') {
+    state.requestType = el.value === 'ADDITIONAL' ? 'ADDITIONAL' : 'NEW';
+    const wrap = document.querySelector('[data-request-parent-wrap]');
+    const select = wrap?.querySelector('select');
+    const additional = el.value === 'ADDITIONAL';
+    if (wrap) wrap.hidden = !additional;
+    if (select) select.required = additional;
+    return;
+  }
+  if (el.dataset.act === 'request-series') {
+    state.requestSeries = el.value;
+    const form = document.getElementById('request-center-form');
+    const target = form?.elements.event;
+    if (!target) return;
+    const options = {
+      aurora: ['Commons opening', 'Student services forum'],
+      lantern: ['Assembly program', 'Closing session'],
+    }[el.value];
+    target.disabled = !options;
+    target.innerHTML = options
+      ? `<option value="">Select Sub-event</option>${options.map((name) => `<option>${esc(name)}</option>`).join('')}`
+      : '<option value="">Select Event first</option>';
+    return;
+  }
   if (el.dataset.act === 'pick-surface') return go(el.value);
   if (el.dataset.act === 'pick-state') {
     updateView(

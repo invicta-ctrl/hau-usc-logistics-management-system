@@ -137,12 +137,30 @@ ${queueTable({
 })}
 </div>`;
 
-export const profile = () => `${pageHead({
+export const profile = ({ profileImage = '' } = {}) => `${pageHead({
   crumbs: ['My profile'],
   title: 'My profile',
   lede: 'Your own details and sign-in security. You cannot change your own role or scope.',
 })}
-<div class="rails" style="margin-top:16px">
+<div class="profile-grid">
+  <div class="panel profile-photo-panel"><div class="panel__body">
+    <h2 class="block-title">Profile image</h2>
+    <div class="profile-photo">
+      <div class="profile-photo__preview">${
+        profileImage
+          ? `<img src="${esc(profileImage)}" alt="Selected profile preview" />`
+          : '<span aria-hidden="true">LO</span>'
+      }</div>
+      <div class="profile-photo__controls">
+        <p>Choose a JPEG, PNG, or WebP image up to 2 MB.</p>
+        <div><input class="visually-hidden" id="profile-image-input" type="file" accept="image/jpeg,image/png,image/webp" data-act="profile-image" />
+          <label class="btn" for="profile-image-input">${icon('plus', 'icon--sm')}${profileImage ? 'Replace image' : 'Choose image'}</label>
+          ${profileImage ? '<button class="btn btn--quiet" type="button" data-act="profile-image-remove">Remove</button>' : ''}
+        </div>
+        <p class="profile-photo__note">Local preview only. The image is not uploaded, saved, or sent anywhere.</p>
+      </div>
+    </div>
+  </div></div>
   <div class="panel"><div class="panel__body">
     <h2 class="block-title">Your access</h2>
     ${facts([

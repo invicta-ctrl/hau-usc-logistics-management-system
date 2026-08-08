@@ -92,3 +92,28 @@ labels yield before queue data, quantities, status, and the primary action.
 V4 does not redesign application runtime code, add routes to the product,
 change domain behavior, connect providers, write operational data, deploy,
 merge, release, or alter production. It is a reviewable visual artifact only.
+
+## V4.1 owner override
+
+The accepted amendment reopens only the front-end preview and requires an
+obvious structural delta from v2/v3. The inherited candidate-five seed remains
+historical provenance; the owner feedback is the current direction authority.
+
+V4.1 changes the first viewport from a portal tutorial into an image-led Holy
+Angel University Student Council gateway. It changes the authenticated
+overview from a flat metric field into an asymmetric decision brief and
+workbench. It changes Request Center from a generic public form into the
+production-grounded authenticated department flow with Create/Track and
+New/Additional modes. The authenticated shell now treats its route rail,
+command search, celestial theme control, kinetic menu, and compact back
+control as one coherent product composition.
+
+Non-semantic maroon/gold corner lines, page-head elbows, and the committee
+scope control are removed. Remaining lines communicate a route, selection,
+table relationship, or loading structure. Mobile uses the off-canvas rail,
+compact named search, truthful preview-width state, and a safe-area-cleared
+five-destination bottom navigation.
+
+The substantialness test is comparative: eight v3/v4.1 pairs use identical
+viewports. A reviewer must still recognize a different composition and design
+system within two seconds when logos and labels are mentally discounted.

@@ -29,8 +29,11 @@ export function setPublicTheme(dark) {
   publicDark = !!dark;
 }
 
-export function publicShell(inner, { wide = false, back = true, dark = publicDark } = {}) {
-  return `<div class="public">
+export function publicShell(
+  inner,
+  { wide = false, back = true, dark = publicDark, landing = false, dataLabel = true } = {},
+) {
+  return `<div class="public${landing ? ' public--landing' : ''}">
     <header class="public__bar">
       <div class="public__brand">${marks}
         <span class="public__wordmark"><b>HAU-USC Logistics</b><span>Department of Logistics</span></span>
@@ -42,7 +45,7 @@ export function publicShell(inner, { wide = false, back = true, dark = publicDar
         }
       </div>
     </header>
-    <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${illustrativeDataLabel}${inner}</main>
+    <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? illustrativeDataLabel : ''}${inner}</main>
     <footer class="public__foot">
       <p class="public__foot-line">Every item moves with a record.</p>
       <div class="public__foot-meta">
@@ -57,38 +60,49 @@ export function publicShell(inner, { wide = false, back = true, dark = publicDar
 
 export const landing = () =>
   publicShell(
-    `<div class="public__head">
-      <h1>Every logistics request starts here.</h1>
-      <p>Choose the route that matches the work. We give every submission a reference number so its status stays visible.</p>
-    </div>
-    <ol class="portal-route" aria-label="Submission route">
-      <li><span>01</span><b>Choose a portal</b></li>
-      <li><span>02</span><b>Submit the details</b></li>
-      <li><span>03</span><b>Track the reference</b></li>
-    </ol>
-    <div class="portal-grid">
-      <a class="portal-card" href="#/public.request-intake">
-        <span class="portal-card__mark">${icon('clipboard')}</span>
-        <b>Request items or materials</b>
-        <span>For events, office needs, and catalog restock.</span>
+    `<section class="landing-hero" aria-labelledby="landing-title">
+      <img class="landing-hero__media" src="assets/images/hau-campus-login-background.jpg"
+        alt="" width="1654" height="951" decoding="async" fetchpriority="high" />
+      <div class="landing-hero__content">
+        <h1 id="landing-title">Holy Angel University Student Council</h1>
+        <p>The university's highest student governing body, representing the tertiary student community through leadership, service, and shared responsibility.</p>
+        <div class="landing-hero__actions">
+          <a class="btn btn--primary" href="#/public.request-intake">Open Request Center${icon('arrow-right')}</a>
+          <a class="landing-link" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">Visit the official USC Facebook page${icon('arrow-right', 'icon--sm')}</a>
+        </div>
+      </div>
+      <div class="landing-hero__monogram" aria-hidden="true"><span>HAU</span><span>USC</span></div>
+    </section>
+
+    <section class="landing-intro" aria-labelledby="landing-intro-title">
+      <h2 id="landing-intro-title">Student representation that stays close to the Angelite community.</h2>
+      <p>USC brings together elected student leaders from across Holy Angel University's colleges. Its public work is grounded in service, integrity, equality, solidarity, and responsibility.</p>
+    </section>
+
+    <nav class="portal-actions" aria-label="Logistics portals">
+      <a class="portal-action portal-action--primary" href="#/public.request-intake">
+        <span class="portal-action__mark">${icon('clipboard')}</span>
+        <span><b>Request Center</b><small>Create a department request or privately track existing work.</small></span>
+        ${icon('arrow-right')}
       </a>
-      <a class="portal-card" href="#/public.lending-intake">
-        <span class="portal-card__mark">${icon('repeat')}</span>
-        <b>Borrow equipment</b>
-        <span>Library-style lending with a return date.</span>
+      <a class="portal-action" href="#/public.lending-intake">
+        <span class="portal-action__mark">${icon('lending')}</span>
+        <span><b>Office Lending</b><small>Borrow reusable equipment with an accountable return date.</small></span>
+        ${icon('arrow-right')}
       </a>
-      <a class="portal-card" href="#/public.request-tracking">
-        <span class="portal-card__mark">${icon('search')}</span>
-        <b>Track a submission</b>
-        <span>Check status using your reference number.</span>
+      <a class="portal-action" href="#/public.signin">
+        <span class="portal-action__mark">${icon('lock')}</span>
+        <span><b>Staff sign in</b><small>Enter the role-based logistics workspace.</small></span>
+        ${icon('arrow-right')}
       </a>
-      <a class="portal-card" href="#/public.signin">
-        <span class="portal-card__mark">${icon('lock')}</span>
-        <b>Staff sign in</b>
-        <span>For Department of Logistics staff and officers.</span>
-      </a>
-    </div>`,
-    { back: false },
+    </nav>
+
+    <section class="landing-updates" aria-labelledby="landing-updates-title">
+      <div><h2 id="landing-updates-title">Official USC updates</h2>
+        <p>Authorized announcements appear through the official council channels. No announcement is fabricated for this preview.</p></div>
+      <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
+    </section>`,
+    { back: false, wide: true, landing: true, dataLabel: false },
   );
 
 /* ---------- 2. Sign in ---------- */
@@ -237,14 +251,42 @@ export const applicationStatus = () =>
 
 /* ---------- 7. Public request intake ---------- */
 
-export function requestIntake({ state }) {
+export function requestIntake({
+  state,
+  requestDraft = [],
+  requestMode = 'create',
+  requestType = 'NEW',
+  requestSeries = '',
+}) {
   const invalid = state === 'error';
+  const requestEvents = {
+    aurora: ['Commons opening', 'Student services forum'],
+    lantern: ['Assembly program', 'Closing session'],
+  };
+  const subEvents = requestEvents[requestSeries] ?? [];
+  const draftMarkup = requestDraft.length
+    ? requestDraft
+        .map(
+          (line, index) => `<li class="request-draft__item">
+            <span><b>${esc(line.description)}</b><small>${esc(line.category)} <span aria-hidden="true">·</span> ${esc(line.quantity)} ${esc(line.unit)}${line.specification ? ` <span aria-hidden="true">·</span> ${esc(line.specification)}` : ''}</small></span>
+            <button class="btn btn--quiet btn--sm" type="button" data-act="request-remove-line" data-index="${index}">Remove</button>
+          </li>`,
+        )
+        .join('')
+    : '<li class="request-draft__empty">No requested items added yet.</li>';
+
   return publicShell(
-    `<div class="public__head">
-      <h1>Request items or materials</h1>
-      <p>Submitting a request does not reserve or deduct stock. The Department of Logistics reviews each line and decides how it will be fulfilled.</p>
+    `<div class="request-center-head">
+      <div><h1>Request Center</h1>
+        <p>Production uses an authenticated department session. This preview mirrors that setup with an illustrative, non-persistent identity.</p></div>
+      <span class="request-center-head__identity">${icon('shield', 'icon--sm')}Illustrative Executive Council</span>
     </div>
-    ${stepper(['Who and when', 'What you need', 'Review and submit'], 1)}
+    <div class="request-mode-tabs" role="tablist" aria-label="Request Center mode">
+      <button id="request-create-tab" type="button" role="tab" data-act="request-mode" data-mode="create"
+        aria-selected="${requestMode === 'create'}" aria-controls="request-create-panel">Create Request</button>
+      <button id="request-track-tab" type="button" role="tab" data-act="request-mode" data-mode="track"
+        aria-selected="${requestMode === 'track'}" aria-controls="request-track-panel">Track Existing Request</button>
+    </div>
     ${
       invalid
         ? notice({
@@ -254,52 +296,60 @@ export function requestIntake({ state }) {
           })
         : ''
     }
-    <form class="form-grid" onsubmit="return false">
-      <fieldset>
-        <legend>Request details</legend>
-        <div style="display:grid;gap:16px">
-          <div class="form-row">
-            ${field({ label: 'Requesting organisation', name: 'org', required: true, value: 'USC Executive Board' })}
-            ${field({
-              label: 'Date needed',
-              name: 'd',
-              type: 'date',
-              required: true,
-              error: invalid ? 'Choose a date at least three working days from today.' : '',
-            })}
+    <section id="request-create-panel" role="tabpanel" aria-labelledby="request-create-tab"${requestMode === 'create' ? '' : ' hidden'}>
+      <form class="request-center-form" id="request-center-form" onsubmit="return false">
+        <section class="request-form-section" aria-labelledby="request-identity-title">
+          <div class="request-form-section__head"><span>1</span><div><h2 id="request-identity-title">Request identity</h2><p>Your department comes from the secure session and cannot be edited.</p></div></div>
+          <label class="field request-readonly">Department<input name="department" value="Illustrative Executive Council" readonly aria-readonly="true" /></label>
+        </section>
+
+        <section class="request-form-section" aria-labelledby="request-type-title">
+          <div class="request-form-section__head"><span>2</span><div><h2 id="request-type-title">New or Additional</h2><p>Additional requests stay separate and link back to an existing request.</p></div></div>
+          <fieldset class="request-type-choice"><legend>Request type</legend>
+            <label><input type="radio" name="requestType" value="NEW" data-act="request-type"${requestType === 'NEW' ? ' checked' : ''} /><span><b>New request</b><small>Start a new logistics request.</small></span></label>
+            <label><input type="radio" name="requestType" value="ADDITIONAL" data-act="request-type"${requestType === 'ADDITIONAL' ? ' checked' : ''} /><span><b>Additional request</b><small>Link new requirements to existing work.</small></span></label>
+          </fieldset>
+          <label class="field" data-request-parent-wrap${requestType === 'ADDITIONAL' ? '' : ' hidden'}>Existing parent request
+            <select name="parentRequest"${requestType === 'ADDITIONAL' ? ' required' : ''}><option value="">Select an illustrative request</option><option>REQ-DEMO-417 · Aurora Commons Week</option></select>
+          </label>
+        </section>
+
+        <section class="request-form-section" aria-labelledby="request-event-title">
+          <div class="request-form-section__head"><span>3</span><div><h2 id="request-event-title">Event and Sub-event</h2><p>Only approved source records appear in production.</p></div></div>
+          <div class="request-form-grid">
+            <label class="field">Event<select name="eventSeries" data-act="request-series" required><option value="">Select Event</option><option value="aurora"${requestSeries === 'aurora' ? ' selected' : ''}>Aurora Commons Week</option><option value="lantern"${requestSeries === 'lantern' ? ' selected' : ''}>Lantern Forum</option></select></label>
+            <label class="field">Sub-event<select name="event" required${subEvents.length ? '' : ' disabled'}><option value="">${subEvents.length ? 'Select Sub-event' : 'Select Event first'}</option>${subEvents.map((name) => `<option>${esc(name)}</option>`).join('')}</select></label>
           </div>
-          ${field({
-            label: 'Linked event',
-            name: 'evt',
-            options: ['Not linked', 'Aurora Commons Week · Route A', 'Aurora Commons Week · Route B', 'Lantern Forum'],
-          })}
-          ${field({
-            label: 'Purpose',
-            name: 'p',
-            textarea: true,
-            required: true,
-            hint: 'Say what the items are for. Do not include personal or contact details.',
-            error: invalid ? 'Tell us what the items will be used for.' : '',
-          })}
-        </div>
-      </fieldset>
-      <fieldset>
-        <legend>Items requested</legend>
-        <div style="display:grid;gap:16px">
-          <div class="form-row">
-            ${field({ label: 'Item', name: 'i1', value: 'Monobloc chair' })}
-            ${field({ label: 'Quantity', name: 'q1', type: 'number', value: '40' })}
+        </section>
+
+        <section class="request-form-section" aria-labelledby="request-items-title">
+          <div class="request-form-section__head"><span>4</span><div><h2 id="request-items-title">Requested venues, logistics, and equipment</h2><p>Every line starts For Review. Submission creates no reservation or stock movement.</p></div></div>
+          <label class="field">Purpose or need<textarea name="purpose" maxlength="500" required></textarea></label>
+          <div class="request-composer">
+            <label class="field">Category<select name="lineCategory"><option>Logistics / Equipment</option><option>Venue / Facility</option><option>Inventory Item</option><option>Other</option></select></label>
+            <label class="field request-composer__item">Approved or custom item<input name="lineDescription" placeholder="Name the requested item" maxlength="120" /></label>
+            <label class="field">Quantity<input name="lineQuantity" type="number" min="1" max="100000" step="1" value="1" /></label>
+            <label class="field">Unit<select name="lineUnit"><option>piece</option><option>set</option><option>pack</option><option>service</option></select></label>
+            <label class="field request-composer__spec">Optional note or specification<textarea name="lineSpecification" maxlength="240"></textarea></label>
+            <button class="btn" type="button" data-act="request-add-line">${icon('plus', 'icon--sm')}Add requested item</button>
           </div>
-          <button class="btn btn--sm" type="button">${icon('plus', 'icon--sm')}Add another item</button>
+          <div class="request-draft" aria-live="polite"><div><h3>Requested items</h3><span>${requestDraft.length} item${requestDraft.length === 1 ? '' : 's'}</span></div><ul>${draftMarkup}</ul></div>
           ${notice({
             tone: 'info',
             title: 'Availability is confirmed after review',
-            body: 'We do not show live stock counts on public portals. Your request is checked against authoritative stock during review.',
+            body: 'The public workflow does not expose authoritative stock counts. Routing and availability remain advisory until staff review.',
           })}
-        </div>
-      </fieldset>
-      <button class="btn btn--primary" type="submit">Review and submit</button>
-    </form>`,
+          <label class="request-ack"><input type="checkbox" name="acknowledged" /><span><b>Privacy and acceptable use</b><small>I confirm this illustrative request is accurate and understand that submission does not reserve stock.</small></span></label>
+          <button class="btn btn--primary" type="button" data-act="request-preview-submit"${requestDraft.length ? '' : ' disabled'}>Submit request for review${icon('arrow-right')}</button>
+        </section>
+      </form>
+    </section>
+    <section id="request-track-panel" class="request-track-panel" role="tabpanel" aria-labelledby="request-track-tab"${requestMode === 'track' ? '' : ' hidden'}>
+      <div><h2>Track Existing Request</h2><p>Production search is restricted to the signed-in department. This preview never looks up a live record.</p></div>
+      <form onsubmit="return false"><label class="field">Request ID, Event, or Sub-event<input name="requestSearch" placeholder="Try REQ-DEMO-431" autocomplete="off" /></label><button class="btn" type="button" data-act="request-preview-track">${icon('search', 'icon--sm')}Search preview</button></form>
+      <div class="request-track-empty" role="status">No live request data is connected to this preview.</div>
+    </section>`,
+    { wide: true },
   );
 }
 

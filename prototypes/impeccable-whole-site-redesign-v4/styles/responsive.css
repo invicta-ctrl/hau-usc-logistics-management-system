@@ -136,8 +136,8 @@
     z-index: 120;
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 3px;
-    padding: 6px;
+    gap: 4px;
+    padding: 8px;
     border: 1px solid var(--line-strong);
     border-radius: var(--r-lg);
     background: var(--paper);
@@ -150,7 +150,7 @@
     place-items: center;
     gap: 4px;
     min-height: 52px;
-    padding: 6px 3px;
+    padding: 8px 4px;
     border-radius: var(--r-sm);
     color: var(--muted);
     font-size: 10px;
@@ -184,7 +184,7 @@
     z-index: 118;
     display: flex;
     gap: var(--s-2);
-    padding: 10px 12px;
+    padding: 12px 12px;
     border-top: 1px solid var(--line);
     background: var(--paper);
   }

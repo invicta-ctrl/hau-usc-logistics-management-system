@@ -103,3 +103,31 @@ the motion test.
 The Impeccable detector was run exactly once; it returned three warnings, all
 were repaired, and it was not rerun. This record therefore does not claim a
 second detector verdict.
+
+## V4.1 choreography and loading extension
+
+The paragraph above is historical v4 evidence. V4.1 uses these current
+interaction contracts:
+
+- Theme press feedback settles within 120ms; the active celestial plate
+  travels for 240ms and surrounding color surfaces crossfade in roughly
+  240–280ms. Theme DOM mutates in place so the plate actually travels and form
+  state/focus are retained.
+- Menu lines react and resolve into drawer state in 180–240ms. The parent
+  surface does not also lift, so one hover signal remains.
+- The back arrow travels 3px in 180ms and press feedback compresses in 120ms.
+- The campus gateway uses one finite entrance, not an ambient loop. Route and
+  overlay transitions remain cancellable and do not block input.
+- Loading preserves the operational brief, replaces every count/context field
+  with a static skeleton, announces that records are updating, and reveals
+  values together. Linear progress and row reveal are finite; no fake
+  percentage, spinner-first wait, perpetual shimmer, or stale count remains.
+- Reduced motion keeps the state change and fast color/opacity feedback while
+  eliminating travel, rotation, hover transforms, and staged reveals.
+
+Current v4.1 evidence is `13/13` motion scenarios, a fully green 13-check
+celestial theme acceptance, zero reduced-motion or responsive findings at all
+six evidence widths, and 21 curated captures with no console error or external
+request. The fresh detector disposition is recorded separately in the v4.1
+review and handoff; the old three-warning statement is not reused as v4.1
+evidence.

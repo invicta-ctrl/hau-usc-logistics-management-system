@@ -96,7 +96,7 @@ export const GROUPS = ['Public', 'Overviews', 'Operations', 'Administration'];
 export const NAV = [
   { id: 'admin.overview', label: 'Overview', icon: 'home' },
   { id: 'request.queue', label: 'Request Center', icon: 'clipboard' },
-  { id: 'lending.queue', label: 'Office Lending Hub', icon: 'repeat' },
+  { id: 'lending.queue', label: 'Office Lending Hub', icon: 'lending' },
   { id: 'release.desk', label: 'Release Desk', icon: 'check' },
   { id: 'restocking.queue', label: 'Restocking', icon: 'arrow-down' },
   { id: 'procurement.board', label: 'Procurement', icon: 'briefcase' },
@@ -116,7 +116,7 @@ export const NAV_ADMIN = [
 export const TABS = [
   { id: 'admin.overview', label: 'Overview', icon: 'home' },
   { id: 'request.queue', label: 'Requests', icon: 'clipboard' },
-  { id: 'lending.queue', label: 'Lending', icon: 'repeat' },
+  { id: 'lending.queue', label: 'Lending', icon: 'lending' },
   { id: 'inventory.catalog', label: 'Inventory', icon: 'box' },
   { id: 'release.desk', label: 'Release', icon: 'check' },
 ];

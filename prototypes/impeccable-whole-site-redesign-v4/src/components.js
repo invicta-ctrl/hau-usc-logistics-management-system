@@ -14,33 +14,30 @@ let uid = 0;
 export const nextId = (prefix = 'x') => `${prefix}-${++uid}`;
 
 /* ---------- Theme toggle ----------
-   Sun in light, moon in dark. Both glyphs stay in the DOM; motion.css rotates
-   and crossfades between them so pressing transforms the icon rather than
-   swapping it. The accessible name describes the ACTION; aria-pressed reports
-   whether dark is active, so the announced state stays truthful. */
+   Both endpoints stay visible so the control reads as a day/night choice at a
+   glance. A separate active plate travels behind the selected glyph; the
+   accessible name describes the action and aria-pressed reports dark mode. */
 
 export function themeToggle(dark) {
   return `<button class="theme-toggle" type="button" data-act="toggle-theme"
     aria-pressed="${!!dark}"
     aria-label="${dark ? 'Switch to light mode' : 'Switch to dark mode'}">
     <span class="theme-toggle__track" aria-hidden="true">
-      <span class="theme-toggle__sky">
-        <i></i><i></i><i></i>
+      <span class="theme-toggle__thumb"></span>
+      <span class="theme-toggle__celestial theme-toggle__celestial--sun">
+        ${icon('sun', 'theme-toggle__sun')}
       </span>
-      <span class="theme-toggle__thumb">
-        <span class="theme-toggle__icons">
-      ${icon('sun', 'theme-toggle__sun')}
-      ${icon('moon', 'theme-toggle__moon')}
-        </span>
+      <span class="theme-toggle__celestial theme-toggle__celestial--moon">
+        ${icon('moon', 'theme-toggle__moon')}
       </span>
     </span>
   </button>`;
 }
 
 export function backControl(label = 'Portals') {
-  return `<a class="back-control" href="#/public.landing">
+  return `<a class="back-control" href="#/public.landing" aria-label="Return to ${esc(label)}">
     <span class="back-control__glyph" aria-hidden="true">${icon('arrow-left')}</span>
-    <span><small>Return to</small><b>${esc(label)}</b></span>
+    <span class="back-control__label">${esc(label)}</span>
   </a>`;
 }
 

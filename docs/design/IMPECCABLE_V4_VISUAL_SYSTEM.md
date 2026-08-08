@@ -85,3 +85,28 @@ V4 may change visual tokens, geometry, and finite interaction choreography in
 the prototype. It may not change production source, generated runtime output,
 backend/provider configuration, migration or ledger behavior, authentication,
 deployment/release state, or the preserved v3 sources and artifacts.
+
+## V4.1 material and component extension
+
+V4.1 introduces embedded campus photography as the public institutional
+ground. An oxblood image veil protects contrast while the warm paper canvas
+and floating public identity bar preserve a premium, bright light theme.
+Dark mode uses near-black charcoal, deep oxblood surfaces, off-white type, and
+muted gold edges rather than inverting the light palette.
+
+Glass is localized to genuinely floating controls: public identity bar,
+celestial capsule, compact back control, dialogs, and mobile tabbar. Work
+surfaces remain paper or charcoal fields. The new lending glyph is a dedicated
+library/equipment mark rather than a recycled repeat arrow.
+
+The theme control is a 76px capsule with both celestial endpoints visible and
+a 32px active plate. The menu keeps three readable lines while changing
+geometry for drawer state. The back control combines a small gold glyph plate
+with an asymmetric glass label. Profile image selection is a local preview,
+and the role selector is a labelled dialog; neither implies authority or
+persistence.
+
+The public landing, Request Center, and operational brief establish three
+distinct composition families. Forms, queues, lifecycle tables, and details
+continue using semantic HTML and the shared typography/status vocabulary. The
+offline export embeds the three local fonts and the campus image.

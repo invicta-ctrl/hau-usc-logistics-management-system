@@ -26,7 +26,7 @@
 }
 
 .page-head p {
-  margin-top: 6px;
+  margin-top: 8px;
   max-width: 62ch;
   color: var(--muted);
   font-size: var(--t-md);
@@ -42,7 +42,7 @@
 .breadcrumbs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: var(--s-2);
   color: var(--muted);
   font-size: var(--t-xs);
@@ -59,9 +59,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 8px;
   min-height: 40px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
   background: var(--paper);
@@ -115,7 +115,7 @@
 
 .btn--sm {
   min-height: 32px;
-  padding: 5px 10px;
+  padding: 4px 12px;
   font-size: var(--t-xs);
 }
 
@@ -140,8 +140,8 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 4px;
+  padding: 4px 8px;
   border: 1px solid var(--tone-neutral-line);
   border-radius: var(--r-pill);
   background: var(--tone-neutral-bg);
@@ -225,7 +225,7 @@
 .attention__label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   color: var(--muted);
   font-size: var(--t-xs);
   font-weight: 700;
@@ -386,7 +386,7 @@ table.q tbody tr:last-child td {
 
 .panel table.q :is(th, td):first-child,
 .detail__body table.q :is(th, td):first-child {
-  padding-left: 10px;
+  padding-left: 12px;
 }
 
 table.q {
@@ -405,7 +405,7 @@ table.q caption {
 /* Scoped to thead: a row header (<th scope="row">) is content, not a column
    label, and must not inherit the uppercase micro-label treatment. */
 table.q thead th {
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--line-strong);
   color: var(--muted);
   font-size: var(--t-2xs);
@@ -418,7 +418,7 @@ table.q thead th {
 
 table.q td,
 table.q tbody th {
-  padding: 10px;
+  padding: 12px;
   border-bottom: 1px solid var(--line);
   vertical-align: middle;
 }
@@ -458,7 +458,7 @@ table.q tbody tr[aria-selected="true"] {
 
 .q__link {
   display: grid;
-  gap: 2px;
+  gap: 4px;
   width: 100%;
   text-align: left;
 }
@@ -593,7 +593,7 @@ table.q tbody tr[aria-selected="true"] {
 }
 
 .facts dd {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-size: var(--t-sm);
   overflow-wrap: anywhere;
 }
@@ -684,9 +684,9 @@ table.q tbody tr[aria-selected="true"] {
   right: clamp(14px, 2.4vw, 28px);
   z-index: 100;
   display: grid;
-  gap: 2px;
+  gap: 4px;
   width: 214px;
-  padding: 6px;
+  padding: 8px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-md);
   background: var(--paper);
@@ -694,7 +694,7 @@ table.q tbody tr[aria-selected="true"] {
 }
 
 .menu button {
-  padding: 9px 10px;
+  padding: 8px 12px;
   border-radius: 6px;
   color: var(--ink);
   font-size: var(--t-sm);
@@ -713,7 +713,7 @@ table.q tbody tr[aria-selected="true"] {
 
 .field {
   display: grid;
-  gap: 5px;
+  gap: 4px;
 }
 
 .field > label {
@@ -735,7 +735,7 @@ table.q tbody tr[aria-selected="true"] {
   min-width: 0;
   max-width: 100%;
   min-height: 42px;
-  padding: 9px 11px;
+  padding: 8px 12px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
   background: var(--paper);
@@ -745,7 +745,7 @@ table.q tbody tr[aria-selected="true"] {
 /* File inputs carry a large intrinsic minimum width that overflows narrow
    containers unless it is explicitly overridden. */
 .field input[type="file"] {
-  padding: 8px 10px;
+  padding: 8px 12px;
 }
 
 /* 24px is the WCAG 2.2 AA minimum target size. */
@@ -772,7 +772,7 @@ input[type="radio"] {
 .field__error {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   color: var(--tone-alert-fg);
   font-size: var(--t-xs);
   font-weight: 700;
@@ -802,7 +802,7 @@ fieldset {
 }
 
 legend {
-  padding: 0 6px;
+  padding: 0 8px;
   font-size: var(--t-sm);
   font-weight: 700;
 }
@@ -822,8 +822,8 @@ legend {
 .stepper li {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 11px 5px 5px;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   color: var(--muted);
@@ -925,7 +925,7 @@ legend {
 
 .timeline__body span {
   display: block;
-  margin-top: 2px;
+  margin-top: 4px;
   color: var(--muted);
   font-size: var(--t-xs);
 }
@@ -940,7 +940,7 @@ legend {
 
 .ledger th,
 .ledger td {
-  padding: 7px 8px;
+  padding: 8px 8px;
   border-bottom: 1px solid var(--line);
   text-align: left;
 }
@@ -992,7 +992,7 @@ legend {
   width: 100%;
   max-width: 140px;
   height: 5px;
-  margin-top: 5px;
+  margin-top: 4px;
   border-radius: var(--r-pill);
   background: var(--line);
   overflow: hidden;
@@ -1034,7 +1034,7 @@ legend {
 
 .composition-key {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1152,7 +1152,7 @@ legend {
 }
 
 .notice p {
-  margin-top: 3px;
+  margin-top: 4px;
   color: inherit;
   opacity: 0.92;
 }
@@ -1206,7 +1206,7 @@ legend {
 
 .receipt__head {
   display: grid;
-  gap: 5px;
+  gap: 4px;
   padding: var(--s-5);
   border-bottom: 1px dashed var(--line-strong);
   text-align: center;
@@ -1241,7 +1241,7 @@ legend {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
   gap: var(--s-2);
-  padding: 11px 13px;
+  padding: 12px 12px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-sm);
   background: var(--ox-800);
@@ -1273,7 +1273,7 @@ legend {
 .illustrative {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   color: var(--muted);
   font-size: var(--t-2xs);
   font-style: italic;

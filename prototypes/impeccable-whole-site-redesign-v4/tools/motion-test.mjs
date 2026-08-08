@@ -150,19 +150,103 @@ await run('confirmation overlay traps meaningful focus and restores it', async (
   return { opened, tabInside, closed };
 });
 
+await run('role picker uses a focused dialog and changes preview only', async () => {
+  const { context, page, errors } = await newPage();
+  await selectSurface(page, 'admin.overview');
+  await page.click('[data-act="open-menu"]');
+  await page.click('[data-act="open-role-dialog"]');
+  await page.waitForSelector('.role-dialog');
+  const opened = await page.evaluate(() => ({
+    active: document.activeElement?.id,
+    copy: document.querySelector('#role-dialog-copy')?.textContent,
+    workspaceInert: document.querySelector('.workspace')?.inert,
+  }));
+  assert(opened.active === 'role-view-select' && opened.workspaceInert, JSON.stringify(opened));
+  assert(opened.copy?.includes('does not change'), opened.copy ?? 'Missing boundary copy');
+  await page.selectOption('#role-view-select', 'REQUESTER');
+  await page.click('[data-act="apply-role-view"]');
+  await page.waitForTimeout(340);
+  const applied = await page.evaluate(() => ({
+    role: document.querySelector('.account-button__text span')?.textContent,
+    focus: document.activeElement?.dataset.act,
+    toast: document.querySelector('.toast')?.textContent,
+  }));
+  assert(applied.role === 'Requester' && applied.focus === 'open-menu', JSON.stringify(applied));
+  assert(applied.toast?.includes('Authorization was not changed'), JSON.stringify(applied));
+  assert(errors.length === 0, `Console errors: ${errors.join(' | ')}`);
+  await context.close();
+  return { opened, applied };
+});
+
+await run('Request Center mirrors governed create and track setup', async () => {
+  const { context, page, errors } = await newPage();
+  await selectSurface(page, 'public.request-intake');
+  const boundary = await page.textContent('.request-center-head');
+  assert(boundary?.includes('authenticated department session'), boundary ?? 'Missing auth boundary');
+  await page.click('[data-act="request-mode"][data-mode="track"]');
+  await page.waitForTimeout(340);
+  assert(await page.isVisible('#request-track-panel'), 'Track mode did not open');
+  await page.click('[data-act="request-mode"][data-mode="create"]');
+  await page.fill('[name="lineDescription"]', 'Illustrative folding table');
+  await page.fill('[name="lineQuantity"]', '2');
+  await page.click('[data-act="request-add-line"]');
+  await page.waitForTimeout(340);
+  const draft = await page.evaluate(() => ({
+    items: document.querySelectorAll('.request-draft__item').length,
+    submitDisabled: document.querySelector('[data-act="request-preview-submit"]')?.disabled,
+    description: document.querySelector('.request-draft__item b')?.textContent,
+  }));
+  assert(draft.items === 1 && draft.submitDisabled === false, JSON.stringify(draft));
+  await page.check('[name="acknowledged"]');
+  await page.click('[data-act="request-preview-submit"]');
+  const toast = await page.textContent('.toast');
+  assert(toast?.includes('no request was submitted'), toast ?? 'Missing preview-only feedback');
+  assert(errors.length === 0, `Console errors: ${errors.join(' | ')}`);
+  await context.close();
+  return { boundary, draft, toast };
+});
+
+await run('profile image stays local and survives a theme rerender', async () => {
+  const { context, page, errors } = await newPage();
+  await selectSurface(page, 'account.profile');
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+    'base64',
+  );
+  await page.setInputFiles('#profile-image-input', {
+    name: 'profile-preview.png',
+    mimeType: 'image/png',
+    buffer: png,
+  });
+  await page.waitForSelector('.profile-photo__preview img');
+  await page.click('.theme-toggle');
+  await page.waitForTimeout(380);
+  const evidence = await page.evaluate(() => ({
+    preview: document.querySelector('.profile-photo__preview img')?.getAttribute('src')?.startsWith('data:image/png'),
+    note: document.querySelector('.profile-photo__note')?.textContent,
+    fileValue: document.querySelector('#profile-image-input')?.value,
+  }));
+  assert(evidence.preview, JSON.stringify(evidence));
+  assert(evidence.note?.includes('not uploaded'), JSON.stringify(evidence));
+  assert(evidence.fileValue === '', 'File input value should not be programmatically restored');
+  assert(errors.length === 0, `Console errors: ${errors.join(' | ')}`);
+  await context.close();
+  return evidence;
+});
+
 await run('form values survive theme and overlay rerenders', async () => {
   const { context, page } = await newPage();
   await selectSurface(page, 'account.profile');
-  const input = page.locator('#surface-main input').first();
+  const input = page.locator('#surface-main input[name="cur"]');
   await input.fill('Preserved local draft');
   await page.click('.theme-toggle');
   await page.waitForTimeout(380);
-  const afterTheme = await page.locator('#surface-main input').first().inputValue();
+  const afterTheme = await input.inputValue();
   await page.click('.searchpill');
   await page.waitForTimeout(320);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(320);
-  const afterOverlay = await page.locator('#surface-main input').first().inputValue();
+  const afterOverlay = await input.inputValue();
   assert(afterTheme === 'Preserved local draft' && afterOverlay === afterTheme, JSON.stringify({ afterTheme, afterOverlay }));
   await context.close();
   return { afterTheme, afterOverlay };
@@ -178,10 +262,23 @@ await run('route animation is scoped and all animation is finite', async () => {
     routeRun: document.querySelector('.route-progress')?.dataset.run,
     transitionState: document.documentElement.dataset.transition ?? null,
     infinite: document.getAnimations({ subtree: true }).filter((animation) => animation.effect?.getTiming().iterations === Infinity).length,
+    activeRouteAnimations: document
+      .getAnimations({ subtree: true })
+      .filter(
+        (animation) =>
+          animation.playState === 'running' &&
+          (animation.effect?.target?.classList?.contains('route-progress__line') ||
+            animation.effect?.target?.parentElement?.classList?.contains('route-progress')),
+      ).length,
   }));
   assert(routeRun === 'true', `Route change reported data-run=${routeRun}`);
-  assert(afterTheme.routeRun === 'false', JSON.stringify(afterTheme));
-  assert(afterTheme.transitionState === null && afterTheme.infinite === 0, JSON.stringify(afterTheme));
+  assert(afterTheme.routeRun === routeRun, 'In-place theme change should not rebuild route progress');
+  assert(
+    afterTheme.transitionState === null &&
+      afterTheme.infinite === 0 &&
+      afterTheme.activeRouteAnimations === 0,
+    JSON.stringify(afterTheme),
+  );
   await page.selectOption('#state-picker', 'loading');
   await page.waitForTimeout(820);
   const loadingInfinite = await page.evaluate(() =>

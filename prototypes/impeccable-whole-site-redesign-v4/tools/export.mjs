@@ -103,11 +103,29 @@ ${registry}
   __req(${JSON.stringify(ENTRY)});
 })();`;
 
+/* Source markup may include approved local imagery. Embed it in the runtime so
+   the generated file remains genuinely portable and makes no automatic
+   network request. */
+const localImages = new Map([
+  [
+    'assets/images/hau-campus-login-background.jpg',
+    `data:image/jpeg;base64,${readFileSync(
+      join(previewRoot, 'assets', 'images', 'hau-campus-login-background.jpg'),
+    ).toString('base64')}`,
+  ],
+]);
+const embeddedRuntime = [...localImages].reduce(
+  (source, [path, dataUrl]) => source.replaceAll(path, dataUrl),
+  runtime,
+);
+
 /* ---------- assemble ---------- */
 
-const sourceCss = STYLES.map(
+const v4Source = readFileSync(join(previewRoot, 'styles', 'v4.css'), 'utf8');
+const hallmarkStamp = v4Source.split(/\r?\n/).find((line) => line.trim()) ?? '';
+const sourceCss = `${hallmarkStamp}\n${STYLES.map(
   (file) => `/* ===== ${file} ===== */\n${readFileSync(join(previewRoot, file), 'utf8')}`,
-).join('\n\n');
+).join('\n\n')}`;
 
 /* The shareable artifact must stay offline. Resolve local font URLs relative
    to styles/v4.css and embed the binaries as data URLs. */
@@ -127,7 +145,7 @@ const html = `<!doctype html>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#610b0f" />
     <meta name="robots" content="noindex, nofollow" />
-    <title>HAU-USC Logistics · Whole-site redesign preview v4</title>
+    <title>HAU-USC Logistics · Whole-site redesign preview v4.1</title>
     <!--
       Generated export. Do not edit.
       Authoritative source: prototypes/impeccable-whole-site-redesign-v4/
@@ -140,8 +158,8 @@ ${css}
     </style>
   </head>
   <body data-theme="light">
-    <!-- DIRECTION CONTRACT: A route console for legible handoffs; oxblood signal rails,
-      gold active segments, fast state choreography, and a complete reduced-motion path. -->
+    <!-- DIRECTION CONTRACT: USC identity and governed logistics routes; oxblood and gold,
+      restrained glass, finite state choreography, and a complete reduced-motion path. -->
     <a class="skip-link" href="#surface-main">Skip to main content</a>
     <div id="app"></div>
     <noscript>
@@ -151,7 +169,7 @@ ${css}
       </p>
     </noscript>
     <script>
-${runtime}
+${embeddedRuntime}
     </script>
   </body>
 </html>

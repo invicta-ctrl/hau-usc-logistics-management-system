@@ -9,10 +9,13 @@ const PATHS = {
     '<path d="M5 5h14l2 10v4H3v-4Z" stroke-linejoin="round"/><path d="M3 14h5l2 3h4l2-3h5" stroke-linejoin="round"/>',
   repeat:
     '<path d="M17 4h3v3M7 20H4v-3M20 7a7 7 0 0 0-12-2L4 8m0 9a7 7 0 0 0 12 2l4-3" stroke-linecap="round" stroke-linejoin="round"/>',
+  lending:
+    '<path d="M5 4h11a2 2 0 0 1 2 2v10H7a2 2 0 0 0-2 2V4Z" stroke-linejoin="round"/><path d="M7 20h12V8h-1M9 8h5M9 12h5" stroke-linecap="round" stroke-linejoin="round"/><path d="m3 16 2 2 2-2" stroke-linecap="round" stroke-linejoin="round"/>',
   check: '<path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
   'arrow-down':
     '<path d="M12 4v15m-6-6 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/>',
   'arrow-left': '<path d="M19 12H5m6-6-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/>',
+  'arrow-right': '<path d="M5 12h14m-6-6 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/>',
   box: '<path d="m12 3 8 4.5v9L12 21l-8-4.5v-9Z" stroke-linejoin="round"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9" stroke-linejoin="round"/>',
   calendar:
     '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16" stroke-linecap="round"/>',
