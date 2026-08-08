@@ -22,3 +22,4 @@ STOP_CONDITIONS: Missing/contradictory v0.8.0 scope; unclaimed/competing writer;
 NEXT_EXACT_ACTION: Ask Earl to approve the first bounded v0.8.0 Inventory Truth and Ledger Lock specification before claiming a writer lock or changing code or an environment.
 
 V0.7.3_RESULT: NO RUNTIME PATCH REQUIRED. No eligible rollout blocker was confirmed, no runtime code changed, and version 0.7.2 remains authoritative.
+V0.7.3_CLOSEOUT_MERGE_SHA: 8b4ad05c6754b3de627535577d24216023dca8ca

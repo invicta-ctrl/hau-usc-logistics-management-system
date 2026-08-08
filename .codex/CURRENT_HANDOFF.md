@@ -6,6 +6,7 @@ MILESTONE: v0.7.3 Rollout Stabilization
 OUTCOME: NO-OP
 STARTING_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
 ENDING_SHA: GIT_HEAD
+NOOP_CLOSEOUT_MERGE_SHA: 8b4ad05c6754b3de627535577d24216023dca8ca
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: GIT_UPSTREAM
@@ -17,7 +18,7 @@ CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
 COMPLETED: V0.7.3 focused rollout acceptance completed with NO RUNTIME PATCH REQUIRED; the writer lock is released and the next milestone is an owner decision for the first bounded v0.8.0 specification.
 VALIDATION: 89 focused unit tests, 19 RV-01 Worker/D1 tests, 10 coherent focused Account/Lending/Inventory/Release/privacy Worker/D1 cases, and 6 Account/Public portal UI tests passed. Live production and staging identity/readiness/protected-boundary checks passed; unchanged exact-SHA evidence was reused under the accepted invalidator rule.
-EXTERNAL_ACTIONS: Read-only GitHub, production runtime, and staging runtime/route/status checks only. No provider send, staging mutation/reset/seed/deploy, production mutation/deploy, tag, release, or database write.
+EXTERNAL_ACTIONS: Created and merged protected documentation-only PR #19 at exact head e3a354128a8531f68ef3959ad978de0782eb70f6, resolved its evidence-only review thread, and deleted only the merged temporary branch. Runtime/provider/environment checks were read-only. No provider send, staging mutation/reset/seed/deploy, production mutation/deploy, tag, release, or database write.
 CONFIRMED_DEFECTS: NONE eligible. Four isolated-staging brand-image endpoints return 404, but this cosmetic asset-population gap does not block login or ordinary use and is out of scope.
 REPRODUCTION_EVIDENCE: The only focused-run failure was a subset harness invocation that omitted its department-account setup; setup plus the dependent requester-privacy test passed without code changes. No product failure remained.
 REGRESSION_TESTS: NONE added because no eligible runtime defect was confirmed.
