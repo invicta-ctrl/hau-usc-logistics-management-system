@@ -3,7 +3,7 @@
 ## Current state
 
 - **Milestone:** V0.7.3 Rollout Stabilization is complete with `NO RUNTIME PATCH REQUIRED`; next is the owner decision for a bounded v0.8.0 Inventory Truth and Ledger Lock specification.
-- **Branch/HEAD:** Resolve exact Git identity during the handshake; canonical closeout must merge through protected `main`.
+- **Branch/HEAD:** Protected no-op closeout PR #19 merged to canonical `main` at `8b4ad05c6754b3de627535577d24216023dca8ca`; resolve current Git identity during the next handshake.
 - **Writer:** NONE; the writer lock is released.
 - **Authority:** `.codex/specs/active/v0.7.3-rollout-stabilization.md` records the completed no-op outcome. No accepted v0.8.0 implementation specification exists.
 - **Runtime:** Production remains immutable v0.7.2 at `84eacfcdb47a3985fed48e3ba14bb413946d4410`; no v0.7.3 version bump, tag, release, staging deployment, or production action occurred.
