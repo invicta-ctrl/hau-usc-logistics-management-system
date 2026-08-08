@@ -1,4 +1,5 @@
 import { accountApplicationEmailProviderIssues } from './account-application/email-provider-registry.js';
+import { parseAccountApplicationStagingIdentityFixture } from './account-application/adapters.js';
 
 const SHA = /^[0-9a-f]{40}$/iu;
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u;
@@ -79,6 +80,14 @@ export function environmentReadinessIssues(env) {
     }
     if (!hasAccountApplicationIdentityClasses(env?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON)) {
       issues.push('ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING');
+    }
+    if (
+      identity.environment === 'STAGING' &&
+      !parseAccountApplicationStagingIdentityFixture(
+        env?.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
+      ).length
+    ) {
+      issues.push('ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_MISSING');
     }
     // A provider is now owner-approved and implemented, so readiness asks the
     // registry instead of refusing unconditionally. It still fails closed: a

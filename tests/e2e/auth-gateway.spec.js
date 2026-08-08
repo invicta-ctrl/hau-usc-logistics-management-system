@@ -8,6 +8,7 @@ const releaseIdentity = (environment = 'STAGING') => ({
   appVersion: '0.7.2',
   releaseVersion: '0.7.2',
   candidateSha: 'a'.repeat(40),
+  database: { schemaVersion: '30', latestMigration: '0030_production_access_and_operations.sql' },
 });
 
 test.beforeEach(async ({ page }) => {

@@ -17,14 +17,19 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
+import { exactDatabaseIdFromInventory, unexpectedStagingConfigKeys } from './staging-sandbox-lib.mjs';
 
 const TARGETS = Object.freeze({
   staging: {
     worker: 'hau-usc-logistics-staging',
     environment: 'STAGING',
-    d1: 'hau-usc-logistics-staging',
-    buckets: ['hau-usc-logistics-staging-assets', 'hau-usc-logistics-staging-evidence'],
+    d1: 'hau-usc-logistics-staging-sandbox-v0721',
+    buckets: [
+      'hau-usc-logistics-staging-sandbox-v0721-assets',
+      'hau-usc-logistics-staging-sandbox-v0721-evidence',
+    ],
     build: 'build:cloudflare',
+    artifactDirectory: '.wrangler/build/staging',
   },
   production: {
     worker: 'hau-usc-logistics-production',
@@ -32,6 +37,7 @@ const TARGETS = Object.freeze({
     d1: 'hau-usc-logistics-production',
     buckets: ['hau-usc-logistics-production-assets', 'hau-usc-logistics-production-evidence'],
     build: 'build:cloudflare:production',
+    artifactDirectory: '.wrangler/build/production',
   },
 });
 
@@ -42,7 +48,12 @@ function fail(message) {
 }
 
 const [target, ...rest] = process.argv.slice(2);
-const expected = TARGETS[String(target ?? '').trim().toLowerCase()];
+const expected =
+  TARGETS[
+    String(target ?? '')
+      .trim()
+      .toLowerCase()
+  ];
 if (!expected) fail('the first argument must be "staging" or "production".');
 
 const configIndex = rest.indexOf('--config');
@@ -55,14 +66,24 @@ if (!configPath || !path.isAbsolute(configPath)) {
   );
 }
 
-const raw = await readFile(configPath, 'utf8').catch(() => fail(`the private config at ${configPath} could not be read.`));
+const raw = await readFile(configPath, 'utf8').catch(() => fail('the private config could not be read.'));
 const config = parseJsonConfig(raw);
 
 // 1. The private config must describe the intended environment.
-if (config.name !== expected.worker) fail(`the config targets Worker "${config.name}", not the ${target} Worker.`);
+if (config.name !== expected.worker)
+  fail(`the config targets Worker "${config.name}", not the ${target} Worker.`);
 const environment = config?.vars?.ENVIRONMENT;
 if (environment !== expected.environment)
   fail(`the config declares ENVIRONMENT "${environment}", not ${expected.environment}.`);
+if (target === 'staging') {
+  if ((config.routes ?? []).length || config.route)
+    fail('custom routes are not allowed in the isolated staging deployment config.');
+  if (config.workers_dev !== true || config.preview_urls !== false)
+    fail('the staging config must use workers_dev with preview URLs disabled.');
+  const extraConfigKeys = unexpectedStagingConfigKeys(config);
+  if (extraConfigKeys.length)
+    fail(`the staging config declares ${extraConfigKeys.length} unapproved top-level configuration key(s).`);
+}
 
 // 2. It must carry exactly one real, resolved D1 binding, and it must be the
 //    binding the Worker actually reads. Checking only d1_databases[0] would let
@@ -82,13 +103,30 @@ if (!database.database_id || database.database_id === PLACEHOLDER_ID)
   fail('the config still carries the placeholder database_id. Regenerate the private config.');
 if (String(database.database_name).startsWith('REPLACE_PRIVATELY'))
   fail('the config still carries a REPLACE_PRIVATELY placeholder.');
+let inventory;
+try {
+  const executable = path.join(process.cwd(), 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  inventory = JSON.parse(
+    execFileSync(process.execPath, [executable, 'd1', 'list', '--config', configPath, '--json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    }),
+  );
+} catch {
+  fail('the exact D1 identity could not be read from the authenticated account inventory.');
+}
+const exactDatabaseId = exactDatabaseIdFromInventory(inventory, expected.d1);
+if (!exactDatabaseId || database.database_id !== exactDatabaseId)
+  fail('the configured D1 identifier does not match the exact named database in the account inventory.');
 
 // 3. R2 bindings must match the environment, so staging can never write production objects.
 const buckets = (config.r2_buckets ?? []).map((entry) => entry.bucket_name);
 for (const bucket of expected.buckets)
   if (!buckets.includes(bucket)) fail(`the config is missing the ${target} R2 bucket ${bucket}.`);
 const foreign = buckets.filter((bucket) => !expected.buckets.includes(bucket));
-if (foreign.length) fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
+if (foreign.length)
+  fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
 
 // 4. The candidate SHA must be resolved and match the tree being deployed.
 const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
@@ -104,9 +142,11 @@ if (status) fail('the working tree is dirty. Deploy only a committed, frozen can
 // 5. Rebuild deterministically, so a stale or tracked dist can never be the
 //    deployment authority, then assert the artifact is the right build mode.
 execFileSync('npm', ['run', expected.build], { stdio: 'inherit', shell: process.platform === 'win32' });
-execFileSync('node', ['scripts/verify-deploy-artifact.mjs', target], { stdio: 'inherit' });
+execFileSync('node', ['scripts/verify-deploy-artifact.mjs', target, expected.artifactDirectory], {
+  stdio: 'inherit',
+});
 
-const artifact = await readFile('dist/index.html', 'utf8');
+const artifact = await readFile(path.join(expected.artifactDirectory, 'index.html'), 'utf8');
 const digest = createHash('sha256').update(artifact).digest('hex');
 
 process.stdout.write(
@@ -121,7 +161,7 @@ process.stdout.write(
 if (dryRun) {
   process.stdout.write('Dry run requested; no upload performed.\n');
 } else {
-  execFileSync('npx', ['wrangler', 'deploy', '-c', configPath], {
+  execFileSync('npx', ['wrangler', 'deploy', '-c', configPath, '--assets', expected.artifactDirectory], {
     stdio: 'inherit',
     shell: process.platform === 'win32',
   });

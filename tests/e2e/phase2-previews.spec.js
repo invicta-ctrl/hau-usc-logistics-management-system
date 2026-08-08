@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 import { navigateToAdminView, navigateToView } from './navigation.js';
 
-const previewRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../docs/previews/v0.6-phase-2');
+const previewRoot = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../docs/archive/v0.6/previews-v0.6-phase-2',
+);
 const generatePreviews = process.env.HAU_GENERATE_PHASE2_PREVIEWS === '1';
 
 const capture = async (page, filename, focus) => {

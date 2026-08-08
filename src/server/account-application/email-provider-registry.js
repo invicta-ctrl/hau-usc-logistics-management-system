@@ -18,6 +18,7 @@ import {
 } from './resend-email-provider.js';
 
 export const ACCOUNT_APPLICATION_EMAIL_SECRET_BINDING = 'ACCOUNT_APPLICATION_RESEND_API_KEY';
+export const ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR = 'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON';
 
 const SUPPORTED_PROVIDERS = Object.freeze([RESEND_PROVIDER_ID]);
 
@@ -33,7 +34,34 @@ function resendConfiguration(env) {
     from: env?.ACCOUNT_APPLICATION_EMAIL_FROM,
     verifyUrl: env?.ACCOUNT_APPLICATION_EMAIL_VERIFY_URL ?? '',
     timeoutMs: env?.ACCOUNT_APPLICATION_EMAIL_TIMEOUT_MS,
+    recipientAllowlist: parseExactRecipientAllowlist(env?.[ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR]),
   };
+}
+
+const RECIPIENT_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
+
+export function parseExactRecipientAllowlist(value) {
+  let parsed;
+  try {
+    parsed = JSON.parse(String(value ?? ''));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || !parsed.length) return null;
+  const normalized = parsed.map((entry) =>
+    String(entry ?? '')
+      .trim()
+      .toLowerCase(),
+  );
+  if (
+    normalized.some(
+      (entry) => !entry || entry.length > 254 || !RECIPIENT_PATTERN.test(entry) || entry.includes('*'),
+    ) ||
+    new Set(normalized).size !== normalized.length
+  ) {
+    return null;
+  }
+  return Object.freeze(normalized);
 }
 
 // Readiness must fail closed on a missing provider, key, or sender. Returning
@@ -47,8 +75,7 @@ function resendConfiguration(env) {
 export function accountApplicationEmailProviderIssues(env) {
   const providerId = selectedProviderId(env);
   if (!providerId) return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED'];
-  if (!SUPPORTED_PROVIDERS.includes(providerId))
-    return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_UNSUPPORTED'];
+  if (!SUPPORTED_PROVIDERS.includes(providerId)) return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_UNSUPPORTED'];
 
   const configuration = resendConfiguration(env);
   const issues = [];
@@ -56,6 +83,14 @@ export function accountApplicationEmailProviderIssues(env) {
     issues.push('ACCOUNT_APPLICATION_EMAIL_PROVIDER_SECRET_UNSET');
   if (!isResendProviderConfigured({ apiKey: 'x'.repeat(16), from: configuration.from }))
     issues.push('ACCOUNT_APPLICATION_EMAIL_SENDER_INVALID');
+  if (
+    String(env?.ENVIRONMENT ?? '')
+      .trim()
+      .toUpperCase() === 'STAGING' &&
+    !configuration.recipientAllowlist
+  ) {
+    issues.push('ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_INVALID');
+  }
   return issues;
 }
 

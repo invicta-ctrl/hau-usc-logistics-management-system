@@ -1,7 +1,7 @@
 # HAU-USC Logistics v0.7.2 DOL Quick Start
 
-Status: repository candidate; publish to staff only after production smoke and
-rollout gates pass.
+Status: production operational at v0.7.2. Use only the official production URL;
+the permanent staging sandbox is test-only and displays `STAGING TEST ENV`.
 
 1. Open the official HAU-USC Logistics staff URL supplied by the release
    operator. Verify the page says `Production` and `v0.7.2` before signing in.

@@ -197,4 +197,32 @@ describe('resend account-application email provider', () => {
     });
     expect(contacted).toBe(false);
   });
+
+  it('contains staging delivery to exact normalized recipients before any provider call', async () => {
+    const calls = [];
+    const resend = provider({
+      recipientAllowlist: ['allowed.test@example.invalid'],
+      fetchImpl: async (...args) => {
+        calls.push(args);
+        return jsonResponse(200, { id: MESSAGE_ID });
+      },
+    });
+
+    await expect(
+      resend.sendVerification({
+        delivery: { institutionalEmail: 'blocked.test@example.invalid' },
+        verificationCode: 'CODE-1',
+      }),
+    ).rejects.toMatchObject({ code: 'EMAIL_PROVIDER_REJECTED' });
+    expect(calls).toHaveLength(0);
+
+    await expect(
+      resend.sendVerification({
+        delivery: { institutionalEmail: ' Allowed.Test@Example.Invalid ' },
+        verificationCode: 'CODE-1',
+      }),
+    ).resolves.toEqual({ providerMessageRef: MESSAGE_ID });
+    expect(calls).toHaveLength(1);
+    expect(JSON.parse(calls[0][1].body).to).toEqual(['allowed.test@example.invalid']);
+  });
 });

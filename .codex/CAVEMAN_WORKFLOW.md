@@ -20,8 +20,10 @@ the authoritative checkpoint.
 
 1. Preserve the owner's exact instruction.
 2. Route it through `.codex/TASK_ROUTING.md` and scan matching skills.
-3. Read `.codex/CURRENT_TASK.md`, `.plans/current-slice.md`, the program status,
-   continuation block, and the accepted specification for the active unit.
+3. Read `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`,
+   `.codex/CURRENT_HANDOFF.md`, and the accepted specification for the active
+   unit. Read `.plans/current-slice.md` or the continuation block only when the
+   active task points to them.
 4. Complete the Git and external-state preconditions proportionate to risk.
 5. Proceed automatically only when scope, authority, writer ownership, and
    rollback are clear.

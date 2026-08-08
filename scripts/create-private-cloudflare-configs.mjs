@@ -2,9 +2,24 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { STAGING_SANDBOX_TARGET } from './staging-sandbox-lib.mjs';
+import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
+const PRIVATE_STAGING_VAR_NAMES = new Set([
+  'ACCOUNT_APPLICATION_EMAIL_FROM',
+  'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON',
+  'GOOGLE_ROSTER_SPREADSHEET_ID',
+  'GOOGLE_ROSTER_RANGE',
+  'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
+]);
+
+function publicStagingVars(source) {
+  return Object.fromEntries(
+    Object.entries(source.vars ?? {}).filter(([name]) => !PRIVATE_STAGING_VAR_NAMES.has(name)),
+  );
+}
 
 export function decodeJsonBuffer(buffer) {
   if (buffer[0] === 0xff && buffer[1] === 0xfe) return buffer.subarray(2).toString('utf16le');
@@ -16,7 +31,10 @@ export function decodeJsonBuffer(buffer) {
   return buffer.toString('utf8').replace(/^\uFEFF/u, '');
 }
 
-function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket, evidenceR2Bucket }) {
+function baseConfig(
+  source,
+  { name, environment, candidateSha, candidateBranch, d1, brandR2Bucket, evidenceR2Bucket },
+) {
   return {
     name,
     main: source.main,
@@ -30,6 +48,7 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
     },
     assets: {
       ...source.assets,
+      not_found_handling: 'single-page-application',
       run_worker_first: [
         ...new Set([
           ...(Array.isArray(source.assets?.run_worker_first) ? source.assets.run_worker_first : []),
@@ -52,21 +71,41 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
     ],
     triggers: { crons: ['*/5 * * * *'] },
     vars: {
+      ...(environment === 'STAGING' ? publicStagingVars(source) : {}),
       ENVIRONMENT: environment,
       APP_VERSION: '0.7.2',
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
-      RECOVERY_HOSTNAME: '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
-      GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
+      CANDIDATE_BRANCH: candidateBranch,
+      RECOVERY_HOSTNAME:
+        environment === 'STAGING'
+          ? (source.vars?.RECOVERY_HOSTNAME ?? '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>')
+          : '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
+      ...(environment === 'PRODUCTION'
+        ? {
+            GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
+            GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
+            GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
+          }
+        : {}),
+      ...(environment === 'STAGING'
+        ? {
+            SANDBOX_RESET_ALLOWED: source.vars?.SANDBOX_RESET_ALLOWED === true,
+            SANDBOX_BASE_URL:
+              source.vars?.SANDBOX_BASE_URL ?? '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT:
+              parseExactRecipientAllowlist(
+                source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
+              )?.length ?? 0,
+          }
+        : {}),
     },
   };
 }
 
-export function createConfigPair(source, databases, candidateSha) {
-  const stagingD1 = databases.find((database) => database.name === 'hau-usc-logistics-staging');
+export function createConfigPair(source, databases, candidateSha, candidateBranch = 'UNKNOWN') {
+  const stagingD1 = databases.find((database) => database.name === STAGING_SANDBOX_TARGET.database);
   const productionD1 = databases.find((database) => database.name === 'hau-usc-logistics-production');
   if (!stagingD1 || !productionD1)
     throw new Error('Required staging and production D1 resources were not found.');
@@ -75,14 +114,16 @@ export function createConfigPair(source, databases, candidateSha) {
       name: 'hau-usc-logistics-staging',
       environment: 'STAGING',
       candidateSha,
+      candidateBranch,
       d1: stagingD1,
-      brandR2Bucket: 'hau-usc-logistics-staging-assets',
-      evidenceR2Bucket: 'hau-usc-logistics-staging-evidence',
+      brandR2Bucket: STAGING_SANDBOX_TARGET.buckets[0],
+      evidenceR2Bucket: STAGING_SANDBOX_TARGET.buckets[1],
     }),
     production: baseConfig(source, {
       name: 'hau-usc-logistics-production',
       environment: 'PRODUCTION',
       candidateSha,
+      candidateBranch,
       d1: productionD1,
       brandR2Bucket: 'hau-usc-logistics-production-assets',
       evidenceR2Bucket: 'hau-usc-logistics-production-evidence',
@@ -102,7 +143,11 @@ async function run() {
     readFile(d1InventoryPath).then(decodeJsonBuffer).then(JSON.parse),
   ]);
   const candidateSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-  const pair = createConfigPair(source, databases, candidateSha);
+  const candidateBranch = execFileSync('git', ['branch', '--show-current'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  }).trim();
+  const pair = createConfigPair(source, databases, candidateSha, candidateBranch);
   await mkdir(outputDirectory, { recursive: true });
   await Promise.all([
     writeFile(

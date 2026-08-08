@@ -9,26 +9,27 @@
 // which Vite inlines as a string literal, so the built artifact states its own
 // build mode. This asserts that literal before any upload.
 //
-// Usage: node scripts/verify-deploy-artifact.mjs [staging|production]
+// Usage: node scripts/verify-deploy-artifact.mjs [staging|production] [artifact-directory]
 
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 
 const CLOUDFLARE_MODES = new Set(['staging', 'production']);
-const target = String(process.argv[2] ?? '').trim().toLowerCase();
+const target = String(process.argv[2] ?? '')
+  .trim()
+  .toLowerCase();
 if (target && !CLOUDFLARE_MODES.has(target)) {
   throw new Error(`Unknown deploy target "${target}". Expected staging or production.`);
 }
 
-const artifactPath = resolve('dist/index.html');
+const artifactDirectory = resolve(process.argv[3] ?? (target ? `.wrangler/build/${target}` : 'dist'));
+const artifactPath = resolve(artifactDirectory, 'index.html');
 let html;
 try {
   html = await readFile(artifactPath, 'utf8');
 } catch {
-  throw new Error(
-    'dist/index.html is missing. Run the Cloudflare build (npm run build:cloudflare) before deploying.',
-  );
+  throw new Error(`${artifactPath} is missing. Run the target-specific Cloudflare build before deploying.`);
 }
 
 // Matches the compiled form of:
@@ -38,9 +39,7 @@ const modeMatches = [...html.matchAll(/["']([a-z]+)["']\s*\)?\s*\.trim\(\)\s*\.t
 );
 
 if (!modeMatches.length) {
-  throw new Error(
-    'Could not determine the build mode of dist/index.html. Refusing to deploy an unverifiable artifact.',
-  );
+  throw new Error('Could not determine the build mode of the isolated artifact. Refusing to deploy it.');
 }
 
 const cloudflareModes = modeMatches.filter((mode) => CLOUDFLARE_MODES.has(mode));
@@ -48,14 +47,14 @@ const previewModes = modeMatches.filter((mode) => ['preview', 'development', 'mo
 
 if (previewModes.length) {
   throw new Error(
-    `dist/index.html is a ${previewModes[0]} build. That artifact runs the mock backend and must never be ` +
+    `The isolated artifact is a ${previewModes[0]} build. That artifact runs the mock backend and must never be ` +
       'deployed against live D1. Rebuild with npm run build:cloudflare and re-run this preflight.',
   );
 }
 
 if (!cloudflareModes.length) {
   throw new Error(
-    `dist/index.html does not declare a Cloudflare build mode (found: ${[...new Set(modeMatches)].join(', ')}). ` +
+    `The isolated artifact does not declare a Cloudflare build mode (found: ${[...new Set(modeMatches)].join(', ')}). ` +
       'Refusing to deploy.',
   );
 }
@@ -65,7 +64,7 @@ if (!cloudflareModes.length) {
 // appEnvironment says "staging", defeating the RV-01.8 identity proof.
 if (target && !cloudflareModes.includes(target)) {
   throw new Error(
-    `dist/index.html declares build mode "${cloudflareModes[0]}", which does not satisfy the ${target} deploy. ` +
+    `The isolated artifact declares build mode "${cloudflareModes[0]}", which does not satisfy the ${target} deploy. ` +
       `Rebuild with the ${target} Cloudflare build path.`,
   );
 }

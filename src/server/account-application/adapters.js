@@ -4,10 +4,14 @@ import { normalizeAccessId } from '../auth/contracts.js';
 import { accessIdCollisionKey, secureTemporaryPassword } from '../access/service.js';
 import { normalizeAccessPolicy } from '../access/policy.js';
 import { ACCOUNT_APPLICATION_STATE } from './contracts.js';
+import { parseExactRecipientAllowlist } from './email-provider-registry.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 const DOMAIN_PATTERN = /^(?![.-])[a-z0-9.-]+(?<![.-])$/u;
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$/u;
+
+export const ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET =
+  'ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON';
 
 const normalizeEmail = (value) =>
   String(value ?? '')
@@ -53,43 +57,119 @@ export function parseAccountApplicationIdentityClasses(value) {
   }
 }
 
+export function parseAccountApplicationStagingIdentityFixture(value) {
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+    if (!Array.isArray(parsed) || !parsed.length || parsed.length > 20) return Object.freeze([]);
+    const profiles = parsed.map((entry) => {
+      const institutionalEmail = normalizeEmail(entry?.institutionalEmail);
+      const studentId = String(entry?.studentId ?? '').trim();
+      const displayName = String(entry?.displayName ?? '')
+        .trim()
+        .replaceAll(/\s+/gu, ' ');
+      if (
+        !EMAIL_PATTERN.test(institutionalEmail) ||
+        institutionalEmail.includes('*') ||
+        institutionalEmail.length > 254 ||
+        !ID_PATTERN.test(studentId) ||
+        displayName.length < 2 ||
+        displayName.length > 160 ||
+        entry?.active !== true ||
+        String(entry?.verificationResult ?? '').toUpperCase() !== 'VERIFIED'
+      ) {
+        return null;
+      }
+      return Object.freeze({
+        institutionalEmail,
+        studentId,
+        displayName,
+        verificationResult: 'VERIFIED',
+        active: true,
+        reviewNotes: String(entry?.reviewNotes ?? '').trim().slice(0, 1000),
+      });
+    });
+    if (profiles.some((entry) => !entry)) return Object.freeze([]);
+    if (new Set(profiles.map((entry) => entry.institutionalEmail)).size !== profiles.length) {
+      return Object.freeze([]);
+    }
+    return Object.freeze(profiles);
+  } catch {
+    return Object.freeze([]);
+  }
+}
+
 function classForEmail(email, classes) {
   const domain = email.slice(email.lastIndexOf('@') + 1);
   return classes.find((entry) => entry.domains.includes(domain)) ?? null;
 }
 
-async function approvedRosterProfile({ rosterRepository, rosterCrypto, emailFingerprint }) {
+async function approvedRosterProfile({
+  rosterRepository,
+  rosterCrypto,
+  emailFingerprint,
+  stagingIdentityFixture = [],
+}) {
   const entry = await rosterRepository.getEntry(emailFingerprint);
-  if (!entry?.active || !entry.protectedProfileEnvelope) return null;
-  const profile = await rosterCrypto.decrypt(entry.protectedProfileEnvelope);
-  if (
-    profile?.active !== true ||
-    String(profile?.verificationResult ?? '').toUpperCase() !== 'VERIFIED' ||
-    (await rosterCrypto.identityKey(normalizeEmail(profile?.institutionalEmail))) !== emailFingerprint
-  ) {
-    return null;
+  if (entry?.active && entry.protectedProfileEnvelope) {
+    const profile = await rosterCrypto.decrypt(entry.protectedProfileEnvelope);
+    if (
+      profile?.active === true &&
+      String(profile?.verificationResult ?? '').toUpperCase() === 'VERIFIED' &&
+      (await rosterCrypto.identityKey(normalizeEmail(profile?.institutionalEmail))) === emailFingerprint
+    ) {
+      return Object.freeze({ entry, profile });
+    }
   }
-  return Object.freeze({ entry, profile });
+  for (const profile of stagingIdentityFixture) {
+    const identityKey = await rosterCrypto.identityKey(normalizeEmail(profile.institutionalEmail));
+    if (identityKey !== emailFingerprint) continue;
+    return Object.freeze({
+      entry: Object.freeze({
+        active: true,
+        identityKey,
+        sourceFingerprint: await rosterCrypto.fingerprint({
+          source: 'OWNER_APPROVED_STAGING_IDENTITY_FIXTURE',
+          identityKey,
+        }),
+      }),
+      profile,
+    });
+  }
+  return null;
 }
 
 export function createAccountApplicationIdentityAdapters({
   rosterRepository,
   rosterCrypto,
   identityClasses = [],
+  environment = 'DEVELOPMENT',
+  recipientAllowlist,
+  stagingIdentityFixture,
 } = {}) {
   if (!rosterRepository || !rosterCrypto) {
     throw new Error('Protected roster repository and crypto are required.');
   }
   const classes = parseAccountApplicationIdentityClasses(identityClasses);
+  const staging = String(environment ?? '').trim().toUpperCase() === 'STAGING';
+  const allowedRecipients = staging ? parseExactRecipientAllowlist(recipientAllowlist) : null;
+  const fixture = staging
+    ? parseAccountApplicationStagingIdentityFixture(stagingIdentityFixture)
+    : Object.freeze([]);
 
   const identityProtection = Object.freeze({
     async prepareEmail(value) {
       const email = normalizeEmail(value);
       if (!EMAIL_PATTERN.test(email) || email.length > 254 || !classes.length) return null;
+      if (staging && (!allowedRecipients || !allowedRecipients.includes(email))) return null;
       const matchedClass = classForEmail(email, classes);
       if (!matchedClass) return null;
       const emailFingerprint = await rosterCrypto.identityKey(email);
-      const roster = await approvedRosterProfile({ rosterRepository, rosterCrypto, emailFingerprint });
+      const roster = await approvedRosterProfile({
+        rosterRepository,
+        rosterCrypto,
+        emailFingerprint,
+        stagingIdentityFixture: fixture,
+      });
       if (!roster || normalizeEmail(roster.profile.institutionalEmail) !== email) return null;
       return Object.freeze({
         approved: true,
@@ -122,7 +202,12 @@ export function createAccountApplicationIdentityAdapters({
       if (!emailFingerprint || !classes.some((entry) => entry.id === identityClassId)) {
         return Object.freeze({ allowed: false });
       }
-      const roster = await approvedRosterProfile({ rosterRepository, rosterCrypto, emailFingerprint });
+      const roster = await approvedRosterProfile({
+        rosterRepository,
+        rosterCrypto,
+        emailFingerprint,
+        stagingIdentityFixture: fixture,
+      });
       if (!roster) return Object.freeze({ allowed: false });
       const matchedClass = classForEmail(normalizeEmail(roster.profile.institutionalEmail), classes);
       if (matchedClass?.id !== identityClassId) return Object.freeze({ allowed: false });
@@ -158,6 +243,7 @@ export function createAccountApplicationIdentityAdapters({
         rosterRepository,
         rosterCrypto,
         emailFingerprint: application.emailFingerprint,
+        stagingIdentityFixture: fixture,
       });
       if (!roster || normalizeEmail(roster.profile.institutionalEmail) !== verifiedEmail) {
         throw new Error('Protected roster identity is unavailable.');
@@ -204,6 +290,8 @@ export function createAccountApplicationActivationHandoff({
   createId = () => globalThis.crypto.randomUUID(),
   createTemporaryPassword = secureTemporaryPassword,
   temporaryCredentialMs = 72 * 60 * 60 * 1000,
+  environment = 'DEVELOPMENT',
+  stagingIdentityFixture,
 } = {}) {
   if (!accessRepository || !rosterRepository || !rosterCrypto || !passwordKdf) {
     throw new Error('Account-application activation adapters are required.');
@@ -211,6 +299,10 @@ export function createAccountApplicationActivationHandoff({
   if (!Number.isSafeInteger(temporaryCredentialMs) || temporaryCredentialMs <= 0) {
     throw new Error('The temporary credential duration is invalid.');
   }
+  const fixture =
+    String(environment ?? '').trim().toUpperCase() === 'STAGING'
+      ? parseAccountApplicationStagingIdentityFixture(stagingIdentityFixture)
+      : Object.freeze([]);
 
   return Object.freeze({
     async prepare({ application, actor, approvedAt }) {
@@ -219,6 +311,7 @@ export function createAccountApplicationActivationHandoff({
         rosterRepository,
         rosterCrypto,
         emailFingerprint: String(application?.emailFingerprint ?? ''),
+        stagingIdentityFixture: fixture,
       });
       if (!roster) throw new Error('Protected roster eligibility is unavailable.');
       const accessIdNormalized = normalizeAccessId(

@@ -26,8 +26,11 @@ describe('Codex governance validators', () => {
       '.codex/TASK_ROUTING.md',
       '.codex/CAVEMAN_WORKFLOW.md',
       '.codex/USAGE_POLICY.md',
+      'AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/CURRENT_HANDOFF.md',
       'only writer by default',
+      'one active writer',
       'at most two concurrent read-only subagents',
+      'model routing is task-specific and version-neutral',
       'accepted specification or amendment',
     ].join('\n');
     expect(validateAgentInstructions(valid)).toEqual([]);
@@ -98,13 +101,16 @@ describe('Codex governance validators', () => {
     for (const directory of ['.codex', '.plans', 'docs']) {
       fs.mkdirSync(path.join(cwd, directory), { recursive: true });
     }
+    fs.writeFileSync(path.join(cwd, '.codex/CURRENT.md'), 'pointer');
+    fs.writeFileSync(path.join(cwd, '.codex/CURRENT_HANDOFF.md'), 'handoff');
     fs.writeFileSync(path.join(cwd, '.codex/CURRENT_TASK.md'), `${'alpha '.repeat(800)}UNFINISHEDTOKEN`);
     fs.writeFileSync(path.join(cwd, '.plans/current-slice.md'), 'slice');
-    fs.writeFileSync(path.join(cwd, '.plans/AUTONOMOUS_PROGRAM_STATUS.md'), 'status');
     fs.writeFileSync(path.join(cwd, 'docs/WORK_CONTINUATION.md'), 'continuation');
 
     const packet = buildContextPacket(cwd);
     expect(Buffer.byteLength(packet, 'utf8')).toBeLessThanOrEqual(12 * 1024);
+    expect(packet).toContain('## CURRENT POINTER');
+    expect(packet).toContain('## CURRENT HANDOFF');
     expect(packet).toContain('[.codex/CURRENT_TASK.md truncated; read the source for full content]');
     expect(packet).toContain('UNFINISHEDTOKEN');
     expect(packet).not.toContain('\uFFFD');

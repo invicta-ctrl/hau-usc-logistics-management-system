@@ -233,6 +233,7 @@
 }
 .auth-environment {
   width: fit-content;
+  max-width: 100%;
   margin: 0.75rem 0 1rem;
   padding: 0.35rem 0.65rem;
   border: 1px solid #d6c29c;
@@ -241,6 +242,12 @@
   color: #5e0d12;
   font-size: 0.8rem;
   font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.auth-environment[data-environment='STAGING'] {
+  border-color: #8f1d23;
+  background: #fff0f1;
+  text-transform: uppercase;
 }
 .portal-navigation {
   display: flex;

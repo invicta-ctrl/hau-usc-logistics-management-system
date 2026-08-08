@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { isConfiguredEmailProvider } from '../../src/server/account-application/email-provider.js';
 import {
   ACCOUNT_APPLICATION_EMAIL_SECRET_BINDING,
+  ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR,
   accountApplicationEmailProviderIssues,
   createAccountApplicationEmailProvider,
+  parseExactRecipientAllowlist,
 } from '../../src/server/account-application/email-provider-registry.js';
 
 const FROM = 'HAU-USC Logistics <no-reply@auth.hausc.org>';
@@ -21,6 +23,37 @@ describe('account-application email provider registry', () => {
     expect(accountApplicationEmailProviderIssues(readyEnv())).toEqual([]);
   });
 
+  it('requires a non-empty exact recipient allowlist in staging only', () => {
+    const staging = readyEnv({ ENVIRONMENT: 'STAGING' });
+    expect(accountApplicationEmailProviderIssues(staging)).toContain(
+      'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_INVALID',
+    );
+    expect(
+      accountApplicationEmailProviderIssues({
+        ...staging,
+        [ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR]: JSON.stringify(['Owner.Test@example.invalid']),
+      }),
+    ).toEqual([]);
+    expect(accountApplicationEmailProviderIssues(readyEnv({ ENVIRONMENT: 'PRODUCTION' }))).toEqual([]);
+  });
+
+  it('rejects wildcard, domain-only, duplicate, malformed, and empty allowlists', () => {
+    for (const value of [
+      '',
+      '[]',
+      '{}',
+      '["*@example.invalid"]',
+      '["example.invalid"]',
+      '["bad"]',
+      '["same@example.invalid", "SAME@example.invalid"]',
+    ]) {
+      expect(parseExactRecipientAllowlist(value)).toBeNull();
+    }
+    expect(parseExactRecipientAllowlist('[" Owner.Test@example.invalid "]')).toEqual([
+      'owner.test@example.invalid',
+    ]);
+  });
+
   it('fails closed when no provider is selected', () => {
     expect(accountApplicationEmailProviderIssues({})).toEqual([
       'ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED',
@@ -29,9 +62,7 @@ describe('account-application email provider registry', () => {
 
   it('fails closed on an unsupported provider rather than guessing one', () => {
     expect(
-      accountApplicationEmailProviderIssues(
-        readyEnv({ ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'sendgrid' }),
-      ),
+      accountApplicationEmailProviderIssues(readyEnv({ ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'sendgrid' })),
     ).toEqual(['ACCOUNT_APPLICATION_EMAIL_PROVIDER_UNSUPPORTED']);
   });
 

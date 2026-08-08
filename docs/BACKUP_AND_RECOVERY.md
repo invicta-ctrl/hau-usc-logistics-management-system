@@ -1,6 +1,11 @@
 # Backup and Recovery
 
-## v0.7.0 verified production recovery baseline
+## v0.7.2 verified production recovery baseline
+
+The v0.7.2 production release is schema 30 / migration 0030. Its fresh private
+export, recovery bookmark, prior Worker version, isolated restore proof, and
+reconciliation evidence remain outside Git. The older v0.7.0 evidence below is
+retained as historical recovery provenance, not current runtime identity.
 
 - Final zero-session production export: 1,235,351 bytes; SHA-256
   `1018c5e6e19c2e2da50c0910950ca40c6cbc54a77a47537951622c40621e8452`.

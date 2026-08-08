@@ -11,7 +11,7 @@ describe('v0.7.2 release pipeline', () => {
     const [workflow, config, handoff] = await Promise.all([
       read('.github/workflows/cloudflare-preview.yml'),
       read('cloudflare/wrangler.preview.jsonc').then(JSON.parse),
-      read('.codex/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md'),
+      read('.codex/archive/releases/v0.7.0-v0.7.1/V0_7_1_SLICE_8_RELEASE_CANDIDATE_HANDOFF.md'),
     ]);
 
     expect(workflow).toContain('workflow_dispatch:');

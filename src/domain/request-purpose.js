@@ -6,8 +6,6 @@ export const REQUEST_PURPOSES = Object.freeze({
 });
 
 export const REQUEST_PURPOSE_VALUES = Object.freeze(Object.values(REQUEST_PURPOSES));
-export const REQUEST_PURPOSE = REQUEST_PURPOSES;
-export const REQUEST_PURPOSE_ENUM = REQUEST_PURPOSE_VALUES;
 
 const EVENT_PURPOSE = REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT;
 const OFFICE_PURPOSE = REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY;
@@ -61,12 +59,6 @@ export const REQUEST_PURPOSE_SHARED_FIELDS = Object.freeze([
   'itemId',
   'clientRequestId',
 ]);
-export const REQUEST_PURPOSE_FIELDS = Object.freeze({
-  [EVENT_PURPOSE]: REQUEST_PURPOSE_BRANCH_FIELDS[EVENT_PURPOSE],
-  [OFFICE_PURPOSE]: REQUEST_PURPOSE_BRANCH_FIELDS[OFFICE_PURPOSE],
-  shared: REQUEST_PURPOSE_SHARED_FIELDS,
-});
-
 const DEFAULT_DISCRIMINATORS = Object.freeze({
   requestType: Object.freeze({
     [EVENT_PURPOSE]: Object.freeze(['EVENT_LOGISTICS']),
@@ -242,13 +234,3 @@ export function validateRequestPurposeCommand(command, options = {}) {
   const purpose = validateRequestPurpose(command, options);
   return { ...command, [field]: purpose };
 }
-
-export const assertRequestPurpose = validateRequestPurpose;
-export const validateRequestPurposeBranch = validateRequestPurpose;
-export const validateRequestBranchFields = (command, purpose, options = {}) => {
-  options = normalizeOptions(options);
-  const normalizedPurpose = normalizeRequestPurpose(purpose, options);
-  if (!isCommand(command)) throw purposeError('request', 'A request command is required.');
-  assertBranchFields(command, normalizedPurpose, options);
-  return normalizedPurpose;
-};

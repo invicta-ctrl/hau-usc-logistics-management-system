@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
+- Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
+
+### Fixed
+
+- Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
+- Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
+
+### Verification boundary
+
+- Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, and negative zero-challenge containment pass. One approved challenge was provider-accepted; one-time redemption remains pending.
+
 ## 0.7.2 - 2026-08-08
 
 ### Released
@@ -777,7 +793,7 @@
 ### Added
 
 - Thirteen tracked fixed-clock previews covering inherited login/onboarding, all five internal experiences, Request Center, Lending Hub, Release Desk, and representative 390 px adaptations.
-- System/role, Request Center, Lending Hub, Administrator/Director, and demo guidance plus the durable `.codex/PHASE_2_TERRA_HANDOFF.md`.
+- System/role, Request Center, Lending Hub, Administrator/Director, and demo guidance plus the durable `.codex/archive/releases/v0.7.0-v0.7.1/PHASE_2_TERRA_HANDOFF.md`.
 - Opt-in preview generation so routine browser and CI runs do not rewrite tracked review artifacts.
 
 ### Fixed
@@ -916,7 +932,7 @@
 
 ### Added
 
-- Locked `docs/V0_6_ARCHITECTURE_AND_SECURITY.md` covering the three product surfaces, five internal experiences, account lifecycle, canonical role/scope routing, cryptography, protected-action order, threat model, Phase 3 migration boundary, and v0.5 rollback.
+- Locked `docs/archive/v0.6/V0_6_ARCHITECTURE_AND_SECURITY.md` covering the three product surfaces, five internal experiences, account lifecycle, canonical role/scope routing, cryptography, protected-action order, threat model, Phase 3 migration boundary, and v0.5 rollback.
 - Portable server authentication modules for PBKDF2 password credentials, digest-only opaque tokens, activation and authenticated sessions, CSRF, reset, account disable/revoke, canonical authorization, synthetic repositories, HTTP routing, and secure cookie serialization.
 - HTTP-mode Access ID login and starter-account activation UI that collects profile and password fields while preserving server-owned role and committee assignments.
 - Focused unit and browser regressions for password/token handling, cookies, safe HTTP responses, enumeration resistance, starter replay/expiry, role preservation, session invalidation, capability/scope denial, CSRF, client contracts, and the request-only authentication boundary.
@@ -1632,3 +1648,37 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 ### Preserved
 
 - HAU-USC visual identity, request/stock routing, Release Desk, lending, restocking, procurement, canvass, inventory, request-only mode, status chips, cards, tables, mobile cards, and preview safeguards.
+
+## Unreleased - V0.7.2.1 governance normalization (2026-08-08)
+
+### Added
+
+- Canonical current pointer, bounded task, and environment handoff contract with deterministic local validation.
+
+### Changed
+
+- Replaced version-specific continuity routing with a compact version-neutral governance, writer-lock, and model-escalation chain.
+- Compressed active status, plan, onboarding, and operator continuity records to current evidence and boundaries.
+
+### Boundary
+
+- The initial governance commit changed documentation and validation only. Later repository-maintenance work below changed source and regenerated tracked preview artifacts, but performed no provider, database, production, or remote Git mutation.
+
+### Repository maintenance
+
+- Removed five zero-reference source modules and declaration-only compatibility aliases proven unused.
+- Made tracked `dist/` preview-only, added fresh isolated preview parity, and moved staging, production, dry-run, deployment, and local Worker assets to isolated directories.
+- Removed the duplicate Apps Script workflow/full-check loop and integrated the reviewed CodeQL and Renovate configuration from superseded draft PR #10.
+- Added staging target/classification/reset guards, exact-recipient email containment, safe status reporting, and a staging-only version/SHA/schema warning.
+- Archived superseded v0.6 governance/specifications, v0.7.2 candidate handoffs, and stale V1 planning while retaining historical evidence.
+
+### Staging hard stop
+
+- Read-only aggregate classification found non-synthetic or unclassified state in the existing staging D1. Reset, seed, deployment, provider sends, and production changes were stopped before mutation pending an owner-approved disposition or new isolated staging D1.
+
+### Isolated sandbox continuation
+
+- Recorded the owner decision to preserve the existing staging D1 as read-only evidence and target a new synthetic-only D1/R2 set behind the existing isolated staging Worker.
+- Added private credential generation, a deterministic 11-actor/36-item workflow seed, generation-scoped archive/disable/reset behavior, append-only ledger reversals, private backup/isolated-restore verification, and a two-generation local D1 proof.
+- Updated deployment and private-config guards to accept only the new sandbox resource names; production targets and the protected prior staging D1 remain excluded.
+- Created the isolated D1 and two R2 resource shells, then stopped with the D1 unmigrated and Worker unchanged because no exact owner-approved test-recipient allowlist value was available. No seed, email, existing-staging, or production write occurred.

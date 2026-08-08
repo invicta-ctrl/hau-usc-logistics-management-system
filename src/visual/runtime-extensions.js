@@ -1,6 +1,7 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
+import { getRuntimeReleaseIdentity, releaseIdentityLabel } from '../app/release-identity.js';
 import { KNOWN_QUANTITY_UNITS } from '../domain/quantity-units.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
@@ -6036,9 +6037,25 @@ export function createRuntimeExtensions(options) {
     if (backendMode === 'rest') {
       document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
     }
-    const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
-    const version = String(state.appVersion ?? '0.7.2');
-    internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
+    const authoritativeIdentity = getRuntimeReleaseIdentity();
+    const identity =
+      backendMode === 'mock' && !authoritativeIdentity.verified
+        ? {
+            environment: String(state.environment ?? config.appEnvironment ?? 'DEVELOPMENT').toUpperCase(),
+            appVersion: String(state.appVersion ?? config.appVersion ?? '0.7.2'),
+            candidateSha: '',
+            schemaVersion: '',
+            verified: true,
+          }
+        : authoritativeIdentity;
+    const releaseIndicator = internalShellBar.querySelector('[data-shell-release]');
+    releaseIndicator.dataset.environment = identity.environment;
+    releaseIndicator.dataset.releaseSha = identity.candidateSha;
+    releaseIndicator.dataset.releaseSchema = identity.schemaVersion;
+    releaseIndicator.textContent =
+      backendMode === 'mock' && !authoritativeIdentity.verified
+        ? `${identity.environment} · v${identity.appVersion}`
+        : releaseIdentityLabel(identity);
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');
     attentionButton.querySelector('strong').textContent = String(attention);

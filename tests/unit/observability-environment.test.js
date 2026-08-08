@@ -7,6 +7,7 @@ import {
 } from '../../scripts/cloudflare-environment-preflight.mjs';
 import { createConfigPair, decodeJsonBuffer } from '../../scripts/create-private-cloudflare-configs.mjs';
 import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs';
+import { buildPrivateStagingIdentityPackage } from '../../scripts/configure-staging-identity-fixture.mjs';
 
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
@@ -86,6 +87,7 @@ describe('v0.7 environment and observability foundation', () => {
         'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING',
         'ROSTER_DATA_ENCRYPTION_KEY_MISSING',
         'ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING',
+        'ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_MISSING',
         'ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED',
       ]),
     );
@@ -207,7 +209,7 @@ describe('v0.7 environment and observability foundation', () => {
         assets: { directory: 'C:/repo/dist', binding: 'ASSETS' },
       },
       [
-        { name: 'hau-usc-logistics-staging', uuid: 'staging-private-id' },
+        { name: 'hau-usc-logistics-staging-sandbox-v0721', uuid: 'staging-private-id' },
         { name: 'hau-usc-logistics-production', uuid: 'production-private-id' },
       ],
       'a'.repeat(40),
@@ -216,10 +218,18 @@ describe('v0.7 environment and observability foundation', () => {
       name: 'hau-usc-logistics-staging',
       vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.2' },
       r2_buckets: [
-        { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
-        { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
+        {
+          binding: 'BRAND_ASSETS',
+          bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-assets',
+        },
+        {
+          binding: 'EVIDENCE_ASSETS',
+          bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-evidence',
+        },
       ],
     });
+    expect(pair.staging.assets.not_found_handling).toBe('single-page-application');
+    expect(pair.production.assets.not_found_handling).toBe('single-page-application');
     expect(pair.staging.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production).toMatchObject({
@@ -231,6 +241,10 @@ describe('v0.7 environment and observability foundation', () => {
       ],
     });
     expect(pair.staging.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
+    expect(pair.staging.vars.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON).toBeUndefined();
+    expect(pair.staging.vars.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT).toBe(0);
+    expect(pair.staging.vars.GOOGLE_ROSTER_SPREADSHEET_ID).toBeUndefined();
+    expect(pair.staging.vars.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL).toBeUndefined();
     expect(pair.production.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
     expect(pair.staging.d1_databases[0].database_id).not.toBe(pair.production.d1_databases[0].database_id);
   });
@@ -260,5 +274,45 @@ describe('v0.7 environment and observability foundation', () => {
     ]);
     expect(Object.values(staging.secrets).every((value) => value.length >= 64)).toBe(true);
     expect(staging.secrets.PASSWORD_PEPPER).not.toBe(production.secrets.PASSWORD_PEPPER);
+  });
+
+  it('builds a one-recipient private staging identity package without changing production', () => {
+    const source = createSecretPackage('staging', () => Buffer.alloc(48, 7));
+    const configured = buildPrivateStagingIdentityPackage(
+      {
+        vars: {
+          ENVIRONMENT: 'STAGING',
+          ACCOUNT_APPLICATION_EMAIL_FROM: 'Staging Sender <sender@example.test>',
+          ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
+            '["owner.fixture@example.test"]',
+        },
+      },
+      source,
+    );
+    expect(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON).toBeTypeOf(
+      'string',
+    );
+    expect(
+      JSON.parse(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON),
+    ).toEqual([
+      expect.objectContaining({
+        institutionalEmail: 'owner.fixture@example.test',
+        verificationResult: 'VERIFIED',
+        active: true,
+      }),
+    ]);
+    expect(source.secrets).not.toHaveProperty('ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON');
+    expect(() =>
+      buildPrivateStagingIdentityPackage(
+        {
+          vars: {
+            ENVIRONMENT: 'PRODUCTION',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
+              '["owner.fixture@example.test"]',
+          },
+        },
+        { ...source, environment: 'PRODUCTION' },
+      ),
+    ).toThrow(/staging/iu);
   });
 });
