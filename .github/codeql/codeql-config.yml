@@ -1,0 +1,10 @@
+name: HAU-USC Logistics source analysis
+
+# Generated standalone bundles duplicate code from src/ and are verified by the
+# repository artifact-parity gate. Scan their authoritative source once instead.
+paths-ignore:
+  - dist/**
+  - apps-script/**
+  - shareable-html-modules/**
+  - HAU-USC_Logistics-Prototype-Shareable.html
+  - hau-usc-logistics-guided-demo.html
