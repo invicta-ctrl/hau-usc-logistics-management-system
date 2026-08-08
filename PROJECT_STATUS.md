@@ -1,5 +1,55 @@
 # Project Status
 
+## v0.7.2 RV-01 request-visibility repair complete; exact-SHA review and pre-production blocked
+
+- Owner-approved amendment `v0.7.2-RV-01` is recorded at
+  `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md` and implemented on
+  `release/v0.7.2-production-access-operations`.
+- A public request is now durably visible to authorized internal review: the
+  authenticated Request module independently projects the canonical parent and
+  line queue with its own scoped pagination total, and no longer depends on
+  Overview loading first.
+- An already-open REST-backed Main Hub refreshes without a hard reload or
+  re-login. The existing scoped-revision poller now runs for the REST/HTTP
+  production backend, and public submission advances the `overview` revision in
+  addition to `global` and `request`.
+- Request review requires one explicit, server-validated route decision per
+  line. The implicit "everything else becomes procurement" default is removed,
+  each accepted line gains at most one active downstream owner, and only the
+  module scopes whose objects changed are incremented.
+- Verified on the repair head: `npm run check` 114 files / 782 tests; browser
+  136 passed / 356 intentional skips / 0 failed; local Worker/D1 40/40,
+  including a real two-context public-to-already-open-internal regression.
+  RV-01 introduced no migration; schema target remains 30.
+- Still blocked before pre-production: one owner-approved live
+  verification-email provider. Identity qualification policy is decided
+  (Option A, exact protected-directory verified-email match only).
+
+## v0.7.2 R2 repair candidate ready; exact-SHA review and pre-production blocked
+
+- Branch `release/v0.7.2-production-access-operations` contains the integrated
+  Production Access and Operations candidate for draft PR #15, based on clean
+  `main` SHA `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- Account application/review/activation, access separation, My Profile,
+  Request/integer/low-stock contracts, public Lending tracking, additive Link
+  Registry, announcement governance, and release identity `0.7.2` are locally
+  complete.
+- Additive migration 0030 rehearsed from migrations 0001-0030 with SQLite
+  integrity `ok`, zero foreign-key findings, and operational schema 30.
+- The first complete-candidate R2 review rejected the prior SHA. Its
+  schema/runtime, activation reconciliation, profile/access/announcement
+  atomicity, last-Administrator, and limiter-alias findings are repaired with
+  focused rollback/failure-injection coverage. Fresh exact-SHA R2 and PR CI are
+  still mandatory.
+- Final local gates pass: `npm run check` at 112 files / 740 tests; full browser
+  136 passed / 356 intentional skips; local Worker/D1 39/39.
+- The owner supplied `AUTHORIZE V0.7.2 PRODUCTION`; no second confirmation wait
+  is required. Deployment is nevertheless blocked before pre-production by the
+  absent approved email provider and private identity-class configuration.
+- No v0.7.2 staging, production, provider, database, storage, Google, domain,
+  merge, tag, release, or rollout write has occurred. Durable evidence:
+  `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+
 ## v0.7.1 production operational and closed
 
 - Canonical `main`, `origin/main`, annotated tag `v0.7.1`, and the published

@@ -34,6 +34,9 @@ export const CAPABILITIES = Object.freeze({
   REFERENCE_MANAGE: 'reference.manage',
   ADVERTISEMENT_MANAGE: 'advertisement.manage',
   ACCESS_ADMIN: 'access.admin',
+  ACCOUNT_APPLICATION_ADMIN_REVIEW: 'account_application.admin_review',
+  ACCOUNT_APPLICATION_DIRECTOR_DECIDE: 'account_application.director_decide',
+  ACCOUNT_APPLICATION_OWNER_OVERRIDE: 'account_application.owner_override',
   SYSTEM_ADMIN: 'system.admin',
   SYSTEM_DIAGNOSTICS: 'system.diagnostics',
   EVIDENCE_UPLOAD: 'evidence.upload',
@@ -152,6 +155,7 @@ const ROLE_REGISTRY = Object.freeze({
       CAPABILITIES.INVENTORY_ADJUST,
       CAPABILITIES.INVENTORY_CLASSIFY,
       CAPABILITIES.EVENT_MANAGE,
+      CAPABILITIES.ACCOUNT_APPLICATION_DIRECTOR_DECIDE,
       CAPABILITIES.EVIDENCE_UPLOAD,
     ],
   }),
@@ -159,6 +163,11 @@ const ROLE_REGISTRY = Object.freeze({
     scopeMode: 'ALL',
     capabilities: [
       CAPABILITIES.VIEW_REQUEST,
+      // RV-01.3 requires an Administrator with verified central capability to
+      // read and review unassigned work. Without this the shipped reviewer
+      // surface is hidden for Administrators and reviewRequest returns
+      // CAPABILITY_REQUIRED unless a per-account grant is configured.
+      CAPABILITIES.REQUEST_REVIEW,
       CAPABILITIES.VIEW_INTERNAL,
       CAPABILITIES.VIEW_ALL_SUMMARY,
       CAPABILITIES.VIEW_AUDIT,
@@ -172,6 +181,7 @@ const ROLE_REGISTRY = Object.freeze({
       CAPABILITIES.REFERENCE_MANAGE,
       CAPABILITIES.ADVERTISEMENT_MANAGE,
       CAPABILITIES.ACCESS_ADMIN,
+      CAPABILITIES.ACCOUNT_APPLICATION_ADMIN_REVIEW,
       CAPABILITIES.SYSTEM_ADMIN,
       CAPABILITIES.SYSTEM_DIAGNOSTICS,
       CAPABILITIES.EVIDENCE_UPLOAD,

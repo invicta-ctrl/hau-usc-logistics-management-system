@@ -1,5 +1,11 @@
 import { ApiError } from './d1/operational-service.js';
-import { isCountableUnit, isKnownQuantityUnit } from '../domain/quantity-units.js';
+import { operationalInteger } from '../domain/operational-integers.js';
+import {
+  REQUEST_PURPOSES,
+  REQUEST_PURPOSE_VALUES,
+  validateRequestPurpose,
+} from '../domain/request-purpose.js';
+import { isKnownQuantityUnit } from '../domain/quantity-units.js';
 
 const PUBLIC_ACTOR_ID = 'SYSTEM-PUBLIC-REQUEST';
 const CATEGORIES = Object.freeze([
@@ -11,6 +17,14 @@ const CATEGORIES = Object.freeze([
   'Other',
 ]);
 const REQUEST_TYPES = Object.freeze(['EVENT_LOGISTICS', 'CATALOG_RESTOCK']);
+const REQUEST_TYPE_BY_PURPOSE = Object.freeze({
+  [REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT]: 'EVENT_LOGISTICS',
+  [REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY]: 'CATALOG_RESTOCK',
+});
+const REQUEST_PURPOSE_BY_TYPE = Object.freeze({
+  EVENT_LOGISTICS: REQUEST_PURPOSES.EVENT_ACTIVITY_SUPPORT,
+  CATALOG_RESTOCK: REQUEST_PURPOSES.OFFICE_INVENTORY_PANTRY,
+});
 const REQUESTER_TYPES = Object.freeze([
   'HAU student / Angelite',
   'HAU office / department',
@@ -19,6 +33,7 @@ const REQUESTER_TYPES = Object.freeze([
 ]);
 const encoder = new TextEncoder();
 const PUBLIC_POLICY_VERSION = '2026-07-28';
+const PUBLIC_REQUEST_IDEMPOTENCY_SCOPE = 'public-request-submit';
 
 function requireAcknowledgment(command, field, message) {
   if (command[field] !== true) {
@@ -41,33 +56,41 @@ const optionalText = (value, max) =>
     .trim()
     .slice(0, max);
 
-const positiveNumber = (value, field) => {
-  const result = Number(value);
-  if (!Number.isFinite(result) || result <= 0 || result > 100000) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be greater than zero.`, {
-      status: 422,
-      details: { field },
-    });
+function translateDomainValidation(error, fallbackField = 'requestPurpose') {
+  const fieldErrors = error?.fieldErrors ?? {};
+  const fields = Object.keys(fieldErrors);
+  const field = fields[0] ?? error?.details?.field ?? fallbackField;
+  const message = fieldErrors[field] ?? 'The submitted value is invalid.';
+  throw new ApiError('VALIDATION_FAILED', message, {
+    status: 422,
+    details: {
+      field,
+      ...(fields.length > 1 ? { fields } : {}),
+    },
+  });
+}
+
+function validatePublicOperationalInteger(value, field) {
+  try {
+    return operationalInteger(value, { field, min: 1, max: 100000 });
+  } catch (error) {
+    return translateDomainValidation(error, field);
   }
-  return result;
-};
+}
 
 const operationalQuantity = (value, unit, field) => {
-  const result = positiveNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       status: 422,
       details: { field, unit },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
-      status: 422,
-      details: { field, unit },
-    });
-  }
-  return result;
+  return validatePublicOperationalInteger(value, field);
 };
+
+function requestPurposeFromType(requestType) {
+  return REQUEST_PURPOSE_BY_TYPE[requestType] ?? null;
+}
 
 function email(value) {
   const result = requiredText(value, 'email', 254).toLowerCase();
@@ -120,6 +143,23 @@ async function hmac(secret, value) {
   return base64Url(await crypto.subtle.sign('HMAC', key, encoder.encode(value)));
 }
 
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map((entry) => stableValue(entry));
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, stableValue(value[key])]),
+    );
+  }
+  return value;
+}
+
+async function publicRequestFingerprint(secret, command) {
+  const { clientRequestId: _clientRequestId, ...payload } = command;
+  return hmac(secret, `public-request-fingerprint:${JSON.stringify(stableValue(payload))}`);
+}
+
 function parseReference(row) {
   try {
     const payload = JSON.parse(row.payload_json);
@@ -154,6 +194,54 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
   if (String(trackingSecret ?? '').length < 32) throw new Error('A protected tracking secret is required.');
   const nowIso = () => new Date(clock.now()).toISOString();
   const createId = (prefix) => `${prefix}-${crypto.randomUUID()}`;
+
+  const conflict = () =>
+    new ApiError('PUBLIC_REQUEST_CONFLICT', 'This retry key is already bound to another submission.', {
+      status: 409,
+    });
+
+  async function replaySubmission(clientRequestId, requestFingerprint, correlationId) {
+    const receipt = await db
+      .prepare(
+        `SELECT actor_account_id, request_fingerprint, result_json
+         FROM idempotency_keys
+         WHERE scope = ?1 AND idempotency_key = ?2`,
+      )
+      .bind(PUBLIC_REQUEST_IDEMPOTENCY_SCOPE, clientRequestId)
+      .first();
+    if (!receipt) return null;
+    if (
+      receipt.actor_account_id !== PUBLIC_ACTOR_ID ||
+      receipt.request_fingerprint !== requestFingerprint
+    ) {
+      throw conflict();
+    }
+    let result;
+    try {
+      result = JSON.parse(receipt.result_json);
+    } catch {
+      throw conflict();
+    }
+    if (
+      !result?.requestId ||
+      !REQUEST_PURPOSE_VALUES.includes(result.requestPurpose) ||
+      typeof result.status !== 'string'
+    ) {
+      throw conflict();
+    }
+    return {
+      ok: true,
+      requestId: result.requestId,
+      status: result.status,
+      requestPurpose: result.requestPurpose,
+      trackingCode: await hmac(
+        trackingSecret,
+        `request-code:${result.requestId}:${clientRequestId}`,
+      ),
+      replayed: true,
+      correlationId,
+    };
+  }
 
   async function rateLimit(networkKey, action) {
     const now = clock.now();
@@ -217,6 +305,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     return {
       ok: true,
       requestTypes: REQUEST_TYPES,
+      requestPurposes: REQUEST_PURPOSE_VALUES,
       requesterTypes: REQUESTER_TYPES,
       categories: CATEGORIES,
       items: items.map((item) => ({
@@ -316,23 +405,20 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
   async function submit({ command = {}, networkKey = '', correlationId = '' } = {}) {
     await rateLimit(networkKey, 'SUBMIT');
     const clientRequestId = requiredText(command.clientRequestId, 'clientRequestId', 80);
+    const requestFingerprint = await publicRequestFingerprint(trackingSecret, command);
+    const replayed = await replaySubmission(clientRequestId, requestFingerprint, correlationId);
+    if (replayed) return replayed;
     const existing = await db
       .prepare(
-        `SELECT id, status FROM requests
+        `SELECT id FROM requests
          WHERE created_by = ?1 AND client_request_id = ?2 LIMIT 1`,
       )
       .bind(PUBLIC_ACTOR_ID, clientRequestId)
       .first();
-    if (existing) {
-      return {
-        ok: true,
-        requestId: existing.id,
-        status: existing.status,
-        trackingCode: await hmac(trackingSecret, `request-code:${existing.id}:${clientRequestId}`),
-        replayed: true,
-        correlationId,
-      };
-    }
+    // Historical submissions predate durable payload fingerprints. Returning a
+    // tracking token for one of those keys would disclose the prior request to
+    // a caller whose payload cannot be proven identical, so fail closed.
+    if (existing) throw conflict();
     requireAcknowledgment(command, 'dataUseAcknowledged', 'Privacy acknowledgment is required.');
     requireAcknowledgment(command, 'acceptableUseAcknowledged', 'Acceptable Use acknowledgment is required.');
     requireAcknowledgment(
@@ -352,13 +438,35 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const requesterEmail = email(command.email);
     const contactNumber = phone(command.contactNumber);
     const purpose = requiredText(command.purpose, 'purpose', 500);
-    const requestType = requiredText(command.requestType, 'requestType', 40);
-    if (!REQUEST_TYPES.includes(requestType)) {
-      throw new ApiError('VALIDATION_FAILED', 'requestType is invalid.', {
-        status: 422,
-        details: { field: 'requestType' },
-      });
+    const hasExplicitRequestPurpose = Object.prototype.hasOwnProperty.call(command, 'requestPurpose');
+    let requestType = '';
+    const requestPurposeInput = hasExplicitRequestPurpose
+      ? command.requestPurpose
+      : (() => {
+          if (!Object.prototype.hasOwnProperty.call(command, 'requestType')) {
+            const canonicalPurpose =
+              typeof command.purpose === 'string' ? command.purpose.trim().toUpperCase() : '';
+            if (REQUEST_PURPOSE_VALUES.includes(canonicalPurpose)) return canonicalPurpose;
+          }
+          requestType = requiredText(command.requestType, 'requestType', 40);
+          if (!REQUEST_TYPES.includes(requestType)) {
+            throw new ApiError('VALIDATION_FAILED', 'requestType is invalid.', {
+              status: 422,
+              details: { field: 'requestType' },
+            });
+          }
+          return requestPurposeFromType(requestType);
+        })();
+    let requestPurpose;
+    try {
+      requestPurpose = validateRequestPurpose(
+        { ...command, requestPurpose: requestPurposeInput },
+        { purposeKey: 'requestPurpose' },
+      );
+    } catch (error) {
+      translateDomainValidation(error);
     }
+    requestType = REQUEST_TYPE_BY_PURPOSE[requestPurpose];
     const isEvent = requestType === 'EVENT_LOGISTICS';
     const startDate = dateOnly(command.startDate, 'startDate');
     const endDate = dateOnly(command.endDate, 'endDate');
@@ -443,6 +551,11 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const trackingCode = await hmac(trackingSecret, `request-code:${requestId}:${clientRequestId}`);
     const trackingDigest = await hmac(trackingSecret, `request-digest:${trackingCode}`);
     const timestamp = nowIso();
+    const storedResult = {
+      requestId,
+      requestPurpose,
+      status: 'FOR_REVIEW',
+    };
     const statements = [
       db
         .prepare(
@@ -553,21 +666,50 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
         ),
       db
         .prepare(
-          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request')",
+          // RV-01.4: a public submission makes new work visible in both the
+          // Request review queue and the Overview counters, so both scope
+          // revisions move with the global one. Release, Deliverables/
+          // Procurement, and Restocking are intentionally excluded because no
+          // object in those modules changed at submission.
+          "UPDATE data_revisions SET revision = revision + 1, updated_at = ?1 WHERE scope IN ('global', 'request', 'overview')",
         )
         .bind(timestamp),
+      db
+        .prepare(
+          `INSERT INTO idempotency_keys (
+             scope, idempotency_key, actor_account_id, request_fingerprint, result_json, created_at
+           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+        )
+        .bind(
+          PUBLIC_REQUEST_IDEMPOTENCY_SCOPE,
+          clientRequestId,
+          PUBLIC_ACTOR_ID,
+          requestFingerprint,
+          JSON.stringify(storedResult),
+          timestamp,
+        ),
     );
     try {
       await db.batch(statements);
     } catch (error) {
       if (String(error?.message ?? '').includes('UNIQUE constraint failed')) {
-        throw new ApiError('PUBLIC_REQUEST_CONFLICT', 'This submission is already being processed.', {
-          status: 409,
-        });
+        const concurrentReplay = await replaySubmission(
+          clientRequestId,
+          requestFingerprint,
+          correlationId,
+        );
+        if (concurrentReplay) return concurrentReplay;
+        throw conflict();
       }
       throw error;
     }
-    return { ok: true, requestId, status: 'FOR_REVIEW', trackingCode, replayed: false, correlationId };
+    return {
+      ok: true,
+      ...storedResult,
+      trackingCode,
+      replayed: false,
+      correlationId,
+    };
   }
 
   async function track({ command = {}, networkKey = '', correlationId = '' } = {}) {
@@ -577,7 +719,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
     const digest = await hmac(trackingSecret, `request-digest:${trackingCode}`);
     const access = await db
       .prepare(
-        `SELECT request.id, request.status, request.created_at, request.updated_at
+        `SELECT request.id, request.request_type, request.status, request.created_at, request.updated_at
          FROM public_request_access access
          JOIN requests request ON request.id = access.request_id
          WHERE access.request_id = ?1 AND access.tracking_digest = ?2`,
@@ -608,6 +750,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       correlationId,
       request: {
         id: access.id,
+        requestPurpose: requestPurposeFromType(access.request_type),
         status: access.status,
         createdAt: access.created_at,
         updatedAt: access.updated_at,
@@ -642,6 +785,7 @@ export function createPublicRequestService({ db, trackingSecret, clock = Date } 
       correlationId,
       reference: {
         id: reference.id,
+        requestPurpose: requestPurposeFromType(reference.request_type),
         requestType: reference.request_type,
         seriesId: reference.event_series_id,
         eventId: reference.event_id,

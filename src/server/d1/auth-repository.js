@@ -41,10 +41,11 @@ async function accessProfile(db, accountId) {
 
 async function accountFromRow(db, row) {
   if (!row) return undefined;
-  const department = row.department_id
+  const profileDepartmentId = row.profile_department_id ?? row.department_id ?? '';
+  const department = profileDepartmentId
     ? await db
         .prepare('SELECT display_name FROM requester_departments WHERE id = ?1')
-        .bind(row.department_id)
+        .bind(profileDepartmentId)
         .first()
     : null;
   return {
@@ -74,9 +75,19 @@ async function accountFromRow(db, row) {
     lendingEligible: row.lending_eligible === 1,
     institutionId: row.institution_id ?? '',
     departmentId: row.department_id ?? '',
+    profileDepartmentId: row.profile_department_id ?? '',
     departmentDisplayName: department?.display_name ?? '',
     passwordChangedAt: row.password_changed_at ?? '',
     lastPasswordResetAt: row.last_password_reset_at ?? '',
+    usernameNormalized: row.username_normalized ?? '',
+    verifiedEmailFingerprint: row.verified_email_fingerprint ?? '',
+    profileCourseId: row.profile_course_id ?? '',
+    profileYearLevel:
+      row.profile_year_level === null || row.profile_year_level === undefined
+        ? null
+        : Number(row.profile_year_level),
+    avatarAssetKey: row.avatar_asset_key ?? '',
+    avatarUpdatedAt: row.avatar_updated_at ?? '',
   };
 }
 
@@ -102,6 +113,13 @@ function accountStatement(db, account) {
     account.departmentId || null,
     account.passwordChangedAt || null,
     account.lastPasswordResetAt || null,
+    account.usernameNormalized || null,
+    account.verifiedEmailFingerprint || null,
+    account.profileDepartmentId || null,
+    account.profileCourseId || null,
+    account.profileYearLevel ?? null,
+    account.avatarAssetKey || null,
+    account.avatarUpdatedAt || null,
   ];
   return db
     .prepare(
@@ -111,9 +129,10 @@ function accountStatement(db, account) {
          password_credential_json, temporary_credential_json, credential_version,
          onboarding_completed_at, profile_email_verified_at, created_at, updated_at,
          lending_eligible, institution_id, department_id, password_changed_at,
-         last_password_reset_at
+         last_password_reset_at, username_normalized, verified_email_fingerprint,
+         profile_department_id, profile_course_id, profile_year_level, avatar_asset_key, avatar_updated_at
        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13,
-         ?14, ?15, ?16, ?17, ?18, ?19, ?20)
+         ?14, ?15, ?16, ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27)
        ON CONFLICT(id) DO UPDATE SET
          access_id_normalized = excluded.access_id_normalized,
          status = excluded.status,
@@ -132,7 +151,14 @@ function accountStatement(db, account) {
          institution_id = excluded.institution_id,
          department_id = excluded.department_id,
          password_changed_at = excluded.password_changed_at,
-         last_password_reset_at = excluded.last_password_reset_at
+         last_password_reset_at = excluded.last_password_reset_at,
+         username_normalized = excluded.username_normalized,
+         verified_email_fingerprint = excluded.verified_email_fingerprint,
+         profile_department_id = excluded.profile_department_id,
+         profile_course_id = excluded.profile_course_id,
+         profile_year_level = excluded.profile_year_level,
+         avatar_asset_key = excluded.avatar_asset_key,
+         avatar_updated_at = excluded.avatar_updated_at
        WHERE accounts.credential_version = excluded.credential_version - 1`,
     )
     .bind(...values);
@@ -161,8 +187,55 @@ export function createD1AuthRepository(db) {
         await db
           .prepare(
             `SELECT * FROM accounts
-             WHERE access_id_normalized = ?1
-                OR (profile_email_verified_at IS NOT NULL AND lower(profile_email) = ?1)
+             WHERE access_id_normalized = upper(?1)
+                OR username_normalized = lower(?1)
+                OR (
+                  status IN ('STARTER', 'ACTIVE')
+                  AND NULLIF(trim(verified_email_fingerprint), '') IS NOT NULL
+                  AND lower(profile_email) = lower(?1)
+                  AND EXISTS (
+                    SELECT 1
+                    FROM account_applications application
+                    WHERE application.approved_account_id = accounts.id
+                      AND application.email_fingerprint = accounts.verified_email_fingerprint
+                      AND application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                  )
+                  AND (
+                    SELECT COUNT(*)
+                    FROM accounts fingerprint_account
+                    WHERE fingerprint_account.status IN ('STARTER', 'ACTIVE')
+                      AND fingerprint_account.verified_email_fingerprint = accounts.verified_email_fingerprint
+                      AND NULLIF(trim(fingerprint_account.verified_email_fingerprint), '') IS NOT NULL
+                      AND EXISTS (
+                        SELECT 1
+                        FROM account_applications fingerprint_application
+                        WHERE fingerprint_application.approved_account_id = fingerprint_account.id
+                          AND fingerprint_application.email_fingerprint =
+                            fingerprint_account.verified_email_fingerprint
+                          AND fingerprint_application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                      )
+                  ) = 1
+                  AND (
+                    SELECT COUNT(*)
+                    FROM accounts qualified_account
+                    WHERE qualified_account.status IN ('STARTER', 'ACTIVE')
+                      AND NULLIF(trim(qualified_account.verified_email_fingerprint), '') IS NOT NULL
+                      AND lower(qualified_account.profile_email) = lower(?1)
+                      AND EXISTS (
+                        SELECT 1
+                        FROM account_applications qualified_application
+                        WHERE qualified_application.approved_account_id = qualified_account.id
+                          AND qualified_application.email_fingerprint =
+                            qualified_account.verified_email_fingerprint
+                          AND qualified_application.state IN ('APPROVED_ACTIVATION_REQUIRED', 'ACTIVE')
+                      )
+                  ) = 1
+                )
+             ORDER BY CASE
+               WHEN access_id_normalized = upper(?1) THEN 1
+               WHEN username_normalized = lower(?1) THEN 2
+               ELSE 3
+             END
              LIMIT 1`,
           )
           .bind(identifier)

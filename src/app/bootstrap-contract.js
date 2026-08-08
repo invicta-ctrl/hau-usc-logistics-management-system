@@ -26,6 +26,11 @@ export const BOOTSTRAP_MODULES = Object.freeze([
 
 const MAX_STANDARD_MODULE_ROWS = 100;
 const MAX_INVENTORY_MODULE_ROWS = 500;
+// Child collections are keyed to a paged parent collection, so one page of
+// parents can legitimately carry several rows each. The bound stays fixed and
+// fails closed rather than truncating a parent's lines.
+const MAX_CHILD_COLLECTION_ROWS = 500;
+const CHILD_COLLECTIONS = new Set(['requestLines']);
 
 const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'eventSeries',
@@ -57,6 +62,11 @@ const LEGACY_STATE_COLLECTIONS = Object.freeze([
   'assetMovementHistory',
 ]);
 
+// Collections that only an authenticated internal session may receive. The
+// Request module is reachable both publicly and internally, so widening its
+// allowlist for the internal review queue must not widen the public contract.
+const INTERNAL_ONLY_COLLECTIONS = Object.freeze(['requests', 'requestLines']);
+
 const MODULE_DATA_KEYS = Object.freeze({
   overview: Object.freeze([
     'eventSeries',
@@ -75,7 +85,14 @@ const MODULE_DATA_KEYS = Object.freeze({
     'dashboardActivity',
     'dashboardLinks',
   ]),
-  request: Object.freeze(['eventSeries', 'eventDays', 'events', 'inventoryItems']),
+  request: Object.freeze([
+    'eventSeries',
+    'eventDays',
+    'events',
+    'inventoryItems',
+    'requests',
+    'requestLines',
+  ]),
   lending: Object.freeze(['inventoryItems', 'lendingTickets']),
   release: Object.freeze([
     'eventSeries',
@@ -198,6 +215,9 @@ const AUTHORIZATION_CAPABILITIES = new Set([
   'reference.manage',
   'advertisement.manage',
   'access.admin',
+  'account_application.admin_review',
+  'account_application.director_decide',
+  'account_application.owner_override',
   'event.manage',
   'brand.manage',
   'system.admin',
@@ -568,8 +588,17 @@ export function validateBootstrapModule(value, { backendMode = 'mock', module } 
   if (!isPlainObject(value.data)) fail();
   const allowedData = new Set(MODULE_DATA_KEYS[value.module]);
   assertAllowedKeys(value.data, allowedData);
-  Object.entries(value.data).forEach(([_key, rows]) => {
-    const maxRows = value.module === 'inventory' ? MAX_INVENTORY_MODULE_ROWS : MAX_STANDARD_MODULE_ROWS;
+  if (value.requestOnly)
+    INTERNAL_ONLY_COLLECTIONS.forEach((key) => {
+      if (key in value.data) fail(`Public bootstrap must not carry internal collection: ${key}`);
+    });
+  Object.entries(value.data).forEach(([key, rows]) => {
+    const maxRows =
+      value.module === 'inventory'
+        ? MAX_INVENTORY_MODULE_ROWS
+        : CHILD_COLLECTIONS.has(key)
+          ? MAX_CHILD_COLLECTION_ROWS
+          : MAX_STANDARD_MODULE_ROWS;
     if (!Array.isArray(rows) || rows.length > maxRows) fail();
   });
   if (value.requestOnly) assertNoSensitiveKeys(value.data);

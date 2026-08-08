@@ -1,6 +1,39 @@
 # Work Continuation
 
+> **CURRENT AS OF 2026-08-08.** The resume block below predates this date and
+> names superseded SHAs and test counts. The authoritative continuation is
+> [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](../.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md),
+> with a copy/paste starting point in
+> [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](../.codex/V0_7_2_CODEX_RESUME_PROMPT.md).
+>
+> Summary: v0.7.2 has an accepted repository candidate at reviewed
+> implementation SHA `6deed1a31ded616fd54d33719230336d9cd5bf64` on
+> `release/v0.7.2-production-access-operations`. Independent exact-SHA security
+> and transaction reviews PASS with zero unresolved P0/P1, exact-head CI is
+> green, and local gates are 117 files / 811 tests, Worker/D1 58/58, and browser
+> 138 passed / 360 intentional skips at `--workers=2`. PR #15 remains draft and
+> unmerged. Staging and production are still 0.7.1 / schema 29; migration 0030
+> is applied nowhere. The next gate is private identity-class configuration
+> from the owner-supplied coarse domain class; it must not be invented or
+> committed.
+
 ## Current resume block
+
+- **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
+- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations` / `origin/release/v0.7.2-production-access-operations`; reviewed implementation `6deed1a31ded616fd54d33719230336d9cd5bf64`, clean and synchronized `0/0` at freeze; draft PR #15; exact-head Apps Script static, `verify`, and `browser-smoke` all `SUCCESS`; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- **Current phase/stage:** repository candidate accepted at `6deed1a`; independent exact-SHA security and transaction reviews PASS with zero P0/P1, and exact-head CI is green. Pre-production is blocked on private identity-class input/configuration and then the backup/migration/deploy/acceptance sequence.
+- **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md`, accepted amendment `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`, and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+- **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
+- **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
+- **Tests verified (reviewed implementation, 2026-08-08):** `npm run check` 117 files / 811 tests; Playwright 138 passed / 360 intentional skips / 0 failed at `--workers=2`; local Worker/D1 58/58. Reservation proof covers procurement release, restock top-up, consume-then-top-up, wrong-item denial with zero ATP effect, and concurrent one-winner/one-safe-409 behavior.
+- **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
+- **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
+- **Blocker:** private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` is absent because the owner-supplied coarse domain class is not available in repository authority; readiness intentionally fails closed. Staging owner login is also not proven.
+- **Next three actions:** obtain or locate the owner-supplied private coarse domain class without recording it in Git; regenerate exact-SHA private Cloudflare configuration; capture a fresh staging backup and execute the guarded migration/deploy/acceptance sequence.
+- **Resume commands:** `git status --short --branch`; `git rev-parse HEAD`; `git fetch origin --prune`; `git rev-list --left-right --count HEAD...@{upstream}`; inspect PR #15; follow the v0.7.2 handoff.
+- **Prohibited actions:** no invented provider/identity values, secret/PII disclosure, fail-open readiness, production-first testing, migration without backup, or production deploy before pre-production acceptance.
+
+## Historical v0.7.1 production resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve the governed local `.codegraph/` index and owner-authorized v0.7.1 launch-report PDF.
 - **Branch/HEAD/upstream:** canonical `main`; exact v0.7.1 release/tag SHA `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90`; `origin/main` matched at reconciliation with `0/0` ahead/behind.

@@ -51,10 +51,10 @@ export function normalizeAccessId(value) {
 }
 
 export function normalizeVerifiedEmail(value) {
-  const normalized = String(value ?? '').trim().toLowerCase();
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalized) && normalized.length <= 254
-    ? normalized
-    : '';
+  const normalized = String(value ?? '')
+    .trim()
+    .toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(normalized) && normalized.length <= 254 ? normalized : '';
 }
 
 export function normalizeCommitteeIds(values) {
@@ -144,10 +144,11 @@ export function validateStarterAssignment({ roleId, committeeIds, defaultCommitt
 
 export function sessionUserDto(account, session) {
   const authorization = accountAuthorization(account);
+  const requesterDepartmentId = account.profileDepartmentId || account.departmentId || '';
   const requesterDepartment =
-    authorization.roleId === ROLES.REQUESTER && account.departmentId
+    authorization.roleId === ROLES.REQUESTER && requesterDepartmentId
       ? Object.freeze({
-          id: account.departmentId,
+          id: requesterDepartmentId,
           displayName: account.departmentDisplayName ?? '',
         })
       : null;

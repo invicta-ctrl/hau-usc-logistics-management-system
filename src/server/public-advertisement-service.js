@@ -1,5 +1,7 @@
 import { ApiError } from './d1/operational-service.js';
 
+const PUBLIC_AUDIENCES = Object.freeze(['PUBLIC', 'REQUEST', 'LENDING']);
+
 const safeId = (value) => {
   const id = String(value ?? '').trim();
   if (!/^[A-Z0-9][A-Z0-9_-]{2,79}$/iu.test(id)) {
@@ -10,51 +12,73 @@ const safeId = (value) => {
   return id;
 };
 
+function safeAudience(value = 'PUBLIC') {
+  const audience = String(value ?? 'PUBLIC')
+    .trim()
+    .toUpperCase();
+  if (!PUBLIC_AUDIENCES.includes(audience)) {
+    throw new ApiError('ADVERTISEMENT_NOT_FOUND', 'The announcement is unavailable.', {
+      status: 404,
+    });
+  }
+  return audience;
+}
+
+function publicDto(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    altText: row.alt_text,
+    callToAction: row.call_to_action,
+    destinationUrl: row.destination_url,
+    audience: safeAudience(row.audience),
+    revision: Number.isSafeInteger(Number(row.revision)) ? Number(row.revision) : 1,
+    imageUrl: `/media/advertisements/${encodeURIComponent(row.id)}`,
+  };
+}
+
 export function createPublicAdvertisementService({ db, bucket, clock = Date } = {}) {
   if (!db) throw new Error('D1 database binding is required.');
   if (!bucket) throw new Error('R2 advertisement binding is required.');
   const nowIso = () => new Date(clock.now()).toISOString();
 
-  async function list() {
+  async function list({ audience = 'PUBLIC' } = {}) {
+    const normalizedAudience = safeAudience(audience);
     const now = nowIso();
     const result = await db
       .prepare(
         `SELECT id, title, description, alt_text, call_to_action, destination_url
+                , audience, revision
          FROM public_advertisements
-         WHERE status = 'ACTIVE' AND archived_at IS NULL
-           AND (publish_at IS NULL OR publish_at <= ?1)
-           AND (expire_at IS NULL OR expire_at > ?1)
+         WHERE audience = ?1 AND status = 'ACTIVE' AND archived_at IS NULL
+           AND (publish_at IS NULL OR publish_at <= ?2)
+           AND (expire_at IS NULL OR expire_at > ?2)
          ORDER BY display_order, created_at, id
          LIMIT 50`,
       )
-      .bind(now)
+      .bind(normalizedAudience, now)
       .all();
     return {
       ok: true,
-      items: (result.results ?? []).map((row) => ({
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        altText: row.alt_text,
-        callToAction: row.call_to_action,
-        destinationUrl: row.destination_url,
-        imageUrl: `/media/advertisements/${encodeURIComponent(row.id)}`,
-      })),
+      audience: normalizedAudience,
+      items: (result.results ?? []).map(publicDto),
     };
   }
 
-  async function image(idValue) {
+  async function image(idValue, { audience = 'PUBLIC' } = {}) {
     const id = safeId(idValue);
+    const normalizedAudience = safeAudience(audience);
     const now = nowIso();
     const advertisement = await db
       .prepare(
         `SELECT image_asset_key
          FROM public_advertisements
-         WHERE id = ?1 AND status = 'ACTIVE' AND archived_at IS NULL
-           AND (publish_at IS NULL OR publish_at <= ?2)
-           AND (expire_at IS NULL OR expire_at > ?2)`,
+         WHERE id = ?1 AND audience = ?2 AND status = 'ACTIVE' AND archived_at IS NULL
+           AND (publish_at IS NULL OR publish_at <= ?3)
+           AND (expire_at IS NULL OR expire_at > ?3)`,
       )
-      .bind(id, now)
+      .bind(id, normalizedAudience, now)
       .first();
     if (!advertisement) {
       throw new ApiError('ADVERTISEMENT_NOT_FOUND', 'The announcement is unavailable.', {

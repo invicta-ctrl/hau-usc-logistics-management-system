@@ -8,7 +8,8 @@ import {
   REQUEST_CENTER_UNITS,
 } from '../../domain/request-center.js';
 import { loadLendingCatalog } from '../lending-catalog-service.js';
-import { isCountableUnit, isKnownQuantityUnit } from '../../domain/quantity-units.js';
+import { isKnownQuantityUnit } from '../../domain/quantity-units.js';
+import { operationalInteger } from '../../domain/operational-integers.js';
 
 const MODULES = Object.freeze([
   'overview',
@@ -69,6 +70,13 @@ const METHOD_CAPABILITIES = Object.freeze({
   linkEventOperationalRecord: CAPABILITIES.EVENT_MANAGE,
   getMigrationStatus: CAPABILITIES.SYSTEM_DIAGNOSTICS,
 });
+
+// Parent request statuses this service actually writes. `src/domain/` carries a
+// wider vocabulary (PARTIALLY_FULFILLED, IN_PROGRESS, READY_FOR_HANDOFF) that
+// the D1 layer has never written, and `requests.status` has no CHECK
+// constraint, so gating against a domain-only name compiles, stores, and
+// silently never matches. Reserve gates must be built from this list.
+const RESERVABLE_PARENT_STATUSES = Object.freeze(['ACCEPTED', 'PARTIALLY_RELEASED']);
 
 const DELIVERABLE_TRANSITIONS = Object.freeze({
   FOR_CANVASSING: Object.freeze(['WAITING_FOR_BUDGET', 'CANCELLED']),
@@ -191,43 +199,33 @@ const positiveNumber = (value, field = 'quantity') => {
 };
 
 const positiveOperationalQuantity = (value, unit, field = 'quantity') => {
-  const result = positiveNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+  try {
+    return operationalInteger(value, { field, min: 1 });
+  } catch {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a positive whole number.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  return result;
-};
-
-const nonNegativeNumber = (value, field = 'value') => {
-  const result = Number(value);
-  if (!Number.isFinite(result) || result < 0) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be zero or greater.`, {
-      details: { field },
-    });
-  }
-  return result;
 };
 
 const nonNegativeOperationalQuantity = (value, unit, field = 'quantity') => {
-  const result = nonNegativeNumber(value, field);
   if (!isKnownQuantityUnit(unit)) {
     throw new ApiError('VALIDATION_FAILED', `${field} uses an unsupported unit.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  if (isCountableUnit(unit) && !Number.isInteger(result)) {
-    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number for ${unit}.`, {
+  try {
+    return operationalInteger(value, { field, min: 0 });
+  } catch {
+    throw new ApiError('VALIDATION_FAILED', `${field} must be a whole number zero or greater.`, {
       details: { field, unit: String(unit ?? '') },
     });
   }
-  return result;
 };
 
 const nowIso = () => new Date().toISOString();
@@ -387,7 +385,13 @@ async function resolveOperationalContext(db, account, requestedValue = '') {
   const visibleLocations = locationRows.filter(
     (entry) => !allowedLocationIds.size || allowedLocationIds.has(entry.id),
   );
-  const boundedScope = committeeRestricted || eventRestricted || allowedLocationIds.size > 0;
+  // RV-01.3: holding a committee assignment must not remove central scope from
+  // an ALL-scope role. Including `committeeRestricted` here suppressed the ALL
+  // option, so the fallback resolved to a committee and unassigned requests
+  // (owner_committee_id IS NULL) disappeared from the reviewer's queue while the
+  // review command failed ENTITY_SCOPE_REQUIRED. Event and location bounds are
+  // genuine restrictions and still apply.
+  const boundedScope = eventRestricted || allowedLocationIds.size > 0;
   const options = [
     ...(allScope && !boundedScope
       ? [
@@ -462,18 +466,25 @@ function scopedReleaseGroup(entry, linePredicate) {
   };
 }
 
-export function filterOperationalData(data, selected) {
+// `sqlScoped` names collections the module already narrowed in its authoritative
+// query. Those must not be re-filtered here: this pass derives its key sets from
+// *paginated* `inventoryItems` and `events`, so a request whose matching item or
+// event fell outside the current page was dropped from the rows while `total`
+// and `hasMore` — computed from the same SQL predicate as the page — still
+// counted it. The reviewer then saw an empty table above a non-zero total.
+export function filterOperationalData(data, selected, { sqlScoped = [] } = {}) {
   if (!selected || ['ALL', 'COMMITTEE', 'SELF'].includes(selected.kind)) return data;
   const next = { ...data };
+  const authoritative = new Set(sqlScoped);
   if (selected.kind === 'LOCATION') {
     next.inventoryItems = (next.inventoryItems ?? []).filter(
       (entry) => String(entry.storageLocation ?? '') === selected.id,
     );
     const itemIds = new Set(next.inventoryItems.map((entry) => entry.id));
-    if (Array.isArray(next.requestLines)) {
+    if (Array.isArray(next.requestLines) && !authoritative.has('requestLines')) {
       next.requestLines = next.requestLines.filter((entry) => itemIds.has(entry.itemId));
       const requestIds = new Set(next.requestLines.map((entry) => entry.requestId));
-      if (Array.isArray(next.requests))
+      if (Array.isArray(next.requests) && !authoritative.has('requests'))
         next.requests = next.requests.filter((entry) => requestIds.has(entry.id));
     }
     if (Array.isArray(next.lendingTickets))
@@ -508,8 +519,10 @@ export function filterOperationalData(data, selected) {
     next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
     next.events = (next.events ?? []).filter((entry) => entry.seriesId === selected.id);
     const eventIds = new Set(next.events.map((entry) => entry.id));
-    next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
-    next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
+    if (!authoritative.has('requests'))
+      next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
+    if (!authoritative.has('requestLines'))
+      next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
     if (Array.isArray(next.releaseConfirmations))
       next.releaseConfirmations = next.releaseConfirmations.filter((entry) => eventIds.has(entry.eventId));
@@ -584,8 +597,71 @@ function entityScope(account) {
   };
 }
 
-function assertEntityScope(account, { committeeId = '', ownerAccountId = '' } = {}) {
+// RV-01.3 event/series bound predicate, exported so the full matrix can be
+// tested directly rather than through a fixture that seeds a single event.
+//
+// Two rules, and they are easy to get wrong together:
+//   1. CONJUNCTIVE. Each bound that exists must be satisfied on its own. This
+//      mirrors the read path in `resolveOperationalContext`:
+//      `(!series.size || has(series)) && (!events.size || has(event))`.
+//      Collapsing them into one OR lets an actor bounded to a single event
+//      inside a bounded series command every other event in that series.
+//   2. FAIL CLOSED. A bounded actor must positively match. Missing context is a
+//      refusal, so a call site that forgets to pass the record's event is
+//      denied rather than silently exempted.
+export function isOutsideEventBounds({
+  boundedEventIds,
+  boundedSeriesIds,
+  eventId = '',
+  eventSeriesId = '',
+} = {}) {
+  const events = boundedEventIds instanceof Set ? boundedEventIds : new Set(boundedEventIds ?? []);
+  const series = boundedSeriesIds instanceof Set ? boundedSeriesIds : new Set(boundedSeriesIds ?? []);
+  const outsideEvents = events.size > 0 && !(eventId !== '' && events.has(eventId));
+  const outsideSeries = series.size > 0 && !(eventSeriesId !== '' && series.has(eventSeriesId));
+  return outsideEvents || outsideSeries;
+}
+
+function assertEntityScope(
+  account,
+  { committeeId = '', ownerAccountId = '', eventId = '', eventSeriesId = '', locationId = '' } = {},
+) {
   const scope = entityScope(account);
+  // RV-01.3 requires "unrelated committee/event/location -> No" for the command
+  // path, not only for the read path.
+  //
+  // The previous form compared only when the caller happened to supply the ids
+  // (`boundedEventIds.size && eventId && ...`). Because `eventId` defaults to
+  // '', every call site that omitted it disabled its own check silently, and
+  // exactly one of sixteen passed it. A bounded actor was therefore refused on
+  // `reviewRequest` and admitted on every physical-movement command behind it.
+  //
+  // The bound is now a positive match: a bounded actor must prove the record is
+  // inside its scope. An omitted argument fails closed instead of open, so a
+  // future call site that forgets the context is refused rather than exempted.
+  const authorization = accountAuthorization(account);
+  const boundedEventIds = new Set(authorization.eventScopeIds ?? []);
+  const boundedSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
+  const boundedLocationIds = new Set(authorization.locationScopeIds ?? []);
+  if (isOutsideEventBounds({ boundedEventIds, boundedSeriesIds, eventId, eventSeriesId })) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+      status: 403,
+    });
+  }
+  // Location bounds were read only when building the operational-context option
+  // list (`resolveOperationalContext`) and were never consulted by any command,
+  // so `locationScopeIds` narrowed the scope picker while leaving every mutation
+  // open. Same positive-match rule.
+  if (boundedLocationIds.size && (locationId === '' || !boundedLocationIds.has(locationId))) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized location scope.', {
+      status: 403,
+    });
+  }
+  // RV-01.3: an explicit DENY is refused before any committee comparison, so a
+  // revoked actor cannot command a record through a retained committee grant.
+  if (scope.mode === 'DENY') {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized scope.', { status: 403 });
+  }
   if (scope.mode === 'ALL') return;
   if (scope.mode === 'SELF') {
     if (ownerAccountId && ownerAccountId === scope.accountId) return;
@@ -633,7 +709,11 @@ function assertBorrowerPortalAccount(account) {
 
 function assertRequesterPortalAccount(account) {
   const authorization = assertCapability(account, CAPABILITIES.REQUEST_CREATE);
-  if (authorization.roleId !== 'REQUESTER' || !account.departmentId || !account.departmentDisplayName) {
+  if (
+    authorization.roleId !== 'REQUESTER' ||
+    !requesterDepartmentId(account) ||
+    !account.departmentDisplayName
+  ) {
     throw new ApiError('REQUESTER_PORTAL_REQUIRED', 'This account cannot use the requester portal.', {
       status: 403,
     });
@@ -641,9 +721,18 @@ function assertRequesterPortalAccount(account) {
   return authorization;
 }
 
+function requesterDepartmentId(account) {
+  return account?.profileDepartmentId || account?.departmentId || '';
+}
+
 function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
   const scope = entityScope(account);
   const prefix = alias ? `${alias}.` : '';
+  // RV-01.3: an explicit DENY must match nothing regardless of any committee
+  // grants the account still carries. scopeMode and committeeIds are
+  // independent fields, so falling through to the committee branch would turn a
+  // revoked actor into a committee-scoped reader.
+  if (scope.mode === 'DENY') return { sql: '1 = 0', values: [] };
   if (scope.mode === 'ALL') return { sql: '1 = 1', values: [] };
   if (scope.mode === 'SELF') {
     return { sql: `${prefix}${ownerColumn} = ?1`, values: [scope.accountId] };
@@ -658,6 +747,8 @@ function scopedWhere(account, { committeeColumn, ownerColumn, alias = '' }) {
 
 function multiScopeWhere(account, { committeeColumns = [], ownerColumns = [] } = {}) {
   const scope = entityScope(account);
+  // RV-01.3: explicit DENY matches nothing. See scopedWhere.
+  if (scope.mode === 'DENY') return { sql: '1 = 0', values: [] };
   if (scope.mode === 'ALL') return { sql: '1 = 1', values: [] };
   if (scope.mode === 'SELF') {
     if (!ownerColumns.length) return { sql: '1 = 0', values: [] };
@@ -880,6 +971,33 @@ const INVENTORY_HANDLING = new Set([
 ]);
 const INVENTORY_CATALOG_TYPES = new Set(['OFFICE_INVENTORY', 'PANTRY', 'EVENT_SPECIFIC']);
 const INVENTORY_STATUSES = new Set(['ACTIVE', 'VERIFY', 'INACTIVE']);
+
+// RV-01.6: the explicit per-line route decisions a reviewer may issue, and the
+// canonical request-line status each one commits. Exactly one active downstream
+// owner is created per accepted line; a stock route creates none at review.
+const LINE_ROUTE_STATUS = Object.freeze({
+  ISSUE_FROM_STOCK: 'READY_TO_RESERVE',
+  PROCUREMENT: 'FOR_CANVASSING',
+  RESTOCK: 'FOR_CANVASSING',
+  REJECT: 'REJECTED',
+  MISSING_INFORMATION: 'NEEDS_INFORMATION',
+});
+const LINE_ROUTE_DECISIONS = new Set(Object.keys(LINE_ROUTE_STATUS));
+// Mirrors the client child-collection cap in src/app/bootstrap-contract.js.
+const MAX_REQUEST_LINE_ROWS = 500;
+// A single public submission may carry up to 50 lines, so a page of parents is
+// bounded such that worst-case lines still fit the child cap and the module can
+// never fail the strict contract closed purely because of page size.
+const MAX_REQUEST_LINES_PER_PARENT = 50;
+const MAX_REQUEST_PAGE_PARENTS = Math.floor(MAX_REQUEST_LINE_ROWS / MAX_REQUEST_LINES_PER_PARENT);
+
+// RV-01.5: accepts only a bare ISO calendar day so a date filter can never
+// carry arbitrary text into the query. Returns '' when absent or malformed.
+function safeDateBoundary(value) {
+  const text = String(value ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/u.test(text)) return '';
+  return Number.isNaN(Date.parse(`${text}T00:00:00.000Z`)) ? '' : text;
+}
 const CONDITION_REVIEW_STATES = new Set([
   'NOT_ASSESSED',
   'NOT_APPLICABLE',
@@ -946,13 +1064,13 @@ const normalizedAliases = (value) => {
 
 const optionalPositiveInteger = (value, field) => {
   if (value === '' || value === null || value === undefined) return null;
-  const number = Number(value);
-  if (!Number.isInteger(number) || number < 1) {
+  try {
+    return operationalInteger(value, { field, min: 1 });
+  } catch {
     throw new ApiError('VALIDATION_FAILED', `${field} must be a positive integer.`, {
       details: { field },
     });
   }
-  return number;
 };
 
 const booleanInput = (value, fallback = false) => {
@@ -989,7 +1107,12 @@ function classificationEnum(value, allowed, field, fallback = '') {
   return normalized;
 }
 
-const itemDto = (row, requestOnly = false) => ({
+// `requestOnly` withholds internal stock data. `hideStorageLocation` defaults to
+// it so the requester-facing contract is unchanged, but internal modules pass
+// false: `filterOperationalData` resolves a LOCATION operational scope by
+// matching `storageLocation` on this DTO, so withholding it there empties the
+// caller's entire workspace instead of merely redacting availability.
+const itemDto = (row, requestOnly = false, hideStorageLocation = requestOnly) => ({
   id: row.id,
   name: row.name,
   aliases: row.aliases ? String(row.aliases).split('|').filter(Boolean) : [],
@@ -997,14 +1120,25 @@ const itemDto = (row, requestOnly = false) => ({
   stockArea: requestOnly ? '' : row.stock_area,
   handling: row.handling,
   unit: row.unit,
+  ...(hideStorageLocation ? {} : { storageLocation: row.storage_location }),
   ...(requestOnly
     ? {}
     : {
         onHand: Number(row.on_hand ?? 0),
         reserved: Number(row.reserved ?? 0),
         availableToPromise: Number(row.available_to_promise ?? 0),
-        storageLocation: row.storage_location,
         reorderThreshold: Number(row.reorder_threshold ?? 0),
+        lowStockAlertEnabled: row.low_stock_alert_enabled === 1,
+        lowStockThreshold:
+          row.low_stock_threshold === null || row.low_stock_threshold === undefined
+            ? null
+            : Number(row.low_stock_threshold),
+        lowStockState:
+          row.low_stock_alert_enabled !== 1 || row.low_stock_threshold === null
+            ? 'DISABLED'
+            : Number(row.on_hand ?? 0) <= Number(row.low_stock_threshold)
+              ? 'LOW'
+              : 'NORMAL',
       }),
   status: row.status,
   catalogType: row.catalog_type,
@@ -1060,6 +1194,7 @@ const requestDto = (row) => ({
   ownerCommitteeId: row.owner_committee_id,
   catalogType: row.catalog_type,
   department: row.department,
+  requesterName: row.requester_name,
   priority: row.priority,
   purpose: row.purpose,
   status: row.status,
@@ -1287,7 +1422,7 @@ async function revision(db, scope = 'global') {
 export function createD1OperationalService({
   db,
   environment = 'DEVELOPMENT',
-  appVersion = '0.7.1',
+  appVersion = '0.7.2',
   schemaVersion = '1.0.0',
   evidenceStore = null,
 }) {
@@ -1363,6 +1498,39 @@ export function createD1OperationalService({
       WHERE item.status = 'ACTIVE' ORDER BY item.name LIMIT ?1 OFFSET ?2`;
     let itemRows = await rows(db, itemSql, [page.pageSize, page.offset]);
     let data;
+    // Set by a module that owns its own pagination total. Null keeps the
+    // legacy Inventory-derived count for modules not yet migrated.
+    let moduleTotal = null;
+    // Set when a module clamps its own page size below the requested value.
+    let modulePageSize = null;
+    // Offset actually used, derived from the clamped page size.
+    let moduleOffset = null;
+    // RV-01.3 "explicit deny -> No". Availability is internal stock data, so it
+    // is redacted by capability rather than by module. This was previously
+    // computed inside the `request` branch only, which meant an actor holding an
+    // explicit `view.inventory` deny still received on-hand, reserved,
+    // available-to-promise, storage location, and reorder state through the
+    // lending, release, restocking, and overview bootstraps — the exact fields
+    // the deny exists to withhold. `capabilityDenies` is a live mechanism in
+    // both deployed environments, so this is reachable configuration, not theory.
+    // Resolved lazily: the public request-only path has no authenticated
+    // account, and the original `requestOnly || !accountAuthorization(...)`
+    // short-circuited before ever calling it. Hoisting it unconditionally made
+    // the public bootstrap throw a 500.
+    const moduleCapabilities = requestOnly ? [] : accountAuthorization(account).capabilities;
+    const protectCatalogAvailability =
+      requestOnly || !moduleCapabilities.includes(CAPABILITIES.VIEW_INVENTORY);
+    // Storage location is withheld from the public contract AND from any actor
+    // without internal access. Keying it on `protectCatalogAvailability` would
+    // also withhold it from an internal actor holding a `view.inventory` deny,
+    // whose LOCATION lens is resolved by matching this very field; keying it on
+    // `requestOnly` alone disclosed every active item's physical location to an
+    // authenticated REQUESTER, who holds neither `view.inventory` nor
+    // `view.internal`. `view.internal` is the line that actually separates the
+    // two, and it stops the same DTO from blanking the coarse `stockArea` while
+    // emitting the finer-grained storage location.
+    const hideStorageLocation =
+      requestOnly || !moduleCapabilities.includes(CAPABILITIES.VIEW_INTERNAL);
     if (module === 'request') {
       const eventScope = requestOnly
         ? { sql: '1 = 1', values: [] }
@@ -1398,8 +1566,138 @@ export function createD1OperationalService({
           ...(requestOnly ? {} : { venue: row.venue }),
           status: row.status,
         })),
-        inventoryItems: itemRows.map((row) => itemDto(row, requestOnly)),
+        // RV-01.8: the Request module is reachable by any actor holding
+        // VIEW_REQUEST, which includes requester-only accounts. Availability is
+        // internal stock data, so it is redacted by capability rather than by
+        // `requestOnly`. Staff holding VIEW_INVENTORY are unaffected.
+        inventoryItems: itemRows.map((row) =>
+          itemDto(row, protectCatalogAvailability, hideStorageLocation),
+        ),
       };
+      // RV-01.2: the authenticated Request module independently projects the
+      // canonical review queue. It must not depend on Overview loading first.
+      // RV-01.8 keeps the public request-only contract purpose-limited.
+      if (!requestOnly) {
+        const queueScope = scopedWhere(account, {
+          committeeColumn: 'owner_committee_id',
+          ownerColumn: 'requester_account_id',
+          alias: 'request',
+        });
+        // RV-01.5: the Request module owns its own active/archive, date, search,
+        // and scope filtering. The same predicate drives both the page and the
+        // total so they can never disagree.
+        const queueFilters = [queueScope.sql];
+        const queueValues = [...queueScope.values];
+        const nextIndex = () => queueValues.length + 1;
+        const archiveFilter = String(command.filter ?? '')
+          .trim()
+          .toUpperCase();
+        if (archiveFilter === 'ARCHIVED') queueFilters.push('request.archived_at IS NOT NULL');
+        else if (archiveFilter === 'ALL') queueFilters.push('1 = 1');
+        else queueFilters.push('request.archived_at IS NULL');
+        // RV-01.5: the 80-character bound existed only in the client, which a
+        // direct GET bypasses entirely.
+        const search = optionalText(command.query, 80).trim();
+        if (search) {
+          // instr() rather than LIKE: the search term is arbitrary user input,
+          // and D1 rejects long LIKE patterns with "pattern too complex", which
+          // surfaced as a 500. instr() has no pattern-complexity limit and no
+          // wildcard or escape semantics, so `%` and `_` are matched literally
+          // instead of silently behaving as wildcards.
+          const term = search.toLowerCase();
+          const idIndex = nextIndex();
+          queueValues.push(term, term, term);
+          queueFilters.push(
+            `(instr(lower(request.id), ?${idIndex}) > 0` +
+              ` OR instr(lower(request.purpose), ?${idIndex + 1}) > 0` +
+              ` OR instr(lower(request.requester_name), ?${idIndex + 2}) > 0)`,
+          );
+        }
+        // RV-01.5: the selected operational scope must narrow the authoritative
+        // query, not a post-query pass. filterOperationalData runs after the
+        // total is computed, so a LOCATION/EVENT scope would otherwise leave
+        // `total` and `hasMore` describing rows the reviewer cannot see.
+        const selectedScope = operationalContext?.selected;
+        if (selectedScope && selectedScope.kind === 'EVENT') {
+          queueFilters.push(`request.event_id = ?${nextIndex()}`);
+          queueValues.push(selectedScope.id);
+        } else if (selectedScope && selectedScope.kind === 'EVENT_SERIES') {
+          queueFilters.push(`request.event_series_id = ?${nextIndex()}`);
+          queueValues.push(selectedScope.id);
+        } else if (selectedScope && selectedScope.kind === 'LOCATION') {
+          queueFilters.push(
+            `EXISTS (SELECT 1 FROM request_lines scoped_line
+                       JOIN inventory_items scoped_item ON scoped_item.id = scoped_line.item_id
+                      WHERE scoped_line.request_id = request.id
+                        AND scoped_item.storage_location = ?${nextIndex()})`,
+          );
+          queueValues.push(selectedScope.id);
+        }
+        const fromDate = safeDateBoundary(command.from);
+        if (fromDate) {
+          queueFilters.push(`request.created_at >= ?${nextIndex()}`);
+          queueValues.push(fromDate);
+        }
+        const toDate = safeDateBoundary(command.to);
+        if (toDate) {
+          // Inclusive upper bound across the whole local day.
+          queueFilters.push(`request.created_at <= ?${nextIndex()}`);
+          queueValues.push(`${toDate}T23:59:59.999Z`);
+        }
+        const queueWhere = queueFilters.join(' AND ');
+        const queueLimitIndex = queueValues.length + 1;
+        // RV-01.5: a parent page must never be able to carry more child lines
+        // than the contract allows, or the whole module fails closed. Bound the
+        // parent page by the child cap divided by the worst-case lines a single
+        // public submission can create, so the page always validates.
+        const queuePageSize = Math.max(1, Math.min(page.pageSize, MAX_REQUEST_PAGE_PARENTS));
+        modulePageSize = queuePageSize;
+        // The offset must follow the clamped size, or requesting a larger page
+        // skips rows: pageSize=50&page=2 would read OFFSET 50 while returning a
+        // 10-row window, leaving rows 10-49 unreachable at every page value.
+        const queueOffset = (page.page - 1) * queuePageSize;
+        moduleOffset = queueOffset;
+        const queueRows = await rows(
+          db,
+          // RV-01.3: reviewable work sorts first. Reviewing a request bumps its
+          // updated_at, so a pure recency order lets freshly accepted requests
+          // occupy the whole first page and push still-pending review work out
+          // of the only page the queue loads, which would hide unassigned
+          // FOR_REVIEW requests from every authorized owner.
+          `SELECT request.* FROM requests request
+           WHERE ${queueWhere}
+           ORDER BY CASE WHEN request.status IN ('FOR_REVIEW', 'NEEDS_INFORMATION') THEN 0 ELSE 1 END,
+                    request.updated_at DESC, request.id DESC
+           LIMIT ?${queueLimitIndex} OFFSET ?${queueLimitIndex + 1}`,
+          [...queueValues, queuePageSize, queueOffset],
+        );
+        // RV-01.5: Request owns its own total. It must not reuse Inventory's.
+        const queueTotalStatement = db.prepare(
+          `SELECT COUNT(*) AS count FROM requests request WHERE ${queueWhere}`,
+        );
+        const queueTotalRow = await (queueValues.length
+          ? queueTotalStatement.bind(...queueValues)
+          : queueTotalStatement
+        ).first();
+        moduleTotal = Number(queueTotalRow?.count ?? 0);
+        const queueParentIds = queueRows.map((row) => row.id);
+        // Lines are fetched for exactly the parents on this page, so the page
+        // stays internally consistent. The bound matches the client child
+        // collection cap; a page that somehow exceeded it fails the strict
+        // contract closed rather than rendering a partial queue.
+        const queueLineRows = queueParentIds.length
+          ? await rows(
+              db,
+              `SELECT line.* FROM request_lines line
+               WHERE line.request_id IN (${queueParentIds.map((_, index) => `?${index + 1}`).join(', ')})
+               ORDER BY line.request_id, line.created_at, line.id
+               LIMIT ${MAX_REQUEST_LINE_ROWS + 1}`,
+              queueParentIds,
+            )
+          : [];
+        data.requests = queueRows.map(requestDto);
+        data.requestLines = queueLineRows.map(lineDto);
+      }
     } else if (module === 'inventory') {
       itemRows = await rows(
         db,
@@ -1579,7 +1877,7 @@ export function createD1OperationalService({
         scope.values,
       );
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row)),
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,
@@ -1720,7 +2018,7 @@ export function createD1OperationalService({
             venue: row.venue,
             status: row.status,
           })),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
           lendingTickets: lendingRows.map((row) => ({
@@ -1752,7 +2050,7 @@ export function createD1OperationalService({
         });
         const restockLimitIndex = restockScope.values.length + 1;
         data = {
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           restockRequests: await rows(
             db,
             `SELECT restock.* FROM restock_requests restock WHERE ${restockScope.sql}
@@ -1873,7 +2171,7 @@ export function createD1OperationalService({
           events: eventRows.map(eventActivityDto),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -1890,7 +2188,7 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -1903,7 +2201,21 @@ export function createD1OperationalService({
         };
       }
     }
-    data = filterOperationalData(data, operationalContext.selected);
+    // The Request module narrows LOCATION/EVENT/EVENT_SERIES inside `queueWhere`,
+    // which drives both the page rows and the COUNT(*) behind `total`/`hasMore`.
+    // Re-filtering those here against a *paginated* item or event page is what
+    // made the metadata disagree with the rows.
+    //
+    // `requestLines` is exempted deliberately rather than narrowed: a reviewer
+    // must see every line of a visible request, because `reviewRequest` requires
+    // a decision for each reviewable line and refuses the whole submission with
+    // LINE_DECISIONS_INCOMPLETE otherwise. Narrowing lines to the selected lens
+    // would leave a parent visible but unreviewable. The lens still governs
+    // which parents appear; the lines shown are the children of parents the
+    // caller is already authorized to see, and carry no requester identity.
+    data = filterOperationalData(data, operationalContext.selected, {
+      sqlScoped: module === 'request' ? ['requests', 'requestLines'] : [],
+    });
     const totalRow = await db
       .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
       .bind('ACTIVE')
@@ -1930,12 +2242,17 @@ export function createD1OperationalService({
               total: data.inventoryItems.length,
               hasMore: false,
             }
-          : {
-              page: page.page,
-              pageSize: page.pageSize,
-              total: Number(totalRow?.count ?? 0),
-              hasMore: page.offset + page.pageSize < Number(totalRow?.count ?? 0),
-            },
+          : (() => {
+              const effectivePageSize = modulePageSize ?? page.pageSize;
+              const effectiveTotal = moduleTotal ?? Number(totalRow?.count ?? 0);
+              const effectiveOffset = moduleOffset ?? page.offset;
+              return {
+                page: page.page,
+                pageSize: effectivePageSize,
+                total: effectiveTotal,
+                hasMore: effectiveOffset + effectivePageSize < effectiveTotal,
+              };
+            })(),
       revision: globalRevision,
       scopeRevision: scopeRevision
         ? { scope: module, token: scopeRevision.revision, updatedAt: scopeRevision.updatedAt }
@@ -3026,7 +3343,8 @@ export function createD1OperationalService({
     const deliverable = await db
       .prepare(
         `SELECT deliverable.*, request.owner_committee_id,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM deliverables deliverable
          JOIN requests request ON request.id = deliverable.request_id
          WHERE deliverable.id = ?1`,
@@ -3039,6 +3357,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: deliverable.assigned_committee_id ?? deliverable.owner_committee_id,
       ownerAccountId: deliverable.owner_account_id,
+      eventId: deliverable.event_id ?? '',
+      eventSeriesId: deliverable.event_series_id ?? '',
     });
     if (!DELIVERABLE_TRANSITIONS[deliverable.status]?.includes(target)) {
       throw new ApiError(
@@ -3123,7 +3443,8 @@ export function createD1OperationalService({
     const restock = await db
       .prepare(
         `SELECT restock.*, line.workflow_revision, line.received_quantity AS line_received_quantity,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM restock_requests restock
          LEFT JOIN request_lines line ON line.id = restock.source_request_line_id
          LEFT JOIN requests request ON request.id = restock.source_request_id
@@ -3141,6 +3462,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: restock.assigned_committee_id,
       ownerAccountId: restock.owner_account_id ?? restock.created_by,
+      eventId: restock.event_id ?? '',
+      eventSeriesId: restock.event_series_id ?? '',
     });
     const receipt = await db
       .prepare(
@@ -3203,7 +3526,8 @@ export function createD1OperationalService({
     const restock = await db
       .prepare(
         `SELECT restock.*, line.status AS line_status, line.workflow_revision,
-           request.requester_account_id AS owner_account_id
+           request.requester_account_id AS owner_account_id,
+           request.event_id, request.event_series_id
          FROM restock_requests restock
          LEFT JOIN request_lines line ON line.id = restock.source_request_line_id
          LEFT JOIN requests request ON request.id = restock.source_request_id
@@ -3224,6 +3548,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: restock.assigned_committee_id,
       ownerAccountId: restock.owner_account_id ?? restock.created_by,
+      eventId: restock.event_id ?? '',
+      eventSeriesId: restock.event_series_id ?? '',
     });
     const currentStatus = restock.line_status ?? restock.status;
     if (!rule.from.includes(currentStatus)) {
@@ -3450,6 +3776,7 @@ export function createD1OperationalService({
 
   async function requesterRequestPortal({ account, correlationId }) {
     assertRequesterPortalAccount(account);
+    const departmentId = requesterDepartmentId(account);
     const eventSeries = await rows(
       db,
       `SELECT id, code, name
@@ -3480,7 +3807,7 @@ export function createD1OperationalService({
          AND request.requester_department_id = ?2
          AND request.archived_at IS NULL
        ORDER BY request.updated_at DESC`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     const requestLines = await rows(
       db,
@@ -3491,7 +3818,7 @@ export function createD1OperationalService({
        WHERE request.requester_account_id = ?1
          AND request.requester_department_id = ?2
        ORDER BY line.created_at, line.id`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     const history = await rows(
       db,
@@ -3502,14 +3829,14 @@ export function createD1OperationalService({
          WHERE requester_account_id = ?1 AND requester_department_id = ?2
        )
        ORDER BY changed_at DESC LIMIT 200`,
-      [account.id, account.departmentId],
+      [account.id, departmentId],
     );
     return {
       ok: true,
       correlationId,
       profile: {
         displayName: account.departmentDisplayName,
-        departmentId: account.departmentId,
+        departmentId,
       },
       eventSeries: eventSeries.map((series) => ({
         id: series.id,
@@ -3563,6 +3890,7 @@ export function createD1OperationalService({
 
   async function submitRequesterRequest({ account, command, correlationId }) {
     assertRequesterPortalAccount(account);
+    const departmentId = requesterDepartmentId(account);
     const mutation = await replay(db, 'submitRequesterRequest', command.clientRequestId, account.id, command);
     if (mutation.replayed) return { ...mutation.value, replayed: true };
     const requestType = requiredText(command.requestType, 'requestType', 20).toUpperCase();
@@ -3598,7 +3926,7 @@ export function createD1OperationalService({
              AND status NOT IN ('CANCELLED', 'REJECTED', 'COMPLETED')
            ORDER BY created_at LIMIT 1`,
         )
-        .bind(account.departmentId, eventSeriesId, eventId)
+        .bind(departmentId, eventSeriesId, eventId)
         .first();
       if (duplicate) {
         throw new ApiError(
@@ -3616,7 +3944,7 @@ export function createD1OperationalService({
              AND event_series_id = ?4 AND event_id = ?5 AND archived_at IS NULL
              AND status NOT IN ('CANCELLED', 'REJECTED')`,
         )
-        .bind(parentRequestId, account.id, account.departmentId, eventSeriesId, eventId)
+        .bind(parentRequestId, account.id, departmentId, eventSeriesId, eventId)
         .first();
       if (!parent) {
         throw new ApiError(
@@ -3717,7 +4045,7 @@ export function createD1OperationalService({
           purpose,
           mutation.key,
           timestamp,
-          account.departmentId,
+          departmentId,
         ),
     ];
     lines.forEach((line, index) => {
@@ -3765,7 +4093,7 @@ export function createD1OperationalService({
           status: 'FOR_REVIEW',
           requestType,
           parentRequestId: parent?.id ?? '',
-          departmentId: account.departmentId,
+          departmentId,
           lineCount: lines.length,
         },
       }),
@@ -3854,10 +4182,32 @@ export function createD1OperationalService({
         status: 403,
       });
     }
+    // The reserved item's storage location is the location bound's subject, so it
+    // is resolved before the guard rather than with the later unit lookup, which
+    // runs after `replay` and could not gate a replayed mutation.
+    const reservedLocation = await db
+      .prepare("SELECT storage_location FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
+      .bind(itemId)
+      .first();
+    // A lending reservation carries no request line, so it used to skip the
+    // scope block entirely and with it every bound check — `reservedLocation`
+    // was resolved and then discarded. `entityScope().mode` is derived from the
+    // role alone, so a bounded DIRECTOR or ADMINISTRATOR is still 'ALL' and
+    // cleared the gate above. The location bound is asserted here so a bounded
+    // actor cannot consume available-to-promise on an item outside it.
+    if (!requestLineId) {
+      assertEntityScope(account, {
+        committeeId: '',
+        ownerAccountId: account.id,
+        locationId: reservedLocation?.storage_location ?? '',
+      });
+    }
+    let parentRequestId = '';
     if (requestLineId) {
       const requestScope = await db
         .prepare(
-          `SELECT request.owner_committee_id, request.requester_account_id
+          `SELECT request.id AS request_id, request.owner_committee_id, request.requester_account_id,
+             request.status, request.event_id, request.event_series_id, line.item_id AS line_item_id
            FROM request_lines line JOIN requests request ON request.id = line.request_id
            WHERE line.id = ?1`,
         )
@@ -3865,10 +4215,37 @@ export function createD1OperationalService({
         .first();
       if (!requestScope)
         throw new ApiError('REQUEST_LINE_NOT_FOUND', 'The request line was not found.', { status: 404 });
+      parentRequestId = String(requestScope.request_id ?? '');
       assertEntityScope(account, {
         committeeId: requestScope.owner_committee_id,
         ownerAccountId: requestScope.requester_account_id,
+        eventId: requestScope.event_id ?? '',
+        eventSeriesId: requestScope.event_series_id ?? '',
+        locationId: reservedLocation?.storage_location ?? '',
       });
+      if (!requestScope.line_item_id || String(requestScope.line_item_id) !== itemId) {
+        throw new ApiError(
+          'RESERVATION_ITEM_MISMATCH',
+          'The selected inventory item does not match the request line.',
+          { status: 409 },
+        );
+      }
+      // RV-01.6: a reservation consumes availability, so it may only exist under
+      // a parent that is actually accepted. Without this a line left stock-ready
+      // by a mixed review could be reserved while the parent was still awaiting
+      // information, or after it was rejected.
+      //
+      // PARTIALLY_RELEASED must be reservable: releasing the first line of a
+      // multi-line stock request moves the parent there, and excluding it left
+      // every remaining line permanently unreservable with no operator recovery
+      // path, because nothing transitions a parent back out of that status.
+      if (!RESERVABLE_PARENT_STATUSES.includes(String(requestScope.status))) {
+        throw new ApiError(
+          'REQUEST_STATE_CONFLICT',
+          'Stock can only be reserved for an accepted request.',
+          { status: 409 },
+        );
+      }
     }
     const mutation = await replay(db, 'reserveStock', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -3899,28 +4276,19 @@ export function createD1OperationalService({
         nowIso(),
         account.id,
       );
-    try {
-      await db.batch([
-        inserted,
-        db
-          .prepare(
-            `UPDATE request_lines
-             SET status = 'READY_TO_RELEASE', updated_at = ?2
-             WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
-          )
-          .bind(requestLineId, nowIso()),
-        idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
-        ...revisionStatements(db, ['inventory', 'request']),
-      ]);
-    } catch (error) {
-      if (String(error?.message ?? '').includes('insufficient available-to-promise')) {
-        throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this reservation.', {
-          status: 409,
-        });
-      }
-      throw error;
-    }
-    await db.batch([
+    // Every other line-status writer bumps the parent. `reserveStock` was the
+    // exception, and `reviewRequest`'s stranding probe is only safe because its
+    // compare-and-swap pins `requests.updated_at` against exactly these
+    // owner-creating commands. Bumping here removes the one gap in that
+    // invariant and keeps the queue's `updated_at DESC` order honest.
+    //
+    // The audit row was previously a second batch issued after the first one
+    // committed, so an eviction or D1 fault between them left an ACTIVE
+    // reservation holding stock with no audit record that it happened.
+    const reserveDependents = [
+      ...(parentRequestId
+        ? [db.prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1').bind(parentRequestId, nowIso())]
+        : []),
       auditStatement(db, {
         action: 'STOCK_RESERVED',
         entityType: 'RESERVATION',
@@ -3929,7 +4297,58 @@ export function createD1OperationalService({
         correlationId,
         after: { itemId, quantity },
       }),
-    ]);
+      idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'request']),
+    ];
+    try {
+      if (requestLineId) {
+        // Guard the remaining unreserved demand before inserting. A status-only
+        // compare-and-swap made reservations once-per-line: procurement lines
+        // already at READY_TO_RELEASE and stock lines awaiting a post-restock
+        // top-up could never acquire the coverage confirmRelease requires.
+        //
+        // The INSERT stays after the in-batch sentinel so the capacity subquery
+        // excludes this command's row. D1 executes the complete batch atomically,
+        // so concurrent callers serialize on the guarded update: only quantities
+        // that still fit requested - released - ACTIVE reservations can commit.
+        await runAtomicRevisionGuardedBatch(db, {
+          guardedStatement: db
+            .prepare(
+              `UPDATE request_lines
+               SET status = CASE
+                     WHEN status = 'PARTIALLY_RELEASED' THEN status
+                     ELSE 'READY_TO_RELEASE'
+                   END,
+                   updated_at = ?2
+               WHERE id = ?1
+                 AND status IN ('READY_TO_RESERVE', 'READY_TO_RELEASE', 'PARTIALLY_RELEASED')
+                 AND ?3 <= requested_quantity - released_quantity - COALESCE((
+                   SELECT SUM(MAX(reservation.quantity - COALESCE((
+                     SELECT SUM(consumption.quantity)
+                     FROM reservation_consumptions consumption
+                     WHERE consumption.reservation_id = reservation.id
+                   ), 0), 0))
+                   FROM reservations reservation
+                   WHERE reservation.request_line_id = request_lines.id
+                     AND reservation.status = 'ACTIVE'
+                 ), 0)`,
+            )
+            .bind(requestLineId, nowIso(), quantity),
+          dependentStatements: [inserted, ...reserveDependents],
+          conflictCode: 'REQUEST_STATE_CONFLICT',
+          conflictMessage: 'The request line cannot accept that reservation quantity. Refresh before reserving again.',
+        });
+      } else {
+        await db.batch([inserted, ...reserveDependents]);
+      }
+    } catch (error) {
+      if (String(error?.message ?? '').includes('insufficient available-to-promise')) {
+        throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this reservation.', {
+          status: 409,
+        });
+      }
+      throw error;
+    }
     return result;
   }
 
@@ -5186,13 +5605,42 @@ export function createD1OperationalService({
       MISSING_INFORMATION: 'NEEDS_INFORMATION',
     }[decision];
     if (!nextStatus) throw new ApiError('VALIDATION_FAILED', 'The review decision is invalid.');
-    const key = command.clientRequestId ?? `review-${requestId}-${decision}`;
+    // RV-01.6 idempotency: the fallback key must include the line payload.
+    // Without it two different decision sets for the same request collide on one
+    // key, and the fingerprint check then turns the second legitimate review of
+    // a NEEDS_INFORMATION parent into a permanent IDEMPOTENCY_CONFLICT.
+    // Decisions are sorted by line so reordering is the same mutation.
+    const normalizedLineDecisions = Array.isArray(command.lineDecisions)
+      ? [...command.lineDecisions]
+          .map((entry) => `${String(entry?.lineId ?? '')}:${String(entry?.decision ?? '').toUpperCase()}`)
+          .sort()
+          .join(',')
+      : '';
+    const key =
+      command.clientRequestId ??
+      `review-${requestId}-${decision}-${await fingerprint(
+        `${normalizedLineDecisions}|${optionalText(command.note, 500)}`,
+      )}`;
     const current = await db.prepare('SELECT * FROM requests WHERE id = ?1').bind(requestId).first();
     if (!current) throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     assertEntityScope(account, {
       committeeId: current.owner_committee_id,
       ownerAccountId: current.requester_account_id,
+      eventId: current.event_id ?? '',
+      eventSeriesId: current.event_series_id ?? '',
     });
+    // Separation of duties: a requester must never review their own request,
+    // even if an unusual account configuration grants request.review. Compared
+    // on the canonical opaque account id, never on a display name or email. The
+    // denial reveals nothing about the requester beyond the caller's own
+    // identity, which they already hold.
+    if (current.requester_account_id && current.requester_account_id === account.id) {
+      throw new ApiError(
+        'SELF_REVIEW_FORBIDDEN',
+        'A request cannot be reviewed by the person who submitted it.',
+        { status: 403 },
+      );
+    }
     const mutation = await replay(db, 'reviewRequest', key, account.id, command);
     if (mutation.replayed) return mutation.value;
     if (!['FOR_REVIEW', 'NEEDS_INFORMATION'].includes(current.status)) {
@@ -5207,35 +5655,213 @@ export function createD1OperationalService({
        WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
       [requestId],
     );
-    const result = { requestId, id: requestId, status: nextStatus, correlationId };
-    const statements = [
-      db
-        .prepare(
-          `UPDATE requests SET status = ?2, updated_at = ?3
-           WHERE id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
-        )
-        .bind(requestId, nextStatus, timestamp),
-      db
-        .prepare(
-          `UPDATE request_lines
-           SET status = CASE
-             WHEN ?2 = 'ACCEPTED' AND item_id IS NOT NULL
-               AND fulfillment_source IN ('ISSUE_FROM_STOCK', 'SPLIT_FULFILLMENT')
-               THEN 'READY_TO_RESERVE'
-             WHEN ?2 = 'ACCEPTED' THEN 'FOR_CANVASSING'
-             WHEN ?2 = 'REJECTED' THEN 'REJECTED'
-             ELSE 'NEEDS_INFORMATION' END,
-             updated_at = ?3
-           WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
-        )
-        .bind(requestId, nextStatus, timestamp),
-    ];
+    // RV-01.6: a mixed review can leave the parent in NEEDS_INFORMATION while
+    // some lines are already routed and own a live Deliverables or Restocking
+    // item. A later whole-request REJECT or MISSING_INFORMATION only touches
+    // still-reviewable lines, so it would strand those active owners under a
+    // rejected parent. Require the remaining lines to be decided individually.
+    // Probe the owner tables directly rather than guessing line statuses.
+    // transitionDeliverable and transitionRestock advance request_lines.status in
+    // lockstep with their downstream item, so any status-literal test silently
+    // stops matching as soon as procurement moves the item past its first state,
+    // and a reject would then strand a live owner all the way through to
+    // physical release. Existence of an unclosed deliverable, restock, or active
+    // reservation is the invariant that actually matters.
+    const routedRow = await db
+      .prepare(
+        `SELECT
+           (SELECT COUNT(*) FROM deliverables deliverable
+              JOIN request_lines line ON line.id = deliverable.request_line_id
+             WHERE line.request_id = ?1
+               AND deliverable.status NOT IN ('CANCELLED', 'COMPLETED'))
+         + (SELECT COUNT(*) FROM restock_requests restock
+             WHERE restock.source_request_id = ?1
+               AND restock.status NOT IN ('CANCELLED', 'REJECTED', 'RESTOCKED'))
+         + (SELECT COUNT(*) FROM reservations reservation
+              JOIN request_lines line ON line.id = reservation.request_line_id
+             WHERE line.request_id = ?1 AND reservation.status = 'ACTIVE')
+           AS count`,
+      )
+      .bind(requestId)
+      .first();
+    const routedLineCount = Number(routedRow?.count ?? 0);
+    const rejectStrandsRoutes = () => {
+      if (routedLineCount === 0) return;
+      throw new ApiError(
+        'REQUEST_ALREADY_ROUTED',
+        'This request already has routed lines. Decide the remaining lines individually.',
+        { status: 409 },
+      );
+    };
+    if (nextStatus !== 'ACCEPTED') rejectStrandsRoutes();
+    // RV-01.6: an accepted review requires one explicit permitted decision for
+    // every reviewable line. The previous implicit default silently routed each
+    // non-preclassified line to procurement.
+    const lineRoutes = new Map();
+    if (nextStatus === 'ACCEPTED') {
+      const submitted = Array.isArray(command.lineDecisions) ? command.lineDecisions : null;
+      if (!submitted || !submitted.length) {
+        throw new ApiError(
+          'LINE_DECISIONS_REQUIRED',
+          'Accepting a request requires an explicit decision for every line.',
+        );
+      }
+      if (submitted.length > 100) throw new ApiError('VALIDATION_FAILED', 'Too many line decisions.');
+      for (let index = 0; index < submitted.length; index += 1) {
+        const entry = submitted[index] ?? {};
+        const lineId = requiredText(entry.lineId, `lineDecisions[${index}].lineId`, 80);
+        const routeDecision = requiredText(
+          entry.decision,
+          `lineDecisions[${index}].decision`,
+          40,
+        ).toUpperCase();
+        if (!LINE_ROUTE_DECISIONS.has(routeDecision)) {
+          throw new ApiError('LINE_DECISION_INVALID', 'The line route decision is not permitted.');
+        }
+        if (lineRoutes.has(lineId)) {
+          throw new ApiError('DUPLICATE_LINE_DECISION', 'Each line accepts exactly one decision.');
+        }
+        const line = requestLines.find((row) => row.id === lineId);
+        if (!line) {
+          throw new ApiError(
+            'LINE_DECISION_SCOPE_MISMATCH',
+            'Every decision must target a reviewable line of this request.',
+            { status: 409 },
+          );
+        }
+        if (routeDecision === 'ISSUE_FROM_STOCK' && !line.item_id) {
+          throw new ApiError(
+            'LINE_ROUTE_NOT_ALLOWED',
+            'A stock route requires an exact catalog item.',
+            { status: 409 },
+          );
+        }
+        if (routeDecision === 'RESTOCK') {
+          if (!line.item_id) {
+            throw new ApiError('LINE_ROUTE_NOT_ALLOWED', 'A restock route requires an exact catalog item.', {
+              status: 409,
+            });
+          }
+          if (
+            current.request_type !== 'CATALOG_RESTOCK' &&
+            !['OFFICE_INVENTORY', 'PANTRY'].includes(current.catalog_type)
+          ) {
+            throw new ApiError(
+              'LINE_ROUTE_NOT_ALLOWED',
+              'A restock route requires a catalog restock or Office Inventory/Pantry request.',
+              { status: 409 },
+            );
+          }
+        }
+        if (routeDecision === 'PROCUREMENT' && current.request_type === 'CATALOG_RESTOCK') {
+          throw new ApiError(
+            'LINE_ROUTE_NOT_ALLOWED',
+            'A catalog restock request cannot create an event procurement item.',
+            { status: 409 },
+          );
+        }
+        lineRoutes.set(lineId, routeDecision);
+      }
+      const uncovered = requestLines.filter((line) => !lineRoutes.has(line.id));
+      if (uncovered.length) {
+        throw new ApiError(
+          'LINE_DECISIONS_INCOMPLETE',
+          'Every reviewable line requires an explicit decision.',
+          { status: 409 },
+        );
+      }
+    }
+
+    // RV-01.6: the parent is derived from the accepted line outcomes.
+    const routeValues = [...lineRoutes.values()];
+    const derivedStatus =
+      nextStatus !== 'ACCEPTED'
+        ? nextStatus
+        : routeValues.every((route) => route === 'REJECT')
+          ? 'REJECTED'
+          : routeValues.includes('MISSING_INFORMATION')
+            ? 'NEEDS_INFORMATION'
+            : 'ACCEPTED';
+    // An ACCEPT whose remaining decisions are all REJECT derives a REJECTED
+    // parent, which would strand any line routed by an earlier mixed review just
+    // as a whole-request REJECT would. The guard therefore keys off the derived
+    // outcome, not the submitted decision.
+    if (derivedStatus === 'REJECTED') rejectStrandsRoutes();
+    const result = { requestId, id: requestId, status: derivedStatus, correlationId };
+    // RV-01.6 atomicity: the parent transition is the guarded statement. D1
+    // returns batch results only after every statement has run, so a post-batch
+    // `changes()` check cannot stop the route inserts below from committing when
+    // a concurrent reviewer already moved the request out of FOR_REVIEW. The
+    // guard must therefore live inside the batch.
+    // A membership test is not enough. NEEDS_INFORMATION is both an accepted
+    // from-state and a state this command can produce, so two reviewers holding
+    // different decision sets could each satisfy `status IN (...)` and both
+    // commit, giving one line two downstream owners. Compare-and-swap against
+    // the exact snapshot read above instead: any interleaved commit changes the
+    // status or updated_at, the guarded update matches zero rows, and the
+    // in-batch sentinel rolls the whole batch back as REQUEST_STATE_CONFLICT.
+    const guardedStatement = db
+      .prepare(
+        `UPDATE requests SET status = ?2, updated_at = ?3
+         WHERE id = ?1 AND status = ?4 AND updated_at = ?5`,
+      )
+      .bind(requestId, derivedStatus, timestamp, current.status, current.updated_at);
+    const statements = [];
+    // A derived-REJECTED parent (an ACCEPT whose remaining decisions are all
+    // REJECT) takes the ACCEPTED branch, which historically never ran the
+    // stock-ready sweep. That left an earlier mixed review's READY_TO_RESERVE
+    // line reservable under a rejected parent, so the sweep is keyed off the
+    // derived outcome and applied on every path that rejects.
+    const sweepStockReadyOnReject = () => {
+      if (derivedStatus !== 'REJECTED') return;
+      statements.push(
+        db
+          .prepare(
+            `UPDATE request_lines SET status = 'REJECTED', updated_at = ?2
+             WHERE request_id = ?1 AND status = 'READY_TO_RESERVE'`,
+          )
+          .bind(requestId, timestamp),
+      );
+    };
     if (nextStatus === 'ACCEPTED') {
       for (const line of requestLines) {
-        const routesFromStock =
-          line.item_id && ['ISSUE_FROM_STOCK', 'SPLIT_FULFILLMENT'].includes(line.fulfillment_source);
-        if (routesFromStock) continue;
-        if (current.request_type === 'CATALOG_RESTOCK' || line.fulfillment_source === 'RESTOCK') {
+        statements.push(
+          db
+            .prepare(
+              `UPDATE request_lines SET status = ?2, updated_at = ?3
+               WHERE id = ?1 AND request_id = ?4 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+            )
+            .bind(line.id, LINE_ROUTE_STATUS[lineRoutes.get(line.id)], timestamp, requestId),
+        );
+      }
+    } else {
+      statements.push(
+        db
+          .prepare(
+            nextStatus === 'REJECTED'
+              ? // READY_TO_RESERVE lines own no downstream item, but reserveStock
+                // keys off that status, so leaving them behind would let stock be
+                // reserved for a rejected request.
+                `UPDATE request_lines SET status = ?2, updated_at = ?3
+                 WHERE request_id = ?1
+                   AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION', 'READY_TO_RESERVE')`
+              : `UPDATE request_lines SET status = ?2, updated_at = ?3
+                 WHERE request_id = ?1 AND status IN ('FOR_REVIEW', 'NEEDS_INFORMATION')`,
+          )
+          .bind(requestId, nextStatus === 'REJECTED' ? 'REJECTED' : 'NEEDS_INFORMATION', timestamp),
+      );
+    }
+    sweepStockReadyOnReject();
+    // RV-01.4: only modules whose objects actually changed bump their revision.
+    const changedScopes = new Set(['request', 'overview']);
+    if (nextStatus === 'ACCEPTED') {
+      for (const line of requestLines) {
+        const route = lineRoutes.get(line.id);
+        // RV-01.6: a stock route creates no downstream owner at review. Release
+        // eligibility follows reservation and accepted readiness rules.
+        if (route === 'ISSUE_FROM_STOCK' || route === 'REJECT' || route === 'MISSING_INFORMATION') continue;
+        if (route === 'RESTOCK') {
+          changedScopes.add('restocking');
           statements.push(
             db
               .prepare(
@@ -5260,6 +5886,7 @@ export function createD1OperationalService({
               ),
           );
         } else {
+          changedScopes.add('procurement');
           statements.push(
             db
               .prepare(
@@ -5298,26 +5925,31 @@ export function createD1OperationalService({
         entityType: 'REQUEST',
         entityId: requestId,
         previousStatus: current.status,
-        newStatus: nextStatus,
+        newStatus: derivedStatus,
         accountId: account.id,
         idempotencyKey: mutation.key,
         reason: optionalText(command.note, 500),
       }),
       auditStatement(db, {
-        action: `REQUEST_${nextStatus}`,
+        action: `REQUEST_${derivedStatus}`,
         entityType: 'REQUEST',
         entityId: requestId,
         accountId: account.id,
         correlationId,
-        after: { status: nextStatus },
+        after: {
+          status: derivedStatus,
+          lineRoutes: [...lineRoutes.entries()].map(([lineId, route]) => ({ lineId, route })),
+        },
       }),
       idempotencyStatement(db, 'reviewRequest', mutation, account.id, result),
-      ...revisionStatements(db, ['request']),
+      ...revisionStatements(db, [...changedScopes]),
     );
-    const outcomes = await db.batch(statements);
-    if (Number(outcomes[0]?.meta?.changes ?? 0) !== 1) {
-      throw new ApiError('REQUEST_STATE_CONFLICT', 'The request changed during review.', { status: 409 });
-    }
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement,
+      dependentStatements: statements,
+      conflictCode: 'REQUEST_STATE_CONFLICT',
+      conflictMessage: 'The request changed during review.',
+    });
     return result;
   }
 
@@ -5331,13 +5963,18 @@ export function createD1OperationalService({
     }
     const requestId = requiredText(command.requestId, 'requestId', 80);
     const requestScope = await db
-      .prepare('SELECT owner_committee_id, requester_account_id FROM requests WHERE id = ?1')
+      .prepare(
+        `SELECT owner_committee_id, requester_account_id, event_id, event_series_id
+         FROM requests WHERE id = ?1`,
+      )
       .bind(requestId)
       .first();
     if (!requestScope) throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     assertEntityScope(account, {
       committeeId: requestScope.owner_committee_id,
       ownerAccountId: requestScope.requester_account_id,
+      eventId: requestScope.event_id ?? '',
+      eventSeriesId: requestScope.event_series_id ?? '',
     });
     const lines = Array.isArray(command.lines) ? command.lines : [];
     if (!lines.length || lines.length > 50) {
@@ -5521,11 +6158,17 @@ export function createD1OperationalService({
     statements.push(
       db
         .prepare(
+          // A REJECTED or CANCELLED line has no downstream owner and can never
+          // become COMPLETED, so counting it as outstanding work left any mixed
+          // request permanently PARTIALLY_RELEASED after its last routable line
+          // was fully released. `src/domain/requests.js` excludes both from the
+          // active set for the same reason; this matches it.
           `UPDATE requests
            SET status = CASE
              WHEN NOT EXISTS (
                SELECT 1 FROM request_lines line
-               WHERE line.request_id = requests.id AND line.status <> 'COMPLETED'
+               WHERE line.request_id = requests.id
+                 AND line.status NOT IN ('COMPLETED', 'REJECTED', 'CANCELLED')
              ) THEN 'COMPLETED' ELSE 'PARTIALLY_RELEASED' END,
              updated_at = ?2
            WHERE id = ?1`,
@@ -5577,6 +6220,7 @@ export function createD1OperationalService({
     const confirmation = await db
       .prepare(
         `SELECT confirmation.*, request.owner_committee_id, request.requester_account_id,
+                request.event_id, request.event_series_id,
                 line.requested_quantity, line.released_quantity, line.status AS line_status,
                 ledger.id AS original_ledger_id
          FROM release_confirmations confirmation
@@ -5597,6 +6241,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: confirmation.owner_committee_id,
       ownerAccountId: confirmation.requester_account_id,
+      eventId: confirmation.event_id ?? '',
+      eventSeriesId: confirmation.event_series_id ?? '',
     });
     const mutation = await replay(db, 'correctRelease', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
@@ -5794,7 +6440,8 @@ export function createD1OperationalService({
       scopeRecord = await db
         .prepare(
           `SELECT restock.assigned_committee_id AS committee_id,
-             request.requester_account_id AS owner_account_id
+             request.requester_account_id AS owner_account_id,
+             request.event_id, request.event_series_id
            FROM restock_requests restock
            LEFT JOIN requests request ON request.id = restock.source_request_id
            WHERE restock.id = ?1`,
@@ -5805,7 +6452,8 @@ export function createD1OperationalService({
       scopeRecord = await db
         .prepare(
           `SELECT COALESCE(deliverable.assigned_committee_id, request.owner_committee_id) AS committee_id,
-             request.requester_account_id AS owner_account_id
+             request.requester_account_id AS owner_account_id,
+             request.event_id, request.event_series_id
            FROM deliverables deliverable
            JOIN requests request ON request.id = deliverable.request_id
            WHERE deliverable.id = ?1`,
@@ -5816,6 +6464,8 @@ export function createD1OperationalService({
     assertEntityScope(account, {
       committeeId: scopeRecord?.committee_id,
       ownerAccountId: scopeRecord?.owner_account_id,
+      eventId: scopeRecord?.event_id ?? '',
+      eventSeriesId: scopeRecord?.event_series_id ?? '',
     });
     const evidenceId = await requireStoredEvidence(command, {
       evidenceTypes:
@@ -6059,6 +6709,40 @@ export function createD1OperationalService({
         : nonNegativeOperationalQuantity(initialQuantity, unit, 'initialQuantity'),
   });
 
+  const validateLowStockControl = ({
+    unit,
+    enabled,
+    threshold,
+    fallbackEnabled = false,
+    fallbackThreshold = null,
+    applicable = true,
+  }) => {
+    const lowStockAlertEnabled = booleanInput(enabled, fallbackEnabled);
+    const sourceThreshold = threshold === undefined ? fallbackThreshold : threshold;
+    const lowStockThreshold =
+      sourceThreshold === '' || sourceThreshold === null || sourceThreshold === undefined
+        ? null
+        : nonNegativeOperationalQuantity(sourceThreshold, unit, 'lowStockThreshold');
+    if (lowStockAlertEnabled && !applicable) {
+      throw new ApiError(
+        'LOW_STOCK_NOT_APPLICABLE',
+        'Low-stock alerts can be enabled only for an active classified stocked item.',
+        { status: 409, details: { field: 'lowStockAlertEnabled' } },
+      );
+    }
+    if (lowStockAlertEnabled && lowStockThreshold === null) {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Enter a whole-number low-stock threshold before enabling the alert.',
+        { details: { field: 'lowStockThreshold' } },
+      );
+    }
+    return {
+      lowStockAlertEnabled,
+      lowStockThreshold: lowStockAlertEnabled ? lowStockThreshold : null,
+    };
+  };
+
   async function createInventoryItem({ account, command, correlationId }) {
     const authorization = assertCapability(account, CAPABILITIES.REFERENCE_CATALOG_MANAGE);
     const mutation = await replay(db, 'createInventoryItem', command.clientRequestId, account.id, command);
@@ -6085,6 +6769,12 @@ export function createD1OperationalService({
       reorderThreshold: command.reorderThreshold,
       maximumLoanQuantity: command.maximumLoanQuantity,
       initialQuantity: command.initialQuantity ?? command.quantity ?? 0,
+    });
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled: command.lowStockAlertEnabled,
+      threshold: command.lowStockThreshold,
+      applicable: false,
     });
     if (
       quantities.initialQuantity > 0 &&
@@ -6116,6 +6806,8 @@ export function createD1OperationalService({
       status,
       catalogType,
       reorderThreshold: quantities.reorderThreshold,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
       defaultLoanDays,
       maximumLoanQuantity: quantities.maximumLoanQuantity,
@@ -6141,11 +6833,13 @@ export function createD1OperationalService({
         .prepare(
           `INSERT INTO inventory_items (
              id, name, category, stock_area, handling, unit, opening_quantity, status,
-             catalog_type, storage_location, reorder_threshold, lending_audience,
-             default_loan_days, maximum_loan_quantity, approval_required, legacy_source_sheet,
-             verification_note, notes, created_at, updated_at, updated_by
+             catalog_type, storage_location, reorder_threshold, low_stock_alert_enabled,
+             low_stock_threshold, lending_audience, default_loan_days, maximum_loan_quantity,
+             approval_required, legacy_source_sheet, verification_note, notes,
+             created_at, updated_at, updated_by
            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, ?7, ?8, ?9, ?10,
-             'NOT_AVAILABLE_FOR_LENDING', ?11, ?12, ?13, '', ?14, ?15, ?16, ?16, ?17)`,
+             ?11, ?12, 'NOT_AVAILABLE_FOR_LENDING', ?13, ?14, ?15, '', ?16, ?17,
+             ?18, ?18, ?19)`,
         )
         .bind(
           itemId,
@@ -6158,6 +6852,8 @@ export function createD1OperationalService({
           catalogType,
           storageLocation,
           quantities.reorderThreshold,
+          lowStock.lowStockAlertEnabled ? 1 : 0,
+          lowStock.lowStockThreshold,
           defaultLoanDays,
           quantities.maximumLoanQuantity,
           approvalRequired ? 1 : 0,
@@ -6284,6 +6980,16 @@ export function createD1OperationalService({
         ? command.maximumLoanQuantity
         : current.maximum_loan_quantity,
     });
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled: has('lowStockAlertEnabled')
+        ? command.lowStockAlertEnabled
+        : current.low_stock_alert_enabled === 1,
+      threshold: has('lowStockThreshold') ? command.lowStockThreshold : undefined,
+      fallbackEnabled: current.low_stock_alert_enabled === 1,
+      fallbackThreshold: current.low_stock_threshold,
+      applicable: current.classification_status === 'CLASSIFIED' && status === 'ACTIVE',
+    });
     const defaultLoanDays = has('defaultLoanDays')
       ? optionalPositiveInteger(command.defaultLoanDays, 'defaultLoanDays')
       : current.default_loan_days;
@@ -6317,6 +7023,8 @@ export function createD1OperationalService({
       status,
       catalogType,
       reorderThreshold: quantities.reorderThreshold,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       lendingAudience,
       defaultLoanDays,
       maximumLoanQuantity: handling === 'NON_CIRCULATING' ? null : quantities.maximumLoanQuantity,
@@ -6331,11 +7039,12 @@ export function createD1OperationalService({
       .prepare(
         `UPDATE inventory_items SET name = ?1, category = ?2, stock_area = ?3,
            storage_location = ?4, handling = ?5, unit = ?6, status = ?7, catalog_type = ?8,
-           reorder_threshold = ?9, lending_audience = ?10, default_loan_days = ?11,
-           maximum_loan_quantity = ?12, approval_required = ?13, verification_note = ?14,
-           notes = ?15, is_lendable = ?16, lending_status = ?17, lending_unit = ?6,
-           updated_at = ?18, updated_by = ?19
-         WHERE id = ?20 AND updated_at = ?21`,
+           reorder_threshold = ?9, low_stock_alert_enabled = ?10, low_stock_threshold = ?11,
+           lending_audience = ?12, default_loan_days = ?13, maximum_loan_quantity = ?14,
+           approval_required = ?15, verification_note = ?16, notes = ?17,
+           is_lendable = ?18, lending_status = ?19, lending_unit = ?6,
+           updated_at = ?20, updated_by = ?21
+         WHERE id = ?22 AND updated_at = ?23`,
       )
       .bind(
         name,
@@ -6347,6 +7056,8 @@ export function createD1OperationalService({
         status,
         catalogType,
         quantities.reorderThreshold,
+        lowStock.lowStockAlertEnabled ? 1 : 0,
+        lowStock.lowStockThreshold,
         lendingAudience,
         defaultLoanDays,
         after.maximumLoanQuantity,
@@ -6827,22 +7538,22 @@ export function createD1OperationalService({
         { status: 409 },
       );
     }
-    const reorderThreshold = Number(command.reorderThreshold ?? current.reorder_threshold);
-    if (
-      !isKnownQuantityUnit(unit) ||
-      !Number.isFinite(reorderThreshold) ||
-      reorderThreshold < 0 ||
-      (isCountableUnit(unit) && !Number.isInteger(reorderThreshold))
-    ) {
-      throw new ApiError(
-        'VALIDATION_FAILED',
-        !isKnownQuantityUnit(unit)
-          ? `Reorder threshold uses an unsupported unit: ${unit}.`
-          : isCountableUnit(unit)
-            ? `Reorder threshold must be a whole number for ${unit}.`
-            : 'Reorder threshold must be zero or greater.',
-      );
-    }
+    const reorderThreshold = nonNegativeOperationalQuantity(
+      command.reorderThreshold ?? current.reorder_threshold,
+      unit,
+      'reorderThreshold',
+    );
+    const lowStock = validateLowStockControl({
+      unit,
+      enabled:
+        command.lowStockAlertEnabled === undefined
+          ? current.low_stock_alert_enabled === 1
+          : command.lowStockAlertEnabled,
+      threshold: command.lowStockThreshold,
+      fallbackEnabled: current.low_stock_alert_enabled === 1,
+      fallbackThreshold: current.low_stock_threshold,
+      applicable: classificationStatus === 'CLASSIFIED' && current.status === 'ACTIVE',
+    });
     const classificationNotes = optionalText(command.classificationNotes, 1000);
     const evidenceId = optionalText(command.evidenceId, 120);
     if (evidenceId) {
@@ -6862,9 +7573,18 @@ export function createD1OperationalService({
       }
     }
     const existingAssetCount = Number(current.asset_count ?? 0);
-    const requestedAssetCount = Number(command.assetInstanceCountIfReusable ?? existingAssetCount);
-    if (!Number.isInteger(requestedAssetCount) || requestedAssetCount < 0) {
-      throw new ApiError('VALIDATION_FAILED', 'Asset instance count must be a whole number zero or greater.');
+    let requestedAssetCount;
+    try {
+      requestedAssetCount = operationalInteger(command.assetInstanceCountIfReusable ?? existingAssetCount, {
+        field: 'assetInstanceCountIfReusable',
+        min: 0,
+      });
+    } catch {
+      throw new ApiError(
+        'VALIDATION_FAILED',
+        'Asset instance count must be a whole number zero or greater.',
+        { details: { field: 'assetInstanceCountIfReusable' } },
+      );
     }
     const assetTags = Array.isArray(command.assetTags)
       ? command.assetTags.map((tag) => requiredText(tag, 'assetTag', 80).toUpperCase())
@@ -6919,6 +7639,8 @@ export function createD1OperationalService({
       inventoryKind,
       isLendable,
       lendingAudience,
+      lowStockAlertEnabled: lowStock.lowStockAlertEnabled,
+      lowStockThreshold: lowStock.lowStockThreshold,
       assetInstanceCount: requestedAssetCount,
       classificationRevision: nextRevision,
       correlationId,
@@ -6936,15 +7658,16 @@ export function createD1OperationalService({
         .prepare(
           `UPDATE inventory_items SET
              stock_area = ?1, storage_location = ?2, handling = ?3, unit = ?4,
-             reorder_threshold = ?5, inventory_kind = ?6, classification_status = ?7,
-             condition_review_state = ?8, maintenance_review_state = ?9,
-             classification_notes = ?10, classification_evidence_id = ?11,
-             classification_revision = ?12, classified_at = ?13, classified_by = ?14,
-             is_lendable = ?15, lending_audience = ?16, lending_kind = ?17,
-             lending_status = ?18, lending_unit = ?4, due_date_required = ?19,
-             condition_tracking = ?20, eligibility_rule = ?21,
-             lending_handling_notes = ?10, updated_at = ?22, updated_by = ?14
-           WHERE id = ?23 AND classification_revision = ?24`,
+             reorder_threshold = ?5, low_stock_alert_enabled = ?6, low_stock_threshold = ?7,
+             inventory_kind = ?8, classification_status = ?9,
+             condition_review_state = ?10, maintenance_review_state = ?11,
+             classification_notes = ?12, classification_evidence_id = ?13,
+             classification_revision = ?14, classified_at = ?15, classified_by = ?16,
+             is_lendable = ?17, lending_audience = ?18, lending_kind = ?19,
+             lending_status = ?20, lending_unit = ?4, due_date_required = ?21,
+             condition_tracking = ?22, eligibility_rule = ?23,
+             lending_handling_notes = ?12, updated_at = ?24, updated_by = ?16
+           WHERE id = ?25 AND classification_revision = ?26`,
         )
         .bind(
           stockArea,
@@ -6952,6 +7675,8 @@ export function createD1OperationalService({
           handling,
           unit,
           reorderThreshold,
+          lowStock.lowStockAlertEnabled ? 1 : 0,
+          lowStock.lowStockThreshold,
           inventoryKind,
           classificationStatus,
           conditionReviewState,

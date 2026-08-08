@@ -359,9 +359,12 @@ export function createLegacyRuntimeAdapter(
         remote.escalateCompositeComponent(command),
       );
     },
-    reviewRequest(requestId, decision, note = '') {
-      return mutationRequests.run('review', { requestId, decision, note }, (command) =>
-        remote.reviewRequest(command),
+    // RV-01.6: an accepted review carries one explicit decision per line.
+    reviewRequest(requestId, decision, note = '', lineDecisions = null) {
+      return mutationRequests.run(
+        'review',
+        { requestId, decision, note, ...(lineDecisions ? { lineDecisions } : {}) },
+        (command) => remote.reviewRequest(command),
       );
     },
     async reserveStock(itemId, quantity, links = {}) {

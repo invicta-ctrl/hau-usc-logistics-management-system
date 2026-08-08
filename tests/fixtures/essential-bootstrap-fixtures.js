@@ -60,6 +60,61 @@ export function createEssentialBootstrapFixture({ backendMode = 'mock', environm
   };
 }
 
+/**
+ * Canonical internal Request review-queue projection used by the RV-01
+ * regression boundary. One unassigned FOR_REVIEW parent with a stock-ready line
+ * and a procurement line, so per-line routing can be asserted from one parent.
+ */
+export function createRequestQueueFixture() {
+  return {
+    requests: [
+      {
+        id: 'REQ-RV01-001',
+        type: 'EVENT_LOGISTICS',
+        status: 'FOR_REVIEW',
+        purpose: 'Synthetic RV-01 event logistics request',
+        requesterName: 'Synthetic Requester',
+        requesterGroup: 'DOL - Synthetic Committee',
+        ownerCommitteeId: '',
+        eventSeriesId: 'SYNTHETIC-SERIES-001',
+        eventId: 'SYNTHETIC-EVENT-001',
+        dateStart: '2026-08-10',
+        dateEnd: '2026-08-10',
+        createdAt: '2026-08-07T01:00:00.000Z',
+        updatedAt: '2026-08-07T01:00:00.000Z',
+      },
+    ],
+    requestLines: [
+      {
+        id: 'RL-RV01-001',
+        requestId: 'REQ-RV01-001',
+        itemId: 'SYNTHETIC-ITEM-001',
+        description: 'Synthetic Item 1',
+        specification: 'Synthetic Item 1',
+        requestedQuantity: 2,
+        unit: 'piece',
+        fulfillmentSource: 'ISSUE_FROM_STOCK',
+        status: 'FOR_REVIEW',
+        createdAt: '2026-08-07T01:00:00.000Z',
+        updatedAt: '2026-08-07T01:00:00.000Z',
+      },
+      {
+        id: 'RL-RV01-002',
+        requestId: 'REQ-RV01-001',
+        itemId: null,
+        description: 'Synthetic procurement specification',
+        specification: 'Synthetic procurement specification',
+        requestedQuantity: 5,
+        unit: 'piece',
+        fulfillmentSource: 'PROCUREMENT',
+        status: 'FOR_REVIEW',
+        createdAt: '2026-08-07T01:00:00.000Z',
+        updatedAt: '2026-08-07T01:00:00.000Z',
+      },
+    ],
+  };
+}
+
 export function createBootstrapModuleFixture({ backendMode = 'mock', environment = 'STAGING', module = 'request', requestOnly = false, cacheSafe = true, rows = 2 } = {}) {
   const items = Array.from({ length: rows }, (_, index) => ({
     id: `SYNTHETIC-ITEM-${String(index + 1).padStart(3, '0')}`,

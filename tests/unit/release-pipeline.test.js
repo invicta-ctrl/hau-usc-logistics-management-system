@@ -6,7 +6,7 @@ import { createReleaseCandidateManifest } from '../../scripts/create-release-can
 const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
-describe('v0.7.1 release pipeline', () => {
+describe('v0.7.2 release pipeline', () => {
   it('keeps the Cloudflare preview static, manually gated, and free of protected bindings', async () => {
     const [workflow, config, handoff] = await Promise.all([
       read('.github/workflows/cloudflare-preview.yml'),
@@ -50,7 +50,7 @@ describe('v0.7.1 release pipeline', () => {
     expect(workflow).not.toContain('echo "preview_url=');
     expect(workflow).not.toContain('echo "- Preview URL:');
     expect(workflow).toContain('$GITHUB_STEP_SUMMARY');
-    expect(workflow).toContain('v0.7.1-preview-evidence-${{ inputs.candidate_sha }}');
+    expect(workflow).toContain('v0.7.2-preview-evidence-${{ inputs.candidate_sha }}');
     expect(workflow).not.toMatch(/pull_request_target|wrangler\.production|PRODUCTION_D1|PRODUCTION_R2/u);
     expect(handoff).toContain('logistics.hausc.org');
     expect(handoff).toContain('request.hausc.org');
@@ -83,7 +83,7 @@ describe('v0.7.1 release pipeline', () => {
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
     const manifest = await createReleaseCandidateManifest();
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.7.1' });
+    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.7.2' });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);

@@ -10,7 +10,7 @@ const NORMALIZED_ROSTER_HEADERS = Object.freeze([
 const USC_DIRECTORY_FIELDS = Object.freeze({
   displayName: 'Full Name',
   studentId: 'Student Number',
-  institutionalEmail: 'HAU Email',
+  institutionalEmail: 'Working Email',
 });
 
 function bytesToBase64Url(bytes) {
@@ -97,6 +97,7 @@ function normalizeRosterValues(headers, rows) {
       true,
       '',
     ]),
+    preserveRejectedProfiles: false,
     fingerprintSource: { headers, rows },
   };
 }

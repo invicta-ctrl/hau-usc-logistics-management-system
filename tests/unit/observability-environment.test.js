@@ -11,6 +11,7 @@ import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
   preview_urls: false,
+  assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
   observability: {
     logs: { enabled: true, head_sampling_rate: environment === 'STAGING' ? 1 : 0.1 },
     traces: { enabled: true, head_sampling_rate: 0.05 },
@@ -84,6 +85,8 @@ describe('v0.7 environment and observability foundation', () => {
         'TRACKING_LINK_SECRET_MISSING',
         'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING',
         'ROSTER_DATA_ENCRYPTION_KEY_MISSING',
+        'ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING',
+        'ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED',
       ]),
     );
     expect(
@@ -154,16 +157,41 @@ describe('v0.7 environment and observability foundation', () => {
     );
   });
 
-  it('preserves route glob strings while parsing strict private configuration JSON', () => {
+  it('fails closed when a private config would route governed assets through the SPA', () => {
+    const staging = binding('STAGING', 'hau-usc-logistics-staging', '1'.repeat(32), 'staging-assets');
+    const production = binding(
+      'PRODUCTION',
+      'hau-usc-logistics-production',
+      '2'.repeat(32),
+      'production-assets',
+    );
+    staging.assets.run_worker_first = ['/api/*'];
+
+    const invalid = validateEnvironmentSeparation(staging, production, {
+      expectedSha: 'a'.repeat(40),
+    });
+
+    expect(invalid.valid).toBe(false);
+    expect(invalid.issues).toEqual(
+      expect.arrayContaining([
+        'STAGING: assets.run_worker_first must include /brand/*',
+        'STAGING: assets.run_worker_first must include /media/*',
+      ]),
+    );
+  });
+
+  it('preserves route glob strings while parsing private JSONC comments', () => {
     const config = parseJsonConfig(
-      JSON.stringify({
-        assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
-        vars: { ENVIRONMENT: 'STAGING', CANDIDATE_SHA: 'a'.repeat(40) },
-        r2_buckets: [
-          { binding: 'BRAND_ASSETS', bucket_name: 'staging-assets' },
-          { binding: 'EVIDENCE_ASSETS', bucket_name: 'staging-evidence' },
-        ],
-      }),
+      `{
+        // Worker-first route globs are string values, not block comments.
+        "assets": { "run_worker_first": ["/api/*", "/brand/*", "/media/*"] },
+        "vars": { "ENVIRONMENT": "STAGING", "CANDIDATE_SHA": "${'a'.repeat(40)}" },
+        /* Provider bindings remain available after comment stripping. */
+        "r2_buckets": [
+          { "binding": "BRAND_ASSETS", "bucket_name": "staging-assets" },
+          { "binding": "EVIDENCE_ASSETS", "bucket_name": "staging-evidence" }
+        ]
+      }`,
     );
 
     expect(config.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
@@ -186,15 +214,17 @@ describe('v0.7 environment and observability foundation', () => {
     );
     expect(pair.staging).toMatchObject({
       name: 'hau-usc-logistics-staging',
-      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.1' },
+      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.2' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
       ],
     });
+    expect(pair.staging.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
+    expect(pair.production.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production).toMatchObject({
       name: 'hau-usc-logistics-production',
-      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.1' },
+      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.7.2' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-production-evidence' },

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
 
 export function decodeJsonBuffer(buffer) {
   if (buffer[0] === 0xff && buffer[1] === 0xfe) return buffer.subarray(2).toString('utf16le');
@@ -27,7 +28,15 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
       logs: { enabled: true, head_sampling_rate: 1, invocation_logs: true, persist: true },
       traces: { enabled: true, head_sampling_rate: 0.05, persist: true },
     },
-    assets: source.assets,
+    assets: {
+      ...source.assets,
+      run_worker_first: [
+        ...new Set([
+          ...(Array.isArray(source.assets?.run_worker_first) ? source.assets.run_worker_first : []),
+          ...REQUIRED_WORKER_FIRST_ROUTES,
+        ]),
+      ],
+    },
     d1_databases: [
       {
         binding: 'DB',
@@ -44,7 +53,7 @@ function baseConfig(source, { name, environment, candidateSha, d1, brandR2Bucket
     triggers: { crons: ['*/5 * * * *'] },
     vars: {
       ENVIRONMENT: environment,
-      APP_VERSION: '0.7.1',
+      APP_VERSION: '0.7.2',
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
@@ -107,7 +116,7 @@ async function run() {
       { flag: 'wx', mode: 0o600 },
     ),
   ]);
-  console.log('Distinct v0.7.1 staging and production Wrangler configs created outside Git.');
+  console.log('Distinct v0.7.2 staging and production Wrangler configs created outside Git.');
   console.log('No private provider identifiers were printed.');
 }
 

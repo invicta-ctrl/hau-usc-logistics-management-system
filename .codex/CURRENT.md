@@ -1,29 +1,101 @@
 # Current Codex Work Pointer
 
+> **CURRENT AS OF 2026-08-08 — read this block first.**
+>
+> Everything below this block predates 2026-08-08 and refers to superseded SHAs.
+> Live Git and provider truth override it.
+>
+> - Release: **v0.7.2 — REPOSITORY CANDIDATE ACCEPTED; PRIVATE STAGING GATES OPEN.** Nothing is deployed; migration 0030 is
+>   applied nowhere; staging and production are both still 0.7.1 / schema 29.
+> - Branch: `release/v0.7.2-production-access-operations`
+> - Reviewed implementation SHA: `6deed1a31ded616fd54d33719230336d9cd5bf64`
+>   (clean and upstream `0/0` at freeze; live Git is authoritative for the
+>   documentation-only successor).
+> - PR #15: OPEN, DRAFT, not merged.
+> - Latest SHA with a valid review PASS:
+>   `6deed1a31ded616fd54d33719230336d9cd5bf64` — security and transaction
+>   reviews both PASS with zero unresolved P0/P1; exact-head CI is green.
+> - N-1 is closed. Current blocker: private
+>   `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` needs the owner-supplied coarse
+>   domain class; do not derive or invent it. Staging owner login is unproven.
+> - **Authoritative continuation:**
+>   [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](V0_7_2_CODEX_CONTINUATION_HANDOFF.md)
+> - **Resume prompt:**
+>   [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](V0_7_2_CODEX_RESUME_PROMPT.md)
+
 ## Active release pointer
 
-- Program: HAU-USC Logistics v0.7.1 production launch closure.
-- Status: `COMPLETE - V0.7.1 PRODUCTION OPERATIONAL`.
-- Canonical branch: `main`.
-- Exact release/tag SHA: `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
-- Upstream: `origin/main` at the same SHA; reconciliation was `0/0`.
-- Pull request/release: PR #13 merged; annotated tag and GitHub Release
-  `v0.7.1` published; required `validate`, `verify`, and `browser-smoke`
-  checks passed.
-- Runtime: staging and production were deployed and reconciled to the exact
-  release SHA. Cache-busted production health/readiness/version reads confirm
-  release `0.7.1`, schema 29 / migration 0029, ready true, and required
-  dependencies available.
-- Recovery: pre-write D1 exports, Time Travel bookmarks, Google evidence, and
-  prior Worker rollback targets are retained privately outside Git. No launch
-  rollback was required.
-- Durable handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
-- Local evidence boundary: preserve `.codegraph/` and the owner-authorized
-  `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both are excluded only in the
-  local Git information file and are not repository dependencies.
-- Next accepted action: begin v0.7.2 only from synchronized clean `main`,
-  create the repository-native accepted specification and task record, and
-  preserve the exact production-deployment owner gate.
+- Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
+- Status: `REPOSITORY_CANDIDATE_ACCEPTED - PRIVATE_STAGING_INPUT_REQUIRED`.
+- Integration branch: `release/v0.7.2-production-access-operations`.
+- Accepted amendment: `v0.7.2-RV-01` Public Request Visibility, Review
+  Ownership, and Deterministic Line Routing, recorded at
+  `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`.
+- RV-01 repair (2026-08-07): the authenticated Request module now independently
+  projects the canonical parent/line review queue with its own pagination total;
+  public submission bumps the `overview` scope revision as well as `global` and
+  `request`; the scoped-revision poller now runs for the REST/HTTP production
+  backend instead of Apps Script only, so an already-open Main Hub refreshes
+  without a hard reload or re-login; and request review requires one explicit
+  server-validated route decision per line, replacing the implicit
+  "everything else becomes procurement" default. No migration was introduced.
+- RV-01 repair head: `375ac1221c5ddad1e60dcee15154acf45f0724c2`. PR #15 head
+  matches; `MERGEABLE` / `CLEAN`; exact-head `validate`, `verify`, and
+  `browser-smoke` all `SUCCESS`.
+- **RV-01 does not carry a PASS.** Both independent exact-SHA reviews ran and
+  are recorded in the candidate handoff; both returned FAIL. Every P0 and P1
+  they raised is repaired (batch atomicity, stranded routes, derived-reject
+  bypass, idempotency key binding, inert revision polling), but the RV-01.6
+  reviewer UI gap remains open and no review round has yet returned PASS.
+- Two earlier claims were overstated and are corrected in the handoff: the DENY
+  short-circuits are latent defence in depth rather than a live repair, and the
+  RV-01.4 refresh claim had been supported only by server-side token advance
+  while the client poller was disabled by a hardcoded `enabled: false`.
+- RV-01 verification at `375ac12`: `npm run check` 114 files / 786 tests,
+  exit 0; browser 136 passed / 356 intentional skips / 0 failed; local
+  Worker/D1 43/43, including the two-context regression `public request becomes
+  visible to an already-open authorized Main Hub and routes each line exactly
+  once`, Request-owned search/date/archive filtering, the RV-01.3 authorization
+  matrix, and the partially-routed reject guard.
+- Generated-artifact hazard recorded: the local Worker acceptance suite rebuilds
+  `dist/index.html` with `--mode staging`, so `npm run build` must be re-run
+  immediately before staging a commit. `verify:dist` does not compare the
+  committed artifact against a fresh build.
+- RV-01 also repaired two pre-existing time-dependent fixtures (hardcoded
+  lending pickup/due dates) that made the recorded 39/39 Worker and 136 browser
+  evidence non-reproducible after 2026-08-03.
+- Owner decision 2026-08-07: identity qualification uses Option A, exact
+  protected-directory verified-email match only; unmatched applicants remain
+  fail closed for governed manual review.
+- Starting clean `main` / `origin/main` SHA:
+  `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- Immutable predecessor release/tag SHA:
+  `e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90` / `v0.7.1`.
+- Accepted specification:
+  `.codex/specs/v0.7.2-production-access-operations.md`.
+- Current work unit: complete a fresh independent exact-SHA review of the RV-01
+  repair head and PR CI, then stop before pre-production until the approved
+  email-provider implementation/configuration exists. Identity policy is
+  decided (Option A) but the live provider remains absent.
+- Verification: schema-30 rehearsal passed; `npm run check` passes 113 files /
+  774 tests; browser passes 136 / 356 intentional skips; local Worker/D1 passes
+  39/39. Five candidate review/audit cycles rejected earlier SHAs; their
+  schema/runtime, reconciliation, transaction, account-revision, stale-write,
+  identifier, login-identity, actor/request replay binding, owner-override
+  confirmation binding, no-op retry receipts, mutation idempotency, and public-
+  replay findings are repaired locally and require a fresh exact-SHA review.
+- Production boundary: the owner supplied `AUTHORIZE V0.7.2 PRODUCTION` and no
+  second confirmation wait is required. Production is still prohibited until
+  the exact target, provider, pre-production, backup, rollback, and
+  reconciliation gates pass. No v0.7.2 external release write has occurred.
+- Blocking inputs: owner-approved live email provider and private
+  `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON`. Readiness remains intentionally
+  fail closed.
+- Candidate handoff: `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
+- Predecessor handoff: `.codex/V0_7_1_PRODUCTION_LAUNCH_HANDOFF.md`.
+- Local evidence boundary: preserve `.codegraph/` and
+  `output/pdf/HAU-USC_v0.7.1_Launch_Report.pdf`; both remain local-only ignored
+  evidence and are not repository dependencies.
 
 ---
 

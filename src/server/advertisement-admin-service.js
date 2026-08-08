@@ -1,5 +1,6 @@
 import { accountAuthorization } from './auth/contracts.js';
 import { ApiError } from './d1/operational-service.js';
+import { operationalInteger } from '../domain/operational-integers.js';
 
 const CONTENT_TYPES = Object.freeze({
   'image/jpeg': 'jpg',
@@ -7,15 +8,14 @@ const CONTENT_TYPES = Object.freeze({
   'image/webp': 'webp',
 });
 const MAX_IMAGE_BYTES = 750_000;
+const AUDIENCES = Object.freeze(['PUBLIC', 'STAFF', 'REQUEST', 'LENDING']);
 
 function mediaMatchesType(bytes, contentType) {
   if (contentType === 'image/jpeg') {
     return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   }
   if (contentType === 'image/png') {
-    return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
-      (value, index) => bytes[index] === value,
-    );
+    return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value);
   }
   if (contentType === 'image/webp') {
     return (
@@ -40,6 +40,137 @@ const optionalText = (value, max = 500) =>
   String(value ?? '')
     .trim()
     .slice(0, max);
+
+function validationFromInteger(error, field) {
+  throw new ApiError('VALIDATION_FAILED', error?.fieldErrors?.[field] ?? `${field} must be a whole number.`, {
+    status: 422,
+    details: { field },
+  });
+}
+
+function operationalDisplayOrder(value, field = 'displayOrder') {
+  try {
+    return operationalInteger(value, { field, min: 0, max: 100000 });
+  } catch (error) {
+    return validationFromInteger(error, field);
+  }
+}
+
+function normalizedAudience(value, field = 'audience') {
+  const audience = String(value ?? 'PUBLIC')
+    .trim()
+    .toUpperCase();
+  if (!AUDIENCES.includes(audience)) {
+    throw new ApiError('VALIDATION_FAILED', 'Choose a supported announcement audience.', {
+      status: 422,
+      details: { field },
+    });
+  }
+  return audience;
+}
+
+function rowRevision(row) {
+  const revision = Number(row?.revision ?? 1);
+  return Number.isSafeInteger(revision) && revision >= 1 ? revision : 1;
+}
+
+function revisionConflict(
+  expectedRevision,
+  currentRevision,
+  message = 'Announcement data changed; refresh before updating.',
+) {
+  throw new ApiError('REVISION_CONFLICT', message, {
+    status: 409,
+    details: { field: 'expectedRevision', expectedRevision, currentRevision },
+  });
+}
+
+function expectedRevision(command, current) {
+  let expected;
+  try {
+    expected = operationalInteger(command.expectedRevision, { field: 'expectedRevision', min: 1 });
+  } catch {
+    revisionConflict(
+      undefined,
+      rowRevision(current),
+      'Expected revision is required; refresh before updating.',
+    );
+  }
+  const currentRevision = rowRevision(current);
+  if (expected !== currentRevision) revisionConflict(expected, currentRevision);
+  return expected;
+}
+
+function changedRows(result) {
+  const first = Array.isArray(result) ? result[0] : result;
+  const changes = first?.meta?.changes ?? first?.changes;
+  if (changes === undefined || changes === null) return null;
+  const numeric = Number(changes);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function assertChanged(result, expected, current) {
+  if (changedRows(result) === 0) revisionConflict(expected, rowRevision(current));
+}
+
+function revisionGuardStatement(db, id, expectedRevision) {
+  return db
+    .prepare(
+      `SELECT CASE
+         WHEN EXISTS (
+           SELECT 1 FROM public_advertisements
+           WHERE id = ?1 AND revision = ?2 AND archived_at IS NULL
+         ) THEN 1
+         ELSE json_extract('ADVERTISEMENT_REVISION_GUARD_FAILED', '$')
+       END AS allowed`,
+    )
+    .bind(id, expectedRevision);
+}
+
+async function guardedMutation(db, { id, expectedRevision, current, statements }) {
+  try {
+    const results = await db.batch([revisionGuardStatement(db, id, expectedRevision), ...statements]);
+    assertChanged(results[1], expectedRevision, current);
+    return results;
+  } catch (error) {
+    const latest = await db
+      .prepare('SELECT revision, archived_at FROM public_advertisements WHERE id = ?1')
+      .bind(id)
+      .first();
+    if (
+      error?.code === 'ADVERTISEMENT_REVISION_GUARD_FAILED' ||
+      !latest ||
+      latest.archived_at ||
+      rowRevision(latest) !== expectedRevision
+    ) {
+      revisionConflict(expectedRevision, latest ? rowRevision(latest) : rowRevision(current));
+    }
+    throw error;
+  }
+}
+
+function announcementDto(row, { preview = false } = {}) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    altText: row.alt_text,
+    callToAction: row.call_to_action,
+    destinationUrl: row.destination_url,
+    status: row.status,
+    displayOrder: Number(row.display_order ?? 0),
+    publishAt: row.publish_at,
+    expireAt: row.expire_at,
+    audience: normalizedAudience(row.audience),
+    revision: rowRevision(row),
+    imageUrl: `/media/advertisements/${encodeURIComponent(row.id)}`,
+    hasImage: Boolean(row.image_asset_key),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    archivedAt: row.archived_at,
+    ...(preview ? { preview: true } : {}),
+  };
+}
 
 function assertAdmin(account) {
   const authorization = accountAuthorization(account);
@@ -143,14 +274,7 @@ function idempotencyStatement(db, { account, operation, replayState, result, cre
          actor_account_id, operation, idempotency_key, request_hash, result_json, created_at
        ) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
     )
-    .bind(
-      account.id,
-      operation,
-      replayState.key,
-      replayState.hash,
-      JSON.stringify(result),
-      createdAt,
-    );
+    .bind(account.id, operation, replayState.key, replayState.hash, JSON.stringify(result), createdAt);
 }
 
 function normalizedMetadata(command, current = {}) {
@@ -169,21 +293,57 @@ function normalizedMetadata(command, current = {}) {
     altText: requiredText(command.altText ?? current.alt_text, 'altText', 240),
     callToAction: optionalText(command.callToAction ?? current.call_to_action, 80),
     destinationUrl: destination(command.destinationUrl ?? current.destination_url),
-    status: String(command.status ?? current.status ?? 'DRAFT').toUpperCase(),
-    displayOrder: Number(command.displayOrder ?? current.display_order ?? 0),
+    status: String(command.status ?? current.status ?? 'DRAFT')
+      .trim()
+      .toUpperCase(),
+    displayOrder: operationalDisplayOrder(command.displayOrder ?? current.display_order ?? 0),
+    audience: normalizedAudience(command.audience ?? current.audience ?? 'PUBLIC'),
     publishAt,
     expireAt,
   };
 }
 
-export function createAdvertisementAdminService({ db, bucket } = {}) {
+function archivedRecord(row) {
+  return Boolean(row?.archived_at) || row?.status === 'ARCHIVED';
+}
+
+function assertMutableRecord(row) {
+  if (!row) {
+    throw new ApiError('ADVERTISEMENT_NOT_FOUND', 'The advertisement was not found.', { status: 404 });
+  }
+  if (archivedRecord(row)) {
+    throw new ApiError('ADVERTISEMENT_ARCHIVED', 'Archived announcements are immutable.', { status: 409 });
+  }
+}
+
+function assertValidStatus(status) {
+  if (!['DRAFT', 'ACTIVE', 'INACTIVE'].includes(status)) {
+    throw new ApiError('VALIDATION_FAILED', 'Choose Draft, Active, or Inactive.', {
+      status: 422,
+      details: { field: 'status' },
+    });
+  }
+}
+
+function requireImage(row) {
+  if (!row?.image_asset_key) {
+    throw new ApiError(
+      'ADVERTISEMENT_MEDIA_REQUIRED',
+      'Upload validated media before activating the advertisement.',
+      { status: 409 },
+    );
+  }
+}
+
+export function createAdvertisementAdminService({ db, bucket, clock = Date } = {}) {
   if (!db) throw new Error('D1 database binding is required.');
   if (!bucket) throw new Error('R2 advertisement binding is required.');
+  const nowIso = () => new Date(clock.now()).toISOString();
 
   async function list({ account, command = {} } = {}) {
     assertAdmin(account);
-    const page = Math.max(1, Number(command.page) || 1);
-    const pageSize = Math.min(100, Math.max(1, Number(command.pageSize) || 20));
+    const page = Math.max(1, Math.floor(Number(command.page) || 1));
+    const pageSize = Math.min(100, Math.max(1, Math.floor(Number(command.pageSize) || 20)));
     const status = optionalText(command.status, 20).toUpperCase();
     const query = optionalText(command.query, 120);
     const filter = `WHERE (?1 = '' OR status = ?1)
@@ -196,7 +356,7 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
       .prepare(
         `SELECT id, title, description, alt_text, call_to_action, image_asset_key,
            destination_url, status, display_order, publish_at, expire_at,
-           created_by, updated_by, created_at, updated_at, archived_at
+           audience, revision, created_by, updated_by, created_at, updated_at, archived_at
          FROM public_advertisements ${filter}
          ORDER BY display_order, created_at DESC, id
          LIMIT ?3 OFFSET ?4`,
@@ -206,7 +366,7 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
     const count = Number(total?.count ?? 0);
     return {
       ok: true,
-      items: result.results ?? [],
+      items: (result.results ?? []).map((row) => announcementDto(row)),
       pagination: {
         page,
         pageSize,
@@ -222,34 +382,52 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
     const replayState = await replay(db, account, operation, command);
     if (replayState.result) return { ...replayState.result, replayed: true };
     const id = safeId(command.id);
-    const current = await db
-      .prepare('SELECT * FROM public_advertisements WHERE id = ?1')
-      .bind(id)
-      .first();
+    const current = await db.prepare('SELECT * FROM public_advertisements WHERE id = ?1').bind(id).first();
+    if (current) assertMutableRecord(current);
     const metadata = normalizedMetadata(command, current);
-    if (!['DRAFT', 'ACTIVE', 'INACTIVE'].includes(metadata.status)) {
-      throw new ApiError('VALIDATION_FAILED', 'Choose Draft, Active, or Inactive.', {
-        status: 422,
-        details: { field: 'status' },
-      });
-    }
-    if (metadata.status === 'ACTIVE' && !current?.image_asset_key) {
-      throw new ApiError(
-        'ADVERTISEMENT_MEDIA_REQUIRED',
-        'Upload validated media before activating the advertisement.',
-        { status: 409 },
-      );
-    }
-    const timestamp = new Date().toISOString();
-    const result = { ok: true, id, status: metadata.status, updatedAt: timestamp, replayed: false };
+    assertValidStatus(metadata.status);
+    if (metadata.status === 'ACTIVE') requireImage(current);
+    const expected = current ? expectedRevision(command, current) : null;
+    const timestamp = nowIso();
+    const nextRevision = current ? rowRevision(current) + 1 : 1;
+    const result = {
+      ok: true,
+      id,
+      status: metadata.status,
+      audience: metadata.audience,
+      revision: nextRevision,
+      updatedAt: timestamp,
+      imageUrl: `/media/advertisements/${encodeURIComponent(id)}`,
+      replayed: false,
+    };
+    result.item = announcementDto(
+      {
+        ...(current ?? {}),
+        id,
+        title: metadata.title,
+        description: metadata.description,
+        alt_text: metadata.altText,
+        call_to_action: metadata.callToAction,
+        destination_url: metadata.destinationUrl,
+        status: metadata.status,
+        display_order: metadata.displayOrder,
+        publish_at: metadata.publishAt,
+        expire_at: metadata.expireAt,
+        audience: metadata.audience,
+        revision: nextRevision,
+        updated_at: timestamp,
+      },
+      {},
+    );
     const write = current
       ? db
           .prepare(
             `UPDATE public_advertisements
              SET title = ?2, description = ?3, alt_text = ?4, call_to_action = ?5,
                destination_url = ?6, status = ?7, display_order = ?8, publish_at = ?9,
-               expire_at = ?10, updated_by = ?11, updated_at = ?12, archived_at = NULL
-             WHERE id = ?1`,
+               expire_at = ?10, audience = ?11, updated_by = ?12, updated_at = ?13,
+               revision = revision + 1
+             WHERE id = ?1 AND revision = ?14 AND archived_at IS NULL`,
           )
           .bind(
             id,
@@ -262,16 +440,18 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
             metadata.displayOrder,
             metadata.publishAt,
             metadata.expireAt,
+            metadata.audience,
             account.id,
             timestamp,
+            expected,
           )
       : db
           .prepare(
             `INSERT INTO public_advertisements (
                id, title, description, alt_text, call_to_action, image_asset_key,
-               destination_url, status, display_order, publish_at, expire_at,
+               destination_url, status, display_order, publish_at, expire_at, audience, revision,
                created_by, updated_by, created_at, updated_at
-             ) VALUES (?1, ?2, ?3, ?4, ?5, '', ?6, ?7, ?8, ?9, ?10, ?11, ?11, ?12, ?12)`,
+             ) VALUES (?1, ?2, ?3, ?4, ?5, '', ?6, ?7, ?8, ?9, ?10, ?11, 1, ?12, ?12, ?13, ?13)`,
           )
           .bind(
             id,
@@ -284,16 +464,16 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
             metadata.displayOrder,
             metadata.publishAt,
             metadata.expireAt,
+            metadata.audience,
             account.id,
             timestamp,
           );
-    await db.batch([
-      write,
+    const evidenceStatements = [
       auditStatement(db, {
         account,
         action: current ? 'ADVERTISEMENT_UPDATED' : 'ADVERTISEMENT_CREATED',
         id,
-        after: metadata,
+        after: { ...metadata, revision: nextRevision },
         correlationId,
       }),
       idempotencyStatement(db, {
@@ -303,7 +483,17 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
         result,
         createdAt: timestamp,
       }),
-    ]);
+    ];
+    if (current) {
+      await guardedMutation(db, {
+        id,
+        expectedRevision: expected,
+        current,
+        statements: [write, ...evidenceStatements],
+      });
+    } else {
+      await db.batch([write, ...evidenceStatements]);
+    }
     return result;
   }
 
@@ -344,16 +534,15 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
       );
     }
     const record = await db
-      .prepare('SELECT image_asset_key FROM public_advertisements WHERE id = ?1 AND archived_at IS NULL')
+      .prepare(
+        'SELECT id, image_asset_key, revision, status, archived_at FROM public_advertisements WHERE id = ?1',
+      )
       .bind(id)
       .first();
-    if (!record) {
-      throw new ApiError('ADVERTISEMENT_NOT_FOUND', 'Create the advertisement before uploading media.', {
-        status: 404,
-      });
-    }
+    assertMutableRecord(record);
+    const expected = expectedRevision(command, record);
     const assetKey = `advertisements/${id.toLowerCase()}/${crypto.randomUUID()}.${extension}`;
-    const timestamp = new Date().toISOString();
+    const timestamp = nowIso();
     await bucket.put(`catalog/${assetKey}`, bytes, {
       httpMetadata: { contentType },
       customMetadata: { advertisementId: id, uploadedBy: account.id },
@@ -362,23 +551,191 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
       ok: true,
       id,
       imageUrl: `/media/advertisements/${encodeURIComponent(id)}`,
+      audience: normalizedAudience(record.audience),
+      revision: rowRevision(record) + 1,
+      cleanupPending: Boolean(
+        record.image_asset_key &&
+        record.image_asset_key !== 'advertisements/executive-staff-applications.jpg',
+      ),
       updatedAt: timestamp,
       replayed: false,
     };
+    result.item = announcementDto(
+      {
+        ...record,
+        image_asset_key: assetKey,
+        revision: result.revision,
+        updated_at: timestamp,
+      },
+      {},
+    );
     try {
-      await db.batch([
-        db
-          .prepare(
-            `UPDATE public_advertisements
-             SET image_asset_key = ?2, updated_by = ?3, updated_at = ?4
-             WHERE id = ?1`,
-          )
-          .bind(id, assetKey, account.id, timestamp),
+      await guardedMutation(db, {
+        id,
+        expectedRevision: expected,
+        current: record,
+        statements: [
+          db
+            .prepare(
+              `UPDATE public_advertisements
+             SET image_asset_key = ?2, updated_by = ?3, updated_at = ?4, revision = revision + 1
+             WHERE id = ?1 AND revision = ?5 AND archived_at IS NULL`,
+            )
+            .bind(id, assetKey, account.id, timestamp, expected),
+          auditStatement(db, {
+            account,
+            action: 'ADVERTISEMENT_MEDIA_REPLACED',
+            id,
+            after: { contentType, byteLength: bytes.length, cleanupPending: result.cleanupPending },
+            correlationId,
+          }),
+          idempotencyStatement(db, {
+            account,
+            operation,
+            replayState,
+            result,
+            createdAt: timestamp,
+          }),
+        ],
+      });
+    } catch (error) {
+      try {
+        await bucket.delete(`catalog/${assetKey}`);
+      } catch {
+        // The canonical row was not proven updated; retain the original error.
+      }
+      throw error;
+    }
+    if (result.cleanupPending) {
+      try {
+        await bucket.delete(`catalog/${record.image_asset_key}`);
+        result.cleanupPending = false;
+        try {
+          await db.batch([
+            db
+              .prepare(
+                `UPDATE advertisement_mutation_results
+                 SET result_json = ?1
+                 WHERE actor_account_id = ?2 AND operation = ?3
+                   AND idempotency_key = ?4 AND request_hash = ?5`,
+              )
+              .bind(JSON.stringify(result), account.id, operation, replayState.key, replayState.hash),
+          ]);
+        } catch {
+          // A stale cleanup hint is conservative and must not fail the authoritative mutation.
+        }
+      } catch {
+        result.cleanupPending = true;
+      }
+    }
+    return result;
+  }
+
+  async function preview({ account, command = {} } = {}) {
+    assertAdmin(account);
+    const id = safeId(command.id);
+    const record = await db.prepare('SELECT * FROM public_advertisements WHERE id = ?1').bind(id).first();
+    assertMutableRecord(record);
+    return { ok: true, item: announcementDto(record, { preview: true }) };
+  }
+
+  async function transition(
+    { account, command = {}, correlationId = '' } = {},
+    { operation, action, status, schedule = false, resumeFromInactive = false },
+  ) {
+    assertAdmin(account);
+    const replayState = await replay(db, account, operation, command);
+    if (replayState.result) return { ...replayState.result, replayed: true };
+    const id = safeId(command.id);
+    const record = await db.prepare('SELECT * FROM public_advertisements WHERE id = ?1').bind(id).first();
+    assertMutableRecord(record);
+    if (resumeFromInactive && record.status !== 'INACTIVE') {
+      throw new ApiError('INVALID_TRANSITION', 'Only inactive announcements can be resumed.', {
+        status: 409,
+        details: { field: 'status', currentStatus: record.status },
+      });
+    }
+    const expected = expectedRevision(command, record);
+    const timestamp = nowIso();
+    let publishAt = record.publish_at ?? null;
+    let expireAt = record.expire_at ?? null;
+    if (status === 'ACTIVE') {
+      if (schedule) {
+        if (
+          command.publishAt === undefined ||
+          command.publishAt === null ||
+          !String(command.publishAt).trim()
+        ) {
+          throw new ApiError('VALIDATION_FAILED', 'publishAt is required when scheduling an announcement.', {
+            status: 422,
+            details: { field: 'publishAt' },
+          });
+        }
+        publishAt = optionalInstant(command.publishAt, 'publishAt');
+        if (!publishAt || publishAt <= timestamp) {
+          throw new ApiError('VALIDATION_FAILED', 'Scheduled publication must be in the future.', {
+            status: 422,
+            details: { field: 'publishAt' },
+          });
+        }
+      } else {
+        publishAt =
+          command.publishAt === undefined || command.publishAt === null || !String(command.publishAt).trim()
+            ? timestamp
+            : optionalInstant(command.publishAt, 'publishAt');
+      }
+      expireAt = command.expireAt === undefined ? expireAt : optionalInstant(command.expireAt, 'expireAt');
+      if (publishAt && expireAt && expireAt <= publishAt) {
+        throw new ApiError('VALIDATION_FAILED', 'Expiration must be later than publication.', {
+          status: 422,
+          details: { field: 'expireAt' },
+        });
+      }
+      requireImage(record);
+    }
+    const nextRevision = rowRevision(record) + 1;
+    const result = {
+      ok: true,
+      id,
+      status,
+      audience: normalizedAudience(record.audience),
+      revision: nextRevision,
+      publishAt,
+      expireAt,
+      updatedAt: timestamp,
+      replayed: false,
+    };
+    const write = db
+      .prepare(
+        `UPDATE public_advertisements
+           SET status = ?2, publish_at = ?3, expire_at = ?4, updated_by = ?5,
+             updated_at = ?6, revision = revision + 1
+           WHERE id = ?1 AND revision = ?7 AND archived_at IS NULL`,
+      )
+      .bind(id, status, publishAt, expireAt, account.id, timestamp, expected);
+    const item = announcementDto(
+      {
+        ...record,
+        status,
+        publish_at: publishAt,
+        expire_at: expireAt,
+        revision: nextRevision,
+        updated_at: timestamp,
+      },
+      {},
+    );
+    result.item = item;
+    await guardedMutation(db, {
+      id,
+      expectedRevision: expected,
+      current: record,
+      statements: [
+        write,
         auditStatement(db, {
           account,
-          action: 'ADVERTISEMENT_MEDIA_REPLACED',
+          action,
           id,
-          after: { assetKey, contentType, byteLength: bytes.length },
+          after: { status, publishAt, expireAt, revision: nextRevision },
           correlationId,
         }),
         idempotencyStatement(db, {
@@ -388,18 +745,43 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
           result,
           createdAt: timestamp,
         }),
-      ]);
-    } catch (error) {
-      await bucket.delete(`catalog/${assetKey}`);
-      throw error;
-    }
-    if (
-      record.image_asset_key &&
-      record.image_asset_key !== 'advertisements/executive-staff-applications.jpg'
-    ) {
-      await bucket.delete(`catalog/${record.image_asset_key}`);
-    }
+      ],
+    });
     return result;
+  }
+
+  async function publish(context = {}) {
+    return transition(context, {
+      operation: 'PUBLISH',
+      action: 'ADVERTISEMENT_PUBLISHED',
+      status: 'ACTIVE',
+    });
+  }
+
+  async function schedule(context = {}) {
+    return transition(context, {
+      operation: 'SCHEDULE',
+      action: 'ADVERTISEMENT_SCHEDULED',
+      status: 'ACTIVE',
+      schedule: true,
+    });
+  }
+
+  async function pause(context = {}) {
+    return transition(context, {
+      operation: 'PAUSE',
+      action: 'ADVERTISEMENT_PAUSED',
+      status: 'INACTIVE',
+    });
+  }
+
+  async function resume(context = {}) {
+    return transition(context, {
+      operation: 'RESUME',
+      action: 'ADVERTISEMENT_RESUMED',
+      status: 'ACTIVE',
+      resumeFromInactive: true,
+    });
   }
 
   async function archive({ account, command = {}, correlationId = '' } = {}) {
@@ -408,37 +790,61 @@ export function createAdvertisementAdminService({ db, bucket } = {}) {
     const replayState = await replay(db, account, operation, command);
     if (replayState.result) return { ...replayState.result, replayed: true };
     const id = safeId(command.id);
-    const timestamp = new Date().toISOString();
-    const result = { ok: true, id, status: 'ARCHIVED', updatedAt: timestamp, replayed: false };
-    const record = await db.prepare('SELECT id FROM public_advertisements WHERE id = ?1').bind(id).first();
-    if (!record) {
-      throw new ApiError('ADVERTISEMENT_NOT_FOUND', 'The advertisement was not found.', { status: 404 });
-    }
-    await db.batch([
-      db
-        .prepare(
-          `UPDATE public_advertisements
-           SET status = 'ARCHIVED', archived_at = ?2, updated_at = ?2, updated_by = ?3
-           WHERE id = ?1`,
-        )
-        .bind(id, timestamp, account.id),
-      auditStatement(db, {
-        account,
-        action: 'ADVERTISEMENT_ARCHIVED',
-        id,
-        after: { status: 'ARCHIVED' },
-        correlationId,
-      }),
-      idempotencyStatement(db, {
-        account,
-        operation,
-        replayState,
-        result,
-        createdAt: timestamp,
-      }),
-    ]);
+    const record = await db.prepare('SELECT * FROM public_advertisements WHERE id = ?1').bind(id).first();
+    assertMutableRecord(record);
+    const expected = expectedRevision(command, record);
+    const timestamp = nowIso();
+    const result = {
+      ok: true,
+      id,
+      status: 'ARCHIVED',
+      audience: normalizedAudience(record.audience),
+      revision: rowRevision(record) + 1,
+      updatedAt: timestamp,
+      replayed: false,
+    };
+    result.item = announcementDto(
+      {
+        ...record,
+        status: 'ARCHIVED',
+        archived_at: timestamp,
+        updated_at: timestamp,
+        revision: result.revision,
+      },
+      {},
+    );
+    const write = db
+      .prepare(
+        `UPDATE public_advertisements
+           SET status = 'ARCHIVED', archived_at = ?2, updated_at = ?2, updated_by = ?3,
+             revision = revision + 1
+           WHERE id = ?1 AND revision = ?4 AND archived_at IS NULL`,
+      )
+      .bind(id, timestamp, account.id, expected);
+    await guardedMutation(db, {
+      id,
+      expectedRevision: expected,
+      current: record,
+      statements: [
+        write,
+        auditStatement(db, {
+          account,
+          action: 'ADVERTISEMENT_ARCHIVED',
+          id,
+          after: { status: 'ARCHIVED', revision: result.revision },
+          correlationId,
+        }),
+        idempotencyStatement(db, {
+          account,
+          operation,
+          replayState,
+          result,
+          createdAt: timestamp,
+        }),
+      ],
+    });
     return result;
   }
 
-  return Object.freeze({ list, save, upload, archive });
+  return Object.freeze({ list, preview, save, upload, publish, schedule, pause, resume, archive });
 }

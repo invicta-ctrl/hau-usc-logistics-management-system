@@ -68,6 +68,7 @@ export function createAuthService({
   passwordKdf,
   tokenCrypto,
   rateLimiter,
+  activationLifecycle,
   clock = Date,
   createId = () => globalThis.crypto.randomUUID(),
   config = {},
@@ -198,18 +199,29 @@ export function createAuthService({
   }
 
   async function login({ accessId, password, networkKey } = {}) {
-    const loginIdentifier = normalizeAccessId(accessId) || normalizeVerifiedEmail(accessId);
-    const limiterKey = `${loginIdentifier || 'invalid'}:${safeNetworkKey(networkKey)}`;
+    const candidate = String(accessId ?? '').trim();
+    const normalizedEmail = normalizeVerifiedEmail(candidate);
+    const loginIdentifier =
+      normalizedEmail ||
+      (/^[A-Za-z0-9][A-Za-z0-9._-]{3,63}$/u.test(candidate) ? candidate.toLowerCase() : '');
+    const limiterIdentity = loginIdentifier ? await tokenCrypto.digest(loginIdentifier) : 'invalid';
+    const limiterKey = `${limiterIdentity}:${safeNetworkKey(networkKey)}`;
     const limit = await rateLimiter.consume(limiterKey, clock.now());
     assert(limit.allowed, 'AUTHENTICATION_THROTTLED', { retryAfterMs: limit.retryAfterMs });
     const account = loginIdentifier
       ? await (repository.getAccountByLoginIdentifier?.(loginIdentifier) ??
           repository.getAccountByAccessId(loginIdentifier))
       : null;
+    const emailOwnershipQualified =
+      !normalizedEmail || Boolean(String(account?.verifiedEmailFingerprint ?? '').trim());
     const credential =
-      account?.status === ACCOUNT_STATUS.STARTER ? account.temporaryCredential : account?.passwordCredential;
+      emailOwnershipQualified && account?.status === ACCOUNT_STATUS.STARTER
+        ? account.temporaryCredential
+        : emailOwnershipQualified
+          ? account?.passwordCredential
+          : await dummyCredential();
     const verified = await passwordKdf.verify(password, credential ?? (await dummyCredential()));
-    if (!account || !verified) {
+    if (!account || !emailOwnershipQualified || !verified) {
       await audit('LOGIN_FAILED', account?.id, { reason: 'INVALID_CREDENTIAL' });
       throw new AuthError('AUTHENTICATION_FAILED');
     }
@@ -235,6 +247,14 @@ export function createAuthService({
       };
     }
     assert(account.status === ACCOUNT_STATUS.ACTIVE && account.onboardingCompletedAt, 'ACCOUNT_UNAVAILABLE');
+    if (typeof activationLifecycle?.reconcile === 'function') {
+      try {
+        await activationLifecycle.reconcile({ account });
+      } catch {
+        await audit('ACCOUNT_APPLICATION_ACTIVATION_RECONCILIATION_FAILED', account.id);
+        throw new AuthError('ACTIVATION_INVALID');
+      }
+    }
     const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
     await rateLimiter.reset(limiterKey);
     await audit('LOGIN_SUCCEEDED', account.id);
@@ -251,6 +271,20 @@ export function createAuthService({
     await requireCsrf(current.session, csrfToken);
     const validatedProfile = validateOnboardingProfile(profile);
     assert(validatedProfile.valid, 'ONBOARDING_INVALID', { fieldErrors: validatedProfile.fieldErrors });
+    if (typeof activationLifecycle?.validateProfile === 'function') {
+      let approved = false;
+      try {
+        approved = await activationLifecycle.validateProfile({
+          account: current.account,
+          profile: validatedProfile.profile,
+        });
+      } catch {
+        approved = false;
+      }
+      assert(approved, 'ONBOARDING_INVALID', {
+        fieldErrors: { email: 'Use the verified email approved for this account.' },
+      });
+    }
     assert(password === confirmPassword, 'ONBOARDING_INVALID', {
       fieldErrors: { confirmPassword: 'Passwords must match.' },
     });
@@ -280,11 +314,19 @@ export function createAuthService({
       await transaction.deleteSessionsForAccount(next.id);
       return next;
     });
-    const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
     await audit('STARTER_ACCOUNT_ACTIVATED', account.id, {
       roleId: account.roleId,
       committeeIds: account.committeeIds,
     });
+    if (typeof activationLifecycle?.complete === 'function') {
+      try {
+        await activationLifecycle.complete({ account, activatedAt });
+      } catch {
+        await audit('ACCOUNT_APPLICATION_ACTIVATION_RECONCILIATION_FAILED', account.id);
+        throw new AuthError('ACTIVATION_INVALID');
+      }
+    }
+    const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
     return {
       state: 'AUTHENTICATED',
       sessionToken: issued.token,
@@ -310,11 +352,17 @@ export function createAuthService({
     };
   }
 
-  async function authorize({ sessionToken, csrfToken, capability, resource = {}, mutation = true } = {}) {
+  async function authorizeSession({ sessionToken, csrfToken, mutation = true } = {}) {
     const current = await readSession(sessionToken);
     if (mutation) await requireCsrf(current.session, csrfToken);
     const authorization = accountAuthorization(current.account);
     assert(authorization.active && authorization.mappingStatus === 'MAPPED', 'CAPABILITY_REQUIRED');
+    return { account: current.account, session: current.session, authorization };
+  }
+
+  async function authorize({ sessionToken, csrfToken, capability, resource = {}, mutation = true } = {}) {
+    const current = await authorizeSession({ sessionToken, csrfToken, mutation });
+    const { authorization } = current;
     assert(authorization.capabilities.includes(capability), 'CAPABILITY_REQUIRED');
     const resourceCommitteeIds = normalizeCommitteeIds(
       resource.committeeIds ?? (resource.committeeId ? [resource.committeeId] : []),
@@ -425,6 +473,7 @@ export function createAuthService({
     login,
     activateStarter,
     authenticate,
+    authorizeSession,
     getSession,
     authorize,
     logout,

@@ -7,6 +7,7 @@ import { isValidRecoveryHostname } from '../src/server/environment.js';
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
 const SHA = /^[0-9a-f]{40}$/iu;
+const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
 const PROTECTED_NAMES = new Set([
   'PASSWORD_PEPPER',
   'TRACKING_LINK_SECRET',
@@ -16,8 +17,68 @@ const PROTECTED_NAMES = new Set([
   'SESSION_SIGNING_SECRET',
 ]);
 
+export function stripJsonComments(value) {
+  const source = String(value ?? '');
+  let output = '';
+  let inString = false;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    const next = source[index + 1];
+
+    if (lineComment) {
+      if (character === '\n' || character === '\r') {
+        lineComment = false;
+        output += character;
+      } else {
+        output += ' ';
+      }
+      continue;
+    }
+
+    if (blockComment) {
+      if (character === '*' && next === '/') {
+        output += '  ';
+        blockComment = false;
+        index += 1;
+      } else {
+        output += character === '\n' || character === '\r' ? character : ' ';
+      }
+      continue;
+    }
+
+    if (inString) {
+      output += character;
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      output += character;
+    } else if (character === '/' && next === '/') {
+      output += '  ';
+      lineComment = true;
+      index += 1;
+    } else if (character === '/' && next === '*') {
+      output += '  ';
+      blockComment = true;
+      index += 1;
+    } else {
+      output += character;
+    }
+  }
+
+  return output;
+}
+
 export function parseJsonConfig(value) {
-  return JSON.parse(value);
+  return JSON.parse(stripJsonComments(value));
 }
 
 function binding(config, collection, name) {
@@ -36,6 +97,11 @@ function requiredEnvironment(config, expected, issues) {
   if (!config.observability?.traces?.enabled) issues.push(`${expected}: Workers Traces must be enabled`);
   if (expected === 'STAGING' && config.observability?.logs?.head_sampling_rate !== 1)
     issues.push('STAGING: log sampling must be 1 during acceptance');
+  const workerFirstRoutes = new Set(config.assets?.run_worker_first ?? []);
+  for (const route of REQUIRED_WORKER_FIRST_ROUTES) {
+    if (!workerFirstRoutes.has(route))
+      issues.push(`${expected}: assets.run_worker_first must include ${route}`);
+  }
   const d1 = binding(config, 'd1_databases', 'DB');
   const brandR2 = binding(config, 'r2_buckets', 'BRAND_ASSETS');
   const evidenceR2 = binding(config, 'r2_buckets', 'EVIDENCE_ASSETS');

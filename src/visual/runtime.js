@@ -216,7 +216,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   const routeModuleValue=()=>({requests:'request',request:'request',lending:'lending',release:'release',inventory:'inventory',restocking:'restocking',procurement:'procurement'}[workspaceRouteFromPath(location.pathname).module]);
   const routeModule=routeModuleValue();
   const defaultView=Object.hasOwn(VIEW_TITLES,shareableModule)?shareableModule:Object.hasOwn(VIEW_TITLES,routeModule)?routeModule:'overview';
-  const ui={view:defaultView,activeCommitteeId:'',dashboardStale:false,requestDraftLines:[],editingRequestLineIndex:-1,selectedRequestItemId:'',requestSuggestions:[],requestSuggestionIndex:-1,lendingTab:'FOR_REVIEW',procurementTab:'deliverables',recentDays:7,canvassPage:1,canvassPageSize:8,inventoryPage:1,inventoryPageSize:10,uploads:{restock:null,canvass:null,deliverable:null,release:null},filters:{},renderQueued:false};
+  const ui={view:defaultView,activeCommitteeId:'',dashboardStale:false,requestDraftLines:[],editingRequestLineIndex:-1,selectedRequestItemId:'',requestSuggestions:[],requestSuggestionIndex:-1,lendingTab:'FOR_REVIEW',procurementTab:'deliverables',recentDays:7,canvassPage:1,canvassPageSize:8,requestPage:1,requestPagination:null,inventoryPage:1,inventoryPageSize:10,uploads:{restock:null,canvass:null,deliverable:null,release:null},filters:{},renderQueued:false};
   function loadState(){
     try{ const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null'); if(saved&&saved.version==='1.0.0'){saved.eventDays=Array.isArray(saved.eventDays)?saved.eventDays:[];return saved;} }catch(e){ console.warn('Could not read preview storage',e); }
     const seed=createSeedState(); try{localStorage.setItem(STORAGE_KEY,JSON.stringify(seed));}catch(e){} return seed;
@@ -443,7 +443,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeModal();hideRequestSuggestions();}});
     bindCompositeRequestEvents();bindRequestEvents();bindLendingEvents();bindReleaseEvents();bindRestockEvents();bindProcurementEvents();bindInventoryEvents();
   }
-  async function loadAndRenderModule(name,options={}){if(!moduleDataController)return{ignored:true};const params={requestOnly:document.body.classList.contains('request-mode'),page:1,pageSize:Number(state.moduleConfig?.defaultPageSize||10),committeeId:ui.activeCommitteeId,operationalScope:operationalScopeValue()};if(options.force)moduleDataController.invalidate(name,params);activeModuleRequest={module:name,params};try{const result=await moduleDataController.load(name,params);if(ui.view!==name)return{ignored:true};state=mergeBootstrapModule(state,result,{backendMode});normalizeStateRecords();if(name==='overview')ui.dashboardStale=false;renderAll();runtimeExtensions?.afterRender();runtimeExtensions?.acceptModuleRevision(name,result.scopeRevision);if(!options.syncRefresh)void runtimeExtensions?.activeModuleChanged(name);return{refreshed:true,module:name};}catch(error){if(error?.code!=='MODULE_LOAD_CANCELLED'){if(name==='overview')ui.dashboardStale=true;toast(error?.message||'The active module could not be loaded.',true);if(options.propagate)throw error;}return{ignored:true,error};}finally{if(activeModuleRequest?.module===name)activeModuleRequest=null;}}
+  async function loadAndRenderModule(name,options={}){if(!moduleDataController)return{ignored:true};const params={requestOnly:document.body.classList.contains('request-mode'),page:name==='request'?Math.max(1,Number(ui.requestPage)||1):1,pageSize:Number(state.moduleConfig?.defaultPageSize||10),committeeId:ui.activeCommitteeId,operationalScope:operationalScopeValue()};if(options.force)moduleDataController.invalidate(name,params);activeModuleRequest={module:name,params};try{const result=await moduleDataController.load(name,params);if(ui.view!==name)return{ignored:true};state=mergeBootstrapModule(state,result,{backendMode});normalizeStateRecords();if(name==='request')ui.requestPagination=result.pagination??null;if(name==='overview')ui.dashboardStale=false;renderAll();runtimeExtensions?.afterRender();runtimeExtensions?.acceptModuleRevision(name,result.scopeRevision);if(!options.syncRefresh)void runtimeExtensions?.activeModuleChanged(name);return{refreshed:true,module:name};}catch(error){if(error?.code!=='MODULE_LOAD_CANCELLED'){if(name==='overview')ui.dashboardStale=true;toast(error?.message||'The active module could not be loaded.',true);if(options.propagate)throw error;}return{ignored:true,error};}finally{if(activeModuleRequest?.module===name)activeModuleRequest=null;}}
   function showView(name){
     if(document.body.classList.contains('request-mode'))name='request';
     if(useEssentialBootstrap&&activeModuleRequest&&activeModuleRequest.module!==name)moduleDataController.cancel(activeModuleRequest.module,activeModuleRequest.params);
@@ -460,7 +460,80 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
     if(useEssentialBootstrap){void loadAndRenderModule(name);return;}
     renderAll();
   }
-  function renderActiveModule(){if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}if(ui.view==='overview')renderOverview();else if(ui.view==='request'){renderRequestSelectors();renderRequestDraft();}else if(ui.view==='lending')renderLending();else if(ui.view==='release')renderReleaseDesk();else if(ui.view==='restocking')renderRestocking();else if(ui.view==='procurement')renderProcurement();else if(ui.view==='inventory')renderInventory();else renderOverview();}
+  // RV-01.6 reviewer surface. The canonical review contract, projection, and
+  // per-line routing already exist server-side; this is the smallest shipped
+  // UI that lets a real reviewer operate them. It reuses the existing shell,
+  // panel/table/status components and modal, adds no new data source, and never
+  // decides legality itself — the server remains authoritative.
+  const REVIEW_ROUTE_LABELS={ISSUE_FROM_STOCK:'Issue from stock',PROCUREMENT:'Procurement / canvass',RESTOCK:'Catalog restock',REJECT:'Reject',MISSING_INFORMATION:'Missing information'};
+  const REVIEWABLE_LINE_STATUSES=['FOR_REVIEW','NEEDS_INFORMATION'];
+  function reviewCapabilities(){const a=state.currentUser?.authorization;return Array.isArray(a?.capabilities)?a.capabilities:[]}
+  function canReviewRequests(){return backendMode!=='mock'?reviewCapabilities().includes('request.review'):Boolean(state.currentUser?.permissions?.review)}
+  function reviewableLinesFor(id){return (state.requestLines||[]).filter(l=>l.requestId===id&&REVIEWABLE_LINE_STATUSES.includes(l.status))}
+  function reviewQueueRows(){return (state.requests||[]).filter(r=>REVIEWABLE_LINE_STATUSES.includes(r.status)).slice().sort((a,b)=>String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||''))||String(b.id).localeCompare(String(a.id)))}
+  // Presentational filtering only. The server revalidates every decision and is
+  // the single source of truth for what is legal.
+  function permittedRoutes(request,line){
+    const routes=[];
+    if(line.itemId)routes.push('ISSUE_FROM_STOCK');
+    if(request.type!=='CATALOG_RESTOCK')routes.push('PROCUREMENT');
+    if(line.itemId&&(request.type==='CATALOG_RESTOCK'||['OFFICE_INVENTORY','PANTRY'].includes(request.catalogType)))routes.push('RESTOCK');
+    routes.push('REJECT','MISSING_INFORMATION');
+    return routes;
+  }
+  function reviewQueueHost(){
+    const view=byId('request');if(!view)return null;
+    let host=byId('requestReviewQueue');
+    if(!host){host=document.createElement('article');host.id='requestReviewQueue';host.className='panel stack section-gap';view.appendChild(host)}
+    return host;
+  }
+  function renderRequestReviewQueue(){
+    const host=reviewQueueHost();if(!host)return;
+    if(document.body.classList.contains('request-mode')||!canReviewRequests()){host.remove();return}
+    const rows=reviewQueueRows();
+    const body=rows.length?`<div class="table-wrap desktop-table medium"><table><thead><tr><th scope="col">Request</th><th scope="col">Requester</th><th scope="col">Lines</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead><tbody>${rows.map(r=>{const lines=reviewableLinesFor(r.id);return `<tr><td><strong>${esc(r.id)}</strong><small>${esc(r.purpose||'No purpose recorded')}</small></td><td>${esc(r.requesterName||'Not reported')}<small>${esc(r.department||'')}</small></td><td>${lines.length}</td><td>${statusChip(r.status)}</td><td><button class="primary mini" type="button" data-review-request="${esc(r.id)}"${lines.length?'':' disabled'}>Review lines</button></td></tr>`}).join('')}</tbody></table></div><div class="mobile-cards">${rows.map(r=>{const lines=reviewableLinesFor(r.id);return `<article class="data-card"><div class="button-row">${statusChip(r.status)}<span class="pill">${esc(r.id)}</span></div><h4 style="margin-top:8px">${esc(r.purpose||'No purpose recorded')}</h4><p>${esc(r.requesterName||'Not reported')} · ${lines.length} line${lines.length===1?'':'s'} awaiting a decision</p><div class="button-row" style="margin-top:10px"><button class="primary mini" type="button" data-review-request="${esc(r.id)}"${lines.length?'':' disabled'}>Review lines</button></div></article>`}).join('')}</div>`:'<div class="empty">No requests are awaiting review in your scope.</div>';
+    // The server clamps this page, so the count and pager must come from its
+    // pagination rather than from the rows on screen, or review work past the
+    // first page is silently unreachable.
+    const pagination=ui.requestPagination??{page:1,pageSize:rows.length,total:rows.length,hasMore:false};
+    const pageInfo={page:Math.max(1,Number(pagination.page)||1),pageSize:Math.max(1,Number(pagination.pageSize)||1),total:Math.max(0,Number(pagination.total)||0),hasMore:pagination.hasMore===true};
+    const pageCount=Math.max(1,Math.ceil(pageInfo.total/pageInfo.pageSize));
+    const pager=pageCount>1?`<div class="pagination"><span>Page ${pageInfo.page} of ${pageCount}</span><div class="pagination-controls"><button class="secondary mini" type="button" data-review-page="prev" ${pageInfo.page<=1?'disabled':''}>Previous</button><button class="secondary mini" type="button" data-review-page="next" ${pageInfo.page>=pageCount?'disabled':''}>Next</button></div></div>`:'';
+    host.innerHTML=`<div class="panel-head"><div><div class="section-kicker">Review queue</div><h2 id="requestReviewQueueTitle">Requests awaiting your decision</h2><p>Accepting a request records one explicit route for every line. Submission never moves physical stock.</p></div><span class="pill" aria-live="polite">${pageInfo.total} request${pageInfo.total===1?'':'s'} awaiting review</span></div>${body}${pager}`;
+    host.setAttribute('aria-labelledby','requestReviewQueueTitle');
+    host.querySelectorAll('[data-review-request]').forEach(b=>b.onclick=()=>openRequestReviewModal(b.dataset.reviewRequest));
+    host.querySelectorAll('[data-review-page]').forEach(b=>b.onclick=()=>{const next=b.dataset.reviewPage==='next'?pageInfo.page+1:pageInfo.page-1;ui.requestPage=Math.min(Math.max(1,next),pageCount);void loadAndRenderModule('request',{force:true});});
+  }
+  function openRequestReviewModal(requestId){
+    const request=(state.requests||[]).find(r=>r.id===requestId);if(!request)return toast('That request is no longer available.',true);
+    const lines=reviewableLinesFor(requestId);
+    if(!lines.length)return toast('That request has no lines awaiting a decision.',true);
+    const fields=lines.map((line,index)=>{const options=permittedRoutes(request,line);const id=`reviewLine${index}`;return `<div class="panel inset stack"><div><strong>${esc(line.description||line.specification||'Request line')}</strong><small>${qty(line.quantity)} ${esc(line.unit||'')}${line.itemId?` · catalog ${esc(line.itemId)}`:' · no exact catalog item'}</small></div><label for="${id}">Route decision<select id="${id}" data-line-decision data-line-id="${esc(line.id)}" required><option value="" disabled selected>Select a route</option>${options.map(o=>`<option value="${o}">${esc(REVIEW_ROUTE_LABELS[o])}</option>`).join('')}</select></label></div>`}).join('');
+    openModal(`Review ${request.id}`,`<div class="mode-note"><strong>${esc(request.purpose||'No purpose recorded')}</strong><br>${lines.length} line${lines.length===1?'':'s'} require an explicit decision. Stock routes reserve availability only; nothing is physically released here.</div><form id="requestReviewForm" class="stack" style="margin-top:14px" novalidate>${fields}<label>Review note (optional)<input name="reviewNote" maxlength="500" placeholder="Recorded in the request history"></label><div class="button-row"><button class="primary" type="submit">Submit review</button><button class="secondary" type="button" data-review-cancel>Cancel</button></div><p class="small muted" data-review-error role="alert"></p></form>`,m=>{
+      m.querySelector('[data-review-cancel]').onclick=()=>closeModal();
+      m.querySelector('#requestReviewForm').onsubmit=async e=>{
+        e.preventDefault();
+        const form=e.currentTarget,submit=form.querySelector('[type=submit]'),error=form.querySelector('[data-review-error]');
+        const lineDecisions=[...form.querySelectorAll('[data-line-decision]')].map(s=>({lineId:s.dataset.lineId,decision:s.value}));
+        // RV-01.6 removes the implicit default. A pre-selected first option
+        // would let one click route every line without a real decision, so an
+        // unset line blocks submission here as well as server-side.
+        if(lineDecisions.some(d=>!d.decision)){error.textContent='Choose a route for every line before submitting.';form.querySelector('[data-line-decision]:invalid,[data-line-decision][value=""]')?.focus();return}
+        submit.disabled=true;error.textContent='';
+        try{
+          const result=await services.reviewRequest(requestId,'ACCEPT',form.elements.reviewNote.value||'',lineDecisions);
+          closeModal();
+          await commit(`${requestId} reviewed. Each line now has one owner.`,'success',result);
+        }catch(err){
+          // Stale, conflicting, and unauthorized outcomes stay recoverable and
+          // never claim a decision was recorded.
+          error.textContent=`${err.message}${err.correlationId?` · ${err.correlationId}`:''}`;
+          submit.disabled=false;
+        }
+      };
+    });
+  }
+  function renderActiveModule(){if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}if(ui.view==='overview')renderOverview();else if(ui.view==='request'){renderRequestSelectors();renderRequestDraft();renderRequestReviewQueue();}else if(ui.view==='lending')renderLending();else if(ui.view==='release')renderReleaseDesk();else if(ui.view==='restocking')renderRestocking();else if(ui.view==='procurement')renderProcurement();else if(ui.view==='inventory')renderInventory();else renderOverview();}
   function renderAll(){if(useEssentialBootstrap){renderActiveModule();return;}if(document.body.classList.contains('request-mode')){renderRequestSelectors();renderRequestDraft();return;}renderOverview();renderRequestSelectors();renderRequestDraft();renderLending();renderReleaseDesk();renderRestocking();renderProcurement();renderInventory();
   }
   function toast(message,error=false){const el=byId('toast');el.textContent=message;el.className=`show ${error?'error':'success'}`;clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.className='',4500)}
@@ -686,7 +759,11 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   function renderDeliverables(){const rows=filteredDeliverables();safeText(byId('deliverableCount'),`${rows.length} line${rows.length===1?'':'s'}`);const desktop=`<div class="table-wrap desktop-table medium"><table><thead><tr><th>Event / Request</th><th>Item</th><th>Inventory / Source</th><th>Assignment</th><th>Status / Budget</th><th>Receiving</th><th></th></tr></thead><tbody>${rows.map(d=>{const r=getRequest(d.requestId),ev=getEvent(d.eventId),series=getSeries(ev?.seriesId);return `<tr><td><strong>${esc(series?.name||'Event')}</strong><small>${esc(ev?.name||d.eventId)}<br>${esc(d.requestId)}${r?.additionalSequence?` · Additional ${r.additionalSequence}`:''}<br>${esc(r?.department||'')}</small></td><td><strong>${esc(d.itemSpec)}</strong><small>${qty(d.quantity)} ${esc(d.unit)} · needed ${esc(formatDate(d.neededAt))}<br>${esc(d.id)} ${d.eventItemId?`· ${esc(d.eventItemId)}`:''}</small></td><td>${d.inventoryMatchId?`<code>${esc(d.inventoryMatchId)}</code><small>${qty(availableToPromise(d.inventoryMatchId))} ${esc(getItem(d.inventoryMatchId)?.unit||'')} ATP</small>`:'No catalog match'}<small>${esc(d.fulfillmentSource.replace(/_/g,' '))}</small></td><td>${esc(d.assignedCommittee)}<small>${esc(d.assignedStaff||'Unassigned')}</small></td><td>${statusChip(d.status)}<small>${esc(d.budgetStatus.replace(/_/g,' '))}<br>${d.linkedCanvassIds.length} quote${d.linkedCanvassIds.length===1?'':'s'}</small></td><td>${d.eventItemId?`<code>${esc(d.eventItemId)}</code><small>${qty(d.quantityReceived)} received · ${qty(d.quantityReleased)} released</small>`:'Not received'}</td><td><button class="secondary mini" data-deliverable-action="actions" data-deliverable-id="${d.id}">Actions</button><button class="ghost mini" data-deliverable-action="details" data-deliverable-id="${d.id}">Details</button></td></tr>`}).join('')}</tbody></table></div>`;const mobile=`<div class="mobile-cards">${rows.map(d=>{const ev=getEvent(d.eventId);return `<article class="data-card"><div class="button-row">${statusChip(d.status)}<span class="pill">${esc(d.id)}</span></div><h4 style="margin-top:8px">${esc(d.itemSpec)}</h4><p>${esc(ev?.name||d.eventId)} · ${qty(d.quantity)} ${esc(d.unit)}<br>${esc(d.fulfillmentSource.replace(/_/g,' '))} · Needed ${esc(formatDate(d.neededAt))}</p><div class="button-row" style="margin-top:10px"><button class="secondary mini" data-deliverable-action="actions" data-deliverable-id="${d.id}">Actions</button><button class="ghost mini" data-deliverable-action="details" data-deliverable-id="${d.id}">Details</button></div></article>`}).join('')}</div>`;byId('deliverablesTable').innerHTML=rows.length?desktop+mobile:'<div class="empty">No deliverables match these filters.</div>'}
   function openDeliverableActions(id){const d=getDeliverable(id),line=getLine(d.requestLineId);const buttons=[];if(d.status==='FOR_REVIEW'){buttons.push(['ACCEPT','Accept'],['REJECT','Reject'],['MATCH','Match to Inventory Item'])}buttons.push(['SPLIT','Split Stock and Procurement'],['FOR_CANVASSING','Send to Canvassing'],['WAITING_FOR_BUDGET','Mark Waiting for Budget'],['TO_BE_PROCURED','Mark To Be Procured'],['PROCURED','Mark Procured'],['RECEIVE','Receive Item'],['READY_TO_RELEASE','Mark Ready to Release']);openModal(`${d.id} · ${d.itemSpec}`,`<div class="mode-note"><strong>${qty(d.quantity)} ${esc(d.unit)}</strong> · ${esc(d.fulfillmentSource.replace(/_/g,' '))}<br>Current status: ${esc(statusLabel(d.status))}</div><div class="stack" style="margin-top:14px">${buttons.map(([a,l])=>`<button class="${a==='REJECT'?'danger':a==='ACCEPT'||a==='RECEIVE'?'primary':'secondary'}" type="button" data-do-deliverable="${a}">${l}</button>`).join('')}</div>`,m=>m.querySelectorAll('[data-do-deliverable]').forEach(b=>b.onclick=()=>performDeliverableAction(d,line,b.dataset.doDeliverable)))}
   async function performDeliverableAction(d,line,action){try{
-    if(backendMode!=='mock'&&!['MATCH','RECEIVE'].includes(action)){let result;if(action==='ACCEPT'||action==='SPLIT')result=await services.reviewRequest(d.requestId,'ACCEPT','Accepted from Deliverables queue');else if(action==='REJECT')result=await services.reviewRequest(d.requestId,'REJECT','Rejected from Deliverables queue');else result=await services.transitionDeliverable({deliverableId:d.id,status:action,note:`Moved to ${statusLabel(action)}`});closeModal();await commit(`${d.id} updated.`,'success',result);return;}if(backendMode!=='mock'&&action==='MATCH')return toast('Inventory matching is applied server-side during request review.',true);
+    // RV-01.6: routing is an explicit Request-review decision. A deliverable
+    // already has exactly one active owner, so the Deliverables queue
+    // transitions that deliverable instead of silently re-reviewing the parent
+    // request, which could never succeed once the parent left FOR_REVIEW.
+    if(backendMode!=='mock'&&!['MATCH','RECEIVE'].includes(action)){if(action==='SPLIT')return toast('Split fulfillment is decided during Request review.',true);const next=action==='ACCEPT'?(d.fulfillmentSource==='ISSUE_FROM_STOCK'?'READY_TO_RELEASE':'FOR_CANVASSING'):action==='REJECT'?'REJECTED':action;const result=await services.transitionDeliverable({deliverableId:d.id,status:next,note:`Moved to ${statusLabel(next)}`});closeModal();await commit(`${d.id} updated.`,'success',result);return;}if(backendMode!=='mock'&&action==='MATCH')return toast('Inventory matching is applied server-side during request review.',true);
     if(action==='MATCH')return openInventoryMatchModal(d.id);if(action==='SPLIT')return splitDeliverable(d.id);if(action==='RECEIVE'){closeModal();ui.procurementTab='receiving';renderProcurementTabs();byId('receiveDeliverable').value=d.id;syncDeliverableReceive();byId('proc-receiving').scrollIntoView({behavior:'smooth'});return}
     if(action==='ACCEPT'){const next=d.fulfillmentSource==='ISSUE_FROM_STOCK'?'READY_TO_RELEASE':'FOR_CANVASSING';if(next==='READY_TO_RELEASE'&&d.inventoryMatchId&&!state.reservations.some(r=>r.requestLineId===line.id&&r.status==='ACTIVE'))await services.reserveStock(d.inventoryMatchId,d.quantity,{requestLineId:line.id});appendStatus(d,next,'Accepted by DOL');appendStatus(line,next,'Accepted by DOL');const req=getRequest(d.requestId);if(req&&req.status==='FOR_REVIEW')appendStatus(req,'ACCEPTED','At least one line accepted')}
     else if(action==='REJECT'){appendStatus(d,'REJECTED','Rejected by DOL');appendStatus(line,'REJECTED','Rejected by DOL')}

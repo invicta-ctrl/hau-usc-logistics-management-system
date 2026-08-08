@@ -5,8 +5,8 @@ import { navigateToView } from './navigation.js';
 const releaseIdentity = (environment = 'STAGING') => ({
   ok: true,
   environment,
-  appVersion: '0.7.1',
-  releaseVersion: '0.7.1',
+  appVersion: '0.7.2',
+  releaseVersion: '0.7.2',
   candidateSha: 'a'.repeat(40),
 });
 
@@ -52,7 +52,7 @@ test('portal selection and login identity use the authoritative Worker release',
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto('/portals');
     await expect(page.getByRole('heading', { name: 'Choose a logistics portal' })).toBeVisible();
-    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.1');
+    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.2');
     await expect(page.locator('[data-release-identity]')).toHaveAttribute('data-environment', 'PRODUCTION');
     await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
     await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
@@ -188,7 +188,7 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
   await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
-  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.1/u);
+  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.2/u);
   await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
@@ -510,7 +510,7 @@ test('login errors preserve one stable form without autofocus or a focus loop', 
   await expect(accessId).toHaveAttribute('type', 'text');
   await expect(accessId).toHaveAttribute('inputmode', 'text');
   await expect(accessId).toHaveAttribute('autocomplete', 'username');
-  await expect(accessId).toHaveAttribute('autocapitalize', 'characters');
+  await expect(accessId).toHaveAttribute('autocapitalize', 'none');
   await expect(password).toHaveAttribute('autocomplete', 'current-password');
   await expect(accessId).not.toBeFocused();
   await accessId.evaluate((element) => {
@@ -795,7 +795,7 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
   await expect(page.locator('body')).not.toHaveCSS('overflow-x', 'scroll');
 });
 
-test('public Lending Center classifies borrowers and submits without public tracking', async ({
+test('public Lending Center classifies borrowers and returns private tracking', async ({
   page,
 }, testInfo) => {
   test.skip(
@@ -892,6 +892,7 @@ test('public Lending Center classifies borrowers and submits without public trac
       contentType: 'application/json',
       body: JSON.stringify({
         submissionId: 'LBR-SYNTHETIC-PUBLIC',
+        trackingCode: 'TRACK-SYNTHETIC-PRIVATE',
         status: 'FOR_REVIEW',
       }),
     });
@@ -929,8 +930,11 @@ test('public Lending Center classifies borrowers and submits without public trac
   await form.getByLabel('College, school, or academic department').fill('School of Computing');
   await form.getByLabel('Contact number').fill('+63 917 000 0010');
   await form.getByLabel('Email address').fill('synthetic@gmail.com');
-  await form.getByLabel('Requested pickup date').fill('2026-08-03');
-  await form.getByLabel('Requested due date').fill('2026-08-10');
+  // Pickup and due dates are validated against the current date, so they must
+  // be derived at run time rather than pinned to the week this was written.
+  const lendingDay = (days) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+  await form.getByLabel('Requested pickup date').fill(lendingDay(1));
+  await form.getByLabel('Requested due date').fill(lendingDay(8));
   await form.getByLabel('Purpose').fill('Synthetic public lending browser proof.');
   await form.getByLabel('Responsibility acknowledgment').check();
   await form.getByLabel('Privacy acknowledgment').check();
@@ -949,9 +953,10 @@ test('public Lending Center classifies borrowers and submits without public trac
   await page.getByRole('button', { name: 'Next announcement' }).click();
   await expect(page.getByRole('heading', { name: 'Synthetic announcement two' })).toBeVisible();
   await form.getByRole('button', { name: 'Submit borrowing request for review' }).click();
-  await expect(page.getByRole('heading', { name: 'Submitted successfully' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Save your private tracking details' })).toBeVisible();
   await expect(page.getByText('LBR-SYNTHETIC-PUBLIC')).toBeVisible();
-  await expect(page.locator('.public-tracking-receipt')).not.toContainText(/tracking code|ticket id/iu);
+  await expect(page.locator('.public-tracking-receipt')).toContainText('TRACK-SYNTHETIC-PRIVATE');
+  await expect(page.locator('.public-tracking-receipt')).toContainText('shown once');
 });
 
 test('public Lending Center distinguishes service failure from true-empty and clears inactive borrower fields', async ({

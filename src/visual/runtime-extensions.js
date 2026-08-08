@@ -1,7 +1,7 @@
 import '../styles/visual/runtime-extensions.css';
 import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
-import { KNOWN_QUANTITY_UNITS, quantityStep } from '../domain/quantity-units.js';
+import { KNOWN_QUANTITY_UNITS } from '../domain/quantity-units.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
@@ -70,7 +70,10 @@ const option = (value, label, selected) =>
 const REUSABLE_CONDITION_REVIEW_STATES = new Set(['NEW', 'GOOD', 'FAIR', 'POOR', 'DAMAGED']);
 const REUSABLE_MAINTENANCE_REVIEW_STATES = new Set(['CLEARED', 'MAINTENANCE_REQUIRED']);
 
-const normalizedReviewState = (value) => String(value ?? '').trim().toUpperCase();
+const normalizedReviewState = (value) =>
+  String(value ?? '')
+    .trim()
+    .toUpperCase();
 
 const isReusableConditionReviewState = (value) =>
   REUSABLE_CONDITION_REVIEW_STATES.has(normalizedReviewState(value));
@@ -136,8 +139,7 @@ function localDueValue(days) {
 }
 
 function quantityInputBounds(unit, { allowZero = false } = {}) {
-  const step = quantityStep(unit);
-  return `min="${allowZero ? '0' : step === '1' ? '1' : '0.01'}" step="${step}"`;
+  return `min="${allowZero ? '0' : '1'}" step="1" data-quantity-unit="${esc(unit)}"`;
 }
 
 export function syncUnitBoundInputs(form, fields) {
@@ -145,9 +147,8 @@ export function syncUnitBoundInputs(form, fields) {
   for (const { name, allowZero = false } of fields) {
     const input = form?.elements?.[name];
     if (!input) continue;
-    const step = quantityStep(unit);
-    input.step = step;
-    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
+    input.step = '1';
+    input.min = allowZero ? '0' : '1';
     input.dataset.quantityUnit = unit;
   }
 }
@@ -185,6 +186,11 @@ export function toFailClosedInventoryClassification(item = {}) {
     classificationStatus,
     isLendable,
     lendingAudience: isLendable ? item.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
+    lowStockAlertEnabled: classificationStatus === 'CLASSIFIED' && item.lowStockAlertEnabled === true,
+    lowStockThreshold:
+      classificationStatus === 'CLASSIFIED' && item.lowStockAlertEnabled === true
+        ? (item.lowStockThreshold ?? null)
+        : null,
     conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
     maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
     classificationRevision: Number(item.classificationRevision ?? 1),
@@ -207,6 +213,8 @@ export function applyMockInventoryClassification(
     storageLocation: item.storageLocation ?? '',
     unit: item.unit ?? '',
     reorderThreshold: item.reorderThreshold ?? 0,
+    lowStockAlertEnabled: item.lowStockAlertEnabled === true,
+    lowStockThreshold: item.lowStockThreshold ?? null,
     conditionReviewState: item.conditionReviewState ?? 'NOT_ASSESSED',
     maintenanceReviewState: item.maintenanceReviewState ?? 'NOT_ASSESSED',
     isLendable: item.isLendable === true,
@@ -234,6 +242,11 @@ export function applyMockInventoryClassification(
     storageLocation: payload.storageLocation,
     unit: payload.unit,
     reorderThreshold: Number(payload.reorderThreshold),
+    lowStockAlertEnabled: classificationStatus === 'CLASSIFIED' && payload.lowStockAlertEnabled === true,
+    lowStockThreshold:
+      classificationStatus === 'CLASSIFIED' && payload.lowStockAlertEnabled === true
+        ? Number(payload.lowStockThreshold)
+        : null,
     assetInstanceCount: Number(payload.assetInstanceCountIfReusable ?? 0),
     isLendable,
     lendingAudience: isLendable ? payload.lendingAudience : 'NOT_AVAILABLE_FOR_LENDING',
@@ -255,6 +268,8 @@ export function applyMockInventoryClassification(
     storageLocation: item.storageLocation,
     unit: item.unit,
     reorderThreshold: item.reorderThreshold,
+    lowStockAlertEnabled: item.lowStockAlertEnabled,
+    lowStockThreshold: item.lowStockThreshold,
     conditionReviewState: item.conditionReviewState,
     maintenanceReviewState: item.maintenanceReviewState,
     isLendable: item.isLendable,
@@ -612,6 +627,8 @@ function catalogFormHtml(item = null) {
     handlingCode: 'NON_CIRCULATING',
     unit: 'piece',
     reorderThreshold: 0,
+    lowStockAlertEnabled: false,
+    lowStockThreshold: null,
     lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
     defaultLoanDays: '',
     maximumLoanQuantity: 1,
@@ -631,6 +648,8 @@ function catalogFormHtml(item = null) {
       <label>Handling<select name="handling">${option('CONSUMABLE', 'Consumable', current.handlingCode || current.handling)}${option('LOANABLE', 'Loanable', current.handlingCode || current.handling)}${option('REUSABLE_ASSET', 'Reusable Asset', current.handlingCode || current.handling)}${option('NON_CIRCULATING', 'Non-circulating', current.handlingCode || current.handling)}</select></label>
       <label>Unit<input name="unit" value="${esc(current.unit)}" required><small>Changing a historical unit is blocked by the server.</small></label>
       <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="${esc(current.reorderThreshold ?? 0)}" required></label>
+      <label class="checkbox"><input name="lowStockAlertEnabled" type="checkbox" value="true" ${current.lowStockAlertEnabled ? 'checked' : ''} ${create ? 'disabled' : ''}> Enable low-stock warning</label>
+      <label>Low-stock threshold<input name="lowStockThreshold" type="number" ${quantityInputBounds(current.unit, { allowZero: true })} value="${esc(current.lowStockThreshold ?? '')}" ${current.lowStockAlertEnabled ? 'required' : ''}><small>${create ? 'Available after the item is actively classified.' : 'Warning only; it never changes stock or purchasing.'}</small></label>
       <label>Lending audience<select name="lendingAudience">${option('NOT_AVAILABLE_FOR_LENDING', 'Not available in Lending Hub', current.lendingAudience)}${option('USC_STAFF_ONLY', 'USC officers and staff only', current.lendingAudience)}${option('STUDENTS_AND_STAFF', 'Students and USC staff', current.lendingAudience)}${option('DOL_INTERNAL_ONLY', 'Eligible DOL users only', current.lendingAudience)}</select></label>
       <label>Default loan days<input name="defaultLoanDays" type="number" min="1" step="1" value="${esc(current.defaultLoanDays ?? '')}"></label>
       <label>Maximum lending quantity<input name="maximumLoanQuantity" type="number" ${quantityInputBounds(current.unit)} value="${esc(current.maximumLoanQuantity ?? '')}"></label>
@@ -684,6 +703,7 @@ export function createRuntimeExtensions(options) {
   let referenceAdminWorkspace = null;
   let referenceAdminPromise = null;
   let referenceAdminDomain = 'VENUES';
+  let referenceLinkRegistryOpen = false;
   let adminControlSurface = 'reference';
   let accessDirectory = null;
   let accessDirectoryPromise = null;
@@ -1736,6 +1756,8 @@ export function createRuntimeExtensions(options) {
     services.listAccessAccounts ??= async (command = {}) => {
       const user = state.currentUser ?? {};
       const item = {
+        accountId: user.accountId ?? user.id ?? 'ACCOUNT-PREVIEW-ADMIN',
+        revision: user.revision ?? '1:PREVIEW',
         accessId: user.accessId ?? user.id ?? 'PREVIEW.ADMIN',
         displayName: user.displayName ?? 'Preview Administrator',
         roleId: user.authorization?.roleId ?? user.role ?? 'ADMINISTRATOR',
@@ -1765,7 +1787,7 @@ export function createRuntimeExtensions(options) {
     };
     services.getAccessIdHistory ??= async (command = {}) => ({
       ok: true,
-      account: { accessId: command.currentAccessId },
+      account: { accountId: command.accountId, accessId: command.currentAccessId },
       history: [],
     });
     services.getAccessPolicyOptions ??= async () => ({
@@ -1852,6 +1874,58 @@ export function createRuntimeExtensions(options) {
       accounts: 10,
       credentials: [],
     });
+    state.referenceLinks ??= [];
+    services.listReferenceLinks ??= async (command = {}) => {
+      const query = String(command.query ?? '')
+        .trim()
+        .toLowerCase();
+      const items = state.referenceLinks.filter(
+        (item) =>
+          (!command.status || item.status === command.status) &&
+          (!query || `${item.id} ${item.label} ${item.url}`.toLowerCase().includes(query)),
+      );
+      return {
+        ok: true,
+        items,
+        pagination: { page: 1, pageSize: 50, total: items.length, totalPages: 1 },
+      };
+    };
+    services.createReferenceLink ??= async (command) => {
+      const now = new Date().toISOString();
+      const link = {
+        id: `RLK-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+        label: command.label,
+        url: command.url,
+        linkType: command.linkType,
+        audience: command.audience,
+        status: 'DRAFT',
+        revision: 1,
+        syncState: 'NOT_CONFIGURED',
+        createdAt: now,
+        updatedAt: now,
+        history: [],
+      };
+      state.referenceLinks.push(link);
+      return { ok: true, link };
+    };
+    services.updateReferenceLink ??= async (command) => {
+      const link = state.referenceLinks.find((item) => item.id === command.id);
+      if (!link) throw new Error('The reference link was not found.');
+      Object.assign(link, command, { revision: link.revision + 1, updatedAt: new Date().toISOString() });
+      return { ok: true, link };
+    };
+    services.transitionReferenceLink ??= async (command) => {
+      const link = state.referenceLinks.find((item) => item.id === command.id);
+      if (!link) throw new Error('The reference link was not found.');
+      link.status = command.status;
+      link.revision += 1;
+      link.updatedAt = new Date().toISOString();
+      return { ok: true, link };
+    };
+    services.getReferenceLinkHistory ??= async (command) => {
+      const link = state.referenceLinks.find((item) => item.id === command.id);
+      return { ok: true, items: link?.history ?? [], pagination: { page: 1, totalPages: 1 } };
+    };
     state.publicAdvertisements ??= [];
     services.listAdvertisements ??= async () => ({
       ok: true,
@@ -1865,31 +1939,60 @@ export function createRuntimeExtensions(options) {
     });
     services.saveAdvertisement ??= async (command) => {
       const current = state.publicAdvertisements.find((item) => item.id === command.id);
+      const revision = Number(current?.revision ?? 0) + 1;
       const record = {
         ...current,
-        ...command,
-        alt_text: command.altText,
-        call_to_action: command.callToAction,
-        destination_url: command.destinationUrl,
-        display_order: Number(command.displayOrder ?? 0),
-        publish_at: command.publishAt,
-        expire_at: command.expireAt,
+        id: command.id,
+        title: command.title,
+        description: command.description,
+        altText: command.altText,
+        callToAction: command.callToAction,
+        destinationUrl: command.destinationUrl,
+        displayOrder: Number(command.displayOrder ?? 0),
+        publishAt: command.publishAt || null,
+        expireAt: command.expireAt || null,
+        audience: command.audience ?? current?.audience ?? 'PUBLIC',
         status: command.status ?? 'DRAFT',
-        updated_at: new Date().toISOString(),
+        revision,
+        hasImage: current?.hasImage === true,
+        updatedAt: new Date().toISOString(),
       };
       if (current) Object.assign(current, record);
       else state.publicAdvertisements.push(record);
-      return { ok: true, id: command.id, status: record.status };
+      return { ok: true, id: command.id, status: record.status, revision, item: record };
     };
-    services.uploadAdvertisementMedia ??= async (command) => ({
-      ok: true,
-      id: command.id,
-      imageUrl: '',
-    });
+    services.uploadAdvertisementMedia ??= async (command) => {
+      const current = state.publicAdvertisements.find((item) => item.id === command.id);
+      if (!current) throw new Error('The announcement was not found.');
+      current.hasImage = true;
+      current.revision = Number(current.revision ?? 0) + 1;
+      return { ok: true, id: command.id, revision: current.revision, item: { ...current }, imageUrl: '' };
+    };
+    services.previewAdvertisement ??= async (command) => {
+      const item = state.publicAdvertisements.find((entry) => entry.id === command.id);
+      if (!item) throw new Error('The announcement was not found.');
+      return { ok: true, item: { ...item, preview: true } };
+    };
+    const mockAdvertisementTransition = async (command, status) => {
+      const current = state.publicAdvertisements.find((item) => item.id === command.id);
+      if (!current) throw new Error('The announcement was not found.');
+      current.status = status;
+      current.publishAt = command.publishAt ?? current.publishAt ?? null;
+      current.expireAt = command.expireAt ?? current.expireAt ?? null;
+      current.revision = Number(current.revision ?? 0) + 1;
+      current.updatedAt = new Date().toISOString();
+      return { ok: true, id: current.id, status, revision: current.revision, item: { ...current } };
+    };
+    services.publishAdvertisement ??= async (command) => mockAdvertisementTransition(command, 'ACTIVE');
+    services.scheduleAdvertisement ??= async (command) => mockAdvertisementTransition(command, 'ACTIVE');
+    services.pauseAdvertisement ??= async (command) => mockAdvertisementTransition(command, 'INACTIVE');
+    services.resumeAdvertisement ??= async (command) => mockAdvertisementTransition(command, 'ACTIVE');
     services.archiveAdvertisement ??= async (command) => {
       const current = state.publicAdvertisements.find((item) => item.id === command.id);
-      if (current) current.status = 'ARCHIVED';
-      return { ok: true, id: command.id, status: 'ARCHIVED' };
+      if (!current) throw new Error('The announcement was not found.');
+      current.status = 'ARCHIVED';
+      current.revision = Number(current.revision ?? 0) + 1;
+      return { ok: true, id: command.id, status: 'ARCHIVED', revision: current.revision, item: current };
     };
     services.listBrandAssets ??= async () => ({
       ok: true,
@@ -2004,11 +2107,33 @@ export function createRuntimeExtensions(options) {
     const items = advertisementDirectory?.items ?? [];
     root.querySelector('[data-advertisement-results]').innerHTML =
       items
-        .map(
-          (item) =>
-            `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.image_asset_key ? `<img src="/media/advertisements/${encodeURIComponent(item.id)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; order ${esc(item.display_order)}</small><small>${esc(item.publish_at ? `From ${accessDate(item.publish_at)}` : 'No start')} &middot; ${esc(item.expire_at ? `until ${accessDate(item.expire_at)}` : 'no expiry')}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>${item.status !== 'ARCHIVED' ? `<button class="danger mini" type="button" data-advertisement-archive="${esc(item.id)}">Archive</button>` : ''}</div></article>`,
-        )
-        .join('') || '<div class="empty">No advertisements match these filters.</div>';
+        .map((item) => {
+          const lifecycle = [];
+          if (item.status === 'DRAFT') {
+            lifecycle.push(
+              `<button class="primary mini" type="button" data-advertisement-action="publish" data-advertisement-id="${esc(item.id)}">Publish</button>`,
+              `<button class="secondary mini" type="button" data-advertisement-action="schedule" data-advertisement-id="${esc(item.id)}">Schedule</button>`,
+            );
+          }
+          if (item.status === 'ACTIVE') {
+            lifecycle.push(
+              `<button class="secondary mini" type="button" data-advertisement-action="pause" data-advertisement-id="${esc(item.id)}">Pause</button>`,
+            );
+          }
+          if (item.status === 'INACTIVE') {
+            lifecycle.push(
+              `<button class="primary mini" type="button" data-advertisement-action="resume" data-advertisement-id="${esc(item.id)}">Resume</button>`,
+              `<button class="secondary mini" type="button" data-advertisement-action="schedule" data-advertisement-id="${esc(item.id)}">Schedule</button>`,
+            );
+          }
+          if (item.status !== 'ARCHIVED') {
+            lifecycle.push(
+              `<button class="danger mini" type="button" data-advertisement-action="archive" data-advertisement-id="${esc(item.id)}">Archive</button>`,
+            );
+          }
+          return `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.hasImage ? `<img src="${esc(item.imageUrl || `/media/advertisements/${encodeURIComponent(item.id)}`)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; ${esc(item.audience)} &middot; order ${esc(item.displayOrder)}</small><small>${esc(item.publishAt ? `From ${accessDate(item.publishAt)}` : 'No start')} &middot; ${esc(item.expireAt ? `until ${accessDate(item.expireAt)}` : 'no expiry')} &middot; revision ${esc(item.revision)}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-action="preview" data-advertisement-id="${esc(item.id)}">Preview</button>${item.status !== 'ARCHIVED' ? `<button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>` : ''}${lifecycle.join('')}</div></article>`;
+        })
+        .join('') || '<div class="empty">No announcements match these filters.</div>';
     const pagination = advertisementDirectory?.pagination ?? {
       page: 1,
       totalPages: 1,
@@ -2050,15 +2175,15 @@ export function createRuntimeExtensions(options) {
         <label>Stable ID<input name="id" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,79}" value="${esc(item?.id ?? '')}" ${item ? 'readonly' : ''} required></label>
         <label>Title<input name="title" maxlength="160" value="${esc(item?.title ?? '')}" required></label>
         <label class="span-2">Description<textarea name="description" maxlength="500">${esc(item?.description ?? '')}</textarea></label>
-        <label class="span-2">Alternative text<input name="altText" maxlength="240" value="${esc(item?.alt_text ?? '')}" required></label>
-        <label>Call to action<input name="callToAction" maxlength="80" value="${esc(item?.call_to_action ?? '')}"></label>
-        <label>HTTPS destination<input name="destinationUrl" type="url" value="${esc(item?.destination_url ?? '')}"></label>
-        <label>Status<select name="status">${['DRAFT', 'ACTIVE', 'INACTIVE'].map((status) => option(status, status, item?.status ?? 'DRAFT')).join('')}</select></label>
-        <label>Display order<input name="displayOrder" type="number" step="1" value="${esc(item?.display_order ?? 0)}"></label>
-        <label>Publish at<input name="publishAt" type="datetime-local" value="${esc(item?.publish_at?.slice(0, 16) ?? '')}"></label>
-        <label>Expire at<input name="expireAt" type="datetime-local" value="${esc(item?.expire_at?.slice(0, 16) ?? '')}"></label>
+        <label class="span-2">Alternative text<input name="altText" maxlength="240" value="${esc(item?.altText ?? '')}" required></label>
+        <label>Call to action<input name="callToAction" maxlength="80" value="${esc(item?.callToAction ?? '')}"></label>
+        <label>HTTPS destination<input name="destinationUrl" type="url" value="${esc(item?.destinationUrl ?? '')}"></label>
+        <label>Audience<select name="audience">${option('PUBLIC', 'Public portals', item?.audience ?? 'PUBLIC')}${option('STAFF', 'Staff only', item?.audience)}${option('ADMINISTRATOR', 'Administrators', item?.audience)}${option('DIRECTOR', 'Directors', item?.audience)}</select></label>
+        <label>Display order<input name="displayOrder" type="number" min="0" step="1" value="${esc(item?.displayOrder ?? 0)}"></label>
+        <label>Publish at<input name="publishAt" type="datetime-local" value="${esc(item?.publishAt?.slice(0, 16) ?? '')}"></label>
+        <label>Expire at<input name="expireAt" type="datetime-local" value="${esc(item?.expireAt?.slice(0, 16) ?? '')}"></label>
         <label class="span-2">JPEG, PNG, or WebP media<input name="media" type="file" accept="image/jpeg,image/png,image/webp"><small>Maximum 750 KB. Full artwork is shown without cropping.</small></label>
-      </div><button class="primary" type="submit">${item ? 'Save changes' : 'Create advertisement'}</button></form>`,
+      </div><div class="mode-note section-gap">Saving preserves the current lifecycle state. Publish, schedule, pause, resume, preview, and archive remain separate revision-guarded actions.</div><button class="primary" type="submit">${item ? 'Save changes' : 'Create draft'}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#advertisementForm');
         form.addEventListener('submit', async (event) => {
@@ -2070,25 +2195,22 @@ export function createRuntimeExtensions(options) {
           const media = form.elements.media.files[0];
           delete values.media;
           try {
-            const requestedStatus = values.status;
             const initialValues = {
               ...values,
               displayOrder: Number(values.displayOrder),
-              ...(!item && media && requestedStatus === 'ACTIVE' ? { status: 'DRAFT' } : {}),
+              status: item?.status ?? 'DRAFT',
+              ...(item ? { expectedRevision: item.revision } : {}),
+              clientRequestId: `announcement-save-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
             };
-            await services.saveAdvertisement(initialValues);
+            const saved = await services.saveAdvertisement(initialValues);
             if (media) {
               if (media.size > 750_000) throw new Error('Advertisement media exceeds 750 KB.');
               await services.uploadAdvertisementMedia({
                 id: values.id,
+                expectedRevision: saved.revision,
+                clientRequestId: `announcement-upload-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
                 contentType: media.type,
                 base64: await fileBase64(media),
-              });
-            }
-            if (!item && media && requestedStatus === 'ACTIVE') {
-              await services.saveAdvertisement({
-                ...values,
-                displayOrder: Number(values.displayOrder),
               });
             }
             closeModal();
@@ -2100,6 +2222,102 @@ export function createRuntimeExtensions(options) {
             button.disabled = false;
           }
         });
+      },
+    );
+  };
+
+  const advertisementMutationCommand = (item, extra = {}) => ({
+    id: item.id,
+    expectedRevision: Number(item.revision),
+    clientRequestId: `announcement-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`,
+    ...extra,
+  });
+
+  const finishAdvertisementMutation = async (message) => {
+    closeModal();
+    advertisementDirectory = null;
+    await refreshAdvertisementDirectory({ force: true });
+    toast(message);
+  };
+
+  const openAdvertisementPreview = async (item) => {
+    try {
+      const result = await services.previewAdvertisement({ id: item.id });
+      const preview = result.item;
+      openModal(
+        `Preview ${preview.id}`,
+        `<article class="card"><div class="button-row"><span class="status">${esc(statusLabel(preview.status))}</span><span class="pill">${esc(preview.audience)}</span></div>${preview.hasImage ? `<img class="advertisement-preview-media" src="${esc(preview.imageUrl)}" alt="${esc(preview.altText)}">` : '<div class="empty section-gap">Upload media before publishing.</div>'}<h3>${esc(preview.title)}</h3><p>${esc(preview.description)}</p>${preview.callToAction ? `<p><strong>${esc(preview.callToAction)}</strong></p>` : ''}<small>Revision ${esc(preview.revision)} · ${esc(preview.publishAt ? `From ${accessDate(preview.publishAt)}` : 'No start')} · ${esc(preview.expireAt ? `until ${accessDate(preview.expireAt)}` : 'no expiry')}</small></article>`,
+      );
+    } catch (error) {
+      toast(operationalErrorText(error), true);
+    }
+  };
+
+  const openAdvertisementSchedule = (item) => {
+    openModal(
+      `Schedule ${item.id}`,
+      `<form id="advertisementScheduleForm"><div class="mode-note">Scheduling activates this announcement only within the approved start and optional expiry window.</div><div class="form-grid section-gap"><label>Publish at<input name="publishAt" type="datetime-local" value="${esc(item.publishAt?.slice(0, 16) ?? '')}" required></label><label>Expire at<input name="expireAt" type="datetime-local" value="${esc(item.expireAt?.slice(0, 16) ?? '')}"></label></div><button class="primary" type="submit">Schedule announcement</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#advertisementScheduleForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            await services.scheduleAdvertisement(
+              advertisementMutationCommand(item, {
+                publishAt: form.elements.publishAt.value,
+                expireAt: form.elements.expireAt.value,
+              }),
+            );
+            await finishAdvertisementMutation('Announcement scheduled and audited.');
+          } catch (error) {
+            toast(operationalErrorText(error), true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openAdvertisementLifecycle = (item, action) => {
+    if (action === 'preview') return void openAdvertisementPreview(item);
+    if (action === 'schedule') return openAdvertisementSchedule(item);
+    const labels = {
+      publish: [
+        'Publish',
+        'publishAdvertisement',
+        'Publish announcement',
+        'Announcement published and audited.',
+      ],
+      pause: ['Pause', 'pauseAdvertisement', 'Pause announcement', 'Announcement paused and audited.'],
+      resume: ['Resume', 'resumeAdvertisement', 'Resume announcement', 'Announcement resumed and audited.'],
+      archive: [
+        'Archive',
+        'archiveAdvertisement',
+        'Archive announcement',
+        'Announcement archived and audited.',
+      ],
+    };
+    const [verb, method, buttonLabel, success] = labels[action] ?? [];
+    if (!method) return;
+    openModal(
+      `${verb} ${item.id}`,
+      `<p>${action === 'archive' ? 'This removes the announcement from public rotation while preserving audit history.' : `Confirm the revision-guarded ${action} action.`}</p><button class="${action === 'archive' ? 'danger' : 'primary'}" type="button" data-confirm-advertisement-action>${buttonLabel}</button>`,
+      (modal) => {
+        modal
+          .querySelector('[data-confirm-advertisement-action]')
+          .addEventListener('click', async (event) => {
+            event.currentTarget.disabled = true;
+            try {
+              await services[method](advertisementMutationCommand(item));
+              await finishAdvertisementMutation(success);
+            } catch (error) {
+              toast(operationalErrorText(error), true);
+              event.currentTarget.disabled = false;
+            }
+          });
       },
     );
   };
@@ -2219,7 +2437,7 @@ export function createRuntimeExtensions(options) {
     const profile = account.accessProfile ?? {};
     const workspaceIds = profile.workspaceIds ?? [];
     const committeeIds = account.committeeIds ?? [];
-    return `<form id="accessPolicyForm">
+    return `<form id="accessPolicyForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}">
       <div class="mode-note">Workspace visibility is not authorization. The server validates this policy, projects effective actions, revokes active sessions after a material change, and appends audit history.</div>
       <div class="form-grid section-gap">
         <label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label>
@@ -2244,6 +2462,8 @@ export function createRuntimeExtensions(options) {
   const accessPolicyCommand = (form) => {
     const data = new FormData(form);
     return {
+      accountId: data.get('accountId'),
+      expectedRevision: data.get('expectedRevision'),
       currentAccessId: data.get('currentAccessId'),
       confirmCurrentAccessId: data.get('confirmCurrentAccessId'),
       presetId: data.get('presetId'),
@@ -2352,7 +2572,11 @@ export function createRuntimeExtensions(options) {
   const openAccessHistory = async (account) => {
     openModal('Access ID history', '<div class="empty">Loading append-only history…</div>');
     try {
-      const result = await services.getAccessIdHistory({ currentAccessId: account.accessId, limit: 100 });
+      const result = await services.getAccessIdHistory({
+        accountId: account.accountId,
+        currentAccessId: account.accessId,
+        limit: 100,
+      });
       openModal(
         `Access ID history · ${account.accessId}`,
         `<h3>Append-only Access ID history</h3><div class="line-list">${
@@ -2384,7 +2608,7 @@ export function createRuntimeExtensions(options) {
     const idempotencyKey = `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Change Access ID · ${account.accessId}`,
-      `<form id="accessIdChangeForm"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
+      `<form id="accessIdChangeForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessIdChangeForm');
         form.addEventListener('submit', async (event) => {
@@ -2457,10 +2681,11 @@ export function createRuntimeExtensions(options) {
           if (!form.reportValidity()) return;
           const values = Object.fromEntries(new FormData(form).entries());
           const command = {
-            currentAccessId: account.accessId,
+            accountId: account.accountId,
+            expectedRevision: account.revision,
             ...values,
             ...(definition.lifecycleAction ? { lifecycleAction: definition.lifecycleAction } : {}),
-            ...(['unlock', 'revoke-sessions'].includes(action) ? { clientRequestId } : {}),
+            clientRequestId,
           };
           const button = form.querySelector('[type="submit"]');
           button.disabled = true;
@@ -2538,7 +2763,8 @@ export function createRuntimeExtensions(options) {
           button.disabled = true;
           try {
             const result = await services.resetAccessPassword({
-              currentAccessId: account.accessId,
+              accountId: account.accountId,
+              expectedRevision: account.revision,
               ...Object.fromEntries(new FormData(form).entries()),
               clientRequestId,
             });
@@ -2730,14 +2956,30 @@ export function createRuntimeExtensions(options) {
     if (!force && referenceAdminWorkspace?.domain === referenceAdminDomain) return;
     const query = root.querySelector('[name="referenceAdminSearch"]')?.value ?? '';
     const status = root.querySelector('[name="referenceAdminStatus"]')?.value ?? 'ALL';
-    referenceAdminPromise = services.getReferenceAdminWorkspace({
-      domain: referenceAdminDomain,
-      query,
-      status,
-      limit: 50,
-    });
+    referenceAdminPromise = referenceLinkRegistryOpen
+      ? services.listReferenceLinks({
+          query,
+          ...(status === 'ALL' ? {} : { status }),
+          page: 1,
+          pageSize: 50,
+        })
+      : services.getReferenceAdminWorkspace({
+          domain: referenceAdminDomain,
+          query,
+          status,
+          limit: 50,
+        });
     try {
-      referenceAdminWorkspace = await referenceAdminPromise;
+      const workspace = await referenceAdminPromise;
+      referenceAdminWorkspace = referenceLinkRegistryOpen
+        ? {
+            ...workspace,
+            contract: 'canonical-link-registry',
+            domain: 'ROUTING',
+            writesEnabled: true,
+            pendingChanges: [],
+          }
+        : workspace;
       renderReferenceAdminWorkspace();
     } catch (error) {
       root.querySelector('[data-reference-admin-results]').innerHTML =
@@ -2747,7 +2989,123 @@ export function createRuntimeExtensions(options) {
     }
   };
 
+  const approvedReferenceRouteIds = Object.freeze([
+    'PORTAL_REQUEST',
+    'PORTAL_LENDING',
+    'STAFF_SIGN_IN',
+    'APP_ADMINISTRATOR',
+    'APP_DIRECTOR',
+    'APP_INVENTORY',
+    'APP_FOOD',
+    'APP_MATERIALS',
+  ]);
+
+  const referenceLinkRequestId = () => `reference-link-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
+
+  const openReferenceLinkForm = (record = null) => {
+    openModal(
+      record ? `Edit ${record.id}` : 'Create canonical link',
+      `<form id="referenceLinkForm"><div class="mode-note">The canonical D1 record is authoritative. External URLs require HTTPS without embedded credentials; internal targets must use an approved route ID.</div><div class="form-grid section-gap"><label class="span-2">Label<input name="label" maxlength="160" value="${esc(record?.label ?? '')}" required></label><label>Target type<select name="linkType">${option('EXTERNAL_URL', 'External HTTPS URL', record?.linkType ?? 'EXTERNAL_URL')}${option('INTERNAL_ROUTE', 'Approved internal route', record?.linkType)}</select></label><label>Audience<select name="audience">${option('PUBLIC', 'Public', record?.audience ?? 'PUBLIC')}${option('STAFF', 'Staff', record?.audience)}${option('ADMINISTRATOR', 'Administrator', record?.audience)}${option('DIRECTOR', 'Director', record?.audience)}</select></label><label class="span-2" data-reference-link-url-label>HTTPS URL<input name="url" maxlength="2048" value="${esc(record?.url ?? '')}" required></label><label class="span-2" data-reference-link-route-label hidden>Approved internal route<select name="routeId">${approvedReferenceRouteIds.map((routeId) => option(routeId, presentationLabel(routeId), record?.url)).join('')}</select></label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label></div><button class="primary" type="submit">${record ? 'Save canonical link' : 'Create draft link'}</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#referenceLinkForm');
+        const syncTarget = () => {
+          const internal = form.elements.linkType.value === 'INTERNAL_ROUTE';
+          modal.querySelector('[data-reference-link-url-label]').hidden = internal;
+          modal.querySelector('[data-reference-link-route-label]').hidden = !internal;
+          form.elements.url.disabled = internal;
+          form.elements.url.required = !internal;
+          form.elements.routeId.disabled = !internal;
+          form.elements.routeId.required = internal;
+        };
+        form.elements.linkType.addEventListener('change', syncTarget);
+        syncTarget();
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          const command = {
+            label: form.elements.label.value,
+            linkType: form.elements.linkType.value,
+            url:
+              form.elements.linkType.value === 'INTERNAL_ROUTE'
+                ? form.elements.routeId.value
+                : form.elements.url.value,
+            audience: form.elements.audience.value,
+            reason: form.elements.reason.value,
+            clientRequestId: referenceLinkRequestId(),
+            ...(record ? { id: record.id, expectedRevision: Number(record.revision) } : {}),
+          };
+          try {
+            const result = record
+              ? await services.updateReferenceLink(command)
+              : await services.createReferenceLink(command);
+            closeModal();
+            referenceAdminWorkspace = null;
+            await refreshReferenceAdminWorkspace({ force: true });
+            toast(`Canonical link ${result.link.id} saved. ${presentationLabel(result.link.syncState)}.`);
+          } catch (error) {
+            toast(operationalErrorText(error), true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openReferenceLinkTransition = (record, status) => {
+    openModal(
+      `${presentationLabel(status)} ${record.id}`,
+      `<form id="referenceLinkTransitionForm"><p>This changes only the canonical lifecycle state. Archived links are terminal.</p><label class="section-gap">Reason<textarea name="reason" maxlength="500" required></textarea></label><button class="${status === 'ARCHIVED' ? 'danger' : 'primary'}" type="submit">Confirm ${esc(presentationLabel(status).toLowerCase())}</button></form>`,
+      (modal) => {
+        const form = modal.querySelector('#referenceLinkTransitionForm');
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          try {
+            await services.transitionReferenceLink({
+              id: record.id,
+              expectedRevision: Number(record.revision),
+              status,
+              reason: form.elements.reason.value,
+              clientRequestId: referenceLinkRequestId(),
+            });
+            closeModal();
+            referenceAdminWorkspace = null;
+            await refreshReferenceAdminWorkspace({ force: true });
+            toast(`Canonical link ${presentationLabel(status).toLowerCase()} and audited.`);
+          } catch (error) {
+            toast(operationalErrorText(error), true);
+            button.disabled = false;
+          }
+        });
+      },
+    );
+  };
+
+  const openReferenceLinkHistory = async (record) => {
+    try {
+      const result = await services.getReferenceLinkHistory({ id: record.id, page: 1, pageSize: 50 });
+      openModal(
+        `${record.id} history`,
+        `<div class="line-list">${
+          result.items
+            .map(
+              (version) =>
+                `<div class="request-line"><div><strong>Revision ${esc(version.revision)} · ${esc(presentationLabel(version.action))}</strong><small>${esc(accessDate(version.createdAt))} · ${esc(version.correlationId)}</small></div></div>`,
+            )
+            .join('') || '<div class="empty">No retained versions were returned.</div>'
+        }</div>`,
+      );
+    } catch (error) {
+      toast(operationalErrorText(error), true);
+    }
+  };
+
   const openReferenceAdminChange = (record, action = record ? 'UPDATE' : 'ADD') => {
+    if (referenceLinkRegistryOpen) return openReferenceLinkForm(record);
     const targetId = record?.id ?? '';
     openModal(
       `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${presentationLabel(referenceAdminDomain)}`,
@@ -2903,7 +3261,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.1'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.7.2'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -3136,7 +3494,11 @@ export function createRuntimeExtensions(options) {
       numberMetric(inventory, 'lowStockAlerts'),
     ]);
     root.querySelector('[data-system-status-metrics]').innerHTML = [
-      ['Overall', statusLabel(status.overallStatus, { missing: 'Not assessed' }), 'Truthful aggregate; attention is not hidden'],
+      [
+        'Overall',
+        statusLabel(status.overallStatus, { missing: 'Not assessed' }),
+        'Truthful aggregate; attention is not hidden',
+      ],
       [
         'Worker / API',
         statusLabel(status.workerApi?.status, { missing: 'Not reported' }),
@@ -3176,17 +3538,17 @@ export function createRuntimeExtensions(options) {
         statusLabel(roster.status, { missing: 'Not reported' }),
         `${statusLabel(roster.latestApplyStatus, { missing: 'Not recorded' })} · ${numberMetric(roster, 'activeIdentities')} active identities`,
       ],
-      ['Google Drive backup', statusLabel(storage.googleDrive, { missing: 'Not reported' }), 'Private evidence recovery copy'],
+      [
+        'Google Drive backup',
+        statusLabel(storage.googleDrive, { missing: 'Not reported' }),
+        'Private evidence recovery copy',
+      ],
       [
         'R2 storage',
         primaryAvailable && storage.brandR2 === 'AVAILABLE' ? 'Available' : 'Attention',
         `Brand ${statusLabel(storage.brandR2, { missing: 'Not reported' })} · Evidence ${statusLabel(storage.evidenceR2, { missing: 'Not reported' })}`,
       ],
-      [
-        'Evidence failures',
-        evidenceFailures,
-        `${pending} pending · ${restoreRequired} require restoration`,
-      ],
+      ['Evidence failures', evidenceFailures, `${pending} pending · ${restoreRequired} require restoration`],
       [
         'Login / rate limits',
         loginAndRateLimitTotal,
@@ -3530,6 +3892,12 @@ export function createRuntimeExtensions(options) {
       control.classList.toggle('active', active);
       control.setAttribute('aria-pressed', String(active));
     });
+    const referenceLinkRegistryControl = root.querySelector('[data-reference-admin-link-registry]');
+    if (referenceLinkRegistryControl) {
+      const active = adminControlSurface === 'reference' && referenceLinkRegistryOpen;
+      referenceLinkRegistryControl.classList.toggle('active', active);
+      referenceLinkRegistryControl.setAttribute('aria-pressed', String(active));
+    }
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       const active = control.dataset.adminControlSurface === adminControlSurface;
       control.classList.toggle('active', active);
@@ -3545,6 +3913,33 @@ export function createRuntimeExtensions(options) {
     }
     if (customSurface) {
       renderAdminControlSurface();
+      return;
+    }
+    if (referenceLinkRegistryOpen) {
+      root.querySelector('[data-reference-admin-pending-panel]').hidden = true;
+      root.querySelector('[data-reference-admin-add]').hidden = !workspace?.writesEnabled;
+      results.innerHTML =
+        (workspace?.items ?? [])
+          .map((record) => {
+            const transitions = [];
+            if (record.status === 'DRAFT' || record.status === 'INACTIVE') {
+              transitions.push(
+                `<button class="primary mini" type="button" data-reference-link-transition="ACTIVE" data-reference-link-id="${esc(record.id)}">Activate</button>`,
+              );
+            }
+            if (record.status === 'DRAFT' || record.status === 'ACTIVE') {
+              transitions.push(
+                `<button class="secondary mini" type="button" data-reference-link-transition="INACTIVE" data-reference-link-id="${esc(record.id)}">Deactivate</button>`,
+              );
+            }
+            if (record.status !== 'ARCHIVED') {
+              transitions.push(
+                `<button class="danger mini" type="button" data-reference-link-transition="ARCHIVED" data-reference-link-id="${esc(record.id)}">Archive</button>`,
+              );
+            }
+            return `<div class="request-line"><div><strong>${esc(record.label)}</strong><small>${esc(record.id)} · revision ${esc(record.revision)} · ${esc(record.status)} · ${esc(record.audience)}</small><small>${esc(record.linkType === 'INTERNAL_ROUTE' ? presentationLabel(record.url) : record.url)} · ${esc(presentationLabel(record.syncState))}</small></div><div class="request-line-actions"><button class="secondary mini" type="button" data-reference-link-history="${esc(record.id)}">History</button>${record.status !== 'ARCHIVED' ? `<button class="secondary mini" type="button" data-reference-admin-edit="${esc(record.id)}">Edit</button>` : ''}${transitions.join('')}</div></div>`;
+          })
+          .join('') || '<div class="empty">No canonical links match the current filters.</div>';
       return;
     }
     root.querySelector('[data-reference-admin-add]').hidden = readOnly || !workspace?.writesEnabled;
@@ -3599,6 +3994,7 @@ export function createRuntimeExtensions(options) {
     root.querySelector('[name="referenceAdminDomain"]').addEventListener('change', (event) => {
       advertisementAdminOpen = false;
       adminControlSurface = 'reference';
+      referenceLinkRegistryOpen = false;
       referenceAdminDomain = event.target.value;
       referenceAdminWorkspace = null;
       void refreshReferenceAdminWorkspace({ force: true });
@@ -3615,11 +4011,21 @@ export function createRuntimeExtensions(options) {
       control.addEventListener('click', () => {
         advertisementAdminOpen = false;
         adminControlSurface = 'reference';
+        referenceLinkRegistryOpen = false;
         referenceAdminDomain = control.dataset.referenceAdminControlDomain;
         root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
         referenceAdminWorkspace = null;
         void refreshReferenceAdminWorkspace({ force: true });
       });
+    });
+    root.querySelector('[data-reference-admin-link-registry]')?.addEventListener('click', () => {
+      advertisementAdminOpen = false;
+      adminControlSurface = 'reference';
+      referenceLinkRegistryOpen = true;
+      referenceAdminDomain = 'ROUTING';
+      root.querySelector('[name="referenceAdminDomain"]').value = referenceAdminDomain;
+      referenceAdminWorkspace = null;
+      void refreshReferenceAdminWorkspace({ force: true });
     });
     root.querySelectorAll('[data-admin-control-surface]').forEach((control) => {
       control.addEventListener('click', () => {
@@ -3734,30 +4140,12 @@ export function createRuntimeExtensions(options) {
           advertisementDirectory?.items.find((item) => item.id === edit.dataset.advertisementEdit),
         );
       }
-      const archive = event.target.closest('[data-advertisement-archive]');
-      if (archive) {
-        const id = archive.dataset.advertisementArchive;
-        openModal(
-          `Archive ${id}`,
-          '<p>This removes the advertisement from public rotation while preserving its audit history.</p><button class="danger" type="button" data-confirm-advertisement-archive>Archive advertisement</button>',
-          (modal) => {
-            modal
-              .querySelector('[data-confirm-advertisement-archive]')
-              .addEventListener('click', async (confirmEvent) => {
-                confirmEvent.currentTarget.disabled = true;
-                try {
-                  await services.archiveAdvertisement({ id });
-                  closeModal();
-                  advertisementDirectory = null;
-                  await refreshAdvertisementDirectory({ force: true });
-                  toast('Advertisement archived and audited.');
-                } catch (error) {
-                  toast(error.message, true);
-                  confirmEvent.currentTarget.disabled = false;
-                }
-              });
-          },
+      const lifecycle = event.target.closest('[data-advertisement-action]');
+      if (lifecycle) {
+        const item = advertisementDirectory?.items.find(
+          (entry) => entry.id === lifecycle.dataset.advertisementId,
         );
+        if (item) openAdvertisementLifecycle(item, lifecycle.dataset.advertisementAction);
       }
     });
     root
@@ -3813,6 +4201,20 @@ export function createRuntimeExtensions(options) {
         openReferenceAdminChange(
           referenceAdminWorkspace?.items.find((record) => record.id === edit.dataset.referenceAdminEdit),
         );
+      const linkTransition = event.target.closest('[data-reference-link-transition]');
+      if (linkTransition) {
+        const record = referenceAdminWorkspace?.items.find(
+          (entry) => entry.id === linkTransition.dataset.referenceLinkId,
+        );
+        if (record) openReferenceLinkTransition(record, linkTransition.dataset.referenceLinkTransition);
+      }
+      const linkHistory = event.target.closest('[data-reference-link-history]');
+      if (linkHistory) {
+        const record = referenceAdminWorkspace?.items.find(
+          (entry) => entry.id === linkHistory.dataset.referenceLinkHistory,
+        );
+        if (record) void openReferenceLinkHistory(record);
+      }
       const lifecycle = event.target.closest('[data-reference-admin-lifecycle]');
       if (lifecycle)
         openReferenceAdminChange(
@@ -4734,7 +5136,7 @@ export function createRuntimeExtensions(options) {
             const previous = index ? `${references[index - 1].type}|${references[index - 1].category}` : '';
             if (group !== previous)
               rows.push(
-              `<p class="eyebrow">${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</p>`,
+                `<p class="eyebrow">${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</p>`,
               );
             rows.push(
               `<button class="suggestion" type="button" role="option" data-venue-equipment-reference="${esc(reference.id)}"><strong>${esc(reference.name)}</strong><code>${esc(reference.id)} &middot; ${esc(presentationLabel(reference.type, { context: 'eventLink', missing: 'Reference type not recorded' }))} &middot; ${esc(presentationLabel(reference.category, { context: 'category', missing: 'Category not recorded' }))}</code><span class="stock">${esc(reference.location || 'Location confirmed during review')} &middot; ${esc(reference.requestabilityLabel)}</span></button>`,
@@ -5170,9 +5572,8 @@ export function createRuntimeExtensions(options) {
   };
   const syncQuantityControl = (input, unit, { allowZero = false } = {}) => {
     if (!input || !unit) return;
-    const step = quantityStep(unit);
-    input.step = step;
-    input.min = allowZero ? '0' : step === '1' ? '1' : '0.01';
+    input.step = '1';
+    input.min = allowZero ? '0' : '1';
     input.dataset.quantityUnit = String(unit);
   };
   const syncRenderedQuantityControls = (root = document) => {
@@ -5252,6 +5653,8 @@ export function createRuntimeExtensions(options) {
         unit: payload.unit,
         openingOnHand: 0,
         reorderThreshold: payload.reorderThreshold,
+        lowStockAlertEnabled: payload.lowStockAlertEnabled === true,
+        lowStockThreshold: payload.lowStockAlertEnabled ? payload.lowStockThreshold : null,
         lendingAudience: payload.lendingAudience,
         defaultLoanDays: payload.defaultLoanDays,
         maximumLoanQuantity: payload.maximumLoanQuantity,
@@ -5291,6 +5694,8 @@ export function createRuntimeExtensions(options) {
         handlingCode: payload.handling,
         unit: payload.unit,
         reorderThreshold: payload.reorderThreshold,
+        lowStockAlertEnabled: payload.lowStockAlertEnabled === true,
+        lowStockThreshold: payload.lowStockAlertEnabled ? payload.lowStockThreshold : null,
         lendingAudience: payload.lendingAudience,
         defaultLoanDays: payload.defaultLoanDays,
         maximumLoanQuantity: payload.maximumLoanQuantity,
@@ -5330,13 +5735,23 @@ export function createRuntimeExtensions(options) {
       const form = modal.querySelector('#catalogItemForm');
       bindUnitBoundInputs(form, [
         { name: 'reorderThreshold', allowZero: true },
+        { name: 'lowStockThreshold', allowZero: true },
         { name: 'maximumLoanQuantity' },
         { name: 'initialQuantity', allowZero: true },
       ]);
+      const syncLowStock = () => {
+        const enabled = form.elements.lowStockAlertEnabled.checked;
+        form.elements.lowStockThreshold.disabled = !enabled;
+        form.elements.lowStockThreshold.required = enabled;
+      };
+      form.elements.lowStockAlertEnabled.addEventListener('change', syncLowStock);
+      syncLowStock();
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!form.reportValidity()) return;
         const draft = Object.fromEntries(new FormData(form).entries());
+        draft.lowStockAlertEnabled = form.elements.lowStockAlertEnabled.checked;
+        draft.lowStockThreshold = draft.lowStockAlertEnabled ? form.elements.lowStockThreshold.value : '';
         const validation = validateCatalogDraft(draft);
         if (!validation.valid) {
           toast(validation.message, true);
@@ -5622,7 +6037,7 @@ export function createRuntimeExtensions(options) {
       document.title = `${workspace.label} · ${currentModuleLabel()} | HAU-USC Logistics`;
     }
     const environment = String(state.environment ?? config.appEnvironment ?? 'UNKNOWN').toUpperCase();
-    const version = String(state.appVersion ?? '0.7.1');
+    const version = String(state.appVersion ?? '0.7.2');
     internalShellBar.querySelector('[data-shell-release]').textContent = `${environment} · v${version}`;
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');
@@ -6763,7 +7178,10 @@ export function createRuntimeExtensions(options) {
       const evidenceLabel = evidence.length
         ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
         : 'None';
-      return `<tr><td><strong>${esc(item.name)}</strong><code>${esc(item.id)}</code><small>${esc((item.aliases ?? []).join(', ') || 'No aliases')}<br>${esc(item.category)} · ${esc(item.unit)}</small></td><td>${esc(item.stockArea)}<small>${esc(item.handlingCode ?? item.handling)} · ${esc(item.catalogType === 'PANTRY' ? 'Pantry' : 'Office Inventory')}<br>${esc(item.storageLocation)}</small></td><td><strong>${inventoryRuntimeQuantity(balance.onHand)} ${esc(item.unit)}</strong></td><td>${inventoryRuntimeQuantity(balance.reserved)} ${esc(item.unit)}</td><td><strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)} ${esc(item.unit)}</strong><small class="${negative ? 'danger-text' : ''}">${atpNote}</small></td><td><span class="status ${inventoryRuntimeStatusClass(health)}">${esc(inventoryRuntimeStatusLabel(health))}</span><small>Reorder at ${inventoryRuntimeQuantity(item.reorderThreshold)} ${esc(item.unit)}</small></td><td>${provenance}<small>${esc(inventoryRuntimeMovementLabel(movement))}</small></td><td><span class="status ${evidence.length ? 'green' : 'gray'}">${esc(evidenceLabel)}</span></td><td>${inventoryRuntimeActions(item)}</td></tr>`;
+      const lowStockNote = item.lowStockAlertEnabled
+        ? `Low-stock warning at ${inventoryRuntimeQuantity(item.lowStockThreshold)} ${item.unit}`
+        : 'Low-stock warning disabled';
+      return `<tr><td><strong>${esc(item.name)}</strong><code>${esc(item.id)}</code><small>${esc((item.aliases ?? []).join(', ') || 'No aliases')}<br>${esc(item.category)} · ${esc(item.unit)}</small></td><td>${esc(item.stockArea)}<small>${esc(item.handlingCode ?? item.handling)} · ${esc(item.catalogType === 'PANTRY' ? 'Pantry' : 'Office Inventory')}<br>${esc(item.storageLocation)}</small></td><td><strong>${inventoryRuntimeQuantity(balance.onHand)} ${esc(item.unit)}</strong></td><td>${inventoryRuntimeQuantity(balance.reserved)} ${esc(item.unit)}</td><td><strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)} ${esc(item.unit)}</strong><small class="${negative ? 'danger-text' : ''}">${atpNote}</small></td><td><span class="status ${inventoryRuntimeStatusClass(health)}">${esc(inventoryRuntimeStatusLabel(health))}</span><small>${esc(lowStockNote)}<br>Reorder reference ${inventoryRuntimeQuantity(item.reorderThreshold)} ${esc(item.unit)}</small></td><td>${provenance}<small>${esc(inventoryRuntimeMovementLabel(movement))}</small></td><td><span class="status ${evidence.length ? 'green' : 'gray'}">${esc(evidenceLabel)}</span></td><td>${inventoryRuntimeActions(item)}</td></tr>`;
     };
     const cardMarkup = (item) => {
       const balance = inventoryBalance(state, item);
@@ -6774,10 +7192,13 @@ export function createRuntimeExtensions(options) {
       const evidenceLabel = evidence.length
         ? `${evidence.length} file${evidence.length === 1 ? '' : 's'}`
         : 'None';
-      return `<article class="data-card"><div class="button-row"><span class="status ${inventoryRuntimeStatusClass(inventoryHealth(state, item))}">${esc(inventoryRuntimeStatusLabel(inventoryHealth(state, item)))}</span><span class="pill">${esc(item.id)}</span></div><h4 style="margin-top:8px">${esc(item.name)}</h4><p>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.handlingCode ?? item.handling)}<br>On hand ${inventoryRuntimeQuantity(balance.onHand)} · Reserved ${inventoryRuntimeQuantity(balance.reserved)} · ATP <strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)}</strong> ${esc(item.unit)}${negative ? '<br><strong class="danger-text">Negative ATP — new allocations blocked</strong>' : ''}<br><small>Provenance ${esc(provenance)} · Latest movement ${esc(inventoryRuntimeMovementLabel(movement))} · Evidence ${esc(evidenceLabel)}</small></p>${inventoryRuntimeActions(item)}</article>`;
+      const lowStockNote = item.lowStockAlertEnabled
+        ? `Low-stock warning at ${inventoryRuntimeQuantity(item.lowStockThreshold)} ${item.unit}`
+        : 'Low-stock warning disabled';
+      return `<article class="data-card"><div class="button-row"><span class="status ${inventoryRuntimeStatusClass(inventoryHealth(state, item))}">${esc(inventoryRuntimeStatusLabel(inventoryHealth(state, item)))}</span><span class="pill">${esc(item.id)}</span></div><h4 style="margin-top:8px">${esc(item.name)}</h4><p>${esc(item.category)} · ${esc(item.stockArea)} · ${esc(item.handlingCode ?? item.handling)}<br>On hand ${inventoryRuntimeQuantity(balance.onHand)} · Reserved ${inventoryRuntimeQuantity(balance.reserved)} · ATP <strong class="${negative ? 'danger-text' : ''}">${inventoryRuntimeQuantity(balance.availableToPromise)}</strong> ${esc(item.unit)}${negative ? '<br><strong class="danger-text">Negative ATP — new allocations blocked</strong>' : ''}<br><small>${esc(lowStockNote)} · Provenance ${esc(provenance)} · Latest movement ${esc(inventoryRuntimeMovementLabel(movement))} · Evidence ${esc(evidenceLabel)}</small></p>${inventoryRuntimeActions(item)}</article>`;
     };
     table.innerHTML = pageRows.length
-      ? `<div class="table-wrap desktop-table"><table><thead><tr><th>Product</th><th>Catalog / Handling</th><th>On Hand</th><th>Reserved</th><th>Raw ATP</th><th>Status / Reorder</th><th>Provenance / Movement</th><th>Evidence</th><th></th></tr></thead><tbody>${pageRows.map(rowMarkup).join('')}</tbody></table></div><div class="mobile-cards">${pageRows.map(cardMarkup).join('')}</div>`
+      ? `<div class="table-wrap desktop-table"><table><thead><tr><th>Product</th><th>Catalog / Handling</th><th>On Hand</th><th>Reserved</th><th>Raw ATP</th><th>Status / Warnings</th><th>Provenance / Movement</th><th>Evidence</th><th></th></tr></thead><tbody>${pageRows.map(rowMarkup).join('')}</tbody></table></div><div class="mobile-cards">${pageRows.map(cardMarkup).join('')}</div>`
       : '<div class="empty">No inventory products match these filters.</div>';
     const count = document.querySelector('#inventoryCount');
     if (count) count.textContent = `${rows.length} matching product${rows.length === 1 ? '' : 's'}`;
@@ -6788,7 +7209,12 @@ export function createRuntimeExtensions(options) {
     if (String(item?.status).toUpperCase() === 'VERIFY') return 'VERIFY';
     const balance = inventoryBalance(state, item);
     if (balance.onHand <= 0 || balance.availableToPromise <= 0) return 'OUT_OF_STOCK';
-    if (balance.availableToPromise <= Number(item?.reorderThreshold ?? 0)) return 'LOW_STOCK';
+    if (
+      item?.lowStockState === 'LOW' ||
+      (item?.lowStockAlertEnabled === true &&
+        balance.availableToPromise <= Number(item?.lowStockThreshold ?? 0))
+    )
+      return 'LOW_STOCK';
     return 'IN_STOCK';
   };
 
@@ -7631,7 +8057,20 @@ export function createRuntimeExtensions(options) {
       ['Storage location', 'storageLocation', 'previousStorageLocation', 'newStorageLocation'],
       ['Unit', 'unit', 'previousUnit', 'newUnit'],
       ['Reorder threshold', 'reorderThreshold', 'previousReorderThreshold', 'newReorderThreshold'],
-      ['Condition review', 'conditionReviewState', 'previousConditionReviewState', 'newConditionReviewState', 'condition'],
+      [
+        'Low-stock warning',
+        'lowStockAlertEnabled',
+        'previousLowStockAlertEnabled',
+        'newLowStockAlertEnabled',
+      ],
+      ['Low-stock threshold', 'lowStockThreshold', 'previousLowStockThreshold', 'newLowStockThreshold'],
+      [
+        'Condition review',
+        'conditionReviewState',
+        'previousConditionReviewState',
+        'newConditionReviewState',
+        'condition',
+      ],
       [
         'Maintenance review',
         'maintenanceReviewState',
@@ -7640,7 +8079,13 @@ export function createRuntimeExtensions(options) {
         'maintenance',
       ],
       ['Lending', 'isLendable', 'previousIsLendable', 'newIsLendable'],
-      ['Lending audience', 'lendingAudience', 'previousLendingAudience', 'newLendingAudience', 'lendingAudience'],
+      [
+        'Lending audience',
+        'lendingAudience',
+        'previousLendingAudience',
+        'newLendingAudience',
+        'lendingAudience',
+      ],
       ['Traceable asset count', 'assetInstanceCount', 'previousAssetInstanceCount', 'newAssetInstanceCount'],
     ];
     const changes = fields
@@ -7676,6 +8121,8 @@ export function createRuntimeExtensions(options) {
         <label>Storage location<input name="storageLocation" value="${esc(item.storageLocation ?? '')}" required></label>
         <label>Unit<input name="unit" value="${esc(item.unit ?? '')}" required><small>Historical units cannot be changed after ledger activity.</small></label>
         <label>Reorder threshold<input name="reorderThreshold" type="number" ${quantityInputBounds(item.unit, { allowZero: true })} value="${esc(item.reorderThreshold ?? 0)}" required></label>
+        <label class="checkbox"><input name="lowStockAlertEnabled" type="checkbox" value="true" ${item.lowStockAlertEnabled ? 'checked' : ''}> Enable low-stock warning after classification</label>
+        <label>Low-stock threshold<input name="lowStockThreshold" type="number" ${quantityInputBounds(item.unit, { allowZero: true })} value="${esc(item.lowStockThreshold ?? '')}"><small>Whole-number warning threshold only; no automatic stock or procurement action.</small></label>
         <label>Condition review<select name="conditionReviewState"><option value="" ${conditionReviewState ? '' : 'selected'} disabled>Select physically reviewed condition</option>${option('NOT_ASSESSED', 'Not assessed', conditionReviewState)}${option('NEW', 'New', conditionReviewState)}${option('GOOD', 'Good', conditionReviewState)}${option('FAIR', 'Fair', conditionReviewState)}${option('POOR', 'Poor / quarantine', conditionReviewState)}${option('DAMAGED', 'Damaged', conditionReviewState)}</select></label>
         <label>Maintenance review<select name="maintenanceReviewState"><option value="" ${maintenanceReviewState ? '' : 'selected'} disabled>Select physical maintenance outcome</option>${option('NOT_ASSESSED', 'Not assessed', maintenanceReviewState)}${option('CLEARED', 'Cleared', maintenanceReviewState)}${option('MAINTENANCE_REQUIRED', 'Maintenance required', maintenanceReviewState)}</select></label>
         <label class="checkbox span-2"><input name="isLendable" type="checkbox" value="true" ${item.isLendable ? 'checked' : ''}> Enable lending after this review</label>
@@ -7712,6 +8159,14 @@ export function createRuntimeExtensions(options) {
       storageLocation: draft.storageLocation ?? item.storageLocation,
       unit: draft.unit ?? item.unit,
       reorderThreshold: Number(draft.reorderThreshold ?? item.reorderThreshold ?? 0),
+      lowStockAlertEnabled:
+        draft.lowStockAlertEnabled === true ||
+        draft.lowStockAlertEnabled === 'true' ||
+        draft.lowStockAlertEnabled === 'on',
+      lowStockThreshold:
+        draft.lowStockThreshold === '' || draft.lowStockThreshold === undefined
+          ? null
+          : Number(draft.lowStockThreshold),
       conditionReviewState: draft.conditionReviewState,
       maintenanceReviewState: draft.maintenanceReviewState,
       isLendable: draft.isLendable === true || draft.isLendable === 'true' || draft.isLendable === 'on',
@@ -7764,6 +8219,8 @@ export function createRuntimeExtensions(options) {
         storageLocation: item.storageLocation,
         unit: item.unit,
         reorderThreshold: Number(item.reorderThreshold ?? 0),
+        lowStockAlertEnabled: false,
+        lowStockThreshold: null,
         isLendable: false,
         lendingAudience: 'NOT_AVAILABLE_FOR_LENDING',
         enableLendingConfirmed: false,
@@ -7788,7 +8245,10 @@ export function createRuntimeExtensions(options) {
   const openInventoryClassification = (item) => {
     openModal(`Classify ${item.id}`, classificationFormHtml(item), (modal) => {
       const form = modal.querySelector('#inventoryClassificationForm');
-      bindUnitBoundInputs(form, [{ name: 'reorderThreshold', allowZero: true }]);
+      bindUnitBoundInputs(form, [
+        { name: 'reorderThreshold', allowZero: true },
+        { name: 'lowStockThreshold', allowZero: true },
+      ]);
       const sync = () => {
         const reusable = form.elements.inventoryKind.value === 'REUSABLE';
         const classified = form.elements.classificationStatus.value === 'CLASSIFIED';
@@ -7798,6 +8258,11 @@ export function createRuntimeExtensions(options) {
         const conditionNotAssessed = conditionReviewState.querySelector('option[value="NOT_ASSESSED"]');
         const maintenanceNotAssessed = maintenanceReviewState.querySelector('option[value="NOT_ASSESSED"]');
         if (!classified) form.elements.isLendable.checked = false;
+        if (!classified) form.elements.lowStockAlertEnabled.checked = false;
+        form.elements.lowStockAlertEnabled.disabled = !classified;
+        const lowStockEnabled = classified && form.elements.lowStockAlertEnabled.checked;
+        form.elements.lowStockThreshold.disabled = !lowStockEnabled;
+        form.elements.lowStockThreshold.required = lowStockEnabled;
         form.elements.isLendable.disabled = !classified;
         const lendable = classified && form.elements.isLendable.checked;
         conditionReviewState.disabled = !reusable;
@@ -7808,7 +8273,8 @@ export function createRuntimeExtensions(options) {
         maintenanceNotAssessed.disabled = classifiedReusable;
         if (classifiedReusable) {
           if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
-          if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
+          if (!isReusableMaintenanceReviewState(maintenanceReviewState.value))
+            maintenanceReviewState.value = '';
         } else if (reusable) {
           if (
             conditionReviewState.value !== 'NOT_ASSESSED' &&
@@ -7836,6 +8302,7 @@ export function createRuntimeExtensions(options) {
       form.elements.classificationStatus.addEventListener('change', sync);
       form.elements.inventoryKind.addEventListener('change', sync);
       form.elements.isLendable.addEventListener('change', sync);
+      form.elements.lowStockAlertEnabled.addEventListener('change', sync);
       sync();
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -7844,6 +8311,8 @@ export function createRuntimeExtensions(options) {
         button.disabled = true;
         const draft = Object.fromEntries(new FormData(form));
         draft.isLendable = form.elements.isLendable.checked;
+        draft.lowStockAlertEnabled = form.elements.lowStockAlertEnabled.checked;
+        draft.lowStockThreshold = draft.lowStockAlertEnabled ? form.elements.lowStockThreshold.value : '';
         draft.enableLendingConfirmed = form.elements.enableLendingConfirmed.checked;
         draft.assetTrackingConfirmed = form.elements.assetTrackingConfirmed.checked;
         const quantityValidation = validateCatalogQuantities(draft);
@@ -7885,7 +8354,8 @@ export function createRuntimeExtensions(options) {
             maintenanceReviewState.value = '';
           } else {
             if (!isReusableConditionReviewState(conditionReviewState.value)) conditionReviewState.value = '';
-            if (!isReusableMaintenanceReviewState(maintenanceReviewState.value)) maintenanceReviewState.value = '';
+            if (!isReusableMaintenanceReviewState(maintenanceReviewState.value))
+              maintenanceReviewState.value = '';
           }
         };
         form.elements.inventoryKind.addEventListener('change', sync);
@@ -8285,7 +8755,13 @@ export function createRuntimeExtensions(options) {
   };
 
   const clearRequestOnlyInternalSurfaces = () => {
-    for (const selector of ['#inventoryTable', '#inventoryCount', '#inventoryPagination', '#releaseTickets', '#lendingTickets']) {
+    for (const selector of [
+      '#inventoryTable',
+      '#inventoryCount',
+      '#inventoryPagination',
+      '#releaseTickets',
+      '#lendingTickets',
+    ]) {
       document.querySelector(selector)?.replaceChildren();
     }
     document
@@ -8496,7 +8972,15 @@ export function createRuntimeExtensions(options) {
   };
 
   const start = () => {
-    if (isRequestOnly() || backendMode !== 'apps-script' || typeof services.getScopedRevision !== 'function')
+    // RV-01.4: the revision poller was previously limited to the Apps Script
+    // runtime, so a REST-backed Main Hub never noticed a public submission and
+    // needed a hard refresh or re-login. REST is the production backend and
+    // uses the same scoped-revision contract.
+    if (
+      isRequestOnly() ||
+      !['apps-script', 'rest', 'http'].includes(backendMode) ||
+      typeof services.getScopedRevision !== 'function'
+    )
       return;
     poller = createRevisionPoller({
       readRevision: (scope) => services.getScopedRevision(scope),

@@ -1,5 +1,111 @@
 # Current Task
 
+INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
+SECONDARY INTENTS: SECURITY, PRIVACY, OPERATIONS, RELEASE
+MODE: execute the owner-authorized final identity, staging, and production closeout
+TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
+SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
+AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; owner-supplied final identity/staging/production closeout prompt dated 2026-08-08; repository invariants
+RISK: critical because protected identity reconciliation, email verification, D1 migration, release integration, and production are in scope
+DELIVERABLE: project the protected USC staff directory from approved Working Email values only; preserve strict Option A exact ACTIVE+VERIFIED matching; complete staging acceptance; merge, tag, and release v0.7.2; back up, migrate, deploy, reconcile production; rebaseline staging
+VERIFICATION: aggregate-only source/D1 reconciliation; focused identity regression; exact-head CI; fresh private exact-SHA configuration and backup/recovery evidence; migration 0030 identity; readiness; real Resend single-use flow; negative non-roster Gmail proof; production backup, smoke, integrity, reconciliation, and staging parity
+STOP CONDITIONS: unsafe protected projection; inability to deliver real Resend mail to an eligible owner-controlled mailbox; unresolved P0/P1; backup/restore, target/binding, migration/integrity, SHA, secret, rollback, privacy, or external owner-action blocker
+STATUS: EXECUTING_OWNER_AUTHORIZED_FINAL_CLOSEOUT
+
+Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
+
+Branch: `release/v0.7.2-production-access-operations`
+
+Accepted specification:
+`.codex/specs/v0.7.2-production-access-operations.md`
+
+Accepted amendment:
+`.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
+
+Current exact action: repair the approved Google source adapter so the protected
+staff projection uses `Working Email` rather than the separate HAU educational
+email column, add focused regression proof, deploy the new exact SHA to staging,
+back up and reconcile the protected D1 projection through its governed owner
+workflow, then execute the remaining acceptance and production closeout gates.
+The private identity class is owner-approved as `gmail.com`; it remains only a
+coarse first-stage filter and is never staff authorization.
+
+Exact-SHA review blockers being repaired:
+
+- `reserveStock` accepted a caller-selected active item without proving it was
+  the item assigned to the request line. A wrong-item reservation could hold
+  unrelated ATP while preventing the authoritative item from ever releasing.
+- public Request replay returned a prior tracking token by public actor and
+  retry key before proving the new payload matched. The existing
+  `idempotency_keys` table will bind actor, protected fingerprint, and safe
+  result in the same atomic submission batch.
+- the first replacement review confirmed both prior P1s closed, but found the
+  capacity guard still counted fully consumed ACTIVE reservations. A partial
+  release could therefore make the remaining same-line demand permanently
+  unreservable even though authoritative remaining coverage was zero.
+
+Local repair proof on 2026-08-08:
+
+- focused unit contracts: 22/22;
+- focused real Worker/D1 regressions: 2/2;
+- `npm run check`: 117 files / 811 tests;
+- `npm run test:e2e:cloudflare:local`: 58/58;
+- `npx playwright test --workers=2`: 138 passed / 360 intentional skips;
+- `npm run build`: deterministic preview artifact restored;
+- staging artifact preflight: expected exit 1 because the tracked artifact is
+  the safe preview build, not a live D1 deployable.
+
+Consumed-reservation correction proof on 2026-08-08:
+
+- pre-fix real Worker/D1 sequence request 4 -> reserve 1 -> release 1 ->
+  restock -> reserve remaining 3 returned 409 at the remainder reservation;
+- post-fix the same sequence succeeds, an additional reservation returns 409,
+  and releasing the remaining 3 completes the request;
+- focused unit contracts: 31/31;
+- repeated `npm run check`: 117 files / 811 tests;
+- repeated local Worker/D1: 58/58;
+- repeated browser matrix: 138 passed / 360 intentional skips;
+- deterministic preview artifact restored and staging preflight again failed
+  closed with expected exit 1.
+
+N-1 repair: `reserveStock` now evaluates requested reservation quantity against
+`requested_quantity - released_quantity - SUM(unconsumed ACTIVE reservation
+coverage)` before the new reservation is inserted. The guarded batch accepts the reachable
+`READY_TO_RESERVE`, `READY_TO_RELEASE`, and `PARTIALLY_RELEASED` line states,
+preserves `PARTIALLY_RELEASED`, and keeps the insert, audit, idempotency receipt,
+parent timestamp, and revision bumps in one atomic batch.
+
+Pre-fix behavioral proof:
+
+- procurement line at `READY_TO_RELEASE`: reached `reserveStock`, returned 409;
+- partial reservation after a completed restock: reached the remainder
+  `reserveStock`, returned 409.
+
+Post-fix focused proof:
+
+- `tests/unit/request-visibility-rv01.test.js`: 8/8;
+- real local Worker/D1 reservation selection: 4/4, including procurement
+  reserve/release, restock top-up, partly released parent, and concurrent one
+  winner / one safe 409 / one inventory effect.
+
+Complete local gates on 2026-08-08:
+
+- `npm run check`: 117 files / 810 tests;
+- `npm run test:e2e:cloudflare:local`: 58/58;
+- `npx playwright test --workers=2`: 138 passed / 360 intentional skips;
+- `npm run build`: deterministic preview artifact restored;
+- `node scripts/verify-deploy-artifact.mjs staging`: expected exit 1 because the
+  tracked artifact is the safe preview build.
+
+The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION` and waived another
+confirmation wait. Staging and production remain untouched because the fresh
+exact-SHA reviews, identity-class input, private configuration, backup,
+migration, readiness, rollback, and reconciliation gates have not passed.
+
+---
+
+## Completed v0.7.1 predecessor task
+
 INTENT: PRODUCTION LAUNCH CLOSURE
 MODE: complete; ready for accepted v0.7.2 cold start
 TARGET: immutable v0.7.1 repository, staging, and production baseline

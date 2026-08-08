@@ -40,6 +40,19 @@ describe('essential bootstrap contract', () => {
     expect(validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toBe(fixture);
   });
 
+  it('accepts the v0.7.2 account-application review capabilities', () => {
+    const fixture = createEssentialBootstrapFixture();
+    fixture.currentUser.role = 'SYSTEM_OWNER';
+    fixture.currentUser.authorization.roleId = 'SYSTEM_OWNER';
+    fixture.currentUser.authorization.roleLabel = 'System Owner';
+    fixture.currentUser.authorization.capabilities.push(
+      'account_application.admin_review',
+      'account_application.director_decide',
+      'account_application.owner_override',
+    );
+    expect(validateEssentialBootstrap(fixture, { backendMode: 'mock' })).toBe(fixture);
+  });
+
   it('accepts only a bounded operational context whose selected option is available', () => {
     const fixture = createEssentialBootstrapFixture();
     fixture.operationalContext = {

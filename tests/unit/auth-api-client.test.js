@@ -114,4 +114,53 @@ describe('authentication API client', () => {
       expect.objectContaining({ method: 'GET', credentials: 'include' }),
     );
   });
+
+  it('keeps applicant status authority in a bearer header and out of the URL', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, state: 'PENDING_ADMIN_REVIEW' }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const client = new AuthApiClient('https://api.example.test');
+
+    await client.getAccountApplicationStatus('opaque-private-status-token');
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.example.test/api/account-applications/status',
+      expect.objectContaining({
+        method: 'GET',
+        headers: expect.objectContaining({ authorization: 'Bearer opaque-private-status-token' }),
+      }),
+    );
+    expect(fetch.mock.calls[0][0]).not.toContain('opaque-private-status-token');
+  });
+
+  it('encodes review identifiers and sends governed mutations with CSRF', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetch);
+    const client = new AuthApiClient('https://api.example.test');
+
+    await client.decideAccountApplication(
+      'director',
+      'APP / synthetic',
+      'approve',
+      { expectedRevision: 3 },
+      'csrf-review',
+    );
+
+    expect(fetch).toHaveBeenCalledWith(
+      'https://api.example.test/api/director/account-applications/APP%20%2F%20synthetic/approve',
+      expect.objectContaining({
+        method: 'POST',
+        headers: expect.objectContaining({ 'x-csrf-token': 'csrf-review' }),
+      }),
+    );
+  });
 });

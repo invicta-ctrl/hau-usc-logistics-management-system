@@ -3,7 +3,12 @@ import { AppError } from '../app/errors.js';
 import { setRuntimeReleaseIdentity } from '../app/release-identity.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
+import { createAuthenticatedAccountControlButtons } from './authenticated-account-controls.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
+import {
+  consumeApplicationStatusToken,
+  mountPublicAccountApplication,
+} from './public-account-application.js';
 import { mountRequesterPortal } from './requester-portal.js';
 import { brandLockupMarkup } from './brand-assets.js';
 import { portalNavigationMarkup, portalSelectionMarkup, releaseIdentityMarkup } from './portal-navigation.js';
@@ -157,11 +162,11 @@ function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
       <p class="eyebrow">Holy Angel University</p>
       <h1 id="authTitle">${portal ? 'Office Lending' : requestPortal ? 'Request Center' : 'Staff sign in'}</h1>
       ${releaseIdentityMarkup()}
-      <p class="auth-intro">${portal ? 'Sign in with your institution-approved Access ID to submit and track your own lending requests.' : requestPortal ? 'Sign in with your requester Access ID to submit and track your own logistics requests.' : 'Sign in with the Access ID issued by the Department of Logistics.'}</p>
+      <p class="auth-intro">${portal ? 'Sign in with your institution-approved Access ID to submit and track your own lending requests.' : requestPortal ? 'Sign in with your requester Access ID to submit and track your own logistics requests.' : 'Sign in with your username, immutable account code, or verified email.'}</p>
       <div class="auth-alert" role="alert" data-auth-login-error ${error ? '' : 'hidden'}>${message}</div>
       <form id="authLoginForm" class="auth-form" autocomplete="on">
-        <label for="authAccessId">Access ID or verified HAU-USC email</label>
-        <input id="authAccessId" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="characters" required maxlength="64" spellcheck="false">
+        <label for="authAccessId">Username, immutable account code, or verified email</label>
+        <input id="authAccessId" name="username" type="text" inputmode="text" autocomplete="username" autocapitalize="none" aria-label="Access ID or verified HAU-USC email, or username" required maxlength="254" spellcheck="false">
         ${passwordControl({ id: 'authPassword', name: 'password', autocomplete: 'current-password' })}
         <div class="auth-form-actions">
           <button class="auth-text-button" type="button" data-auth-forgot aria-expanded="false" aria-controls="authRecoveryHelp">Forgot password?</button>
@@ -173,6 +178,7 @@ function loginMarkup(error, { portal = false, requestPortal = false } = {}) {
         <p>Contact an authorized Administrator to revoke active sessions and issue a one-time temporary password. Your role and committee scope cannot be changed from this page.</p>
       </div>
       <p class="auth-help">${portal ? 'Borrower eligibility is assigned by the server. This portal never provides internal staff access.' : requestPortal ? 'This portal shows only your own requests. Roles and committee access are assigned by the server.' : 'Roles and committee access are assigned by the server. They cannot be selected here.'}</p>
+      <div class="auth-account-links"><a href="/register">Create staff account</a><a href="/application-status">Check application status</a></div>
       ${portalNavigationMarkup({ current: currentPortal })}
     </section>`;
 }
@@ -243,7 +249,12 @@ function attachSessionControls(client) {
         location.reload();
       }
     });
-    tools.prepend(identity, logout);
+    const accountControls = createAuthenticatedAccountControlButtons({
+      client,
+      session: getAuthSession(),
+      onSessionInvalidated: clearAuthSession,
+    });
+    tools.prepend(identity, ...accountControls, logout);
     return true;
   };
   if (install()) return;
@@ -255,6 +266,13 @@ function attachSessionControls(client) {
 
 export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestOnly, start }) {
   document.body.dataset.runtimeMode = backendMode;
+  const accountApplicationMode =
+    location.pathname === '/register'
+      ? 'register'
+      : location.pathname === '/application-status'
+        ? 'status'
+        : '';
+  const initialStatusToken = accountApplicationMode === 'status' ? consumeApplicationStatusToken() : '';
   if (backendMode === 'unconfigured') {
     const root = gatewayRoot();
     setWorkspaceVisibility(false);
@@ -278,6 +296,10 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   }
   if (portalSelection) {
     root.innerHTML = portalSelectionMarkup();
+    return;
+  }
+  if (accountApplicationMode) {
+    mountPublicAccountApplication({ root, client, mode: accountApplicationMode, initialStatusToken });
     return;
   }
   if (lendingPortal) {

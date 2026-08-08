@@ -1,6 +1,14 @@
 import { expect, request as apiRequest, test } from '@playwright/test';
 import { navigateToAdminView } from '../e2e/navigation.js';
 
+// Lending pickup/due dates are validated against the current date, so they must
+// be derived at run time. Hardcoded calendar dates made this suite pass only
+// during the week it was written.
+const dayOffset = (days) => new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10);
+const PICKUP_DATE = dayOffset(1);
+const DUE_DATE = dayOffset(8);
+const DUE_AT = `${dayOffset(8)}T12:00:00+08:00`;
+
 const PASSWORD = `LocalOnly${String.fromCharCode(33)}Pass2026`;
 const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
 const ACTIVATED_PASSWORD = `Activated${String.fromCharCode(33)}Local9472`;
@@ -37,7 +45,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '29' },
+    database: { connected: true, schemaVersion: '30' },
   });
 
   await page.goto('/');
@@ -238,7 +246,7 @@ test('System Owner receives every module and a server-validated operational scop
     quantity: 1,
     unit: 'piece',
     purpose: 'System Owner operational-context audit proof',
-    dueAt: '2026-08-10T12:00:00+08:00',
+    dueAt: DUE_AT,
     ticketType: 'LOAN',
     operationalScope: 'COMMITTEE:COM_FOOD',
     activeWorkspace: 'inventory',
@@ -367,7 +375,7 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       quantity: 1,
       unit: fixture.unit,
       purpose: 'Fail-closed classification proof',
-      dueAt: '2026-08-10T12:00:00+08:00',
+      dueAt: DUE_AT,
       ticketType: 'LOAN',
     });
     expect(unsafeTicket.status()).toBe(409);
@@ -383,6 +391,8 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       storageLocation: fixture.storageLocation,
       unit: fixture.unit,
       reorderThreshold: fixture.reorderThreshold,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
       conditionReviewState: 'GOOD',
       maintenanceReviewState: 'CLEARED',
       isLendable: true,
@@ -426,6 +436,8 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       classificationStatus: 'CLASSIFIED',
       inventoryKind: 'REUSABLE',
       isLendable: true,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
       assetInstanceCount: 1,
       classificationRevision: fixture.classificationRevision + 1,
     });
@@ -445,6 +457,9 @@ test('inventory classification is protected, audited, idempotent, and fail-close
       id: fixture.id,
       classificationStatus: 'CLASSIFIED',
       assetInstanceCount: 1,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 3,
+      lowStockState: expect.stringMatching(/^(LOW|NORMAL)$/u),
       classificationHistory: [
         expect.objectContaining({
           previousStatus: 'NEEDS_CLASSIFICATION',
@@ -711,6 +726,9 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
     for (const invalid of [
       { unit: 'piece', reorderThreshold: 0.5 },
       { unit: 'piece', initialQuantity: 1.5 },
+      { unit: 'meter', reorderThreshold: 2.02 },
+      { unit: 'meter', initialQuantity: 2.03 },
+      { unit: 'meter', maximumLoanQuantity: 0.06 },
       { unit: 'unsupported-unit' },
     ]) {
       const response = await mutate(owner, ownerCsrf, 'createInventoryItem', {
@@ -735,6 +753,18 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
     const createReplay = await mutate(owner, ownerCsrf, 'createInventoryItem', createCommand);
     expect(createReplay.status()).toBe(200);
     await expect(createReplay.json()).resolves.toMatchObject(created);
+
+    const prematureLowStock = await mutate(owner, ownerCsrf, 'updateInventoryItem', {
+      clientRequestId: `catalog-low-stock-premature-${marker}`,
+      itemId: created.itemId,
+      expectedUpdatedAt: created.updatedAt,
+      lowStockAlertEnabled: true,
+      lowStockThreshold: 2,
+    });
+    expect(prematureLowStock.status()).toBe(409);
+    await expect(prematureLowStock.json()).resolves.toMatchObject({
+      code: 'LOW_STOCK_NOT_APPLICABLE',
+    });
 
     const updateCommand = {
       clientRequestId: `catalog-update-${marker}`,
@@ -805,6 +835,8 @@ test('D1 catalog mutations enforce authority, quantity, revision, dependency, an
         unit: 'piece',
         onHand: 2,
         reorderThreshold: 2,
+        lowStockAlertEnabled: false,
+        lowStockThreshold: null,
         updatedAt: updated.updatedAt,
         inventoryKind: 'UNVERIFIED',
         classificationStatus: 'NEEDS_CLASSIFICATION',
@@ -1019,21 +1051,205 @@ test('shared shell exposes protected System Owner surfaces only to the System Ow
   await Promise.all([ownerPage.close(), adminPage.close()]);
 });
 
-test('Request Center public APIs require an authenticated department session', async ({ request }) => {
-  for (const [method, route] of [
-    ['get', '/api/public/request/options'],
-    ['post', '/api/public/request'],
-    ['post', '/api/public/request/track'],
-    ['post', '/api/public/request/related'],
-  ]) {
-    const response = await request[method](route, method === 'post' ? { data: {} } : undefined);
-    expect(response.status()).toBe(401);
-    await expect(response.json()).resolves.toMatchObject({ code: 'SESSION_REQUIRED' });
-  }
+test('Request Center public APIs enforce the two-purpose private-tracking contract', async ({ request }) => {
+  const submissionHeaders = {
+    origin: 'http://127.0.0.1:8787',
+    'cf-connecting-ip': '192.0.2.30',
+  };
+  const optionsResponse = await request.get('/api/public/request/options');
+  expect(optionsResponse.status()).toBe(200);
+  const options = await optionsResponse.json();
+  expect(options.requestPurposes).toEqual(['EVENT_ACTIVITY_SUPPORT', 'OFFICE_INVENTORY_PANTRY']);
+  const event = options.events[0];
+  const item = options.items[0];
+  expect(event).toBeTruthy();
+  expect(item).toBeTruthy();
+
+  const command = {
+    clientRequestId: `public-request-${crypto.randomUUID()}`,
+    requesterName: 'Synthetic Public Requester',
+    organization: 'Synthetic Organization',
+    requesterType: 'HAU office / department',
+    email: `public-request-${crypto.randomUUID()}@example.invalid`,
+    contactNumber: '+63 917 000 0030',
+    purpose: 'Synthetic event support request.',
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    eventSeriesId: event.seriesId,
+    eventId: event.id,
+    startDate: '',
+    endDate: '',
+    location: event.venue ?? '',
+    dataUseAcknowledged: true,
+    acceptableUseAcknowledged: true,
+    evidenceConsentAcknowledged: true,
+    lines: [{ category: 'Inventory Item', itemId: item.id, quantity: 1 }],
+  };
+  const submittedResponse = await request.post('/api/public/request', {
+    headers: submissionHeaders,
+    data: command,
+  });
+  expect(submittedResponse.status()).toBe(200);
+  const submitted = await submittedResponse.json();
+  expect(submitted).toMatchObject({
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    status: 'FOR_REVIEW',
+    replayed: false,
+  });
+  expect(submitted.trackingCode).toEqual(expect.any(String));
+
+  const replayedResponse = await request.post('/api/public/request', {
+    headers: submissionHeaders,
+    data: command,
+  });
+  expect(replayedResponse.status()).toBe(200);
+  await expect(replayedResponse.json()).resolves.toMatchObject({
+    requestId: submitted.requestId,
+    trackingCode: submitted.trackingCode,
+    replayed: true,
+  });
+
+  const changedReplayResponse = await request.post('/api/public/request', {
+    headers: submissionHeaders,
+    data: { ...command, purpose: 'A changed payload must not inherit private tracking access.' },
+  });
+  expect(changedReplayResponse.status()).toBe(409);
+  const changedReplay = await changedReplayResponse.json();
+  expect(changedReplay).toMatchObject({ code: 'PUBLIC_REQUEST_CONFLICT' });
+  expect(changedReplay).not.toHaveProperty('trackingCode');
+  expect(JSON.stringify(changedReplay)).not.toContain(submitted.trackingCode);
+
+  const trackedResponse = await request.post('/api/public/request/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
+  });
+  expect(trackedResponse.status()).toBe(200);
+  const tracked = await trackedResponse.json();
+  expect(tracked.request).toMatchObject({
+    id: submitted.requestId,
+    requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+    status: 'FOR_REVIEW',
+  });
+  expect(JSON.stringify(tracked)).not.toContain(command.requesterName);
+  expect(JSON.stringify(tracked)).not.toContain(command.email);
+
+  const relatedResponse = await request.post('/api/public/request/related', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { requestId: submitted.requestId, trackingCode: submitted.trackingCode },
+  });
+  expect(relatedResponse.status()).toBe(200);
+  await expect(relatedResponse.json()).resolves.toMatchObject({
+    reference: {
+      id: submitted.requestId,
+      requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+      requestType: 'EVENT_LOGISTICS',
+    },
+  });
+
   expect((await request.get('/api/portal/request')).status()).toBe(401);
 });
 
-test('public Lending Center submits both borrower types without exposing public tracking', async ({
+test('Link Registry is server-authorized, revision-guarded, versioned, and idempotent', async ({
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  try {
+    const csrf = await login(admin, 'LOCAL.ADMIN');
+    const post = (route, data) =>
+      admin.post(`/api/admin/reference-links/${route}`, {
+        headers: { 'x-csrf-token': csrf },
+        data,
+      });
+    const marker = crypto.randomUUID();
+    const createCommand = {
+      clientRequestId: `reference-create-${marker}`,
+      label: `Synthetic reference ${marker}`,
+      linkType: 'EXTERNAL_URL',
+      url: `https://example.invalid/reference/${marker}`,
+      audience: 'PUBLIC',
+      reason: 'Synthetic Link Registry acceptance proof.',
+    };
+    const createdResponse = await post('create', createCommand);
+    expect(createdResponse.status()).toBe(200);
+    const created = await createdResponse.json();
+    expect(created).toMatchObject({
+      link: {
+        id: expect.stringMatching(/^RLK-/u),
+        status: 'DRAFT',
+        revision: 1,
+        syncState: 'NOT_CONFIGURED',
+      },
+      replayed: false,
+    });
+    await expect((await post('create', createCommand)).json()).resolves.toMatchObject({
+      link: { id: created.link.id, revision: 1 },
+      replayed: true,
+    });
+
+    const updateCommand = {
+      ...createCommand,
+      clientRequestId: `reference-update-${marker}`,
+      id: created.link.id,
+      expectedRevision: 1,
+      label: `Updated synthetic reference ${marker}`,
+      reason: 'Synthetic governed metadata update.',
+    };
+    const updatedResponse = await post('update', updateCommand);
+    expect(updatedResponse.status()).toBe(200);
+    await expect(updatedResponse.json()).resolves.toMatchObject({
+      link: { id: created.link.id, revision: 2, status: 'DRAFT' },
+    });
+
+    const staleResponse = await post('update', {
+      ...updateCommand,
+      clientRequestId: `reference-stale-${marker}`,
+      label: 'This stale write must not win',
+    });
+    expect(staleResponse.status()).toBe(409);
+    await expect(staleResponse.json()).resolves.toMatchObject({
+      code: 'REFERENCE_LINK_REVISION_CONFLICT',
+    });
+
+    const activatedResponse = await post('transition', {
+      clientRequestId: `reference-activate-${marker}`,
+      id: created.link.id,
+      expectedRevision: 2,
+      status: 'ACTIVE',
+      reason: 'Synthetic publication approval.',
+    });
+    expect(activatedResponse.status()).toBe(200);
+    await expect(activatedResponse.json()).resolves.toMatchObject({
+      link: { revision: 3, status: 'ACTIVE' },
+    });
+
+    const historyResponse = await post('history', { id: created.link.id, page: 1, pageSize: 20 });
+    expect(historyResponse.status()).toBe(200);
+    await expect(historyResponse.json()).resolves.toMatchObject({
+      items: [
+        { revision: 3, action: 'ACTIVATED' },
+        { revision: 2, action: 'UPDATED' },
+        { revision: 1, action: 'CREATED' },
+      ],
+      pagination: { total: 3 },
+    });
+
+    const internalResponse = await post('create', {
+      clientRequestId: `reference-internal-${marker}`,
+      label: `Synthetic internal reference ${marker}`,
+      linkType: 'INTERNAL_ROUTE',
+      url: 'PORTAL_REQUEST',
+      audience: 'STAFF',
+      reason: 'Synthetic approved route proof.',
+    });
+    expect(internalResponse.status()).toBe(200);
+    await expect(internalResponse.json()).resolves.toMatchObject({
+      link: { linkType: 'INTERNAL_ROUTE', url: 'PORTAL_REQUEST' },
+    });
+  } finally {
+    await admin.dispose();
+  }
+});
+
+test('public Lending Center submits both borrower types with private tracking', async ({
   request,
   baseURL,
 }) => {
@@ -1092,8 +1308,8 @@ test('public Lending Center submits both borrower types without exposing public 
     contactNumber: '+63 917 000 0010',
     email: `lending-${crypto.randomUUID()}@gmail.com`,
     purpose: 'Synthetic public lending acceptance proof.',
-    pickupDate: '2026-08-03',
-    dueDate: '2026-08-10',
+    pickupDate: PICKUP_DATE,
+    dueDate: DUE_DATE,
     responsibilityAcknowledged: true,
     dataUseAcknowledged: true,
     acceptableUseAcknowledged: true,
@@ -1124,7 +1340,8 @@ test('public Lending Center submits both borrower types without exposing public 
   const receipt = await submitted.json();
   expect(receipt).toMatchObject({ status: 'FOR_REVIEW', replayed: false });
   expect(receipt.submissionId).toMatch(/^LBR-/u);
-  expect(receipt).not.toHaveProperty('trackingCode');
+  expect(receipt.trackingCode).toEqual(expect.any(String));
+  expect(receipt.trackingCode.length).toBeGreaterThan(32);
   expect(receipt).not.toHaveProperty('ticketId');
 
   const replay = await request.post('/api/public/lending', {
@@ -1133,14 +1350,31 @@ test('public Lending Center submits both borrower types without exposing public 
   });
   await expect(replay.json()).resolves.toMatchObject({
     submissionId: receipt.submissionId,
+    trackingCode: receipt.trackingCode,
     replayed: true,
   });
 
   const trackingRoute = await request.post('/api/public/lending/track', {
     headers: { origin: 'http://127.0.0.1:8787' },
-    data: { submissionId: receipt.submissionId, trackingCode: 'not-issued' },
+    data: { submissionId: receipt.submissionId, trackingCode: receipt.trackingCode },
   });
-  expect(trackingRoute.status()).toBe(404);
+  expect(trackingRoute.status()).toBe(200);
+  const tracked = await trackingRoute.json();
+  expect(tracked).toMatchObject({
+    submissionId: receipt.submissionId,
+    status: 'FOR_REVIEW',
+    lines: [expect.objectContaining({ status: 'FOR_REVIEW', quantity: 1 })],
+    history: [expect.objectContaining({ status: 'FOR_REVIEW' })],
+  });
+  expect(tracked).not.toHaveProperty('borrowerName');
+  expect(tracked).not.toHaveProperty('email');
+  expect(tracked).not.toHaveProperty('contactNumber');
+
+  const invalidTracking = await request.post('/api/public/lending/track', {
+    headers: { origin: 'http://127.0.0.1:8787' },
+    data: { submissionId: receipt.submissionId, trackingCode: 'invalid-private-code' },
+  });
+  expect(invalidTracking.status()).toBe(404);
 
   const staffSubmitted = await request.post('/api/public/lending', {
     headers: { origin: 'http://127.0.0.1:8787' },
@@ -1202,11 +1436,13 @@ test('Lending Usage and advertisement management enforce role and media boundari
     },
   });
   expect(draft.status()).toBe(200);
+  const draftResult = await draft.json();
 
   const invalidMedia = await admin.post('/api/admin/advertisements/upload', {
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: draftResult.revision,
       contentType: 'image/png',
       base64: Buffer.alloc(40, 1).toString('base64'),
       clientRequestId: `advertisement-invalid-media-${crypto.randomUUID()}`,
@@ -1222,12 +1458,14 @@ test('Lending Usage and advertisement management enforce role and media boundari
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: draftResult.revision,
       contentType: 'image/png',
       base64: pngBytes.toString('base64'),
       clientRequestId: `advertisement-media-${crypto.randomUUID()}`,
     },
   });
   expect(uploaded.status()).toBe(200);
+  const uploadedResult = await uploaded.json();
 
   const activateCommand = {
     id: advertisementId,
@@ -1238,6 +1476,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     destinationUrl: 'https://example.invalid/announcement',
     status: 'ACTIVE',
     displayOrder: 99,
+    expectedRevision: uploadedResult.revision,
     clientRequestId: `advertisement-activate-${crypto.randomUUID()}`,
   };
   const activated = await admin.post('/api/admin/advertisements/save', {
@@ -1245,6 +1484,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     data: activateCommand,
   });
   expect(activated.status()).toBe(200);
+  const activatedResult = await activated.json();
   const publicAdvertisements = await (await request.get('/api/public/advertisements')).json();
   expect(publicAdvertisements.items.find((item) => item.id === advertisementId)).toEqual(
     expect.objectContaining({
@@ -1260,6 +1500,7 @@ test('Lending Usage and advertisement management enforce role and media boundari
     headers: { 'x-csrf-token': adminCsrf },
     data: {
       id: advertisementId,
+      expectedRevision: activatedResult.revision,
       clientRequestId: `advertisement-archive-${crypto.randomUUID()}`,
     },
   });
@@ -1712,18 +1953,24 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       data: { query: 'LOCAL.FOOD', status: 'ALL', page: 1, pageSize: 20 },
     });
     expect(directory.status()).toBe(200);
-    await expect(directory.json()).resolves.toMatchObject({
+    const directoryResult = await directory.json();
+    expect(directoryResult).toMatchObject({
       ok: true,
       items: [
         {
+          accountId: expect.any(String),
+          revision: expect.any(String),
           accessId: 'LOCAL.FOOD',
           roleId: 'DOL_STAFF',
           committeeIds: ['COM_FOOD'],
         },
       ],
     });
+    const managedAccount = directoryResult.items[0];
 
     const command = {
+      accountId: managedAccount.accountId,
+      expectedRevision: managedAccount.revision,
       currentAccessId: 'LOCAL.FOOD',
       confirmCurrentAccessId: 'LOCAL.FOOD',
       proposedAccessId: 'LOCAL.FOOD.RENAMED',
@@ -1746,7 +1993,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       data: command,
     });
     expect(changed.status()).toBe(200);
-    await expect(changed.json()).resolves.toMatchObject({
+    const changedResult = await changed.json();
+    expect(changedResult).toMatchObject({
       changed: true,
       replayed: false,
       sessionsRevoked: true,
@@ -1772,7 +2020,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
 
     const history = await admin.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { currentAccessId: 'LOCAL.FOOD.RENAMED' },
+      data: { accountId: managedAccount.accountId, currentAccessId: 'LOCAL.FOOD.RENAMED' },
     });
     expect(history.status()).toBe(200);
     const historyResult = await history.json();
@@ -1789,6 +2037,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
     const collision = await admin.post('/api/admin/access/preview-access-id', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: managedAccount.accountId,
+        expectedRevision: changedResult.revision,
         currentAccessId: 'LOCAL.FOOD.RENAMED',
         confirmCurrentAccessId: 'LOCAL.FOOD.RENAMED',
         proposedAccessId: 'LOCAL_ADMIN',
@@ -1876,7 +2126,16 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
     });
     expect(activated.status()).toBe(200);
 
+    const managedDirectory = await owner.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { query: createdResult.account.accessId, status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(managedDirectory.status()).toBe(200);
+    const managedAccount = (await managedDirectory.json()).items[0];
+
     const command = {
+      accountId: managedAccount.accountId,
+      expectedRevision: managedAccount.revision,
       currentAccessId: createdResult.account.accessId,
       confirmCurrentAccessId: createdResult.account.accessId,
       presetId: 'FOOD_OPERATOR',
@@ -2022,21 +2281,27 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(filteredDirectory.status()).toBe(200);
-    await expect(filteredDirectory.json()).resolves.toMatchObject({
+    const filteredDirectoryResult = await filteredDirectory.json();
+    expect(filteredDirectoryResult).toMatchObject({
       items: [{ accessId: 'LOCAL.ACCESS.ACTIONS', status: 'ACTIVE' }],
       pagination: { page: 1, pageSize: 5, total: 1 },
     });
+    const accessAccount = filteredDirectoryResult.items[0];
 
     const disable = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: accessAccount.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'DISABLED',
         reason: 'Synthetic disable account lifecycle proof.',
+        clientRequestId: 'local-access-status-disable-0001',
       },
     });
     expect(disable.status()).toBe(200);
+    const disableResult = await disable.json();
     expect((await managed.get('/api/requests')).status()).toBe(401);
     const disabledLogin = await anonymous.post('/api/auth/login', {
       data: { accessId: 'LOCAL.ACCESS.ACTIONS', password: MANAGED_ACTIVATED_PASSWORD },
@@ -2046,26 +2311,34 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const enable = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: disableResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
         reason: 'Synthetic enable account lifecycle proof.',
+        clientRequestId: 'local-access-status-enable-0001',
       },
     });
     expect(enable.status()).toBe(200);
+    const enableResult = await enable.json();
 
     const archived = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: enableResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'REVOKED',
         lifecycleAction: 'ARCHIVE',
         reason: 'Synthetic archive preserves account and audit history.',
+        clientRequestId: 'local-access-status-archive-0001',
       },
     });
     expect(archived.status()).toBe(200);
-    await expect(archived.json()).resolves.toMatchObject({
+    const archivedResult = await archived.json();
+    expect(archivedResult).toMatchObject({
       archived: true,
       status: 'REVOKED',
       sessionsRevoked: true,
@@ -2080,18 +2353,24 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const restoreArchived = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: archivedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         status: 'ACTIVE',
         reason: 'Synthetic restore after archive lifecycle proof.',
+        clientRequestId: 'local-access-status-restore-0001',
       },
     });
     expect(restoreArchived.status()).toBe(200);
+    const restoredResult = await restoreArchived.json();
     const managedCsrf = await login(managed, 'LOCAL.ACCESS.ACTIONS', MANAGED_ACTIVATED_PASSWORD);
 
     const revoked = await admin.post('/api/admin/access/revoke-sessions', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: restoredResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic revoke sessions lifecycle proof.',
@@ -2099,6 +2378,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
       },
     });
     expect(revoked.status()).toBe(200);
+    const revokedResult = await revoked.json();
     expect((await managed.get('/api/requests', { headers: { 'x-csrf-token': managedCsrf } })).status()).toBe(
       401,
     );
@@ -2106,6 +2386,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const reset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
@@ -2123,6 +2405,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const resetReplay = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic temporary password reset lifecycle proof.',
@@ -2151,6 +2435,8 @@ test('Administrator Access Management governs the staging account lifecycle and 
     const unlocked = await admin.post('/api/admin/access/unlock', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: accessAccount.accountId,
+        expectedRevision: resetResult.revision,
         currentAccessId: 'LOCAL.ACCESS.ACTIONS',
         confirmCurrentAccessId: 'LOCAL.ACCESS.ACTIONS',
         reason: 'Synthetic unlock and rate-limit reset lifecycle proof.',
@@ -2166,7 +2452,7 @@ test('Administrator Access Management governs the staging account lifecycle and 
 
     const audit = await admin.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { currentAccessId: 'LOCAL.ACCESS.ACTIONS', limit: 20 },
+      data: { accountId: accessAccount.accountId, currentAccessId: 'LOCAL.ACCESS.ACTIONS', limit: 20 },
     });
     expect(audit.status()).toBe(200);
     const auditActions = (await audit.json()).auditHistory.map((entry) => entry.action);
@@ -2289,17 +2575,22 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
       }),
     ]);
     expect(JSON.stringify(directoryResult)).not.toContain(dolCredential.temporaryPassword);
+    const departmentAccount = directoryResult.items[0];
 
     const revoked = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: departmentAccount.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'REVOKED',
         reason: 'Verify immediate department account revocation.',
+        clientRequestId: 'local-department-status-revoke-0001',
       },
     });
     expect(revoked.status()).toBe(200);
+    const revokedResult = await revoked.json();
     expect((await requester.get('/api/requests')).status()).toBe(401);
     expect(
       (
@@ -2312,28 +2603,37 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
     const restored = await admin.post('/api/admin/access/status', {
       headers: { 'x-cs-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
         reason: 'Verify governed department account restoration.',
+        clientRequestId: 'local-department-status-restore-0001',
       },
     });
     expect(restored.status()).toBe(403);
     const restoredWithCsrf = await admin.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: revokedResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         status: 'ACTIVE',
         reason: 'Verify governed department account restoration.',
+        clientRequestId: 'local-department-status-restore-0001',
       },
     });
     expect(restoredWithCsrf.status()).toBe(200);
+    const restoredResult = await restoredWithCsrf.json();
     await expect(login(requester, 'DOL_2026', departmentPassword)).resolves.toBeTruthy();
 
     const reset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: restoredResult.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Generate one governed replacement department credential.',
@@ -2406,9 +2706,17 @@ test('requester portals keep request and lending records self-scoped', async () 
   const requesterAccessId = `LOCAL.REQUESTER.${suffix}`;
   try {
     const adminCsrf = await login(admin, 'LOCAL.ADMIN');
+    const departmentDirectory = await admin.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: { query: 'DOL_2026', role: 'REQUESTER', status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(departmentDirectory.status()).toBe(200);
+    const departmentAccount = (await departmentDirectory.json()).items[0];
     const departmentReset = await admin.post('/api/admin/access/reset-password', {
       headers: { 'x-csrf-token': adminCsrf },
       data: {
+        accountId: departmentAccount.accountId,
+        expectedRevision: departmentAccount.revision,
         currentAccessId: 'DOL_2026',
         confirmCurrentAccessId: 'DOL_2026',
         reason: 'Prepare the governed department account for authenticated Request Center coverage.',
@@ -2687,11 +2995,75 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(submitted.status()).toBe(200);
   const requestId = (await submitted.json()).requestId;
 
-  const review = await mutate(request, csrfToken, 'reviewRequest', {
+  // RV-01.2: the authenticated Request module independently projects the
+  // canonical review queue, so the reviewer reads the lines from it directly
+  // rather than depending on Overview or another module.
+  const requestModule = await request.get('/api/requests');
+  expect(requestModule.status()).toBe(200);
+  const requestModuleData = await requestModule.json();
+  expect(requestModuleData.data.requests.some((row) => row.id === requestId)).toBe(true);
+  const reviewableLines = requestModuleData.data.requestLines.filter(
+    (line) => line.requestId === requestId,
+  );
+  expect(reviewableLines).toHaveLength(2);
+  // RV-01.5: Request owns its pagination total. On a single page the total is
+  // exactly the number of visible requests, not the Inventory catalog count.
+  if (!requestModuleData.pagination.hasMore) {
+    expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
+  }
+  // Ownership is proven by the total tracking the visible request set above.
+  // A bare "total !== inventoryCount" check is coincidence-prone: the two
+  // counts can be equal by chance, which made this assertion flake.
+  if (!requestModuleData.pagination.hasMore) {
+    expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
+  } else {
+    // The queue clamps its page, so on a full page the total must exceed it.
+    expect(requestModuleData.pagination.total).toBeGreaterThan(
+      requestModuleData.data.requests.length,
+    );
+    expect(requestModuleData.data.requests.length).toBe(requestModuleData.pagination.pageSize);
+  }
+
+  // RV-01.6: every accepted line carries one explicit route decision. The
+  // implicit "everything else becomes procurement" default no longer exists.
+  const stockDecisionLine = reviewableLines.find((line) => line.itemId);
+  const procurementDecisionLine = reviewableLines.find((line) => !line.itemId);
+  expect(stockDecisionLine).toBeTruthy();
+  expect(procurementDecisionLine).toBeTruthy();
+
+  // Separation of duties: LOCAL.DIRECTOR submitted this request, so it must be
+  // reviewed by a different central reviewer. LOCAL.ADMIN holds REQUEST_REVIEW.
+  const reviewer = await apiRequest.newContext({ baseURL });
+  const reviewerCsrf = await login(reviewer, 'LOCAL.ADMIN');
+
+  const selfReview = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Submitter attempts self review',
+    clientRequestId: 'local-e2e-request-self-review',
+    lineDecisions: [{ lineId: stockDecisionLine.id, decision: 'ISSUE_FROM_STOCK' }],
+  });
+  expect(selfReview.status()).toBe(403);
+  expect((await selfReview.json()).code).toBe('SELF_REVIEW_FORBIDDEN');
+
+  const missingDecisions = await mutate(reviewer, reviewerCsrf, 'reviewRequest', {
+    requestId,
+    decision: 'ACCEPT',
+    note: 'Synthetic acceptance without line decisions',
+    clientRequestId: 'local-e2e-request-review-missing-decisions',
+  });
+  expect(missingDecisions.status()).toBe(422);
+  expect((await missingDecisions.json()).code).toBe('LINE_DECISIONS_REQUIRED');
+
+  const review = await mutate(reviewer, reviewerCsrf, 'reviewRequest', {
     requestId,
     decision: 'ACCEPT',
     note: 'Synthetic acceptance',
     clientRequestId: 'local-e2e-request-review',
+    lineDecisions: [
+      { lineId: stockDecisionLine.id, decision: 'ISSUE_FROM_STOCK' },
+      { lineId: procurementDecisionLine.id, decision: 'PROCUREMENT' },
+    ],
   });
   expect(review.status()).toBe(200);
 
@@ -3392,8 +3764,8 @@ test('traceable reusable assets preserve assignment, condition, and maintenance 
     quantity: 1,
     unit: 'piece',
     purpose: 'Synthetic traceable asset lifecycle',
-    pickupDate: '2026-08-03',
-    dueAt: '2026-08-10T12:00:00+08:00',
+    pickupDate: PICKUP_DATE,
+    dueAt: DUE_AT,
     ticketType: 'LOAN',
   });
   expect(lending.status()).toBe(200);
@@ -3494,7 +3866,7 @@ test('a returned reusable asset can be assigned to a later lending ticket withou
       quantity: 1,
       unit: 'piece',
       purpose: `Synthetic ${suffix} reusable assignment`,
-      dueAt: '2026-08-10T12:00:00+08:00',
+      dueAt: DUE_AT,
       ticketType: 'LOAN',
       clientRequestId: `local-reuse-ticket-${suffix}`,
     });

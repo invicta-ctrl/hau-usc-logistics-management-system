@@ -1,27 +1,37 @@
-# HAU-USC v0.7.1 production recovery - reviewed release candidate
+# HAU-USC v0.7.2 Production Access and Operations
 
-> v0.7.1 authority update (2026-08-03): Slices 2 through 8 are locally
-> repository-accepted under
-> `.codex/specs/v0.7.1-production-recovery.md`. Routing/TOML preflight and the
-> read-only production truth audit passed from synchronized `main` at
-> `9fb1b4e6b4e956419fa65dee55268b10c0a55da6`. Production remains operational
-> on immutable v0.7.0 and was not modified. Follow `.codex/CURRENT.md`; the
-> historical Slice 13 material below does not override the active pointer.
+> v0.7.2 authority update (2026-08-03): the complete v0.7.1 production
+> predecessor handoff is accepted, clean `main` is synchronized at
+> `589970d31d0dab4fe876107276d9b808eb44b9c3`, and the owner-approved v0.7.2
+> plan and MAX16 execution prompt are adopted in
+> `.codex/specs/v0.7.2-production-access-operations.md`. The historical
+> material below remains evidence only and does not override `.codex/CURRENT.md`.
 
-CURRENT SLICE: v0.7.1 complete release candidate
+CURRENT SLICE: v0.7.2 exact repository candidate freeze
 
-CURRENT STAGE: SLICE_8_RELEASE_CANDIDATE_REVIEW_ACCEPTED_OWNER_GATES_REMAIN
+CURRENT STAGE: REPOSITORY_CANDIDATE_READY_PREPRODUCTION_BLOCKED
 
 LAST UPDATED: 2026-08-03 (Asia/Manila)
 
-Repaired release-candidate code/test head:
-`42f1970efbccd8c275be2cc4bc77246b5a9c97ab`. Repository gates pass 576 tests;
-the browser matrix passes 130 with 326 intentional skips; local Worker/D1 is
-38/38; preview dry-run is binding-free. Production and external systems were
-untouched. The first final review's two P2s and one P3 are repaired. Fresh Sol
-correction re-review passes at `7338124554d5ad6f948587d69328dae731b38a6c`
-with no P0-P3; repository-side work is complete and external activation remains
-owner-gated.
+Release branch: `release/v0.7.2-production-access-operations`
+
+Current bounded plan:
+
+1. Freeze the integrated source, migration, tests, generated artifacts, release
+   identity, and current handoff in one candidate commit.
+2. Run the required fresh R2 review against that exact product SHA; repair and
+   refreeze if any P0/P1 is found.
+3. Push the branch and verify exact-head PR #15 CI.
+4. Stop before pre-production until the owner-approved live email provider and
+   private identity-class configuration exist.
+5. After those inputs exist, rerun exact-SHA gates and complete isolated
+   pre-production, backup, rollback, reconciliation, and only then production.
+
+The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION`; no second confirmation
+wait is required. The authorization does not clear the blocked provider and
+pre-production gates. Local acceptance is 109 files / 726 tests, browser 136 /
+356 intentional skips, local Worker/D1 39/39, and schema-30 integrity `ok` with
+zero foreign-key findings.
 
 ---
 

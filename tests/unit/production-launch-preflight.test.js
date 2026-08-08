@@ -23,6 +23,7 @@ let paths;
 const config = (environment, marker) => ({
   name: `worker-${environment.toLowerCase()}`,
   preview_urls: false,
+  assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
   observability: {
     logs: { enabled: true, head_sampling_rate: environment === 'STAGING' ? 1 : 0.1 },
     traces: { enabled: true, head_sampling_rate: 0.05 },

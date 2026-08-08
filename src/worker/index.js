@@ -6,7 +6,10 @@ import { createAuthHttpHandler, statusForAuthError } from '../server/auth/http-h
 import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
+import { createD1AccountApplicationRepository } from '../server/d1/account-application-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
+import { createD1ProfileRepository } from '../server/d1/profile-repository.js';
+import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
 import { createGoogleDriveEvidenceStore } from '../server/evidence/google-drive-store.js';
 import {
@@ -22,10 +25,22 @@ import { createBrandAssetService } from '../server/brand-asset-service.js';
 import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
+import { createReferenceLinkService } from '../server/reference-link-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
+import {
+  createAccountApplicationActivationHandoff,
+  createAccountApplicationActivationLifecycle,
+  createAccountApplicationIdentityAdapters,
+} from '../server/account-application/adapters.js';
+import { createAccountApplicationEmailProvider } from '../server/account-application/email-provider-registry.js';
+import {
+  AccountApplicationError,
+  createAccountApplicationService,
+} from '../server/account-application/service.js';
+import { createProfileService } from '../server/profile/service.js';
 import { resolveHostRoute, responseForHostRoute } from './host-routing.js';
 
 const API_SECURITY_HEADERS = Object.freeze({
@@ -46,6 +61,17 @@ const BRAND_ASSET_KEYS = Object.freeze({
   '/brand/favicon': 'brand/favicon',
   '/brand/default-item-image': 'brand/default-item-image',
 });
+
+const APPROVED_REFERENCE_LINK_ROUTES = Object.freeze([
+  'PORTAL_REQUEST',
+  'PORTAL_LENDING',
+  'STAFF_SIGN_IN',
+  'APP_ADMINISTRATOR',
+  'APP_DIRECTOR',
+  'APP_INVENTORY',
+  'APP_FOOD',
+  'APP_MATERIALS',
+]);
 
 async function brandAsset(request, env, key, { governedSlot = false } = {}) {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -173,20 +199,61 @@ function json(value, status = 200, additionalHeaders = {}) {
 
 function services(env) {
   const repository = createD1AuthRepository(env.DB);
+  const accessRepository = createD1AccessManagementRepository(env.DB);
+  const rosterRepository = createD1IdentityRosterRepository(env.DB);
+  const accountApplicationRepository = createD1AccountApplicationRepository(env.DB);
   const passwordKdf = createPasswordKdf({
     timingSafeEqual: constantTimeEqual,
     pepper: env.PASSWORD_PEPPER ?? '',
   });
   const tokenCrypto = createTokenCrypto({ timingSafeEqual: constantTimeEqual });
+  const rosterCrypto = createIdentityRosterCrypto({
+    secret:
+      env.ROSTER_DATA_ENCRYPTION_KEY ??
+      (String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase() === 'DEVELOPMENT'
+        ? 'development-only-roster-data-encryption-key-9472'
+        : ''),
+  });
+  const identityAdapters = createAccountApplicationIdentityAdapters({
+    rosterRepository,
+    rosterCrypto,
+    identityClasses: env.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON,
+  });
+  const accountApplications = createAccountApplicationService({
+    repository: accountApplicationRepository,
+    // Selection is environment-driven and fails closed: an unset provider, an
+    // unsupported one, an absent secret, or a malformed sender all yield the
+    // fail-closed provider, which is the same object this line used to hardcode.
+    emailProvider: createAccountApplicationEmailProvider(env),
+    identityProtection: identityAdapters.identityProtection,
+    passwordKdf,
+    tokenCrypto,
+    rateLimiter: createD1RateLimiter(env.DB),
+    submissionEligibility: identityAdapters.submissionEligibility,
+    reviewDisclosure: identityAdapters.reviewDisclosure,
+    activationHandoff: createAccountApplicationActivationHandoff({
+      accessRepository,
+      rosterRepository,
+      rosterCrypto,
+      passwordKdf,
+    }),
+  });
+  const activationLifecycle = createAccountApplicationActivationLifecycle({
+    applicationService: accountApplications,
+    applicationRepository: accountApplicationRepository,
+    rosterCrypto,
+  });
   const auth = createAuthService({
     repository,
     passwordKdf,
     tokenCrypto,
     rateLimiter: createD1RateLimiter(env.DB),
+    activationLifecycle,
   });
   const access = createAccessManagementService({
-    repository: createD1AccessManagementRepository(env.DB),
+    repository: accessRepository,
     passwordKdf,
+    tokenCrypto,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
   });
   const evidenceBackup = createGoogleDriveEvidenceStore({
@@ -212,7 +279,7 @@ function services(env) {
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-    appVersion: env.APP_VERSION ?? '0.7.1',
+    appVersion: env.APP_VERSION ?? '0.7.2',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
     evidenceStore: evidence,
   });
@@ -240,23 +307,27 @@ function services(env) {
     db: env.DB,
     bucket: env.BRAND_ASSETS,
   });
+  const referenceLinks = createReferenceLinkService({
+    repository: createD1ReferenceLinkRepository(env.DB),
+    approvedInternalRoutes: APPROVED_REFERENCE_LINK_ROUTES,
+    syncConfigured: false,
+  });
   const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
   const identityRoster = createIdentityRosterService({
-    repository: createD1IdentityRosterRepository(env.DB),
+    repository: rosterRepository,
     source: createGoogleSheetsRosterSource({
       spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
       range: env.GOOGLE_ROSTER_RANGE,
       serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
       serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
     }),
-    crypto: createIdentityRosterCrypto({
-      secret:
-        env.ROSTER_DATA_ENCRYPTION_KEY ??
-        (String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase() === 'DEVELOPMENT'
-          ? 'development-only-roster-data-encryption-key-9472'
-          : ''),
-    }),
+    crypto: rosterCrypto,
+  });
+  const profile = createProfileService({
+    repository: createD1ProfileRepository(env.DB),
+    passwordKdf,
+    protectIdentityRequest: (value, context) => rosterCrypto.encrypt({ context, request: value }),
   });
   const operationalHealth = createOperationalHealthService({
     db: env.DB,
@@ -266,6 +337,7 @@ function services(env) {
   });
   return {
     access,
+    accountApplications,
     advertisementAdmin,
     brandAssets,
     auth,
@@ -274,9 +346,12 @@ function services(env) {
     identityRoster,
     operationalHealth,
     operations,
+    profile,
     publicAdvertisements,
     publicLending,
     publicRequests,
+    referenceLinks,
+    rosterCrypto,
   };
 }
 
@@ -291,6 +366,54 @@ async function authorize(request, auth, capability, { mutation = false } = {}) {
     resource: { committeeIds: current.account.committeeIds },
     mutation,
   });
+}
+
+async function authorizeSession(request, auth, { mutation = false } = {}) {
+  const values = cookies(request);
+  const sessionToken = values[AUTH_COOKIE.session] ?? values[DEVELOPMENT_AUTH_COOKIE.session];
+  return auth.authorizeSession({
+    sessionToken,
+    csrfToken: request.headers.get('x-csrf-token') ?? '',
+    mutation,
+  });
+}
+
+function bearerToken(request) {
+  const match = String(request.headers.get('authorization') ?? '').match(/^Bearer\s+([^\s]+)$/iu);
+  return match?.[1] ?? '';
+}
+
+function applicationActor(authorized) {
+  return Object.freeze({
+    ...authorized.account,
+    capabilities: authorized.authorization.capabilities,
+  });
+}
+
+function accountApplicationQuery(url) {
+  const optionalInteger = (name, fallback) => {
+    const value = url.searchParams.get(name);
+    return value === null ? fallback : Number(value);
+  };
+  return {
+    ...(url.searchParams.has('state') ? { state: url.searchParams.get('state') } : {}),
+    limit: optionalInteger('limit', 25),
+    offset: optionalInteger('offset', 0),
+  };
+}
+
+async function protectReviewCommand(command, rosterCrypto) {
+  const evidence = command?.reviewEvidence;
+  if (!evidence || typeof evidence !== 'object' || Array.isArray(evidence) || !Object.keys(evidence).length) {
+    throw new AccountApplicationError('ACCOUNT_APPLICATION_REVIEW_EVIDENCE_REQUIRED');
+  }
+  return {
+    ...command,
+    reviewEvidence: {
+      evidenceFingerprint: await rosterCrypto.fingerprint(evidence),
+      protectedReviewEnvelope: await rosterCrypto.encrypt(evidence),
+    },
+  };
 }
 
 async function health(env, requestId, readiness = false) {
@@ -336,6 +459,7 @@ async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
   const {
     access,
+    accountApplications,
     advertisementAdmin,
     brandAssets,
     auth,
@@ -344,8 +468,12 @@ async function handleApi(request, env, requestId, executionContext) {
     identityRoster,
     operationalHealth,
     operations,
+    profile,
     publicAdvertisements,
     publicLending,
+    publicRequests,
+    referenceLinks,
+    rosterCrypto,
   } = services(env);
   try {
     if (url.pathname === '/api/health' && request.method === 'GET') return health(env, requestId);
@@ -355,14 +483,218 @@ async function handleApi(request, env, requestId, executionContext) {
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
     }
-    if (url.pathname.startsWith('/api/public/request')) {
-      return json(
-        {
-          code: 'SESSION_REQUIRED',
-          message: 'Sign in with a department requester account to use the Request Center.',
+    if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json({
+        ...(await accountApplications.startEmailVerification(await body(request))),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/account-applications/email/confirm' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json({
+        ...(await accountApplications.confirmEmailVerification(await body(request))),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/account-applications' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      const command = await body(request);
+      const statusToken = bearerToken(request);
+      return json({
+        ...(statusToken
+          ? await accountApplications.resubmitApplication({ statusToken, ...command })
+          : await accountApplications.submitApplication(command)),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/account-applications/status' && request.method === 'GET') {
+      return json({
+        ...(await accountApplications.getStatus({ statusToken: bearerToken(request) })),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/account-applications/withdraw' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json({
+        ...(await accountApplications.withdraw({
+          statusToken: bearerToken(request),
+          ...(await body(request)),
+        })),
+        correlationId: requestId,
+      });
+    }
+
+    const administratorApplication = url.pathname.match(
+      /^\/api\/admin\/account-applications(?:\/([^/]+)(?:\/(request-changes|reject|forward))?)?$/u,
+    );
+    if (administratorApplication) {
+      const authorized = await authorize(request, auth, CAPABILITIES.ACCOUNT_APPLICATION_ADMIN_REVIEW, {
+        mutation: request.method !== 'GET',
+      });
+      const actor = applicationActor(authorized);
+      const applicationId = administratorApplication[1]
+        ? decodeURIComponent(administratorApplication[1])
+        : '';
+      const action = administratorApplication[2] ?? '';
+      if (request.method === 'GET' && !applicationId) {
+        return json({
+          ...(await accountApplications.adminList({ actor, ...accountApplicationQuery(url) })),
           correlationId: requestId,
-        },
-        401,
+        });
+      }
+      if (request.method === 'GET' && applicationId && !action) {
+        return json({
+          ...(await accountApplications.adminGet({ actor, applicationId })),
+          correlationId: requestId,
+        });
+      }
+      if (request.method === 'POST' && applicationId && action) {
+        const command = await protectReviewCommand(await body(request), rosterCrypto);
+        const method = {
+          'request-changes': 'adminRequestChanges',
+          reject: 'adminReject',
+          forward: 'adminForward',
+        }[action];
+        return json({
+          ...(await accountApplications[method]({ actor, applicationId, ...command })),
+          correlationId: requestId,
+        });
+      }
+    }
+
+    const directorApplication = url.pathname.match(
+      /^\/api\/director\/account-applications(?:\/([^/]+)(?:\/(approve|request-changes|reject))?)?$/u,
+    );
+    if (directorApplication) {
+      const authorized = await authorize(request, auth, CAPABILITIES.ACCOUNT_APPLICATION_DIRECTOR_DECIDE, {
+        mutation: request.method !== 'GET',
+      });
+      const actor = applicationActor(authorized);
+      const applicationId = directorApplication[1] ? decodeURIComponent(directorApplication[1]) : '';
+      const action = directorApplication[2] ?? '';
+      if (request.method === 'GET' && !applicationId) {
+        return json({
+          ...(await accountApplications.directorList({ actor, ...accountApplicationQuery(url) })),
+          correlationId: requestId,
+        });
+      }
+      if (request.method === 'GET' && applicationId && !action) {
+        return json({
+          ...(await accountApplications.directorGet({ actor, applicationId })),
+          correlationId: requestId,
+        });
+      }
+      if (request.method === 'POST' && applicationId && action) {
+        const command = await protectReviewCommand(await body(request), rosterCrypto);
+        const method = {
+          approve: 'directorApprove',
+          'request-changes': 'directorRequestChanges',
+          reject: 'directorReject',
+        }[action];
+        return json({
+          ...(await accountApplications[method]({ actor, applicationId, ...command })),
+          correlationId: requestId,
+        });
+      }
+    }
+
+    const ownerApplication = url.pathname.match(/^\/api\/owner\/account-applications\/([^/]+)\/override$/u);
+    if (ownerApplication && request.method === 'POST') {
+      const authorized = await authorize(request, auth, CAPABILITIES.ACCOUNT_APPLICATION_OWNER_OVERRIDE, {
+        mutation: true,
+      });
+      const command = await protectReviewCommand(await body(request), rosterCrypto);
+      return json({
+        ...(await accountApplications.ownerOverride({
+          actor: applicationActor(authorized),
+          applicationId: decodeURIComponent(ownerApplication[1]),
+          ...command,
+        })),
+        correlationId: requestId,
+      });
+    }
+
+    if (url.pathname === '/api/me/profile' && ['GET', 'PATCH'].includes(request.method)) {
+      const authorized = await authorizeSession(request, auth, { mutation: request.method === 'PATCH' });
+      const context = { account: authorized.account, correlationId: requestId };
+      const result =
+        request.method === 'GET'
+          ? await profile.get(context)
+          : await profile.updateContact({ ...context, command: await body(request) });
+      return json({ ...result, correlationId: requestId });
+    }
+    if (url.pathname === '/api/me/username/change' && request.method === 'POST') {
+      const authorized = await authorizeSession(request, auth, { mutation: true });
+      return json({
+        ...(await profile.changeUsername({
+          account: authorized.account,
+          command: await body(request),
+          correlationId: requestId,
+        })),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/me/password/change' && request.method === 'POST') {
+      const authorized = await authorizeSession(request, auth, { mutation: true });
+      return json({
+        ...(await profile.changePassword({
+          account: authorized.account,
+          command: await body(request),
+          correlationId: requestId,
+        })),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/me/identity-correction-request' && request.method === 'POST') {
+      const authorized = await authorizeSession(request, auth, { mutation: true });
+      return json({
+        ...(await profile.requestIdentityCorrection({
+          account: authorized.account,
+          command: await body(request),
+          correlationId: requestId,
+        })),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/me/avatar' && ['POST', 'DELETE'].includes(request.method)) {
+      const authorized = await authorizeSession(request, auth, { mutation: true });
+      return json({
+        ...(await profile.avatar({ account: authorized.account })),
+        correlationId: requestId,
+      });
+    }
+    if (url.pathname === '/api/public/request/options' && request.method === 'GET') {
+      return json({ ...(await publicRequests.options()), correlationId: requestId });
+    }
+    if (url.pathname === '/api/public/request' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.submit({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
+    }
+    if (url.pathname === '/api/public/request/related' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicRequests.related({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
       );
     }
     if (url.pathname === '/api/public/lending/catalog' && request.method === 'GET') {
@@ -370,6 +702,16 @@ async function handleApi(request, env, requestId, executionContext) {
     }
     if (url.pathname === '/api/public/advertisements' && request.method === 'GET') {
       return json({ ...(await publicAdvertisements.list()), correlationId: requestId });
+    }
+    if (url.pathname === '/api/public/lending/track' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      return json(
+        await publicLending.track({
+          command: await body(request),
+          networkKey: request.headers.get('cf-connecting-ip') ?? 'untrusted-local',
+          correlationId: requestId,
+        }),
+      );
     }
     if (url.pathname === '/api/public/lending' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
@@ -408,7 +750,9 @@ async function handleApi(request, env, requestId, executionContext) {
       });
     }
     if (url.pathname.startsWith('/api/admin/advertisements/') && request.method === 'POST') {
-      const mutation = url.pathname !== '/api/admin/advertisements/list';
+      const mutation = !new Set(['/api/admin/advertisements/list', '/api/admin/advertisements/preview']).has(
+        url.pathname,
+      );
       const actor = await authorize(request, auth, CAPABILITIES.ADVERTISEMENT_MANAGE, { mutation });
       const context = {
         account: actor.account,
@@ -418,15 +762,65 @@ async function handleApi(request, env, requestId, executionContext) {
       if (url.pathname === '/api/admin/advertisements/list') {
         return json(await advertisementAdmin.list(context));
       }
+      if (url.pathname === '/api/admin/advertisements/preview') {
+        return json(await advertisementAdmin.preview(context));
+      }
       if (url.pathname === '/api/admin/advertisements/save') {
         return json(await advertisementAdmin.save(context));
       }
       if (url.pathname === '/api/admin/advertisements/upload') {
         return json(await advertisementAdmin.upload(context));
       }
+      if (url.pathname === '/api/admin/advertisements/publish') {
+        return json(await advertisementAdmin.publish(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/schedule') {
+        return json(await advertisementAdmin.schedule(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/pause') {
+        return json(await advertisementAdmin.pause(context));
+      }
+      if (url.pathname === '/api/admin/advertisements/resume') {
+        return json(await advertisementAdmin.resume(context));
+      }
       if (url.pathname === '/api/admin/advertisements/archive') {
         return json(await advertisementAdmin.archive(context));
       }
+      throw new ApiError('ADVERTISEMENT_ROUTE_NOT_FOUND', 'The announcement route was not found.', {
+        status: 404,
+      });
+    }
+    if (url.pathname.startsWith('/api/admin/reference-links/') && request.method === 'POST') {
+      const readOnlyRoutes = new Set([
+        '/api/admin/reference-links/list',
+        '/api/admin/reference-links/get',
+        '/api/admin/reference-links/history',
+      ]);
+      const mutation = !readOnlyRoutes.has(url.pathname);
+      const actor = await authorize(request, auth, CAPABILITIES.REFERENCE_MANAGE, { mutation });
+      const command = await body(request);
+      const context = { actor: actor.account, command, correlationId: requestId };
+      if (url.pathname === '/api/admin/reference-links/list') {
+        return json(await referenceLinks.list(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/get') {
+        return json(await referenceLinks.get({ actor: actor.account, id: command.id }));
+      }
+      if (url.pathname === '/api/admin/reference-links/history') {
+        return json(await referenceLinks.history({ actor: actor.account, id: command.id, command }));
+      }
+      if (url.pathname === '/api/admin/reference-links/create') {
+        return json(await referenceLinks.create(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/update') {
+        return json(await referenceLinks.update(context));
+      }
+      if (url.pathname === '/api/admin/reference-links/transition') {
+        return json(await referenceLinks.transition(context));
+      }
+      throw new ApiError('REFERENCE_LINK_ROUTE_NOT_FOUND', 'The Link Registry route was not found.', {
+        status: 404,
+      });
     }
     if (url.pathname.startsWith('/api/owner/brand-assets/') && request.method === 'POST') {
       const mutation = url.pathname !== '/api/owner/brand-assets/list';
@@ -535,6 +929,7 @@ async function handleApi(request, env, requestId, executionContext) {
           ok: true,
           ...(await access.getAccessIdHistory({
             actor,
+            accountId: command.accountId,
             currentAccessId: command.currentAccessId,
             limit: command.limit,
           })),
@@ -711,7 +1106,11 @@ async function handleApi(request, env, requestId, executionContext) {
         data: {
           contract: 'scoped-revision',
           contractVersion: 1,
-          enabled: false,
+          // RV-01.4: the poller disables itself permanently when this is false,
+          // after which route return, focus, and reconnect are all refused, and
+          // an already-open Main Hub never notices a public submission. Near-
+          // live refresh is a v0.7.2 requirement, so REST reports it enabled.
+          enabled: true,
           scope,
           token: value.revision,
           globalRevision: (await operations.revision('global')).revision,
@@ -791,12 +1190,14 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof AuthError ||
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
-      error instanceof IdentityRosterError;
+      error instanceof IdentityRosterError ||
+      error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
-      error instanceof IdentityRosterError
+      error instanceof IdentityRosterError ||
+      error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError
           ? statusForAuthError(error)
@@ -822,7 +1223,9 @@ async function handleApi(request, env, requestId, executionContext) {
         code: known ? error.code : 'INTERNAL_ERROR',
         message: known ? error.message : 'The service is temporarily unavailable.',
         correlationId: requestId,
-        ...(error instanceof ApiError && error.details ? { details: error.details } : {}),
+        ...((error instanceof ApiError || error instanceof AccountApplicationError) && error.details
+          ? { details: error.details }
+          : {}),
       },
       status,
     );

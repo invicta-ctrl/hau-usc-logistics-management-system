@@ -27,6 +27,7 @@ function account(overrides = {}) {
 
 function context({ accounts = [], activeAdministrators = 1 } = {}) {
   const byAccessId = new Map(accounts.map((entry) => [entry.accessIdNormalized, entry]));
+  const byAccountId = new Map(accounts.map((entry) => [entry.id, entry]));
   const reservations = new Map(
     accounts.map((entry) => [accessIdCollisionKey(entry.accessIdNormalized), { accountId: entry.id }]),
   );
@@ -35,6 +36,13 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
   const changes = [];
   const repository = {
     getAccountByAccessId: vi.fn(async (accessId) => byAccessId.get(accessId)),
+    getAccountById: vi.fn(async (accountId) => byAccountId.get(accountId)),
+    getAccountByUsername: vi.fn(async (accessId) => {
+      const key = accessIdCollisionKey(accessId);
+      return [...byAccountId.values()].find(
+        (entry) => entry.usernameNormalized && accessIdCollisionKey(entry.usernameNormalized) === key,
+      );
+    }),
     getAccessIdReservation: vi.fn(async (key) => reservations.get(key)),
     nextGeneratedAccessId: vi.fn(async (year) => `DOL-${year}-0001`),
     countActiveAdministrators: vi.fn(async () => activeAdministrators),
@@ -53,7 +61,23 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
       eventScopeIds: ['EVT-001'],
     })),
     getAccessPolicyChangeByIdempotency: vi.fn(async () => null),
-    updateAccessPolicy: vi.fn(),
+    updateAccessPolicy: vi.fn(async (command) => {
+      const next = {
+        ...command.account,
+        ...command.nextAccount,
+        credentialVersion: command.account.credentialVersion + 1,
+        updatedAt: command.changedAt,
+      };
+      byAccountId.set(next.id, next);
+      byAccessId.set(next.accessIdNormalized, next);
+      if (command.idempotency) {
+        idempotency.set(`${command.idempotency.scope}:${command.idempotency.key}`, {
+          actorAccountId: command.idempotency.actorAccountId,
+          requestFingerprint: command.idempotency.requestFingerprint,
+          result: command.idempotency.result,
+        });
+      }
+    }),
     listAccounts: vi.fn(async () => ({ items: [], pagination: { page: 1, totalPages: 1, total: 0 } })),
     listAccessIdHistory: vi.fn(async () => []),
     listAccountAuditHistory: vi.fn(async () => []),
@@ -61,11 +85,14 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
     getAccessIdHistoryByIdempotency: vi.fn(async (key) => history.get(key)),
     changeAccessId: vi.fn(async (command) => {
       byAccessId.delete(command.account.accessIdNormalized);
-      byAccessId.set(command.newAccessId, {
+      const next = {
         ...command.account,
         accessIdNormalized: command.newAccessId,
         credentialVersion: command.account.credentialVersion + 1,
-      });
+        updatedAt: command.changedAt,
+      };
+      byAccessId.set(command.newAccessId, next);
+      byAccountId.set(command.account.id, next);
       reservations.set(command.collisionKey, { accountId: command.account.id });
       history.set(command.idempotencyKey, {
         accountId: command.account.id,
@@ -95,22 +122,62 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
       })),
     ),
     seedDepartmentAccounts: vi.fn(),
-    resetTemporaryPassword: vi.fn(async ({ idempotency: replay }) => {
+    resetTemporaryPassword: vi.fn(async ({ account: target, resetAt, idempotency: replay }) => {
+      const next = {
+        ...target,
+        status: ACCOUNT_STATUS.STARTER,
+        credentialVersion: target.credentialVersion + 1,
+        updatedAt: resetAt,
+      };
+      byAccountId.set(target.id, next);
+      byAccessId.set(next.accessIdNormalized, next);
       idempotency.set(`${replay.scope}:${replay.key}`, {
         actorAccountId: replay.actorAccountId,
         requestFingerprint: replay.requestFingerprint,
         result: replay.result,
       });
     }),
-    setAccountStatus: vi.fn(),
-    revokeSessions: vi.fn(async ({ idempotency: replay }) => {
+    setAccountStatus: vi.fn(async ({ account: target, nextStatus, changedAt, idempotency: replay }) => {
+      const next = {
+        ...target,
+        status: nextStatus,
+        credentialVersion: target.credentialVersion + 1,
+        updatedAt: changedAt,
+      };
+      byAccountId.set(target.id, next);
+      byAccessId.set(next.accessIdNormalized, next);
       idempotency.set(`${replay.scope}:${replay.key}`, {
         actorAccountId: replay.actorAccountId,
         requestFingerprint: replay.requestFingerprint,
         result: replay.result,
       });
     }),
-    unlockAccount: vi.fn(async ({ idempotency: replay }) => {
+    recordAccountStatusNoop: vi.fn(async ({ idempotency: replay }) => {
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
+    revokeSessions: vi.fn(async ({ account: target, changedAt, idempotency: replay }) => {
+      const next = { ...target, credentialVersion: target.credentialVersion + 1, updatedAt: changedAt };
+      byAccountId.set(target.id, next);
+      byAccessId.set(next.accessIdNormalized, next);
+      idempotency.set(`${replay.scope}:${replay.key}`, {
+        actorAccountId: replay.actorAccountId,
+        requestFingerprint: replay.requestFingerprint,
+        result: replay.result,
+      });
+    }),
+    unlockAccount: vi.fn(async ({ account: target, changedAt, idempotency: replay }) => {
+      const next = {
+        ...target,
+        lockedAt: null,
+        credentialVersion: target.credentialVersion + 1,
+        updatedAt: changedAt,
+      };
+      byAccountId.set(target.id, next);
+      byAccessId.set(next.accessIdNormalized, next);
       idempotency.set(`${replay.scope}:${replay.key}`, {
         actorAccountId: replay.actorAccountId,
         requestFingerprint: replay.requestFingerprint,
@@ -123,12 +190,23 @@ function context({ accounts = [], activeAdministrators = 1 } = {}) {
   const service = createAccessManagementService({
     repository,
     passwordKdf: { hash: vi.fn(async () => ({ algorithm: 'PBKDF2-SHA-256', iterations: 100_000 })) },
+    tokenCrypto: { digest: vi.fn(async (value) => `DIGEST:${value}`) },
     environment: 'STAGING',
     clock: { now: () => Date.parse('2026-07-22T08:00:00.000Z') },
     createId: () => `ID-${++id}`,
     createTemporaryPassword: () => `Generated!Password${++password}9472`,
   });
   return { service, repository, changes };
+}
+
+function targetCommand(target, overrides = {}) {
+  return {
+    accountId: target.id,
+    expectedRevision: `${target.credentialVersion}:${target.updatedAt}`,
+    confirmCurrentAccessId: target.accessIdNormalized,
+    clientRequestId: 'access-target-command-0001',
+    ...overrides,
+  };
 }
 
 const actor = account({
@@ -164,11 +242,9 @@ describe('access management service', () => {
     await expect(
       service.previewAccessIdChange({
         actor: ownerActor,
-        command: {
-          currentAccessId: ownerTarget.accessIdNormalized,
-          confirmCurrentAccessId: ownerTarget.accessIdNormalized,
+        command: targetCommand(ownerTarget, {
           proposedAccessId: 'HAU.OWNER.002',
-        },
+        }),
       }),
     ).rejects.toMatchObject({ code: 'SYSTEM_ACCOUNT_PROTECTED' });
     expect(repository.listAccounts).toHaveBeenCalledOnce();
@@ -182,13 +258,11 @@ describe('access management service', () => {
   it('changes only the mutable Access ID, revokes sessions, and safely replays one history event', async () => {
     const target = account();
     const { service, repository, changes } = context({ accounts: [target] });
-    const command = {
-      currentAccessId: target.accessIdNormalized,
-      confirmCurrentAccessId: target.accessIdNormalized,
+    const command = targetCommand(target, {
       proposedAccessId: 'HAU.FOOD.009',
       reason: 'Correct the synthetic operator login identifier.',
       idempotencyKey: 'access-id-change-00000001',
-    };
+    });
 
     const first = await service.changeAccessId({ actor, command, correlationId: 'REQ-SYNTHETIC' });
     const replay = await service.changeAccessId({ actor, command, correlationId: 'REQ-RETRY' });
@@ -217,13 +291,126 @@ describe('access management service', () => {
     await expect(
       service.previewAccessIdChange({
         actor,
-        command: {
-          currentAccessId: other.accessIdNormalized,
-          confirmCurrentAccessId: other.accessIdNormalized,
+        command: targetCommand(other, {
           proposedAccessId: 'HAU_FOOD-001',
-        },
+        }),
       }),
     ).rejects.toMatchObject({ code: 'ACCESS_ID_COLLISION', status: 409 });
+  });
+
+  it('rejects an Access-ID collision with an existing username', async () => {
+    const target = account();
+    const usernameOwner = account({
+      id: 'ACCOUNT-USERNAME',
+      accessIdNormalized: 'HAU.OTHER.001',
+      usernameNormalized: 'HAU.USER.009',
+    });
+    const { service } = context({ accounts: [target, usernameOwner] });
+
+    await expect(
+      service.previewAccessIdChange({
+        actor,
+        command: targetCommand(target, { proposedAccessId: 'HAU-USER-009' }),
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_ID_COLLISION', status: 409 });
+  });
+
+  it('returns opaque account ID and revision and rejects stale mutation snapshots', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    await expect(
+      service.previewAccessPolicy({
+        actor,
+        command: targetCommand(target, { presetId: 'FOOD_OPERATOR', roleId: ROLES.DOL_STAFF }),
+      }),
+    ).resolves.toMatchObject({
+      account: {
+        accountId: target.id,
+        revision: `${target.credentialVersion}:${target.updatedAt}`,
+      },
+    });
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: targetCommand(target, {
+          expectedRevision: 'stale-revision-token',
+          status: ACCOUNT_STATUS.DISABLED,
+          reason: 'Reject this stale synthetic account snapshot.',
+        }),
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_WRITE_CONFLICT', status: 409 });
+    expect(repository.setAccountStatus).not.toHaveBeenCalled();
+  });
+
+  it('returns the committed next revision when a hydrated account carries an explicit prior revision', async () => {
+    const target = account({ revision: '1:2026-07-22T00:00:00.000Z' });
+    const { service } = context({ accounts: [target] });
+
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: targetCommand(target, {
+          status: ACCOUNT_STATUS.DISABLED,
+          reason: 'Return the committed synthetic account revision.',
+        }),
+      }),
+    ).resolves.toMatchObject({
+      changed: true,
+      revision: '2:2026-07-22T08:00:00.000Z',
+    });
+  });
+
+  it('replays an identical account status request and rejects retry-key payload changes', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = targetCommand(target, {
+      status: ACCOUNT_STATUS.DISABLED,
+      reason: 'Disable the synthetic account with retry safety.',
+      clientRequestId: 'access-status-retry-0001',
+    });
+
+    const first = await service.setAccountStatus({ actor, command });
+    await expect(service.setAccountStatus({ actor, command })).resolves.toMatchObject({
+      ...first,
+      replayed: true,
+    });
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: { ...command, status: ACCOUNT_STATUS.REVOKED },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
+    expect(repository.setAccountStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('binds a no-op account status result to its retry key', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = targetCommand(target, {
+      status: ACCOUNT_STATUS.ACTIVE,
+      reason: 'Keep this synthetic account active with retry safety.',
+      clientRequestId: 'access-status-noop-retry-0001',
+    });
+
+    const first = await service.setAccountStatus({ actor, command });
+    expect(first).toMatchObject({
+      changed: false,
+      status: ACCOUNT_STATUS.ACTIVE,
+      replayed: false,
+      accountId: target.id,
+    });
+    await expect(service.setAccountStatus({ actor, command })).resolves.toMatchObject({
+      ...first,
+      replayed: true,
+    });
+    await expect(
+      service.setAccountStatus({
+        actor,
+        command: { ...command, status: ACCOUNT_STATUS.DISABLED },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
+    expect(repository.recordAccountStatusNoop).toHaveBeenCalledTimes(1);
+    expect(repository.setAccountStatus).not.toHaveBeenCalled();
   });
 
   it('protects the last active Administrator from a consequential status change', async () => {
@@ -238,12 +425,10 @@ describe('access management service', () => {
     await expect(
       service.setAccountStatus({
         actor,
-        command: {
-          currentAccessId: target.accessIdNormalized,
-          confirmCurrentAccessId: target.accessIdNormalized,
+        command: targetCommand(target, {
           status: ACCOUNT_STATUS.DISABLED,
           reason: 'Synthetic last administrator protection test.',
-        },
+        }),
       }),
     ).rejects.toMatchObject({ code: 'LAST_ACTIVE_ADMIN_PROTECTED', status: 409 });
     expect(repository.setAccountStatus).not.toHaveBeenCalled();
@@ -256,13 +441,11 @@ describe('access management service', () => {
     await expect(
       service.setAccountStatus({
         actor,
-        command: {
-          currentAccessId: target.accessIdNormalized,
-          confirmCurrentAccessId: target.accessIdNormalized,
+        command: targetCommand(target, {
           status: ACCOUNT_STATUS.REVOKED,
           lifecycleAction: 'ARCHIVE',
           reason: 'Archive this departed operator while retaining history.',
-        },
+        }),
       }),
     ).resolves.toMatchObject({
       changed: true,
@@ -296,12 +479,10 @@ describe('access management service', () => {
     await expect(
       service.setAccountStatus({
         actor,
-        command: {
-          currentAccessId: target.accessIdNormalized,
-          confirmCurrentAccessId: target.accessIdNormalized,
+        command: targetCommand(target, {
           status: ACCOUNT_STATUS.ACTIVE,
           reason: 'Restore the unactivated department account.',
-        },
+        }),
       }),
     ).resolves.toMatchObject({
       changed: true,
@@ -333,12 +514,10 @@ describe('access management service', () => {
     await expect(
       service.setAccountStatus({
         actor,
-        command: {
-          currentAccessId: target.accessIdNormalized,
-          confirmCurrentAccessId: target.accessIdNormalized,
+        command: targetCommand(target, {
           status: ACCOUNT_STATUS.ACTIVE,
           reason: 'Synthetic attempt to activate a protected system account.',
-        },
+        }),
       }),
     ).rejects.toMatchObject({ code: 'SYSTEM_ACCOUNT_PROTECTED', status: 403 });
     expect(repository.setAccountStatus).not.toHaveBeenCalled();
@@ -380,15 +559,14 @@ describe('access management service', () => {
   it('generates a one-time reset credential server-side and never requires plaintext input', async () => {
     const target = account();
     const { service, repository } = context({ accounts: [target] });
+    const resetCommand = targetCommand(target, {
+      reason: 'Authorized synthetic credential reset for acceptance.',
+      clientRequestId: 'access-reset-synthetic-00000001',
+    });
     const result = await service.resetTemporaryPassword({
       actor,
       correlationId: 'REQ_RESETORIGINAL123',
-      command: {
-        currentAccessId: target.accessIdNormalized,
-        confirmCurrentAccessId: target.accessIdNormalized,
-        reason: 'Authorized synthetic credential reset for acceptance.',
-        clientRequestId: 'access-reset-synthetic-00000001',
-      },
+      command: resetCommand,
     });
 
     expect(result).toMatchObject({
@@ -408,12 +586,7 @@ describe('access management service', () => {
     const replay = await service.resetTemporaryPassword({
       actor,
       correlationId: 'REQ_RESETRETRY9999',
-      command: {
-        currentAccessId: target.accessIdNormalized,
-        confirmCurrentAccessId: target.accessIdNormalized,
-        reason: 'Authorized synthetic credential reset for acceptance.',
-        clientRequestId: 'access-reset-synthetic-00000001',
-      },
+      command: resetCommand,
     });
     expect(replay).toMatchObject({
       reset: true,
@@ -428,9 +601,7 @@ describe('access management service', () => {
   it('previews and applies a governed access policy with session revocation and audit input', async () => {
     const target = account();
     const { service, repository } = context({ accounts: [target] });
-    const command = {
-      currentAccessId: target.accessIdNormalized,
-      confirmCurrentAccessId: target.accessIdNormalized,
+    const command = targetCommand(target, {
       presetId: 'MATERIALS_OPERATOR',
       roleId: 'DOL_STAFF',
       committeeIds: ['COM_MATERIALS'],
@@ -443,7 +614,7 @@ describe('access management service', () => {
       capabilityDenies: ['lending.usage.view'],
       reason: 'Assign the synthetic Materials operating policy.',
       idempotencyKey: 'access-policy-change-00000001',
-    };
+    });
 
     await expect(service.previewAccessPolicy({ actor: ownerActor, command })).resolves.toMatchObject({
       roleId: 'DOL_STAFF',
@@ -469,20 +640,82 @@ describe('access management service', () => {
     );
   });
 
+  it('rejects access-policy idempotency reuse for changed input or a different actor', async () => {
+    const target = account();
+    const { service, repository } = context({ accounts: [target] });
+    const command = targetCommand(target, {
+      presetId: 'MATERIALS_OPERATOR',
+      roleId: ROLES.DOL_STAFF,
+      committeeIds: ['COM_MATERIALS'],
+      defaultCommitteeId: 'COM_MATERIALS',
+      workspaceIds: ['materials'],
+      defaultWorkspaceId: 'materials',
+      reason: 'Bind this synthetic policy replay to one exact request.',
+      idempotencyKey: 'access-policy-replay-0000001',
+    });
+    await expect(service.updateAccessPolicy({ actor: ownerActor, command })).resolves.toMatchObject({
+      changed: true,
+      replayed: false,
+      accountId: target.id,
+    });
+    await expect(
+      service.updateAccessPolicy({
+        actor: ownerActor,
+        command: { ...command, roleId: ROLES.COMMITTEE_HEAD },
+      }),
+    ).rejects.toMatchObject({ code: 'ACCESS_IDEMPOTENCY_CONFLICT', status: 409 });
+    await expect(service.updateAccessPolicy({ actor, command })).rejects.toMatchObject({
+      code: 'ACCESS_IDEMPOTENCY_CONFLICT',
+      status: 409,
+    });
+    expect(repository.updateAccessPolicy).toHaveBeenCalledOnce();
+  });
+
   it('blocks an ordinary Administrator from assigning the Administrator preset', async () => {
     const target = account();
     const { service, repository } = context({ accounts: [target] });
     await expect(
       service.previewAccessPolicy({
         actor,
-        command: {
-          currentAccessId: target.accessIdNormalized,
-          confirmCurrentAccessId: target.accessIdNormalized,
+        command: targetCommand(target, {
           presetId: 'ADMINISTRATOR',
           roleId: 'ADMINISTRATOR',
-        },
+        }),
       }),
     ).rejects.toMatchObject({ code: 'OWNER_APPROVAL_REQUIRED', status: 403 });
     expect(repository.updateAccessPolicy).not.toHaveBeenCalled();
+  });
+
+  it('unlocks every privacy-preserving limiter identity used by authentication', async () => {
+    const target = account({
+      lockedAt: '2026-07-22T07:00:00.000Z',
+      usernameNormalized: 'food.operator',
+      profileEmailVerifiedAt: '2026-07-22T00:00:00.000Z',
+      profile: { fullName: 'Synthetic Food Operator', email: 'Food.Operator@example.test' },
+    });
+    const { service, repository } = context({ accounts: [target] });
+
+    await expect(
+      service.unlockAccount({
+        actor,
+        correlationId: 'REQ-UNLOCK',
+        command: targetCommand(target, {
+          reason: 'Reset the synthetic account lock and limiter state.',
+          clientRequestId: 'access-unlock-synthetic-0001',
+        }),
+      }),
+    ).resolves.toMatchObject({ unlocked: true, replayed: false });
+    expect(repository.unlockAccount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        limiterIdentities: [
+          `DIGEST:${target.accessIdNormalized.toLowerCase()}`,
+          'DIGEST:food.operator',
+          'DIGEST:food.operator@example.test',
+        ],
+      }),
+    );
+    expect(JSON.stringify(repository.unlockAccount.mock.calls[0][0].limiterIdentities)).not.toContain(
+      'Food.Operator@example.test',
+    );
   });
 });

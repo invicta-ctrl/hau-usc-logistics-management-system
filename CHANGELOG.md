@@ -1,5 +1,78 @@
 # Changelog
 
+## 0.7.2 - Unreleased
+
+### Fixed
+
+- **USC staff identity projection.** The approved protected Google directory
+  adapter now projects the owner-authoritative `Working Email` column for USC
+  staff identity instead of the separate HAU educational email column. The
+  explicitly reviewed raw-directory projection also replaces legacy matches
+  tied only to rejected raw rows, while normalized private sources retain their
+  quarantine-preservation safeguard. The
+  runtime still requires an exact ACTIVE and VERIFIED protected-directory match;
+  the configured Gmail domain remains only a coarse first-stage filter.
+- **RV-01 request visibility.** The authenticated Request module now
+  independently projects the canonical parent and request-line review queue.
+  Previously the module's server projection and strict client allowlist both
+  omitted `requests`/`requestLines`, so a submitted request could only appear
+  after the Overview module loaded, and the strict validator would have
+  rejected the data if the server had sent it.
+- **RV-01 pagination ownership.** Every non-inventory module derived its
+  `total` and `hasMore` from a count of active inventory items. The Request
+  module now computes its own scoped total with a deterministic
+  `updated_at DESC, id DESC` order and excludes archived requests.
+- **RV-01 already-open session refresh.** The scoped-revision poller was gated
+  to the Apps Script runtime, so a REST-backed Main Hub never noticed a public
+  submission and needed a hard refresh or re-login. It now runs for the
+  REST/HTTP production backend, and public submission bumps the `overview`
+  scope revision in addition to `global` and `request`.
+- **RV-01 deterministic line routing.** Request review accepted one
+  whole-request decision and implicitly routed every non-stock, non-restock
+  line to procurement. Accepting now requires one explicit, server-validated
+  route decision per line, derives the parent status from the line outcomes,
+  and bumps only the module scopes whose objects actually changed.
+- **RV-01 Deliverables contract mismatch.** The Deliverables queue re-ran a
+  whole-request review in REST mode, which could never succeed once the parent
+  left `FOR_REVIEW`. It now transitions the deliverable it already owns.
+- Repaired two pre-existing time-dependent test fixtures whose hardcoded
+  lending pickup/due dates made the Worker and browser suites fail on any date
+  after 2026-08-03.
+
+### Added
+
+- Added the protected staff account-application state machine, private status
+  receipt, Administrator and Director review, audited owner override, starter
+  activation handoff, and authenticated My Profile controls.
+- Added schema 0030 for applications/history/profile, canonical Link Registry,
+  announcements, integer and low-stock controls, and supporting audit state.
+- Added public registration/status UI and authenticated profile/account-review
+  UI with bounded accessibility and privacy behavior.
+
+### Changed
+
+- Separated staff profile affiliation from legacy department requester identity
+  while preserving requester behavior.
+- Made Link Registry additive to the existing second-review Routing workspace.
+- Updated runtime, package, Wrangler, private config generation, and release
+  workflows to identify v0.7.2.
+- Aligned account unlock with the privacy-preserving login limiter identity.
+- Repaired complete-candidate review findings by aligning the verification
+  schema/runtime contract, keeping activation reconciliation fail closed, and
+  making profile, access-policy, and announcement mutations atomic with their
+  audit/history/idempotency/session evidence.
+- Moved last-active-Administrator protection into the guarded SQL mutation and
+  clear every digested login alias during an authorized account unlock.
+
+### Verified boundary
+
+- Local verification passes 112 test files / 740 tests, 136 browser tests with
+  356 intentional skips, 39/39 local Worker/D1 tests, deterministic generated
+  parity, and a fresh schema-30 migration integrity rehearsal.
+- Pre-production and production remain blocked by the missing owner-approved
+  email provider and private identity-class configuration. No external v0.7.2
+  release write has occurred.
+
 ## 0.7.1 - 2026-08-03
 
 ### Released

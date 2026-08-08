@@ -1,3 +1,4 @@
+/* Hallmark · pre-emit critique: P5 H4 E5 S5 R5 V4 */
 import { brandLockupMarkup } from './brand-assets.js';
 import { portalNavigationMarkup, releaseIdentityMarkup } from './portal-navigation.js';
 import { mountPublicAdvertisementCarousel } from './public-advertisement-carousel.js';
@@ -20,6 +21,26 @@ const clientRequestId = () => `public-lending:${crypto.randomUUID()}`;
 const requestable = (item) => ['AVAILABLE', 'LIMITED', 'ELIGIBILITY_REQUIRED'].includes(item.availability);
 const searchableText = (item) =>
   [item.name, item.productId, item.category, ...(item.aliases ?? [])].join(' ').trim().toLowerCase();
+
+function trackingResultMarkup(result) {
+  const submission = result?.submission ?? result?.ticket ?? result?.request ?? {};
+  const submissionId = submission.submissionId ?? submission.id ?? '';
+  const status = String(submission.status ?? 'FOR_REVIEW').replaceAll('_', ' ');
+  const updatedAt = submission.updatedAt ? new Date(submission.updatedAt) : null;
+  const lines = Array.isArray(submission.lines) ? submission.lines : [];
+  return `<article class="public-track-result"><span class="status blue">${escapeHtml(status)}</span><h3>${escapeHtml(submissionId)}</h3>${
+    lines.length
+      ? `<ul>${lines
+          .map((line) => {
+            const label = line.itemName ?? line.name ?? line.productId ?? 'Requested item';
+            const quantity = Number.isFinite(Number(line.quantity)) ? ` · ${Number(line.quantity)}` : '';
+            const lineStatus = line.status ? ` · ${String(line.status).replaceAll('_', ' ')}` : '';
+            return `<li>${escapeHtml(label)}${escapeHtml(quantity)}${escapeHtml(lineStatus)}</li>`;
+          })
+          .join('')}</ul>`
+      : ''
+  }${updatedAt && !Number.isNaN(updatedAt.getTime()) ? `<small>Last updated ${escapeHtml(updatedAt.toLocaleString('en-PH'))}</small>` : ''}</article>`;
+}
 
 export async function mountPublicLendingPortal({ root, client }) {
   root.innerHTML =
@@ -112,6 +133,18 @@ export async function mountPublicLendingPortal({ root, client }) {
         </form>
         <aside class="public-request-aside">
           <section class="panel" aria-labelledby="borrowingProcessTitle"><p class="eyebrow">How it works</p><h2 id="borrowingProcessTitle">Borrowing process</h2><ol>${catalog.process.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></section>
+          <section class="panel" aria-labelledby="publicLendingTrackTitle">
+            <p class="eyebrow">Private tracking</p>
+            <h2 id="publicLendingTrackTitle">Track a borrowing request</h2>
+            <p>Use only the Submission ID and private tracking code shown once after submission. This lookup does not display borrower identity or contact details.</p>
+            <form id="publicLendingTrackForm" class="borrower-form">
+              <label>Submission ID<input name="submissionId" autocomplete="off" maxlength="80" required></label>
+              <label>Private tracking code<input name="trackingCode" type="password" autocomplete="off" maxlength="128" required></label>
+              <button class="secondary" type="submit">Check borrowing status</button>
+              <p class="borrower-form-message" role="status" aria-live="polite"></p>
+            </form>
+            <div data-lending-track-result></div>
+          </section>
           <div data-public-announcements></div>
         </aside>
       </div>
@@ -181,13 +214,19 @@ export async function mountPublicLendingPortal({ root, client }) {
       ? [...selected.values()]
           .map(
             (line) =>
-              `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`,
+              `<article class="public-request-line"><span><strong>${escapeHtml(line.name)}</strong><small>${escapeHtml(line.type)} · ${escapeHtml(line.unit)} · maximum ${escapeHtml(line.maximumQuantity)}</small></span><span class="public-lending-quantity"><label>Quantity<input type="number" inputmode="numeric" min="1" max="${escapeHtml(line.maximumQuantity)}" step="1" value="${escapeHtml(line.quantity)}" data-lending-quantity="${escapeHtml(line.itemId)}" aria-label="Quantity for ${escapeHtml(line.name)}"></label><button class="secondary mini" type="button" data-remove-lending="${escapeHtml(line.itemId)}">Remove</button></span></article>`,
           )
           .join('')
       : '<p class="empty">Choose an available catalog item.</p>';
     selectedRoot.querySelectorAll('[data-lending-quantity]').forEach((input) =>
       input.addEventListener('change', () => {
-        selected.get(input.dataset.lendingQuantity).quantity = Number(input.value);
+        const quantity = Number(input.value);
+        const line = selected.get(input.dataset.lendingQuantity);
+        const valid =
+          Number.isSafeInteger(quantity) && quantity >= 1 && quantity <= Number(line.maximumQuantity);
+        input.setCustomValidity(valid ? '' : 'Enter a whole number within the allowed maximum.');
+        if (valid) line.quantity = quantity;
+        else input.reportValidity();
       }),
     );
     selectedRoot.querySelectorAll('[data-remove-lending]').forEach((button) =>
@@ -306,11 +345,47 @@ export async function mountPublicLendingPortal({ root, client }) {
       const receipt = document.createElement('section');
       receipt.className = 'public-tracking-receipt';
       receipt.setAttribute('role', 'status');
-      receipt.innerHTML = `<p class="eyebrow">Borrowing request submitted</p><h2>Submitted successfully</h2><p><strong>Submission ID</strong><code>${escapeHtml(result.submissionId)}</code></p><p><strong>Initial status</strong> For Review</p><p>Submission does not guarantee approval or allocation. Authorized staff will complete eligibility and availability review.</p>`;
+      const trackingCode = String(result.trackingCode ?? '').trim();
+      receipt.innerHTML = `<p class="eyebrow">Borrowing request submitted</p><h2>Save your private tracking details</h2><p><strong>Submission ID</strong><code>${escapeHtml(result.submissionId)}</code></p>${
+        trackingCode
+          ? `<p><strong>Private tracking code</strong><code>${escapeHtml(trackingCode)}</code></p><p>Copy both values now into a private password manager or secure note. The tracking code is shown once; do not paste it into email, chat, or a public form.</p><button class="secondary" type="button" data-open-lending-tracking>Track this request</button>`
+          : '<p><strong>Private tracking is temporarily unavailable.</strong> Do not resubmit this request. Save the Submission ID and contact authorized logistics staff through a private channel.</p>'
+      }<p><strong>Initial status</strong> For Review</p><p>Submission does not guarantee approval or allocation. Authorized staff will complete eligibility and availability review.</p>`;
       form.after(receipt);
+      receipt.querySelector('[data-open-lending-tracking]')?.addEventListener('click', () => {
+        const trackForm = root.querySelector('#publicLendingTrackForm');
+        trackForm.elements.submissionId.value = result.submissionId;
+        trackForm.elements.trackingCode.focus();
+      });
       receipt.scrollIntoView({ block: 'center' });
     } catch (error) {
       message.textContent = error.message;
+      submit.disabled = false;
+    }
+  });
+
+  const trackForm = root.querySelector('#publicLendingTrackForm');
+  trackForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const message = trackForm.querySelector('.borrower-form-message');
+    const resultRoot = root.querySelector('[data-lending-track-result]');
+    const submit = event.submitter ?? trackForm.querySelector('[type="submit"]');
+    submit.disabled = true;
+    try {
+      const values = Object.fromEntries(new FormData(trackForm));
+      const result = await client.request('/api/public/lending/track', {
+        body: {
+          submissionId: values.submissionId,
+          trackingCode: values.trackingCode,
+        },
+      });
+      message.textContent = '';
+      resultRoot.innerHTML = trackingResultMarkup(result);
+    } catch (error) {
+      resultRoot.innerHTML = '';
+      message.textContent = error.message;
+    } finally {
+      trackForm.elements.trackingCode.value = '';
       submit.disabled = false;
     }
   });

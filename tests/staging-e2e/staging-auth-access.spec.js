@@ -146,10 +146,12 @@ test('deployed staging Materials workspace projects its canonical queue and shar
   }
 
   await expect(panel.getByRole('heading', { name: 'Traceable materials pipeline' })).toBeVisible();
-  await expect.poll(() => browserQueueCalls).toContainEqual({
-    status: 200,
-    operationalScope: 'COMMITTEE:COM_MATERIALS',
-  });
+  await expect
+    .poll(() => browserQueueCalls)
+    .toContainEqual({
+      status: 200,
+      operationalScope: 'COMMITTEE:COM_MATERIALS',
+    });
   await expect(panel).toContainText(
     `${queue.items.length} scoped deliverable${queue.items.length === 1 ? '' : 's'}`,
   );
@@ -559,6 +561,13 @@ test('deployed staging authentication and Access Management remain operational',
       state: 'AUTHENTICATED',
     });
 
+    const targetDirectory = await ownerRequest.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { query: originalTargetAccessId, status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(targetDirectory.status()).toBe(200);
+    const targetAccount = (await targetDirectory.json()).items[0];
+
     const search = page.locator('[name="accessSearch"]');
     await search.fill(originalTargetAccessId);
     await expect(page.locator('[data-access-results] .access-account-row')).toHaveCount(1);
@@ -572,6 +581,8 @@ test('deployed staging authentication and Access Management remain operational',
     expect(deniedEnumeration.status()).toBe(403);
 
     const renameCommand = {
+      accountId: targetAccount.accountId,
+      expectedRevision: targetAccount.revision,
       currentAccessId: originalTargetAccessId,
       confirmCurrentAccessId: originalTargetAccessId,
       proposedAccessId: renamedTargetAccessId,
@@ -593,6 +604,7 @@ test('deployed staging authentication and Access Management remain operational',
       data: renameCommand,
     });
     expect(changed.status()).toBe(200);
+    const changedResult = await changed.json();
     cleanupAccessId = renamedTargetAccessId;
     expect((await targetRequest.get('/api/requests')).status()).toBe(401);
 
@@ -605,7 +617,7 @@ test('deployed staging authentication and Access Management remain operational',
 
     const history = await ownerRequest.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': ownerCsrf },
-      data: { currentAccessId: renamedTargetAccessId, limit: 20 },
+      data: { accountId: targetAccount.accountId, currentAccessId: renamedTargetAccessId, limit: 20 },
     });
     expect(history.status()).toBe(200);
     const historyResult = await history.json();
@@ -631,10 +643,13 @@ test('deployed staging authentication and Access Management remain operational',
     const disabled = await ownerRequest.post('/api/admin/access/status', {
       headers: { 'x-csrf-token': ownerCsrf },
       data: {
+        accountId: targetAccount.accountId,
+        expectedRevision: changedResult.revision,
         currentAccessId: renamedTargetAccessId,
         confirmCurrentAccessId: renamedTargetAccessId,
         status: 'DISABLED',
         reason: 'Retain the authorized synthetic smoke account in a disabled staging-only state.',
+        clientRequestId: `staging-access-status-disable-${targetAccount.accountId}`,
       },
     });
     expect(disabled.status()).toBe(200);
@@ -661,16 +676,27 @@ test('deployed staging authentication and Access Management remain operational',
         expect.soft(cleanupLogin.status()).toBe(200);
         if (cleanupLogin.status() === 200) {
           const cleanupCsrf = (await cleanupLogin.json()).csrfToken;
-          const cleanup = await cleanupRequest.post('/api/admin/access/status', {
+          const cleanupDirectory = await cleanupRequest.post('/api/admin/access/directory', {
             headers: { 'x-csrf-token': cleanupCsrf },
-            data: {
-              currentAccessId: cleanupAccessId,
-              confirmCurrentAccessId: cleanupAccessId,
-              status: 'DISABLED',
-              reason: 'Fail-safe disable for the authorized synthetic deployed smoke account.',
-            },
+            data: { query: cleanupAccessId, status: 'ALL', page: 1, pageSize: 20 },
           });
-          expect.soft([200, 404]).toContain(cleanup.status());
+          const cleanupAccount =
+            cleanupDirectory.status() === 200 ? (await cleanupDirectory.json()).items[0] : null;
+          if (cleanupAccount) {
+            const cleanup = await cleanupRequest.post('/api/admin/access/status', {
+              headers: { 'x-csrf-token': cleanupCsrf },
+              data: {
+                accountId: cleanupAccount.accountId,
+                expectedRevision: cleanupAccount.revision,
+                currentAccessId: cleanupAccessId,
+                confirmCurrentAccessId: cleanupAccessId,
+                status: 'DISABLED',
+                reason: 'Fail-safe disable for the authorized synthetic deployed smoke account.',
+                clientRequestId: `staging-access-status-cleanup-disable-${cleanupAccount.accountId}`,
+              },
+            });
+            expect.soft(cleanup.status()).toBe(200);
+          }
         }
       } finally {
         await cleanupRequest.dispose();
@@ -754,7 +780,16 @@ test('deployed staging Advanced Access Management assigns and enforces effective
     });
     expect(activated.status()).toBe(200);
 
+    const targetDirectory = await page.context().request.post('/api/admin/access/directory', {
+      headers: { 'x-csrf-token': ownerCsrf },
+      data: { query: targetAccessId, status: 'ALL', page: 1, pageSize: 20 },
+    });
+    expect(targetDirectory.status()).toBe(200);
+    const targetAccount = (await targetDirectory.json()).items[0];
+
     const policyCommand = {
+      accountId: targetAccount.accountId,
+      expectedRevision: targetAccount.revision,
       currentAccessId: targetAccessId,
       confirmCurrentAccessId: targetAccessId,
       presetId: 'FOOD_OPERATOR',
@@ -791,7 +826,8 @@ test('deployed staging Advanced Access Management assigns and enforces effective
       },
     });
     expect(updated.status()).toBe(200);
-    await expect(updated.json()).resolves.toMatchObject({
+    const updatedResult = await updated.json();
+    expect(updatedResult).toMatchObject({
       changed: true,
       replayed: false,
       sessionsRevoked: true,
@@ -842,18 +878,21 @@ test('deployed staging Advanced Access Management assigns and enforces effective
       const archived = await cleanup.post('/api/admin/access/status', {
         headers: { 'x-csrf-token': cleanupLogin.csrfToken },
         data: {
+          accountId: targetAccount.accountId,
+          expectedRevision: updatedResult.revision,
           currentAccessId: targetAccessId,
           confirmCurrentAccessId: targetAccessId,
           status: 'REVOKED',
           lifecycleAction: 'ARCHIVE',
           reason: 'Archive the live Phase 14 synthetic operator without deleting history.',
+          clientRequestId: `staging-access-status-archive-${targetAccount.accountId}`,
         },
       });
       expect(archived.status()).toBe(200);
       await expect(archived.json()).resolves.toMatchObject({ archived: true, status: 'REVOKED' });
       const history = await cleanup.post('/api/admin/access/history', {
         headers: { 'x-csrf-token': cleanupLogin.csrfToken },
-        data: { currentAccessId: targetAccessId, limit: 20 },
+        data: { accountId: targetAccount.accountId, currentAccessId: targetAccessId, limit: 20 },
       });
       expect(history.status()).toBe(200);
       expect((await history.json()).auditHistory).toEqual(
@@ -879,16 +918,27 @@ test('deployed staging Advanced Access Management assigns and enforces effective
         });
         if (cleanupLogin.status() === 200) {
           const cleanupCsrf = (await cleanupLogin.json()).csrfToken;
-          await cleanup.post('/api/admin/access/status', {
+          const cleanupDirectory = await cleanup.post('/api/admin/access/directory', {
             headers: { 'x-csrf-token': cleanupCsrf },
-            data: {
-              currentAccessId: targetAccessId,
-              confirmCurrentAccessId: targetAccessId,
-              status: 'REVOKED',
-              lifecycleAction: 'ARCHIVE',
-              reason: 'Fail-safe archive for the live Phase 14 synthetic operator.',
-            },
+            data: { query: targetAccessId, status: 'ALL', page: 1, pageSize: 20 },
           });
+          const cleanupAccount =
+            cleanupDirectory.status() === 200 ? (await cleanupDirectory.json()).items[0] : null;
+          if (cleanupAccount) {
+            await cleanup.post('/api/admin/access/status', {
+              headers: { 'x-csrf-token': cleanupCsrf },
+              data: {
+                accountId: cleanupAccount.accountId,
+                expectedRevision: cleanupAccount.revision,
+                currentAccessId: targetAccessId,
+                confirmCurrentAccessId: targetAccessId,
+                status: 'REVOKED',
+                lifecycleAction: 'ARCHIVE',
+                reason: 'Fail-safe archive for the live Phase 14 synthetic operator.',
+                clientRequestId: `staging-access-status-cleanup-archive-${cleanupAccount.accountId}`,
+              },
+            });
+          }
         }
       } finally {
         await cleanup.dispose();
