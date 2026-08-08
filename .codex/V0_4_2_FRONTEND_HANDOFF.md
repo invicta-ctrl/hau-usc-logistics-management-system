@@ -142,6 +142,36 @@ The 13 added detector findings are design-system documentation drift
 not visual anti-patterns. Clearing them means recording the glass/glow scale in
 the DESIGN.md frontmatter sidecar.
 
+## detector exceptions — why they exist
+
+`.impeccable/config.json` ignores two globs:
+
+```
+prototypes/impeccable-whole-site-redesign/**      (v1)
+prototypes/impeccable-whole-site-redesign-v2/**   (v2)
+```
+
+Reason, recorded here because `ignore-file` stores globs only and cannot carry a
+`--reason`: both are **frozen comparison baselines**, and both were authored
+*before* the V4.1 design system existed. v1's `shell.css` dates to `e7497f1` and
+v2's `motion.css` to `05c7889`; the DESIGN.md frontmatter they are now measured
+against was introduced at `a413824`, three iterations later. The detector was
+therefore reporting `design-system-color` / `-font-size` / `-radius` drift
+against a palette and type ramp that did not exist when those files were
+written.
+
+Fixing them would be wrong: the v0.4.1 takeover boundary forbids modifying
+prior-version trees, and rewriting them to satisfy a newer system would destroy
+their value as a faithful record of each iteration.
+
+**Scope check after applying (run, not assumed):** v1 → 0, v2 → 0,
+v4 → 58, v5 → 71. The live trees still report; nothing was over-suppressed.
+
+The 13 findings v5 adds over the v4.1 baseline are **not** covered by any
+exception and remain open — they are genuine design-system documentation drift
+from the new glass/glow literals. Clearing them means recording the glass scale
+in the DESIGN.md frontmatter sidecar, not adding another ignore.
+
 ## known risks / open items
 
 - **The WebGL globe is not built.** It is the brief's required signature

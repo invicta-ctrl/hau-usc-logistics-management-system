@@ -1,0 +1,10 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "prototypes/impeccable-whole-site-redesign/**",
+      "prototypes/impeccable-whole-site-redesign-v2/**"
+    ],
+    "ignoreValues": []
+  }
+}
