@@ -903,7 +903,10 @@ export function createAccountApplicationService({
           createdAt: issuedAt,
         };
         await repository.createVerificationChallenge(challenge);
-        await emailProvider.sendVerification({
+        // The challenge is marked sent only after the provider accepts. A
+        // timeout, network fault, or 5xx throws, so a message that was never
+        // delivered can never be recorded as sent.
+        const delivered = await emailProvider.sendVerification({
           delivery: identity.providerDelivery,
           verificationCode,
           expiresAt: challenge.expiresAt,
@@ -913,6 +916,7 @@ export function createAccountApplicationService({
           challengeId: challenge.id,
           emailFingerprint: challenge.emailFingerprint,
           sentAt: issuedAt,
+          providerMessageRef: delivered?.providerMessageRef ?? '',
         });
       } catch {
         // Public verification start remains generic. No delivery or identity detail is logged or audited here.

@@ -1,3 +1,5 @@
+import { accountApplicationEmailProviderIssues } from './account-application/email-provider-registry.js';
+
 const SHA = /^[0-9a-f]{40}$/iu;
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u;
 const ENVIRONMENTS = new Set(['DEVELOPMENT', 'STAGING', 'PRODUCTION']);
@@ -78,8 +80,12 @@ export function environmentReadinessIssues(env) {
     if (!hasAccountApplicationIdentityClasses(env?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON)) {
       issues.push('ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING');
     }
-    // No provider has been owner-approved or implemented. Keep deployed readiness closed until both are true.
-    issues.push('ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_CONFIGURED');
+    // A provider is now owner-approved and implemented, so readiness asks the
+    // registry instead of refusing unconditionally. It still fails closed: a
+    // missing provider selection, an unsupported provider, an absent secret, or
+    // a malformed sender each keep deployed readiness shut. Only presence is
+    // reported; no configured value reaches health output.
+    issues.push(...accountApplicationEmailProviderIssues(env));
   }
   return issues;
 }

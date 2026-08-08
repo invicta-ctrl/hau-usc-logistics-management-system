@@ -35,7 +35,7 @@ import {
   createAccountApplicationActivationLifecycle,
   createAccountApplicationIdentityAdapters,
 } from '../server/account-application/adapters.js';
-import { createFailClosedEmailProvider } from '../server/account-application/email-provider.js';
+import { createAccountApplicationEmailProvider } from '../server/account-application/email-provider-registry.js';
 import {
   AccountApplicationError,
   createAccountApplicationService,
@@ -221,7 +221,10 @@ function services(env) {
   });
   const accountApplications = createAccountApplicationService({
     repository: accountApplicationRepository,
-    emailProvider: createFailClosedEmailProvider(),
+    // Selection is environment-driven and fails closed: an unset provider, an
+    // unsupported one, an absent secret, or a malformed sender all yield the
+    // fail-closed provider, which is the same object this line used to hardcode.
+    emailProvider: createAccountApplicationEmailProvider(env),
     identityProtection: identityAdapters.identityProtection,
     passwordKdf,
     tokenCrypto,

@@ -588,6 +588,31 @@ function entityScope(account) {
   };
 }
 
+// RV-01.3 event/series bound predicate, exported so the full matrix can be
+// tested directly rather than through a fixture that seeds a single event.
+//
+// Two rules, and they are easy to get wrong together:
+//   1. CONJUNCTIVE. Each bound that exists must be satisfied on its own. This
+//      mirrors the read path in `resolveOperationalContext`:
+//      `(!series.size || has(series)) && (!events.size || has(event))`.
+//      Collapsing them into one OR lets an actor bounded to a single event
+//      inside a bounded series command every other event in that series.
+//   2. FAIL CLOSED. A bounded actor must positively match. Missing context is a
+//      refusal, so a call site that forgets to pass the record's event is
+//      denied rather than silently exempted.
+export function isOutsideEventBounds({
+  boundedEventIds,
+  boundedSeriesIds,
+  eventId = '',
+  eventSeriesId = '',
+} = {}) {
+  const events = boundedEventIds instanceof Set ? boundedEventIds : new Set(boundedEventIds ?? []);
+  const series = boundedSeriesIds instanceof Set ? boundedSeriesIds : new Set(boundedSeriesIds ?? []);
+  const outsideEvents = events.size > 0 && !(eventId !== '' && events.has(eventId));
+  const outsideSeries = series.size > 0 && !(eventSeriesId !== '' && series.has(eventSeriesId));
+  return outsideEvents || outsideSeries;
+}
+
 function assertEntityScope(
   account,
   { committeeId = '', ownerAccountId = '', eventId = '', eventSeriesId = '', locationId = '' } = {},
@@ -609,15 +634,10 @@ function assertEntityScope(
   const boundedEventIds = new Set(authorization.eventScopeIds ?? []);
   const boundedSeriesIds = new Set(authorization.eventSeriesScopeIds ?? []);
   const boundedLocationIds = new Set(authorization.locationScopeIds ?? []);
-  if (boundedEventIds.size || boundedSeriesIds.size) {
-    const withinEvent =
-      (boundedEventIds.size > 0 && eventId !== '' && boundedEventIds.has(eventId)) ||
-      (boundedSeriesIds.size > 0 && eventSeriesId !== '' && boundedSeriesIds.has(eventSeriesId));
-    if (!withinEvent) {
-      throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
-        status: 403,
-      });
-    }
+  if (isOutsideEventBounds({ boundedEventIds, boundedSeriesIds, eventId, eventSeriesId })) {
+    throw new ApiError('OUT_OF_SCOPE', 'This record is outside your authorized event scope.', {
+      status: 403,
+    });
   }
   // Location bounds were read only when building the operational-context option
   // list (`resolveOperationalContext`) and were never consulted by any command,
@@ -1078,7 +1098,12 @@ function classificationEnum(value, allowed, field, fallback = '') {
   return normalized;
 }
 
-const itemDto = (row, requestOnly = false) => ({
+// `requestOnly` withholds internal stock data. `hideStorageLocation` defaults to
+// it so the requester-facing contract is unchanged, but internal modules pass
+// false: `filterOperationalData` resolves a LOCATION operational scope by
+// matching `storageLocation` on this DTO, so withholding it there empties the
+// caller's entire workspace instead of merely redacting availability.
+const itemDto = (row, requestOnly = false, hideStorageLocation = requestOnly) => ({
   id: row.id,
   name: row.name,
   aliases: row.aliases ? String(row.aliases).split('|').filter(Boolean) : [],
@@ -1086,13 +1111,13 @@ const itemDto = (row, requestOnly = false) => ({
   stockArea: requestOnly ? '' : row.stock_area,
   handling: row.handling,
   unit: row.unit,
+  ...(hideStorageLocation ? {} : { storageLocation: row.storage_location }),
   ...(requestOnly
     ? {}
     : {
         onHand: Number(row.on_hand ?? 0),
         reserved: Number(row.reserved ?? 0),
         availableToPromise: Number(row.available_to_promise ?? 0),
-        storageLocation: row.storage_location,
         reorderThreshold: Number(row.reorder_threshold ?? 0),
         lowStockAlertEnabled: row.low_stock_alert_enabled === 1,
         lowStockThreshold:
@@ -1825,7 +1850,7 @@ export function createD1OperationalService({
         scope.values,
       );
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,
@@ -1966,7 +1991,7 @@ export function createD1OperationalService({
             venue: row.venue,
             status: row.status,
           })),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
           lendingTickets: lendingRows.map((row) => ({
@@ -1998,7 +2023,7 @@ export function createD1OperationalService({
         });
         const restockLimitIndex = restockScope.values.length + 1;
         data = {
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
           restockRequests: await rows(
             db,
             `SELECT restock.* FROM restock_requests restock WHERE ${restockScope.sql}
@@ -2119,7 +2144,7 @@ export function createD1OperationalService({
           events: eventRows.map(eventActivityDto),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -2136,7 +2161,7 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],

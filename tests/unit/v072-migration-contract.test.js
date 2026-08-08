@@ -82,8 +82,14 @@ describe('v0.7.2 additive migration contract', () => {
     expect(sql).toContain('secret_digest TEXT NOT NULL UNIQUE');
     expect(sql).toContain('verification_receipt_digest TEXT UNIQUE');
     expect(sql).toContain("purpose TEXT NOT NULL CHECK (purpose = 'STAFF_ACCOUNT_APPLICATION')");
-    expect(sql).toMatch(/created_at TEXT NOT NULL,\s+last_sent_at TEXT,\s+verified_at TEXT/u);
+    // The delivery-tracking columns stay nullable: a challenge exists before it
+    // is sent, and a send may be accepted without the provider returning a
+    // usable reference.
+    expect(sql).toMatch(
+      /created_at TEXT NOT NULL,\s+last_sent_at TEXT,[\s\S]*?provider_message_ref TEXT,\s+verified_at TEXT/u,
+    );
     expect(sql).not.toContain('last_sent_at TEXT NOT NULL');
+    expect(sql).not.toContain('provider_message_ref TEXT NOT NULL');
     expect(sql).toContain('status_token_digest TEXT NOT NULL UNIQUE');
     expect(sql).toMatch(/CREATE TABLE account_applications[\s\S]*identity_class_id TEXT NOT NULL/u);
     expect(sql).toContain('protected_email_envelope TEXT NOT NULL');

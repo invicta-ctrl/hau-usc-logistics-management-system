@@ -37,6 +37,10 @@ CREATE TABLE email_verification_challenges (
   resend_count INTEGER NOT NULL DEFAULT 0 CHECK (resend_count >= 0),
   created_at TEXT NOT NULL,
   last_sent_at TEXT,
+  -- Opaque provider-side message id for delivery reconciliation. The adapter
+  -- only ever stores a value matching a strict safe pattern, so no provider
+  -- prose, error text, or credential fragment can land here.
+  provider_message_ref TEXT,
   verified_at TEXT,
   consumed_at TEXT
 ) STRICT;

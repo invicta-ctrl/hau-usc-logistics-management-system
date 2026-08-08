@@ -472,7 +472,12 @@ export function createD1AccountApplicationRepository(db) {
       return repository.getVerificationChallengeById(challenge.id);
     },
 
-    async markVerificationChallengeSent({ challengeId, emailFingerprint, sentAt }) {
+    async markVerificationChallengeSent({
+      challengeId,
+      emailFingerprint,
+      sentAt,
+      providerMessageRef = '',
+    }) {
       await db.batch([
         db
           .prepare(
@@ -488,10 +493,10 @@ export function createD1AccountApplicationRepository(db) {
         db
           .prepare(
             `UPDATE email_verification_challenges
-             SET last_sent_at = ?1
+             SET last_sent_at = ?1, provider_message_ref = ?4
              WHERE id = ?2 AND email_fingerprint = ?3 AND status = 'PENDING'`,
           )
-          .bind(sentAt, challengeId, emailFingerprint),
+          .bind(sentAt, challengeId, emailFingerprint, String(providerMessageRef ?? '') || null),
       ]);
     },
 
