@@ -1,23 +1,24 @@
 # Current Bounded Task
 
 INTENT: OWNER_DECISION
+SECONDARY INTENTS: ARCHITECTURE, PLANNING
 MODE: PLAN
-OBJECTIVE: Hold the completed v0.7.2.1 repository and environments steady until Earl accepts the first bounded v0.7.3 specification.
-TARGET: main at verified remote truth
-SKILLS: none for this read-only intake packet; select and record the smallest applicable workflow when the bounded implementation specification is adopted
+OBJECTIVE: Hold the stable v0.7.2 runtime and completed no-op v0.7.3 evidence steady until Earl accepts the first bounded v0.8.0 Inventory Truth and Ledger Lock specification.
+TARGET: canonical main after protected v0.7.3 no-op closeout
+SKILLS: none for the owner-decision hold; select and record the smallest applicable workflow when a v0.8.0 specification is adopted
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-product-work-intake.md
-AUTHORITY: Earl's next product objective; the accepted v0.7.3 intake specification; AGENTS.md; current continuity chain
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
+AUTHORITY: Earl's next v0.8.0 objective; completed v0.7.3 rollout-stabilization specification; AGENTS.md; canonical continuity chain
 REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
 ACTIVE_WRITER: NONE
-GIT_UPSTREAM: origin/main
-RISK: MEDIUM - the repository is stable, but production and protected identity/data boundaries remain critical
-DELIVERABLE: One accepted, bounded v0.7.3 task packet before any implementation or environment mutation
-SCOPE: Read-only handshake, owner intake, specification adoption, writer-lock claim, and bounded v0.7.3 planning
-OUT_OF_SCOPE: Any v0.7.3 implementation; production write/deploy; staging reset during active identity/application state; release/tag creation; deletion of preserved unique work
-VERIFICATION: Confirm main equals origin/main, clean worktree, ACTIVE_WRITER NONE, production v0.7.2, isolated staging readiness, and an accepted next specification
-STOP_CONDITIONS: Missing or contradictory v0.7.3 specification; unexpected dirty work; production/staging identity uncertainty; private-value exposure; unclaimed writer lock
-NEXT_EXACT_ACTION: Ask Earl for the first bounded v0.7.3 product objective, then adopt a task-specific implementation specification before claiming the writer lock or changing code or an environment.
+GIT_UPSTREAM: Resolve from canonical main during the next handshake
+RISK: HIGH - Inventory truth, ledger invariants, migration, recovery, and production boundaries require a separately accepted specification
+DELIVERABLE: One accepted, bounded v0.8.0 implementation specification before any writer lock, implementation, migration, or environment mutation
+SCOPE: Read-only handshake, owner intake, targeted discovery, specification adoption, risk/model routing, and writer-lock claim after acceptance
+OUT_OF_SCOPE: Any v0.8.0 implementation, migration, schema or ledger change, production/staging mutation, tag/release, repair of the cosmetic staging brand-asset gap, or deletion of preserved resources/evidence
+VERIFICATION: Confirm canonical main/upstream/worktree, ACTIVE_WRITER NONE, immutable production v0.7.2, isolated staging boundaries, and an accepted bounded v0.8.0 specification
+STOP_CONDITIONS: Missing/contradictory v0.8.0 scope; unclaimed/competing writer; unknown work; production/staging drift; migration/recovery ambiguity; private-value exposure; any request to implement before specification acceptance
+NEXT_EXACT_ACTION: Ask Earl to approve the first bounded v0.8.0 Inventory Truth and Ledger Lock specification before claiming a writer lock or changing code or an environment.
 
-V0.7.2.1 is complete: PR #17 merged at `6a30ab482a1e9884870fcfb6e88b7c57f879a44c`; production stayed on v0.7.2; isolated staging acceptance passed at `c4fa46f267733eeceb5d82a825431c6337f8e4e0`; approved-recipient delivery/redemption/replay controls passed; required local and remote gates passed; safe topology cleanup completed; unique/dirty work remains preserved.
+V0.7.3_RESULT: NO RUNTIME PATCH REQUIRED. No eligible rollout blocker was confirmed, no runtime code changed, and version 0.7.2 remains authoritative.
