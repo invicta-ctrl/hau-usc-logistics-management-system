@@ -19,7 +19,7 @@ import path from 'node:path';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
 import {
   exactDatabaseIdFromInventory,
-  unexpectedWritableBindings,
+  unexpectedStagingConfigKeys,
 } from './staging-sandbox-lib.mjs';
 
 const TARGETS = Object.freeze({
@@ -80,9 +80,9 @@ if (target === 'staging') {
     fail('custom routes are not allowed in the isolated staging deployment config.');
   if (config.workers_dev !== true || config.preview_urls !== false)
     fail('the staging config must use workers_dev with preview URLs disabled.');
-  const extraWritableBindings = unexpectedWritableBindings(config);
-  if (extraWritableBindings.length)
-    fail(`the staging config declares ${extraWritableBindings.length} unexpected writable binding group(s).`);
+  const extraConfigKeys = unexpectedStagingConfigKeys(config);
+  if (extraConfigKeys.length)
+    fail(`the staging config declares ${extraConfigKeys.length} unapproved top-level configuration key(s).`);
 }
 
 // 2. It must carry exactly one real, resolved D1 binding, and it must be the

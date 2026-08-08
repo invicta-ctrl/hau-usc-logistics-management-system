@@ -75,7 +75,7 @@ describe('permanent staging sandbox guards', () => {
     ).toEqual(expect.arrayContaining(['STAGING_D1_MISMATCH', 'PRODUCTION_RESOURCE_CROSSOVER']));
   });
 
-  it('rejects spoofed D1 identity, routes, and unexpected writable bindings', () => {
+  it('rejects spoofed D1 identity, routes, and every unapproved top-level config key', () => {
     expect(
       validate(
         config({
@@ -93,7 +93,13 @@ describe('permanent staging sandbox guards', () => {
       'STAGING_ROUTE_NOT_ALLOWED',
     );
     expect(validate(config({ kv_namespaces: [{ binding: 'FOREIGN', id: 'private' }] })).issues).toContain(
-      'UNEXPECTED_WRITABLE_BINDING',
+      'UNEXPECTED_STAGING_CONFIG_KEY',
+    );
+    expect(validate(config({ send_email: [{ name: 'FOREIGN' }] })).issues).toContain(
+      'UNEXPECTED_STAGING_CONFIG_KEY',
+    );
+    expect(validate(config({ analytics_engine_datasets: [{ binding: 'FOREIGN' }] })).issues).toContain(
+      'UNEXPECTED_STAGING_CONFIG_KEY',
     );
   });
 

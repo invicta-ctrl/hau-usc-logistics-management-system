@@ -10,17 +10,18 @@ export const STAGING_SANDBOX_TARGET = Object.freeze({
 const SHA = /^[0-9a-f]{40}$/u;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/u;
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
-const EXTRA_WRITABLE_BINDINGS = Object.freeze([
-  'dispatch_namespaces',
-  'durable_objects',
-  'hyperdrive',
-  'kv_namespaces',
-  'mtls_certificates',
-  'pipelines',
-  'queues',
-  'services',
-  'vectorize',
-  'workflows',
+const ALLOWED_STAGING_CONFIG_KEYS = Object.freeze([
+  'assets',
+  'compatibility_date',
+  'd1_databases',
+  'main',
+  'name',
+  'observability',
+  'preview_urls',
+  'r2_buckets',
+  'triggers',
+  'vars',
+  'workers_dev',
 ]);
 
 export function isInside(parent, candidate) {
@@ -32,16 +33,6 @@ function binding(config, collection, name) {
   return (config?.[collection] ?? []).find((entry) => entry.binding === name);
 }
 
-function populated(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  if (value && typeof value === 'object') {
-    if (Array.isArray(value.bindings)) return value.bindings.length > 0;
-    if (Array.isArray(value.producers)) return value.producers.length > 0;
-    return Object.keys(value).length > 0;
-  }
-  return value !== undefined && value !== null && value !== '';
-}
-
 export function exactDatabaseIdFromInventory(inventory, databaseName) {
   const matches = (Array.isArray(inventory) ? inventory : []).filter(
     (database) => database?.name === databaseName,
@@ -51,8 +42,8 @@ export function exactDatabaseIdFromInventory(inventory, databaseName) {
   return identifier && !PLACEHOLDER.test(identifier) ? identifier : '';
 }
 
-export function unexpectedWritableBindings(config) {
-  return EXTRA_WRITABLE_BINDINGS.filter((key) => populated(config?.[key]));
+export function unexpectedStagingConfigKeys(config) {
+  return Object.keys(config ?? {}).filter((key) => !ALLOWED_STAGING_CONFIG_KEYS.includes(key));
 }
 
 export function safeSandboxErrorMessage(error) {
@@ -102,10 +93,11 @@ export function validateStagingSandboxConfig(
   if (JSON.stringify(bucketBindings) !== JSON.stringify(expectedBucketBindings))
     issues.push('STAGING_R2_MISMATCH');
 
-  if (populated(config?.routes) || populated(config?.route)) issues.push('STAGING_ROUTE_NOT_ALLOWED');
+  if (config?.routes !== undefined || config?.route !== undefined)
+    issues.push('STAGING_ROUTE_NOT_ALLOWED');
   if (config?.workers_dev !== true || config?.preview_urls !== false)
     issues.push('STAGING_PUBLICATION_MODE_INVALID');
-  if (unexpectedWritableBindings(config).length) issues.push('UNEXPECTED_WRITABLE_BINDING');
+  if (unexpectedStagingConfigKeys(config).length) issues.push('UNEXPECTED_STAGING_CONFIG_KEY');
 
   const resourceValues = [config?.name, database?.database_name, ...buckets];
   if (resourceValues.some((value) => /production/iu.test(String(value ?? ''))))
