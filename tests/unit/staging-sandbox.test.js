@@ -1,9 +1,11 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  SANDBOX_CLASSIFICATION_RULES,
   assertSandboxMutationReady,
   parseWranglerJsonOutput,
   safeSandboxErrorMessage,
+  sandboxClassificationQuery,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
   waitForSandboxLifecycleState,
@@ -142,6 +144,42 @@ describe('permanent staging sandbox guards', () => {
     expect(classification).toMatchObject({ total: 7, nonSynthetic: 1, resetEligible: false });
     expect(() =>
       assertSandboxMutationReady({ configResult: validate(config()), classification, command: 'reset' }),
+    ).toThrow('NON_SYNTHETIC_OR_UNCLASSIFIED_ROWS');
+  });
+
+  it('classifies every seeded lifecycle table and blocks live identity workflow state', () => {
+    const entities = new Set(SANDBOX_CLASSIFICATION_RULES.map((rule) => rule.entity));
+    for (const entity of [
+      'request_lines',
+      'restock_requests',
+      'event_series',
+      'event_days',
+      'inventory_asset_instances',
+      'inventory_asset_movements',
+      'lending_handoffs',
+      'lending_returns',
+      'release_confirmations',
+    ]) {
+      expect(entities.has(entity)).toBe(true);
+    }
+
+    for (const entity of ['email_verification_challenges', 'account_applications']) {
+      const rule = SANDBOX_CLASSIFICATION_RULES.find((candidate) => candidate.entity === entity);
+      expect(rule?.syntheticPredicate).toBe('0');
+      expect(rule?.activePredicate).not.toBe('1 = 1');
+      expect(sandboxClassificationQuery(rule)).toContain(`FROM ${entity} WHERE`);
+    }
+
+    const liveIdentityState = summarizeSandboxClassification([
+      { entity: 'email_verification_challenges', total: 1, non_synthetic: 1 },
+    ]);
+    expect(liveIdentityState.resetEligible).toBe(false);
+    expect(() =>
+      assertSandboxMutationReady({
+        configResult: validate(config()),
+        classification: liveIdentityState,
+        command: 'reset',
+      }),
     ).toThrow('NON_SYNTHETIC_OR_UNCLASSIFIED_ROWS');
   });
 

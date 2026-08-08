@@ -6,10 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
 import { restoreAndVerifyD1Export } from './d1/verify-d1-export.mjs';
 import {
+  SANDBOX_CLASSIFICATION_RULES,
   assertSandboxMutationReady,
   exactDatabaseIdFromInventory,
   parseWranglerJsonOutput,
   safeSandboxErrorMessage,
+  sandboxClassificationQuery,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
   waitForSandboxLifecycleState,
@@ -24,19 +26,6 @@ import { parseAccountApplicationStagingIdentityFixture } from '../src/server/acc
 import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const TABLES = Object.freeze([
-  [
-    'accounts',
-    "id LIKE 'SBX-%' OR id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
-  ],
-  ['requests', "id LIKE 'SBX-%'"],
-  ['inventory_items', "id LIKE 'SBX-%'"],
-  ['events', "id LIKE 'SBX-%'"],
-  ['reservations', "id LIKE 'SBX-%'"],
-  ['lending_tickets', "id LIKE 'SBX-%'"],
-  ['deliverables', "id LIKE 'SBX-%'"],
-]);
-
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : '';
@@ -213,13 +202,8 @@ function expectedDatabaseId(configPath) {
 
 function classify(configPath) {
   return summarizeSandboxClassification(
-    TABLES.flatMap(([entity, syntheticPredicate]) => {
-      const [row] = runWrangler(
-        configPath,
-        `SELECT ${JSON.stringify(entity)} AS entity, COUNT(*) AS total, ` +
-          `COALESCE(SUM(CASE WHEN ${syntheticPredicate} THEN 0 ELSE 1 END), 0) AS non_synthetic ` +
-          `FROM ${entity}`,
-      );
+    SANDBOX_CLASSIFICATION_RULES.flatMap((rule) => {
+      const [row] = runWrangler(configPath, sandboxClassificationQuery(rule));
       return row ? [row] : [];
     }),
   );

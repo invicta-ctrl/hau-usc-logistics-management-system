@@ -9,6 +9,64 @@ export const STAGING_SANDBOX_TARGET = Object.freeze({
   ]),
 });
 
+function classificationRule(entity, syntheticPredicate, activePredicate = '1 = 1') {
+  return Object.freeze({ entity, syntheticPredicate, activePredicate });
+}
+
+export const SANDBOX_CLASSIFICATION_RULES = Object.freeze([
+  classificationRule(
+    'accounts',
+    "id LIKE 'SBX-%' OR id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
+  ),
+  classificationRule('sessions', "account_id LIKE 'SBX-%'"),
+  classificationRule('password_reset_tokens', "account_id LIKE 'SBX-%'"),
+  classificationRule(
+    'account_committees',
+    "account_id LIKE 'SBX-%' OR account_id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
+  ),
+  classificationRule(
+    'access_id_reservations',
+    "account_id LIKE 'SBX-%' OR account_id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
+  ),
+  classificationRule('requests', "id LIKE 'SBX-%'"),
+  classificationRule('request_lines', "id LIKE 'SBX-%'"),
+  classificationRule('deliverables', "id LIKE 'SBX-%'"),
+  classificationRule('restock_requests', "id LIKE 'SBX-%'"),
+  classificationRule('inventory_items', "id LIKE 'SBX-%'"),
+  classificationRule('inventory_ledger', "id LIKE 'SBX-%'"),
+  classificationRule('inventory_asset_instances', "id LIKE 'SBX-%'"),
+  classificationRule('inventory_asset_movements', "id LIKE 'SBX-%'"),
+  classificationRule('event_series', "id LIKE 'SBX-%'"),
+  classificationRule('event_days', "id LIKE 'SBX-%'"),
+  classificationRule('events', "id LIKE 'SBX-%'"),
+  classificationRule('reservations', "id LIKE 'SBX-%'"),
+  classificationRule('lending_tickets', "id LIKE 'SBX-%'"),
+  classificationRule('lending_handoffs', "id LIKE 'SBX-%'"),
+  classificationRule('lending_returns', "id LIKE 'SBX-%'"),
+  classificationRule('release_confirmations', "id LIKE 'SBX-%'"),
+  classificationRule(
+    'email_verification_challenges',
+    '0',
+    "status IN ('PENDING', 'VERIFIED')",
+  ),
+  classificationRule(
+    'account_applications',
+    '0',
+    "archived_at IS NULL AND state NOT IN ('REJECTED', 'WITHDRAWN', 'EXPIRED', 'ARCHIVED')",
+  ),
+]);
+
+export function sandboxClassificationQuery(rule) {
+  if (!SANDBOX_CLASSIFICATION_RULES.includes(rule)) {
+    throw new Error('Unknown sandbox classification rule.');
+  }
+  return (
+    `SELECT ${JSON.stringify(rule.entity)} AS entity, COUNT(*) AS total, ` +
+    `COALESCE(SUM(CASE WHEN ${rule.syntheticPredicate} THEN 0 ELSE 1 END), 0) AS non_synthetic ` +
+    `FROM ${rule.entity} WHERE ${rule.activePredicate}`
+  );
+}
+
 const SHA = /^[0-9a-f]{40}$/u;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/u;
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
