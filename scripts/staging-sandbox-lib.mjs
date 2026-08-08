@@ -10,6 +10,18 @@ export const STAGING_SANDBOX_TARGET = Object.freeze({
 const SHA = /^[0-9a-f]{40}$/u;
 const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/u;
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
+const EXTRA_WRITABLE_BINDINGS = Object.freeze([
+  'dispatch_namespaces',
+  'durable_objects',
+  'hyperdrive',
+  'kv_namespaces',
+  'mtls_certificates',
+  'pipelines',
+  'queues',
+  'services',
+  'vectorize',
+  'workflows',
+]);
 
 export function isInside(parent, candidate) {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -20,9 +32,44 @@ function binding(config, collection, name) {
   return (config?.[collection] ?? []).find((entry) => entry.binding === name);
 }
 
+function populated(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === 'object') {
+    if (Array.isArray(value.bindings)) return value.bindings.length > 0;
+    if (Array.isArray(value.producers)) return value.producers.length > 0;
+    return Object.keys(value).length > 0;
+  }
+  return value !== undefined && value !== null && value !== '';
+}
+
+export function exactDatabaseIdFromInventory(inventory, databaseName) {
+  const matches = (Array.isArray(inventory) ? inventory : []).filter(
+    (database) => database?.name === databaseName,
+  );
+  if (matches.length !== 1) return '';
+  const identifier = String(matches[0]?.uuid ?? matches[0]?.id ?? '').trim();
+  return identifier && !PLACEHOLDER.test(identifier) ? identifier : '';
+}
+
+export function unexpectedWritableBindings(config) {
+  return EXTRA_WRITABLE_BINDINGS.filter((key) => populated(config?.[key]));
+}
+
+export function safeSandboxErrorMessage(error) {
+  const message = String(error?.message ?? '');
+  if (
+    /^Sandbox (?:status|seed|reset) refused: [A-Z0-9_, -]+$/u.test(message) ||
+    message === 'Usage: staging-sandbox.mjs <status|seed|reset> --config <absolute-private-config>' ||
+    message === 'An absolute private --config path is required.'
+  ) {
+    return message;
+  }
+  return 'Sandbox command failed: PRIVATE_OPERATION_ERROR';
+}
+
 export function validateStagingSandboxConfig(
   config,
-  { configPath, repoRoot, head = '', branch = '', command = 'status' } = {},
+  { configPath, repoRoot, head = '', branch = '', command = 'status', expectedDatabaseId = '' } = {},
 ) {
   const issues = [];
   if (!path.isAbsolute(configPath ?? '')) issues.push('PRIVATE_CONFIG_ABSOLUTE_PATH_REQUIRED');
@@ -31,18 +78,34 @@ export function validateStagingSandboxConfig(
   if (String(config?.vars?.ENVIRONMENT ?? '').toUpperCase() !== 'STAGING')
     issues.push('STAGING_ENVIRONMENT_REQUIRED');
 
+  const databases = config?.d1_databases ?? [];
   const database = binding(config, 'd1_databases', 'DB');
   if (
+    databases.length !== 1 ||
     !database ||
     database.database_name !== STAGING_SANDBOX_TARGET.database ||
     !database.database_id ||
-    PLACEHOLDER.test(String(database.database_id))
+    PLACEHOLDER.test(String(database.database_id)) ||
+    !expectedDatabaseId ||
+    database.database_id !== expectedDatabaseId
   ) {
     issues.push('STAGING_D1_MISMATCH');
   }
+  const bucketBindings = (config?.r2_buckets ?? [])
+    .map((entry) => `${entry.binding}:${entry.bucket_name}`)
+    .sort();
+  const expectedBucketBindings = [
+    `BRAND_ASSETS:${STAGING_SANDBOX_TARGET.buckets[0]}`,
+    `EVIDENCE_ASSETS:${STAGING_SANDBOX_TARGET.buckets[1]}`,
+  ].sort();
   const buckets = (config?.r2_buckets ?? []).map((entry) => entry.bucket_name).sort();
-  if (JSON.stringify(buckets) !== JSON.stringify([...STAGING_SANDBOX_TARGET.buckets].sort()))
+  if (JSON.stringify(bucketBindings) !== JSON.stringify(expectedBucketBindings))
     issues.push('STAGING_R2_MISMATCH');
+
+  if (populated(config?.routes) || populated(config?.route)) issues.push('STAGING_ROUTE_NOT_ALLOWED');
+  if (config?.workers_dev !== true || config?.preview_urls !== false)
+    issues.push('STAGING_PUBLICATION_MODE_INVALID');
+  if (unexpectedWritableBindings(config).length) issues.push('UNEXPECTED_WRITABLE_BINDING');
 
   const resourceValues = [config?.name, database?.database_name, ...buckets];
   if (resourceValues.some((value) => /production/iu.test(String(value ?? ''))))
@@ -81,8 +144,12 @@ export function validateStagingSandboxConfig(
     safe: Object.freeze({
       environment: 'STAGING',
       workerMatch: config?.name === STAGING_SANDBOX_TARGET.worker,
-      databaseMatch: database?.database_name === STAGING_SANDBOX_TARGET.database,
-      bucketMatch: JSON.stringify(buckets) === JSON.stringify([...STAGING_SANDBOX_TARGET.buckets].sort()),
+      databaseMatch:
+        databases.length === 1 &&
+        database?.database_name === STAGING_SANDBOX_TARGET.database &&
+        Boolean(expectedDatabaseId) &&
+        database?.database_id === expectedDatabaseId,
+      bucketMatch: JSON.stringify(bucketBindings) === JSON.stringify(expectedBucketBindings),
       candidateSha: SHA.test(candidateSha) ? candidateSha : '',
       candidateBranch: BRANCH.test(candidateBranch) ? candidateBranch : '',
       allowlistCount: allowlist?.length ?? 0,

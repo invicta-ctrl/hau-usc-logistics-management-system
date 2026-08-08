@@ -17,6 +17,10 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
+import {
+  exactDatabaseIdFromInventory,
+  unexpectedWritableBindings,
+} from './staging-sandbox-lib.mjs';
 
 const TARGETS = Object.freeze({
   staging: {
@@ -62,9 +66,7 @@ if (!configPath || !path.isAbsolute(configPath)) {
   );
 }
 
-const raw = await readFile(configPath, 'utf8').catch(() =>
-  fail(`the private config at ${configPath} could not be read.`),
-);
+const raw = await readFile(configPath, 'utf8').catch(() => fail('the private config could not be read.'));
 const config = parseJsonConfig(raw);
 
 // 1. The private config must describe the intended environment.
@@ -73,6 +75,15 @@ if (config.name !== expected.worker)
 const environment = config?.vars?.ENVIRONMENT;
 if (environment !== expected.environment)
   fail(`the config declares ENVIRONMENT "${environment}", not ${expected.environment}.`);
+if (target === 'staging') {
+  if ((config.routes ?? []).length || config.route)
+    fail('custom routes are not allowed in the isolated staging deployment config.');
+  if (config.workers_dev !== true || config.preview_urls !== false)
+    fail('the staging config must use workers_dev with preview URLs disabled.');
+  const extraWritableBindings = unexpectedWritableBindings(config);
+  if (extraWritableBindings.length)
+    fail(`the staging config declares ${extraWritableBindings.length} unexpected writable binding group(s).`);
+}
 
 // 2. It must carry exactly one real, resolved D1 binding, and it must be the
 //    binding the Worker actually reads. Checking only d1_databases[0] would let
@@ -92,6 +103,22 @@ if (!database.database_id || database.database_id === PLACEHOLDER_ID)
   fail('the config still carries the placeholder database_id. Regenerate the private config.');
 if (String(database.database_name).startsWith('REPLACE_PRIVATELY'))
   fail('the config still carries a REPLACE_PRIVATELY placeholder.');
+let inventory;
+try {
+  const executable = path.join(process.cwd(), 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  inventory = JSON.parse(
+    execFileSync(process.execPath, [executable, 'd1', 'list', '--config', configPath, '--json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    }),
+  );
+} catch {
+  fail('the exact D1 identity could not be read from the authenticated account inventory.');
+}
+const exactDatabaseId = exactDatabaseIdFromInventory(inventory, expected.d1);
+if (!exactDatabaseId || database.database_id !== exactDatabaseId)
+  fail('the configured D1 identifier does not match the exact named database in the account inventory.');
 
 // 3. R2 bindings must match the environment, so staging can never write production objects.
 const buckets = (config.r2_buckets ?? []).map((entry) => entry.bucket_name);

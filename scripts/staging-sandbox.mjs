@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
 import {
   assertSandboxMutationReady,
+  exactDatabaseIdFromInventory,
+  safeSandboxErrorMessage,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
 } from './staging-sandbox-lib.mjs';
@@ -35,6 +37,21 @@ function runWrangler(configPath, sql) {
   const parsed = JSON.parse(output);
   if (!parsed?.[0]?.success) throw new Error('Remote staging classification query failed.');
   return parsed[0].results ?? [];
+}
+
+function expectedDatabaseId(configPath) {
+  const executable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  const output = execFileSync(
+    process.execPath,
+    [executable, 'd1', 'list', '--config', configPath, '--json'],
+    { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+  );
+  const identifier = exactDatabaseIdFromInventory(
+    JSON.parse(output),
+    'hau-usc-logistics-staging',
+  );
+  if (!identifier) throw new Error('Exact staging D1 identity could not be verified.');
+  return identifier;
 }
 
 function classify(configPath) {
@@ -95,6 +112,7 @@ async function main() {
     head,
     branch,
     command,
+    expectedDatabaseId: expectedDatabaseId(configPath),
   });
   if (!configResult.valid) {
     throw new Error(`Sandbox ${command} refused: ${configResult.issues.join(', ')}`);
@@ -136,6 +154,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error.message);
+  console.error(safeSandboxErrorMessage(error));
   process.exitCode = 1;
 });

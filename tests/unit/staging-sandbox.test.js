@@ -2,6 +2,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   assertSandboxMutationReady,
+  safeSandboxErrorMessage,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
 } from '../../scripts/staging-sandbox-lib.mjs';
@@ -10,11 +11,14 @@ const repoRoot = path.resolve('D:/workspace/repo');
 const configPath = path.resolve('D:/private/wrangler.staging.private.jsonc');
 const head = 'a'.repeat(40);
 const branch = 'feat/v0.7.3-synthetic';
+const stagingDatabaseId = '11111111-1111-4111-8111-111111111111';
 
 function config(overrides = {}) {
   const { vars = {}, ...rest } = overrides;
   return {
     name: 'hau-usc-logistics-staging',
+    workers_dev: true,
+    preview_urls: false,
     vars: {
       ENVIRONMENT: 'STAGING',
       CANDIDATE_SHA: head,
@@ -28,7 +32,7 @@ function config(overrides = {}) {
       {
         binding: 'DB',
         database_name: 'hau-usc-logistics-staging',
-        database_id: '11111111-1111-4111-8111-111111111111',
+        database_id: stagingDatabaseId,
       },
     ],
     r2_buckets: [
@@ -46,6 +50,7 @@ function validate(value, command = 'status') {
     head,
     branch,
     command,
+    expectedDatabaseId: stagingDatabaseId,
   });
 }
 
@@ -68,6 +73,28 @@ describe('permanent staging sandbox guards', () => {
         }),
       ).issues,
     ).toEqual(expect.arrayContaining(['STAGING_D1_MISMATCH', 'PRODUCTION_RESOURCE_CROSSOVER']));
+  });
+
+  it('rejects spoofed D1 identity, routes, and unexpected writable bindings', () => {
+    expect(
+      validate(
+        config({
+          d1_databases: [
+            {
+              binding: 'DB',
+              database_name: 'hau-usc-logistics-staging',
+              database_id: '33333333-3333-4333-8333-333333333333',
+            },
+          ],
+        }),
+      ).issues,
+    ).toContain('STAGING_D1_MISMATCH');
+    expect(validate(config({ routes: [{ pattern: 'production.example.test/*' }] })).issues).toContain(
+      'STAGING_ROUTE_NOT_ALLOWED',
+    );
+    expect(validate(config({ kv_namespaces: [{ binding: 'FOREIGN', id: 'private' }] })).issues).toContain(
+      'UNEXPECTED_WRITABLE_BINDING',
+    );
   });
 
   it('rejects repository-relative config, SHA/branch drift, and missing recipient containment', () => {
@@ -102,5 +129,14 @@ describe('permanent staging sandbox guards', () => {
     expect(() =>
       assertSandboxMutationReady({ configResult: validate(config()), classification, command: 'reset' }),
     ).toThrow('NON_SYNTHETIC_OR_UNCLASSIFIED_ROWS');
+  });
+
+  it('redacts unexpected filesystem and tool errors', () => {
+    expect(
+      safeSandboxErrorMessage(new Error('ENOENT: missing D:\\private\\wrangler.staging.jsonc')),
+    ).toBe('Sandbox command failed: PRIVATE_OPERATION_ERROR');
+    expect(safeSandboxErrorMessage(new Error('Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED'))).toBe(
+      'Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED',
+    );
   });
 });
