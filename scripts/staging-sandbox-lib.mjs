@@ -1,5 +1,4 @@
 import path from 'node:path';
-import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 
 export const STAGING_SANDBOX_TARGET = Object.freeze({
   worker: 'hau-usc-logistics-staging',
@@ -138,10 +137,10 @@ export function validateStagingSandboxConfig(
     issues.push('STAGING_BASE_URL_INVALID');
   }
 
-  const allowlist = parseExactRecipientAllowlist(
-    config?.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
-  );
-  if (!allowlist) issues.push('STAGING_EMAIL_ALLOWLIST_INVALID');
+  const allowlistCount = Number(config?.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT);
+  if (!Number.isSafeInteger(allowlistCount) || allowlistCount !== 1) {
+    issues.push('STAGING_EMAIL_ALLOWLIST_INVALID');
+  }
   if (command === 'reset' && config?.vars?.SANDBOX_RESET_ALLOWED !== true)
     issues.push('SANDBOX_RESET_NOT_ALLOWED');
 
@@ -159,7 +158,7 @@ export function validateStagingSandboxConfig(
       bucketMatch: JSON.stringify(bucketBindings) === JSON.stringify(expectedBucketBindings),
       candidateSha: SHA.test(candidateSha) ? candidateSha : '',
       candidateBranch: BRANCH.test(candidateBranch) ? candidateBranch : '',
-      allowlistCount: allowlist?.length ?? 0,
+      allowlistCount: Number.isSafeInteger(allowlistCount) ? allowlistCount : 0,
       baseUrl,
     }),
   });

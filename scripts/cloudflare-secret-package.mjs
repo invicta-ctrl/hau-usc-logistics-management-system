@@ -7,6 +7,10 @@ import {
   ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET,
   parseAccountApplicationStagingIdentityFixture,
 } from '../src/server/account-application/adapters.js';
+import {
+  ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR,
+  parseExactRecipientAllowlist,
+} from '../src/server/account-application/email-provider-registry.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const GENERATED_SECRET_NAMES = Object.freeze([
@@ -26,6 +30,11 @@ const PRODUCTION_GOOGLE_SECRET_NAMES = Object.freeze([
   'GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID',
   'GOOGLE_EVIDENCE_RELEASE_FOLDER_ID',
   'GOOGLE_DRIVE_LENDING_FOLDER_ID',
+]);
+const STAGING_IDENTITY_SECRET_NAMES = Object.freeze([
+  'ACCOUNT_APPLICATION_EMAIL_FROM',
+  ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR,
+  ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET,
 ]);
 
 export function createSecretPackage(environment, random = randomBytes) {
@@ -56,7 +65,7 @@ async function apply(configPath, packagePath) {
   const secretNames =
     source.environment === 'PRODUCTION'
       ? [...GENERATED_SECRET_NAMES, ...PRODUCTION_GOOGLE_SECRET_NAMES]
-      : [...GENERATED_SECRET_NAMES, ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET];
+      : [...GENERATED_SECRET_NAMES, ...STAGING_IDENTITY_SECRET_NAMES];
   if (
     source.schemaVersion !== 1 ||
     secretNames.some(
@@ -66,9 +75,19 @@ async function apply(configPath, packagePath) {
     throw new Error('Secret package is incomplete or malformed.');
   if (
     source.environment === 'STAGING' &&
-    parseAccountApplicationStagingIdentityFixture(
-      source.secrets[ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET],
-    ).length !== 1
+    (() => {
+      const allowlist = parseExactRecipientAllowlist(
+        source.secrets[ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR],
+      );
+      const fixture = parseAccountApplicationStagingIdentityFixture(
+        source.secrets[ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET],
+      );
+      return (
+        allowlist?.length !== 1 ||
+        fixture.length !== 1 ||
+        allowlist[0] !== fixture[0].institutionalEmail
+      );
+    })()
   ) {
     throw new Error('Private staging identity fixture is missing or malformed.');
   }

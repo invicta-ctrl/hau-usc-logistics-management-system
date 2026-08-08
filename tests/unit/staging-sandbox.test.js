@@ -27,7 +27,7 @@ function config(overrides = {}) {
       CANDIDATE_BRANCH: branch,
       SANDBOX_BASE_URL: 'https://hau-usc-logistics-staging.example.workers.dev',
       SANDBOX_RESET_ALLOWED: true,
-      ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '["owner.test@example.invalid"]',
+      ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT: 1,
       ...vars,
     },
     d1_databases: [
@@ -125,7 +125,7 @@ describe('permanent staging sandbox guards', () => {
       'CANDIDATE_SHA_HEAD_MISMATCH',
     );
     expect(
-      validate(config({ vars: { ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '[]' } })).issues,
+      validate(config({ vars: { ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT: 0 } })).issues,
     ).toContain('STAGING_EMAIL_ALLOWLIST_INVALID');
   });
 

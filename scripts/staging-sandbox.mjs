@@ -21,6 +21,7 @@ import {
   sandboxSeedSummary,
 } from './staging-sandbox-lifecycle.mjs';
 import { parseAccountApplicationStagingIdentityFixture } from '../src/server/account-application/adapters.js';
+import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TABLES = Object.freeze([
@@ -93,11 +94,16 @@ async function privateSecretPackage(packagePath) {
   const fixture = parseAccountApplicationStagingIdentityFixture(
     source?.secrets?.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
   );
+  const allowlist = parseExactRecipientAllowlist(
+    source?.secrets?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
+  );
   if (
     source?.environment !== 'STAGING' ||
     typeof pepper !== 'string' ||
     pepper.length < 16 ||
-    fixture.length !== 1
+    fixture.length !== 1 ||
+    allowlist?.length !== 1 ||
+    allowlist[0] !== fixture[0].institutionalEmail
   ) {
     throw new Error('Private staging secret package is incomplete or mismatched.');
   }

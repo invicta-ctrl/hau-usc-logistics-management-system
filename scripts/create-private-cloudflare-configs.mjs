@@ -3,9 +3,23 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STAGING_SANDBOX_TARGET } from './staging-sandbox-lib.mjs';
+import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
+const PRIVATE_STAGING_VAR_NAMES = new Set([
+  'ACCOUNT_APPLICATION_EMAIL_FROM',
+  'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON',
+  'GOOGLE_ROSTER_SPREADSHEET_ID',
+  'GOOGLE_ROSTER_RANGE',
+  'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
+]);
+
+function publicStagingVars(source) {
+  return Object.fromEntries(
+    Object.entries(source.vars ?? {}).filter(([name]) => !PRIVATE_STAGING_VAR_NAMES.has(name)),
+  );
+}
 
 export function decodeJsonBuffer(buffer) {
   if (buffer[0] === 0xff && buffer[1] === 0xfe) return buffer.subarray(2).toString('utf16le');
@@ -57,7 +71,7 @@ function baseConfig(
     ],
     triggers: { crons: ['*/5 * * * *'] },
     vars: {
-      ...(environment === 'STAGING' ? source.vars : {}),
+      ...(environment === 'STAGING' ? publicStagingVars(source) : {}),
       ENVIRONMENT: environment,
       APP_VERSION: '0.7.2',
       SCHEMA_VERSION: '1.0.0',
@@ -68,26 +82,22 @@ function baseConfig(
         environment === 'STAGING'
           ? (source.vars?.RECOVERY_HOSTNAME ?? '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>')
           : '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
-      GOOGLE_ROSTER_SPREADSHEET_ID:
-        environment === 'STAGING'
-          ? (source.vars?.GOOGLE_ROSTER_SPREADSHEET_ID ?? '<REPLACE_PRIVATELY>')
-          : '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_RANGE:
-        environment === 'STAGING'
-          ? (source.vars?.GOOGLE_ROSTER_RANGE ?? '<REPLACE_PRIVATELY>')
-          : '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL:
-        environment === 'STAGING'
-          ? (source.vars?.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL ?? '<REPLACE_PRIVATELY>')
-          : '<REPLACE_PRIVATELY>',
+      ...(environment === 'PRODUCTION'
+        ? {
+            GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
+            GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
+            GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
+          }
+        : {}),
       ...(environment === 'STAGING'
         ? {
             SANDBOX_RESET_ALLOWED: source.vars?.SANDBOX_RESET_ALLOWED === true,
             SANDBOX_BASE_URL:
               source.vars?.SANDBOX_BASE_URL ?? '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
-            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
-              source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON ??
-              '<REPLACE_PRIVATELY_EXACT_RECIPIENT_ARRAY>',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT:
+              parseExactRecipientAllowlist(
+                source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
+              )?.length ?? 0,
           }
         : {}),
     },

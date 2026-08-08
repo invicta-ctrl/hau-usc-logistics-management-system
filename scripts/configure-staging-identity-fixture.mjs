@@ -32,6 +32,8 @@ export function buildPrivateStagingIdentityPackage(config, secretPackage) {
   if (secretPackage?.schemaVersion !== 1 || secretPackage?.environment !== 'STAGING') {
     throw new Error('Private secret package must target STAGING.');
   }
+  const sender = String(config?.vars?.ACCOUNT_APPLICATION_EMAIL_FROM ?? '').trim();
+  if (!sender) throw new Error('Private staging email sender is missing.');
   const fixture = [
     {
       institutionalEmail: allowlist[0],
@@ -49,6 +51,8 @@ export function buildPrivateStagingIdentityPackage(config, secretPackage) {
     ...secretPackage,
     secrets: {
       ...secretPackage.secrets,
+      ACCOUNT_APPLICATION_EMAIL_FROM: sender,
+      ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: JSON.stringify(allowlist),
       [ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET]: JSON.stringify(fixture),
     },
   };

@@ -241,6 +241,10 @@ describe('v0.7 environment and observability foundation', () => {
       ],
     });
     expect(pair.staging.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
+    expect(pair.staging.vars.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON).toBeUndefined();
+    expect(pair.staging.vars.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT).toBe(0);
+    expect(pair.staging.vars.GOOGLE_ROSTER_SPREADSHEET_ID).toBeUndefined();
+    expect(pair.staging.vars.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL).toBeUndefined();
     expect(pair.production.vars.RECOVERY_HOSTNAME).toBe('<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>');
     expect(pair.staging.d1_databases[0].database_id).not.toBe(pair.production.d1_databases[0].database_id);
   });
@@ -278,6 +282,7 @@ describe('v0.7 environment and observability foundation', () => {
       {
         vars: {
           ENVIRONMENT: 'STAGING',
+          ACCOUNT_APPLICATION_EMAIL_FROM: 'Staging Sender <sender@example.test>',
           ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
             '["owner.fixture@example.test"]',
         },
