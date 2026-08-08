@@ -1513,8 +1513,24 @@ export function createD1OperationalService({
     // lending, release, restocking, and overview bootstraps — the exact fields
     // the deny exists to withhold. `capabilityDenies` is a live mechanism in
     // both deployed environments, so this is reachable configuration, not theory.
+    // Resolved lazily: the public request-only path has no authenticated
+    // account, and the original `requestOnly || !accountAuthorization(...)`
+    // short-circuited before ever calling it. Hoisting it unconditionally made
+    // the public bootstrap throw a 500.
+    const moduleCapabilities = requestOnly ? [] : accountAuthorization(account).capabilities;
     const protectCatalogAvailability =
-      requestOnly || !accountAuthorization(account).capabilities.includes(CAPABILITIES.VIEW_INVENTORY);
+      requestOnly || !moduleCapabilities.includes(CAPABILITIES.VIEW_INVENTORY);
+    // Storage location is withheld from the public contract AND from any actor
+    // without internal access. Keying it on `protectCatalogAvailability` would
+    // also withhold it from an internal actor holding a `view.inventory` deny,
+    // whose LOCATION lens is resolved by matching this very field; keying it on
+    // `requestOnly` alone disclosed every active item's physical location to an
+    // authenticated REQUESTER, who holds neither `view.inventory` nor
+    // `view.internal`. `view.internal` is the line that actually separates the
+    // two, and it stops the same DTO from blanking the coarse `stockArea` while
+    // emitting the finer-grained storage location.
+    const hideStorageLocation =
+      requestOnly || !moduleCapabilities.includes(CAPABILITIES.VIEW_INTERNAL);
     if (module === 'request') {
       const eventScope = requestOnly
         ? { sql: '1 = 1', values: [] }
@@ -1554,12 +1570,9 @@ export function createD1OperationalService({
         // VIEW_REQUEST, which includes requester-only accounts. Availability is
         // internal stock data, so it is redacted by capability rather than by
         // `requestOnly`. Staff holding VIEW_INVENTORY are unaffected.
-        // Storage location is withheld for the public/requester contract only.
-        // Keying it on `protectCatalogAvailability` instead would also withhold
-        // it from an internal actor holding a `view.inventory` deny, and
-        // `filterOperationalData` resolves a LOCATION scope by matching that
-        // field — which blanked this module's entire result set.
-        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, requestOnly)),
+        inventoryItems: itemRows.map((row) =>
+          itemDto(row, protectCatalogAvailability, hideStorageLocation),
+        ),
       };
       // RV-01.2: the authenticated Request module independently projects the
       // canonical review queue. It must not depend on Overview loading first.
@@ -1864,7 +1877,7 @@ export function createD1OperationalService({
         scope.values,
       );
       data = {
-        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
         lendingTickets: tickets.map((row) => ({
           id: row.id,
           itemId: row.item_id,
@@ -2005,7 +2018,7 @@ export function createD1OperationalService({
             venue: row.venue,
             status: row.status,
           })),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
           lendingTickets: lendingRows.map((row) => ({
@@ -2037,7 +2050,7 @@ export function createD1OperationalService({
         });
         const restockLimitIndex = restockScope.values.length + 1;
         data = {
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           restockRequests: await rows(
             db,
             `SELECT restock.* FROM restock_requests restock WHERE ${restockScope.sql}
@@ -2158,7 +2171,7 @@ export function createD1OperationalService({
           events: eventRows.map(eventActivityDto),
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -2175,7 +2188,7 @@ export function createD1OperationalService({
           events: [],
           requests: requestRows.map(requestDto),
           requestLines: requestLines.map(lineDto),
-          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, false)),
+          inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, hideStorageLocation)),
           lendingTickets: [],
           restockRequests: [],
           deliverables: [],
@@ -2189,9 +2202,17 @@ export function createD1OperationalService({
       }
     }
     // The Request module narrows LOCATION/EVENT/EVENT_SERIES inside `queueWhere`,
-    // which drives the page rows, the child lines, and the COUNT(*) behind
-    // `total`/`hasMore` alike. Re-filtering those here against a paginated item
-    // or event page is what made the metadata disagree with the rows.
+    // which drives both the page rows and the COUNT(*) behind `total`/`hasMore`.
+    // Re-filtering those here against a *paginated* item or event page is what
+    // made the metadata disagree with the rows.
+    //
+    // `requestLines` is exempted deliberately rather than narrowed: a reviewer
+    // must see every line of a visible request, because `reviewRequest` requires
+    // a decision for each reviewable line and refuses the whole submission with
+    // LINE_DECISIONS_INCOMPLETE otherwise. Narrowing lines to the selected lens
+    // would leave a parent visible but unreviewable. The lens still governs
+    // which parents appear; the lines shown are the children of parents the
+    // caller is already authorized to see, and carry no requester identity.
     data = filterOperationalData(data, operationalContext.selected, {
       sqlScoped: module === 'request' ? ['requests', 'requestLines'] : [],
     });
