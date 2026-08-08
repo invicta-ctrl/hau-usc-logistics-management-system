@@ -16,6 +16,13 @@
   padding: var(--s-3) clamp(16px, 4vw, 40px);
   border-bottom: 1px solid var(--line);
   background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+.public__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
 }
 
 .public__brand {

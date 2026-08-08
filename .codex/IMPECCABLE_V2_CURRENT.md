@@ -10,7 +10,8 @@ PROGRAM
   Not a v0.7.2 amendment; the active spec §3.3 defers the v0.8.0 redesign.
 
 STATUS
-  CHECKPOINT_1_COMPLETE — v1 baseline frozen, v2 duplicated, continuity written.
+  CHECKPOINT_2_COMPLETE — v2 visual system, motion system, and animated theme
+  toggle are in place and verified. Surface-level application is next.
 
 DESIGN BRANCH
   design/impeccable-whole-site-preview
@@ -38,8 +39,8 @@ V2 OUTPUT PATH
   output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v2.html
 
 CURRENT DESIGN SLICE
-  Slice B — v2 design system: bolder light/dark palettes, elevation and type
-  scale, motion tokens, animated sun/moon theme toggle.
+  Slice C — apply the v2 system across every surface family: public portals,
+  role overviews, operational queues and detail, administration, and mobile.
 
 COMPLETED
   - Phase 0: v1 generated preview backed up byte-identically.
@@ -47,14 +48,23 @@ COMPLETED
     to write the v2 output filename).
   - Phase 0: v1 modular source and v1 generated preview verified unchanged.
   - Phase 1: continuity records written.
+  - Slice A: boldness critique recorded at
+    docs/design/IMPECCABLE_V2_BOLDNESS_CRITIQUE.md.
+  - Slice B: v2 token layer (real surface ladder in both themes, raised type
+    scale, radius variety, three-step elevation), motion system
+    (styles/motion.css), and the animated sun/moon theme toggle with local
+    persistence, first-run system default, truthful aria-pressed, and
+    reduced-motion support.
 
 IN PROGRESS
   (nothing — checkpoint boundary)
 
 NEXT ACTION
-  Run the Impeccable boldness critique against the v1 baseline and record
-  docs/design/IMPECCABLE_V2_BOLDNESS_CRITIQUE.md, then build the v2 token,
-  motion and theme-toggle foundation in the v2 source.
+  Apply v2 composition surface by surface, starting with the public portal
+  family and the operational queue/detail pattern. Then write
+  IMPECCABLE_V2_DESIGN_DIRECTION.md, IMPECCABLE_V2_MOTION_SYSTEM.md,
+  IMPECCABLE_V2_SURFACE_MATRIX.md, IMPECCABLE_V2_DECISIONS.md, and the
+  v1-vs-v2 comparison review, then capture v2 screenshots.
 
 OPEN DESIGN FINDINGS
   Owner: v1 is structurally strong but visually too bland (~4/10 energy).
@@ -65,7 +75,17 @@ VERIFICATION STATE
   v1 (unchanged, still valid): Impeccable detector 0; 53 surface/state combos ×
   6 widths = 0 findings; contrast 0 failures both themes; 200% zoom 0 overflow;
   reduced motion honoured; 0 external requests; focus restored to trigger.
-  v2: not yet verified — v2 currently equals v1 output plus the export rename.
+  v2 (at checkpoint 2): Impeccable detector 0 after fixing three real findings
+  (a 4px side-stripe AI tell on the attention band, and two layout-thrashing
+  transitions on height/width, now transform-driven); 53 surface/state combos ×
+  6 widths = 0 findings; contrast 0 failures in both themes; 200% zoom 0
+  overflow; reduced motion honoured; focus restored to trigger; 0 non-file:
+  network requests; 0 console errors.
+
+  Harness note: both verify.mjs and contrast.mjs now freeze transitions and
+  animations before sampling. v2 animates theme changes and surface entry, and
+  reading computed geometry or colour mid-animation produced phantom failures
+  (interpolated colours reporting fg ~= bg).
 
 RELEASE-BRANCH DRIFT NOTE
   release/v0.7.2-production-access-operations has moved independently during

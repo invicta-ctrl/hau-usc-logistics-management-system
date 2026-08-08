@@ -65,6 +65,17 @@ for (const width of WIDTHS) {
 
   await page.goto(pathToFileURL(previewPath).href);
 
+  /* v2 has staged entrance motion. Mid-animation, transformed elements report
+     offset geometry and interpolated colours, which produces phantom overflow
+     and contrast readings. Freeze motion so measurements and screenshots are
+     deterministic. Reduced-motion behaviour is asserted separately below. */
+  await page.addStyleTag({
+    content: `*, *::before, *::after {
+      transition: none !important;
+      animation: none !important;
+    }`,
+  });
+
   const findings = await page.evaluate(() => {
     const ids = [...document.querySelectorAll('#surface-picker option')]
       .map((o) => o.value)

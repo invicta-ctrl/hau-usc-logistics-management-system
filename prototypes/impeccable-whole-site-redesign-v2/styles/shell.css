@@ -135,9 +135,31 @@
   max-height: calc(100vh - var(--preview-bar-h, 0px));
   min-height: 0;
   overflow: hidden;
-  background: linear-gradient(168deg, var(--ox-800), var(--ox-900));
-  border-right: 1px solid color-mix(in srgb, var(--gold-300) 26%, transparent);
-  color: var(--cream);
+  /* v2: rail sits between ground and working surface in both themes, so
+     content advances and navigation recedes. */
+  background: linear-gradient(168deg, var(--rail-from), var(--rail-to));
+  border-right: 1px solid var(--rail-line);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.06);
+  color: var(--rail-ink);
+}
+
+/* A single gold hairline down the rail edge — a compositional device, not
+   decoration: it marks where navigation ends and work begins. */
+.rail::after {
+  position: absolute;
+  top: 12%;
+  right: -1px;
+  bottom: 12%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 30%,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 70%,
+    transparent
+  );
+  content: "";
+  pointer-events: none;
 }
 
 .rail__brand {
@@ -175,7 +197,7 @@
 }
 
 .rail__kicker {
-  color: var(--gold-300);
+  color: var(--gold-400);
   font-size: var(--t-2xs);
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -345,10 +367,11 @@
   grid-template-columns: 36px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--s-3);
-  min-height: 60px;
+  min-height: 62px;
   padding: 10px clamp(14px, 2.4vw, 28px);
   border-bottom: 1px solid var(--line);
   background: var(--paper);
+  box-shadow: var(--elev-1);
 }
 
 .icon-button {

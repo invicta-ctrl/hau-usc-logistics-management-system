@@ -22,6 +22,7 @@ const STYLES = [
   'styles/shell.css',
   'styles/components.css',
   'styles/surfaces.css',
+  'styles/motion.css',
   'styles/responsive.css',
 ];
 

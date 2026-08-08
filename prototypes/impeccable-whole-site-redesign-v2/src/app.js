@@ -2,16 +2,44 @@
    All interaction is local. No network request is made from this preview. */
 
 import { icon, spriteMarkup } from './icons.js';
-import { esc, chip } from './components.js';
+import { esc, chip, themeToggle } from './components.js';
 import { GROUPS, NAV, NAV_ADMIN, SURFACES, TABS, byId } from './registry.js';
+import { setPublicTheme } from './surfaces/public.js';
 import { ROLE_VIEWS, SCOPES, WORKSPACES, NOTIFICATIONS } from './data/mock.js';
 
 const root = document.getElementById('app');
 
+/* Theme persistence. A file:// preview can have an opaque origin, so every
+   storage access is guarded and persistence degrades to session-only. */
+const THEME_KEY = 'hau-usc-v2-theme';
+const store = {
+  get(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {
+      /* persistence is optional in an opaque-origin preview */
+    }
+  },
+};
+
+/* Stored preference wins. System preference is only the first-run default. */
+function initialTheme() {
+  const stored = store.get(THEME_KEY);
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 const state = {
   surface: 'index',
   variant: 'populated',
-  theme: 'light',
+  theme: initialTheme(),
   viewport: 'desktop',
   role: 'ADMINISTRATOR',
   workspace: 'administrator',
@@ -85,6 +113,24 @@ function closeOverlay() {
   const target = selector ? document.querySelector(selector) : null;
   // Fall back to the main region so focus is never dropped on the body.
   (target ?? document.getElementById('surface-main'))?.focus();
+}
+
+/* ---------------- Theme ----------------
+   Sun in light, moon in dark. Both glyphs are always in the DOM; CSS rotates
+   and crossfades between them so the press transforms the icon rather than
+   swapping it. The accessible name describes the ACTION; aria-pressed reports
+   whether dark is active, so the state stays truthful. */
+
+/* Colour-only transition, applied for one frame budget so the theme change
+   reads as deliberate rather than as a flash. Layout never animates. */
+let themeAnimTimer;
+function setTheme(next) {
+  state.theme = next;
+  store.set(THEME_KEY, next);
+  document.body.classList.add('theme-anim');
+  render();
+  clearTimeout(themeAnimTimer);
+  themeAnimTimer = setTimeout(() => document.body.classList.remove('theme-anim'), 400);
 }
 
 /* ---------------- Toast ---------------- */
@@ -260,6 +306,7 @@ function topbar() {
       <kbd>Ctrl K</kbd>
     </label>
     <div class="topbar__actions">
+      ${themeToggle(state.theme === 'dark')}
       <button class="icon-button notif" type="button" data-act="open-notifications"
         aria-label="Notifications, 3 unread">
         ${icon('bell')}<span class="notif__count" aria-hidden="true">3</span>
@@ -387,6 +434,7 @@ function render() {
   if (state.surface === 'index') {
     body = `<div class="frame" data-viewport="${state.viewport}">${indexPage()}</div>`;
   } else if (surface.kind === 'public') {
+    setPublicTheme(state.theme === 'dark');
     body = `<div class="frame" data-viewport="${state.viewport}">${surface.render({
       state: state.variant,
     })}</div>`;
@@ -397,7 +445,9 @@ function render() {
         <section class="workspace">
           ${topbar()}
           <main class="main" id="surface-main" tabindex="-1">
-            <div class="main__inner">${surface.render({ state: state.variant })}</div>
+            <div class="main__inner stage" key="${esc(state.surface)}-${esc(state.variant)}">
+              ${surface.render({ state: state.variant })}
+            </div>
           </main>
         </section>
         ${tabbar()}
@@ -455,10 +505,8 @@ document.addEventListener('click', (event) => {
     state.viewport = el.dataset.v;
     return render();
   }
-  if (act === 'theme') {
-    state.theme = el.dataset.v;
-    return render();
-  }
+  if (act === 'theme') return setTheme(el.dataset.v);
+  if (act === 'toggle-theme') return setTheme(state.theme === 'dark' ? 'light' : 'dark');
   if (act === 'toggle-rail') {
     state.drawer = state.drawer === 'open' ? 'closed' : 'open';
     state.rail = state.rail === 'expanded' ? 'collapsed' : 'expanded';

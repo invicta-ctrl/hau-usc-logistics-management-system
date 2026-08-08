@@ -12,22 +12,35 @@ import {
   notice,
   receipt,
   stepper,
+  themeToggle,
   timeline,
 } from '../components.js';
 
 const marks = `<span class="public__marks"><span class="public__mark">HAU</span><span class="public__mark">USC</span></span>`;
 
-export function publicShell(inner, { wide = false, back = true } = {}) {
+/* Public surfaces are plain render functions with no context argument, so the
+   shell reads the current theme from here. app.js sets it before each render.
+   Only the toggle's accessible name and pressed state depend on it — the icon
+   itself is switched by CSS from [data-theme]. */
+let publicDark = false;
+export function setPublicTheme(dark) {
+  publicDark = !!dark;
+}
+
+export function publicShell(inner, { wide = false, back = true, dark = publicDark } = {}) {
   return `<div class="public">
     <header class="public__bar">
       <div class="public__brand">${marks}
         <span class="public__wordmark"><b>HAU-USC Logistics</b><span>Department of Logistics</span></span>
       </div>
-      ${
-        back
-          ? `<a class="btn btn--sm" href="#/public.landing">${icon('home', 'icon--sm')}Portals</a>`
-          : ''
-      }
+      <div class="public__bar-actions">
+        ${themeToggle(dark)}
+        ${
+          back
+            ? `<a class="btn btn--sm" href="#/public.landing">${icon('home', 'icon--sm')}Portals</a>`
+            : ''
+        }
+      </div>
     </header>
     <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${inner}</main>
     <footer class="public__foot">

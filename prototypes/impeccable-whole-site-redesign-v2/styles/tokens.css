@@ -1,66 +1,94 @@
-/* Institutional Operations Editorial — token layer.
-   Identity ramp preserved verbatim from the v0.7.2 reference.
-   See DESIGN.md and docs/design/IMPECCABLE_REFERENCE_ANALYSIS.md §6. */
+/* v2 — Kinetic Institutional Operations · token layer.
+
+   The v1 defect this file fixes: --canvas and --paper were 1.5% apart in
+   relative luminance, so nothing on a page had a figure/ground relationship
+   and every surface read at one level. v2 opens a real surface ladder in both
+   themes, raises the type scale, restores radius variety, and adds a
+   documented motion system.
+
+   Identity ramp is preserved from the v0.7.2 reference. */
 
 :root {
   color-scheme: light;
 
   /* ---- Identity ramp (preserved) ---- */
-  --ox-900: #4b080b;
+  --ox-900: #40070a;
   --ox-800: #610b0f;
   --ox-700: #78141a;
   --ox-600: #8d1f28;
   --ox-500: #a62835;
 
-  --gold-700: #8a5f1d;
-  --gold-600: #b88632;
-  --gold-500: #d2ad62;
-  --gold-400: #f2d15c;
-  --gold-300: #efdda3;
+  --gold-700: #7d5518;
+  --gold-600: #a8761f;
+  --gold-500: #c8992f;
+  --gold-400: #e8b93c;
+  --gold-300: #f2d15c;
+  --gold-200: #f6e29a;
+  --gold-100: #faeecb;
 
+  /* ---- Surface ladder: ground < surface < raised < overlay ---- */
+  --canvas: #e9e0d0; /* page ground — sunken, warm sand */
+  --paper: #fffdf8; /* working surface */
+  --paper-2: #f7f0e2; /* inset / secondary */
+  --paper-3: #ffffff; /* elevated overlay */
   --cream: #f6ecda;
-  --canvas: #f4efe6;
-  --paper: #fffdf8;
-  --paper-2: #fbf5e9;
 
-  --ink: #291b1d;
-  --ink-2: #59464a;
-  /* The reference's #7c696d measures 4.47:1 on paper — just under the 4.5 AA
-     floor for normal text. Darkened to clear it with margin. */
-  --muted: #786369;
-  --line: #ddd2c1;
-  --line-strong: #c6b7a0;
+  --ink: #241416;
+  --ink-2: #4e3a3e;
+  /* Must clear 4.5:1 against the *ground* (#e9e0d0), not just paper — v2's
+     ground is deliberately darker than v1's, which pushed the v1 value to
+     4.23:1. Measured 4.82:1 on ground, 6.0:1 on paper. */
+  --muted: #6f5a60;
+  --line: #d8cbb6;
+  --line-strong: #bda98c;
+  --line-hair: #e6dcc9;
   --white: #ffffff;
 
-  /* ---- Status tones: exactly five ---- */
-  --tone-neutral-fg: #635155;
-  --tone-neutral-bg: #efe8db;
-  --tone-neutral-line: #d4c8b6;
+  /* Compositional anchors — brand colour is a layout device in v2,
+     not just a button fill. */
+  --anchor: var(--ox-800);
+  --anchor-soft: color-mix(in srgb, var(--ox-800) 8%, var(--paper));
+  --anchor-line: color-mix(in srgb, var(--ox-800) 24%, var(--line));
+  --accent: var(--gold-400);
+  --accent-wash: color-mix(in srgb, var(--gold-300) 26%, var(--paper));
+  --accent-line: color-mix(in srgb, var(--gold-500) 46%, var(--line));
 
-  --tone-info-fg: #2c639f;
-  --tone-info-bg: #eaf2fb;
-  --tone-info-line: #bfd4eb;
+  /* ---- Status tones: still exactly five ---- */
+  --tone-neutral-fg: #5d4a4f;
+  --tone-neutral-bg: #ece3d3;
+  --tone-neutral-line: #cdbfa7;
 
-  --tone-progress-fg: #8a5f1d;
-  --tone-progress-bg: #fdf3df;
-  --tone-progress-line: #e3cb99;
+  --tone-info-fg: #23557f;
+  --tone-info-bg: #e4eefa;
+  --tone-info-line: #b0cbe6;
 
-  --tone-done-fg: #2f7c50;
-  --tone-done-bg: #eaf6ef;
-  --tone-done-line: #b9dcc7;
+  --tone-progress-fg: #7d5518;
+  --tone-progress-bg: #fbeed2;
+  --tone-progress-line: #dcbe8a;
 
-  --tone-alert-fg: #a8323a;
-  --tone-alert-bg: #fbecee;
-  --tone-alert-line: #e9bdc1;
+  --tone-done-fg: #1f6b41;
+  --tone-done-bg: #e2f3e9;
+  --tone-done-line: #a8d3ba;
 
-  /* ---- Icon language (preserved single-ink rule) ---- */
+  --tone-alert-fg: #9c2630;
+  --tone-alert-bg: #fbe6e8;
+  --tone-alert-line: #e3aeb3;
+
+  /* ---- Icon language (single brand ink preserved) ---- */
   --icon-ink: var(--ox-800);
-  --icon-ink-muted: color-mix(in srgb, var(--ox-800) 68%, var(--muted));
-  --icon-surface: color-mix(in srgb, var(--gold-300) 34%, var(--paper));
-  --icon-surface-strong: color-mix(in srgb, var(--gold-300) 56%, var(--paper));
-  --icon-border: color-mix(in srgb, var(--gold-500) 38%, var(--line));
+  --icon-ink-muted: color-mix(in srgb, var(--ox-800) 66%, var(--muted));
+  --icon-surface: color-mix(in srgb, var(--gold-200) 42%, var(--paper));
+  --icon-surface-strong: color-mix(in srgb, var(--gold-200) 68%, var(--paper));
+  --icon-border: color-mix(in srgb, var(--gold-500) 40%, var(--line));
 
-  /* ---- Type ---- */
+  /* ---- Rail ---- */
+  --rail-from: #6b0e13;
+  --rail-to: #3d070a;
+  --rail-ink: #f7ecd9;
+  --rail-ink-dim: #d9bfae;
+  --rail-line: rgba(242, 209, 92, 0.22);
+
+  /* ---- Type: raised so sections assert ---- */
   --font-body: "Aptos", "Segoe UI Variable", "Segoe UI", "Candara",
     "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
   --font-display: Georgia, "Times New Roman", serif;
@@ -70,11 +98,12 @@
   --t-xs: 11px;
   --t-sm: 13px;
   --t-md: 15px;
-  --t-lg: 17px;
-  --t-xl: 26px;
-  --t-2xl: 32px;
-  --t-display: clamp(30px, 3.2vw, 44px);
+  --t-lg: 20px; /* v1: 17 — section headings now assert */
+  --t-xl: 30px;
+  --t-2xl: 44px; /* v1: 32 — attention values carry the page */
+  --t-display: clamp(34px, 3.6vw, 54px);
   --tracking-body: -0.01em;
+  --tracking-tight: -0.022em;
   --tracking-label: 0.1em;
 
   /* ---- Space ---- */
@@ -86,80 +115,124 @@
   --s-6: 24px;
   --s-8: 32px;
   --s-10: 40px;
+  --s-12: 56px;
 
-  /* ---- Radius: 20px retired ---- */
-  --r-sm: 8px;
-  --r-md: 12px;
+  /* ---- Radius: variety restored, still no consumer-soft 20px on wide panels ---- */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
   --r-pill: 999px;
 
-  /* ---- Elevation: two levels only ---- */
-  --elev-raised: 0 16px 40px rgba(45, 24, 27, 0.18);
-  --elev-raised-strong: 0 22px 56px rgba(45, 24, 27, 0.26);
+  /* ---- Elevation ladder ---- */
+  --elev-1: 0 1px 2px rgba(64, 30, 34, 0.05), 0 2px 8px rgba(64, 30, 34, 0.05);
+  --elev-2: 0 2px 6px rgba(64, 30, 34, 0.07), 0 10px 26px rgba(64, 30, 34, 0.08);
+  --elev-3: 0 8px 20px rgba(64, 30, 34, 0.12), 0 28px 60px rgba(64, 30, 34, 0.16);
+  --elev-inset: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 
   /* ---- Motion ---- */
-  --dur-state: 140ms;
-  --dur-move: 240ms;
+  --m-instant: 120ms;
+  --m-small: 200ms;
+  --m-surface: 280ms;
+  --m-overlay: 320ms;
+  --m-reveal: 400ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* Compatibility aliases for rules carried over from v1. An undefined custom
+     property makes the whole declaration invalid, so these must exist. */
+  --dur-state: var(--m-instant);
+  --dur-move: var(--m-surface);
+  --elev-raised: var(--elev-2);
+  --elev-raised-strong: var(--elev-3);
 
   /* ---- Layout ---- */
-  --rail-w: 264px;
+  --rail-w: 272px;
   --rail-w-collapsed: 76px;
   --content-max: 1520px;
   --focus-ring: 3px solid var(--gold-400);
 }
 
+/* ============================================================
+   Dark — designed, not inverted.
+   v1 defect fixed here: the rail was LIGHTER than the content ground, so
+   navigation advanced and content receded. v2 orders luminance
+   ground < rail < surface, so content sits above its ground.
+   ============================================================ */
+
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ox-900: #6f171d;
+  --ox-900: #4a1015;
   --ox-800: #8e3038;
-  --ox-700: #a03c45;
-  --ox-600: #a94b54;
-  --ox-500: #b53f4b;
+  --ox-700: #a5424b;
+  --ox-600: #b8535d;
+  --ox-500: #c4626c;
 
-  --gold-700: #d4aa61;
-  --gold-600: #d4aa61;
-  --gold-500: #e2c17b;
-  --gold-400: #f2d86f;
-  --gold-300: #e7d49e;
+  --gold-700: #c9a45f;
+  --gold-600: #d9b56d;
+  --gold-500: #e3c37f;
+  --gold-400: #eed08a;
+  --gold-300: #f2dca6;
+  --gold-200: #f6e7c4;
+  --gold-100: #faf1de;
 
-  --cream: #eadfce;
-  --canvas: #151012;
-  --paper: #21181a;
-  --paper-2: #271c1f;
+  --canvas: #100b0c; /* deepest ground */
+  --paper: #1f1719; /* working surface — above the rail */
+  --paper-2: #281d20; /* raised */
+  --paper-3: #312428; /* overlay */
+  --cream: #e9dcc8;
 
-  --ink: #f5eee7;
-  --ink-2: #ddcfd1;
-  --muted: #b7a5a8;
-  --line: #49393d;
-  --line-strong: #6d5359;
+  --ink: #f7efe6;
+  --ink-2: #ddcbcd;
+  --muted: #b3a0a4;
+  --line: #3d2e31;
+  --line-strong: #5b4449;
+  --line-hair: #2c2124;
+  --white: #ffffff;
 
-  --tone-neutral-fg: #c3b2b5;
-  --tone-neutral-bg: rgba(255, 255, 255, 0.06);
-  --tone-neutral-line: rgba(255, 255, 255, 0.16);
+  --anchor: var(--ox-700);
+  --anchor-soft: color-mix(in srgb, var(--ox-700) 22%, var(--paper));
+  --anchor-line: color-mix(in srgb, var(--ox-600) 42%, var(--line));
+  --accent: var(--gold-400);
+  --accent-wash: rgba(238, 208, 138, 0.12);
+  --accent-line: rgba(238, 208, 138, 0.32);
 
-  --tone-info-fg: #9cc2ee;
-  --tone-info-bg: rgba(65, 111, 164, 0.22);
-  --tone-info-line: rgba(156, 194, 238, 0.36);
+  --tone-neutral-fg: #cbb9bc;
+  --tone-neutral-bg: rgba(255, 255, 255, 0.07);
+  --tone-neutral-line: rgba(255, 255, 255, 0.18);
 
-  --tone-progress-fg: #e6c485;
-  --tone-progress-bg: rgba(147, 97, 22, 0.24);
-  --tone-progress-line: rgba(230, 196, 133, 0.36);
+  --tone-info-fg: #a8cbf0;
+  --tone-info-bg: rgba(58, 104, 158, 0.26);
+  --tone-info-line: rgba(168, 203, 240, 0.38);
 
-  --tone-done-fg: #8fd0a8;
-  --tone-done-bg: rgba(54, 121, 80, 0.24);
-  --tone-done-line: rgba(143, 208, 168, 0.34);
+  --tone-progress-fg: #eecb92;
+  --tone-progress-bg: rgba(150, 103, 30, 0.28);
+  --tone-progress-line: rgba(238, 203, 146, 0.38);
 
-  --tone-alert-fg: #f2a3a9;
-  --tone-alert-bg: rgba(180, 61, 67, 0.24);
-  --tone-alert-line: rgba(242, 163, 169, 0.34);
+  --tone-done-fg: #9ad9b2;
+  --tone-done-bg: rgba(45, 112, 72, 0.28);
+  --tone-done-line: rgba(154, 217, 178, 0.36);
+
+  --tone-alert-fg: #f6acb2;
+  --tone-alert-bg: rgba(166, 52, 60, 0.30);
+  --tone-alert-line: rgba(246, 172, 178, 0.36);
 
   --icon-ink: var(--gold-300);
-  --icon-ink-muted: color-mix(in srgb, var(--gold-300) 68%, var(--muted));
-  --icon-surface: rgba(231, 212, 158, 0.1);
-  --icon-surface-strong: rgba(231, 212, 158, 0.18);
-  --icon-border: rgba(226, 193, 123, 0.26);
+  --icon-ink-muted: color-mix(in srgb, var(--gold-300) 62%, var(--muted));
+  --icon-surface: rgba(242, 220, 166, 0.10);
+  --icon-surface-strong: rgba(242, 220, 166, 0.18);
+  --icon-border: rgba(227, 195, 127, 0.26);
 
-  --elev-raised: 0 16px 40px rgba(0, 0, 0, 0.5);
-  --elev-raised-strong: 0 22px 56px rgba(0, 0, 0, 0.62);
+  /* Rail sits between ground and surface. */
+  --rail-from: #2c1013;
+  --rail-to: #180a0c;
+  --rail-ink: #f4e6d2;
+  --rail-ink-dim: #c4a9ad;
+  --rail-line: rgba(242, 220, 166, 0.16);
+
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.32);
+  --elev-2: 0 2px 6px rgba(0, 0, 0, 0.46), 0 10px 26px rgba(0, 0, 0, 0.44);
+  --elev-3: 0 8px 20px rgba(0, 0, 0, 0.54), 0 28px 60px rgba(0, 0, 0, 0.6);
+  --elev-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }

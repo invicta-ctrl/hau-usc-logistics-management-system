@@ -20,8 +20,8 @@
   font-family: var(--font-display);
   font-size: var(--t-display);
   font-weight: 400;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
+  line-height: 1;
+  letter-spacing: var(--tracking-tight);
   text-wrap: balance;
 }
 
@@ -183,24 +183,34 @@
 
 /* ---------- Attention band ---------- */
 
+/* The attention band is the page's visual anchor in v2. In v1 it was a flat
+   strip that read at the same level as the table beneath it. */
 .attention {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: var(--s-5);
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   background: var(--paper);
+  box-shadow: var(--elev-2);
   overflow: hidden;
 }
+
+/* No side stripe. A thick coloured bar down one edge of a card is a stock
+   AI-UI tell; the band already reads as the page anchor through elevation,
+   the display-serif numerals, and the alert-toned urgent cell. */
 
 .attention__item {
   display: grid;
   align-content: start;
-  gap: 3px;
-  padding: var(--s-4);
-  border-left: 1px solid var(--line);
+  gap: 4px;
+  padding: var(--s-5) var(--s-5) var(--s-4);
+  border-left: 1px solid var(--line-hair);
   text-align: left;
-  transition: background var(--dur-state) var(--ease);
+  transition:
+    background-color var(--m-instant) var(--ease),
+    box-shadow var(--m-small) var(--ease);
 }
 
 .attention__item:first-child {
@@ -208,11 +218,8 @@
 }
 
 .attention__item:hover {
-  background: var(--cream);
-}
-
-[data-theme="dark"] .attention__item:hover {
-  background: var(--paper-2);
+  background: var(--accent-wash);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 .attention__label {
@@ -221,16 +228,31 @@
   gap: 6px;
   color: var(--muted);
   font-size: var(--t-xs);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .attention__value {
+  font-family: var(--font-display);
   font-size: var(--t-2xl);
-  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1;
 }
 
-.attention__item[data-urgent="true"] .attention__value {
+/* Urgency reads as urgent — but the note text still carries the meaning, so
+   this is reinforcement, never colour-only. */
+.attention__item[data-urgent="true"] {
+  background: var(--tone-alert-bg);
+}
+
+.attention__item[data-urgent="true"] .attention__value,
+.attention__item[data-urgent="true"] .attention__label {
   color: var(--tone-alert-fg);
+}
+
+.attention__item[data-urgent="true"]:hover {
+  box-shadow: inset 0 -3px 0 var(--tone-alert-fg);
 }
 
 .attention__note {
@@ -258,18 +280,33 @@
   margin-top: var(--s-8);
 }
 
+/* Editorial section rule: a short oxblood anchor followed by a hairline.
+   Replaces v1's uniform full-width hairline, which made every section equal. */
 .section__head {
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--s-4);
-  padding-bottom: var(--s-2);
-  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--line-hair);
+}
+
+.section__head::after {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 56px;
+  height: 2px;
+  background: var(--anchor);
+  content: "";
 }
 
 .section__head h2 {
+  font-family: var(--font-display);
   font-size: var(--t-lg);
-  font-weight: 700;
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
 }
 
 .section__head h3 {
@@ -287,10 +324,13 @@
   text-transform: uppercase;
 }
 
+/* Panels are a raised working surface over the sunken ground — v1 made them
+   flat, which is why nothing had depth. */
 .panel {
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--paper);
+  box-shadow: var(--elev-1);
 }
 
 .panel__body {
@@ -299,10 +339,54 @@
 
 /* ---------- Queue table ---------- */
 
+/* A queue is a working surface, not bare text on the page ground. */
 .table-wrap {
   width: 100%;
   min-width: 0;
   overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+/* Nested inside an existing surface it must not double up. */
+.panel .table-wrap,
+.detail__body .table-wrap {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+table.q caption {
+  padding: var(--s-3) var(--s-4) var(--s-2);
+}
+
+table.q thead th:first-child,
+table.q tbody th:first-child,
+table.q tbody td:first-child {
+  padding-left: var(--s-4);
+}
+
+table.q thead th:last-child,
+table.q tbody td:last-child {
+  padding-right: var(--s-4);
+}
+
+table.q tbody tr:last-child th,
+table.q tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.panel table.q caption,
+.detail__body table.q caption {
+  padding-inline: 0;
+}
+
+.panel table.q :is(th, td):first-child,
+.detail__body table.q :is(th, td):first-child {
+  padding-left: 10px;
 }
 
 table.q {
@@ -360,14 +444,16 @@ table.q tbody tr:hover {
   background: var(--paper-2);
 }
 
+/* The selected row grows an oxblood spine that visually connects it to the
+   detail pane beside it. */
 table.q tbody tr[aria-selected="true"] {
-  background: color-mix(in srgb, var(--gold-300) 30%, var(--paper));
-  box-shadow: inset 3px 0 0 var(--ox-800);
+  background: var(--accent-wash);
+  box-shadow: inset 4px 0 0 var(--anchor);
 }
 
 [data-theme="dark"] table.q tbody tr[aria-selected="true"] {
-  background: rgba(231, 212, 158, 0.12);
-  box-shadow: inset 3px 0 0 var(--gold-300);
+  background: var(--accent-wash);
+  box-shadow: inset 4px 0 0 var(--gold-400);
 }
 
 .q__link {
@@ -421,8 +507,10 @@ table.q tbody tr[aria-selected="true"] {
      min-content width, which pushes the pane past the viewport. */
   min-width: 0;
   border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-lg);
   background: var(--paper);
+  /* The detail pane is the active working surface — it sits above the queue. */
+  box-shadow: var(--elev-2);
 }
 
 .detail__body > * {
@@ -894,8 +982,10 @@ legend {
 
 .meter > span {
   display: block;
+  width: 100%;
   height: 100%;
   background: var(--ox-600);
+  transform-origin: left center;
 }
 
 .meter[data-tone="done"] > span {

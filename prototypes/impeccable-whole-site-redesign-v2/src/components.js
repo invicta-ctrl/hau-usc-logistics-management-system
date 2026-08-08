@@ -13,6 +13,23 @@ export const esc = (value) =>
 let uid = 0;
 export const nextId = (prefix = 'x') => `${prefix}-${++uid}`;
 
+/* ---------- Theme toggle ----------
+   Sun in light, moon in dark. Both glyphs stay in the DOM; motion.css rotates
+   and crossfades between them so pressing transforms the icon rather than
+   swapping it. The accessible name describes the ACTION; aria-pressed reports
+   whether dark is active, so the announced state stays truthful. */
+
+export function themeToggle(dark) {
+  return `<button class="icon-button theme-toggle" type="button" data-act="toggle-theme"
+    aria-pressed="${!!dark}"
+    aria-label="${dark ? 'Switch to light mode' : 'Switch to dark mode'}">
+    <span class="theme-toggle__icons">
+      ${icon('sun', 'theme-toggle__sun')}
+      ${icon('moon', 'theme-toggle__moon')}
+    </span>
+  </button>`;
+}
+
 /* ---------- Status chip: colour never travels alone ---------- */
 
 export function chip(status) {
@@ -114,9 +131,10 @@ export function qty(value, unit) {
 export function meter(done, total, toneName = 'progress') {
   if (!total) return `<span class="muted">Not assessed</span>`;
   const pct = Math.round((done / total) * 100);
+  // scaleX rather than width so progress animates without layout thrash.
   return `<span class="qty"><b>${done}</b><span>of ${total}</span></span>
     <span class="meter" data-tone="${toneName}" role="img"
-      aria-label="${pct}% complete"><span style="width:${pct}%"></span></span>`;
+      aria-label="${pct}% complete"><span style="transform:scaleX(${pct / 100})"></span></span>`;
 }
 
 /* ---------- Facts ---------- */

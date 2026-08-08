@@ -18,6 +18,17 @@ const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await ctx.newPage();
 await page.goto(pathToFileURL(previewPath).href);
 
+/* v2 animates the theme change. getComputedStyle() mid-transition returns
+   interpolated colours, which makes every reading during a theme switch
+   meaningless (it reports fg ~= bg). Freeze all transitions and animations
+   before sampling so the measurement is deterministic. */
+await page.addStyleTag({
+  content: `*, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }`,
+});
+
 const findings = await page.evaluate(() => {
   const srgb = (c) => {
     const v = c / 255;
