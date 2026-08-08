@@ -2962,6 +2962,15 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   baseURL,
 }) => {
   const csrfToken = await login(request, 'LOCAL.DIRECTOR');
+  const inventoryBeforeSubmission = await request.get('/api/inventory?pageSize=50');
+  expect(inventoryBeforeSubmission.status()).toBe(200);
+  const inventoryBeforeSubmissionData = (await inventoryBeforeSubmission.json()).data;
+  const itemBeforeSubmission = inventoryBeforeSubmissionData.inventoryItems.find(
+    (item) => item.id === 'ITM-LOCAL-001',
+  );
+  const itemLedgerCountBeforeSubmission = inventoryBeforeSubmissionData.ledgerTransactions.filter(
+    (entry) => entry.itemId === 'ITM-LOCAL-001',
+  ).length;
   const splitGroupId = 'SPLIT-LOCAL-E2E';
   const submitCommand = {
     clientRequestId: 'local-e2e-request-submit',
@@ -2994,6 +3003,19 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   const submitted = await mutate(request, csrfToken, 'submitRequest', submitCommand);
   expect(submitted.status()).toBe(200);
   const requestId = (await submitted.json()).requestId;
+  const inventoryAfterSubmission = await request.get('/api/inventory?pageSize=50');
+  expect(inventoryAfterSubmission.status()).toBe(200);
+  const inventoryAfterSubmissionData = (await inventoryAfterSubmission.json()).data;
+  expect(
+    inventoryAfterSubmissionData.inventoryItems.find((item) => item.id === 'ITM-LOCAL-001'),
+  ).toMatchObject({
+    onHand: itemBeforeSubmission.onHand,
+    reserved: itemBeforeSubmission.reserved,
+    availableToPromise: itemBeforeSubmission.availableToPromise,
+  });
+  expect(
+    inventoryAfterSubmissionData.ledgerTransactions.filter((entry) => entry.itemId === 'ITM-LOCAL-001'),
+  ).toHaveLength(itemLedgerCountBeforeSubmission);
 
   // RV-01.2: the authenticated Request module independently projects the
   // canonical review queue, so the reviewer reads the lines from it directly
@@ -3002,9 +3024,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   expect(requestModule.status()).toBe(200);
   const requestModuleData = await requestModule.json();
   expect(requestModuleData.data.requests.some((row) => row.id === requestId)).toBe(true);
-  const reviewableLines = requestModuleData.data.requestLines.filter(
-    (line) => line.requestId === requestId,
-  );
+  const reviewableLines = requestModuleData.data.requestLines.filter((line) => line.requestId === requestId);
   expect(reviewableLines).toHaveLength(2);
   // RV-01.5: Request owns its pagination total. On a single page the total is
   // exactly the number of visible requests, not the Inventory catalog count.
@@ -3018,9 +3038,7 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
     expect(requestModuleData.pagination.total).toBe(requestModuleData.data.requests.length);
   } else {
     // The queue clamps its page, so on a full page the total must exceed it.
-    expect(requestModuleData.pagination.total).toBeGreaterThan(
-      requestModuleData.data.requests.length,
-    );
+    expect(requestModuleData.pagination.total).toBeGreaterThan(requestModuleData.data.requests.length);
     expect(requestModuleData.data.requests.length).toBe(requestModuleData.pagination.pageSize);
   }
 
@@ -3090,6 +3108,19 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   const reserveReplay = await mutate(request, csrfToken, 'reserveStock', reserveCommand);
   expect(reserveReplay.status()).toBe(200);
   expect((await reserveReplay.json()).reservationId).toBe((await reserved.json()).reservationId);
+  const inventoryAfterReservation = await request.get('/api/inventory?pageSize=50');
+  expect(inventoryAfterReservation.status()).toBe(200);
+  const inventoryAfterReservationData = (await inventoryAfterReservation.json()).data;
+  expect(
+    inventoryAfterReservationData.inventoryItems.find((item) => item.id === 'ITM-LOCAL-001'),
+  ).toMatchObject({
+    onHand: itemBeforeSubmission.onHand,
+    reserved: itemBeforeSubmission.reserved + 2,
+    availableToPromise: itemBeforeSubmission.availableToPromise - 2,
+  });
+  expect(
+    inventoryAfterReservationData.ledgerTransactions.filter((entry) => entry.itemId === 'ITM-LOCAL-001'),
+  ).toHaveLength(itemLedgerCountBeforeSubmission);
 
   const evidenceBytes = new Uint8Array([
     0x89,
@@ -3338,6 +3369,11 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
   );
   await owner.dispose();
 
+  const inventoryBeforeLending = await request.get('/api/inventory?pageSize=50');
+  expect(inventoryBeforeLending.status()).toBe(200);
+  const itemBeforeLending = (await inventoryBeforeLending.json()).data.inventoryItems.find(
+    (item) => item.id === 'ITM-LOCAL-001',
+  );
   const lending = await mutate(request, csrfToken, 'createLendingTicket', {
     clientRequestId: 'local-e2e-lending-create',
     borrowerReference: '12345678',
@@ -3390,6 +3426,19 @@ test('D1 request split, allocation, release, correction, and lending lifecycle p
     clientRequestId: 'local-e2e-lending-return-duplicate',
   });
   expect(duplicateReturn.status()).toBe(409);
+  const inventoryAfterLending = await request.get('/api/inventory?pageSize=50');
+  expect(inventoryAfterLending.status()).toBe(200);
+  const inventoryAfterLendingData = (await inventoryAfterLending.json()).data;
+  expect(inventoryAfterLendingData.inventoryItems.find((item) => item.id === 'ITM-LOCAL-001')).toMatchObject({
+    onHand: itemBeforeLending.onHand,
+    reserved: itemBeforeLending.reserved,
+    availableToPromise: itemBeforeLending.availableToPromise,
+  });
+  const lendingLedger = inventoryAfterLendingData.ledgerTransactions.filter(
+    (entry) => entry.relatedId === ticketId,
+  );
+  expect(lendingLedger.filter((entry) => entry.type === 'LOAN_OUT')).toHaveLength(1);
+  expect(lendingLedger.filter((entry) => entry.type === 'LOAN_RETURN')).toHaveLength(1);
 });
 
 test('committee-scoped canvass, procurement, and cumulative receiving execute in D1', async ({

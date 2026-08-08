@@ -1,25 +1,25 @@
 # Current Bounded Task
 
-INTENT: OWNER_DECISION
-SECONDARY INTENTS: ARCHITECTURE, PLANNING
-MODE: PLAN
-OBJECTIVE: Hold the stable v0.7.2 runtime and completed no-op v0.7.3 evidence steady until Earl accepts the first bounded v0.8.0 Inventory Truth and Ledger Lock specification.
-TARGET: canonical main after protected v0.7.3 no-op closeout
-SKILLS: none for the owner-decision hold; select and record the smallest applicable workflow when a v0.8.0 specification is adopted
+INTENT: TESTING
+SECONDARY INTENTS: ARCHITECTURE, REPOSITORY_MAINTENANCE, OWNER_APPROVED_SPECIFICATION_RECORDING
+MODE: EXECUTE
+OBJECTIVE: Map the exact schema-30 Inventory truth contract, prove INV-01 through INV-10 with existing and minimal focused tests, record defects without runtime repair, and decide whether a migration is required for Slice 2.
+TARGET: release/v0.8.0-inventory-truth-ledger-lock from canonical main 88bfdf026e716ffdc779cb2ce7534978f36df0f3
+SKILLS: lean-ctx for targeted reads, searches, and compressed command output; no visual, deployment, provider, or artifact skill applies
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
-AUTHORITY: Earl's next v0.8.0 objective; completed v0.7.3 rollout-stabilization specification; AGENTS.md; canonical continuity chain
-REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
+ACCEPTED_SPEC: .codex/specs/active/v0.8.0-inventory-truth-ledger-lock-slice-1.md
+AUTHORITY: Earl's directly submitted Slice 1 prompt; live Git and AGENTS.md; canonical current chain; accepted Slice 1 specification; schema/runtime/direct-callers/tests only as needed
+REQUIRED_MODEL: CODEX; stop rather than make an unauthorized ledger, migration, privacy, recovery, or runtime-behavior decision
 ACTIVE_WRITER: NONE
-GIT_UPSTREAM: Resolve from canonical main during the next handshake
-RISK: HIGH - Inventory truth, ledger invariants, migration, recovery, and production boundaries require a separately accepted specification
-DELIVERABLE: One accepted, bounded v0.8.0 implementation specification before any writer lock, implementation, migration, or environment mutation
-SCOPE: Read-only handshake, owner intake, targeted discovery, specification adoption, risk/model routing, and writer-lock claim after acceptance
-OUT_OF_SCOPE: Any v0.8.0 implementation, migration, schema or ledger change, production/staging mutation, tag/release, repair of the cosmetic staging brand-asset gap, or deletion of preserved resources/evidence
-VERIFICATION: Confirm canonical main/upstream/worktree, ACTIVE_WRITER NONE, immutable production v0.7.2, isolated staging boundaries, and an accepted bounded v0.8.0 specification
-STOP_CONDITIONS: Missing/contradictory v0.8.0 scope; unclaimed/competing writer; unknown work; production/staging drift; migration/recovery ambiguity; private-value exposure; any request to implement before specification acceptance
-NEXT_EXACT_ACTION: Ask Earl to approve the first bounded v0.8.0 Inventory Truth and Ledger Lock specification before claiming a writer lock or changing code or an environment.
+GIT_UPSTREAM: GIT_UPSTREAM
+RISK: HIGH - inventory truth, immutable ledger/history, authorization, idempotency, privacy, and migration sufficiency
+DELIVERABLE: Accepted spec; Inventory baseline map; INV-01..INV-10 matrix; minimal green focused tests; defect register; explicit migration decision; one clean commit; preservation push; released writer lock
+SCOPE: Governance/spec recording, targeted mapping, documentation, focused tests/non-semantic test harness repair, migration decision, status/handoff/changelog updates, commit, and branch push
+OUT_OF_SCOPE: Runtime behavior or schema changes; migration; environment/provider/Google writes or calls; deployments; version/tag/release/PR; UI work; unrelated cleanup; Slice 2
+VERIFICATION: Pre/post governance and handoff checks; exact focused tests; changed-test lint/static checks; git diff --check; complete logical diff and secret/PII scan; upstream preservation verification
+STOP_CONDITIONS: Wrong/diverged Git or writer state; runtime/staging contradiction; destructive discovery; P0/P1, auth/privacy/history/data-integrity defect; migration required; runtime repair required; private-data dependency; recovery uncertainty; repeated blocker
+RESULT: COMPLETE - schema-30 baseline and INV-01 through INV-10 mapped; focused tests green; four P2/P3 Slice 2 gaps recorded; MIGRATION_DECISION: NONE_REQUIRED; no runtime behavior or migration changed
+NEXT_EXACT_ACTION: Await Earl's bounded Slice 2 prompt/approval. Do not implement Slice 2 automatically.
 
-V0.7.3_RESULT: NO RUNTIME PATCH REQUIRED. No eligible rollout blocker was confirmed, no runtime code changed, and version 0.7.2 remains authoritative.
-V0.7.3_CLOSEOUT_MERGE_SHA: 8b4ad05c6754b3de627535577d24216023dca8ca
+Starting Gate 0 evidence: repository root verified; `main` and `origin/main` equal `88bfdf026e716ffdc779cb2ce7534978f36df0f3`; ahead/behind `0/0`; worktree clean; writer/blocker clear; pre-edit handoff and governance checks passed. No provider call was performed or authorized.

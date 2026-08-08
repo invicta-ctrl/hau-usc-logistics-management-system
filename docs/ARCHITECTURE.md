@@ -33,6 +33,10 @@ Browser portals and authenticated workspaces
 
 D1 migrations are additive and forward-only. Posted ledger, audit, status, access, account, release, evidence, and other history records are append-only or corrected through linked audited records. Client state never authorizes a server action. Retryable writes require server-enforced idempotency and transactional invariants.
 
+The schema-30 Inventory truth formula, transaction map, invariant coverage, and
+evidence-proven gaps are recorded in
+[INVENTORY_TRUTH_BASELINE.md](INVENTORY_TRUTH_BASELINE.md).
+
 See [SECURITY_AND_ACCESS.md](SECURITY_AND_ACCESS.md), [D1_MIGRATION_AND_ROLLBACK.md](D1_MIGRATION_AND_ROLLBACK.md), [BACKUP_AND_RECOVERY.md](BACKUP_AND_RECOVERY.md), and [STAGING_SANDBOX.md](STAGING_SANDBOX.md).
 
 The superseded Apps Script-era architecture narrative is retained at `docs/archive/legacy/ARCHITECTURE-pre-v0721.md` for historical reference only.
