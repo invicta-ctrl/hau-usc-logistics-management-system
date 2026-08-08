@@ -1,0 +1,165 @@
+/* Institutional Operations Editorial — token layer.
+   Identity ramp preserved verbatim from the v0.7.2 reference.
+   See DESIGN.md and docs/design/IMPECCABLE_REFERENCE_ANALYSIS.md §6. */
+
+:root {
+  color-scheme: light;
+
+  /* ---- Identity ramp (preserved) ---- */
+  --ox-900: #4b080b;
+  --ox-800: #610b0f;
+  --ox-700: #78141a;
+  --ox-600: #8d1f28;
+  --ox-500: #a62835;
+
+  --gold-700: #8a5f1d;
+  --gold-600: #b88632;
+  --gold-500: #d2ad62;
+  --gold-400: #f2d15c;
+  --gold-300: #efdda3;
+
+  --cream: #f6ecda;
+  --canvas: #f4efe6;
+  --paper: #fffdf8;
+  --paper-2: #fbf5e9;
+
+  --ink: #291b1d;
+  --ink-2: #59464a;
+  /* The reference's #7c696d measures 4.47:1 on paper — just under the 4.5 AA
+     floor for normal text. Darkened to clear it with margin. */
+  --muted: #786369;
+  --line: #ddd2c1;
+  --line-strong: #c6b7a0;
+  --white: #ffffff;
+
+  /* ---- Status tones: exactly five ---- */
+  --tone-neutral-fg: #635155;
+  --tone-neutral-bg: #efe8db;
+  --tone-neutral-line: #d4c8b6;
+
+  --tone-info-fg: #2c639f;
+  --tone-info-bg: #eaf2fb;
+  --tone-info-line: #bfd4eb;
+
+  --tone-progress-fg: #8a5f1d;
+  --tone-progress-bg: #fdf3df;
+  --tone-progress-line: #e3cb99;
+
+  --tone-done-fg: #2f7c50;
+  --tone-done-bg: #eaf6ef;
+  --tone-done-line: #b9dcc7;
+
+  --tone-alert-fg: #a8323a;
+  --tone-alert-bg: #fbecee;
+  --tone-alert-line: #e9bdc1;
+
+  /* ---- Icon language (preserved single-ink rule) ---- */
+  --icon-ink: var(--ox-800);
+  --icon-ink-muted: color-mix(in srgb, var(--ox-800) 68%, var(--muted));
+  --icon-surface: color-mix(in srgb, var(--gold-300) 34%, var(--paper));
+  --icon-surface-strong: color-mix(in srgb, var(--gold-300) 56%, var(--paper));
+  --icon-border: color-mix(in srgb, var(--gold-500) 38%, var(--line));
+
+  /* ---- Type ---- */
+  --font-body: "Aptos", "Segoe UI Variable", "Segoe UI", "Candara",
+    "Trebuchet MS", ui-sans-serif, system-ui, sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+
+  --t-2xs: 10px;
+  --t-xs: 11px;
+  --t-sm: 13px;
+  --t-md: 15px;
+  --t-lg: 17px;
+  --t-xl: 26px;
+  --t-2xl: 32px;
+  --t-display: clamp(30px, 3.2vw, 44px);
+  --tracking-body: -0.01em;
+  --tracking-label: 0.1em;
+
+  /* ---- Space ---- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+
+  /* ---- Radius: 20px retired ---- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-pill: 999px;
+
+  /* ---- Elevation: two levels only ---- */
+  --elev-raised: 0 16px 40px rgba(45, 24, 27, 0.18);
+  --elev-raised-strong: 0 22px 56px rgba(45, 24, 27, 0.26);
+
+  /* ---- Motion ---- */
+  --dur-state: 140ms;
+  --dur-move: 240ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- Layout ---- */
+  --rail-w: 264px;
+  --rail-w-collapsed: 76px;
+  --content-max: 1520px;
+  --focus-ring: 3px solid var(--gold-400);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ox-900: #6f171d;
+  --ox-800: #8e3038;
+  --ox-700: #a03c45;
+  --ox-600: #a94b54;
+  --ox-500: #b53f4b;
+
+  --gold-700: #d4aa61;
+  --gold-600: #d4aa61;
+  --gold-500: #e2c17b;
+  --gold-400: #f2d86f;
+  --gold-300: #e7d49e;
+
+  --cream: #eadfce;
+  --canvas: #151012;
+  --paper: #21181a;
+  --paper-2: #271c1f;
+
+  --ink: #f5eee7;
+  --ink-2: #ddcfd1;
+  --muted: #b7a5a8;
+  --line: #49393d;
+  --line-strong: #6d5359;
+
+  --tone-neutral-fg: #c3b2b5;
+  --tone-neutral-bg: rgba(255, 255, 255, 0.06);
+  --tone-neutral-line: rgba(255, 255, 255, 0.16);
+
+  --tone-info-fg: #9cc2ee;
+  --tone-info-bg: rgba(65, 111, 164, 0.22);
+  --tone-info-line: rgba(156, 194, 238, 0.36);
+
+  --tone-progress-fg: #e6c485;
+  --tone-progress-bg: rgba(147, 97, 22, 0.24);
+  --tone-progress-line: rgba(230, 196, 133, 0.36);
+
+  --tone-done-fg: #8fd0a8;
+  --tone-done-bg: rgba(54, 121, 80, 0.24);
+  --tone-done-line: rgba(143, 208, 168, 0.34);
+
+  --tone-alert-fg: #f2a3a9;
+  --tone-alert-bg: rgba(180, 61, 67, 0.24);
+  --tone-alert-line: rgba(242, 163, 169, 0.34);
+
+  --icon-ink: var(--gold-300);
+  --icon-ink-muted: color-mix(in srgb, var(--gold-300) 68%, var(--muted));
+  --icon-surface: rgba(231, 212, 158, 0.1);
+  --icon-surface-strong: rgba(231, 212, 158, 0.18);
+  --icon-border: rgba(226, 193, 123, 0.26);
+
+  --elev-raised: 0 16px 40px rgba(0, 0, 0, 0.5);
+  --elev-raised-strong: 0 22px 56px rgba(0, 0, 0, 0.62);
+}
