@@ -1,5 +1,20 @@
 # Work Continuation
 
+> **CURRENT AS OF 2026-08-08.** The resume block below predates this date and
+> names superseded SHAs and test counts. The authoritative continuation is
+> [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](../.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md),
+> with a copy/paste starting point in
+> [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](../.codex/V0_7_2_CODEX_RESUME_PROMPT.md).
+>
+> Summary: v0.7.2 is **INCOMPLETE**. HEAD is
+> `6d371e826c8dd921ad53699ad06b6ba9aa1c218b` on
+> `release/v0.7.2-production-access-operations`, working tree clean, PR #15 open
+> and unmerged. Staging and production are both still 0.7.1 / schema 29 and
+> migration 0030 is applied nowhere. Gates at HEAD: `npm run check` 117 files /
+> 810 tests, Worker/D1 56 passed, browser 138 passed at `--workers=2`. No SHA
+> currently holds a valid review PASS. One open **P1**: `reserveStock` became
+> once-per-line in `4c423a6`.
+
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.

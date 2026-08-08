@@ -1,5 +1,24 @@
 # Current Codex Work Pointer
 
+> **CURRENT AS OF 2026-08-08 — read this block first.**
+>
+> Everything below this block predates 2026-08-08 and refers to superseded SHAs.
+> Live Git and provider truth override it.
+>
+> - Release: **v0.7.2 — INCOMPLETE.** Nothing is deployed; migration 0030 is
+>   applied nowhere; staging and production are both still 0.7.1 / schema 29.
+> - Branch: `release/v0.7.2-production-access-operations`
+> - HEAD: `6d371e826c8dd921ad53699ad06b6ba9aa1c218b` (working tree clean)
+> - PR #15: OPEN, DRAFT, not merged.
+> - Latest SHA with a valid review PASS: **NONE.**
+> - Blocker: one open **P1** — `reserveStock` became once-per-line in `4c423a6`,
+>   so a procurement line advanced to `READY_TO_RELEASE` can never be reserved
+>   or released, and a partial reservation cannot be topped up.
+> - **Authoritative continuation:**
+>   [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](V0_7_2_CODEX_CONTINUATION_HANDOFF.md)
+> - **Resume prompt:**
+>   [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](V0_7_2_CODEX_RESUME_PROMPT.md)
+
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
