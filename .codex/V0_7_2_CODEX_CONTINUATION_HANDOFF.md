@@ -5,7 +5,53 @@ source. Nothing important is left only in chat context.
 
 ---
 
-## A. EXECUTIVE STATUS
+## FINAL CLOSEOUT — READ FIRST
+
+```text
+Release:              v0.7.2
+Status:               PRODUCTION COMPLETE AND OPERATIONAL
+Canonical release:    84eacfcdb47a3985fed48e3ba14bb413946d4410
+Tag:                  v0.7.2 (annotated, exact canonical SHA)
+Integration:          PR #15 merged; GitHub Release published
+Staging runtime:      0.7.2 / canonical SHA / schema 30 / migration 0030
+Production runtime:   0.7.2 / canonical SHA / schema 30 / migration 0030
+Readiness:            true in staging and production
+Protected config:     true in staging and production
+Blocking issue:       NONE
+Next work unit:       v0.7.2.1 repository normalization / staging sandbox
+```
+
+The owner-authorized rollout completed on 2026-08-08. The protected source
+confirmed 37 ACTIVE + VERIFIED Working Email entries and only `gmail.com` at
+the aggregate domain level. The private identity class is configured in both
+environments, but remains only a coarse first-stage filter: exact protected
+fingerprint match, VERIFIED state, decrypted reconciliation, and normalized
+email equality remain mandatory. No local-part convention grants membership,
+role, department, committee, or access.
+
+Staging acceptance proved real Resend delivery, one-time code redemption,
+replay denial, random non-roster Gmail denial, synthetic application withdrawal,
+and temporary-owner disablement. Production was backed up before mutation,
+migrated through 0030, deployed from the canonical release SHA, reconciled,
+and accepted through public, protected-denial, authenticated-module, readiness,
+and browser-runtime smoke. The production recovery exports were restored in
+isolation before and after migration with integrity `ok` and zero foreign-key
+violations; the direct-SQLite fallback was used because remote D1 rejected
+`PRAGMA integrity_check` with `SQLITE_AUTH`.
+
+Permanent staging was then rebaselined to the exact production release while
+retaining isolated Worker, D1, R2, provider, and configuration resources.
+Private credentials, provider identifiers, configuration values, protected
+addresses, and backup hashes remain outside Git.
+
+The remaining sections are retained as the pre-launch execution history. They
+are not an active resume sequence. New work must start from synchronized
+`main`, adopt a bounded v0.7.2.1 normalization/staging-sandbox authority, and
+must not retag or move the immutable v0.7.2 release.
+
+---
+
+## A. HISTORICAL PRE-LAUNCH EXECUTIVE STATUS
 
 ```text
 Release:              v0.7.2
@@ -88,31 +134,31 @@ task/v072-reference-link-server
 
 ## D. COMPLETED WORK — DO NOT REDO
 
-| Area | State |
-|---|---|
-| Administrator central review (`REQUEST_REVIEW`) | DONE + VERIFIED |
-| Self-approval guard (`SELF_REVIEW_FORBIDDEN`) | DONE + VERIFIED (behavioral) |
-| Request visibility / queue projection | DONE + VERIFIED |
-| Shipped reviewer UI (`src/visual/runtime.js`) | DONE + VERIFIED |
-| Per-line routing, one downstream owner | DONE + VERIFIED |
-| Reject-stranding probe (owner tables) | DONE + VERIFIED |
-| Scope-in-SQL for queue rows + `COUNT(*)` | DONE + VERIFIED |
-| Event/series bounds, conjunctive + fail-closed | DONE + VERIFIED (unit matrix) |
-| Location bound on `reserveStock` (both branches) | DONE + REVIEWED |
-| Availability + storage-location redaction | DONE + VERIFIED |
-| `RESERVABLE_PARENT_STATUSES` vocabulary fix | DONE + VERIFIED (behavioral) |
-| `COMPLETED` derivation excl. REJECTED/CANCELLED | DONE + VERIFIED (behavioral) |
-| Resend adapter + registry + Worker wiring | DONE + REVIEWED |
-| Readiness fail-closed via provider registry | DONE + VERIFIED |
-| Migration 0030 `provider_message_ref` column | DONE (unapplied anywhere) |
-| Guarded deploy path + artifact preflight | DONE + VERIFIED |
-| Staging Resend secret installed | DONE (see I) |
-| Staging access-code TXT | DONE (see K) |
-| Identity classes config | **NOT STARTED — blocked, see N-2** |
-| Staging deploy / acceptance | NOT STARTED |
-| PR merge / tag / Release | NOT STARTED |
-| Production backup / migration / deploy | NOT STARTED |
-| Staging rebaseline / canaries | NOT STARTED |
+| Area                                             | State                              |
+| ------------------------------------------------ | ---------------------------------- |
+| Administrator central review (`REQUEST_REVIEW`)  | DONE + VERIFIED                    |
+| Self-approval guard (`SELF_REVIEW_FORBIDDEN`)    | DONE + VERIFIED (behavioral)       |
+| Request visibility / queue projection            | DONE + VERIFIED                    |
+| Shipped reviewer UI (`src/visual/runtime.js`)    | DONE + VERIFIED                    |
+| Per-line routing, one downstream owner           | DONE + VERIFIED                    |
+| Reject-stranding probe (owner tables)            | DONE + VERIFIED                    |
+| Scope-in-SQL for queue rows + `COUNT(*)`         | DONE + VERIFIED                    |
+| Event/series bounds, conjunctive + fail-closed   | DONE + VERIFIED (unit matrix)      |
+| Location bound on `reserveStock` (both branches) | DONE + REVIEWED                    |
+| Availability + storage-location redaction        | DONE + VERIFIED                    |
+| `RESERVABLE_PARENT_STATUSES` vocabulary fix      | DONE + VERIFIED (behavioral)       |
+| `COMPLETED` derivation excl. REJECTED/CANCELLED  | DONE + VERIFIED (behavioral)       |
+| Resend adapter + registry + Worker wiring        | DONE + REVIEWED                    |
+| Readiness fail-closed via provider registry      | DONE + VERIFIED                    |
+| Migration 0030 `provider_message_ref` column     | DONE (unapplied anywhere)          |
+| Guarded deploy path + artifact preflight         | DONE + VERIFIED                    |
+| Staging Resend secret installed                  | DONE (see I)                       |
+| Staging access-code TXT                          | DONE (see K)                       |
+| Identity classes config                          | **NOT STARTED — blocked, see N-2** |
+| Staging deploy / acceptance                      | NOT STARTED                        |
+| PR merge / tag / Release                         | NOT STARTED                        |
+| Production backup / migration / deploy           | NOT STARTED                        |
+| Staging rebaseline / canaries                    | NOT STARTED                        |
 
 ---
 
@@ -129,20 +175,20 @@ Next input:    Owner-supplied coarse identity domain class for private config.
 
 ## F. REVIEW / AUDIT LEDGER
 
-| Round | SHA | Focus | Result | Findings |
-|---|---|---|---|---|
-| 1 | `8945631` | Security/authz | FAIL | 2×P1 (event/location bounds), 3×P2, 3×P3 |
-| 1 | `8945631` | Transactions | FAIL | 1×P1 (`PARTIALLY_FULFILLED`), 3×P2, 5×P3 |
-| 2 | `8501f0e` | Transactions | FAIL | 1×P1 (bounds became disjunctive — regression) |
-| 3 | `07af508` | Security/authz | PASS | 0 P0/P1; 10 P2/P3 |
-| 4 | `4c423a6` | Security/authz | FAIL | 1×P1 (storage location → requester) |
-| 4 | `4c423a6` | Transactions | FAIL | 1×P1 (reserveStock once-per-line; later fixed) |
-| 5 | `5ef9421` | Security/authz | FAIL | 2×P1 (wrong-item reservation; public retry token binding) |
-| 5 | `5ef9421` | Transactions | FAIL | 1×P1 (wrong-item reservation/ATP stranding) |
-| 6 | `4ed88ae` | Security/authz | PASS | 0 P0/P1; prior security findings closed |
-| 6 | `4ed88ae` | Transactions | FAIL | 1×P1 (consumed reservations overcounted) |
-| 7 | `6deed1a` | Security/authz | PASS | 0 P0/P1; nonblocking P2 register below |
-| 7 | `6deed1a` | Transactions | PASS | 0 P0/P1; nonblocking P2 register below |
+| Round | SHA       | Focus          | Result | Findings                                                  |
+| ----- | --------- | -------------- | ------ | --------------------------------------------------------- |
+| 1     | `8945631` | Security/authz | FAIL   | 2×P1 (event/location bounds), 3×P2, 3×P3                  |
+| 1     | `8945631` | Transactions   | FAIL   | 1×P1 (`PARTIALLY_FULFILLED`), 3×P2, 5×P3                  |
+| 2     | `8501f0e` | Transactions   | FAIL   | 1×P1 (bounds became disjunctive — regression)             |
+| 3     | `07af508` | Security/authz | PASS   | 0 P0/P1; 10 P2/P3                                         |
+| 4     | `4c423a6` | Security/authz | FAIL   | 1×P1 (storage location → requester)                       |
+| 4     | `4c423a6` | Transactions   | FAIL   | 1×P1 (reserveStock once-per-line; later fixed)            |
+| 5     | `5ef9421` | Security/authz | FAIL   | 2×P1 (wrong-item reservation; public retry token binding) |
+| 5     | `5ef9421` | Transactions   | FAIL   | 1×P1 (wrong-item reservation/ATP stranding)               |
+| 6     | `4ed88ae` | Security/authz | PASS   | 0 P0/P1; prior security findings closed                   |
+| 6     | `4ed88ae` | Transactions   | FAIL   | 1×P1 (consumed reservations overcounted)                  |
+| 7     | `6deed1a` | Security/authz | PASS   | 0 P0/P1; nonblocking P2 register below                    |
+| 7     | `6deed1a` | Transactions   | PASS   | 0 P0/P1; nonblocking P2 register below                    |
 
 ```text
 THE LATEST SHA THAT HAS A VALID REVIEW PASS IS:
@@ -360,7 +406,7 @@ Canaries/rollout:         NOT STARTED
 and consumed coverage are enforced atomically.**
 
 - The guarded predicate accepts reachable reserve/release states and evaluates
-  requested minus released minus *unconsumed* ACTIVE reservation coverage
+  requested minus released minus _unconsumed_ ACTIVE reservation coverage
   before the new reservation INSERT.
 - The authoritative request-line item must match the caller-selected item
   before replay or mutation, preventing wrong-item ATP poisoning.

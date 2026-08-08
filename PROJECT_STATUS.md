@@ -1,5 +1,33 @@
 # Project Status
 
+## v0.7.2 production operational and closed
+
+- PR #15 is merged into canonical `main`; annotated tag `v0.7.2` and the
+  published GitHub Release identify exact SHA
+  `84eacfcdb47a3985fed48e3ba14bb413946d4410`.
+- Permanent staging and production run the same canonical v0.7.2 software on
+  isolated Worker, D1, R2, provider, and private configuration resources. Both
+  report schema 30 / migration 0030, readiness true, and protected
+  configuration true.
+- The approved protected directory reconciles 37 ACTIVE + VERIFIED Working
+  Email entries and only `gmail.com` at the aggregate domain level. Gmail is a
+  coarse filter only; exact protected fingerprint match, VERIFIED state, and
+  decrypted normalized equality remain mandatory.
+- Real staging Resend delivery and one-time redemption passed. Replay and
+  non-roster Gmail paths failed closed, the synthetic application was withdrawn,
+  and the temporary staging owner was disabled.
+- Fresh production recovery state was captured before migration and again after 0030. Both exports restored in isolation with integrity `ok` and zero
+  foreign-key violations; direct SQLite validation was used because remote D1
+  rejected `PRAGMA integrity_check` under `SQLITE_AUTH`.
+- Production public/protected denial, authenticated module, access management,
+  roster, application queue, readiness, and browser-runtime smoke passed with
+  zero console errors. No rollback was required.
+- v0.7.2 has no open release blocker. Next work is a separately adopted
+  v0.7.2.1 repository-normalization and staging-sandbox slice from synchronized
+  `main`; the immutable v0.7.2 tag must not move.
+
+## Historical v0.7.2 pre-production status
+
 ## v0.7.2 RV-01 request-visibility repair complete; exact-SHA review and pre-production blocked
 
 - Owner-approved amendment `v0.7.2-RV-01` is recorded at

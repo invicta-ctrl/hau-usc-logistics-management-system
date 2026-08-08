@@ -1,37 +1,27 @@
 # Work Continuation
 
-> **CURRENT AS OF 2026-08-08.** The resume block below predates this date and
-> names superseded SHAs and test counts. The authoritative continuation is
-> [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](../.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md),
-> with a copy/paste starting point in
-> [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](../.codex/V0_7_2_CODEX_RESUME_PROMPT.md).
->
-> Summary: v0.7.2 has an accepted repository candidate at reviewed
-> implementation SHA `6deed1a31ded616fd54d33719230336d9cd5bf64` on
-> `release/v0.7.2-production-access-operations`. Independent exact-SHA security
-> and transaction reviews PASS with zero unresolved P0/P1, exact-head CI is
-> green, and local gates are 117 files / 811 tests, Worker/D1 58/58, and browser
-> 138 passed / 360 intentional skips at `--workers=2`. PR #15 remains draft and
-> unmerged. Staging and production are still 0.7.1 / schema 29; migration 0030
-> is applied nowhere. The next gate is private identity-class configuration
-> from the owner-supplied coarse domain class; it must not be invented or
-> committed.
+> **CURRENT AS OF 2026-08-08.** v0.7.2 is production complete and operational.
+> Canonical `main`, annotated tag `v0.7.2`, the published GitHub Release,
+> staging, and production identify release SHA
+> `84eacfcdb47a3985fed48e3ba14bb413946d4410`. Both environments are ready on
+> schema 30 / migration 0030 and use isolated resources. The authoritative
+> closeout is
+> [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](../.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md).
 
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
-- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations` / `origin/release/v0.7.2-production-access-operations`; reviewed implementation `6deed1a31ded616fd54d33719230336d9cd5bf64`, clean and synchronized `0/0` at freeze; draft PR #15; exact-head Apps Script static, `verify`, and `browser-smoke` all `SUCCESS`; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
-- **Current phase/stage:** repository candidate accepted at `6deed1a`; independent exact-SHA security and transaction reviews PASS with zero P0/P1, and exact-head CI is green. Pre-production is blocked on private identity-class input/configuration and then the backup/migration/deploy/acceptance sequence.
+- **Branch/HEAD/upstream:** canonical `main` / `origin/main`; immutable release and annotated tag `v0.7.2` identify `84eacfcdb47a3985fed48e3ba14bb413946d4410`; PR #15 is merged and its required checks passed.
+- **Current phase/stage:** v0.7.2 repository, staging, production, migration, backup/recovery, identity reconciliation, provider verification, smoke, tag, release, and staging rebaseline are complete.
 - **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md`, accepted amendment `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`, and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
-- **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
-- **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
-- **Tests verified (reviewed implementation, 2026-08-08):** `npm run check` 117 files / 811 tests; Playwright 138 passed / 360 intentional skips / 0 failed at `--workers=2`; local Worker/D1 58/58. Reservation proof covers procurement release, restock top-up, consume-then-top-up, wrong-item denial with zero ATP effect, and concurrent one-winner/one-safe-409 behavior.
-- **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
-- **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
-- **Blocker:** private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` is absent because the owner-supplied coarse domain class is not available in repository authority; readiness intentionally fails closed. Staging owner login is also not proven.
-- **Next three actions:** obtain or locate the owner-supplied private coarse domain class without recording it in Git; regenerate exact-SHA private Cloudflare configuration; capture a fresh staging backup and execute the guarded migration/deploy/acceptance sequence.
-- **Resume commands:** `git status --short --branch`; `git rev-parse HEAD`; `git fetch origin --prune`; `git rev-list --left-right --count HEAD...@{upstream}`; inspect PR #15; follow the v0.7.2 handoff.
-- **Prohibited actions:** no invented provider/identity values, secret/PII disclosure, fail-open readiness, production-first testing, migration without backup, or production deploy before pre-production acceptance.
+- **Completed work:** protected Working Email identity projection; strict Option A authorization; account application/review/activation; access/profile and operational P0; schema 0030; real staging Resend acceptance; canonical integration/release; production backup, migration, deployment, reconciliation, smoke; and isolated staging rebaseline.
+- **Verified runtime:** staging and production report `0.7.2`, the exact release SHA, schema 30 / migration 0030, readiness true, and protected configuration true. The roster aggregate is 37 ACTIVE + VERIFIED entries with only `gmail.com`; the domain alone never authorizes an account.
+- **Recovery:** pre-migration and post-0030 production exports restore in isolation with integrity `ok` and zero foreign-key violations. Direct SQLite verification was used after remote D1 denied `PRAGMA integrity_check` with `SQLITE_AUTH`; no rollback was required.
+- **External actions:** PR #15 merged; tag and GitHub Release published; staging and production secrets/configuration installed privately; staging and production migrated/deployed/reconciled; production API and browser smoke passed; staging was rebaselined to the canonical release.
+- **Blocker:** none for v0.7.2. Private configuration, credentials, provider identifiers, protected directory values, and recovery material remain outside Git.
+- **Next three actions:** synchronize current `main`; draft and accept a bounded v0.7.2.1 repository-normalization/staging-sandbox specification or amendment; perform only that accepted work on a new short-lived branch with staging isolation preserved.
+- **Resume commands:** `git fetch origin --prune`; `git status --short --branch`; `git rev-list --left-right --count HEAD...@{upstream}`; verify tag `v0.7.2`; read the authoritative closeout before defining v0.7.2.1.
+- **Prohibited actions:** do not move or retag v0.7.2, expose private identity/provider/recovery values, infer authorization from Gmail or local-part naming, mutate production for v0.7.2.1 without a new exact-candidate gate, or begin unaccepted normalization work.
 
 ## Historical v0.7.1 production resume block
 

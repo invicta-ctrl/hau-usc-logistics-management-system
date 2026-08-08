@@ -1,6 +1,19 @@
 # Changelog
 
-## 0.7.2 - Unreleased
+## 0.7.2 - 2026-08-08
+
+### Released
+
+- Merged PR #15 into canonical `main`, published annotated tag and GitHub
+  Release `v0.7.2`, and deployed exact release SHA
+  `84eacfcdb47a3985fed48e3ba14bb413946d4410` to separated staging and
+  production resources.
+- Applied additive migration 0030 after fresh private backup/recovery capture.
+  Both environments report release `0.7.2`, schema 30 / migration 0030,
+  readiness true, and protected configuration true.
+- Reconciled the protected Working Email projection, completed real staging
+  Resend acceptance and negative authorization proof, passed production API and
+  browser smoke, and rebaselined isolated staging to the canonical release.
 
 ### Fixed
 
@@ -66,12 +79,21 @@
 
 ### Verified boundary
 
-- Local verification passes 112 test files / 740 tests, 136 browser tests with
-  356 intentional skips, 39/39 local Worker/D1 tests, deterministic generated
-  parity, and a fresh schema-30 migration integrity rehearsal.
-- Pre-production and production remain blocked by the missing owner-approved
-  email provider and private identity-class configuration. No external v0.7.2
-  release write has occurred.
+- The exact reviewed implementation passed required repository, Worker/D1,
+  browser, generated-artifact, migration-rehearsal, independent-review, and
+  exact-head CI gates before PR integration. No code changed after the canonical
+  merge commit was tagged.
+- Real staging verification proved one successful delivery/redemption, replay
+  denial, and fail-closed non-roster Gmail handling. Production public,
+  protected-denial, authenticated-module, reconciliation, readiness, and
+  browser-runtime smoke passed.
+- Pre-migration and post-0030 production exports restored in isolation with
+  integrity `ok` and zero foreign-key violations. Remote D1 rejected
+  `PRAGMA integrity_check` with `SQLITE_AUTH`; the accepted direct-SQLite
+  recovery verification path passed instead.
+- Private identity configuration, credentials, provider identifiers, protected
+  addresses, and recovery artifacts remain outside Git. The Gmail domain is
+  only a coarse filter and never authorizes USC membership or access.
 
 ## 0.7.1 - 2026-08-03
 

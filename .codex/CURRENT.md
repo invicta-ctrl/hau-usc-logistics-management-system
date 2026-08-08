@@ -2,28 +2,36 @@
 
 > **CURRENT AS OF 2026-08-08 — read this block first.**
 >
-> Everything below this block predates 2026-08-08 and refers to superseded SHAs.
-> Live Git and provider truth override it.
->
-> - Release: **v0.7.2 — REPOSITORY CANDIDATE ACCEPTED; PRIVATE STAGING GATES OPEN.** Nothing is deployed; migration 0030 is
->   applied nowhere; staging and production are both still 0.7.1 / schema 29.
-> - Branch: `release/v0.7.2-production-access-operations`
-> - Reviewed implementation SHA: `6deed1a31ded616fd54d33719230336d9cd5bf64`
->   (clean and upstream `0/0` at freeze; live Git is authoritative for the
->   documentation-only successor).
-> - PR #15: OPEN, DRAFT, not merged.
-> - Latest SHA with a valid review PASS:
->   `6deed1a31ded616fd54d33719230336d9cd5bf64` — security and transaction
->   reviews both PASS with zero unresolved P0/P1; exact-head CI is green.
-> - N-1 is closed. Current blocker: private
->   `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` needs the owner-supplied coarse
->   domain class; do not derive or invent it. Staging owner login is unproven.
-> - **Authoritative continuation:**
+> - Release: **v0.7.2 — PRODUCTION COMPLETE AND OPERATIONAL.**
+> - Canonical release/tag SHA: `84eacfcdb47a3985fed48e3ba14bb413946d4410`
+>   / `v0.7.2`.
+> - Integration: PR #15 merged into `main`; the annotated tag and GitHub
+>   Release are published from the exact merge SHA.
+> - Runtime parity: isolated staging and production run the same canonical
+>   v0.7.2 SHA on schema 30 / migration 0030 with readiness and protected
+>   configuration true.
+> - Identity: the protected directory reconciles 37 ACTIVE + VERIFIED Working
+>   Email entries, with `gmail.com` as the aggregate domain. The domain remains
+>   only a coarse filter; Option A exact fingerprint and decrypted normalized
+>   equality are still mandatory.
+> - Acceptance: real staging Resend delivery and one-time redemption passed;
+>   replay and non-roster Gmail authorization failed closed; the synthetic
+>   application was withdrawn and the temporary staging owner was disabled.
+> - Recovery: production pre-migration and post-0030 exports restored in
+>   isolation with integrity `ok` and zero foreign-key violations. Remote D1
+>   `PRAGMA integrity_check` was unavailable under `SQLITE_AUTH`, so the
+>   accepted direct-SQLite recovery verification path was used.
+> - Production: API, authenticated module, authorization-denial, reconciliation,
+>   readiness, and browser-runtime smoke passed with zero console errors.
+> - Blocker: none for v0.7.2. Private configuration, credentials, provider
+>   details, and recovery material remain outside Git.
+> - **Next accepted work boundary:** prepare a separate v0.7.2.1 repository
+>   normalization and isolated staging-sandbox specification/amendment from
+>   current synchronized `main`; do not begin implementation without adoption.
+> - **Authoritative closeout:**
 >   [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](V0_7_2_CODEX_CONTINUATION_HANDOFF.md)
-> - **Resume prompt:**
->   [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](V0_7_2_CODEX_RESUME_PROMPT.md)
 
-## Active release pointer
+## Historical pre-production pointer (superseded by the block above)
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
 - Status: `REPOSITORY_CANDIDATE_ACCEPTED - PRIVATE_STAGING_INPUT_REQUIRED`.
@@ -54,8 +62,8 @@
 - RV-01 verification at `375ac12`: `npm run check` 114 files / 786 tests,
   exit 0; browser 136 passed / 356 intentional skips / 0 failed; local
   Worker/D1 43/43, including the two-context regression `public request becomes
-  visible to an already-open authorized Main Hub and routes each line exactly
-  once`, Request-owned search/date/archive filtering, the RV-01.3 authorization
+visible to an already-open authorized Main Hub and routes each line exactly
+once`, Request-owned search/date/archive filtering, the RV-01.3 authorization
   matrix, and the partially-routed reject guard.
 - Generated-artifact hazard recorded: the local Worker acceptance suite rebuilds
   `dist/index.html` with `--mode staging`, so `npm run build` must be re-run
