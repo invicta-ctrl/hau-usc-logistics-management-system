@@ -1,24 +1,41 @@
 # Current Environment Handoff
 
-FROM: CODEX
-TO: NEXT_AGENT
-BRANCH: GIT_BRANCH
+FROM: EARL / CANONICAL MAIN
+TO: CODEX
+MILESTONE: v0.7.3 Rollout Stabilization
+OUTCOME: ACTIVE INTAKE
+STARTING_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
+ENDING_SHA: UNCOMMITTED SPECIFICATION ADOPTION FROM STARTING SHA
+BRANCH: fix/v0.7.3-rollout-stabilization
 HEAD: GIT_HEAD
-UPSTREAM: GIT_UPSTREAM
+UPSTREAM: NONE - temporary branch from verified origin/main
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: CODEX
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-product-work-intake.md
-COMPLETED: V0.7.2.1 repository normalization and permanent isolated staging sandbox are complete. PR #17 merged at 6a30ab482a1e9884870fcfb6e88b7c57f879a44c; the maintenance branch and proven stale topology were safely pruned; PR #10 was closed as superseded with its unique branch preserved; production remains v0.7.2; staging acceptance passed at c4fa46f267733eeceb5d82a825431c6337f8e4e0.
-VALIDATION: Final repository gate, exact-head CI verify, browser smoke, CodeQL analysis/policy, governance, handoff, secret/PII scans, staging readiness/schema identity, backup/isolated restore, integrity/FK/invariants, authentication/permission denials, workflow reads, recipient containment, provider delivery, one-time redemption, same-code replay denial, altered-code denial, and fresh Sol review passed with no remaining P0/P1.
-EXTERNAL_ACTIONS: Created only the dedicated isolated staging Worker/D1/R2/config/secrets, seeded and deployed synthetic staging, sent controlled verification messages, merged PR #17, closed superseded PR #10, deleted merged temporary branches, and removed six proven-safe worktrees. Production received no write, deploy, migration, seed, reset, route, secret, identity, or binding change.
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
+COMPLETED: Gate 0 passed and the owner-submitted v0.7.3 rollout-stabilization amendment was adopted on the isolated branch with the CODEX writer lock claimed.
+VALIDATION: Repository/GitHub closeout, live production version/readiness, live staging safe status, governance, and continuity checks are recorded below; focused product acceptance remains pending.
+EXTERNAL_ACTIONS: Read-only GitHub, production runtime, and staging runtime/status checks only; no environment or provider mutation.
+CONFIRMED_DEFECTS: NONE at intake start
+REPRODUCTION_EVIDENCE: NONE at intake start
+REGRESSION_TESTS: NONE at intake start
+FILES_CHANGED: Accepted v0.7.3 specification and the three canonical continuity records only
+MIGRATIONS: NONE; any migration requires a separately approved amendment
+EXTERNAL_WRITES: NONE. Gate 0 used read-only GitHub, production-runtime, and staging-runtime/status checks only.
+FOCUSED_TESTS_AND_RESULTS: Gate 0 repository/GitHub checks passed. Production live version/readiness reported v0.7.2 at 84eacfcdb47a3985fed48e3ba14bb413946d4410, schema 30/0030, ready/protected. Staging safe status reported v0.7.2 at c4fa46f267733eeceb5d82a825431c6337f8e4e0, schema 30/0030, ready/protected, exact resource matches, exact allowlist count one, and synthetic generation 4.
+FINAL_REPOSITORY_GATE: NOT RUN - no code candidate exists
+BROWSER_WORKER_D1_EVIDENCE: Existing v0.7.2.1 evidence remains reusable only where relevant code/config/provider state is unchanged; focused intake pending
+STAGING_EXACT_SHA_EVIDENCE: Baseline staging c4fa46f267733eeceb5d82a825431c6337f8e4e0 remains live and matched its private configuration; no v0.7.3 candidate deployed
+PRODUCTION_STATE: UNCHANGED v0.7.2 at 84eacfcdb47a3985fed48e3ba14bb413946d4410; production promotion is not authorized
+BACKUP_ROLLBACK_STATE: Existing private staging backup/isolated-restore/prior-Worker evidence is retained. Fresh/reusable proof must be verified before any candidate deployment; production backup/rollback preflight is deferred until an exact owner GO.
+SOL_REVIEW_RESULT: NOT RUN - no code candidate exists
+UNRESOLVED_RISKS: Staging reset is ineligible while one verification challenge is active; no reset/reseed is required or authorized for focused intake. Runtime defect status remains unassessed.
 BLOCKER: NONE
-NEXT_EXACT_ACTION: Ask Earl for the first bounded v0.7.3 product objective, then adopt a task-specific implementation specification before claiming the writer lock or changing code or an environment.
+NEXT_EXACT_ACTION: Commit and verify Gate 1 specification adoption, then inventory reusable evidence and run the smallest focused acceptance sweep without changing runtime behavior.
+DO_NOT_REPEAT: Do not merge PR #18 again; do not resend the private verification email or repeat redemption/replay tests unless relevant code/config/provider state changes; do not reset/reseed staging during active verification/application lifecycle state; do not deploy or mutate production without an exact-SHA owner GO.
+HANDOFF_STATUS: ACTIVE_EXECUTION
 RESUME_COMMANDS: git status --short --branch; git rev-parse HEAD; git fetch --prune origin; git rev-list --left-right --count origin/main...HEAD; npm run handoff:verify
-PROHIBITED_ACTIONS: Do not begin v0.7.3 without an accepted specification and claimed writer lock; do not mutate production or the protected prior staging D1; do not expose private values; do not delete the preserved tooling branch or dirty design worktree without new proof and authority.
 
-Safe staging names: Worker `hau-usc-logistics-staging`; D1 `hau-usc-logistics-staging-sandbox-v0721`; R2 `hau-usc-logistics-staging-sandbox-v0721-assets` and `hau-usc-logistics-staging-sandbox-v0721-evidence`. All raw IDs, recipient/identity material, credentials, codes, receipts, provider references, exports, bookmarks, recovery hashes, and rollback versions remain outside Git.
-
-Expected cold-start answer: v0.7.2.1 complete; production runtime v0.7.2 with no blocker; permanent isolated staging operational at schema 30/0030; active writer NONE; blocker NONE; next product milestone v0.7.3 intake only under its accepted planning specification.
+PROHIBITED_ACTIONS: No production write/deploy/tag/release; no private-value output; no source/domain-only recipient shortcut; no schema migration without amendment; no v0.8/v0.9 work; no destructive sandbox reset or protected-resource deletion.
