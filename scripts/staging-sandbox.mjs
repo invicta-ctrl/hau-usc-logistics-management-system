@@ -20,6 +20,7 @@ import {
   createSandboxCredentials,
   sandboxSeedSummary,
 } from './staging-sandbox-lifecycle.mjs';
+import { parseAccountApplicationStagingIdentityFixture } from '../src/server/account-application/adapters.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TABLES = Object.freeze([
@@ -89,10 +90,18 @@ async function privateSecretPackage(packagePath) {
   const resolved = assertPrivatePath(packagePath, 'Secret package');
   const source = JSON.parse(await readFile(resolved, 'utf8'));
   const pepper = source?.secrets?.PASSWORD_PEPPER;
-  if (source?.environment !== 'STAGING' || typeof pepper !== 'string' || pepper.length < 16) {
+  const fixture = parseAccountApplicationStagingIdentityFixture(
+    source?.secrets?.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
+  );
+  if (
+    source?.environment !== 'STAGING' ||
+    typeof pepper !== 'string' ||
+    pepper.length < 16 ||
+    fixture.length !== 1
+  ) {
     throw new Error('Private staging secret package is incomplete or mismatched.');
   }
-  return { resolved, pepper };
+  return { resolved, pepper, identityFixtureCount: fixture.length };
 }
 
 async function writeLifecycleFiles({ privateDirectory, generation, pepper, archiveGeneration = 0 }) {

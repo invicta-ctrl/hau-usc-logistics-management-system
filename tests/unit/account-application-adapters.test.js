@@ -4,6 +4,7 @@ import {
   createAccountApplicationActivationLifecycle,
   createAccountApplicationIdentityAdapters,
   parseAccountApplicationIdentityClasses,
+  parseAccountApplicationStagingIdentityFixture,
 } from '../../src/server/account-application/adapters.js';
 
 function rosterFixture() {
@@ -46,6 +47,83 @@ describe('v0.7.2 account-application production adapters', () => {
         { id: 'B', domains: ['same.example.test'] },
       ]),
     ).toEqual([]);
+  });
+
+  it('accepts one exact private staging identity while keeping other and production identities denied', async () => {
+    const roster = rosterFixture();
+    const fixture = JSON.stringify([
+      {
+        institutionalEmail: ' Owner.Verification@Example.Test ',
+        studentId: 'STAGING-OWNER-001',
+        displayName: 'Owner Verification',
+        verificationResult: 'verified',
+        active: true,
+      },
+    ]);
+    expect(parseAccountApplicationStagingIdentityFixture(fixture)).toEqual([
+      expect.objectContaining({
+        institutionalEmail: 'owner.verification@example.test',
+        verificationResult: 'VERIFIED',
+        active: true,
+      }),
+    ]);
+    expect(
+      parseAccountApplicationStagingIdentityFixture([
+        {
+          institutionalEmail: '*@example.test',
+          studentId: 'STAGING-WILDCARD-001',
+          displayName: 'Wildcard Fixture',
+          verificationResult: 'VERIFIED',
+          active: true,
+        },
+      ]),
+    ).toEqual([]);
+
+    const staging = createAccountApplicationIdentityAdapters({
+      rosterRepository: roster.repository,
+      rosterCrypto: roster.crypto,
+      identityClasses: [{ id: 'OWNER_TEST', domains: ['example.test'] }],
+      environment: 'STAGING',
+      recipientAllowlist: JSON.stringify([
+        'owner.verification@example.test',
+        'allowed.but.not.fixture@example.test',
+      ]),
+      stagingIdentityFixture: fixture,
+    });
+    const approved = await staging.identityProtection.prepareEmail(
+      ' OWNER.VERIFICATION@EXAMPLE.TEST ',
+    );
+    expect(approved).toMatchObject({
+      approved: true,
+      emailFingerprint: 'identity:owner.verification@example.test',
+      identityClassId: 'OWNER_TEST',
+    });
+    await expect(
+      staging.submissionEligibility.evaluate({
+        emailFingerprint: approved.emailFingerprint,
+        identityClassId: approved.identityClassId,
+        requestedUsernameNormalized: 'owner.fixture',
+        requestedAccessFingerprint: 'SHA256-access',
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    await expect(
+      staging.identityProtection.prepareEmail('allowed.but.not.fixture@example.test'),
+    ).resolves.toBeNull();
+    await expect(
+      staging.identityProtection.prepareEmail('same-domain-but-not-allowlisted@example.test'),
+    ).resolves.toBeNull();
+
+    const production = createAccountApplicationIdentityAdapters({
+      rosterRepository: roster.repository,
+      rosterCrypto: roster.crypto,
+      identityClasses: [{ id: 'OWNER_TEST', domains: ['example.test'] }],
+      environment: 'PRODUCTION',
+      recipientAllowlist: JSON.stringify(['owner.verification@example.test']),
+      stagingIdentityFixture: fixture,
+    });
+    await expect(
+      production.identityProtection.prepareEmail('owner.verification@example.test'),
+    ).resolves.toBeNull();
   });
 
   it('anchors verification and submission eligibility to the protected active roster', async () => {

@@ -3,6 +3,10 @@ import { spawnSync } from 'node:child_process';
 import { readFile, realpath, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET,
+  parseAccountApplicationStagingIdentityFixture,
+} from '../src/server/account-application/adapters.js';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const GENERATED_SECRET_NAMES = Object.freeze([
@@ -52,7 +56,7 @@ async function apply(configPath, packagePath) {
   const secretNames =
     source.environment === 'PRODUCTION'
       ? [...GENERATED_SECRET_NAMES, ...PRODUCTION_GOOGLE_SECRET_NAMES]
-      : GENERATED_SECRET_NAMES;
+      : [...GENERATED_SECRET_NAMES, ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET];
   if (
     source.schemaVersion !== 1 ||
     secretNames.some(
@@ -60,6 +64,14 @@ async function apply(configPath, packagePath) {
     )
   )
     throw new Error('Secret package is incomplete or malformed.');
+  if (
+    source.environment === 'STAGING' &&
+    parseAccountApplicationStagingIdentityFixture(
+      source.secrets[ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_SECRET],
+    ).length !== 1
+  ) {
+    throw new Error('Private staging identity fixture is missing or malformed.');
+  }
   const wrangler = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   for (const name of secretNames) {
     const result = spawnSync(process.execPath, [wrangler, 'secret', 'put', name, '--config', resolvedConfig], {

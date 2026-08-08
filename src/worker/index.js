@@ -218,6 +218,9 @@ function services(env) {
     rosterRepository,
     rosterCrypto,
     identityClasses: env.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON,
+    environment: env.ENVIRONMENT,
+    recipientAllowlist: env.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
+    stagingIdentityFixture: env.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
   });
   const accountApplications = createAccountApplicationService({
     repository: accountApplicationRepository,
@@ -236,6 +239,8 @@ function services(env) {
       rosterRepository,
       rosterCrypto,
       passwordKdf,
+      environment: env.ENVIRONMENT,
+      stagingIdentityFixture: env.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
     }),
   });
   const activationLifecycle = createAccountApplicationActivationLifecycle({

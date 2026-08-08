@@ -7,6 +7,7 @@ import {
 } from '../../scripts/cloudflare-environment-preflight.mjs';
 import { createConfigPair, decodeJsonBuffer } from '../../scripts/create-private-cloudflare-configs.mjs';
 import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs';
+import { buildPrivateStagingIdentityPackage } from '../../scripts/configure-staging-identity-fixture.mjs';
 
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
@@ -86,6 +87,7 @@ describe('v0.7 environment and observability foundation', () => {
         'PROTECTED_PROFILE_ENCRYPTION_KEY_MISSING',
         'ROSTER_DATA_ENCRYPTION_KEY_MISSING',
         'ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING',
+        'ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_MISSING',
         'ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED',
       ]),
     );
@@ -268,5 +270,44 @@ describe('v0.7 environment and observability foundation', () => {
     ]);
     expect(Object.values(staging.secrets).every((value) => value.length >= 64)).toBe(true);
     expect(staging.secrets.PASSWORD_PEPPER).not.toBe(production.secrets.PASSWORD_PEPPER);
+  });
+
+  it('builds a one-recipient private staging identity package without changing production', () => {
+    const source = createSecretPackage('staging', () => Buffer.alloc(48, 7));
+    const configured = buildPrivateStagingIdentityPackage(
+      {
+        vars: {
+          ENVIRONMENT: 'STAGING',
+          ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
+            '["owner.fixture@example.test"]',
+        },
+      },
+      source,
+    );
+    expect(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON).toBeTypeOf(
+      'string',
+    );
+    expect(
+      JSON.parse(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON),
+    ).toEqual([
+      expect.objectContaining({
+        institutionalEmail: 'owner.fixture@example.test',
+        verificationResult: 'VERIFIED',
+        active: true,
+      }),
+    ]);
+    expect(source.secrets).not.toHaveProperty('ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON');
+    expect(() =>
+      buildPrivateStagingIdentityPackage(
+        {
+          vars: {
+            ENVIRONMENT: 'PRODUCTION',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
+              '["owner.fixture@example.test"]',
+          },
+        },
+        { ...source, environment: 'PRODUCTION' },
+      ),
+    ).toThrow(/staging/iu);
   });
 });

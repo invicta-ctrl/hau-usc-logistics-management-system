@@ -31,6 +31,7 @@
     "cloudflare:preflight": "node scripts/cloudflare-environment-preflight.mjs",
     "cloudflare:private-configs:init": "node scripts/create-private-cloudflare-configs.mjs",
     "cloudflare:secrets": "node scripts/cloudflare-secret-package.mjs",
+    "staging:identity-fixture": "node scripts/configure-staging-identity-fixture.mjs",
     "cloudflare:types": "wrangler types && prettier --write worker-configuration.d.ts",
     "cloudflare:dry-run": "npm run build:cloudflare && wrangler deploy --dry-run --env= --assets .wrangler/build/staging --outdir .wrangler/dry-run",
     "verify:deploy:artifact": "node scripts/verify-deploy-artifact.mjs",
