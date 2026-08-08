@@ -538,7 +538,21 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   }
   function toast(message,error=false){const el=byId('toast');el.textContent=message;el.className=`show ${error?'error':'success'}`;clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.className='',4500)}
   let layerReturnFocus=null;
-  function openDrawer(title,body){layerReturnFocus=document.activeElement;const d=byId('drawer');d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','drawerTitle');d.innerHTML=`<div class="drawer-head"><div><p class="eyebrow">Record details</p><h2 id="drawerTitle">${esc(title)}</h2></div><button class="drawer-close" type="button" data-close-drawer aria-label="Close">×</button></div>${body}`;byId('drawerBackdrop').classList.add('show');d.querySelector('[data-close-drawer]').onclick=closeDrawer;setTimeout(()=>d.querySelector('button')?.focus(),20)}
+  /* Docked detail (accepted specification §4.1).
+     On wide viewports the record detail docks beside the queue so the reviewer
+     never loses their place in the list. Below the threshold it stays the
+     modal overlay drawer it has always been.
+
+     The accessible state follows the visual state rather than being asserted:
+     a docked pane leaves the queue interactive, so it is NOT aria-modal, and
+     the backdrop must not swallow clicks. Escape-to-close and focus return to
+     the originating row are kept in both modes. No route, service call, or
+     permission check changes - only where the same panel is painted. */
+  const dockedDetailQuery=typeof window.matchMedia==='function'?window.matchMedia('(min-width: 1280px)'):null;
+  function detailIsDocked(){return Boolean(dockedDetailQuery?.matches);}
+  function applyDetailMode(){const backdrop=byId('drawerBackdrop'),d=byId('drawer');if(!backdrop||!d)return;const docked=detailIsDocked();backdrop.dataset.docked=String(docked);if(docked){d.setAttribute('aria-modal','false');}else{d.setAttribute('aria-modal','true');}}
+  dockedDetailQuery?.addEventListener?.('change',applyDetailMode);
+  function openDrawer(title,body){layerReturnFocus=document.activeElement;const d=byId('drawer');d.setAttribute('role','dialog');d.setAttribute('aria-labelledby','drawerTitle');d.innerHTML=`<div class="drawer-head"><div><p class="eyebrow">Record details</p><h2 id="drawerTitle">${esc(title)}</h2></div><button class="drawer-close" type="button" data-close-drawer aria-label="Close">×</button></div>${body}`;byId('drawerBackdrop').classList.add('show');applyDetailMode();d.querySelector('[data-close-drawer]').onclick=closeDrawer;setTimeout(()=>d.querySelector('button')?.focus(),20)}
   function closeDrawer(){const wasOpen=byId('drawerBackdrop').classList.contains('show');byId('drawerBackdrop').classList.remove('show');if(wasOpen){layerReturnFocus?.focus();layerReturnFocus=null;}}
   function openModal(title,body,onReady){layerReturnFocus=document.activeElement;const m=byId('modal');m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','modalTitle');m.innerHTML=`<div class="modal-head"><div><p class="eyebrow">Action</p><h2 id="modalTitle">${esc(title)}</h2></div><button class="drawer-close" type="button" data-close-modal aria-label="Close">×</button></div>${body}`;byId('modalBackdrop').classList.add('show');m.querySelector('[data-close-modal]').onclick=closeModal;if(onReady)onReady(m);m.onkeydown=e=>{if(e.key!=='Tab')return;const focusable=[...m.querySelectorAll('button,input,select,textarea,[href],[tabindex]:not([tabindex="-1"])')].filter(x=>!x.disabled);if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};setTimeout(()=>m.querySelector('input,select,button')?.focus(),20)}
   function closeModal(){const wasOpen=byId('modalBackdrop').classList.contains('show');if(wasOpen)byId('modal').querySelectorAll('form').forEach(form=>runtimeExtensions?.markFormClean?.(form));byId('modalBackdrop').classList.remove('show');if(wasOpen){layerReturnFocus?.focus();layerReturnFocus=null;}}
