@@ -16,7 +16,7 @@ CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.2.1-repository-normalization-and-staging-sandbox.md
 LAST_VALID_RUNTIME_EVIDENCE: Exact HEAD is deployed to the isolated staging Worker with schema 30 / migration 0030, readiness and protected configuration true, generation 3 synthetic-only state, and exact SHA/schema staging banners. Production and the protected prior staging D1 remain unchanged.
 BLOCKER: NONE - the owner approved a private isolated staging-only exact-recipient identity fixture; production policy remains unchanged.
-NEXT_EXACT_ACTION: Implement the generic private staging fixture boundary, prove exact identity and containment tests, configure it privately, and run one real positive delivery/redemption acceptance against the isolated sandbox.
+NEXT_EXACT_ACTION: Implement and test the generic private exact-recipient staging fixture, configure it outside Git, deploy the exact candidate, and run positive delivery/redemption acceptance.
 HANDOFF_STATUS: ACTIVE
 
 Resolve BRANCH, HEAD, UPSTREAM, and WORKTREE_STATE during the Git handshake; markers avoid a continuity edit invalidating its own commit identity. The accepted specification remains the controlling implementation authority.
