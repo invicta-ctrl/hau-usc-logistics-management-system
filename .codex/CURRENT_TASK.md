@@ -2,7 +2,7 @@
 
 INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
 SECONDARY INTENTS: SECURITY, TRANSACTIONAL_INTEGRITY, OPERATIONS, RELEASE
-MODE: repair the consumed-reservation P1 from the replacement exact-SHA review, freeze/review the next candidate, then continue only through passed release gates
+MODE: record the accepted repository candidate and evaluate private staging prerequisites without widening authority
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
 SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
 AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`; owner-supplied v0.7.2 Codex resume prompt; repository invariants
@@ -10,7 +10,7 @@ RISK: critical because reservation concurrency, inventory availability, migratio
 DELIVERABLE: bind reservations to the request line's authoritative item, bind public request retries to actor and payload before returning tracking access, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
 VERIFICATION: two pre-fix behavioral failures; existing concurrent reservation proof; focused unit/Worker tests; full repository, Worker/D1, and browser gates; deterministic default artifact; fresh same-SHA security and transaction reviews; exact-head CI; staged backup/migration/readiness/reconciliation before production
 STOP CONDITIONS: unknown work or target; capacity invariant cannot be expressed atomically; contract/spec conflict; unresolved P0/P1; missing identity class/private config/backup/rollback; provider or target mismatch; privacy/secret risk; external MFA or owner-only browser action
-STATUS: LOCAL_CONSUMED_RESERVATION_REPAIR_VERIFIED_AWAITING_EXACT_SHA_REVIEW
+STATUS: REPOSITORY_CANDIDATE_ACCEPTED_PRIVATE_STAGING_INPUT_REQUIRED
 
 Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
@@ -22,11 +22,12 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: commit and push the locally verified repair for the
-blocking transaction finding from the exact review of
-`4ed88ae7cf84037a14a0b397062821a83769a58e`, then repeat both exact-SHA
-reviews and exact-head CI. Zero unresolved P0/P1 is required before any staging
-operation.
+Current exact action: preserve reviewed implementation SHA
+`6deed1a31ded616fd54d33719230336d9cd5bf64`, record the passing review/CI
+evidence in a documentation-only successor, then locate or obtain the
+owner-supplied coarse identity domain class for the private
+`ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON`. Do not derive or invent it. Zero
+unresolved P0/P1 is required before any staging operation.
 
 Exact-SHA review blockers being repaired:
 

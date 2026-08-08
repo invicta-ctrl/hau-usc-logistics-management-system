@@ -9,11 +9,11 @@ source. Nothing important is left only in chat context.
 
 ```text
 Release:              v0.7.2
-Status:               INCOMPLETE
-Current phase:        Phase 1 — final RV-01 review/repair loop
-Current blocker:      One UNFIXED P1 in reserveStock (see N-1)
+Status:               REPOSITORY CANDIDATE ACCEPTED; RELEASE INCOMPLETE
+Current phase:        Phase 2 — private staging preflight
+Current blocker:      Identity classes private input (N-2); owner login (N-3)
 Branch:               release/v0.7.2-production-access-operations
-HEAD:                 6d371e826c8dd921ad53699ad06b6ba9aa1c218b
+Reviewed code SHA:    6deed1a31ded616fd54d33719230336d9cd5bf64
 Working tree:         CLEAN
 PR:                   #15 (OPEN, DRAFT, base main)
 Production version:   0.7.1 (candidateSha e49311f7a712b56da3d5d2913e3c8bf2d0fe4f90)
@@ -54,14 +54,17 @@ Owner decisions already made — **do not re-ask**:
 ```text
 Repo root:      D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 Branch:         release/v0.7.2-production-access-operations
-HEAD:           6d371e826c8dd921ad53699ad06b6ba9aa1c218b
-Upstream:       in sync (0/0) at time of writing
+Reviewed code:  6deed1a31ded616fd54d33719230336d9cd5bf64
+Upstream:       in sync (0/0) at review freeze
 Working tree:   clean
 ```
 
 Recent commits (newest first):
 
 ```text
+6deed1a  fix: count remaining reservation coverage
+4ed88ae  fix: bind reservations and public retries
+5ef9421  fix: allow bounded reservation top-ups
 6d371e8  fix: restore the deterministic default build artifact
 7a31216  fix: stop disclosing storage location to authenticated requesters
 4c423a6  fix: guard concurrent reservations, close bound bypass, make paging truthful
@@ -95,11 +98,11 @@ task/v072-reference-link-server
 | Reject-stranding probe (owner tables) | DONE + VERIFIED |
 | Scope-in-SQL for queue rows + `COUNT(*)` | DONE + VERIFIED |
 | Event/series bounds, conjunctive + fail-closed | DONE + VERIFIED (unit matrix) |
-| Location bound on `reserveStock` (both branches) | DONE + NEEDS FINAL REVIEW |
+| Location bound on `reserveStock` (both branches) | DONE + REVIEWED |
 | Availability + storage-location redaction | DONE + VERIFIED |
 | `RESERVABLE_PARENT_STATUSES` vocabulary fix | DONE + VERIFIED (behavioral) |
 | `COMPLETED` derivation excl. REJECTED/CANCELLED | DONE + VERIFIED (behavioral) |
-| Resend adapter + registry + Worker wiring | DONE + NEEDS FINAL REVIEW |
+| Resend adapter + registry + Worker wiring | DONE + REVIEWED |
 | Readiness fail-closed via provider registry | DONE + VERIFIED |
 | Migration 0030 `provider_message_ref` column | DONE (unapplied anywhere) |
 | Guarded deploy path + artifact preflight | DONE + VERIFIED |
@@ -116,10 +119,10 @@ task/v072-reference-link-server
 ## E. CURRENT IN-PROGRESS SLICE
 
 ```text
-Intent:        Close the final RV-01 review round with zero P0/P1.
-Files:         src/server/d1/operational-service.js  (reserveStock, ~line 4234-4300)
-Committed:     Yes — HEAD 6d371e8, working tree clean.
-Next edit:     Repair the reserveStock once-per-line regression (N-1).
+Intent:        Begin private staging preflight without widening authority.
+Reviewed SHA:  6deed1a31ded616fd54d33719230336d9cd5bf64.
+Committed:     Yes; upstream synchronized and exact-head CI green.
+Next input:    Owner-supplied coarse identity domain class for private config.
 ```
 
 ---
@@ -133,29 +136,35 @@ Next edit:     Repair the reserveStock once-per-line regression (N-1).
 | 2 | `8501f0e` | Transactions | FAIL | 1×P1 (bounds became disjunctive — regression) |
 | 3 | `07af508` | Security/authz | PASS | 0 P0/P1; 10 P2/P3 |
 | 4 | `4c423a6` | Security/authz | FAIL | 1×P1 (storage location → requester) |
-| 4 | `4c423a6` | Transactions | FAIL | **1×P1 (reserveStock once-per-line) — UNFIXED** |
+| 4 | `4c423a6` | Transactions | FAIL | 1×P1 (reserveStock once-per-line; later fixed) |
+| 5 | `5ef9421` | Security/authz | FAIL | 2×P1 (wrong-item reservation; public retry token binding) |
+| 5 | `5ef9421` | Transactions | FAIL | 1×P1 (wrong-item reservation/ATP stranding) |
+| 6 | `4ed88ae` | Security/authz | PASS | 0 P0/P1; prior security findings closed |
+| 6 | `4ed88ae` | Transactions | FAIL | 1×P1 (consumed reservations overcounted) |
+| 7 | `6deed1a` | Security/authz | PASS | 0 P0/P1; nonblocking P2 register below |
+| 7 | `6deed1a` | Transactions | PASS | 0 P0/P1; nonblocking P2 register below |
 
 ```text
-THE LATEST SHA THAT HAS A VALID REVIEW PASS IS: NONE
+THE LATEST SHA THAT HAS A VALID REVIEW PASS IS:
+6deed1a31ded616fd54d33719230336d9cd5bf64
 ```
 
-`07af508` passed security only; it was superseded by material changes in
-`4c423a6`. Round-4 security P1 was fixed in `7a31216`. Round-4 transaction P1 is
-still open. **A fresh security + transaction review is required on the SHA that
-fixes N-1.**
+The exact-SHA loop is closed for repository release gating. `6deed1a` repairs
+the once-per-line, wrong-item, public tracking replay, and consumed-coverage
+findings. Both independent reviews passed the same SHA with zero P0/P1.
 
 ---
 
 ## G. TEST / CI EVIDENCE
 
-All observed on `6d371e8` unless noted.
+All observed on reviewed implementation SHA `6deed1a` unless noted.
 
 ```text
-npm run check                     117 files / 810 tests   PASS
-npm run test:e2e:cloudflare:local 56 passed / 0 failed    PASS
-npm run test:e2e (browser)        138 passed / 0 failed    PASS  (at --workers=2)
-Exact-head CI                     SUCCESS  (last verified at 4c423a6)
-Apps Script static check          SUCCESS  (last verified at 4c423a6)
+npm run check                     117 files / 811 tests   PASS
+npm run test:e2e:cloudflare:local 58 passed / 0 failed    PASS
+npm run test:e2e (browser)        138 passed / 0 failed    PASS  (360 intentional skips; --workers=2)
+Exact-head CI                     SUCCESS  (run 31246367448 at 6deed1a)
+Apps Script static check          SUCCESS  (at 6deed1a)
 Migration 0030 rehearsal          NOT RUN
 Artifact preflight                default (preview) build restored and verified
 Secret scan on staged diff        clean (only synthetic `re_test_key_...` fixture)
@@ -167,7 +176,8 @@ unmodified by this release, pass individually in ~5s, and pass 138/0 at
 `--workers=2`. No timeout was raised and no assertion weakened. Treat default-
 parallelism timeouts on this hardware as load, but re-confirm on CI.
 
-CI has **not** yet run on `7a31216` or `6d371e8` — verify before relying on it.
+Exact-head CI is green for `6deed1a`. A documentation-only successor must also
+remain green before staging.
 
 ---
 
@@ -346,40 +356,21 @@ Canaries/rollout:         NOT STARTED
 
 ### BLOCKING v0.7.2
 
-**N-1 — P1: `reserveStock` is once-per-line; two reachable states become
-permanently unfinishable.**
+**N-1 — CLOSED at reviewed SHA `6deed1a`: reservation capacity, item binding,
+and consumed coverage are enforced atomically.**
 
-- File: `src/server/d1/operational-service.js`, `reserveStock` guarded batch
-  (CAS ≈ line 4289).
-- Introduced by `4c423a6` while fixing a real concurrent-double-reservation P2.
-  Routing the line transition through `runAtomicRevisionGuardedBatch` made a
-  zero-row CAS abort the whole batch. Previously a zero-row CAS still committed
-  the reservation.
-- The CAS accepts only `status IN ('READY_TO_RESERVE','ACCEPTED')`, and
-  `'ACCEPTED'` is never written to `request_lines` by any command — so
-  effectively only `READY_TO_RESERVE`.
-- Failure A: a PROCUREMENT line advanced by `transitionDeliverable` to
-  `READY_TO_RELEASE` can no longer be reserved (409), and `confirmRelease`
-  requires ACTIVE-reservation coverage for every line → the line can never be
-  released. No command returns a line to `READY_TO_RESERVE`.
-- Failure B: a partially reserved stock line (reserved 4 of 10 because ATP was
-  short) cannot be topped up after a restock → parent pinned at
-  `PARTIALLY_RELEASED` forever.
-- Why gates stayed green: the new partial-release e2e uses two separate lines,
-  each reserved once; no test drives a deliverable to `READY_TO_RELEASE` and
-  then releases it; and the shipped UI only calls `reserveStock` in the mock
-  backend branch, so no browser test covers it.
-- **Smallest next action:** guard on remaining *unreserved quantity* rather than
-  line status. Widen the CAS to also accept `READY_TO_RELEASE` /
-  `PARTIALLY_RELEASED`, and add a guarded predicate that the requested quantity
-  fits `requested_quantity - released_quantity - SUM(active reservations)`.
-  Note `inserted` currently sits in `beforeGuardStatements`; if the capacity
-  subquery must exclude the new row, move `inserted` into
-  `dependentStatements` so the guard evaluates before the INSERT.
-- **Verification to close:** keep the existing concurrency e2e green (one 200,
-  one 409, one inventory effect) AND add a behavioral test that a procurement
-  line at `READY_TO_RELEASE` reserves and releases successfully, plus a
-  top-up-after-restock test. Both must fail against the current HEAD.
+- The guarded predicate accepts reachable reserve/release states and evaluates
+  requested minus released minus *unconsumed* ACTIVE reservation coverage
+  before the new reservation INSERT.
+- The authoritative request-line item must match the caller-selected item
+  before replay or mutation, preventing wrong-item ATP poisoning.
+- The INSERT, parent timestamp, audit, idempotency receipt, and revision bumps
+  remain dependent statements in one sentinel-guarded D1 batch.
+- Real Worker/D1 proof covers procurement reserve/release, restock top-up,
+  consume-then-top-up, over-capacity refusal, wrong-item refusal with zero ATP
+  effect, and concurrent one-winner/one-safe-409 behavior.
+- Independent security and transaction reviews both PASS `6deed1a` with zero
+  unresolved P0/P1.
 
 **N-2 — Identity classes are unconfigured and cannot be derived from the repo.**
 
@@ -401,6 +392,20 @@ permanently unfinishable.**
 acceptance step that requires owner login; does not block backup/migration/deploy.
 
 ### NON-BLOCKING — DEFERRED TO v0.7.3+
+
+- Public Request fingerprints canonicalize key ordering but run before every
+  server string normalization, so semantically equivalent whitespace/case
+  variants may safely return 409 instead of replaying. No token or duplicate
+  mutation is exposed.
+- `reviewRequest` does not repeat every catalog classification/availability
+  revalidation before stock routing; `reserveStock` later fails closed on an
+  inactive item and transaction guards remain authoritative.
+- Legacy ALL-scope `reserveStock` can create an orphan reservation when neither
+  request-line nor lending-ticket linkage is supplied. Shipped request flows
+  supply a request line; harden the legacy branch in a later accepted slice.
+- `reserveStock` checks parent state before durable replay, so an exact retry
+  after a later parent transition may return a safe state conflict; a
+  concurrent same-key loser may surface a generic error before retry.
 
 - `request.reject` / `request.missing_information` capabilities are declared and
   role-assigned but never asserted; `REQUEST_REVIEW` alone confers reject
@@ -436,48 +441,22 @@ acceptance step that requires owner login; does not block backup/migration/deplo
 
 ## O. EXACT NEXT ACTIONS FOR CODEX
 
-### Action 1 — Fix N-1 (release blocker)
+### Actions 1–2 — COMPLETE at reviewed implementation SHA `6deed1a`
 
 ```text
-OBJECTIVE  Make reserveStock idempotent-safe under concurrency WITHOUT making it
-           once-per-line. Guard on remaining unreserved quantity, not status.
-FILES      src/server/d1/operational-service.js (reserveStock)
-           tests/cloudflare-e2e/rv01-request-visibility.spec.js (add 2 tests)
-COMMANDS   npx vitest run tests/unit/request-visibility-rv01.test.js
-           npx playwright test --config playwright.cloudflare.config.js -g "concurrent reservations"
-           npx playwright test --config playwright.cloudflare.config.js -g "partly released"
-EXPECTED   Concurrency test still one 200 / one 409 / one inventory effect;
-           new procurement-line and top-up tests pass; both new tests fail
-           against current HEAD before the fix.
-STOP IF    The capacity predicate cannot be expressed in-batch — then do NOT
-           revert to a plain batch silently; record it and ask.
-DO NOT     Re-derive the whole review history; it is in section F.
-```
-
-### Action 2 — Freeze and re-review
-
-```text
-OBJECTIVE  One frozen candidate with a valid PASS on the SAME SHA.
-COMMANDS   npm run check
-           npm run test:e2e:cloudflare:local
-           npx playwright test --workers=2
-           npm run build            # restore default artifact BEFORE commit
-           git status --short       # dist/index.html must NOT be staged as staging build
-           node scripts/verify-deploy-artifact.mjs staging   # must FAIL for tracked dist
-EXPECTED   117+ files / 810+ tests; Worker/D1 56+; browser 138/0.
-           Then run BOTH exact-SHA reviews (security + transactions) on the new
-           SHA. Zero P0/P1 required.
-STOP IF    Either review returns P0/P1.
-DO NOT     Reuse the 07af508 security PASS — it is superseded.
+RESULT     N-1 plus the two later P1 findings are repaired. Local gates pass:
+           117 files / 811 tests; Worker/D1 58/58; browser 138 passed /
+           360 intentional skips. Exact-head CI is green. Independent security
+           and transaction reviews both PASS 6deed1a with zero P0/P1.
 ```
 
 ### Action 3 — Staging backup → migration 0030 → guarded deploy
 
 ```text
 OBJECTIVE  Get staging onto v0.7.2.
-PRECONDITION  Action 2 complete; owner has supplied the identity-class domain
-              (N-2), or accept that readiness will report
-              ACCOUNT_APPLICATION_IDENTITY_CLASSES_MISSING.
+PRECONDITION  Actions 1–2 complete; owner has supplied the private
+              identity-class domain (N-2); exact private config is regenerated;
+              fresh staging backup and rollback point are captured.
 COMMANDS   node scripts/create-private-cloudflare-configs.mjs <staging-base> \
              D:\Documents\Codex\.private\hau-usc-logistics\d1-inventory.json <out-dir>
            # D1 export + Time Travel bookmark FIRST — see docs/BACKUP_AND_RECOVERY.md
@@ -501,9 +480,9 @@ Cloudflare read-only inventory (Workers/D1/R2/versions)  — reuse; re-verify on
 Staging Resend secret installation                        — DONE, do not reinstall
 Provider selection + key rotation decision                — owner-decided, closed
 Staging access-code TXT (86 accounts)                     — regenerate only AFTER deploy
-Review rounds 1-4 (section F)                             — do not re-run on old SHAs
-Full browser matrix on 6d371e8                            — invalidated by any src/ change
-Worker/D1 matrix on 6d371e8                               — invalidated by any src/ change
+Review rounds 1-7 (section F)                             — do not re-run on old SHAs
+Full browser matrix on 6deed1a                            — invalidated by any src/ change
+Worker/D1 matrix on 6deed1a                               — invalidated by any src/ change
 D1 backups                                                — NONE taken yet; must be done
 Migration 0030 rehearsal                                  — never run; must be done
 ```

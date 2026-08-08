@@ -37,9 +37,9 @@ Coverage: 8 of 8 requirements mapped.
 
 ## Status
 
-All three repairs and focused verification are complete. Repeated full local
-gates are green; replacement exact-SHA reviews and exact-head CI remain release
-gates.
+All three repairs, full local verification, independent exact-SHA reviews, and
+exact-head CI are complete for reviewed implementation SHA `6deed1a`. Private
+staging prerequisites remain outside this completed repair plan.
 
 ## Context
 
@@ -179,4 +179,4 @@ No applicable `CLAUDE.md` exists under the repository or affected directories.
 - [x] Changed-payload and legacy-key collision fail closed without tracking
       disclosure.
 - [x] Consumed ACTIVE reservations no longer block remaining same-line demand.
-- [ ] Full gates, deterministic artifact, exact reviews, and CI pass.
+- [x] Full gates, deterministic artifact, exact reviews, and CI pass.

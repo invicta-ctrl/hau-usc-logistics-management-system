@@ -5,15 +5,19 @@
 > Everything below this block predates 2026-08-08 and refers to superseded SHAs.
 > Live Git and provider truth override it.
 >
-> - Release: **v0.7.2 — INCOMPLETE.** Nothing is deployed; migration 0030 is
+> - Release: **v0.7.2 — REPOSITORY CANDIDATE ACCEPTED; PRIVATE STAGING GATES OPEN.** Nothing is deployed; migration 0030 is
 >   applied nowhere; staging and production are both still 0.7.1 / schema 29.
 > - Branch: `release/v0.7.2-production-access-operations`
-> - HEAD: `6d371e826c8dd921ad53699ad06b6ba9aa1c218b` (working tree clean)
+> - Reviewed implementation SHA: `6deed1a31ded616fd54d33719230336d9cd5bf64`
+>   (clean and upstream `0/0` at freeze; live Git is authoritative for the
+>   documentation-only successor).
 > - PR #15: OPEN, DRAFT, not merged.
-> - Latest SHA with a valid review PASS: **NONE.**
-> - Blocker: one open **P1** — `reserveStock` became once-per-line in `4c423a6`,
->   so a procurement line advanced to `READY_TO_RELEASE` can never be reserved
->   or released, and a partial reservation cannot be topped up.
+> - Latest SHA with a valid review PASS:
+>   `6deed1a31ded616fd54d33719230336d9cd5bf64` — security and transaction
+>   reviews both PASS with zero unresolved P0/P1; exact-head CI is green.
+> - N-1 is closed. Current blocker: private
+>   `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` needs the owner-supplied coarse
+>   domain class; do not derive or invent it. Staging owner login is unproven.
 > - **Authoritative continuation:**
 >   [`.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`](V0_7_2_CODEX_CONTINUATION_HANDOFF.md)
 > - **Resume prompt:**
@@ -22,7 +26,7 @@
 ## Active release pointer
 
 - Program: HAU-USC Logistics v0.7.2 Production Access and Operations.
-- Status: `RV_01_REVIEW_FAIL - REVIEWER_UI_GAP_OPEN - RV_02_NOT_STARTED`.
+- Status: `REPOSITORY_CANDIDATE_ACCEPTED - PRIVATE_STAGING_INPUT_REQUIRED`.
 - Integration branch: `release/v0.7.2-production-access-operations`.
 - Accepted amendment: `v0.7.2-RV-01` Public Request Visibility, Review
   Ownership, and Deterministic Line Routing, recorded at

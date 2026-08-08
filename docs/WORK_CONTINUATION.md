@@ -6,28 +6,30 @@
 > with a copy/paste starting point in
 > [`.codex/V0_7_2_CODEX_RESUME_PROMPT.md`](../.codex/V0_7_2_CODEX_RESUME_PROMPT.md).
 >
-> Summary: v0.7.2 is **INCOMPLETE**. HEAD is
-> `6d371e826c8dd921ad53699ad06b6ba9aa1c218b` on
-> `release/v0.7.2-production-access-operations`, working tree clean, PR #15 open
-> and unmerged. Staging and production are both still 0.7.1 / schema 29 and
-> migration 0030 is applied nowhere. Gates at HEAD: `npm run check` 117 files /
-> 810 tests, Worker/D1 56 passed, browser 138 passed at `--workers=2`. No SHA
-> currently holds a valid review PASS. One open **P1**: `reserveStock` became
-> once-per-line in `4c423a6`.
+> Summary: v0.7.2 has an accepted repository candidate at reviewed
+> implementation SHA `6deed1a31ded616fd54d33719230336d9cd5bf64` on
+> `release/v0.7.2-production-access-operations`. Independent exact-SHA security
+> and transaction reviews PASS with zero unresolved P0/P1, exact-head CI is
+> green, and local gates are 117 files / 811 tests, Worker/D1 58/58, and browser
+> 138 passed / 360 intentional skips at `--workers=2`. PR #15 remains draft and
+> unmerged. Staging and production are still 0.7.1 / schema 29; migration 0030
+> is applied nowhere. The next gate is private identity-class configuration
+> from the owner-supplied coarse domain class; it must not be invented or
+> committed.
 
 ## Current resume block
 
 - **Repository/worktree:** `D:\Documents\Codex\HAU-USC Logistics\active\hau-usc-logistics-management-system`; preserve `.codegraph/` and ignored local evidence.
-- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations` / `origin/release/v0.7.2-production-access-operations`; draft PR #15 at `375ac1221c5ddad1e60dcee15154acf45f0724c2`, `MERGEABLE`/`CLEAN`, exact-head `validate`/`verify`/`browser-smoke` all `SUCCESS`; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
-- **Current phase/stage:** RV-01 repaired but NOT passing; both independent exact-SHA reviews returned FAIL and are recorded, all P0/P1 findings are fixed, and the RV-01.6 reviewer UI gap remains the one open blocker; fresh independent exact-SHA review and PR CI next; pre-production blocked on the absent live email provider (identity policy decided: Option A, exact protected-directory match only).
+- **Branch/HEAD/upstream:** `release/v0.7.2-production-access-operations` / `origin/release/v0.7.2-production-access-operations`; reviewed implementation `6deed1a31ded616fd54d33719230336d9cd5bf64`, clean and synchronized `0/0` at freeze; draft PR #15; exact-head Apps Script static, `verify`, and `browser-smoke` all `SUCCESS`; branch began at `589970d31d0dab4fe876107276d9b808eb44b9c3`.
+- **Current phase/stage:** repository candidate accepted at `6deed1a`; independent exact-SHA security and transaction reviews PASS with zero P0/P1, and exact-head CI is green. Pre-production is blocked on private identity-class input/configuration and then the backup/migration/deploy/acceptance sequence.
 - **Accepted scope:** `.codex/specs/v0.7.2-production-access-operations.md`, accepted amendment `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`, and `.codex/V0_7_2_RELEASE_CANDIDATE_HANDOFF.md`.
 - **Completed work:** identity/application/review/activation, access separation, profile, operational P0, Link Registry/announcement integration, schema 0030, v0.7.2 release identity, generated artifacts, and local acceptance.
 - **Files changed by purpose:** migration/domain/server/Worker/client/UI source; focused unit/browser/Worker tests; generated distribution artifacts; release configuration/workflows; current status and operator guides.
-- **Tests verified (RV-01 head, 2026-08-07):** `npm run check` 114 files / 782 tests; Playwright 136 passed / 356 intentional skips / 0 failed; local Worker/D1 40/40 including the new two-context regression; migration 0001-0030 integrity `ok` and zero foreign-key findings. RV-01 introduced no migration.
+- **Tests verified (reviewed implementation, 2026-08-08):** `npm run check` 117 files / 811 tests; Playwright 138 passed / 360 intentional skips / 0 failed at `--workers=2`; local Worker/D1 58/58. Reservation proof covers procurement release, restock top-up, consume-then-top-up, wrong-item denial with zero ATP effect, and concurrent one-winner/one-safe-409 behavior.
 - **External actions:** none for v0.7.2. Production remains on accepted v0.7.1; no provider, deployment, D1/R2/Google/domain, merge/tag/release, or rollout write occurred.
 - **Rollback:** before external work capture exact D1/R2/Google/Worker/static recovery state; follow `docs/D1_MIGRATION_AND_ROLLBACK.md` and `docs/PRODUCTION_INCIDENT_GUIDE.md`; never rewrite append-only history.
-- **Blocker:** owner-approved live email provider implementation/configuration and private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` are absent; readiness intentionally fails closed.
-- **Next three actions:** freeze and independently review the exact candidate; push and verify exact-head PR CI; after private provider inputs exist, run isolated pre-production with no mandatory `UNRUN` before using the already-recorded production authorization.
+- **Blocker:** private `ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON` is absent because the owner-supplied coarse domain class is not available in repository authority; readiness intentionally fails closed. Staging owner login is also not proven.
+- **Next three actions:** obtain or locate the owner-supplied private coarse domain class without recording it in Git; regenerate exact-SHA private Cloudflare configuration; capture a fresh staging backup and execute the guarded migration/deploy/acceptance sequence.
 - **Resume commands:** `git status --short --branch`; `git rev-parse HEAD`; `git fetch origin --prune`; `git rev-list --left-right --count HEAD...@{upstream}`; inspect PR #15; follow the v0.7.2 handoff.
 - **Prohibited actions:** no invented provider/identity values, secret/PII disclosure, fail-open readiness, production-first testing, migration without backup, or production deploy before pre-production acceptance.
 
