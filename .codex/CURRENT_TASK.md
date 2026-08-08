@@ -1,23 +1,35 @@
 # Current Bounded Task
 
-INTENT: OWNER_DECISION
-MODE: PLAN
-OBJECTIVE: Hold the completed v0.7.2.1 repository and environments steady until Earl accepts the first bounded v0.7.3 specification.
-TARGET: main at verified remote truth
-SKILLS: none for this read-only intake packet; select and record the smallest applicable workflow when the bounded implementation specification is adopted
+INTENT: SOFTWARE_FEATURE
+MODE: EXECUTE
+OBJECTIVE: Integrate the accepted V4.1 visual language into the authoritative HAU-USC Logistics front end while preserving every production route, workflow, form, action, status, permission boundary, and service contract exactly as they behave today.
+TARGET: spec/v0.7.3-frontend-design-integration, based on origin/main
+SKILLS: impeccable (critique, audit, adapt, harden, polish, detector); hallmark for composition direction; ui-quality-gate as a read-only audit; anti-slop-implementation for bounded repository discipline
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-product-work-intake.md
-AUTHORITY: Earl's next product objective; the accepted v0.7.3 intake specification; AGENTS.md; current continuity chain
-REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
-ACTIVE_WRITER: NONE
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
+AUTHORITY: The accepted v0.7.3 front-end design integration specification; AGENTS.md; .codex/PHASE_AND_CONTEXT_POLICY.md; production functionality as recorded in docs/design/PRODUCTION_FRONTEND_PARITY_BASELINE.md
+REQUIRED_MODEL: Sol-class judgement for the parity gate and any authorization-adjacent surface; ordinary implementation routing for presentation-only work
+ACTIVE_WRITER: Claude Opus 5 (Claude Code)
+WRITER_LOCK: CLAIMED - 2026-08-09, Asia/Manila
 GIT_UPSTREAM: origin/main
-RISK: MEDIUM - the repository is stable, but production and protected identity/data boundaries remain critical
-DELIVERABLE: One accepted, bounded v0.7.3 task packet before any implementation or environment mutation
-SCOPE: Read-only handshake, owner intake, specification adoption, writer-lock claim, and bounded v0.7.3 planning
-OUT_OF_SCOPE: Any v0.7.3 implementation; production write/deploy; staging reset during active identity/application state; release/tag creation; deletion of preserved unique work
-VERIFICATION: Confirm main equals origin/main, clean worktree, ACTIVE_WRITER NONE, production v0.7.2, isolated staging readiness, and an accepted next specification
-STOP_CONDITIONS: Missing or contradictory v0.7.3 specification; unexpected dirty work; production/staging identity uncertainty; private-value exposure; unclaimed writer lock
-NEXT_EXACT_ACTION: Ask Earl for the first bounded v0.7.3 product objective, then adopt a task-specific implementation specification before claiming the writer lock or changing code or an environment.
+BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
+PRODUCTION_RELEASE: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
+RISK: MEDIUM-HIGH - presentation-only, but it touches every production surface in one accepted slice, so rollback granularity and parity proof are the primary risks
+DELIVERABLE: A verified front-end implementation candidate plus the six design and verification documents required by the accepted specification
+SCOPE: Front-end source under src/, front-end artifacts regenerated through repository build scripts, user-facing copy, front-end animation, a progressive-enhancement 3D landing hero, and front-end/browser/accessibility/visual tests
+OUT_OF_SCOPE: Back-end business rules, D1 schema or data, R2 behaviour, migrations, Worker service contracts, Google Sheets/Drive writes, provider changes, the auth/security model, deployment, staging or production mutation, DNS or domain changes, release tagging, and merge
+VERIFICATION: Functional parity with browser evidence per journey; accessibility (landmarks, headings, focus, keyboard, focus containment and restoration, announcements, no colour-only meaning, contrast, 200% zoom, touch targets, reduced motion, 320px); responsive at 320/375/414/768/1024/1440; repository checks where governance requires; generated-artifact verification; git diff --check; measured bundle and runtime delta
+STOP_CONDITIONS: A change would require back-end, service-contract, migration, provider, or environment work; a protected artifact or the release branch would be written; real private data would be needed; a production route cannot be verified from authoritative source; functional parity cannot be proven; accessibility or performance cannot reach standard without reducing the visual effect - in which case reduce the effect, never the gate
+NEXT_EXACT_ACTION: Capture the rollback point and production front-end screenshots before the first source edit, per specification section 13, then implement in the section 17 order.
 
-V0.7.2.1 is complete: PR #17 merged at `6a30ab482a1e9884870fcfb6e88b7c57f879a44c`; production stayed on v0.7.2; isolated staging acceptance passed at `c4fa46f267733eeceb5d82a825431c6337f8e4e0`; approved-recipient delivery/redemption/replay controls passed; required local and remote gates passed; safe topology cleanup completed; unique/dirty work remains preserved.
+Owner accepted the specification on 2026-08-09. Two owner decisions are binding
+on this task: the integration base is `origin/main` rather than tag `v0.7.2`,
+and the whole front end is a single slice rather than four. The single-slice
+trade-off - one commit range for rollback and parity proof across roughly thirty
+surfaces at once - is recorded as an accepted risk in the specification, and is
+mitigated by capturing the parity baseline before the first edit and by the
+fixed implementation order in specification section 17.
+
+Nothing is deployed, merged, tagged, or written to any external system under
+this task.
