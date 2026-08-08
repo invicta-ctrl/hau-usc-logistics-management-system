@@ -81,18 +81,31 @@ typography:
     fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
     fontSize: "10px"
     fontWeight: 600
-typographyDrift: >-
-  This ramp is the INTENDED scale, not an inventory of what production
-  currently renders. src/styles/**.css presently uses twenty distinct literal
-  sizes - 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 25, 27, 29,
-  30, 36, 38 - accumulated per surface over time. Detector findings against
-  the off-ramp values are TRUE POSITIVES and are deliberately left visible.
-  Documenting all twenty here would silence them by legitimising the drift,
-  which is the opposite of a design system. Consolidating them onto this ramp
-  is outstanding work under section 17 of the accepted specification. Many of
-  the smallest values also sit inside the byte-for-byte cascade preserved from
-  legacy/HAU-USC_Logistics-Prototype.original.html, so they cannot be changed
-  until that guard is addressed for the module concerned.
+systemDrift: >-
+  IMPORTANT. The colors, typography and rounded blocks above are the INTENDED
+  system, not an inventory of what production currently renders.
+
+  Typography: src/styles/**.css presently uses twenty distinct literal sizes -
+  8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 23, 25, 27, 29, 30, 36,
+  38 - accumulated per surface over time.
+
+  Colour: overlay and shell rules use raw rgba literals such as
+  rgba(36,5,7,.53), rgba(0,0,0,.25) and bare #fff rather than palette tokens.
+
+  Radius: values such as 10px and 20px appear alongside the 6/12/18/999 scale.
+
+  Detector findings against any of these are TRUE POSITIVES and are
+  deliberately left visible. Documenting every observed value here would
+  silence them by declaring the drift to be the design system, which is the
+  opposite of having one. No ignore has been applied for them.
+
+  Consolidation is outstanding work under section 17 of the accepted
+  specification. A large share of these values sit inside the byte-for-byte
+  cascade preserved from legacy/HAU-USC_Logistics-Prototype.original.html and
+  asserted by tests/unit/visual-baseline.test.js, so they cannot move until
+  that guard is addressed per module - by extending the sanctioned
+  original-prefix-plus-appended-overrides pattern already used for
+  tokens-base.css and overlays.css.
 rounded:
   xs: "6px"
   sm: "12px"
