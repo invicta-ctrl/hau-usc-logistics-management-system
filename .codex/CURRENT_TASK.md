@@ -1,25 +1,24 @@
 # Current Bounded Task
 
-INTENT: BUG_FIX
-SECONDARY INTENTS: TESTING, REPOSITORY_MAINTENANCE, conditional DEPLOYMENT limited to isolated staging
-MODE: EXECUTE
-OBJECTIVE: Confirm and repair only rollout-blocking defects on the v0.7.2 baseline.
-TARGET: fix/v0.7.3-rollout-stabilization
-SKILLS: lean-ctx for targeted repository reads/searches and capped command execution; no visual-design skill because visual redesign is explicitly out of scope
+INTENT: OWNER_DECISION
+SECONDARY INTENTS: ARCHITECTURE, PLANNING
+MODE: PLAN
+OBJECTIVE: Hold the stable v0.7.2 runtime and completed no-op v0.7.3 evidence steady until Earl accepts the first bounded v0.8.0 Inventory Truth and Ledger Lock specification.
+TARGET: canonical main after protected v0.7.3 no-op closeout
+SKILLS: none for the owner-decision hold; select and record the smallest applicable workflow when a v0.8.0 specification is adopted
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
-AUTHORITY: Earl's owner-submitted v0.7.3 rollout-stabilization specification; AGENTS.md; canonical current chain; phase/context policy; repository runbooks
-REQUIRED_MODEL: Codex primary writer; fresh independent Sol review required on an exact code candidate before staging acceptance is declared complete
-ACTIVE_WRITER: CODEX
-GIT_STARTING_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
-GIT_UPSTREAM: NONE on temporary branch; starting main matched origin/main 0/0
-RISK: HIGH - acceptance covers authentication, authorization, privacy, idempotency, ledger/data integrity, and isolated staging boundaries; production remains owner-gated and prohibited
-DELIVERABLE: Either (A) a proven no-op intake with no runtime release, or (B) one accepted exact-SHA v0.7.3 candidate containing only reproduced blocker fixes.
-SCOPE: Focused Account, Request/RV-01, Lending, Inventory/Release, and public/protected-shell blocker intake; repair only deterministic eligible blockers; required regression evidence and continuity handoff; exact isolated staging acceptance only if code changes.
-OUT_OF_SCOPE: V0.8 Inventory/ledger work; broad Request/Lending/Release/Inventory redesign; visual polish; new auth/SSO/MFA/OAuth; migration without amendment; production writes/deploy/release/tag; staging reset without exact invalidation and authority; speculative refactor/cleanup/dependency work.
-VERIFICATION: Reproduction evidence, regression tests where practical, changed-surface checks, complete repository gate once at final code head, affected browser/Worker-D1 checks, independent Sol review, exact candidate staging acceptance, and proof production stayed unchanged.
-STOP_CONDITIONS: Any stop condition in the accepted specification, including wrong target, competing writer, unknown work, production drift/crossover, private-value exposure, unclassified staging where mutation is required, migration need, invariant regression, exact-SHA mismatch, unresolved P0/P1, two failed repair attempts, or v0.8/v0.9 scope expansion.
-NEXT_EXACT_ACTION: Commit and verify Gate 1 specification adoption, then inventory reusable evidence and run the smallest focused acceptance sweep without changing runtime behavior.
+AUTHORITY: Earl's next v0.8.0 objective; completed v0.7.3 rollout-stabilization specification; AGENTS.md; canonical continuity chain
+REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
+ACTIVE_WRITER: NONE
+GIT_UPSTREAM: Resolve from canonical main during the next handshake
+RISK: HIGH - Inventory truth, ledger invariants, migration, recovery, and production boundaries require a separately accepted specification
+DELIVERABLE: One accepted, bounded v0.8.0 implementation specification before any writer lock, implementation, migration, or environment mutation
+SCOPE: Read-only handshake, owner intake, targeted discovery, specification adoption, risk/model routing, and writer-lock claim after acceptance
+OUT_OF_SCOPE: Any v0.8.0 implementation, migration, schema or ledger change, production/staging mutation, tag/release, repair of the cosmetic staging brand-asset gap, or deletion of preserved resources/evidence
+VERIFICATION: Confirm canonical main/upstream/worktree, ACTIVE_WRITER NONE, immutable production v0.7.2, isolated staging boundaries, and an accepted bounded v0.8.0 specification
+STOP_CONDITIONS: Missing/contradictory v0.8.0 scope; unclaimed/competing writer; unknown work; production/staging drift; migration/recovery ambiguity; private-value exposure; any request to implement before specification acceptance
+NEXT_EXACT_ACTION: Ask Earl to approve the first bounded v0.8.0 Inventory Truth and Ledger Lock specification before claiming a writer lock or changing code or an environment.
 
-PRODUCTION_AUTHORIZATION: NOT GRANTED. Direct owner submission authorizes repository work and isolated staging acceptance only. If a blocker is repaired, freeze the exact staging candidate and stop for Earl's explicit `GO - promote exact candidate <SHA> as v0.7.3` or `NO-GO` decision.
+V0.7.3_RESULT: NO RUNTIME PATCH REQUIRED. No eligible rollout blocker was confirmed, no runtime code changed, and version 0.7.2 remains authoritative.
