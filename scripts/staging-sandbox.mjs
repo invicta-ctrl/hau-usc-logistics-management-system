@@ -1,16 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
+import { restoreAndVerifyD1Export } from './d1/verify-d1-export.mjs';
 import {
   assertSandboxMutationReady,
   exactDatabaseIdFromInventory,
+  parseWranglerJsonOutput,
   safeSandboxErrorMessage,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
+  waitForSandboxLifecycleState,
 } from './staging-sandbox-lib.mjs';
 import {
   buildSandboxArchiveSql,
@@ -21,7 +23,10 @@ import {
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TABLES = Object.freeze([
-  ['accounts', "id LIKE 'SBX-%' OR id = 'SYSTEM-IMPORT'"],
+  [
+    'accounts',
+    "id LIKE 'SBX-%' OR id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
+  ],
   ['requests', "id LIKE 'SBX-%'"],
   ['inventory_items', "id LIKE 'SBX-%'"],
   ['events', "id LIKE 'SBX-%'"],
@@ -53,7 +58,7 @@ function runWrangler(configPath, sql) {
     [executable, 'd1', 'execute', 'DB', '--remote', '--config', configPath, '--command', sql, '--json'],
     { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
   );
-  const parsed = JSON.parse(output);
+  const parsed = parseWranglerJsonOutput(output);
   if (!parsed?.[0]?.success) throw new Error('Remote staging classification query failed.');
   return parsed[0].results ?? [];
 }
@@ -65,7 +70,7 @@ function runWranglerFile(configPath, filePath, extra = []) {
     [executable, 'd1', 'execute', 'DB', ...extra, '--config', configPath, '--file', filePath, '--json'],
     { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
   );
-  const parsed = JSON.parse(output);
+  const parsed = parseWranglerJsonOutput(output);
   if (!Array.isArray(parsed) || parsed.some((entry) => entry?.success !== true)) {
     throw new Error('Staging sandbox lifecycle SQL failed.');
   }
@@ -151,17 +156,11 @@ async function captureAndVerifyBackup(configPath, privateDirectory, head, databa
     { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
   );
   await mkdir(restoreDirectory, { recursive: true });
-  runWranglerFile(configPath, exportPath, ['--local', '--persist-to', restoreDirectory]);
   const exportBytes = await readFile(exportPath);
-  const localFiles = await readdir(restoreDirectory, { recursive: true });
-  const databaseRelativePath = localFiles.find((file) => String(file).endsWith('.sqlite'));
-  if (!databaseRelativePath) throw new Error('Private isolated restore verification failed.');
-  const database = new DatabaseSync(path.join(restoreDirectory, databaseRelativePath));
-  const integrityOk =
-    String(database.prepare('PRAGMA integrity_check').get()?.integrity_check ?? '').toLowerCase() === 'ok';
-  const foreignKeyRows = database.prepare('PRAGMA foreign_key_check').all();
-  database.close();
-  if (!integrityOk || foreignKeyRows.length) throw new Error('Private isolated restore verification failed.');
+  const isolatedRestore = await restoreAndVerifyD1Export(
+    exportPath,
+    path.join(restoreDirectory, 'restored.sqlite'),
+  );
   await writeFile(
     path.join(directory, `sandbox-backup-manifest-${stamp}.json`),
     `${JSON.stringify(
@@ -172,14 +171,14 @@ async function captureAndVerifyBackup(configPath, privateDirectory, head, databa
         databaseId,
         createdAt: new Date().toISOString(),
         exportSha256: createHash('sha256').update(exportBytes).digest('hex'),
-        isolatedRestore: { integrityOk: true, foreignKeyViolations: 0 },
+        isolatedRestore,
       },
       null,
       2,
     )}\n`,
     { flag: 'wx', mode: 0o600 },
   );
-  return { integrityOk: true, foreignKeyViolations: 0 };
+  return isolatedRestore;
 }
 
 function expectedDatabaseId(configPath) {
@@ -190,7 +189,7 @@ function expectedDatabaseId(configPath) {
     { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
   );
   const identifier = exactDatabaseIdFromInventory(
-    JSON.parse(output),
+    parseWranglerJsonOutput(output),
     'hau-usc-logistics-staging-sandbox-v0721',
   );
   if (!identifier) throw new Error('Exact staging D1 identity could not be verified.');
@@ -321,11 +320,10 @@ async function main() {
       runWranglerFile(configPath, lifecycle.archivePath, ['--remote']);
     }
     runWranglerFile(configPath, lifecycle.seedPath, ['--remote']);
-    const after = classify(configPath);
-    const afterMetadata = sandboxMetadata(configPath);
-    if (!after.resetEligible || Number(afterMetadata.sandbox_generation) !== nextGeneration) {
-      throw new Error('Sandbox lifecycle postcondition failed.');
-    }
+    const { classification: after, metadata: afterMetadata } = await waitForSandboxLifecycleState(
+      () => ({ classification: classify(configPath), metadata: sandboxMetadata(configPath) }),
+      nextGeneration,
+    );
     process.stdout.write(
       `${JSON.stringify(
         {

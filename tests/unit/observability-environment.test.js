@@ -226,6 +226,8 @@ describe('v0.7 environment and observability foundation', () => {
         },
       ],
     });
+    expect(pair.staging.assets.not_found_handling).toBe('single-page-application');
+    expect(pair.production.assets.not_found_handling).toBe('single-page-application');
     expect(pair.staging.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production).toMatchObject({

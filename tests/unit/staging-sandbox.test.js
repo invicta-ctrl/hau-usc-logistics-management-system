@@ -2,9 +2,11 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   assertSandboxMutationReady,
+  parseWranglerJsonOutput,
   safeSandboxErrorMessage,
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
+  waitForSandboxLifecycleState,
 } from '../../scripts/staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve('D:/workspace/repo');
@@ -150,5 +152,31 @@ describe('permanent staging sandbox guards', () => {
     expect(safeSandboxErrorMessage(new Error('Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED'))).toBe(
       'Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED',
     );
+  });
+
+  it('parses Wrangler JSON after a provider status banner', () => {
+    expect(parseWranglerJsonOutput('Checking D1 export...\n[{"success":true}]')).toEqual([
+      { success: true },
+    ]);
+    expect(() => parseWranglerJsonOutput('Checking D1 export...')).toThrow(
+      'Wrangler returned an invalid JSON response.',
+    );
+  });
+
+  it('waits for the exact lifecycle generation after a remote write becomes consistent', async () => {
+    let reads = 0;
+    const state = await waitForSandboxLifecycleState(
+      async () => {
+        reads += 1;
+        return {
+          classification: { resetEligible: reads >= 2 },
+          metadata: { sandbox_generation: reads >= 2 ? '2' : '1' },
+        };
+      },
+      2,
+      { attempts: 3, intervalMs: 0, delay: async () => {} },
+    );
+    expect(reads).toBe(2);
+    expect(state.metadata.sandbox_generation).toBe('2');
   });
 });

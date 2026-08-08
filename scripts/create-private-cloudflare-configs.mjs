@@ -34,6 +34,7 @@ function baseConfig(
     },
     assets: {
       ...source.assets,
+      not_found_handling: 'single-page-application',
       run_worker_first: [
         ...new Set([
           ...(Array.isArray(source.assets?.run_worker_first) ? source.assets.run_worker_first : []),

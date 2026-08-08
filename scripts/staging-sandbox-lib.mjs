@@ -61,6 +61,19 @@ export function safeSandboxErrorMessage(error) {
   return 'Sandbox command failed: PRIVATE_OPERATION_ERROR';
 }
 
+export function parseWranglerJsonOutput(output) {
+  const source = String(output ?? '').trim();
+  for (let index = 0; index < source.length; index += 1) {
+    if (source[index] !== '[' && source[index] !== '{') continue;
+    try {
+      return JSON.parse(source.slice(index));
+    } catch {
+      // Wrangler may emit a status banner before otherwise valid JSON.
+    }
+  }
+  throw new Error('Wrangler returned an invalid JSON response.');
+}
+
 export function validateStagingSandboxConfig(
   config,
   { configPath, repoRoot, head = '', branch = '', command = 'status', expectedDatabaseId = '' } = {},
@@ -173,4 +186,22 @@ export function assertSandboxMutationReady({ configResult, classification, comma
   if (!classification?.resetEligible) {
     throw new Error(`Sandbox ${command} refused: NON_SYNTHETIC_OR_UNCLASSIFIED_ROWS`);
   }
+}
+
+export async function waitForSandboxLifecycleState(
+  readState,
+  expectedGeneration,
+  { attempts = 10, intervalMs = 1_000, delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)) } = {},
+) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const state = await readState();
+    if (
+      state.classification?.resetEligible &&
+      Number(state.metadata?.sandbox_generation) === expectedGeneration
+    ) {
+      return state;
+    }
+    if (attempt < attempts) await delay(intervalMs);
+  }
+  throw new Error('Sandbox lifecycle postcondition failed.');
 }
