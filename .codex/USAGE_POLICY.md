@@ -4,8 +4,9 @@ Use the lowest-cost capable workflow that preserves correctness.
 
 ## Context loading
 
-Read applicable instructions, `.codex/CURRENT_TASK.md`, the current Slice and
-program status, the accepted specification, and directly relevant source/tests.
+Read applicable instructions, the canonical current/task/handoff chain, the
+accepted specification, and directly relevant source/tests. Read planning or
+status records only when the current task points to them.
 Prefer `git diff --stat`, `git diff --name-only`, and targeted `rg` searches.
 Do not dump generated HTML, lockfiles, large JSON, raw operational exports, full
 traces, or broad multi-file diffs into the main context.

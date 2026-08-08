@@ -16,6 +16,11 @@ const PROTECTED_NAMES = new Set([
   'GOOGLE_ROSTER_PRIVATE_KEY',
   'SESSION_SIGNING_SECRET',
 ]);
+const STAGING_ONLY_PROTECTED_NAMES = new Set([
+  'ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON',
+  'ACCOUNT_APPLICATION_EMAIL_FROM',
+  'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON',
+]);
 
 export function stripJsonComments(value) {
   const source = String(value ?? '');
@@ -112,13 +117,17 @@ function requiredEnvironment(config, expected, issues) {
   if (!evidenceR2 || PLACEHOLDER.test(String(evidenceR2.bucket_name)))
     issues.push(`${expected}: exact EVIDENCE_ASSETS R2 binding is required`);
   for (const key of Object.keys(config.vars ?? {})) {
-    if (PROTECTED_NAMES.has(key))
+    if (PROTECTED_NAMES.has(key) || (expected === 'STAGING' && STAGING_ONLY_PROTECTED_NAMES.has(key)))
       issues.push(`${expected}: ${key} must be a protected secret, not a plaintext var`);
   }
   return { d1, brandR2, evidenceR2 };
 }
 
-export function validateEnvironmentSeparation(staging, production, { expectedSha } = {}) {
+export function validateEnvironmentSeparation(
+  staging,
+  production,
+  { expectedSha, allowStagingCandidate = false } = {},
+) {
   const issues = [];
   const stagingBindings = requiredEnvironment(staging, 'STAGING', issues);
   const productionBindings = requiredEnvironment(production, 'PRODUCTION', issues);
@@ -134,7 +143,7 @@ export function validateEnvironmentSeparation(staging, production, { expectedSha
     issues.push('STAGING: brand and evidence R2 buckets must be distinct');
   if (productionBindings.brandR2?.bucket_name === productionBindings.evidenceR2?.bucket_name)
     issues.push('PRODUCTION: brand and evidence R2 buckets must be distinct');
-  if (staging.vars?.CANDIDATE_SHA !== production.vars?.CANDIDATE_SHA)
+  if (!allowStagingCandidate && staging.vars?.CANDIDATE_SHA !== production.vars?.CANDIDATE_SHA)
     issues.push('Staging and production configs must bind the same frozen candidate SHA');
   if (expectedSha && staging.vars?.CANDIDATE_SHA !== expectedSha)
     issues.push('Private configs must match the current repository HEAD');
@@ -143,6 +152,7 @@ export function validateEnvironmentSeparation(staging, production, { expectedSha
 
 async function run() {
   const [stagingPath, productionPath] = process.argv.slice(2);
+  const allowStagingCandidate = process.argv.includes('--allow-staging-candidate');
   if (!path.isAbsolute(stagingPath ?? '') || !path.isAbsolute(productionPath ?? ''))
     throw new Error(
       'Usage: node scripts/cloudflare-environment-preflight.mjs <absolute-staging-config> <absolute-production-config>',
@@ -152,7 +162,10 @@ async function run() {
     readFile(productionPath, 'utf8').then(parseJsonConfig),
   ]);
   const expectedSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-  const result = validateEnvironmentSeparation(staging, production, { expectedSha });
+  const result = validateEnvironmentSeparation(staging, production, {
+    expectedSha,
+    allowStagingCandidate,
+  });
   if (!result.valid) {
     console.error('Cloudflare environment preflight: FAILED');
     result.issues.forEach((issue) => console.error(`- ${issue}`));

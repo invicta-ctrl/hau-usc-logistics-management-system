@@ -218,6 +218,9 @@ function services(env) {
     rosterRepository,
     rosterCrypto,
     identityClasses: env.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON,
+    environment: env.ENVIRONMENT,
+    recipientAllowlist: env.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
+    stagingIdentityFixture: env.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
   });
   const accountApplications = createAccountApplicationService({
     repository: accountApplicationRepository,
@@ -236,6 +239,8 @@ function services(env) {
       rosterRepository,
       rosterCrypto,
       passwordKdf,
+      environment: env.ENVIRONMENT,
+      stagingIdentityFixture: env.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON,
     }),
   });
   const activationLifecycle = createAccountApplicationActivationLifecycle({
@@ -455,6 +460,22 @@ async function health(env, requestId, readiness = false) {
   );
 }
 
+async function version(env, requestId) {
+  const schema = await env.DB.prepare(
+    "SELECT value FROM app_metadata WHERE key = 'operational_schema_version'",
+  ).first();
+  const migration = await env.DB.prepare('SELECT name FROM d1_migrations ORDER BY id DESC LIMIT 1').first();
+  return json({
+    ok: true,
+    correlationId: requestId,
+    ...safeReleaseIdentity(env),
+    database: {
+      schemaVersion: schema?.value ?? '0',
+      latestMigration: migration?.name ?? '',
+    },
+  });
+}
+
 async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
   const {
@@ -481,7 +502,7 @@ async function handleApi(request, env, requestId, executionContext) {
       return health(env, requestId, true);
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
-      return json({ ok: true, correlationId: requestId, ...safeReleaseIdentity(env) });
+      return version(env, requestId);
     }
     if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
       assertPublicMutationOrigin(request);

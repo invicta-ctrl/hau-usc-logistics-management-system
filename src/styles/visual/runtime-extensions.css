@@ -1325,6 +1325,8 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero {
 
 .shell-release-indicator {
   display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
   min-height: 34px;
   align-items: center;
   padding: 7px 10px;
@@ -1335,6 +1337,15 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero {
   font-size: 9px;
   font-weight: 850;
   letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.shell-release-indicator[data-environment='STAGING'] {
+  border-color: #8f1d23;
+  color: #5e0d12;
+  background: #fff0f1;
+  text-transform: uppercase;
 }
 
 .shell-attention {
@@ -1478,8 +1489,16 @@ body[data-runtime-mode='rest']:not(.request-mode) .hero {
 
   .internal-shell-context-meta {
     display: grid;
-    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     width: 100%;
+  }
+
+  .internal-shell-context-meta .shell-release-indicator {
+    grid-column: 1 / -1;
+  }
+
+  .shell-account {
+    min-width: 0;
   }
 
   .shell-release-indicator,

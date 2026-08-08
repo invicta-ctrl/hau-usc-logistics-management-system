@@ -9,7 +9,10 @@ const REQUIRED_FILES = [
   '.codex/CAVEMAN_WORKFLOW.md',
   '.codex/TASK_ROUTING.md',
   '.codex/USAGE_POLICY.md',
+  '.codex/CURRENT.md',
   '.codex/CURRENT_TASK.md',
+  '.codex/CURRENT_HANDOFF.md',
+  '.codex/PHASE_AND_CONTEXT_POLICY.md',
   '.codex/TASK_HISTORY.md',
 ];
 
@@ -19,8 +22,14 @@ export function validateAgentInstructions(text) {
     ['task routing', /\.codex\/TASK_ROUTING\.md/i],
     ['Caveman workflow', /\.codex\/CAVEMAN_WORKFLOW\.md/i],
     ['usage policy', /\.codex\/USAGE_POLICY\.md/i],
+    [
+      'canonical continuity chain',
+      /AGENTS\.md\s*->\s*\.codex\/CURRENT\.md\s*->\s*\.codex\/CURRENT_TASK\.md\s*->\s*\.codex\/CURRENT_HANDOFF\.md/i,
+    ],
     ['single writer', /only writer by default/i],
+    ['one active writer', /one active writer/i],
     ['bounded subagents', /at most two concurrent read-only subagents/i],
+    ['version-neutral model routing', /model routing is task-specific and version-neutral/i],
     ['specification gate', /accepted specification or amendment/i],
   ];
   return required.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);

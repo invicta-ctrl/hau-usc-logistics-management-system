@@ -1,5 +1,10 @@
 # D1 migration, reconciliation, and rollback
 
+Current production and staging runtime baseline is application v0.7.2 at schema
+30 / migration `0030_production_access_and_operations.sql`. V0.7.2.1 introduces
+no schema change. Every future remote migration remains additive, backup-first,
+exact-target, isolated-restore verified, and separately authorized.
+
 ## Local proof
 
 Local proof is allowed with the all-zero local binding and fictional records:
@@ -13,7 +18,9 @@ npm run build:cloudflare
 npm run cloudflare:dev
 ```
 
-The seed generator refuses repository paths. Local state under `.wrangler/` is ignored and is never staging evidence.
+The seed generator refuses repository paths. Local state and isolated build
+artifacts under `.wrangler/` are ignored and are never staging evidence. Tracked
+`dist/` remains preview-only.
 
 ## Remote preconditions
 

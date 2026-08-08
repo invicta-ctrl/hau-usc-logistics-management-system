@@ -523,6 +523,7 @@ describe('account-application service', () => {
     const unknown = await configured.service.startEmailVerification({ email: 'unknown@example.test' });
     expect(approved).toEqual(unknown);
     expect(configured.sent).toHaveLength(1);
+    expect(configured.repository.inspect().challenges).toHaveLength(1);
 
     const failClosed = testContext({ providerConfigured: false });
     const unavailable = await failClosed.service.startEmailVerification({ email: 'eligible@example.test' });
