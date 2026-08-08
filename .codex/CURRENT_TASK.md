@@ -10,11 +10,12 @@ RISK: critical because protected identity reconciliation, email verification, D1
 DELIVERABLE: project the protected USC staff directory from approved Working Email values only; preserve strict Option A exact ACTIVE+VERIFIED matching; complete staging acceptance; merge, tag, and release v0.7.2; back up, migrate, deploy, reconcile production; rebaseline staging
 VERIFICATION: aggregate-only source/D1 reconciliation; focused identity regression; exact-head CI; fresh private exact-SHA configuration and backup/recovery evidence; migration 0030 identity; readiness; real Resend single-use flow; negative non-roster Gmail proof; production backup, smoke, integrity, reconciliation, and staging parity
 STOP CONDITIONS: unsafe protected projection; inability to deliver real Resend mail to an eligible owner-controlled mailbox; unresolved P0/P1; backup/restore, target/binding, migration/integrity, SHA, secret, rollback, privacy, or external owner-action blocker
-STATUS: EXECUTING_OWNER_AUTHORIZED_FINAL_CLOSEOUT
+STATUS: COMPLETE_V0_7_2_PRODUCTION_OPERATIONAL
 
 Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
-Branch: `release/v0.7.2-production-access-operations`
+Canonical release SHA/tag: `84eacfcdb47a3985fed48e3ba14bb413946d4410`
+/ `v0.7.2`
 
 Accepted specification:
 `.codex/specs/v0.7.2-production-access-operations.md`
@@ -22,15 +23,20 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: repair the approved Google source adapter so the protected
-staff projection uses `Working Email` rather than the separate HAU educational
-email column, add focused regression proof, deploy the new exact SHA to staging,
-back up and reconcile the protected D1 projection through its governed owner
-workflow, then execute the remaining acceptance and production closeout gates.
-The private identity class is owner-approved as `gmail.com`; it remains only a
-coarse first-stage filter and is never staff authorization.
+Completed exact action: the protected projection uses owner-authoritative
+Working Email values; strict Option A identity authorization is preserved;
+staging acceptance, PR #15 integration, annotated tag/GitHub Release,
+production backup/migration/deployment/reconciliation, and isolated staging
+rebaseline are complete at the canonical release SHA. The private Gmail
+identity class remains only a coarse first-stage filter and is never staff
+authorization.
 
-Exact-SHA review blockers being repaired:
+Next exact action: start a new task from synchronized `main` and prepare a
+bounded v0.7.2.1 repository-normalization/staging-sandbox specification or
+approved amendment. Do not begin implementation or move the v0.7.2 tag before
+that authority is adopted.
+
+Historical exact-SHA review blockers repaired before release:
 
 - `reserveStock` accepted a caller-selected active item without proving it was
   the item assigned to the request line. A wrong-item reservation could hold
@@ -97,10 +103,11 @@ Complete local gates on 2026-08-08:
 - `node scripts/verify-deploy-artifact.mjs staging`: expected exit 1 because the
   tracked artifact is the safe preview build.
 
-The owner already supplied `AUTHORIZE V0.7.2 PRODUCTION` and waived another
-confirmation wait. Staging and production remain untouched because the fresh
-exact-SHA reviews, identity-class input, private configuration, backup,
-migration, readiness, rollback, and reconciliation gates have not passed.
+The owner supplied `AUTHORIZE V0.7.2 PRODUCTION`. Every required repository,
+identity-class, private configuration, backup/recovery, migration, staging,
+readiness, provider, production, rollback-readiness, reconciliation, smoke,
+merge, tag, release, and rebaseline gate passed. Private values and recovery
+material remain outside Git.
 
 ---
 
