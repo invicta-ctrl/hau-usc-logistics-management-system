@@ -359,6 +359,53 @@ describe('owner-protected identity roster service', () => {
     });
   });
 
+  it('replaces quarantined legacy matches for an owner-reviewed raw directory projection', async () => {
+    const scenario = context([rows[0]]);
+    const original = await scenario.service.preview({ actor: owner });
+    await scenario.service.apply({
+      actor: owner,
+      command: {
+        runId: original.id,
+        confirmSourceFingerprint: original.sourceFingerprint,
+        reason: 'Apply the initial reviewed directory.',
+      },
+    });
+
+    scenario.source.read.mockResolvedValue({
+      headers: [...IDENTITY_ROSTER_HEADERS],
+      preserveRejectedProfiles: false,
+      fingerprintSource: {
+        headers: ['Synthetic raw directory headers'],
+        rows: [['Synthetic exact raw directory state']],
+      },
+      rows: [['STUDENT-001', 'operator.one@example.invalid', '', 'VERIFIED', true, ''], rows[1]],
+    });
+    const preview = await scenario.service.preview({ actor: owner });
+    expect(preview).toMatchObject({
+      acceptedCount: 1,
+      rejectionCount: 1,
+      addCount: 1,
+      removalCount: 1,
+      unchangedCount: 0,
+      validationStatus: 'VALID_WITH_REJECTIONS',
+    });
+
+    await expect(
+      scenario.service.apply({
+        actor: owner,
+        command: {
+          runId: preview.id,
+          confirmSourceFingerprint: preview.sourceFingerprint,
+          reason: 'Replace the legacy projection from the reviewed raw directory.',
+        },
+      }),
+    ).resolves.toMatchObject({ applied: true, reconciliation: { reconciled: true } });
+    await expect(scenario.service.selfProfile({ actor: normalUser })).resolves.toEqual({
+      linked: false,
+      profile: null,
+    });
+  });
+
   it('rejects superseded, source-changed, and no-op previews', async () => {
     const scenario = context([rows[0]]);
     const superseded = await scenario.service.preview({ actor: owner });

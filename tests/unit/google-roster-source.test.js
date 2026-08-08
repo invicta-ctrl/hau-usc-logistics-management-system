@@ -204,6 +204,7 @@ describe('Google Sheets identity roster source', () => {
       ['', '', 'Incomplete Officer', 'VERIFIED', true, ''],
     ]);
     expect(result.fingerprintSource).toEqual({ headers: rawHeaders, rows: rawRows });
+    expect(result.preserveRejectedProfiles).toBe(false);
     expect(JSON.stringify(result.rows)).not.toMatch(
       /synthetic\.officer@example|00000000000|They\/Them|2000-01-01|Synthetic Program/u,
     );

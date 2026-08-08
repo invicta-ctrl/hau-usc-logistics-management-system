@@ -263,12 +263,14 @@ export function createIdentityRosterService({
         validation.rejections.map((rejection) => compact(rejection.studentId).toUpperCase()).filter(Boolean),
       );
       const preservedProfiles = [];
-      for (const [identityKey, entry] of currentByKey) {
-        const email = normalizeEmail(entry.profile.institutionalEmail);
-        const studentId = compact(entry.profile.studentId).toUpperCase();
-        if (rejectedEmails.has(email) || rejectedStudentIds.has(studentId)) {
-          preservedProfiles.push(entry.profile);
-          currentByKey.delete(identityKey);
+      if (sourceData.preserveRejectedProfiles !== false) {
+        for (const [identityKey, entry] of currentByKey) {
+          const email = normalizeEmail(entry.profile.institutionalEmail);
+          const studentId = compact(entry.profile.studentId).toUpperCase();
+          if (rejectedEmails.has(email) || rejectedStudentIds.has(studentId)) {
+            preservedProfiles.push(entry.profile);
+            currentByKey.delete(identityKey);
+          }
         }
       }
       const addCount = planned.filter((entry) => entry.action === 'ADD').length;

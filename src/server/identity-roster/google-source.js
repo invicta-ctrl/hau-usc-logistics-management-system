@@ -97,6 +97,7 @@ function normalizeRosterValues(headers, rows) {
       true,
       '',
     ]),
+    preserveRejectedProfiles: false,
     fingerprintSource: { headers, rows },
   };
 }
