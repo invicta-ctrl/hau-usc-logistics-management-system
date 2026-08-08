@@ -15,12 +15,11 @@ const PROTECTED_NAMES = new Set([
   'ROSTER_DATA_ENCRYPTION_KEY',
   'GOOGLE_ROSTER_PRIVATE_KEY',
   'SESSION_SIGNING_SECRET',
+]);
+const STAGING_ONLY_PROTECTED_NAMES = new Set([
   'ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON',
   'ACCOUNT_APPLICATION_EMAIL_FROM',
   'ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON',
-  'GOOGLE_ROSTER_SPREADSHEET_ID',
-  'GOOGLE_ROSTER_RANGE',
-  'GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL',
 ]);
 
 export function stripJsonComments(value) {
@@ -118,7 +117,7 @@ function requiredEnvironment(config, expected, issues) {
   if (!evidenceR2 || PLACEHOLDER.test(String(evidenceR2.bucket_name)))
     issues.push(`${expected}: exact EVIDENCE_ASSETS R2 binding is required`);
   for (const key of Object.keys(config.vars ?? {})) {
-    if (PROTECTED_NAMES.has(key))
+    if (PROTECTED_NAMES.has(key) || (expected === 'STAGING' && STAGING_ONLY_PROTECTED_NAMES.has(key)))
       issues.push(`${expected}: ${key} must be a protected secret, not a plaintext var`);
   }
   return { d1, brandR2, evidenceR2 };

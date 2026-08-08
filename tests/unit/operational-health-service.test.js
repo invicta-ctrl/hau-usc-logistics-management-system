@@ -101,7 +101,7 @@ describe('System Owner operational health', () => {
       generatedAt: '2026-07-28T12:00:00.000Z',
       overallStatus: 'ATTENTION',
       release: { environment: 'STAGING', releaseVersion: '0.7.0', candidateSha: 'a'.repeat(40) },
-      workerApi: { status: 'DEGRADED', readinessIssueCount: 2 },
+      workerApi: { status: 'DEGRADED', readinessIssueCount: 3 },
       database: {
         status: 'AVAILABLE',
         schemaVersion: '28',
