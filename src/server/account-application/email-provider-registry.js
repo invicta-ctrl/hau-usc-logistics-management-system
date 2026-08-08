@@ -37,8 +37,13 @@ function resendConfiguration(env) {
 }
 
 // Readiness must fail closed on a missing provider, key, or sender. Returning
-// the issue list (rather than a boolean) keeps the reason visible in health
-// output without disclosing any configured value.
+// the issue list (rather than a boolean) keeps the reason available to readiness
+// without disclosing any configured value; the Worker collapses it to
+// CONFIGURATION_INCOMPLETE before anything reaches a response.
+//
+// Codes deliberately avoid the `_MISSING` suffix: `/api/health` derives its
+// unauthenticated `protectedConfiguration` flag from that suffix, and that flag
+// is about the protected env secrets, not about provider configuration.
 export function accountApplicationEmailProviderIssues(env) {
   const providerId = selectedProviderId(env);
   if (!providerId) return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED'];
@@ -48,7 +53,7 @@ export function accountApplicationEmailProviderIssues(env) {
   const configuration = resendConfiguration(env);
   const issues = [];
   if (typeof configuration.apiKey !== 'string' || configuration.apiKey.trim().length < 16)
-    issues.push('ACCOUNT_APPLICATION_EMAIL_PROVIDER_SECRET_MISSING');
+    issues.push('ACCOUNT_APPLICATION_EMAIL_PROVIDER_SECRET_UNSET');
   if (!isResendProviderConfigured({ apiKey: 'x'.repeat(16), from: configuration.from }))
     issues.push('ACCOUNT_APPLICATION_EMAIL_SENDER_INVALID');
   return issues;

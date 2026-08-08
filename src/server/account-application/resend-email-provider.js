@@ -19,8 +19,12 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const DEFAULT_TIMEOUT_MS = 8000;
 const MAX_TIMEOUT_MS = 20000;
 
-// "Display Name <local@domain>" or a bare address. Anything else is a config error.
-const SENDER_PATTERN = /^(?:[^<>\r\n]{1,64}\s)?<?[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>?$/u;
+// "Display Name <local@domain>" or a bare address. The angle brackets must be
+// balanced: making each one independently optional accepted `Name <a@b.co` and
+// `a@b.co>`, which pass readiness and are then rejected by the provider on every
+// send, so applicants silently receive nothing.
+const SENDER_PATTERN =
+  /^(?:[^<>\r\n]{1,64}\s<[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>|[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+)$/u;
 const RECIPIENT_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u;
 // Resend returns a UUID. Keep the accepted shape narrow so no provider prose,
 // key fragment, or error text can be persisted as a "reference".
@@ -127,22 +131,28 @@ export function createResendEmailProvider({
         });
       } catch {
         // Abort, DNS failure, TLS failure, socket reset. Never a delivery.
+        clearTimeout(expiry);
         throw providerError('EMAIL_PROVIDER_UNAVAILABLE');
+      }
+
+      try {
+        if (!response?.ok) throw errorForStatus(Number(response?.status ?? 0));
+
+        // The body is advisory. A success with an unparseable body is still a
+        // success, but it yields no reference rather than a fabricated one. The
+        // timeout is cleared only after the body is read, so a provider that
+        // returns headers and then stalls the stream still aborts instead of
+        // hanging until the runtime kills the request.
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch {
+          payload = null;
+        }
+        return Object.freeze({ providerMessageRef: safeMessageReference(payload) });
       } finally {
         clearTimeout(expiry);
       }
-
-      if (!response?.ok) throw errorForStatus(Number(response?.status ?? 0));
-
-      // The body is advisory. A success with an unparseable body is still a
-      // success, but it yields no reference rather than a fabricated one.
-      let payload = null;
-      try {
-        payload = await response.json();
-      } catch {
-        payload = null;
-      }
-      return Object.freeze({ providerMessageRef: safeMessageReference(payload) });
     },
   });
 }

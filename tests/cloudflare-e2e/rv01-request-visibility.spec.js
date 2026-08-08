@@ -1215,3 +1215,103 @@ test('an event-bounded reviewer is refused on a record outside its event scope',
     await restoredContext.dispose();
   }
 });
+
+test('two concurrent reservations for one line yield one winner and one inventory effect', async ({
+  request,
+}) => {
+  // The line transition is a compare-and-swap, but a plain D1 batch does not
+  // abort when it matches zero rows — every statement runs before results are
+  // returned. Both callers therefore inserted an ACTIVE reservation while only
+  // one moved the line, and the loser's reservation held available-to-promise
+  // permanently, because no command clears a request-line reservation.
+  const csrfToken = await login(request, 'LOCAL.OWNER');
+  const marker = `Synthetic RV-01 concurrent reservation proof ${crypto.randomUUID()}`;
+
+  const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
+  let itemId;
+  try {
+    const options = await (await publicContext.get('/api/public/request/options')).json();
+    const event = options.events[0];
+    const item =
+      (options.items ?? []).find((entry) => entry.id === 'ITM-LOCAL-001') ?? options.items[0];
+    itemId = item.id;
+    const submitted = await publicContext.post('/api/public/request', {
+      headers: { origin: BASE_URL },
+      data: {
+        clientRequestId: `rv01-concurrent-${crypto.randomUUID()}`,
+        requesterName: 'Synthetic RV-01 Concurrent Requester',
+        organization: 'Synthetic Organization',
+        requesterType: 'HAU office / department',
+        email: `rv01-concurrent-${crypto.randomUUID()}@example.invalid`,
+        contactNumber: '+63 917 000 0038',
+        purpose: marker,
+        requestPurpose: 'EVENT_ACTIVITY_SUPPORT',
+        eventSeriesId: event.seriesId,
+        eventId: event.id,
+        startDate: '',
+        endDate: '',
+        location: event.venue ?? '',
+        dataUseAcknowledged: true,
+        acceptableUseAcknowledged: true,
+        evidenceConsentAcknowledged: true,
+        lines: [{ category: 'Inventory Item', itemId, quantity: 2 }],
+      },
+    });
+    expect(submitted.status()).toBe(200);
+  } finally {
+    await publicContext.dispose();
+  }
+
+  const queue = await (await request.get('/api/requests')).json();
+  const parent = queue.data.requests.find((row) => row.purpose === marker);
+  expect(parent).toBeTruthy();
+  const line = queue.data.requestLines.find((row) => row.requestId === parent.id);
+  expect(line).toBeTruthy();
+
+  const review = await mutate(request, csrfToken, 'reviewRequest', {
+    requestId: parent.id,
+    decision: 'ACCEPT',
+    note: 'Concurrent reservation proof',
+    clientRequestId: `rv01-concurrent-review-${parent.id}`,
+    lineDecisions: [{ lineId: line.id, decision: 'ISSUE_FROM_STOCK' }],
+  });
+  expect(review.status()).toBe(200);
+
+  const availableToPromise = async () => {
+    const inventory = await (await request.get('/api/inventory?pageSize=50')).json();
+    const item = (inventory.data.inventoryItems ?? []).find((entry) => entry.id === itemId);
+    expect(item).toBeTruthy();
+    return Number(item.availableToPromise);
+  };
+  const before = await availableToPromise();
+
+  // Distinct idempotency keys, so replay cannot mask the race.
+  const [first, second] = await Promise.all([
+    mutate(request, csrfToken, 'reserveStock', {
+      itemId,
+      requestLineId: line.id,
+      quantity: 2,
+      clientRequestId: `rv01-concurrent-reserve-a-${parent.id}`,
+    }),
+    mutate(request, csrfToken, 'reserveStock', {
+      itemId,
+      requestLineId: line.id,
+      quantity: 2,
+      clientRequestId: `rv01-concurrent-reserve-b-${parent.id}`,
+    }),
+  ]);
+
+  // One winner, one safe failure.
+  expect([first.status(), second.status()].sort()).toEqual([200, 409]);
+  const loser = first.status() === 409 ? first : second;
+  expect((await loser.json()).code).toBe('REQUEST_STATE_CONFLICT');
+
+  // One inventory effect: the loser's reservation must have rolled back with
+  // the rest of its batch, so exactly one reservation's worth of stock is held.
+  expect(await availableToPromise()).toBe(before - 2);
+
+  // One reservation owner: the line advanced exactly once.
+  const after = await (await request.get('/api/requests?filter=ALL&pageSize=10')).json();
+  const reservedLine = after.data.requestLines.find((row) => row.id === line.id);
+  expect(reservedLine.status).toBe('READY_TO_RELEASE');
+});

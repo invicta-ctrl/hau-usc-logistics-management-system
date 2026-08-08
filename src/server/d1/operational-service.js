@@ -466,18 +466,25 @@ function scopedReleaseGroup(entry, linePredicate) {
   };
 }
 
-export function filterOperationalData(data, selected) {
+// `sqlScoped` names collections the module already narrowed in its authoritative
+// query. Those must not be re-filtered here: this pass derives its key sets from
+// *paginated* `inventoryItems` and `events`, so a request whose matching item or
+// event fell outside the current page was dropped from the rows while `total`
+// and `hasMore` — computed from the same SQL predicate as the page — still
+// counted it. The reviewer then saw an empty table above a non-zero total.
+export function filterOperationalData(data, selected, { sqlScoped = [] } = {}) {
   if (!selected || ['ALL', 'COMMITTEE', 'SELF'].includes(selected.kind)) return data;
   const next = { ...data };
+  const authoritative = new Set(sqlScoped);
   if (selected.kind === 'LOCATION') {
     next.inventoryItems = (next.inventoryItems ?? []).filter(
       (entry) => String(entry.storageLocation ?? '') === selected.id,
     );
     const itemIds = new Set(next.inventoryItems.map((entry) => entry.id));
-    if (Array.isArray(next.requestLines)) {
+    if (Array.isArray(next.requestLines) && !authoritative.has('requestLines')) {
       next.requestLines = next.requestLines.filter((entry) => itemIds.has(entry.itemId));
       const requestIds = new Set(next.requestLines.map((entry) => entry.requestId));
-      if (Array.isArray(next.requests))
+      if (Array.isArray(next.requests) && !authoritative.has('requests'))
         next.requests = next.requests.filter((entry) => requestIds.has(entry.id));
     }
     if (Array.isArray(next.lendingTickets))
@@ -512,8 +519,10 @@ export function filterOperationalData(data, selected) {
     next.eventSeries = (next.eventSeries ?? []).filter((entry) => entry.id === selected.id);
     next.events = (next.events ?? []).filter((entry) => entry.seriesId === selected.id);
     const eventIds = new Set(next.events.map((entry) => entry.id));
-    next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
-    next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
+    if (!authoritative.has('requests'))
+      next.requests = (next.requests ?? []).filter((entry) => entry.eventSeriesId === selected.id);
+    if (!authoritative.has('requestLines'))
+      next.requestLines = (next.requestLines ?? []).filter((entry) => eventIds.has(entry.eventId));
     next.deliverables = (next.deliverables ?? []).filter((entry) => eventIds.has(entry.eventId));
     if (Array.isArray(next.releaseConfirmations))
       next.releaseConfirmations = next.releaseConfirmations.filter((entry) => eventIds.has(entry.eventId));
@@ -1545,7 +1554,12 @@ export function createD1OperationalService({
         // VIEW_REQUEST, which includes requester-only accounts. Availability is
         // internal stock data, so it is redacted by capability rather than by
         // `requestOnly`. Staff holding VIEW_INVENTORY are unaffected.
-        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability)),
+        // Storage location is withheld for the public/requester contract only.
+        // Keying it on `protectCatalogAvailability` instead would also withhold
+        // it from an internal actor holding a `view.inventory` deny, and
+        // `filterOperationalData` resolves a LOCATION scope by matching that
+        // field — which blanked this module's entire result set.
+        inventoryItems: itemRows.map((row) => itemDto(row, protectCatalogAvailability, requestOnly)),
       };
       // RV-01.2: the authenticated Request module independently projects the
       // canonical review queue. It must not depend on Overview loading first.
@@ -2174,7 +2188,13 @@ export function createD1OperationalService({
         };
       }
     }
-    data = filterOperationalData(data, operationalContext.selected);
+    // The Request module narrows LOCATION/EVENT/EVENT_SERIES inside `queueWhere`,
+    // which drives the page rows, the child lines, and the COUNT(*) behind
+    // `total`/`hasMore` alike. Re-filtering those here against a paginated item
+    // or event page is what made the metadata disagree with the rows.
+    data = filterOperationalData(data, operationalContext.selected, {
+      sqlScoped: module === 'request' ? ['requests', 'requestLines'] : [],
+    });
     const totalRow = await db
       .prepare('SELECT COUNT(*) AS count FROM inventory_items WHERE status = ?1')
       .bind('ACTIVE')
@@ -4148,6 +4168,19 @@ export function createD1OperationalService({
       .prepare("SELECT storage_location FROM inventory_items WHERE id = ?1 AND status = 'ACTIVE'")
       .bind(itemId)
       .first();
+    // A lending reservation carries no request line, so it used to skip the
+    // scope block entirely and with it every bound check — `reservedLocation`
+    // was resolved and then discarded. `entityScope().mode` is derived from the
+    // role alone, so a bounded DIRECTOR or ADMINISTRATOR is still 'ALL' and
+    // cleared the gate above. The location bound is asserted here so a bounded
+    // actor cannot consume available-to-promise on an item outside it.
+    if (!requestLineId) {
+      assertEntityScope(account, {
+        committeeId: '',
+        ownerAccountId: account.id,
+        locationId: reservedLocation?.storage_location ?? '',
+      });
+    }
     let parentRequestId = '';
     if (requestLineId) {
       const requestScope = await db
@@ -4215,42 +4248,56 @@ export function createD1OperationalService({
         nowIso(),
         account.id,
       );
+    // Every other line-status writer bumps the parent. `reserveStock` was the
+    // exception, and `reviewRequest`'s stranding probe is only safe because its
+    // compare-and-swap pins `requests.updated_at` against exactly these
+    // owner-creating commands. Bumping here removes the one gap in that
+    // invariant and keeps the queue's `updated_at DESC` order honest.
+    //
+    // The audit row was previously a second batch issued after the first one
+    // committed, so an eviction or D1 fault between them left an ACTIVE
+    // reservation holding stock with no audit record that it happened.
+    const reserveDependents = [
+      ...(parentRequestId
+        ? [db.prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1').bind(parentRequestId, nowIso())]
+        : []),
+      auditStatement(db, {
+        action: 'STOCK_RESERVED',
+        entityType: 'RESERVATION',
+        entityId: reservationId,
+        accountId: account.id,
+        correlationId,
+        after: { itemId, quantity },
+      }),
+      idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
+      ...revisionStatements(db, ['inventory', 'request']),
+    ];
     try {
-      await db.batch([
-        inserted,
-        db
-          .prepare(
-            `UPDATE request_lines
-             SET status = 'READY_TO_RELEASE', updated_at = ?2
-             WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
-          )
-          .bind(requestLineId, nowIso()),
-        // Every other line-status writer bumps the parent. `reserveStock` was the
-        // exception, and `reviewRequest`'s stranding probe is only safe because
-        // its compare-and-swap pins `requests.updated_at` against exactly these
-        // owner-creating commands. Bumping here removes the one gap in that
-        // invariant and keeps the queue's `updated_at DESC` order honest.
-        ...(parentRequestId
-          ? [
-              db
-                .prepare('UPDATE requests SET updated_at = ?2 WHERE id = ?1')
-                .bind(parentRequestId, nowIso()),
-            ]
-          : []),
-        // The audit row was previously a second batch issued after this one
-        // committed, so an eviction or D1 fault between them left an ACTIVE
-        // reservation holding stock with no audit record that it happened.
-        auditStatement(db, {
-          action: 'STOCK_RESERVED',
-          entityType: 'RESERVATION',
-          entityId: reservationId,
-          accountId: account.id,
-          correlationId,
-          after: { itemId, quantity },
-        }),
-        idempotencyStatement(db, 'reserveStock', mutation, account.id, result),
-        ...revisionStatements(db, ['inventory', 'request']),
-      ]);
+      if (requestLineId) {
+        // The line transition is a compare-and-swap, but a plain batch does not
+        // abort when it matches zero rows: D1 runs every statement before
+        // returning, so two concurrent reservations for the same line both
+        // inserted an ACTIVE reservation while only one moved the line. The
+        // loser's reservation held available-to-promise forever, because no
+        // command clears a request-line reservation. Routing it through the
+        // in-batch sentinel makes the loser roll back entirely — one winner,
+        // one safe 409, one reservation, one inventory effect.
+        await runAtomicRevisionGuardedBatch(db, {
+          beforeGuardStatements: [inserted],
+          guardedStatement: db
+            .prepare(
+              `UPDATE request_lines
+               SET status = 'READY_TO_RELEASE', updated_at = ?2
+               WHERE id = ?1 AND status IN ('READY_TO_RESERVE', 'ACCEPTED')`,
+            )
+            .bind(requestLineId, nowIso()),
+          dependentStatements: reserveDependents,
+          conflictCode: 'REQUEST_STATE_CONFLICT',
+          conflictMessage: 'The request line was already reserved. Refresh before reserving again.',
+        });
+      } else {
+        await db.batch([inserted, ...reserveDependents]);
+      }
     } catch (error) {
       if (String(error?.message ?? '').includes('insufficient available-to-promise')) {
         throw new ApiError('INSUFFICIENT_STOCK', 'Available stock is insufficient for this reservation.', {

@@ -41,7 +41,7 @@ describe('account-application email provider registry', () => {
         accountApplicationEmailProviderIssues(
           readyEnv({ [ACCOUNT_APPLICATION_EMAIL_SECRET_BINDING]: apiKey }),
         ),
-      ).toContain('ACCOUNT_APPLICATION_EMAIL_PROVIDER_SECRET_MISSING');
+      ).toContain('ACCOUNT_APPLICATION_EMAIL_PROVIDER_SECRET_UNSET');
     }
   });
 

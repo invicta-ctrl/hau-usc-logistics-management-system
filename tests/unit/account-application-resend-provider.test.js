@@ -33,6 +33,20 @@ describe('resend account-application email provider', () => {
     expect(isResendProviderConfigured({ apiKey: API_KEY })).toBe(false);
     expect(isResendProviderConfigured({ apiKey: API_KEY, from: 'not-an-address' })).toBe(false);
 
+    // Unbalanced angle brackets must not pass readiness. They otherwise report
+    // green and are then rejected by the provider on every send, so applicants
+    // silently receive nothing.
+    for (const from of [
+      'HAU-USC Logistics <no-reply@auth.hausc.org',
+      'no-reply@auth.hausc.org>',
+      'HAU-USC Logistics no-reply@auth.hausc.org>',
+      '<no-reply@auth.hausc.org',
+    ]) {
+      expect(isResendProviderConfigured({ apiKey: API_KEY, from }), from).toBe(false);
+    }
+    // Both accepted shapes stay accepted.
+    expect(isResendProviderConfigured({ apiKey: API_KEY, from: 'no-reply@auth.hausc.org' })).toBe(true);
+
     expect(provider({ apiKey: '' })).toBeNull();
     expect(provider({ from: '' })).toBeNull();
     expect(provider({ fetchImpl: null })).toBeNull();
