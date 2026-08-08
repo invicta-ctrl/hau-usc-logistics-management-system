@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { STAGING_SANDBOX_TARGET } from './staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
@@ -55,21 +56,37 @@ function baseConfig(
     ],
     triggers: { crons: ['*/5 * * * *'] },
     vars: {
+      ...(environment === 'STAGING' ? source.vars : {}),
       ENVIRONMENT: environment,
       APP_VERSION: '0.7.2',
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
       CANDIDATE_BRANCH: candidateBranch,
-      RECOVERY_HOSTNAME: '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
-      GOOGLE_ROSTER_SPREADSHEET_ID: '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_RANGE: '<REPLACE_PRIVATELY>',
-      GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL: '<REPLACE_PRIVATELY>',
+      RECOVERY_HOSTNAME:
+        environment === 'STAGING'
+          ? (source.vars?.RECOVERY_HOSTNAME ?? '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>')
+          : '<REPLACE_PRIVATELY_RECOVERY_HOSTNAME>',
+      GOOGLE_ROSTER_SPREADSHEET_ID:
+        environment === 'STAGING'
+          ? (source.vars?.GOOGLE_ROSTER_SPREADSHEET_ID ?? '<REPLACE_PRIVATELY>')
+          : '<REPLACE_PRIVATELY>',
+      GOOGLE_ROSTER_RANGE:
+        environment === 'STAGING'
+          ? (source.vars?.GOOGLE_ROSTER_RANGE ?? '<REPLACE_PRIVATELY>')
+          : '<REPLACE_PRIVATELY>',
+      GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL:
+        environment === 'STAGING'
+          ? (source.vars?.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL ?? '<REPLACE_PRIVATELY>')
+          : '<REPLACE_PRIVATELY>',
       ...(environment === 'STAGING'
         ? {
-            SANDBOX_RESET_ALLOWED: false,
-            SANDBOX_BASE_URL: '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
-            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '<REPLACE_PRIVATELY_EXACT_RECIPIENT_ARRAY>',
+            SANDBOX_RESET_ALLOWED: source.vars?.SANDBOX_RESET_ALLOWED === true,
+            SANDBOX_BASE_URL:
+              source.vars?.SANDBOX_BASE_URL ?? '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
+              source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON ??
+              '<REPLACE_PRIVATELY_EXACT_RECIPIENT_ARRAY>',
           }
         : {}),
     },
@@ -77,7 +94,7 @@ function baseConfig(
 }
 
 export function createConfigPair(source, databases, candidateSha, candidateBranch = 'UNKNOWN') {
-  const stagingD1 = databases.find((database) => database.name === 'hau-usc-logistics-staging');
+  const stagingD1 = databases.find((database) => database.name === STAGING_SANDBOX_TARGET.database);
   const productionD1 = databases.find((database) => database.name === 'hau-usc-logistics-production');
   if (!stagingD1 || !productionD1)
     throw new Error('Required staging and production D1 resources were not found.');
@@ -88,8 +105,8 @@ export function createConfigPair(source, databases, candidateSha, candidateBranc
       candidateSha,
       candidateBranch,
       d1: stagingD1,
-      brandR2Bucket: 'hau-usc-logistics-staging-assets',
-      evidenceR2Bucket: 'hau-usc-logistics-staging-evidence',
+      brandR2Bucket: STAGING_SANDBOX_TARGET.buckets[0],
+      evidenceR2Bucket: STAGING_SANDBOX_TARGET.buckets[1],
     }),
     production: baseConfig(source, {
       name: 'hau-usc-logistics-production',

@@ -207,7 +207,7 @@ describe('v0.7 environment and observability foundation', () => {
         assets: { directory: 'C:/repo/dist', binding: 'ASSETS' },
       },
       [
-        { name: 'hau-usc-logistics-staging', uuid: 'staging-private-id' },
+        { name: 'hau-usc-logistics-staging-sandbox-v0721', uuid: 'staging-private-id' },
         { name: 'hau-usc-logistics-production', uuid: 'production-private-id' },
       ],
       'a'.repeat(40),
@@ -216,8 +216,14 @@ describe('v0.7 environment and observability foundation', () => {
       name: 'hau-usc-logistics-staging',
       vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.7.2' },
       r2_buckets: [
-        { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
-        { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
+        {
+          binding: 'BRAND_ASSETS',
+          bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-assets',
+        },
+        {
+          binding: 'EVIDENCE_ASSETS',
+          bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-evidence',
+        },
       ],
     });
     expect(pair.staging.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);

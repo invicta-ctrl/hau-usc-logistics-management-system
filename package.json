@@ -21,6 +21,7 @@
     "staging:sandbox:status": "node scripts/staging-sandbox.mjs status",
     "staging:seed-sandbox": "node scripts/staging-sandbox.mjs seed",
     "staging:reset-sandbox": "node scripts/staging-sandbox.mjs reset",
+    "staging:sandbox:verify-local": "node scripts/d1/verify-staging-sandbox-local.mjs",
     "phase3:authorization:init": "node scripts/phase3-staging-authorization.mjs init",
     "phase3:authorization:check": "node scripts/phase3-staging-authorization.mjs check",
     "production:authorization:init": "node scripts/production-authorization.mjs init",

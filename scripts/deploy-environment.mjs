@@ -17,17 +17,17 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
-import {
-  exactDatabaseIdFromInventory,
-  unexpectedStagingConfigKeys,
-} from './staging-sandbox-lib.mjs';
+import { exactDatabaseIdFromInventory, unexpectedStagingConfigKeys } from './staging-sandbox-lib.mjs';
 
 const TARGETS = Object.freeze({
   staging: {
     worker: 'hau-usc-logistics-staging',
     environment: 'STAGING',
-    d1: 'hau-usc-logistics-staging',
-    buckets: ['hau-usc-logistics-staging-assets', 'hau-usc-logistics-staging-evidence'],
+    d1: 'hau-usc-logistics-staging-sandbox-v0721',
+    buckets: [
+      'hau-usc-logistics-staging-sandbox-v0721-assets',
+      'hau-usc-logistics-staging-sandbox-v0721-evidence',
+    ],
     build: 'build:cloudflare',
     artifactDirectory: '.wrangler/build/staging',
   },

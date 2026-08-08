@@ -31,13 +31,19 @@ function config(overrides = {}) {
     d1_databases: [
       {
         binding: 'DB',
-        database_name: 'hau-usc-logistics-staging',
+        database_name: 'hau-usc-logistics-staging-sandbox-v0721',
         database_id: stagingDatabaseId,
       },
     ],
     r2_buckets: [
-      { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-staging-assets' },
-      { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-staging-evidence' },
+      {
+        binding: 'BRAND_ASSETS',
+        bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-assets',
+      },
+      {
+        binding: 'EVIDENCE_ASSETS',
+        bucket_name: 'hau-usc-logistics-staging-sandbox-v0721-evidence',
+      },
     ],
     ...rest,
   };
@@ -82,7 +88,7 @@ describe('permanent staging sandbox guards', () => {
           d1_databases: [
             {
               binding: 'DB',
-              database_name: 'hau-usc-logistics-staging',
+              database_name: 'hau-usc-logistics-staging-sandbox-v0721',
               database_id: '33333333-3333-4333-8333-333333333333',
             },
           ],
@@ -138,9 +144,9 @@ describe('permanent staging sandbox guards', () => {
   });
 
   it('redacts unexpected filesystem and tool errors', () => {
-    expect(
-      safeSandboxErrorMessage(new Error('ENOENT: missing D:\\private\\wrangler.staging.jsonc')),
-    ).toBe('Sandbox command failed: PRIVATE_OPERATION_ERROR');
+    expect(safeSandboxErrorMessage(new Error('ENOENT: missing D:\\private\\wrangler.staging.jsonc'))).toBe(
+      'Sandbox command failed: PRIVATE_OPERATION_ERROR',
+    );
     expect(safeSandboxErrorMessage(new Error('Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED'))).toBe(
       'Sandbox reset refused: SANDBOX_RESET_NOT_ALLOWED',
     );

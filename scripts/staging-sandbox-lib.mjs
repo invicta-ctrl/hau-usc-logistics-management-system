@@ -3,8 +3,11 @@ import { parseExactRecipientAllowlist } from '../src/server/account-application/
 
 export const STAGING_SANDBOX_TARGET = Object.freeze({
   worker: 'hau-usc-logistics-staging',
-  database: 'hau-usc-logistics-staging',
-  buckets: Object.freeze(['hau-usc-logistics-staging-assets', 'hau-usc-logistics-staging-evidence']),
+  database: 'hau-usc-logistics-staging-sandbox-v0721',
+  buckets: Object.freeze([
+    'hau-usc-logistics-staging-sandbox-v0721-assets',
+    'hau-usc-logistics-staging-sandbox-v0721-evidence',
+  ]),
 });
 
 const SHA = /^[0-9a-f]{40}$/u;
@@ -93,8 +96,7 @@ export function validateStagingSandboxConfig(
   if (JSON.stringify(bucketBindings) !== JSON.stringify(expectedBucketBindings))
     issues.push('STAGING_R2_MISMATCH');
 
-  if (config?.routes !== undefined || config?.route !== undefined)
-    issues.push('STAGING_ROUTE_NOT_ALLOWED');
+  if (config?.routes !== undefined || config?.route !== undefined) issues.push('STAGING_ROUTE_NOT_ALLOWED');
   if (config?.workers_dev !== true || config?.preview_urls !== false)
     issues.push('STAGING_PUBLICATION_MODE_INVALID');
   if (unexpectedStagingConfigKeys(config).length) issues.push('UNEXPECTED_STAGING_CONFIG_KEY');

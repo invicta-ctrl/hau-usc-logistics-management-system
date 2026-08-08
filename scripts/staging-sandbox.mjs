@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process';
-import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
 import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
 import {
@@ -10,6 +12,12 @@ import {
   summarizeSandboxClassification,
   validateStagingSandboxConfig,
 } from './staging-sandbox-lib.mjs';
+import {
+  buildSandboxArchiveSql,
+  buildSandboxSeedSql,
+  createSandboxCredentials,
+  sandboxSeedSummary,
+} from './staging-sandbox-lifecycle.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const TABLES = Object.freeze([
@@ -27,6 +35,17 @@ function argument(name) {
   return index >= 0 ? process.argv[index + 1] : '';
 }
 
+function assertPrivatePath(candidate, label) {
+  if (!path.isAbsolute(candidate ?? '') || candidate === path.parse(candidate).root) {
+    throw new Error(`${label} must be an absolute private path outside the repository.`);
+  }
+  const relative = path.relative(repoRoot, path.resolve(candidate));
+  if (relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))) {
+    throw new Error(`${label} must be an absolute private path outside the repository.`);
+  }
+  return path.resolve(candidate);
+}
+
 function runWrangler(configPath, sql) {
   const executable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   const output = execFileSync(
@@ -39,6 +58,130 @@ function runWrangler(configPath, sql) {
   return parsed[0].results ?? [];
 }
 
+function runWranglerFile(configPath, filePath, extra = []) {
+  const executable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  const output = execFileSync(
+    process.execPath,
+    [executable, 'd1', 'execute', 'DB', ...extra, '--config', configPath, '--file', filePath, '--json'],
+    { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+  );
+  const parsed = JSON.parse(output);
+  if (!Array.isArray(parsed) || parsed.some((entry) => entry?.success !== true)) {
+    throw new Error('Staging sandbox lifecycle SQL failed.');
+  }
+  return parsed;
+}
+
+function sandboxMetadata(configPath) {
+  const rows = runWrangler(
+    configPath,
+    "SELECT key, value FROM app_metadata WHERE key IN ('sandbox_seed_version', 'sandbox_generation', 'sandbox_scope')",
+  );
+  return Object.fromEntries(rows.map((row) => [String(row.key), String(row.value)]));
+}
+
+async function privateSecretPackage(packagePath) {
+  const resolved = assertPrivatePath(packagePath, 'Secret package');
+  const source = JSON.parse(await readFile(resolved, 'utf8'));
+  const pepper = source?.secrets?.PASSWORD_PEPPER;
+  if (source?.environment !== 'STAGING' || typeof pepper !== 'string' || pepper.length < 16) {
+    throw new Error('Private staging secret package is incomplete or mismatched.');
+  }
+  return { resolved, pepper };
+}
+
+async function writeLifecycleFiles({ privateDirectory, generation, pepper, archiveGeneration = 0 }) {
+  const directory = assertPrivatePath(privateDirectory, 'Private lifecycle directory');
+  await mkdir(directory, { recursive: true });
+  const now = new Date().toISOString();
+  const credentials = await createSandboxCredentials({ generation, pepper });
+  const label = `g${String(generation).padStart(4, '0')}`;
+  const seedPath = path.join(directory, `sandbox-seed-${label}.sql`);
+  const credentialsPath = path.join(directory, `sandbox-credentials-${label}.json`);
+  const writes = [
+    writeFile(seedPath, buildSandboxSeedSql({ generation, now, credentials }), {
+      flag: 'wx',
+      mode: 0o600,
+    }),
+    writeFile(
+      credentialsPath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          environment: 'STAGING',
+          generation,
+          createdAt: now,
+          accounts: Object.fromEntries(
+            Object.entries(credentials).map(([key, entry]) => [
+              key,
+              { accountId: entry.accountId, accessId: entry.accessId, password: entry.password },
+            ]),
+          ),
+        },
+        null,
+        2,
+      )}\n`,
+      { flag: 'wx', mode: 0o600 },
+    ),
+  ];
+  let archivePath = '';
+  if (archiveGeneration > 0) {
+    archivePath = path.join(directory, `sandbox-archive-g${String(archiveGeneration).padStart(4, '0')}.sql`);
+    writes.push(
+      writeFile(archivePath, buildSandboxArchiveSql({ generation: archiveGeneration, now }), {
+        flag: 'wx',
+        mode: 0o600,
+      }),
+    );
+  }
+  await Promise.all(writes);
+  return { seedPath, credentialsPath, archivePath, now };
+}
+
+async function captureAndVerifyBackup(configPath, privateDirectory, head, databaseId) {
+  const directory = assertPrivatePath(privateDirectory, 'Private lifecycle directory');
+  await mkdir(directory, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/gu, '-');
+  const exportPath = path.join(directory, `sandbox-backup-${stamp}.sql`);
+  const restoreDirectory = path.join(directory, `restore-proof-${stamp}`);
+  const executable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
+  execFileSync(
+    process.execPath,
+    [executable, 'd1', 'export', 'DB', '--remote', '--config', configPath, '--output', exportPath],
+    { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true },
+  );
+  await mkdir(restoreDirectory, { recursive: true });
+  runWranglerFile(configPath, exportPath, ['--local', '--persist-to', restoreDirectory]);
+  const exportBytes = await readFile(exportPath);
+  const localFiles = await readdir(restoreDirectory, { recursive: true });
+  const databaseRelativePath = localFiles.find((file) => String(file).endsWith('.sqlite'));
+  if (!databaseRelativePath) throw new Error('Private isolated restore verification failed.');
+  const database = new DatabaseSync(path.join(restoreDirectory, databaseRelativePath));
+  const integrityOk =
+    String(database.prepare('PRAGMA integrity_check').get()?.integrity_check ?? '').toLowerCase() === 'ok';
+  const foreignKeyRows = database.prepare('PRAGMA foreign_key_check').all();
+  database.close();
+  if (!integrityOk || foreignKeyRows.length) throw new Error('Private isolated restore verification failed.');
+  await writeFile(
+    path.join(directory, `sandbox-backup-manifest-${stamp}.json`),
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        environment: 'STAGING',
+        candidateSha: head,
+        databaseId,
+        createdAt: new Date().toISOString(),
+        exportSha256: createHash('sha256').update(exportBytes).digest('hex'),
+        isolatedRestore: { integrityOk: true, foreignKeyViolations: 0 },
+      },
+      null,
+      2,
+    )}\n`,
+    { flag: 'wx', mode: 0o600 },
+  );
+  return { integrityOk: true, foreignKeyViolations: 0 };
+}
+
 function expectedDatabaseId(configPath) {
   const executable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   const output = execFileSync(
@@ -48,7 +191,7 @@ function expectedDatabaseId(configPath) {
   );
   const identifier = exactDatabaseIdFromInventory(
     JSON.parse(output),
-    'hau-usc-logistics-staging',
+    'hau-usc-logistics-staging-sandbox-v0721',
   );
   if (!identifier) throw new Error('Exact staging D1 identity could not be verified.');
   return identifier;
@@ -118,6 +261,7 @@ async function main() {
     throw new Error(`Sandbox ${command} refused: ${configResult.issues.join(', ')}`);
   }
   const classification = classify(configPath);
+  const metadata = sandboxMetadata(configPath);
   const runtime = await runtimeStatus(configResult.safe.baseUrl.replace(/\/$/u, ''));
   const runtimeMatch =
     runtime.versionStatus === 200 &&
@@ -142,13 +286,64 @@ async function main() {
     allowlistCount: configResult.safe.allowlistCount,
     syntheticClassification: classification.rows,
     resetEligible: classification.resetEligible,
+    seedVersion: metadata.sandbox_seed_version ?? '',
+    sandboxGeneration: Number(metadata.sandbox_generation ?? 0),
+    syntheticOnly: metadata.sandbox_scope === 'SYNTHETIC_ONLY',
   };
   process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
   if (command !== 'status') {
     if (!runtimeMatch) throw new Error(`Sandbox ${command} refused: RUNTIME_IDENTITY_MISMATCH`);
     assertSandboxMutationReady({ configResult, classification, command });
-    throw new Error(
-      `Sandbox ${command} stopped after guards: an owner-reviewed lifecycle manifest is required before mutation.`,
+    const privateDirectory = argument('--private-dir');
+    const { pepper } = await privateSecretPackage(argument('--secret-package'));
+    const currentGeneration = Number(metadata.sandbox_generation ?? 0);
+    if (command === 'seed' && currentGeneration !== 0) {
+      throw new Error('Sandbox seed refused: SANDBOX_ALREADY_SEEDED');
+    }
+    const nextGeneration = command === 'reset' ? currentGeneration + 1 : 1;
+    if (command === 'reset' && currentGeneration < 1) {
+      throw new Error('Sandbox reset refused: SANDBOX_NOT_SEEDED');
+    }
+    const lifecycle = await writeLifecycleFiles({
+      privateDirectory,
+      generation: nextGeneration,
+      pepper,
+      archiveGeneration: command === 'reset' ? currentGeneration : 0,
+    });
+    let recovery = null;
+    if (command === 'reset') {
+      recovery = await captureAndVerifyBackup(
+        configPath,
+        privateDirectory,
+        head,
+        expectedDatabaseId(configPath),
+      );
+      runWranglerFile(configPath, lifecycle.archivePath, ['--remote']);
+    }
+    runWranglerFile(configPath, lifecycle.seedPath, ['--remote']);
+    const after = classify(configPath);
+    const afterMetadata = sandboxMetadata(configPath);
+    if (!after.resetEligible || Number(afterMetadata.sandbox_generation) !== nextGeneration) {
+      throw new Error('Sandbox lifecycle postcondition failed.');
+    }
+    process.stdout.write(
+      `${JSON.stringify(
+        {
+          command,
+          environment: 'STAGING',
+          candidateSha: head,
+          candidateBranch: branch,
+          schemaVersion: runtime.schemaVersion,
+          latestMigration: runtime.latestMigration,
+          ...sandboxSeedSummary(nextGeneration),
+          syntheticOnly: afterMetadata.sandbox_scope === 'SYNTHETIC_ONLY',
+          resetEligible: after.resetEligible,
+          isolatedRestore: recovery,
+          credentialsWrittenPrivately: true,
+        },
+        null,
+        2,
+      )}\n`,
     );
   }
 }
