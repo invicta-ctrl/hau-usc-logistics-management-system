@@ -5963,7 +5963,7 @@ export function createRuntimeExtensions(options) {
     if (authorization.scopeMode === 'SELF') return 'My own records';
     const committees = authorization.committees ?? [];
     if (committees.length) return committees.map((committee) => committee.name).join(', ');
-    return 'Server-assigned scope';
+    return 'Your assigned view';
   };
 
   const currentModuleLabel = () => {
@@ -6135,7 +6135,7 @@ export function createRuntimeExtensions(options) {
             <select id="shellWorkspaceSelect" aria-describedby="shellWorkspaceHelp"></select>
           </label>
           <small id="shellWorkspaceHelp">Workspace access is assigned by the server.</small>
-          <label for="shellScopeSelect">Operational scope
+          <label for="shellScopeSelect">View
             <select id="shellScopeSelect" aria-describedby="shellScopeHelp"></select>
           </label>
           <small id="shellScopeHelp">Scope is enforced by server authorization.</small>
@@ -6153,7 +6153,7 @@ export function createRuntimeExtensions(options) {
             <strong data-shell-account-name>Authenticated staff</strong>
             <span data-shell-account-role>Authorized</span>
             <small data-shell-account-viewing>Viewing: Assigned workspace</small>
-            <small data-shell-account-scope>Server-assigned scope</small>
+            <small data-shell-account-scope>Your assigned view</small>
             <div data-shell-account-actions></div>
           </div>
         </details>
@@ -6201,7 +6201,7 @@ export function createRuntimeExtensions(options) {
       }
       if (hasUnsavedRuntimeState()) {
         select.value = previous;
-        toast('Finish or clear the current draft before changing operational scope.', true);
+        toast('Finish or clear the current draft before changing view.', true);
         return;
       }
       select.disabled = true;
@@ -6217,7 +6217,7 @@ export function createRuntimeExtensions(options) {
         ]);
         const label = getState()?.operationalContext?.selected?.label ?? currentScopeLabel();
         internalShellBar.querySelector('[data-shell-context-announcement]').textContent =
-          `Operational scope changed to ${label}.`;
+          `View changed to ${label}.`;
         renderInternalShell();
       } catch (error) {
         select.value = previous;
@@ -7782,7 +7782,7 @@ export function createRuntimeExtensions(options) {
     const state = getState() ?? {};
     const status = (row) => String(row?.status ?? '').toUpperCase();
     let title = 'Leadership detail';
-    let note = 'Server-authorized records in the current operational scope.';
+    let note = 'Records you can see in this view.';
     let rows = [];
     if (destination === 'decision-queue') {
       title = 'Decision Queue';

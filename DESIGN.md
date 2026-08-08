@@ -1,84 +1,91 @@
 ---
 name: HAU-USC Logistics Management System
 description: Premium institutional operations with editorial command surfaces and purposeful choreography.
+note: >-
+  Reconciled to the PRODUCTION token layer (src/styles/visual/tokens-base.css)
+  on 2026-08-09 under .codex/specs/active/v0.7.3-frontend-design-integration.md.
+  It previously described the V4.1 PREVIEW system - Bricolage Grotesque, a 12px
+  label / 16px body ramp, oklch colours - which production never shipped. The
+  detector measures source against this block, so the mismatch reported real
+  production values as drift. The prose below still states the V4.1 direction;
+  this block states what production actually renders.
 colors:
-  oxblood-900: "oklch(22% 0.085 22)"
-  oxblood-800: "oklch(30% 0.12 22)"
-  oxblood-700: "oklch(37% 0.135 22)"
-  oxblood-600: "oklch(44% 0.13 22)"
-  oxblood-500: "oklch(52% 0.12 22)"
-  gold-700: "oklch(48% 0.09 82)"
-  gold-600: "oklch(58% 0.105 82)"
-  gold-500: "oklch(69% 0.115 82)"
-  gold-400: "oklch(77% 0.1 82)"
-  gold-300: "oklch(84% 0.075 82)"
-  gold-200: "oklch(91% 0.045 82)"
-  gold-100: "oklch(96% 0.02 82)"
-  canvas: "oklch(94% 0.012 70)"
-  paper: "oklch(98.5% 0.008 70)"
-  paper-2: "oklch(96.5% 0.012 70)"
-  paper-3: "oklch(99% 0.006 70)"
-  cream: "oklch(93% 0.027 76)"
-  ink: "oklch(19% 0.018 22)"
-  ink-2: "oklch(34% 0.018 22)"
-  muted: "oklch(44% 0.014 22)"
-  line: "oklch(85% 0.015 70)"
-  line-strong: "oklch(72% 0.021 70)"
-  line-hair: "oklch(91% 0.012 70)"
+  oxblood: "#3A0608"
+  burgundy: "#610B0F"
+  maroon: "#911414"
+  crimson: "#B32B2F"
+  antique: "#AF7925"
+  metallic: "#D3A73F"
+  bright: "#F4CB30"
+  light-gold: "#F8DC78"
+  cream: "#F1E5CA"
+  bg: "#ece3d2"
+  paper: "#FFFDF8"
+  paper-2: "#f8f1e3"
+  paper-3: "#ffffff"
+  white: "#FFFFFF"
+  ink: "#381517"
+  ink-2: "#5c4340"
+  muted: "#6b5450"
+  line: "#ddcdb0"
+  line-strong: "#c4a469"
+  line-hair: "#e8dcc4"
+  green: "#276448"
+  green-bg: "#E7F4EA"
+  amber: "#7D520E"
+  amber-bg: "#FFF4CB"
+  red: "#9B2024"
+  red-bg: "#FFF0ED"
+  blue: "#315F7F"
+  blue-bg: "#EAF3F8"
+  violet: "#684780"
+  violet-bg: "#F2ECF8"
+  gray: "#5E6268"
+  gray-bg: "#EEF0F2"
 typography:
   display:
-    fontFamily: '"Bricolage Grotesque Local", "Bahnschrift", "Aptos Display", system-ui, sans-serif'
-    fontSize: "clamp(42px, 6.4vw, 88px)"
-    fontWeight: 780
-    lineHeight: 0.96
-    letterSpacing: "-0.045em"
-  headline:
-    fontFamily: '"Bricolage Grotesque Local", "Bahnschrift", "Aptos Display", system-ui, sans-serif'
-    fontSize: "clamp(34px, 4vw, 62px)"
-    fontWeight: 780
+    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontSize: "clamp(34px, 3.6vw, 54px)"
+    fontWeight: 400
     lineHeight: 1.02
-    letterSpacing: "-0.035em"
+    letterSpacing: "-0.022em"
+  headline:
+    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontSize: "30px"
+    fontWeight: 400
+    letterSpacing: "-0.022em"
   title:
-    fontFamily: '"Bricolage Grotesque Local", "Bahnschrift", "Aptos Display", system-ui, sans-serif'
-    fontSize: "22px"
-    fontWeight: 700
+    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontSize: "20px"
+    fontWeight: 400
+  numeral:
+    fontFamily: 'Georgia, "Times New Roman", serif'
+    fontSize: "44px"
+    fontWeight: 400
+    fontFeature: "tabular-nums"
   body:
-    fontFamily: '"IBM Plex Sans Local", "Aptos", "Segoe UI Variable", system-ui, sans-serif'
-    fontSize: "16px"
+    fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
+    fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.5
-    letterSpacing: "-0.012em"
-  label:
-    fontFamily: '"IBM Plex Sans Local", "Aptos", "Segoe UI Variable", system-ui, sans-serif'
-    fontSize: "12px"
-    fontWeight: 600
-    letterSpacing: "0.115em"
   control:
-    fontFamily: '"IBM Plex Sans Local", "Aptos", "Segoe UI Variable", system-ui, sans-serif'
-    fontSize: "14px"
+    fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
+    fontSize: "13px"
     fontWeight: 700
-  wordmark:
-    fontFamily: '"Newsreader Local", "Palatino Linotype", Georgia, serif'
-    fontSize: "22px"
+  label:
+    fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
+    fontSize: "11px"
     fontWeight: 600
-    lineHeight: 1.15
-  numeral:
-    fontFamily: '"Bricolage Grotesque Local", "Bahnschrift", "Aptos Display", system-ui, sans-serif'
-    fontSize: "clamp(30px, 3vw, 46px)"
-    fontWeight: 900
-    lineHeight: 1
-    fontFeature: "tabular-nums"
+    letterSpacing: "0.1em"
+  micro:
+    fontFamily: '"Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif'
+    fontSize: "10px"
+    fontWeight: 600
 rounded:
-  xs: "4px"
-  sm: "8px"
-  md: "12px"
-  lg: "16px"
+  xs: "6px"
+  sm: "12px"
+  md: "18px"
   pill: "999px"
-  route-control: "5px 16px 5px 16px"
-  route-surface: "5px 18px 5px 18px"
-  route-card: "5px 24px 5px 24px"
-  field: "5px 14px 5px 14px"
-  dialog: "6px 24px 6px 24px"
 spacing:
   s-1: "4px"
   s-2: "8px"
@@ -87,71 +94,19 @@ spacing:
   s-5: "20px"
   s-6: "24px"
   s-8: "32px"
-  s-10: "44px"
-  s-12: "64px"
-  s-16: "84px"
-components:
-  button-primary:
-    backgroundColor: "{colors.oxblood-800}"
-    textColor: "{colors.gold-100}"
-    typography: "{typography.control}"
-    rounded: "{rounded.route-control}"
-    padding: "8px 16px"
-    height: "48px"
-  celestial-toggle:
-    backgroundColor: "{colors.oxblood-900}"
-    textColor: "{colors.gold-200}"
-    rounded: "{rounded.pill}"
-    width: "76px"
-    height: "38px"
-    motion: "240ms transform"
-  kinetic-menu:
-    backgroundColor: "{colors.oxblood-800}"
-    textColor: "{colors.gold-100}"
-    typography: "{typography.control}"
-    rounded: "{rounded.route-control}"
-    padding: "8px 16px"
-    height: "48px"
-  back-control:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.oxblood-900}"
-    typography: "{typography.control}"
-    rounded: "{rounded.route-control}"
-    padding: "4px 12px 4px 4px"
-    height: "48px"
-  command-search:
-    backgroundColor: "{colors.paper-2}"
-    textColor: "{colors.muted}"
-    typography: "{typography.body}"
-    rounded: "{rounded.pill}"
-    padding: "0 8px 0 16px"
-    height: "48px"
-  operational-brief:
-    backgroundColor: "{colors.oxblood-900}"
-    textColor: "{colors.gold-100}"
-    typography: "{typography.headline}"
-    rounded: "{rounded.route-card}"
-    padding: "44px"
-  status-chip:
-    backgroundColor: "#ece3d3"
-    textColor: "#5d4a4f"
-    typography: "{typography.label}"
-    rounded: "{rounded.pill}"
-    padding: "4px 8px"
-  input:
-    backgroundColor: "{colors.paper-2}"
-    textColor: "{colors.ink}"
-    typography: "{typography.control}"
-    rounded: "{rounded.field}"
-    padding: "8px 12px"
-    height: "48px"
-  public-bar:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.pill}"
-    padding: "8px 12px 8px 20px"
-    height: "68px"
+  s-10: "40px"
+elevation:
+  elev-1: "0 1px 2px rgba(58,6,8,0.05), 0 2px 8px rgba(58,6,8,0.05)"
+  elev-2: "0 2px 6px rgba(58,6,8,0.07), 0 10px 26px rgba(58,6,8,0.09)"
+  elev-3: "0 8px 20px rgba(58,6,8,0.13), 0 28px 60px rgba(58,6,8,0.18)"
+motion:
+  press: "120ms"
+  micro: "190ms"
+  component: "220ms"
+  route: "280ms"
+  overlay: "320ms"
+  hero: "420ms"
+  ease: "cubic-bezier(0.22, 1, 0.36, 1)"
 ---
 
 # Design System: HAU-USC Logistics Management System
