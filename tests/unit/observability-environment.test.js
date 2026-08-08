@@ -156,16 +156,18 @@ describe('v0.7 environment and observability foundation', () => {
     );
   });
 
-  it('preserves route glob strings while parsing strict private configuration JSON', () => {
+  it('preserves route glob strings while parsing private JSONC comments', () => {
     const config = parseJsonConfig(
-      JSON.stringify({
-        assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
-        vars: { ENVIRONMENT: 'STAGING', CANDIDATE_SHA: 'a'.repeat(40) },
-        r2_buckets: [
-          { binding: 'BRAND_ASSETS', bucket_name: 'staging-assets' },
-          { binding: 'EVIDENCE_ASSETS', bucket_name: 'staging-evidence' },
-        ],
-      }),
+      `{
+        // Worker-first route globs are string values, not block comments.
+        "assets": { "run_worker_first": ["/api/*", "/brand/*", "/media/*"] },
+        "vars": { "ENVIRONMENT": "STAGING", "CANDIDATE_SHA": "${'a'.repeat(40)}" },
+        /* Provider bindings remain available after comment stripping. */
+        "r2_buckets": [
+          { "binding": "BRAND_ASSETS", "bucket_name": "staging-assets" },
+          { "binding": "EVIDENCE_ASSETS", "bucket_name": "staging-evidence" }
+        ]
+      }`,
     );
 
     expect(config.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);

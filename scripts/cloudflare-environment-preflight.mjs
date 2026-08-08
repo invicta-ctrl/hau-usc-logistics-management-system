@@ -16,8 +16,68 @@ const PROTECTED_NAMES = new Set([
   'SESSION_SIGNING_SECRET',
 ]);
 
+export function stripJsonComments(value) {
+  const source = String(value ?? '');
+  let output = '';
+  let inString = false;
+  let escaped = false;
+  let lineComment = false;
+  let blockComment = false;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const character = source[index];
+    const next = source[index + 1];
+
+    if (lineComment) {
+      if (character === '\n' || character === '\r') {
+        lineComment = false;
+        output += character;
+      } else {
+        output += ' ';
+      }
+      continue;
+    }
+
+    if (blockComment) {
+      if (character === '*' && next === '/') {
+        output += '  ';
+        blockComment = false;
+        index += 1;
+      } else {
+        output += character === '\n' || character === '\r' ? character : ' ';
+      }
+      continue;
+    }
+
+    if (inString) {
+      output += character;
+      if (escaped) escaped = false;
+      else if (character === '\\') escaped = true;
+      else if (character === '"') inString = false;
+      continue;
+    }
+
+    if (character === '"') {
+      inString = true;
+      output += character;
+    } else if (character === '/' && next === '/') {
+      output += '  ';
+      lineComment = true;
+      index += 1;
+    } else if (character === '/' && next === '*') {
+      output += '  ';
+      blockComment = true;
+      index += 1;
+    } else {
+      output += character;
+    }
+  }
+
+  return output;
+}
+
 export function parseJsonConfig(value) {
-  return JSON.parse(value);
+  return JSON.parse(stripJsonComments(value));
 }
 
 function binding(config, collection, name) {

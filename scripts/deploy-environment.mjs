@@ -16,6 +16,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
 
 const TARGETS = Object.freeze({
   staging: {
@@ -54,11 +55,8 @@ if (!configPath || !path.isAbsolute(configPath)) {
   );
 }
 
-// Strip // and /* */ comments so a .jsonc private config parses.
 const raw = await readFile(configPath, 'utf8').catch(() => fail(`the private config at ${configPath} could not be read.`));
-const config = JSON.parse(
-  raw.replace(/\/\*[\s\S]*?\*\//gu, '').replace(/(^|[^:"'\\])\/\/.*$/gmu, '$1'),
-);
+const config = parseJsonConfig(raw);
 
 // 1. The private config must describe the intended environment.
 if (config.name !== expected.worker) fail(`the config targets Worker "${config.name}", not the ${target} Worker.`);
