@@ -19,7 +19,30 @@ is carried by hairline rules and alignment.
 The product is a custody ledger with manners. Nothing decorative may compete
 with an operational fact.
 
-## Color
+> **v2 supersedes parts of this record.** The current direction is *Kinetic
+> Institutional Operations*, implemented by
+> `prototypes/impeccable-whole-site-redesign-v2/` and documented in
+> `docs/design/IMPECCABLE_V2_DESIGN_DIRECTION.md`,
+> `docs/design/IMPECCABLE_V2_MOTION_SYSTEM.md`, and
+> `docs/design/IMPECCABLE_V2_DECISIONS.md`.
+>
+> Superseded v1 rules, explicitly:
+> - "Two elevation levels only; panels flat" → **three-step elevation ladder**;
+>   panels, queues, and detail panes are raised working surfaces.
+> - "`--radius-lg: 20px` retired; 8/12px only" → **radius variety restored**
+>   (6 / 10 / 14 / 18 px). 20px stays retired on full-width panels.
+> - "Section headings 17px" → **20px in the display serif**, with a 56px oxblood
+>   rule.
+> - "Attention values 32px" → **44px in the display serif**.
+> - "`--muted: #786369`" → **`#6f5a60`**, recomputed against v2's darker ground.
+> - "One acknowledgement animation total" → **a documented motion system**; the
+>   continuous-animation budget (at most one per viewport) still holds.
+> - Theme switching moved from preview chrome into the product shell as an
+>   animated sun/moon control.
+>
+> Everything below that is not listed above remains in force in v2.
+
+## Colors
 
 Identity ramp preserved verbatim from the reference.
 

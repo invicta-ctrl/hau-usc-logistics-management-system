@@ -59,9 +59,28 @@ Untouched and must stay untouched:
 
 ## components changed
 
-Not yet — v2 currently equals v1. The planned surface of change is the token
-layer, the shell chrome, the attention band, queue rows, detail panes, the
-theme toggle, and the state transitions.
+- **tokens.css** — rewritten: surface ladder, dark depth re-ordering, raised
+  type scale, radius variety, three-step elevation, motion tokens, anchor and
+  accent tokens, `--muted` recomputed. Compatibility aliases kept for
+  `--dur-state`, `--dur-move`, `--elev-raised`, `--elev-raised-strong`.
+- **motion.css** — new file; the whole motion system.
+- **shell.css** — rail re-toned with `--rail-*` tokens, gold edge hairline,
+  elevated topbar, dark-mode plaque overrides.
+- **components.css** — attention band as page anchor, editorial section rule,
+  raised panels and queue surfaces, elevated detail pane with anchor-washed
+  head, oxblood selected-row spine, split rebalanced, `.q__date` nowrap.
+- **surfaces.css** — asymmetric `.rails--overview`, portal lead action,
+  larger public headings, `.public__bar-actions`.
+- **responsive.css** — rebuilt mobile tab bar, `.rails--overview` collapse.
+- **components.js** — `themeToggle()`; `queueTable()` single class list plus
+  `nowrap` column option; `meter()` emits `scaleX`.
+- **app.js** — theme persistence, `setTheme()` with `.theme-anim`, product
+  toggle in the topbar, `.stage` staged reveal.
+- **surfaces/public.js** — `setPublicTheme()` and the public-bar toggle.
+- **surfaces/operations.js** — `.rails--overview`, `nowrap` date columns.
+- **tools/** — `export.mjs` writes the v2 filename and includes motion.css;
+  `verify.mjs` and `contrast.mjs` freeze motion before sampling; new
+  `theme-test.mjs` and `shot.mjs`.
 
 ## motion tokens (target)
 
@@ -90,15 +109,14 @@ status dot that genuinely reports a live/connected state.
 
 ## surfaces completed
 
-None in v2 yet. v1 covers 32 surfaces / 53 surface-state combinations across
-Public, Overviews, Operations, and Administration. See
-`docs/design/IMPECCABLE_SURFACE_MATRIX.md`.
+All 32 surfaces / 53 surface-state combinations, across Public, the shared
+authenticated shell, role workspaces, Operations, and Administration. Per-surface
+v2 changes are recorded in `docs/design/IMPECCABLE_V2_SURFACE_MATRIX.md`.
 
 ## surfaces not yet completed
 
-All v2 surfaces. The v2 matrix must preserve v1 coverage; a `Reports` surface
-must **not** be invented, because the repository still has a `src/features/reports/`
-directory with no bootstrap module and no view template.
+None. No `Reports` surface exists, deliberately: `src/features/reports/` has no
+bootstrap module and no view template, so inventing one would contradict source.
 
 ## accessibility findings
 
@@ -127,7 +145,17 @@ transition, not suppressed. No ignore rules exist.
 
 ## known defects
 
-None outstanding in v1.
+None outstanding. Fixed during v2: a 4px side-stripe AI tell on the attention
+band; two layout-thrashing transitions (`height`, `width`) now transform-driven;
+`--muted` at 4.23:1 against the new ground; a latent v1 bug where `queueTable`
+emitted two `class` attributes and silently lost numeric alignment; date columns
+wrapping mid-value; and a split-pane ratio that pushed queue titles onto second
+lines.
+
+Open risks are listed in `output/design/IMPECCABLE_REDESIGN_V2_REVIEW.md`
+under KNOWN RISKS — chiefly that `--muted` has now moved twice for contrast and
+should be computed against the ground rather than chosen by eye, and that the
+staged-reveal timing is tuned to preview-sized queues.
 
 ## exact tests
 

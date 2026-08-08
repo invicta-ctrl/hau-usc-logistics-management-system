@@ -486,18 +486,26 @@ table.q tbody tr[aria-selected="true"] {
   white-space: nowrap;
 }
 
+/* Dates are atomic: a wrapped "2026-08-\n19" is harder to scan than a
+   slightly narrower column. */
+.q__date {
+  white-space: nowrap;
+}
+
 /* Column priority: which columns survive a narrow container. */
 .col-p3 { /* first to go */ }
 .col-p2 { /* second to go */ }
 
 /* ---------- Split pane ---------- */
 
+/* The queue keeps the larger share. v2's detail pane carries more padding than
+   v1's, and an even split pushed queue titles and dates onto second lines. */
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.72fr);
-  gap: var(--s-4);
+  grid-template-columns: minmax(0, 1.32fr) minmax(360px, 0.68fr);
+  gap: var(--s-5);
   align-items: start;
-  margin-top: var(--s-4);
+  margin-top: var(--s-5);
 }
 
 .split__detail {
@@ -517,11 +525,21 @@ table.q tbody tr[aria-selected="true"] {
   min-width: 0;
 }
 
+/* The detail head is the working context: it reads as a header, not as more
+   table. The anchor wash ties it to the selected row's oxblood spine. */
 .detail__head {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-4);
+  padding: var(--s-5);
   border-bottom: 1px solid var(--line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: linear-gradient(160deg, var(--anchor-soft), transparent 70%);
+}
+
+.detail__title h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
 }
 
 .detail__title {

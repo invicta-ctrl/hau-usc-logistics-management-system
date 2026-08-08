@@ -103,12 +103,22 @@ export function queueTable({ caption, columns, rows, selectedRef = null }) {
     <tbody>${rows
       .map(
         (r) => `<tr${r.ref === selectedRef ? ' aria-selected="true"' : ''}>${r.cells
-          .map(
-            (cell, i) =>
-              `<${i === 0 ? 'th scope="row"' : 'td'}${
-                columns[i]?.priority ? ` class="col-p${columns[i].priority}"` : ''
-              }${columns[i]?.numeric ? ' class="q__num"' : ''}>${cell}</${i === 0 ? 'th' : 'td'}>`,
-          )
+          .map((cell, i) => {
+            const col = columns[i] ?? {};
+            // One class list. Emitting two class attributes silently drops the
+            // second, which is why numeric alignment was lost on any column
+            // that also had a priority.
+            const classes = [
+              col.priority ? `col-p${col.priority}` : '',
+              col.numeric ? 'q__num' : '',
+              col.nowrap ? 'q__date' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            const attr = classes ? ` class="${classes}"` : '';
+            const tag = i === 0 ? 'th scope="row"' : 'td';
+            return `<${tag}${attr}>${cell}</${i === 0 ? 'th' : 'td'}>`;
+          })
           .join('')}</tr>`,
       )
       .join('')}</tbody>

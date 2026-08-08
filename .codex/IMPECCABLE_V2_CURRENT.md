@@ -10,8 +10,8 @@ PROGRAM
   Not a v0.7.2 amendment; the active spec §3.3 defers the v0.8.0 redesign.
 
 STATUS
-  CHECKPOINT_2_COMPLETE — v2 visual system, motion system, and animated theme
-  toggle are in place and verified. Surface-level application is next.
+  CHECKPOINT_3_COMPLETE — v2 preview complete and verified across all 32
+  surfaces, both themes, and six widths. Ready for owner review.
 
 DESIGN BRANCH
   design/impeccable-whole-site-preview
@@ -39,8 +39,7 @@ V2 OUTPUT PATH
   output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v2.html
 
 CURRENT DESIGN SLICE
-  Slice C — apply the v2 system across every surface family: public portals,
-  role overviews, operational queues and detail, administration, and mobile.
+  (none active — v2 preview delivered)
 
 COMPLETED
   - Phase 0: v1 generated preview backed up byte-identically.
@@ -56,15 +55,23 @@ COMPLETED
     persistence, first-run system default, truthful aria-pressed, and
     reduced-motion support.
 
+  - Slice C: v2 composition applied across every surface family; asymmetric
+    overview rails, portal lead action, elevated queue/detail treatment,
+    rebuilt mobile tab bar. Two latent v1 defects fixed (duplicate class
+    attribute in queueTable; wrapping date columns).
+  - All v2 documentation and the v1-vs-v2 comparison review written.
+  - 57 v2 screenshots captured; the v1 set is untouched and uses identical
+    filenames for direct comparison.
+
 IN PROGRESS
-  (nothing — checkpoint boundary)
+  (nothing — v2 preview delivered)
 
 NEXT ACTION
-  Apply v2 composition surface by surface, starting with the public portal
-  family and the operational queue/detail pattern. Then write
-  IMPECCABLE_V2_DESIGN_DIRECTION.md, IMPECCABLE_V2_MOTION_SYSTEM.md,
-  IMPECCABLE_V2_SURFACE_MATRIX.md, IMPECCABLE_V2_DECISIONS.md, and the
-  v1-vs-v2 comparison review, then capture v2 screenshots.
+  Owner review of output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v2.html.
+  No further design slice is queued. If the owner wants more, the likely next
+  candidates are: re-tuning staged-reveal timing against realistic data volume,
+  View Transitions API for cross-surface navigation, and deciding whether
+  `reports` becomes a real surface.
 
 OPEN DESIGN FINDINGS
   Owner: v1 is structurally strong but visually too bland (~4/10 energy).

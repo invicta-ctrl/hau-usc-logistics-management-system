@@ -139,34 +139,40 @@
     gap: 3px;
     padding: 6px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--r-md);
+    border-radius: var(--r-lg);
     background: var(--paper);
-    box-shadow: var(--elev-raised);
+    box-shadow: var(--elev-3);
   }
 
   .tabbar button {
+    position: relative;
     display: grid;
     place-items: center;
-    gap: 3px;
-    min-height: 48px;
-    padding: 5px 3px;
+    gap: 4px;
+    min-height: 52px;
+    padding: 6px 3px;
     border-radius: var(--r-sm);
     color: var(--muted);
     font-size: 10px;
     font-weight: 700;
+    transition:
+      background-color var(--m-instant) var(--ease),
+      color var(--m-instant) var(--ease);
   }
 
   .tabbar button .icon {
     color: var(--icon-ink-muted);
+    transition: transform var(--m-small) var(--ease);
   }
 
   .tabbar button[aria-current="page"] {
-    background: var(--gold-300);
-    color: var(--ox-900);
+    background: var(--anchor);
+    color: var(--gold-200);
   }
 
   .tabbar button[aria-current="page"] .icon {
-    color: var(--ox-800);
+    color: var(--gold-300);
+    transform: translateY(-1px) scale(1.06);
   }
 
   /* Sticky primary action */

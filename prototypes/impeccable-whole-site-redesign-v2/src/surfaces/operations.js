@@ -156,7 +156,7 @@ function queueSection(state) {
               columns: [
                 { label: 'Request' },
                 { label: 'Committee', priority: 3 },
-                { label: 'Needed', priority: 2 },
+                { label: 'Needed', priority: 2, nowrap: true },
                 { label: 'Lines', numeric: true, priority: 2 },
                 { label: 'Status' },
               ],
@@ -177,7 +177,7 @@ function queueSection(state) {
 
 function rails(state) {
   if (state === 'empty') return '';
-  return `<div class="rails">
+  return `<div class="rails rails--overview">
     <section class="rail-block">
       <div class="rail-block__head"><h3>Recent activity</h3>
         <a class="btn btn--sm btn--quiet" href="#/audit.activity">All</a></div>
@@ -238,7 +238,7 @@ export function requestQueue({ state, selected }) {
     columns: [
       { label: 'Request' },
       { label: 'Committee', priority: 3 },
-      { label: 'Needed', priority: 2 },
+      { label: 'Needed', priority: 2, nowrap: true },
       { label: 'Routed', numeric: true, priority: 2 },
       { label: 'Status' },
     ],
@@ -369,7 +369,7 @@ export function lendingQueue({ state }) {
       columns: [
         { label: 'Loan' },
         { label: 'Borrower', priority: 3 },
-        { label: 'Return by', priority: 2 },
+        { label: 'Return by', priority: 2, nowrap: true },
         { label: 'Evidence', priority: 3 },
         { label: 'Status' },
       ],

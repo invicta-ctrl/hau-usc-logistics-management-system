@@ -1433,18 +1433,26 @@ table.q tbody tr[aria-selected="true"] {
   white-space: nowrap;
 }
 
+/* Dates are atomic: a wrapped "2026-08-\n19" is harder to scan than a
+   slightly narrower column. */
+.q__date {
+  white-space: nowrap;
+}
+
 /* Column priority: which columns survive a narrow container. */
 .col-p3 { /* first to go */ }
 .col-p2 { /* second to go */ }
 
 /* ---------- Split pane ---------- */
 
+/* The queue keeps the larger share. v2's detail pane carries more padding than
+   v1's, and an even split pushed queue titles and dates onto second lines. */
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(380px, 0.72fr);
-  gap: var(--s-4);
+  grid-template-columns: minmax(0, 1.32fr) minmax(360px, 0.68fr);
+  gap: var(--s-5);
   align-items: start;
-  margin-top: var(--s-4);
+  margin-top: var(--s-5);
 }
 
 .split__detail {
@@ -1464,11 +1472,21 @@ table.q tbody tr[aria-selected="true"] {
   min-width: 0;
 }
 
+/* The detail head is the working context: it reads as a header, not as more
+   table. The anchor wash ties it to the selected row's oxblood spine. */
 .detail__head {
   display: grid;
   gap: var(--s-2);
-  padding: var(--s-4);
+  padding: var(--s-5);
   border-bottom: 1px solid var(--line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: linear-gradient(160deg, var(--anchor-soft), transparent 70%);
+}
+
+.detail__title h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
 }
 
 .detail__title {
@@ -2299,10 +2317,10 @@ legend {
 
 .public__head h1 {
   font-family: var(--font-display);
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: clamp(32px, 4.4vw, 48px);
   font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-tight);
   text-wrap: balance;
 }
 
@@ -2326,10 +2344,70 @@ legend {
 
 /* Portal selector cards — heterogeneous choices, so cards are earned here. */
 
+/* The lead action takes the full first row. v1 gave four identical cards, so
+   nothing told a first-time visitor where to start. */
 .portal-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-3);
+}
+
+/* The lead action runs the full width as a horizontal row, so it reads as the
+   primary path rather than as a taller version of the same card. */
+.portal-grid > :first-child {
+  grid-column: 1 / -1;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-areas:
+    "mark title"
+    "mark sub";
+  align-items: center;
+  column-gap: var(--s-5);
+  row-gap: 2px;
+  padding: var(--s-5) var(--s-6);
+  border-color: var(--anchor-line);
+  background: linear-gradient(118deg, var(--anchor-soft), var(--paper) 62%);
+}
+
+.portal-grid > :first-child .portal-card__mark {
+  grid-area: mark;
+  align-self: center;
+}
+
+.portal-grid > :first-child b {
+  grid-area: title;
+}
+
+.portal-grid > :first-child span {
+  grid-area: sub;
+}
+
+.portal-grid > :first-child b {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+
+.portal-grid > :first-child .portal-card__mark {
+  width: 48px;
+  height: 48px;
+  border-color: var(--accent-line);
+  background: var(--icon-surface-strong);
+}
+
+@container app (max-width: 640px) {
+  .portal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Back to a stacked card so the mark and title do not crush at 320px. */
+  .portal-grid > :first-child {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "mark" "title" "sub";
+    align-items: start;
+    row-gap: var(--s-2);
+    padding: var(--s-5);
+  }
 }
 
 .portal-card {
@@ -2519,8 +2597,33 @@ legend {
 .rails {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--s-4);
-  margin-top: var(--s-4);
+  gap: var(--s-6);
+  margin-top: var(--s-6);
+}
+
+/* Deliberate asymmetry. v1 gave the three overview rails identical width, so
+   none of them led. Activity is the widest, readiness next, composition
+   narrowest — matching how often each is actually read. */
+.rails--overview {
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+@container app (max-width: 1023px) {
+  .rails--overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rails--overview > *:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@container app (max-width: 767px) {
+  .rails--overview,
+  .rails--overview > *:first-child {
+    grid-column: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .rail-block {
@@ -3115,34 +3218,40 @@ table.q tbody tr[aria-selected="true"] {
     gap: 3px;
     padding: 6px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--r-md);
+    border-radius: var(--r-lg);
     background: var(--paper);
-    box-shadow: var(--elev-raised);
+    box-shadow: var(--elev-3);
   }
 
   .tabbar button {
+    position: relative;
     display: grid;
     place-items: center;
-    gap: 3px;
-    min-height: 48px;
-    padding: 5px 3px;
+    gap: 4px;
+    min-height: 52px;
+    padding: 6px 3px;
     border-radius: var(--r-sm);
     color: var(--muted);
     font-size: 10px;
     font-weight: 700;
+    transition:
+      background-color var(--m-instant) var(--ease),
+      color var(--m-instant) var(--ease);
   }
 
   .tabbar button .icon {
     color: var(--icon-ink-muted);
+    transition: transform var(--m-small) var(--ease);
   }
 
   .tabbar button[aria-current="page"] {
-    background: var(--gold-300);
-    color: var(--ox-900);
+    background: var(--anchor);
+    color: var(--gold-200);
   }
 
   .tabbar button[aria-current="page"] .icon {
-    color: var(--ox-800);
+    color: var(--gold-300);
+    transform: translateY(-1px) scale(1.06);
   }
 
   /* Sticky primary action */
@@ -4050,12 +4159,22 @@ function queueTable({ caption, columns, rows, selectedRef = null }) {
     <tbody>${rows
       .map(
         (r) => `<tr${r.ref === selectedRef ? ' aria-selected="true"' : ''}>${r.cells
-          .map(
-            (cell, i) =>
-              `<${i === 0 ? 'th scope="row"' : 'td'}${
-                columns[i]?.priority ? ` class="col-p${columns[i].priority}"` : ''
-              }${columns[i]?.numeric ? ' class="q__num"' : ''}>${cell}</${i === 0 ? 'th' : 'td'}>`,
-          )
+          .map((cell, i) => {
+            const col = columns[i] ?? {};
+            // One class list. Emitting two class attributes silently drops the
+            // second, which is why numeric alignment was lost on any column
+            // that also had a priority.
+            const classes = [
+              col.priority ? `col-p${col.priority}` : '',
+              col.numeric ? 'q__num' : '',
+              col.nowrap ? 'q__date' : '',
+            ]
+              .filter(Boolean)
+              .join(' ');
+            const attr = classes ? ` class="${classes}"` : '';
+            const tag = i === 0 ? 'th scope="row"' : 'td';
+            return `<${tag}${attr}>${cell}</${i === 0 ? 'th' : 'td'}>`;
+          })
           .join('')}</tr>`,
       )
       .join('')}</tbody>
@@ -5133,7 +5252,7 @@ function queueSection(state) {
               columns: [
                 { label: 'Request' },
                 { label: 'Committee', priority: 3 },
-                { label: 'Needed', priority: 2 },
+                { label: 'Needed', priority: 2, nowrap: true },
                 { label: 'Lines', numeric: true, priority: 2 },
                 { label: 'Status' },
               ],
@@ -5154,7 +5273,7 @@ function queueSection(state) {
 
 function rails(state) {
   if (state === 'empty') return '';
-  return `<div class="rails">
+  return `<div class="rails rails--overview">
     <section class="rail-block">
       <div class="rail-block__head"><h3>Recent activity</h3>
         <a class="btn btn--sm btn--quiet" href="#/audit.activity">All</a></div>
@@ -5215,7 +5334,7 @@ function requestQueue({ state, selected }) {
     columns: [
       { label: 'Request' },
       { label: 'Committee', priority: 3 },
-      { label: 'Needed', priority: 2 },
+      { label: 'Needed', priority: 2, nowrap: true },
       { label: 'Routed', numeric: true, priority: 2 },
       { label: 'Status' },
     ],
@@ -5346,7 +5465,7 @@ function lendingQueue({ state }) {
       columns: [
         { label: 'Loan' },
         { label: 'Borrower', priority: 3 },
-        { label: 'Return by', priority: 2 },
+        { label: 'Return by', priority: 2, nowrap: true },
         { label: 'Evidence', priority: 3 },
         { label: 'Status' },
       ],
