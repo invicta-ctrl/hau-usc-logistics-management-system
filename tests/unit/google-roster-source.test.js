@@ -200,12 +200,12 @@ describe('Google Sheets identity roster source', () => {
       'Review_Notes',
     ]);
     expect(result.rows).toEqual([
-      ['SYNTHETIC-001', 'synthetic.officer@example.invalid', 'Synthetic Officer', 'VERIFIED', true, ''],
+      ['SYNTHETIC-001', 'private@example.invalid', 'Synthetic Officer', 'VERIFIED', true, ''],
       ['', '', 'Incomplete Officer', 'VERIFIED', true, ''],
     ]);
     expect(result.fingerprintSource).toEqual({ headers: rawHeaders, rows: rawRows });
     expect(JSON.stringify(result.rows)).not.toMatch(
-      /private@example|00000000000|They\/Them|2000-01-01|Synthetic Program/u,
+      /synthetic\.officer@example|00000000000|They\/Them|2000-01-01|Synthetic Program/u,
     );
   });
 });

@@ -4,6 +4,11 @@
 
 ### Fixed
 
+- **USC staff identity projection.** The approved protected Google directory
+  adapter now projects the owner-authoritative `Working Email` column for USC
+  staff identity instead of the separate HAU educational email column. The
+  runtime still requires an exact ACTIVE and VERIFIED protected-directory match;
+  the configured Gmail domain remains only a coarse first-stage filter.
 - **RV-01 request visibility.** The authenticated Request module now
   independently projects the canonical parent and request-line review queue.
   Previously the module's server projection and strict client allowlist both

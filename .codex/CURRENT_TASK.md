@@ -1,16 +1,16 @@
 # Current Task
 
 INTENT: BUG_FIX, TESTING, DEPLOYMENT, RELEASE_CLOSEOUT
-SECONDARY INTENTS: SECURITY, TRANSACTIONAL_INTEGRITY, OPERATIONS, RELEASE
-MODE: record the accepted repository candidate and evaluate private staging prerequisites without widening authority
+SECONDARY INTENTS: SECURITY, PRIVACY, OPERATIONS, RELEASE
+MODE: execute the owner-authorized final identity, staging, and production closeout
 TARGET: HAU-USC Logistics v0.7.2 Production Access and Operations release
 SKILLS: lean-ctx for targeted repository work; Cloudflare deployment workflow only after repository, review, backup, identity-class, and private-config gates pass; GitHub release workflow for PR integration
-AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; `.codex/V0_7_2_CODEX_CONTINUATION_HANDOFF.md`; owner-supplied v0.7.2 Codex resume prompt; repository invariants
-RISK: critical because reservation concurrency, inventory availability, migration, providers, and production are in scope
-DELIVERABLE: bind reservations to the request line's authoritative item, bind public request retries to actor and payload before returning tracking access, obtain exact-SHA security and transaction PASS, and continue through staging/release only when every private and recovery gate passes
-VERIFICATION: two pre-fix behavioral failures; existing concurrent reservation proof; focused unit/Worker tests; full repository, Worker/D1, and browser gates; deterministic default artifact; fresh same-SHA security and transaction reviews; exact-head CI; staged backup/migration/readiness/reconciliation before production
-STOP CONDITIONS: unknown work or target; capacity invariant cannot be expressed atomically; contract/spec conflict; unresolved P0/P1; missing identity class/private config/backup/rollback; provider or target mismatch; privacy/secret risk; external MFA or owner-only browser action
-STATUS: REPOSITORY_CANDIDATE_ACCEPTED_PRIVATE_STAGING_INPUT_REQUIRED
+AUTHORITY: `.codex/specs/v0.7.2-production-access-operations.md`; `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`; owner-supplied final identity/staging/production closeout prompt dated 2026-08-08; repository invariants
+RISK: critical because protected identity reconciliation, email verification, D1 migration, release integration, and production are in scope
+DELIVERABLE: project the protected USC staff directory from approved Working Email values only; preserve strict Option A exact ACTIVE+VERIFIED matching; complete staging acceptance; merge, tag, and release v0.7.2; back up, migrate, deploy, reconcile production; rebaseline staging
+VERIFICATION: aggregate-only source/D1 reconciliation; focused identity regression; exact-head CI; fresh private exact-SHA configuration and backup/recovery evidence; migration 0030 identity; readiness; real Resend single-use flow; negative non-roster Gmail proof; production backup, smoke, integrity, reconciliation, and staging parity
+STOP CONDITIONS: unsafe protected projection; inability to deliver real Resend mail to an eligible owner-controlled mailbox; unresolved P0/P1; backup/restore, target/binding, migration/integrity, SHA, secret, rollback, privacy, or external owner-action blocker
+STATUS: EXECUTING_OWNER_AUTHORIZED_FINAL_CLOSEOUT
 
 Starting SHA: `1f216a107d67a69403df1573875e2b93a95d12c2`
 
@@ -22,12 +22,13 @@ Accepted specification:
 Accepted amendment:
 `.codex/specs/v0.7.2-rv-01-request-visibility-amendment.md`
 
-Current exact action: preserve reviewed implementation SHA
-`6deed1a31ded616fd54d33719230336d9cd5bf64`, record the passing review/CI
-evidence in a documentation-only successor, then locate or obtain the
-owner-supplied coarse identity domain class for the private
-`ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON`. Do not derive or invent it. Zero
-unresolved P0/P1 is required before any staging operation.
+Current exact action: repair the approved Google source adapter so the protected
+staff projection uses `Working Email` rather than the separate HAU educational
+email column, add focused regression proof, deploy the new exact SHA to staging,
+back up and reconcile the protected D1 projection through its governed owner
+workflow, then execute the remaining acceptance and production closeout gates.
+The private identity class is owner-approved as `gmail.com`; it remains only a
+coarse first-stage filter and is never staff authorization.
 
 Exact-SHA review blockers being repaired:
 
