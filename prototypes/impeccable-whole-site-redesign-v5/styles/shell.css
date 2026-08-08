@@ -1,0 +1,502 @@
+/* Preview chrome + application shell.
+   Layout responds to the *frame* via container queries, so the viewport
+   switcher reflows the real layout and browser resizing does too. */
+
+/* ---------- Preview chrome (not part of the product design) ---------- */
+
+.preview-bar {
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding: 12px clamp(12px, 2vw, 20px);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.preview-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-right: auto;
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.preview-bar__tag {
+  padding: 4px 8px;
+  border: 1px solid var(--gold-500);
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--gold-300) 30%, transparent);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+[data-theme="dark"] .preview-bar__tag {
+  color: var(--gold-300);
+}
+
+.preview-group {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+}
+
+.preview-group > button {
+  min-height: 32px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  color: var(--ink-2);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.preview-group > button:hover {
+  background: var(--paper);
+}
+
+.preview-group > button[aria-pressed="true"] {
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.preview-select {
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+  color: var(--ink);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+/* ---------- Frame: the container-query root ---------- */
+
+.frame {
+  container-type: inline-size;
+  container-name: app;
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--canvas);
+  /* Width is deliberately not animated — that would thrash layout, and a
+     preview width change should settle instantly so the result can be judged. */
+}
+
+.frame[data-viewport="tablet"] {
+  max-width: 834px;
+}
+
+.frame[data-viewport="mobile"] {
+  max-width: 390px;
+}
+
+.frame[data-viewport="tablet"],
+.frame[data-viewport="mobile"] {
+  border-inline: 1px solid var(--line-strong);
+  box-shadow: var(--elev-raised);
+}
+
+/* ---------- Application shell ---------- */
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+  min-height: 720px;
+}
+
+.shell[data-rail="collapsed"] {
+  --rail-w: var(--rail-w-collapsed);
+}
+
+/* Rail */
+
+.rail {
+  position: sticky;
+  /* --preview-bar-h is published by the preview chrome; it is 0 in any real
+     integration, where the shell owns the full viewport. */
+  top: var(--preview-bar-h, 0px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100vh - var(--preview-bar-h, 0px));
+  max-height: calc(100vh - var(--preview-bar-h, 0px));
+  min-height: 0;
+  overflow: hidden;
+  /* v2: rail sits between ground and working surface in both themes, so
+     content advances and navigation recedes. */
+  background: linear-gradient(168deg, var(--rail-from), var(--rail-to));
+  border-right: 1px solid var(--rail-line);
+  box-shadow: 1px 0 0 rgba(0, 0, 0, 0.06);
+  color: var(--rail-ink);
+}
+
+/* A single gold hairline down the rail edge — a compositional device, not
+   decoration: it marks where navigation ends and work begins. */
+.rail::after {
+  position: absolute;
+  top: 12%;
+  right: -1px;
+  bottom: 12%;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 30%,
+    color-mix(in srgb, var(--gold-400) 55%, transparent) 70%,
+    transparent
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.rail__brand {
+  display: grid;
+  gap: 4px;
+  padding: var(--s-5) var(--s-4) var(--s-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+
+.rail__marks {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--s-3);
+}
+
+.rail__mark {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--gold-300);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+/* In dark mode --paper is near-black and --ox-800 lightens, so the light-mode
+   plaque would put dark red on dark. Invert the plaque instead. */
+[data-theme="dark"] .rail__mark {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gold-300);
+}
+
+.rail__name {
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 21px;
+  line-height: 1.1;
+}
+
+.rail__scroll {
+  display: grid;
+  align-content: start;
+  gap: var(--s-4);
+  min-height: 0;
+  padding: var(--s-4) var(--s-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.rail__section {
+  display: grid;
+  gap: 4px;
+}
+
+.rail__section > .label {
+  padding: 0 var(--s-2) 8px;
+  color: color-mix(in srgb, var(--cream) 76%, transparent);
+  font-size: var(--t-2xs);
+}
+
+.nav-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 44px;
+  padding: 8px var(--s-2);
+  border-radius: var(--r-sm);
+  color: var(--cream);
+  text-align: left;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: var(--white);
+}
+
+.nav-item[aria-current="page"] {
+  background: var(--gold-300);
+  color: var(--ox-900);
+  font-weight: 700;
+}
+
+.nav-item[aria-current="page"] .icon {
+  color: var(--ox-800);
+}
+
+.nav-item .icon {
+  color: var(--gold-300);
+}
+
+.nav-item__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+}
+
+.nav-item__text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--t-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail__foot {
+  display: grid;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-top: 1px solid color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+
+.scope-button {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: 46px;
+  padding: 8px var(--s-2);
+  border: 1px solid color-mix(in srgb, var(--gold-300) 24%, transparent);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--white);
+  text-align: left;
+  transition: background var(--dur-state) var(--ease);
+}
+
+.scope-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.scope-button__text {
+  display: grid;
+  min-width: 0;
+}
+
+.scope-button__text b {
+  overflow: hidden;
+  font-size: var(--t-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scope-button__text span {
+  overflow: hidden;
+  color: var(--cream);
+  font-size: var(--t-2xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ox-800);
+  font-size: var(--t-2xs);
+  font-weight: 900;
+}
+
+[data-theme="dark"] .avatar {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--gold-300);
+}
+
+[data-theme="dark"] .account-button .avatar {
+  background: var(--ox-700);
+  color: var(--white);
+}
+
+/* Workspace */
+
+.workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  background: var(--canvas);
+}
+
+.topbar {
+  position: sticky;
+  top: var(--preview-bar-h, 0px);
+  z-index: 60;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 62px;
+  padding: 12px clamp(16px, 2.4vw, 28px);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  box-shadow: var(--elev-1);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--paper);
+  color: var(--icon-ink);
+  transition: border-color var(--dur-state) var(--ease),
+    background var(--dur-state) var(--ease);
+}
+
+.icon-button:hover {
+  border-color: var(--line-strong);
+  background: var(--canvas);
+}
+
+.icon-button--round {
+  border-radius: 50%;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: 100%;
+  max-width: 460px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--canvas);
+}
+
+.search input {
+  min-width: 0;
+  /* Fill the label so the measured control matches the visible target. */
+  min-height: 34px;
+  flex: 1;
+  border: 0;
+  background: none;
+  outline: none;
+  font-size: var(--t-sm);
+}
+
+.search kbd {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--paper);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: var(--t-2xs);
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.notif {
+  position: relative;
+}
+
+.notif__count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border: 2px solid var(--paper);
+  border-radius: var(--r-pill);
+  background: var(--ox-600);
+  color: var(--white);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.account-button {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: 4px 8px 4px 4px;
+  border-radius: var(--r-sm);
+}
+
+.account-button:hover {
+  background: var(--canvas);
+}
+
+.account-button .avatar {
+  background: var(--ox-800);
+  color: var(--white);
+}
+
+.account-button__text {
+  display: grid;
+  text-align: left;
+}
+
+.account-button__text b {
+  font-size: var(--t-sm);
+}
+
+.account-button__text span {
+  color: var(--muted);
+  font-size: var(--t-xs);
+}
+
+.main {
+  min-width: 0;
+  padding: var(--s-6) clamp(16px, 2.4vw, 28px) var(--s-10);
+}
+
+.main__inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* Mobile drawer + bottom nav (hidden until the container is narrow) */
+
+.rail__scrim {
+  display: none;
+}
+
+.tabbar {
+  display: none;
+}
