@@ -15,6 +15,7 @@
     "check:apps-script": "node scripts/check-apps-script.mjs",
     "check:agents": "node scripts/check-agent-instructions.mjs",
     "check:continuation": "node scripts/check-work-continuation.mjs",
+    "handoff:verify": "node scripts/handoff-verify.mjs",
     "staging:authorization:init": "node scripts/staging-authorization.mjs init",
     "staging:authorization:check": "node scripts/staging-authorization.mjs check",
     "phase3:authorization:init": "node scripts/phase3-staging-authorization.mjs init",

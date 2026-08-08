@@ -1632,3 +1632,18 @@ STAGING ACCEPTANCE: SLICES 1-3 PASSED
 ### Preserved
 
 - HAU-USC visual identity, request/stock routing, Release Desk, lending, restocking, procurement, canvass, inventory, request-only mode, status chips, cards, tables, mobile cards, and preview safeguards.
+
+## Unreleased - V0.7.2.1 governance normalization (2026-08-08)
+
+### Added
+
+- Canonical current pointer, bounded task, and environment handoff contract with deterministic local validation.
+
+### Changed
+
+- Replaced version-specific continuity routing with a compact version-neutral governance, writer-lock, and model-escalation chain.
+- Compressed active status, plan, onboarding, and operator continuity records to current evidence and boundaries.
+
+### Boundary
+
+- Documentation and validation only; no runtime source, generated artifact, provider, database, production, or remote Git mutation.

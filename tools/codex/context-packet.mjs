@@ -3,10 +3,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const sources = [
-  ['CURRENT TASK', '.codex/CURRENT_TASK.md', 3600],
-  ['CURRENT SLICE', '.plans/current-slice.md', 2800],
-  ['PROGRAM STATUS', '.plans/AUTONOMOUS_PROGRAM_STATUS.md', 2800],
-  ['CONTINUATION', 'docs/WORK_CONTINUATION.md', 2800],
+  ['CURRENT POINTER', '.codex/CURRENT.md', 2200],
+  ['CURRENT TASK', '.codex/CURRENT_TASK.md', 3000],
+  ['CURRENT HANDOFF', '.codex/CURRENT_HANDOFF.md', 3000],
+  ['CURRENT SLICE', '.plans/current-slice.md', 1800],
+  ['CONTINUATION', 'docs/WORK_CONTINUATION.md', 1800],
 ];
 
 export function truncateUtf8(text, maxBytes, marker) {
