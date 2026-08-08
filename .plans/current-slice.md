@@ -1,7 +1,7 @@
 # Current Slice
 
 MILESTONE: V0.7.2.1 Repository Normalization and Permanent Staging Sandbox
-STATUS: BLOCKED - owner staging data disposition required
+STATUS: ACTIVE - ISOLATED STAGING ACCEPTED EXCEPT ONE-TIME EMAIL REDEMPTION
 BRANCH: maintenance/v0.7.2.1-repository-normalization
 BASE_SHA: 7f4eb25eac915a3a98453b4cda8df01ca4dbaf8c
 HEAD: GIT_HEAD
@@ -10,7 +10,7 @@ ACCEPTED_SPEC: .codex/specs/active/v0.7.2.1-repository-normalization-and-staging
 
 ## Scope
 
-Complete the accepted V0.7.2.1 repository normalization and fail-closed staging safeguards without changing production. Repository implementation is locally complete; private staging recovery/reset/reseed/deployment and PR integration remain stopped.
+Complete the accepted V0.7.2.1 repository normalization and isolated staging acceptance without changing production. The dedicated sandbox is on the exact candidate with generation 4, private identity and recipient containment, recovery proof, and provider acceptance; one-time email redemption and repository integration remain.
 
 ## Acceptance
 
@@ -21,8 +21,8 @@ Complete the accepted V0.7.2.1 repository normalization and fail-closed staging 
 
 ## Stop conditions
 
-Stop for non-synthetic/unclassified staging rows, missing owner lifecycle authority, missing backup/restore proof, private-value exposure, production crossover, exact-resource mismatch, unexpected dirty overlap, or any unresolved P0/P1.
+Stop for non-synthetic/unclassified staging rows, missing backup/restore proof, private-value exposure, production crossover, exact-resource mismatch, unexpected dirty overlap, failed one-time verification semantics, or any unresolved P0/P1.
 
 ## Next exact action
 
-Obtain owner-approved disposition for the current staging rows or authorize a new isolated staging D1; then complete backup/restore, lifecycle reseed, staging acceptance, and protected PR integration.
+Redeem the single legitimate staging verification code through the normal confirmation endpoint, prove replay denial, then run the one final repository gate/review and protected PR integration.

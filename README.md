@@ -18,8 +18,8 @@ Then perform the task's Git handshake. Do not treat this README, old task record
 ## Current state
 
 - Canonical released application: v0.7.2, release SHA 84eacfcdb47a3985fed48e3ba14bb413946d4410.
-- Active repository branch: maintenance/v0.7.2.1-repository-normalization.
-- Active accepted scope: repository governance/continuity normalization and an isolated synthetic staging sandbox.
+- Active repository branch: maintenance/v0.7.2.1-repository-normalization until protected closeout merges.
+- Active accepted scope: repository governance/continuity normalization and the permanent isolated synthetic staging sandbox; see `.codex/CURRENT.md` for the exact remaining action.
 - Production runtime, data, bindings, recovery state, and release tag remain outside this maintenance scope.
 
 ## Local commands

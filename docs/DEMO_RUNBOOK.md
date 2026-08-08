@@ -7,7 +7,7 @@ artifact. It contains the complete fictional preview application plus an
 accessible seven-step guide. It requires no server, external stylesheet,
 external script, Google account, Sheet, Drive folder, or network connection.
 
-The tracked Phase 2 review images are under `docs/previews/v0.6-phase-2/`.
+The historical Phase 2 review images are under `docs/archive/v0.6/previews-v0.6-phase-2/`.
 They cover login/onboarding, all five internal experiences, Request Center,
 Lending Hub, Release Desk, and representative 390 px mobile adaptations. The
 preview manifest records the fixed clock, viewport, regeneration command, and

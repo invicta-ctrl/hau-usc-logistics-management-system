@@ -5,14 +5,16 @@
 ### Added
 
 - Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
+- Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
 
 ### Fixed
 
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
+- Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
 ### Verification boundary
 
-- Generation 3, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, and negative email containment pass. Positive delivery remains stopped because the approved recipient is not eligible under the protected identity source; no provider call or challenge was created.
+- Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, and negative zero-challenge containment pass. One approved challenge was provider-accepted; one-time redemption remains pending.
 
 ## 0.7.2 - 2026-08-08
 
@@ -791,7 +793,7 @@
 ### Added
 
 - Thirteen tracked fixed-clock previews covering inherited login/onboarding, all five internal experiences, Request Center, Lending Hub, Release Desk, and representative 390 px adaptations.
-- System/role, Request Center, Lending Hub, Administrator/Director, and demo guidance plus the durable `.codex/PHASE_2_TERRA_HANDOFF.md`.
+- System/role, Request Center, Lending Hub, Administrator/Director, and demo guidance plus the durable `.codex/archive/releases/v0.7.0-v0.7.1/PHASE_2_TERRA_HANDOFF.md`.
 - Opt-in preview generation so routine browser and CI runs do not rewrite tracked review artifacts.
 
 ### Fixed
@@ -930,7 +932,7 @@
 
 ### Added
 
-- Locked `docs/V0_6_ARCHITECTURE_AND_SECURITY.md` covering the three product surfaces, five internal experiences, account lifecycle, canonical role/scope routing, cryptography, protected-action order, threat model, Phase 3 migration boundary, and v0.5 rollback.
+- Locked `docs/archive/v0.6/V0_6_ARCHITECTURE_AND_SECURITY.md` covering the three product surfaces, five internal experiences, account lifecycle, canonical role/scope routing, cryptography, protected-action order, threat model, Phase 3 migration boundary, and v0.5 rollback.
 - Portable server authentication modules for PBKDF2 password credentials, digest-only opaque tokens, activation and authenticated sessions, CSRF, reset, account disable/revoke, canonical authorization, synthetic repositories, HTTP routing, and secure cookie serialization.
 - HTTP-mode Access ID login and starter-account activation UI that collects profile and password fields while preserving server-owned role and committee assignments.
 - Focused unit and browser regressions for password/token handling, cookies, safe HTTP responses, enumeration resistance, starter replay/expiry, role preservation, session invalidation, capability/scope denial, CSRF, client contracts, and the request-only authentication boundary.
