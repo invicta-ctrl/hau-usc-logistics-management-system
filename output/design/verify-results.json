@@ -47,7 +47,8 @@
     "dialog": {
       "before": "confirm-accept",
       "open": true,
-      "focusMovedIn": true
+      "focusMovedIn": true,
+      "focusedAction": "confirm-done"
     },
     "afterEscape": {
       "stillOpen": false,
@@ -56,7 +57,7 @@
   },
   "reducedMotion": {
     "matches": true,
-    "transitionDuration": "1e-05s"
+    "transitionDuration": "0.001s"
   },
   "zoom": {
     "overflowAt200": []

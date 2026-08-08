@@ -1,20 +1,31 @@
 # Current Task
 
 INTENT: FRONTEND REDESIGN ARTIFACT
-MODE: execute and verify; stop before PR, merge, deploy, or production mutation
-TARGET: HAU-USC Logistics whole-site redesign preview v3
+MODE: execute, verify, document, commit, and push the design branch; stop before PR, merge, deploy, or production mutation
+TARGET: HAU-USC Logistics whole-site redesign preview v4
 SKILLS: Hallmark; Impeccable; lean-ctx
-AUTHORITY: owner continuation packet v3; accepted v0.7.2 workflow and privacy invariants; repository AGENTS.md; PRODUCT.md; DESIGN.md
+AUTHORITY: owner v4 continuation packet; accepted v3/product constraints; repository AGENTS.md; PRODUCT.md; DESIGN.md
 RISK: medium because the artifact spans every representative surface but is isolated from runtime code
-DELIVERABLE: modular v3 source, single-file export, responsive screenshots, research/decision/review records, and resumable design-branch handoff
-VERIFICATION: six-width Chromium audit; contrast sweep; theme persistence and reduced-motion test; screenshot inspection; independent finish review; source/export parity; Git containment
-STOP CONDITIONS: any backend/provider/deployment/release mutation; missing surface; privacy or workflow contradiction; unknown overlapping work
-STATUS: V3_ACCEPTED_FRONTEND_CANDIDATE
+DELIVERABLE: modular v4 source, single-file export, 33-route/53-variant parity, responsive screenshots, research/decision/motion records, independent finish verdict, recorded design system, and pushed design-branch handoff
+VERIFICATION: six-width Chromium audit; contrast sweep; theme persistence and reduced-motion test; finite motion test; screenshot inspection; registry parity; source/export parity; independent reviewer verdict; documenter validation; Git containment
+STOP CONDITIONS: any backend/provider/deployment/release mutation; missing route/state; privacy or workflow contradiction; unknown overlapping work; unverified reviewer or commit claim
+STATUS: V4_REVIEW_SHIP_DOCUMENTED_COMMIT_PENDING
 
 Starting branch/SHA: `design/impeccable-whole-site-preview` at
-`d94d7a294450de7a78aac2b94c0387e065e44c29`.
+`182cea85fd40adb23e2efa9672295de50526f0ca`.
 
-Operational pointer: `.codex/IMPECCABLE_V3_CURRENT.md`.
+Operational pointer: `.codex/IMPECCABLE_V4_CURRENT.md`.
+
+Source: `prototypes/impeccable-whole-site-redesign-v4/`.
+
+Export: `output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`.
+
+Recorded evidence: verify zero findings/errors/external requests at 320, 375,
+414, 768, 1024, and 1440; contrast zero; theme green; motion 10/10; review
+captures 12/12. The detector ran exactly once with three warnings repaired and
+was not rerun. The fresh finish reviewer scored all five findings resolved and
+returned `ship`; the documenter refreshed `DESIGN.md` and
+`.impeccable/design.json`. The checkpoint commit/push remains pending.
 
 ---
 

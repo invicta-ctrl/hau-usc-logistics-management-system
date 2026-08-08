@@ -2,15 +2,17 @@
   "schemaVersion": 1,
   "recordedAt": "2026-08-08",
   "genre": "modern-minimal",
-  "macrostructure": "Workbench",
+  "macrostructure": "Map / Diagram",
   "designSystem": "DESIGN.md",
-  "directionSource": "owner continuation packet v3",
+  "directionSource": "owner v4 direction packet",
+  "directionOwner": "v4",
   "directionPinned": true,
-  "conceptTournament": "not run because the owner packet fixes the palette, hierarchy, controls, motion character, and preservation boundary",
+  "conceptSeed": "surface/operate key 00000004 -> candidate 5",
+  "conceptTournament": "deterministic degraded replay; no catalog challengers or QUALITY BAR boards",
   "navigation": {
-    "authenticated": "N3 operational rail",
-    "public": "N9 edge-aligned brand bar"
+    "authenticated": "N13 authenticated command pill",
+    "public": "N5 public floating bar"
   },
-  "footer": "Ft2 inline utility footer",
+  "footer": "Ft5 statement close",
   "skills": ["Hallmark", "Impeccable", "lean-ctx"]
 }

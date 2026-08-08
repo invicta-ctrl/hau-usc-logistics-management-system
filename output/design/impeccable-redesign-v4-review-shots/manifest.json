@@ -1,0 +1,113 @@
+[
+  {
+    "name": "desktop-light-public-landing",
+    "width": 1440,
+    "theme": "light",
+    "surface": "public.landing",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-public-landing.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "mobile-light-public-landing",
+    "width": 390,
+    "theme": "light",
+    "surface": "public.landing",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\mobile-light-public-landing.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-light-admin-overview",
+    "width": 1440,
+    "theme": "light",
+    "surface": "admin.overview",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-admin-overview.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "mobile-light-admin-overview",
+    "width": 390,
+    "theme": "light",
+    "surface": "admin.overview",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\mobile-light-admin-overview.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-dark-admin-overview",
+    "width": 1440,
+    "theme": "dark",
+    "surface": "admin.overview",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-dark-admin-overview.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-light-request-queue",
+    "width": 1440,
+    "theme": "light",
+    "surface": "request.queue",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-request-queue.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "mobile-light-request-queue",
+    "width": 390,
+    "theme": "light",
+    "surface": "request.queue",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\mobile-light-request-queue.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-light-release-desk",
+    "width": 1440,
+    "theme": "light",
+    "surface": "release.desk",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-release-desk.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-dark-public-signin",
+    "width": 1440,
+    "theme": "dark",
+    "surface": "public.signin",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-dark-public-signin.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-light-admin-loading",
+    "width": 1440,
+    "theme": "light",
+    "surface": "admin.overview",
+    "state": "loading",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-admin-loading.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "desktop-light-command",
+    "width": 1440,
+    "theme": "light",
+    "surface": "admin.overview",
+    "overlay": "command",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\desktop-light-command.png",
+    "errors": [],
+    "externalRequests": []
+  },
+  {
+    "name": "mobile-dark-command",
+    "width": 390,
+    "theme": "dark",
+    "surface": "admin.overview",
+    "overlay": "command",
+    "file": "D:\\Documents\\Codex\\HAU-USC Logistics\\worktrees\\design-impeccable-whole-site-preview\\output\\design\\impeccable-redesign-v4-review-shots\\mobile-dark-command.png",
+    "errors": [],
+    "externalRequests": []
+  }
+]

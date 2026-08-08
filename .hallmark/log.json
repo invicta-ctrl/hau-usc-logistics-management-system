@@ -6,5 +6,21 @@
     "macrostructure": "Workbench",
     "variation": "asymmetric attention field; N3 authenticated rail; N9 public edge bar; Ft2 inline footer",
     "status": "candidate"
+  },
+  {
+    "date": "2026-08-08",
+    "artifact": "prototypes/impeccable-whole-site-redesign-v4/",
+    "genre": "modern-minimal",
+    "macrostructure": "Map / Diagram",
+    "variation": "Operational Choreography / Route Console; N13 authenticated command pill; N5 public floating bar; Ft5 statement close",
+    "navigation": {
+      "authenticated": "N13 authenticated command pill",
+      "public": "N5 public floating bar"
+    },
+    "footer": "Ft5 statement close",
+    "directionOwner": "v4",
+    "conceptSeed": "surface/operate key 00000004 -> candidate 5 (degraded replay)",
+    "directionPinned": true,
+    "status": "candidate"
   }
 ]
