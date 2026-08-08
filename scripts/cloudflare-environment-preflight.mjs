@@ -7,6 +7,7 @@ import { isValidRecoveryHostname } from '../src/server/environment.js';
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
 const SHA = /^[0-9a-f]{40}$/iu;
+const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
 const PROTECTED_NAMES = new Set([
   'PASSWORD_PEPPER',
   'TRACKING_LINK_SECRET',
@@ -96,6 +97,11 @@ function requiredEnvironment(config, expected, issues) {
   if (!config.observability?.traces?.enabled) issues.push(`${expected}: Workers Traces must be enabled`);
   if (expected === 'STAGING' && config.observability?.logs?.head_sampling_rate !== 1)
     issues.push('STAGING: log sampling must be 1 during acceptance');
+  const workerFirstRoutes = new Set(config.assets?.run_worker_first ?? []);
+  for (const route of REQUIRED_WORKER_FIRST_ROUTES) {
+    if (!workerFirstRoutes.has(route))
+      issues.push(`${expected}: assets.run_worker_first must include ${route}`);
+  }
   const d1 = binding(config, 'd1_databases', 'DB');
   const brandR2 = binding(config, 'r2_buckets', 'BRAND_ASSETS');
   const evidenceR2 = binding(config, 'r2_buckets', 'EVIDENCE_ASSETS');
