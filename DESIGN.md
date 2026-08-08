@@ -150,3 +150,45 @@ user-facing concepts. Missing data reads "Not recorded" / "Not assessed".
 Failure copy states what saved, what did not, and the next safe action.
 
 All figures in the preview are illustrative and labelled as such.
+
+## Accepted v3 system — Calm Institutional Operations
+
+v3 is the accepted **modern-minimal Workbench** expression: a calm institutional
+operations desk with decisive hierarchy, generous work surfaces, crisp rules,
+and one clear next action. It preserves the product contracts above—including
+semantic operational data, truthful status and control states, keyboard access,
+and oxblood/gold identity—while superseding v2's visual treatment where the v3
+records and implementation are explicit.
+
+- **Surfaces:** light mode steps from warm-neutral canvas → near-white working
+  paper → inset-control/table-head paper → white overlay. Dark mode is authored
+  independently as warm near-black canvas → charcoal paper → raised
+  charcoal-brown → oxblood anchors; it is never a simple inversion.
+- **Type and color:** all typography is offline-only: Bahnschrift/Aptos Display
+  for page titles, Aptos/Segoe UI for body copy, and Palatino/Book Antiqua only
+  for the wordmark. Oxblood carries structure and authority; muted gold is
+  reserved for focus, selection, route progress, status emphasis, and small
+  brand details—not broad decorative fields.
+- **Signatures:** the labelled menu collapses to an icon-only control and its
+  three lines become a close mark; public flows use the gold-arrow **Return to
+  Portals** treatment; the theme track translates its thumb while sun/moon
+  glyphs crossfade, with truthful `aria-expanded`, `aria-controls`, and
+  `aria-pressed` state.
+- **Loading and controls:** loading reads **Preparing this workspace**, pairs a
+  three-bar logistics mark with a directional progress rule, preserves table
+  geometry, and exposes `aria-busy` plus polite live text—no generic spinner.
+  Base controls are at least 44px high, keep visible focus, and retain
+  default, hover, active, disabled, loading, and reduced-motion behavior.
+- **Responsive and motion:** verify at 320, 375, 414, 768, 1024, and 1440 CSS
+  pixels. Navigation and nonessential brand detail yield before work content;
+  quantity, status, and primary actions remain visible. Motion explains state,
+  uses non-bouncy 120–440ms transform/opacity transitions, and becomes static or
+  effectively instantaneous under `prefers-reduced-motion` without removing
+  meaning.
+
+Authoritative v3 source: `prototypes/impeccable-whole-site-redesign-v3/`
+(including `styles/v3.css`). Review artifact:
+`output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v3.html`.
+Supporting records: `docs/design/IMPECCABLE_V3_VISUAL_SYSTEM.md`,
+`docs/design/IMPECCABLE_V3_DYNAMIC_CONTROLS.md`, and
+`docs/design/IMPECCABLE_V3_MOTION_AND_LOADING.md`.

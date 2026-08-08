@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-08-08",
+  "genre": "modern-minimal",
+  "macrostructure": "Workbench",
+  "designSystem": "DESIGN.md",
+  "directionSource": "owner continuation packet v3",
+  "directionPinned": true,
+  "conceptTournament": "not run because the owner packet fixes the palette, hierarchy, controls, motion character, and preservation boundary",
+  "navigation": {
+    "authenticated": "N3 operational rail",
+    "public": "N9 edge-aligned brand bar"
+  },
+  "footer": "Ft2 inline utility footer",
+  "skills": ["Hallmark", "Impeccable", "lean-ctx"]
+}

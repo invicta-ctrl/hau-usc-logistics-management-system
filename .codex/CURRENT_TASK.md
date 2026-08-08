@@ -1,5 +1,23 @@
 # Current Task
 
+INTENT: FRONTEND REDESIGN ARTIFACT
+MODE: execute and verify; stop before PR, merge, deploy, or production mutation
+TARGET: HAU-USC Logistics whole-site redesign preview v3
+SKILLS: Hallmark; Impeccable; lean-ctx
+AUTHORITY: owner continuation packet v3; accepted v0.7.2 workflow and privacy invariants; repository AGENTS.md; PRODUCT.md; DESIGN.md
+RISK: medium because the artifact spans every representative surface but is isolated from runtime code
+DELIVERABLE: modular v3 source, single-file export, responsive screenshots, research/decision/review records, and resumable design-branch handoff
+VERIFICATION: six-width Chromium audit; contrast sweep; theme persistence and reduced-motion test; screenshot inspection; independent finish review; source/export parity; Git containment
+STOP CONDITIONS: any backend/provider/deployment/release mutation; missing surface; privacy or workflow contradiction; unknown overlapping work
+STATUS: V3_ACCEPTED_FRONTEND_CANDIDATE
+
+Starting branch/SHA: `design/impeccable-whole-site-preview` at
+`d94d7a294450de7a78aac2b94c0387e065e44c29`.
+
+Operational pointer: `.codex/IMPECCABLE_V3_CURRENT.md`.
+
+---
+
 INTENT: FEATURE, MIGRATION, TESTING, DEPLOYMENT PREPARATION
 SECONDARY INTENTS: SECURITY, ACCESSIBILITY, OPERATIONS, RELEASE
 MODE: freeze and review the exact repository candidate; stop before blocked pre-production
