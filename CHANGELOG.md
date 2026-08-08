@@ -6,15 +6,20 @@
 
 - Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
 - Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
+- Added the accepted, planning-only v0.7.3 product-intake specification after completing the v0.7.2.1 maintenance milestone.
 
 ### Fixed
 
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
 - Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
+### Changed
+
+- Merged the v0.7.2.1 repository-normalization and permanent-sandbox maintenance candidate through protected PR #17, released the writer lock, and advanced the canonical continuity pointer to v0.7.3 product intake without starting v0.7.3 implementation or changing the v0.7.2 runtime.
+
 ### Verification boundary
 
-- Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, and negative zero-challenge containment pass. One approved challenge was provider-accepted; one-time redemption remains pending.
+- Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, negative zero-challenge containment, provider delivery, one-time redemption, same-code replay denial, and altered-code denial pass. Exact-head repository verification, browser smoke, CodeQL, governance, handoff, secret/PII scans, and fresh Sol review also pass.
 
 ## 0.7.2 - 2026-08-08
 
