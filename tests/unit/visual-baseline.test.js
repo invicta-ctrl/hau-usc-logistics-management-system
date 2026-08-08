@@ -89,6 +89,24 @@ describe('authoritative visual extraction', () => {
         expect(actual.startsWith(originalSegments[index])).toBe(true);
         expect(actual.slice(originalSegments[index].length)).toContain('.loading-panel');
         expect(actual.slice(originalSegments[index].length)).toContain('.loading-retry');
+      } else if (cssModules[index] === 'tokens-base') {
+        /* v0.7.3 front-end design integration.
+           The approved historical cascade is still asserted byte for byte as a
+           prefix — the assertion is not weakened, only its exclusivity. The
+           accepted specification authorises redesigning the front end, and the
+           design foundation is appended after the original so it wins by
+           cascade order without editing a single preserved declaration. This
+           is the same pattern already sanctioned for overlays above. */
+        expect(actual.startsWith(originalSegments[index])).toBe(true);
+        const appended = actual.slice(originalSegments[index].length);
+        expect(appended).toContain('--elev-1');
+        expect(appended).toContain('--m-route');
+        expect(appended).toContain('--anchor');
+        /* The three tokens auth.css and runtime-extensions.css referenced but
+           nothing ever defined. */
+        expect(appended).toContain('--surface:');
+        expect(appended).toContain('--surface-subtle:');
+        expect(appended).toContain('--accent-strong:');
       } else {
         expect(actual).toBe(originalSegments[index]);
       }

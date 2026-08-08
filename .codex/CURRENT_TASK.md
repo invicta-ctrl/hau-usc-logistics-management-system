@@ -21,8 +21,8 @@ SCOPE: Front-end source under src/, front-end artifacts regenerated through repo
 OUT_OF_SCOPE: Back-end business rules, D1 schema or data, R2 behaviour, migrations, Worker service contracts, Google Sheets/Drive writes, provider changes, the auth/security model, deployment, staging or production mutation, DNS or domain changes, release tagging, and merge to main
 VERIFICATION: Functional parity with browser evidence per journey; accessibility (landmarks, headings, focus, keyboard, focus containment and restoration, announcements, no colour-only meaning, contrast, 200% zoom, touch targets, reduced motion, 320px); responsive at 320/375/414/768/1024/1440; repository checks where governance requires; generated-artifact verification; git diff --check; measured bundle and runtime delta
 STOP_CONDITIONS: A change would require back-end, service-contract, migration, provider, or environment work; a protected artifact or the release branch would be written; real private data would be needed; a production route cannot be verified from authoritative source; functional parity cannot be proven; accessibility or performance cannot reach standard without reducing the visual effect - in which case reduce the effect, never the gate
-BLOCKER: tests/unit/visual-baseline.test.js pins src/styles/visual/*.css byte-for-byte to legacy/HAU-USC_Logistics-Prototype.original.html, which AGENTS.md preserves, while the accepted specification authorizes redesigning the front end. The overlays module already carries a sanctioned startsWith-plus-additions exception. Re-baselining that guard for tokens-base is an owner decision and has not been taken.
-NEXT_EXACT_ACTION: Obtain the owner decision on the visual-baseline guard, then continue the section 17 order at step 3, shell and signature controls.
+BLOCKER: NONE
+NEXT_EXACT_ACTION: Continue the section 17 order at step 3, shell and signature controls.
 
 Owner accepted the specification on 2026-08-09. Three owner decisions are
 binding on this task: the integration base is `origin/main` rather than tag

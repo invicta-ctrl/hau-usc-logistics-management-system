@@ -1,55 +1,62 @@
-/* Design foundation.
-   Accepted specification: .codex/specs/active/v0.7.3-frontend-design-integration.md (§17.2)
+:root{
+      --oxblood:#3A0608;--burgundy:#610B0F;--maroon:#911414;--crimson:#B32B2F;
+      --antique:#AF7925;--metallic:#D3A73F;--bright:#F4CB30;--light-gold:#F8DC78;
+      --cream:#F1E5CA;--paper:#FFFDF8;--white:#FFFFFF;--ink:#381517;--muted:#765F5D;
+      --line:#E4D4B7;--line-strong:#CDAE73;--bg:#F8F1E4;
+      --green:#276448;--green-bg:#E7F4EA;--amber:#7D520E;--amber-bg:#FFF4CB;
+      --red:#9B2024;--red-bg:#FFF0ED;--blue:#315F7F;--blue-bg:#EAF3F8;
+      --violet:#684780;--violet-bg:#F2ECF8;--gray:#5E6268;--gray-bg:#EEF0F2;
+      --shadow:0 14px 40px rgba(58,6,8,.09);--shadow-lg:0 28px 72px rgba(58,6,8,.18);
+      --radius:18px;--radius-sm:12px;--sidebar:292px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-width:320px;background:
+      radial-gradient(circle at 88% -8%,rgba(244,203,48,.22),transparent 29%),
+      linear-gradient(120deg,rgba(175,121,37,.045) 1px,transparent 1px),var(--bg);
+      background-size:auto,28px 28px,auto;color:var(--ink);
+      font-family:"Aptos","Segoe UI Variable","Segoe UI",ui-sans-serif,Arial,sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:inherit}
+    ::selection{background:var(--light-gold);color:var(--oxblood)}
+    :focus-visible{outline:3px solid var(--bright);outline-offset:2px}
+    .hidden{display:none!important}
+    .muted{color:var(--muted)}
+    .small{font-size:11px;line-height:1.5}
+    .nowrap{white-space:nowrap}
 
-   Every token name that existed before this change still exists, so no surface
-   loses its styling. What changed:
+/* ============================================================
+   v0.7.3 front-end design integration - appended overrides.
+   Accepted specification: .codex/specs/active/v0.7.3-frontend-design-integration.md
 
-   1. Surface ladder. --bg and --paper were 1.6% apart in relative luminance,
-      so panels had no figure/ground relationship against the page. --bg is now
-      a warmer, deeper ground and paper stays bright, giving roughly a 20%
-      relative gap. --paper-2 and --paper-3 are new inset and overlay steps.
-   2. Elevation ladder. --shadow / --shadow-lg were two far-apart steps.
-      --elev-1..3 add a usable ramp; the old names remain as aliases.
-   3. Motion tokens. There were none, so motion was ad hoc per surface.
-   4. Type scale and compositional anchors, so brand colour can be a layout
-      device rather than only a button fill.
-   5. --muted darkened. Against the deeper ground the previous value fell under
-      the 4.5:1 AA floor. Measured 5.4:1 on ground and 6.8:1 on paper.
-   6. The decorative diagonal-line and radial body pattern is removed. It sat
-      behind every operational screen and competed with content.
+   Everything ABOVE this line is the approved historical cascade, preserved
+   byte for byte. tests/unit/visual-baseline.test.js asserts that prefix, and
+   AGENTS.md preserves legacy/HAU-USC_Logistics-Prototype.original.html as the
+   baseline it comes from. Nothing above was edited.
 
-   No webfont is introduced. Production ships none today, and the accepted
-   specification's performance budget forbids adding a dependency without a
-   clear reason; the display voice comes from scale, weight and tracking on the
-   existing stack. */
+   Everything BELOW is additive and wins by cascade order. This is the same
+   sanctioned pattern the overlays module already uses: original first,
+   documented additions after.
+   ============================================================ */
 
 :root {
-  /* ---- Identity (unchanged) ---- */
-  --oxblood: #3a0608;
-  --burgundy: #610b0f;
-  --maroon: #911414;
-  --crimson: #b32b2f;
-  --antique: #af7925;
-  --metallic: #d3a73f;
-  --bright: #f4cb30;
-  --light-gold: #f8dc78;
-  --cream: #f1e5ca;
-  --white: #ffffff;
+  /* Surface ladder. --bg and --paper were 1.6% apart in relative luminance, so
+     panels had no figure/ground relationship against the page. */
+  --bg: #ece3d2;
+  --paper-2: #f8f1e3;
+  --paper-3: #ffffff;
 
-  /* ---- Surface ladder ---- */
-  --bg: #ece3d2;        /* page ground, deepened for real figure/ground */
-  --paper: #fffdf8;     /* working surface */
-  --paper-2: #f8f1e3;   /* inset / secondary */
-  --paper-3: #ffffff;   /* elevated overlay */
-
-  --ink: #381517;
+  /* Against the deeper ground the original --muted fell under the 4.5:1 AA
+     floor. Measured 5.4:1 on ground and 6.8:1 on paper. */
+  --muted: #6b5450;
   --ink-2: #5c4340;
-  --muted: #6b5450;     /* was #765F5D — under 4.5:1 on the deeper ground */
   --line: #ddcdb0;
   --line-strong: #c4a469;
   --line-hair: #e8dcc4;
 
-  /* ---- Compositional anchors: brand colour as a layout device ---- */
+  /* Compositional anchors, so brand colour can be a layout device rather than
+     only a button fill. */
   --anchor: var(--burgundy);
   --anchor-soft: color-mix(in srgb, var(--burgundy) 8%, var(--paper));
   --anchor-line: color-mix(in srgb, var(--burgundy) 26%, var(--line));
@@ -57,43 +64,24 @@
   --accent-wash: color-mix(in srgb, var(--light-gold) 30%, var(--paper));
   --accent-line: color-mix(in srgb, var(--metallic) 48%, var(--line));
 
-  /* auth.css and runtime-extensions.css already reference these three, but
-     nothing ever defined them, so those rules fell back to their inline
-     literals (#fff, #f8f9fb, #7a1f2b) — generic cool greys sitting outside the
-     warm HAU palette. Defining them pulls those surfaces into the token
-     system without touching the consuming rules. */
+  /* auth.css and runtime-extensions.css already referenced these three, but
+     nothing ever defined them, so those rules silently used their inline
+     literals (#fff, #f8f9fb, #7a1f2b) - generic cool greys outside the warm
+     HAU palette. */
   --surface: var(--paper);
   --surface-subtle: var(--paper-2);
   --accent-strong: var(--antique);
 
-  /* ---- Semantic (unchanged) ---- */
-  --green: #276448;
-  --green-bg: #e7f4ea;
-  --amber: #7d520e;
-  --amber-bg: #fff4cb;
-  --red: #9b2024;
-  --red-bg: #fff0ed;
-  --blue: #315f7f;
-  --blue-bg: #eaf3f8;
-  --violet: #684780;
-  --violet-bg: #f2ecf8;
-  --gray: #5e6268;
-  --gray-bg: #eef0f2;
-
-  /* ---- Elevation ladder ---- */
+  /* Elevation ramp. The original two steps are retained above; these add the
+     usable middle and are referenced by new rules. */
   --elev-1: 0 1px 2px rgba(58, 6, 8, 0.05), 0 2px 8px rgba(58, 6, 8, 0.05);
   --elev-2: 0 2px 6px rgba(58, 6, 8, 0.07), 0 10px 26px rgba(58, 6, 8, 0.09);
   --elev-3: 0 8px 20px rgba(58, 6, 8, 0.13), 0 28px 60px rgba(58, 6, 8, 0.18);
-  --shadow: var(--elev-2);      /* retained alias */
-  --shadow-lg: var(--elev-3);   /* retained alias */
 
-  /* ---- Radius ---- */
   --radius-xs: 6px;
-  --radius-sm: 12px;
-  --radius: 18px;
   --radius-pill: 999px;
 
-  /* ---- Type scale ---- */
+  /* Type scale. Sizes were literal per file before this. */
   --t-2xs: 10px;
   --t-xs: 11px;
   --t-sm: 13px;
@@ -105,9 +93,9 @@
   --tracking-tight: -0.022em;
   --tracking-label: 0.1em;
 
-  /* ---- Motion ----
-     press 100-140 · micro 160-220 · component 180-260
-     route 220-320 · drawer 240-360 · hero 300-520 */
+  /* Motion. There were no tokens, so motion was ad hoc per surface.
+     press 100-140 - micro 160-220 - component 180-260
+     route 220-320 - drawer 240-360 - hero 300-520 */
   --m-press: 120ms;
   --m-micro: 190ms;
   --m-component: 220ms;
@@ -115,53 +103,13 @@
   --m-overlay: 320ms;
   --m-hero: 420ms;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-
-  --sidebar: 292px;
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Clean ground. The previous decorative radial plus 28px diagonal-line pattern
+/* Clean ground. The original decorative radial plus 28px diagonal-line pattern
    sat behind every operational screen and competed with the content on it. */
 body {
-  margin: 0;
-  min-width: 320px;
   background: var(--bg);
-  color: var(--ink);
-  font-family: "Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif, Arial, sans-serif;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-a {
-  color: inherit;
-}
-
-::selection {
-  background: var(--light-gold);
-  color: var(--oxblood);
-}
-
-:focus-visible {
-  outline: 3px solid var(--bright);
-  outline-offset: 2px;
+  background-size: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -176,21 +124,4 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-.hidden {
-  display: none !important;
-}
-
-.muted {
-  color: var(--muted);
-}
-
-.small {
-  font-size: 11px;
-  line-height: 1.5;
-}
-
-.nowrap {
-  white-space: nowrap;
 }
