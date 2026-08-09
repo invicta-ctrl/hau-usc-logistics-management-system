@@ -4,7 +4,7 @@ INTENT: DEPLOYMENT
 SECONDARY INTENTS: REPOSITORY_MAINTENANCE, ARCHITECTURE, TESTING
 MODE: EXECUTE
 OBJECTIVE: Convert isolated staging into the permanent Isolated Staging Playground, establish safe production-derived D1/R2 baseline parity and resettable working state, and hardcode the permanent Git/release model.
-RESULT: IMPLEMENTED_AWAITING_EXACT_PLAYGROUND_DEPLOYMENT
+RESULT: COMPLETE_AWAITING_EARL_MANUAL_TESTING
 TARGET: release/v0.8.1-isolated-staging-playground plus playground-only Cloudflare resources
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -15,9 +15,9 @@ REQUIRED_MODEL: CODEX
 STARTING_SHA: df3fdb96e62ab396c63e3300b58fb70c6ab960a5
 PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
 PRODUCTION_VERSION: v0.8.0
-CANDIDATE_SHA: PENDING_FREEZE
-PR: PENDING
-RUNTIME: playground clean/working D1 and R2 are isolated, parity-verified with privacy exceptions, and reset-proven; Worker deployment pending
+CANDIDATE_SHA: THIS_COMMIT_AT_EXACT_WORKFLOW_DISPATCH
+PR: #23 DRAFT
+RUNTIME: exact candidate accepted in the isolated playground; clean/working D1 and R2 are distinct, parity-verified with privacy exceptions, reset-proven, and CLEAN
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
 NEW_MIGRATION: NONE
@@ -28,6 +28,6 @@ SCOPE: accepted specification, root governance, playground-only Cloudflare confi
 OUT_OF_SCOPE: production deployment/business mutation/migration, automatic promotion, Google/provider-email writes, frontend baseline integration, v0.8.1 product features, M1/M2, unrelated cleanup, force push, unknown branch deletion
 STOP_CONDITIONS: environment/binding ambiguity, production crossover, unknown dirty work, privacy/access uncertainty, missing recovery, migration need, failed integrity/FK/parity, exact-identity drift, automatic production path, unresolved P0/P1, or two failed targeted repair rounds
 EXTERNAL_WRITES: bounded GitHub branch/PR; playground-only Cloudflare Worker/D1/R2; production read-only export/copy source; no production deployment or business mutation
-ACTIVE_WRITER: CODEX
-HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: Freeze the clean exact candidate, deploy it only to the Isolated Staging Playground, run acceptance and production-nonmutation reconciliation, publish the bounded PR, and stop for Earl.
+ACTIVE_WRITER: NONE
+HANDOFF_STATUS: READY_FOR_HANDOFF
+NEXT_EXACT_ACTION: Earl manually tests the exact PR #23 playground candidate. If accepted, submit a separate explicit production GO task; do not merge, deploy production, rotate pointers, start frontend integration, or begin M1/M2 from this handoff.

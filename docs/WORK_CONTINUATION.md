@@ -2,30 +2,30 @@
 
 ## Current resume block
 
-- **Milestone:** v0.8.0 Inventory Truth and Ledger Lock is `RELEASED`.
+- **Milestone:** Isolated Staging Playground + Git Branch Governance + Production Parity is `COMPLETE_AWAITING_EARL_MANUAL_TESTING`.
 - **Repository/worktree:** D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system; preserve private evidence outside Git.
-- **Branch/HEAD/upstream:** use live Git; accepted deployed main release is `3059098ff2a2935fec59df52748ccae420aadba7`.
-- **Current phase/stage:** release closed; writer none; handoff ready.
-- **Accepted scope:** `.codex/specs/active/v0.8.0-staging-production-master-release.md` completed.
-- **Completed work:** audit, candidate freeze, protected CI/merge, staging and production recovery/deploy/smoke/reconciliation, tag, and GitHub Release.
-- **Files changed by purpose:** accepted Slice 1-3 runtime/tests/tooling/generated artifacts plus release continuity; the final closeout is documentation-only.
-- **Tests verified at current SHA:** candidate focused 2/2, canonical 125 files/868 tests, Worker/browser 58/58; exact-head, PR, main-push CI, and CodeQL green.
-- **Generated artifacts:** deterministic v0.8.0 artifacts match the accepted release; do not hand-edit them.
-- **External actions:** protected GitHub release actions and exact Cloudflare staging/production deployments; no Google or provider/email write.
-- **Rollback:** not required; fresh private D1/Time Travel/Worker/R2 recovery evidence is retained outside Git.
-- **Blocker:** none for v0.8.0 closeout.
-- **Next three actions:** preserve release evidence; accept the separate playground specification; execute the playground conversion before v0.8.1.
+- **Branch/HEAD/upstream:** `release/v0.8.1-isolated-staging-playground`; use live Git for the exact dispatched SHA; draft PR #23 targets `main`.
+- **Current phase/stage:** exact candidate accepted in the isolated playground; writer none; handoff ready for Earl manual testing.
+- **Accepted scope:** `.codex/specs/active/isolated-staging-playground-and-git-governance.md` completed.
+- **Completed work:** permanent root Git policy; five recovery pointers; isolated D1/R2 clean baseline and working state; privacy filtering; reset/refresh/session guards; module switcher; exact-freeze CI; live acceptance; production nonmutation reconciliation.
+- **Files changed by purpose:** governance/spec/continuity, candidate workflow, playground runtime/console, D1/R2 provider tooling, denial/parity/reset tests, and regenerated artifacts through the documented build.
+- **Tests verified at current SHA:** canonical 133 files/891 tests; playground 8 files/23 tests; build/Apps Script/dist/types/dry-run, governance, handoff, live readiness/operator/session/reset, and production D1/R2 nonmutation pass.
+- **Generated artifacts:** deterministic build-generated HTML and Apps Script packages match source; do not hand-edit them.
+- **External actions:** non-force GitHub recovery refs, candidate branch, draft PR #23, isolated GitHub environment secrets, exact workflow dispatch, and playground-only Cloudflare resources/deployments. No production, Google, or email write.
+- **Rollback:** prior staging Worker/D1/R2 remain preserved; private exports, D1 bookmarks, R2 manifests, environment fingerprints, and reset evidence are retained outside Git.
+- **Blocker:** none.
+- **Next three actions:** Earl manually tests the exact playground candidate; preserve its identity; if accepted, submit a separate explicit production GO task for that unchanged candidate.
 - **Resume commands:** `git status --short --branch`; `git fetch --prune origin`; `git rev-parse origin/main`; `npm run handoff:verify`; `npm run check:governance`.
-- **Prohibited actions:** no automatic playground/v0.8.1 work, production mutation, migration, tag movement, recovery cleanup, branch deletion, Google write, or provider/email send.
-- **Candidate / accepted main:** `26ee284cf066379e28a60511568053afd92c8768` / `3059098ff2a2935fec59df52748ccae420aadba7`.
-- **Protected release:** PR #21 merged; annotated tag and GitHub Release `v0.8.0` resolve to the accepted main SHA.
-- **Runtime:** isolated staging and production report v0.8.0, schema 30, latest migration `0030_production_access_and_operations.sql`, readiness true, and protected configuration true.
+- **Prohibited actions:** no merge/production deploy or mutation, migration, recovery-pointer rotation, baseline overwrite during active testing, branch deletion, frontend integration, M1/M2, Google write, or provider/email send.
+- **Candidate / accepted main:** exact branch-tip SHA recorded by the PR #23 workflow / production `3059098ff2a2935fec59df52748ccae420aadba7`.
+- **Protected release:** production remains annotated tag/GitHub Release `v0.8.0`; PR #23 is draft and not production authorization.
+- **Runtime:** Isolated Staging Playground reports exact candidate identity, STAGING, schema 30, latest migration `0030_production_access_and_operations.sql`, distinct D1/R2 bindings, readiness true, and CLEAN working state. Production remains v0.8.0.
 - **Migration:** none created or applied.
-- **Verification:** focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; exact-head, PR, main-push CI, CodeQL, build/parity/types/dry-run, governance, privacy, and independent review green.
-- **Recovery/reconciliation:** fresh private staging and production recovery evidence is retained outside Git; isolated restores passed integrity and FK checks; staging and production reconciliations passed 20/20 with zero blockers/quarantine.
-- **Production effects:** deployment caused no unexpected business-row, ledger, reservation, request, lending, release, schema, or migration change. Expected smoke-only session/login-audit rows were reconciled. Rollback was not required.
-- **External writes:** protected GitHub release actions and exact Cloudflare staging/production deployments only. Google and provider/email writes: none.
+- **Verification:** canonical 133 files/891 tests; playground 8 files/23 tests; build/parity/types/dry-run, governance, handoff, live status/module switcher/session/reset, D1 integrity/FK/schema/migration, and R2 manifest checks green.
+- **Recovery/reconciliation:** prior staging resources preserved; playground D1 restored to its sealed clean reset point and R2 reconciled to sealed baselines; production D1 exact pre/post fingerprint and safe R2 pre/post fingerprints unchanged.
+- **Production effects:** none. No Worker deployment, D1/R2 mutation, migration, branch rotation, or business-data write occurred.
+- **External writes:** bounded GitHub governance/CI/PR/recovery refs and playground-only Cloudflare resources/deployments. Google and provider/email writes: none.
 - **Writer/handoff:** `ACTIVE_WRITER: NONE`; `HANDOFF_STATUS: READY_FOR_HANDOFF`.
-- **Next exact action:** execute the separately accepted Isolated Staging Playground conversion before v0.8.1. Do not begin playground or v0.8.1 work automatically.
+- **Next exact action:** Earl manually tests the exact PR #23 playground candidate. Any code change invalidates approval; production requires a separately accepted explicit GO.
 
-Historical implementation and recovery evidence remains reachable through Git history, accepted specifications, the v0.8.0 tag/release, and owner-private recovery packages. Do not copy private paths, provider identifiers, credentials, exports, or recovery material into Git.
+Historical implementation and recovery evidence remains reachable through Git history, the accepted playground specification, PR #23, the v0.8.0 tag/release, and owner-private recovery packages. Do not copy private paths, provider identifiers, credentials, exports, or recovery material into Git.

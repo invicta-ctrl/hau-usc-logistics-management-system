@@ -2,7 +2,18 @@
 
 ## Unreleased
 
-- No changes recorded after the v0.8.0 release.
+### Added
+
+- Accepted the permanent Isolated Staging Playground specification and hardcoded the five retained recovery pointers, one-temporary-branch rule, exact-candidate playground path, Earl GO requirement, and post-production rotation rules in root `AGENTS.md`.
+- Added isolated playground D1/R2 clean-baseline and working-state tooling, privacy filtering, deterministic parity/reconciliation, Reset Workspace, Refresh Baseline protection, safe status, module switcher, and real-login testing.
+- Added an explicit exact-SHA candidate-freeze workflow that deploys automatically to the playground after repository checks and stops for Earl; ordinary WIP pushes and playground success cannot trigger production.
+- Established `backup/last-known-good` and `regression/r1` through `regression/r3` non-destructively from verified accepted recovery history.
+
+### Verification boundary
+
+- Canonical `npm run check` passes governance/handoff, lint with zero errors, deterministic build, 133 test files / 891 tests, Apps Script, dist parity, Cloudflare types, and dry-run.
+- Live isolated playground readiness, operator status/module switcher, session protection, deliberate D1/R2 mutation/reset, and production-denial checks pass. Production remains v0.8.0 and read-only D1/R2 pre/post fingerprints are unchanged.
+- No production deployment, production migration, production business-data mutation, Google write, provider/email send, frontend integration, or M1/M2 work occurred.
 
 ## 0.8.0 - 2026-08-09
 
