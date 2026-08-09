@@ -1,12 +1,25 @@
-name: Release candidate package
+name: Candidate to Isolated Staging Playground
 
 on:
+  push:
+    branches:
+      - 'release/v*'
+      - 'fix/v*'
+      - 'hotfix/v*'
   workflow_dispatch:
     inputs:
       candidate_sha:
-        description: Exact 40-character commit SHA to package
+        description: Exact 40-character commit SHA to package and deploy to playground
         required: true
         type: string
+      candidate_branch:
+        description: Exact temporary release/fix/hotfix branch containing the candidate
+        required: true
+        type: string
+
+concurrency:
+  group: isolated-staging-playground
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -15,15 +28,19 @@ jobs:
   package-release-candidate:
     runs-on: ubuntu-latest
     environment: release-candidate
+    outputs:
+      candidate_sha: ${{ steps.identity.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.candidate_sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_sha || github.sha }}
           persist-credentials: false
       - name: Verify exact candidate
+        id: identity
         shell: bash
         env:
-          EXPECTED_SHA: ${{ inputs.candidate_sha }}
+          EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_sha || github.sha }}
+          EXPECTED_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
         run: |
           set -euo pipefail
           if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
@@ -31,6 +48,8 @@ jobs:
             exit 1
           fi
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+          [[ "$EXPECTED_BRANCH" =~ ^(release|fix|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*$ ]]
+          echo "sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -43,7 +62,7 @@ jobs:
       - name: Upload immutable candidate package
         uses: actions/upload-artifact@v4
         with:
-          name: v0.8.0-candidate-${{ inputs.candidate_sha }}
+          name: v0.8.0-candidate-${{ steps.identity.outputs.sha }}
           path: |
             .release/v0.8.0-candidate.json
             dist/index.html
@@ -51,3 +70,63 @@ jobs:
             apps-script/
           if-no-files-found: error
           retention-days: 14
+
+  deploy-playground:
+    needs: package-release-candidate
+    runs-on: ubuntu-latest
+    environment: isolated-staging-playground
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.package-release-candidate.outputs.candidate_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Rebuild exact staging artifact
+        run: npm run build:cloudflare
+      - name: Materialize fixed private playground manifest
+        shell: bash
+        env:
+          PLAYGROUND_RESOURCE_MANIFEST_B64: ${{ secrets.PLAYGROUND_RESOURCE_MANIFEST_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "$PLAYGROUND_RESOURCE_MANIFEST_B64"
+          printf '%s' "$PLAYGROUND_RESOURCE_MANIFEST_B64" | base64 --decode > "$RUNNER_TEMP/playground-resource-manifest.json"
+          chmod 600 "$RUNNER_TEMP/playground-resource-manifest.json"
+      - name: Build private candidate config
+        env:
+          CANDIDATE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
+        run: node scripts/playground/create-private-config.mjs "$RUNNER_TEMP/playground-resource-manifest.json" "$RUNNER_TEMP/wrangler.playground.private.jsonc"
+      - name: Deploy exact candidate to isolated playground
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CANDIDATE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
+        run: node scripts/playground/deploy-playground.mjs "$RUNNER_TEMP/wrangler.playground.private.jsonc" "$RUNNER_TEMP/playground-resource-manifest.json"
+      - name: Automated playground acceptance
+        env:
+          CONFIG_PATH: ${{ runner.temp }}/wrangler.playground.private.jsonc
+          EXPECTED_SHA: ${{ needs.package-release-candidate.outputs.candidate_sha }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFile } from 'node:fs/promises';
+          const config = JSON.parse(await readFile(process.env.CONFIG_PATH, 'utf8'));
+          const origin = `https://${config.vars.RECOVERY_HOSTNAME}`;
+          const [readinessResponse, versionResponse] = await Promise.all([
+            fetch(`${origin}/api/readiness`),
+            fetch(`${origin}/api/version`),
+          ]);
+          const readiness = await readinessResponse.json();
+          const version = await versionResponse.json();
+          if (!readinessResponse.ok || !readiness.ready) throw new Error('Playground readiness failed.');
+          if (!versionResponse.ok || version.environment !== 'STAGING') throw new Error('Playground identity failed.');
+          if (version.candidateSha !== process.env.EXPECTED_SHA) throw new Error('Candidate identity drifted.');
+          if (version.database?.schemaVersion !== '30') throw new Error('Playground schema drifted.');
+          NODE
+      - name: Stop for Earl manual testing
+        run: |
+          echo 'Playground acceptance is green.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'WAIT FOR EARL. No production job exists in this workflow.' >> "$GITHUB_STEP_SUMMARY"

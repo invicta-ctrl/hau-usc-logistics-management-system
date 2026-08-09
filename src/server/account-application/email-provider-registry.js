@@ -22,6 +22,14 @@ export const ACCOUNT_APPLICATION_EMAIL_ALLOWLIST_VAR = 'ACCOUNT_APPLICATION_EMAI
 
 const SUPPORTED_PROVIDERS = Object.freeze([RESEND_PROVIDER_ID]);
 
+function playgroundDeliveryDisabled(env) {
+  return (
+    String(env?.ENVIRONMENT ?? '').toUpperCase() === 'STAGING' &&
+    (env?.PLAYGROUND_MODE === true || String(env?.PLAYGROUND_MODE ?? '').toLowerCase() === 'true') &&
+    selectedProviderId(env) === 'disabled'
+  );
+}
+
 function selectedProviderId(env) {
   return String(env?.ACCOUNT_APPLICATION_EMAIL_PROVIDER ?? '')
     .trim()
@@ -73,6 +81,7 @@ export function parseExactRecipientAllowlist(value) {
 // unauthenticated `protectedConfiguration` flag from that suffix, and that flag
 // is about the protected env secrets, not about provider configuration.
 export function accountApplicationEmailProviderIssues(env) {
+  if (playgroundDeliveryDisabled(env)) return [];
   const providerId = selectedProviderId(env);
   if (!providerId) return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_NOT_SELECTED'];
   if (!SUPPORTED_PROVIDERS.includes(providerId)) return ['ACCOUNT_APPLICATION_EMAIL_PROVIDER_UNSUPPORTED'];
@@ -95,6 +104,7 @@ export function accountApplicationEmailProviderIssues(env) {
 }
 
 export function createAccountApplicationEmailProvider(env, { fetchImpl } = {}) {
+  if (playgroundDeliveryDisabled(env)) return createFailClosedEmailProvider();
   if (accountApplicationEmailProviderIssues(env).length) return createFailClosedEmailProvider();
   const provider = createResendEmailProvider({
     ...resendConfiguration(env),

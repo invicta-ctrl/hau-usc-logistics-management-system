@@ -26,6 +26,11 @@ import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
 import { createReferenceLinkService } from '../server/reference-link-service.js';
+import {
+  createPlaygroundService,
+  isPlaygroundRuntime,
+  markPlaygroundModified,
+} from '../server/playground-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
@@ -503,6 +508,24 @@ async function handleApi(request, env, requestId, executionContext) {
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return version(env, requestId);
+    }
+    if (url.pathname === '/api/playground/status' && request.method === 'GET') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN);
+      return json({
+        ...(await createPlaygroundService(env).status()),
+        correlationId: requestId,
+        actor: { accountId: authorized.account.id },
+      });
+    }
+    if (url.pathname === '/api/playground/operation' && request.method === 'POST') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true });
+      return json({
+        ...(await createPlaygroundService(env).requestOperation({
+          ...(await body(request)),
+          actorAccountId: authorized.account.id,
+        })),
+        correlationId: requestId,
+      });
     }
     if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
@@ -1296,6 +1319,14 @@ export default {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();
       const response = await handleApi(request, env, requestId, executionContext);
+      if (
+        response.ok &&
+        isPlaygroundRuntime(env) &&
+        !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
+        !url.pathname.startsWith('/api/playground/')
+      ) {
+        executionContext.waitUntil(markPlaygroundModified(env.DB));
+      }
       response.headers.set('x-correlation-id', requestId);
       structuredLog({
         event: 'API_REQUEST_COMPLETED',

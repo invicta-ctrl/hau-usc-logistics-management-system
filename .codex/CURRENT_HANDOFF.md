@@ -13,7 +13,7 @@ CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/isolated-staging-playground-and-git-governance.md
 MILESTONE: Isolated Staging Playground + Git Branch Governance + Production Parity
 SLICE: SINGLE BOUNDED UNIT
-OUTCOME: IN_PROGRESS
+OUTCOME: IMPLEMENTED_AWAITING_EXACT_PLAYGROUND_DEPLOYMENT
 STARTING_SHA: df3fdb96e62ab396c63e3300b58fb70c6ab960a5
 PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
 CANDIDATE_SHA: PENDING_FREEZE
@@ -24,18 +24,18 @@ SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
 NEW_MIGRATION: NONE
 MASTER_AUDIT: PENDING
-COMPLETED: cold-start continuity, clean Git handshake, branch/PR/worktree disposition, v0.8.0 tag/release proof, live Worker/D1/R2 isolation, schema/migration/FK checks, provider recovery capability, accepted scope lock
-VALIDATION: live staging and production report v0.8.0 at exact distinct identities; both D1 databases expose 83 application tables, migration 0030, and zero FK violations; live integrity PRAGMA requires export validation
-EXTERNAL_ACTIONS: Cloudflare read-only metadata/D1 queries and local branch creation only; no provider mutation, GitHub write, Google write, or provider/email send
+COMPLETED: cold-start continuity; accepted spec and root branch policy; one-way privacy-filtered D1 baseline; sealed/working R2 model; reset/refresh/session guards; private console/module switcher; candidate CI; denial tests; playground D1/R2 provisioning and dirty/reset rehearsal
+VALIDATION: production and prior staging exports restore with integrity/FK/schema/migration checks; playground D1 schema 30/migration 0030; public-brand R2 baseline/working manifest parity; private evidence excluded; deliberate D1/R2 probes removed by Reset Workspace; 21 focused playground tests green
+EXTERNAL_ACTIONS: production read-only metadata/D1 export/public-brand copy source; new playground-only D1/R2 resources and temporary copy/reset Workers; temporary Workers removed; no production mutation, GitHub write, Google write, or provider/email send
 BLOCKER: NONE
-LOCAL_VALIDATION: scope-lock diff pending governance checks
-STAGING: current v0.8.0 candidate identity and distinct Worker/D1/R2 verified; conversion not yet deployed
+LOCAL_VALIDATION: governance/handoff, lint, focused tests, formatting, and staging build green; complete repository check reached 888/889 tests with one obsolete release-workflow assertion since updated and reverified focused
+STAGING: playground D1/R2 conversion is ready and reset-proven; exact Worker candidate deployment pending
 PRODUCTION: exact v0.8.0 identity verified read-only; no task mutation authorized or performed
-RECOVERY: live Worker deployment history, D1 Time Travel availability, R2 binding inventory, and production/staging separation reverified; fresh private conversion backups pending
+RECOVERY: prior staging Worker/D1/R2 preserved; fresh staging and production D1 exports restored locally; new playground D1 sealed Time Travel bookmark and pre-reset bookmark proof captured; R2 baseline manifests sealed privately
 ROLLBACK_REQUIRED: NO
 GOOGLE_WRITES: NONE
 PROVIDER_EMAIL_SENDS: NONE
 HANDOFF_STATUS: IN_PROGRESS
-NEXT_EXACT_ACTION: Commit the accepted scope lock, implement and verify the bounded playground/governance unit, and stop before production, frontend integration, or M1/M2.
+NEXT_EXACT_ACTION: Freeze the clean exact candidate, deploy it only to the Isolated Staging Playground, run acceptance and production-nonmutation reconciliation, publish the bounded PR, and stop for Earl.
 RESUME_COMMANDS: git status --short --branch; git fetch origin; git rev-parse origin/main; npm run handoff:verify; npm run check:governance
 PROHIBITED_ACTIONS: no production deployment/business mutation/migration, automatic promotion, frontend baseline integration, v0.8.1 product features, M1/M2, Google write, provider/email send, force push, or unknown branch deletion

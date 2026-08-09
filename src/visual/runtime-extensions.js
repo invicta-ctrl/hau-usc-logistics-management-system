@@ -50,6 +50,7 @@ import {
   previewReferenceAdminChange,
 } from '../domain/reference-administration.js';
 import { canvassEvidenceLinks, canvassQualityIndicators } from '../domain/canvass-quality.js';
+import { installPlaygroundConsole } from './playground-console.js';
 import {
   inventoryLabel,
   presentationLabel,
@@ -665,6 +666,7 @@ function catalogFormHtml(item = null) {
 }
 
 export function createRuntimeExtensions(options) {
+  installPlaygroundConsole();
   const {
     backendMode,
     services,
