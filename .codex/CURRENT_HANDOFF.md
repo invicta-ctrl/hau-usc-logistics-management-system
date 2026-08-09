@@ -6,7 +6,7 @@ BRANCH: release/v0.8.1-isolated-staging-playground
 HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
-WORKTREE_STATE: DIRTY - scoped owner-feedback candidate changes pending freeze
+WORKTREE_STATE: CLEAN
 ACTIVE_WRITER: NONE
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
