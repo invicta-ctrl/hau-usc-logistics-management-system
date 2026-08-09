@@ -143,6 +143,9 @@ describe('V5 backend integration', () => {
     ]);
 
     expect(entry).toContain('const backend = createV5Backend();');
+    expect(entry).toContain("import * as app from '../src/app.js';");
+    expect(entry).toContain('app.integrationBoot();');
+    expect(entry).not.toContain("await import('../src/app.js')");
     expect(entry).not.toContain('__HAU_RUNTIME_CONFIG__');
     expect(entry).not.toContain('VITE_HTTP_API_BASE_URL');
     for (const field of [

@@ -4,6 +4,7 @@ import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Script } from 'node:vm';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const canonicalRoot = path.join(repoRoot, 'dist');
@@ -39,6 +40,15 @@ function verifySingleFile(html, label) {
   }
   if (/<script[^>]+\btype=["']module["']/iu.test(html)) {
     throw new Error(`${label} still uses a module script and is not a single-file artifact.`);
+  }
+  const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)];
+  if (!inlineScripts.length) throw new Error(`${label} contains no inline application script.`);
+  for (const [index, match] of inlineScripts.entries()) {
+    try {
+      new Script(match[1], { filename: `${label}:inline-script-${index + 1}` });
+    } catch (error) {
+      throw new Error(`${label} is not valid classic-script JavaScript.`, { cause: error });
+    }
   }
 }
 
