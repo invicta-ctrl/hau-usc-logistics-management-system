@@ -1,29 +1,33 @@
 # Current Bounded Task
 
 INTENT: DEPLOYMENT
-MODE: COMPLETE
-OBJECTIVE: Release v0.8.0 Inventory Truth and Ledger Lock through protected staging and production.
-RESULT: RELEASED
-TARGET: protected main release v0.8.0
+SECONDARY INTENTS: REPOSITORY_MAINTENANCE, ARCHITECTURE, TESTING
+MODE: EXECUTE
+OBJECTIVE: Convert isolated staging into the permanent Isolated Staging Playground, establish safe production-derived D1/R2 baseline parity and resettable working state, and hardcode the permanent Git/release model.
+RESULT: IN_PROGRESS
+TARGET: release/v0.8.1-isolated-staging-playground plus playground-only Cloudflare resources
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
-AUTHORITY: Earl's accepted master-release prompt, protected Git history, exact runtime evidence, and repository release runbooks
+ACCEPTED_SPEC: .codex/specs/active/isolated-staging-playground-and-git-governance.md
+AUTHORITY: Earl's accepted 2026-08-09 owner execution prompt, protected Git history, live provider truth, and repository deployment/recovery runbooks
+SKILLS: lean-ctx (local allowlist blocked; narrow native fallback), cloudflare-deploy, Hallmark for the scoped playground UI, GitHub publishing workflow at the PR gate
 REQUIRED_MODEL: CODEX
-FINAL_CANDIDATE_SHA: 26ee284cf066379e28a60511568053afd92c8768
-ACCEPTED_MAIN_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-TAG: v0.8.0
-PR: 21
-RUNTIME: 0.8.0 in isolated staging and production
+STARTING_SHA: df3fdb96e62ab396c63e3300b58fb70c6ab960a5
+PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
+PRODUCTION_VERSION: v0.8.0
+CANDIDATE_SHA: PENDING_FREEZE
+PR: PENDING
+RUNTIME: existing staging and production are isolated v0.8.0; playground conversion pending
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
 NEW_MIGRATION: NONE
-VERIFICATION: local focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; exact-head and protected PR CI green; staging and production recovery, restore, full-stack smoke, and 20/20 reconciliation green
-RISK: CLOSED - production release completed with rollback not required
-SCOPE: completed v0.8.0 Slice 3 release and repository-native closeout only
-OUT_OF_SCOPE: playground implementation, v0.8.1+, migrations, further deployment, data mutation, or recovery cleanup
-STOP_CONDITIONS: any new action requires a separately accepted specification and fresh exact-state handshake
-EXTERNAL_WRITES: protected GitHub push/PR/merge/tag/release; exact isolated staging deploy; exact production deploy; no Google or provider/email write
-ACTIVE_WRITER: NONE
-HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: Execute the separately accepted Isolated Staging Playground conversion before v0.8.1; do not begin it automatically.
+DELIVERABLE: verified governance, one-way clean baselines, reset/refresh/session guards, playground UI/module switcher, denial tests, candidate-to-playground CI, production non-mutation, and exact handoff
+VERIFICATION: Git/release/provider handshake; recovery proof; D1/R2 parity and reset mutation proof; production before/after fingerprints; focused/canonical/browser/workflow/governance/handoff checks; complete diff and P0/P1 review
+RISK: HIGH
+SCOPE: accepted specification, root governance, playground-only Cloudflare config/resources/runtime, private baseline/reset/recovery tooling, CI, tests, bounded GitHub branch/PR and initial recovery-pointer writes after proof
+OUT_OF_SCOPE: production deployment/business mutation/migration, automatic promotion, Google/provider-email writes, frontend baseline integration, v0.8.1 product features, M1/M2, unrelated cleanup, force push, unknown branch deletion
+STOP_CONDITIONS: environment/binding ambiguity, production crossover, unknown dirty work, privacy/access uncertainty, missing recovery, migration need, failed integrity/FK/parity, exact-identity drift, automatic production path, unresolved P0/P1, or two failed targeted repair rounds
+EXTERNAL_WRITES: bounded GitHub branch/PR; playground-only Cloudflare Worker/D1/R2; production read-only export/copy source; no production deployment or business mutation
+ACTIVE_WRITER: CODEX
+HANDOFF_STATUS: IN_PROGRESS
+NEXT_EXACT_ACTION: Commit the accepted scope lock, implement and verify the bounded playground/governance unit, and stop before production, frontend integration, or M1/M2.

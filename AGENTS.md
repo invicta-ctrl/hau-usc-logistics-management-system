@@ -31,6 +31,78 @@ Git state -> AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/
 - Model routing is task-specific and version-neutral: follow REQUIRED_MODEL and escalation rules in the current task and accepted specification. Escalate auth, authorization, ledger, migration, recovery, security, or production-boundary decisions to the required authority; do not silently substitute a lower-scope role.
 - Before handoff, update the three current records together. A writer lock is released only when the pointer says ACTIVE_WRITER: NONE and HANDOFF_STATUS: READY_FOR_HANDOFF.
 
+## Permanent Git branch and playground release policy
+
+The repository uses environment-independent Git history. Staging/playground and production are deployment environments, never permanent Git branches.
+
+### Permanent retained branches
+
+The only permanent retained branch pointers are:
+
+- `main` — current accepted production lineage.
+- `backup/last-known-good` — immediately previous verified production state.
+- `regression/r1` — next older retained verified production state.
+- `regression/r2` — next older retained verified production state.
+- `regression/r3` — oldest retained recovery pointer.
+
+Do not create or retain permanent `staging`, `playground`, `production`, `prod`, `develop`, `dev`, `working`, or `next` branches.
+
+Immutable tags/releases and verified recovery artifacts preserve history beyond these five movable pointers.
+
+### Temporary implementation branch
+
+At most one production-bound implementation branch may be active unless Earl explicitly authorizes otherwise.
+
+Use one of:
+
+- `release/vX.Y.Z-<slug>` for planned releases/features;
+- `fix/vX.Y.Z-<slug>` for bounded fixes;
+- `hotfix/vX.Y.Z-<slug>` only for a true urgent production patch.
+
+The temporary branch is the active writer branch. It is deleted after accepted production release or explicit closure.
+
+### Mandatory release path after v0.8.0
+
+Every production-bound version, feature, update, fix, patch, or hotfix after `v0.8.0` follows:
+
+`temporary branch -> focused verification -> frozen exact candidate -> Isolated Staging Playground -> automated acceptance -> Earl manual testing -> Earl explicit production GO -> protected accepted main lineage -> production -> smoke/reconciliation -> rotate recovery pointers -> delete temporary branch`
+
+No normal direct-to-production path exists after `v0.8.0`.
+
+A green CI run or successful playground deployment is not production approval.
+
+Production promotion requires Earl's explicit GO for the exact tested candidate.
+
+If code changes after Earl tests a candidate, that approval is invalid. Freeze and deploy a new candidate and obtain new approval.
+
+### Candidate identity
+
+Record the exact candidate commit/tree and deterministic application artifact identity used in the playground.
+
+Protected merge mechanics may create a different commit SHA on `main`; if so, prove that the accepted `main` tree/application artifact is identical to the exact playground-tested candidate before production.
+
+Never silently rebuild different source for production.
+
+### Recovery pointer rotation
+
+Move recovery pointers only after the new production release passes required production smoke, reconciliation, and rollback-readiness checks.
+
+After successful production acceptance:
+
+- previous `regression/r2` -> `regression/r3`
+- previous `regression/r1` -> `regression/r2`
+- previous `backup/last-known-good` -> `regression/r1`
+- previous accepted `main` -> `backup/last-known-good`
+- new accepted release remains `main`
+
+Never rotate pointers merely because a PR merged.
+
+### Environment rule
+
+The Isolated Staging Playground and Production must use distinct provider bindings. Never solve environment parity by pointing playground code at production D1, R2, secrets, queues, or mutable production resources.
+
+Production data may flow one way into an isolated playground baseline under the accepted refresh runbook. Playground data never synchronizes back into production.
+
 ## Required Git handshake
 
 Before edits, record repository root, branch, HEAD, upstream, and git status --short. Fetch and compare an upstream only when network access is authorized. A missing upstream, divergence, wrong branch, or unexpected dirty work is a stop condition unless the current task explicitly marks a local no-push branch as sanctioned. Never reset, clean, force-push, discard, or overwrite unknown work.
