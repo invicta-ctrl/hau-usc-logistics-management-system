@@ -1,22 +1,22 @@
 # Current Environment Handoff
 
 FROM: CODEX V5 BACKEND INTEGRATION
-TO: EARL MANUAL PLAYGROUND ACCEPTANCE
+TO: CODEX OTG PARITY IMPLEMENTATION
 BRANCH: release/v0.8.1-isolated-staging-playground
 HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: CODEX
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v5-backend-integration-steer.md
 MILESTONE: V0.8.1 V5 Backend Integration Steer
 SLICE: SINGLE BOUNDED BACKEND-INTEGRATION UNIT
-OUTCOME: PLAYGROUND_ACCEPTED_AWAITING_EARL
+OUTCOME: ACTIVE_OTG_PARITY_IMPLEMENTATION
 STARTING_SHA: a06566f58ffeed826d8b7a53fe0421d9d68802b1
 PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-CANDIDATE_SHA: 947afedb7d0ec4528b4834220facc13ab55930f1
+CANDIDATE_SHA: NONE
 PR: #23 DRAFT
 TAG: NONE
 RUNTIME_VERSION: 0.8.1-playground.1
@@ -32,8 +32,8 @@ PRODUCTION: no mutation authorized or performed
 ROLLBACK_REQUIRED: NO
 GOOGLE_WRITES: NONE
 PROVIDER_EMAIL_SENDS: NONE
-HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: Earl tests the exact deployed V5 candidate in the Isolated Staging Playground and issues explicit production GO or a bounded correction steer; do not promote automatically.
+HANDOFF_STATUS: ACTIVE
+NEXT_EXACT_ACTION: Audit current Production capability contracts against V5 routes, restore required V5-native functional/visual parity in src/, verify the Playground Index and responsive matrix, then freeze a new exact playground candidate.
 RESUME_COMMANDS: git status --short --branch; git stash list; npm run handoff:verify; npm run check:governance
-PROHIBITED_ACTIONS: no CSS/theme/copy/route redesign, old frontend control import, migration, production deployment/mutation, automatic promotion, M1/M2, Google write, provider/email send, force push, or unknown resource deletion
+PROHIBITED_ACTIONS: no new design language or substantial layout redesign, old Production/Playground frontend import, backend architecture/auth change, migration, production deployment/mutation, automatic promotion, M1/M2, Google write, provider/email send, force push, or unknown resource deletion
 DO_NOT_REPEAT: do not apply the superseded stash over the accepted candidate; do not restart the task; do not rerun Hallmark or Impeccable
