@@ -51,7 +51,7 @@
     "migration:prepare": "node scripts/migration/prepare-import.mjs",
     "migration:fixture": "node scripts/migration/create-synthetic-export.mjs",
     "check:governance": "npm run check:agents && npm run check:continuation",
-    "check:playground": "vitest run tests/unit/playground-baseline-data.test.js tests/unit/playground-branch-governance.test.js tests/unit/playground-config.test.js tests/unit/playground-governance-files.test.js tests/unit/playground-r2-copy-worker.test.js tests/unit/playground-r2-reset-worker.test.js tests/unit/playground-service.test.js",
+    "check:playground": "vitest run tests/unit/playground-baseline-data.test.js tests/unit/playground-branch-governance.test.js tests/unit/playground-config.test.js tests/unit/playground-governance-files.test.js tests/unit/playground-r2-copy-worker.test.js tests/unit/playground-r2-readonly-fingerprint-worker.test.js tests/unit/playground-r2-reset-worker.test.js tests/unit/playground-service.test.js",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
