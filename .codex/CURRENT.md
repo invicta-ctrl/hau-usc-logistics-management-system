@@ -2,22 +2,27 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: V0.8.0 Inventory Truth and Ledger Lock
-STATUS: ACTIVE - REPLACEMENT CANDIDATE FREEZE
-BRANCH: release/v0.8.0-inventory-truth-ledger-lock
+STATUS: RELEASED
+BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-UPSTREAM: origin/release/v0.8.0-inventory-truth-ledger-lock
+UPSTREAM: GIT_UPSTREAM
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: CODEX
-WRITER_LOCK: CLAIMED - one authorized test-only follow-up candidate
-REQUIRED_MODEL: CODEX; fresh independent high-risk review required after any invalidating runtime repair and before production
+ACCEPTED_RELEASE_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
+FINAL_CANDIDATE_SHA: 26ee284cf066379e28a60511568053afd92c8768
+TAG: v0.8.0
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
+REQUIRED_MODEL: CODEX
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
-STARTING_SHA: c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
-LAST_VALID_VERIFICATION_SHA: c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
-LAST_VALID_RUNTIME_EVIDENCE: The authorized v0.8.0 shell expectation passes 2/2 at the exact affected widths on the current checkout; canonical npm run check passes 125 files/868 tests with deterministic build/parity, Cloudflare types, and dry-run; the prior complete exact-source Worker/browser gate remains 58/58; local reconciliation remains 20/20 with zero discrepancies/quarantine; all 73 candidate paths are mapped and the changed-scope privacy scan is clean.
-BLOCKER: NONE locally. Remote exact-head and PR CI remain mandatory before Cloudflare access.
+BLOCKER: NONE
 MIGRATION_DECISION: NONE_REQUIRED
-NEXT_EXACT_ACTION: Freeze and push the single authorized replacement candidate, then require exact-head plus PR CI before Cloudflare access.
-HANDOFF_STATUS: ACTIVE
+SCHEMA: 30
+LATEST_MIGRATION: 0030_production_access_and_operations.sql
+RUNTIME: staging and production report v0.8.0 at their exact accepted release identities
+PRODUCTION: exact accepted main SHA 3059098ff2a2935fec59df52748ccae420aadba7; readiness and protected configuration true
+RELEASE_EVIDENCE: protected PR #21, exact-head workflow 31296658664, main-push CI 31297844976, CodeQL 31297844972, private staging and production recovery packages retained outside Git
+NEXT_EXACT_ACTION: Execute the separately accepted Isolated Staging Playground conversion before v0.8.1; do not begin it automatically.

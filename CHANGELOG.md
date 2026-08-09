@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- No changes recorded after the v0.8.0 release.
+
+## 0.8.0 - 2026-08-09
+
+### Released
+
+- Merged protected PR #21 and deployed the exact accepted release from
+  `3059098ff2a2935fec59df52748ccae420aadba7` to isolated staging and production.
+  Annotated tag and GitHub Release `v0.8.0` resolve to the same accepted main SHA.
+- Preserved schema 30 and migration `0030_production_access_and_operations.sql`;
+  v0.8.0 created and applied no migration.
+- Passed exact-SHA staging and production recovery, isolated restore, full-stack
+  smoke, and 20/20 Inventory reconciliation with zero blocking or quarantine
+  discrepancies. No Google write or provider/email send occurred.
+
 ### Added
 
 - Added the accepted final v0.8.0 Slice 3 specification, aggregate-only
@@ -40,9 +55,8 @@
 
 ### Changed
 
-- Froze the repository candidate identity at v0.8.0 while retaining schema 30 and
-  migration `0030_production_access_and_operations.sql`. This is a candidate only;
-  production remains unchanged v0.7.2 pending Earl's exact-SHA GO.
+- Released repository and runtime identity v0.8.0 while retaining schema 30 and
+  migration `0030_production_access_and_operations.sql`.
 - Completed the bounded v0.8.0 Slice 2 repair set under schema 30 with no
   migration, historical rewrite/reconciliation, deployment, environment/provider
   mutation, Google write, version/tag/release/merge, or Slice 3 work.
@@ -56,16 +70,12 @@
 
 ### Verification boundary
 
-- V0.8.0 Slice 3 deterministic reconciliation passes 20/20 checks on the canonical
-  two-generation schema-30 synthetic fixture with zero discrepancies, zero
-  quarantine items, and eight proven imported-history observations classified
-  `KNOWN_NONBLOCKING`. The canonical repository gate passes 124 Vitest files/860
-  tests, deterministic build/parity, Cloudflare types/build/dry-run; affected
-  Inventory/Lending browser coverage passes 17 cases with 37 intentional skips.
-  Fresh logical high-risk review is green with zero unresolved P0/P1. Exact-source
-  local Worker/browser coverage remains red at 57/58 after its focused retry failed;
-  private recovery, staging, PR, and exact-head CI were not performed, so no exact
-  candidate or owner GO is claimed.
+- V0.8.0 final verification passed the authorized focused test 2/2, canonical
+  repository gate 125 files/868 tests, exact-source Worker/browser 58/58,
+  deterministic build/parity, Cloudflare types/dry-run, exact-head and protected PR
+  CI, main-push CI, CodeQL, staging/production recovery and full-stack smoke, and
+  staging/production reconciliation 20/20. Fresh high-risk review found zero
+  unresolved P0/P1.
 - V0.8.0 Slice 2 focused evidence passed: two Vitest files / nine tests,
   six adjacent unit/contract files / 76 tests, and two focused local Worker/D1
   lifecycle/receiving cases. The full shared-core repository gate passed lint,
