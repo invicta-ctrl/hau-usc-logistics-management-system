@@ -32,6 +32,34 @@ function bookmarkFrom(value) {
   return '';
 }
 
+function validWorkersDevHostname(value) {
+  return (
+    typeof value === 'string' &&
+    /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]+\.workers\.dev$/u.test(value) &&
+    !/(?:replace|placeholder|unknown|tbd)/iu.test(value)
+  );
+}
+
+function preservedPlaygroundHostname() {
+  const deployments = wrangler(['deployments', 'list', '--env', 'staging', '--json'], { json: true });
+  for (const deployment of deployments) {
+    for (const version of deployment.versions ?? []) {
+      const detail = wrangler(['versions', 'view', version.version_id, '--env', 'staging', '--json'], {
+        json: true,
+      });
+      const hostname = detail?.resources?.bindings?.find(
+        (entry) => entry.name === 'RECOVERY_HOSTNAME' && typeof entry.text === 'string',
+      )?.text;
+      if (validWorkersDevHostname(hostname)) return hostname;
+      const fallback = detail?.resources?.bindings?.find(
+        (entry) => entry.name === 'RECOVERY_HOSTNAME' && typeof entry.value === 'string',
+      )?.value;
+      if (validWorkersDevHostname(fallback)) return fallback;
+    }
+  }
+  return '';
+}
+
 async function run() {
   const input = process.argv[2];
   if (!path.isAbsolute(input ?? '')) throw new Error('Manifest path must be absolute.');
@@ -78,6 +106,9 @@ async function run() {
     latestMigration: baselineReport.latestMigration,
     parityExceptions: baselineReport.parityExceptions,
   };
+  const hostname = preservedPlaygroundHostname();
+  if (!hostname) throw new Error('A preserved valid playground hostname was not found in Worker history.');
+  manifest.playgroundHostname = hostname;
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
   console.log('Playground D1 clean reset point: CAPTURED AND VERIFIED');
   console.log('The private bookmark, database identity, and resource names were not printed.');

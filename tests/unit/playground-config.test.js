@@ -6,6 +6,7 @@ const tree = 'b'.repeat(40);
 const artifact = 'c'.repeat(64);
 const manifest = {
   status: 'READY',
+  playgroundHostname: 'playground.example.workers.dev',
   d1: { databaseId: 'playground-d1-id' },
   resources: {
     names: {
@@ -32,6 +33,7 @@ function config() {
       PLAYGROUND_MODE: true,
       PLAYGROUND_LABEL: 'ISOLATED_STAGING_PLAYGROUND',
       ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'disabled',
+      RECOVERY_HOSTNAME: 'playground.example.workers.dev',
       CANDIDATE_BRANCH: 'release/v0.8.1-playground',
       CANDIDATE_SHA: sha,
       CANDIDATE_TREE_SHA: tree,

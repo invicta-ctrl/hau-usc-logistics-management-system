@@ -65,6 +65,13 @@ async function run() {
   if (!baselineReport?.sourceProductionSha || !baselineReport?.sourceProductionVersion) {
     throw new Error('Resource manifest is missing the sealed production baseline identity.');
   }
+  if (
+    !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]+\.workers\.dev$/u.test(
+      manifest.playgroundHostname ?? '',
+    )
+  ) {
+    throw new Error('Resource manifest is missing the exact private playground hostname.');
+  }
   const config = {
     name: staging.name,
     main: path.join(repoRoot, 'src', 'worker', 'index.js'),
@@ -110,6 +117,7 @@ async function run() {
       PRODUCTION_ACCEPTED_SHA: baselineReport.sourceProductionSha,
       PRODUCTION_SCHEMA_VERSION: String(baselineReport.schemaVersion),
       PLAYGROUND_BASELINE_CAPTURED_AT: baselineReport.capturedAt,
+      RECOVERY_HOSTNAME: manifest.playgroundHostname,
       ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'disabled',
       SANDBOX_RESET_ALLOWED: false,
     },

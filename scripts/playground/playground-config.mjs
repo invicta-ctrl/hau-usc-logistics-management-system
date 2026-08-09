@@ -32,6 +32,14 @@ export function validatePlaygroundConfig({
   if (config?.vars?.ACCOUNT_APPLICATION_EMAIL_PROVIDER !== 'disabled') {
     issues.push('Playground provider/email delivery must be disabled');
   }
+  if (
+    config?.vars?.RECOVERY_HOSTNAME !== manifest?.playgroundHostname ||
+    !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]+\.workers\.dev$/u.test(
+      config?.vars?.RECOVERY_HOSTNAME ?? '',
+    )
+  ) {
+    issues.push('Recovery hostname must match the exact private playground hostname');
+  }
   if (!TEMPORARY_BRANCH.test(expectedBranch ?? '')) issues.push('Candidate branch is not an allowed temporary branch');
   if (config?.vars?.CANDIDATE_BRANCH !== expectedBranch) issues.push('Candidate branch identity mismatch');
   if (!SHA.test(expectedSha ?? '') || config?.vars?.CANDIDATE_SHA !== expectedSha) {
