@@ -332,7 +332,7 @@ test('Materials refreshes canonical overview truth when operational scope change
 
   await page
     .locator('[data-internal-shell-context]')
-    .getByLabel('Operational scope')
+    .locator('#shellScopeSelect')
     .selectOption('COMMITTEE:COM_MATERIALS');
 
   await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_MATERIALS/u);

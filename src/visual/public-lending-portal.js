@@ -133,7 +133,7 @@ export async function mountPublicLendingPortal({ root, client }) {
         </form>
         <aside class="public-request-aside">
           <section class="panel" aria-labelledby="borrowingProcessTitle"><p class="eyebrow">How it works</p><h2 id="borrowingProcessTitle">Borrowing process</h2><ol>${catalog.process.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol></section>
-          <section class="panel" aria-labelledby="publicLendingTrackTitle">
+          <section id="lending-tracking" class="panel" aria-labelledby="publicLendingTrackTitle">
             <p class="eyebrow">Private tracking</p>
             <h2 id="publicLendingTrackTitle">Track a borrowing request</h2>
             <p>Use only the Submission ID and private tracking code shown once after submission. This lookup does not display borrower identity or contact details.</p>

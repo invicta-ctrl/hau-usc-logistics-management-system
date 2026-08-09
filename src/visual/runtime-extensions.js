@@ -3341,7 +3341,7 @@ export function createRuntimeExtensions(options) {
     const label = brandAssetDefinitions.find(([id]) => id === slot)?.[1] ?? slot;
     openModal(
       `Upload ${label}`,
-      `<form data-brand-upload-form><div class="alert">The file is validated from its bytes. Upload creates a draft; publication is a separate audited action.</div><div class="form-grid section-gap"><label class="span-2">Image file<input name="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" required></label><label class="span-2">Accessible alt text<input name="altText" maxlength="240" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><div class="admin-brand-preview section-gap"><img data-brand-local-preview alt="Local preview" hidden></div><button class="primary" type="submit">Validate and upload draft</button></form>`,
+      `<form data-brand-upload-form><div class="alert">The file is validated from its bytes. Upload creates a draft; publication is a separate audited action.</div><div class="form-grid section-gap"><label class="span-2">Image file<input name="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" required></label><label class="span-2">Accessible alt text<input name="altText" maxlength="240" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><div class="admin-brand-preview section-gap"><img data-brand-local-preview src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Selected image" hidden></div><button class="primary" type="submit">Validate and upload draft</button></form>`,
       (modal) => {
         const form = modal.querySelector('[data-brand-upload-form]');
         const input = form.elements.file;
@@ -6052,10 +6052,9 @@ export function createRuntimeExtensions(options) {
     releaseIndicator.dataset.environment = identity.environment;
     releaseIndicator.dataset.releaseSha = identity.candidateSha;
     releaseIndicator.dataset.releaseSchema = identity.schemaVersion;
+    releaseIndicator.setAttribute('aria-label', releaseIdentityLabel(identity));
     releaseIndicator.textContent =
-      backendMode === 'mock' && !authoritativeIdentity.verified
-        ? `${identity.environment} · v${identity.appVersion}`
-        : releaseIdentityLabel(identity);
+      identity.verified && identity.environment === 'PRODUCTION' ? 'Online' : 'Test site';
     const attention = operationalAttentionCount();
     const attentionButton = internalShellBar.querySelector('[data-shell-attention]');
     attentionButton.querySelector('strong').textContent = String(attention);

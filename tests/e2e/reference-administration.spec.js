@@ -14,10 +14,14 @@ test('reference administration stays within the 320 px viewport', async ({ page 
   await expect(hero).not.toHaveClass(/\bpanel\b/);
   const heroPresentation = await hero.evaluate((element) => ({
     backgroundImage: getComputedStyle(element).backgroundImage,
+    backgroundColor: getComputedStyle(element).backgroundColor,
     headingColor: getComputedStyle(element.querySelector('h2')).color,
+    headingFontFamily: getComputedStyle(element.querySelector('h2')).fontFamily,
   }));
-  expect(heroPresentation.backgroundImage).toContain('linear-gradient');
-  expect(heroPresentation.headingColor).toBe('rgb(255, 255, 255)');
+  expect(heroPresentation.backgroundImage).toBe('none');
+  expect(heroPresentation.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+  expect(heroPresentation.headingColor).not.toBe(heroPresentation.backgroundColor);
+  expect(heroPresentation.headingFontFamily).toContain('Georgia');
   await expect
     .poll(() =>
       page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),

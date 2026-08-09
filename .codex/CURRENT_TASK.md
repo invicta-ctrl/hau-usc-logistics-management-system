@@ -1,121 +1,119 @@
 # Current Bounded Task
 
-> **BRANCH-LOCAL RECORD.** This file describes work on
-> `frontend-design-integration` only. `.codex/CURRENT.md` is the project-wide
-> pointer, owned by `main`; this branch does not fork it.
+> **BRANCH-LOCAL RECORD.** This file describes
+> `frontend-design-integration`. `.codex/CURRENT.md` remains the project-wide
+> pointer owned by `main` and is intentionally unchanged.
 
 INTENT: SOFTWARE_FEATURE
-MODE: HANDOFF - work paused, branch is a verified increment
-OBJECTIVE: Integrate the V4.1 visual language into the authoritative HAU-USC Logistics front end while preserving every production route, workflow, form, action, status, permission boundary, and service contract.
+MODE: EXECUTE - owner-directed continuation of Claude's late v0.7.3 front-end slice
+OBJECTIVE: Integrate V4.1 into the authoritative front end without changing production behavior or contracts.
 TARGET: frontend-design-integration
 BRANCH_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED - 2026-08-09, released at handoff. A future writer must re-claim it, and must first reconcile the milestone conflict below.
+CURRENT_POINTER: .codex/CURRENT.md
+CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
+ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
+AUTHORITY: Earl's continuation instruction -> accepted frontend specification -> AGENTS.md -> branch-local task/handoff -> verified Git state
+REQUIRED_MODEL: Requested routing is platform-accepted; exact runtime identity is not agent-attestable
+RISK: MEDIUM - broad presentation change, no backend or production authority
+SCOPE: Frontend source, frontend tests, generated frontend artifacts through repository scripts, design/handoff documentation, candidate branch commit/push, public sanitized GPT Sites preview
+OUT_OF_SCOPE: Backend, service contracts, auth model, migrations, provider/D1/R2/Google writes, staging/production deploy, merge, tag, DNS, protected data
+VERIFICATION: Unit, lint, build, dist parity, focused and broad Playwright, accessibility, responsive, reduced motion, 200 percent zoom, governance, diff review, logged-out GPT Sites check
+STOP_CONDITIONS: Backend or protected write required; production/staging/merge/tag required; anonymous GPT Sites unavailable; route or invariant conflict; unclassifiable work
+ACTIVE_WRITER: CODEX
+WRITER_LOCK: CLAIMED - 2026-08-09
 GIT_UPSTREAM: origin/frontend-design-integration
 ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
+CODEX_STARTING_SHA: 85f064a0f809654d584853204e9a33eb1fc52d32
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
 ROLLBACK_POINT: f0312b76bd8401e2aa5b9947252642bdb693b19d
-STATUS: VERIFIED INCREMENT - NOT AN ACCEPTANCE CANDIDATE
+STATUS: VERIFIED FRONT-END CANDIDATE - GPT SITES PUBLICATION AND FINAL COMMIT/PUSH PENDING
+NEXT_EXACT_ACTION: Finish final candidate gates, commit and push the candidate branch, then publish and verify the sanitized candidate through anonymous GPT Sites.
 
-## MILESTONE CONFLICT - read before resuming
+## Recovery
 
-This branch was authorized under an owner-accepted specification,
-`.codex/specs/active/v0.7.3-frontend-design-integration.md`, on 2026-08-09.
+CLAUDE_STOP_STATE: Committed and pushed checkpoint
+`85f064a0f809654d584853204e9a33eb1fc52d32`; no tracked or staged changes;
+two untracked Claude files were preserved.
 
-Since then `main` has advanced and now records:
+CODEX_RECOVERY_CLASSIFICATION: **B. PARTIAL COMMITTED CHECKPOINT.**
 
-    MILESTONE:     V0.8.0 Inventory Truth and Ledger Lock Owner Decision
-    STATUS:        READY - V0.7.3 CLOSED WITH NO RUNTIME PATCH REQUIRED
-    ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
-    WRITER_LOCK:   RELEASED
+CLAUDE_WORK_PRESERVED: Yes. No reset, clean, checkout, restore, stash, rebase,
+force-push, or overwrite was performed.
 
-So v0.7.3 is closed on `main` while this branch holds an accepted v0.7.3
-front-end specification that was never completed or withdrawn.
+PRESERVED_UNTRACKED_FILES:
 
-Nothing is lost and nothing conflicts in code: `main` changed no file under
-`src/` since this branch's base. The conflict is governance only.
+- `.impeccable/hook.cache.json` - local tool cache; do not commit.
+- `output/design/HAU_USC_Logistics_FrontEnd_Design_v0.7.2_r1_Integrated.html`
+  - Claude's preview artifact, retained unchanged and not used as the final
+    production candidate.
 
-The owner must choose one:
+The owner instruction to continue the existing slice resolved the branch-local
+milestone conflict in favor of completing this already-accepted late v0.7.3
+front-end work. Runtime version remains 0.7.2. This grants no deployment,
+merge, release, migration, backend, provider, or protected-data authority.
 
-1. Re-scope this branch under v0.8.0 - carry the accepted specification
-   forward as a v0.8.0 front-end slice and re-accept it.
-2. Complete it as a late v0.7.3 item - reopen the milestone for this scope.
-3. Park the branch - it is a verified increment and can sit indefinitely; the
-   merged design programme is preserved either way.
+## Completed
 
-Do not resume implementation until this is resolved, and do not overwrite
-`.codex/CURRENT.md`.
+- Claude's design foundation, privacy repair, docked detail, copy foundation,
+  and generated artifact work were preserved.
+- V4.1 presentation cascade added after the protected production cascade.
+- Production landing rebuilt around real Request, Lending, Staff, and tracking
+  routes with no preview chrome, demo label, fake metric, or invented feature.
+- Dependency-free isometric logistics map added with static, mobile,
+  reduced-motion, save-data, off-screen, and hidden-tab behavior.
+- Persisted celestial theme control, kinetic menu/drawer, and compact back
+  control integrated into the real shell.
+- Visible environment copy reduced to `Online` / `Test site`; exact release
+  identity remains available to verification and assistive technology.
+- Return action wording simplified without changing the underlying return call
+  or ledger semantics.
+- Mock-only sanitized Request/Lending interactions added for a safe public
+  preview. Production REST paths and absolute Staff Sign In routing remain.
+- Four required section 9 documents completed.
+- Generated standalone, guided demo, seven module shareables, and Apps Script
+  bundle rebuilt through repository scripts.
 
-## Done and verified
+## Verification
 
-- Specification gate satisfied: proposed, owner-accepted, lock claimed,
-  rollback point recorded before the first source edit.
-- Personal data removed from the shipped front end. `src/visual/runtime.js`
-  carried ten real person names including the owner's, compiled into the
-  deployed v0.7.2 bundle and rendered with no session at all.
-- 17.2 design foundation: surface ladder, elevation ramp, motion tokens, type
-  scale, compositional anchors, decorative grid neutralised, three
-  previously-undefined tokens defined.
-- 4.1 docked record detail across all eleven detail surfaces, reusing the
-  existing drawer, with aria-modal following the visual state.
-- 17.7 copy pass: environment badge, scope control, loading and status copy in
-  plain language, no infrastructure names.
-- 17.8 preview-chrome sweep: clean.
-- Impeccable design programme merged; branch renamed.
-- DESIGN.md reconciled to the production token layer, with a systemDrift
-  record of the genuine remaining drift.
+- `npm run build` - pass; 61 modules; `dist/index.html` 903,621 bytes,
+  gzip 230,860 bytes.
+- `node scripts/create-shareable.mjs` - pass after build.
+- `npm run verify:dist` - pass for fresh preview parity, standalone, guided
+  demo, and seven module shareables.
+- `npm run test` - 122 files, 842 tests passed.
+- `npm run lint` - 0 errors; one pre-existing unused-variable warning.
+- `npm run test:e2e` - 146 passed, 400 intentional project skips, 0 failed.
+- Focused final route repair - 21 unit assertions and 16 browser tests passed.
+- Hallmark - 58/58 manual gates pass.
+- Impeccable detector - run once after UI completion; all three findings fixed.
+- Required widths, light/dark, reduced motion, keyboard/focus, static fallback,
+  and 200% zoom have visual/browser evidence.
 
-Verification at handoff: npm run test 121 files / 837 tests passed; npm run
-lint 0 errors and 1 pre-existing warning; npm run verify:dist verified fresh
-preview parity, the standalone, guided demo, and seven module shareables.
+## Boundaries
 
-## Remaining
+FRONT_END_ONLY: YES
+BACKEND_CHANGES: NONE
+SERVICE_CONTRACT_CHANGES: NONE
+MIGRATIONS: NONE
+PROVIDER_OR_PRIVATE_DATA_WRITES: NONE
+STAGING_OR_PRODUCTION_DEPLOYMENT: NONE
+LIVE_PRODUCTION_CHANGED: NO
 
-- 17.3 shell and signature controls. Reference implementations already exist
-  and are proven against the owner's reference images:
-  prototypes/impeccable-whole-site-redesign-v5/styles/v5.css and
-  src/components.js celestialToggle, against
-  docs/design/references/v0.4.1-control-references/. Cheapest next win.
-- 17.4 landing page and progressive-enhancement 3D hero with static fallback.
-- 17.5 and 17.6 operational and administration surface composition.
-- 17.9 functional parity gate - NOT RUN. The specification requires browser
-  evidence per journey. Until that exists this branch is not acceptance-ready.
-- Four section 9 deliverables missing: V4_1_PRODUCTION_COPY_GUIDE.md,
-  V4_1_PRODUCTION_MOTION_AND_3D.md,
-  V4_1_PRODUCTION_FUNCTIONAL_PARITY_REPORT.md,
-  V4_1_PRODUCTION_VISUAL_ACCEPTANCE.md.
-- Typography, colour and radius consolidation - see systemDrift in DESIGN.md.
-- .impeccable/design.json is stale against DESIGN.md.
+## Remaining exact actions
 
-## Traps that already cost time - do not repeat
+1. Rebuild after the final production/mock Staff Sign In routing repair.
+2. Run final invalidated unit/lint/browser/governance/diff gates.
+3. Commit and push this candidate branch; verify remote SHA.
+4. Publish the exact sanitized candidate through GPT Sites only if anonymous
+   public access is available; verify it logged out/incognito.
+5. Record the URL and final SHA in `.codex/CURRENT_HANDOFF.md` and release the
+   branch-local writer lock.
 
-- tests/unit/visual-baseline.test.js pins src/styles/visual/*.css
-  byte-for-byte to legacy/HAU-USC_Logistics-Prototype.original.html, which
-  AGENTS.md preserves. Append AFTER the preserved cascade; never rewrite it and
-  never insert mid-file. The sanctioned pattern is proven on tokens-base.css
-  and overlays.css.
-- The same test pins the exact string "Reset Demo Data is available only in
-  local preview mode." as an interaction hook. Rewording it breaks a
-  deliberate invariant.
-- npm run build leaves the guided demo out of step with dist/index.html and
-  verify:dist fails. Run scripts/create-shareable.mjs a second time after the
-  vite build. This is the hazard AGENTS.md records.
-- Detector findings inside the preserved cascade are true positives that cannot
-  be fixed until that guard is addressed per module. No ignore is applied for
-  them; do not add one.
+## Do not repeat
 
-## Known-good verification sequence
-
-    npm run build && node scripts/create-shareable.mjs && npm run verify:dist \
-      && npm run test && npm run lint
-
-Tooling that needs Playwright takes PLAYWRIGHT_PATH pointing at an existing
-install; this worktree may have its own node_modules, the design worktree does
-not.
-
-## Boundaries that still hold
-
-Front-end only. No back-end, service contract, migration, provider, D1, R2,
-Google, auth-model, deployment, staging, production, DNS, or release-tag change
-was made, and none is authorized. Nothing is deployed, merged to main, or
-tagged.
+- Do not recreate the landing from the preview harness.
+- Do not rerun the Impeccable detector; its single final run is complete.
+- Do not hand-edit generated HTML.
+- Do not remove the two preserved Claude untracked files.
+- Do not point production Request/Lending hosts at a relative Staff login.
+- Do not merge, tag, stage, deploy production, or modify any protected system.

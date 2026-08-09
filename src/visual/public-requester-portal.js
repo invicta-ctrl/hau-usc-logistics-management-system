@@ -183,7 +183,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
         </form>
       </section>
 
-      <section data-request-mode-panel="track" hidden>
+      <section id="request-tracking" data-request-mode-panel="track" hidden>
         <div class="public-track-layout">
           <section class="panel" aria-labelledby="trackRequestTitle">
             <p class="eyebrow">Private tracking</p>

@@ -4,6 +4,14 @@
 
 ### Added
 
+- Integrated the approved V4.1 visual language into the authoritative frontend,
+  including the real public landing, persisted theme control, kinetic menu,
+  compact back control, and a dependency-free isometric logistics map with
+  static/mobile/reduced-motion fallbacks.
+- Added sanitized in-memory Request and Lending interactions for public preview
+  hosting without protected APIs, credentials, staff records, or private data.
+- Added focused V4.1 production-integration and visual-acceptance tests plus the
+  required copy, motion/3D, parity, and visual-acceptance reports.
 - Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
 - Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
 - Added the accepted, planning-only v0.7.3 product-intake specification after completing the v0.7.2.1 maintenance milestone.
@@ -15,6 +23,12 @@
 
 ### Changed
 
+- Simplified ordinary UI wording to direct actions and plain environment state
+  while preserving release identity, workflow meaning, routes, permissions,
+  fields, statuses, service calls, and production Staff Sign In routing.
+- Rebuilt the standalone, guided demo, seven module shareables, and Apps Script
+  frontend bundle through repository generators; no generated HTML was
+  hand-edited.
 - Merged the v0.7.2.1 repository-normalization and permanent-sandbox maintenance candidate through protected PR #17, released the writer lock, and advanced the canonical continuity pointer to v0.7.3 product intake without starting v0.7.3 implementation or changing the v0.7.2 runtime.
 - Closed the owner-accepted v0.7.3 rollout-stabilization intake as `NO RUNTIME PATCH REQUIRED`. Focused Account, Request/RV-01, Lending, Inventory/Release, route, privacy, and safe-error acceptance found no eligible blocker, so product version remains 0.7.2 and no v0.7.3 runtime tag, release, staging deployment, or production action was created.
 - Merged the documentation-only v0.7.3 no-op closeout through protected PR #19 at `8b4ad05c6754b3de627535577d24216023dca8ca` after resolving its review thread, then deleted the temporary release branch; the merge made no runtime, provider, database, migration, staging, or production change.

@@ -4,7 +4,9 @@ import { setRuntimeReleaseIdentity } from '../app/release-identity.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
 import { createAuthenticatedAccountControlButtons } from './authenticated-account-controls.js';
+import { activateLandingNetwork } from './landing-network.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
+import { mountPublicRequesterPortal } from './public-requester-portal.js';
 import {
   consumeApplicationStatusToken,
   mountPublicAccountApplication,
@@ -12,6 +14,8 @@ import {
 import { mountRequesterPortal } from './requester-portal.js';
 import { brandLockupMarkup } from './brand-assets.js';
 import { portalNavigationMarkup, portalSelectionMarkup, releaseIdentityMarkup } from './portal-navigation.js';
+import { createSanitizedPreviewClient } from './sanitized-preview-client.js';
+import { installSignatureControls } from './signature-controls.js';
 import { isInternalWorkspacePath, WORKSPACE_ROUTES, workspaceRouteFromPath } from './workspace-routes.js';
 
 function escapeHtml(value) {
@@ -266,6 +270,7 @@ function attachSessionControls(client) {
 
 export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestOnly, start }) {
   document.body.dataset.runtimeMode = backendMode;
+  installSignatureControls();
   const accountApplicationMode =
     location.pathname === '/register'
       ? 'register'
@@ -282,6 +287,24 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   const lendingPortal = location.pathname === '/lending';
   const requesterPortal = location.pathname === '/request';
   const portalSelection = location.pathname === '/portals';
+  if (backendMode === 'mock' && !requestOnly && (portalSelection || lendingPortal || requesterPortal)) {
+    const root = gatewayRoot();
+    const client = createSanitizedPreviewClient();
+    setWorkspaceVisibility(false);
+    if (portalSelection) {
+      root.innerHTML = portalSelectionMarkup();
+      activateLandingNetwork(root);
+      return;
+    }
+    if (lendingPortal) await mountPublicLendingPortal({ root, client });
+    else await mountPublicRequesterPortal({ root, client });
+    const trackingHash = lendingPortal ? '#lending-tracking' : '#request-tracking';
+    if (location.hash === trackingHash) {
+      root.querySelector('[data-request-mode="track"]')?.click();
+      root.querySelector(location.hash)?.scrollIntoView({ block: 'start' });
+    }
+    return;
+  }
   if (backendMode !== 'rest' || requestOnly) {
     start();
     return;
@@ -296,6 +319,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   }
   if (portalSelection) {
     root.innerHTML = portalSelectionMarkup();
+    activateLandingNetwork(root);
     return;
   }
   if (accountApplicationMode) {
@@ -304,6 +328,9 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
   }
   if (lendingPortal) {
     await mountPublicLendingPortal({ root, client });
+    if (location.hash === '#lending-tracking') {
+      root.querySelector(location.hash)?.scrollIntoView({ block: 'start' });
+    }
     return;
   }
 

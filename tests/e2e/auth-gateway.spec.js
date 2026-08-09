@@ -52,16 +52,16 @@ test('portal selection and login identity use the authoritative Worker release',
   for (const width of [390, 820, 1366]) {
     await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
     await page.goto('/portals');
-    await expect(page.getByRole('heading', { name: 'Choose a logistics portal' })).toBeVisible();
-    await expect(page.locator('[data-release-identity]')).toHaveText('Production · v0.7.2');
+    await expect(page.getByRole('heading', { name: 'Request. Prepare. Release.' })).toBeVisible();
+    await expect(page.locator('[data-release-identity]')).toHaveText('Online');
     await expect(page.locator('[data-release-identity]')).toHaveAttribute('data-environment', 'PRODUCTION');
-    await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
-    await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
-    await expect(page.getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open Request Center' })).toHaveAttribute('href', '/request');
+    await expect(page.getByRole('link', { name: 'Open Lending Center' })).toHaveAttribute('href', '/lending');
+    await expect(page.locator('.portal-landing__quiet-actions').getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
       'href',
       'https://logistics.hausc.org/login',
     );
-    await expect(page.getByRole('link', { name: 'Back to portal selection' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Back to portals' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
   expect(authCalls).toBe(0);
@@ -188,8 +188,8 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(shell.getByLabel('Workspace')).toHaveValue('food');
   await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
   await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
-  await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
-  await expect(shell.locator('[data-shell-release]')).toHaveText(/STAGING.*v0\.7\.2/u);
+  await expect(shell.locator('#shellScopeSelect')).toHaveValue('current');
+  await expect(shell.locator('[data-shell-release]')).toHaveText('Test site');
   await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
@@ -578,7 +578,7 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(page.getByText(/authorized Administrator.*one-time temporary password/i)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
   await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
-  await expect(page.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+  await expect(page.getByRole('link', { name: 'Back to portals' })).toHaveAttribute(
     'href',
     '/portals',
   );
@@ -746,7 +746,7 @@ test('authenticated department Request Center submits, tracks, and saves a PDF r
     'href',
     'https://logistics.hausc.org/login',
   );
-  await expect(requesterNavigation.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+  await expect(requesterNavigation.getByRole('link', { name: 'Back to portals' })).toHaveAttribute(
     'href',
     '/portals',
   );
@@ -911,7 +911,7 @@ test('public Lending Center classifies borrowers and returns private tracking', 
     'href',
     'https://logistics.hausc.org/login',
   );
-  await expect(lendingNavigation.getByRole('link', { name: 'Back to portal selection' })).toHaveAttribute(
+  await expect(lendingNavigation.getByRole('link', { name: 'Back to portals' })).toHaveAttribute(
     'href',
     '/portals',
   );

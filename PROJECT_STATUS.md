@@ -1,5 +1,15 @@
 # Project Status
 
+## Branch-local V4.1 front-end candidate
+
+On `frontend-design-integration`, Earl's explicit continuation instruction
+authorized completion of the existing accepted late v0.7.3 front-end slice.
+The candidate is front-end only and locally verified: 842 unit tests and 146
+applicable Playwright tests pass; generated artifact parity passes; Hallmark is
+58/58. Final commit/push and anonymous GPT Sites preview verification are
+pending. Production remains v0.7.2 and unchanged. This branch-local record does
+not replace the project-wide `main` pointer below.
+
 ## Current state
 
 - **Milestone:** V0.7.3 Rollout Stabilization is complete with `NO RUNTIME PATCH REQUIRED`; next is the owner decision for a bounded v0.8.0 Inventory Truth and Ledger Lock specification.

@@ -2,6 +2,16 @@
 
 The current block is the operator resume record. Historical evidence remains reachable through Git history, release tags, CHANGELOG.md, and accepted specifications; it does not override the canonical current-task chain.
 
+## Branch-local frontend continuation
+
+- **Worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration`.
+- **Authority:** accepted `.codex/specs/active/v0.7.3-frontend-design-integration.md` plus Earl's 2026-08-09 instruction to continue Claude's exact state.
+- **Recovery:** classification B, partial committed checkpoint at `85f064a`; Claude work and two untracked artifacts preserved.
+- **Current state:** implementation and local parity/visual verification complete; final commit/push and GPT Sites anonymous-public verification pending.
+- **Evidence:** 842 unit tests; 146 applicable Playwright tests; generated parity; all required design reports and screenshot matrix.
+- **Boundary:** front-end only; no backend, contract, migration, provider, protected-data, staging, production, merge, tag, or release action.
+- **Resume:** use `.codex/CURRENT_TASK.md` and `.codex/CURRENT_HANDOFF.md`; do not reconstruct from chat or restart from the design preview.
+
 ## Current resume block
 
 - **Repository/worktree:** D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system; preserve ignored local evidence and unknown work.

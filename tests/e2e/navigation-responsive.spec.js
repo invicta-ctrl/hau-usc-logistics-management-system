@@ -4,7 +4,7 @@ import { navigateToView } from './navigation.js';
 test('navigates every approved module without page-level overflow', async ({ page }, testInfo) => {
   await page.goto('/');
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await expect(page.locator('.app-header [data-runtime-status]')).toHaveText('Connecting securely…');
+  await expect(page.locator('.app-header [data-runtime-status]')).toHaveText('Test site');
   await expect(page.locator('#resetDemo')).toHaveCount(0);
   if (testInfo.project.use.viewport.width <= 820) {
     await expect(page.locator('[data-shared-mobile-nav]')).toBeVisible();
