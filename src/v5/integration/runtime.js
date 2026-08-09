@@ -8,7 +8,7 @@ import {
 } from './view-models.js';
 import { createAdminParityController } from './admin-parity.js';
 import { createOperationsParityController } from './operations-parity.js';
-import landingMediaUrl from '../assets/images/hau-campus-login-background.jpg?url';
+import landingMediaUrl from '../assets/images/usc-facebook-cover-youth-development-day-2026.jpg?url';
 
 const MODULE_BY_ROUTE = Object.freeze({
   'admin.overview': 'overview',
@@ -97,6 +97,26 @@ const text = (...values) => {
   }
   return '';
 };
+
+const PLAYGROUND_REAL_LOGIN_KEY = 'hau-usc-playground-real-login';
+
+function realLoginRequested() {
+  try {
+    return sessionStorage.getItem(PLAYGROUND_REAL_LOGIN_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function setRealLoginRequested(value) {
+  try {
+    if (value) sessionStorage.setItem(PLAYGROUND_REAL_LOGIN_KEY, 'true');
+    else sessionStorage.removeItem(PLAYGROUND_REAL_LOGIN_KEY);
+  } catch {
+    // The server-owned environment guard remains authoritative. Storage only
+    // remembers whether this browser asked to exercise the real login path.
+  }
+}
 
 const route = () => location.hash.replace(/^#\/?/u, '') || 'index';
 const newId = (prefix) => `${prefix}:${crypto.randomUUID()}`;
@@ -302,26 +322,14 @@ export function createV5Runtime({ backend, app }) {
     selectedLoanId: integration.selectedLoanId,
     selectedReleaseId: integration.selectedReleaseId,
     selectedInventoryId: integration.selectedInventoryId,
-    selectedRestockId: text(
-      integration.selectedRestockId,
-      integration.state?.restockRequests?.[0]?.id,
-    ),
-    selectedDeliverableId: text(
-      integration.selectedDeliverableId,
-      integration.state?.deliverables?.[0]?.id,
-    ),
+    selectedRestockId: text(integration.selectedRestockId, integration.state?.restockRequests?.[0]?.id),
+    selectedDeliverableId: text(integration.selectedDeliverableId, integration.state?.deliverables?.[0]?.id),
     selectedReleaseConfirmationId: text(
       integration.selectedReleaseConfirmationId,
       integration.state?.releaseConfirmations?.[0]?.id,
     ),
-    selectedEventSeriesId: text(
-      integration.selectedEventSeriesId,
-      integration.state?.eventSeries?.[0]?.id,
-    ),
-    selectedEventDayId: text(
-      integration.selectedEventDayId,
-      integration.state?.eventDays?.[0]?.id,
-    ),
+    selectedEventSeriesId: text(integration.selectedEventSeriesId, integration.state?.eventSeries?.[0]?.id),
+    selectedEventDayId: text(integration.selectedEventDayId, integration.state?.eventDays?.[0]?.id),
     selectedActivityId: text(
       integration.selectedActivityId,
       integration.state?.events?.[0]?.id,
@@ -368,6 +376,10 @@ export function createV5Runtime({ backend, app }) {
   async function ensureAuthenticated() {
     if (integration.session && integration.state) return true;
     integration.session = await backend.session();
+    if (!integration.session && integration.playgroundVerified && !realLoginRequested()) {
+      const issued = await backend.playgroundSession();
+      integration.session = issued?.user ? issued : null;
+    }
     if (!integration.session) return false;
     const boot = await backend.bootstrap();
     integration.essential = boot.essential;
@@ -487,12 +499,12 @@ export function createV5Runtime({ backend, app }) {
       integration.releaseIdentity = identity;
       integration.playgroundVerified = Boolean(
         identity?.playground === true &&
-          String(identity?.environment ?? '').toUpperCase() === 'STAGING' &&
-          String(health?.environment ?? '').toUpperCase() === 'STAGING' &&
-          health?.database?.connected === true &&
-          health?.dependencies?.d1 === true &&
-          health?.dependencies?.brandAssets === true &&
-          health?.dependencies?.evidenceAssets === true,
+        String(identity?.environment ?? '').toUpperCase() === 'STAGING' &&
+        String(health?.environment ?? '').toUpperCase() === 'STAGING' &&
+        health?.database?.connected === true &&
+        health?.dependencies?.d1 === true &&
+        health?.dependencies?.brandAssets === true &&
+        health?.dependencies?.evidenceAssets === true,
       );
     } catch {
       integration.playgroundVerified = false;
@@ -587,11 +599,30 @@ export function createV5Runtime({ backend, app }) {
     const item = integration.advertisements[0];
     if (!item) return;
     const section = document.querySelector('.landing-updates');
-    const summary = section?.querySelector('p');
+    const hero = document.querySelector('.landing-hero');
+    const heroTitle = hero?.querySelector('h1');
+    const heroSummary = hero?.querySelector('.landing-hero__content > p');
+    const heroLink = hero?.querySelector('.landing-link');
+    const heading = section?.querySelector('h2');
+    const summary = section?.querySelector('p:not(.eyebrow)');
     const link = section?.querySelector('a');
-    if (summary) summary.textContent = text(item.summary, item.body, item.title, summary.textContent);
-    const target = text(item.url, item.targetUrl);
-    if (link && /^https:\/\//u.test(target)) link.href = target;
+    const title = text(item.title);
+    const description = text(item.description, item.summary, item.body);
+    const target = text(item.destinationUrl, item.url, item.targetUrl);
+    const callToAction = text(item.callToAction, 'View official page');
+    if (hero) hero.dataset.eventActive = 'true';
+    if (heroTitle && title) heroTitle.textContent = title;
+    if (heroSummary && description) heroSummary.textContent = description;
+    if (heroLink) {
+      heroLink.firstChild.textContent = callToAction;
+      if (/^https:\/\//u.test(target)) heroLink.href = target;
+    }
+    if (heading && title) heading.textContent = title;
+    if (summary && description) summary.textContent = description;
+    if (link) {
+      link.firstChild.textContent = callToAction;
+      if (/^https:\/\//u.test(target)) link.href = target;
+    }
     const mediaUrl = text(item.mediaUrl, item.imageUrl);
     const media = document.querySelector('.landing-hero__media');
     if (media && mediaUrl && (/^\//u.test(mediaUrl) || /^https:\/\//u.test(mediaUrl))) {
@@ -1074,8 +1105,25 @@ export function createV5Runtime({ backend, app }) {
     if (currentRoute === 'index') bindPlaygroundIndex();
     if (currentRoute === 'public.landing') {
       const media = document.querySelector('.landing-hero__media');
-      if (media) media.src = landingMediaUrl;
+      if (media) {
+        media.src = landingMediaUrl;
+        media.alt = 'USC Youth Development Day 2026 official cover';
+      }
       bindAnnouncement();
+    }
+    if (
+      currentRoute === 'public.signin' &&
+      integration.playgroundVerified &&
+      realLoginRequested() &&
+      !document.querySelector('[data-act="resume-playground"]')
+    ) {
+      const card = document.querySelector('.auth-card');
+      const resume = document.createElement('button');
+      resume.className = 'btn btn--quiet';
+      resume.type = 'button';
+      resume.dataset.act = 'resume-playground';
+      resume.textContent = 'Resume unlocked playground';
+      card?.append(resume);
     }
     if (currentRoute === 'public.request-intake') bindPublicRequest();
     if (currentRoute === 'public.lending-intake') bindPublicLending();
@@ -1298,6 +1346,7 @@ export function createV5Runtime({ backend, app }) {
         return;
       }
       integration.session = result;
+      setRealLoginRequested(false);
       integration.activationCsrfToken = '';
       integration.state = null;
       await ensureAuthenticated();
@@ -1337,7 +1386,8 @@ export function createV5Runtime({ backend, app }) {
         confirmation: values.confirmation,
         discardActiveSession: values.discardActiveSession === 'on',
       });
-      if (result) result.textContent = `${response.state}. Safe operator reference ${response.operationReference}.`;
+      if (result)
+        result.textContent = `${response.state}. Safe operator reference ${response.operationReference}.`;
       integration.playgroundStatus = await backend.playgroundStatus();
       document.querySelector('[data-v5-playground-status]')?.remove();
       bindPlaygroundIndex();
@@ -1398,7 +1448,17 @@ export function createV5Runtime({ backend, app }) {
     if (action === 'test-real-login') {
       event.preventDefault();
       event.stopImmediatePropagation();
+      setRealLoginRequested(true);
       void signOut();
+      return;
+    }
+    if (action === 'resume-playground') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      setRealLoginRequested(false);
+      integration.session = null;
+      integration.state = null;
+      app.integrationGo('index');
       return;
     }
     if (action === 'request-submit') {

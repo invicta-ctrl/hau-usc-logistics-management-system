@@ -4,6 +4,7 @@ import {
   isPlaygroundRuntime,
   playgroundRuntimeIssues,
 } from '../../src/server/playground-service.js';
+import worker from '../../src/worker/index.js';
 
 const baseline = {
   sourceProductionVersion: 'v0.8.0',
@@ -27,11 +28,13 @@ function environment(state = { state: 'CLEAN', activeTestSession: false }) {
       first: vi.fn().mockResolvedValue(rows.get(key) ?? null),
       run,
     })),
-    first: vi.fn().mockResolvedValue(
-      sql.includes('operational_schema_version')
-        ? { value: '30' }
-        : { name: '0030_production_access_and_operations.sql' },
-    ),
+    first: vi
+      .fn()
+      .mockResolvedValue(
+        sql.includes('operational_schema_version')
+          ? { value: '30' }
+          : { name: '0030_production_access_and_operations.sql' },
+      ),
   }));
   return {
     ENVIRONMENT: 'STAGING',
@@ -60,6 +63,23 @@ describe('isolated playground runtime guard and status', () => {
       }),
     ).toBe(false);
     expect(isPlaygroundRuntime({ ENVIRONMENT: 'STAGING', request: { staging: true } })).toBe(false);
+  });
+
+  it('does not expose the owner convenience-session endpoint in production', async () => {
+    const response = await worker.fetch(
+      new Request('https://logistics.hausc.org/api/playground/session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: 'https://logistics.hausc.org' },
+        body: JSON.stringify({ accountId: 'browser-selected-production-owner' }),
+      }),
+      { ENVIRONMENT: 'PRODUCTION', RECOVERY_HOSTNAME: 'recovery.workers.dev' },
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get('set-cookie')).toBeNull();
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED' },
+    });
   });
 
   it('returns only safe candidate, production, baseline, and working identities', async () => {

@@ -82,6 +82,10 @@ function field(spec) {
         step: spec.step,
         accept: spec.accept,
         autocomplete: spec.autocomplete,
+        inputmode: spec.inputmode,
+        pattern: spec.pattern,
+        minlength: spec.minlength,
+        maxlength: spec.maxlength,
       },
     });
   }
@@ -261,8 +265,13 @@ function publicPanels(currentRoute, integration = {}) {
           {
             label: 'Verification code',
             name: 'code',
-            type: 'password',
-            hint: 'Required only when confirming.',
+            type: 'text',
+            inputmode: 'numeric',
+            pattern: '\\d{8}',
+            minlength: 8,
+            maxlength: 8,
+            autocomplete: 'one-time-code',
+            hint: 'Enter the 8-digit code when confirming.',
           },
         ],
       }),
@@ -564,7 +573,7 @@ function brandPanel() {
   return formPanel({
     title: 'Versioned brand assets',
     description:
-      'The application reads the file only when Upload is submitted; publish and rollback require an exact version and revision.',
+      'Governed logo, landing masthead, sign-in background, and catalog theme images are versioned here. The application reads a file only on Upload; publish and rollback require an exact version and revision.',
     action: 'brand',
     submit: 'Run brand action',
     fields: [
@@ -578,12 +587,12 @@ function brandPanel() {
         label: 'Governed slot',
         name: 'slot',
         options: [
-          'usc-logo',
-          'dol-logo',
-          'combined-lockup',
-          'favicon',
-          'login-background',
-          'default-item-image',
+          { value: 'usc-logo', label: 'USC logo' },
+          { value: 'dol-logo', label: 'Department of Logistics logo' },
+          { value: 'combined-lockup', label: 'Combined USC and DOL lockup' },
+          { value: 'favicon', label: 'Browser icon' },
+          { value: 'login-background', label: 'Sign-in and landing fallback image' },
+          { value: 'default-item-image', label: 'Default catalog image' },
         ],
       },
       { label: 'Version ID', name: 'versionId' },
@@ -605,7 +614,7 @@ function advertisementPanel() {
   return formPanel({
     title: 'Public announcement lifecycle',
     description:
-      'Public projection shows only server-published announcements; administration remains capability-gated.',
+      'The first active PUBLIC announcement becomes the event-led landing hero—title, summary, CTA, destination, and image. All public projection remains server-published and capability-gated.',
     action: 'advertisement',
     submit: 'Run announcement action',
     fields: [
@@ -628,7 +637,13 @@ function advertisementPanel() {
       { label: 'Expire at', name: 'expireAt', type: 'datetime-local' },
       { label: 'Expected revision', name: 'expectedRevision' },
       ...retryFields,
-      { label: 'Media file', name: 'file', type: 'file', accept: 'image/jpeg,image/png,image/webp' },
+      {
+        label: 'Landing and announcement image',
+        name: 'file',
+        type: 'file',
+        accept: 'image/jpeg,image/png,image/webp',
+        hint: 'Use a wide, readable event cover. Publishing controls when it appears on the public landing page.',
+      },
       { label: 'Search', name: 'query' },
       { label: 'Page', name: 'page', type: 'number', min: 1 },
       { label: 'Page size', name: 'pageSize', type: 'number', min: 1, max: 100 },

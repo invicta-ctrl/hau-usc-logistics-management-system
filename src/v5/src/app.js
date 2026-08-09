@@ -58,13 +58,14 @@ const state = {
   overlay: null, // 'menu' | 'command' | 'notifications' | 'confirm' | 'detail' | 'role'
 };
 
-const reducedMotion = () =>
-  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
 let renderReason = 'boot';
 
 function captureFormSnapshot() {
-  const controls = [...document.querySelectorAll('#surface-main input, #surface-main select, #surface-main textarea')];
+  const controls = [
+    ...document.querySelectorAll('#surface-main input, #surface-main select, #surface-main textarea'),
+  ];
   const focusedIndex = controls.indexOf(document.activeElement);
   return {
     focusedIndex,
@@ -79,7 +80,9 @@ function captureFormSnapshot() {
 
 function restoreFormSnapshot(snapshot) {
   if (!snapshot) return;
-  const controls = [...document.querySelectorAll('#surface-main input, #surface-main select, #surface-main textarea')];
+  const controls = [
+    ...document.querySelectorAll('#surface-main input, #surface-main select, #surface-main textarea'),
+  ];
   controls.forEach((control, index) => {
     const saved = snapshot.controls[index];
     if (!saved) return;
@@ -328,7 +331,7 @@ function indexPage() {
     <p><span class="illustrative">${icon(
       'info',
       'icon--sm icon--muted',
-    )}Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> to focus route search. Real login and authorization remain active.</span></p>
+    )}Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> to focus route search. A server-authorized owner test session unlocks the playground; use <b>Test Real Login Flow</b> when authentication itself is under test.</span></p>
     <p id="index-search-status" role="status" aria-live="polite">${SURFACES.length} routes available</p>
     ${GROUPS.map(
       (g) => `<section class="index-group" data-index-group>
@@ -358,7 +361,10 @@ function routeCode(id) {
   const item = byId(id);
   const prefix = item?.group === 'Administration' ? 'A' : item?.group === 'Public' ? 'P' : 'O';
   const groupItems = SURFACES.filter((surface) => surface.group === item?.group);
-  const index = Math.max(0, groupItems.findIndex((surface) => surface.id === id));
+  const index = Math.max(
+    0,
+    groupItems.findIndex((surface) => surface.id === id),
+  );
   return `${prefix}-${String(index + 1).padStart(2, '0')}`;
 }
 
@@ -459,12 +465,14 @@ function topbar() {
 
 function tabbar() {
   return `<nav class="tabbar" aria-label="Sections"${state.overlay ? ' inert aria-hidden="true"' : ''}>
-    ${TABS.filter((t) => state.authorizedRoutes.includes(t.id)).map(
-      (t) =>
-        `<button type="button" data-act="go" data-id="${t.id}"${
-          t.id === state.surface ? ' aria-current="page"' : ''
-        }>${icon(t.icon, 'icon--sm')}<span>${esc(t.label)}</span></button>`,
-    ).join('')}
+    ${TABS.filter((t) => state.authorizedRoutes.includes(t.id))
+      .map(
+        (t) =>
+          `<button type="button" data-act="go" data-id="${t.id}"${
+            t.id === state.surface ? ' aria-current="page"' : ''
+          }>${icon(t.icon, 'icon--sm')}<span>${esc(t.label)}</span></button>`,
+      )
+      .join('')}
   </nav>`;
 }
 
@@ -472,10 +480,12 @@ function commandMatches(query = '') {
   const needle = query.trim().toLowerCase();
   return SURFACES.filter(
     (surface) => surface.kind === 'public' || state.authorizedRoutes.includes(surface.id),
-  ).filter((surface) => {
-    if (!needle) return true;
-    return `${surface.name} ${surface.group} ${surface.id}`.toLowerCase().includes(needle);
-  }).slice(0, 6);
+  )
+    .filter((surface) => {
+      if (!needle) return true;
+      return `${surface.name} ${surface.group} ${surface.id}`.toLowerCase().includes(needle);
+    })
+    .slice(0, 6);
 }
 
 function commandResults(query = state.commandQuery, active = state.commandIndex) {
@@ -504,10 +514,7 @@ function syncCommandResults() {
   if (matches.length) state.commandIndex = Math.min(state.commandIndex, matches.length - 1);
   else state.commandIndex = 0;
   list.innerHTML = commandResults();
-  input.setAttribute(
-    'aria-activedescendant',
-    matches.length ? `command-option-${state.commandIndex}` : '',
-  );
+  input.setAttribute('aria-activedescendant', matches.length ? `command-option-${state.commandIndex}` : '');
   const status = document.getElementById('command-status');
   if (status) status.textContent = `${matches.length} route${matches.length === 1 ? '' : 's'} available`;
 }
@@ -655,9 +662,7 @@ function render() {
     <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>`;
 
   syncPlaygroundBarHeight();
-  document.dispatchEvent(
-    new CustomEvent('hau:v5-rendered', { detail: { surface: state.surface } }),
-  );
+  document.dispatchEvent(new CustomEvent('hau:v5-rendered', { detail: { surface: state.surface } }));
 }
 
 /* Publish the server-verified playground bar height only while it is present. */
@@ -669,8 +674,7 @@ function syncPlaygroundBarHeight() {
     document.documentElement.style.removeProperty('--preview-bar-h');
     return;
   }
-  const apply = () =>
-    document.documentElement.style.setProperty('--preview-bar-h', `${bar.offsetHeight}px`);
+  const apply = () => document.documentElement.style.setProperty('--preview-bar-h', `${bar.offsetHeight}px`);
   apply();
   barObserver?.disconnect();
   barObserver = new ResizeObserver(apply);
@@ -731,10 +735,7 @@ document.addEventListener('click', (event) => {
        be enforced here as well as announced. Saying nothing on the click would
        read as a dead button. */
     if (el.getAttribute('aria-disabled') === 'true') {
-      toast(
-        el.dataset.blockedReason ?? 'This request cannot be accepted yet.',
-        'error',
-      );
+      toast(el.dataset.blockedReason ?? 'This request cannot be accepted yet.', 'error');
       return;
     }
     return openOverlay('confirm');
@@ -807,10 +808,7 @@ document.addEventListener('click', (event) => {
   if (act === 'request-remove-line') {
     const index = Number(el.dataset.index);
     if (!Number.isInteger(index) || !state.requestDraft[index]) return;
-    return updateView(
-      'local',
-      () => state.requestDraft.splice(index, 1),
-    );
+    return updateView('local', () => state.requestDraft.splice(index, 1));
   }
   if (act === 'request-submit') {
     const form = document.getElementById('request-center-form');

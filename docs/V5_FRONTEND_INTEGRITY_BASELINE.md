@@ -1,8 +1,8 @@
 # V5 frontend integrity baseline
 
-Captured: 2026-08-09, Asia/Manila
-Purpose: pre-wiring fingerprint for the accepted V5 backend-integration steer
-Visual change authorized by this task: none
+Captured: 2026-08-09, Asia/Manila; owner amendment recorded 2026-08-10
+Purpose: preserve the frozen V5 authority while recording the accepted live-application integration
+Visual change authorized by the current task: Earl's accepted V5 owner visual-feedback amendment
 
 ## Frozen source identity
 
@@ -53,9 +53,11 @@ c4d611b8fa4fdcb140782331202ca7a97862cc67f65f738594fd847e4572a3b3  styles/v4.css
 - Route format: `#/surface.id`; the route IDs and registry order are frozen.
 - Runtime visual stylesheets: `tokens.css`, `base.css`, `shell.css`, `components.css`, `surfaces.css`, `responsive.css`, `motion.css`, `v3.css`, `v4.css`, and `v5.css`, in the order in `index.html`.
 - Static visual assets: three bundled fonts plus `hau-campus-login-background.jpg`; SVG icons are emitted from the frozen `src/icons.js` sprite.
-- Major DOM remains produced by the V5 `index.html`, `src/app.js`, `src/components.js`, `src/registry.js`, and three surface modules. The superseding full-parity amendment permits only the structural and copy changes required to replace prototype behavior with the exact current backend contracts, make the Index searchable and playground-only, and remove mock records. It does not authorize a new visual system, route deletion/reordering, token changes, asset substitution, or responsive redesign.
+- Major DOM remains produced by the V5 `index.html`, `src/app.js`, `src/components.js`, `src/registry.js`, and three surface modules. The accepted 2026-08-10 owner amendment additionally authorizes the event-led full-bleed public landing, governed USC/DOL identity, production-shaped staff sign-in, and responsive corrections listed in `DESIGN.md`. It does not authorize route deletion/reordering, a replacement workbench system, or unrelated visual change.
 
-## Post-wiring result
+## Historical pre-owner-amendment post-wiring result
+
+The counts and hashes in this section describe the backend-integration state before Earl's 2026-08-10 visual-feedback amendment. They remain immutable comparison evidence and are superseded for current-source acceptance by the next section.
 
 Recomputed against current authority commit `908653dc956c9ccffa68ac0b350fc23b69f053ea` after the superseding full-parity implementation:
 
@@ -72,6 +74,19 @@ Recomputed against current authority commit `908653dc956c9ccffa68ac0b350fc23b69f
 - `tools/motion-test.mjs` vendored SHA-256: `ba9219b42c97a2de33fb5fab48e317d21514cf8be0ac5c076706b7659acd4c7b`. This non-runtime tool points at the current application entry instead of the obsolete standalone preview path.
 - The integration controllers are additive JavaScript outside the frozen source tree. They map current API DTOs and exact command contracts into existing V5 form, card, section, drawer, and feedback primitives; they add no CSS or replacement component system.
 
-The intentional differences are functional integration, environment denial, truthful content, and required contract completeness—not a visual redesign. The preserved V5 color, type, spacing, surface, and responsive system remains authoritative.
+The intentional differences at that checkpoint were functional integration, environment denial, truthful content, and required contract completeness. The preserved V5 workbench remained authoritative.
 
-Current-source browser evidence was captured at 320, 390, 768, 1024, and 1440 CSS pixels in both light and dark themes. The automated matrix verified the searchable Index, landing, request queue, and governed accounts/access controls, including persistence across theme-triggered V5 re-renders, with no horizontal overflow or browser errors. Exact deployed-candidate evidence must be refreshed after the candidate is frozen and deployed to the isolated playground.
+That checkpoint's browser evidence was captured at 320, 390, 768, 1024, and 1440 CSS pixels. Exact deployed-candidate evidence is superseded by each newly frozen candidate.
+
+## Current owner-amended visual contract
+
+The 2026-08-10 accepted amendment preserves every registered V5 route and the V5 internal workbench while intentionally changing the public arrival and playground convenience behavior:
+
+- `src/v5/src/app.js` SHA-256 `f7d40fd1cef76d94b3e45ccde8a1d5f901c61e6b09a6b7d9c5de87665eb80a75`: Index copy now explains the server-authorized owner session and retained real-login test path.
+- `src/v5/src/surfaces/public.js` SHA-256 `4ebf5da153f9b3f998f86cb3b6ccbbb7998208d22ba89bcd847ffa933d35d3fb`: governed USC/DOL image slots, full council wordmark, Staff sign-in hero CTA, USC-only hero mark, enlarged announcement hierarchy, and `HAU-USC · 2026-2027` footer.
+- `src/v5/integration/owner-visual-feedback.css` SHA-256 `185e520d0e5019cec94f39a86e9511910bdaa3e40b8e0d5b9787cd2e9d240bce`: the final integration-only Hallmark layer; it owns full-bleed event composition, warm-gold Request Center treatment, larger identity/header, production-background sign-in, and responsive safeguards without altering the frozen token system.
+- `src/v5/assets/images/usc-facebook-cover-youth-development-day-2026.jpg` SHA-256 `6ec7c5a75f1a360e68064d4887d237c64e12359969730fefbfdd9c95ea60d747`: vendored official USC Facebook event cover used only as the deterministic fallback. A server-published PUBLIC announcement may replace the hero title, description, CTA, destination, alternative text, and image.
+- Existing governed brand slots remain the only application-wide logo/theme asset controls. The existing advertisement contract remains the only event-led landing-media control; no arbitrary CSS, HTML, bucket, object-key, or browser-selected binding was introduced.
+- Browser acceptance now covers `320/375/390/414/768/1024/1280×800/1440/1920` CSS pixels, light/dark, all 33 routes, searchable Index, guarded owner auto-session, explicit real-login escape hatch, dynamic event projection, eight-digit verification field constraints, first-fold fit, and Production playground denial with no horizontal overflow or browser errors.
+
+The complete interaction and responsive contract is `DESIGN.md`. Exact deployed-candidate evidence must still be refreshed after candidate freeze and playground-only deployment.

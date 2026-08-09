@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const widths = [320, 390, 768, 1024, 1440];
+const widths = [320, 375, 390, 414, 768, 1024, 1280, 1440, 1920];
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -17,7 +17,10 @@ export default defineConfig({
     name: `v5-chromium-${width}`,
     use: {
       browserName: 'chromium',
-      viewport: { width, height: width <= 390 ? 844 : 900 },
+      viewport: {
+        width,
+        height: width <= 414 ? 844 : width === 1280 ? 800 : width === 1920 ? 1080 : 900,
+      },
     },
   })),
   webServer: {

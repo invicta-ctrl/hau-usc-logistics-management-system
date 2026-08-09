@@ -93,6 +93,13 @@ export function createV5Backend({ baseUrl = '' } = {}) {
     readiness: () => auth.request('/api/readiness', { method: 'GET' }),
     version: () => auth.getReleaseIdentity(),
     playgroundStatus: () => auth.request('/api/playground/status', { method: 'GET' }),
+    async playgroundSession() {
+      const result = await auth.request('/api/playground/session', { body: {} });
+      if (authenticated(result)) {
+        setAuthSession({ csrfToken: result.csrfToken, user: result.user });
+      }
+      return result;
+    },
     requestPlaygroundOperation(command) {
       return auth.request('/api/playground/operation', {
         body: command,

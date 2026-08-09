@@ -19,7 +19,7 @@ async function expectNoHorizontalOverflow(page) {
   );
 }
 
-test('verified STAGING exposes the complete searchable Playground Index without bypassing auth', async ({
+test('verified STAGING exposes the complete searchable Playground Index with a server-owned owner session', async ({
   page,
 }) => {
   const requests = await installV5ApiFixture(page, { environment: STAGING });
@@ -45,16 +45,17 @@ test('verified STAGING exposes the complete searchable Playground Index without 
   await search.clear();
   await page.locator('[data-index-item][href="#/request.queue"]').click();
 
-  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
-  await expect(page).toHaveURL(/#\/public\.signin$/u);
+  await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+  await expect(page).toHaveURL(/#\/request\.queue$/u);
   expect(requests.some(({ pathname }) => pathname === '/api/auth/session')).toBe(true);
-  expect((await integrationStatus(page)).authenticated).toBe(false);
+  expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(true);
+  expect((await integrationStatus(page)).authenticated).toBe(true);
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });
 
 test('production identity cannot activate playground chrome or the Index route', async ({ page }) => {
-  await installV5ApiFixture(page, { environment: PRODUCTION });
+  const requests = await installV5ApiFixture(page, { environment: PRODUCTION });
   const pageErrors = [];
   page.on('pageerror', (error) => pageErrors.push(error.message));
 
@@ -67,11 +68,64 @@ test('production identity cannot activate playground chrome or the Index route',
   await expect(page.locator('[href="#/index"]')).toHaveCount(0);
   await expect(page).toHaveURL(/#\/public\.landing$/u);
   expect((await integrationStatus(page)).playgroundVerified).toBe(false);
+  expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });
 
-test('public intake stays public while a representative internal route requires a real session', async ({
+test('published public announcement drives the major-event landing content without arbitrary markup', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The governed projection contract runs once.');
+  await installV5ApiFixture(page, {
+    environment: STAGING,
+    advertisements: [
+      {
+        id: 'EVENT-YDD-2026',
+        title: 'Youth Development Day 2026',
+        description: 'Sibulahi: Yabong ng Pamana brings the Angelite community together.',
+        altText: 'Youth Development Day 2026 official event cover',
+        callToAction: 'View event details',
+        destinationUrl: 'https://www.facebook.com/holyangeluniversitysc/',
+        imageUrl: '/brand/login-background',
+      },
+    ],
+  });
+
+  await page.goto('/#/public.landing');
+  await waitForV5(page);
+  await expect(page.locator('.landing-hero')).toHaveAttribute('data-event-active', 'true');
+  await expect(page.locator('.landing-hero h1')).toHaveText('Youth Development Day 2026');
+  await expect(page.locator('.landing-hero__content > p')).toContainText('Sibulahi');
+  await expect(page.locator('.landing-link')).toHaveText(/View event details/u);
+  await expect(page.locator('.landing-link')).toHaveAttribute(
+    'href',
+    'https://www.facebook.com/holyangeluniversitysc/',
+  );
+  await expect(page.locator('.landing-updates h2')).toHaveText('Youth Development Day 2026');
+  await expect(page.locator('.landing-hero__media')).toHaveAttribute(
+    'alt',
+    'Youth Development Day 2026 official event cover',
+  );
+});
+
+test('verification confirmation accepts only an eight-digit one-time code shape', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The field contract runs once.');
+  await installV5ApiFixture(page, { environment: STAGING });
+  await page.goto('/#/public.verify');
+  await waitForV5(page);
+
+  const code = page.getByLabel('Verification code');
+  await expect(code).toHaveAttribute('inputmode', 'numeric');
+  await expect(code).toHaveAttribute('pattern', '\\d{8}');
+  await expect(code).toHaveAttribute('minlength', '8');
+  await expect(code).toHaveAttribute('maxlength', '8');
+  await expect(code).toHaveAttribute('autocomplete', 'one-time-code');
+});
+
+test('public intake stays public while an internal route receives the guarded playground owner session', async ({
   page,
 }) => {
   const requests = await installV5ApiFixture(page, { environment: STAGING });
@@ -84,10 +138,35 @@ test('public intake stays public while a representative internal route requires 
   expect(requests.some(({ pathname }) => pathname === '/api/auth/session')).toBe(false);
 
   await page.goto('/#/request.queue');
-  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
   expect(requests.some(({ pathname }) => pathname === '/api/auth/session')).toBe(true);
-  expect((await integrationStatus(page)).authenticated).toBe(false);
+  expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(true);
+  expect((await integrationStatus(page)).authenticated).toBe(true);
   await expectNoHorizontalOverflow(page);
+});
+
+test('Test Real Login Flow disables convenience unlock until the tester resumes it', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The login escape-hatch flow runs once.');
+  const requests = await installV5ApiFixture(page, { environment: STAGING });
+  await page.goto('/#/index');
+  await waitForV5(page);
+  await expect(page.locator('[data-v5-playground-status]')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Test Real Login Flow' }).click();
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await page.goto('/#/request.queue');
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Resume unlocked playground' })).toBeVisible();
+
+  const callsBeforeResume = requests.filter(({ pathname }) => pathname === '/api/playground/session').length;
+  await page.getByRole('button', { name: 'Resume unlocked playground' }).click();
+  await expect(page.getByRole('heading', { name: 'Isolated Staging Playground Index' })).toBeVisible();
+  await expect
+    .poll(() => requests.filter(({ pathname }) => pathname === '/api/playground/session').length)
+    .toBeGreaterThan(callsBeforeResume);
+  await expect.poll(async () => (await integrationStatus(page)).authenticated).toBe(true);
 });
 
 test('authenticated owner renders every registered V5 route without prototype records', async ({
@@ -109,13 +188,10 @@ test('authenticated owner renders every registered V5 route without prototype re
       surface.id,
     );
     if (surface.kind === 'internal') {
-      await page.waitForFunction(
-        (routeId) => {
-          const status = globalThis.__HAU_V5_INTEGRATION__?.status?.();
-          return status?.connectedRoutes?.includes(routeId) || Boolean(status?.failedRoutes?.[routeId]);
-        },
-        surface.id,
-      );
+      await page.waitForFunction((routeId) => {
+        const status = globalThis.__HAU_V5_INTEGRATION__?.status?.();
+        return status?.connectedRoutes?.includes(routeId) || Boolean(status?.failedRoutes?.[routeId]);
+      }, surface.id);
     }
     const main = page.locator('#surface-main');
     await expect(main, surface.id).toBeVisible();
@@ -157,7 +233,9 @@ test('authenticated operational surface remains usable in both themes at the con
   await expectNoHorizontalOverflow(page);
 });
 
-test('light and dark V5 themes remain usable at the configured responsive width', async ({ page }) => {
+test('light and dark V5 themes remain usable at the configured responsive width', async ({
+  page,
+}, testInfo) => {
   await installV5ApiFixture(page, { environment: STAGING });
   await page.goto('/#/public.landing');
   await waitForV5(page);
@@ -165,6 +243,22 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   const heroMedia = page.locator('.landing-hero__media');
   await expect(heroMedia).toBeVisible();
   await expect.poll(() => heroMedia.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('.landing-hero__actions .btn--primary')).toHaveText(/Staff sign in/u);
+  await expect(page.locator('.landing-hero__monogram img')).toHaveAttribute('alt', 'USC');
+  await expect(page.locator('.public__marks img')).toHaveCount(2);
+  await expect(page.locator('.public__wordmark b')).toHaveText('Holy Angel University Student Council');
+  await expect(page.locator('.public__foot-meta')).toContainText('HAU-USC · 2026-2027');
+  if (testInfo.project.name === 'v5-chromium-1280') {
+    for (const selector of [
+      '.landing-hero h1',
+      '.landing-hero__content > p',
+      '.landing-hero__actions .btn--primary',
+    ]) {
+      const box = await page.locator(selector).boundingBox();
+      expect(box, `${selector} must render in the 1280×800 first fold`).not.toBeNull();
+      expect(box.y + box.height, `${selector} must fit in the 1280×800 first fold`).toBeLessThanOrEqual(800);
+    }
+  }
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await expect(page.locator('body')).toHaveAttribute('data-theme', 'light');
   await expectNoHorizontalOverflow(page);

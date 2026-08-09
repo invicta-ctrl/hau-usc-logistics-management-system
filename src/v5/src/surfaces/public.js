@@ -16,7 +16,10 @@ import {
   timeline,
 } from '../components.js';
 
-const marks = `<span class="public__marks"><span class="public__mark">HAU</span><span class="public__mark">USC</span></span>`;
+const marks = `<span class="public__marks" aria-label="USC and Department of Logistics">
+  <span class="public__mark public__mark--usc"><img src="/brand/usc-logo" alt="USC" /></span>
+  <span class="public__mark public__mark--dol"><img src="/brand/dol-logo" alt="Department of Logistics" /></span>
+</span>`;
 const serviceDataLabel = `<p class="preview-data-label" role="note">Service-backed workflow <span aria-hidden="true">·</span> protected fields stay private</p>`;
 
 /* Public surfaces are plain render functions with no context argument, so the
@@ -35,20 +38,18 @@ export function publicShell(
   return `<div class="public${landing ? ' public--landing' : ''}">
     <header class="public__bar">
       <div class="public__brand">${marks}
-        <span class="public__wordmark"><b>HAU-USC Logistics</b><span>Department of Logistics</span></span>
+        <span class="public__wordmark"><b>Holy Angel University Student Council</b><span>Department of Logistics</span></span>
       </div>
       <div class="public__bar-actions">
         ${themeToggle(dark)}
-        ${
-          back ? backControl() : ''
-        }
+        ${back ? backControl() : ''}
       </div>
     </header>
     <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? serviceDataLabel : ''}${inner}</main>
     <footer class="public__foot">
       <p class="public__foot-line">Every item moves with a record.</p>
       <div class="public__foot-meta">
-        <span>HAU-USC Logistics · © 2026</span>
+        <span>HAU-USC <span aria-hidden="true">·</span> 2026-2027</span>
         <a href="#/public.policy">Privacy Notice and Acceptable Use</a>
       </div>
     </footer>
@@ -61,16 +62,16 @@ export const landing = () =>
   publicShell(
     `<section class="landing-hero" aria-labelledby="landing-title">
       <img class="landing-hero__media" src="assets/images/hau-campus-login-background.jpg"
-        alt="" width="1654" height="951" decoding="async" fetchpriority="high" />
+        alt="USC current major event" width="960" height="356" decoding="async" fetchpriority="high" />
       <div class="landing-hero__content">
         <h1 id="landing-title">Holy Angel University Student Council</h1>
         <p>The university's highest student governing body, representing the tertiary student community through leadership, service, and shared responsibility.</p>
         <div class="landing-hero__actions">
-          <a class="btn btn--primary" href="#/public.request-intake">Open Request Center${icon('arrow-right')}</a>
+          <a class="btn btn--primary" href="#/public.signin">Staff sign in${icon('arrow-right')}</a>
           <a class="landing-link" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">Visit the official USC Facebook page${icon('arrow-right', 'icon--sm')}</a>
         </div>
       </div>
-      <div class="landing-hero__monogram" aria-hidden="true"><span>HAU</span><span>USC</span></div>
+      <div class="landing-hero__monogram"><img src="/brand/usc-logo" alt="USC" /></div>
     </section>
 
     <section class="landing-intro" aria-labelledby="landing-intro-title">
@@ -97,7 +98,7 @@ export const landing = () =>
     </nav>
 
     <section class="landing-updates" aria-labelledby="landing-updates-title">
-      <div><h2 id="landing-updates-title">Official USC updates</h2>
+      <div><p class="eyebrow">Published announcements</p><h2 id="landing-updates-title">Official USC updates</h2>
         <p>Authorized announcements appear through the official council channels. No announcement is shown unless the service publishes it.</p></div>
       <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
     </section>`,
@@ -110,7 +111,7 @@ export function signin({ state }) {
   const invalid = state === 'error';
   const unavailable = state === 'unavailable';
   return publicShell(
-    `<div class="auth-card">
+    `<div class="auth-card auth-card--signin">
       <h1>Staff sign in</h1>
       <p>Department of Logistics accounts only.</p>
       ${
@@ -426,7 +427,11 @@ export function requestTracking({ state }) {
         <span class="muted" style="font-size:var(--t-sm)">No request is loaded.</span>
       </div>
       ${timeline([
-        { title: 'Request not loaded', meta: 'Enter the request ID and private tracking code', current: true },
+        {
+          title: 'Request not loaded',
+          meta: 'Enter the request ID and private tracking code',
+          current: true,
+        },
       ])}
       ${facts([
         { label: 'Request', value: 'Not loaded' },
@@ -512,7 +517,11 @@ export function lendingTracking({ state } = {}) {
         <span class="chip">NOT LOADED</span>
       </div>
       ${timeline([
-        { title: 'Lending record not loaded', meta: 'Enter the submission ID and private tracking code', current: true },
+        {
+          title: 'Lending record not loaded',
+          meta: 'Enter the submission ID and private tracking code',
+          current: true,
+        },
       ])}
       ${notice({
         tone: 'info',

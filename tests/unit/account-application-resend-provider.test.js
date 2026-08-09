@@ -70,7 +70,7 @@ describe('resend account-application email provider', () => {
 
     const result = await resend.sendVerification({
       delivery,
-      verificationCode: 'CODE-123456',
+      verificationCode: '12345678',
       expiresAt: '2026-08-08T10:00:00.000Z',
       correlationId: 'corr-1',
     });
@@ -88,7 +88,7 @@ describe('resend account-application email provider', () => {
     const body = JSON.parse(init.body);
     expect(body.from).toBe(FROM);
     expect(body.to).toEqual([delivery.institutionalEmail]);
-    expect(body.text).toContain('CODE-123456');
+    expect(body.text).toContain('12345678');
     expect(body.text).toContain('https://hau-usc-logistics-staging.example.workers.dev/account');
     // The key must never travel in the message itself.
     expect(body.text).not.toContain(API_KEY);
@@ -97,7 +97,7 @@ describe('resend account-application email provider', () => {
   it('drops a provider reference that does not match the safe reference shape', async () => {
     for (const id of ['', null, 'has spaces', 'x', `${API_KEY} leaked`]) {
       const resend = provider({ fetchImpl: async () => jsonResponse(200, { id }) });
-      const result = await resend.sendVerification({ delivery, verificationCode: 'CODE-1' });
+      const result = await resend.sendVerification({ delivery, verificationCode: '12345678' });
       expect(result.providerMessageRef).toBe('');
     }
   });
@@ -112,7 +112,7 @@ describe('resend account-application email provider', () => {
         },
       }),
     });
-    await expect(resend.sendVerification({ delivery, verificationCode: 'CODE-1' })).resolves.toEqual({
+    await expect(resend.sendVerification({ delivery, verificationCode: '12345678' })).resolves.toEqual({
       providerMessageRef: '',
     });
   });
@@ -138,7 +138,7 @@ describe('resend account-application email provider', () => {
           }),
       });
       const error = await resend
-        .sendVerification({ delivery, verificationCode: 'CODE-1' })
+        .sendVerification({ delivery, verificationCode: '12345678' })
         .then(() => null)
         .catch((thrown) => thrown);
 
@@ -156,7 +156,7 @@ describe('resend account-application email provider', () => {
         throw new TypeError('network failure');
       },
     });
-    await expect(resend.sendVerification({ delivery, verificationCode: 'CODE-1' })).rejects.toMatchObject({
+    await expect(resend.sendVerification({ delivery, verificationCode: '12345678' })).rejects.toMatchObject({
       code: 'EMAIL_PROVIDER_UNAVAILABLE',
     });
   });
@@ -172,7 +172,7 @@ describe('resend account-application email provider', () => {
         }),
     });
 
-    await expect(resend.sendVerification({ delivery, verificationCode: 'CODE-1' })).rejects.toMatchObject({
+    await expect(resend.sendVerification({ delivery, verificationCode: '12345678' })).rejects.toMatchObject({
       code: 'EMAIL_PROVIDER_UNAVAILABLE',
     });
     expect(observedSignal?.aborted).toBe(true);
@@ -189,12 +189,17 @@ describe('resend account-application email provider', () => {
 
     for (const bad of [undefined, {}, { institutionalEmail: 'nope' }, { institutionalEmail: '' }]) {
       await expect(
-        resend.sendVerification({ delivery: bad, verificationCode: 'CODE-1' }),
+        resend.sendVerification({ delivery: bad, verificationCode: '12345678' }),
       ).rejects.toMatchObject({ code: 'EMAIL_PROVIDER_REJECTED' });
     }
     await expect(resend.sendVerification({ delivery, verificationCode: '' })).rejects.toMatchObject({
       code: 'EMAIL_PROVIDER_REJECTED',
     });
+    for (const code of ['1234567', '123456789', '12AB5678']) {
+      await expect(resend.sendVerification({ delivery, verificationCode: code })).rejects.toMatchObject({
+        code: 'EMAIL_PROVIDER_REJECTED',
+      });
+    }
     expect(contacted).toBe(false);
   });
 
@@ -211,7 +216,7 @@ describe('resend account-application email provider', () => {
     await expect(
       resend.sendVerification({
         delivery: { institutionalEmail: 'blocked.test@example.invalid' },
-        verificationCode: 'CODE-1',
+        verificationCode: '12345678',
       }),
     ).rejects.toMatchObject({ code: 'EMAIL_PROVIDER_REJECTED' });
     expect(calls).toHaveLength(0);
@@ -219,7 +224,7 @@ describe('resend account-application email provider', () => {
     await expect(
       resend.sendVerification({
         delivery: { institutionalEmail: ' Allowed.Test@Example.Invalid ' },
-        verificationCode: 'CODE-1',
+        verificationCode: '12345678',
       }),
     ).resolves.toEqual({ providerMessageRef: MESSAGE_ID });
     expect(calls).toHaveLength(1);

@@ -1,0 +1,329 @@
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R4 V4 */
+/* Hallmark · macrostructure: Marquee Hero / Photographic Fold · genre: editorial
+   · tone: institutional, event-led, assured · anchor: oxblood · theme: studied-DNA
+   (source: frozen V5 authority + Earl's browser annotations) · nav: N5 · footer: Ft5
+   · contrast: pass (40–41) · slop: pass (42–45) · honest: pass (46)
+   · chrome: pass (47) · tokens: pass (48) · responsive: pass (49)
+   · icons: pass (30) · mobile: pass (34, 49, 50–57).
+   The frozen V5 workbench remains intact; this layer owns only live-application
+   identity, event media, public arrival, and production-shaped sign-in. */
+
+.public__bar {
+  gap: clamp(16px, 3vw, 32px);
+}
+
+.public--landing .public__bar {
+  max-width: min(1480px, calc(100% - 32px));
+  min-height: clamp(84px, 7vw, 104px);
+  padding: 12px clamp(16px, 2vw, 28px);
+}
+
+.public__brand {
+  align-items: center;
+  display: flex;
+  gap: clamp(12px, 1.5vw, 20px);
+}
+
+.public__marks {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.public__mark {
+  background: color-mix(in oklch, var(--paper) 90%, transparent);
+  border-color: var(--anchor-line);
+  height: clamp(42px, 4vw, 56px);
+  min-height: 0;
+  min-width: clamp(42px, 4vw, 56px);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.public__mark:first-child {
+  background: color-mix(in oklch, var(--anchor) 10%, var(--paper));
+  color: var(--anchor);
+}
+
+.public__mark img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.public__marks .public__mark:last-child {
+  display: inline-flex;
+}
+
+.public__wordmark {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.public__wordmark b {
+  font-size: clamp(17px, 1.7vw, 25px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.public__wordmark span {
+  font-size: var(--t-2xs);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.public--landing .public__main {
+  max-width: none;
+  overflow: clip;
+  padding: clamp(20px, 2vw, 32px) 0 clamp(76px, 8vw, 120px);
+}
+
+.public--landing .landing-hero {
+  border-radius: 0;
+  min-height: clamp(640px, 82svh, 920px);
+  width: 100%;
+}
+
+.public--landing .landing-hero::after {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--ox-900) 96%, transparent) 0%,
+    color-mix(in oklch, var(--ox-900) 78%, transparent) 42%,
+    color-mix(in oklch, var(--ox-900) 26%, transparent) 76%,
+    color-mix(in oklch, var(--ox-900) 12%, transparent) 100%
+  );
+}
+
+.landing-hero__media {
+  object-position: center;
+}
+
+.landing-hero__content {
+  margin-inline: auto;
+  max-width: 1480px;
+  padding: clamp(44px, 7vw, 108px) clamp(24px, 7vw, 112px);
+  padding-block-end: clamp(72px, 10vw, 148px);
+  width: 100%;
+}
+
+.landing-hero h1 {
+  font-size: clamp(52px, 7.6vw, 112px);
+  max-width: 13ch;
+}
+
+.landing-hero__content > p {
+  font-size: clamp(18px, 1.7vw, 24px);
+  max-width: 58ch;
+}
+
+.landing-hero__monogram {
+  align-items: center;
+  background: color-mix(in oklch, var(--paper) 90%, transparent);
+  border: 1px solid color-mix(in oklch, var(--gold-100) 68%, transparent);
+  border-radius: 6px 20px 6px 20px;
+  display: flex;
+  height: clamp(72px, 8vw, 108px);
+  inset: clamp(32px, 4vw, 60px) clamp(28px, 6vw, 92px) auto auto;
+  justify-content: center;
+  opacity: 1;
+  padding: 12px;
+  width: clamp(72px, 8vw, 108px);
+}
+
+.landing-hero__monogram img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.landing-intro,
+.portal-actions,
+.landing-updates {
+  margin-inline: auto;
+  width: min(1320px, calc(100% - clamp(40px, 8vw, 112px)));
+}
+
+.portal-action--primary {
+  background: color-mix(in oklch, var(--gold-300) 18%, var(--paper));
+  color: var(--ox-900);
+}
+
+.portal-action--primary .portal-action__mark {
+  background: var(--ox-800);
+  color: var(--gold-100);
+}
+
+.portal-action--primary small {
+  color: color-mix(in oklch, var(--ox-900) 76%, var(--gold-700));
+}
+
+.landing-updates {
+  align-items: end;
+  border: 1px solid var(--accent-line);
+  border-radius: 8px 34px 8px 34px;
+  display: grid;
+  gap: clamp(28px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: clamp(320px, 35vw, 500px);
+  padding: clamp(44px, 7vw, 96px);
+}
+
+.landing-updates .eyebrow {
+  color: var(--anchor);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  margin: 0 0 20px;
+}
+
+.landing-updates h2 {
+  font-size: clamp(42px, 6vw, 82px);
+  line-height: 0.98;
+  max-width: 13ch;
+}
+
+.landing-updates p:not(.eyebrow) {
+  font-size: clamp(16px, 1.5vw, 20px);
+  max-width: 58ch;
+}
+
+.public__foot {
+  max-width: 1320px;
+}
+
+.public:not(.public--landing) .public__main > .preview-data-label + .auth-card {
+  margin-inline: auto;
+}
+
+.public:not(.public--landing) .public__main:has(> .preview-data-label + .auth-card) {
+  padding-block-start: clamp(52px, 8vw, 108px);
+}
+
+.public:not(.public--landing) .auth-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px 26px 8px 26px;
+  box-shadow: var(--elev-2);
+}
+
+.public:has(.auth-card--signin) .public__main {
+  background:
+    linear-gradient(
+      115deg,
+      color-mix(in oklch, var(--ox-900) 88%, transparent),
+      color-mix(in oklch, var(--ox-800) 62%, transparent)
+    ),
+    url('/brand/login-background') center / cover fixed;
+  max-width: none;
+}
+
+.public:has(.auth-card--signin) .preview-data-label {
+  background: color-mix(in oklch, var(--paper) 92%, transparent);
+  border-color: color-mix(in oklch, var(--gold-300) 52%, transparent);
+}
+
+.public:has(.auth-card--signin) .auth-card--signin {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .public--landing .public__bar {
+    max-width: calc(100% - 20px);
+    min-height: 76px;
+    padding: 8px 12px;
+  }
+
+  .public__wordmark b {
+    font-size: clamp(14px, 4.2vw, 18px);
+  }
+
+  .public__wordmark span {
+    display: none;
+  }
+
+  .public__mark {
+    height: 38px;
+    min-width: 38px;
+    width: 38px;
+  }
+
+  .public--landing .landing-hero {
+    min-height: max(620px, 80svh);
+  }
+
+  .public--landing .landing-hero::after {
+    background: linear-gradient(
+      0deg,
+      color-mix(in oklch, var(--ox-900) 96%, transparent) 0%,
+      color-mix(in oklch, var(--ox-900) 78%, transparent) 58%,
+      color-mix(in oklch, var(--ox-900) 28%, transparent) 100%
+    );
+  }
+
+  .landing-hero__content {
+    padding: 44px 24px 72px;
+  }
+
+  .landing-hero h1 {
+    font-size: clamp(46px, 14vw, 70px);
+  }
+
+  .landing-hero__monogram {
+    height: 72px;
+    inset: 28px 24px auto auto;
+    width: 72px;
+  }
+
+  .landing-intro,
+  .portal-actions,
+  .landing-updates {
+    width: calc(100% - 40px);
+  }
+
+  .landing-updates {
+    align-items: start;
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 36px 28px;
+  }
+
+  .landing-updates h2 {
+    font-size: clamp(36px, 11vw, 54px);
+  }
+}
+
+@media (max-width: 390px) {
+  .public__marks {
+    gap: 4px;
+  }
+
+  .public__mark {
+    height: 34px;
+    min-width: 34px;
+    width: 34px;
+  }
+
+  .public__wordmark b {
+    font-size: 13px;
+  }
+
+  .landing-hero__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .landing-hero__actions .btn,
+  .landing-link {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero__media,
+  .public__bar {
+    transition: none;
+  }
+}

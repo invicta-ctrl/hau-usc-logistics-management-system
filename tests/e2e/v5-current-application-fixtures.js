@@ -91,9 +91,20 @@ function playgroundStatus() {
 
 export async function installV5ApiFixture(
   page,
-  { environment = STAGING, authenticated = false } = {},
+  { environment = STAGING, authenticated = false, advertisements = [] } = {},
 ) {
   const requests = [];
+  let sessionAuthenticated = authenticated;
+  await page.route('**/brand/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      body: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    }),
+  );
   await page.route('**/api/**', async (route) => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
@@ -102,7 +113,7 @@ export async function installV5ApiFixture(
 
     if (pathname === '/api/version') return json(route, releaseIdentity(environment));
     if (pathname === '/api/health') return json(route, health(environment));
-    if (pathname === '/api/public/advertisements') return json(route, { items: [] });
+    if (pathname === '/api/public/advertisements') return json(route, { items: advertisements });
     if (pathname === '/api/public/request/options') {
       return json(route, {
         eventSeries: [],
@@ -116,14 +127,25 @@ export async function installV5ApiFixture(
       return json(route, { uscDepartments: [], items: [], process: [] });
     }
     if (pathname === '/api/auth/session') {
-      if (authenticated) return json(route, authenticatedSession());
+      if (sessionAuthenticated) return json(route, authenticatedSession());
       return json(route, { code: 'SESSION_REQUIRED', message: 'Sign in to continue.' }, 401);
     }
+    if (pathname === '/api/playground/session') {
+      if (environment !== STAGING) {
+        return json(route, { error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED' } }, 404);
+      }
+      sessionAuthenticated = true;
+      return json(route, authenticatedSession());
+    }
+    if (pathname === '/api/auth/logout') {
+      sessionAuthenticated = false;
+      return json(route, { state: 'SIGNED_OUT' });
+    }
 
-    if (authenticated && pathname === '/api/getEssentialBootstrapData') {
+    if (sessionAuthenticated && pathname === '/api/getEssentialBootstrapData') {
       return json(route, essential(environment));
     }
-    if (authenticated && pathname === '/api/getBootstrapModule') {
+    if (sessionAuthenticated && pathname === '/api/getBootstrapModule') {
       return json(
         route,
         createBootstrapModuleFixture({
@@ -134,7 +156,7 @@ export async function installV5ApiFixture(
         }),
       );
     }
-    if (authenticated && pathname === '/api/getInventoryItem') {
+    if (sessionAuthenticated && pathname === '/api/getInventoryItem') {
       return json(route, {
         ok: true,
         item: {
@@ -151,7 +173,7 @@ export async function installV5ApiFixture(
         ledgerTransactions: [],
       });
     }
-    if (authenticated && pathname === '/api/me/profile') {
+    if (sessionAuthenticated && pathname === '/api/me/profile') {
       return json(route, {
         ok: true,
         profile: {
@@ -161,31 +183,31 @@ export async function installV5ApiFixture(
         },
       });
     }
-    if (authenticated && pathname === '/api/playground/status') {
+    if (sessionAuthenticated && pathname === '/api/playground/status') {
       return json(route, playgroundStatus());
     }
-    if (authenticated && pathname === '/api/readiness') {
+    if (sessionAuthenticated && pathname === '/api/readiness') {
       return json(route, { ...health(environment), ready: true });
     }
-    if (authenticated && pathname === '/api/admin/access/directory') {
+    if (sessionAuthenticated && pathname === '/api/admin/access/directory') {
       return json(route, { ok: true, accounts: [], updatedAt: '2026-08-09T00:00:00.000Z' });
     }
-    if (authenticated && pathname === '/api/getEventManagement') {
+    if (sessionAuthenticated && pathname === '/api/getEventManagement') {
       return json(route, { ok: true, eventSeries: [], eventDays: [], events: [] });
     }
-    if (authenticated && pathname === '/api/getReferenceAdminWorkspace') {
+    if (sessionAuthenticated && pathname === '/api/getReferenceAdminWorkspace') {
       return json(route, { ok: true, items: [] });
     }
     if (
-      authenticated &&
+      sessionAuthenticated &&
       ['/api/admin/reference-links/list', '/api/owner/brand-assets/list'].includes(pathname)
     ) {
       return json(route, { ok: true, items: [] });
     }
-    if (authenticated && pathname === '/api/owner/evidence/status') {
+    if (sessionAuthenticated && pathname === '/api/owner/evidence/status') {
       return json(route, { ok: true, status: 'READY' });
     }
-    if (authenticated) return json(route, { ok: true, items: [] });
+    if (sessionAuthenticated) return json(route, { ok: true, items: [] });
 
     return json(route, { code: 'UNEXPECTED_V5_SMOKE_REQUEST', message: `No fixture for ${pathname}.` }, 500);
   });

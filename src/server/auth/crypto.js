@@ -146,6 +146,19 @@ export function createTokenCrypto({ cryptoProvider = globalThis.crypto, timingSa
       }
       return bytesToBase64Url(randomBytes(cryptoValue, byteLength));
     },
+    createNumericCode(digits = 8) {
+      if (!Number.isSafeInteger(digits) || digits < 4 || digits > 9) {
+        throw new Error('Numeric verification codes require 4 to 9 digits.');
+      }
+      const range = 10 ** digits;
+      const cardinality = 2 ** 32;
+      const unbiasedLimit = cardinality - (cardinality % range);
+      const randomValue = new Uint32Array(1);
+      do {
+        cryptoValue.getRandomValues(randomValue);
+      } while (randomValue[0] >= unbiasedLimit);
+      return String(randomValue[0] % range).padStart(digits, '0');
+    },
     digest,
     async matches(token, expectedDigest) {
       try {
