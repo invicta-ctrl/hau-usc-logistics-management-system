@@ -43,6 +43,13 @@ function verifySingleFile(html, label) {
   }
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)];
   if (!inlineScripts.length) throw new Error(`${label} contains no inline application script.`);
+  const applicationScript = inlineScripts.find((match) =>
+    match[1].includes('__HAU_V5_INTEGRATION__'),
+  );
+  if (!applicationScript) throw new Error(`${label} contains no V5 integration script.`);
+  if (applicationScript.index < html.indexOf('<div id="app"></div>')) {
+    throw new Error(`${label} executes the V5 integration script before the application root exists.`);
+  }
   for (const [index, match] of inlineScripts.entries()) {
     try {
       new Script(match[1], { filename: `${label}:inline-script-${index + 1}` });
