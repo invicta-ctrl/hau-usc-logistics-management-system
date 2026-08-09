@@ -19,10 +19,9 @@ function setTheme(theme, { persist = false } = {}) {
   const next = theme === 'dark' ? 'dark' : 'light';
   document.documentElement.dataset.theme = next;
   document.documentElement.style.colorScheme = next;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute(
-    'content',
-    next === 'dark' ? '#1f1012' : '#610b0f',
-  );
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', next === 'dark' ? '#1f1012' : '#610b0f');
   document.querySelectorAll('[data-theme-control]').forEach((control) => {
     const dark = next === 'dark';
     control.dataset.theme = next;
@@ -40,23 +39,26 @@ function setTheme(theme, { persist = false } = {}) {
 }
 
 export function themeControlMarkup() {
-  return `<button class="celestial-control" type="button" data-theme-control aria-pressed="false" aria-label="Switch to dark mode">
-    <span class="celestial-control__plate" aria-hidden="true"></span>
-    <span class="celestial-control__icon" data-theme-icon="light">${SUN_ICON}</span>
-    <span class="celestial-control__icon" data-theme-icon="dark">${MOON_ICON}</span>
+  return `<button class="celestial celestial-control" type="button" data-theme-control aria-pressed="false" aria-label="Switch to dark mode">
+    <span class="celestial__capsule" aria-hidden="true">
+      <span class="celestial__sheen"></span>
+      <span class="celestial__plate celestial-control__plate"></span>
+      <span class="celestial__slot celestial__slot--sun celestial-control__icon" data-theme-icon="light">${SUN_ICON}</span>
+      <span class="celestial__slot celestial__slot--moon celestial-control__icon" data-theme-icon="dark">${MOON_ICON}</span>
+    </span>
   </button>`;
 }
 
 export function backControlMarkup({ href = '/portals', label = 'Back' } = {}) {
-  return `<a class="signature-back" href="${href}" data-signature-back aria-label="${label}">
-    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m14.5 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    <span>${label}</span>
+  return `<a class="signature-back back-control" href="${href}" data-signature-back aria-label="${label}">
+    <span class="back-control__glyph"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m14.5 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="back-control__label">${label}</span>
   </a>`;
 }
 
 function menuControlMarkup() {
-  return `<button class="signature-menu" type="button" data-signature-menu aria-expanded="true" aria-controls="primaryNav" aria-label="Close navigation">
-    <span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>
+  return `<button class="menu-control" type="button" data-signature-menu data-drawer-open="true" aria-expanded="true" aria-controls="primaryNav" aria-label="Close navigation">
+    <span class="menu-control__glyph" aria-hidden="true"><i></i><i></i><i></i></span><span class="menu-control__label">Navigate</span>
   </button>`;
 }
 
@@ -75,6 +77,7 @@ function setNavigationOpen(open, { focus = false } = {}) {
   const menu = document.querySelector('[data-signature-menu]');
   document.body.dataset.navigation = open ? 'open' : 'closed';
   menu?.setAttribute('aria-expanded', String(open));
+  if (menu) menu.dataset.drawerOpen = String(open && matchMedia('(max-width: 63.99rem)').matches);
   menu?.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation');
   document.querySelector('[data-navigation-backdrop]')?.toggleAttribute('hidden', !open);
   if (focus && open) {
@@ -162,4 +165,5 @@ export function installSignatureControls() {
     setNavigationOpen(false);
     document.querySelector('[data-signature-menu]')?.focus({ preventScroll: true });
   });
+  document.addEventListener('hau:v5-navigation-close', () => setNavigationOpen(false));
 }

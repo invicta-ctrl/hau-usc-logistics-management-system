@@ -2,7 +2,10 @@ import { expect, test } from '@playwright/test';
 
 test.beforeEach(({ page }, testInfo) => {
   void page;
-  test.skip(testInfo.project.name !== 'chromium-390', 'Focused V4.1 behavior runs once; responsive coverage runs separately.');
+  test.skip(
+    testInfo.project.name !== 'chromium-390',
+    'Focused V4.1 behavior runs once; responsive coverage runs separately.',
+  );
 });
 
 test('landing uses real routes, persistent theme, and a static mobile map fallback', async ({ page }) => {
@@ -17,9 +20,17 @@ test('landing uses real routes, persistent theme, and a static mobile map fallba
   await expect(page.getByRole('heading', { name: 'Request. Prepare. Release.' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open Request Center' })).toHaveAttribute('href', '/request');
   await expect(page.getByRole('link', { name: 'Open Lending Center' })).toHaveAttribute('href', '/lending');
-  await expect(page.locator('.portal-landing__quiet-actions').getByRole('link', { name: 'Staff sign in' })).toHaveAttribute('href', '/login');
-  await expect(page.getByRole('link', { name: 'Track a request' })).toHaveAttribute('href', '/request#request-tracking');
-  await expect(page.getByRole('link', { name: 'Track a loan' })).toHaveAttribute('href', '/lending#lending-tracking');
+  await expect(
+    page.locator('.portal-landing__quiet-actions').getByRole('link', { name: 'Staff sign in' }),
+  ).toHaveAttribute('href', '/login');
+  await expect(page.getByRole('link', { name: 'Track a request' })).toHaveAttribute(
+    'href',
+    '/request#request-tracking',
+  );
+  await expect(page.getByRole('link', { name: 'Track a loan' })).toHaveAttribute(
+    'href',
+    '/lending#lending-tracking',
+  );
   await expect(page.locator('[data-landing-network]')).toHaveAttribute('data-motion', 'static');
   await expect(page.locator('.landing-network__fallback')).toBeVisible();
 
@@ -30,7 +41,9 @@ test('landing uses real routes, persistent theme, and a static mobile map fallba
   await expect(darkTheme).toBeVisible();
   await expect(darkTheme).toHaveAttribute('data-theme', 'dark');
   await expect
-    .poll(() => darkTheme.locator('.celestial-control__plate').evaluate((plate) => getComputedStyle(plate).transform))
+    .poll(() =>
+      darkTheme.locator('.celestial-control__plate').evaluate((plate) => getComputedStyle(plate).transform),
+    )
     .toContain('30');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
@@ -43,6 +56,7 @@ test('landing map enhances once, settles, and keeps calls to action independent'
   await page.goto('/portals');
 
   const network = page.locator('[data-landing-network]');
+  await network.scrollIntoViewIfNeeded();
   await expect(network).toHaveAttribute('data-motion', /active|settled/u);
   await expect(network).toHaveAttribute('data-motion', 'settled', { timeout: 4000 });
   await expect(page.getByRole('link', { name: 'Open Request Center' })).toBeEnabled();
@@ -65,15 +79,19 @@ test('sanitized preview opens public request tracking without a protected servic
 
 test('menu is keyboard operable and closes with Escape on mobile', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.app-header .brand-media-link[data-brand-fallback]')).toBeVisible();
+  await expect(page.locator('.app-header .brand-media-link[data-brand-fallback]')).toBeHidden();
   await expect(page.locator('.app-header .brand-media[hidden]')).toHaveCount(1);
   const menu = page.locator('[data-signature-menu]');
   await expect(menu).toBeVisible();
   await menu.click();
   await expect(menu).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('.sidebar')).toBeInViewport();
+  await expect(page.locator('.sidebar .rail__marks')).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Open navigation' })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
 });
 
 test('lending return remains an accountable browser workflow', async ({ page }) => {

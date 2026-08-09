@@ -5,6 +5,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      'sites-preview/dist/**',
       '.wrangler/**',
       'legacy/**',
       'node_modules/**',
@@ -27,7 +28,7 @@ export default [
     rules: { 'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }] },
   },
   {
-    files: ['tests/**/*.js', '*.config.js', 'scripts/**/*.mjs', 'tools/**/*.mjs'],
+    files: ['tests/**/*.js', '*.config.js', 'scripts/**/*.mjs', 'sites-preview/**/*.mjs', 'tools/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

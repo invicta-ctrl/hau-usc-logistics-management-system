@@ -61,7 +61,11 @@ async function openDirector(page) {
     }),
   );
   await page.route('**/api/getBootstrapData', (route) =>
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: bootstrap }) }),
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: true, data: bootstrap }),
+    }),
   );
   await page.goto('/app/director');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
@@ -78,8 +82,8 @@ test('Director receives complete decision and readiness destinations without Adm
   await openDirector(page);
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('Director');
-  await expect(shell.getByLabel('Workspace')).toHaveValue('director');
-  await expect(shell.getByLabel('Workspace').locator('option:not(:disabled)')).toHaveCount(1);
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('director');
+  await expect(page.locator('#shellWorkspaceSelect option:not(:disabled)')).toHaveCount(1);
   await expect(page.locator('[data-admin-view="referenceAdmin"]')).toBeHidden();
 
   const panel = page.locator('#roleExperiencePanel[data-role-experience="director"]');
@@ -118,7 +122,7 @@ test('Director Management & Access stays bounded and actionable metrics open own
   const management = panel.locator('[data-director-management-access]');
   await expect(management).toBeFocused();
   await expect(management).toContainText('Director');
-  await expect(management).toContainText('Server-authorized');
+  await expect(management).toContainText('Permissions');
   await expect(management).toContainText('No system administration');
 
   await panel.getByRole('button', { name: /Inventory alerts/u }).click();

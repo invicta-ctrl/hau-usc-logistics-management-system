@@ -272,8 +272,7 @@ async function openMaterials(
       body: JSON.stringify({
         ok: true,
         committeeId: 'COM_MATERIALS',
-        items:
-          scopeSensitive && operationalScope !== 'COMMITTEE:COM_MATERIALS' ? [] : materialsItems,
+        items: scopeSensitive && operationalScope !== 'COMMITTEE:COM_MATERIALS' ? [] : materialsItems,
       }),
     });
   });
@@ -284,14 +283,16 @@ async function openMaterials(
   return { bootstrap, materialsQueueScopes };
 }
 
-test('Materials exposes all accepted destinations and a stable source-grounded pipeline', async ({ page }, testInfo) => {
+test('Materials exposes all accepted destinations and a stable source-grounded pipeline', async ({
+  page,
+}, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop proof are sufficient.',
   );
   await openMaterials(page);
   const shell = page.locator('[data-internal-shell-context]');
-  await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('materials');
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('DOL staff');
 
   const panel = page.locator('#roleExperiencePanel[data-role-experience="materials"]');
@@ -321,7 +322,9 @@ test('Materials exposes all accepted destinations and a stable source-grounded p
   await expect(panel).not.toContainText('PRIVATE-TEST-TIN');
 });
 
-test('Materials refreshes canonical overview truth when operational scope changes', async ({ page }, testInfo) => {
+test('Materials refreshes canonical overview truth when operational scope changes', async ({
+  page,
+}, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-1366', 'One focused scope-change proof is sufficient.');
   const { materialsQueueScopes } = await openMaterials(page, {
     scopeSensitive: true,
@@ -341,7 +344,9 @@ test('Materials refreshes canonical overview truth when operational scope change
   await expect(panel).toContainText('SYNTHETIC-DEL-MAT-1');
 });
 
-test('Materials destinations reuse shared queue, canvass, deliverables, receiving, and Release Desk', async ({ page }, testInfo) => {
+test('Materials destinations reuse shared queue, canvass, deliverables, receiving, and Release Desk', async ({
+  page,
+}, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop proof are sufficient.',
@@ -362,12 +367,18 @@ test('Materials destinations reuse shared queue, canvass, deliverables, receivin
 
   await page.goto('/app/materials');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page.locator('#roleExperiencePanel [data-materials-destination="materials-deliverables"]').last().click();
+  await page
+    .locator('#roleExperiencePanel [data-materials-destination="materials-deliverables"]')
+    .last()
+    .click();
   await expect(page.locator('[data-proc-tab="deliverables"]')).toHaveClass(/active/u);
 
   await page.goto('/app/materials');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page.locator('#roleExperiencePanel [data-materials-destination="materials-receiving"]').last().click();
+  await page
+    .locator('#roleExperiencePanel [data-materials-destination="materials-receiving"]')
+    .last()
+    .click();
   await expect(page.locator('[data-proc-tab="receiving"]')).toHaveClass(/active/u);
 
   await page.goto('/app/materials');
@@ -376,7 +387,9 @@ test('Materials destinations reuse shared queue, canvass, deliverables, receivin
   await expect(page.locator('#release')).toHaveClass(/active/u);
 
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
+    .poll(() =>
+      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    )
     .toBeLessThanOrEqual(1);
 });
 

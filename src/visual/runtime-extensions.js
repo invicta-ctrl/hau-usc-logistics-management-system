@@ -2132,7 +2132,7 @@ export function createRuntimeExtensions(options) {
               `<button class="danger mini" type="button" data-advertisement-action="archive" data-advertisement-id="${esc(item.id)}">Archive</button>`,
             );
           }
-          return `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.hasImage ? `<img src="${esc(item.imageUrl || `/media/advertisements/${encodeURIComponent(item.id)}`)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; ${esc(item.audience)} &middot; order ${esc(item.displayOrder)}</small><small>${esc(item.publishAt ? `From ${accessDate(item.publishAt)}` : 'No start')} &middot; ${esc(item.expireAt ? `until ${accessDate(item.expireAt)}` : 'no expiry')} &middot; revision ${esc(item.revision)}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-action="preview" data-advertisement-id="${esc(item.id)}">Preview</button>${item.status !== 'ARCHIVED' ? `<button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>` : ''}${lifecycle.join('')}</div></article>`;
+          return `<article class="request-line advertisement-admin-row"><div class="advertisement-admin-summary">${item.hasImage ? `<img src="${esc(item.imageUrl || `/media/advertisements/${encodeURIComponent(item.id)}`)}" alt="">` : '<span class="advertisement-media-missing">No media</span>'}<span><strong>${esc(item.title)}</strong><small>${esc(item.id)} &middot; ${esc(statusLabel(item.status, { missing: 'Status not reported' }))} &middot; ${esc(item.audience)} &middot; order ${esc(item.displayOrder)}</small><small>${esc(item.publishAt ? `From ${accessDate(item.publishAt)}` : 'No start')} &middot; ${esc(item.expireAt ? `until ${accessDate(item.expireAt)}` : 'no expiry')} &middot; revision ${esc(item.revision)}</small></span></div><div class="request-line-actions"><button class="secondary mini" type="button" data-advertisement-action="preview" data-advertisement-id="${esc(item.id)}">View</button>${item.status !== 'ARCHIVED' ? `<button class="secondary mini" type="button" data-advertisement-edit="${esc(item.id)}">Edit / media</button>` : ''}${lifecycle.join('')}</div></article>`;
         })
         .join('') || '<div class="empty">No announcements match these filters.</div>';
     const pagination = advertisementDirectory?.pagination ?? {
@@ -2184,7 +2184,7 @@ export function createRuntimeExtensions(options) {
         <label>Publish at<input name="publishAt" type="datetime-local" value="${esc(item?.publishAt?.slice(0, 16) ?? '')}"></label>
         <label>Expire at<input name="expireAt" type="datetime-local" value="${esc(item?.expireAt?.slice(0, 16) ?? '')}"></label>
         <label class="span-2">JPEG, PNG, or WebP media<input name="media" type="file" accept="image/jpeg,image/png,image/webp"><small>Maximum 750 KB. Full artwork is shown without cropping.</small></label>
-      </div><div class="mode-note section-gap">Saving preserves the current lifecycle state. Publish, schedule, pause, resume, preview, and archive remain separate revision-guarded actions.</div><button class="primary" type="submit">${item ? 'Save changes' : 'Create draft'}</button></form>`,
+      </div><div class="mode-note section-gap">Saving preserves the current status. Publish, schedule, pause, resume, view, and archive remain separate actions.</div><button class="primary" type="submit">${item ? 'Save changes' : 'Create draft'}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#advertisementForm');
         form.addEventListener('submit', async (event) => {
@@ -2456,7 +2456,7 @@ export function createRuntimeExtensions(options) {
         <label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label>
         <label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label>
       </div>
-      <button class="primary" type="submit">Preview effective access</button>
+      <button class="primary" type="submit">Review access</button>
     </form>`;
   };
 
@@ -2505,66 +2505,62 @@ export function createRuntimeExtensions(options) {
     try {
       const options = await ensureAccessPolicyOptions();
       const idempotencyKey = `access-policy-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
-      openModal(
-        `Edit effective access · ${account.accessId}`,
-        accessPolicyFormMarkup(account, options),
-        (modal) => {
-          const form = modal.querySelector('#accessPolicyForm');
-          const presetSelect = form.elements.presetId;
-          presetSelect.addEventListener('change', () => {
-            const preset = options.presets.find((entry) => entry.id === presetSelect.value);
-            if (!preset || preset.id === 'CUSTOM') return;
-            form.elements.roleId.value = preset.roleId;
-            form.querySelectorAll('[name="workspaceIds"]').forEach((control) => {
-              control.checked = (preset.workspaceIds ?? []).includes(control.value);
-            });
-            form.querySelectorAll('[name="committeeIds"]').forEach((control) => {
-              control.checked = (preset.committeeIds ?? []).includes(control.value);
-            });
-            form.elements.defaultWorkspaceId.value = preset.workspaceIds?.[0] ?? '';
-            form.elements.defaultCommitteeId.value = preset.committeeIds?.[0] ?? '';
+      openModal(`Edit access · ${account.accessId}`, accessPolicyFormMarkup(account, options), (modal) => {
+        const form = modal.querySelector('#accessPolicyForm');
+        const presetSelect = form.elements.presetId;
+        presetSelect.addEventListener('change', () => {
+          const preset = options.presets.find((entry) => entry.id === presetSelect.value);
+          if (!preset || preset.id === 'CUSTOM') return;
+          form.elements.roleId.value = preset.roleId;
+          form.querySelectorAll('[name="workspaceIds"]').forEach((control) => {
+            control.checked = (preset.workspaceIds ?? []).includes(control.value);
           });
-          form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            if (!form.reportValidity()) return;
-            const button = form.querySelector('[type="submit"]');
-            button.disabled = true;
-            const command = accessPolicyCommand(form);
-            try {
-              const preview = await services.previewAccessPolicy(command);
-              openModal(
-                'Confirm effective access',
-                `${accessPreviewMarkup(preview)}<button class="danger section-gap" type="button" data-access-policy-confirm>Save policy and revoke sessions</button>`,
-                (confirmModal) => {
-                  confirmModal
-                    .querySelector('[data-access-policy-confirm]')
-                    .addEventListener('click', async (confirmEvent) => {
-                      confirmEvent.currentTarget.disabled = true;
-                      try {
-                        const result = await services.updateAccessPolicy({
-                          ...command,
-                          idempotencyKey,
-                        });
-                        closeModal();
-                        accessDirectory = null;
-                        await refreshAccessDirectory({ force: true });
-                        toast(
-                          `Effective access updated; active sessions were revoked and audit history was appended.${auditReferenceText(result)}`,
-                        );
-                      } catch (error) {
-                        toast(error.message, true);
-                        confirmEvent.currentTarget.disabled = false;
-                      }
-                    });
-                },
-              );
-            } catch (error) {
-              toast(error.message, true);
-              button.disabled = false;
-            }
+          form.querySelectorAll('[name="committeeIds"]').forEach((control) => {
+            control.checked = (preset.committeeIds ?? []).includes(control.value);
           });
-        },
-      );
+          form.elements.defaultWorkspaceId.value = preset.workspaceIds?.[0] ?? '';
+          form.elements.defaultCommitteeId.value = preset.committeeIds?.[0] ?? '';
+        });
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          const button = form.querySelector('[type="submit"]');
+          button.disabled = true;
+          const command = accessPolicyCommand(form);
+          try {
+            const preview = await services.previewAccessPolicy(command);
+            openModal(
+              'Confirm access change',
+              `${accessPreviewMarkup(preview)}<button class="danger section-gap" type="button" data-access-policy-confirm>Save policy and revoke sessions</button>`,
+              (confirmModal) => {
+                confirmModal
+                  .querySelector('[data-access-policy-confirm]')
+                  .addEventListener('click', async (confirmEvent) => {
+                    confirmEvent.currentTarget.disabled = true;
+                    try {
+                      const result = await services.updateAccessPolicy({
+                        ...command,
+                        idempotencyKey,
+                      });
+                      closeModal();
+                      accessDirectory = null;
+                      await refreshAccessDirectory({ force: true });
+                      toast(
+                        `Access updated; active sessions were revoked and history was recorded.${auditReferenceText(result)}`,
+                      );
+                    } catch (error) {
+                      toast(error.message, true);
+                      confirmEvent.currentTarget.disabled = false;
+                    }
+                  });
+              },
+            );
+          } catch (error) {
+            toast(error.message, true);
+            button.disabled = false;
+          }
+        });
+      });
     } catch (error) {
       toast(error.message, true);
     }
@@ -2609,7 +2605,7 @@ export function createRuntimeExtensions(options) {
     const idempotencyKey = `access-id-change-${globalThis.crypto?.randomUUID?.() ?? Date.now()}`;
     openModal(
       `Change Access ID · ${account.accessId}`,
-      `<form id="accessIdChangeForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}"><div class="mode-note">The immutable account identity, role, capabilities, and historical authorship remain unchanged. All active sessions will be revoked.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Preview normalized change</button></form>`,
+      `<form id="accessIdChangeForm"><input name="accountId" type="hidden" value="${esc(account.accountId)}"><input name="expectedRevision" type="hidden" value="${esc(account.revision)}"><div class="mode-note">The account identity, role, permissions, and history remain unchanged. All active sessions will be signed out.</div><div class="form-grid section-gap"><label>Selected account<input name="currentAccessId" value="${esc(account.accessId)}" readonly></label><label>Proposed Access ID<input name="proposedAccessId" maxlength="64" autocomplete="off" required></label><label>Confirm current Access ID<input name="confirmCurrentAccessId" maxlength="64" autocomplete="off" required></label><label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label></div><button class="primary" type="submit">Review change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#accessIdChangeForm');
         form.addEventListener('submit', async (event) => {
@@ -2794,7 +2790,7 @@ export function createRuntimeExtensions(options) {
       const options = await ensureAccessPolicyOptions();
       openModal(
         'Create governed account',
-        `<form id="accessAccountCreateForm"><div class="mode-note">The server generates the temporary password, validates effective access, requires first-login password change, and returns plaintext only once.</div><div class="form-grid section-gap">
+        `<form id="accessAccountCreateForm"><div class="mode-note">The system generates the temporary password, checks permissions, requires a password change at first sign-in, and shows the password only once.</div><div class="form-grid section-gap">
           <label>Access ID<input name="accessId" maxlength="64" autocomplete="off" required></label>
           <label class="checkbox"><input name="generateAccessId" type="checkbox"> Generate DOL-YYYY-NNNN Access ID</label>
           <label>Access preset<select name="presetId">${options.presets.map((entry) => option(entry.id, entry.label, 'CUSTOM')).join('')}</select></label>
@@ -2813,7 +2809,7 @@ export function createRuntimeExtensions(options) {
           <fieldset class="span-2"><legend>Sub-event scopes</legend>${accessCheckboxes('eventScopeIds', options.events)}</fieldset>
           <details class="span-2 access-advanced-settings"><summary>Advanced settings</summary><p>Use small approved overrides only. Sensitive grants require System Owner approval.</p><div class="form-grid section-gap"><label>Explicit grants<select name="capabilityGrants" multiple size="8">${accessCapabilityOptions(options.capabilities)}</select></label><label>Explicit denies<select name="capabilityDenies" multiple size="8">${accessCapabilityOptions(options.capabilities)}</select></label></div></details>
           <label class="span-2">Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label>
-          <label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this account and effective-access assignment.</label>
+          <label class="checkbox span-2"><input name="confirmed" type="checkbox" required> I confirm this account and permission assignment.</label>
         </div><button class="primary" type="submit">Create account and show one-time credential</button></form>`,
         (modal) => {
           const form = modal.querySelector('#accessAccountCreateForm');
@@ -3005,8 +3001,8 @@ export function createRuntimeExtensions(options) {
 
   const openReferenceLinkForm = (record = null) => {
     openModal(
-      record ? `Edit ${record.id}` : 'Create canonical link',
-      `<form id="referenceLinkForm"><div class="mode-note">The canonical D1 record is authoritative. External URLs require HTTPS without embedded credentials; internal targets must use an approved route ID.</div><div class="form-grid section-gap"><label class="span-2">Label<input name="label" maxlength="160" value="${esc(record?.label ?? '')}" required></label><label>Target type<select name="linkType">${option('EXTERNAL_URL', 'External HTTPS URL', record?.linkType ?? 'EXTERNAL_URL')}${option('INTERNAL_ROUTE', 'Approved internal route', record?.linkType)}</select></label><label>Audience<select name="audience">${option('PUBLIC', 'Public', record?.audience ?? 'PUBLIC')}${option('STAFF', 'Staff', record?.audience)}${option('ADMINISTRATOR', 'Administrator', record?.audience)}${option('DIRECTOR', 'Director', record?.audience)}</select></label><label class="span-2" data-reference-link-url-label>HTTPS URL<input name="url" maxlength="2048" value="${esc(record?.url ?? '')}" required></label><label class="span-2" data-reference-link-route-label hidden>Approved internal route<select name="routeId">${approvedReferenceRouteIds.map((routeId) => option(routeId, presentationLabel(routeId), record?.url)).join('')}</select></label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label></div><button class="primary" type="submit">${record ? 'Save canonical link' : 'Create draft link'}</button></form>`,
+      record ? `Edit ${record.id}` : 'Create managed link',
+      `<form id="referenceLinkForm"><div class="mode-note">The official link record is authoritative. External links require HTTPS without embedded credentials; internal targets must use an approved route.</div><div class="form-grid section-gap"><label class="span-2">Label<input name="label" maxlength="160" value="${esc(record?.label ?? '')}" required></label><label>Target type<select name="linkType">${option('EXTERNAL_URL', 'External HTTPS URL', record?.linkType ?? 'EXTERNAL_URL')}${option('INTERNAL_ROUTE', 'Approved internal route', record?.linkType)}</select></label><label>Audience<select name="audience">${option('PUBLIC', 'Public', record?.audience ?? 'PUBLIC')}${option('STAFF', 'Staff', record?.audience)}${option('ADMINISTRATOR', 'Administrator', record?.audience)}${option('DIRECTOR', 'Director', record?.audience)}</select></label><label class="span-2" data-reference-link-url-label>HTTPS URL<input name="url" maxlength="2048" value="${esc(record?.url ?? '')}" required></label><label class="span-2" data-reference-link-route-label hidden>Approved internal route<select name="routeId">${approvedReferenceRouteIds.map((routeId) => option(routeId, presentationLabel(routeId), record?.url)).join('')}</select></label><label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label></div><button class="primary" type="submit">${record ? 'Save managed link' : 'Create draft link'}</button></form>`,
       (modal) => {
         const form = modal.querySelector('#referenceLinkForm');
         const syncTarget = () => {
@@ -3110,7 +3106,7 @@ export function createRuntimeExtensions(options) {
     const targetId = record?.id ?? '';
     openModal(
       `${action === 'ADD' ? 'Add' : action === 'UPDATE' ? 'Update' : action.toLowerCase()} ${presentationLabel(referenceAdminDomain)}`,
-      `<form id="referenceAdminChangeForm"><div class="mode-note">Controlled fields only. Roster-owned identity is read-only; permission and cross-office routing changes require a distinct reviewer.</div><div class="form-grid" style="margin-top:14px"><label>Stable ID<input name="targetId" maxlength="100" value="${esc(targetId)}" ${record ? 'readonly' : ''} required></label>${action === 'UPDATE' || action === 'ADD' ? referenceAdminFields(referenceAdminDomain, record) : `<label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`}</div><button class="primary" type="submit">Preview change</button></form>`,
+      `<form id="referenceAdminChangeForm"><div class="mode-note">Controlled fields only. Roster-owned identity is read-only; permission and cross-office routing changes require a distinct reviewer.</div><div class="form-grid" style="margin-top:14px"><label>Stable ID<input name="targetId" maxlength="100" value="${esc(targetId)}" ${record ? 'readonly' : ''} required></label>${action === 'UPDATE' || action === 'ADD' ? referenceAdminFields(referenceAdminDomain, record) : `<label class="span-2">Reason<textarea name="reason" maxlength="500" required></textarea></label>`}</div><button class="primary" type="submit">Review change</button></form>`,
       (modal) => {
         const form = modal.querySelector('#referenceAdminChangeForm');
         form.addEventListener('submit', async (event) => {
@@ -3273,8 +3269,8 @@ export function createRuntimeExtensions(options) {
       )
       .join('');
     root.querySelector('[data-admin-health-attention]').innerHTML = `
-      <div class="request-line"><div><strong>Operational data revision</strong><small>${esc(revision)} &middot; ${esc(updatedAt ? accessDate(updatedAt) : 'Last update not reported')}</small></div><span class="pill">Read only</span></div>
-      <div class="request-line"><div><strong>Authorization boundary</strong><small>Visibility and navigation do not grant a capability; every action remains server-authorized.</small></div><span class="pill">Fail closed</span></div>
+      <div class="request-line"><div><strong>Data last checked</strong><small>${esc(revision)} &middot; ${esc(updatedAt ? accessDate(updatedAt) : 'Last update not reported')}</small></div><span class="pill">Read only</span></div>
+      <div class="request-line"><div><strong>Access boundary</strong><small>Seeing a destination does not grant access; every action still checks your permissions.</small></div><span class="pill">Protected</span></div>
       <div class="request-line"><div><strong>Cross-workspace attention</strong><small>${esc(counts.requestBlockers)} request &middot; ${esc(counts.lendingBlockers)} lending &middot; ${esc(counts.releaseBlockers)} release &middot; ${esc(counts.inventoryDiscrepancies)} inventory</small></div><button class="secondary mini" type="button" data-admin-destination="cross-workspace-attention">Open attention</button></div>`;
   };
 
@@ -5313,7 +5309,7 @@ export function createRuntimeExtensions(options) {
         'beforeend',
         `<label>Reference type<select name="venueEquipmentTypeFilter"><option value="">Venue and equipment</option><option value="VENUE">Venue</option><option value="EQUIPMENT">Equipment</option></select></label>
         <label>Controlled category<select name="venueEquipmentCategoryFilter"><option value="">All categories</option>${['MEETING_SPACE', 'EVENT_SPACE', 'AUDIO_VISUAL', 'FURNITURE', 'LOGISTICS_SUPPORT', 'OTHER_CONTROLLED'].map((category) => `<option value="${category}">${presentationLabel(category, { context: 'category' })}</option>`).join('')}</select></label>
-        <label class="span-2">Search approved references<input name="venueEquipmentSearch" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="venueEquipmentReferenceResults" aria-expanded="false" placeholder="Search canonical name, alias, category, or location"><small>Results show requestability only. Confirmation is still required.</small></label>
+        <label class="span-2">Search approved references<input name="venueEquipmentSearch" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="venueEquipmentReferenceResults" aria-expanded="false" placeholder="Search name, alias, category, or location"><small>Results show requestability only. Confirmation is still required.</small></label>
         <div id="venueEquipmentReferenceResults" class="autocomplete-panel show span-2" role="listbox" data-venue-equipment-results><div class="empty">Enter a search term.</div></div>
         <label>Quantity to add<input name="venueEquipmentAddQuantity" type="number" min="1" step="1" value="1"></label>
         <div class="span-2 line-list" data-venue-equipment-selected></div>
@@ -6005,7 +6001,7 @@ export function createRuntimeExtensions(options) {
     const authorization = user.authorization ?? {};
     const workspaceId = workspaceForCurrentUser();
     const workspace = workspaceDefinitions[workspaceId] ?? workspaceDefinitions.administrator;
-    const workspaceSelect = internalShellBar.querySelector('#shellWorkspaceSelect');
+    const workspaceSelect = document.querySelector('#shellWorkspaceSelect');
     const authorizedWorkspaces = authorizedWorkspaceIds();
     workspaceSelect.innerHTML = Object.entries(workspaceDefinitions)
       .map(([id, definition]) => {
@@ -6016,13 +6012,13 @@ export function createRuntimeExtensions(options) {
         return `<option value="${esc(id)}"${selected}${unavailable ? ' disabled' : ''}>${esc(definition.initial)} · ${esc(definition.label)} — ${esc(definition.purpose)} — ${esc(stateLabel)}</option>`;
       })
       .join('');
-    internalShellBar.querySelector('#shellWorkspaceHelp').textContent =
+    document.querySelector('#shellWorkspaceHelp').textContent =
       authorizedWorkspaces.length > 1
         ? `Switches the active workspace while preserving your authenticated ${authorization.roleLabel || 'Administrator'} identity.`
         : 'Workspace access is assigned by the server.';
     document.body.dataset.workspace = workspaceId;
     const scopeLabel = currentScopeLabel();
-    const scopeSelect = internalShellBar.querySelector('#shellScopeSelect');
+    const scopeSelect = document.querySelector('#shellScopeSelect');
     const operationalContext = state.operationalContext;
     scopeSelect.innerHTML = operationalContext?.options?.length
       ? operationalContext.options
@@ -6097,7 +6093,7 @@ export function createRuntimeExtensions(options) {
     if (freshness?.textContent.includes('local preview calculation')) {
       freshness.textContent = freshness.textContent.replace(
         'local preview calculation',
-        'server-authorized operational data',
+        'current operational data',
       );
     }
     document.querySelectorAll('#overviewMetrics small').forEach((summary) => {
@@ -6158,7 +6154,7 @@ export function createRuntimeExtensions(options) {
         </details>
       </div>`;
     header.before(internalShellBar);
-    internalShellBar.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
+    document.querySelector('#shellWorkspaceSelect').addEventListener('change', async (event) => {
       if (authorizedWorkspaceIds().includes(event.target.value) && workspaceDefinitions[event.target.value]) {
         const previousLocation = acceptedLocation;
         const previousHistoryIndex = acceptedHistoryIndex;
@@ -6179,6 +6175,9 @@ export function createRuntimeExtensions(options) {
         pushRouteLocation(`${target.pathname}${target.search}`, { accept: false });
         try {
           await reloadRoutedWorkspace('workspace-change');
+          if (matchMedia('(max-width: 63.99rem)').matches) {
+            document.dispatchEvent(new Event('hau:v5-navigation-close'));
+          }
         } catch (error) {
           replaceRouteLocation(previousLocation, previousHistoryIndex);
           syncRoutedExperience();
@@ -6191,7 +6190,7 @@ export function createRuntimeExtensions(options) {
       }
       event.target.value = workspaceForCurrentUser();
     });
-    internalShellBar.querySelector('#shellScopeSelect').addEventListener('change', async (event) => {
+    document.querySelector('#shellScopeSelect').addEventListener('change', async (event) => {
       const select = event.target;
       const previous = getState()?.operationalContext?.selected?.value ?? 'current';
       if (!changeOperationalScope) {
@@ -6218,6 +6217,9 @@ export function createRuntimeExtensions(options) {
         internalShellBar.querySelector('[data-shell-context-announcement]').textContent =
           `View changed to ${label}.`;
         renderInternalShell();
+        if (matchMedia('(max-width: 63.99rem)').matches) {
+          document.dispatchEvent(new Event('hau:v5-navigation-close'));
+        }
       } catch (error) {
         select.value = previous;
         toast(error.message, true);
@@ -6356,10 +6358,10 @@ export function createRuntimeExtensions(options) {
       label: 'Administrator workspace',
       heading: 'Administrator Control Center',
       description:
-        'Start with system exceptions, access changes, evidence failures, reference errors, inventory discrepancies, and blocked request, lending, or release work. Every signal opens the existing server-authorized owner workflow.',
+        'Start with system exceptions, access changes, evidence failures, reference errors, inventory discrepancies, and blocked request, lending, or release work. Every signal opens the existing owner workflow.',
       boundaryTitle: 'Administrator control boundary',
       boundary:
-        'Reference changes, account access, and environment controls remain subject to their existing server authorization, separation-of-duties, and audit requirements.',
+        'Reference changes, account access, and environment controls keep their existing permissions, review steps, and history.',
       actions: [
         [
           'overview',
@@ -6400,10 +6402,10 @@ export function createRuntimeExtensions(options) {
       label: 'Director workspace',
       heading: 'Executive Overview',
       description:
-        'Lead from decisions, blockers, deadlines, committee readiness, event progress, and exceptions. Progressive detail stays connected to the existing server-authorized owner workflow.',
+        'Lead from decisions, blockers, deadlines, committee readiness, event progress, and exceptions. Each detail stays connected to the existing owner workflow.',
       boundaryTitle: 'Bounded Management & Access',
       boundary:
-        'Director visibility supports event structure and leadership decisions. Access, configuration, and environment changes remain in the existing server-authorized administration boundary.',
+        'Director access supports event structure and leadership decisions. Account and system changes remain in Administration.',
       actions: [
         [
           'overview',
@@ -6518,7 +6520,7 @@ export function createRuntimeExtensions(options) {
         [
           'inventory',
           'Pantry',
-          'Non-perishable stock inside the same canonical catalog',
+          'Non-perishable stock in the shared inventory catalog',
           'inventory-pantry-stock',
         ],
         [
@@ -7279,7 +7281,7 @@ export function createRuntimeExtensions(options) {
       [
         'Pantry items',
         activeItems.filter((item) => item?.catalogType === 'PANTRY' || item?.stockArea === 'Pantry').length,
-        'Canonical non-perishable stock',
+        'Non-perishable inventory',
         'inventory-pantry-stock',
       ],
       ['Stock alerts', stockAttention, 'Low, unavailable, or verification-required ATP', 'inventory-alerts'],
@@ -7321,7 +7323,7 @@ export function createRuntimeExtensions(options) {
           Number(row?.quantityReceived ?? 0) < Number(row?.quantityRequested ?? 0),
       ).length;
       return [
-        ['Active requirements', active.length, 'Canonical scoped deliverables', 'materials-queue'],
+        ['Active requirements', active.length, 'Deliverables in this workspace', 'materials-queue'],
         [
           'Quote attention',
           quoteAttention,
@@ -8557,7 +8559,7 @@ export function createRuntimeExtensions(options) {
             (row) =>
               `<div class="request-line inventory-movement-line"><div><strong>${esc(row.type)} &middot; ${esc(row.subject)}</strong><small>${esc(row.id)}${row.related ? ` &middot; Related ${esc(row.related)}` : ''}</small><small>${esc(row.at || 'Time not reported')}</small></div><span class="pill">${esc(row.quantity || 'Recorded')}</span></div>`,
           )
-          .join('') || '<div class="empty">No movement rows are in the current authorized projection.</div>'
+          .join('') || '<div class="empty">No movement history is available in this workspace.</div>'
       }</div>`;
       return;
     }
@@ -8577,7 +8579,7 @@ export function createRuntimeExtensions(options) {
           `<div class="request-line"><div><strong>${esc(asset.assetTag ?? asset.asset_tag ?? asset.id)}</strong><small>${esc(asset.id)} &middot; ${esc(asset.conditionLabel ?? asset.condition_label ?? 'Condition not reported')}</small></div><span class="pill">${esc(asset.lifecycleStatus ?? asset.lifecycle_status ?? 'ATTENTION')}</span></div>`,
       ),
     ].join('');
-    root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Exception-first stock control</p><h2>Condition &amp; Stock Alerts</h2><p>Low, unavailable, verification-required, damaged, and maintenance signals are derived from current server-projected truth.</p></div><span class="pill">${stock.length + condition.itemSignals.length + condition.assetSignals.length} alert${stock.length + condition.itemSignals.length + condition.assetSignals.length === 1 ? '' : 's'}</span></div><div class="line-list">${alertRows || '<div class="empty">No condition or stock alerts are in the current authorized projection.</div>'}</div>`;
+    root.innerHTML = `<div class="panel-head"><div><p class="eyebrow">Exception-first stock control</p><h2>Condition &amp; Stock Alerts</h2><p>Low, unavailable, verification-required, damaged, and maintenance signals come from current inventory records.</p></div><span class="pill">${stock.length + condition.itemSignals.length + condition.assetSignals.length} alert${stock.length + condition.itemSignals.length + condition.assetSignals.length === 1 ? '' : 's'}</span></div><div class="line-list">${alertRows || '<div class="empty">No condition or stock alerts are in the current view.</div>'}</div>`;
   };
 
   const openInventoryDestination = (destination) => {
@@ -8688,14 +8690,14 @@ export function createRuntimeExtensions(options) {
               ? materialsDestinationAllowed(destination)
               : true;
     const destinationAttributes = (destination) =>
-      `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available in the current server capability projection"'}`;
+      `${destinationAttribute(destination)}${destinationEnabled(destination) ? '' : ' disabled aria-disabled="true" title="Not available with your current access"'}`;
     const hasSystemAdministration = (authorization.capabilities ?? []).includes('system.admin');
     const directorAdministrationBoundary = hasSystemAdministration
-      ? '<strong>Administration stays in its own workspace</strong><small>Your server-authorized System Owner access is preserved, but the Director workspace does not expose the Administrator control center.</small>'
-      : '<strong>No system administration</strong><small>Account, configuration, provider, and environment controls remain unavailable unless separately granted by the server.</small>';
+      ? '<strong>Administration stays in its own workspace</strong><small>Your System Owner access is preserved, but the Director workspace does not show the Administrator control centre.</small>'
+      : '<strong>No system administration</strong><small>Account and system settings remain unavailable unless they are part of your access.</small>';
     const directorManagement =
       experience === 'director'
-        ? `<div class="director-management-projection" data-director-management-access tabindex="-1"><dl><div><dt>Role</dt><dd>${esc(authorization.roleLabel ?? authorization.roleId ?? 'Director')}</dd></div><div><dt>Operational scope</dt><dd>${esc(currentScopeLabel())}</dd></div><div><dt>Committee access</dt><dd>${esc((authorization.committees ?? []).map((entry) => entry.name).join(', ') || 'Server-authorized global summary')}</dd></div><div><dt>Capabilities</dt><dd>${esc((authorization.capabilities ?? []).length)} server-projected</dd></div></dl>${directorAdministrationBoundary}</div>`
+        ? `<div class="director-management-projection" data-director-management-access tabindex="-1"><dl><div><dt>Role</dt><dd>${esc(authorization.roleLabel ?? authorization.roleId ?? 'Director')}</dd></div><div><dt>Workspace</dt><dd>${esc(currentScopeLabel())}</dd></div><div><dt>Committee access</dt><dd>${esc((authorization.committees ?? []).map((entry) => entry.name).join(', ') || 'All assigned committees')}</dd></div><div><dt>Permissions</dt><dd>${esc((authorization.capabilities ?? []).length)} available</dd></div></dl>${directorAdministrationBoundary}</div>`
         : '';
     const foodRows = experience === 'food' ? activeFoodRows(state) : [];
     const foodOverview =
@@ -8717,24 +8719,23 @@ export function createRuntimeExtensions(options) {
                 const balance = inventoryBalance(state, item);
                 return `<div class="request-line inventory-attention-line"><div><strong>${esc(item.id)} &middot; ${esc(item.name)}</strong><small>${esc(item.catalogType === 'PANTRY' || item.stockArea === 'Pantry' ? 'Pantry' : 'Office Inventory')} &middot; ${esc(presentationLabel(item.handling ?? item.handlingCode, { context: 'handling', missing: 'Handling not reported' }))}</small><small>On hand ${esc(balance.onHand)} &middot; Reserved ${esc(balance.reserved)} &middot; ATP ${esc(balance.availableToPromise)} ${esc(item.unit ?? '')}</small></div><span class="pill">${esc(statusLabel(inventoryHealth(state, item), { missing: 'Inventory health not reported' }))}</span></div>`;
               })
-              .join('') ||
-            '<div class="empty">No stock exceptions are in the current authorized projection.</div>'
+              .join('') || '<div class="empty">No stock exceptions are in this workspace.</div>'
           }</div></section>`
         : '';
     const materialsRows = experience === 'materials' ? (materialsQueueItems ?? []) : [];
     const materialsQueueLoading = experience === 'materials' && materialsQueueItems === null;
     const materialsOverview =
       experience === 'materials'
-        ? `<section class="materials-overview-detail" data-materials-overview aria-labelledby="materialsPipelineTitle"><div class="panel-head"><div><p class="eyebrow">Request → Canvass → Budget → Procurement → Receiving → Deliverables → Release → Complete</p><h3 id="materialsPipelineTitle">Traceable materials pipeline</h3><p>Stable request, event, and deliverable identities keep exact specifications and cumulative quantities connected. Historical prices inform review but never replace current quote evidence.</p></div><span class="pill">${materialsQueueLoading ? 'Loading canonical queue…' : `${materialsRows.length} scoped deliverable${materialsRows.length === 1 ? '' : 's'}`}</span></div>${materialsQueueLoading ? '<div class="empty">Loading the current authorized Materials scope…</div>' : materialsQueueGroupsMarkup(materialsRows, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}</section>`
+        ? `<section class="materials-overview-detail" data-materials-overview aria-labelledby="materialsPipelineTitle"><div class="panel-head"><div><p class="eyebrow">Request → Canvass → Budget → Procurement → Receiving → Deliverables → Release → Complete</p><h3 id="materialsPipelineTitle">Traceable materials pipeline</h3><p>Stable request, event, and deliverable identities keep exact specifications and cumulative quantities connected. Historical prices inform review but never replace current quote evidence.</p></div><span class="pill">${materialsQueueLoading ? 'Loading materials queue…' : `${materialsRows.length} deliverable${materialsRows.length === 1 ? '' : 's'}`}</span></div>${materialsQueueLoading ? '<div class="empty">Loading materials for this workspace…</div>' : materialsQueueGroupsMarkup(materialsRows, { allowOpen: materialsDestinationAllowed('materials-deliverables') })}</section>`
         : '';
     panel.dataset.roleExperience = experience;
     panel.innerHTML = `<div class="role-experience-head">
       <div>
-        <p class="role-experience-kicker">${esc(definition.label)} &middot; source-grounded role view</p>
+        <p class="role-experience-kicker">${esc(definition.label)}</p>
         <h2 id="roleExperienceTitle">${esc(definition.heading)}</h2>
         <p>${esc(definition.description)}</p>
       </div>
-      <span class="role-experience-badge">Role-scoped overview</span>
+      <span class="role-experience-badge">Workspace overview</span>
     </div>
     <div class="role-experience-metrics">
       ${metrics.map(([label, value, note, destination]) => (destination ? `<button type="button" ${destinationAttributes(destination)}><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></button>` : `<article><span>${esc(label)}</span><strong>${esc(value)}</strong><small>${esc(note)}</small></article>`)).join('')}

@@ -75,7 +75,7 @@ const STAGE_MESSAGES = Object.freeze({
   [BOOTSTRAP_STAGES.RESPONSE_VALIDATION]: 'The workspace returned an unsupported response.',
   [BOOTSTRAP_STAGES.NORMALIZATION]: 'The workspace could not prepare the returned records.',
   [BOOTSTRAP_STAGES.STATIC_OPTIONS]: 'The workspace could not prepare its controls.',
-  [BOOTSTRAP_STAGES.EXTENSIONS]: 'The workspace could not prepare its runtime helpers.',
+  [BOOTSTRAP_STAGES.EXTENSIONS]: 'The workspace could not prepare its controls.',
   [BOOTSTRAP_STAGES.BINDINGS]: 'The workspace could not activate its controls.',
   [BOOTSTRAP_STAGES.ACTIVE_MODULE]: 'The workspace could not load the active module.',
   [BOOTSTRAP_STAGES.FIRST_RENDER]: 'The workspace could not render its first usable view.',

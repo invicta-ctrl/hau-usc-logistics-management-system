@@ -16,6 +16,8 @@ import {
   quantityStep,
 } from '../domain/quantity-units.js';
 import { installOperationalBranding } from './brand-assets.js';
+import { installModuleIndex } from './module-index.js';
+import { installV5ProductionFrontend } from './v5-production-adapter.js';
 import { restockActionDecisions, validateRestockTransition } from '../domain/restock-workflow.js';
   'use strict';
   /* =========================================================
@@ -364,6 +366,8 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
      ========================================================= */
   document.addEventListener('DOMContentLoaded',()=>{
     const requestOnly=document.body.dataset.requestOnly==='true'||new URLSearchParams(location.search).get('request')==='1';
+    installV5ProductionFrontend();
+    installModuleIndex();
     installOperationalBranding();
     void startAuthenticatedRuntime({backendMode,baseUrl:config.httpApiBaseUrl,requestOnly,start:init});
   });

@@ -209,7 +209,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
               <label data-event-autocomplete-wrap hidden>Sub-event autocomplete<input type="search" data-event-autocomplete list="requestEventSuggestions" autocomplete="off" aria-autocomplete="list" aria-controls="requestEvent"><small>Type an approved Sub-event name, then confirm it in the Sub-event selector.</small><datalist id="requestEventSuggestions"></datalist></label>
               <label>Sub-event<select id="requestEvent" name="eventId" required disabled><option value="">Select Event first</option></select></label>
             </div>
-            <div class="panel-head section-gap"><div><p class="eyebrow">Step 4</p><h2>Requested venues, logistics, and equipment</h2><p>Every item begins For Review. Availability is non-binding and submission makes no reservation or stock movement.</p></div></div>
+            <div class="panel-head section-gap"><div><p class="eyebrow">Step 4</p><h2>Requested venues, logistics, and equipment</h2><p>Every item begins For Review. Availability is not confirmed, and submission does not reserve stock.</p></div></div>
             <div class="public-form-grid request-line-composer">
               <label class="span-2">Purpose / need<textarea name="purpose" maxlength="500" required></textarea></label>
               <label>Category<select name="lineCategory">${categoryOptions}</select></label>

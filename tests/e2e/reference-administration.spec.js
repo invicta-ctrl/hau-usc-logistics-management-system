@@ -125,9 +125,9 @@ test('advanced Access Management previews bounded workspace and scope policy', a
   await expect(form.locator('[name="committeeIds"][value="COM_MATERIALS"]')).toBeChecked();
   await form.getByLabel('Confirm current Access ID').fill(accessId);
   await form.getByLabel('Reason').fill('Preview the bounded Materials operator assignment.');
-  await form.getByRole('button', { name: 'Preview effective access' }).click();
+  await form.getByRole('button', { name: 'Review access' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Confirm effective access' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Confirm access change' })).toBeVisible();
   const preview = page.locator('.access-effective-preview');
   await expect(preview).toContainText('MATERIALS_OPERATOR');
   await expect(preview).toContainText('materials');
@@ -162,7 +162,7 @@ test('advanced account creation exposes governed identity and credential control
   await expect(form.getByLabel('Role')).toHaveValue('DOL_STAFF');
   await expect(form.getByLabel('Default workspace')).toHaveValue('food');
   await expect(form.locator('[name="committeeIds"][value="COM_FOOD"]')).toBeChecked();
-  await expect(form).toContainText('plaintext only once');
+  await expect(form).toContainText('shows the password only once');
 });
 
 test('read-only roster ownership and second-review routing are visible', async ({ page }, testInfo) => {

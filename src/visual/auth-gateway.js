@@ -192,7 +192,7 @@ function configurationMarkup() {
     <section class="auth-card" aria-labelledby="authTitle">
       <p class="eyebrow">HAU-USC Logistics</p>
       <h1 id="authTitle">Secure service unavailable</h1>
-      <p class="auth-intro">This deployment has no approved server runtime configuration. No local or preview data has been loaded.</p>
+      <p class="auth-intro">This site is not configured for shared access. No local data has been loaded.</p>
     </section>`;
 }
 

@@ -47,5 +47,5 @@ test('legacy preview state without Event Days still starts safely', async ({ pag
   });
   await page.reload();
   await expect(page.locator('#loading')).toHaveClass(/hidden/);
-  await expect(page.getByRole('heading', { name: 'Operations Overview' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Control Centre' })).toBeVisible();
 });

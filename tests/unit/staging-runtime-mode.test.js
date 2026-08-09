@@ -38,7 +38,7 @@ describe('staging runtime mode boundary', () => {
     expect(gateway).toContain('if (validInternalWorkspace && !routed.legacy) return;');
     expect(gateway).not.toContain('administrator && validInternalWorkspace');
     expect(gateway).toContain("backendMode === 'unconfigured'");
-    expect(gateway).toContain('No local or preview data has been loaded.');
+    expect(gateway).toContain('No local data has been loaded.');
     const roleRuntime = await read('src/visual/runtime-extensions.js');
     const roleStyles = await read('src/styles/visual/runtime-extensions.css');
     expect(roleRuntime).toContain('administrator: {');

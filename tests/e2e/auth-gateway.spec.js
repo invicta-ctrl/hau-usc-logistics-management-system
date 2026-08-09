@@ -11,6 +11,14 @@ const releaseIdentity = (environment = 'STAGING') => ({
   database: { schemaVersion: '30', latestMigration: '0030_production_access_and_operations.sql' },
 });
 
+async function revealWorkspaceSwitcher(page) {
+  const menu = page.locator('[data-signature-menu]');
+  if ((await menu.getAttribute('aria-expanded')) !== 'true') await menu.click();
+  const switcher = page.locator('[data-v5-scope-switcher]');
+  if ((await switcher.getAttribute('open')) === null) await switcher.locator('summary').click();
+  await expect(switcher.getByLabel('Workspace')).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/version', (route) =>
     route.fulfill({
@@ -57,10 +65,9 @@ test('portal selection and login identity use the authoritative Worker release',
     await expect(page.locator('[data-release-identity]')).toHaveAttribute('data-environment', 'PRODUCTION');
     await expect(page.getByRole('link', { name: 'Open Request Center' })).toHaveAttribute('href', '/request');
     await expect(page.getByRole('link', { name: 'Open Lending Center' })).toHaveAttribute('href', '/lending');
-    await expect(page.locator('.portal-landing__quiet-actions').getByRole('link', { name: 'Staff sign in' })).toHaveAttribute(
-      'href',
-      'https://logistics.hausc.org/login',
-    );
+    await expect(
+      page.locator('.portal-landing__quiet-actions').getByRole('link', { name: 'Staff sign in' }),
+    ).toHaveAttribute('href', 'https://logistics.hausc.org/login');
     await expect(page.getByRole('link', { name: 'Back to portals' })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
@@ -185,12 +192,12 @@ test('HTTP mode requires Access ID login and starter activation without role sel
   await expect(page.locator('#authGateway')).toHaveCount(0);
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell).toBeVisible();
-  await expect(shell.getByLabel('Workspace')).toHaveValue('food');
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('food');
   await expect(page).toHaveTitle(/Food Committee.*HAU-USC Logistics/u);
-  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(4);
-  await expect(shell.locator('#shellScopeSelect')).toHaveValue('current');
+  await expect(page.locator('#shellWorkspaceSelect option:disabled')).toHaveCount(4);
+  await expect(page.locator('#shellScopeSelect')).toHaveValue('current');
   await expect(shell.locator('[data-shell-release]')).toHaveText('Test site');
-  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText('Food Committee');
+  await expect(shell.locator('.shell-breadcrumbs')).toContainText('Food Committee');
   await shell.locator('.shell-account > summary').click();
   await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
   await expect(shell).not.toContainText(
@@ -258,8 +265,8 @@ test('authenticated Administrator switches real workspace routes without changin
   await expect(page).toHaveURL(/\/food$/u);
   await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
   const shell = page.locator('[data-internal-shell-context]');
-  await expect(shell.getByLabel('Workspace')).toHaveValue('food');
-  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('food');
+  await expect(page.locator('#shellWorkspaceSelect option:disabled')).toHaveCount(0);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText(/ADMINISTRATOR|Administrator/u);
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
 
@@ -271,10 +278,11 @@ test('authenticated Administrator switches real workspace routes without changin
     }, value);
   await setRequesterName('Temporary edit');
   await setRequesterName('');
-  await shell.getByLabel('Workspace').selectOption('materials');
+  await revealWorkspaceSwitcher(page);
+  await page.locator('#shellWorkspaceSelect').selectOption('materials');
   await expect(page).toHaveURL(/\/materials$/u);
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
-  await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('materials');
   await expect(page).toHaveTitle(/Materials & Documentation.*HAU-USC Logistics/u);
   await expect(shell.locator('[data-shell-workspace-crumb]')).toHaveText('Materials & Documentation');
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'materials');
@@ -289,18 +297,20 @@ test('authenticated Administrator switches real workspace routes without changin
   await expect(page.locator('#request')).toHaveClass(/active/u);
   await setRequesterName('');
   await setRequesterName('Unsaved workspace edit');
-  await shell.getByLabel('Workspace').selectOption('food');
+  await revealWorkspaceSwitcher(page);
+  await page.locator('#shellWorkspaceSelect').selectOption('food');
   await expect(discardDialog).toBeVisible();
   await discardDialog.getByRole('button', { name: 'Continue editing' }).click();
   await expect(page).toHaveURL(/\/materials\/requests$/u);
-  await shell.getByLabel('Workspace').selectOption('food');
+  await page.locator('#shellWorkspaceSelect').selectOption('food');
   await discardDialog.getByRole('button', { name: 'Discard changes' }).click();
   await expect(page).toHaveURL(/\/food$/u);
   await expect(page.locator('#primaryNav [data-view="overview"]')).toHaveClass(/active/u);
   await expect(page.locator('#primaryNav [data-view="request"]')).not.toHaveClass(/active/u);
-  await expect(page.locator('#pageTitle')).toHaveText('Operations Overview');
+  await expect(page.locator('#pageTitle')).toHaveText('Control Centre');
   await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Overview');
-  await shell.getByLabel('Workspace').selectOption('materials');
+  await revealWorkspaceSwitcher(page);
+  await page.locator('#shellWorkspaceSelect').selectOption('materials');
   await expect(page).toHaveURL(/\/materials$/u);
   await expect(page.locator('.app-shell')).not.toContainText(
     /Role-resolved preview account|No writes|Synthetic data|Suite preview|role-preview/iu,
@@ -404,12 +414,13 @@ test('authenticated System Owner keeps owner identity across every workspace and
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell).toBeVisible();
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-  await expect(shell.getByLabel('Workspace')).toHaveValue('materials');
-  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('materials');
+  await expect(page.locator('#shellWorkspaceSelect option:disabled')).toHaveCount(0);
 
   for (const workspace of ['administrator', 'director', 'food', 'inventory-pantry', 'materials']) {
-    await shell.getByLabel('Workspace').selectOption(workspace);
-    await expect(shell.getByLabel('Workspace')).toHaveValue(workspace);
+    await revealWorkspaceSwitcher(page);
+    await page.locator('#shellWorkspaceSelect').selectOption(workspace);
+    await expect(page.locator('#shellWorkspaceSelect')).toHaveValue(workspace);
     await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
   }
 
@@ -425,7 +436,8 @@ test('authenticated System Owner keeps owner identity across every workspace and
   await expect(page).toHaveTitle(/Materials & Documentation.*Release Desk.*HAU-USC Logistics/u);
   await expect(page).toHaveURL(/\/materials\/release$/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-  await shell.getByLabel('Workspace').selectOption('food');
+  await revealWorkspaceSwitcher(page);
+  await page.locator('#shellWorkspaceSelect').selectOption('food');
   await expect(page).toHaveURL(/\/food\/release\?scope=COMMITTEE%3ACOM_FOOD$/u);
   await expect(page.locator('#release')).toHaveClass(/active/u);
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
@@ -578,10 +590,7 @@ test('staff login provides accessible password visibility and recovery controls'
   await expect(page.getByText(/authorized Administrator.*one-time temporary password/i)).toBeVisible();
   await expect(page.getByRole('link', { name: 'Request Center' })).toHaveAttribute('href', '/request');
   await expect(page.getByRole('link', { name: 'Lending Center' })).toHaveAttribute('href', '/lending');
-  await expect(page.getByRole('link', { name: 'Back to portals' })).toHaveAttribute(
-    'href',
-    '/portals',
-  );
+  await expect(page.getByRole('link', { name: 'Back to portals' })).toHaveAttribute('href', '/portals');
   await expect(page.locator('.portal-navigation [aria-current="page"]')).toHaveText('Staff sign in');
 });
 
@@ -950,6 +959,7 @@ test('public Lending Center classifies borrowers and returns private tracking', 
   await expect(page.getByRole('heading', { name: 'Acceptable Use' })).toBeVisible();
   await page.getByRole('button', { name: 'Close Acceptable Use' }).click();
   await expect(page.getByRole('heading', { name: 'USC Announcements' })).toBeVisible();
+  await page.getByRole('button', { name: 'Show Synthetic announcement one' }).click();
   await expect(page.getByRole('heading', { name: 'Synthetic announcement one' })).toBeVisible();
   await page.getByRole('button', { name: 'Next announcement' }).click();
   await expect(page.getByRole('heading', { name: 'Synthetic announcement two' })).toBeVisible();
