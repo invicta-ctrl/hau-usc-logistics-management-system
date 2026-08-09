@@ -1,6 +1,6 @@
 # Isolated Staging Playground
 
-Status: active release architecture after `v0.8.0`  
+Status: active release architecture after `v0.8.0`
 Accepted authority: `.codex/specs/active/isolated-staging-playground-and-git-governance.md`
 
 ## Safety contract
