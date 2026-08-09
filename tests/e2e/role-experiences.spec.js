@@ -19,7 +19,7 @@ test('shared internal context bar stays truthful, accessible, and responsive', a
   await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
     'Administrator',
   );
-  await expect(shell.locator('[data-shell-release]')).toContainText(/v0\.7\.2/u);
+  await expect(shell.locator('[data-shell-release]')).toContainText(/v0\.8\.0/u);
   await expect(shell.getByRole('button', { name: /operational items? need attention/u })).toBeVisible();
   await shell.locator('.shell-account > summary').click();
   await expect(shell.locator('[data-shell-account-role]')).toContainText(/ADMIN|Administrator/u);

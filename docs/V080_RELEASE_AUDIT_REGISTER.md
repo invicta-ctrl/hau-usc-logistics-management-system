@@ -2,6 +2,7 @@
 
 Status: `FINAL`
 Decision: `MASTER_AUDIT: CLEAN`
+Release progression: `ACTIVE` - the authorized v0.8.0 browser expectation repair passes 2/2 at the affected widths and the replacement candidate is ready to freeze
 Slice: 3 of 3
 Starting main: `88bfdf026e716ffdc779cb2ce7534978f36df0f3`
 Slice 3 starting SHA: `c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d`
@@ -95,6 +96,9 @@ bounded release repair and do not violate a v0.8.0 acceptance criterion.
 - Canonical `npm run check`: 125 files / 868 tests pass; governance, deterministic
   build, Apps Script/dist parity, Cloudflare types, and dry-run pass. Lint has zero
   errors and one unchanged warning in `public-request-service.js`.
+- Authorized one-line shell-version expectation: 2/2 pass at chromium-390 and
+  chromium-1366 on the current checkout. Clean-runner PR browser CI remains the
+  authoritative complete browser decision for the replacement SHA.
 - The first final rerun hit one 5-second approval/cancellation race-test timeout;
   the exact test passed three consecutive focused runs, then the permitted full
   retry passed all 867 tests. This was full-suite timing contention, not a runtime
