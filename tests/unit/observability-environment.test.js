@@ -216,7 +216,7 @@ describe('v0.7 environment and observability foundation', () => {
     );
     expect(pair.staging).toMatchObject({
       name: 'hau-usc-logistics-staging',
-      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.8.0' },
+      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.8.1' },
       r2_buckets: [
         {
           binding: 'BRAND_ASSETS',
@@ -234,7 +234,7 @@ describe('v0.7 environment and observability foundation', () => {
     expect(pair.production.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production).toMatchObject({
       name: 'hau-usc-logistics-production',
-      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.8.0' },
+      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.8.1' },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-production-evidence' },
@@ -283,18 +283,13 @@ describe('v0.7 environment and observability foundation', () => {
         vars: {
           ENVIRONMENT: 'STAGING',
           ACCOUNT_APPLICATION_EMAIL_FROM: 'Staging Sender <sender@example.test>',
-          ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
-            '["owner.fixture@example.test"]',
+          ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '["owner.fixture@example.test"]',
         },
       },
       source,
     );
-    expect(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON).toBeTypeOf(
-      'string',
-    );
-    expect(
-      JSON.parse(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON),
-    ).toEqual([
+    expect(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON).toBeTypeOf('string');
+    expect(JSON.parse(configured.secrets.ACCOUNT_APPLICATION_STAGING_IDENTITY_FIXTURE_JSON)).toEqual([
       expect.objectContaining({
         institutionalEmail: 'owner.fixture@example.test',
         verificationResult: 'VERIFIED',
@@ -307,8 +302,7 @@ describe('v0.7 environment and observability foundation', () => {
         {
           vars: {
             ENVIRONMENT: 'PRODUCTION',
-            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON:
-              '["owner.fixture@example.test"]',
+            ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON: '["owner.fixture@example.test"]',
           },
         },
         { ...source, environment: 'PRODUCTION' },

@@ -152,11 +152,19 @@ if (
 if (!index.includes("data-food-requests-enabled=\"<?= foodRequestsEnabled ? 'true' : 'false' ?>\"")) {
   throw new Error('Apps Script template does not expose the server Food request feature flag.');
 }
-if (!index.includes("data-materials-requests-enabled=\"<?= materialsRequestsEnabled ? 'true' : 'false' ?>\"")) {
+if (
+  !index.includes("data-materials-requests-enabled=\"<?= materialsRequestsEnabled ? 'true' : 'false' ?>\"")
+) {
   throw new Error('Apps Script template does not expose the server Materials request feature flag.');
 }
-if (!index.includes("data-venue-equipment-requests-enabled=\"<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>\"")) {
-  throw new Error('Apps Script template does not expose the server Venue and Equipment request feature flag.');
+if (
+  !index.includes(
+    "data-venue-equipment-requests-enabled=\"<?= venueEquipmentRequestsEnabled ? 'true' : 'false' ?>\"",
+  )
+) {
+  throw new Error(
+    'Apps Script template does not expose the server Venue and Equipment request feature flag.',
+  );
 }
 if (index.length > 20_000) throw new Error('Apps Script Index.html must remain a small template shell.');
 if (!appBody.includes('id="loading"') || !appBody.includes('id="primaryNav"'))
@@ -241,19 +249,26 @@ if (
 if (!diagnosticShell.includes('api_htmlDiagnosticPing') || !diagnosticShell.includes('data-inline-script'))
   throw new Error('DiagnosticShell.html is missing its isolated client/server checks.');
 
-const regenerated = await createAppsScriptBundleFromProject();
-for (const [name, source] of Object.entries(files)) {
-  if (regenerated[name] !== source)
-    throw new Error(
-      `Generated Apps Script file parity failed for ${name}. Run npm run build and commit only generator output.`,
-    );
+const applicationIndex = await readFile(resolve('src/index.html'), 'utf8');
+const v5WorkerCandidate = applicationIndex.includes('./v5/integration/entry.js');
+if (!v5WorkerCandidate) {
+  const regenerated = await createAppsScriptBundleFromProject();
+  for (const [name, source] of Object.entries(files)) {
+    if (regenerated[name] !== source)
+      throw new Error(
+        `Generated Apps Script file parity failed for ${name}. Run npm run build and commit only generator output.`,
+      );
+  }
+} else if (applicationIndex.includes('<!-- AUTHORITATIVE_VISUAL -->')) {
+  throw new Error('The V5 Worker candidate cannot retain the legacy visual-injection marker.');
 }
 
 console.log(
   JSON.stringify(
     {
-      message:
-        'Validated Apps Script sources, parser-safe package assembly, executable bootstrap, and deterministic generated-file parity.',
+      message: v5WorkerCandidate
+        ? 'Validated retained Apps Script sources, parser-safe package assembly, and executable bootstrap. Generated visual parity is not applicable to the V5 Worker candidate.'
+        : 'Validated Apps Script sources, parser-safe package assembly, executable bootstrap, and deterministic generated-file parity.',
       appsScriptSourceFiles: gasFiles.length,
       requiredFunctions: requiredFunctions.length,
       generatedFiles: bundleDiagnostics(files),

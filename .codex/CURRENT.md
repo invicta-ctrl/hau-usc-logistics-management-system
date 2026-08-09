@@ -1,28 +1,28 @@
 # Current Work Pointer
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: Isolated Staging Playground + Git Branch Governance + Production Parity
-STATUS: COMPLETE_AWAITING_EARL_MANUAL_TESTING
+MILESTONE: V0.8.1 V5 Backend Integration Steer
+STATUS: READY_FOR_CANDIDATE_FREEZE
 BRANCH: release/v0.8.1-isolated-staging-playground
 HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
-WORKTREE_STATE: GIT_STATUS
+WORKTREE_STATE: DIRTY - locally complete V5 integration pending candidate freeze
 ACCEPTED_RELEASE_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-FINAL_CANDIDATE_SHA: THIS_COMMIT_AT_EXACT_WORKFLOW_DISPATCH
+FINAL_CANDIDATE_SHA: NONE
 TAG: v0.8.0
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
-HANDOFF_STATUS: READY_FOR_HANDOFF
+ACTIVE_WRITER: CODEX
+WRITER_LOCK: CLAIMED
+HANDOFF_STATUS: ACTIVE
 REQUIRED_MODEL: CODEX
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/isolated-staging-playground-and-git-governance.md
+ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v5-backend-integration-steer.md
 BLOCKER: NONE
 MIGRATION_DECISION: NONE_REQUIRED
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
-RUNTIME: exact PR #23 candidate deployed by the frozen manual workflow to isolated playground D1/R2; acceptance and CLEAN reset state verified
-PRODUCTION: exact deployed SHA 3059098ff2a2935fec59df52748ccae420aadba7; no task mutation authorized
-RELEASE_EVIDENCE: v0.8.0 tag/live identity reverified; private D1/R2 baseline, parity, reset, rollback, live-operator, production-nonmutation, and exact workflow evidence captured
-NEXT_EXACT_ACTION: Earl manually tests the exact PR #23 playground candidate. If accepted, submit a separate explicit production GO task; do not merge, deploy production, rotate pointers, start frontend integration, or begin M1/M2 from this handoff.
+SUPERSEDED_WORK_PRESERVATION: local stash 5f9b716ae16cbe8b04b609778f96fc575a0c087a
+RUNTIME: live loopback V5 preview uses the verified isolated-playground API proxy; exact V5 candidate deployment pending
+PRODUCTION: v0.8.0 at 3059098ff2a2935fec59df52748ccae420aadba7; no mutation authorized
+NEXT_EXACT_ACTION: Freeze, push, and deploy the exact V5 candidate to the Isolated Staging Playground; then record remote acceptance and stop for Earl.

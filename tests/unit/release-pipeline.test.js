@@ -95,7 +95,7 @@ describe('v0.8.0 release pipeline', () => {
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
     const manifest = await createReleaseCandidateManifest();
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.0' });
+    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.1' });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);

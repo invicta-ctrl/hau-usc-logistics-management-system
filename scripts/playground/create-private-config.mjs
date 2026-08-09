@@ -7,6 +7,7 @@ import { parseJsonConfig } from '../cloudflare-environment-preflight.mjs';
 import { TEMPORARY_BRANCH } from './playground-config.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const candidateVersion = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8')).version;
 
 function inside(parent, candidate) {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -57,7 +58,8 @@ async function run() {
       cwd: repoRoot,
       encoding: 'utf8',
     }).trim();
-  if (!TEMPORARY_BRANCH.test(candidateBranch)) throw new Error('Current branch is not an allowed temporary branch.');
+  if (!TEMPORARY_BRANCH.test(candidateBranch))
+    throw new Error('Current branch is not an allowed temporary branch.');
   const staging = source.env?.staging;
   if (!staging?.name || !staging?.vars) throw new Error('Tracked staging configuration is incomplete.');
   const names = manifest.resources.names;
@@ -90,7 +92,9 @@ async function run() {
       ...source.assets,
       directory: path.join(repoRoot, '.wrangler', 'build', 'staging'),
       not_found_handling: 'single-page-application',
-      run_worker_first: [...new Set([...(source.assets?.run_worker_first ?? []), '/api/*', '/brand/*', '/media/*'])],
+      run_worker_first: [
+        ...new Set([...(source.assets?.run_worker_first ?? []), '/api/*', '/brand/*', '/media/*']),
+      ],
     },
     d1_databases: [
       {
@@ -111,7 +115,7 @@ async function run() {
       PLAYGROUND_MODE: true,
       PLAYGROUND_LABEL: 'ISOLATED_STAGING_PLAYGROUND',
       PLAYGROUND_RESOURCE_SET: 'PLAYGROUND_V1',
-      APP_VERSION: '0.8.0-playground.1',
+      APP_VERSION: `${candidateVersion}-playground.1`,
       CANDIDATE_SHA: candidateSha,
       CANDIDATE_TREE_SHA: candidateTree,
       CANDIDATE_BRANCH: candidateBranch,
