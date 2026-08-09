@@ -54,6 +54,8 @@ const METHOD_CAPABILITIES = Object.freeze({
   uploadEvidence: CAPABILITIES.EVIDENCE_UPLOAD,
   confirmRelease: CAPABILITIES.FULFILL_RELEASE,
   correctRelease: CAPABILITIES.FULFILL_RELEASE,
+  transferEventItemToInventory: CAPABILITIES.INVENTORY_MERGE,
+  transferEventItem: CAPABILITIES.INVENTORY_MERGE,
   postCycleCountAdjustment: CAPABILITIES.INVENTORY_ADJUST,
   listInventoryClassifications: CAPABILITIES.INVENTORY_CLASSIFY,
   classifyInventoryItem: CAPABILITIES.INVENTORY_CLASSIFY,
@@ -1782,7 +1784,7 @@ export function createD1OperationalService({
         ledgerTransactions: (
           await rows(
             db,
-            `SELECT id, transaction_type, direction, item_id, event_item_id, quantity, unit,
+            `SELECT id, transaction_type, direction, item_id, event_item_id, quantity, unit, signed_quantity,
                     related_entity_type, related_entity_id, request_id, event_id, reversal_of,
                     status, notes, created_at
              FROM inventory_ledger
@@ -1797,6 +1799,7 @@ export function createD1OperationalService({
           itemId: row.item_id,
           eventItemId: row.event_item_id,
           quantity: Number(row.quantity),
+          signedQuantity: Number(row.signed_quantity),
           unit: row.unit,
           relatedEntityType: row.related_entity_type,
           relatedId: row.related_entity_id,
@@ -4127,34 +4130,71 @@ export function createD1OperationalService({
     const mutation = await replay(db, 'cancelRequesterRequest', command.clientRequestId, account.id, command);
     if (mutation.replayed) return mutation.value;
     const request = await db
-      .prepare('SELECT status, requester_account_id FROM requests WHERE id = ?1')
+      .prepare('SELECT status, requester_account_id, updated_at FROM requests WHERE id = ?1')
       .bind(requestId)
       .first();
     if (!request || request.requester_account_id !== account.id) {
       throw new ApiError('REQUEST_NOT_FOUND', 'The request was not found.', { status: 404 });
     }
-    if (request.status !== 'FOR_REVIEW') {
+    if (!['FOR_REVIEW', 'ACCEPTED'].includes(request.status)) {
       throw new ApiError('REQUEST_CANCELLATION_NOT_ALLOWED', 'This request can no longer be cancelled.', {
         status: 409,
       });
     }
+    if (request.status === 'ACCEPTED') {
+      const downstream = await db
+        .prepare(
+          `SELECT
+             (SELECT COUNT(*) FROM deliverables
+              WHERE request_id = ?1 AND status NOT IN ('CANCELLED', 'COMPLETED')) AS deliverables,
+             (SELECT COUNT(*) FROM restock_requests
+              WHERE source_request_id = ?1 AND status NOT IN ('CANCELLED', 'REJECTED', 'RESTOCKED', 'COMPLETED')) AS restocks,
+             (SELECT COUNT(*) FROM request_lines
+              WHERE request_id = ?1 AND released_quantity > 0) AS released_lines`,
+        )
+        .bind(requestId)
+        .first();
+      if (
+        Number(downstream?.deliverables ?? 0) > 0 ||
+        Number(downstream?.restocks ?? 0) > 0 ||
+        Number(downstream?.released_lines ?? 0) > 0
+      ) {
+        throw new ApiError(
+          'REQUEST_CANCELLATION_NOT_ALLOWED',
+          'This accepted request has downstream or released work and cannot be cancelled here.',
+          { status: 409 },
+        );
+      }
+    }
     const timestamp = nowIso();
     const result = { id: requestId, requestId, status: 'CANCELLED', correlationId };
-    await db.batch([
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement: db
+        .prepare(
+          `UPDATE requests SET status = 'CANCELLED', updated_at = ?2
+           WHERE id = ?1 AND status = ?3 AND updated_at = ?4`,
+        )
+        .bind(requestId, timestamp, request.status, request.updated_at),
+      dependentStatements: [
       db
         .prepare(
-          "UPDATE requests SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'FOR_REVIEW'",
+          `UPDATE request_lines SET status = 'CANCELLED', updated_at = ?2
+           WHERE request_id = ?1
+             AND status IN ('FOR_REVIEW', 'READY_TO_RESERVE', 'READY_TO_RELEASE')`,
         )
         .bind(requestId, timestamp),
       db
         .prepare(
-          "UPDATE request_lines SET status = 'CANCELLED', updated_at = ?2 WHERE request_id = ?1 AND status = 'FOR_REVIEW'",
+          `UPDATE reservations
+           SET status = 'CANCELLED', cleared_at = ?2, clear_reason = 'REQUEST_CANCELLED', updated_at = ?2
+           WHERE request_line_id IN (SELECT id FROM request_lines WHERE request_id = ?1)
+             AND status = 'ACTIVE'`,
         )
         .bind(requestId, timestamp),
       historyStatement(db, {
         entityType: 'REQUEST',
         entityId: requestId,
-        previousStatus: 'FOR_REVIEW',
+        previousStatus: request.status,
         newStatus: 'CANCELLED',
         accountId: account.id,
         idempotencyKey: mutation.key,
@@ -4168,8 +4208,11 @@ export function createD1OperationalService({
         correlationId,
       }),
       idempotencyStatement(db, 'cancelRequesterRequest', mutation, account.id, result),
-      ...revisionStatements(db, ['request']),
-    ]);
+      ...revisionStatements(db, ['request', 'inventory']),
+      ],
+      conflictCode: 'REQUEST_STATE_CONFLICT',
+      conflictMessage: 'The request changed before cancellation could be completed.',
+    });
     return result;
   }
 
@@ -4573,30 +4616,41 @@ export function createD1OperationalService({
     );
     if (mutation.replayed) return mutation.value;
     const ticket = await db
-      .prepare('SELECT status, created_by FROM lending_tickets WHERE id = ?1')
+      .prepare('SELECT status, created_by, updated_at FROM lending_tickets WHERE id = ?1')
       .bind(ticketId)
       .first();
     if (!ticket || ticket.created_by !== account.id) {
       throw new ApiError('LENDING_NOT_FOUND', 'The lending request was not found.', { status: 404 });
     }
-    if (ticket.status !== 'FOR_REVIEW') {
+    if (!['FOR_REVIEW', 'READY_TO_CLAIM'].includes(ticket.status)) {
       throw new ApiError(
         'LENDING_CANCELLATION_NOT_ALLOWED',
         'This lending request can no longer be cancelled.',
         { status: 409 },
       );
     }
+    const assignedAssets = await rows(
+      db,
+      `SELECT assignment.asset_id, asset.condition_label
+       FROM lending_ticket_assets assignment
+       JOIN inventory_asset_instances asset ON asset.id = assignment.asset_id
+       WHERE assignment.lending_ticket_id = ?1 AND assignment.released_at IS NULL`,
+      [ticketId],
+    );
+    const timestamp = nowIso();
     const result = { id: ticketId, ticketId, status: 'CANCELLED', correlationId };
-    await db.batch([
+    const dependents = [
       db
         .prepare(
-          "UPDATE lending_tickets SET status = 'CANCELLED', updated_at = ?2 WHERE id = ?1 AND status = 'FOR_REVIEW'",
+          `UPDATE reservations
+           SET status = 'CANCELLED', cleared_at = ?2, clear_reason = 'LENDING_CANCELLED', updated_at = ?2
+           WHERE lending_ticket_id = ?1 AND status = 'ACTIVE'`,
         )
-        .bind(ticketId, nowIso()),
+        .bind(ticketId, timestamp),
       historyStatement(db, {
         entityType: 'LENDING',
         entityId: ticketId,
-        previousStatus: 'FOR_REVIEW',
+        previousStatus: ticket.status,
         newStatus: 'CANCELLED',
         accountId: account.id,
         idempotencyKey: mutation.key,
@@ -4610,8 +4664,62 @@ export function createD1OperationalService({
         correlationId,
       }),
       idempotencyStatement(db, 'cancelBorrowerLendingRequest', mutation, account.id, result),
-      ...revisionStatements(db, ['lending']),
-    ]);
+      ...revisionStatements(db, ['lending', 'inventory']),
+    ];
+    for (const asset of assignedAssets) {
+      dependents.push(
+        db
+          .prepare(
+            `UPDATE inventory_asset_instances
+             SET lifecycle_status = 'AVAILABLE', current_lending_ticket_id = NULL,
+                 expected_return_at = NULL, updated_at = ?2, updated_by = ?3
+             WHERE id = ?1 AND lifecycle_status = 'RESERVED'
+               AND current_lending_ticket_id = ?4`,
+          )
+          .bind(asset.asset_id, timestamp, account.id, ticketId),
+        db
+          .prepare(
+            `UPDATE lending_ticket_assets SET released_at = ?3
+             WHERE lending_ticket_id = ?1 AND asset_id = ?2 AND released_at IS NULL`,
+          )
+          .bind(ticketId, asset.asset_id, timestamp),
+        db
+          .prepare(
+            `INSERT INTO inventory_asset_movements (
+               id, asset_id, movement_type, previous_status, new_status,
+               lending_ticket_id, condition_label, occurred_at, recorded_by, notes
+             ) VALUES (?1, ?2, 'RESTORED', 'RESERVED', 'AVAILABLE', ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            createId('AMV'),
+            asset.asset_id,
+            ticketId,
+            asset.condition_label ?? '',
+            timestamp,
+            account.id,
+            'Borrower cancelled before handoff; reserved asset restored.',
+          ),
+      );
+    }
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement: db
+        .prepare(
+          `UPDATE lending_tickets SET status = 'CANCELLED', updated_at = ?2
+           WHERE id = ?1 AND status = ?3 AND updated_at = ?4
+             AND NOT EXISTS (
+               SELECT 1 FROM lending_ticket_assets assignment
+               JOIN inventory_asset_instances asset ON asset.id = assignment.asset_id
+               WHERE assignment.lending_ticket_id = lending_tickets.id
+                 AND assignment.released_at IS NULL
+                 AND (asset.lifecycle_status <> 'RESERVED'
+                   OR asset.current_lending_ticket_id <> lending_tickets.id)
+             )`,
+        )
+        .bind(ticketId, timestamp, ticket.status, ticket.updated_at),
+      dependentStatements: dependents,
+      conflictCode: 'LENDING_STATE_CONFLICT',
+      conflictMessage: 'The lending request changed before cancellation could be completed.',
+    });
     return result;
   }
 
@@ -7933,9 +8041,290 @@ export function createD1OperationalService({
     return result;
   }
 
+  async function transferEventItemToInventory({ account, command, correlationId }) {
+    const authorization = assertCapability(account, METHOD_CAPABILITIES.transferEventItemToInventory);
+    const mutation = await replay(
+      db,
+      'transferEventItemToInventory',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
+    const deliverableId = requiredText(command.deliverableId, 'deliverableId', 80);
+    const source = await db
+      .prepare(
+        `SELECT deliverable.id, deliverable.request_line_id, deliverable.inventory_match_id,
+           deliverable.quantity_received, deliverable.quantity_released, deliverable.unit,
+           deliverable.event_id, deliverable.event_series_id,
+           COALESCE(deliverable.assigned_committee_id, request.owner_committee_id) AS committee_id,
+           request.requester_account_id AS owner_account_id,
+           line.event_item_id, line.category AS source_category,
+           item.storage_location AS source_location,
+           balance.available_to_promise,
+           deliverable.quantity_received - deliverable.quantity_released - COALESCE((
+             SELECT SUM(ledger.quantity) FROM inventory_ledger ledger
+             WHERE ledger.transaction_type = 'TRANSFER_OUT_EVENT'
+               AND ledger.event_item_id = COALESCE(line.event_item_id, deliverable.id)
+               AND ledger.status = 'POSTED'
+           ), 0) AS event_available
+         FROM deliverables deliverable
+         JOIN requests request ON request.id = deliverable.request_id
+         JOIN request_lines line ON line.id = deliverable.request_line_id
+         LEFT JOIN inventory_items item ON item.id = deliverable.inventory_match_id
+         LEFT JOIN inventory_balances balance ON balance.item_id = deliverable.inventory_match_id
+         WHERE deliverable.id = ?1`,
+      )
+      .bind(deliverableId)
+      .first();
+    if (!source) {
+      throw new ApiError('DELIVERABLE_NOT_FOUND', 'The event-item deliverable was not found.', {
+        status: 404,
+      });
+    }
+    if (!source.inventory_match_id) {
+      throw new ApiError(
+        'TRANSFER_SOURCE_UNAVAILABLE',
+        'The event item has no authoritative Inventory source item.',
+        { status: 409 },
+      );
+    }
+    assertEntityScope(account, {
+      committeeId: source.committee_id,
+      ownerAccountId: source.owner_account_id,
+      eventId: source.event_id ?? '',
+      eventSeriesId: source.event_series_id ?? '',
+      locationId: source.source_location ?? '',
+    });
+    const unit = requiredText(command.unit ?? source.unit, 'unit', 40).toLowerCase();
+    if (!isKnownQuantityUnit(unit) || unit !== String(source.unit).toLowerCase()) {
+      throw new ApiError('UNIT_MISMATCH', 'The transfer unit does not match the event item.', {
+        status: 409,
+      });
+    }
+    const quantity = positiveOperationalQuantity(command.quantity, unit);
+    if (quantity > Number(source.event_available ?? 0)) {
+      throw new ApiError(
+        'INSUFFICIENT_EVENT_BALANCE',
+        'The event item no longer has enough quantity available to transfer.',
+        { status: 409 },
+      );
+    }
+    if (quantity > Number(source.available_to_promise ?? 0)) {
+      throw new ApiError(
+        'INSUFFICIENT_STOCK',
+        'Authoritative available stock is insufficient for this transfer.',
+        { status: 409 },
+      );
+    }
+    if (!(command.semanticConfirmed === true || command.semanticConfirmed === 'true')) {
+      throw new ApiError(
+        'MERGE_CONFIRMATION_REQUIRED',
+        'Semantic match confirmation is required for this transfer.',
+      );
+    }
+    const reason = requiredText(command.mergeReason ?? command.notes, 'mergeReason', 500);
+    const normalizeSemantic = (value) =>
+      String(value ?? '')
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/gu, '_')
+        .replace(/^_+|_+$/gu, '');
+    const handling = normalizedHandling(command.handling ?? 'NON_CIRCULATING');
+    const sourceCategory = normalizeSemantic(source.source_category);
+    const createNew = Boolean(command.createNew);
+    let destinationItemId;
+    let destination;
+    const beforeGuardStatements = [];
+    if (createNew) {
+      if (!authorization.capabilities.includes(CAPABILITIES.REFERENCE_CATALOG_MANAGE)) {
+        throw new ApiError(
+          'CAPABILITY_REQUIRED',
+          'Catalog-management permission is required to create the transfer destination.',
+          { status: 403 },
+        );
+      }
+      destinationItemId = createId('ITM');
+      const category = requiredText(source.source_category ?? command.category, 'category', 120);
+      const stockArea = requiredText(command.destinationArea ?? 'Inventory', 'destinationArea', 120);
+      const itemName = requiredText(command.newItemName, 'newItemName', 240);
+      const timestamp = nowIso();
+      destination = { category, handling, unit, status: 'ACTIVE' };
+      beforeGuardStatements.push(
+        db
+          .prepare(
+            `INSERT INTO inventory_items (
+               id, name, category, stock_area, handling, unit, opening_quantity, status,
+               catalog_type, storage_location, reorder_threshold, lending_audience,
+               approval_required, legacy_source_sheet, verification_note, notes,
+               created_at, updated_at, updated_by
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0, 'ACTIVE', ?7, 'TO_BE_ASSIGNED', 0,
+               'NOT_AVAILABLE_FOR_LENDING', 1, 'EVENT_TRANSFER', ?8, ?9, ?10, ?10, ?11)`,
+          )
+          .bind(
+            destinationItemId,
+            itemName,
+            category,
+            stockArea,
+            handling,
+            unit,
+            stockArea.toUpperCase() === 'PANTRY' ? 'PANTRY' : 'OFFICE_INVENTORY',
+            `Created from ${String(source.event_item_id ?? deliverableId)}`,
+            reason,
+            timestamp,
+            account.id,
+          ),
+      );
+    } else {
+      destinationItemId = requiredText(command.destinationItemId, 'destinationItemId', 80);
+      destination = await db
+        .prepare('SELECT id, category, handling, unit, status FROM inventory_items WHERE id = ?1')
+        .bind(destinationItemId)
+        .first();
+      if (!destination || destination.status !== 'ACTIVE') {
+        throw new ApiError('DESTINATION_UNAVAILABLE', 'The destination inventory item is unavailable.', {
+          status: 409,
+        });
+      }
+    }
+    if (destinationItemId === source.inventory_match_id) {
+      throw new ApiError('DESTINATION_INCOMPATIBLE', 'Choose a different destination inventory item.', {
+        status: 409,
+      });
+    }
+    if (
+      String(destination.unit).toLowerCase() !== unit ||
+      normalizedHandling(destination.handling) !== handling ||
+      normalizeSemantic(destination.category) !== sourceCategory
+    ) {
+      throw new ApiError(
+        'DESTINATION_INCOMPATIBLE',
+        'Destination category, handling, or unit is incompatible with the event item.',
+        { status: 409 },
+      );
+    }
+    const eventItemId = String(source.event_item_id ?? deliverableId);
+    const mappingId = createId('MAP');
+    const outTransactionId = createId('LED');
+    const inTransactionId = createId('LED');
+    const timestamp = nowIso();
+    const result = {
+      mappingId,
+      destinationItemId,
+      outTransactionId,
+      inTransactionId,
+      quantity,
+      unit,
+      correlationId,
+    };
+    const dependents = [
+      db
+        .prepare(
+          `INSERT INTO inventory_ledger (
+             id, created_at, transaction_type, direction, item_id, event_item_id,
+             quantity, unit, signed_quantity, related_entity_type, related_entity_id,
+             event_id, actor_account_id, idempotency_key, status, notes
+           ) VALUES (?1, ?2, 'TRANSFER_IN_INVENTORY', 'IN', ?3, ?4, ?5, ?6, ?5,
+             'TRANSFER_MAP', ?7, ?8, ?9, ?10, 'POSTED', ?11)`,
+        )
+        .bind(
+          inTransactionId,
+          timestamp,
+          destinationItemId,
+          eventItemId,
+          quantity,
+          unit,
+          mappingId,
+          source.event_id ?? null,
+          account.id,
+          `${mutation.key}:in`,
+          reason,
+        ),
+      auditStatement(db, {
+        action: 'TRANSFER_EVENT_ITEM',
+        entityType: 'EVENT_ITEM',
+        entityId: eventItemId,
+        accountId: account.id,
+        correlationId,
+        after: {
+          mappingId,
+          destinationItemId,
+          outTransactionId,
+          inTransactionId,
+          quantity,
+          unit,
+        },
+      }),
+      idempotencyStatement(db, 'transferEventItemToInventory', mutation, account.id, result),
+      ...revisionStatements(db, ['procurement', 'inventory'], timestamp),
+    ];
+    if (createNew) {
+      dependents.splice(
+        1,
+        0,
+        historyStatement(db, {
+          entityType: 'INVENTORY_ITEM',
+          entityId: destinationItemId,
+          newStatus: 'ACTIVE',
+          accountId: account.id,
+          idempotencyKey: mutation.key,
+          reason: `Created as the destination for event item ${eventItemId}.`,
+        }),
+      );
+    }
+    await runAtomicRevisionGuardedBatch(db, {
+      beforeGuardStatements,
+      guardedStatement: db
+        .prepare(
+          `INSERT INTO inventory_ledger (
+             id, created_at, transaction_type, direction, item_id, event_item_id,
+             quantity, unit, signed_quantity, related_entity_type, related_entity_id,
+             event_id, actor_account_id, idempotency_key, status, notes
+           ) SELECT ?1, ?2, 'TRANSFER_OUT_EVENT', 'OUT', deliverable.inventory_match_id,
+             ?3, ?4, ?5, -?4, 'TRANSFER_MAP', ?6, deliverable.event_id, ?7, ?8,
+             'POSTED', ?9
+           FROM deliverables deliverable
+           JOIN inventory_balances balance ON balance.item_id = deliverable.inventory_match_id
+           WHERE deliverable.id = ?10 AND deliverable.inventory_match_id = ?11
+             AND lower(deliverable.unit) = ?5
+             AND balance.available_to_promise >= ?4
+             AND deliverable.quantity_received - deliverable.quantity_released - COALESCE((
+               SELECT SUM(ledger.quantity) FROM inventory_ledger ledger
+               WHERE ledger.transaction_type = 'TRANSFER_OUT_EVENT'
+                 AND ledger.event_item_id = ?3 AND ledger.status = 'POSTED'
+             ), 0) >= ?4`,
+        )
+        .bind(
+          outTransactionId,
+          timestamp,
+          eventItemId,
+          quantity,
+          unit,
+          mappingId,
+          account.id,
+          `${mutation.key}:out`,
+          reason,
+          deliverableId,
+          source.inventory_match_id,
+        ),
+      dependentStatements: dependents,
+      conflictCode: 'TRANSFER_STATE_CONFLICT',
+      conflictMessage: 'The event-item balance changed before the transfer could be completed.',
+    });
+    return result;
+  }
+
   async function postCycleCountAdjustment({ account, command, correlationId }) {
     assertCapability(account, METHOD_CAPABILITIES.postCycleCountAdjustment);
     const itemId = requiredText(command.itemId, 'itemId', 80);
+    const mutation = await replay(
+      db,
+      'postCycleCountAdjustment',
+      command.clientRequestId,
+      account.id,
+      command,
+    );
+    if (mutation.replayed) return mutation.value;
     const balance = await db
       .prepare(
         `SELECT balance.on_hand, item.unit
@@ -7957,14 +8346,6 @@ export function createD1OperationalService({
     if (delta === 0) {
       throw new ApiError('NO_ADJUSTMENT_REQUIRED', 'The count already matches authoritative stock.');
     }
-    const mutation = await replay(
-      db,
-      'postCycleCountAdjustment',
-      command.clientRequestId,
-      account.id,
-      command,
-    );
-    if (mutation.replayed) return mutation.value;
     const transactionId = createId('LED');
     const result = {
       transactionId,
@@ -7974,8 +8355,8 @@ export function createD1OperationalService({
       delta,
       correlationId,
     };
-    await db.batch([
-      db
+    await runAtomicRevisionGuardedBatch(db, {
+      guardedStatement: db
         .prepare(
           `INSERT INTO inventory_ledger (
              id, created_at, transaction_type, direction, item_id, quantity, unit,
@@ -7983,7 +8364,9 @@ export function createD1OperationalService({
              idempotency_key, status, notes
            ) SELECT ?1, ?2, 'CYCLE_COUNT_ADJUSTMENT', 'ADJUSTMENT', item.id, ?3,
              item.unit, ?4, 'INVENTORY_ITEM', item.id, ?5, ?6, 'POSTED', ?7
-             FROM inventory_items item WHERE item.id = ?8`,
+           FROM inventory_items item
+           JOIN inventory_balances current ON current.item_id = item.id
+           WHERE item.id = ?8 AND current.on_hand = ?9`,
         )
         .bind(
           transactionId,
@@ -7994,18 +8377,23 @@ export function createD1OperationalService({
           mutation.key,
           requiredText(command.reason, 'reason', 500),
           itemId,
+          Number(balance.on_hand),
         ),
-      auditStatement(db, {
+      dependentStatements: [
+        auditStatement(db, {
         action: 'CYCLE_COUNT_ADJUSTMENT',
         entityType: 'INVENTORY_ITEM',
         entityId: itemId,
         accountId: account.id,
         correlationId,
         after: { countedQuantity, delta },
-      }),
-      idempotencyStatement(db, 'postCycleCountAdjustment', mutation, account.id, result),
-      ...revisionStatements(db, ['inventory']),
-    ]);
+        }),
+        idempotencyStatement(db, 'postCycleCountAdjustment', mutation, account.id, result),
+        ...revisionStatements(db, ['inventory']),
+      ],
+      conflictCode: 'INVENTORY_COUNT_STALE',
+      conflictMessage: 'Authoritative stock changed before the cycle count could be posted.',
+    });
     return result;
   }
 
@@ -8814,6 +9202,8 @@ export function createD1OperationalService({
     uploadEvidence,
     confirmRelease,
     correctRelease,
+    transferEventItemToInventory,
+    transferEventItem: transferEventItemToInventory,
     receiveRestock: (context) => receiveEntity({ ...context, kind: 'RESTOCK' }),
     receiveDeliverable: (context) => receiveEntity({ ...context, kind: 'DELIVERABLE' }),
     listInventoryClassifications,

@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added the owner-accepted v0.8.0 Slice 2 specification, four-item Repair
+  Register, and deterministic schema-30 regressions for paired transfer,
+  accepted-state reservation cancellation, stale rollback, cycle-count races,
+  replay conflicts, and explicit signed-quantity reduction.
 - Added the owner-accepted v0.8.0 Inventory Truth and Ledger Lock Slice 1
   specification and a durable schema-30 Inventory baseline covering authoritative
   storage, transaction/caller paths, INV-01 through INV-10, and the Slice 2 defect
@@ -17,11 +21,20 @@
 
 ### Fixed
 
+- Implemented the previously claimed event-item transfer at the authoritative D1
+  boundary as an authorized, retry-safe, concurrency-guarded ledger pair.
+- Made accepted Request and ready-to-claim Lending cancellation release active
+  reservations atomically, restoring reserved reusable assets before handoff.
+- Prevented stale concurrent cycle counts from double-applying one physical count
+  and corrected fallback adjustment/reversal signs without changing D1 authority.
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
 - Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
 ### Changed
 
+- Completed the bounded v0.8.0 Slice 2 repair set under schema 30 with no
+  migration, historical rewrite/reconciliation, deployment, environment/provider
+  mutation, Google write, version/tag/release/merge, or Slice 3 work.
 - Completed v0.8.0 Slice 1 with `MIGRATION_DECISION: NONE_REQUIRED`. Recorded
   three P2 and one P3 evidence-proven gaps for a separately authorized Slice 2;
   no runtime, schema, migration, environment, provider, Google, version, release,
@@ -32,6 +45,11 @@
 
 ### Verification boundary
 
+- V0.8.0 Slice 2 focused evidence passed: two Vitest files / nine tests,
+  six adjacent unit/contract files / 76 tests, and two focused local Worker/D1
+  lifecycle/receiving cases. The full shared-core repository gate passed lint,
+  build/parity, 122 Vitest files / 843 tests, Cloudflare types, isolated
+  staging-mode build, and Wrangler dry-run without a remote runtime write.
 - V0.8.0 Slice 1 focused evidence passed: 12 Vitest files / 92 tests, seven
   focused Worker/D1 cases, two RV-01 reservation concurrency/top-up cases, and
   the strengthened D1 lifecycle case. The schema-30 migration decision relies on

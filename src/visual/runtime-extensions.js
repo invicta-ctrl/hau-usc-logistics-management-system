@@ -3,6 +3,7 @@ import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
 import { getRuntimeReleaseIdentity, releaseIdentityLabel } from '../app/release-identity.js';
 import { KNOWN_QUANTITY_UNITS } from '../domain/quantity-units.js';
+import { signedLedgerQuantity } from '../domain/inventory.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
@@ -6916,9 +6917,7 @@ export function createRuntimeExtensions(options) {
     const onHand = (state.ledgerTransactions ?? [])
       .filter((movement) => movement?.itemId === item.id)
       .reduce(
-        (total, movement) =>
-          total +
-          (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
+        (total, movement) => total + signedLedgerQuantity(movement),
         Number(item?.openingOnHand ?? 0),
       );
     const reserved = (state.reservations ?? [])

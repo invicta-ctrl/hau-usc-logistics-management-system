@@ -17,6 +17,7 @@ import {
 } from '../domain/quantity-units.js';
 import { installOperationalBranding } from './brand-assets.js';
 import { restockActionDecisions, validateRestockTransition } from '../domain/restock-workflow.js';
+import { signedLedgerQuantity } from '../domain/inventory.js';
   'use strict';
   /* =========================================================
      1. Constants and enums
@@ -243,7 +244,7 @@ import { restockActionDecisions, validateRestockTransition } from '../domain/res
   function getCanvass(id){return state.canvassReferences.find(x=>x.id===id)}
   function getEvidence(id){return state.evidenceFiles.find(x=>x.id===id)}
   function activeReservationQuantity(itemId){const item=getItem(itemId);if(useEssentialBootstrap&&Number.isFinite(Number(item?.reserved)))return Number(item.reserved);return state.reservations.filter(r=>r.itemId===itemId&&r.status==='ACTIVE').reduce((a,r)=>a+Number(r.quantity||0),0)}
-  function itemOnHand(itemId){ const item=getItem(itemId); if(!item)return 0; if(useEssentialBootstrap&&Number.isFinite(Number(item.onHand)))return Number(item.onHand); return Number(item.openingOnHand||0)+state.ledgerTransactions.filter(t=>t.itemId===itemId).reduce((sum,t)=>sum+(t.direction==='IN'?1:-1)*Number(t.quantity||0),0); }
+  function itemOnHand(itemId){ const item=getItem(itemId); if(!item)return 0; if(useEssentialBootstrap&&Number.isFinite(Number(item.onHand)))return Number(item.onHand); return Number(item.openingOnHand||0)+state.ledgerTransactions.filter(t=>t.itemId===itemId).reduce((sum,t)=>sum+signedLedgerQuantity(t),0); }
   function availableToPromise(itemId){const item=getItem(itemId);if(useEssentialBootstrap&&Number.isFinite(Number(item?.availableToPromise)))return Math.max(0,Number(item.availableToPromise));return Math.max(0,itemOnHand(itemId)-activeReservationQuantity(itemId))}
   function itemAvailabilityStatus(item){if(item.status==='ARCHIVED')return'ARCHIVED';if(item.status==='INACTIVE')return'INACTIVE';if(item.status==='VERIFY')return'VERIFY';const on=itemOnHand(item.id),atp=availableToPromise(item.id);if(on<=0)return'OUT_OF_STOCK';if(atp<=Number(item.reorderThreshold||0))return'LOW_STOCK';return'IN_STOCK';}
   function latestMovement(itemId){return state.ledgerTransactions.filter(t=>t.itemId===itemId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0]}
