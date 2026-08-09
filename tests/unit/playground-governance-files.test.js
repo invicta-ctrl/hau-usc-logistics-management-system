@@ -21,7 +21,10 @@ describe('repository-hardcoded playground release governance', () => {
 
   it('automates candidate to playground and contains no production continuation', () => {
     const workflow = read('.github/workflows/release-candidate.yml');
-    expect(workflow).toContain("'release/v*'");
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\s+push:/mu);
+    expect(workflow).toContain('(release|fix|hotfix)/v');
+    expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
     expect(workflow).toContain('deploy-playground.mjs');
     expect(workflow).toContain('Stop for Earl manual testing');
     expect(workflow).not.toContain('deploy-environment.mjs production');

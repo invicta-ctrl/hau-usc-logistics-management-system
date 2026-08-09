@@ -79,6 +79,8 @@ one temporary release/fix/hotfix branch
 
 `.github/workflows/release-candidate.yml` stops after playground acceptance. It has no production job and no workflow-run continuation. Any code change invalidates Earl's approval.
 
+Ordinary branch pushes are WIP and do not deploy. An operator freezes a candidate by dispatching the workflow with the exact 40-character branch-tip commit and the matching temporary branch name. The workflow re-verifies that identity, runs the repository gates, and then deploys automatically to the playground.
+
 ## Recovery-pointer rotation
 
 Rotation is deterministic and is refused until production smoke and reconciliation are accepted:

@@ -74,10 +74,10 @@ describe('v0.8.0 release pipeline', () => {
     const workflow = await read('.github/workflows/release-candidate.yml');
 
     expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\s+push:/mu);
     expect(workflow).toContain('environment: release-candidate');
-    expect(workflow).toContain(
-      "ref: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_sha || github.sha }}",
-    );
+    expect(workflow).toContain('ref: ${{ inputs.candidate_sha }}');
+    expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
     expect(workflow).toContain('npm run check');
     expect(workflow).toContain('create-release-candidate-manifest.mjs');
     expect(workflow).toContain('actions/upload-artifact@v4');

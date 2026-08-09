@@ -1,11 +1,6 @@
 name: Candidate to Isolated Staging Playground
 
 on:
-  push:
-    branches:
-      - 'release/v*'
-      - 'fix/v*'
-      - 'hotfix/v*'
   workflow_dispatch:
     inputs:
       candidate_sha:
@@ -33,14 +28,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_sha || github.sha }}
+          ref: ${{ inputs.candidate_sha }}
           persist-credentials: false
       - name: Verify exact candidate
         id: identity
         shell: bash
         env:
-          EXPECTED_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_sha || github.sha }}
-          EXPECTED_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
+          EXPECTED_SHA: ${{ inputs.candidate_sha }}
+          EXPECTED_BRANCH: ${{ inputs.candidate_branch }}
         run: |
           set -euo pipefail
           if [[ ! "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]; then
@@ -49,6 +44,8 @@ jobs:
           fi
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
           [[ "$EXPECTED_BRANCH" =~ ^(release|fix|hotfix)/v[0-9]+\.[0-9]+\.[0-9]+-[a-z0-9][a-z0-9-]*$ ]]
+          git fetch --no-tags --depth=1 origin "refs/heads/${EXPECTED_BRANCH}:refs/remotes/origin/${EXPECTED_BRANCH}"
+          test "$(git rev-parse "refs/remotes/origin/${EXPECTED_BRANCH}")" = "$EXPECTED_SHA"
           echo "sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
@@ -98,13 +95,13 @@ jobs:
           chmod 600 "$RUNNER_TEMP/playground-resource-manifest.json"
       - name: Build private candidate config
         env:
-          CANDIDATE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
+          CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
         run: node scripts/playground/create-private-config.mjs "$RUNNER_TEMP/playground-resource-manifest.json" "$RUNNER_TEMP/wrangler.playground.private.jsonc"
       - name: Deploy exact candidate to isolated playground
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CANDIDATE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.candidate_branch || github.ref_name }}
+          CANDIDATE_BRANCH: ${{ inputs.candidate_branch }}
         run: node scripts/playground/deploy-playground.mjs "$RUNNER_TEMP/wrangler.playground.private.jsonc" "$RUNNER_TEMP/playground-resource-manifest.json"
       - name: Automated playground acceptance
         env:
