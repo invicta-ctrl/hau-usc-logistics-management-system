@@ -26,8 +26,8 @@ ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
 CODEX_STARTING_SHA: d57b1c5931c82886b98c88dc468adfefd3d62bdf
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
 ROLLBACK_POINT: d57b1c5931c82886b98c88dc468adfefd3d62bdf
-STATUS: IN PROGRESS - SPECIFICATION CORRECTION AND V5 ROUTE TRANSFER AUDIT
-NEXT_EXACT_ACTION: Complete and review docs/design/V5_TO_PRODUCTION_FRONTEND_TRANSFER_MAP.md before changing broad application source.
+STATUS: IN PROGRESS - V5 FOUNDATION AND PRODUCTION SHELL TRANSFER
+NEXT_EXACT_ACTION: Replace the real application shell and public landing/module-index/profile presentation with v5-native structure while preserving existing routes, controllers, services, and permission gates.
 
 SKILLS: lean-ctx; Hallmark; Impeccable; Browser control
 VISUAL_FRONTEND_AUTHORITY: prototypes/impeccable-whole-site-redesign-v5/
@@ -59,6 +59,8 @@ merge, release, migration, backend, provider, or protected-data authority.
 
 ## Completed
 
+- Owner correction accepted in the active specification and repository governance: v5 is the visual/frontend authority, production is the functional authority, and the transfer direction is production functionality into v5.
+- `docs/design/V5_TO_PRODUCTION_FRONTEND_TRANSFER_MAP.md` maps every production route/surface, field/action class, service connection, permission gate, copy change, missing v5 component, and integration action before broad source work.
 - Claude's design foundation, privacy repair, docked detail, copy foundation,
   and generated artifact work were preserved.
 - V4.1 presentation cascade added after the protected production cascade.
