@@ -86,23 +86,42 @@ const config = {
 await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
 let deployed = false;
 let fingerprint;
+let rejection = { http: 0, json: false, statusPass: false, mutationNone: false, hashesValid: false };
 try {
   const deployment = wrangler(['deploy', '--config', configPath]);
   deployed = true;
   const workerUrl = deployment.match(/https:\/\/[^\s]+\.workers\.dev/iu)?.[0];
   if (!workerUrl) throw new Error('Temporary read-only Worker URL was not returned.');
-  const response = await fetch(`${workerUrl}/fingerprint`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
-  fingerprint = await response.json().catch(() => null);
-  if (
-    !response.ok ||
-    fingerprint?.status !== 'PASS' ||
-    fingerprint?.productionMutation !== 'NONE' ||
-    !/^[0-9a-f]{64}$/u.test(fingerprint?.brand?.hash ?? '') ||
-    !/^[0-9a-f]{64}$/u.test(fingerprint?.evidence?.hash ?? '')
-  ) {
-    throw new Error('Production R2 read-only fingerprint response failed validation.');
+  for (let attempt = 1; attempt <= 15; attempt += 1) {
+    const response = await fetch(`${workerUrl}/fingerprint?attempt=${attempt}-${Date.now()}`, {
+      headers: { authorization: `Bearer ${token}`, 'cache-control': 'no-cache' },
+    });
+    const candidate = await response.json().catch(() => null);
+    rejection = {
+      http: response.status,
+      json: candidate !== null,
+      statusPass: candidate?.status === 'PASS',
+      mutationNone: candidate?.productionMutation === 'NONE',
+      hashesValid:
+        /^[0-9a-f]{64}$/u.test(candidate?.brand?.hash ?? '') &&
+        /^[0-9a-f]{64}$/u.test(candidate?.evidence?.hash ?? ''),
+    };
+    if (
+      response.ok &&
+      candidate?.status === 'PASS' &&
+      candidate?.productionMutation === 'NONE' &&
+      /^[0-9a-f]{64}$/u.test(candidate?.brand?.hash ?? '') &&
+      /^[0-9a-f]{64}$/u.test(candidate?.evidence?.hash ?? '')
+    ) {
+      fingerprint = candidate;
+      break;
+    }
+    if (attempt < 15) await new Promise((resolve) => setTimeout(resolve, 2_000));
+  }
+  if (!fingerprint) {
+    throw new Error(
+      `Production R2 read-only fingerprint response failed validation (${JSON.stringify(rejection)}).`,
+    );
   }
 } finally {
   if (deployed) wrangler(['delete', '--config', configPath, '--force']);
