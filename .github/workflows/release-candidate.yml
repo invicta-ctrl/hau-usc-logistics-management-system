@@ -112,16 +112,32 @@ jobs:
           import { readFile } from 'node:fs/promises';
           const config = JSON.parse(await readFile(process.env.CONFIG_PATH, 'utf8'));
           const origin = `https://${config.vars.RECOVERY_HOSTNAME}`;
-          const [readinessResponse, versionResponse] = await Promise.all([
-            fetch(`${origin}/api/readiness`),
-            fetch(`${origin}/api/version`),
-          ]);
-          const readiness = await readinessResponse.json();
-          const version = await versionResponse.json();
-          if (!readinessResponse.ok || !readiness.ready) throw new Error('Playground readiness failed.');
-          if (!versionResponse.ok || version.environment !== 'STAGING') throw new Error('Playground identity failed.');
-          if (version.candidateSha !== process.env.EXPECTED_SHA) throw new Error('Candidate identity drifted.');
-          if (version.database?.schemaVersion !== '30') throw new Error('Playground schema drifted.');
+          const expected = process.env.EXPECTED_SHA;
+          for (let attempt = 1; attempt <= 15; attempt += 1) {
+            const nonce = `${expected}-${attempt}-${Date.now()}`;
+            const [readinessResponse, versionResponse] = await Promise.all([
+              fetch(`${origin}/api/readiness?candidate=${nonce}`, {
+                headers: { 'cache-control': 'no-cache' },
+              }),
+              fetch(`${origin}/api/version?candidate=${nonce}`, {
+                headers: { 'cache-control': 'no-cache' },
+              }),
+            ]);
+            const readiness = await readinessResponse.json().catch(() => null);
+            const version = await versionResponse.json().catch(() => null);
+            if (
+              readinessResponse.ok &&
+              readiness?.ready === true &&
+              versionResponse.ok &&
+              version?.environment === 'STAGING' &&
+              version?.candidateSha === expected &&
+              version?.database?.schemaVersion === '30'
+            ) {
+              process.exit(0);
+            }
+            if (attempt < 15) await new Promise((resolve) => setTimeout(resolve, 2_000));
+          }
+          throw new Error('Playground did not converge to the exact accepted candidate.');
           NODE
       - name: Stop for Earl manual testing
         run: |

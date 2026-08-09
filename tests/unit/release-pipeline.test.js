@@ -84,6 +84,9 @@ describe('v0.8.0 release pipeline', () => {
     expect(workflow).toContain('environment: isolated-staging-playground');
     expect(workflow).toContain('deploy-playground.mjs');
     expect(workflow).toContain('CLOUDFLARE_API_TOKEN');
+    expect(workflow).toContain('attempt <= 15');
+    expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");
+    expect(workflow).toContain('version?.candidateSha === expected');
     expect(workflow).toContain('Stop for Earl manual testing');
     expect(workflow).not.toContain('deploy-environment.mjs production');
     expect(workflow).not.toContain('pull_request_target');
