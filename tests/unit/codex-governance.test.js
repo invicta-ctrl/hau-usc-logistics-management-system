@@ -7,6 +7,7 @@ import {
   parseRestrictedToml,
   validateAgentInstructions,
   validateAgentToml,
+  validateCurrentModelRouting,
   validateProjectConfig,
 } from '../../scripts/check-agent-instructions.mjs';
 import { REQUIRED_RESUME_FIELDS, validateContinuation } from '../../scripts/check-work-continuation.mjs';
@@ -20,50 +21,108 @@ import {
 } from '../../tools/codex/run-capped.mjs';
 
 describe('Codex governance validators', () => {
-  it('requires the durable routing and safety triggers', () => {
+  it('requires the canonical Sol/Terra/Luna orchestration policy', () => {
     const valid = [
       'skill registry',
       '.codex/TASK_ROUTING.md',
       '.codex/CAVEMAN_WORKFLOW.md',
       '.codex/USAGE_POLICY.md',
       'AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/CURRENT_HANDOFF.md',
-      'only writer by default',
-      'one active writer',
-      'at most two concurrent read-only subagents',
-      'model routing is task-specific and version-neutral',
+      'ORCHESTRATOR_MODEL: GPT-5.6 Sol',
+      'ORCHESTRATOR_WRITES: FORBIDDEN',
+      'SOL_SUBAGENTS: FORBIDDEN',
+      'MAX_SOL_SUBAGENTS: 0',
+      'WRITER_MODEL: Terra MAX',
+      'MAX_TERRA_SUBAGENTS: 16',
+      'CANONICAL_ACTIVE_WRITER: one Terra Integration Writer',
+      'PARALLEL_TERRA: isolated non-overlapping worktrees or patch scopes only',
+      'READER_MODEL: Luna MAX',
+      'LUNA_WRITES: FORBIDDEN',
+      'MAX_LUNA_SUBAGENTS: 16',
+      'DELEGATION_DEPTH: 1',
+      'SUBAGENT_SPAWNER: Sol only',
+      'MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task',
       'accepted specification or amendment',
     ].join('\n');
     expect(validateAgentInstructions(valid)).toEqual([]);
     expect(validateAgentInstructions(valid.replace('skill registry', 'skills'))).toContain('skill registry');
+    expect(
+      validateAgentInstructions(valid.replace('MAX_SOL_SUBAGENTS: 0', 'MAX_SOL_SUBAGENTS: 1')),
+    ).toContain('zero Sol children');
+    expect(validateAgentInstructions(`${valid}\nCodex is the only writer.`)).toContain(
+      'obsolete Codex-only writer language',
+    );
+    expect(validateAgentInstructions(`${valid}\nSol may create a child.`)).toContain('Sol-child permission');
   });
 
-  it('validates read-only custom-agent essentials', () => {
-    const valid = `name = "repo_mapper"\ndescription = "map"\nmodel = "gpt-5.6-terra"\nmodel_reasoning_effort = "low"\nsandbox_mode = "read-only"\ndeveloper_instructions = '''\nread only\n'''`;
+  it('validates read-only Luna MAX custom-agent essentials', () => {
+    const valid = `name = "repo_mapper"\ndescription = "Luna MAX map"\nmodel = "gpt-5.6-luna"\nmodel_reasoning_effort = "max"\nsandbox_mode = "read-only"\ndeveloper_instructions = '''\nRead only. Do not edit files.\n'''`;
     expect(validateAgentToml(valid, 'repo_mapper')).toEqual([]);
     expect(validateAgentToml(valid.replace('read-only', 'workspace-write'), 'repo_mapper')).toContain(
       'read-only sandbox',
     );
-    expect(validateAgentToml(valid.replace('gpt-5.6-terra', 'gpt-5.6'), 'repo_mapper')).toContain(
-      'model gpt-5.6-terra',
+    expect(validateAgentToml(valid.replace('gpt-5.6-luna', 'gpt-5.6-terra'), 'repo_mapper')).toContain(
+      'model gpt-5.6-luna',
     );
+    expect(
+      validateAgentToml(
+        valid.replace('model_reasoning_effort = "max"', 'model_reasoning_effort = "low"'),
+        'repo_mapper',
+      ),
+    ).toContain('maximum reasoning');
     expect(validateAgentToml(`${valid}\nmalformed`, 'repo_mapper')[0]).toMatch(/valid restricted TOML/);
     expect(
       validateAgentToml(
-        valid.replace('description = "map"', 'description = "read\\/only"'),
+        valid.replace('description = "Luna MAX map"', 'description = "read\\/only"'),
         'repo_mapper',
       )[0],
     ).toMatch(/unsupported TOML escape/);
   });
 
   it('parses only the supported TOML subset and rejects configuration drift', () => {
-    const valid = '[agents]\nmax_threads = 2\nmax_depth = 1\ninterrupt_message = false\n';
-    expect(parseRestrictedToml(valid).sections.agents).toMatchObject({ max_threads: 2, max_depth: 1 });
+    const valid =
+      '[agents]\nmax_concurrent_threads_per_session = 32\nmax_depth = 1\ninterrupt_message = false\n';
+    expect(parseRestrictedToml(valid).sections.agents).toMatchObject({
+      max_concurrent_threads_per_session: 32,
+      max_depth: 1,
+    });
     expect(validateProjectConfig(valid)).toEqual([]);
-    expect(validateProjectConfig(valid.replace('max_threads = 2', 'max_threads = 3'))).toContain(
-      'max_threads must be 2',
+    expect(
+      validateProjectConfig(
+        valid.replace('max_concurrent_threads_per_session = 32', 'max_concurrent_threads_per_session = 16'),
+      ),
+    ).toContain('max_concurrent_threads_per_session must be 32');
+    expect(
+      validateProjectConfig('[agents]\nmax_threads = 2\nmax_depth = 1\ninterrupt_message = false\n'),
+    ).toEqual(
+      expect.arrayContaining([
+        'max_concurrent_threads_per_session must be 32',
+        'unsupported [agents] field max_threads',
+      ]),
     );
     expect(validateProjectConfig(`${valid}unknown = true`)).toContain('unsupported [agents] field unknown');
     expect(() => parseRestrictedToml(`${valid}max_depth = 1`)).toThrow(/duplicate key/);
+  });
+
+  it('requires matching explicit current-chain model-routing fields', () => {
+    const valid = [
+      'REQUIRED_MODEL: GPT-5.6 SOL',
+      'ORCHESTRATOR_MODEL: GPT-5.6 SOL',
+      'ORCHESTRATOR_WRITES: FORBIDDEN',
+      'WRITER_MODEL: TERRA MAX',
+      'READER_MODEL: LUNA MAX',
+      'MAX_SOL_SUBAGENTS: 0',
+      'MAX_TERRA_SUBAGENTS: 16',
+      'MAX_LUNA_SUBAGENTS: 16',
+      'DELEGATION_DEPTH: 1',
+      'SUBAGENT_SPAWNER: SOL_ONLY',
+      'MODEL_SUBSTITUTION: FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK',
+      'GOVERNANCE_AMENDMENT: .codex/specs/active/sol-terra-luna-orchestration-governance-amendment.md',
+    ].join('\n');
+    expect(validateCurrentModelRouting(valid)).toEqual([]);
+    expect(
+      validateCurrentModelRouting(valid.replace('READER_MODEL: LUNA MAX', 'READER_MODEL: TERRA MAX')),
+    ).toContain('READER_MODEL LUNA MAX');
   });
 
   it('requires every compact resume field near the top', () => {

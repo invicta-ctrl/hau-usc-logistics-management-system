@@ -14,6 +14,28 @@ const REQUIRED_FILES = [
   '.codex/CURRENT_HANDOFF.md',
   '.codex/PHASE_AND_CONTEXT_POLICY.md',
   '.codex/TASK_HISTORY.md',
+  '.codex/specs/active/sol-terra-luna-orchestration-governance-amendment.md',
+];
+
+const REQUIRED_CURRENT_ROUTING = [
+  ['REQUIRED_MODEL GPT-5.6 SOL', /^REQUIRED_MODEL:\s*GPT-5\.6 SOL\s*$/im],
+  ['ORCHESTRATOR_MODEL GPT-5.6 SOL', /^ORCHESTRATOR_MODEL:\s*GPT-5\.6 SOL\s*$/im],
+  ['ORCHESTRATOR_WRITES FORBIDDEN', /^ORCHESTRATOR_WRITES:\s*FORBIDDEN\s*$/im],
+  ['WRITER_MODEL TERRA MAX', /^WRITER_MODEL:\s*TERRA MAX\s*$/im],
+  ['READER_MODEL LUNA MAX', /^READER_MODEL:\s*LUNA MAX\s*$/im],
+  ['MAX_SOL_SUBAGENTS 0', /^MAX_SOL_SUBAGENTS:\s*0\s*$/im],
+  ['MAX_TERRA_SUBAGENTS 16', /^MAX_TERRA_SUBAGENTS:\s*16\s*$/im],
+  ['MAX_LUNA_SUBAGENTS 16', /^MAX_LUNA_SUBAGENTS:\s*16\s*$/im],
+  ['DELEGATION_DEPTH 1', /^DELEGATION_DEPTH:\s*1\s*$/im],
+  ['SUBAGENT_SPAWNER SOL_ONLY', /^SUBAGENT_SPAWNER:\s*SOL_ONLY\s*$/im],
+  [
+    'MODEL_SUBSTITUTION forbidden',
+    /^MODEL_SUBSTITUTION:\s*FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK\s*$/im,
+  ],
+  [
+    'GOVERNANCE_AMENDMENT canonical path',
+    /^GOVERNANCE_AMENDMENT:\s*\.codex\/specs\/active\/sol-terra-luna-orchestration-governance-amendment\.md\s*$/im,
+  ],
 ];
 
 export function validateAgentInstructions(text) {
@@ -26,13 +48,34 @@ export function validateAgentInstructions(text) {
       'canonical continuity chain',
       /AGENTS\.md\s*->\s*\.codex\/CURRENT\.md\s*->\s*\.codex\/CURRENT_TASK\.md\s*->\s*\.codex\/CURRENT_HANDOFF\.md/i,
     ],
-    ['single writer', /only writer by default/i],
-    ['one active writer', /one active writer/i],
-    ['bounded subagents', /at most two concurrent read-only subagents/i],
-    ['version-neutral model routing', /model routing is task-specific and version-neutral/i],
+    ['GPT-5.6 Sol orchestrator', /ORCHESTRATOR_MODEL:\s*GPT-5\.6 Sol/i],
+    ['Sol writes forbidden', /ORCHESTRATOR_WRITES:\s*FORBIDDEN/i],
+    ['Sol subagents forbidden', /SOL_SUBAGENTS:\s*FORBIDDEN/i],
+    ['zero Sol children', /MAX_SOL_SUBAGENTS:\s*0\b/i],
+    ['Terra MAX writer model', /WRITER_MODEL:\s*Terra MAX/i],
+    ['Terra MAX cap', /MAX_TERRA_SUBAGENTS:\s*16\b/i],
+    ['one Terra Integration Writer', /CANONICAL_ACTIVE_WRITER:\s*one Terra Integration Writer/i],
+    ['isolated parallel Terra scopes', /PARALLEL_TERRA:\s*isolated non-overlapping/i],
+    ['Luna MAX reader model', /READER_MODEL:\s*Luna MAX/i],
+    ['Luna writes forbidden', /LUNA_WRITES:\s*FORBIDDEN/i],
+    ['Luna MAX cap', /MAX_LUNA_SUBAGENTS:\s*16\b/i],
+    ['delegation depth one', /DELEGATION_DEPTH:\s*1\b/i],
+    ['Sol-only child spawner', /SUBAGENT_SPAWNER:\s*Sol only/i],
+    ['no silent model substitution', /MODEL_SUBSTITUTION:\s*forbidden/i],
     ['specification gate', /accepted specification or amendment/i],
   ];
-  return required.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
+  const errors = required.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
+  const obsolete = [
+    ['obsolete Codex-only writer language', /Codex is the only writer/i],
+    ['obsolete two-read-only-subagent cap', /at most two concurrent read-only subagents/i],
+    ['Sol direct-write permission', /Sol may (?:directly )?(?:edit|write|mutate)/i],
+    [
+      'Sol-child permission',
+      /(?:Sol (?:may|can|is allowed to) (?:spawn|create)|Sol child(?:ren)? (?:are )?allowed)/i,
+    ],
+    ['Luna writer permission', /Luna (?:may )?(?:write|edit|mutate)/i],
+  ];
+  return [...errors, ...obsolete.filter(([, pattern]) => pattern.test(text)).map(([name]) => name)];
 }
 
 export function parseRestrictedToml(text) {
@@ -121,13 +164,15 @@ export function validateAgentToml(text, expectedName) {
   const checks = [
     ['name', agent.name === expectedName],
     ['description', typeof agent.description === 'string' && agent.description.trim().length > 0],
-    ['model gpt-5.6-terra', agent.model === 'gpt-5.6-terra'],
+    ['Luna MAX description', /\bLuna MAX\b/.test(agent.description || '')],
+    ['model gpt-5.6-luna', agent.model === 'gpt-5.6-luna'],
     [
       'developer_instructions',
       typeof agent.developer_instructions === 'string' && agent.developer_instructions.trim().length > 0,
     ],
+    ['read-only instructions', /Do not edit files/i.test(agent.developer_instructions || '')],
     ['read-only sandbox', agent.sandbox_mode === 'read-only'],
-    ['low reasoning', agent.model_reasoning_effort === 'low'],
+    ['maximum reasoning', agent.model_reasoning_effort === 'max'],
   ];
   for (const [name, valid] of checks) {
     if (!valid) missing.push(name);
@@ -164,15 +209,21 @@ export function validateProjectConfig(text) {
   }
 
   const agents = parsed.sections.agents || Object.create(null);
-  if (agents.max_threads !== 2) errors.push('max_threads must be 2');
+  if (agents.max_concurrent_threads_per_session !== 32) {
+    errors.push('max_concurrent_threads_per_session must be 32');
+  }
   if (agents.max_depth !== 1) errors.push('max_depth must be 1');
   if (agents.interrupt_message !== false) errors.push('interrupt_message must be false');
   for (const key of Object.keys(agents)) {
-    if (!['max_threads', 'max_depth', 'interrupt_message'].includes(key)) {
+    if (!['max_concurrent_threads_per_session', 'max_depth', 'interrupt_message'].includes(key)) {
       errors.push(`unsupported [agents] field ${key}`);
     }
   }
   return errors;
+}
+
+export function validateCurrentModelRouting(text) {
+  return REQUIRED_CURRENT_ROUTING.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
 }
 
 export function validateProjectAgentFiles(root) {
@@ -194,6 +245,14 @@ export function validateProjectAgentFiles(root) {
   if (fs.existsSync(configPath)) {
     for (const item of validateProjectConfig(fs.readFileSync(configPath, 'utf8'))) {
       errors.push(`.codex/config.toml ${item}`);
+    }
+  }
+
+  for (const relative of ['.codex/CURRENT.md', '.codex/CURRENT_TASK.md', '.codex/CURRENT_HANDOFF.md']) {
+    const file = path.join(root, relative);
+    if (!fs.existsSync(file)) continue;
+    for (const item of validateCurrentModelRouting(fs.readFileSync(file, 'utf8'))) {
+      errors.push(`${relative} missing ${item}`);
     }
   }
 

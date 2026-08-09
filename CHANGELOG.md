@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added the owner-authorized Sol/Terra/Luna orchestration governance amendment: GPT-5.6 Sol is the sole read-only orchestrator with no Sol children, Terra MAX is the only writer class with one canonical integration writer and isolated scopes, and Luna MAX is the read-only auditor class. The amendment preserves historical product specifications while superseding only their model-routing language.
+- Completed the governance amendment after pre-final Sol/Luna PASS review, focused validation, and the authorized normal update of the existing draft-PR branch; no product or runtime work was introduced.
 - Added a documentation-only HAU-USC Design DNA research gate: eight independent Hallmark public-reference studies, a comparative reference matrix, the proposed “Institutional Logistics Ledger” design language, an Impeccable-informed design/component/motion/3D/accessibility/performance system, a module rollout plan, and an owner-facing Design Gate handoff.
 - Added durable `PRODUCT.md` product truth for future Impeccable work without replacing the incumbent accepted `DESIGN.md`.
 - Integrated the frozen V5 whole-site design into the real `src/` application with same-origin playground auth/API wiring, exhaustive 34-surface classification, V5-native governed controls for current Production capability families, mock-free service-backed routes, and a searchable playground-only Index.
@@ -15,6 +17,8 @@
 
 ### Verification boundary
 
+- The governance amendment changes repository governance, focused governance tests, and continuity documentation only. It does not authorize or perform design implementation, runtime/build artifact changes, migrations, deployments, D1/R2/Google/provider writes, production mutation, merge, tag, or recovery-pointer rotation.
+- The governance closure uses only an authorized normal commit/push to the existing branch and draft PR; force-push, merge, deployment, migration, provider/data, Google, D1/R2, and recovery actions remain absent.
 - The Design DNA task changed documentation only. No frontend/backend source, build artifact, migration, staging deployment, D1/R2 resource, Production state, Google data, or provider/email state changed. Substantial redesign remains blocked on Earl's explicit Design Gate approval.
 - V5 current-source acceptance passes all 33 registered application routes at 1440 CSS pixels, responsive/theme checks at 320/390/768/1024/1440, and governed-control persistence across application re-renders. The deterministic classic-script artifact passes a fresh production-mode build with playground markers denied.
 - Current Production capability contracts remain authoritative under schema 30/migration 0030. Direct public account creation, public evidence-file upload, and local avatar upload remain explicitly unsupported rather than fabricating backend behavior.

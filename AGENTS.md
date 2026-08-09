@@ -23,13 +23,83 @@ Git state -> AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/
 - Non-trivial behavior, architecture, migration, deployment, destructive maintenance, or external action requires an accepted specification or amendment. Implement only that scope.
 - Stop and record a material conflict, missing acceptance criterion, privacy/security uncertainty, migration need, unknown dirty work, or production crossover. Do not invent a resolution.
 
-## Writer lock, model routing, and delegation
+## Orchestration, writer lock, and delegation
 
-- The active writer named in .codex/CURRENT.md owns the branch. Codex is the only writer by default; if another active writer is named, remain read-only and stop for transfer.
-- One active writer may modify a branch at a time. Read-only review is allowed only when it cannot race the writer.
-- Use at most two concurrent read-only subagents, with one delegation level, only for bounded independent mapping, triage, or review. They never edit shared files.
-- Model routing is task-specific and version-neutral: follow REQUIRED_MODEL and escalation rules in the current task and accepted specification. Escalate auth, authorization, ledger, migration, recovery, security, or production-boundary decisions to the required authority; do not silently substitute a lower-scope role.
-- Before handoff, update the three current records together. A writer lock is released only when the pointer says ACTIVE_WRITER: NONE and HANDOFF_STATUS: READY_FOR_HANDOFF.
+This repository has one canonical model architecture. It applies to every active
+task and cannot be changed by a nested instruction, historical specification, or
+ad hoc delegation. The current task retains `REQUIRED_MODEL: GPT-5.6 SOL` to
+identify the required top-level orchestrator; it never grants Sol write authority.
+
+```text
+ORCHESTRATOR_MODEL: GPT-5.6 Sol
+ORCHESTRATOR_WRITES: FORBIDDEN
+SOL_SUBAGENTS: FORBIDDEN
+MAX_SOL_SUBAGENTS: 0
+
+WRITER_MODEL: Terra MAX
+MAX_TERRA_SUBAGENTS: 16
+CANONICAL_BRANCH_WRITER_COUNT: 1
+CANONICAL_ACTIVE_WRITER: one Terra Integration Writer
+PARALLEL_TERRA: isolated non-overlapping worktrees or patch scopes only
+
+READER_MODEL: Luna MAX
+LUNA_WRITES: FORBIDDEN
+MAX_LUNA_SUBAGENTS: 16
+
+DELEGATION_DEPTH: 1
+SUBAGENT_SPAWNER: Sol only
+MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task
+```
+
+### Sol: sole read-only orchestrator
+
+- GPT-5.6 Sol is the only top-level planner, router, reviewer, and acceptance
+  authority. Sol may read evidence, normalize scope, maintain the delegation
+  ledger, spawn bounded Terra MAX and Luna MAX children, and produce the final
+  owner-facing handoff.
+- Sol never edits a repository file, creates a patch, stages, commits, pushes,
+  merges, rebases, resets, cleans, deploys, migrates, mutates a provider, or
+  rotates recovery pointers.
+- Sol child agents are forbidden. No agent may create a Sol child or ask another
+  agent to do so. Every child-task creation remains with Sol and has depth one.
+
+### Terra MAX: writer class
+
+- Terra MAX is the only model class permitted to mutate repository or provider
+  state when the accepted task authorizes that mutation. Sol may use zero through
+  sixteen Terra MAX children, never more than the task requires.
+- Each repository task with writes has exactly one `TERRA_INTEGRATION_WRITER`.
+  That Terra is the only writer on the canonical task branch/worktree, recorded
+  as `ACTIVE_WRITER: TERRA_MAX:<task-or-agent-id>`.
+- Additional Terra writers require exclusive, non-overlapping paths and isolated
+  worktrees or bounded patch artifacts. They never share a canonical registry,
+  current pointer, release file, migration, generated manifest, lockfile, or
+  external resource with another active Terra. The Terra Integration Writer owns
+  canonical integration and conflict resolution after Sol review.
+- Terra does not spawn agents, invoke Sol as a child, broaden scope, or claim
+  acceptance without evidence.
+
+### Luna MAX: read-only reviewer class
+
+- Luna MAX is the read-only mapper, reviewer, and auditor class. Sol may use zero
+  through sixteen Luna MAX children for bounded mapping, review, security/privacy
+  audit, test-gap analysis, or final contradiction audit.
+- Luna never edits tracked repository state, writes patches, takes the writer
+  lock, stages, commits, pushes, merges, deploys, migrates, mutates providers, or
+  spawns agents. Luna reports findings to Sol; Terra performs any authorized repair.
+
+### Canonical lock and task ledger
+
+- The singular `ACTIVE_WRITER` lock protects the canonical branch. A conflicting
+  active writer is a stop condition. Read-only work must not race the writer.
+- The current task/handoff records every delegated Terra or Luna with agent ID,
+  model, role, mode, scope, worktree or patch, owned and excluded paths,
+  dependencies, status, and output evidence. No ledger row may name Sol as a child.
+- No silent model substitution is permitted. Stop and report an unavailable or
+  mismatched Sol, Terra MAX, or Luna MAX route.
+- Before handoff, update the three current records together. Release the lock
+  only when the pointer says `ACTIVE_WRITER: NONE` and
+  `HANDOFF_STATUS: READY_FOR_HANDOFF`.
 
 ## Permanent Git branch and playground release policy
 

@@ -28,6 +28,31 @@ Choose the intent governing the highest-risk or final requested action. Skills
 refine execution but never override repository authority, accepted
 specifications, security, privacy, domain invariants, or owner instructions.
 
+## Orchestration envelope
+
+For every governed task, the task/handoff chain also records these root-policy
+fields without changing the product objective:
+
+```text
+REQUIRED_MODEL: GPT-5.6 SOL
+ORCHESTRATOR_MODEL: GPT-5.6 SOL
+ORCHESTRATOR_WRITES: FORBIDDEN
+WRITER_MODEL: TERRA MAX
+READER_MODEL: LUNA MAX
+MAX_SOL_SUBAGENTS: 0
+MAX_TERRA_SUBAGENTS: 16
+MAX_LUNA_SUBAGENTS: 16
+DELEGATION_DEPTH: 1
+SUBAGENT_SPAWNER: SOL_ONLY
+MODEL_SUBSTITUTION: FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK
+```
+
+Sol is the sole read-only orchestrator and only child-task spawner. A write task
+names one `TERRA_INTEGRATION_WRITER` and its singular `ACTIVE_WRITER` lock.
+Additional Terra work requires isolated non-overlapping scopes; Luna is
+read-only. Record every Terra/Luna child in the task-local delegation ledger;
+never record a Sol child.
+
 ## Risk routing
 
 - **Low:** answers, small documentation corrections, deterministic formatting.
