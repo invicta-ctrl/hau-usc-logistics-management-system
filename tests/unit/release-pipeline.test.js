@@ -6,7 +6,7 @@ import { createReleaseCandidateManifest } from '../../scripts/create-release-can
 const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
-describe('v0.7.2 release pipeline', () => {
+describe('v0.8.0 release pipeline', () => {
   it('keeps the Cloudflare preview static, manually gated, and free of protected bindings', async () => {
     const [workflow, config, handoff] = await Promise.all([
       read('.github/workflows/cloudflare-preview.yml'),
@@ -24,7 +24,9 @@ describe('v0.7.2 release pipeline', () => {
       'https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/subdomain',
     );
     expect(workflow).toContain("process.env.PREVIEW_WORKER_NAME !== 'hau-usc-logistics-preview'");
-    expect(workflow).toContain('preview_url="https://${PREVIEW_WORKER_NAME}.${preview_account_subdomain}.workers.dev"');
+    expect(workflow).toContain(
+      'preview_url="https://${PREVIEW_WORKER_NAME}.${preview_account_subdomain}.workers.dev"',
+    );
     expect(workflow).toContain('$RUNNER_TEMP/cloudflare-preview-account-subdomain');
     expect(workflow).toContain('deploy_log="$RUNNER_TEMP/cloudflare-preview-deploy.log"');
     expect(workflow).toContain('redact_preview_urls');
@@ -50,7 +52,7 @@ describe('v0.7.2 release pipeline', () => {
     expect(workflow).not.toContain('echo "preview_url=');
     expect(workflow).not.toContain('echo "- Preview URL:');
     expect(workflow).toContain('$GITHUB_STEP_SUMMARY');
-    expect(workflow).toContain('v0.7.2-preview-evidence-${{ inputs.candidate_sha }}');
+    expect(workflow).toContain('v0.8.0-preview-evidence-${{ inputs.candidate_sha }}');
     expect(workflow).not.toMatch(/pull_request_target|wrangler\.production|PRODUCTION_D1|PRODUCTION_R2/u);
     expect(handoff).toContain('logistics.hausc.org');
     expect(handoff).toContain('request.hausc.org');
@@ -83,11 +85,46 @@ describe('v0.7.2 release pipeline', () => {
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
     const manifest = await createReleaseCandidateManifest();
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.7.2' });
+    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.0' });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);
     expect(manifest.artifacts.shareableHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.appsScriptHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
+  });
+
+  it('fails closed around staging smoke, recovery identity, and live deployment authorization', async () => {
+    const [smoke, stagingEvidence, productionEvidence, deploy, privateConfigs] = await Promise.all([
+      read('scripts/staging-candidate-smoke.mjs'),
+      read('scripts/staging-candidate-evidence.mjs'),
+      read('scripts/production-recovery-evidence.mjs'),
+      read('scripts/deploy-environment.mjs'),
+      read('scripts/create-private-cloudflare-configs.mjs'),
+    ]);
+
+    expect(smoke).toContain("post(baseUrl, '/api/admin/access/directory')");
+    expect(smoke).toContain("authenticated.post('/api/getEssentialBootstrapData'");
+    expect(smoke).toContain("'inventory',");
+    expect(smoke).toContain('data: { module, page: 1, pageSize: 10 }');
+    expect(smoke).toContain('validateEnvironmentSeparation');
+    expect(stagingEvidence).toContain("'r2', 'bucket', 'info'");
+    expect(productionEvidence).toContain("'d1', 'time-travel', 'info'");
+    expect(productionEvidence).toContain("'r2', 'bucket', 'info'");
+    expect(productionEvidence).toContain('validateStagingSandboxConfig');
+    expect(productionEvidence).toContain('restoreAndVerifyD1Export');
+    expect(productionEvidence).toContain('reconcileInventoryDatabase');
+    expect(deploy).toContain("actions?.workerDeploy !== 'APPROVED'");
+    expect(deploy).toContain('result.launchAuthorized');
+    expect(deploy).toContain('validateProductionLaunchPreflight');
+    expect(deploy).toContain("path.join(repoRoot, 'src', 'worker', 'index.js')");
+    expect(deploy).toContain("path.join(repoRoot, 'dist')");
+    expect(deploy).toContain('const artifactDirectory = path.join(repoRoot, expected.artifactDirectory)');
+    expect(deploy).toContain("path.join(repoRoot, 'scripts', 'verify-deploy-artifact.mjs')");
+    expect(deploy).toContain("[wranglerExecutable, 'deploy', '-c', configPath, '--assets', artifactDirectory]");
+    expect(deploy).not.toContain("execFileSync('npx', ['wrangler', 'deploy'");
+    expect(deploy).toContain("target === 'staging' ? 'release/v0.8.0-inventory-truth-ledger-lock' : 'main'");
+    expect(privateConfigs).toContain('resolvePrivatePath');
+    expect(privateConfigs).toContain("main: path.join(repoRoot, 'src', 'worker', 'index.js')");
+    expect(privateConfigs).toContain("directory: path.join(repoRoot, 'dist')");
   });
 });

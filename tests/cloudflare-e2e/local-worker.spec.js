@@ -1811,8 +1811,35 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
   );
   const classificationQueue = page.locator('[data-inventory-classification-queue]');
   await expect(classificationQueue.getByRole('heading', { name: 'Needs Classification' })).toBeVisible();
+  const initialSearch = await classificationQueue
+    .getByLabel('Search classification queue')
+    .elementHandle();
+  const allClassificationsResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/listInventoryClassifications',
+  );
   await classificationQueue.locator('[data-classification-status]').selectOption('ALL');
-  await classificationQueue.getByLabel('Search classification queue').fill('ITM-LOCAL-CLASSIFY');
+  const allClassifications = await allClassificationsResponse;
+  await allClassifications.finished();
+  if (initialSearch)
+    await page.waitForFunction((element) => !element.isConnected, initialSearch);
+  const preSearchSelection = await classificationQueue
+    .getByLabel('Select Synthetic Classification Fixture for bulk classification')
+    .elementHandle();
+  const filteredClassificationsResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/listInventoryClassifications' &&
+      response.request().postDataJSON()?.search === 'ITM-LOCAL-CLASSIFY',
+  );
+  await classificationQueue
+    .getByLabel('Search classification queue')
+    .fill('ITM-LOCAL-CLASSIFY');
+  const filteredClassifications = await filteredClassificationsResponse;
+  await filteredClassifications.finished();
+  if (preSearchSelection)
+    await page.waitForFunction((element) => !element.isConnected, preSearchSelection);
   await expect(classificationQueue).toContainText('ITM-LOCAL-CLASSIFY');
   const classificationSelection = classificationQueue.getByLabel(
     'Select Synthetic Classification Fixture for bulk classification',

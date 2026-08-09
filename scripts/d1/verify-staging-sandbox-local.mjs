@@ -9,6 +9,7 @@ import {
   buildSandboxSeedSql,
   createSandboxCredentials,
 } from '../staging-sandbox-lifecycle.mjs';
+import { reconcileInventoryDatabase } from './reconcile-inventory-truth.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const wrangler = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
@@ -92,8 +93,11 @@ async function main() {
       .get();
     const integrity = database.prepare('PRAGMA integrity_check').get();
     const foreignKeyRows = database.prepare('PRAGMA foreign_key_check').all();
-    database.close();
     const integrityOk = String(integrity?.integrity_check ?? '').toLowerCase() === 'ok';
+    const inventoryReconciliation = reconcileInventoryDatabase(database, {
+      environment: 'LOCAL_TEST',
+    });
+    database.close();
     if (
       Number(counts?.accounts) !== 22 ||
       Number(counts?.active_items) !== 36 ||
@@ -102,9 +106,14 @@ async function main() {
       Number(counts?.minimum_active_balance) < 0 ||
       String(counts?.generation) !== '2' ||
       !integrityOk ||
-      foreignKeyRows.length
+      foreignKeyRows.length ||
+      inventoryReconciliation.summary.disposition !== 'RECONCILED'
     ) {
-      throw new Error('Local sandbox lifecycle proof failed.');
+      const failedChecks = inventoryReconciliation.checks
+        .filter((check) => check.discrepancyCount > 0)
+        .map((check) => check.id)
+        .join(',');
+      throw new Error(`Local sandbox lifecycle proof failed${failedChecks ? `: ${failedChecks}` : ''}.`);
     }
     process.stdout.write(
       `${JSON.stringify({
@@ -114,6 +123,7 @@ async function main() {
         archivedItems: 36,
         integrityOk: true,
         foreignKeyViolations: 0,
+        inventoryReconciliation: inventoryReconciliation.summary,
       })}\n`,
     );
   } finally {

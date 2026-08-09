@@ -234,4 +234,83 @@ would add no required invariant and is not authorized.
   atomic D1 batch.
 - Preserve server capability, entity/location scope, CSRF, privacy redaction, evidence,
   and exact retry-fingerprint boundaries.
-- Implement only evidence-proven Slice 2 defects under a separately accepted prompt.
+
+## v0.8.0 final server/domain contract freeze
+
+This section freezes the v0.8.0 server/domain contract. It does not promise an expanded
+Inventory UI.
+
+### Inventory truth
+
+- Physical on-hand authority is the sum of `POSTED inventory_ledger.signed_quantity`.
+- Reserved authority is the sum of each `ACTIVE` reservation's nonnegative unconsumed
+  remainder. A reservation never changes physical on-hand.
+- Available-to-promise is exactly `on_hand - reserved` from `inventory_balances`.
+- `inventory_items` owns identity, unit, thresholds, and catalog/classification metadata;
+  it does not own a mutable physical balance.
+- Direct opening quantity remains zero. An authorized nonzero opening is an explicit
+  `OPENING_BALANCE` ledger effect created with the item.
+- Only posted ledger rows affect on-hand. Immutable ledger rows are never updated or
+  deleted; corrections are linked compensating effects.
+- Low-stock is a projection from authoritative ATP and the catalog threshold, not a
+  second quantity source.
+
+### Frozen command effects
+
+All commands below require an authenticated Worker session, CSRF where applicable,
+server capability and entity/location scope, an idempotency key plus request fingerprint,
+and one atomic D1 batch. Exact replay returns the accepted result; the same key with a
+different fingerprint fails without a business effect. Public responses remain scoped
+and redacted; owner-only reconciliation/audit detail is not public.
+
+| Command                                 | State precondition and capability                                                                         | Atomic authoritative effects                                                                                                               | Safe failure behavior                                                            |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `submitRequest`                         | valid demand; `request.create`                                                                            | request, lines, status/audit/idempotency; no reservation or ledger effect                                                                  | validation/auth/conflict leaves stock unchanged                                  |
+| `reserveStock`                          | accepted routed line with current ATP; `fulfillment.reserve` and entity/location scope                    | active reservation/top-up, status/audit/idempotency; no ledger effect                                                                      | guarded line/revision/capacity conflict rolls back                               |
+| `approveLendingTicket`                  | exact approvable ticket snapshot and current ATP; `lending.approve` and entity scope                      | reservation plus traceable asset assignment/movement/history where applicable                                                              | stale/capacity/asset conflict rolls back                                         |
+| `confirmLendingHandoff`                 | approved pre-handoff ticket and reservation; `lending.handoff`                                            | unique handoff, one `ISSUE` or `LOAN_OUT`, reservation release, custody/status/audit/idempotency                                           | stale, duplicate, insufficient, or unauthorized command has no partial effect    |
+| `confirmReturn`                         | handed-off reusable ticket; `lending.return`                                                              | unique return, returned-quantity `LOAN_RETURN`, custody/condition/status/audit/idempotency                                                 | duplicate or impossible return fails atomically                                  |
+| `confirmRelease`                        | releasable approved line, reservation coverage, current ATP guard; `fulfillment.release`                  | consumption, negative `ISSUE`, confirmation, counters/status/audit/idempotency                                                             | stale/over-release/insufficient/conflict leaves no effect                        |
+| `correctRelease`                        | existing confirmation and owner authority                                                                 | linked positive `REVERSAL`, compensating reservation/correction/status/audit/idempotency                                                   | never changes the original confirmation, consumption, or ledger row              |
+| `receiveRestock` / `receiveDeliverable` | exact receivable procurement parent (`TO_BE_PROCURED` is also valid for Restocking), item/unit, counters, and cumulative ceiling; `fulfillment.receive` | receiving/receipt, positive `RECEIVE`, counters/status/audit/idempotency | terminal/over-receipt/stale/duplicate mismatch rolls back |
+| `createInventoryItem` with stock        | catalog authority plus receive/adjust/system capability for nonzero stock                                 | catalog row and explicit positive `OPENING_BALANCE`; opening metadata stays zero                                                           | invalid identity/unit/capability creates neither row                             |
+| `postCycleCountAdjustment`              | counted quantity and atomically current on-hand; `inventory.adjust`                                       | one signed `CYCLE_COUNT_ADJUSTMENT`, audit/idempotency/revision                                                                            | stale current-state sentinel fails with no ledger effect; winner replay is exact |
+| `transferEventItemToInventory`          | source event item, destination identity/unit, current source quantity; `inventory.merge` and entity scope | exact negative/positive paired ledger rows sharing one logical mapping, audit/idempotency/revisions                                        | over-transfer, unit mismatch, stale race, denial, or altered retry has no pair   |
+| accepted Request/Lending cancellation   | accepted pre-physical-effect parent and permitted self/entity cancellation scope                          | parent terminal state, active reservation cancellation, audit/history/idempotency, and reserved-asset restoration history where applicable | stale/closed/post-effect state rejects without partial release                   |
+
+### Reservation lifecycle
+
+- Creation/top-up is explicit and atomically checks the authoritative availability and
+  guarded parent/line state.
+- Active remainder is `max(quantity - accepted consumption, 0)`.
+- Consumption is append-only, linked to a valid active reservation, and cannot exceed
+  reserved quantity.
+- Cancellation/release changes the reservation to a terminal state only through the
+  supported parent command; terminal reservations are excluded from reserved stock.
+- Physical on-hand changes only when a separate supported ledger movement is posted.
+- Stale state, capacity races, or the losing concurrent command fail the complete batch.
+- Lending review, handoff, cancellation, asset maintenance/custody, and receiving use
+  exact in-batch state guards; a zero-row transition cannot retain dependent effects.
+
+### Downstream version contracts
+
+- **v0.8.1 Inventory Operations/UI:** may present and invoke this contract, but must use
+  `inventory_balances`/server projections and must not introduce mutable balance state.
+- **v0.8.2 Release Desk:** must preserve authoritative pre-effect recheck,
+  reservation/consumption, idempotent release/correction, and append-only ledger/audit.
+- **v0.8.3 Lending:** must use the same ATP/reservation contract and preserve unique
+  handoff/return plus custody/asset history.
+- **v0.8.4 Request Center:** submission remains demand-only; reservation is a separate
+  explicit atomic action after accepted routing and never deducts physical stock.
+
+### Explicit unsupported or deferred behavior
+
+- Expanded Inventory Operations/UI belongs to v0.8.1.
+- Release Desk expansion belongs to v0.8.2; only the commands above are frozen now.
+- Lending expansion belongs to v0.8.3; lost/damaged behavior is supported only where
+  the current schema/commands explicitly record it.
+- Request Center expansion belongs to v0.8.4.
+- Direct balance edits, unpaired transfers, reservation-on-submission, Google quantity
+  authority/fallback, history rewrite/delete, and undocumented movement types are not
+  supported in v0.8.0.
+- No additional v0.8.0 behavior beyond these frozen commands is supported.

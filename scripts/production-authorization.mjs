@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { readdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolvePrivatePath } from './private-path.mjs';
 
 export const PRODUCTION_ACTIONS = Object.freeze([
   'productionBackup',
@@ -11,6 +12,12 @@ export const PRODUCTION_ACTIONS = Object.freeze([
   'productionSheetCutover',
   'productionSeedAccounts',
   'productionSmokeMutations',
+  'productionRollback',
+  'productionClosure',
+]);
+export const REQUIRED_PRODUCTION_LAUNCH_ACTIONS = Object.freeze([
+  'productionBackup',
+  'productionWorkerDeploy',
   'productionRollback',
   'productionClosure',
 ]);
@@ -166,7 +173,7 @@ function completedText(value) {
 
 export async function validateProductionAuthorizationPackage(
   source,
-  { packagePath, currentCandidate, now = Date.now() } = {},
+  { packagePath, currentCandidate, now = Date.now(), allowMissingBackupManifest = false } = {},
 ) {
   currentCandidate ??= await productionCandidateEvidence();
   const issues = [];
@@ -248,6 +255,10 @@ export async function validateProductionAuthorizationPackage(
       issues.push(`${field} must be a completed absolute path`);
       continue;
     }
+    if (field === 'target.privateBackupManifestPath' && allowMissingBackupManifest) {
+      if (isInside(repoRoot, file)) issues.push(`${field} must resolve outside the repository`);
+      continue;
+    }
     try {
       const resolved = await realpath(file);
       if (isInside(repoRoot, resolved)) issues.push(`${field} must resolve outside the repository`);
@@ -275,12 +286,23 @@ export async function validateProductionAuthorizationPackage(
     issues.push('window.endsAt must be after window.startsAt');
   }
   const valid = issues.length === 0;
-  const pendingActions = PRODUCTION_ACTIONS.filter((action) => decisions[action] !== 'APPROVED');
+  const pendingActions = PRODUCTION_ACTIONS.filter((action) => decisions[action] === 'PENDING');
+  const deniedRequiredActions = REQUIRED_PRODUCTION_LAUNCH_ACTIONS.filter(
+    (action) => decisions[action] !== 'APPROVED',
+  );
+  const deniedOptionalActions = PRODUCTION_ACTIONS.filter(
+    (action) => !REQUIRED_PRODUCTION_LAUNCH_ACTIONS.includes(action) && decisions[action] === 'DENIED',
+  );
   const windowActive = valid && now >= start && now <= end;
-  const launchAuthorized = valid && pendingActions.length === 0 && windowActive;
+  const launchAuthorized =
+    valid && pendingActions.length === 0 && deniedRequiredActions.length === 0 && windowActive;
   const warnings = [];
   if (valid && pendingActions.length)
     warnings.push(`production actions not approved: ${pendingActions.join(', ')}`);
+  if (valid && deniedRequiredActions.length)
+    warnings.push(`required production actions denied: ${deniedRequiredActions.join(', ')}`);
+  if (valid && deniedOptionalActions.length)
+    warnings.push(`optional production mutations explicitly denied: ${deniedOptionalActions.join(', ')}`);
   if (valid && !windowActive) warnings.push('the approved production launch window is not active');
   return { valid, launchAuthorized, windowActive, issues, warnings };
 }
@@ -297,25 +319,22 @@ async function run() {
   if (!path.isAbsolute(rawPath)) {
     throw new SafeCliError('The private production authorization package path must be absolute.');
   }
-  const packagePath = path.resolve(rawPath);
-  if (isInside(repoRoot, packagePath)) {
-    throw new SafeCliError(
-      'The private production authorization package must remain outside the repository.',
-    );
-  }
+  const packagePath = await resolvePrivatePath(rawPath, {
+    repoRoot,
+    label: 'Private production authorization package',
+    allowMissing: command === 'init',
+  });
   if (command === 'init') {
-    const destination = path.join(await realpath(path.dirname(packagePath)), path.basename(packagePath));
     await writeFile(
-      destination,
+      packagePath,
       `${JSON.stringify(await createProductionAuthorizationTemplate(), null, 2)}\n`,
       { flag: 'wx', mode: 0o600 },
     );
     console.log('Private production authorization template created outside the repository.');
     return;
   }
-  const resolved = await realpath(packagePath);
-  const source = JSON.parse(await readFile(resolved, 'utf8'));
-  const result = await validateProductionAuthorizationPackage(source, { packagePath: resolved });
+  const source = JSON.parse(await readFile(packagePath, 'utf8'));
+  const result = await validateProductionAuthorizationPackage(source, { packagePath });
   if (!result.valid || !result.launchAuthorized) {
     console.error('Production authorization package: NOT AUTHORIZED');
     result.issues.forEach((issue) => console.error(`- ${issue}`));

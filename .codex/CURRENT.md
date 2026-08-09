@@ -2,22 +2,22 @@
 
 PROGRAM: HAU-USC Logistics
 MILESTONE: V0.8.0 Inventory Truth and Ledger Lock
-STATUS: COMPLETE - SLICE 2 LEDGER, RESERVATION, CONCURRENCY, AND RETRY-SAFETY HARDENING
+STATUS: ACTIVE - EXACT CANDIDATE FREEZE
 BRANCH: release/v0.8.0-inventory-truth-ledger-lock
 HEAD: GIT_HEAD
-UPSTREAM: GIT_UPSTREAM
+UPSTREAM: origin/release/v0.8.0-inventory-truth-ledger-lock
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED - bounded Slice 2 complete
-REQUIRED_MODEL: CODEX; stop before any unauthorized ledger, migration, privacy, recovery, or runtime-boundary expansion
+ACTIVE_WRITER: CODEX
+WRITER_LOCK: CLAIMED - one final Slice 3 writer only
+REQUIRED_MODEL: CODEX; fresh independent high-risk review required after any invalidating runtime repair and before production
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.0-inventory-truth-ledger-lock-slice-2.md
-STARTING_SHA: 77286cc65827070c7d93a07eaf4454c28d2d1147
-LAST_VALID_VERIFICATION_SHA: GIT_HEAD
-LAST_VALID_RUNTIME_EVIDENCE: Production remains v0.7.2 at 84eacfcdb47a3985fed48e3ba14bb413946d4410, schema 30/0030. Isolated staging remains v0.7.2 at c4fa46f267733eeceb5d82a825431c6337f8e4e0, schema 30/0030. Slice 2 made no provider or environment mutation.
-BLOCKER: NONE
+ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
+STARTING_SHA: c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
+LAST_VALID_VERIFICATION_SHA: c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
+LAST_VALID_RUNTIME_EVIDENCE: Inventory classification harness repair passed three consecutive focused runs and adjacent classification 3/3; the complete exact-source Worker/browser gate passes 58/58 after the correction CAS repair; local reconciliation remains 20/20 with zero discrepancies/quarantine; canonical npm run check passes 125 files/868 tests; focused release/recovery/private-path/reconciliation gates pass; all 73 paths are mapped and the changed-scope privacy scan is clean.
+BLOCKER: NONE - MASTER_AUDIT CLEAN and fresh high-risk review has zero unresolved P0/P1. Remote Cloudflare access remains gated until the exact committed/pushed candidate and CI are green.
 MIGRATION_DECISION: NONE_REQUIRED
-NEXT_EXACT_ACTION: Await Earl's bounded Slice 3 prompt/approval. Do not implement Slice 3 automatically.
-HANDOFF_STATUS: READY_FOR_HANDOFF
+NEXT_EXACT_ACTION: Create the one final Slice 3 candidate commit, push the existing release branch, prepare/reuse one draft PR, and require exact-head CI before any Cloudflare access.
+HANDOFF_STATUS: ACTIVE

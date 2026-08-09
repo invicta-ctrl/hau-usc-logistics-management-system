@@ -48,11 +48,29 @@ For a separately accepted future production change:
    staging acceptance, and required review/CI;
 3. capture a fresh private production authorization package, D1 export/Time
    Travel bookmark, previous Worker version, and affected R2/provider recovery
-   inputs;
+   inputs. Recovery captured on the release branch is read-only pre-merge evidence;
 4. merge through protected GitHub without force-push;
-5. deploy only the accepted `main` SHA in the approved change window;
-6. verify exact runtime identity, health/readiness, bounded smoke, and
+5. resolve the accepted `main` SHA, prove `git diff --exit-code <candidate> <main>`
+   (tree parity), wait for required main-push CI, and stop on any merge-time tree
+   drift;
+6. regenerate private configs, authorization, release manifest, and recovery
+   evidence bound to the accepted `main` SHA; pre-merge candidate packages are
+   invalid after a merge commit changes the SHA;
+7. run `npm run production:recovery:evidence -- --staging-config <private> --production-config <private> --authorization <private> --private-dir <private> --manifest <private>`;
+8. require `npm run production:preflight`; the live deploy repeats that gate and therefore requires
+   `npm run deploy:production -- --config <private-production-config> --authorization <private> --staging-config <private-staging-config> --secrets <private-production-secrets>` only
+   in the approved change window;
+9. verify exact runtime identity, health/readiness, bounded smoke, and
    reconciliation; retain append-only history and rollback evidence.
+
+The private authorization package must approve backup, Worker deployment, rollback,
+and closure. A no-migration/no-Google/no-seed release explicitly sets the inapplicable
+mutation actions to `DENIED`; `PENDING` remains fail-closed and a denied required action
+revokes launch authorization.
+
+The production deploy wrapper additionally requires both checked-out Git branch and
+private `CANDIDATE_BRANCH` to equal `main`. A release-branch package can capture only
+pre-merge read-only recovery evidence; it cannot deploy production.
 
 On target, binding, integrity, authorization, privacy, evidence, or identity
 drift, stop the affected write path and follow `docs/PRODUCTION_INCIDENT_GUIDE.md`

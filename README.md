@@ -1,6 +1,6 @@
 # HAU-USC Logistics Management System
 
-HAU-USC Logistics is an operational logistics application with a protected production release at v0.7.2. The current repository task is V0.7.2.1 Repository Normalization and Permanent Staging Sandbox; it must not change production.
+HAU-USC Logistics is an operational logistics application with a protected production release at v0.7.2. The current repository task is the final v0.8.0 Inventory Truth and Ledger Lock candidate; production must remain unchanged until Earl authorizes the exact candidate SHA.
 
 ## Start here
 
@@ -18,9 +18,12 @@ Then perform the task's Git handshake. Do not treat this README, old task record
 ## Current state
 
 - Canonical released application: v0.7.2, release SHA 84eacfcdb47a3985fed48e3ba14bb413946d4410.
-- Active repository branch: maintenance/v0.7.2.1-repository-normalization until protected closeout merges.
-- Active accepted scope: repository governance/continuity normalization and the permanent isolated synthetic staging sandbox; see `.codex/CURRENT.md` for the exact remaining action.
-- Production runtime, data, bindings, recovery state, and release tag remain outside this maintenance scope.
+- Active repository branch: `release/v0.8.0-inventory-truth-ledger-lock`.
+- Active accepted scope: final reconciliation, Inventory server/domain contract freeze,
+  recovery proof, exact-candidate verification, isolated-staging acceptance, and a draft
+  protected PR; see `.codex/CURRENT.md` for the exact remaining action.
+- Production runtime, data, bindings, routes, and the immutable v0.7.2 tag/release remain
+  outside this candidate implementation scope.
 
 ## Local commands
 

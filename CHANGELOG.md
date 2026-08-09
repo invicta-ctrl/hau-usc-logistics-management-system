@@ -4,6 +4,10 @@
 
 ### Added
 
+- Added the accepted final v0.8.0 Slice 3 specification, aggregate-only
+  reconciliation command/report, final finding register, frozen downstream
+  Inventory contract, strict isolated D1 restore proof, and non-mutating exact-SHA
+  staging candidate evidence/smoke commands.
 - Added the owner-accepted v0.8.0 Slice 2 specification, four-item Repair
   Register, and deterministic schema-30 regressions for paired transfer,
   accepted-state reservation cancellation, stale rollback, cycle-count races,
@@ -27,11 +31,18 @@
   reservations atomically, restoring reserved reusable assets before handoff.
 - Prevented stale concurrent cycle counts from double-applying one physical count
   and corrected fallback adjustment/reversal signs without changing D1 authority.
+- Closed eight fresh high-risk concurrency, custody, and reservation-ownership gaps so
+  cancellation, release, lending approval/handoff, asset maintenance/custody, receiving,
+  and direct stock reservation have one governed owner/effect path and losing stale
+  commands retain no ledger, reservation, custody, or audit effect.
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
 - Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
 ### Changed
 
+- Froze the repository candidate identity at v0.8.0 while retaining schema 30 and
+  migration `0030_production_access_and_operations.sql`. This is a candidate only;
+  production remains unchanged v0.7.2 pending Earl's exact-SHA GO.
 - Completed the bounded v0.8.0 Slice 2 repair set under schema 30 with no
   migration, historical rewrite/reconciliation, deployment, environment/provider
   mutation, Google write, version/tag/release/merge, or Slice 3 work.
@@ -45,6 +56,16 @@
 
 ### Verification boundary
 
+- V0.8.0 Slice 3 deterministic reconciliation passes 20/20 checks on the canonical
+  two-generation schema-30 synthetic fixture with zero discrepancies, zero
+  quarantine items, and eight proven imported-history observations classified
+  `KNOWN_NONBLOCKING`. The canonical repository gate passes 124 Vitest files/860
+  tests, deterministic build/parity, Cloudflare types/build/dry-run; affected
+  Inventory/Lending browser coverage passes 17 cases with 37 intentional skips.
+  Fresh logical high-risk review is green with zero unresolved P0/P1. Exact-source
+  local Worker/browser coverage remains red at 57/58 after its focused retry failed;
+  private recovery, staging, PR, and exact-head CI were not performed, so no exact
+  candidate or owner GO is claimed.
 - V0.8.0 Slice 2 focused evidence passed: two Vitest files / nine tests,
   six adjacent unit/contract files / 76 tests, and two focused local Worker/D1
   lifecycle/receiving cases. The full shared-core repository gate passed lint,

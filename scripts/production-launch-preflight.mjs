@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,6 +7,9 @@ import {
   productionCandidateEvidence,
   validateProductionAuthorizationPackage,
 } from './production-authorization.mjs';
+import { resolvePrivatePath } from './private-path.mjs';
+
+const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 const SHA256 = /^[0-9a-f]{64}$/iu;
 const PLACEHOLDER = /^(?:<.*>|REPLACE(?:_|\b)|TBD\b|TODO\b|UNKNOWN\b|PENDING(?:_|\b))/iu;
@@ -30,13 +34,16 @@ const REQUIRED_PRIVATE_IDENTIFIERS = Object.freeze([
 
 const completedPrivateValue = (value, minimumLength = 1) =>
   typeof value === 'string' && value.trim().length >= minimumLength && !PLACEHOLDER.test(value.trim());
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
 export async function validateProductionLaunchPreflight({
   authorization,
   authorizationPath,
   currentCandidate,
   stagingConfig,
+  stagingConfigRaw,
   productionConfig,
+  productionConfigRaw,
   productionSecrets,
   googleConfig,
   backupManifest,
@@ -145,6 +152,24 @@ export async function validateProductionLaunchPreflight({
   }
 
   if (backupManifest?.environment !== 'PRODUCTION') issues.push('backup: environment must be PRODUCTION');
+  if (backupManifest?.candidateSha !== currentCandidate?.releaseSha) {
+    issues.push('backup: candidate SHA must match the exact accepted release SHA');
+  }
+  if (backupManifest?.candidateBranch !== currentCandidate?.branch) {
+    issues.push('backup: candidate branch must match the exact accepted release branch');
+  }
+  if (
+    typeof stagingConfigRaw !== 'string' ||
+    backupManifest?.fingerprints?.stagingConfigSha256 !== sha256(stagingConfigRaw)
+  ) {
+    issues.push('backup: staging config fingerprint must match the exact preflight input');
+  }
+  if (
+    typeof productionConfigRaw !== 'string' ||
+    backupManifest?.fingerprints?.productionConfigSha256 !== sha256(productionConfigRaw)
+  ) {
+    issues.push('backup: production config fingerprint must match the exact preflight input');
+  }
   if (!Array.isArray(backupManifest?.integrity) || backupManifest.integrity.join(',') !== 'ok') {
     issues.push('backup: integrity must be ok');
   }
@@ -186,22 +211,66 @@ async function run() {
       'Usage: node scripts/production-launch-preflight.mjs <absolute-authorization> <absolute-staging-config> <absolute-production-secrets>',
     );
   }
-  const authorization = await readJson(authorizationPath);
-  const [currentCandidate, stagingConfig, productionConfig, productionSecrets, googleConfig, backupManifest] =
-    await Promise.all([
-      productionCandidateEvidence(),
-      readJson(stagingPath),
-      readJson(authorization.target.privateWranglerConfigPath),
-      readJson(secretsPath),
-      readJson(authorization.target.privateGoogleConfigPath),
-      readJson(authorization.target.privateBackupManifestPath),
-    ]);
+  const [resolvedAuthorizationPath, resolvedStagingPath, resolvedSecretsPath] = await Promise.all([
+    resolvePrivatePath(authorizationPath, {
+      repoRoot,
+      label: 'Production authorization package',
+      kind: 'file',
+    }),
+    resolvePrivatePath(stagingPath, {
+      repoRoot,
+      label: 'Private staging config',
+      kind: 'file',
+    }),
+    resolvePrivatePath(secretsPath, {
+      repoRoot,
+      label: 'Private production secrets',
+      kind: 'file',
+    }),
+  ]);
+  const authorization = await readJson(resolvedAuthorizationPath);
+  const [productionConfigPath, googleConfigPath, backupManifestPath] = await Promise.all([
+    resolvePrivatePath(authorization.target?.privateWranglerConfigPath, {
+      repoRoot,
+      label: 'Private production config',
+      kind: 'file',
+    }),
+    resolvePrivatePath(authorization.target?.privateGoogleConfigPath, {
+      repoRoot,
+      label: 'Private production Google config',
+      kind: 'file',
+    }),
+    resolvePrivatePath(authorization.target?.privateBackupManifestPath, {
+      repoRoot,
+      label: 'Private production backup manifest',
+      kind: 'file',
+    }),
+  ]);
+  const [
+    currentCandidate,
+    stagingConfigRaw,
+    productionConfigRaw,
+    productionSecrets,
+    googleConfig,
+    backupManifest,
+  ] = await Promise.all([
+    productionCandidateEvidence(),
+    readFile(resolvedStagingPath, 'utf8'),
+    readFile(productionConfigPath, 'utf8'),
+    readJson(resolvedSecretsPath),
+    readJson(googleConfigPath),
+    readJson(backupManifestPath),
+  ]);
+  const stagingConfig = JSON.parse(stagingConfigRaw);
+  const productionConfig = JSON.parse(productionConfigRaw);
   const result = await validateProductionLaunchPreflight({
     authorization,
-    authorizationPath,
+    authorizationPath: resolvedAuthorizationPath,
     currentCandidate,
     stagingConfig,
+    stagingConfigRaw,
     productionConfig,
+    productionConfigRaw,
     productionSecrets,
     googleConfig,
     backupManifest,
@@ -222,7 +291,8 @@ async function run() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   run().catch((error) => {
-    console.error(error?.code === 'ENOENT' ? 'Production launch preflight input is missing.' : error.message);
+    void error;
+    console.error('Production launch preflight failed: PRIVATE_INPUT_OR_AUTHORIZATION_ERROR');
     process.exitCode = 1;
   });
 }

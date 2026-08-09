@@ -3263,7 +3263,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.2'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.8.0'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -6043,7 +6043,7 @@ export function createRuntimeExtensions(options) {
       backendMode === 'mock' && !authoritativeIdentity.verified
         ? {
             environment: String(state.environment ?? config.appEnvironment ?? 'DEVELOPMENT').toUpperCase(),
-            appVersion: String(state.appVersion ?? config.appVersion ?? '0.7.2'),
+            appVersion: String(state.appVersion ?? config.appVersion ?? '0.8.0'),
             candidateSha: '',
             schemaVersion: '',
             verified: true,

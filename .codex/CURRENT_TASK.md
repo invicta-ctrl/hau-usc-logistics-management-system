@@ -1,26 +1,25 @@
 # Current Bounded Task
 
-INTENT: BUG_FIX
-SECONDARY INTENTS: TESTING, REFACTOR, ARCHITECTURE_HARDENING, OWNER_APPROVED_SPECIFICATION_RECORDING
+INTENT: DEPLOYMENT
+SECONDARY INTENTS: BUG_FIX, TESTING, REPOSITORY_MAINTENANCE, MIGRATION_VERIFICATION, INCIDENT_SAFETY
 MODE: EXECUTE
-OBJECTIVE: Repair only the four Slice 1-proven Inventory ledger, reservation lifecycle, cycle-count concurrency, and presentation sign gaps under schema 30.
-TARGET: existing release/v0.8.0-inventory-truth-ledger-lock from Slice 1 SHA 77286cc65827070c7d93a07eaf4454c28d2d1147
-SKILLS: lean-ctx for targeted reads, searches, and compressed command output; no visual, deployment, provider, database, or artifact skill applied
+OBJECTIVE: Audit and finish the preserved v0.8.0 Slice 3 work, close only proven release blockers, freeze one exact candidate, obtain exact-head CI/staging/recovery acceptance, and conditionally promote that exact release through protected main to production.
+TARGET: release/v0.8.0-inventory-truth-ledger-lock from committed Slice 2 SHA c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
+SKILLS: lean-ctx for targeted repository work; cloudflare-deploy for exact Worker/D1/R2 authentication, isolation, recovery, deployment, and rollback checks; repository-native Playwright and release tooling remain authoritative
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.0-inventory-truth-ledger-lock-slice-2.md
-REPAIR_REGISTER: docs/INVENTORY_SLICE_2_REPAIR_REGISTER.md
-AUTHORITY: Earl's directly submitted Slice 2 prompt; live Git and AGENTS.md; canonical current chain; accepted Slice 1 and Slice 2 specifications; Slice 1 baseline/defect register; only affected source/tests/direct callers
-REQUIRED_MODEL: CODEX; stop rather than make an unauthorized ledger, migration, privacy, recovery, schema, historical-data, or external-runtime decision
-ACTIVE_WRITER: NONE
-GIT_UPSTREAM: GIT_UPSTREAM
-RISK: HIGH - inventory truth, immutable ledger/history, authorization, idempotency, concurrency, privacy, and migration sufficiency
-DELIVERABLE: Accepted Slice 2 spec; Repair Register; focused regressions; minimal verified repairs; updated INV-01..INV-10 matrix/status/continuation/changelog/handoff; one clean commit; preservation push; released writer lock
-SCOPE: Only V080-S1-INV-01 through -04; governance/spec records; focused local/Worker-D1 tests; minimal source repair; one commit and existing-branch push
-OUT_OF_SCOPE: Anything not grounded in Slice 1; schema/migration; historical reconciliation; immutable-history rewrite; environment/provider/Google writes; deployment; version/tag/release/PR/merge; new branch; UI redesign; broad refactor; Slice 3
-VERIFICATION: Pre/post governance and handoff checks; per-defect regression and adjacent invariant/direct-caller/Worker-D1 tests; full shared-core repository gate; git diff --check; logical diff and secret/PII scan; upstream preservation verification
-STOP_CONDITIONS: Missing/contradictory Slice 1 evidence; wrong/diverged Git or writer state; runtime/staging crossover; migration need; immutable-history or historical-data rewrite; auth/privacy ambiguity; materially expanded root cause; new out-of-scope P0/P1; two failed bounded repair attempts; unauthorized private-data dependency; secret/private identifier exposure
-RESULT: COMPLETE - all four Slice 1 gaps reproduced and repaired under schema 30; no migration, history rewrite, reconciliation, or protected external mutation required.
-NEXT_EXACT_ACTION: Await Earl's bounded Slice 3 prompt/approval. Do not implement Slice 3 automatically.
+ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
+AUTHORITY: Earl's directly submitted master-release prompt; live Git; AGENTS/current chain; base Slice 3 specification; current launch/staging/recovery/production runbooks; exact live provider evidence
+REQUIRED_MODEL: CODEX with fresh independent high-risk review before production; no subagent may edit
+ACTIVE_WRITER: CODEX
+GIT_UPSTREAM: origin/release/v0.8.0-inventory-truth-ledger-lock
+RISK: CRITICAL - production release, recovery, D1/R2, authentication, Inventory ledger, exact release identity
+DELIVERABLE: RELEASED only after clean audit/local/CI/staging/recovery/production gates and exact closeout; otherwise STOPPED or ROLLED_BACK with all evidence preserved
+SCOPE: accepted v0.8.0 Slice 3 plus bounded Inventory classification harness and release/recovery guard repairs and the exact staging/production release actions authorized by the master amendment
+OUT_OF_SCOPE: Slice 4, migration 0031, broad UI/design/auth/data-history repair, force push, non-exact deploy, unsafe staging mutation, production auth bypass, Google/provider writes, playground implementation, v0.8.1+
+VERIFICATION: complete diff/invariant/security/migration audit; focused/direct-caller/Worker-D1/browser/canonical gates; exact-head CI/review; private staging and production recovery/restore; exact-SHA staging/production identity, smoke, isolation, and reconciliation; tag/release parity
+STOP_CONDITIONS: any master prompt hard stop, especially red required gate after two bounded attempts, unresolved P0/P1, migration need, unknown dirty work, target/SHA/schema/binding/privacy drift, failed recovery, staging failure, production preflight discrepancy, or cross-environment reachability
+RESULT: ACTIVE
+NEXT_EXACT_ACTION: Create the one final Slice 3 candidate commit, push the existing release branch, prepare/reuse one draft PR, and require exact-head CI before any Cloudflare access.
 
-Gate 0 evidence: repository root and branch verified; local and origin release heads equal `77286cc65827070c7d93a07eaf4454c28d2d1147`; upstream divergence `0/0`; worktree clean; Slice 1 is exactly one commit above `origin/main`; Slice 1 runtime/migration diff is empty; handoff/governance checks passed; ACTIVE_WRITER was NONE; `MIGRATION_DECISION: NONE_REQUIRED`; no unresolved P0/P1 or stop condition.
+Phase 0/local audit evidence: current branch/HEAD/upstream and recorded dirty Slice 3 paths match the prior stop handoff; upstream divergence is 0/0; origin main remains `88bfdf026e716ffdc779cb2ce7534978f36df0f3`; origin release remains `c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d`; v0.7.2 remains the latest GitHub release and resolves to production baseline `84eacfcdb47a3985fed48e3ba14bb413946d4410`; no v0.8.0 tag exists; no competing writer or unknown work was found. The browser blocker was a stale-element harness race and is green (focused 3x, adjacent 3/3, full 58/58 after correction CAS repair). Canonical `npm run check` passes 125 files/868 tests; focused release/recovery/private-path/reconciliation checks pass; all 73 paths are mapped; privacy, governance, handoff, lint, build/parity, types, dry-run, and diff checks are green. Live Cloudflare target checks remain deliberately deferred until the committed/pushed/CI-green candidate per repository remote preconditions.

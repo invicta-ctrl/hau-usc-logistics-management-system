@@ -118,7 +118,7 @@ async function createSchema30InventoryHarness(database) {
     ) STRICT`,
     `CREATE TABLE lending_ticket_assets (
       lending_ticket_id TEXT NOT NULL, asset_id TEXT NOT NULL UNIQUE,
-      assigned_at TEXT NOT NULL, assigned_by TEXT NOT NULL, released_at TEXT,
+      assigned_at TEXT NOT NULL, assigned_by TEXT NOT NULL, released_at TEXT, returned_at TEXT,
       PRIMARY KEY (lending_ticket_id, asset_id)
     ) STRICT`,
     `CREATE TABLE inventory_asset_movements (
