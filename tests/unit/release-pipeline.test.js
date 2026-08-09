@@ -7,6 +7,16 @@ const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
 describe('v0.8.0 release pipeline', () => {
+  it('does not require retired generated Apps Script UI artifacts for a V5 clean checkout', async () => {
+    const check = await read('scripts/check-apps-script.mjs');
+
+    expect(check).toContain(
+      "const v5WorkerCandidate = applicationIndex.includes('./v5/integration/entry.js')",
+    );
+    expect(check).toContain('requiredFiles.filter((file) => !generatedAppsScriptFiles.has(file))');
+    expect(check).toContain('Legacy generated UI artifacts are not applicable');
+  });
+
   it('keeps the Cloudflare preview static, manually gated, and free of protected bindings', async () => {
     const [workflow, config, handoff] = await Promise.all([
       read('.github/workflows/cloudflare-preview.yml'),
