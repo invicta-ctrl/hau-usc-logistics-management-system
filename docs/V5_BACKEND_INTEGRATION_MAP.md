@@ -94,7 +94,7 @@ Each connected route test must record: route, exact API contract, D1 domain, R2 
 
 Earl's minimum contract-completeness amendment resolved the original public-request and public-lending stop. The authorized additions are present in `src/v5/src/surfaces/public.js` and use only existing V5 field, row, checkbox, button, typography, spacing, validation, and responsive patterns; no new CSS rule was introduced for them.
 
-The integration entry clears every backend-backed frozen collection before importing the V5 application. `src/v5/integration/backend.js` uses only same-origin Worker/API paths, and `src/v5/integration/entry.js` gives browser state no API-origin selector. `src/v5/integration/view-models.js` replaces the cleared arrays with scoped bootstrap/module/detail DTOs. `src/v5/integration/runtime.js` provides session guards, route loading, form/command adaptation, real-data detail binding, safe errors, mock suppression on unloaded private tracking routes, and fail-closed unsupported controls.
+The build bridge defers the frozen V5 application's boot sequence. The integration entry clears every backend-backed frozen collection before invoking that boot sequence. `src/v5/integration/backend.js` uses only same-origin Worker/API paths, and `src/v5/integration/entry.js` gives browser state no API-origin selector. `src/v5/integration/view-models.js` replaces the cleared arrays with scoped bootstrap/module/detail DTOs. `src/v5/integration/runtime.js` provides session guards, route loading, form/command adaptation, real-data detail binding, safe errors, mock suppression on unloaded private tracking routes, and fail-closed unsupported controls.
 
 The authoritative V5 worktree advanced from the initial snapshot to accepted correction commit `908653dc956c9ccffa68ac0b350fc23b69f053ea`. The vendored source was reconciled to that current authority. Its only intentional non-identical source files are:
 
@@ -109,14 +109,19 @@ All CSS, fonts, images, icons, registry, routes, and other source files match th
 LIVE_PREVIEW: AVAILABLE
 DEV_URL_SAFE: http://localhost:4173/
 REQUESTED_ROUTE: #/request.queue
+CURRENT_ROUTE: #/public.request-intake
 SERVED_WORKTREE: active/hau-usc-logistics-management-system
 STARTING_SHA: a06566f58ffeed826d8b7a53fe0421d9d68802b1
-WORKTREE_STATE: DIRTY - accepted V5 integration in progress
+CANDIDATE_SHA: 947afedb7d0ec4528b4834220facc13ab55930f1
+CANDIDATE_TREE_SHA: 5042fe9e56fda4d7b6d961464f7a5c3686d95d5d
+STAGING_ARTIFACT_SHA256: 3e0a2a16888766b7...
+WORKTREE_STATE: CLEAN - application candidate deployed; closeout records committed separately
 HOT_RELOAD: AVAILABLE through the repository-native Vite server
 BACKEND_TARGET: verified STAGING Worker through a loopback same-origin proxy
 CURRENT_ROUTE_AUTH_RESULT: unauthenticated request.queue redirected to public.signin
-REAL_BACKEND_DATA_OBSERVED: public request options included current D1-derived playground event and stock-area values
+REAL_BACKEND_DATA_OBSERVED: public request options returned current D1-derived playground data; the browser rendered 2 event-series choices and 3 stock-area choices including their placeholders
 MOCK_DATA_REMAINING: frozen illustrative copy/placeholders only; backend-backed arrays are cleared before render
 OTG_STEERS_APPLIED: minimum contract fields; live built-in-browser preview
-BROWSER_CONTROL: later localhost inspection blocked by browser URL policy; server remains available for Earl
+BUILT_IN_BROWSER: AVAILABLE on the deployed private HTTPS playground; left open on public.request-intake
+RUNTIME_ACCEPTANCE: exact candidate rendered with its classic script in BODY; protected internal route failed closed to staff sign-in; no new browser runtime error after cache-busted candidate load
 ```
