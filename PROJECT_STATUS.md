@@ -4,11 +4,15 @@
 
 On `frontend-design-integration`, Earl's explicit continuation instruction
 authorized completion of the existing accepted late v0.7.3 front-end slice.
-The candidate is front-end only and locally verified: 842 unit tests and 146
-applicable Playwright tests pass; generated artifact parity passes; Hallmark is
-58/58. Final commit/push and anonymous GPT Sites preview verification are
-pending. Production remains v0.7.2 and unchanged. This branch-local record does
-not replace the project-wide `main` pointer below.
+The candidate is front-end only and verified: 842 unit tests and 146 applicable
+Playwright tests pass; generated artifact parity passes; Hallmark is 58/58.
+Candidate `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1` was pushed and published as
+GPT Sites version 1 at
+https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals. A fresh
+cookie-free Chromium check passed anonymous access, responsiveness, theme,
+motion/fallback, and sanitized interactions with no protected API calls.
+Production remains v0.7.2 and unchanged. This branch-local record does not
+replace the project-wide `main` pointer below.
 
 ## Current state
 

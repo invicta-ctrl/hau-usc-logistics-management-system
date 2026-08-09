@@ -7,10 +7,11 @@ The current block is the operator resume record. Historical evidence remains rea
 - **Worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration`.
 - **Authority:** accepted `.codex/specs/active/v0.7.3-frontend-design-integration.md` plus Earl's 2026-08-09 instruction to continue Claude's exact state.
 - **Recovery:** classification B, partial committed checkpoint at `85f064a`; Claude work and two untracked artifacts preserved.
-- **Current state:** implementation and local parity/visual verification complete; final commit/push and GPT Sites anonymous-public verification pending.
-- **Evidence:** 842 unit tests; 146 applicable Playwright tests; generated parity; all required design reports and screenshot matrix.
+- **Current state:** complete; candidate `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1` pushed and published as GPT Sites version 1 with anonymous public access.
+- **Public preview:** https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals; fresh cookie-free Chromium returned HTTP 200 with no account wall.
+- **Evidence:** 842 unit tests; 146 applicable Playwright tests; generated parity; all required design reports and screenshot matrix; required widths, theme persistence, 3D/mobile/reduced-motion fallbacks, sanitized Request submission, menu/Escape, and Lending return passed on the public URL with zero `/api/` calls or browser errors.
 - **Boundary:** front-end only; no backend, contract, migration, provider, protected-data, staging, production, merge, tag, or release action.
-- **Resume:** use `.codex/CURRENT_TASK.md` and `.codex/CURRENT_HANDOFF.md`; do not reconstruct from chat or restart from the design preview.
+- **Resume:** no implementation work remains. Earl may review the public candidate; use `.codex/CURRENT_TASK.md` and `.codex/CURRENT_HANDOFF.md` for any separately authorized next action, and do not reconstruct from chat or restart from the design preview.
 
 ## Current resume block
 

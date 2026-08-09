@@ -19,15 +19,15 @@ SCOPE: Frontend source, frontend tests, generated frontend artifacts through rep
 OUT_OF_SCOPE: Backend, service contracts, auth model, migrations, provider/D1/R2/Google writes, staging/production deploy, merge, tag, DNS, protected data
 VERIFICATION: Unit, lint, build, dist parity, focused and broad Playwright, accessibility, responsive, reduced motion, 200 percent zoom, governance, diff review, logged-out GPT Sites check
 STOP_CONDITIONS: Backend or protected write required; production/staging/merge/tag required; anonymous GPT Sites unavailable; route or invariant conflict; unclassifiable work
-ACTIVE_WRITER: CODEX
-WRITER_LOCK: CLAIMED - 2026-08-09
+ACTIVE_WRITER: NONE
+WRITER_LOCK: RELEASED - 2026-08-09
 GIT_UPSTREAM: origin/frontend-design-integration
 ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
 CODEX_STARTING_SHA: 85f064a0f809654d584853204e9a33eb1fc52d32
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
 ROLLBACK_POINT: f0312b76bd8401e2aa5b9947252642bdb693b19d
-STATUS: VERIFIED FRONT-END CANDIDATE - GPT SITES PUBLICATION AND FINAL COMMIT/PUSH PENDING
-NEXT_EXACT_ACTION: Finish final candidate gates, commit and push the candidate branch, then publish and verify the sanitized candidate through anonymous GPT Sites.
+STATUS: COMPLETE - VERIFIED FRONT-END CANDIDATE PUBLISHED AS AN ANONYMOUS GPT SITES PREVIEW
+NEXT_EXACT_ACTION: Earl may review the public GPT Sites candidate at https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals; no merge or production/staging deployment is authorized.
 
 ## Recovery
 
@@ -88,6 +88,13 @@ merge, release, migration, backend, provider, or protected-data authority.
 - Impeccable detector - run once after UI completion; all three findings fixed.
 - Required widths, light/dark, reduced motion, keyboard/focus, static fallback,
   and 200% zoom have visual/browser evidence.
+- Candidate source committed at `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1`
+  and pushed to `origin/frontend-design-integration` before publication.
+- GPT Sites version 1 published the exact candidate SHA with public access.
+- A fresh cookie-free Chromium context opened `/portals` at HTTP 200 without
+  an account wall; all six required widths, theme persistence, 3D/mobile and
+  reduced-motion fallbacks, Request submission, menu controls, and Lending
+  return passed with zero `/api/` requests or browser errors.
 
 ## Boundaries
 
@@ -95,19 +102,18 @@ FRONT_END_ONLY: YES
 BACKEND_CHANGES: NONE
 SERVICE_CONTRACT_CHANGES: NONE
 MIGRATIONS: NONE
-PROVIDER_OR_PRIVATE_DATA_WRITES: NONE
+PROVIDER_OR_PRIVATE_DATA_WRITES: GPT Sites publication only; no direct Cloudflare, D1, R2, Google, protected API, or private-data write
 STAGING_OR_PRODUCTION_DEPLOYMENT: NONE
 LIVE_PRODUCTION_CHANGED: NO
 
-## Remaining exact actions
+## Completion
 
-1. Rebuild after the final production/mock Staff Sign In routing repair.
-2. Run final invalidated unit/lint/browser/governance/diff gates.
-3. Commit and push this candidate branch; verify remote SHA.
-4. Publish the exact sanitized candidate through GPT Sites only if anonymous
-   public access is available; verify it logged out/incognito.
-5. Record the URL and final SHA in `.codex/CURRENT_HANDOFF.md` and release the
-   branch-local writer lock.
+- Public preview: https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals
+- Public without login: PASS
+- Frontend candidate SHA: `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1`
+- Writer lock: released
+- Next step requires a separate owner decision; this task does not authorize
+  merge, release, staging, production, or protected-system work.
 
 ## Do not repeat
 

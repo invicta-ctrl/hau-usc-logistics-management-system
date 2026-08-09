@@ -3,15 +3,15 @@
 FROM: CODEX
 TO: EARL / NEXT_AGENT
 PROGRAM: HAU-USC Logistics V4.1 Production Front-End Integration
-STATUS: VERIFIED CANDIDATE - GPT SITES PUBLICATION AND FINAL COMMIT/PUSH PENDING
+STATUS: COMPLETE - VERIFIED CANDIDATE PUBLISHED AS AN ANONYMOUS GPT SITES PREVIEW
 BRANCH: frontend-design-integration
 HEAD: GIT_HEAD
 STARTING_SHA: 85f064a0f809654d584853204e9a33eb1fc52d32
 FINAL_SHA: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration
-WORKTREE_STATE: DIRTY - verified candidate changes plus two preserved Claude untracked files
-ACTIVE_WRITER: CODEX
+WORKTREE_STATE: DIRTY - two preserved Claude untracked files and one Codex PDF-render temp directory remain untracked
+ACTIVE_WRITER: NONE
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
@@ -36,15 +36,18 @@ GENERATED_ARTIFACTS: dist/index.html; standalone shareable; guided demo; seven m
 BACKEND_CHANGES: NONE
 SERVICE_CONTRACT_CHANGES: NONE
 MIGRATIONS: NONE
-EXTERNAL_WRITES: NONE PENDING GPT SITES PUBLIC PREVIEW
-EXTERNAL_ACTIONS: Read-only Git fetch and local tests/builds only; GPT Sites publication not yet performed.
+EXTERNAL_WRITES: Candidate branch push and GPT Sites project/access/version/public-preview publication only.
+EXTERNAL_ACTIONS: Pushed exact frontend candidate `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1`; published GPT Sites version 1 with public access. No direct Cloudflare, D1, R2, Google, protected API, staging, or production write.
 LIVE_PRODUCTION_CHANGED: NO
 ROLLBACK_POINT: f0312b76bd8401e2aa5b9947252642bdb693b19d
-UNRESOLVED_RISKS: GPT Sites anonymous public access and logged-out verification are not yet proven. Candidate commit and remote SHA are pending.
+UNRESOLVED_RISKS: `npm run handoff:verify` retains the known branch-local governance mismatch because `.codex/CURRENT.md` is main-owned and points to the completed rollout-stabilization task. It was intentionally not overwritten. GPT Sites is a sanitized public preview, not a production-auth or provider integration environment.
 BLOCKER: NONE
-GPT_SITES_URL: PENDING
-PUBLIC_WITHOUT_LOGIN: PENDING
-NEXT_EXACT_ACTION: Finish final candidate gates, commit and push the candidate branch, then publish and verify the sanitized candidate through anonymous GPT Sites.
+GPT_SITES_URL: https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals
+PUBLIC_WITHOUT_LOGIN: PASS - fresh cookie-free Chromium, HTTP 200, no OpenAI/ChatGPT account wall
+FRONTEND_CANDIDATE_SHA: 0ccc0dee60a5eef79e57ef896bea25b4ea0284b1
+GPT_SITES_VERSION: 1
+GPT_SITES_BROWSER_EVIDENCE: Six required widths had no horizontal overflow; light/dark persistence passed; desktop 3D settled; mobile and reduced-motion fallbacks passed; public Request submission produced an in-memory sample receipt; menu/Escape and Lending return passed; zero `/api/` calls, console errors, or page errors.
+NEXT_EXACT_ACTION: Earl may review the public GPT Sites candidate at https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals; no merge or production/staging deployment is authorized.
 RESUME_COMMANDS: git status --short --branch; git rev-parse HEAD; git fetch --prune origin; git rev-list --left-right --count origin/frontend-design-integration...HEAD; npm run check:governance; npm run verify:dist
 PROHIBITED_ACTIONS: No merge, tag, staging/production deploy, backend/service-contract/auth/migration/provider/protected-data write, destructive Git recovery, alternate hosting provider, or removal of preserved Claude artifacts.
-DO_NOT_REPEAT: Do not reconstruct Claude work; rerun Impeccable detector; hand-edit generated HTML; use the stale untracked integrated preview as the candidate; change production contracts; merge; tag; deploy staging/production; or touch protected data/providers.
+DO_NOT_REPEAT: Do not reconstruct Claude work; rerun Impeccable detector; rerun unchanged expensive suites; hand-edit generated HTML; use the stale untracked integrated preview as the candidate; recreate or republish the unchanged GPT Sites version; change production contracts; merge; tag; deploy staging/production; or touch protected data/providers.
