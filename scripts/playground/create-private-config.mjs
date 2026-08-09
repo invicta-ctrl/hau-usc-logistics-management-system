@@ -72,6 +72,9 @@ async function run() {
   ) {
     throw new Error('Resource manifest is missing the exact private playground hostname.');
   }
+  if (!manifest.playgroundRequiredVars?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON) {
+    throw new Error('Resource manifest is missing required private playground configuration.');
+  }
   const config = {
     name: staging.name,
     main: path.join(repoRoot, 'src', 'worker', 'index.js'),
@@ -118,6 +121,8 @@ async function run() {
       PRODUCTION_SCHEMA_VERSION: String(baselineReport.schemaVersion),
       PLAYGROUND_BASELINE_CAPTURED_AT: baselineReport.capturedAt,
       RECOVERY_HOSTNAME: manifest.playgroundHostname,
+      ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON:
+        manifest.playgroundRequiredVars.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON,
       ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'disabled',
       SANDBOX_RESET_ALLOWED: false,
     },

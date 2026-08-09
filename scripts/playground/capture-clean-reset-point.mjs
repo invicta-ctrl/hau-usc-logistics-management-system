@@ -60,6 +60,27 @@ function preservedPlaygroundHostname() {
   return '';
 }
 
+function preservedIdentityClasses() {
+  const deployments = wrangler(['deployments', 'list', '--env', 'staging', '--json'], { json: true });
+  for (const deployment of deployments) {
+    for (const version of deployment.versions ?? []) {
+      const detail = wrangler(['versions', 'view', version.version_id, '--env', 'staging', '--json'], {
+        json: true,
+      });
+      const value = detail?.resources?.bindings?.find(
+        (entry) => entry.name === 'ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON' && typeof entry.text === 'string',
+      )?.text;
+      try {
+        const parsed = JSON.parse(value ?? '');
+        if (Array.isArray(parsed) && parsed.length) return value;
+      } catch {
+        // Continue through preserved versions without printing private configuration.
+      }
+    }
+  }
+  return '';
+}
+
 async function run() {
   const input = process.argv[2];
   if (!path.isAbsolute(input ?? '')) throw new Error('Manifest path must be absolute.');
@@ -109,6 +130,11 @@ async function run() {
   const hostname = preservedPlaygroundHostname();
   if (!hostname) throw new Error('A preserved valid playground hostname was not found in Worker history.');
   manifest.playgroundHostname = hostname;
+  const identityClasses = preservedIdentityClasses();
+  if (!identityClasses) throw new Error('Preserved playground identity-class configuration was not found.');
+  manifest.playgroundRequiredVars = {
+    ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON: identityClasses,
+  };
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { mode: 0o600 });
   console.log('Playground D1 clean reset point: CAPTURED AND VERIFIED');
   console.log('The private bookmark, database identity, and resource names were not printed.');

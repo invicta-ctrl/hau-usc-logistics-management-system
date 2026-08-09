@@ -33,6 +33,12 @@ export function validatePlaygroundConfig({
     issues.push('Playground provider/email delivery must be disabled');
   }
   if (
+    config?.vars?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON !==
+    manifest?.playgroundRequiredVars?.ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON
+  ) {
+    issues.push('Identity-class configuration must match the private playground manifest');
+  }
+  if (
     config?.vars?.RECOVERY_HOSTNAME !== manifest?.playgroundHostname ||
     !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]+\.workers\.dev$/u.test(
       config?.vars?.RECOVERY_HOSTNAME ?? '',

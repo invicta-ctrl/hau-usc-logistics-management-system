@@ -7,6 +7,9 @@ const artifact = 'c'.repeat(64);
 const manifest = {
   status: 'READY',
   playgroundHostname: 'playground.example.workers.dev',
+  playgroundRequiredVars: {
+    ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON: '[{"id":"TEST","domains":["example.test"]}]',
+  },
   d1: { databaseId: 'playground-d1-id' },
   resources: {
     names: {
@@ -34,6 +37,7 @@ function config() {
       PLAYGROUND_LABEL: 'ISOLATED_STAGING_PLAYGROUND',
       ACCOUNT_APPLICATION_EMAIL_PROVIDER: 'disabled',
       RECOVERY_HOSTNAME: 'playground.example.workers.dev',
+      ACCOUNT_APPLICATION_IDENTITY_CLASSES_JSON: '[{"id":"TEST","domains":["example.test"]}]',
       CANDIDATE_BRANCH: 'release/v0.8.1-playground',
       CANDIDATE_SHA: sha,
       CANDIDATE_TREE_SHA: tree,
