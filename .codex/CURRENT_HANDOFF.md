@@ -1,7 +1,7 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:terra_governance_writer
-TO: EARL DESIGN GATE
+TO: LUNA EXACT-SHA AUDIT / SOL OWNER HANDOFF
 BRANCH: release/v0.8.1-isolated-staging-playground
 HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
@@ -13,7 +13,7 @@ CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-design-dna-research-amendment.md
 MILESTONE: V0.8.1 Design DNA Research Gate / Sol-Terra-Luna Governance Amendment
-SLICE: REPOSITORY-GOVERNANCE DOCUMENTATION AND VALIDATION ONLY
+SLICE: REPOSITORY-GOVERNANCE CLOSURE DOCUMENTATION ONLY
 OUTCOME: COMPLETE_AWAITING_OWNER_DECISION
 STARTING_SHA: a578e72ba86d9c72908892aa6812831ac4a56e4e
 FROZEN_DESIGN_RESEARCH_CANDIDATE_SHA: 433ac260092960328a586cf50ed7269f08e0a19b
@@ -24,9 +24,9 @@ PR: #23 DRAFT
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
 NEW_MIGRATION: NONE
-COMPLETED: Design DNA research remains complete; the governance amendment now defines canonical Sol/Terra/Luna routing, Luna MAX profiles, project limits, current-chain lock protocol, amendment record, and validator coverage while preserving the Design Gate boundary
-VALIDATION: pre-final Sol review PASS; Luna governance mapping/final audit PASS; focused governance-unit coverage passed (1 file / 14 tests); `check:agents` passed (12 project files); `check:continuation`, `handoff:verify`, focused Markdown/JavaScript Prettier, `git diff --check`, complete logical-diff review, and targeted active-governance contradiction scan passed; TOML is validated by the restricted-TOML governance validator; runtime suites were excluded
-EXTERNAL_ACTIONS: the only external Git action for this closure is the authorized normal commit/push to the existing branch/draft PR after final reviews, required checks, and protected Git authorization re-verification; no force-push, merge, deployment, provider/data, Google, D1/R2, migration, or recovery action
+COMPLETED: Design DNA research remains complete; initial governance commit 4825f02dfa96b9e5e6fe018d1bfd252d7720f47d defines canonical Sol/Terra/Luna routing, Luna MAX profiles, project limits, current-chain lock protocol, amendment record, and validator coverage while preserving the Design Gate boundary; the bounded post-commit closure-truth repair is complete; Luna's pre-commit final content audit PASS occurred before this closure commit; an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff
+VALIDATION: pre-final Sol review PASS; Luna governance mapping/review PASS; Luna pre-commit final content audit PASS; focused governance-unit coverage passed (1 file / 14 tests); `check:agents` passed (12 project files); `check:continuation`, `handoff:verify`, focused Markdown/JavaScript Prettier, `git diff --check`, complete logical-diff review, ledger/record coherence, targeted active-governance contradiction scan, deterministic AGENTS.md inventory, and no-disallowed-path check passed; TOML is validated by the restricted-TOML governance validator; an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff; runtime suites are excluded
+EXTERNAL_ACTIONS: initial normal governance commit/push 4825f02dfa96b9e5e6fe018d1bfd252d7720f47d completed after the pre-final Sol review, Luna review/recheck, required checks, and protected Git authorization re-verification; normal closure commit/push is limited to the existing branch/draft PR after fresh protected Git revalidation, then an independent read-only exact-SHA audit follows before Sol's owner handoff; no force-push, merge, deployment, provider/data, Google, D1/R2, migration, or recovery action is authorized or performed
 BLOCKER: NONE
 PRODUCTION: v0.8.0 unchanged; no mutation authorized or performed
 GOOGLE_WRITES: NONE
@@ -48,6 +48,8 @@ CANONICAL_INTEGRATION_WRITER_STATUS: COMPLETE
 GOVERNANCE_AMENDMENT: .codex/specs/active/sol-terra-luna-orchestration-governance-amendment.md
 SOL_PREFINAL_REVIEW: PASS
 LUNA_PREFINAL_AUDIT: PASS
+LUNA_FINAL_CONTENT_AUDIT: PASS
+LUNA_EXACT_SHA_AUDIT: REQUIRED_AFTER_CLOSURE_COMMIT_PUSH
 TERRA_CHILDREN_USED: 1
 LUNA_CHILDREN_USED: 1
 SOL_CHILDREN_USED: 0
@@ -58,7 +60,7 @@ DO_NOT_REPEAT: do not redesign or deploy during the research gate; do not copy t
 
 ## Task-local delegation ledger
 
-| AGENT_ID                | MODEL     | ROLE                               | MODE  | SCOPE                                                   | WORKTREE_OR_PATCH              | OWNED_PATHS                                                                                                      | EXCLUDED_PATHS                                                    | DEPENDENCIES                                   | STATUS   | OUTPUT / EVIDENCE                                                    |
-| ----------------------- | --------- | ---------------------------------- | ----- | ------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- | -------- | -------------------------------------------------------------------- |
-| luna_governance_map     | LUNA MAX  | GOVERNANCE_MAPPING_AND_FINAL_AUDIT | READ  | Active governance mapping and final contradiction audit | Canonical worktree, read-only  | None                                                                                                             | All tracked repository paths                                      | Current-chain lock and combined candidate diff | COMPLETE | Pre-final mapping/final audit PASS; no repository or provider writes |
-| terra_governance_writer | TERRA MAX | TERRA_INTEGRATION_WRITER           | WRITE | Canonical governance amendment integration              | Canonical task branch/worktree | AGENTS.md; .codex governance/current-chain records; governance validator/tests; required handoff/status evidence | Product/runtime/generated/migration/provider files and Luna scope | Sol task decomposition and Luna findings       | COMPLETE | Canonical candidate, final checks, commit, and normal push evidence  |
+| AGENT_ID                | MODEL     | ROLE                               | MODE  | SCOPE                                                   | WORKTREE_OR_PATCH              | OWNED_PATHS                                                                                                      | EXCLUDED_PATHS                                                    | DEPENDENCIES                                   | STATUS   | OUTPUT / EVIDENCE                                                                                                                        |
+| ----------------------- | --------- | ---------------------------------- | ----- | ------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| luna_governance_map     | LUNA MAX  | GOVERNANCE_MAPPING_AND_FINAL_AUDIT | READ  | Active governance mapping and final contradiction audit | Canonical worktree, read-only  | None                                                                                                             | All tracked repository paths                                      | Current-chain lock and combined candidate diff | COMPLETE | Pre-commit final content audit PASS; independent read-only exact-SHA audit follows closure commit/push; no repository or provider writes |
+| terra_governance_writer | TERRA MAX | TERRA_INTEGRATION_WRITER           | WRITE | Canonical governance amendment integration              | Canonical task branch/worktree | AGENTS.md; .codex governance/current-chain records; governance validator/tests; required handoff/status evidence | Product/runtime/generated/migration/provider files and Luna scope | Sol task decomposition and Luna findings       | COMPLETE | Post-commit closure-truth repair complete; focused gates PASS; no new child count or product/runtime/provider write                      |

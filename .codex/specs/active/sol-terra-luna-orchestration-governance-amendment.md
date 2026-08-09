@@ -4,9 +4,14 @@ Accepted: 2026-08-10, Asia/Manila
 
 Authority: Earl's submitted `HAU_USC_Logistics_AGENTS_Sol_Terra_Luna_Orchestration_Governance_Repair_Prompt_2026-08-10.md`
 
-Execution status: complete. This repository-governance amendment preserves the
-completed Design Gate and does not authorize Design Gate implementation, runtime
-change, or provider mutation.
+Execution status: complete. Initial governance commit
+`4825f02dfa96b9e5e6fe018d1bfd252d7720f47d` is complete, and the bounded
+post-commit closure-truth documentation repair is complete. Luna's pre-commit
+final content audit PASS occurred before this closure commit; an independent
+read-only exact-SHA audit follows normal closure commit/push before Sol's owner
+handoff. This repository-governance amendment preserves the completed Design
+Gate and does not authorize Design Gate implementation, runtime change, or
+provider mutation.
 
 ## Decision
 
@@ -91,18 +96,26 @@ frontend or backend implementation, generated artifact changes, migrations,
 deployments, D1/R2/Google/provider writes, production mutation, merge, tag,
 recovery-pointer rotation, or Design Gate execution.
 
-The only external Git action for this closure is the authorized normal
-commit/push to the existing branch and draft PR, completed only after final Sol
-acceptance, Luna's independent final audit, required checks, and reverified
-protected Git authorization. This amendment does not authorize a force-push,
-merge, deployment, provider/data action, or recovery-pointer change.
+Initial authorized normal commit/push
+`4825f02dfa96b9e5e6fe018d1bfd252d7720f47d` to the existing branch and draft
+PR followed the required pre-final Sol review, Luna review/recheck, focused
+governance checks, and protected Git authorization revalidation. The completed
+post-commit closure-truth repair received Luna's pre-commit final content audit
+PASS before this closure commit. An independent read-only exact-SHA audit follows
+normal closure commit/push before Sol's owner handoff. This amendment does not
+authorize a force-push, merge, deployment, provider/data action, or
+recovery-pointer change.
 
-Before the Terra writer transfers this candidate, it must inventory tracked and
-untracked `AGENTS.md` files, review the complete logical diff, run focused
-governance-unit coverage plus `check:agents`, `check:continuation`, formatting,
-and `git diff --check`, and complete a targeted active-governance contradiction
-scan. Luna performs the independent final audit; Sol performs final acceptance
-review. The frozen playground/runtime SHA and production SHA remain unchanged.
+For the initial governance commit, before the Terra writer transferred the
+candidate, it inventoried tracked and untracked `AGENTS.md` files, reviewed the
+complete logical diff, ran focused governance-unit coverage plus `check:agents`,
+`check:continuation`, formatting, and `git diff --check`, and completed a
+targeted active-governance contradiction scan. Pre-final Sol review and Luna
+review/recheck passed. The completed closure-truth repair reran its focused
+checks and received Luna's pre-commit final content audit PASS before this
+closure commit. The independent read-only exact-SHA audit follows normal closure
+commit/push before Sol's owner handoff. The frozen playground/runtime SHA and
+production SHA remain unchanged.
 
 ## Next owner gate
 
