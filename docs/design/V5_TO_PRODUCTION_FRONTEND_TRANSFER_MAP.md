@@ -1,11 +1,11 @@
 # V5 to Production Frontend Transfer Map
 
-Status: **ACCEPTED IMPLEMENTATION MAP**  
-Owner direction: 2026-08-09  
-Starting SHA: `d57b1c5931c82886b98c88dc468adfefd3d62bdf`  
-Visual/frontend authority: `prototypes/impeccable-whole-site-redesign-v5/`  
+Status: **ACCEPTED IMPLEMENTATION MAP**
+Owner direction: 2026-08-09
+Starting SHA: `d57b1c5931c82886b98c88dc468adfefd3d62bdf`
+Visual/frontend authority: `prototypes/impeccable-whole-site-redesign-v5/`
 Functional authority: deployed `v0.7.2` at
-`84eacfcdb47a3985fed48e3ba14bb413946d4410` and matching repository source  
+`84eacfcdb47a3985fed48e3ba14bb413946d4410` and matching repository source
 Integration direction: **production functionality -> v5 frontend architecture**
 
 This map is the pre-implementation gate required by
