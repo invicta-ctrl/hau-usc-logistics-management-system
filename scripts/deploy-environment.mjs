@@ -9,6 +9,8 @@
 //
 // Usage:
 //   node scripts/deploy-environment.mjs <staging|production> --config <absolute-private-config> [--dry-run]
+// Production live deployments also require --staging-config and --secrets so
+// the mandatory launch preflight cannot be skipped.
 //
 // Private identifiers are read but never printed.
 
@@ -16,8 +18,19 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
+import { validatePhase3AuthorizationPackage } from './phase3-staging-authorization.mjs';
+import {
+  productionCandidateEvidence,
+  validateProductionAuthorizationPackage,
+} from './production-authorization.mjs';
+import { validateProductionLaunchPreflight } from './production-launch-preflight.mjs';
+import { resolvePrivatePath } from './private-path.mjs';
 import { exactDatabaseIdFromInventory, unexpectedStagingConfigKeys } from './staging-sandbox-lib.mjs';
+
+const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+const wranglerExecutable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
 
 const TARGETS = Object.freeze({
   staging: {
@@ -47,6 +60,13 @@ function fail(message) {
   throw new Error(`Deployment refused: ${message}`);
 }
 
+function sameLocalPath(left, right) {
+  const values = [left, right].map((value) => path.resolve(String(value ?? '')));
+  return process.platform === 'win32'
+    ? values[0].toLowerCase() === values[1].toLowerCase()
+    : values[0] === values[1];
+}
+
 const [target, ...rest] = process.argv.slice(2);
 const expected =
   TARGETS[
@@ -57,17 +77,118 @@ const expected =
 if (!expected) fail('the first argument must be "staging" or "production".');
 
 const configIndex = rest.indexOf('--config');
-const configPath = configIndex === -1 ? '' : rest[configIndex + 1];
+const rawConfigPath = configIndex === -1 ? '' : rest[configIndex + 1];
+const authorizationIndex = rest.indexOf('--authorization');
+const authorizationPath = authorizationIndex === -1 ? '' : rest[authorizationIndex + 1];
 const dryRun = rest.includes('--dry-run');
-if (!configPath || !path.isAbsolute(configPath)) {
+if (!rawConfigPath || !path.isAbsolute(rawConfigPath)) {
   fail(
     'an absolute --config path to the private Wrangler config is required. ' +
       'The committed wrangler.jsonc holds placeholders and must never be used to deploy.',
   );
 }
-
+const configPath = await resolvePrivatePath(rawConfigPath, {
+  repoRoot,
+  label: 'Private config',
+}).catch(() => fail('the private config must remain outside the repository.'));
 const raw = await readFile(configPath, 'utf8').catch(() => fail('the private config could not be read.'));
 const config = parseJsonConfig(raw);
+if (!sameLocalPath(config.main, path.join(repoRoot, 'src', 'worker', 'index.js'))) {
+  fail('the private config does not target the canonical repository Worker entrypoint.');
+}
+if (!sameLocalPath(config.assets?.directory, path.join(repoRoot, 'dist'))) {
+  fail('the private config does not target the canonical repository asset directory.');
+}
+
+if (!dryRun) {
+  if (!authorizationPath || !path.isAbsolute(authorizationPath)) {
+    fail('an absolute private --authorization package is required for a live deployment.');
+  }
+  const resolvedAuthorizationPath = await resolvePrivatePath(authorizationPath, {
+    repoRoot,
+    label: 'Deployment authorization package',
+  }).catch(() => fail('the deployment authorization package must remain outside the repository.'));
+  const authorization = JSON.parse(
+    await readFile(resolvedAuthorizationPath, 'utf8').catch(() =>
+      fail('the deployment authorization package could not be read.'),
+    ),
+  );
+  if (target === 'staging') {
+    const result = await validatePhase3AuthorizationPackage(authorization, {
+      packagePath: resolvedAuthorizationPath,
+    });
+    if (
+      !result.valid ||
+      authorization.authorization?.actions?.workerDeploy !== 'APPROVED' ||
+      path.resolve(authorization.target?.privateWranglerConfigPath ?? '') !== path.resolve(configPath)
+    ) {
+      fail('the private staging package does not approve the Worker deployment action.');
+    }
+  } else {
+    const currentCandidate = await productionCandidateEvidence();
+    const result = await validateProductionAuthorizationPackage(authorization, {
+      packagePath: resolvedAuthorizationPath,
+      currentCandidate,
+    });
+    if (
+      !result.launchAuthorized ||
+      path.resolve(authorization.target?.privateWranglerConfigPath ?? '') !== path.resolve(configPath)
+    ) {
+      fail('the private production package is not authorized for the active launch window.');
+    }
+
+    const stagingConfigIndex = rest.indexOf('--staging-config');
+    const secretsIndex = rest.indexOf('--secrets');
+    const rawStagingConfigPath = stagingConfigIndex === -1 ? '' : rest[stagingConfigIndex + 1];
+    const rawSecretsPath = secretsIndex === -1 ? '' : rest[secretsIndex + 1];
+    if (!rawStagingConfigPath || !rawSecretsPath) {
+      fail('live production deployment requires private --staging-config and --secrets inputs.');
+    }
+    const [stagingConfigPath, secretsPath, googleConfigPath, backupManifestPath] = await Promise.all([
+      resolvePrivatePath(rawStagingConfigPath, {
+        repoRoot,
+        label: 'Private staging config',
+        kind: 'file',
+      }),
+      resolvePrivatePath(rawSecretsPath, {
+        repoRoot,
+        label: 'Private production secrets',
+        kind: 'file',
+      }),
+      resolvePrivatePath(authorization.target?.privateGoogleConfigPath, {
+        repoRoot,
+        label: 'Private production Google config',
+        kind: 'file',
+      }),
+      resolvePrivatePath(authorization.target?.privateBackupManifestPath, {
+        repoRoot,
+        label: 'Private production backup manifest',
+        kind: 'file',
+      }),
+    ]).catch(() => fail('all production launch-preflight inputs must remain outside the repository.'));
+    const [stagingRaw, productionSecrets, googleConfig, backupManifest] = await Promise.all([
+      readFile(stagingConfigPath, 'utf8'),
+      readFile(secretsPath, 'utf8').then(JSON.parse),
+      readFile(googleConfigPath, 'utf8').then(JSON.parse),
+      readFile(backupManifestPath, 'utf8').then(JSON.parse),
+    ]).catch(() => fail('a production launch-preflight input could not be read.'));
+    const launchPreflight = await validateProductionLaunchPreflight({
+      authorization,
+      authorizationPath: resolvedAuthorizationPath,
+      currentCandidate,
+      stagingConfig: parseJsonConfig(stagingRaw),
+      stagingConfigRaw: stagingRaw,
+      productionConfig: config,
+      productionConfigRaw: raw,
+      productionSecrets,
+      googleConfig,
+      backupManifest,
+    });
+    if (!launchPreflight.valid || !launchPreflight.launchAuthorized) {
+      fail('the mandatory production launch preflight is not authorized for the active launch window.');
+    }
+  }
+}
 
 // 1. The private config must describe the intended environment.
 if (config.name !== expected.worker)
@@ -105,9 +226,8 @@ if (String(database.database_name).startsWith('REPLACE_PRIVATELY'))
   fail('the config still carries a REPLACE_PRIVATELY placeholder.');
 let inventory;
 try {
-  const executable = path.join(process.cwd(), 'node_modules', 'wrangler', 'bin', 'wrangler.js');
   inventory = JSON.parse(
-    execFileSync(process.execPath, [executable, 'd1', 'list', '--config', configPath, '--json'], {
+    execFileSync(process.execPath, [wranglerExecutable, 'd1', 'list', '--config', configPath, '--json'], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
@@ -129,24 +249,42 @@ if (foreign.length)
   fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
 
 // 4. The candidate SHA must be resolved and match the tree being deployed.
-const head = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
 const candidateSha = config?.vars?.CANDIDATE_SHA;
 if (!candidateSha || candidateSha === 'REPLACE_AT_CANDIDATE_FREEZE')
   fail('the config still carries the placeholder CANDIDATE_SHA. Regenerate it at candidate freeze.');
 if (candidateSha !== head)
   fail(`the config pins CANDIDATE_SHA ${candidateSha.slice(0, 12)}..., but HEAD is ${head.slice(0, 12)}...`);
+const branch = execFileSync('git', ['branch', '--show-current'], {
+  cwd: repoRoot,
+  encoding: 'utf8',
+}).trim();
+const requiredBranch = target === 'staging' ? 'release/v0.8.0-inventory-truth-ledger-lock' : 'main';
+if (branch !== requiredBranch || config?.vars?.CANDIDATE_BRANCH !== requiredBranch) {
+  fail(`the ${target} deployment requires the exact accepted ${requiredBranch} branch identity.`);
+}
 
-const status = execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim();
+const status = execFileSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' }).trim();
 if (status) fail('the working tree is dirty. Deploy only a committed, frozen candidate.');
 
 // 5. Rebuild deterministically, so a stale or tracked dist can never be the
 //    deployment authority, then assert the artifact is the right build mode.
-execFileSync('npm', ['run', expected.build], { stdio: 'inherit', shell: process.platform === 'win32' });
-execFileSync('node', ['scripts/verify-deploy-artifact.mjs', target, expected.artifactDirectory], {
+const artifactDirectory = path.join(repoRoot, expected.artifactDirectory);
+execFileSync('npm', ['run', expected.build], {
+  cwd: repoRoot,
   stdio: 'inherit',
+  shell: process.platform === 'win32',
 });
+execFileSync(
+  process.execPath,
+  [path.join(repoRoot, 'scripts', 'verify-deploy-artifact.mjs'), target, artifactDirectory],
+  {
+    cwd: repoRoot,
+    stdio: 'inherit',
+  },
+);
 
-const artifact = await readFile(path.join(expected.artifactDirectory, 'index.html'), 'utf8');
+const artifact = await readFile(path.join(artifactDirectory, 'index.html'), 'utf8');
 const digest = createHash('sha256').update(artifact).digest('hex');
 
 process.stdout.write(
@@ -161,8 +299,12 @@ process.stdout.write(
 if (dryRun) {
   process.stdout.write('Dry run requested; no upload performed.\n');
 } else {
-  execFileSync('npx', ['wrangler', 'deploy', '-c', configPath, '--assets', expected.artifactDirectory], {
-    stdio: 'inherit',
-    shell: process.platform === 'win32',
-  });
+  execFileSync(
+    process.execPath,
+    [wranglerExecutable, 'deploy', '-c', configPath, '--assets', artifactDirectory],
+    {
+      cwd: repoRoot,
+      stdio: 'inherit',
+    },
+  );
 }

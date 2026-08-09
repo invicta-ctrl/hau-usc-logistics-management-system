@@ -284,7 +284,7 @@ function services(env) {
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-    appVersion: env.APP_VERSION ?? '0.7.2',
+    appVersion: env.APP_VERSION ?? '0.8.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
     evidenceStore: evidence,
   });

@@ -1,25 +1,25 @@
 # Current Bounded Task
 
-INTENT: OWNER_DECISION
-SECONDARY INTENTS: ARCHITECTURE, PLANNING
-MODE: PLAN
-OBJECTIVE: Hold the stable v0.7.2 runtime and completed no-op v0.7.3 evidence steady until Earl accepts the first bounded v0.8.0 Inventory Truth and Ledger Lock specification.
-TARGET: canonical main after protected v0.7.3 no-op closeout
-SKILLS: none for the owner-decision hold; select and record the smallest applicable workflow when a v0.8.0 specification is adopted
+INTENT: DEPLOYMENT
+SECONDARY INTENTS: BUG_FIX, TESTING, REPOSITORY_MAINTENANCE, MIGRATION_VERIFICATION, INCIDENT_SAFETY
+MODE: EXECUTE
+OBJECTIVE: Audit and finish the preserved v0.8.0 Slice 3 work, close only proven release blockers, freeze one exact candidate, obtain exact-head CI/staging/recovery acceptance, and conditionally promote that exact release through protected main to production.
+TARGET: release/v0.8.0-inventory-truth-ledger-lock from committed Slice 2 SHA c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
+SKILLS: lean-ctx for targeted repository work; cloudflare-deploy for exact Worker/D1/R2 authentication, isolation, recovery, deployment, and rollback checks; repository-native Playwright and release tooling remain authoritative
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-rollout-stabilization.md
-AUTHORITY: Earl's next v0.8.0 objective; completed v0.7.3 rollout-stabilization specification; AGENTS.md; canonical continuity chain
-REQUIRED_MODEL: Route by .codex/PHASE_AND_CONTEXT_POLICY.md after scope and risk are known
-ACTIVE_WRITER: NONE
-GIT_UPSTREAM: Resolve from canonical main during the next handshake
-RISK: HIGH - Inventory truth, ledger invariants, migration, recovery, and production boundaries require a separately accepted specification
-DELIVERABLE: One accepted, bounded v0.8.0 implementation specification before any writer lock, implementation, migration, or environment mutation
-SCOPE: Read-only handshake, owner intake, targeted discovery, specification adoption, risk/model routing, and writer-lock claim after acceptance
-OUT_OF_SCOPE: Any v0.8.0 implementation, migration, schema or ledger change, production/staging mutation, tag/release, repair of the cosmetic staging brand-asset gap, or deletion of preserved resources/evidence
-VERIFICATION: Confirm canonical main/upstream/worktree, ACTIVE_WRITER NONE, immutable production v0.7.2, isolated staging boundaries, and an accepted bounded v0.8.0 specification
-STOP_CONDITIONS: Missing/contradictory v0.8.0 scope; unclaimed/competing writer; unknown work; production/staging drift; migration/recovery ambiguity; private-value exposure; any request to implement before specification acceptance
-NEXT_EXACT_ACTION: Ask Earl to approve the first bounded v0.8.0 Inventory Truth and Ledger Lock specification before claiming a writer lock or changing code or an environment.
+ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
+AUTHORITY: Earl's directly submitted master-release prompt; live Git; AGENTS/current chain; base Slice 3 specification; current launch/staging/recovery/production runbooks; exact live provider evidence
+REQUIRED_MODEL: CODEX with fresh independent high-risk review before production; no subagent may edit
+ACTIVE_WRITER: CODEX
+GIT_UPSTREAM: origin/release/v0.8.0-inventory-truth-ledger-lock
+RISK: CRITICAL - production release, recovery, D1/R2, authentication, Inventory ledger, exact release identity
+DELIVERABLE: RELEASED only after clean audit/local/CI/staging/recovery/production gates and exact closeout; otherwise STOPPED or ROLLED_BACK with all evidence preserved
+SCOPE: accepted v0.8.0 Slice 3 plus the explicitly authorized one test-only follow-up changing the stale role-experiences v0.7.2 expectation to v0.8.0, continuity records, and the exact staging/production release actions authorized by the master amendment
+OUT_OF_SCOPE: Slice 4, migration 0031, broad UI/design/auth/data-history repair, force push, non-exact deploy, unsafe staging mutation, production auth bypass, Google/provider writes, playground implementation, v0.8.1+
+VERIFICATION: complete diff/invariant/security/migration audit; focused/direct-caller/Worker-D1/browser/canonical gates; exact-head CI/review; private staging and production recovery/restore; exact-SHA staging/production identity, smoke, isolation, and reconciliation; tag/release parity
+STOP_CONDITIONS: any master prompt hard stop, especially red required gate after two bounded attempts, unresolved P0/P1, migration need, unknown dirty work, target/SHA/schema/binding/privacy drift, failed recovery, staging failure, production preflight discrepancy, or cross-environment reachability
+RESULT: ACTIVE - authorized test-only repair and local gates green; replacement candidate ready to freeze
+NEXT_EXACT_ACTION: Freeze and push the single authorized replacement candidate, then require exact-head plus PR CI before Cloudflare access.
 
-V0.7.3_RESULT: NO RUNTIME PATCH REQUIRED. No eligible rollout blocker was confirmed, no runtime code changed, and version 0.7.2 remains authoritative.
-V0.7.3_CLOSEOUT_MERGE_SHA: 8b4ad05c6754b3de627535577d24216023dca8ca
+Phase 0/local audit evidence: current branch/HEAD/upstream and recorded Slice 3 paths match the prior stop handoff; upstream divergence is 0/0; origin main remains `88bfdf026e716ffdc779cb2ce7534978f36df0f3`; the prior candidate remains `c6fe2bfa5d847f43f6abf0ef98ec40004920c8f0`; v0.7.2 remains the latest GitHub release and resolves to production baseline `84eacfcdb47a3985fed48e3ba14bb413946d4410`; no v0.8.0 tag exists; no competing writer or unknown work was found. The authorized v0.8.0 shell expectation passes 2/2 at the exact affected widths on the current checkout. Canonical `npm run check` passes 125 files/868 tests; focused release/recovery/private-path/reconciliation checks pass; all candidate paths are mapped; privacy, governance, handoff, lint, build/parity, types, dry-run, and diff checks are green. A temporary alternate-port full-suite run was non-authoritative because one legacy test hard-codes port 4173 and two unrelated cases timed out under the temporary harness; the temporary config was removed and clean-runner PR CI is the required browser decision. Live Cloudflare target checks remain deferred until the committed/pushed/CI-green candidate per repository remote preconditions.

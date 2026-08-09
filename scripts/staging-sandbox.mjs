@@ -24,22 +24,12 @@ import {
 } from './staging-sandbox-lifecycle.mjs';
 import { parseAccountApplicationStagingIdentityFixture } from '../src/server/account-application/adapters.js';
 import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
+import { resolvePrivatePath } from './private-path.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : '';
-}
-
-function assertPrivatePath(candidate, label) {
-  if (!path.isAbsolute(candidate ?? '') || candidate === path.parse(candidate).root) {
-    throw new Error(`${label} must be an absolute private path outside the repository.`);
-  }
-  const relative = path.relative(repoRoot, path.resolve(candidate));
-  if (relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))) {
-    throw new Error(`${label} must be an absolute private path outside the repository.`);
-  }
-  return path.resolve(candidate);
 }
 
 function runWrangler(configPath, sql) {
@@ -77,7 +67,10 @@ function sandboxMetadata(configPath) {
 }
 
 async function privateSecretPackage(packagePath) {
-  const resolved = assertPrivatePath(packagePath, 'Secret package');
+  const resolved = await resolvePrivatePath(packagePath, {
+    repoRoot,
+    label: 'Secret package',
+  });
   const source = JSON.parse(await readFile(resolved, 'utf8'));
   const pepper = source?.secrets?.PASSWORD_PEPPER;
   const fixture = parseAccountApplicationStagingIdentityFixture(
@@ -100,7 +93,12 @@ async function privateSecretPackage(packagePath) {
 }
 
 async function writeLifecycleFiles({ privateDirectory, generation, pepper, archiveGeneration = 0 }) {
-  const directory = assertPrivatePath(privateDirectory, 'Private lifecycle directory');
+  const directory = await resolvePrivatePath(privateDirectory, {
+    repoRoot,
+    label: 'Private lifecycle directory',
+    kind: 'directory',
+    allowMissing: true,
+  });
   await mkdir(directory, { recursive: true });
   const now = new Date().toISOString();
   const credentials = await createSandboxCredentials({ generation, pepper });
@@ -148,7 +146,12 @@ async function writeLifecycleFiles({ privateDirectory, generation, pepper, archi
 }
 
 async function captureAndVerifyBackup(configPath, privateDirectory, head, databaseId) {
-  const directory = assertPrivatePath(privateDirectory, 'Private lifecycle directory');
+  const directory = await resolvePrivatePath(privateDirectory, {
+    repoRoot,
+    label: 'Private lifecycle directory',
+    kind: 'directory',
+    allowMissing: true,
+  });
   await mkdir(directory, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/gu, '-');
   const exportPath = path.join(directory, `sandbox-backup-${stamp}.sql`);
@@ -164,6 +167,11 @@ async function captureAndVerifyBackup(configPath, privateDirectory, head, databa
   const isolatedRestore = await restoreAndVerifyD1Export(
     exportPath,
     path.join(restoreDirectory, 'restored.sqlite'),
+    {
+      expectedSchema: '30',
+      expectedMigration: '0030_production_access_and_operations.sql',
+      requireImmutableHistory: true,
+    },
   );
   await writeFile(
     path.join(directory, `sandbox-backup-manifest-${stamp}.json`),
@@ -239,8 +247,10 @@ async function main() {
   if (!['status', 'seed', 'reset'].includes(command)) {
     throw new Error('Usage: staging-sandbox.mjs <status|seed|reset> --config <absolute-private-config>');
   }
-  const configPath = argument('--config');
-  if (!path.isAbsolute(configPath ?? '')) throw new Error('An absolute private --config path is required.');
+  const configPath = await resolvePrivatePath(argument('--config'), {
+    repoRoot,
+    label: 'Staging config',
+  });
   const config = parseJsonConfig(await readFile(configPath, 'utf8'));
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const branch = execFileSync('git', ['branch', '--show-current'], {
@@ -264,6 +274,7 @@ async function main() {
   const runtimeMatch =
     runtime.versionStatus === 200 &&
     runtime.environment === 'STAGING' &&
+    runtime.appVersion === '0.8.0' &&
     runtime.candidateSha === configResult.safe.candidateSha &&
     runtime.schemaVersion === '30' &&
     runtime.latestMigration === '0030_production_access_and_operations.sql';

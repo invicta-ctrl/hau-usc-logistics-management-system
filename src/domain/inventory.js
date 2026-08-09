@@ -1,4 +1,12 @@
-const signedQuantity = (txn) => (txn.direction === 'IN' ? Number(txn.quantity) : -Number(txn.quantity));
+export const signedLedgerQuantity = (transaction) => {
+  const explicit = Number(transaction?.signedQuantity ?? transaction?.signed_quantity);
+  if (Number.isFinite(explicit) && explicit !== 0) return explicit;
+  const quantity = Number(transaction?.quantity ?? 0);
+  const direction = String(transaction?.direction ?? '').toUpperCase();
+  if (direction === 'IN') return Math.abs(quantity);
+  if (direction === 'OUT') return -Math.abs(quantity);
+  return quantity;
+};
 
 export function buildInventoryIndexes(state) {
   const onHand = new Map();
@@ -10,7 +18,7 @@ export function buildInventoryIndexes(state) {
   for (const txn of state.ledgerTransactions) {
     const map = txn.eventItemId ? eventItemBalance : onHand;
     const key = txn.eventItemId || txn.itemId;
-    if (key) map.set(key, (map.get(key) ?? 0) + signedQuantity(txn));
+    if (key) map.set(key, (map.get(key) ?? 0) + signedLedgerQuantity(txn));
   }
   for (const reservation of state.reservations) {
     if (reservation.status === 'ACTIVE')

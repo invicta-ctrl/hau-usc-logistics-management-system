@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { readdir, readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolvePrivatePath } from './private-path.mjs';
 
 export const PHASE3_ACTION_GATES = Object.freeze({
   B: ['cloudflareRead', 'googleRead'],
@@ -65,7 +66,9 @@ async function candidateEvidence() {
 
 export async function createPhase3AuthorizationTemplate() {
   const actions = Object.fromEntries(
-    Object.values(PHASE3_ACTION_GATES).flat().map((action) => [action, 'PENDING']),
+    Object.values(PHASE3_ACTION_GATES)
+      .flat()
+      .map((action) => [action, 'PENDING']),
   );
   return {
     schemaVersion: 1,
@@ -115,13 +118,9 @@ export async function createPhase3AuthorizationTemplate() {
 const completedText = (value) =>
   typeof value === 'string' && Boolean(value.trim()) && !PLACEHOLDER.test(value.trim());
 
-const valueAt = (source, dottedPath) =>
-  dottedPath.split('.').reduce((value, key) => value?.[key], source);
+const valueAt = (source, dottedPath) => dottedPath.split('.').reduce((value, key) => value?.[key], source);
 
-export async function validatePhase3AuthorizationPackage(
-  source,
-  { packagePath, currentCandidate } = {},
-) {
+export async function validatePhase3AuthorizationPackage(source, { packagePath, currentCandidate } = {}) {
   currentCandidate ??= await candidateEvidence();
   const issues = [];
   if (!source || typeof source !== 'object' || Array.isArray(source)) {
@@ -151,13 +150,15 @@ export async function validatePhase3AuthorizationPackage(
     'evidence.privateLocationLabel',
     'evidence.redactionRuleLabel',
   ]) {
-    if (!completedText(valueAt(source, field))) issues.push(`${field} must contain a completed private value or safe label`);
+    if (!completedText(valueAt(source, field)))
+      issues.push(`${field} must contain a completed private value or safe label`);
   }
   for (const field of ['authorization.approvedAt', 'window.startsAt', 'window.endsAt']) {
     if (Number.isNaN(Date.parse(valueAt(source, field)))) issues.push(`${field} must be an ISO date-time`);
   }
   if (source.target?.environment !== 'STAGING') issues.push('target.environment must be STAGING');
-  if (source.target?.confirmsNoProductionBindings !== true) issues.push('target.confirmsNoProductionBindings must be true');
+  if (source.target?.confirmsNoProductionBindings !== true)
+    issues.push('target.confirmsNoProductionBindings must be true');
   if (!['SYNTHETIC', 'APPROVED_REDACTED'].includes(source.fixture?.dataClassification)) {
     issues.push('fixture.dataClassification must be SYNTHETIC or APPROVED_REDACTED');
   }
@@ -188,7 +189,8 @@ export async function validatePhase3AuthorizationPackage(
   }
   if (packagePath) {
     if (!path.isAbsolute(packagePath)) issues.push('authorization package path must be absolute');
-    else if (isInside(repoRoot, packagePath)) issues.push('authorization package must remain outside the repository');
+    else if (isInside(repoRoot, packagePath))
+      issues.push('authorization package must remain outside the repository');
   }
   const decisions = source.authorization?.actions ?? {};
   for (const action of Object.values(PHASE3_ACTION_GATES).flat()) {
@@ -203,34 +205,42 @@ export async function validatePhase3AuthorizationPackage(
       authorizedThroughGate = gate;
     }
   }
-  const pendingActions = Object.values(PHASE3_ACTION_GATES).flat().filter((action) => decisions[action] !== 'APPROVED');
+  const pendingActions = Object.values(PHASE3_ACTION_GATES)
+    .flat()
+    .filter((action) => decisions[action] !== 'APPROVED');
   return {
     valid: issues.length === 0,
     issues,
     authorizedThroughGate,
-    warnings: issues.length || !pendingActions.length ? [] : [`external actions not approved: ${pendingActions.join(', ')}`],
+    warnings:
+      issues.length || !pendingActions.length
+        ? []
+        : [`external actions not approved: ${pendingActions.join(', ')}`],
   };
 }
 
 async function run() {
   const [command, rawPath] = process.argv.slice(2);
   if (!['init', 'check'].includes(command) || !rawPath) {
-    throw new Error('Usage: node scripts/phase3-staging-authorization.mjs <init|check> <absolute-private-json-path>');
+    throw new Error(
+      'Usage: node scripts/phase3-staging-authorization.mjs <init|check> <absolute-private-json-path>',
+    );
   }
-  const packagePath = path.resolve(rawPath);
-  if (isInside(repoRoot, packagePath)) throw new Error('The private authorization package must remain outside the repository.');
+  const packagePath = await resolvePrivatePath(rawPath, {
+    repoRoot,
+    label: 'Private authorization package',
+    allowMissing: command === 'init',
+  });
   if (command === 'init') {
-    const destination = path.join(await realpath(path.dirname(packagePath)), path.basename(packagePath));
-    await writeFile(destination, `${JSON.stringify(await createPhase3AuthorizationTemplate(), null, 2)}\n`, {
+    await writeFile(packagePath, `${JSON.stringify(await createPhase3AuthorizationTemplate(), null, 2)}\n`, {
       flag: 'wx',
       mode: 0o600,
     });
     console.log('Phase 3 private authorization template created outside the repository.');
     return;
   }
-  const resolved = await realpath(packagePath);
-  const source = JSON.parse(await readFile(resolved, 'utf8'));
-  const result = await validatePhase3AuthorizationPackage(source, { packagePath: resolved });
+  const source = JSON.parse(await readFile(packagePath, 'utf8'));
+  const result = await validatePhase3AuthorizationPackage(source, { packagePath });
   if (!result.valid) {
     console.error('Phase 3 authorization package: INVALID');
     result.issues.forEach((issue) => console.error(`- ${issue}`));

@@ -4,23 +4,79 @@
 
 ### Added
 
+- Added the accepted final v0.8.0 Slice 3 specification, aggregate-only
+  reconciliation command/report, final finding register, frozen downstream
+  Inventory contract, strict isolated D1 restore proof, and non-mutating exact-SHA
+  staging candidate evidence/smoke commands.
+- Added the owner-accepted v0.8.0 Slice 2 specification, four-item Repair
+  Register, and deterministic schema-30 regressions for paired transfer,
+  accepted-state reservation cancellation, stale rollback, cycle-count races,
+  replay conflicts, and explicit signed-quantity reduction.
+- Added the owner-accepted v0.8.0 Inventory Truth and Ledger Lock Slice 1
+  specification and a durable schema-30 Inventory baseline covering authoritative
+  storage, transaction/caller paths, INV-01 through INV-10, and the Slice 2 defect
+  register.
+- Strengthened focused local Worker/D1 characterization for request submission
+  non-deduction, reservation-only availability effects, and exactly-once lending
+  handoff/return stock effects without changing runtime behavior.
 - Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
 - Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
 - Added the accepted, planning-only v0.7.3 product-intake specification after completing the v0.7.2.1 maintenance milestone.
 
 ### Fixed
 
+- Implemented the previously claimed event-item transfer at the authoritative D1
+  boundary as an authorized, retry-safe, concurrency-guarded ledger pair.
+- Made accepted Request and ready-to-claim Lending cancellation release active
+  reservations atomically, restoring reserved reusable assets before handoff.
+- Prevented stale concurrent cycle counts from double-applying one physical count
+  and corrected fallback adjustment/reversal signs without changing D1 authority.
+- Closed eight fresh high-risk concurrency, custody, and reservation-ownership gaps so
+  cancellation, release, lending approval/handoff, asset maintenance/custody, receiving,
+  and direct stock reservation have one governed owner/effect path and losing stale
+  commands retain no ledger, reservation, custody, or audit effect.
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
 - Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
 ### Changed
 
+- Froze the repository candidate identity at v0.8.0 while retaining schema 30 and
+  migration `0030_production_access_and_operations.sql`. This is a candidate only;
+  production remains unchanged v0.7.2 pending Earl's exact-SHA GO.
+- Completed the bounded v0.8.0 Slice 2 repair set under schema 30 with no
+  migration, historical rewrite/reconciliation, deployment, environment/provider
+  mutation, Google write, version/tag/release/merge, or Slice 3 work.
+- Completed v0.8.0 Slice 1 with `MIGRATION_DECISION: NONE_REQUIRED`. Recorded
+  three P2 and one P3 evidence-proven gaps for a separately authorized Slice 2;
+  no runtime, schema, migration, environment, provider, Google, version, release,
+  or production state changed.
 - Merged the v0.7.2.1 repository-normalization and permanent-sandbox maintenance candidate through protected PR #17, released the writer lock, and advanced the canonical continuity pointer to v0.7.3 product intake without starting v0.7.3 implementation or changing the v0.7.2 runtime.
 - Closed the owner-accepted v0.7.3 rollout-stabilization intake as `NO RUNTIME PATCH REQUIRED`. Focused Account, Request/RV-01, Lending, Inventory/Release, route, privacy, and safe-error acceptance found no eligible blocker, so product version remains 0.7.2 and no v0.7.3 runtime tag, release, staging deployment, or production action was created.
 - Merged the documentation-only v0.7.3 no-op closeout through protected PR #19 at `8b4ad05c6754b3de627535577d24216023dca8ca` after resolving its review thread, then deleted the temporary release branch; the merge made no runtime, provider, database, migration, staging, or production change.
 
 ### Verification boundary
 
+- V0.8.0 Slice 3 deterministic reconciliation passes 20/20 checks on the canonical
+  two-generation schema-30 synthetic fixture with zero discrepancies, zero
+  quarantine items, and eight proven imported-history observations classified
+  `KNOWN_NONBLOCKING`. The canonical repository gate passes 124 Vitest files/860
+  tests, deterministic build/parity, Cloudflare types/build/dry-run; affected
+  Inventory/Lending browser coverage passes 17 cases with 37 intentional skips.
+  Fresh logical high-risk review is green with zero unresolved P0/P1. Exact-source
+  local Worker/browser coverage remains red at 57/58 after its focused retry failed;
+  private recovery, staging, PR, and exact-head CI were not performed, so no exact
+  candidate or owner GO is claimed.
+- V0.8.0 Slice 2 focused evidence passed: two Vitest files / nine tests,
+  six adjacent unit/contract files / 76 tests, and two focused local Worker/D1
+  lifecycle/receiving cases. The full shared-core repository gate passed lint,
+  build/parity, 122 Vitest files / 843 tests, Cloudflare types, isolated
+  staging-mode build, and Wrangler dry-run without a remote runtime write.
+- V0.8.0 Slice 1 focused evidence passed: 12 Vitest files / 92 tests, seven
+  focused Worker/D1 cases, two RV-01 reservation concurrency/top-up cases, and
+  the strengthened D1 lifecycle case. The schema-30 migration decision relies on
+  existing signed-ledger, reservation-consumption, history, idempotency, reversal,
+  evidence, and data-revision structures; no full release-candidate gate was
+  invalidated or rerun.
 - Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, negative zero-challenge containment, provider delivery, one-time redemption, same-code replay denial, and altered-code denial pass. Exact-head repository verification, browser smoke, CodeQL, governance, handoff, secret/PII scans, and fresh Sol review also pass.
 - V0.7.3 focused evidence passed: 89 unit tests, 19 RV-01 Worker/D1 tests, ten coherent core Worker/D1 cases, and six Account/Public portal UI cases. Production and staging remain ready/protected at their unchanged exact SHAs and schema 30/0030. Four missing isolated-staging brand-image endpoints were recorded as a cosmetic, out-of-scope asset-population observation; daily-use shells remain available.
 

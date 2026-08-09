@@ -47,4 +47,48 @@ describe('inventory ledger truth and available-to-promise', () => {
     state.ledgerTransactions.push({ ...state.ledgerTransactions[0] });
     expect(qualityWarnings(state).some((warning) => warning.code === 'DUPLICATE_LEDGER_ID')).toBe(true);
   });
+
+  it('uses explicit signed quantities for adjustments and reversals in fallback projections', () => {
+    const state = createSeedState();
+    state.inventoryItems.push({ id: 'ITM-SIGNED', name: 'Signed movement fixture' });
+    state.ledgerTransactions.push(
+      {
+        id: 'T-SIGNED-IN',
+        itemId: 'ITM-SIGNED',
+        direction: 'IN',
+        quantity: 10,
+        signedQuantity: 10,
+      },
+      {
+        id: 'T-SIGNED-OUT',
+        itemId: 'ITM-SIGNED',
+        direction: 'OUT',
+        quantity: 3,
+        signedQuantity: -3,
+      },
+      {
+        id: 'T-SIGNED-ADJUST-UP',
+        itemId: 'ITM-SIGNED',
+        direction: 'ADJUSTMENT',
+        quantity: 2,
+        signedQuantity: 2,
+      },
+      {
+        id: 'T-SIGNED-ADJUST-DOWN',
+        itemId: 'ITM-SIGNED',
+        direction: 'ADJUSTMENT',
+        quantity: 1,
+        signedQuantity: -1,
+      },
+      {
+        id: 'T-SIGNED-REVERSAL',
+        itemId: 'ITM-SIGNED',
+        direction: 'REVERSAL',
+        quantity: 3,
+        signedQuantity: 3,
+      },
+    );
+
+    expect(buildInventoryIndexes(state).onHand.get('ITM-SIGNED')).toBe(11);
+  });
 });

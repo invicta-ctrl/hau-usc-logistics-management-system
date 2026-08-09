@@ -59,7 +59,7 @@ export async function mountBorrowerLendingPortal({ root, client, session, onLogo
         .map(
           (ticket) => `<article class="borrower-ticket" data-ticket="${escapeHtml(ticket.id)}">
           <div><span class="status ${ticket.status === 'OVERDUE' ? 'red' : 'blue'}">${escapeHtml(ticket.status.replaceAll('_', ' '))}</span><strong>${escapeHtml(ticket.itemName)}</strong><small>${escapeHtml(ticket.quantity)} ${escapeHtml(ticket.unit)} · ${escapeHtml(ticket.type)}</small></div>
-          <div><small>Due: ${escapeHtml(dateLabel(ticket.dueAt))}</small>${ticket.status === 'FOR_REVIEW' ? `<button class="secondary mini" type="button" data-cancel-ticket="${escapeHtml(ticket.id)}">Cancel request</button>` : ''}</div>
+          <div><small>Due: ${escapeHtml(dateLabel(ticket.dueAt))}</small>${['FOR_REVIEW', 'READY_TO_CLAIM'].includes(ticket.status) ? `<button class="secondary mini" type="button" data-cancel-ticket="${escapeHtml(ticket.id)}">Cancel request</button>` : ''}</div>
         </article>`,
         )
         .join('') || '<p class="empty">No borrowing or consumable requests yet.</p>';

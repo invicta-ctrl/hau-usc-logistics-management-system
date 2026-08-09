@@ -3,6 +3,7 @@ import { config } from '../app/config.js';
 import { AppError } from '../app/errors.js';
 import { getRuntimeReleaseIdentity, releaseIdentityLabel } from '../app/release-identity.js';
 import { KNOWN_QUANTITY_UNITS } from '../domain/quantity-units.js';
+import { signedLedgerQuantity } from '../domain/inventory.js';
 import { createFormDirtyTracker } from './form-dirty-state.js';
 import { WORKSPACE_ROUTES, workspacePath, workspaceRouteFromPath } from './workspace-routes.js';
 import {
@@ -3262,7 +3263,7 @@ export function createRuntimeExtensions(options) {
     const updatedAt = state.dataRevisionUpdatedAt || state.updatedAt || '';
     const metrics = [
       ['Environment', environment, 'Server-reported deployment identity'],
-      ['Release', `v${state.appVersion ?? '0.7.2'}`, 'Authenticated application release'],
+      ['Release', `v${state.appVersion ?? '0.8.0'}`, 'Authenticated application release'],
       ['Schema', state.schemaVersion ?? 'Not reported', 'Server-reported data contract'],
       ['Attention', counts.total, 'Cross-workspace exception total'],
     ];
@@ -6042,7 +6043,7 @@ export function createRuntimeExtensions(options) {
       backendMode === 'mock' && !authoritativeIdentity.verified
         ? {
             environment: String(state.environment ?? config.appEnvironment ?? 'DEVELOPMENT').toUpperCase(),
-            appVersion: String(state.appVersion ?? config.appVersion ?? '0.7.2'),
+            appVersion: String(state.appVersion ?? config.appVersion ?? '0.8.0'),
             candidateSha: '',
             schemaVersion: '',
             verified: true,
@@ -6916,9 +6917,7 @@ export function createRuntimeExtensions(options) {
     const onHand = (state.ledgerTransactions ?? [])
       .filter((movement) => movement?.itemId === item.id)
       .reduce(
-        (total, movement) =>
-          total +
-          (String(movement?.direction).toUpperCase() === 'IN' ? 1 : -1) * Number(movement?.quantity ?? 0),
+        (total, movement) => total + signedLedgerQuantity(movement),
         Number(item?.openingOnHand ?? 0),
       );
     const reserved = (state.reservations ?? [])

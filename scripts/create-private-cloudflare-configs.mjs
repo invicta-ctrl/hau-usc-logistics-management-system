@@ -1,11 +1,14 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { STAGING_SANDBOX_TARGET } from './staging-sandbox-lib.mjs';
 import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
+import { resolvePrivatePath } from './private-path.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
+const releaseVersion = JSON.parse(readFileSync(path.join(repoRoot, 'package.json'), 'utf8')).version;
 const REQUIRED_WORKER_FIRST_ROUTES = Object.freeze(['/api/*', '/brand/*', '/media/*']);
 const PRIVATE_STAGING_VAR_NAMES = new Set([
   'ACCOUNT_APPLICATION_EMAIL_FROM',
@@ -37,7 +40,9 @@ function baseConfig(
 ) {
   return {
     name,
-    main: source.main,
+    // Private Wrangler configs live outside the repository, so relative source
+    // and asset paths would otherwise resolve against the private directory.
+    main: path.join(repoRoot, 'src', 'worker', 'index.js'),
     compatibility_date: source.compatibility_date,
     workers_dev: true,
     preview_urls: false,
@@ -48,6 +53,7 @@ function baseConfig(
     },
     assets: {
       ...source.assets,
+      directory: path.join(repoRoot, 'dist'),
       not_found_handling: 'single-page-application',
       run_worker_first: [
         ...new Set([
@@ -73,7 +79,7 @@ function baseConfig(
     vars: {
       ...(environment === 'STAGING' ? publicStagingVars(source) : {}),
       ENVIRONMENT: environment,
-      APP_VERSION: '0.7.2',
+      APP_VERSION: releaseVersion,
       SCHEMA_VERSION: '1.0.0',
       BOOTSTRAP_CONTRACT_VERSION: '2',
       CANDIDATE_SHA: candidateSha,
@@ -95,9 +101,8 @@ function baseConfig(
             SANDBOX_BASE_URL:
               source.vars?.SANDBOX_BASE_URL ?? '<REPLACE_PRIVATELY_EXACT_STAGING_HTTPS_ORIGIN>',
             ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_COUNT:
-              parseExactRecipientAllowlist(
-                source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
-              )?.length ?? 0,
+              parseExactRecipientAllowlist(source.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON)
+                ?.length ?? 0,
           }
         : {}),
     },
@@ -138,9 +143,19 @@ async function run() {
       'Usage: node scripts/create-private-cloudflare-configs.mjs <absolute-staging-base> <absolute-d1-inventory-json> <absolute-output-directory>',
     );
   }
+  const [resolvedStagingBase, resolvedD1Inventory, resolvedOutputDirectory] = await Promise.all([
+    resolvePrivatePath(stagingBasePath, { repoRoot, label: 'Staging base config' }),
+    resolvePrivatePath(d1InventoryPath, { repoRoot, label: 'D1 inventory' }),
+    resolvePrivatePath(outputDirectory, {
+      repoRoot,
+      label: 'Output directory',
+      kind: 'directory',
+      allowMissing: true,
+    }),
+  ]);
   const [source, databases] = await Promise.all([
-    readFile(stagingBasePath).then(decodeJsonBuffer).then(JSON.parse),
-    readFile(d1InventoryPath).then(decodeJsonBuffer).then(JSON.parse),
+    readFile(resolvedStagingBase).then(decodeJsonBuffer).then(JSON.parse),
+    readFile(resolvedD1Inventory).then(decodeJsonBuffer).then(JSON.parse),
   ]);
   const candidateSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const candidateBranch = execFileSync('git', ['branch', '--show-current'], {
@@ -148,20 +163,20 @@ async function run() {
     encoding: 'utf8',
   }).trim();
   const pair = createConfigPair(source, databases, candidateSha, candidateBranch);
-  await mkdir(outputDirectory, { recursive: true });
+  await mkdir(resolvedOutputDirectory, { recursive: true });
   await Promise.all([
     writeFile(
-      path.join(outputDirectory, 'wrangler.staging.private.jsonc'),
+      path.join(resolvedOutputDirectory, 'wrangler.staging.private.jsonc'),
       `${JSON.stringify(pair.staging, null, 2)}\n`,
       { flag: 'wx', mode: 0o600 },
     ),
     writeFile(
-      path.join(outputDirectory, 'wrangler.production.private.jsonc'),
+      path.join(resolvedOutputDirectory, 'wrangler.production.private.jsonc'),
       `${JSON.stringify(pair.production, null, 2)}\n`,
       { flag: 'wx', mode: 0o600 },
     ),
   ]);
-  console.log('Distinct v0.7.2 staging and production Wrangler configs created outside Git.');
+  console.log(`Distinct v${releaseVersion} staging and production Wrangler configs created outside Git.`);
   console.log('No private provider identifiers were printed.');
 }
 

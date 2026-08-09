@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -9,6 +10,7 @@ import {
 import { validateProductionLaunchPreflight } from '../../scripts/production-launch-preflight.mjs';
 
 const sha = 'a'.repeat(40);
+const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 const candidate = Object.freeze({
   branch: 'release/test',
   releaseSha: sha,
@@ -109,12 +111,18 @@ async function fixture() {
     privateValuesExcludedFromRepositoryEvidence: true,
     credentialAndIdentifierHandlingConfirmed: true,
   });
+  const stagingConfig = config('STAGING', '1');
+  const productionConfig = config('PRODUCTION', '2');
+  const stagingConfigRaw = `${JSON.stringify(stagingConfig, null, 2)}\n`;
+  const productionConfigRaw = `${JSON.stringify(productionConfig, null, 2)}\n`;
   return {
     authorization,
     authorizationPath: paths.authorization,
     currentCandidate: candidate,
-    stagingConfig: config('STAGING', '1'),
-    productionConfig: config('PRODUCTION', '2'),
+    stagingConfig,
+    stagingConfigRaw,
+    productionConfig,
+    productionConfigRaw,
     productionSecrets: {
       schemaVersion: 1,
       environment: 'PRODUCTION',
@@ -160,12 +168,18 @@ async function fixture() {
     backupManifest: {
       capturedAt: '2026-07-29T11:30:00.000Z',
       environment: 'PRODUCTION',
+      candidateSha: candidate.releaseSha,
+      candidateBranch: candidate.branch,
       exportSha256: 'f'.repeat(64),
       integrity: ['ok'],
       foreignKeyViolations: 0,
       bookmarkPresent: true,
       testDataPromotionConfirmed: false,
       syntheticActiveAccounts: 0,
+      fingerprints: {
+        stagingConfigSha256: sha256(stagingConfigRaw),
+        productionConfigSha256: sha256(productionConfigRaw),
+      },
     },
     now: Date.parse('2026-07-29T12:00:00.000Z'),
   };
@@ -177,6 +191,29 @@ describe('production launch preflight', () => {
       valid: true,
       launchAuthorized: true,
       issues: [],
+    });
+  });
+
+  it('allows explicitly denied non-applicable mutation actions while requiring deploy and recovery', async () => {
+    const value = await fixture();
+    for (const action of [
+      'productionD1Migration',
+      'productionSheetCutover',
+      'productionSeedAccounts',
+      'productionSmokeMutations',
+    ]) {
+      value.authorization.authorization.actions[action] = 'DENIED';
+    }
+    expect(await validateProductionLaunchPreflight(value)).toMatchObject({
+      valid: true,
+      launchAuthorized: true,
+      issues: [],
+    });
+
+    value.authorization.authorization.actions.productionWorkerDeploy = 'DENIED';
+    expect(await validateProductionLaunchPreflight(value)).toMatchObject({
+      valid: true,
+      launchAuthorized: false,
     });
   });
 
@@ -212,6 +249,16 @@ describe('production launch preflight', () => {
       'stale recovery',
       (value) => (value.backupManifest.capturedAt = '2026-07-20T00:00:00.000Z'),
       'less than 24 hours',
+    ],
+    [
+      'wrong recovery candidate',
+      (value) => (value.backupManifest.candidateSha = 'b'.repeat(40)),
+      'candidate SHA',
+    ],
+    [
+      'wrong production config fingerprint',
+      (value) => (value.backupManifest.fingerprints.productionConfigSha256 = '0'.repeat(64)),
+      'production config fingerprint',
     ],
     ['unverified target', (value) => (value.authorization.target.routeLabel = 'TBD'), 'routeLabel'],
   ])('fails closed for %s', async (_label, mutate, expected) => {

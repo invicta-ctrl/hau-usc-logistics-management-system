@@ -115,6 +115,7 @@ function downloadReceipt(receipt) {
 }
 
 function requestCard(request, { expanded = false } = {}) {
+  const cancellable = ['FOR_REVIEW', 'ACCEPTED'].includes(request.status);
   return `<article class="borrower-ticket request-center-ticket" data-request="${escapeHtml(request.id)}">
     <div>
       <span class="status blue">${escapeHtml(displayStatus(request.status))}</span>
@@ -127,7 +128,7 @@ function requestCard(request, { expanded = false } = {}) {
       <ul>${request.lines.map((line) => `<li><strong>${escapeHtml(line.description)}</strong> — ${escapeHtml(line.quantity)} ${escapeHtml(line.unit)} · ${escapeHtml(line.category)} · ${escapeHtml(displayStatus(line.status))}${line.specification ? `<br><small>${escapeHtml(line.specification)}</small>` : ''}</li>`).join('')}</ul>
       <h3>Visible history</h3>
       <ol>${request.history.map((entry) => `<li>${escapeHtml(displayStatus(entry.status))} · ${escapeHtml(formatDate(entry.at))}</li>`).join('') || '<li>No visible status changes yet.</li>'}</ol>
-      <button class="secondary mini" type="button" data-additional-for="${escapeHtml(request.parentRequestId || request.id)}">Add to this request</button>
+      <div class="button-row"><button class="secondary mini" type="button" data-additional-for="${escapeHtml(request.parentRequestId || request.id)}">Add to this request</button>${cancellable ? `<button class="danger mini" type="button" data-cancel-request="${escapeHtml(request.id)}">Cancel request</button>` : ''}</div>
     </div>
   </article>`;
 }
@@ -434,6 +435,24 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
             eventSelect.value = parent.eventId;
           }
           form.scrollIntoView({ behavior: 'smooth' });
+        }),
+      );
+      output.querySelectorAll('[data-cancel-request]').forEach((button) =>
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            await client.request('/api/portal/request/cancel', {
+              body: {
+                requestId: button.dataset.cancelRequest,
+                clientRequestId: requestKey('requester-cancel'),
+              },
+              csrfToken: session.csrfToken,
+            });
+            await load();
+            render();
+          } finally {
+            button.disabled = false;
+          }
         }),
       );
     };
