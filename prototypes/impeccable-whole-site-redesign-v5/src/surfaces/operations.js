@@ -330,18 +330,33 @@ export function requestQueue({ state, selected }) {
     </div>`;
 }
 
-function requestDetailPanel(state) {
+/* Lines still carrying no decision. The surface's own rule — one explicit
+   routing decision per line, nothing routed by default — has to be readable
+   from the data, not restated as a hand-written count that can drift. */
+const PENDING_LINES = REQUEST_LINES.filter((line) => line.route === 'PENDING_DECISION').length;
+
+function acceptBlockedReason(stale) {
+  if (stale) return 'Reload this request before deciding. Another reviewer changed it while you were reading.';
+  if (PENDING_LINES)
+    return `${PENDING_LINES} of ${REQUEST_LINES.length} lines still need a routing decision.`;
+  return '';
+}
+
+/* The request detail is built in parts because two surfaces render it: the
+   desktop split pane and, below 1180px, the drawer. The drawer used to carry a
+   summary sentence and no lines at all, which left the one decision this
+   surface exists for impossible on tablet and phone. */
+export function requestDetailParts(state, titleAction = '') {
   const stale = state === 'stale';
-  return `<aside class="split__detail" aria-label="Request detail">
-    <div class="detail__head">
-      <div class="detail__title">
+  const blockedReason = acceptBlockedReason(stale);
+
+  const head = `<div class="detail__title">
         <h2>Sound system and stage materials</h2>
-        ${chip('FOR_REVIEW')}
+        ${chip('FOR_REVIEW')}${titleAction}
       </div>
-      <p class="muted" style="font-size:var(--t-xs)">REQ-DEMO-431 · Illustrative Executive Council · needed 19 May 2032</p>
-    </div>
-    <div class="detail__body">
-      ${
+      <p class="muted" style="font-size:var(--t-xs)">REQ-DEMO-431 · Illustrative Executive Council · needed 19 May 2032</p>`;
+
+  const body = `${
         stale
           ? notice({
               tone: 'alert',
@@ -378,15 +393,26 @@ function requestDetailPanel(state) {
         ${evidenceList([
           { name: 'Approved activity proposal', meta: 'PDF · uploaded 7 August', state: 'Verified', tone: 'done' },
         ])}
-      </section>
-    </div>
-    <div class="detail__foot">
-      <button class="btn btn--primary" type="button" data-act="confirm-accept"${
-        stale ? ' aria-disabled="true"' : ''
-      }>${icon('check')}Accept and reserve</button>
+      </section>`;
+
+  /* `aria-disabled` alone announced a block the control did not enforce, so the
+     button stayed clickable for everyone it claimed to stop. The reason travels
+     with the control; the click handler reads it and says what is in the way. */
+  const foot = `<button class="btn btn--primary" type="button" data-act="confirm-accept"${
+      blockedReason ? ` aria-disabled="true" data-blocked-reason="${esc(blockedReason)}"` : ''
+    }>${icon('check')}Accept and reserve</button>
       <button class="btn" type="button">Ask for information</button>
-      <button class="btn btn--quiet" type="button">Reject</button>
-    </div>
+      <button class="btn btn--quiet" type="button">Reject</button>`;
+
+  return { head, body, foot };
+}
+
+function requestDetailPanel(state) {
+  const { head, body, foot } = requestDetailParts(state);
+  return `<aside class="split__detail" aria-label="Request detail">
+    <div class="detail__head">${head}</div>
+    <div class="detail__body">${body}</div>
+    <div class="detail__foot">${foot}</div>
   </aside>`;
 }
 

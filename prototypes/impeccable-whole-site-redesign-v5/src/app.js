@@ -2,9 +2,10 @@
    All interaction is local. No network request is made from this preview. */
 
 import { icon, spriteMarkup } from './icons.js';
-import { esc, chip, themeToggle } from './components.js';
+import { esc, themeToggle } from './components.js';
 import { GROUPS, NAV, NAV_ADMIN, SURFACES, TABS, byId } from './registry.js';
 import { setPublicTheme } from './surfaces/public.js';
+import { requestDetailParts } from './surfaces/operations.js';
 import { ROLE_VIEWS, WORKSPACES, NOTIFICATIONS } from './data/mock.js';
 
 const root = document.getElementById('app');
@@ -253,6 +254,12 @@ function setTheme(next) {
   const commit = () => {
     state.theme = next;
     store.set(THEME_KEY, next);
+    /* The token layer is authored as `[data-theme="dark"]` with no light
+       counterpart, so light is only the `:root` default. Updating the body
+       alone leaves a stale `dark` on the root element, the dark tokens keep
+       inheriting, and dark → light does nothing until the next full render.
+       Both nodes carry the attribute in render(); both must carry it here. */
+    document.documentElement.dataset.theme = next;
     document.body.dataset.theme = next;
     document.querySelectorAll('[data-act="toggle-theme"]').forEach((button) => {
       button.setAttribute('aria-pressed', String(dark));
@@ -632,23 +639,19 @@ function overlays() {
   }
 
   if (state.overlay === 'detail') {
+    /* Below 1180px the split pane is hidden and this drawer is the only way to
+       reach a request. It therefore carries the whole detail — lines, routing
+       controls, evidence — not a summary of them. */
+    const { head, body, foot } = requestDetailParts(
+      state.variant,
+      `<button class="icon-button" type="button" data-act="close-overlay" aria-label="Close">${icon('close')}</button>`,
+    );
     return `<div data-overlay-root>
       <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Close detail"></button>
       <aside class="drawer" role="dialog" aria-modal="true" aria-label="Request detail">
-        <div class="detail__head">
-          <div class="detail__title"><h2>Sound system and stage materials</h2>
-            <button class="icon-button" type="button" data-act="close-overlay" aria-label="Close">${icon('close')}</button></div>
-          <p class="muted" style="font-size:var(--t-xs)">REQ-DEMO-431 · Illustrative Executive Council</p>
-          <div>${chip('FOR_REVIEW')}</div>
-        </div>
-        <div class="detail__body">
-          <p style="font-size:var(--t-sm)">Six lines need one routing decision each. Two are still
-          pending a decision, so this request cannot be accepted yet.</p>
-        </div>
-        <div class="detail__foot">
-          <button class="btn btn--primary" type="button" data-act="confirm-accept">Accept and reserve</button>
-          <button class="btn btn--quiet" type="button" data-act="close-overlay">Close</button>
-        </div>
+        <div class="detail__head">${head}</div>
+        <div class="detail__body">${body}</div>
+        <div class="detail__foot">${foot}</div>
       </aside>
     </div>`;
   }
@@ -774,7 +777,19 @@ document.addEventListener('click', (event) => {
   if (act === 'open-notifications') return openOverlay('notifications');
   if (act === 'open-command') return openOverlay('command');
   if (act === 'close-overlay') return closeOverlay();
-  if (act === 'confirm-accept') return openOverlay('confirm');
+  if (act === 'confirm-accept') {
+    /* An `aria-disabled` control stays focusable on purpose, so the block has to
+       be enforced here as well as announced. Saying nothing on the click would
+       read as a dead button. */
+    if (el.getAttribute('aria-disabled') === 'true') {
+      toast(
+        el.dataset.blockedReason ?? 'This request cannot be accepted yet.',
+        'error',
+      );
+      return;
+    }
+    return openOverlay('confirm');
+  }
   if (act === 'confirm-return') {
     toast('Preview only: the return was not persisted and stock was not changed.');
     return;

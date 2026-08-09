@@ -538,6 +538,13 @@ button[aria-disabled="true"],
   letter-spacing: 0.1em;
 }
 
+/* `--anchor` is a structural oxblood. On the dark ground it reads 2.34:1 as
+   10px text, so the route code takes the secondary-text token the rest of the
+   shell already uses at this size. */
+[data-theme="dark"] .topbar__route span {
+  color: var(--muted);
+}
+
 .topbar__route b {
   color: var(--ink);
   font-size: var(--t-sm);
@@ -619,6 +626,11 @@ button[aria-disabled="true"],
   font-size: var(--t-2xs);
   font-variant-numeric: tabular-nums;
   height: auto;
+}
+
+/* Same code, same correction as its visible twin in the topbar. */
+[data-theme="dark"] .route-progress > .route-progress__code {
+  color: var(--muted);
 }
 
 .route-progress i {
@@ -1024,7 +1036,13 @@ button[aria-disabled="true"],
 .table-wrap {
   background: var(--paper);
   border: 1px solid var(--line);
-  overflow: clip;
+  /* `overflow: clip` here used to override components.css's `overflow-x: auto`
+     on both axes, so any table wider than its wrapper was cut off with no way
+     to reach the rest: the detail pane's routing selects at desktop widths and
+     the status column at 320. Clip the block axis only; the inline axis keeps
+     the scroll the queue was built with. */
+  overflow-x: auto;
+  overflow-y: clip;
 }
 
 .q thead {
@@ -1433,6 +1451,14 @@ button[aria-disabled="true"],
 .public__foot-meta a {
   color: var(--anchor);
   white-space: nowrap;
+}
+
+/* This rule has the same specificity as base.css's `[data-theme="dark"] a` and
+   loads after it, so it was silently undoing the gold re-tone that layer
+   documents — leaving the only link in the public footer at 2.46:1. Restore it
+   here rather than weakening the light-mode deepening this rule exists for. */
+[data-theme="dark"] .public__foot-meta a {
+  color: var(--gold-300);
 }
 
 .auth-card {
@@ -2218,6 +2244,13 @@ button[aria-disabled="true"],
   justify-content: center;
   overflow: hidden;
   width: 112px;
+}
+
+/* `--anchor-soft` is only 8% anchor over paper, so in dark it lands close to the
+   ground and the oxblood monogram falls to 2.11:1. The initials are primary
+   identity content, so they take the primary ink. */
+[data-theme="dark"] .profile-photo__preview {
+  color: var(--ink);
 }
 
 .profile-photo__preview img {
