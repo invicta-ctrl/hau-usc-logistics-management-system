@@ -4,6 +4,8 @@
 
 ### Added
 
+- Added a documentation-only HAU-USC Design DNA research gate: eight independent Hallmark public-reference studies, a comparative reference matrix, the proposed “Institutional Logistics Ledger” design language, an Impeccable-informed design/component/motion/3D/accessibility/performance system, a module rollout plan, and an owner-facing Design Gate handoff.
+- Added durable `PRODUCT.md` product truth for future Impeccable work without replacing the incumbent accepted `DESIGN.md`.
 - Integrated the frozen V5 whole-site design into the real `src/` application with same-origin playground auth/API wiring, exhaustive 34-surface classification, V5-native governed controls for current Production capability families, mock-free service-backed routes, and a searchable playground-only Index.
 - Added V5-specific unit, exhaustive route, responsive, light/dark, deterministic artifact, and production-denial acceptance gates. Candidate automation stops after isolated-playground acceptance and cannot continue to Production.
 - Accepted the permanent Isolated Staging Playground specification and hardcoded the five retained recovery pointers, one-temporary-branch rule, exact-candidate playground path, Earl GO requirement, and post-production rotation rules in root `AGENTS.md`.
@@ -13,6 +15,7 @@
 
 ### Verification boundary
 
+- The Design DNA task changed documentation only. No frontend/backend source, build artifact, migration, staging deployment, D1/R2 resource, Production state, Google data, or provider/email state changed. Substantial redesign remains blocked on Earl's explicit Design Gate approval.
 - V5 current-source acceptance passes all 33 registered application routes at 1440 CSS pixels, responsive/theme checks at 320/390/768/1024/1440, and governed-control persistence across application re-renders. The deterministic classic-script artifact passes a fresh production-mode build with playground markers denied.
 - Current Production capability contracts remain authoritative under schema 30/migration 0030. Direct public account creation, public evidence-file upload, and local avatar upload remain explicitly unsupported rather than fabricating backend behavior.
 - Canonical `npm run check` passes governance/handoff, lint with zero errors, deterministic build, 136 test files / 908 tests, Apps Script, dist parity, Cloudflare types, and dry-run.
