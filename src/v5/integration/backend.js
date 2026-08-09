@@ -41,6 +41,14 @@ export function createV5Backend({ baseUrl = '' } = {}) {
       return result;
     },
 
+    async activateStarter(command) {
+      const result = await auth.activate(command);
+      if (authenticated(result)) {
+        setAuthSession({ csrfToken: result.csrfToken, user: result.user });
+      }
+      return result;
+    },
+
     async logout() {
       const { csrfToken } = getAuthSession();
       try {
@@ -75,6 +83,7 @@ export function createV5Backend({ baseUrl = '' } = {}) {
     publicRequestOptions: () => auth.request('/api/public/request/options', { method: 'GET' }),
     submitPublicRequest: (command) => auth.request('/api/public/request', { body: command }),
     trackPublicRequest: (command) => auth.request('/api/public/request/track', { body: command }),
+    relatedPublicRequest: (command) => auth.request('/api/public/request/related', { body: command }),
     publicLendingCatalog: () => auth.request('/api/public/lending/catalog', { method: 'GET' }),
     submitPublicLending: (command) => auth.request('/api/public/lending', { body: command }),
     trackPublicLending: (command) => auth.request('/api/public/lending/track', { body: command }),
@@ -83,5 +92,12 @@ export function createV5Backend({ baseUrl = '' } = {}) {
     health: () => auth.request('/api/health', { method: 'GET' }),
     readiness: () => auth.request('/api/readiness', { method: 'GET' }),
     version: () => auth.getReleaseIdentity(),
+    playgroundStatus: () => auth.request('/api/playground/status', { method: 'GET' }),
+    requestPlaygroundOperation(command) {
+      return auth.request('/api/playground/operation', {
+        body: command,
+        csrfToken: getAuthSession().csrfToken ?? '',
+      });
+    },
   });
 }

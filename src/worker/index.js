@@ -474,6 +474,7 @@ async function version(env, requestId) {
     ok: true,
     correlationId: requestId,
     ...safeReleaseIdentity(env),
+    playground: isPlaygroundRuntime(env),
     database: {
       schemaVersion: schema?.value ?? '0',
       latestMigration: migration?.name ?? '',

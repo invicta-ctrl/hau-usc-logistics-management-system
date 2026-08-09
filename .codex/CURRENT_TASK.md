@@ -5,7 +5,7 @@ MODE: EXECUTE
 OBJECTIVE: Make the real src/ application match the frozen impeccable-whole-site-redesign-v5 visual authority while exposing all required current Production capabilities through real isolated-playground backend wiring and minimal V5-native controls.
 SECONDARY_INTENTS: SOFTWARE_FEATURE, TESTING, DEPLOYMENT
 SKILLS: browser:control-in-app-browser for the explicitly requested live localhost preview; Hallmark and Impeccable are explicitly prohibited
-RESULT: ACTIVE_OTG_PARITY_IMPLEMENTATION
+RESULT: COMPLETE_AWAITING_EARL_MANUAL_TESTING
 TARGET: current active release branch and the frozen prototypes/impeccable-whole-site-redesign-v5 frontend
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -15,9 +15,9 @@ REQUIRED_MODEL: CODEX
 STARTING_SHA: a06566f58ffeed826d8b7a53fe0421d9d68802b1
 PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
 PRODUCTION_VERSION: v0.8.0
-CANDIDATE_SHA: NONE
+CANDIDATE_SHA: GIT_HEAD
 PR: #23 DRAFT
-RUNTIME: checkpoint V5 candidate 947afedb7d0ec4528b4834220facc13ab55930f1 is live in the Isolated Staging Playground; it is not final under the newly accepted parity amendment
+RUNTIME: exact frozen GIT_HEAD V5 full-parity candidate is live only in the Isolated Staging Playground
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
 NEW_MIGRATION: NONE
@@ -28,8 +28,8 @@ SCOPE: accepted steer and amendments, frozen v5 visual reference, real src/ impl
 OUT_OF_SCOPE: new design language or substantial redesign, copying the Production/old Playground frontend, backend architecture/auth changes, migration, production deployment/mutation, automatic promotion, M1/M2, Google/provider-email writes, unrelated cleanup, force push, unknown branch/resource deletion
 STOP_CONDITIONS: unknown work, writer conflict, unresolved Production/playground contract mismatch, backend architecture/auth change, migration, new design language, substantial V5 layout redesign, playground/production crossover, unproven isolation, unresolved P0/P1, parity failure, or exact identity drift
 EXTERNAL_WRITES: bounded existing branch/PR update and exact playground-only candidate workflow after all local gates; no production, D1/R2 business-data, Google, or provider-email write
-ACTIVE_WRITER: CODEX
-HANDOFF_STATUS: ACTIVE
+ACTIVE_WRITER: NONE
+HANDOFF_STATUS: READY_FOR_HANDOFF
 BLOCKER: NONE
-COMPLETED_BEFORE_STOP: 33-route/control inventory; current-authority fingerprint reconciliation; V5 adapter/data-binding/runtime integration; owner-authorized request/tracking/lending fields; same-origin playground proxy; deterministic classic-script V5 build/shareable; focused and full repository gates; exact isolated-playground deployment; built-in-browser runtime acceptance
-NEXT_EXACT_ACTION: Audit current Production capability contracts against V5 routes, restore required V5-native functional/visual parity in src/, verify the Playground Index and responsive matrix, then freeze a new exact playground candidate.
+COMPLETED_BEFORE_STOP: exact Production capability audit; exhaustive route classification; full V5-native parity controllers; mock-zero service-backed routes; protected searchable Playground Index; clean candidate CI; deterministic production-denied artifact; five-width light/dark acceptance; exact isolated-playground deployment; unchanged Production boundary
+NEXT_EXACT_ACTION: Earl manually tests the exact GIT_HEAD candidate in the Isolated Staging Playground; any code change invalidates approval, and Production requires a separately accepted explicit GO.

@@ -6,7 +6,6 @@
 import { icon } from '../icons.js';
 import {
   backControl,
-  chip,
   esc,
   facts,
   field,
@@ -18,7 +17,7 @@ import {
 } from '../components.js';
 
 const marks = `<span class="public__marks"><span class="public__mark">HAU</span><span class="public__mark">USC</span></span>`;
-const illustrativeDataLabel = `<p class="preview-data-label" role="note">Illustrative preview data <span aria-hidden="true">·</span> no live record</p>`;
+const serviceDataLabel = `<p class="preview-data-label" role="note">Service-backed workflow <span aria-hidden="true">·</span> protected fields stay private</p>`;
 
 /* Public surfaces are plain render functions with no context argument, so the
    shell reads the current theme from here. app.js sets it before each render.
@@ -45,7 +44,7 @@ export function publicShell(
         }
       </div>
     </header>
-    <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? illustrativeDataLabel : ''}${inner}</main>
+    <main class="public__main${wide ? ' public__main--wide' : ''}" id="surface-main" tabindex="-1">${dataLabel ? serviceDataLabel : ''}${inner}</main>
     <footer class="public__foot">
       <p class="public__foot-line">Every item moves with a record.</p>
       <div class="public__foot-meta">
@@ -99,7 +98,7 @@ export const landing = () =>
 
     <section class="landing-updates" aria-labelledby="landing-updates-title">
       <div><h2 id="landing-updates-title">Official USC updates</h2>
-        <p>Authorized announcements appear through the official council channels. No announcement is fabricated for this preview.</p></div>
+        <p>Authorized announcements appear through the official council channels. No announcement is shown unless the service publishes it.</p></div>
       <a class="btn" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">View official page${icon('arrow-right', 'icon--sm')}</a>
     </section>`,
     { back: false, wide: true, landing: true, dataLabel: false },
@@ -181,7 +180,7 @@ export const verify = () =>
         body: 'Your account stays inactive until the link is opened and an administrator completes the review.',
       })}
       <div style="display:grid;gap:8px;margin-top:20px">
-        <button class="btn" type="button">Resend confirmation</button>
+        <button class="btn" type="button" data-act="open-parity-actions">Resend confirmation</button>
         <a class="btn btn--quiet" href="#/public.signin">Back to sign in</a>
       </div>
     </div>`,
@@ -221,7 +220,7 @@ export const application = () =>
           })}
         </div>
       </fieldset>
-      <button class="btn btn--primary" type="submit">Continue to review</button>
+      <button class="btn btn--primary" type="submit" data-act="open-parity-actions">Continue to review</button>
     </form>`,
   );
 
@@ -231,15 +230,11 @@ export const applicationStatus = () =>
   publicShell(
     `<div class="public__head">
       <h1>Application status</h1>
-      <p>Reference <b>APP-DEMO-214</b></p>
+      <p>Open the private status link issued for an application.</p>
     </div>
     <div class="panel"><div class="panel__body">
       ${timeline([
-        { title: 'Application received', meta: '3 May 2032', done: true },
-        { title: 'Email confirmed', meta: '3 May 2032', done: true },
-        { title: 'Administrator review', meta: 'In progress', current: true },
-        { title: 'Director decision', meta: 'Not started' },
-        { title: 'Access activated', meta: 'Not started' },
+        { title: 'Application not loaded', meta: 'A private status token is required', current: true },
       ])}
       ${notice({
         tone: 'info',
@@ -259,10 +254,7 @@ export function requestIntake({
   requestSeries = '',
 }) {
   const invalid = state === 'error';
-  const requestEvents = {
-    aurora: ['Commons opening', 'Student services forum'],
-    lantern: ['Assembly program', 'Closing session'],
-  };
+  const requestEvents = {};
   const subEvents = requestEvents[requestSeries] ?? [];
   const draftMarkup = requestDraft.length
     ? requestDraft
@@ -278,8 +270,8 @@ export function requestIntake({
   return publicShell(
     `<div class="request-center-head">
       <div><h1>Request Center</h1>
-        <p>Production uses an authenticated department session. This preview mirrors that setup with an illustrative, non-persistent identity.</p></div>
-      <span class="request-center-head__identity">${icon('shield', 'icon--sm')}Illustrative Executive Council</span>
+        <p>Submit a request for review or track a prior submission with its private tracking code.</p></div>
+      <span class="request-center-head__identity">${icon('shield', 'icon--sm')}Public request portal</span>
     </div>
     <div class="request-mode-tabs" role="tablist" aria-label="Request Center mode">
       <button id="request-create-tab" type="button" role="tab" data-act="request-mode" data-mode="create"
@@ -299,7 +291,7 @@ export function requestIntake({
     <section id="request-create-panel" role="tabpanel" aria-labelledby="request-create-tab"${requestMode === 'create' ? '' : ' hidden'}>
       <form class="request-center-form" id="request-center-form" onsubmit="return false">
         <section class="request-form-section" aria-labelledby="request-identity-title">
-          <div class="request-form-section__head"><span>1</span><div><h2 id="request-identity-title">Request identity</h2><p>Your department comes from the secure session and cannot be edited.</p></div></div>
+          <div class="request-form-section__head"><span>1</span><div><h2 id="request-identity-title">Request identity</h2><p>Use accurate contact details so an authorized reviewer can follow up safely.</p></div></div>
           <div class="request-form-grid">
             ${field({ label: 'Requester name', name: 'requesterName', required: true })}
             ${field({
@@ -316,7 +308,6 @@ export function requestIntake({
             ${field({ label: 'Organisation or office', name: 'organization', required: true })}
             ${field({ label: 'Email', name: 'email', type: 'email', required: true })}
             ${field({ label: 'Contact number', name: 'contactNumber', type: 'tel', required: true })}
-            <label class="field request-readonly">Department<input name="department" value="Illustrative Executive Council" readonly aria-readonly="true" /></label>
           </div>
         </section>
 
@@ -326,9 +317,10 @@ export function requestIntake({
             <label><input type="radio" name="requestType" value="NEW" data-act="request-type"${requestType === 'NEW' ? ' checked' : ''} /><span><b>New request</b><small>Start a new logistics request.</small></span></label>
             <label><input type="radio" name="requestType" value="ADDITIONAL" data-act="request-type"${requestType === 'ADDITIONAL' ? ' checked' : ''} /><span><b>Additional request</b><small>Link new requirements to existing work.</small></span></label>
           </fieldset>
-          <label class="field" data-request-parent-wrap${requestType === 'ADDITIONAL' ? '' : ' hidden'}>Existing parent request
-            <select name="parentRequest"${requestType === 'ADDITIONAL' ? ' required' : ''}><option value="">Select an illustrative request</option><option>REQ-DEMO-417 · Aurora Commons Week</option></select>
-          </label>
+          <div class="request-form-grid" data-request-parent-wrap${requestType === 'ADDITIONAL' ? '' : ' hidden'}>
+            ${field({ label: 'Related request ID', name: 'parentRequestId', required: requestType === 'ADDITIONAL' })}
+            ${field({ label: 'Related request tracking code', name: 'parentTrackingCode', required: requestType === 'ADDITIONAL' })}
+          </div>
         </section>
 
         <section class="request-form-section" aria-labelledby="request-event-title">
@@ -339,7 +331,7 @@ export function requestIntake({
             <option value="OFFICE_INVENTORY_PANTRY">Office inventory or pantry</option>
           </select></label>
           <div class="request-form-grid">
-            <label class="field" data-request-event-field>Event<select name="eventSeries" data-act="request-series"><option value="">Select Event</option><option value="aurora"${requestSeries === 'aurora' ? ' selected' : ''}>Aurora Commons Week</option><option value="lantern"${requestSeries === 'lantern' ? ' selected' : ''}>Lantern Forum</option></select></label>
+            <label class="field" data-request-event-field>Event<select name="eventSeries" data-act="request-series"><option value="">Select Event</option></select></label>
             <label class="field" data-request-event-field>Sub-event<select name="event"${subEvents.length ? '' : ' disabled'}><option value="">${subEvents.length ? 'Select Sub-event' : 'Select Event first'}</option>${subEvents.map((name) => `<option>${esc(name)}</option>`).join('')}</select></label>
             ${field({ label: 'Start date', name: 'startDate', type: 'date' })}
             ${field({ label: 'End date', name: 'endDate', type: 'date' })}
@@ -368,14 +360,14 @@ export function requestIntake({
           <label class="request-ack"><input type="checkbox" name="dataUseAcknowledged" required /><span><b>Privacy</b><small>I understand how my information is used to review and track this request.</small></span></label>
           <label class="request-ack"><input type="checkbox" name="acceptableUseAcknowledged" required /><span><b>Acceptable use</b><small>I confirm this request is legitimate and accurate, and that submission does not reserve stock.</small></span></label>
           <label class="request-ack"><input type="checkbox" name="evidenceConsentAcknowledged" required /><span><b>Evidence and photos</b><small>I understand authorized staff may attach evidence or handoff photos to this request.</small></span></label>
-          <button class="btn btn--primary" type="button" data-act="request-preview-submit"${requestDraft.length ? '' : ' disabled'}>Submit request for review${icon('arrow-right')}</button>
+          <button class="btn btn--primary" type="button" data-act="request-submit"${requestDraft.length ? '' : ' disabled'}>Submit request for review${icon('arrow-right')}</button>
         </section>
       </form>
     </section>
     <section id="request-track-panel" class="request-track-panel" role="tabpanel" aria-labelledby="request-track-tab"${requestMode === 'track' ? '' : ' hidden'}>
-      <div><h2>Track Existing Request</h2><p>Production search is restricted to the signed-in department. This preview never looks up a live record.</p></div>
-      <form onsubmit="return false"><label class="field">Request ID<input name="requestSearch" placeholder="Try REQ-DEMO-431" autocomplete="off" required /></label><label class="field">Tracking code<input name="trackingCode" autocomplete="off" required /></label><button class="btn" type="button" data-act="request-preview-track">${icon('search', 'icon--sm')}Search preview</button></form>
-      <div class="request-track-empty" role="status">No live request data is connected to this preview.</div>
+      <div><h2>Track Existing Request</h2><p>Enter the request ID and private tracking code from the submission receipt.</p></div>
+      <form onsubmit="return false"><label class="field">Request ID<input name="requestSearch" autocomplete="off" required /></label><label class="field">Tracking code<input name="trackingCode" autocomplete="off" required /></label><button class="btn" type="button" data-act="request-track">${icon('search', 'icon--sm')}Search request</button></form>
+      <div class="request-track-empty" role="status">No request has been loaded.</div>
     </section>`,
     { wide: true },
   );
@@ -387,9 +379,10 @@ export function requestTracking({ state }) {
   if (state === 'empty') {
     return publicShell(
       `<div class="public__head"><h1>Track a submission</h1>
-        <p>Enter the reference number from your receipt.</p></div>
+        <p>Enter the request ID and private tracking code from your receipt.</p></div>
       <form class="form-grid" onsubmit="return false">
-        ${field({ label: 'Reference number', name: 'ref', hint: 'For example, REQ-DEMO-431.' })}
+        ${field({ label: 'Request ID', name: 'ref', required: true })}
+        ${field({ label: 'Tracking code', name: 'trackingCode', required: true })}
         <button class="btn btn--primary" type="submit">${icon('search')}Track</button>
       </form>
       ${notice({
@@ -405,15 +398,12 @@ export function requestTracking({ state }) {
       `<div class="public__head"><h1>Request submitted</h1>
         <p>Keep this reference. It is the only way to track this request.</p></div>
       ${receipt({
-        ref: 'REQ-DEMO-431',
+        ref: 'Recorded request',
         title: 'Submission receipt',
         lines: [
-          { label: 'Submitted', value: '7 May 2032, 9:32 AM' },
-          { label: 'Organisation', value: 'Illustrative Executive Council' },
-          { label: 'Event', value: 'Aurora Commons Week · Route A' },
-          { label: 'Items', value: '6 lines' },
-          { label: 'Date needed', value: '19 May 2032' },
-          { label: 'Status', html: chip('FOR_REVIEW') },
+          { label: 'Submitted', value: 'Recorded by the authorized service' },
+          { label: 'Reference', value: 'Use the private receipt shown after submission' },
+          { label: 'Status', value: 'Load with the private tracking code' },
         ],
         footer: notice({
           tone: 'info',
@@ -429,23 +419,24 @@ export function requestTracking({ state }) {
   }
 
   return publicShell(
-    `<div class="public__head"><h1>Request REQ-DEMO-431</h1>
-      <p>Aurora Commons Week · Route A — submitted 7 May 2032</p></div>
+    `<div class="public__head"><h1>Request status</h1>
+      <p>Verified request details load only after a private tracking check.</p></div>
     <div class="panel"><div class="panel__body" style="display:grid;gap:24px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        ${chip('FOR_REVIEW')}<span class="muted" style="font-size:var(--t-sm)">Updated 2 hours ago</span>
+        <span class="muted" style="font-size:var(--t-sm)">No request is loaded.</span>
       </div>
       ${timeline([
-        { title: 'Submitted', meta: '7 May 2032, 9:32 AM', done: true },
-        { title: 'Under review', meta: 'Each line is being routed', current: true },
-        { title: 'Accepted and reserved', meta: 'Not started' },
-        { title: 'Ready to release', meta: 'Not started' },
-        { title: 'Released to you', meta: 'Not started' },
+        { title: 'Request not loaded', meta: 'Enter the request ID and private tracking code', current: true },
+      ])}
+      ${facts([
+        { label: 'Request', value: 'Not loaded' },
+        { label: 'Status', value: 'Not loaded' },
+        { label: 'Purpose', value: 'Not loaded' },
       ])}
       ${notice({
         tone: 'info',
         title: 'What you need to do next',
-        body: 'Nothing right now. We will contact your organisation if a line needs more information.',
+        body: 'Use the private tracking form to load an authorized status response.',
       })}
     </div></div>`,
   );
@@ -473,12 +464,6 @@ export const lendingIntake = () =>
           ${field({ label: 'USC department or office', name: 'uscDepartment', options: ['Select department'], required: true })}
           ${field({ label: 'Contact number', name: 'contactNumber', type: 'tel', required: true })}
           ${field({ label: 'Email', name: 'email', type: 'email', required: true })}
-          ${field({
-            label: 'Identity evidence',
-            name: 'ev',
-            type: 'file',
-            hint: 'Required for student borrowers. Uploaded evidence is private and is not shown publicly.',
-          })}
         </div>
       </fieldset>
       <fieldset>
@@ -503,31 +488,45 @@ export const lendingIntake = () =>
 
 /* ---------- 10. Public lending tracking ---------- */
 
-export const lendingTracking = () =>
-  publicShell(
-    `<div class="public__head"><h1>Loan LOAN-DEMO-228</h1><p>Tent, 10 × 10 — requested 5 May 2032</p></div>
+export function lendingTracking({ state } = {}) {
+  if (state === 'empty') {
+    return publicShell(
+      `<div class="public__head"><h1>Track a lending submission</h1>
+        <p>Enter the submission ID and private tracking code from your receipt.</p></div>
+      <form class="form-grid" onsubmit="return false" data-v5-lending-track>
+        ${field({ label: 'Submission ID', name: 'submissionId', required: true })}
+        ${field({ label: 'Tracking code', name: 'trackingCode', required: true })}
+        <button class="btn btn--primary" type="submit">${icon('search')}Track</button>
+      </form>
+      ${notice({
+        tone: 'info',
+        title: 'Private lookup',
+        body: 'For privacy, a lending submission cannot be found by borrower name or email.',
+      })}`,
+    );
+  }
+  return publicShell(
+    `<div class="public__head"><h1>Loan tracking</h1><p>Verified lending details load after a private lookup.</p></div>
     <div class="panel"><div class="panel__body" style="display:grid;gap:24px">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        ${chip('READY_TO_CLAIM')}<span class="muted" style="font-size:var(--t-sm)">Claim by 14 May 2032</span>
+        <span class="chip">NOT LOADED</span>
       </div>
       ${timeline([
-        { title: 'Requested', meta: '5 May 2032', done: true },
-        { title: 'Reviewed and approved', meta: '6 May 2032', done: true },
-        { title: 'Ready to claim', meta: 'Bring your approved identity evidence', current: true },
-        { title: 'Handed over', meta: 'Not started' },
-        { title: 'Returned', meta: 'Not started' },
+        { title: 'Lending record not loaded', meta: 'Enter the submission ID and private tracking code', current: true },
       ])}
       ${notice({
-        tone: 'progress',
-        title: 'Bring identity evidence to the handoff',
-        body: 'Student borrowers must present the same approved evidence recorded on this loan. Staff confirm receipt at handoff.',
+        tone: 'info',
+        title: 'Private lookup required',
+        body: 'A lending record is shown only after its private tracking code is verified.',
       })}
       ${facts([
-        { label: 'Return by', value: '14 May 2032' },
-        { label: 'Pickup point', value: 'Department of Logistics office' },
+        { label: 'Submission', value: 'Not loaded' },
+        { label: 'Status', value: 'Not loaded' },
+        { label: 'Items', value: 'Not loaded' },
       ])}
     </div></div>`,
   );
+}
 
 /* ---------- 11. Privacy / acceptable use ---------- */
 
@@ -538,7 +537,7 @@ export const policy = () =>
     <div class="panel"><div class="panel__body" style="display:grid;gap:20px">
       <section>
         <h2 style="font-size:var(--t-md);font-weight:700">What we record</h2>
-        <p class="muted" style="font-size:var(--t-sm);margin-top:6px">Your organisation, what you requested, when you need it, and the decisions staff make. Identity evidence you upload for lending is stored privately and is never shown on public pages.</p>
+        <p class="muted" style="font-size:var(--t-sm);margin-top:6px">Your organisation, what you requested, when you need it, and the decisions staff make. Identity or handoff evidence recorded by authorized staff is stored privately and is never shown on public pages.</p>
       </section>
       <section>
         <h2 style="font-size:var(--t-md);font-weight:700">What we do not do</h2>

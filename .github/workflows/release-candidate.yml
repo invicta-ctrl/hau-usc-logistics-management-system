@@ -55,16 +55,15 @@ jobs:
       - name: Run exact-head repository gates
         run: npm run check
       - name: Create bound release manifest
-        run: node scripts/create-release-candidate-manifest.mjs .release/v0.8.0-candidate.json
+        run: node scripts/create-release-candidate-manifest.mjs .release/candidate.json
       - name: Upload immutable candidate package
         uses: actions/upload-artifact@v4
         with:
-          name: v0.8.0-candidate-${{ steps.identity.outputs.sha }}
+          name: release-candidate-${{ steps.identity.outputs.sha }}
           path: |
-            .release/v0.8.0-candidate.json
+            .release/candidate.json
             dist/index.html
             HAU-USC_Logistics-Prototype-Shareable.html
-            apps-script/
           if-no-files-found: error
           retention-days: 14
 

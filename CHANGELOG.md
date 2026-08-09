@@ -4,6 +4,8 @@
 
 ### Added
 
+- Integrated the frozen V5 whole-site design into the real `src/` application with same-origin playground auth/API wiring, exhaustive 34-surface classification, V5-native governed controls for current Production capability families, mock-free service-backed routes, and a searchable playground-only Index.
+- Added V5-specific unit, exhaustive route, responsive, light/dark, deterministic artifact, and production-denial acceptance gates. Candidate automation stops after isolated-playground acceptance and cannot continue to Production.
 - Accepted the permanent Isolated Staging Playground specification and hardcoded the five retained recovery pointers, one-temporary-branch rule, exact-candidate playground path, Earl GO requirement, and post-production rotation rules in root `AGENTS.md`.
 - Added isolated playground D1/R2 clean-baseline and working-state tooling, privacy filtering, deterministic parity/reconciliation, Reset Workspace, Refresh Baseline protection, safe status, module switcher, and real-login testing.
 - Added an explicit exact-SHA candidate-freeze workflow that deploys automatically to the playground after repository checks and stops for Earl; ordinary WIP pushes and playground success cannot trigger production.
@@ -11,7 +13,9 @@
 
 ### Verification boundary
 
-- Canonical `npm run check` passes governance/handoff, lint with zero errors, deterministic build, 133 test files / 891 tests, Apps Script, dist parity, Cloudflare types, and dry-run.
+- V5 current-source acceptance passes all 33 registered application routes at 1440 CSS pixels, responsive/theme checks at 320/390/768/1024/1440, and governed-control persistence across application re-renders. The deterministic classic-script artifact passes a fresh production-mode build with playground markers denied.
+- Current Production capability contracts remain authoritative under schema 30/migration 0030. Direct public account creation, public evidence-file upload, and local avatar upload remain explicitly unsupported rather than fabricating backend behavior.
+- Canonical `npm run check` passes governance/handoff, lint with zero errors, deterministic build, 136 test files / 908 tests, Apps Script, dist parity, Cloudflare types, and dry-run.
 - Live isolated playground readiness, operator status/module switcher, session protection, deliberate D1/R2 mutation/reset, and production-denial checks pass. Production remains v0.8.0 and read-only D1/R2 pre/post fingerprints are unchanged.
 - No production deployment, production migration, production business-data mutation, Google write, provider/email send, frontend integration, or M1/M2 work occurred.
 

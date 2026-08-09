@@ -109,7 +109,7 @@ export function attentionBand(items) {
     ${items
       .map(
         (m) => `<button class="attention__item" type="button" data-urgent="${!!m.urgent}"
-        data-act="${esc(m.act ?? 'noop')}">
+        data-act="${esc(m.act)}">
         <span class="attention__label">${icon(m.icon, 'icon--sm icon--muted')}${esc(m.label)}</span>
         <span class="attention__value num">${esc(m.value)}</span>
         <span class="attention__note">${esc(m.note)}</span>
@@ -125,7 +125,7 @@ export function contextLine(pairs) {
     .join('')}<span class="illustrative">${icon(
     'info',
     'icon--sm icon--muted',
-  )}All figures are illustrative preview data.</span></p>`;
+  )}Figures reflect the current authorized service response.</span></p>`;
 }
 
 /* ---------- Queue table ----------
@@ -240,7 +240,7 @@ export function loadingState(rows = 5) {
   return `<div class="preview-loading" aria-busy="true" aria-live="polite">
     <div class="preview-loading__head">
       <span class="preview-loading__mark" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span><b>Preparing this workspace</b><small>Checking the latest illustrative records</small></span>
+      <span><b>Preparing this workspace</b><small>Checking the latest authorized records</small></span>
     </div>
     <div class="preview-loading__progress" aria-hidden="true"><span></span></div>
     <p class="visually-hidden">Loading records.</p>

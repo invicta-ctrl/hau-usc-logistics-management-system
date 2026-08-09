@@ -193,12 +193,12 @@ await run('Request Center mirrors governed create and track setup', async () => 
   await page.waitForTimeout(340);
   const draft = await page.evaluate(() => ({
     items: document.querySelectorAll('.request-draft__item').length,
-    submitDisabled: document.querySelector('[data-act="request-preview-submit"]')?.disabled,
+    submitDisabled: document.querySelector('[data-act="request-submit"]')?.disabled,
     description: document.querySelector('.request-draft__item b')?.textContent,
   }));
   assert(draft.items === 1 && draft.submitDisabled === false, JSON.stringify(draft));
   await page.check('[name="acknowledged"]');
-  await page.click('[data-act="request-preview-submit"]');
+  await page.click('[data-act="request-submit"]');
   const toast = await page.textContent('.toast');
   assert(toast?.includes('no request was submitted'), toast ?? 'Missing preview-only feedback');
   assert(errors.length === 0, `Console errors: ${errors.join(' | ')}`);

@@ -3247,7 +3247,7 @@ button[aria-disabled="true"],
   }
 
   .preview-bar__brand > span:not(.preview-bar__tag)::after {
-    content: "Preview v4.1";
+    content: "Playground";
     font-size: var(--t-xs);
     white-space: nowrap;
   }

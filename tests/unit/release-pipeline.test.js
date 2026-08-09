@@ -80,7 +80,10 @@ describe('v0.8.0 release pipeline', () => {
     expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
     expect(workflow).toContain('npm run check');
     expect(workflow).toContain('create-release-candidate-manifest.mjs');
+    expect(workflow).toContain('.release/candidate.json');
+    expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
     expect(workflow).toContain('actions/upload-artifact@v4');
+    expect(workflow).not.toContain('apps-script/');
     expect(workflow).toContain('environment: isolated-staging-playground');
     expect(workflow).toContain('deploy-playground.mjs');
     expect(workflow).toContain('CLOUDFLARE_API_TOKEN');
@@ -100,7 +103,7 @@ describe('v0.8.0 release pipeline', () => {
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);
     expect(manifest.artifacts.shareableHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
-    expect(manifest.artifacts.appsScriptHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(manifest.artifacts).not.toHaveProperty('appsScriptHtmlSha256');
   });
 
   it('fails closed around staging smoke, recovery identity, and live deployment authorization', async () => {

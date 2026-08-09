@@ -6,6 +6,9 @@ import {
   viewModelCounts,
   workspaceForV5,
 } from './view-models.js';
+import { createAdminParityController } from './admin-parity.js';
+import { createOperationsParityController } from './operations-parity.js';
+import landingMediaUrl from '../assets/images/hau-campus-login-background.jpg?url';
 
 const MODULE_BY_ROUTE = Object.freeze({
   'admin.overview': 'overview',
@@ -51,9 +54,20 @@ const SPECIAL_ROUTES = new Set([
 ]);
 
 const ROUTE_CAPABILITY = Object.freeze({
+  'admin.overview': 'view.internal',
+  'director.overview': 'view.all.summary',
+  'food.overview': 'view.internal',
+  'inventory.overview': 'view.inventory',
+  'materials.overview': 'view.internal',
   'request.queue': 'view.request',
+  'lending.queue': 'view.internal',
+  'lending.detail': 'view.internal',
+  'release.desk': 'fulfillment.release',
   'inventory.catalog': 'view.inventory',
   'inventory.item': 'view.inventory',
+  'restocking.queue': 'view.inventory',
+  'procurement.board': 'view.internal',
+  'events.series': 'event.manage',
   'admin.access': 'access.admin',
   'admin.directory': 'access.admin',
   'admin.reference': 'reference.manage',
@@ -159,7 +173,7 @@ function replaceQueueRows(root, rows) {
         const button = document.createElement('button');
         button.className = 'q__link';
         button.type = 'button';
-        button.dataset.act = 'noop';
+        button.dataset.act = 'open-parity-actions';
         button.dataset.ref = text(row.ref);
         const title = document.createElement('b');
         const subtitle = document.createElement('span');
@@ -219,11 +233,24 @@ export function createV5Runtime({ backend, app }) {
     selectedLoanId: '',
     selectedReleaseId: '',
     selectedInventoryId: '',
+    selectedRestockId: '',
+    selectedDeliverableId: '',
+    selectedReleaseConfirmationId: '',
+    selectedEventSeriesId: '',
+    selectedEventDayId: '',
+    selectedActivityId: '',
+    selectedComponentId: '',
+    activationCsrfToken: '',
     lastPublicRequest: null,
     lastPublicLending: null,
     connectedRoutes: new Set(),
     failedRoutes: new Map(),
     dynamicMedia: 'NOT_PRESENT',
+    releaseIdentity: null,
+    playgroundVerified: false,
+    playgroundStatus: null,
+    scopedRevisions: new Map(),
+    revisionTimer: null,
     started: false,
   };
 
@@ -234,6 +261,18 @@ export function createV5Runtime({ backend, app }) {
   function allowed(currentRoute) {
     const needed = ROUTE_CAPABILITY[currentRoute] ?? 'view.internal';
     return currentRoute === 'account.profile' || capabilities().has(needed);
+  }
+
+  function syncAuthorizedRoutes() {
+    const routeIds = [...new Set([...Object.keys(MODULE_BY_ROUTE), ...SPECIAL_ROUTES])].filter(allowed);
+    app.integrationSetAuthorizedRoutes(
+      routeIds,
+      text(
+        integration.essential?.currentUser?.displayName,
+        integration.essential?.currentUser?.name,
+        integration.session?.user?.displayName,
+      ),
+    );
   }
 
   function render(nextVariant) {
@@ -249,6 +288,72 @@ export function createV5Runtime({ backend, app }) {
   function toast(message, error = false) {
     app.integrationToast(text(message), error ? 'error' : 'info');
   }
+
+  function focusParityActions() {
+    const actions = document.querySelector('[data-v5-parity-actions]');
+    if (!actions) return false;
+    actions.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    actions.querySelector('button,input,select,textarea')?.focus({ preventScroll: true });
+    return true;
+  }
+
+  const selection = () => ({
+    selectedRequestId: integration.selectedRequestId,
+    selectedLoanId: integration.selectedLoanId,
+    selectedReleaseId: integration.selectedReleaseId,
+    selectedInventoryId: integration.selectedInventoryId,
+    selectedRestockId: text(
+      integration.selectedRestockId,
+      integration.state?.restockRequests?.[0]?.id,
+    ),
+    selectedDeliverableId: text(
+      integration.selectedDeliverableId,
+      integration.state?.deliverables?.[0]?.id,
+    ),
+    selectedReleaseConfirmationId: text(
+      integration.selectedReleaseConfirmationId,
+      integration.state?.releaseConfirmations?.[0]?.id,
+    ),
+    selectedEventSeriesId: text(
+      integration.selectedEventSeriesId,
+      integration.state?.eventSeries?.[0]?.id,
+    ),
+    selectedEventDayId: text(
+      integration.selectedEventDayId,
+      integration.state?.eventDays?.[0]?.id,
+    ),
+    selectedActivityId: text(
+      integration.selectedActivityId,
+      integration.state?.events?.[0]?.id,
+      integration.state?.eventActivities?.[0]?.id,
+    ),
+    selectedComponentId: text(
+      integration.selectedComponentId,
+      integration.state?.compositeComponents?.[0]?.id,
+      integration.state?.foodComponents?.[0]?.id,
+      integration.state?.materialsComponents?.[0]?.id,
+    ),
+  });
+
+  const refreshCurrentRoute = () => loadRoute(route(), { refresh: true });
+  const operationsParity = createOperationsParityController({
+    backend,
+    app,
+    getState: () => integration.state ?? {},
+    getSelection: selection,
+    getCapabilities: capabilities,
+    refresh: refreshCurrentRoute,
+    toast,
+  });
+  const adminParity = createAdminParityController({
+    backend,
+    app,
+    getState: () => app.integrationState,
+    getIntegration: () => integration,
+    getCapabilities: capabilities,
+    refresh: refreshCurrentRoute,
+    toast,
+  });
 
   function persistentReceipt(message) {
     const region = document.getElementById('toast-region');
@@ -269,6 +374,7 @@ export function createV5Runtime({ backend, app }) {
     integration.state = boot.state;
     app.integrationState.role = roleForV5(boot.essential.currentUser);
     app.integrationState.workspace = workspaceForV5(boot.essential.currentUser);
+    syncAuthorizedRoutes();
     return true;
   }
 
@@ -375,7 +481,49 @@ export function createV5Runtime({ backend, app }) {
     }
   }
 
+  async function verifyPlaygroundContext() {
+    try {
+      const [identity, health] = await Promise.all([backend.version(), backend.health()]);
+      integration.releaseIdentity = identity;
+      integration.playgroundVerified = Boolean(
+        identity?.playground === true &&
+          String(identity?.environment ?? '').toUpperCase() === 'STAGING' &&
+          String(health?.environment ?? '').toUpperCase() === 'STAGING' &&
+          health?.database?.connected === true &&
+          health?.dependencies?.d1 === true &&
+          health?.dependencies?.brandAssets === true &&
+          health?.dependencies?.evidenceAssets === true,
+      );
+    } catch {
+      integration.playgroundVerified = false;
+    }
+    app.integrationSetPlaygroundContext(integration.playgroundVerified);
+  }
+
+  async function pollScopedRevision() {
+    const currentRoute = route();
+    const scope = MODULE_BY_ROUTE[currentRoute];
+    if (!integration.session || !scope || document.visibilityState === 'hidden') return;
+    try {
+      const revision = await backend.commands.getScopedRevision(scope);
+      if (revision?.enabled !== true || revision?.token === undefined) return;
+      const previous = integration.scopedRevisions.get(scope);
+      integration.scopedRevisions.set(scope, revision.token);
+      if (previous !== undefined && previous !== revision.token) {
+        await loadRoute(currentRoute, { refresh: true });
+      }
+    } catch {
+      // Polling is advisory. Route reads and explicit refresh remain authoritative.
+    }
+  }
+
   async function loadPublic(currentRoute) {
+    if (currentRoute === 'index' && integration.playgroundVerified) {
+      const authenticated = await ensureAuthenticated();
+      if (authenticated && capabilities().has('system.admin')) {
+        integration.playgroundStatus = await backend.playgroundStatus();
+      }
+    }
     if (currentRoute === 'public.landing') await loadAdvertisements();
     if (currentRoute === 'public.request-intake') {
       integration.requestOptions ??= await backend.publicRequestOptions();
@@ -444,6 +592,12 @@ export function createV5Runtime({ backend, app }) {
     if (summary) summary.textContent = text(item.summary, item.body, item.title, summary.textContent);
     const target = text(item.url, item.targetUrl);
     if (link && /^https:\/\//u.test(target)) link.href = target;
+    const mediaUrl = text(item.mediaUrl, item.imageUrl);
+    const media = document.querySelector('.landing-hero__media');
+    if (media && mediaUrl && (/^\//u.test(mediaUrl) || /^https:\/\//u.test(mediaUrl))) {
+      media.src = mediaUrl;
+      media.alt = text(item.altText, item.title);
+    }
   }
 
   function syncRequestPurpose() {
@@ -505,9 +659,11 @@ export function createV5Runtime({ backend, app }) {
       'Select stock area',
       (area) => text(area),
     );
-    if (form.elements.parentRequest) {
-      setOptions(form.elements.parentRequest, [], 'Select an illustrative request', (entry) => entry);
-    }
+    const additional = app.integrationState.requestType === 'ADDITIONAL';
+    form.querySelectorAll('[data-request-parent-wrap] input').forEach((control) => {
+      control.disabled = !additional;
+      control.required = additional;
+    });
     syncRequestEvents();
     syncRequestPurpose();
   }
@@ -522,13 +678,15 @@ export function createV5Runtime({ backend, app }) {
       if (!control) continue;
       control.disabled = !selected || staff;
       control.required = selected && !staff;
-      control.closest('label').hidden = selected && staff;
+      const wrapper = control.closest('label,.field');
+      if (wrapper) wrapper.hidden = selected && staff;
     }
     const department = form.elements.uscDepartment;
     if (department) {
       department.disabled = !selected || !staff;
       department.required = selected && staff;
-      department.closest('label').hidden = selected && !staff;
+      const wrapper = department.closest('label,.field');
+      if (wrapper) wrapper.hidden = selected && !staff;
     }
   }
 
@@ -793,7 +951,9 @@ export function createV5Runtime({ backend, app }) {
     const currentStatus = text(request?.status, result?.status, 'FOR_REVIEW');
     const status = root?.querySelector('.chip');
     if (status) status.textContent = currentStatus.replaceAll('_', ' ');
-    const summary = root?.querySelector('.page-head p, .track-summary p, .detail__head > p');
+    const summary = root?.querySelector(
+      '.public__head > p, .page-head p, .track-summary p, .detail__head > p',
+    );
     if (summary) {
       summary.textContent = `${text(request?.requestPurpose, request?.requestType, 'Request')} · last updated ${text(request?.updatedAt, result?.updatedAt, 'not reported')}`;
     }
@@ -838,7 +998,9 @@ export function createV5Runtime({ backend, app }) {
     if (status) status.textContent = currentStatus.replaceAll('_', ' ');
     const lines = firstCollection(result, 'lines', 'items');
     const quantity = lines.reduce((sum, line) => sum + Number(line.quantity ?? 0), 0);
-    const summary = root?.querySelector('.page-head p, .track-summary p, .detail__head > p');
+    const summary = root?.querySelector(
+      '.public__head > p, .page-head p, .track-summary p, .detail__head > p',
+    );
     if (summary) {
       summary.textContent = `${lines.length} lending line${lines.length === 1 ? '' : 's'} · ${quantity} unit${quantity === 1 ? '' : 's'}`;
     }
@@ -859,9 +1021,62 @@ export function createV5Runtime({ backend, app }) {
     );
   }
 
+  function bindPlaygroundIndex() {
+    const status = integration.playgroundStatus;
+    const root = document.getElementById('surface-main');
+    if (!root || !status?.playground || root.querySelector('[data-v5-playground-status]')) return;
+    const section = document.createElement('section');
+    section.className = 'panel';
+    section.dataset.v5PlaygroundStatus = '';
+    section.dataset.v5ParityActions = '';
+    section.innerHTML = `<div class="panel__body">
+      <div class="section__head"><div><span class="label">Private operator surface</span><h2>Playground status and recovery</h2></div></div>
+      <dl class="facts">
+        <div><dt>Candidate</dt><dd data-playground-value="candidate"></dd></div>
+        <div><dt>Production</dt><dd data-playground-value="production"></dd></div>
+        <div><dt>Clean baseline</dt><dd data-playground-value="baseline"></dd></div>
+        <div><dt>Schema</dt><dd data-playground-value="schema"></dd></div>
+        <div><dt>D1 baseline parity</dt><dd data-playground-value="d1"></dd></div>
+        <div><dt>R2 baseline parity</dt><dd data-playground-value="r2"></dd></div>
+        <div><dt>Working state</dt><dd data-playground-value="working"></dd></div>
+        <div><dt>Last reset</dt><dd data-playground-value="reset"></dd></div>
+      </dl>
+      <form class="form-grid" data-v5-playground-operation>
+        <label class="field">Confirmation phrase<input name="confirmation" autocomplete="off" required /></label>
+        <label class="request-ack"><input type="checkbox" name="discardActiveSession" /><span><b>Discard active test session</b><small>Required to refresh the baseline while a valuable manual test session is active or dirty.</small></span></label>
+        <div class="page-head__actions">
+          <button class="btn btn--primary" type="submit" name="kind" value="RESET">Reset Workspace</button>
+          <button class="btn" type="submit" name="kind" value="REFRESH_BASELINE">Refresh Baseline From Production</button>
+          <button class="btn btn--quiet" type="button" data-act="test-real-login">Test Real Login Flow</button>
+        </div>
+        <p role="status" data-playground-operation-result></p>
+      </form>
+    </div>`;
+    const values = {
+      candidate: `${text(status.candidate?.version)} · ${text(status.candidate?.commit)} · artifact ${text(status.candidate?.artifact)}`,
+      production: `${text(status.production?.version)} · ${text(status.production?.identity)}`,
+      baseline: `${text(status.cleanBaseline?.sourceProductionVersion)} · captured ${text(status.cleanBaseline?.capturedAt, 'not reported')}`,
+      schema: `production ${text(status.production?.schema)} · baseline ${text(status.cleanBaseline?.schema)} · working ${text(status.workingSchema?.version)}`,
+      d1: text(status.d1BaselineParity),
+      r2: text(status.r2BaselineParity),
+      working: `${text(status.workingState)}${status.activeTestSession ? ' · active test session protected' : ''}`,
+      reset: text(status.lastReset, 'Not reported'),
+    };
+    Object.entries(values).forEach(([key, value]) => {
+      const target = section.querySelector(`[data-playground-value="${key}"]`);
+      if (target) target.textContent = value;
+    });
+    root.append(section);
+  }
+
   function afterRender() {
     const currentRoute = route();
-    if (currentRoute === 'public.landing') bindAnnouncement();
+    if (currentRoute === 'index') bindPlaygroundIndex();
+    if (currentRoute === 'public.landing') {
+      const media = document.querySelector('.landing-hero__media');
+      if (media) media.src = landingMediaUrl;
+      bindAnnouncement();
+    }
     if (currentRoute === 'public.request-intake') bindPublicRequest();
     if (currentRoute === 'public.lending-intake') bindPublicLending();
     if (currentRoute === 'request.queue') bindRequestDetail();
@@ -887,6 +1102,8 @@ export function createV5Runtime({ backend, app }) {
         },
       ]);
     }
+    adminParity.afterRender();
+    operationsParity.afterRender();
   }
 
   function resolveRequestLine(line) {
@@ -919,18 +1136,25 @@ export function createV5Runtime({ backend, app }) {
   async function submitPublicRequest() {
     const form = document.getElementById('request-center-form');
     if (!form?.reportValidity()) return;
-    if (app.integrationState.requestType === 'ADDITIONAL') {
-      toast('Additional requests require private verification that this V5 form does not collect.', true);
-      return;
-    }
     if (!app.integrationState.requestDraft.length) {
       toast('Add at least one requested item.', true);
       return;
     }
     const values = Object.fromEntries(new FormData(form));
-    const button = form.querySelector('[data-act="request-preview-submit"]');
+    const button = form.querySelector('[data-act="request-submit"]');
     button.disabled = true;
     try {
+      let related = {};
+      if (app.integrationState.requestType === 'ADDITIONAL') {
+        const verified = await backend.relatedPublicRequest({
+          requestId: values.parentRequestId,
+          trackingCode: values.parentTrackingCode,
+        });
+        related =
+          values.requestPurpose === 'EVENT_ACTIVITY_SUPPORT'
+            ? { originalRequestId: verified.reference.id }
+            : { relatedRequestId: verified.reference.id };
+      }
       const result = await backend.submitPublicRequest({
         clientRequestId: newId('public-request'),
         requestPurpose: values.requestPurpose,
@@ -946,6 +1170,7 @@ export function createV5Runtime({ backend, app }) {
         stockArea: values.stockArea,
         neededDate: values.neededDate,
         purpose: values.purpose,
+        ...related,
         dataUseAcknowledged: values.dataUseAcknowledged === 'on',
         acceptableUseAcknowledged: values.acceptableUseAcknowledged === 'on',
         evidenceConsentAcknowledged: values.evidenceConsentAcknowledged === 'on',
@@ -967,18 +1192,40 @@ export function createV5Runtime({ backend, app }) {
     }
   }
 
-  async function trackPublicRequest() {
-    const form = document.querySelector('#request-track-panel form');
+  async function trackPublicRequest(form = document.querySelector('#request-track-panel form')) {
     if (!form?.reportValidity()) return;
     const values = Object.fromEntries(new FormData(form));
     try {
       integration.lastPublicRequest = await backend.trackPublicRequest({
-        requestId: values.requestSearch,
+        requestId: text(values.requestSearch, values.ref),
         trackingCode: values.trackingCode,
       });
       integration.connectedRoutes.add('public.request-tracking');
       form.elements.trackingCode.value = '';
       app.integrationGo('public.request-tracking');
+      app.integrationState.variant = 'populated';
+      app.integrationRender();
+      queueMicrotask(afterRender);
+    } catch (error) {
+      form.elements.trackingCode.value = '';
+      toast(safeMessage(error), true);
+    }
+  }
+
+  async function trackPublicLending(form) {
+    if (!form?.reportValidity()) return;
+    const values = Object.fromEntries(new FormData(form));
+    try {
+      integration.lastPublicLending = await backend.trackPublicLending({
+        submissionId: values.submissionId,
+        trackingCode: values.trackingCode,
+      });
+      integration.connectedRoutes.add('public.lending-tracking');
+      form.elements.trackingCode.value = '';
+      app.integrationGo('public.lending-tracking');
+      app.integrationState.variant = 'populated';
+      app.integrationRender();
+      queueMicrotask(afterRender);
     } catch (error) {
       form.elements.trackingCode.value = '';
       toast(safeMessage(error), true);
@@ -1039,11 +1286,19 @@ export function createV5Runtime({ backend, app }) {
     render('loading');
     try {
       const result = await backend.login(values.u, values.p);
+      if (result?.state === 'ACTIVATION_REQUIRED' && result.csrfToken) {
+        integration.activationCsrfToken = result.csrfToken;
+        integration.session = null;
+        render('populated');
+        toast('Starter account verified. Complete activation below.');
+        return;
+      }
       if (!result?.user) {
         render('error');
         return;
       }
       integration.session = result;
+      integration.activationCsrfToken = '';
       integration.state = null;
       await ensureAuthenticated();
       app.integrationGo(
@@ -1061,10 +1316,35 @@ export function createV5Runtime({ backend, app }) {
       await backend.logout();
     } finally {
       integration.session = null;
+      integration.activationCsrfToken = '';
       integration.essential = null;
       integration.state = null;
+      app.integrationSetAuthorizedRoutes([]);
       app.integrationCloseOverlay();
       app.integrationGo('public.signin');
+    }
+  }
+
+  async function requestPlaygroundOperation(form, kind) {
+    if (!form?.reportValidity()) return;
+    const values = Object.fromEntries(new FormData(form));
+    const result = form.querySelector('[data-playground-operation-result]');
+    const button = form.querySelector(`[name="kind"][value="${kind}"]`);
+    if (button) button.disabled = true;
+    try {
+      const response = await backend.requestPlaygroundOperation({
+        kind,
+        confirmation: values.confirmation,
+        discardActiveSession: values.discardActiveSession === 'on',
+      });
+      if (result) result.textContent = `${response.state}. Safe operator reference ${response.operationReference}.`;
+      integration.playgroundStatus = await backend.playgroundStatus();
+      document.querySelector('[data-v5-playground-status]')?.remove();
+      bindPlaygroundIndex();
+    } catch (error) {
+      if (result) result.textContent = safeMessage(error);
+    } finally {
+      if (button) button.disabled = false;
     }
   }
 
@@ -1103,23 +1383,31 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function onClick(event) {
-    const button = event.target.closest('button');
-    if (route() === 'public.verify' && button?.textContent?.includes('Resend confirmation')) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      toast('No verified application email session is present in this V5 route.', true);
-      return;
-    }
+    if (adminParity.onClick(event) || operationsParity.onClick(event)) return;
     const target = event.target.closest('[data-act]');
     if (!target) return;
     const action = target.dataset.act;
-    if (action === 'request-preview-submit') {
+    if (action === 'open-parity-actions') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!focusParityActions()) {
+        toast('No governed action is available for this record and role.', true);
+      }
+      return;
+    }
+    if (action === 'test-real-login') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void signOut();
+      return;
+    }
+    if (action === 'request-submit') {
       event.preventDefault();
       event.stopImmediatePropagation();
       void submitPublicRequest();
       return;
     }
-    if (action === 'request-preview-track') {
+    if (action === 'request-track') {
       event.preventDefault();
       event.stopImmediatePropagation();
       void trackPublicRequest();
@@ -1153,7 +1441,7 @@ export function createV5Runtime({ backend, app }) {
       void acceptRequest();
       return;
     }
-    if (['confirm-return', 'confirm-release', 'noop'].includes(action)) {
+    if (['confirm-return', 'confirm-release'].includes(action)) {
       event.preventDefault();
       event.stopImmediatePropagation();
       toast(
@@ -1198,9 +1486,14 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function onSubmit(event) {
+    if (adminParity.onSubmit(event) || operationsParity.onSubmit(event)) return;
     const form = event.target;
     const currentRoute = route();
-    if (currentRoute === 'public.signin') {
+    if (form.matches('[data-v5-playground-operation]')) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void requestPlaygroundOperation(form, event.submitter?.value);
+    } else if (currentRoute === 'public.signin') {
       event.preventDefault();
       event.stopImmediatePropagation();
       void signIn(form);
@@ -1208,17 +1501,29 @@ export function createV5Runtime({ backend, app }) {
       event.preventDefault();
       event.stopImmediatePropagation();
       void submitPublicLending(form);
-    } else if (['public.register', 'public.application'].includes(currentRoute)) {
+    } else if (currentRoute === 'public.request-tracking') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void trackPublicRequest(form);
+    } else if (currentRoute === 'public.lending-tracking') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void trackPublicLending(form);
+    } else if (currentRoute === 'public.register') {
       event.preventDefault();
       event.stopImmediatePropagation();
       toast(
-        'This V5 form does not collect the complete verified account-application contract and remains non-destructive.',
+        'Direct public account creation is unsupported. Use the verified account application flow.',
         true,
       );
+    } else if (currentRoute === 'public.application') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (!focusParityActions()) toast('The verified application form is unavailable.', true);
     } else if (currentRoute === 'account.profile') {
       event.preventDefault();
       event.stopImmediatePropagation();
-      toast('Password confirmation is not present in V5, so this control remains non-destructive.', true);
+      if (!focusParityActions()) toast('The governed profile controls are unavailable.', true);
     }
   }
 
@@ -1228,8 +1533,11 @@ export function createV5Runtime({ backend, app }) {
     document.addEventListener('click', onClick, true);
     document.addEventListener('change', onChange, true);
     document.addEventListener('submit', onSubmit, true);
+    document.addEventListener('hau:v5-rendered', afterRender);
     window.addEventListener('hashchange', () => void loadRoute());
+    await verifyPlaygroundContext();
     await loadRoute();
+    integration.revisionTimer = setInterval(() => void pollScopedRevision(), 30_000);
     return integration;
   }
 
@@ -1245,6 +1553,7 @@ export function createV5Runtime({ backend, app }) {
         failedRoutes: Object.fromEntries(integration.failedRoutes),
         counts: viewModelCounts(),
         dynamicMedia: integration.dynamicMedia,
+        playgroundVerified: integration.playgroundVerified,
       };
     },
   });

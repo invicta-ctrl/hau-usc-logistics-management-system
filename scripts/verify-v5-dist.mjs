@@ -23,18 +23,32 @@ async function artifactFiles(directory) {
   return files.map((name) => name.replaceAll('\\', '/')).sort();
 }
 
-function verifySingleFile(html, label) {
+function verifySingleFile(html, label, { playground = true } = {}) {
   const required = [
     '<div id="app"></div>',
-    'HAU-USC Logistics · Whole-site redesign preview v4.1',
+    'HAU-USC Logistics',
     '__HAU_V5_INTEGRATION__',
     'public.request-intake',
     'public.lending-intake',
     'request.queue',
     'inventory.catalog',
   ];
+  if (playground) required.push('Isolated Staging Playground');
   const missing = required.filter((marker) => !html.includes(marker));
   if (missing.length) throw new Error(`${label} is missing ${missing.length} required V5 marker(s).`);
+  const obsoletePreviewMarkers = [
+    'Whole-site redesign preview',
+    'Animated redesign preview',
+    'This design preview',
+    'Not production',
+    'id="surface-picker"',
+    'data-act="pick-surface"',
+    'data-act="viewport"',
+  ];
+  const obsolete = obsoletePreviewMarkers.filter((marker) => html.includes(marker));
+  if (obsolete.length) {
+    throw new Error(`${label} still contains ${obsolete.length} obsolete preview-harness marker(s).`);
+  }
   if (/<script[^>]+\bsrc=|<link[^>]+\brel=["']stylesheet/iu.test(html)) {
     throw new Error(`${label} contains an external runtime asset dependency.`);
   }
@@ -43,9 +57,7 @@ function verifySingleFile(html, label) {
   }
   const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)];
   if (!inlineScripts.length) throw new Error(`${label} contains no inline application script.`);
-  const applicationScript = inlineScripts.find((match) =>
-    match[1].includes('__HAU_V5_INTEGRATION__'),
-  );
+  const applicationScript = inlineScripts.find((match) => match[1].includes('__HAU_V5_INTEGRATION__'));
   if (!applicationScript) throw new Error(`${label} contains no V5 integration script.`);
   if (applicationScript.index < html.indexOf('<div id="app"></div>')) {
     throw new Error(`${label} executes the V5 integration script before the application root exists.`);
@@ -68,6 +80,7 @@ if (shareable !== canonical) throw new Error('The V5 shareable differs from dist
 const privateRoot = await mkdtemp(path.join(tmpdir(), 'hau-usc-v5-dist-'));
 try {
   const freshRoot = path.join(privateRoot, 'dist');
+  const productionRoot = path.join(privateRoot, 'production');
   const vite = path.join(repoRoot, 'node_modules', 'vite', 'bin', 'vite.js');
   execFileSync(process.execPath, [vite, 'build', '--mode', 'preview', '--outDir', freshRoot], {
     cwd: repoRoot,
@@ -89,11 +102,26 @@ try {
     if (!expected.equals(actual)) throw new Error(`dist/${relative} differs from a fresh V5 build.`);
   }
   verifySingleFile(await readFile(path.join(freshRoot, 'index.html'), 'utf8'), 'fresh V5 build');
+
+  execFileSync(process.execPath, [vite, 'build', '--mode', 'production', '--outDir', productionRoot], {
+    cwd: repoRoot,
+    stdio: 'pipe',
+    windowsHide: true,
+  });
+  const production = await readFile(path.join(productionRoot, 'index.html'), 'utf8');
+  verifySingleFile(production, 'fresh production V5 build', { playground: false });
+  const effectivePlaygroundMarkers = ['Isolated Staging Playground', 'Test environment', 'href="#/index"'];
+  const exposed = effectivePlaygroundMarkers.filter((marker) => production.includes(marker));
+  if (exposed.length) {
+    throw new Error(
+      `The production V5 artifact exposes ${exposed.length} effective playground capability marker(s).`,
+    );
+  }
 } finally {
   await rm(privateRoot, { recursive: true, force: true });
 }
 
 const digest = createHash('sha256').update(canonical).digest('hex');
 console.log(
-  `Verified deterministic V5 single-file preview (${Buffer.byteLength(canonical).toLocaleString()} bytes, sha256 ${digest.slice(0, 16)}...).`,
+  `Verified deterministic V5 single-file application (${Buffer.byteLength(canonical).toLocaleString()} bytes, sha256 ${digest.slice(0, 16)}...).`,
 );

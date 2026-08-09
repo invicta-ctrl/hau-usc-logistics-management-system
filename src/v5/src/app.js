@@ -1,5 +1,4 @@
-/* Preview application: shell, routing, state switching, and overlay behaviour.
-   All interaction is local. No network request is made from this preview. */
+/* V5 application shell, routing, state switching, and overlay behaviour. */
 
 import { icon, spriteMarkup } from './icons.js';
 import { esc, themeToggle } from './components.js';
@@ -9,6 +8,7 @@ import { requestDetailParts } from './surfaces/operations.js';
 import { ROLE_VIEWS, WORKSPACES, NOTIFICATIONS } from './data/mock.js';
 
 const root = document.getElementById('app');
+const PLAYGROUND_UI_ALLOWED = import.meta.env.MODE !== 'production';
 
 /* Theme persistence. A file:// preview can have an opaque origin, so every
    storage access is guarded and persistence degrades to session-only. */
@@ -38,17 +38,19 @@ function initialTheme() {
 }
 
 const state = {
-  surface: 'index',
+  surface: 'public.landing',
   variant: 'populated',
   theme: initialTheme(),
   viewport: 'desktop',
+  playgroundVerified: false,
+  authorizedRoutes: [],
+  accountName: 'Authorized user',
   role: 'ADMINISTRATOR',
   workspace: 'administrator',
   rail: 'expanded',
   drawer: 'closed',
   commandQuery: '',
   commandIndex: 0,
-  profileImage: '',
   requestDraft: [],
   requestMode: 'create',
   requestType: 'NEW',
@@ -199,8 +201,7 @@ function describeFocus(el) {
 }
 
 function openOverlay(name) {
-  lastFocusedSelector =
-    name === 'role' ? '[data-act="open-menu"]' : describeFocus(document.activeElement);
+  lastFocusedSelector = describeFocus(document.activeElement);
   updateView(
     'overlay',
     () => {
@@ -218,7 +219,6 @@ function openOverlay(name) {
         notifications: '[data-act="close-overlay"]',
         confirm: '[data-act="confirm-done"]',
         detail: '[data-act="confirm-accept"]',
-        role: '#role-view-select',
       }[name];
       if (node) trapFocus(node, preferred ?? null);
     },
@@ -296,69 +296,17 @@ function toast(message, tone = 'info') {
   }, 3600);
 }
 
-/* ---------------- Preview chrome ---------------- */
+/* ---------------- Playground chrome ---------------- */
 
-function previewBar() {
-  const surface = byId(state.surface);
-  const variants = surface?.states ?? ['populated'];
+function playgroundBar() {
+  if (!PLAYGROUND_UI_ALLOWED || !state.playgroundVerified) return '';
   return `<div class="preview-bar"${state.overlay ? ' inert aria-hidden="true"' : ''}>
     <div class="preview-bar__brand">
       ${icon('box', 'icon--sm')}
-      <span>HAU-USC Logistics · Animated redesign preview v4.1</span>
-      <span class="preview-bar__tag">Not production</span>
+      <span>HAU-USC Logistics · Isolated Staging Playground</span>
+      <span class="preview-bar__tag">Test environment</span>
     </div>
-
-    <label class="visually-hidden" for="surface-picker">Surface</label>
-    <select class="preview-select" id="surface-picker" data-act="pick-surface">
-      <option value="index"${state.surface === 'index' ? ' selected' : ''}>— Surface index —</option>
-      ${GROUPS.map(
-        (g) => `<optgroup label="${esc(g)}">${SURFACES.filter((s) => s.group === g)
-          .map(
-            (s) =>
-              `<option value="${s.id}"${s.id === state.surface ? ' selected' : ''}>${esc(s.name)}</option>`,
-          )
-          .join('')}</optgroup>`,
-      ).join('')}
-    </select>
-
-    ${
-      variants.length > 1
-        ? `<label class="visually-hidden" for="state-picker">State</label>
-      <select class="preview-select" id="state-picker" data-act="pick-state">
-        ${variants
-          .map(
-            (v) =>
-              `<option value="${v}"${v === state.variant ? ' selected' : ''}>${esc(
-                v[0].toUpperCase() + v.slice(1),
-              )}</option>`,
-          )
-          .join('')}
-      </select>`
-        : ''
-    }
-
-    <div class="preview-group" role="group" aria-label="Preview width">
-      ${['desktop', 'tablet', 'mobile']
-        .map(
-          (v) =>
-            `<button type="button" data-act="viewport" data-v="${v}" aria-pressed="${
-              state.viewport === v
-            }">${v[0].toUpperCase() + v.slice(1)}</button>`,
-        )
-        .join('')}
-    </div>
-
-    <div class="preview-group" role="group" aria-label="Theme">
-      ${['light', 'dark']
-        .map(
-          (t) =>
-            `<button type="button" data-act="theme" data-v="${t}" aria-pressed="${
-              state.theme === t
-            }">${t[0].toUpperCase() + t.slice(1)}</button>`,
-        )
-        .join('')}
-    </div>
-
+    ${state.surface === 'index' ? themeToggle(state.theme === 'dark') : ''}
     <a class="btn btn--sm" href="#/index">${icon('home', 'icon--sm')}Index</a>
   </div>`;
 }
@@ -366,22 +314,31 @@ function previewBar() {
 /* ---------------- Surface index ---------------- */
 
 function indexPage() {
-  return `<div class="index-wrap">
-    <h1>Operational Choreography</h1>
-    <p>A route-console redesign for the HAU-USC Logistics Management System. Every
-    surface below is a local, animated preview. Nothing here contacts a live service,
-    and every person, quantity, reference, and status is illustrative.</p>
-    <p style="margin-top:12px"><span class="illustrative">${icon(
+  return `<main class="index-wrap" id="surface-main" tabindex="-1">
+    <h1>Isolated Staging Playground Index</h1>
+    <p>Use this private route directory to test the V5 application against isolated
+    playground services. Protected destinations still enforce the signed-in persona's
+    server-authorized capabilities.</p>
+    <label class="cmdk__field" for="index-search">
+      ${icon('search')}
+      <span class="visually-hidden">Search routes</span>
+      <input id="index-search" type="search" autocomplete="off" data-act="index-search"
+        placeholder="Search routes, modules, or workspaces" />
+    </label>
+    <p><span class="illustrative">${icon(
       'info',
       'icon--sm icon--muted',
-    )}Use the width and theme controls above. Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> inside a workspace to open search.</span></p>
+    )}Press <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>K</kbd> to focus route search. Real login and authorization remain active.</span></p>
+    <p id="index-search-status" role="status" aria-live="polite">${SURFACES.length} routes available</p>
     ${GROUPS.map(
-      (g) => `<section class="index-group">
+      (g) => `<section class="index-group" data-index-group>
       <h2>${esc(g)}</h2>
       <div class="index-list">
         ${SURFACES.filter((s) => s.group === g)
           .map(
-            (s) => `<a class="index-item" href="#/${s.id}">
+            (s) => `<a class="index-item" href="#/${s.id}" data-index-item data-search="${esc(
+              `${s.name} ${s.group} ${s.id}`.toLowerCase(),
+            )}">
             <span><b>${esc(s.name)}</b><span>${s.states.length} state${
               s.states.length > 1 ? 's' : ''
             }</span></span>
@@ -392,7 +349,7 @@ function indexPage() {
       </div>
     </section>`,
     ).join('')}
-  </div>`;
+  </main>`;
 }
 
 /* ---------------- Internal shell ---------------- */
@@ -428,19 +385,22 @@ function rail() {
     <div class="rail__scroll">
       <nav class="rail__section" aria-label="Operations">
         <span class="label"><b>Operations</b><i>O-BANK</i></span>
-        ${NAV.map((n, i) => navItem(n, i, 'O')).join('')}
+        ${NAV.filter((n) => state.authorizedRoutes.includes(n.id))
+          .map((n, i) => navItem(n, i, 'O'))
+          .join('')}
       </nav>
       <nav class="rail__section" aria-label="Administration">
         <span class="label"><b>Administration</b><i>A-BANK</i></span>
-        ${NAV_ADMIN.map((n, i) => navItem(n, i, 'A')).join('')}
+        ${NAV_ADMIN.filter((n) => state.authorizedRoutes.includes(n.id))
+          .map((n, i) => navItem(n, i, 'A'))
+          .join('')}
       </nav>
     </div>
     <div class="rail__foot">
-      <button class="scope-button" type="button" data-act="cycle-workspace">
+      <div class="scope-button" aria-label="Current authorized workspace">
         <span class="avatar">${esc((ws?.name ?? 'A')[0])}</span>
         <span class="scope-button__text"><b>${esc(ws?.name ?? '')}</b><span>${esc(ws?.sub ?? '')}</span></span>
-        ${icon('chevron', 'icon--sm')}
-      </button>
+      </div>
     </div>
   </aside>
   <button class="rail__scrim" type="button" data-act="close-drawer" aria-label="Close navigation"></button>`;
@@ -472,14 +432,25 @@ function topbar() {
     </button>
     <div class="topbar__actions">
       ${themeToggle(state.theme === 'dark')}
-      <button class="icon-button notif" type="button" data-act="open-notifications"
-        aria-label="Notifications, 3 unread">
-        ${icon('bell')}<span class="notif__count" aria-hidden="true">3</span>
-      </button>
+      ${
+        NOTIFICATIONS.length
+          ? `<button class="icon-button notif" type="button" data-act="open-notifications"
+        aria-label="Notifications, ${NOTIFICATIONS.length} unread">
+        ${icon('bell')}<span class="notif__count" aria-hidden="true">${NOTIFICATIONS.length}</span>
+      </button>`
+          : ''
+      }
       <button class="account-button" type="button" data-act="open-menu"
         aria-haspopup="true" aria-expanded="${state.overlay === 'menu'}" aria-controls="account-menu">
-        <span class="avatar">LO</span>
-        <span class="account-button__text"><b>Logistics Office</b><span>${esc(role?.name ?? '')}</span></span>
+        <span class="avatar">${esc(
+          state.accountName
+            .split(/\s+/u)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join('') || 'AU',
+        )}</span>
+        <span class="account-button__text"><b>${esc(state.accountName)}</b><span>${esc(role?.name ?? '')}</span></span>
         ${icon('chevron', 'icon--sm')}
       </button>
     </div>
@@ -488,7 +459,7 @@ function topbar() {
 
 function tabbar() {
   return `<nav class="tabbar" aria-label="Sections"${state.overlay ? ' inert aria-hidden="true"' : ''}>
-    ${TABS.map(
+    ${TABS.filter((t) => state.authorizedRoutes.includes(t.id)).map(
       (t) =>
         `<button type="button" data-act="go" data-id="${t.id}"${
           t.id === state.surface ? ' aria-current="page"' : ''
@@ -499,7 +470,9 @@ function tabbar() {
 
 function commandMatches(query = '') {
   const needle = query.trim().toLowerCase();
-  return SURFACES.filter((surface) => {
+  return SURFACES.filter(
+    (surface) => surface.kind === 'public' || state.authorizedRoutes.includes(surface.id),
+  ).filter((surface) => {
     if (!needle) return true;
     return `${surface.name} ${surface.group} ${surface.id}`.toLowerCase().includes(needle);
   }).slice(0, 6);
@@ -551,33 +524,8 @@ function overlays() {
   if (state.overlay === 'menu') {
     return `<div class="menu" id="account-menu" data-overlay-root role="menu" aria-label="Account">
       <button type="button" role="menuitem" data-act="go" data-id="account.profile">My profile</button>
-      <button type="button" role="menuitem" data-act="open-role-dialog">Choose role view…</button>
       <button type="button" role="menuitem" data-act="close-overlay">Session details</button>
       <button type="button" role="menuitem" data-act="close-overlay">Sign out</button>
-    </div>`;
-  }
-
-  if (state.overlay === 'role') {
-    return `<div class="dialog role-dialog" data-overlay-root role="dialog" aria-modal="true"
-      aria-labelledby="role-dialog-title" aria-describedby="role-dialog-copy">
-      <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Cancel role selection"></button>
-      <div class="dialog__panel">
-        <div class="dialog__body">
-          <h3 id="role-dialog-title">Choose a preview role</h3>
-          <p id="role-dialog-copy">This changes the visible preview perspective only. It does not change an account, permission, committee scope, or server authorization.</p>
-          <label class="role-dialog__field" for="role-view-select">Role view
-            <select id="role-view-select" data-act="role-view-select">
-              ${ROLE_VIEWS.map(
-                (role) => `<option value="${esc(role.id)}"${role.id === state.role ? ' selected' : ''}>${esc(role.name)}</option>`,
-              ).join('')}
-            </select>
-          </label>
-        </div>
-        <div class="dialog__foot">
-          <button class="btn btn--quiet" type="button" data-act="close-overlay">Cancel</button>
-          <button class="btn btn--primary" type="button" data-act="apply-role-view">Apply role view</button>
-        </div>
-      </div>
     </div>`;
   }
 
@@ -624,15 +572,15 @@ function overlays() {
       <button class="drawer-scrim" type="button" data-act="close-overlay" aria-label="Cancel"></button>
       <div class="dialog__panel">
         <div class="dialog__body">
-          <h3 id="cd-t">Preview acceptance and reservation?</h3>
+          <h3 id="cd-t">Accept and reserve this request?</h3>
           <p id="cd-b" class="muted" style="font-size:var(--t-sm)">
             Accepting reserves 6 lines against authoritative stock. Reserving is not a release —
             nothing physically leaves the office until you record a handoff at the Release Desk.</p>
-          <p class="preview-action-note">Illustrative preview only — confirming does not persist or change a record.</p>
+          <p class="preview-action-note">This action is validated and recorded by the authorized service.</p>
         </div>
         <div class="dialog__foot">
           <button class="btn btn--quiet" type="button" data-act="close-overlay">Cancel</button>
-          <button class="btn btn--primary" type="button" data-act="confirm-done">Preview acceptance</button>
+          <button class="btn btn--primary" type="button" data-act="confirm-done">Confirm acceptance</button>
         </div>
       </div>
     </div>`;
@@ -667,7 +615,6 @@ function render() {
   document.body.setAttribute('data-theme', state.theme);
   const surfaceContext = {
     state: state.variant,
-    profileImage: state.profileImage,
     requestDraft: state.requestDraft,
     requestMode: state.requestMode,
     requestType: state.requestType,
@@ -675,7 +622,7 @@ function render() {
   };
 
   let body;
-  if (state.surface === 'index') {
+  if (PLAYGROUND_UI_ALLOWED && state.surface === 'index') {
     body = `<div class="frame" data-viewport="${state.viewport}">${indexPage()}</div>`;
   } else if (surface.kind === 'public') {
     setPublicTheme(state.theme === 'dark');
@@ -704,19 +651,24 @@ function render() {
     </div>`;
   }
 
-  root.innerHTML = `${previewBar()}${body}
+  root.innerHTML = `${playgroundBar()}${body}
     <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>`;
 
-  syncPreviewBarHeight();
+  syncPlaygroundBarHeight();
+  document.dispatchEvent(
+    new CustomEvent('hau:v5-rendered', { detail: { surface: state.surface } }),
+  );
 }
 
-/* The preview bar is preview chrome, not product chrome, but it still occupies
-   space above the shell. Publish its height so the sticky rail and topbar sit
-   under it instead of overflowing the viewport. */
+/* Publish the server-verified playground bar height only while it is present. */
 let barObserver;
-function syncPreviewBarHeight() {
+function syncPlaygroundBarHeight() {
   const bar = root.querySelector('.preview-bar');
-  if (!bar) return;
+  if (!bar) {
+    barObserver?.disconnect();
+    document.documentElement.style.removeProperty('--preview-bar-h');
+    return;
+  }
   const apply = () =>
     document.documentElement.style.setProperty('--preview-bar-h', `${bar.offsetHeight}px`);
   apply();
@@ -728,6 +680,9 @@ function syncPreviewBarHeight() {
 /* ---------------- Events ---------------- */
 
 function go(id) {
+  if (id === 'index' && (!PLAYGROUND_UI_ALLOWED || !state.playgroundVerified)) {
+    id = 'public.landing';
+  }
   if (!byId(id) && id !== 'index') return;
   updateView(
     'route',
@@ -753,11 +708,6 @@ document.addEventListener('click', (event) => {
 
   if (act === 'go') return go(el.dataset.id);
   if (act.startsWith('go:')) return go(act.slice(3));
-  if (act === 'viewport') {
-    return updateView('viewport', () => {
-      state.viewport = el.dataset.v;
-    });
-  }
   if (act === 'theme') return setTheme(el.dataset.v);
   if (act === 'toggle-theme') return setTheme(state.theme === 'dark' ? 'light' : 'dark');
   if (act === 'toggle-rail') {
@@ -773,7 +723,6 @@ document.addEventListener('click', (event) => {
     });
   }
   if (act === 'open-menu') return openOverlay('menu');
-  if (act === 'open-role-dialog') return openOverlay('role');
   if (act === 'open-notifications') return openOverlay('notifications');
   if (act === 'open-command') return openOverlay('command');
   if (act === 'close-overlay') return closeOverlay();
@@ -791,20 +740,16 @@ document.addEventListener('click', (event) => {
     return openOverlay('confirm');
   }
   if (act === 'confirm-return') {
-    toast('Preview only: the return was not persisted and stock was not changed.');
+    toast('The authorized return service is not ready. No stock or custody record changed.', 'error');
     return;
   }
   if (act === 'confirm-release') {
-    return updateView(
-      'state',
-      () => {
-        state.variant = 'success';
-      },
-    );
+    toast('The authorized release service is not ready. Nothing was released.', 'error');
+    return;
   }
   if (act === 'confirm-done') {
     closeOverlay();
-    toast('Preview only: acceptance was not persisted; no reservation or release changed.');
+    toast('The authorized acceptance service is not ready. No record changed.', 'error');
     return;
   }
   if (act === 'select:request' || act === 'select:release') {
@@ -812,43 +757,6 @@ document.addEventListener('click', (event) => {
     if (narrow) return openOverlay('detail');
     toast('Detail shown beside the queue.');
     return;
-  }
-  if (act === 'cycle-workspace') {
-    const i = WORKSPACES.findIndex((w) => w.id === state.workspace);
-    return updateView(
-      'state',
-      () => {
-        state.workspace = WORKSPACES[(i + 1) % WORKSPACES.length].id;
-      },
-    );
-  }
-  if (act === 'apply-role-view') {
-    const selected = document.getElementById('role-view-select')?.value;
-    const nextRole = ROLE_VIEWS.find((role) => role.id === selected);
-    if (!nextRole) return;
-    lastFocusedSelector = null;
-    return updateView(
-      'overlay',
-      () => {
-        state.role = nextRole.id;
-        state.overlay = null;
-      },
-      () => {
-        document.querySelector('[data-act="open-menu"]')?.focus();
-        toast(`Preview role: ${nextRole.name}. Authorization was not changed.`);
-      },
-    );
-  }
-  if (act === 'profile-image-remove') {
-    return updateView(
-      'local',
-      () => {
-        state.profileImage = '';
-      },
-      () => {
-        document.getElementById('profile-image-input')?.focus();
-      },
-    );
   }
   if (act === 'request-mode') {
     const nextMode = el.dataset.mode === 'track' ? 'track' : 'create';
@@ -904,71 +812,41 @@ document.addEventListener('click', (event) => {
       () => state.requestDraft.splice(index, 1),
     );
   }
-  if (act === 'request-preview-submit') {
+  if (act === 'request-submit') {
     const form = document.getElementById('request-center-form');
     if (!form?.elements.acknowledged?.checked) {
       form?.elements.acknowledged?.focus();
       toast('Confirm the privacy and no-reservation acknowledgment first.', 'error');
       return;
     }
-    toast('Preview only: no request was submitted, reserved, or recorded.');
+    toast('The authorized request service is not ready. Nothing was submitted.', 'error');
     return;
   }
-  if (act === 'request-preview-track') {
-    toast('Preview only: no live request lookup was performed.');
+  if (act === 'request-track') {
+    toast('The authorized tracking service is not ready. No lookup was performed.', 'error');
     return;
   }
   if (act === 'refresh') {
-    toast('Illustrative records checked. No live service was contacted.');
+    toast('The latest authorized records were requested.');
     return;
   }
   if (act === 'filter') {
-    toast('Filters are illustrative in this preview.');
+    toast('Filters apply to the currently loaded authorized records.');
   }
 });
 
 document.addEventListener('change', (event) => {
   const el = event.target.closest('[data-act]');
   if (!el) return;
-  if (el.dataset.act === 'profile-image') {
-    const file = el.files?.[0];
-    if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      el.value = '';
-      toast('Choose a JPEG, PNG, or WebP image.', 'error');
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      el.value = '';
-      toast('Choose an image no larger than 2 MB.', 'error');
-      return;
-    }
-    const reader = new FileReader();
-    reader.addEventListener('load', () => {
-      if (typeof reader.result !== 'string') return;
-      updateView(
-        'local',
-        () => {
-          state.profileImage = reader.result;
-        },
-        () => {
-          document.getElementById('profile-image-input')?.focus();
-        },
-      );
-    });
-    reader.addEventListener('error', () =>
-      toast('The image could not be read. Choose another file.', 'error'),
-    );
-    reader.readAsDataURL(file);
-    return;
-  }
   if (el.dataset.act === 'request-type') {
     state.requestType = el.value === 'ADDITIONAL' ? 'ADDITIONAL' : 'NEW';
     const wrap = document.querySelector('[data-request-parent-wrap]');
-    const select = wrap?.querySelector('select');
     const additional = el.value === 'ADDITIONAL';
     if (wrap) wrap.hidden = !additional;
-    if (select) select.required = additional;
+    wrap?.querySelectorAll('input,select').forEach((control) => {
+      control.required = additional;
+      control.disabled = !additional;
+    });
     return;
   }
   if (el.dataset.act === 'request-series') {
@@ -986,19 +864,26 @@ document.addEventListener('change', (event) => {
       : '<option value="">Select Event first</option>';
     return;
   }
-  if (el.dataset.act === 'pick-surface') return go(el.value);
-  if (el.dataset.act === 'pick-state') {
-    updateView(
-      'state',
-      () => {
-        state.variant = el.value;
-      },
-      focusMain,
-    );
-  }
 });
 
 document.addEventListener('input', (event) => {
+  const indexSearch = event.target.closest('[data-act="index-search"]');
+  if (indexSearch) {
+    const query = indexSearch.value.trim().toLowerCase();
+    let visible = 0;
+    document.querySelectorAll('[data-index-item]').forEach((item) => {
+      item.hidden = Boolean(query) && !item.dataset.search.includes(query);
+      item.style.display = item.hidden ? 'none' : '';
+      if (!item.hidden) visible += 1;
+    });
+    document.querySelectorAll('[data-index-group]').forEach((group) => {
+      group.hidden = !group.querySelector('[data-index-item]:not([hidden])');
+      group.style.display = group.hidden ? 'none' : '';
+    });
+    const status = document.getElementById('index-search-status');
+    if (status) status.textContent = `${visible} route${visible === 1 ? '' : 's'} available`;
+    return;
+  }
   const input = event.target.closest('[data-act="command-input"]');
   if (!input) return;
   state.commandQuery = input.value;
@@ -1039,27 +924,54 @@ document.addEventListener('keydown', (event) => {
   const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
     event.preventDefault();
+    if (state.surface === 'index') {
+      document.getElementById('index-search')?.focus();
+      return;
+    }
     if (state.overlay === 'command') return closeOverlay();
     if (state.surface !== 'index' && byId(state.surface)?.kind === 'internal') openOverlay('command');
     return;
   }
   if (event.key === '/' && !typing) {
     event.preventDefault();
+    if (state.surface === 'index') {
+      document.getElementById('index-search')?.focus();
+      return;
+    }
     if (state.surface !== 'index' && byId(state.surface)?.kind === 'internal') openOverlay('command');
   }
 });
 
 window.addEventListener('hashchange', () => {
-  const id = location.hash.replace(/^#\/?/, '') || 'index';
+  const id = location.hash.replace(/^#\/?/, '') || 'public.landing';
   if (id !== state.surface) go(id);
 });
+
+// Exported by scripts/v5-application-plugin.mjs in the integrated application build.
+// eslint-disable-next-line no-unused-vars
+function setPlaygroundContext(verified) {
+  state.playgroundVerified = PLAYGROUND_UI_ALLOWED && verified === true;
+  const requested = location.hash.replace(/^#\/?/, '') || 'public.landing';
+  if (state.playgroundVerified && requested === 'index') go('index');
+  else if (!state.playgroundVerified && (state.surface === 'index' || requested === 'index')) {
+    go('public.landing');
+  } else render();
+}
+
+// Exported by scripts/v5-application-plugin.mjs in the integrated application build.
+// eslint-disable-next-line no-unused-vars
+function setAuthorizedRoutes(routeIds, accountName = '') {
+  state.authorizedRoutes = Array.isArray(routeIds) ? [...new Set(routeIds.map(String))] : [];
+  state.accountName = String(accountName || 'Authorized user');
+  render();
+}
 
 /* ---------------- Boot ---------------- */
 
 document.body.insertAdjacentHTML('afterbegin', spriteMarkup());
 document.documentElement.classList.add('v4-boot');
-const initial = location.hash.replace(/^#\/?/, '') || 'index';
-state.surface = byId(initial) ? initial : 'index';
+const initial = location.hash.replace(/^#\/?/, '') || 'public.landing';
+state.surface = byId(initial) ? initial : 'public.landing';
 state.variant = byId(state.surface)?.states?.[0] ?? 'populated';
 render();
 renderReason = 'idle';

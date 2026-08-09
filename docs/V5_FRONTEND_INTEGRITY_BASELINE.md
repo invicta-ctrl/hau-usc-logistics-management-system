@@ -53,20 +53,25 @@ c4d611b8fa4fdcb140782331202ca7a97862cc67f65f738594fd847e4572a3b3  styles/v4.css
 - Route format: `#/surface.id`; the route IDs and registry order are frozen.
 - Runtime visual stylesheets: `tokens.css`, `base.css`, `shell.css`, `components.css`, `surfaces.css`, `responsive.css`, `motion.css`, `v3.css`, `v4.css`, and `v5.css`, in the order in `index.html`.
 - Static visual assets: three bundled fonts plus `hau-campus-login-background.jpg`; SVG icons are emitted from the frozen `src/icons.js` sprite.
-- Major DOM is produced by the frozen `index.html`, `src/app.js`, `src/components.js`, `src/registry.js`, and three surface modules. Integration may change text/value/src data at runtime but must not intentionally change structure, classes, copy templates, routes, CSS, tokens, assets, or responsive behavior.
+- Major DOM remains produced by the V5 `index.html`, `src/app.js`, `src/components.js`, `src/registry.js`, and three surface modules. The superseding full-parity amendment permits only the structural and copy changes required to replace prototype behavior with the exact current backend contracts, make the Index searchable and playground-only, and remove mock records. It does not authorize a new visual system, route deletion/reordering, token changes, asset substitution, or responsive redesign.
 
 ## Post-wiring result
 
-Recomputed against current authority commit `908653dc956c9ccffa68ac0b350fc23b69f053ea`:
+Recomputed against current authority commit `908653dc956c9ccffa68ac0b350fc23b69f053ea` after the superseding full-parity implementation:
 
-- Runtime file count: 39 authority files and 39 vendored non-integration files.
-- Byte-identical files: 37 of 39.
-- CSS: all ten stylesheet files byte-identical, including current corrected `styles/v4.css`.
-- Static fonts/images, icons, tokens, registry, routes, components, application shell, and index: byte-identical.
-- `src/surfaces/public.js` vendored SHA-256: `b9f69f2488d706a314e48e0c566d331f5d28033e3147f75c467c714040531c97`. Difference is limited to Earl's authorized public request/tracking/lending contract fields and copy.
-- `src/surfaces/operations.js` vendored SHA-256: `b3a8fdedc56e43aa66325b159a53ee91596b65eea3b8a28497cb48c658f87846`. The only difference is a functional data-binding correction: the accepted request guard recomputes pending lines from the mutable backend-projected array instead of capturing the empty array at module import.
-- Integration JavaScript is external to the frozen source layers. It clears mock arrays, maps API DTOs, delegates events, and updates text/value/src state without adding styles or replacing the component system.
+- Complete preserved-tree file count: 39 authority files and 39 vendored files; 31 are byte-identical and 8 intentionally differ.
+- Runtime visual-input count: 24 files; 17 are byte-identical and 7 intentionally differ.
+- CSS: 9 of 10 stylesheets are byte-identical. `styles/v4.css` changes only the mobile playground-only generated label from `Preview v4.1` to `Playground`; no selector, property, token, layout, breakpoint, or theme value changed.
+- All bundled fonts, the HAU campus image, icons, vocabulary, mock source, tokens, base/component/shell/surface/responsive/motion/v3/v5 CSS, and the frozen prototype `index.html` are byte-identical.
+- `src/app.js` vendored SHA-256: `57a9d0afa77c4f62273601ee02c25fdd32a58ef8e8028f00984e5d0337490e95`. It removes the browser simulation harness, fail-closes the Index and playground chrome behind verified playground identity, adds Index search, uses authorized routes/current account identity, preserves production suppression, and emits the post-render integration lifecycle event.
+- `src/components.js` vendored SHA-256: `1079ca51bc53e0462e44f0d95597b78f62e3fca0ceb95be0a0854aa18b0284d7`. It replaces the preview service label and removes the destructive-looking `noop` fallback.
+- `src/registry.js` vendored SHA-256: `3e06f191b10a2c841a7df6b80443002247fe2976d6efa724057681e977ae9799`. It adds the executable exhaustive route classification without changing the 33 route IDs, grouping, order, kinds, or renderers.
+- `src/surfaces/admin.js` vendored SHA-256: `721304828f63af7cbd237644cc37657a550d2df31028a8f1dc43f0682607c199`. It replaces illustrative administrative records and local avatar simulation with governed action hooks and truthful empty/current-state copy.
+- `src/surfaces/operations.js` vendored SHA-256: `1715fd4b4e7360178fa61730cfc48dab51db33406c24d9601b26c8d89aa78017`. It binds counts and rows to current state, removes prototype records, exposes governed operation hooks, and recomputes pending request lines from mutable backend-projected state.
+- `src/surfaces/public.js` vendored SHA-256: `e6c697c181ff63ba040f451b60ae2c6a0e9a769373c7269dbc4af199ec697e86`. It adds only authorized current public contract fields and actions, accurate upload/application copy, and mock-free tracking states; the original authority image path remains in the template and the integration runtime replaces it with the bundled asset URL.
+- `tools/motion-test.mjs` vendored SHA-256: `ba9219b42c97a2de33fb5fab48e317d21514cf8be0ac5c076706b7659acd4c7b`. This non-runtime tool points at the current application entry instead of the obsolete standalone preview path.
+- The integration controllers are additive JavaScript outside the frozen source tree. They map current API DTOs and exact command contracts into existing V5 form, card, section, drawer, and feedback primitives; they add no CSS or replacement component system.
 
-Expected intentional design change remains **none**. Expected data differences are current server values replacing illustrative array values. The only source-level visual additions are the separately owner-authorized minimum contract fields/copy, rendered with existing V5 patterns and no CSS addition.
+The intentional differences are functional integration, environment denial, truthful content, and required contract completeness—not a visual redesign. The preserved V5 color, type, spacing, surface, and responsive system remains authoritative.
 
-Representative visual evidence must be taken from the exact deployed candidate at 1440, 1024, 768, and 390 CSS pixels in both themes. The earlier built-in-browser checkpoint established live route/auth/data behavior; subsequent localhost browser automation was unavailable because the browser-control URL policy blocked loopback inspection. This is an evidence-tool limitation, not permission to bypass it.
+Current-source browser evidence was captured at 320, 390, 768, 1024, and 1440 CSS pixels in both light and dark themes. The automated matrix verified the searchable Index, landing, request queue, and governed accounts/access controls, including persistence across theme-triggered V5 re-renders, with no horizontal overflow or browser errors. Exact deployed-candidate evidence must be refreshed after the candidate is frozen and deployed to the isolated playground.

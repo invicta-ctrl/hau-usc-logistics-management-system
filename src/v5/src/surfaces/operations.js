@@ -36,7 +36,7 @@ import {
   REQUEST_LINES,
   RESTOCKING,
 } from '../data/mock.js';
-import { LEDGER_LABELS, label, statusLabel } from '../data/vocabulary.js';
+import { LEDGER_LABELS, label } from '../data/vocabulary.js';
 
 const refreshAction = `<button class="btn" type="button" data-act="refresh">${icon(
   'repeat',
@@ -104,7 +104,7 @@ function overviewWorkbench(state) {
         }</h2>
         <p>${
           isLoading
-            ? 'Checking the latest illustrative records. Counts will appear together when this pass finishes.'
+            ? 'Checking the latest authorized records. Counts will appear together when this pass finishes.'
             : 'Start with the exception that can block today’s work, then move through review, handoff, and stock.'
         }</p>
       </div>
@@ -141,7 +141,7 @@ function overviewAttentionLoading() {
       )
       .join('')}
   </div>
-  <p class="visually-hidden" role="status">Updating illustrative operational counts.</p>`;
+  <p class="visually-hidden" role="status">Updating authorized operational counts.</p>`;
 }
 
 function overviewContextLoading() {
@@ -155,33 +155,39 @@ function overviewContextLoading() {
 }
 
 function attention() {
+  const overdue = LOANS.filter((loan) => loan.status === 'OVERDUE');
+  const review = REQUESTS.filter((request) => request.status === 'FOR_REVIEW');
+  const ready = RELEASES.filter((release) =>
+    ['READY_TO_RELEASE', 'PARTIALLY_RELEASED'].includes(release.status),
+  );
+  const low = INVENTORY.filter((item) => item.low || Number(item.onHand) === 0);
   return attentionBand([
     {
       label: 'Loans overdue',
-      value: '2',
-      note: 'Oldest 4 days past due',
+      value: String(overdue.length),
+      note: overdue.length ? 'Authorized overdue lending records' : 'No overdue loans in scope',
       icon: 'clock',
       urgent: true,
       act: 'go:lending.queue',
     },
     {
       label: 'Requests for review',
-      value: '2',
+      value: String(review.length),
       note: 'Each line needs one decision',
       icon: 'clipboard',
       act: 'go:request.queue',
     },
     {
       label: 'Ready to release',
-      value: '1',
-      note: '60 units awaiting handoff',
+      value: String(ready.length),
+      note: ready.length ? 'Authorized records awaiting handoff' : 'No releases awaiting handoff',
       icon: 'check',
       act: 'go:release.desk',
     },
     {
       label: 'Low or out of stock',
-      value: '4',
-      note: '1 item at zero',
+      value: String(low.length),
+      note: low.length ? 'Review the current inventory balance' : 'No low-stock item in scope',
       icon: 'box',
       act: 'go:inventory.catalog',
     },
@@ -310,7 +316,7 @@ export function requestQueue({ state, selected }) {
       { label: 'Routed', numeric: true, priority: 2 },
       { label: 'Status' },
     ],
-    selectedRef: selected ?? 'REQ-DEMO-431',
+    selectedRef: selected ?? '',
     rows: REQUESTS.map((r) => ({
       ref: r.ref,
       cells: [
@@ -337,6 +343,7 @@ const pendingLines = () => REQUEST_LINES.filter((line) => line.route === 'PENDIN
 
 function acceptBlockedReason(stale) {
   if (stale) return 'Reload this request before deciding. Another reviewer changed it while you were reading.';
+  if (!REQUEST_LINES.length) return 'Load an authorized request before submitting a decision.';
   const pending = pendingLines();
   if (pending)
     return `${pending} of ${REQUEST_LINES.length} lines still need a routing decision.`;
@@ -352,27 +359,27 @@ export function requestDetailParts(state, titleAction = '') {
   const blockedReason = acceptBlockedReason(stale);
 
   const head = `<div class="detail__title">
-        <h2>Sound system and stage materials</h2>
+        <h2>Selected request</h2>
         ${chip('FOR_REVIEW')}${titleAction}
       </div>
-      <p class="muted" style="font-size:var(--t-xs)">REQ-DEMO-431 · Illustrative Executive Council · needed 19 May 2032</p>`;
+      <p class="muted" style="font-size:var(--t-xs)">Load an authorized request to review its lines.</p>`;
 
   const body = `${
         stale
           ? notice({
               tone: 'alert',
               title: 'This request changed while you were reading it',
-              body: 'Another reviewer routed two lines 40 seconds ago. Your decisions were not saved. Reload to see the current lines before deciding.',
+              body: 'A newer authorized revision exists. Your decisions were not saved. Reload before deciding.',
               action:
-                '<button class="btn btn--sm" type="button" style="margin-top:10px">Reload request</button>',
+                '<button class="btn btn--sm" type="button" data-act="refresh" style="margin-top:10px">Reload request</button>',
             })
           : ''
       }
       ${facts([
-        { label: 'Event', value: 'Aurora Commons Week · Route A' },
-        { label: 'Committee', value: 'Materials' },
-        { label: 'Submitted', value: '7 May 2032' },
-        { label: 'Lines routed', value: '0 of 6' },
+        { label: 'Event', value: 'Not loaded' },
+        { label: 'Committee', value: 'Not loaded' },
+        { label: 'Submitted', value: 'Not loaded' },
+        { label: 'Lines routed', value: 'No lines loaded' },
       ])}
       <section>
         <div class="section__head" style="margin-bottom:10px"><h3>Lines</h3>
@@ -391,9 +398,7 @@ export function requestDetailParts(state, titleAction = '') {
       </section>
       <section>
         <div class="section__head" style="margin-bottom:10px"><h3>Evidence</h3></div>
-        ${evidenceList([
-          { name: 'Approved activity proposal', meta: 'PDF · uploaded 7 August', state: 'Verified', tone: 'done' },
-        ])}
+        ${evidenceList([])}
       </section>`;
 
   /* `aria-disabled` alone announced a block the control did not enforce, so the
@@ -402,8 +407,8 @@ export function requestDetailParts(state, titleAction = '') {
   const foot = `<button class="btn btn--primary" type="button" data-act="confirm-accept"${
       blockedReason ? ` aria-disabled="true" data-blocked-reason="${esc(blockedReason)}"` : ''
     }>${icon('check')}Accept and reserve</button>
-      <button class="btn" type="button">Ask for information</button>
-      <button class="btn btn--quiet" type="button">Reject</button>`;
+      <button class="btn" type="button" data-act="open-parity-actions">Ask for information</button>
+      <button class="btn btn--quiet" type="button" data-act="open-parity-actions">Reject</button>`;
 
   return { head, body, foot };
 }
@@ -452,12 +457,17 @@ export function lendingQueue({ state }) {
       body: 'Approved lending requests appear here once a borrower is confirmed.',
     })}</div>`;
 
+  const overdue = LOANS.filter((loan) => loan.status === 'OVERDUE').length;
   return `${head}
-    ${notice({
-      tone: 'alert',
-      title: '2 loans are overdue',
-      body: 'Follow up on returns before approving new loans for the same borrowers.',
-    })}
+    ${
+      overdue
+        ? notice({
+            tone: 'alert',
+            title: `${overdue} loan${overdue === 1 ? '' : 's'} overdue`,
+            body: 'Follow up on returns before approving new loans for the same borrowers.',
+          })
+        : ''
+    }
     <div style="margin-top:16px">
     ${queueTable({
       caption: 'Loans in your authorized scope.',
@@ -486,43 +496,39 @@ export function lendingQueue({ state }) {
 
 export function lendingDetail() {
   return `${pageHead({
-    crumbs: ['Office Lending Hub', 'LOAN-DEMO-221'],
-    title: 'Portable PA system',
-    lede: 'Loan LOAN-DEMO-221 · Illustrative Education Council',
+    crumbs: ['Office Lending Hub', 'Loan detail'],
+    title: 'Loan detail',
+    lede: 'Load an authorized lending record.',
     actions: `<a class="btn btn--quiet" href="#/lending.queue">${icon('arrow-left')}Back to loans</a>`,
   })}
   ${notice({
-    tone: 'alert',
-    title: 'This loan is 4 days overdue',
-    body: 'Record the return when the item is physically back. Stock is restored by the return, not by closing this screen.',
+    tone: 'info',
+    title: 'No lending record loaded',
+    body: 'Open an authorized lending record before recording a custody transition.',
   })}
   <div class="rails" style="margin-top:16px">
     <div class="panel"><div class="panel__body">
       <h2 class="block-title">Loan facts</h2>
       ${facts([
-        { label: 'Status', html: chip('OVERDUE') },
-        { label: 'Return by', value: '3 May 2032' },
-        { label: 'Borrower type', value: 'USC officer' },
-        { label: 'Quantity', html: qty(1, 'set') },
-        { label: 'Handed over', value: '28 April 2032' },
-        { label: 'Condition at handoff', value: 'Good' },
+        { label: 'Status', value: 'Not loaded' },
+        { label: 'Return by', value: 'Not loaded' },
+        { label: 'Borrower type', value: 'Not loaded' },
+        { label: 'Quantity', value: 'Not loaded' },
+        { label: 'Handed over', value: 'Not loaded' },
+        { label: 'Condition at handoff', value: 'Not loaded' },
       ])}
     </div></div>
     <div class="panel"><div class="panel__body">
       <h2 class="block-title">Custody timeline</h2>
       ${timeline([
-        { title: 'Requested', meta: '26 April 2032', done: true },
-        { title: 'Approved', meta: '27 April 2032', done: true },
-        { title: 'Handed over', meta: '28 April 2032 · recipient confirmed', done: true },
-        { title: 'Overdue', meta: 'Since 3 May 2032', current: true },
-        { title: 'Returned', meta: 'Not recorded' },
+        { title: 'Lending record not loaded', meta: 'Choose a record from the authorized queue', current: true },
       ])}
     </div></div>
   </div>
   <div class="panel" style="margin-top:16px"><div class="panel__body" style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn btn--primary" type="button" data-act="confirm-return">${icon('check')}Preview return</button>
-    <button class="btn" type="button">Record partial return</button>
-    <button class="btn btn--quiet" type="button">Add note</button>
+    <button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('check')}Preview return</button>
+    <button class="btn" type="button" data-act="open-parity-actions">Record partial return</button>
+    <button class="btn btn--quiet" type="button" data-act="open-parity-actions">Add note</button>
   </div></div>`;
 }
 
@@ -546,8 +552,8 @@ export function releaseDesk({ state }) {
   if (state === 'success')
     return `${head}${notice({
       tone: 'done',
-      title: 'Partial release recorded for REQ-DEMO-417',
-      body: '18 of 42 units released and confirmed by the recipient. The remaining 24 units stay reserved and this request remains open.',
+      title: 'Release recorded',
+      body: 'The authorized service recorded this cumulative release. Any remaining quantity stays visible in the active queue.',
     })}<div style="margin-top:16px">${releaseTable()}</div>`;
 
   return `${head}
@@ -583,24 +589,24 @@ function releaseTable() {
 
 function partialPanel() {
   return `<section class="section">
-    <div class="section__head"><h2>Record a release · REQ-DEMO-417</h2></div>
+    <div class="section__head"><h2>Record a release</h2></div>
     <div class="panel" style="margin-top:12px"><div class="panel__body" style="display:grid;gap:16px">
       ${facts([
-        { label: 'Reserved', html: qty(42, 'units') },
-        { label: 'Already released', html: qty(18, 'units') },
-        { label: 'Remaining', html: qty(24, 'units') },
-        { label: 'Recipient', value: 'Committee on Facilities' },
+        { label: 'Reserved', value: 'Not loaded' },
+        { label: 'Already released', value: 'Not loaded' },
+        { label: 'Remaining', value: 'Not loaded' },
+        { label: 'Recipient', value: 'Not loaded' },
       ])}
       <div class="form-row" style="max-width:520px">
         <div class="field"><label for="rel-q">Quantity to release now</label>
-          <input id="rel-q" type="number" value="12" max="24" aria-describedby="rel-q-h" />
-          <span class="field__hint" id="rel-q-h">Cannot exceed the 24 units still reserved.</span></div>
+          <input id="rel-q" type="number" min="1" aria-describedby="rel-q-h" />
+          <span class="field__hint" id="rel-q-h">The authorized remaining quantity loads with the request.</span></div>
         <div class="field"><label for="rel-c">Recipient confirming</label>
-          <input id="rel-c" type="text" value="Committee on Facilities" /></div>
+          <input id="rel-c" type="text" /></div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn--primary" type="button" data-act="confirm-release">${icon('check')}Record release</button>
-        <button class="btn" type="button">Attach handoff evidence</button>
+        <button class="btn btn--primary" type="button" data-act="open-parity-actions">${icon('check')}Record release</button>
+        <button class="btn" type="button" data-act="open-parity-actions">Attach handoff evidence</button>
       </div>
     </div></div>
   </section>`;
@@ -618,12 +624,17 @@ export function inventoryCatalog({ state }) {
 
   if (state === 'loading') return `${head}<div style="margin-top:16px">${loadingState(7)}</div>`;
 
+  const unclassified = INVENTORY.filter((item) => !item.category).length;
   return `${head}
-    ${notice({
-      tone: 'progress',
-      title: '1 item needs classification',
-      body: 'Unclassified items cannot be lent or released until a committee head classifies them.',
-    })}
+    ${
+      unclassified
+        ? notice({
+            tone: 'progress',
+            title: `${unclassified} item${unclassified === 1 ? '' : 's'} need classification`,
+            body: 'Unclassified items cannot be lent or released until a committee head classifies them.',
+          })
+        : ''
+    }
     <div style="margin-top:16px">
     ${queueTable({
       caption: 'Active inventory in your authorized scope.',
@@ -664,19 +675,19 @@ export function inventoryCatalog({ state }) {
 
 export function inventoryItem() {
   return `${pageHead({
-    crumbs: ['Inventory Management', 'ITM-DEMO-204'],
-    title: 'Extension cord, 10 m',
-    lede: 'Equipment · Reusable Asset · ITM-DEMO-204',
+    crumbs: ['Inventory Management', 'Item detail'],
+    title: 'Inventory item',
+    lede: 'Load an authorized item and its append-only movement history.',
     actions: `<a class="btn btn--quiet" href="#/inventory.catalog">${icon('arrow-left')}Back to inventory</a>`,
   })}
   <div class="rails" style="margin-top:16px">
     <div class="panel"><div class="panel__body">
       ${facts([
-        { label: 'On hand', html: qty(11, 'piece') },
-        { label: 'Reserved', html: qty(6, 'piece') },
-        { label: 'Available', html: qty(5, 'piece') },
-        { label: 'Condition', value: 'Good' },
-        { label: 'Lending audience', value: 'Eligible DOL users only' },
+        { label: 'On hand', value: 'Not loaded' },
+        { label: 'Reserved', value: 'Not loaded' },
+        { label: 'Available', value: 'Not loaded' },
+        { label: 'Condition', value: 'Not loaded' },
+        { label: 'Lending audience', value: 'Not loaded' },
         { label: 'Last counted', value: 'Not recorded' },
       ])}
       ${notice({
@@ -688,7 +699,7 @@ export function inventoryItem() {
     <div class="panel"><div class="panel__body">
       <h2 class="block-title">Movement history</h2>
       <div class="table-wrap"><table class="ledger">
-        <caption class="visually-hidden">Append-only movement history for ITM-DEMO-204.</caption>
+        <caption class="visually-hidden">Append-only movement history for the selected item.</caption>
         <thead><tr><th scope="col">Date</th><th scope="col">Movement</th><th scope="col">Reference</th><th scope="col">Change</th></tr></thead>
         <tbody>${LEDGER.map(
           (m) => `<tr><td>${esc(m.date)}</td><td>${esc(LEDGER_LABELS[m.type] ?? m.type)}</td>
@@ -712,8 +723,8 @@ export function restockingQueue({ state }) {
   if (state === 'partial')
     return `${head}${notice({
       tone: 'progress',
-      title: 'RST-DEMO-157 is partially received',
-      body: '12 of 24 bottles arrived and were added to stock. The remaining 12 stay on order. Record the rest when they arrive.',
+      title: 'A restock is partially received',
+      body: 'The authorized service keeps received and outstanding quantities separate until the remaining stock arrives.',
     })}<div style="margin-top:16px">${restockTable()}</div>`;
   return `${head}<div style="margin-top:16px">${restockTable()}</div>`;
 }
@@ -729,7 +740,7 @@ function restockTable() {
     rows: RESTOCKING.map((r) => ({
       ref: r.ref,
       cells: [
-        rowLink(r.ref, r.item, `${r.ref} · ${r.requested} ${r.unit} requested`, 'noop'),
+        rowLink(r.ref, r.item, `${r.ref} · ${r.requested} ${r.unit} requested`, 'open-parity-actions'),
         meter(r.received, r.requested, r.received === r.requested ? 'done' : 'progress'),
         chip(r.status),
       ],
@@ -756,7 +767,7 @@ export function procurementBoard() {
     rows: PROCUREMENT.map((p) => ({
       ref: p.ref,
       cells: [
-        rowLink(p.ref, p.item, p.ref, 'noop'),
+        rowLink(p.ref, p.item, p.ref, 'open-parity-actions'),
         String(p.suppliers),
         p.preferred === 'Not decided' ? '<span class="muted">Not decided</span>' : esc(p.preferred),
         chip(p.status),
@@ -785,7 +796,7 @@ export function eventsSeries() {
     rows: EVENTS.map((e) => ({
       ref: e.name,
       cells: [
-        rowLink(e.name, e.name, e.window, 'noop'),
+        rowLink(e.name, e.name, e.window, 'open-parity-actions'),
         String(e.subEvents),
         String(e.requests),
         meter(e.readiness, 100, e.readiness >= 90 ? 'done' : e.readiness < 50 ? 'alert' : 'progress'),

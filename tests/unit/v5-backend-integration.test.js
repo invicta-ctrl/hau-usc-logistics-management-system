@@ -18,6 +18,10 @@ import {
 } from '../../src/v5/src/data/mock.js';
 import { createV5Backend } from '../../src/v5/integration/backend.js';
 import {
+  SURFACES,
+  V5_ROUTE_CLASSIFICATIONS,
+} from '../../src/v5/src/registry.js';
+import {
   applyOperationalState,
   clearBackendViewModels,
   viewModelCounts,
@@ -135,11 +139,13 @@ describe('V5 backend integration', () => {
     }
   });
 
-  it('hard-codes same-origin startup and contains only the owner-authorized public contract fields', async () => {
-    const [entry, publicSurface, runtime] = await Promise.all([
+  it('hard-codes same-origin startup and exposes the complete V5 parity controllers', async () => {
+    const [entry, publicSurface, runtime, adminParity, operationsParity] = await Promise.all([
       readFile(new URL('../../src/v5/integration/entry.js', import.meta.url), 'utf8'),
       readFile(new URL('../../src/v5/src/surfaces/public.js', import.meta.url), 'utf8'),
       readFile(new URL('../../src/v5/integration/runtime.js', import.meta.url), 'utf8'),
+      readFile(new URL('../../src/v5/integration/admin-parity.js', import.meta.url), 'utf8'),
+      readFile(new URL('../../src/v5/integration/operations-parity.js', import.meta.url), 'utf8'),
     ]);
 
     expect(entry).toContain('const backend = createV5Backend();');
@@ -167,12 +173,42 @@ describe('V5 backend integration', () => {
       'acceptableUseAcknowledged',
       'borrowerResponsibilityAcknowledged',
       'evidenceConsentAcknowledged',
+      'parentRequestId',
+      'parentTrackingCode',
     ]) {
       expect(publicSurface).toMatch(new RegExp(`name(?:=|:)\\s*["']${field}["']`, 'u'));
     }
-    expect(runtime).not.toContain('startAccountApplicationEmail');
-    expect(runtime).not.toContain('confirmAccountApplicationEmail');
-    expect(runtime).toContain('remains non-destructive');
+    expect(runtime).toContain('createAdminParityController');
+    expect(runtime).toContain('createOperationsParityController');
+    expect(adminParity).toContain('startAccountApplicationEmail');
+    expect(adminParity).toContain('confirmAccountApplicationEmail');
+    expect(adminParity).toContain('submitAccountApplication');
+    expect(operationsParity).toContain("method: 'reviewRequest'");
+    expect(operationsParity).toContain("method: 'confirmRelease'");
+    expect(operationsParity).toContain("method: 'postCycleCountAdjustment'");
+    expect(`${publicSurface}\n${runtime}\n${adminParity}\n${operationsParity}`).not.toContain(
+      "data-act=\"noop\"",
+    );
+  });
+
+  it('classifies every V5 route exactly once with no implicit owner deferral', () => {
+    const routeIds = ['index', ...SURFACES.map((surface) => surface.id)].sort();
+    const classified = Object.keys(V5_ROUTE_CLASSIFICATIONS).sort();
+    const allowed = new Set([
+      'FULLY_BACKEND_WIRED',
+      'BACKEND_READ_ONLY',
+      'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+      'PLAYGROUND_ONLY',
+      'PROTOTYPE_ONLY_UNSUPPORTED',
+      'OWNER_DEFERRED',
+    ]);
+
+    expect(classified).toEqual(routeIds);
+    expect(new Set(classified).size).toBe(routeIds.length);
+    expect(Object.values(V5_ROUTE_CLASSIFICATIONS).every((value) => allowed.has(value))).toBe(true);
+    expect(Object.values(V5_ROUTE_CLASSIFICATIONS)).not.toContain('OWNER_DEFERRED');
+    expect(V5_ROUTE_CLASSIFICATIONS.index).toBe('PLAYGROUND_ONLY');
+    expect(V5_ROUTE_CLASSIFICATIONS['public.register']).toBe('PROTOTYPE_ONLY_UNSUPPORTED');
   });
 });
 

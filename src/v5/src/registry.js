@@ -15,6 +15,43 @@ const S = (id, name, group, tier, kind, render, states = ['populated']) => ({
   states,
 });
 
+export const V5_ROUTE_CLASSIFICATIONS = Object.freeze({
+  index: 'PLAYGROUND_ONLY',
+  'public.landing': 'BACKEND_READ_ONLY',
+  'public.signin': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'public.register': 'PROTOTYPE_ONLY_UNSUPPORTED',
+  'public.verify': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'public.application': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'public.application-status': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'public.request-intake': 'FULLY_BACKEND_WIRED',
+  'public.request-tracking': 'FULLY_BACKEND_WIRED',
+  'public.lending-intake': 'FULLY_BACKEND_WIRED',
+  'public.lending-tracking': 'FULLY_BACKEND_WIRED',
+  'public.policy': 'BACKEND_READ_ONLY',
+  'admin.overview': 'BACKEND_READ_ONLY',
+  'director.overview': 'BACKEND_READ_ONLY',
+  'food.overview': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'inventory.overview': 'BACKEND_READ_ONLY',
+  'materials.overview': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'request.queue': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'lending.queue': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'lending.detail': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'release.desk': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'inventory.catalog': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'inventory.item': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'restocking.queue': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'procurement.board': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'events.series': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'audit.activity': 'BACKEND_READ_ONLY',
+  'admin.access': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'admin.directory': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'admin.reference': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'admin.links': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'admin.brand': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'account.profile': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+  'owner.health': 'V5_NATIVE_FUNCTIONAL_PARITY_ADDITION',
+});
+
 export const SURFACES = [
   /* Public and pre-authentication */
   S('public.landing', 'Portal landing', 'Public', 'solid', 'public', pub.landing),
@@ -33,12 +70,15 @@ export const SURFACES = [
     'error',
   ]),
   S('public.request-tracking', 'Public request tracking', 'Public', 'deep', 'public', pub.requestTracking, [
-    'populated',
     'empty',
+    'populated',
     'success',
   ]),
   S('public.lending-intake', 'Public lending intake', 'Public', 'solid', 'public', pub.lendingIntake),
-  S('public.lending-tracking', 'Public lending tracking', 'Public', 'solid', 'public', pub.lendingTracking),
+  S('public.lending-tracking', 'Public lending tracking', 'Public', 'solid', 'public', pub.lendingTracking, [
+    'empty',
+    'populated',
+  ]),
   S('public.policy', 'Privacy and acceptable use', 'Public', 'solid', 'public', pub.policy),
 
   /* Role overviews */

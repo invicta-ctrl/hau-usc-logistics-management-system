@@ -12,7 +12,7 @@ export function v5ApplicationBridge() {
       const application = code.slice(0, bootIndex);
       const boot = code.slice(bootIndex + BOOT_MARKER.length).trim();
       return {
-        code: `${application}\nexport function integrationBoot() {\n${boot}\n}\nexport { render as integrationRender, go as integrationGo, toast as integrationToast, state as integrationState, openOverlay as integrationOpenOverlay, closeOverlay as integrationCloseOverlay };\n`,
+        code: `${application}\nexport function integrationBoot() {\n${boot}\n}\nexport { render as integrationRender, go as integrationGo, toast as integrationToast, state as integrationState, setPlaygroundContext as integrationSetPlaygroundContext, setAuthorizedRoutes as integrationSetAuthorizedRoutes, openOverlay as integrationOpenOverlay, closeOverlay as integrationCloseOverlay };\n`,
         map: null,
       };
     },
