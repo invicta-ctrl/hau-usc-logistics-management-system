@@ -2,7 +2,7 @@
 
 Captured: 2026-08-09, Asia/Manila; owner amendment recorded 2026-08-10
 Purpose: preserve the frozen V5 authority while recording the accepted live-application integration
-Visual change authorized by the current task: Earl's accepted V5 owner visual-feedback amendment
+Visual change authorized by the current task: Earl's accepted V5 owner visual-feedback amendment plus the bounded Impeccable bolder refinement
 
 ## Frozen source identity
 
@@ -84,7 +84,7 @@ The 2026-08-10 accepted amendment preserves every registered V5 route and the V5
 
 - `src/v5/src/app.js` SHA-256 `f7d40fd1cef76d94b3e45ccde8a1d5f901c61e6b09a6b7d9c5de87665eb80a75`: Index copy now explains the server-authorized owner session and retained real-login test path.
 - `src/v5/src/surfaces/public.js` SHA-256 `4ebf5da153f9b3f998f86cb3b6ccbbb7998208d22ba89bcd847ffa933d35d3fb`: governed USC/DOL image slots, full council wordmark, Staff sign-in hero CTA, USC-only hero mark, enlarged announcement hierarchy, and `HAU-USC · 2026-2027` footer.
-- `src/v5/integration/owner-visual-feedback.css` SHA-256 `185e520d0e5019cec94f39a86e9511910bdaa3e40b8e0d5b9787cd2e9d240bce`: the final integration-only Hallmark layer; it owns full-bleed event composition, warm-gold Request Center treatment, larger identity/header, production-background sign-in, and responsive safeguards without altering the frozen token system.
+- `src/v5/integration/owner-visual-feedback.css` SHA-256 `82b7118d23905d5b70b92a22b947a4398f390995b347eee0ca0a2d725c6fc860`: the final integration-only visual layer; it owns full-bleed event composition, warm-gold Request Center treatment, production-background sign-in, and responsive safeguards without altering the frozen token system. The accepted Impeccable bolder refinement changes only the landing masthead and hero: full-width institutional banner, stronger marks/wordmark, concentrated oxblood photographic field, tighter headline, decisive actions, and a reduced-motion-safe cover reveal.
 - `src/v5/assets/images/usc-facebook-cover-youth-development-day-2026.jpg` SHA-256 `6ec7c5a75f1a360e68064d4887d237c64e12359969730fefbfdd9c95ea60d747`: vendored official USC Facebook event cover used only as the deterministic fallback. A server-published PUBLIC announcement may replace the hero title, description, CTA, destination, alternative text, and image.
 - Existing governed brand slots remain the only application-wide logo/theme asset controls. The existing advertisement contract remains the only event-led landing-media control; no arbitrary CSS, HTML, bucket, object-key, or browser-selected binding was introduced.
 - Browser acceptance now covers `320/375/390/414/768/1024/1280×800/1440/1920` CSS pixels, light/dark, all 33 routes, searchable Index, guarded owner auto-session, explicit real-login escape hatch, dynamic event projection, eight-digit verification field constraints, first-fold fit, and Production playground denial with no horizontal overflow or browser errors.

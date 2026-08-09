@@ -2,9 +2,9 @@
 
 INTENT: OWNER_VISUAL_FEEDBACK
 MODE: EXECUTE
-OBJECTIVE: Apply Earl's accepted annotated landing, branding, sign-in, eight-digit verification, governed dynamic-media, and playground-unlocked testing refinements without changing Production.
+OBJECTIVE: Apply Earl's accepted Impeccable bolder refinement to only the public landing masthead and photographic hero without changing Production.
 SECONDARY_INTENTS: SOFTWARE_FEATURE, TESTING, DEPLOYMENT
-SKILLS: Hallmark for bounded in-place visual quality, browser:control-in-app-browser for live verification, lean-ctx for targeted repository context
+SKILLS: Impeccable bolder for bounded visual amplification, browser:control-in-app-browser for live verification
 RESULT: COMPLETE
 TARGET: current active release branch and the frozen prototypes/impeccable-whole-site-redesign-v5 frontend
 CURRENT_POINTER: .codex/CURRENT.md
@@ -31,5 +31,5 @@ EXTERNAL_WRITES: bounded existing branch/PR update and exact playground-only can
 ACTIVE_WRITER: NONE
 HANDOFF_STATUS: READY_FOR_HANDOFF
 BLOCKER: NONE
-COMPLETED_BEFORE_STOP: Earl's 17 annotated owner-feedback items; governed USC and DOL branding; official USC event cover; dynamic published-event landing projection; Production-parity sign-in hierarchy; exact eight-digit verification; server-owned playground owner session with a preserved real-login path; complete searchable Playground Index; mock-zero service-backed routes; deterministic production-denied artifact; nine-width light/dark browser acceptance; exact isolated-playground deployment; unchanged Production boundary
-NEXT_EXACT_ACTION: Earl manually tests the exact playground candidate and either submits bounded feedback or gives explicit Production GO; Codex must not promote automatically.
+COMPLETED_BEFORE_STOP: prior owner-feedback scope preserved; public landing masthead expanded into a full-width institutional banner; photographic hero amplified with stronger oxblood focus, tighter hierarchy, decisive actions, and reduced-motion-safe reveal; adjacent landing sections, public flows, workbench, routes, backend, schema, and environment guards unchanged; full nine-width browser acceptance; deterministic production-denied artifact; exact isolated-playground deployment; unchanged Production boundary
+NEXT_EXACT_ACTION: Earl manually tests the exact Impeccable bolder playground candidate and either submits bounded feedback or gives explicit Production GO; Codex must not promote automatically.

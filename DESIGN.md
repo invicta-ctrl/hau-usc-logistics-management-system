@@ -56,6 +56,12 @@ The supplied `impeccable-whole-site-redesign-v5` prototype is the visual and int
 
 The public landing follows a Marquee Hero / Photographic Fold composition. Its cover is full-bleed across the page canvas, uses the active governed landing-media asset, and keeps the copy legible through an oxblood wash. The masthead is large enough to read as university identity: published USC and DOL marks appear together in the header; the hero carries the USC mark only. The primary hero action is `Staff sign in`.
 
+The accepted Impeccable bolder refinement amplifies only this arrival moment:
+the masthead spans the page as an institutional banner, while the hero uses a
+tighter asymmetric headline, concentrated oxblood field, decisive gold
+actions, and one restrained photographic reveal. The remaining landing
+sections and the application workbench keep their established rhythm.
+
 Landing content is event-led. A published announcement may select the hero image, title, summary, call-to-action, and bounded named presentation variant. Only validated media, plain text, HTTPS/same-origin links, and allowlisted variants may render. No stored HTML, CSS, browser-supplied object key, or provider binding is accepted.
 
 The portal rail remains typographic and asymmetric. Request Center uses a warm gold field with oxblood ink; gold is not used as decoration elsewhere. Official USC updates is a generous editorial feature rather than a compressed card. The statement footer closes with `HAU-USC · © 2026–2027` and the existing policy link.
