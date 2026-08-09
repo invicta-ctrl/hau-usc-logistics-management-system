@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
+import { findInlineScriptElements } from './inline-script-elements.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const canonicalRoot = path.join(repoRoot, 'dist');
@@ -55,7 +56,7 @@ function verifySingleFile(html, label, { playground = true } = {}) {
   if (/<script[^>]+\btype=["']module["']/iu.test(html)) {
     throw new Error(`${label} still uses a module script and is not a single-file artifact.`);
   }
-  const inlineScripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/giu)];
+  const inlineScripts = findInlineScriptElements(html);
   if (!inlineScripts.length) throw new Error(`${label} contains no inline application script.`);
   const applicationScript = inlineScripts.find((match) => match[1].includes('__HAU_V5_INTEGRATION__'));
   if (!applicationScript) throw new Error(`${label} contains no V5 integration script.`);
