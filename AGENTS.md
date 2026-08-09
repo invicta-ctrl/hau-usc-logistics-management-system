@@ -49,6 +49,34 @@ Owner instruction, 2026-08-09. This section is authoritative on the
 `frontend-design-integration` branch and governs every future front-end design
 iteration.
 
+### Owner correction - v5 transfer authority
+
+**Latest owner instruction, 2026-08-09. This subsection supersedes the older
+Baseline and Consequence subsections below wherever they conflict.**
+
+`prototypes/impeccable-whole-site-redesign-v5/` is the authoritative visual,
+front-end shell, design, interaction, and UX baseline for the current bounded
+integration. The exact deployed production frontend and its matching
+repository source remain authoritative for functionality, routes, data,
+services, permissions, validation, statuses, and user-visible workflow
+semantics.
+
+The binding integration direction is:
+
+```text
+production functionality -> v5 frontend architecture
+```
+
+The old production presentation layer is evidence of functional coverage, not
+the visual baseline. Where v5 lacks a production capability, add a native v5
+component; do not retain a visually isolated legacy island or remove the
+capability.
+
+Preserve the modular v5 directory as the reference implementation. Do not
+create v6, a v5 copy, or another preview lineage. The integrated frontend
+belongs in real application source. `v5` is an engineering reference and must
+not appear in ordinary product copy.
+
 ### Baseline
 
 **The current production front end on `main` is the baseline for all future

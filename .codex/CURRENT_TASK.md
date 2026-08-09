@@ -5,29 +5,34 @@
 > pointer owned by `main` and is intentionally unchanged.
 
 INTENT: SOFTWARE_FEATURE
-MODE: EXECUTE - owner-directed continuation of Claude's late v0.7.3 front-end slice
-OBJECTIVE: Integrate V4.1 into the authoritative front end without changing production behavior or contracts.
+MODE: EXECUTE - owner-directed v5 architecture transfer into the real frontend
+OBJECTIVE: Transfer exact production functionality into the modular v5 frontend architecture without changing backend behavior or contracts.
 TARGET: frontend-design-integration
 BRANCH_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
-AUTHORITY: Earl's continuation instruction -> accepted frontend specification -> AGENTS.md -> branch-local task/handoff -> verified Git state
+AUTHORITY: Earl's V4.2/v5 correction -> accepted frontend specification amendment -> AGENTS.md -> branch-local task/handoff -> verified Git state
 REQUIRED_MODEL: Requested routing is platform-accepted; exact runtime identity is not agent-attestable
-RISK: MEDIUM - broad presentation change, no backend or production authority
-SCOPE: Frontend source, frontend tests, generated frontend artifacts through repository scripts, design/handoff documentation, candidate branch commit/push, public sanitized GPT Sites preview
-OUT_OF_SCOPE: Backend, service contracts, auth model, migrations, provider/D1/R2/Google writes, staging/production deploy, merge, tag, DNS, protected data
-VERIFICATION: Unit, lint, build, dist parity, focused and broad Playwright, accessibility, responsive, reduced motion, 200 percent zoom, governance, diff review, logged-out GPT Sites check
-STOP_CONDITIONS: Backend or protected write required; production/staging/merge/tag required; anonymous GPT Sites unavailable; route or invariant conflict; unclassifiable work
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED - 2026-08-09
+RISK: HIGH - whole-frontend presentation architecture transfer with strict functional parity; no backend or production authority
+SCOPE: Accepted-spec amendment; required route transfer map; real frontend source; frontend tests; generated frontend artifacts through repository scripts; v5 functional/visual parity evidence; candidate branch commit/push
+OUT_OF_SCOPE: Changes to the preserved modular v5 reference unless required by a confirmed reference defect; backend; service contracts; auth model; migrations; provider/D1/R2/Google writes; staging/production/GPT Sites deploy; merge; tag; DNS; protected data
+VERIFICATION: Transfer-map coverage; unit/lint/build/dist parity; focused and broad Playwright; production journeys; v5 visual comparison; accessibility; responsive; reduced motion; 200 percent zoom; governance; complete diff review
+STOP_CONDITIONS: Backend/contract/auth change required; feature loss; parity cannot be proven; production/staging/GPT Sites/merge/tag/provider write required; unknown route or invariant conflict; unclassifiable work
+ACTIVE_WRITER: CODEX
+WRITER_LOCK: CLAIMED - 2026-08-09 for the owner-approved v5 transfer slice
 GIT_UPSTREAM: origin/frontend-design-integration
 ORIGINAL_BASE_SHA: 7245c717f2b8bff3f327b47ff844281d94eaa1db
-CODEX_STARTING_SHA: 85f064a0f809654d584853204e9a33eb1fc52d32
+CODEX_STARTING_SHA: d57b1c5931c82886b98c88dc468adfefd3d62bdf
 PRODUCTION_RELEASE_AT_START: v0.7.2 @ 84eacfcdb47a3985fed48e3ba14bb413946d4410
-ROLLBACK_POINT: f0312b76bd8401e2aa5b9947252642bdb693b19d
-STATUS: COMPLETE - VERIFIED FRONT-END CANDIDATE PUBLISHED AS AN ANONYMOUS GPT SITES PREVIEW
-NEXT_EXACT_ACTION: Earl may review the public GPT Sites candidate at https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals; no merge or production/staging deployment is authorized.
+ROLLBACK_POINT: d57b1c5931c82886b98c88dc468adfefd3d62bdf
+STATUS: IN PROGRESS - SPECIFICATION CORRECTION AND V5 ROUTE TRANSFER AUDIT
+NEXT_EXACT_ACTION: Complete and review docs/design/V5_TO_PRODUCTION_FRONTEND_TRANSFER_MAP.md before changing broad application source.
+
+SKILLS: lean-ctx; Hallmark; Impeccable; Browser control
+VISUAL_FRONTEND_AUTHORITY: prototypes/impeccable-whole-site-redesign-v5/
+FUNCTIONAL_AUTHORITY: exact deployed production v0.7.2 at 84eacfcdb47a3985fed48e3ba14bb413946d4410 and matching repository source
+INTEGRATION_DIRECTION: production functionality -> v5 frontend architecture
 
 ## Recovery
 
@@ -106,20 +111,23 @@ PROVIDER_OR_PRIVATE_DATA_WRITES: GPT Sites publication only; no direct Cloudflar
 STAGING_OR_PRODUCTION_DEPLOYMENT: NONE
 LIVE_PRODUCTION_CHANGED: NO
 
-## Completion
+## Superseded candidate
 
 - Public preview: https://hau-usc-logistics-v41.adrianoearl04.chatgpt.site/portals
 - Public without login: PASS
 - Frontend candidate SHA: `0ccc0dee60a5eef79e57ef896bea25b4ea0284b1`
 - Writer lock: released
-- Next step requires a separate owner decision; this task does not authorize
-  merge, release, staging, production, or protected-system work.
+- The owner corrected the integration direction after this candidate. Its code,
+  tests, evidence, and public preview remain historical checkpoint evidence,
+  not the final v5-based candidate.
 
 ## Do not repeat
 
-- Do not recreate the landing from the preview harness.
-- Do not rerun the Impeccable detector; its single final run is complete.
+- Do not create a v6 or another v5 copy.
+- Do not use the old production presentation as the visual baseline.
+- Do not rerun the Impeccable detector until the v5 application-source transfer
+  is complete; then run it once on the final changed targets.
 - Do not hand-edit generated HTML.
 - Do not remove the two preserved Claude untracked files.
 - Do not point production Request/Lending hosts at a relative Staff login.
-- Do not merge, tag, stage, deploy production, or modify any protected system.
+- Do not merge, tag, deploy GPT Sites/staging/production, or modify any protected system.
