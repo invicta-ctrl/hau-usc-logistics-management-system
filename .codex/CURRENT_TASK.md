@@ -1,25 +1,29 @@
 # Current Bounded Task
 
 INTENT: DEPLOYMENT
-SECONDARY INTENTS: BUG_FIX, TESTING, REPOSITORY_MAINTENANCE, MIGRATION_VERIFICATION, INCIDENT_SAFETY
-MODE: EXECUTE
-OBJECTIVE: Audit and finish the preserved v0.8.0 Slice 3 work, close only proven release blockers, freeze one exact candidate, obtain exact-head CI/staging/recovery acceptance, and conditionally promote that exact release through protected main to production.
-TARGET: release/v0.8.0-inventory-truth-ledger-lock from committed Slice 2 SHA c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d
-SKILLS: lean-ctx for targeted repository work; cloudflare-deploy for exact Worker/D1/R2 authentication, isolation, recovery, deployment, and rollback checks; repository-native Playwright and release tooling remain authoritative
+MODE: COMPLETE
+OBJECTIVE: Release v0.8.0 Inventory Truth and Ledger Lock through protected staging and production.
+RESULT: RELEASED
+TARGET: protected main release v0.8.0
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
-AUTHORITY: Earl's directly submitted master-release prompt; live Git; AGENTS/current chain; base Slice 3 specification; current launch/staging/recovery/production runbooks; exact live provider evidence
-REQUIRED_MODEL: CODEX with fresh independent high-risk review before production; no subagent may edit
-ACTIVE_WRITER: CODEX
-GIT_UPSTREAM: origin/release/v0.8.0-inventory-truth-ledger-lock
-RISK: CRITICAL - production release, recovery, D1/R2, authentication, Inventory ledger, exact release identity
-DELIVERABLE: RELEASED only after clean audit/local/CI/staging/recovery/production gates and exact closeout; otherwise STOPPED or ROLLED_BACK with all evidence preserved
-SCOPE: accepted v0.8.0 Slice 3 plus the explicitly authorized one test-only follow-up changing the stale role-experiences v0.7.2 expectation to v0.8.0, continuity records, and the exact staging/production release actions authorized by the master amendment
-OUT_OF_SCOPE: Slice 4, migration 0031, broad UI/design/auth/data-history repair, force push, non-exact deploy, unsafe staging mutation, production auth bypass, Google/provider writes, playground implementation, v0.8.1+
-VERIFICATION: complete diff/invariant/security/migration audit; focused/direct-caller/Worker-D1/browser/canonical gates; exact-head CI/review; private staging and production recovery/restore; exact-SHA staging/production identity, smoke, isolation, and reconciliation; tag/release parity
-STOP_CONDITIONS: any master prompt hard stop, especially red required gate after two bounded attempts, unresolved P0/P1, migration need, unknown dirty work, target/SHA/schema/binding/privacy drift, failed recovery, staging failure, production preflight discrepancy, or cross-environment reachability
-RESULT: ACTIVE - authorized test-only repair and local gates green; replacement candidate ready to freeze
-NEXT_EXACT_ACTION: Freeze and push the single authorized replacement candidate, then require exact-head plus PR CI before Cloudflare access.
-
-Phase 0/local audit evidence: current branch/HEAD/upstream and recorded Slice 3 paths match the prior stop handoff; upstream divergence is 0/0; origin main remains `88bfdf026e716ffdc779cb2ce7534978f36df0f3`; the prior candidate remains `c6fe2bfa5d847f43f6abf0ef98ec40004920c8f0`; v0.7.2 remains the latest GitHub release and resolves to production baseline `84eacfcdb47a3985fed48e3ba14bb413946d4410`; no v0.8.0 tag exists; no competing writer or unknown work was found. The authorized v0.8.0 shell expectation passes 2/2 at the exact affected widths on the current checkout. Canonical `npm run check` passes 125 files/868 tests; focused release/recovery/private-path/reconciliation checks pass; all candidate paths are mapped; privacy, governance, handoff, lint, build/parity, types, dry-run, and diff checks are green. A temporary alternate-port full-suite run was non-authoritative because one legacy test hard-codes port 4173 and two unrelated cases timed out under the temporary harness; the temporary config was removed and clean-runner PR CI is the required browser decision. Live Cloudflare target checks remain deferred until the committed/pushed/CI-green candidate per repository remote preconditions.
+AUTHORITY: Earl's accepted master-release prompt, protected Git history, exact runtime evidence, and repository release runbooks
+REQUIRED_MODEL: CODEX
+FINAL_CANDIDATE_SHA: 26ee284cf066379e28a60511568053afd92c8768
+ACCEPTED_MAIN_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
+TAG: v0.8.0
+PR: 21
+RUNTIME: 0.8.0 in isolated staging and production
+SCHEMA: 30
+LATEST_MIGRATION: 0030_production_access_and_operations.sql
+NEW_MIGRATION: NONE
+VERIFICATION: local focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; exact-head and protected PR CI green; staging and production recovery, restore, full-stack smoke, and 20/20 reconciliation green
+RISK: CLOSED - production release completed with rollback not required
+SCOPE: completed v0.8.0 Slice 3 release and repository-native closeout only
+OUT_OF_SCOPE: playground implementation, v0.8.1+, migrations, further deployment, data mutation, or recovery cleanup
+STOP_CONDITIONS: any new action requires a separately accepted specification and fresh exact-state handshake
+EXTERNAL_WRITES: protected GitHub push/PR/merge/tag/release; exact isolated staging deploy; exact production deploy; no Google or provider/email write
+ACTIVE_WRITER: NONE
+HANDOFF_STATUS: READY_FOR_HANDOFF
+NEXT_EXACT_ACTION: Execute the separately accepted Isolated Staging Playground conversion before v0.8.1; do not begin it automatically.

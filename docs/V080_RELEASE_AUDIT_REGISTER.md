@@ -1,8 +1,8 @@
 # v0.8.0 Master Release Audit Register
 
-Status: `FINAL`
+Status: `RELEASED`
 Decision: `MASTER_AUDIT: CLEAN`
-Release progression: `ACTIVE` - the authorized v0.8.0 browser expectation repair passes 2/2 at the affected widths and the replacement candidate is ready to freeze
+Release progression: `RELEASED` - exact candidate `26ee284cf066379e28a60511568053afd92c8768` passed protected CI and staging; protected main `3059098ff2a2935fec59df52748ccae420aadba7` passed recovery, deployment, smoke, and reconciliation
 Slice: 3 of 3
 Starting main: `88bfdf026e716ffdc779cb2ce7534978f36df0f3`
 Slice 3 starting SHA: `c5f53ddf44aaf28ab4a3e43b74d42f66d09e257d`
@@ -11,14 +11,13 @@ Schema / latest migration: `30` / `0030_production_access_and_operations.sql`
 
 ## Continuity and diff
 
-- Branch lineage is main -> Slice 1 `77286cc` -> Slice 2 `c5f53dd` -> one pending
-  final Slice 3 candidate commit.
-- The preserved dirty tree matches the prior Slice 3 stop handoff. No unknown work or
-  competing writer was found.
+- Branch lineage is main -> Slice 1 `77286cc` -> Slice 2 `c5f53dd` -> final Slice 3
+  candidate `26ee284` -> protected merge `3059098`.
+- The final candidate and accepted main trees were proven identical before production.
 - Every changed/untracked path is mapped in
   [INVENTORY_V080_CANDIDATE_DIFF_MAP.md](./INVENTORY_V080_CANDIDATE_DIFF_MAP.md).
-- Runtime/package/generated identity is v0.8.0 candidate; schema remains 30/0030.
-- Production remains immutable v0.7.2 until all conditional master-release gates pass.
+- Runtime/package/generated identity is v0.8.0; schema remains 30/0030.
+- Isolated staging and production report v0.8.0 at their exact accepted identities.
 
 ## Inventory invariants
 
@@ -82,8 +81,8 @@ bounded release repair and do not violate a v0.8.0 acceptance criterion.
 - Staging/production paired-config separation is mandatory; hostname text is not
   accepted as production-isolation evidence.
 - Staging and production deployment actions require private authorization packages.
-- No migration 0031 exists or is authorized. No Google/provider/email write is part of
-  the candidate or local audit.
+- No migration 0031 exists or is authorized. No Google write or provider/email send
+  occurred during staging, production, or closeout.
 
 ## Gate evidence so far
 
@@ -111,5 +110,17 @@ bounded release repair and do not violate a v0.8.0 acceptance criterion.
 
 Fresh independent high-risk review found zero unresolved P0/P1. The exact-source
 local repository gate, full Worker/browser gate, reconciliation, map, privacy scan,
-and recovery/deploy guard regressions are green. `MASTER_AUDIT: CLEAN`; provider
-writes remain gated to the exact committed, pushed, CI-green candidate.
+and recovery/deploy guard regressions are green. `MASTER_AUDIT: CLEAN`.
+
+## Final release evidence
+
+- Final candidate: `26ee284cf066379e28a60511568053afd92c8768`.
+- Protected PR: #21; accepted main and deployed release:
+  `3059098ff2a2935fec59df52748ccae420aadba7`.
+- Exact-head workflow, PR checks, main-push CI, and CodeQL passed.
+- Staging backup/export, isolated restore integrity/FK, exact identity, production
+  isolation, full-stack smoke, and reconciliation passed.
+- Production preflight, D1 export/Time Travel, isolated restore integrity/FK,
+  Worker/R2 rollback evidence, full-stack smoke, and postdeploy reconciliation passed.
+- Annotated tag and GitHub Release `v0.8.0` resolve to the accepted main SHA.
+- Rollback was not required. Private recovery material remains outside Git.
