@@ -1,60 +1,127 @@
 # Current Bounded Task
 
-INTENT: REPOSITORY_MAINTENANCE / ARCHITECTURE_GOVERNANCE
+INTENT: REPOSITORY_MAINTENANCE
+SECONDARY_INTENTS: GOVERNANCE, DOCUMENTATION, PRIVACY, CONTINUITY, RELEASE_CONTROL
 MODE: EXECUTE
-OBJECTIVE: Implement the bounded Sol/Terra/Luna orchestration governance amendment while preserving the completed Design Gate objective, frozen candidate boundary, and Earl's decision gate.
-SECONDARY_INTENTS: DOCUMENTATION, MODEL_ROUTING, WRITER_LOCK_NORMALIZATION, TASK_ORCHESTRATION
-SKILLS: lean-ctx for targeted governance reads and deterministic verification
-RESULT: COMPLETE_AWAITING_OWNER_DECISION
-TARGET: repository-scoped agent governance and directly conflicting model-routing records only
+OBJECTIVE: Repair the held V1R7 sanitized materialization semantics and durable current-chain controls without entering S00 or changing runtime, release, provider, or preserved-artifact state.
+RESULT: GOVERNANCE_MATERIALIZATION_ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
+MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
+MASTER_PHASE: PRE_PROGRAM_AUDIT
+RELEASE: v0.8.1
+RELEASE_STATE: MASTER_PRE_PROGRAM_AUDIT
+RELEASE_STATUS: GOVERNANCE_MATERIALIZATION_ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
+RELEASE_CONDITION: This bounded materialization subtask does not enter or complete S00 and does not narrow the overall accepted V1R7 program
+SOURCE_AUTHORITY_STATUS: ACCEPTED_BY_EARL_V1R7
+TRACKED_MATERIALIZATION_STATUS: ACCEPTED_SOL_LUNA_PASS_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
+TARGET: the existing V1R7 sanitized amendment and canonical current/task/handoff records only
+SKILLS: lean-ctx for targeted governance reads and deterministic verification; native read-only fallback after the local allowlist block
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.1-design-dna-research-amendment.md
-AUTHORITY: Earl's 2026-08-10 Sol/Terra/Luna Orchestration Governance Repair directive; repository governance; accepted Design DNA research amendment for preserved product boundary
+ACCEPTED_SPEC: .codex/specs/active/v0.8.0-v0.8.5-final-unified-stabilization-pih-master-program-v1r7.md
+AUTHORITY: Earl's accepted V1R7 master program, source SHA256 8CE637F1EA8E0C06A5808C87CF3AC0321728AF756872F6131BD74336829C5284, this sanitized amendment, then applicable live AGENTS/continuity, current chain, accepted specifications, and live Git/provider/environment evidence
 REQUIRED_MODEL: GPT-5.6 SOL
 ORCHESTRATOR_MODEL: GPT-5.6 SOL
 ORCHESTRATOR_WRITES: FORBIDDEN
 WRITER_MODEL: TERRA MAX
 READER_MODEL: LUNA MAX
-MAX_SOL_SUBAGENTS: 0
-MAX_TERRA_SUBAGENTS: 16
-MAX_LUNA_SUBAGENTS: 16
-DELEGATION_DEPTH: 1
-SUBAGENT_SPAWNER: SOL_ONLY
-MODEL_SUBSTITUTION: FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK
-CANONICAL_INTEGRATION_WRITER: TERRA_MAX:terra_governance_writer
-GOVERNANCE_AMENDMENT: .codex/specs/active/sol-terra-luna-orchestration-governance-amendment.md
-STARTING_SHA: a578e72ba86d9c72908892aa6812831ac4a56e4e
-FROZEN_DESIGN_RESEARCH_CANDIDATE_SHA: 433ac260092960328a586cf50ed7269f08e0a19b
-ENDING_SHA: GIT_HEAD
-PRODUCTION_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-PRODUCTION_VERSION: v0.8.0
-PLAYGROUND_RUNTIME_SHA: 433ac260092960328a586cf50ed7269f08e0a19b
-PR: #23 DRAFT
+ACTIVE_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7
+WRITER_LOCK: HELD:TERRA_INTEGRATION_V1R7
+LOCK_HOLDER: TERRA_MAX:TERRA_INTEGRATION_V1R7
+LOCK_STATUS: HELD
+LOCK_RELEASE: v0.8.1
+LOCK_RELEASE_CONDITION: explicit Sol-accepted transfer or version-close release; not requested now
+LOCK_BRANCH: release/v0.8.1-isolated-staging-playground
+LOCK_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
+LOCK_ACQUIRED_AT: 2026-08-10T11:31:50+08:00
+LOCK_HEARTBEAT_AT: 2026-08-10T12:50:47+08:00
+LOCK_STALE_THRESHOLD: 60_MINUTES_WITHOUT_VERIFIED_HEARTBEAT
+LOCK_STALE_RULE: Never steal; Sol runs read-only crash-resume verification before explicit acquisition and records an explicit Sol-accepted transfer; never silent takeover
+OWNER_TASK: /root/integration_terra
+TASK_RISK_CLASS: CLASS_R_TRACKED_GOVERNANCE_ONLY
+CHANGE_RISK_CLASSES: Class R only; Class C NONE; Class I NONE
+CLASS_I_ACTIONS: NONE
+CLASS_C_ACTIONS: NONE
+ROLLBACK_STATE: NOT_TRIGGERED_UNCOMMITTED_CLASS_R
+PROGRAM_ROLLBACK_PROOF: PENDING
+SOL_ORCHESTRATOR: GPT-5.6 Sol; sole top-level, read-only, zero children; only Sol spawns
+TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7; sole canonical Integration Terra writer
+LUNA_AUDITORS_USED: LUNA_V1R7_HOLD_1, LUNA_V1R7_HOLD_2, and LUNA_V1R7_PASS_3; independent read-only auditors
+STARTING_BRANCH: release/v0.8.1-isolated-staging-playground
+STARTING_SHA: cdedd2668cd4e81b036864e1211cd9ee8e8eefe1
+STARTING_TREE: 18dab11aae7546d36f5d5f0fac7f018f79887dea
+ENDING_BRANCH: release/v0.8.1-isolated-staging-playground
+ENDING_SHA: cdedd2668cd4e81b036864e1211cd9ee8e8eefe1
+ENDING_TREE: 18dab11aae7546d36f5d5f0fac7f018f79887dea
+UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
+REMOTE_MAIN_SHA: 2a734d2a1277eac875c62cdb7df953b5ec585494
+PRODUCTION_START_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
+PRODUCTION_END_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
+PLAYGROUND_SAFE_IDENTITY: 0.8.1-playground.1 at 433ac260092960328a586cf50ed7269f08e0a19b; schema 30 / 0030
+PRODUCTION_SAFE_IDENTITY: v0.8.0 at 3059098ff2a2935fec59df52748ccae420aadba7; schema 30 / 0030
+D1_R2_ZERO_OVERLAP: PENDING — not reproven in this governance subtask
+MAIN_MERGE_AUTO_PRODUCTION_DEPLOY: NO
+MAIN_MERGE_AUTO_PRODUCTION_DEPLOY_PROOF: READ_ONLY_COUPLING_EVIDENCE_RECORDED_IN_CURRENT_HANDOFF_PENDING_INDEPENDENT_REVIEW
+INDEPENDENT_CANDIDATE_ARTIFACT_HASH: PENDING
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
-NEW_MIGRATION: NONE
-DELIVERABLE: one coherent repository-wide Sol/Terra/Luna governance policy, a canonical governance amendment, normalized current-chain routing, updated read-only profiles, and evidence preserving the Design Gate as the next owner decision
-VERIFICATION: deterministic AGENTS.md inventory; complete logical diff; focused governance-unit coverage; agent-instruction, continuity, formatting, ledger/record coherence, and contradiction checks; Luna pre-commit final content audit; independent read-only exact-SHA audit after closure commit/push; Sol owner handoff
-RISK: MEDIUM
-SCOPE: AGENTS.md, directly conflicting governance records, active current-chain records, canonical governance amendment, governance validator/tests, and required documentation/status/continuation evidence only
-OUT_OF_SCOPE: frontend/backend implementation, redesign code, DESIGN.md replacement, generated artifacts, migration, staging deployment/mutation, Production deployment/mutation, D1/R2/Google/provider-email writes, M1/M2, automatic promotion, merge, tag, recovery-pointer rotation, force push, unknown cleanup, and any Design Gate implementation
-STOP_CONDITIONS: authority conflict, unknown work, competing writer, frozen-candidate invalidation risk, Production crossover, provider/data mutation, required runtime/product change, or model-routing substitution requirement
-EXTERNAL_WRITES: initial governance commit/push 4825f02dfa96b9e5e6fe018d1bfd252d7720f47d completed after the pre-final Sol review, Luna review/recheck, required checks, and protected Git authorization re-verification; this closure is documentation-only, with normal closure commit/push authorized only after fresh protected Git revalidation and followed by an independent read-only exact-SHA audit before Sol's owner handoff; no runtime, provider, or data write
-ACTIVE_WRITER: NONE
-WRITER_LOCK: RELEASED
-HANDOFF_STATUS: READY_FOR_HANDOFF
-BLOCKER: NONE
-CANONICAL_INTEGRATION_WRITER_STATUS: COMPLETE
-SOL_PREFINAL_REVIEW: PASS
-LUNA_PREFINAL_AUDIT: PASS
-LUNA_FINAL_CONTENT_AUDIT: PASS
-LUNA_EXACT_SHA_AUDIT: REQUIRED_AFTER_CLOSURE_COMMIT_PUSH
-NEXT_EXACT_ACTION: Earl reviews the Design Gate and explicitly approves, rejects, or amends the proposed Institutional Logistics Ledger direction and bounded `admin.overview` first slice; do not implement or deploy before that decision.
+DELIVERABLE: review-ready semantics repair in the same four governance files, evidence-complete handoff fields, and unchanged preserved-artifact aggregates
+VERIFICATION: final reruns after final evidence record edit passed handoff:verify, git diff --check, four-path Markdown Prettier --check, deterministic privacy, canonical aggregate, and supplemental cross-record self-check; runtime, deployment, provider, migration, P1, and final-release gates remain unevidenced
+RISK: HIGH — privacy governance, one-writer coordination, release-state continuity, rollback durability, and preserved private artifacts
+RISK_CLASSES: Class R only; Class C NONE; Class I NONE
+SCOPE: .codex/specs/active/v0.8.0-v0.8.5-final-unified-stabilization-pih-master-program-v1r7.md; .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md
+OUT_OF_SCOPE: runtime, scripts, tests, configuration, generated artifacts, migrations, provider calls, deployments, data mutation, Git ref/worktree changes, staging, commit, push, merge, PR conflict resolution, object preservation, repair implementation, cleanup, stash, archive, or every action on the 45 owner-feedback artifacts
+STOP_CONDITIONS: aggregate drift; branch/HEAD/upstream/lock drift; competing writer; model mismatch/unavailability; private-source exposure; need to read or alter artifacts; unevidenced gate; P0/P1 work; provider/Production crossover; unsafe migration; reconciliation mismatch; unauthorized Class I; PII leak; or scope expansion
+EXTERNAL_ACTIONS: NONE
+UNKNOWN_WORK: CLASSIFIED_BUT_PRIVATE_PRESERVATION_PENDING; 28 unreachable commits (11 equivalent/duplicate, 17 unique variants) plus associated unreachable trees/blobs remain unreferenced/unbundled; six stale commit-graph cache entries and no reachable object missing
+OWNER_FEEDBACK: QUIESCENT_PARTIAL_PRIVATE_PRESERVATION_PENDING; 45 private artifacts preserved in place, unaccepted, unexamined, unstaged, and untouched
+PR23: PR23_CONFLICT_NEW_MAIN_INTEGRATION_PENDING
+KNOWN_P1_REPAIRS: PENDING — fail-closed Production binding identity; cross-resource reset compensation/recovery; authenticated Playground owner-session gate; exact parsed baseline metadata/integrity validation; provider environment/binding identity preflight
+REPAIR_ATTEMPT: GOVERNANCE_MATERIALIZATION 2/3
+ROOT_CAUSE_COUNT: 2/2
+SOL_DIFF_REVIEW: ACCEPTED_SOL_READ_ONLY_DIFF_REVIEW
+LUNA_VERIFICATION: PASS_3_NO_GOVERNANCE_MATERIALIZATION_P0_P1_P2_ALIAS_ADVISORY_INCORPORATED
+DIFF_REVIEW_BY_SOL: ACCEPTED_SOL_READ_ONLY_DIFF_REVIEW
+INDEPENDENT_LUNA_VERIFICATION: PASS_3_NO_GOVERNANCE_MATERIALIZATION_P0_P1_P2_ALIAS_ADVISORY_INCORPORATED
+SOL_ACCEPTANCE: ACCEPTED_GOVERNANCE_MATERIALIZATION_ATTEMPT_2_OF_3
+LUNA_PASS_3: PASS; governance materialization P0=0 and P1=0; P2 literal-field alias advisory incorporated
+GOVERNANCE_HOLD_BLOCKER: RESOLVED_SOL_ACCEPTANCE_LUNA_PASS_3
+ROLLBACK: NOT_TRIGGERED_UNCOMMITTED_CLASS_R; SR0/SR1/SR2/SR3 program rules remain recorded in the accepted sanitized amendment
+RECONCILIATION: NOT_APPLICABLE_TO_GOVERNANCE_SUBTASK; broader pre-program reconciliation pending
+P0: 0_FOR_GOVERNANCE_MATERIALIZATION; broader pre-program audit ongoing
+P1: 5_CONFIRMED_BLOCKER_FAMILIES_OUTSIDE_SUBTASK; GOVERNANCE_MATERIALIZATION_P1=0
+P2: LUNA_PASS_3_LITERAL_FIELD_ALIAS_ADVISORY_INCORPORATED; broader P2 remains outside subtask
+P3: BROADER_PREEXISTING_P3_OUTSIDE_GOVERNANCE_MATERIALIZATION_PENDING
+KNOWN_P2_P3: BROADER_PREEXISTING_P2_P3_OUTSIDE_THIS_GOVERNANCE_MATERIALIZATION_PENDING; no program-wide NONE claim
+HANDOFF_STATUS: ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
+NEXT_EXACT_ACTION: Create and independently verify private preservation for all classified unreachable commits/associated objects, the quiescent 45-file owner-feedback set, and every other classified dirty worktree/stash; the accepted governance commit/push must first stage only the four governed files, and no S00, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, or provider action may begin until preservation and a fresh pre-program gate are accepted.
 
 ## Task-local delegation ledger
 
-| AGENT_ID                | MODEL     | ROLE                               | MODE  | SCOPE                                                   | WORKTREE_OR_PATCH              | OWNED_PATHS                                                                                                      | EXCLUDED_PATHS                                                    | DEPENDENCIES                                   | STATUS   | OUTPUT / EVIDENCE                                                                                                                        |
-| ----------------------- | --------- | ---------------------------------- | ----- | ------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| luna_governance_map     | LUNA MAX  | GOVERNANCE_MAPPING_AND_FINAL_AUDIT | READ  | Active governance mapping and final contradiction audit | Canonical worktree, read-only  | None                                                                                                             | All tracked repository paths                                      | Current-chain lock and combined candidate diff | COMPLETE | Pre-commit final content audit PASS; independent read-only exact-SHA audit follows closure commit/push; no repository or provider writes |
-| terra_governance_writer | TERRA MAX | TERRA_INTEGRATION_WRITER           | WRITE | Canonical governance amendment integration              | Canonical task branch/worktree | AGENTS.md; .codex governance/current-chain records; governance validator/tests; required handoff/status evidence | Product/runtime/generated/migration/provider files and Luna scope | Sol task decomposition and Luna findings       | COMPLETE | Post-commit closure-truth repair complete; focused gates PASS; no new child count or product/runtime/provider write                      |
+- **SOL_V1R7_HOLD** — GPT-5.6 Sol, sole top-level read-only orchestrator.
+  - Role: HOLD and repair request for authority, phase, and handoff precision.
+  - Scope: Read-only review of the four governance files and safe evidence.
+  - Status: HISTORICAL_HOLD_1_SUPERSEDED_BY_ATTEMPT_2; no repository or provider write.
+- **LUNA_V1R7_HOLD** — Luna MAX independent read-only auditor.
+  - Role: HOLD for governance semantics, privacy, continuity, and release control.
+  - Scope: Read-only audit; no raw Annex, owner-feedback artifact content, or provider data.
+  - Status: HISTORICAL_HOLD_1_SUPERSEDED_BY_ATTEMPT_2; independent post-repair review is represented by HOLD_2 below.
+- **TERRA_INTEGRATION_V1R7** — Terra MAX canonical Integration Writer.
+  - Role: Repair only the V1R7 amendment and three current records.
+  - Scope: The four named governance files; all other paths and providers excluded.
+  - Status: HISTORICAL_PRE_ATTEMPT_2_RECORD; see the authoritative attempt-2 ledger below.
+
+### Attempt 2 authoritative ledger
+
+- **SOL_V1R7_REPAIR_REQUEST_2** - GPT-5.6 Sol, sole top-level read-only orchestrator.
+  - Scope: Read-only request to correct lock, risk, and reproducible evidence exactness in the four governance files.
+  - Status: ACCEPTED_SOL_READ_ONLY_DIFF_REVIEW.
+- **LUNA_V1R7_HOLD_2** - Luna MAX independent read-only auditor.
+  - Scope: Exactly two P1 and two P2 evidence-exactness findings; no private Annex, owner-feedback content, or provider data.
+  - Status: HISTORICAL_HOLD_2_RESOLVED_BY_LUNA_PASS_3.
+- **TERRA_INTEGRATION_V1R7** - Terra MAX canonical Integration Writer.
+  - Scope: Only the four governance files; no stage, commit, push, ref/worktree, runtime, provider, or artifact action.
+  - Status: ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT; final reruns occurred after the final evidence record edit.
+
+- **LUNA_V1R7_PASS_3** - Luna MAX independent read-only auditor.
+  - Scope: Fresh acceptance audit of the four governance files and safe evidence only.
+  - Status: PASS; no governance-materialization P0/P1; one P2 literal-field alias advisory incorporated.
