@@ -3,17 +3,18 @@
 INTENT: REPOSITORY_MAINTENANCE
 SECONDARY_INTENTS: GOVERNANCE, DOCUMENTATION, PRIVACY, CONTINUITY, RELEASE_CONTROL
 MODE: EXECUTE
-OBJECTIVE: Execute the accepted additive V1R7 pre-program private-preservation transaction without entering S00 or changing runtime, release, or provider state.
-RESULT: PRIVATE_PRESERVATION_TASK_PACKET_REVIEW
+OBJECTIVE: Retain immutable v1 pre-ref failure evidence and hold the accepted Class R v2 private-preservation transaction until exact three-record acceptance commit/push parity after recorded Sol/Luna v2 prewrite acceptance, without entering S00 or changing runtime, release, or provider state.
+RESULT: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTED_READY_FOR_RECORD_COMMIT
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: PRE_PROGRAM_AUDIT
 RELEASE: v0.8.1
 RELEASE_STATE: MASTER_PRE_PROGRAM_AUDIT
-RELEASE_STATUS: PRIVATE_PRESERVATION_TASK_PACKET_ACCEPTED_READY_FOR_COMMIT
-RELEASE_CONDITION: This private-preservation packet task does not enter or complete S00 and authorizes only the accepted Class R local preservation transaction after Sol/Luna acceptance and packet commit/push.
+RELEASE_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTED_READY_FOR_RECORD_COMMIT
+RELEASE_CONDITION: This private-preservation task does not enter or complete S00; v1 initialized then failed pre-ref and is retained INCOMPLETE; Sol/Luna v2 prewrite acceptance is recorded; exact three-record acceptance commit/push parity is pending; v2 has NOT started and execution is permitted only after that parity.
+S00_STATUS: NOT_ENTERED
 SOURCE_AUTHORITY_STATUS: ACCEPTED_BY_EARL_V1R7
-TRACKED_MATERIALIZATION_STATUS: PRIVATE_PRESERVATION_TASK_PACKET_ACCEPTED_READY_FOR_COMMIT
-TARGET: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v1; refs/private/v1r7-preservation/capture-20260810-182872e3-v1/
+TRACKED_MATERIALIZATION_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTED_READY_FOR_RECORD_COMMIT
+TARGET: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2; refs/private/v1r7-preservation/capture-20260810-182872e3-v2/
 SKILLS: lean-ctx for targeted governance reads and deterministic verification; native read-only fallback after the local allowlist block
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -38,7 +39,7 @@ LOCK_RELEASE_CONDITION: explicit Sol-accepted transfer or version-close release;
 LOCK_BRANCH: release/v0.8.1-isolated-staging-playground
 LOCK_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 LOCK_ACQUIRED_AT: 2026-08-10T11:31:50+08:00
-LOCK_HEARTBEAT_AT: 2026-08-10T15:00:34+08:00
+LOCK_HEARTBEAT_AT: 2026-08-10T17:03:23+08:00
 LOCK_STALE_THRESHOLD: 60_MINUTES_WITHOUT_VERIFIED_HEARTBEAT
 LOCK_STALE_RULE: Never steal; Sol runs read-only crash-resume verification before explicit acquisition and records an explicit Sol-accepted transfer; never silent takeover
 OWNER_TASK: /root/integration_terra_2
@@ -50,6 +51,7 @@ ROLLBACK_STATE: NOT_TRIGGERED_PRIVATE_PRESERVATION_CLASS_R
 PROGRAM_ROLLBACK_PROOF: PENDING
 SOL_ORCHESTRATOR: GPT-5.6 Sol; sole top-level, read-only, zero children; only Sol spawns
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7B; sole canonical Integration Terra writer after explicit Sol-accepted transfer
+CANONICAL_INTEGRATION_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7B
 LUNA_AUDITORS_USED: LUNA_V1R7_HOLD_1, LUNA_V1R7_HOLD_2, and LUNA_V1R7_PASS_3; independent read-only auditors
 STARTING_BRANCH: release/v0.8.1-isolated-staging-playground
 STARTING_SHA: cdedd2668cd4e81b036864e1211cd9ee8e8eefe1
@@ -69,6 +71,9 @@ PRIVATE_PRESERVATION_PACKET_BASE_SHA: 182872e346a14fa8235fe7d23ac2143a2f07ed57
 PRIVATE_PRESERVATION_PACKET_BASE_TREE: 02b959662ab385a0b7c9a81551eb6efd4ab7d9c6
 PRIVATE_PRESERVATION_PACKET_PARENT_SHA: 6a766c65965583fca5e23f902ed28522dee4bc07
 PRIVATE_PRESERVATION_PACKET_REMOTE_PARITY: LOCAL=UPSTREAM=REMOTE=182872e346a14fa8235fe7d23ac2143a2f07ed57; DIVERGENCE=0/0
+PRIVATE_PRESERVATION_PACKET_COMMIT_SHA: 34f7dc93b4f7d4656420d7be2044649324c979c3
+PRIVATE_PRESERVATION_PACKET_COMMIT_TREE: f83d584f1a143de17bd02413c1f10928c8ba1eeb
+PRIVATE_PRESERVATION_PACKET_PUSH_PARITY: COMMITTED_AND_PUSHED; LOCAL=UPSTREAM=REMOTE=34f7dc93b4f7d4656420d7be2044649324c979c3; DIVERGENCE=0/0; SCOPE=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md
 PRIVATE_PRESERVATION_PACKET_CRASH_RESUME: PASS_AT_PACKET_BASE_SHA; TRACKED_MODIFIED=0; UNTRACKED_TOTAL=45; CAPTURE_TARGET_ABSENT=TRUE; CAPTURE_OUTSIDE_WORKTREES=TRUE; GIT_LOCK_FILES=0; ACTIVE_GIT_PROCESSES=0
 PACKET_BASE_CANONICAL_WORKTREE_CLEAN: TRUE; TRACKED_MODIFIED=0; INDEX_MODIFIED=0
 GOVERNANCE_COMMIT_PUSH_PARITY: COMMITTED_AND_PUSHED; LOCAL_HEAD=UPSTREAM=REMOTE=6a766c65965583fca5e23f902ed28522dee4bc07; DIVERGENCE=0/0
@@ -78,36 +83,63 @@ PRODUCTION_START_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
 PRODUCTION_END_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
 PLAYGROUND_SAFE_IDENTITY: 0.8.1-playground.1 at 433ac260092960328a586cf50ed7269f08e0a19b; schema 30 / 0030
 PRODUCTION_SAFE_IDENTITY: v0.8.0 at 3059098ff2a2935fec59df52748ccae420aadba7; schema 30 / 0030
+PRODUCTION_READINESS_SAFE_PROOF: READ_ONLY_GET_EXIT=0; ORDERED_SAFE_SERIALIZATION=PASS; OK=TRUE; READY=TRUE; ENVIRONMENT=PRODUCTION; APP_VERSION=0.8.0; RELEASE_VERSION=0.8.0; CANDIDATE_SHA=3059098ff2a2935fec59df52748ccae420aadba7; DATABASE_CONNECTED=TRUE; SCHEMA_VERSION=30; D1=TRUE; STATIC_ASSETS=TRUE; BRAND_ASSETS=TRUE; EVIDENCE_ASSETS=TRUE; PROTECTED_CONFIGURATION=TRUE; CHECKS=0; CORRELATION_ID_OMITTED=TRUE
+PRODUCTION_READINESS_SAFE_PROJECTION_SHA256: 31FED1FC52F055915B5979E8153D5D9A6E182DE87C12167B60750A755F762998
 D1_R2_ZERO_OVERLAP: PENDING — not reproven in this governance subtask
 MAIN_MERGE_AUTO_PRODUCTION_DEPLOY: NO
 MAIN_MERGE_AUTO_PRODUCTION_DEPLOY_PROOF: READ_ONLY_COUPLING_EVIDENCE_RECORDED_IN_CURRENT_HANDOFF_PENDING_INDEPENDENT_REVIEW
 INDEPENDENT_CANDIDATE_ARTIFACT_HASH: PENDING
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
-DELIVERABLE: Sol/Luna-accepted and committed/pushed three-record private-preservation packet followed by a VERIFIED additive private capture and fresh pre-program gate
-VERIFICATION: packet checks plus later ref/bundle/restore/snapshot/manifests/aggregate/object coverage and independent Luna verification; no runtime, provider, or release claim
+DELIVERABLE: Immutable v1 INCOMPLETE failed-pre-ref evidence retained; recorded Sol/Luna v2 prewrite acceptance followed by exact three-record acceptance commit/push parity, then a v2 VERIFIED additive private capture and fresh pre-program gate
+VERIFICATION: v1 failure evidence/ref0/source-unchanged proof plus later v2 ref/bundle/restore/snapshot/manifests/aggregate/object coverage and independent Luna verification; no runtime, provider, or release claim
 RISK: HIGH — privacy governance, one-writer coordination, release-state continuity, rollback durability, and preserved private artifacts
 RISK_CLASSES: Class R only; Class C NONE; Class I NONE
-SCOPE: .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md; D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v1; refs/private/v1r7-preservation/capture-20260810-182872e3-v1/; only the accepted local private-preservation transaction after Sol/Luna acceptance plus packet commit/push
-OUT_OF_SCOPE: runtime, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, provider, destructive, or cleanup action; only the accepted additive local private-preservation transaction is allowed after Sol/Luna acceptance plus packet commit/push
-STOP_CONDITIONS: capture exists; ref exists; object, aggregate, manifest, bundle, or restore mismatch; private exposure; branch/HEAD/upstream/lock drift; competing writer; model mismatch/unavailability; unevidenced gate; P0/P1 work; provider/Production crossover; unsafe migration; reconciliation mismatch; unauthorized Class I; PII leak; or scope expansion
-EXTERNAL_ACTIONS: PENDING_LOCAL_PRIVATE_CAPTURE_AND_LOCAL_PRIVATE_GIT_REFS_ONLY; PROVIDER_WRITES=NONE
+SCOPE: .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md; immutable v1 capture root/ref prefix; v2 D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2 and refs/private/v1r7-preservation/capture-20260810-182872e3-v2/; Sol/Luna v2 prewrite acceptance is recorded, and the accepted local v2 private-preservation transaction is permitted only after exact three-record acceptance commit/push parity
+OUT_OF_SCOPE: runtime, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, provider, destructive, or cleanup action; v2 local private-preservation is prohibited until exact three-record acceptance commit/push parity
+STOP_CONDITIONS: v2 capture exists; v2 ref exists; v1 immutable evidence drift; object, aggregate, manifest, bundle, or restore mismatch; private exposure; branch/HEAD/upstream/lock drift; competing writer; model mismatch/unavailability; unevidenced gate; P0/P1 work; provider/Production crossover; unsafe migration; reconciliation mismatch; unauthorized Class I; PII leak; or scope expansion
+EXTERNAL_ACTIONS: V1_RETAINED_INCOMPLETE_PRE_REF; V2_PREWRITE_ACCEPTED_RECORD_COMMIT_PUSH_PENDING; PROVIDER_WRITES=NONE
 UNKNOWN_WORK: CLASSIFIED_BUT_PRIVATE_PRESERVATION_PENDING; all 28 unreachable commits plus associated unreachable trees/blobs remain unreferenced/unbundled; six stale commit-graph cache entries and no reachable object missing
-OWNER_FEEDBACK: QUIESCENT_PARTIAL_PRIVATE_PRESERVATION_PENDING; preserved set is TMP=44 and OWNER_FEEDBACK=1, unaccepted, unexamined, unstaged, and untouched
-PRIVATE_PRESERVATION_CAPTURE_ROOT: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v1
-PRIVATE_PRESERVATION_REF_PREFIX: refs/private/v1r7-preservation/capture-20260810-182872e3-v1/
-PRIVATE_PRESERVATION_CAPTURE_PRECONDITION: FAIL_IF_EXISTS; CAPTURE_TARGET_ABSENT=TRUE; CAPTURE_OUTSIDE_WORKTREES=TRUE
+OWNER_FEEDBACK: QUIESCENT_V1_INCOMPLETE_RETAINED_V2_ACCEPTED_RECORD_COMMIT_PUSH_PENDING; preserved set is TMP=44 and OWNER_FEEDBACK=1, unaccepted, unexamined, unstaged, and untouched
+PRIVATE_PRESERVATION_CAPTURE_ROOT: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2
+PRIVATE_PRESERVATION_REF_PREFIX: refs/private/v1r7-preservation/capture-20260810-182872e3-v2/
+PRIVATE_PRESERVATION_CAPTURE_PRECONDITION: FAIL_IF_EXISTS; CAPTURE_TARGET_ABSENT=TRUE; PRIVATE_REF_PREFIX_COUNT=0; CAPTURE_OUTSIDE_WORKTREES=TRUE
+PRIVATE_PRESERVATION_ACTIVE_ATTEMPT: 2
+PRIVATE_PRESERVATION_TRANSACTION_ATTEMPT: 2/3; SEPARATE_FROM_GOVERNANCE_REPAIR_BUDGET
+PRIVATE_PRESERVATION_ATTEMPT_SEQUENCE: 1_FAILED_PRE_REF_INCOMPLETE_RETAINED -> 2_V2_PREWRITE_ACCEPTED_RECORD_COMMIT_PUSH_PENDING
 PRIVATE_PRESERVATION_OBJECT_EVIDENCE: CORE_COMMIT_GRAPH_FALSE_NO_REFLOG_FSCK_EXIT=0; COMMITS=28; TREES=121; BLOBS=133; COMMIT_SET_SERIALIZATION=SORTED_COMMIT_SHA_LF_NO_TRAILING_LF_UTF8; COMMIT_SET_SHA256=20D520C85EBF6262E2023D6A7B26DD5A1547868180CCB116DB511AF971ED8A84; WITH_REFLOG_UNREACHABLE_COMMITS=13; REACHABLE_MISSING=0
 PRIVATE_PRESERVATION_STASH_EVIDENCE: SHA=5f9b716ae16cbe8b04b609778f96fc575a0c087a; TYPE=commit; PARENTS=3
+PRIVATE_PRESERVATION_ATTEMPT_1: 1
+PRIVATE_PRESERVATION_ATTEMPT_1_CAPTURE_ID: capture-20260810-182872e3-v1
+PRIVATE_PRESERVATION_ATTEMPT_1_STATE: INCOMPLETE
+PRIVATE_PRESERVATION_ATTEMPT_1_RESULT: FAILED_PRE_REF_INCOMPLETE_RETAINED
+PRIVATE_PRESERVATION_ATTEMPT_1_ROOT: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v1
+PRIVATE_PRESERVATION_ATTEMPT_1_REF_PREFIX: refs/private/v1r7-preservation/capture-20260810-182872e3-v1/
+PRIVATE_PRESERVATION_ATTEMPT_1_FAILURE_STAGE: UPDATE_REF_INPUT
+PRIVATE_PRESERVATION_ATTEMPT_1_HOST_COMMAND_EXIT: 1
+PRIVATE_PRESERVATION_ATTEMPT_1_GIT_CHILD_EXIT: UNPROVEN
+PRIVATE_PRESERVATION_ATTEMPT_1_ERROR_CLASS: NativeCommandError
+PRIVATE_PRESERVATION_ATTEMPT_1_ERROR_TOKEN: fatal: unknown command: start?
+PRIVATE_PRESERVATION_ATTEMPT_1_FAILURE_ENCODING: CRLF_INFERRED_NOT_BYTE_CAPTURED
+PRIVATE_PRESERVATION_ATTEMPT_1_TRANSACTION_DIRECTIVE_REACHED: START_REJECTED_BEFORE_CREATE
+PRIVATE_PRESERVATION_ATTEMPT_1_REF_CREATION_AT_FAILURE: INFERRED_NONE; DIRECT_POST_FAILURE_QUERY=UNPROVEN
+PRIVATE_PRESERVATION_ATTEMPT_1_CURRENT_REF_PREFIX_COUNT: 0
+PRIVATE_PRESERVATION_ATTEMPT_1_SOURCE_STATE: HEAD=34f7dc93b4f7d4656420d7be2044649324c979c3; TREE=f83d584f1a143de17bd02413c1f10928c8ba1eeb; UNCHANGED=TRUE
+PRIVATE_PRESERVATION_ATTEMPT_1_RETAIN_IMMUTABLE: TRUE
 PRIVATE_PRESERVATION_PRIMARY_AGGREGATES: TMP=44; OWNER_FEEDBACK=1; EVIDENCE43=43;1784293;2496024B3A96CFB7D03E6F61B380F348DD258A0063357ED92412FB305EAF10FA; ALL45=45;1916074;B2A7652E7EEA0BB8BE9EE6128AA13B03D1FAF2EBEB0A798AA373C3DE042084B3
 PRIVATE_PRESERVATION_SECONDARY_AGGREGATE: CLASSIFIED38=38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6AFACEA8BFD9F7AC0D
+PRIVATE_PRESERVATION_SECONDARY_ROOT: D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration
+PRIVATE_PRESERVATION_SECONDARY_SOURCE_SET: tracked=git diff --name-only --no-renames plus git diff --cached --name-only --no-renames; untracked=git ls-files --others --exclude-standard; ignored_evidence=git ls-files --others --ignored --exclude-standard excluding only ^node_modules/ and ^src/node_modules/; union sort-unique files only
+PRIVATE_PRESERVATION_SECONDARY_SERIALIZATION: relative path with forward slashes TAB decimal bytes TAB uppercase SHA256; PowerShell Sort-Object; LF join; no trailing LF; UTF8 SHA256
+PRIVATE_PRESERVATION_SECONDARY_COUNTS: TRACKED=2; UNTRACKED=26; IGNORED_EVIDENCE=10; EXCLUDED_DEPENDENCY_FILES=3684; CLASSIFIED=38
 PRIVATE_PRESERVATION_DEPENDENCY_EXCLUSIONS: node_modules; src/node_modules; package-lock/package proof required
-PRIVATE_PRESERVATION_AUTHORIZATION: SOL_LUNA_ACCEPTED; EXECUTION_ONLY_AFTER_PACKET_COMMIT_PUSH
+PRIVATE_PRESERVATION_AUTHORIZATION: CLASS_R_LOCAL_ONLY; SOL_LUNA_V2_PREWRITE_ACCEPTED; V2_EXECUTION_ONLY_AFTER_ACCEPTANCE_RECORD_COMMIT_PUSH
 SOL_PRIVATE_PRESERVATION_PACKET_ACCEPTANCE: PASS
 LUNA_PRIVATE_PRESERVATION_PACKET_ACCEPTANCE: PASS_NO_P0_P1_P2_P3
-PRIVATE_PRESERVATION_ALLOWED_SEQUENCE: fail-if-exists capture with INCOMPLETE; atomic create-only private refs for current/governance/base/stash/all worktree heads/all 28 commits; bundle --all plus verify/list; private bare restore/fsck/ref/object coverage; byte-copy primary ALL45 and secondary CLASSIFIED38; sorted LF manifests with hash parity; declared dependency exclusions; set VERIFIED only at end
+PRIVATE_PRESERVATION_ALLOWED_SEQUENCE: retain immutable v1 INCOMPLETE evidence; Sol/Luna v2 prewrite acceptance is recorded; only after exact three-record acceptance commit/push parity create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream with no-CR assertion; atomically create v2 private refs; bundle/restore/object proof; byte-copy primary ALL45 and secondary CLASSIFIED38; sorted LF manifests with hash parity; set VERIFIED only at end
 PRIVATE_PRESERVATION_FAILURE_RULE: retain INCOMPLETE, refs, files, and evidence; no overwrite, delete, clean, reset, prune, or stash drop
 PR23: PR23_CONFLICT_NEW_MAIN_INTEGRATION_PENDING
+PR23_SAFE_STATE: READ_ONLY; HEAD=34f7dc93b4f7d4656420d7be2044649324c979c3; STATE=OPEN; DRAFT=TRUE; MERGE_STATE=DIRTY; CHECKS=0; PENDING=0; FAILED=0
 KNOWN_P1_REPAIRS: PENDING — fail-closed Production binding identity; cross-resource reset compensation/recovery; authenticated Playground owner-session gate; exact parsed baseline metadata/integrity validation; provider environment/binding identity preflight
 REPAIR_ATTEMPT: GOVERNANCE_MATERIALIZATION 2/3
 ROOT_CAUSE_COUNT: 2/2
@@ -118,16 +150,34 @@ INDEPENDENT_LUNA_VERIFICATION: PASS_3_NO_GOVERNANCE_MATERIALIZATION_P0_P1_P2_ALI
 SOL_ACCEPTANCE: ACCEPTED_GOVERNANCE_MATERIALIZATION_ATTEMPT_2_OF_3
 LUNA_PASS_3: PASS; governance materialization P0=0 and P1=0; P2 literal-field alias advisory incorporated
 GOVERNANCE_HOLD_BLOCKER: RESOLVED_SOL_ACCEPTANCE_LUNA_PASS_3
-ROLLBACK: NOT_TRIGGERED_COMMITTED_CLASS_R; SR0/SR1/SR2/SR3 program rules remain recorded in the accepted sanitized amendment
+ROLLBACK: NOT_TRIGGERED_PRIVATE_PRESERVATION_CLASS_R; SR0/SR1/SR2/SR3 program rules remain recorded in the accepted sanitized amendment
 RECONCILIATION: NOT_APPLICABLE_TO_GOVERNANCE_SUBTASK; broader pre-program reconciliation pending
 P0: 0_FOR_GOVERNANCE_MATERIALIZATION; broader pre-program audit ongoing
 P1: 5_CONFIRMED_BLOCKER_FAMILIES_OUTSIDE_SUBTASK; GOVERNANCE_MATERIALIZATION_P1=0
 P2: LUNA_PASS_3_LITERAL_FIELD_ALIAS_ADVISORY_INCORPORATED; broader P2 remains outside subtask
 P3: BROADER_PREEXISTING_P3_OUTSIDE_GOVERNANCE_MATERIALIZATION_PENDING
 KNOWN_P2_P3: BROADER_PREEXISTING_P2_P3_OUTSIDE_THIS_GOVERNANCE_MATERIALIZATION_PENDING; no program-wide NONE claim
-HANDOFF_STATUS: PRIVATE_PRESERVATION_TASK_PACKET_ACCEPTED_READY_FOR_COMMIT
-NEXT_ACTION_SCOPE: CURRENT_TASK_ONLY_AFTER_PACKET_COMMIT_PUSH
-NEXT_EXACT_ACTION: Commit and push the Sol/Luna-accepted three-record private-preservation task packet first; only then execute the fail-if-exists additive private-preservation transaction, obtain independent Luna verification, and obtain a fresh pre-program gate. No S00 entry/completion or release action is authorized before those gates.
+PRIVATE_PRESERVATION_EXECUTION: NOT_STARTED_ATTEMPT_2_PREWRITE
+PRIVATE_PRESERVATION_RETRY_AUTHORIZATION: SOL_LUNA_V2_PREWRITE_ACCEPTED; EXECUTION_ONLY_AFTER_ACCEPTANCE_RECORD_COMMIT_PUSH
+PRIVATE_PRESERVATION_RETRY_INPUT_REQUIREMENT: DOTNET_UTF8_NO_BOM_LF_ONLY_ASSERT_NO_CR_BEFORE_STANDARDINPUT_BASESTREAM
+PRIVATE_PRESERVATION_RETRY_FAILURE_RULE: RETAIN_V2_INCOMPLETE_REFS_FILES_AND_EVIDENCE; NEVER_OVERWRITE_DELETE_OR_FALLBACK_TO_V1
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_ATTEMPT: 3/3
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_ROOT_CAUSES: 2/2
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_RESULT: PASS
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_HARNESS_ROOTS: PORCELAIN_DIRECTORY_ROW_COUNT=PASS; GENERIC_LIST_PACKAGING=PASS
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_EVIDENCE_SAFE_SHA256: A43557BE74BA088126E3BB28358F6CEC321DE1FD13895479265453D3CF32E963
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_COMMAND_IDENTITIES: HANDOFF=npm.cmd run handoff:verify; DIFF=git diff --check; PRETTIER=exact three-record npx.cmd prettier --check
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_COMMAND_RESULTS: HANDOFF_EXIT=0; DIFF_EXIT=0; PRETTIER_EXIT=0; FULL_BATCH_EXIT=0; PRIVACY_MATCHES=0; PRIVACY_STANDALONE_EXIT=UNPROVEN_NOT_CAPTURED
+PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_COMMAND_SHA256: UNPROVEN_NOT_CAPTURED
+PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_BASE_SHA: 34f7dc93b4f7d4656420d7be2044649324c979c3
+PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_BASE_TREE: f83d584f1a143de17bd02413c1f10928c8ba1eeb
+SOL_PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE: PASS
+LUNA_PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE: PASS_NO_P0_P1_P2_P3
+PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_AT: 2026-08-10T16:57:22+08:00
+V2_PREWRITE_RECORD_PUSH_PARITY: PENDING
+HANDOFF_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTED_READY_FOR_RECORD_COMMIT
+NEXT_ACTION_SCOPE: CURRENT_TASK_COMMIT_PUSH_EXACT_V2_PREWRITE_ACCEPTANCE_RECORDS
+NEXT_EXACT_ACTION: Commit and push exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, and .codex/CURRENT_HANDOFF.md with local/upstream/remote parity; only afterward create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream (assert no CR), atomically create v2 refs, complete bundle/restore/object proof and snapshot/manifest parity, mark VERIFIED only at end, obtain independent Luna verification and a fresh pre-program gate; no S00/P1/PR/merge/deploy/migration/pointer/provider.
 
 ## Task-local delegation ledger
 
