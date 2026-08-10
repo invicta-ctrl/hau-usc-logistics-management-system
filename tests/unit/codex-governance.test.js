@@ -27,6 +27,15 @@ describe('Codex governance validators', () => {
       '.codex/CAVEMAN_WORKFLOW.md',
       '.codex/USAGE_POLICY.md',
       'AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/CURRENT_HANDOFF.md',
+      '## Accepted mainline governance amendment — 2026-08-10',
+      'This AGENTS.md section is the durable accepted governance amendment at the first step of the canonical continuity chain',
+      'STATUS: ACCEPTED',
+      'OWNER: Earl',
+      'QUICK Mainline AGENTS Governance Sync + Fast Document-Fix Mode',
+      'Root Sol/Terra/Luna sync, Quick Document Fix Mode, directly coupled enforcement, and branch/commit/PR/merge to main',
+      'Runtime, deploy, provider, database, migration, production-data, recovery, frontend, and release behavior',
+      'Main-governance lineage is distinct from deployed Production runtime',
+      'Legacy current/task REQUIRED_MODEL: CODEX remains superseded and non-authoritative and does not require a current-chain rewrite for this explicitly accepted bootstrap',
       'ORCHESTRATOR_MODEL: GPT-5.6 Sol',
       'ORCHESTRATOR_WRITES: FORBIDDEN',
       'SOL_SUBAGENTS: FORBIDDEN',
@@ -84,6 +93,14 @@ describe('Codex governance validators', () => {
     ].join('\n');
     expect(validateAgentInstructions(valid)).toEqual([]);
     expect(validateAgentInstructions(valid.replace('skill registry', 'skills'))).toContain('skill registry');
+    expect(validateAgentInstructions(valid.replace('STATUS: ACCEPTED', 'STATUS: DRAFT'))).toContain(
+      'accepted mainline governance amendment status',
+    );
+    expect(
+      validateAgentInstructions(
+        valid.replace('QUICK Mainline AGENTS Governance Sync + Fast Document-Fix Mode', 'other directive'),
+      ),
+    ).toContain('accepted mainline governance amendment directive');
     expect(
       validateAgentInstructions(valid.replace('MAX_SOL_SUBAGENTS: 0', 'MAX_SOL_SUBAGENTS: 1')),
     ).toContain('zero Sol children');
@@ -143,24 +160,23 @@ describe('Codex governance validators', () => {
   });
 
   it('parses only the supported TOML subset and rejects configuration drift', () => {
-    const valid =
-      '[agents]\nmax_concurrent_threads_per_session = 32\nmax_depth = 1\ninterrupt_message = false\n';
+    const valid = '[agents]\nmax_threads = 32\nmax_depth = 1\ninterrupt_message = false\n';
     expect(parseRestrictedToml(valid).sections.agents).toMatchObject({
-      max_concurrent_threads_per_session: 32,
+      max_threads: 32,
       max_depth: 1,
     });
     expect(validateProjectConfig(valid)).toEqual([]);
+    expect(validateProjectConfig(valid.replace('max_threads = 32', 'max_threads = 2'))).toContain(
+      'max_threads must be 32',
+    );
     expect(
       validateProjectConfig(
-        valid.replace('max_concurrent_threads_per_session = 32', 'max_concurrent_threads_per_session = 16'),
+        '[agents]\nmax_concurrent_threads_per_session = 32\nmax_depth = 1\ninterrupt_message = false\n',
       ),
-    ).toContain('max_concurrent_threads_per_session must be 32');
-    expect(
-      validateProjectConfig('[agents]\nmax_threads = 2\nmax_depth = 1\ninterrupt_message = false\n'),
     ).toEqual(
       expect.arrayContaining([
-        'max_concurrent_threads_per_session must be 32',
-        'unsupported [agents] field max_threads',
+        'max_threads must be 32',
+        'unsupported [agents] field max_concurrent_threads_per_session',
       ]),
     );
     expect(validateProjectConfig(`${valid}unknown = true`)).toContain('unsupported [agents] field unknown');

@@ -23,6 +23,25 @@ Git state -> AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/
 - Non-trivial behavior, architecture, migration, deployment, destructive maintenance, or external action requires an accepted specification or amendment. Implement only that scope.
 - Stop and record a material conflict, missing acceptance criterion, privacy/security uncertainty, migration need, unknown dirty work, or production crossover. Do not invent a resolution.
 
+## Accepted mainline governance amendment — 2026-08-10
+
+This `AGENTS.md` section is the durable accepted governance amendment at the
+first step of the canonical continuity chain, so its authority is reconstructable
+before a current pointer is read.
+
+- **STATUS:** ACCEPTED
+- **OWNER:** Earl
+- **DIRECTIVE:** `QUICK Mainline AGENTS Governance Sync + Fast Document-Fix Mode`
+- **AUTHORIZED_SCOPE:** Root Sol/Terra/Luna sync, Quick Document Fix Mode,
+  directly coupled enforcement, and branch/commit/PR/merge to `main`.
+- **EXCLUDED_SCOPE:** Runtime, deploy, provider, database, migration,
+  production-data, recovery, frontend, and release behavior.
+- **LINEAGE:** Main-governance lineage is distinct from deployed Production
+  runtime.
+- **LEGACY_CURRENT_TASK_METADATA:** Legacy current/task `REQUIRED_MODEL: CODEX`
+  remains superseded and non-authoritative for model routing and does not require
+  a current-chain rewrite for this explicitly accepted bootstrap.
+
 ## Orchestration, writer lock, and delegation
 
 This repository has one canonical model architecture. It applies to every active

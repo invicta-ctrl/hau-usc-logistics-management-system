@@ -34,6 +34,33 @@ export function validateAgentInstructions(text) {
       'canonical continuity chain',
       /AGENTS\.md\s*->\s*\.codex\/CURRENT\.md\s*->\s*\.codex\/CURRENT_TASK\.md\s*->\s*\.codex\/CURRENT_HANDOFF\.md/i,
     ],
+    ['accepted mainline governance amendment', /## Accepted mainline governance amendment — 2026-08-10/i],
+    [
+      'accepted mainline governance amendment durability',
+      /`?AGENTS\.md`? section is the durable accepted governance amendment at the\s+first step of the canonical continuity chain/i,
+    ],
+    ['accepted mainline governance amendment status', /STATUS:\*{0,2}\s*ACCEPTED/i],
+    ['accepted mainline governance amendment owner', /OWNER:\*{0,2}\s*Earl/i],
+    [
+      'accepted mainline governance amendment directive',
+      /QUICK Mainline AGENTS Governance Sync \+ Fast Document-Fix Mode/i,
+    ],
+    [
+      'accepted mainline governance amendment scope',
+      /Root Sol\/Terra\/Luna sync[\s\S]*?Quick Document Fix Mode[\s\S]*?directly coupled enforcement[\s\S]*?branch\/commit\/PR\/merge to `?main`?/i,
+    ],
+    [
+      'accepted mainline governance amendment exclusions',
+      /Runtime,\s+deploy,\s+provider,\s+database,\s+migration,\s+production-data,\s+recovery,\s+frontend,\s+and release behavior/i,
+    ],
+    [
+      'accepted mainline governance/runtime distinction',
+      /Main-governance lineage is distinct from deployed Production\s+runtime/i,
+    ],
+    [
+      'accepted mainline governance legacy bootstrap exception',
+      /Legacy current\/task\s+`?REQUIRED_MODEL:\s*CODEX`?\s+remains superseded and non-authoritative[\s\S]*?does not require\s+a current-chain rewrite for this explicitly accepted bootstrap/i,
+    ],
     ['GPT-5.6 Sol orchestrator', /ORCHESTRATOR_MODEL:\s*GPT-5\.6 Sol/i],
     ['Sol writes forbidden', /ORCHESTRATOR_WRITES:\s*FORBIDDEN/i],
     ['Sol subagents forbidden', /SOL_SUBAGENTS:\s*FORBIDDEN/i],
@@ -245,13 +272,13 @@ export function validateProjectConfig(text) {
   }
 
   const agents = parsed.sections.agents || Object.create(null);
-  if (agents.max_concurrent_threads_per_session !== 32) {
-    errors.push('max_concurrent_threads_per_session must be 32');
+  if (agents.max_threads !== 32) {
+    errors.push('max_threads must be 32');
   }
   if (agents.max_depth !== 1) errors.push('max_depth must be 1');
   if (agents.interrupt_message !== false) errors.push('interrupt_message must be false');
   for (const key of Object.keys(agents)) {
-    if (!['max_concurrent_threads_per_session', 'max_depth', 'interrupt_message'].includes(key)) {
+    if (!['max_threads', 'max_depth', 'interrupt_message'].includes(key)) {
       errors.push(`unsupported [agents] field ${key}`);
     }
   }
