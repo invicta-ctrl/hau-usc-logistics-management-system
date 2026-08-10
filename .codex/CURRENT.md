@@ -3,20 +3,29 @@
 PROGRAM: HAU-USC Logistics
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: PRE_PROGRAM_AUDIT
-MILESTONE: V1R7 MASTER PRE-PROGRAM AUDIT GOVERNANCE MATERIALIZATION
+MILESTONE: V1R7 GOVERNANCE MATERIALIZATION COMMITTED PRESERVATION PREFLIGHT HOLD
 RELEASE: v0.8.1
 RELEASE_STATE: MASTER_PRE_PROGRAM_AUDIT
-RELEASE_STATUS: GOVERNANCE_MATERIALIZATION_ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
-RELEASE_CONDITION: No S00 entry/completion; no release action authorized by this bounded materialization subtask
+RELEASE_STATUS: GOVERNANCE_MATERIALIZATION_COMMITTED_PRESERVATION_PREFLIGHT_HOLD
+RELEASE_CONDITION: No S00 entry/completion; no release action authorized by this post-commit continuity transition
 SOURCE_AUTHORITY_STATUS: ACCEPTED_BY_EARL_V1R7
-TRACKED_MATERIALIZATION_STATUS: ACCEPTED_SOL_LUNA_PASS_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
-STATUS: TRACKED_MATERIALIZATION_ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
-UPDATED_AT: 2026-08-10T12:50:47+08:00
+TRACKED_MATERIALIZATION_STATUS: GOVERNANCE_MATERIALIZATION_COMMITTED_PRESERVATION_PREFLIGHT_HOLD
+STATUS: GOVERNANCE_MATERIALIZATION_COMMITTED_PRESERVATION_PREFLIGHT_HOLD
+UPDATED_AT: 2026-08-10T13:38:11+08:00
 BRANCH: release/v0.8.1-isolated-staging-playground
-HEAD: cdedd2668cd4e81b036864e1211cd9ee8e8eefe1
+HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.1-isolated-staging-playground
+GOVERNANCE_MATERIALIZATION_COMMIT_SHA: 6a766c65965583fca5e23f902ed28522dee4bc07
+GOVERNANCE_MATERIALIZATION_TREE: 7ee8894aebb7c6b6bee722337896177b7725d537
+GOVERNANCE_MATERIALIZATION_PARENT_SHA: cdedd2668cd4e81b036864e1211cd9ee8e8eefe1
+GOVERNANCE_MATERIALIZATION_SCOPE: .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md; .codex/specs/active/v0.8.0-v0.8.5-final-unified-stabilization-pih-master-program-v1r7.md
+GOVERNANCE_MATERIALIZATION_UPSTREAM_SHA: origin/release/v0.8.1-isolated-staging-playground@6a766c65965583fca5e23f902ed28522dee4bc07
+POST_GOVERNANCE_BASELINE_WORKTREE_STATUS: TRACKED_MODIFIED=0; UNTRACKED_TOTAL=45; TMP=44; OWNER_FEEDBACK=1; IGNORED=0
+CONTINUITY_TRANSITION_REVIEW_WORKTREE_STATUS: TRACKED_MODIFIED=3; UNTRACKED_TOTAL=45; TMP=44; OWNER_FEEDBACK=1; IGNORED=0
+GOVERNANCE_COMMIT_PUSH_PARITY: COMMITTED_AND_PUSHED; LOCAL_HEAD=UPSTREAM=REMOTE=6a766c65965583fca5e23f902ed28522dee4bc07; DIVERGENCE=0/0
+GOVERNANCE_TRANSITION_PRODUCTION: UNCHANGED; v0.8.0 at 3059098ff2a2935fec59df52748ccae420aadba7; schema 30 / 0030
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
-WORKTREE_STATE: DIRTY — four uncommitted V1R7 governance/current-chain files only; 45 preserved owner-feedback artifacts remain untracked and untouched
+WORKTREE_STATE: GIT_STATUS
 ACTIVE_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7
 WRITER_LOCK: HELD:TERRA_INTEGRATION_V1R7
 LOCK_HOLDER: TERRA_MAX:TERRA_INTEGRATION_V1R7
@@ -26,16 +35,16 @@ LOCK_RELEASE_CONDITION: explicit Sol-accepted transfer or version-close release;
 LOCK_BRANCH: release/v0.8.1-isolated-staging-playground
 LOCK_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 LOCK_ACQUIRED_AT: 2026-08-10T11:31:50+08:00
-LOCK_HEARTBEAT_AT: 2026-08-10T12:50:47+08:00
+LOCK_HEARTBEAT_AT: 2026-08-10T13:38:11+08:00
 LOCK_STALE_THRESHOLD: 60_MINUTES_WITHOUT_VERIFIED_HEARTBEAT
 LOCK_STALE_RULE: Never steal; Sol runs read-only crash-resume verification before explicit acquisition and records an explicit Sol-accepted transfer; never silent takeover
 OWNER_TASK: /root/integration_terra
-HANDOFF_STATUS: ACCEPTED_READY_FOR_MECHANICAL_COMMIT_CLOSEOUT
+HANDOFF_STATUS: GOVERNANCE_MATERIALIZATION_COMMITTED_PRESERVATION_PREFLIGHT_HOLD
 TASK_RISK_CLASS: CLASS_R_TRACKED_GOVERNANCE_ONLY
 CHANGE_RISK_CLASSES: Class R only; Class C NONE; Class I NONE
 CLASS_I_ACTIONS: NONE
 CLASS_C_ACTIONS: NONE
-ROLLBACK_STATE: NOT_TRIGGERED_UNCOMMITTED_CLASS_R
+ROLLBACK_STATE: NOT_TRIGGERED_COMMITTED_CLASS_R
 PROGRAM_ROLLBACK_PROOF: PENDING
 RECONCILIATION: NOT_APPLICABLE_TO_GOVERNANCE_SUBTASK; broader pre-program reconciliation pending
 REQUIRED_MODEL: GPT-5.6 SOL
@@ -66,8 +75,8 @@ MAIN_MERGE_AUTO_PRODUCTION_DEPLOY_PROOF: READ_ONLY_COUPLING_EVIDENCE_RECORDED_IN
 INDEPENDENT_CANDIDATE_ARTIFACT_HASH: PENDING
 UNEVIDENCED_PASS_EQUALS_FAIL: TRUE
 S00_STATUS: NOT_ENTERED
-UNKNOWN_WORK: CLASSIFIED_BUT_PRIVATE_PRESERVATION_PENDING; 28 unreachable commits (11 equivalent/duplicate, 17 unique variants) plus associated unreachable trees/blobs are unreferenced/unbundled
-OWNER_FEEDBACK: QUIESCENT_PARTIAL_PRIVATE_PRESERVATION_PENDING; 45 private artifacts remain untouched and unstaged
+UNKNOWN_WORK: CLASSIFIED_BUT_PRIVATE_PRESERVATION_PENDING; all 28 unreachable commits plus associated unreachable trees/blobs are classified but remain unreferenced/unbundled
+OWNER_FEEDBACK: QUIESCENT_PARTIAL_PRIVATE_PRESERVATION_PENDING; preserved set is TMP=44 and OWNER_FEEDBACK=1, unaccepted, unexamined, unstaged, and untouched
 PR23: PR23_CONFLICT_NEW_MAIN_INTEGRATION_PENDING
 KNOWN_P1_REPAIRS: PENDING — fail-closed binding identity, reset compensation/recovery, owner-session gate, baseline integrity validation, and provider binding preflight
 REPAIR_ATTEMPT: GOVERNANCE_MATERIALIZATION 2/3
@@ -80,9 +89,10 @@ SOL_ACCEPTANCE: ACCEPTED_GOVERNANCE_MATERIALIZATION_ATTEMPT_2_OF_3
 LUNA_PASS_3: PASS; governance materialization P0=0 and P1=0; P2 literal-field alias advisory incorporated
 GOVERNANCE_HOLD_BLOCKER: RESOLVED_SOL_ACCEPTANCE_LUNA_PASS_3
 KNOWN_P2_P3: BROADER_PREEXISTING_P2_P3_OUTSIDE_THIS_GOVERNANCE_MATERIALIZATION_PENDING; no program-wide NONE claim
-POST_REPAIR_EVIDENCE: FINAL_RERUNS_EXIT_0_AFTER_FINAL_EVIDENCE_RECORD_EDIT; read-only coupling evidence is recorded in CURRENT_HANDOFF; mechanical commit closeout audit remains pending
-BLOCKER: GOVERNANCE_HOLD_RESOLVED; private preservation, five confirmed P1 blocker families, PR23 conflict/new-main integration, candidate artifact identity, program rollback proof, and broader pre-program reconciliation remain pending; no S00 or release action is authorized
+POST_REPAIR_EVIDENCE: HISTORICAL_PRECOMMIT_FINAL_RERUNS_EXIT_0; read-only coupling evidence remains recorded in CURRENT_HANDOFF; governance commit/push parity is anchored above and continuity review is pending
+BLOCKER: GOVERNANCE_HOLD_RESOLVED; governance commit/push parity is established, while private preservation, five confirmed P1 blocker families, PR23 conflict/new-main integration, candidate artifact identity, program rollback proof, and broader pre-program reconciliation remain pending; no S00 or release action is authorized
 MIGRATION_DECISION: NONE_REQUIRED_FOR_THIS_SUBTASK
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
-NEXT_EXACT_ACTION: Create and independently verify private preservation for all classified unreachable commits/associated objects, the quiescent 45-file owner-feedback set, and every other classified dirty worktree/stash; the accepted governance commit/push must first stage only the four governed files, and no S00, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, or provider action may begin until preservation and a fresh pre-program gate are accepted.
+NEXT_ACTION_SCOPE: NEXT_TASK_ONLY_AFTER_HANDOFF
+NEXT_EXACT_ACTION: Create and independently verify additive private preservation first: private snapshot, manifest/hash verification, private ref preservation, and private Git-bundle coverage for all classified unreachable commits/associated objects, the quiescent preserved set (TMP=44; OWNER_FEEDBACK=1), and every classified dirty worktree/stash; then obtain a fresh pre-program gate. No S00, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, or provider action may begin before that preservation and gate are accepted.
