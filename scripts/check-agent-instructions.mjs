@@ -16,6 +16,14 @@ const REQUIRED_FILES = [
   '.codex/TASK_HISTORY.md',
 ];
 
+function hasTenStepQuickDocumentWorkflow(text) {
+  const section = text.match(/### Fast workflow \(10 steps\)\r?\n([\s\S]*?)(?=\r?\n### |\r?\n## |$)/i);
+  if (!section) return false;
+  return Array.from({ length: 10 }, (_, index) =>
+    new RegExp(`^${index + 1}\\.\\s+`, 'm').test(section[1]),
+  ).every(Boolean);
+}
+
 export function validateAgentInstructions(text) {
   const required = [
     ['skill registry', /skill registry/i],
@@ -26,13 +34,83 @@ export function validateAgentInstructions(text) {
       'canonical continuity chain',
       /AGENTS\.md\s*->\s*\.codex\/CURRENT\.md\s*->\s*\.codex\/CURRENT_TASK\.md\s*->\s*\.codex\/CURRENT_HANDOFF\.md/i,
     ],
-    ['single writer', /only writer by default/i],
-    ['one active writer', /one active writer/i],
-    ['bounded subagents', /at most two concurrent read-only subagents/i],
-    ['version-neutral model routing', /model routing is task-specific and version-neutral/i],
+    ['GPT-5.6 Sol orchestrator', /ORCHESTRATOR_MODEL:\s*GPT-5\.6 Sol/i],
+    ['Sol writes forbidden', /ORCHESTRATOR_WRITES:\s*FORBIDDEN/i],
+    ['Sol subagents forbidden', /SOL_SUBAGENTS:\s*FORBIDDEN/i],
+    ['zero Sol children', /MAX_SOL_SUBAGENTS:\s*0\b/i],
+    ['Terra MAX writer model', /WRITER_MODEL:\s*Terra MAX/i],
+    ['Terra MAX cap', /MAX_TERRA_SUBAGENTS:\s*16\b/i],
+    ['one Terra Integration Writer', /CANONICAL_ACTIVE_WRITER:\s*one Terra Integration Writer/i],
+    ['isolated parallel Terra scopes', /PARALLEL_TERRA:\s*isolated non-overlapping/i],
+    ['Luna MAX reader model', /READER_MODEL:\s*Luna MAX/i],
+    ['Luna writes forbidden', /LUNA_WRITES:\s*FORBIDDEN/i],
+    ['Luna MAX cap', /MAX_LUNA_SUBAGENTS:\s*16\b/i],
+    ['delegation depth one', /DELEGATION_DEPTH:\s*1\b/i],
+    ['Sol-only child spawner', /SUBAGENT_SPAWNER:\s*Sol only/i],
+    ['no silent model substitution', /MODEL_SUBSTITUTION:\s*forbidden/i],
+    [
+      'legacy current metadata superseded',
+      /legacy\s+`?REQUIRED_MODEL:\s*CODEX`?\s+metadata[\s\S]*?superseded and non-authoritative/i,
+    ],
+    ['permanent branch and playground policy', /Permanent Git branch and playground release policy/i],
+    ['isolated staging playground policy', /Isolated Staging Playground/i],
+    ['Quick Document Fix Mode', /## Quick Document Fix Mode/i],
+    ['Quick Document Fix eligibility', /Quick Document Fix Mode is available only when all/i],
+    ['Quick Document Fix eligibility section', /### Eligibility/i],
+    [
+      'Quick Document Fix default staffing',
+      /one Terra Integration\s+Writer,\s+zero Luna reviewers,\s+and\s+zero Sol children/i,
+    ],
+    ['ten-step fast workflow', hasTenStepQuickDocumentWorkflow],
+    ['Quick Document Fix authorized Git path', /authorized Git branch\/commit\/push\/PR\/merge path/i],
+    ['Quick Document Fix excludes Git-history rewrites', /excludes Git-history rewrites/i],
+    ['Quick Document Fix excludes unknown-work deletion', /deletion of unknown work/i],
+    [
+      'Quick Document Fix excludes executable authorization changes',
+      /executable security, authentication, or authorization changes/i,
+    ],
+    ['Quick Document Fix excludes broad architecture decisions', /broad\s+architecture decisions/i],
+    ['Quick Document Fix Sol reads authority', /Sol reads the exact target and direct authority/i],
+    ['Quick Document Fix Sol defines minimal diff', /Sol defines the minimal diff/i],
+    ['Quick Document Fix one Terra assignment', /Sol assigns ONE Terra MAX writer/i],
+    ['Quick Document Fix Terra-only document edit', /Terra edits only the required documents/i],
+    ['Quick Document Fix Terra validation', /Terra runs focused documentation-governance validation/i],
+    ['Quick Document Fix one Sol review', /Sol reviews the complete diff once/i],
+    ['Quick Document Fix material-only repair', /repairs only material defects/i],
+    ['Quick Document Fix commit once', /commits exactly once/i],
+    [
+      'Quick Document Fix push and merge',
+      /pushes and merges only through the smallest permitted repository path/i,
+    ],
+    ['limited Luna triggers', /The default is zero Luna reviewers/i],
+    ['Luna Earl audit trigger', /Earl\s+explicitly requests an independent audit/i],
+    ['Luna large-diff trigger', /genuinely large diff where one\s+independent read materially reduces risk/i],
+    ['no repeated audit loops', /Do not repeat audit loops/i],
+    ['proportional documentation-only verification', /Run proportional documentation-only verification/i],
+    ['documentation-only test exclusions', /does not voluntarily run full browser\/e2e suites/i],
+    ['documentation-only CodeQL exclusion', /CodeQL/i],
+    ['required merge checks only', /wait only for the\s+required merge checks/i],
+    ['minimal continuity updates', /Use minimal continuity updates/i],
+    ['current-chain continuity trigger', /document is part of the current chain/i],
+    ['active-governance continuity trigger', /active governance or the exact next action\s+changes/i],
+    ['repository-record continuity trigger', /repository requires a specific record/i],
+    ['one concise continuity entry', /Add one concise factual entry only when/i],
+    ['bootstrap continuity exception', /For this bootstrap sync, do not add\s+continuity files/i],
+    ['Quick Document Fix stop condition', /Stop Quick Document Fix Mode immediately/i],
+    [
+      'Quick Document Fix success stop',
+      /requested document must be present, focused validation must pass, the\s+complete diff must be reviewed, and the required push\/merge must be complete\.\s+Then STOP\./i,
+    ],
     ['specification gate', /accepted specification or amendment/i],
   ];
-  return required.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
+  const errors = required
+    .filter(([, pattern]) => !(pattern instanceof RegExp ? pattern.test(text) : pattern(text)))
+    .map(([name]) => name);
+  const obsolete = [
+    ['obsolete Codex-only writer language', /Codex is the only writer by default/i],
+    ['obsolete two-read-only-subagent cap', /at most two concurrent read-only subagents/i],
+  ];
+  return [...errors, ...obsolete.filter(([, pattern]) => pattern.test(text)).map(([name]) => name)];
 }
 
 export function parseRestrictedToml(text) {
@@ -121,13 +199,16 @@ export function validateAgentToml(text, expectedName) {
   const checks = [
     ['name', agent.name === expectedName],
     ['description', typeof agent.description === 'string' && agent.description.trim().length > 0],
-    ['model gpt-5.6-terra', agent.model === 'gpt-5.6-terra'],
+    ['Luna MAX description', /\bLuna MAX\b/.test(agent.description || '')],
+    ['model gpt-5.6-luna', agent.model === 'gpt-5.6-luna'],
     [
       'developer_instructions',
       typeof agent.developer_instructions === 'string' && agent.developer_instructions.trim().length > 0,
     ],
+    ['read-only instructions', /Do not edit files/i.test(agent.developer_instructions || '')],
+    ['no agent spawning', /Do not[\s\S]{0,500}spawn agents/i.test(agent.developer_instructions || '')],
     ['read-only sandbox', agent.sandbox_mode === 'read-only'],
-    ['low reasoning', agent.model_reasoning_effort === 'low'],
+    ['maximum reasoning', agent.model_reasoning_effort === 'max'],
   ];
   for (const [name, valid] of checks) {
     if (!valid) missing.push(name);
@@ -164,11 +245,13 @@ export function validateProjectConfig(text) {
   }
 
   const agents = parsed.sections.agents || Object.create(null);
-  if (agents.max_threads !== 2) errors.push('max_threads must be 2');
+  if (agents.max_concurrent_threads_per_session !== 32) {
+    errors.push('max_concurrent_threads_per_session must be 32');
+  }
   if (agents.max_depth !== 1) errors.push('max_depth must be 1');
   if (agents.interrupt_message !== false) errors.push('interrupt_message must be false');
   for (const key of Object.keys(agents)) {
-    if (!['max_threads', 'max_depth', 'interrupt_message'].includes(key)) {
+    if (!['max_concurrent_threads_per_session', 'max_depth', 'interrupt_message'].includes(key)) {
       errors.push(`unsupported [agents] field ${key}`);
     }
   }
