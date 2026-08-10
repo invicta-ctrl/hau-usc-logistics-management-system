@@ -3,17 +3,17 @@
 INTENT: REPOSITORY_MAINTENANCE
 SECONDARY_INTENTS: GOVERNANCE, DOCUMENTATION, PRIVACY, CONTINUITY, RELEASE_CONTROL
 MODE: EXECUTE
-OBJECTIVE: Retain immutable v1 pre-ref failure evidence and hold the accepted Class R v2 private-preservation transaction until this exact three-record parity closeout is committed/pushed and read-only parity is verified after recorded Sol/Luna v2 prewrite acceptance and acceptance-record push parity, without entering S00 or changing runtime, release, or provider state.
-RESULT: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_PUSH_VERIFIED_READY_FOR_V2
+OBJECTIVE: Retain immutable v1 pre-ref failure evidence and prepare the accepted Class R v2 private-preservation transaction after closeout 8834ef2484d8bd31a75c4974f89ffc2937bbae45/4b451ec9b055a93abc7b7d17909159f36ada8860 push parity; v2 remains NOT_STARTED and can execute only after this exact post-closeout transition is committed/pushed and read-only parity is verified, without entering S00 or changing runtime, release, or provider state.
+RESULT: PRIVATE_PRESERVATION_V2_EXECUTION_AUTHORIZED_READY_TO_START
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: PRE_PROGRAM_AUDIT
 RELEASE: v0.8.1
 RELEASE_STATE: MASTER_PRE_PROGRAM_AUDIT
-RELEASE_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_PUSH_VERIFIED_READY_FOR_V2
-RELEASE_CONDITION: This private-preservation task does not enter or complete S00; v1 initialized then failed pre-ref and is retained INCOMPLETE; Sol/Luna v2 prewrite acceptance and acceptance-record push parity are verified; this exact three-record parity closeout commit/push and read-only local/upstream/remote parity remain pending; v2 has NOT started and execution is permitted only after that closeout parity.
+RELEASE_STATUS: PRIVATE_PRESERVATION_V2_EXECUTION_AUTHORIZED_READY_TO_START
+RELEASE_CONDITION: This private-preservation task does not enter or complete S00; v1 initialized then failed pre-ref and is retained INCOMPLETE; Sol/Luna v2 prewrite acceptance, acceptance-record push parity, and closeout 8834ef2484d8bd31a75c4974f89ffc2937bbae45/4b451ec9b055a93abc7b7d17909159f36ada8860 commit/push and read-only local/upstream/remote parity are verified; v2 is NOT_STARTED and the exact Class R transaction is authorized only after this post-closeout transition is committed/pushed and parity verified; other P1 and pre-program blockers remain.
 S00_STATUS: NOT_ENTERED
 SOURCE_AUTHORITY_STATUS: ACCEPTED_BY_EARL_V1R7
-TRACKED_MATERIALIZATION_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_PUSH_VERIFIED_READY_FOR_V2
+TRACKED_MATERIALIZATION_STATUS: PRIVATE_PRESERVATION_V2_EXECUTION_AUTHORIZED_READY_TO_START
 TARGET: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2; refs/private/v1r7-preservation/capture-20260810-182872e3-v2/
 SKILLS: lean-ctx for targeted governance reads and deterministic verification; native read-only fallback after the local allowlist block
 CURRENT_POINTER: .codex/CURRENT.md
@@ -39,7 +39,7 @@ LOCK_RELEASE_CONDITION: explicit Sol-accepted transfer or version-close release;
 LOCK_BRANCH: release/v0.8.1-isolated-staging-playground
 LOCK_WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 LOCK_ACQUIRED_AT: 2026-08-10T11:31:50+08:00
-LOCK_HEARTBEAT_AT: 2026-08-10T17:29:48+08:00
+LOCK_HEARTBEAT_AT: 2026-08-10T17:42:29+08:00
 LOCK_STALE_THRESHOLD: 60_MINUTES_WITHOUT_VERIFIED_HEARTBEAT
 LOCK_STALE_RULE: Never steal; Sol runs read-only crash-resume verification before explicit acquisition and records an explicit Sol-accepted transfer; never silent takeover
 OWNER_TASK: /root/integration_terra_2
@@ -91,22 +91,22 @@ MAIN_MERGE_AUTO_PRODUCTION_DEPLOY_PROOF: READ_ONLY_COUPLING_EVIDENCE_RECORDED_IN
 INDEPENDENT_CANDIDATE_ARTIFACT_HASH: PENDING
 SCHEMA: 30
 LATEST_MIGRATION: 0030_production_access_and_operations.sql
-DELIVERABLE: Immutable v1 INCOMPLETE failed-pre-ref evidence retained; recorded Sol/Luna v2 prewrite acceptance and verified acceptance-record push parity followed by this exact three-record parity closeout commit/push and read-only parity, then a v2 VERIFIED additive private capture and fresh pre-program gate
+DELIVERABLE: Immutable v1 INCOMPLETE failed-pre-ref evidence retained; recorded Sol/Luna v2 prewrite acceptance, verified acceptance-record push parity, and verified closeout 8834ef2484d8bd31a75c4974f89ffc2937bbae45/4b451ec9b055a93abc7b7d17909159f36ada8860 push parity followed by this exact post-closeout transition commit/push and read-only parity, then a v2 VERIFIED additive private capture and fresh pre-program gate
 VERIFICATION: v1 failure evidence/ref0/source-unchanged proof plus later v2 ref/bundle/restore/snapshot/manifests/aggregate/object coverage and independent Luna verification; no runtime, provider, or release claim
 RISK: HIGH — privacy governance, one-writer coordination, release-state continuity, rollback durability, and preserved private artifacts
 RISK_CLASSES: Class R only; Class C NONE; Class I NONE
-SCOPE: .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md; immutable v1 capture root/ref prefix; v2 D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2 and refs/private/v1r7-preservation/capture-20260810-182872e3-v2/; Sol/Luna v2 prewrite acceptance and acceptance-record push parity are verified, and the accepted local v2 private-preservation transaction is permitted only after this exact three-record parity closeout is committed/pushed and read-only parity is verified
-OUT_OF_SCOPE: runtime, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, provider, destructive, or cleanup action; v2 local private-preservation is prohibited until this exact three-record parity closeout commit/push and read-only parity are verified
+SCOPE: .codex/CURRENT.md; .codex/CURRENT_TASK.md; .codex/CURRENT_HANDOFF.md; immutable v1 capture root/ref prefix; v2 D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2 and refs/private/v1r7-preservation/capture-20260810-182872e3-v2/; Sol/Luna v2 prewrite acceptance, acceptance-record push parity, and closeout push parity are verified, and the accepted local v2 private-preservation transaction is permitted only after this exact post-closeout transition is committed/pushed and read-only parity is verified
+OUT_OF_SCOPE: runtime, P1 repair, PR conflict resolution, merge, deploy, migration, pointer, provider, destructive, or cleanup action; v2 local private-preservation is prohibited until this exact post-closeout transition commit/push and read-only parity are verified
 STOP_CONDITIONS: v2 capture exists; v2 ref exists; v1 immutable evidence drift; object, aggregate, manifest, bundle, or restore mismatch; private exposure; branch/HEAD/upstream/lock drift; competing writer; model mismatch/unavailability; unevidenced gate; P0/P1 work; provider/Production crossover; unsafe migration; reconciliation mismatch; unauthorized Class I; PII leak; or scope expansion
-EXTERNAL_ACTIONS: V1_RETAINED_INCOMPLETE_PRE_REF; V2_PREWRITE_ACCEPTED_RECORD_PUSH_VERIFIED; PROVIDER_WRITES=NONE
+EXTERNAL_ACTIONS: V1_RETAINED_INCOMPLETE_PRE_REF; V2_AUTHORIZED_NOT_STARTED_PENDING_POST_CLOSEOUT_TRANSITION_PUSH_PARITY; PROVIDER_WRITES=NONE
 UNKNOWN_WORK: CLASSIFIED_BUT_PRIVATE_PRESERVATION_PENDING; all 28 unreachable commits plus associated unreachable trees/blobs remain unreferenced/unbundled; six stale commit-graph cache entries and no reachable object missing
-OWNER_FEEDBACK: QUIESCENT_V1_INCOMPLETE_RETAINED_V2_ACCEPTANCE_PUSH_VERIFIED_CLOSEOUT_PUSH_PENDING; preserved set is TMP=44 and OWNER_FEEDBACK=1, unaccepted, unexamined, unstaged, and untouched
+OWNER_FEEDBACK: QUIESCENT_V1_INCOMPLETE_RETAINED_V2_AUTHORIZED_NOT_STARTED_POST_CLOSEOUT_TRANSITION_PUSH_PENDING; preserved set is TMP=44 and OWNER_FEEDBACK=1, unaccepted, unexamined, unstaged, and untouched
 PRIVATE_PRESERVATION_CAPTURE_ROOT: D:/Documents/Codex/HAU-USC Logistics/Private/v1r7-preservation/capture-20260810-182872e3-v2
 PRIVATE_PRESERVATION_REF_PREFIX: refs/private/v1r7-preservation/capture-20260810-182872e3-v2/
 PRIVATE_PRESERVATION_CAPTURE_PRECONDITION: FAIL_IF_EXISTS; CAPTURE_TARGET_ABSENT=TRUE; PRIVATE_REF_PREFIX_COUNT=0; CAPTURE_OUTSIDE_WORKTREES=TRUE
 PRIVATE_PRESERVATION_ACTIVE_ATTEMPT: 2
 PRIVATE_PRESERVATION_TRANSACTION_ATTEMPT: 2/3; SEPARATE_FROM_GOVERNANCE_REPAIR_BUDGET
-PRIVATE_PRESERVATION_ATTEMPT_SEQUENCE: 1_FAILED_PRE_REF_INCOMPLETE_RETAINED -> 2_V2_PREWRITE_ACCEPTANCE_PUSH_VERIFIED_CLOSEOUT_PUSH_PENDING
+PRIVATE_PRESERVATION_ATTEMPT_SEQUENCE: 1_FAILED_PRE_REF_INCOMPLETE_RETAINED -> 2_V2_EXECUTION_AUTHORIZED_NOT_STARTED_POST_CLOSEOUT_TRANSITION_PUSH_PENDING
 PRIVATE_PRESERVATION_OBJECT_EVIDENCE: CORE_COMMIT_GRAPH_FALSE_NO_REFLOG_FSCK_EXIT=0; COMMITS=28; TREES=121; BLOBS=133; COMMIT_SET_SERIALIZATION=SORTED_COMMIT_SHA_LF_NO_TRAILING_LF_UTF8; COMMIT_SET_SHA256=20D520C85EBF6262E2023D6A7B26DD5A1547868180CCB116DB511AF971ED8A84; WITH_REFLOG_UNREACHABLE_COMMITS=13; REACHABLE_MISSING=0
 PRIVATE_PRESERVATION_STASH_EVIDENCE: SHA=5f9b716ae16cbe8b04b609778f96fc575a0c087a; TYPE=commit; PARENTS=3
 PRIVATE_PRESERVATION_ATTEMPT_1: 1
@@ -133,13 +133,13 @@ PRIVATE_PRESERVATION_SECONDARY_SOURCE_SET: tracked=git diff --name-only --no-ren
 PRIVATE_PRESERVATION_SECONDARY_SERIALIZATION: relative path with forward slashes TAB decimal bytes TAB uppercase SHA256; PowerShell Sort-Object; LF join; no trailing LF; UTF8 SHA256
 PRIVATE_PRESERVATION_SECONDARY_COUNTS: TRACKED=2; UNTRACKED=26; IGNORED_EVIDENCE=10; EXCLUDED_DEPENDENCY_FILES=3684; CLASSIFIED=38
 PRIVATE_PRESERVATION_DEPENDENCY_EXCLUSIONS: node_modules; src/node_modules; package-lock/package proof required
-PRIVATE_PRESERVATION_AUTHORIZATION: CLASS_R_LOCAL_ONLY; SOL_LUNA_V2_PREWRITE_ACCEPTED_AND_ACCEPTANCE_RECORD_PUSH_VERIFIED; V2_EXECUTION_ONLY_AFTER_THIS_EXACT_CLOSEOUT_RECORD_COMMIT_PUSH_PARITY
+PRIVATE_PRESERVATION_AUTHORIZATION: CLASS_R_LOCAL_ONLY; SOL_LUNA_V2_PREWRITE_ACCEPTED_AND_ACCEPTANCE_RECORD_PUSH_VERIFIED; V2_PREWRITE_CLOSEOUT_PUSH_PARITY_VERIFIED; V2_EXECUTION_ONLY_AFTER_THIS_EXACT_POST_CLOSEOUT_TRANSITION_COMMIT_PUSH_PARITY
 SOL_PRIVATE_PRESERVATION_PACKET_ACCEPTANCE: PASS
 LUNA_PRIVATE_PRESERVATION_PACKET_ACCEPTANCE: PASS_NO_P0_P1_P2_P3
-PRIVATE_PRESERVATION_ALLOWED_SEQUENCE: retain immutable v1 INCOMPLETE evidence; Sol/Luna v2 prewrite acceptance and acceptance-record push parity are verified; only after this exact three-record parity closeout is committed/pushed and read-only local/upstream/remote parity is verified create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream with no-CR assertion; atomically create v2 private refs; bundle/restore/object proof; byte-copy primary ALL45 and secondary CLASSIFIED38; sorted LF manifests with hash parity; set VERIFIED only at end
+PRIVATE_PRESERVATION_ALLOWED_SEQUENCE: retain immutable v1 INCOMPLETE evidence; Sol/Luna v2 prewrite acceptance and acceptance-record push parity are verified; only after this exact post-closeout three-record transition is committed/pushed and read-only local/upstream/remote parity is verified create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream with no-CR assertion; atomically create v2 private refs; bundle/restore/object proof; byte-copy primary ALL45 and secondary CLASSIFIED38; sorted LF manifests with hash parity; set VERIFIED only at end
 PRIVATE_PRESERVATION_FAILURE_RULE: retain INCOMPLETE, refs, files, and evidence; no overwrite, delete, clean, reset, prune, or stash drop
 PR23: PR23_CONFLICT_NEW_MAIN_INTEGRATION_PENDING
-PR23_SAFE_STATE: READ_ONLY; HEAD=fc254ad1b3263f717ad1bed473de93f0b4324ec9; STATE=OPEN; DRAFT=TRUE; MERGE_STATE=DIRTY; CHECKS=0; PENDING=0; FAILED=0
+PR23_SAFE_STATE: READ_ONLY; HEAD=8834ef2484d8bd31a75c4974f89ffc2937bbae45; STATE=OPEN; DRAFT=TRUE; MERGE_STATE=DIRTY; CHECKS=0; PENDING=0; FAILED=0
 KNOWN_P1_REPAIRS: PENDING — fail-closed Production binding identity; cross-resource reset compensation/recovery; authenticated Playground owner-session gate; exact parsed baseline metadata/integrity validation; provider environment/binding identity preflight
 REPAIR_ATTEMPT: GOVERNANCE_MATERIALIZATION 2/3
 ROOT_CAUSE_COUNT: 2/2
@@ -157,8 +157,8 @@ P1: 5_CONFIRMED_BLOCKER_FAMILIES_OUTSIDE_SUBTASK; GOVERNANCE_MATERIALIZATION_P1=
 P2: LUNA_PASS_3_LITERAL_FIELD_ALIAS_ADVISORY_INCORPORATED; broader P2 remains outside subtask
 P3: BROADER_PREEXISTING_P3_OUTSIDE_GOVERNANCE_MATERIALIZATION_PENDING
 KNOWN_P2_P3: BROADER_PREEXISTING_P2_P3_OUTSIDE_THIS_GOVERNANCE_MATERIALIZATION_PENDING; no program-wide NONE claim
-PRIVATE_PRESERVATION_EXECUTION: NOT_STARTED_ATTEMPT_2_PREWRITE
-PRIVATE_PRESERVATION_RETRY_AUTHORIZATION: SOL_LUNA_V2_PREWRITE_ACCEPTED_AND_ACCEPTANCE_RECORD_PUSH_VERIFIED; EXECUTION_AUTHORIZED_CLASS_R_LOCAL_ONLY
+PRIVATE_PRESERVATION_EXECUTION: NOT_STARTED_ATTEMPT_2_AUTHORIZED
+PRIVATE_PRESERVATION_RETRY_AUTHORIZATION: SOL_LUNA_V2_PREWRITE_ACCEPTED_AND_CLOSEOUT_PUSH_PARITY_VERIFIED; EXECUTION_AUTHORIZED_CLASS_R_LOCAL_ONLY_AFTER_THIS_EXACT_POST_CLOSEOUT_TRANSITION_COMMIT_PUSH_PARITY
 PRIVATE_PRESERVATION_RETRY_INPUT_REQUIREMENT: DOTNET_UTF8_NO_BOM_LF_ONLY_ASSERT_NO_CR_BEFORE_STANDARDINPUT_BASESTREAM
 PRIVATE_PRESERVATION_RETRY_FAILURE_RULE: RETAIN_V2_INCOMPLETE_REFS_FILES_AND_EVIDENCE; NEVER_OVERWRITE_DELETE_OR_FALLBACK_TO_V1
 PRIVATE_PRESERVATION_V2_PREWRITE_VALIDATION_ATTEMPT: 3/3
@@ -180,10 +180,11 @@ SOL_PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE: PASS
 LUNA_PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE: PASS_NO_P0_P1_P2_P3
 PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_AT: 2026-08-10T16:57:22+08:00
 V2_PREWRITE_RECORD_PUSH_PARITY: PASS; ACCEPTANCE_RECORD_COMMIT_SHA=fc254ad1b3263f717ad1bed473de93f0b4324ec9; ACCEPTANCE_RECORD_TREE=fd10f5dd57905a0835e368130133c78eb965945f; ACCEPTANCE_RECORD_PARENT=34f7dc93b4f7d4656420d7be2044649324c979c3; LOCAL=UPSTREAM=REMOTE=fc254ad1b3263f717ad1bed473de93f0b4324ec9; DIVERGENCE=0/0; SCOPE=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md
-PRIVATE_PRESERVATION_V2_EXECUTION_PRECONDITION: THIS_EXACT_THREE_RECORD_CLOSEOUT_MUST_BE_COMMITTED_PUSHED_AND_LOCAL_UPSTREAM_REMOTE_PARITY_VERIFIED; V1_INCOMPLETE_REF0_UNCHANGED; V2_TARGET_ABSENT_OUTSIDE_REF0
-HANDOFF_STATUS: PRIVATE_PRESERVATION_V2_PREWRITE_ACCEPTANCE_PUSH_VERIFIED_READY_FOR_V2
-NEXT_ACTION_SCOPE: CURRENT_TASK_AFTER_EXACT_CLOSEOUT_PUSH_PARITY_EXECUTE_V2
-NEXT_EXACT_ACTION: After this exact three-record parity closeout is committed/pushed and read-only local/upstream/remote parity plus v1 INCOMPLETE/ref0 and v2 target-absent/outside/ref0 pass, create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream (assert no CR), atomically create v2 refs, complete bundle/restore/object proof and snapshot/manifest parity, mark VERIFIED only at end, obtain independent Luna verification and a fresh pre-program gate; no S00/P1/PR/merge/deploy/migration/pointer/provider.
+V2_PREWRITE_CLOSEOUT_PUSH_PARITY: PASS; CLOSEOUT_COMMIT_SHA=8834ef2484d8bd31a75c4974f89ffc2937bbae45; CLOSEOUT_TREE=4b451ec9b055a93abc7b7d17909159f36ada8860; CLOSEOUT_PARENT=fc254ad1b3263f717ad1bed473de93f0b4324ec9; LOCAL=UPSTREAM=REMOTE=8834ef2484d8bd31a75c4974f89ffc2937bbae45; DIVERGENCE=0/0; SCOPE=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md; NORMAL_PUSH_EXIT=0
+PRIVATE_PRESERVATION_V2_EXECUTION_PRECONDITION: CLOSEOUT_SHA=8834ef2484d8bd31a75c4974f89ffc2937bbae45; CLOSEOUT_LOCAL_UPSTREAM_REMOTE_PARITY=PASS; V1_INCOMPLETE_REF0_UNCHANGED; V2_TARGET_ABSENT_OUTSIDE_REF0; THIS_EXACT_POST_CLOSEOUT_TRANSITION_MUST_BE_COMMITTED_PUSHED_AND_READ_ONLY_PARITY_VERIFIED
+HANDOFF_STATUS: PRIVATE_PRESERVATION_V2_EXECUTION_AUTHORIZED_READY_TO_START
+NEXT_ACTION_SCOPE: CURRENT_TASK_EXECUTE_EXACT_V2_PRIVATE_PRESERVATION_AFTER_TRANSITION_PUSH_PARITY
+NEXT_EXACT_ACTION: After this exact post-closeout three-record transition is committed/pushed and read-only local/upstream/remote parity plus v1 INCOMPLETE/ref0 and v2 target-absent/outside/ref0 pass, create v2 fail-if-exists INCOMPLETE via .NET UTF-8 no-BOM LF-only BaseStream (assert no CR), atomically create v2 refs, complete bundle/restore/object proof and snapshot/manifest parity, mark VERIFIED only at end, obtain independent Luna verification and a fresh pre-program gate; no S00/P1/PR/merge/deploy/migration/pointer/provider.
 
 ## Task-local delegation ledger
 
