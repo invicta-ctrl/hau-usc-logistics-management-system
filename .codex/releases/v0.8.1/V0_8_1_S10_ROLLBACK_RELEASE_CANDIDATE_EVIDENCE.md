@@ -1,17 +1,22 @@
 # V0.8.1 S10 Rollback and Release-Candidate Evidence Boundary
 
-- **Status:** `V81-S10_BOUNDARY_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S10_TOOLING_CONFIG_REGEN_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **State:** `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Rollback and release-candidate evidence complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
-- **Boundary baseline:** `d4449d60340e55ee7317a3a14eedf910f7f0516a`
-- **Boundary tree:** `abb007a566f13f54cee032c19d7af5042294ea2d`
+- **Pushed boundary commit:** `bb65250699c35546b476b41365dc0370224f349d`
+- **Pushed boundary tree:** `f73224c8d2ebe38174d2c7f119ec243ef0aaef98`
+- **Pushed boundary parent:** `d4449d60340e55ee7317a3a14eedf910f7f0516a`
 - **Package version:** `0.8.1`
-- **S09 durable state:** local, upstream, and live remote are equal at the boundary baseline; divergence is `0/0`, tracked and staged counts are `0/0`, and preserved46 remains untouched.
+- **Boundary durable state:** local, upstream, and live remote are equal at the pushed boundary commit; divergence is `0/0`, tracked and staged counts are `0/0`, and preserved46 remains untouched.
 - **Sol acceptance:** `PASS`
 - **Luna S10 boundary review:** `PASS_NO_P0_P1_P2_P3`
 - **Review timestamp:** `2026-08-12T06:05:49.9949725+08:00`
-- **Review state:** accepted and uncommitted, ready for one final fresh packet audit; no S10 evidence execution is authorized before Sol accepts that final packet and the exact four-path governance packet is committed, normally pushed, and verified at parity.
+- **Amendment recorded at:** `2026-08-12T06:36:12.6279493+08:00`
+- **Sol tooling-amendment acceptance:** `PASS`
+- **Fresh Luna tooling-amendment review:** `PASS_NO_P0_P1_P2_P3`
+- **Amendment review timestamp:** `2026-08-12T06:50:40.4383281+08:00`
+- **Amendment review state:** accepted and uncommitted, ready for the exact governance commit after one final fresh Luna packet audit; no configuration generation or S10 evidence execution is authorized before the exact four-path amendment is committed, normally pushed, and verified at parity.
 
 ## Accepted boundary
 
@@ -36,13 +41,40 @@ Only after fresh Luna review, Sol acceptance, exact four-path governance commit 
 4. Perform only the minimum read-only Cloudflare operations required by the accepted evidence scripts: exact D1 inventory, R2 bucket metadata, Worker deployment history, D1 Time Travel information, and remote D1 export.
 5. Restore each export only into an isolated local SQLite database outside Git for integrity, schema, migration, and reconciliation proof. No restore targets a live database.
 
-If an existing private configuration does not already match the exact candidate, stop rather than overwrite it or improvise configuration changes. Any separately accepted candidate-scoped private replacement must be immutable, outside Git, and validated before provider access.
+If an existing private configuration does not already match the exact candidate, stop rather than overwrite it or improvise configuration changes. The bounded amendment below is the only accepted path to a candidate-scoped private replacement. Every generated input, configuration, authorization package, and evidence artifact remains outside Git, uses a never-before-existing path, is never overwritten after validation, and must pass the exact predicates below before provider access.
+
+## Tooling and configuration-regeneration amendment
+
+The historical v0.7.1 staging and Production pair is genuinely stale, not a presentation-only failure: its actual `APP_VERSION` is `0.7.1`, its candidate SHA is not the pushed S10 boundary, and `CANDIDATE_BRANCH` is absent. The exact safe failures are `APP_VERSION_PACKAGE_MISMATCH`, `CANDIDATE_SHA_HEAD_MISMATCH`, `CANDIDATE_BRANCH_RELEASE_VERSION_MISMATCH`, and `CANDIDATE_BRANCH_HEAD_MISMATCH`. No historical package may be relabeled or overwritten.
+
+Only after this amendment passes fresh Luna review, receives Sol acceptance, is committed and normally pushed in the exact four governance paths, and reaches local/upstream/live-remote parity may Integration Terra:
+
+1. Fast-forward the existing clean branch-tracking evidence clone to the new pushed amendment SHA. Do not delete, reclone, detach, or create a linked worktree.
+2. Create one never-before-existing candidate-scoped private input/configuration subdirectory outside Git. Refuse any pre-existing or partial target; never reuse or overwrite it.
+3. Make exactly one read-only private `d1 list --json` inventory call and save its raw output only in that private subdirectory. It must resolve exactly one `hau-usc-logistics-staging-sandbox-v0721` database and one `hau-usc-logistics-production` database with distinct identifiers. No identifier enters Git or sanitized console evidence.
+4. Run the repository configuration generator once. It must create, without overwrite, `wrangler.staging.private.jsonc` and `wrangler.production.private.jsonc` in a new private output directory.
+5. Before either configuration is accepted, prove the staging HTTPS endpoint, existing compatibility/assets/recovery-host source, exact private one-recipient containment input and derived count `1`, Production recovery host, and distinct existing staging and Production Google-configuration path existence. The Google paths are existence-only S10 inputs; do not infer or invent Google roster, Drive, credential, secret, recipient, or provider-identifier values, and do not treat this evidence as Production launch preflight.
+6. Generate a current-candidate Phase 3 staging authorization package from the controlling Earl V1R7-A3 directive. Only `cloudflareRead` and `d1Backup` are `APPROVED`; `googleRead`, `d1Migration`, `sheetExport`, `d1Import`, `stagingSecretSetup`, `workerDeploy`, `syntheticWorkflowWrites`, `evidenceUploads`, `rollbackRehearsal`, and `cleanupOrRetention` are `DENIED`. Its candidate hashes are generator-derived, its completed labels are safe, its paths are absolute and private, and it authorizes no deployment or mutation.
+7. Run staging candidate evidence exactly once. Only after it passes may Integration Terra generate the Production backup-only authorization package. Only `productionBackup` is `APPROVED`; `productionD1Migration`, `productionWorkerDeploy`, `productionSheetCutover`, `productionSeedAccounts`, `productionSmokeMutations`, `productionRollback`, and `productionClosure` are `DENIED`.
+8. The Production package records the current directive-receipt/materialization time and safe labels, validates with the reserved outside-Git backup-manifest path allowed to be missing before capture, and must remain `launchAuthorized=false`. The normal full-launch authorization CLI is not required to report green and must not be made green by approving excluded actions.
+
+The sanctioned creation commands are:
+
+```powershell
+node .\node_modules\wrangler\bin\wrangler.js d1 list --json --config <ABS_EXISTING_PRIVATE_CLOUDFLARE_CONFIG> > <ABS_NEW_PRIVATE_D1_INVENTORY_JSON>
+npm.cmd run cloudflare:private-configs:init -- <ABS_PRIVATE_STAGING_BASE> <ABS_NEW_PRIVATE_D1_INVENTORY_JSON> <ABS_NEW_PRIVATE_CONFIG_DIR>
+npm.cmd run phase3:authorization:init -- <ABS_NEW_PRIVATE_STAGING_AUTHORIZATION_JSON>
+npm.cmd run phase3:authorization:check -- <ABS_NEW_PRIVATE_STAGING_AUTHORIZATION_JSON>
+npm.cmd run production:authorization:init -- <ABS_NEW_PRIVATE_PRODUCTION_AUTHORIZATION_JSON>
+```
+
+`package.json` version, exact Git `HEAD`, current branch, candidate hashes, repository source/artifact paths, schema/contract constants, fixed Worker/R2 names, and observability defaults are Git-derived. D1 identifiers and the staging endpoint are proved from the single authorized read-only inventory/current endpoint evidence. Compatibility, assets, both recovery hosts, the exact one-recipient containment input, and the distinct existing Google-configuration paths must come from existing private values; they are never guessed or printed. The configuration and authorization files remain candidate-scoped, private, validated, and non-overwritten.
 
 ## Clean evidence checkout
 
 The canonical worktree retains preserved46 and must remain untouched. `scripts/staging-candidate-evidence.mjs` rejects any nonempty Git status, while the accepted identity guard also rejects a literal detached `HEAD` because the current branch must equal private `CANDIDATE_BRANCH`.
 
-Therefore S10 evidence must run from a disposable independent clean clone/evidence checkout, operationally isolated from the canonical writer but attached to its own `release/v0.8.1-final-stabilization` branch at the exact pushed S10 boundary candidate. It must have a configured upstream at that same commit, tracked/staged/untracked counts `0/0/0` before evidence, and no copied preserved artifacts. This strategy creates no linked-worktree branch collision and no canonical ref mutation. Provider scripts must continue to leave that evidence checkout clean because every generated export, restore, and manifest path resolves outside Git.
+Therefore S10 evidence must run from the existing independent clean clone/evidence checkout, operationally isolated from the canonical writer and attached to its own `release/v0.8.1-final-stabilization` branch. After the amendment governance push, that clone must fast-forward normally to the exact pushed amendment SHA with its configured upstream at the same commit, tracked/staged/untracked counts `0/0/0`, and no copied preserved artifacts. It must not be deleted, recloned, detached, or converted into a linked worktree. Provider scripts must continue to leave that evidence checkout clean because every generated input, configuration, authorization, export, restore, and manifest path resolves outside Git.
 
 ## Release identity and backup tuple
 
@@ -103,9 +135,12 @@ Stop before or during S10 evidence on any of the following:
 
 - canonical or evidence-checkout branch, HEAD, tree, upstream, remote, cleanliness, preservation, capture, lock, or writer drift;
 - missing, malformed, stale, or non-private configuration, authorization, credential, or evidence destination;
+- any pre-existing/partial candidate input or configuration destination, overwrite attempt, or more than one preparatory D1 inventory read;
 - package/branch/`CANDIDATE_BRANCH`/`APP_VERSION`/`CANDIDATE_SHA` mismatch;
+- unresolved compatibility/assets/recovery-host input, staging HTTPS endpoint, exact one-recipient input/count, distinct Google-config path, expected D1 name, or required placeholder;
 - unexpected environment/resource identity or staging/Production crossover;
 - missing approval for the exact read/export action;
+- any staging authorization action other than `cloudflareRead` or `d1Backup` approved, any Production authorization action other than `productionBackup` approved, or any Production package that becomes launch-authorized;
 - absent or empty Time Travel bookmark or missing prior Worker deployment;
 - export, hash, isolated restore, integrity, foreign-key, schema, migration, reconciliation, fingerprint, or R2 proof failure;
 - any active synthetic Production account;
@@ -115,6 +150,6 @@ Stop before or during S10 evidence on any of the following:
 
 ## Current boundary and exact next action
 
-This record is `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. No clone, private-file access, provider call, stage, commit, push, or S10 evidence execution has occurred during acceptance materialization.
+This record is `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. The pushed S10 boundary is durable at `bb65250699c35546b476b41365dc0370224f349d` / `f73224c8d2ebe38174d2c7f119ec243ef0aaef98`, parent `d4449d60340e55ee7317a3a14eedf910f7f0516a`. No clone update, private-file creation or modification, provider call, operational npm command, source/test edit, stage, commit, push, or S10 evidence execution has occurred during this amendment materialization or acceptance.
 
-**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S10 boundary-governance paths; only after Sol accepts that final packet, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S10_ROLLBACK_RELEASE_CANDIDATE_EVIDENCE.md`, normally push, verify local/upstream/live-remote parity and preserved46, and only then execute S10 rollback/release-candidate evidence in the independent clean branch-tracking clone; no source/test edit, deployment, migration, seed/reset, live restore, R2 write, recovery-pointer change, staging smoke/auth E2E, release-manifest generation, provider mutation, or canonical ref action.
+**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S10 tooling/config-regeneration amendment paths; only after that audit remains `PASS`, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S10_ROLLBACK_RELEASE_CANDIDATE_EVIDENCE.md`, normally push, verify local/upstream/live-remote parity and preserved46, fast-forward the existing clean evidence clone to the new pushed SHA without deleting or recloning it, then create the new private config/input subdirectory, generate and validate candidate-scoped configurations and authorization packages, and execute each accepted S10 evidence command exactly once; no source/test edit, deployment, migration, seed/reset, live restore, R2 write, recovery-pointer change, staging smoke/auth E2E, release-manifest generation, provider mutation, or canonical ref action.
