@@ -15,7 +15,7 @@ describe('repository-hardcoded playground release governance', () => {
     ]) {
       expect(agents).toContain(`\`${branch}\``);
     }
-    expect(agents).toContain('Staging/playground and production are deployment environments');
+    expect(agents).toMatch(/Staging\/playground and\s+production are deployment environments/);
     expect(agents).toContain("Earl's explicit GO");
   });
 
