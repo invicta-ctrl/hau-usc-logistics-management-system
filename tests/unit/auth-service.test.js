@@ -462,7 +462,7 @@ describe('v0.6 authentication and onboarding service', () => {
   });
 
   it('invalidates existing sessions after an administrator-issued password reset', async () => {
-    const { service } = context;
+    const { service, repository } = context;
     const admin = await activate(service, { accessId: 'HAU-ADMIN-003' });
     const target = await activate(service, {
       accessId: 'HAU-INV-001',
@@ -493,5 +493,12 @@ describe('v0.6 authentication and onboarding service', () => {
     await expect(
       service.login({ accessId: 'HAU-INV-001', password: 'Reset!Password9472' }),
     ).resolves.toMatchObject({ state: 'AUTHENTICATED' });
+    const targetAccount = repository
+      .inspect()
+      .accounts.find((account) => account.id === target.starter.accountId);
+    expect(targetAccount.committeeIds).toEqual([COMMITTEES.INVENTORY_PANTRY]);
+    expect(
+      repository.inspect().auditEvents.filter((event) => event.event === 'PASSWORD_RESET_COMPLETED'),
+    ).toHaveLength(1);
   });
 });

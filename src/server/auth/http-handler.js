@@ -59,7 +59,11 @@ export function statusForAuthError(error) {
     ].includes(error.code)
   )
     return 403;
-  if (['ACCOUNT_EXISTS', 'ACTIVATION_REPLAYED', 'SELF_ACCESS_CHANGE_BLOCKED'].includes(error.code))
+  if (
+    ['ACCOUNT_EXISTS', 'ACTIVATION_REPLAYED', 'RESET_CONFLICT', 'SELF_ACCESS_CHANGE_BLOCKED'].includes(
+      error.code,
+    )
+  )
     return 409;
   return 422;
 }

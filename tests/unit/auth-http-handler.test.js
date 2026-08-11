@@ -189,4 +189,44 @@ describe('authentication HTTP boundary', () => {
       expect.objectContaining({ resetToken: 'not-returned' }),
     );
   });
+
+  it('maps reset conflicts and unexpected reset failures without exposing request secrets', async () => {
+    const resetToken = 'raw-reset-token-should-not-leak';
+    const password = 'Raw!Password9472';
+    const accountId = 'ACCOUNT-PRIVATE-001';
+    const cause = `raw database cause for ${accountId}`;
+    const request = () =>
+      new Request('https://logistics.example.test/api/auth/reset/complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ resetToken, password, confirmPassword: password }),
+      });
+    const conflict = createAuthHttpHandler({
+      service: { completePasswordReset: vi.fn().mockRejectedValue(new AuthError('RESET_CONFLICT')) },
+      correlationId: 'REQ_RESET_CONFLICT_001',
+    });
+
+    const conflictResponse = await conflict(request());
+    const conflictBody = await conflictResponse.text();
+    expect(conflictResponse.status).toBe(409);
+    expect(conflictResponse.headers.get('x-correlation-id')).toBe('REQ_RESET_CONFLICT_001');
+    expect(conflictBody).toContain('RESET_CONFLICT');
+    expect(conflictBody).not.toContain(resetToken);
+    expect(conflictBody).not.toContain(password);
+    expect(conflictBody).not.toContain(accountId);
+
+    const failed = createAuthHttpHandler({
+      service: { completePasswordReset: vi.fn().mockRejectedValue(new Error(cause)) },
+      correlationId: 'REQ_RESET_FAILURE_001',
+    });
+    const failedResponse = await failed(request());
+    const failedBody = await failedResponse.text();
+    expect(failedResponse.status).toBe(500);
+    expect(failedResponse.headers.get('x-correlation-id')).toBe('REQ_RESET_FAILURE_001');
+    expect(failedBody).toContain('AUTH_INTERNAL_ERROR');
+    expect(failedBody).not.toContain(resetToken);
+    expect(failedBody).not.toContain(password);
+    expect(failedBody).not.toContain(accountId);
+    expect(failedBody).not.toContain(cause);
+  });
 });
