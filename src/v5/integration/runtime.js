@@ -89,6 +89,10 @@ const ROUTE_STATES = Object.freeze({
 });
 
 const ROUTES_WITHOUT_DATA_SLOT = new Set(['public.register']);
+const ROUTE_SEARCH_LABELS = Object.freeze({
+  'lending.queue': 'loans',
+  'release.desk': 'releases',
+});
 
 const text = (...values) => {
   for (const value of values) {
@@ -270,6 +274,7 @@ export function createV5Runtime({ backend, app }) {
     playgroundVerified: false,
     playgroundStatus: null,
     scopedRevisions: new Map(),
+    routeSearch: new Map(),
     revisionTimer: null,
     started: false,
   };
@@ -315,6 +320,36 @@ export function createV5Runtime({ backend, app }) {
     actions.scrollIntoView({ behavior: 'smooth', block: 'start' });
     actions.querySelector('button,input,select,textarea')?.focus({ preventScroll: true });
     return true;
+  }
+
+  function applyRouteSearch(currentRoute) {
+    const label = ROUTE_SEARCH_LABELS[currentRoute];
+    if (!label) return;
+    const root = document.getElementById('surface-main');
+    const search = root?.querySelector(`[data-v5-route-search="${currentRoute}"]`);
+    const status = root?.querySelector(`[data-v5-route-search-status="${currentRoute}"]`);
+    const rows = [...(root?.querySelectorAll('table.q tbody tr') ?? [])];
+    const query = text(search?.value, integration.routeSearch.get(currentRoute)).toLowerCase();
+    integration.routeSearch.set(currentRoute, query);
+    let visible = 0;
+    for (const row of rows) {
+      const matches = !query || text(row.textContent).toLowerCase().includes(query);
+      row.hidden = !matches;
+      if (matches) visible += 1;
+    }
+    if (!status) return;
+    if (!rows.length) status.textContent = `No authorized ${label} are available.`;
+    else if (!visible) status.textContent = `No authorized ${label} match the current search.`;
+    else status.textContent = `${visible} of ${rows.length} authorized ${label} shown.`;
+  }
+
+  function bindRouteSearch(currentRoute) {
+    if (!ROUTE_SEARCH_LABELS[currentRoute]) return;
+    const root = document.getElementById('surface-main');
+    const search = root?.querySelector(`[data-v5-route-search="${currentRoute}"]`);
+    if (!search) return;
+    search.value = integration.routeSearch.get(currentRoute) ?? '';
+    applyRouteSearch(currentRoute);
   }
 
   const selection = () => ({
@@ -1152,6 +1187,7 @@ export function createV5Runtime({ backend, app }) {
     }
     adminParity.afterRender();
     operationsParity.afterRender();
+    bindRouteSearch(currentRoute);
   }
 
   function resolveRequestLine(line) {
@@ -1336,6 +1372,7 @@ export function createV5Runtime({ backend, app }) {
       const result = await backend.login(values.u, values.p);
       if (result?.state === 'ACTIVATION_REQUIRED' && result.csrfToken) {
         integration.activationCsrfToken = result.csrfToken;
+        integration.routeSearch.clear();
         integration.session = null;
         render('populated');
         toast('Starter account verified. Complete activation below.');
@@ -1345,6 +1382,7 @@ export function createV5Runtime({ backend, app }) {
         render('error');
         return;
       }
+      integration.routeSearch.clear();
       integration.session = result;
       setRealLoginRequested(false);
       integration.activationCsrfToken = '';
@@ -1368,6 +1406,7 @@ export function createV5Runtime({ backend, app }) {
       integration.activationCsrfToken = '';
       integration.essential = null;
       integration.state = null;
+      integration.routeSearch.clear();
       app.integrationSetAuthorizedRoutes([]);
       app.integrationCloseOverlay();
       app.integrationGo('public.signin');
@@ -1433,6 +1472,22 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function onClick(event) {
+    const searchReset = event.target?.closest?.('[data-v5-route-search-reset]');
+    if (searchReset) {
+      event.preventDefault?.();
+      event.stopImmediatePropagation?.();
+      const searchRoute = text(searchReset.dataset.v5RouteSearchReset);
+      if (ROUTE_SEARCH_LABELS[searchRoute]) {
+        integration.routeSearch.delete(searchRoute);
+        const search = document.querySelector(`[data-v5-route-search="${searchRoute}"]`);
+        if (search) {
+          search.value = '';
+          search.focus?.();
+        }
+        applyRouteSearch(searchRoute);
+      }
+      return;
+    }
     if (adminParity.onClick(event) || operationsParity.onClick(event)) return;
     const target = event.target.closest('[data-act]');
     if (!target) return;
@@ -1458,6 +1513,7 @@ export function createV5Runtime({ backend, app }) {
       setRealLoginRequested(false);
       integration.session = null;
       integration.state = null;
+      integration.routeSearch.clear();
       app.integrationGo('index');
       return;
     }
@@ -1520,6 +1576,14 @@ export function createV5Runtime({ backend, app }) {
     }
     if (action === 'select:release') {
       integration.selectedReleaseId = text(target.dataset.ref);
+      const frame = document.querySelector('.frame');
+      const narrow = (frame ? frame.clientWidth : window.innerWidth) < 1181;
+      if (narrow) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        queueMicrotask(afterRender);
+        return;
+      }
       queueMicrotask(afterRender);
     }
     if (action === 'go:lending.detail') integration.selectedLoanId = text(target.dataset.ref);
@@ -1543,6 +1607,15 @@ export function createV5Runtime({ backend, app }) {
       syncRequestEvents();
     }
     if (control.matches('[name="k"]')) syncLendingBorrower();
+  }
+
+  function onInput(event) {
+    const search = event.target?.closest?.('[data-v5-route-search]');
+    if (!search) return;
+    const searchRoute = text(search.dataset.v5RouteSearch);
+    if (!ROUTE_SEARCH_LABELS[searchRoute]) return;
+    integration.routeSearch.set(searchRoute, text(search.value).toLowerCase());
+    applyRouteSearch(searchRoute);
   }
 
   function onSubmit(event) {
@@ -1592,6 +1665,7 @@ export function createV5Runtime({ backend, app }) {
     integration.started = true;
     document.addEventListener('click', onClick, true);
     document.addEventListener('change', onChange, true);
+    document.addEventListener('input', onInput, true);
     document.addEventListener('submit', onSubmit, true);
     document.addEventListener('hau:v5-rendered', afterRender);
     window.addEventListener('hashchange', () => void loadRoute());

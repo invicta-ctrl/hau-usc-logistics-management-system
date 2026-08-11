@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { readFile } from 'node:fs/promises';
 import { createOperationsParityController } from '../../src/v5/integration/operations-parity.js';
 
 const dataKey = (attribute) =>
@@ -41,7 +42,10 @@ class FakeElement {
     this.disabled = false;
     this.required = false;
     this.readOnly = false;
+    this.hidden = false;
+    this.inert = false;
     this.textContent = '';
+    this.attributes = {};
   }
 
   append(...children) {
@@ -82,6 +86,29 @@ class FakeElement {
     this.parentElement = null;
   }
 
+  setAttribute(name, value) {
+    if (name.startsWith('data-')) this.dataset[dataKey(name)] = String(value);
+    else this.attributes[name] = String(value);
+  }
+
+  getAttribute(name) {
+    if (name.startsWith('data-')) return this.dataset[dataKey(name)] ?? null;
+    return this.attributes[name] ?? null;
+  }
+
+  removeAttribute(name) {
+    if (name.startsWith('data-')) delete this.dataset[dataKey(name)];
+    else delete this.attributes[name];
+  }
+
+  focus() {
+    this.focused = true;
+  }
+
+  scrollIntoView(options) {
+    this.scrolled = options;
+  }
+
   reportValidity() {
     return this.querySelectorAll('input, select, textarea').every((control) => {
       if (!control.required || control.disabled) return true;
@@ -119,6 +146,27 @@ function setup(route) {
   vi.stubGlobal('location', { hash: `#/${route}` });
   vi.stubGlobal('crypto', { randomUUID: () => '00000000-0000-4000-8000-000000000001' });
   return document;
+}
+
+function contextualMount(document, route) {
+  const mount = document.createElement('section');
+  mount.dataset.v5ContextualMount = route;
+  document.getElementById('surface-main').append(mount);
+  return mount;
+}
+
+function newEventTrigger(document) {
+  const wrap = document.createElement('div');
+  wrap.dataset.v5NewEventWrap = '';
+  wrap.hidden = true;
+  wrap.inert = true;
+  const trigger = document.createElement('button');
+  trigger.dataset.v5NewEvent = '';
+  trigger.disabled = true;
+  trigger.setAttribute('aria-disabled', 'true');
+  wrap.append(trigger);
+  document.getElementById('surface-main').append(wrap);
+  return { wrap, trigger };
 }
 
 function form(document, id) {
@@ -279,6 +327,112 @@ describe('V5 operations parity controller', () => {
     });
   });
 
+  it('uses a selected-route mount when present and preserves the root fallback otherwise', () => {
+    const mountedDocument = setup('request.queue');
+    const mount = contextualMount(mountedDocument, 'request.queue');
+    const mountedController = createOperationsParityController({
+      backend: { commands: {}, api: {} },
+      app: {},
+      getState: () => ({
+        requests: [{ id: 'REQ-MOUNT-1' }],
+        requestLines: [{ id: 'RQL-MOUNT-1', requestId: 'REQ-MOUNT-1', itemId: 'ITM-MOUNT-1' }],
+      }),
+      getSelection: () => ({ selectedRequestId: 'REQ-MOUNT-1' }),
+      getCapabilities: () => ['request.review'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(mountedController.afterRender()).toBe(1);
+    const mountedSection = mount.querySelector('[data-v5-operations-parity]');
+    expect(mountedSection.dataset.v5ParityMount).toBe('contextual');
+    expect(mountedSection.querySelector('h2').textContent).toBe('Selected request actions');
+    expect(
+      form(mountedDocument, 'request-review').closest('[data-v5-contextual-mount="request.queue"]'),
+    ).toBe(mount);
+
+    const fallbackDocument = setup('request.queue');
+    const fallbackController = createOperationsParityController({
+      backend: { commands: {}, api: {} },
+      app: {},
+      getState: () => ({
+        requests: [{ id: 'REQ-FALLBACK-1' }],
+        requestLines: [{ id: 'RQL-FALLBACK-1', requestId: 'REQ-FALLBACK-1', itemId: 'ITM-FALLBACK-1' }],
+      }),
+      getSelection: () => ({ selectedRequestId: 'REQ-FALLBACK-1' }),
+      getCapabilities: () => ['request.review'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(fallbackController.afterRender()).toBe(1);
+    const fallbackSection = fallbackDocument.querySelector('[data-v5-operations-parity]');
+    expect(fallbackSection.dataset.v5ParityMount).toBe('fallback');
+    expect(fallbackSection.parentElement).toBe(fallbackDocument.getElementById('surface-main'));
+    expect(fallbackSection.querySelector('h2').textContent).toBe('Selected request actions');
+  });
+
+  it('chooses the active request drawer mount instead of an inert desktop mount', () => {
+    const document = setup('request.queue');
+    const inertDesktopMount = contextualMount(document, 'request.queue');
+    document.getElementById('surface-main').inert = true;
+    const drawer = document.createElement('aside');
+    drawer.className = 'drawer';
+    const activeDrawerMount = document.createElement('section');
+    activeDrawerMount.dataset.v5ContextualMount = 'request.queue';
+    drawer.append(activeDrawerMount);
+    document.append(drawer);
+    const controller = createOperationsParityController({
+      backend: { commands: {}, api: {} },
+      app: {},
+      getState: () => ({
+        requests: [{ id: 'REQ-DRAWER-1' }],
+        requestLines: [{ id: 'RQL-DRAWER-1', requestId: 'REQ-DRAWER-1' }],
+      }),
+      getSelection: () => ({ selectedRequestId: 'REQ-DRAWER-1' }),
+      getCapabilities: () => ['request.review'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(controller.afterRender()).toBe(1);
+    expect(form(document, 'request-review').closest('[data-v5-contextual-mount="request.queue"]')).toBe(
+      activeDrawerMount,
+    );
+    expect(inertDesktopMount.querySelector('[data-v5-operations-parity]')).toBeNull();
+  });
+
+  it('keeps mobile release selection in the release review plane before app drawer bubbling', async () => {
+    const runtime = await readFile(new URL('../../src/v5/integration/runtime.js', import.meta.url), 'utf8');
+    const start = runtime.indexOf("if (action === 'select:release') {");
+    const end = runtime.indexOf("if (action === 'go:lending.detail')", start);
+    const releaseSelection = runtime.slice(start, end);
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    expect(releaseSelection).toMatch(
+      /document\.querySelector\('\.frame'\)[\s\S]*frame \? frame\.clientWidth : window\.innerWidth[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopImmediatePropagation\(\);[\s\S]*queueMicrotask\(afterRender\);[\s\S]*return;/u,
+    );
+  });
+
+  it('clears route-local search state at every session boundary', async () => {
+    const runtime = await readFile(new URL('../../src/v5/integration/runtime.js', import.meta.url), 'utf8');
+
+    expect(runtime).toMatch(
+      /result\?\.state === 'ACTIVATION_REQUIRED'[\s\S]*integration\.activationCsrfToken = result\.csrfToken;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*integration\.session = null;/u,
+    );
+    expect(runtime).toMatch(
+      /if \(!result\?\.user\)[\s\S]*return;[\s\S]*\}\s*integration\.routeSearch\.clear\(\);[\s\S]*integration\.session = result;/u,
+    );
+    expect(runtime).toMatch(
+      /async function signOut\(\)[\s\S]*finally \{[\s\S]*integration\.state = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*app\.integrationGo\('public\.signin'\);/u,
+    );
+    expect(runtime).toMatch(
+      /action === 'resume-playground'[\s\S]*integration\.session = null;[\s\S]*integration\.state = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*app\.integrationGo\('index'\);/u,
+    );
+    expect([...runtime.matchAll(/integration\.routeSearch\.clear\(\)/gu)]).toHaveLength(4);
+  });
+
   it('renders the governed return form from a real selected loan and sends exact quantities', async () => {
     const document = setup('lending.detail');
     const confirmReturn = vi.fn().mockResolvedValue({ ok: true });
@@ -362,6 +516,7 @@ describe('V5 operations parity controller', () => {
     );
 
     const releaseDocument = setup('release.desk');
+    const releaseMount = contextualMount(releaseDocument, 'release.desk');
     const confirmRelease = vi.fn().mockResolvedValue({ ok: true });
     const releaseController = createOperationsParityController({
       backend: { commands: { confirmRelease }, api: {} },
@@ -378,6 +533,7 @@ describe('V5 operations parity controller', () => {
 
     expect(releaseController.afterRender()).toBe(1);
     const releaseForm = form(releaseDocument, 'release-confirm');
+    expect(releaseForm.closest('[data-v5-contextual-mount="release.desk"]')).toBe(releaseMount);
     expect(releaseForm.querySelectorAll('label').map((node) => node.textContent)).toEqual(
       expect.arrayContaining(['Request Ticket ID', 'Release item']),
     );
@@ -402,6 +558,82 @@ describe('V5 operations parity controller', () => {
         clientRequestId: 'release:00000000-0000-4000-8000-000000000001',
       }),
     );
+  });
+
+  it('fails closed when selected request and release IDs diverge', () => {
+    const document = setup('release.desk');
+    const mount = contextualMount(document, 'release.desk');
+    const confirmRelease = vi.fn().mockResolvedValue({ ok: true });
+    const controller = createOperationsParityController({
+      backend: { commands: { confirmRelease }, api: {} },
+      app: {},
+      getState: () => ({
+        requests: [{ id: 'REQ-RELEASE-A' }, { id: 'REQ-RELEASE-B' }],
+        requestLines: [
+          { id: 'RQL-RELEASE-A', requestId: 'REQ-RELEASE-A', description: 'Authorized A' },
+          { id: 'RQL-RELEASE-B', requestId: 'REQ-RELEASE-B', description: 'Authorized B' },
+        ],
+      }),
+      getSelection: () => ({ selectedRequestId: 'REQ-RELEASE-A', selectedReleaseId: 'REQ-RELEASE-B' }),
+      getCapabilities: () => ['fulfillment.release'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(controller.afterRender()).toBe(0);
+    expect(form(document, 'release-confirm')).toBeNull();
+    expect(mount.querySelector('[data-v5-operations-parity]')).toBeNull();
+    expect(confirmRelease).not.toHaveBeenCalled();
+  });
+
+  it('keeps New Event hidden and inert without capability, then focuses the exact existing form when authorized', () => {
+    const unavailableDocument = setup('events.series');
+    contextualMount(unavailableDocument, 'events.series');
+    const unavailableTrigger = newEventTrigger(unavailableDocument);
+    const unavailableController = createOperationsParityController({
+      backend: { commands: {}, api: {} },
+      app: {},
+      getState: () => ({ eventSeries: [] }),
+      getSelection: () => ({}),
+      getCapabilities: () => [],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(unavailableController.afterRender()).toBe(0);
+    expect(unavailableTrigger.wrap.hidden).toBe(true);
+    expect(unavailableTrigger.wrap.inert).toBe(true);
+    expect(unavailableTrigger.trigger.disabled).toBe(true);
+
+    const availableDocument = setup('events.series');
+    const eventMount = contextualMount(availableDocument, 'events.series');
+    const availableTrigger = newEventTrigger(availableDocument);
+    const availableController = createOperationsParityController({
+      backend: { commands: {}, api: {} },
+      app: {},
+      getState: () => ({ eventSeries: [] }),
+      getSelection: () => ({}),
+      getCapabilities: () => ['event.manage'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(availableController.afterRender()).toBe(4);
+    expect(availableTrigger.wrap.hidden).toBe(false);
+    expect(availableTrigger.wrap.inert).toBe(false);
+    expect(availableTrigger.trigger.disabled).toBe(false);
+    const createForm = form(availableDocument, 'event-series-save');
+    expect(createForm.closest('[data-v5-contextual-mount="events.series"]')).toBe(eventMount);
+
+    expect(
+      availableController.onClick({
+        target: availableTrigger.trigger,
+        preventDefault: vi.fn(),
+        stopImmediatePropagation: vi.fn(),
+      }),
+    ).toBe(true);
+    expect(createForm.scrolled).toMatchObject({ block: 'start' });
+    expect(createForm.querySelector('input, select, textarea, button').focused).toBe(true);
   });
 
   it('passes a cycle count through the current direct API path with the real selected item', async () => {

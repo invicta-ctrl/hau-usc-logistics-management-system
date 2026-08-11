@@ -42,6 +42,19 @@ const refreshAction = `<button class="btn" type="button" data-act="refresh">${ic
   'repeat',
 )}Refresh</button>`;
 
+function queueSearchControls({ route, id, label, resetLabel }) {
+  return `<div class="form-row" data-v5-route-search-controls="${route}" style="margin-top:16px">
+    <div class="field">
+      <label for="${id}">Search ${label}</label>
+      <input id="${id}" type="search" autocomplete="off" data-v5-route-search="${route}" placeholder="Search authorized ${label}" />
+    </div>
+    <div class="field" style="align-self:end">
+      <button class="btn btn--quiet" type="button" data-v5-route-search-reset="${route}">${resetLabel}</button>
+    </div>
+    <p class="muted" role="status" aria-live="polite" data-v5-route-search-status="${route}">All authorized ${label} are shown.</p>
+  </div>`;
+}
+
 /* ================= Role overviews ================= */
 
 const OVERVIEW_CONFIG = {
@@ -399,7 +412,8 @@ export function requestDetailParts(state, titleAction = '') {
       <section>
         <div class="section__head" style="margin-bottom:10px"><h3>Evidence</h3></div>
         ${evidenceList([])}
-      </section>`;
+      </section>
+      <section class="section" data-v5-contextual-mount="request.queue" aria-label="Selected request actions"></section>`;
 
   /* `aria-disabled` alone announced a block the control did not enforce, so the
      button stayed clickable for everyone it claimed to stop. The reason travels
@@ -468,6 +482,12 @@ export function lendingQueue({ state }) {
           })
         : ''
     }
+    ${queueSearchControls({
+      route: 'lending.queue',
+      id: 'lending-queue-search',
+      label: 'loans',
+      resetLabel: 'Reset loan search',
+    })}
     <div style="margin-top:16px">
     ${queueTable({
       caption: 'Loans in your authorized scope.',
@@ -562,6 +582,12 @@ export function releaseDesk({ state }) {
       title: 'Stock moves only when you record a release',
       body: 'Accepting a request reserves stock. The ledger records an issue at the moment of physical handoff.',
     })}
+    ${queueSearchControls({
+      route: 'release.desk',
+      id: 'release-desk-search',
+      label: 'releases',
+      resetLabel: 'Reset release search',
+    })}
     <div style="margin-top:16px">${releaseTable()}</div>
     ${partialPanel()}`;
 }
@@ -597,6 +623,7 @@ function partialPanel() {
         { label: 'Remaining', value: 'Not loaded' },
         { label: 'Recipient', value: 'Not loaded' },
       ])}
+      <div data-v5-contextual-mount="release.desk" aria-label="Release review actions"></div>
       <div class="form-row" style="max-width:520px">
         <div class="field"><label for="rel-q">Quantity to release now</label>
           <input id="rel-q" type="number" min="1" aria-describedby="rel-q-h" />
@@ -783,6 +810,15 @@ export function eventsSeries() {
     title: 'Event series',
     lede: 'Series, sub-events, and the requests and deliverables attached to each.',
   })}
+  <section class="section" style="margin-top:16px">
+    <div class="section__head">
+      <h2>Events workbench</h2>
+      <div data-v5-new-event-wrap hidden inert>
+        <button class="btn btn--primary" type="button" data-v5-new-event disabled aria-disabled="true">New Event</button>
+      </div>
+    </div>
+    <div data-v5-contextual-mount="events.series" aria-label="Events workbench actions"></div>
+  </section>
   <div style="margin-top:16px">
   ${queueTable({
     caption: 'Event series with readiness and linked requests.',

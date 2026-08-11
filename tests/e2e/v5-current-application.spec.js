@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { GROUPS, SURFACES } from '../../src/v5/src/registry.js';
-import { createBootstrapModuleFixture } from '../fixtures/essential-bootstrap-fixtures.js';
+import {
+  createBootstrapModuleFixture,
+  createRequestQueueFixture,
+} from '../fixtures/essential-bootstrap-fixtures.js';
 import {
   PRODUCTION,
   STAGING,
@@ -244,6 +247,163 @@ test('authenticated R1 lending and release forms preserve labels and release ide
   expect(await release.locator('input[name="recipientConfirmed"]').evaluate((input) => input.required)).toBe(
     true,
   );
+});
+
+test('authenticated R2 queues search loaded rows and keep contextual operations selected and fail closed', async ({
+  page,
+}, testInfo) => {
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+  await page.route('**/api/getBootstrapModule', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON?.() ?? {};
+    if (
+      new URL(request.url()).pathname !== '/api/getBootstrapModule' ||
+      !['release', 'request'].includes(body.module)
+    ) {
+      return route.fallback();
+    }
+    const fixture = createBootstrapModuleFixture({
+      backendMode: 'rest',
+      environment: STAGING,
+      module: body.module,
+      rows: 2,
+    });
+    fixture.data =
+      body.module === 'release'
+        ? {
+            ...fixture.data,
+            requests: [
+              { id: 'REQ-DEMO-421', status: 'READY_FOR_RELEASE' },
+              { id: 'REQ-DEMO-417', status: 'READY_FOR_RELEASE' },
+            ],
+            requestLines: [
+              {
+                id: 'RQL-S07-RELEASE-A',
+                requestId: 'REQ-DEMO-421',
+                description: 'Synthetic authorized release A',
+                requestedQuantity: 1,
+                releasedQuantity: 0,
+                unit: 'piece',
+              },
+              {
+                id: 'RQL-S07-RELEASE-B',
+                requestId: 'REQ-DEMO-417',
+                description: 'Synthetic authorized release B',
+                requestedQuantity: 1,
+                releasedQuantity: 0,
+                unit: 'piece',
+              },
+            ],
+          }
+        : (() => {
+            const requestFixture = createRequestQueueFixture();
+            return {
+              ...fixture.data,
+              requests: requestFixture.requests.map((entry) => ({ ...entry, id: 'REQ-DEMO-431' })),
+              requestLines: requestFixture.requestLines.map((line, index) => ({
+                ...line,
+                id: `RQL-DEMO-431-${index + 1}`,
+                requestId: 'REQ-DEMO-431',
+              })),
+            };
+          })();
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixture),
+    });
+  });
+
+  await page.goto('/#/lending.queue');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('lending.queue'),
+  );
+  const lendingSearch = page.getByRole('searchbox', { name: 'Search loans' });
+  await lendingSearch.fill('no authorized lending result');
+  await expect(page.locator('[data-v5-route-search-status="lending.queue"]')).toHaveText(
+    'No authorized loans match the current search.',
+  );
+  await expect(page.locator('table.q tbody tr:visible')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reset loan search' }).click();
+  await expect(page.locator('[data-v5-route-search-status="lending.queue"]')).toContainText(
+    'authorized loans shown',
+  );
+
+  await page.goto('/#/release.desk');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('release.desk'),
+  );
+  const releaseSearch = page.getByRole('searchbox', { name: 'Search releases' });
+  await releaseSearch.fill('no authorized release result');
+  await expect(page.locator('[data-v5-route-search-status="release.desk"]')).toHaveText(
+    'No authorized releases match the current search.',
+  );
+  await expect(page.locator('table.q tbody tr:visible')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Reset release search' }).click();
+  await expect(page.locator('[data-v5-contextual-mount="release.desk"] h2')).toHaveText(
+    'Release review actions',
+  );
+  await expect(
+    page.locator('[data-v5-contextual-mount="release.desk"] [data-v5-command="release-confirm"]'),
+  ).toBeVisible();
+  const mobileViewport = (testInfo.project.use.viewport?.width ?? page.viewportSize()?.width ?? 1440) < 1181;
+  const visibleDrawer = page.locator('.drawer:visible');
+  await page.locator('[data-act="select:release"]').first().click();
+  await expect(
+    page.locator('[data-v5-contextual-mount="release.desk"] [data-v5-command="release-confirm"]'),
+  ).toBeVisible();
+  if (mobileViewport) await expect(visibleDrawer).toHaveCount(0);
+  const requestsBeforeMismatch = requests.length;
+  await page.locator('[data-act="select:release"]').nth(1).click();
+  await expect(page.locator('[data-v5-command="release-confirm"]')).toHaveCount(0);
+  expect(requests).toHaveLength(requestsBeforeMismatch);
+  if (mobileViewport) await expect(visibleDrawer).toHaveCount(0);
+
+  await page.goto('/#/request.queue');
+  await page.reload();
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('request.queue'),
+  );
+  const requestRow = page.locator('[data-act="select:request"]').first();
+  await expect(requestRow).toBeVisible();
+  if (mobileViewport) {
+    await requestRow.click();
+    const activeDrawerMount = page.locator('.drawer:visible [data-v5-contextual-mount="request.queue"]');
+    await expect(activeDrawerMount).toHaveCount(1);
+    await expect(activeDrawerMount.locator('[data-v5-command="request-review"]')).toBeVisible();
+    expect(
+      await page.locator('#surface-main [data-v5-command="request-review"]').evaluateAll(
+        (forms) =>
+          forms.filter((form) => {
+            for (let node = form; node; node = node.parentElement) {
+              if (node.inert || node.getAttribute('aria-hidden') === 'true') return true;
+            }
+            return false;
+          }).length,
+      ),
+    ).toBe(0);
+  } else {
+    const activeDesktopMount = page.locator(
+      '.split__detail:visible [data-v5-contextual-mount="request.queue"]',
+    );
+    await expect(activeDesktopMount.locator('[data-v5-command="request-review"]')).toBeVisible();
+  }
+  await expect(page.locator('[data-v5-parity-mount="fallback"]')).toHaveCount(0);
+
+  await page.goto('/#/events.series');
+  await waitForV5(page);
+  const newEvent = page.locator('[data-v5-new-event]');
+  await expect(newEvent).toBeVisible();
+  await expect(newEvent).toBeEnabled();
+  await newEvent.click();
+  const eventForm = page.locator(
+    '[data-v5-contextual-mount="events.series"] [data-v5-command="event-series-save"]',
+  );
+  await expect(eventForm).toBeVisible();
+  await expect(eventForm.locator('input, select, textarea').first()).toBeFocused();
 });
 
 test('Test Real Login Flow disables convenience unlock until the tester resumes it', async ({

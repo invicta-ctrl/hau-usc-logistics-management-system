@@ -45,6 +45,11 @@ const LENDING_AUDIENCE_OPTIONS = options(
 
 const text = (value) => String(value ?? '').trim();
 const currentRoute = () => text(globalThis.location?.hash).replace(/^#\/?/u, '') || 'index';
+const CONTEXTUAL_ROUTE_META = Object.freeze({
+  'request.queue': { heading: 'Selected request actions' },
+  'release.desk': { heading: 'Release review actions' },
+  'events.series': { heading: 'Events workbench actions' },
+});
 const recordId = (record) =>
   text(
     record?.id ??
@@ -484,9 +489,14 @@ function lendingDetailForms(context) {
 }
 
 function releaseForms(context) {
-  const request = context.request;
-  const requestId = recordId(request) || selectedValue(context.selection, 'releaseId', 'selectedReleaseId');
-  if (!requestId) return [];
+  const selectedRequestId = selectedValue(context.selection, 'requestId', 'selectedRequestId');
+  const selectedReleaseId = selectedValue(context.selection, 'releaseId', 'selectedReleaseId');
+  if (!selectedRequestId || !selectedReleaseId || selectedRequestId !== selectedReleaseId) return [];
+  const request = collection(context.state, 'requests').find(
+    (entry) => recordId(entry) === selectedReleaseId,
+  );
+  if (!request || recordId(context.request) !== selectedReleaseId) return [];
+  const requestId = selectedReleaseId;
   const lines = collection(context.state, 'requestLines').filter(
     (line) => text(line.requestId ?? line.request_id) === requestId,
   );
@@ -1164,6 +1174,37 @@ function formsForRoute(routeName, context) {
   return [];
 }
 
+function activeContextualMount(candidate) {
+  for (let node = candidate; node; node = node.parentElement) {
+    if (node.inert === true || node.getAttribute?.('aria-hidden') === 'true') return false;
+  }
+  return true;
+}
+
+function contextualMount(root, routeName) {
+  if (!CONTEXTUAL_ROUTE_META[routeName]) return null;
+  const selector = `[data-v5-contextual-mount="${routeName}"]`;
+  const candidates = [
+    ...(document?.querySelectorAll?.(selector) ?? root?.querySelectorAll?.(selector) ?? []),
+  ];
+  return candidates.find(activeContextualMount) ?? null;
+}
+
+function setNewEventTrigger(enabled) {
+  const trigger = document.querySelector('[data-v5-new-event]');
+  const wrap = document.querySelector('[data-v5-new-event-wrap]');
+  if (wrap) {
+    wrap.hidden = !enabled;
+    wrap.inert = !enabled;
+    if (enabled) wrap.removeAttribute?.('inert');
+    else wrap.setAttribute?.('inert', '');
+  }
+  if (trigger) {
+    trigger.disabled = !enabled;
+    trigger.setAttribute?.('aria-disabled', enabled ? 'false' : 'true');
+  }
+}
+
 function element(tag, className = '', content = '') {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -1288,7 +1329,7 @@ export function createOperationsParityController({
   }
 
   function afterRender() {
-    document.querySelector('[data-v5-operations-parity]')?.remove();
+    document.querySelectorAll('[data-v5-operations-parity]').forEach((section) => section.remove());
     definitions.clear();
     const state = getState?.() ?? {};
     const selection = getSelection?.() ?? {};
@@ -1299,14 +1340,21 @@ export function createOperationsParityController({
         capabilities.has(capability),
       ),
     );
+    setNewEventTrigger(
+      routeName === 'events.series' && forms.some((definition) => definition.id === 'event-series-save'),
+    );
     if (!forms.length) return 0;
     const root = document.getElementById('surface-main');
     if (!root) return 0;
+    const meta = CONTEXTUAL_ROUTE_META[routeName];
+    const mount = contextualMount(root, routeName);
+    const host = mount ?? root;
     const section = element('section', 'section');
     section.dataset.v5OperationsParity = routeName;
     section.dataset.v5ParityActions = routeName;
+    section.dataset.v5ParityMount = mount ? 'contextual' : 'fallback';
     const head = element('div', 'section__head');
-    head.append(element('h2', '', 'Authorized operations'));
+    head.append(element('h2', '', meta?.heading ?? 'Authorized operations'));
     const reload = element('button', 'btn btn--quiet', 'Reload current data');
     reload.type = 'button';
     reload.dataset.v5CommandRefresh = 'true';
@@ -1316,11 +1364,23 @@ export function createOperationsParityController({
       definitions.set(definition.id, definition);
       section.append(renderForm(definition));
     }
-    root.append(section);
+    host.append(section);
     return forms.length;
   }
 
   function onClick(event) {
+    const newEvent = event.target?.closest?.('[data-v5-new-event]');
+    if (newEvent) {
+      event.preventDefault?.();
+      event.stopImmediatePropagation?.();
+      if (newEvent.disabled || newEvent.getAttribute?.('aria-disabled') === 'true') return true;
+      const form = document.querySelector('form[data-v5-command="event-series-save"]');
+      if (!form) return true;
+      const reducedMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === true;
+      form.scrollIntoView?.({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+      form.querySelector('input, select, textarea, button')?.focus?.({ preventScroll: true });
+      return true;
+    }
     const refreshButton = event.target?.closest?.('[data-v5-command-refresh]');
     if (refreshButton) {
       event.preventDefault?.();
