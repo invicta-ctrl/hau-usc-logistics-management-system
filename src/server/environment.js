@@ -1,5 +1,6 @@
 import { accountApplicationEmailProviderIssues } from './account-application/email-provider-registry.js';
 import { parseAccountApplicationStagingIdentityFixture } from './account-application/adapters.js';
+import { playgroundRuntimeIssues } from './playground-service.js';
 
 const SHA = /^[0-9a-f]{40}$/iu;
 const VERSION = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u;
@@ -95,6 +96,9 @@ export function environmentReadinessIssues(env) {
     // a malformed sender each keep deployed readiness shut. Only presence is
     // reported; no configured value reaches health output.
     issues.push(...accountApplicationEmailProviderIssues(env));
+    if (env?.PLAYGROUND_MODE === true || String(env?.PLAYGROUND_MODE ?? '').toLowerCase() === 'true') {
+      issues.push(...playgroundRuntimeIssues(env));
+    }
   }
   return issues;
 }

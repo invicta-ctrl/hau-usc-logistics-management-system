@@ -1,0 +1,466 @@
+/* v0.4.2 — Glossy Command Center layer.
+   Loads after v4.css and only overrides what this iteration changes.
+
+   Scope of this file:
+     1. glass + glow token system
+     2. signature controls: celestial toggle, kinetic menu, compact back
+     3. command-center dark ground (charcoal with oxblood tint, not all-maroon)
+
+   Motion timings follow the owner brief:
+     press feedback   90-140ms
+     thumb travel     220-300ms
+     icon choreography 220-360ms
+     theme crossfade  280-420ms
+   Transform and opacity only. No bounce. No width/height animation. */
+
+:root {
+  /* ---- Glass system ---- */
+  --glass-blur: 18px;
+  --glass-saturation: 150%;
+  --glass-base: rgba(255, 255, 255, 0.62);
+  --glass-raised: rgba(255, 255, 255, 0.76);
+  --glass-overlay: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-edge: rgba(120, 90, 60, 0.16);
+  --glass-specular: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.28) 34%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  --glass-shadow: 0 2px 6px rgba(60, 30, 26, 0.08), 0 18px 44px rgba(60, 30, 26, 0.14);
+
+  /* Solid fallbacks used when backdrop-filter is unavailable. */
+  --glass-solid: #fbf5ea;
+  --glass-solid-raised: #fffdf8;
+
+  /* ---- Telemetry glow. Glow is for live data, selection, and attention. ---- */
+  --glow-gold: 0 0 0 1px rgba(232, 185, 60, 0.34), 0 0 22px rgba(232, 185, 60, 0.28);
+  --glow-blue: 0 0 0 1px rgba(96, 178, 232, 0.32), 0 0 20px rgba(96, 178, 232, 0.26);
+  --glow-green: 0 0 0 1px rgba(96, 206, 150, 0.32), 0 0 20px rgba(96, 206, 150, 0.24);
+  --glow-alert: 0 0 0 1px rgba(232, 118, 124, 0.34), 0 0 22px rgba(232, 118, 124, 0.26);
+
+  --telemetry-cyan: #3f9fd0;
+  --telemetry-emerald: #2f9e6d;
+
+  /* ---- Celestial control geometry ---- */
+  --celestial-w: 78px;
+  --celestial-h: 38px;
+  --celestial-pad: 4px;
+  --celestial-plate: 30px;
+  --celestial-travel: calc(var(--celestial-w) - var(--celestial-plate) - (var(--celestial-pad) * 2));
+
+  --t-press: 120ms;
+  --t-travel: 260ms;
+  --t-choreo: 300ms;
+  --t-crossfade: 360ms;
+}
+
+[data-theme="dark"] {
+  --glass-base: rgba(38, 30, 33, 0.56);
+  --glass-raised: rgba(46, 36, 40, 0.68);
+  --glass-overlay: rgba(52, 40, 45, 0.82);
+  --glass-border: rgba(242, 220, 166, 0.16);
+  --glass-edge: rgba(0, 0, 0, 0.5);
+  --glass-specular: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.16) 0%,
+    rgba(255, 255, 255, 0.05) 32%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 22px 54px rgba(0, 0, 0, 0.55);
+  --glass-solid: #241b1e;
+  --glass-solid-raised: #2c2126;
+
+  --telemetry-cyan: #6cc4ee;
+  --telemetry-emerald: #5fd3a0;
+}
+
+/* ============================================================
+   1. Glass utility
+   ============================================================ */
+
+.glass {
+  position: relative;
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  isolation: isolate;
+}
+
+@supports (backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px)) {
+  .glass {
+    background: var(--glass-base);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  }
+
+  .glass--raised {
+    background: var(--glass-raised);
+  }
+
+  .glass--overlay {
+    background: var(--glass-overlay);
+  }
+}
+
+/* Specular top edge — the "gloss" is one highlight, not a white wash. */
+.glass::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--glass-specular);
+  content: "";
+  pointer-events: none;
+}
+
+/* ============================================================
+   2. Celestial day/night toggle
+   ============================================================ */
+
+.celestial {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.celestial__capsule {
+  position: relative;
+  display: block;
+  width: var(--celestial-w);
+  height: var(--celestial-h);
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-radius: var(--radius-pill, 999px);
+  background: linear-gradient(180deg, #35292c, #1d1517);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.65),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.07),
+    0 1px 2px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .celestial__capsule {
+  border-color: rgba(242, 220, 166, 0.18);
+  background: linear-gradient(180deg, #241b1e, #100b0c);
+}
+
+/* Highlight that travels across the capsule on press. */
+.celestial__sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 66%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-70%);
+}
+
+.celestial:active .celestial__sheen {
+  animation: celestial-sheen 520ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@keyframes celestial-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(-70%);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(70%);
+  }
+}
+
+/* The glossy active plate. Travels; never resizes. */
+.celestial__plate {
+  position: absolute;
+  top: var(--celestial-pad);
+  left: var(--celestial-pad);
+  width: var(--celestial-plate);
+  height: var(--celestial-plate);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 26%, #ffffff 0%, #f7f2e8 52%, #e6dccb 100%);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.42),
+    0 4px 10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transform: translateX(0) scale(1);
+  transition: transform var(--t-travel) var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+[data-theme="dark"] .celestial__plate {
+  transform: translateX(var(--celestial-travel)) scale(1);
+}
+
+/* Press: the plate compresses slightly, then releases. */
+.celestial:active .celestial__plate {
+  transform: translateX(0) scale(0.9);
+  transition-duration: var(--t-press);
+}
+
+[data-theme="dark"] .celestial:active .celestial__plate {
+  transform: translateX(var(--celestial-travel)) scale(0.9);
+}
+
+.celestial__slot {
+  position: absolute;
+  top: var(--celestial-pad);
+  display: grid;
+  place-items: center;
+  width: var(--celestial-plate);
+  height: var(--celestial-plate);
+  transition:
+    color var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    transform var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.celestial__slot--sun {
+  left: var(--celestial-pad);
+}
+
+.celestial__slot--moon {
+  right: var(--celestial-pad);
+}
+
+.celestial__art {
+  width: 17px;
+  height: 17px;
+}
+
+/* LIGHT: sun sits on the plate (dark ink); moon waits on the capsule (muted). */
+.celestial__slot--sun {
+  color: #23181a;
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.celestial__slot--moon {
+  color: rgba(246, 231, 196, 0.5);
+  opacity: 0.75;
+  transform: rotate(-18deg) scale(0.86);
+}
+
+/* DARK: the plate has travelled right, so the moon inverts to dark ink. */
+[data-theme="dark"] .celestial__slot--sun {
+  color: rgba(246, 231, 196, 0.5);
+  opacity: 0.75;
+  transform: rotate(-42deg) scale(0.86);
+}
+
+[data-theme="dark"] .celestial__slot--moon {
+  color: #17100f;
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Rays contract when the sun goes inactive. */
+.celestial__rays {
+  transform-origin: 12px 12px;
+  transition: transform var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity var(--t-choreo) var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+[data-theme="dark"] .celestial__rays {
+  opacity: 0.5;
+  transform: rotate(38deg) scale(0.62);
+}
+
+.celestial:focus-visible {
+  outline: var(--focus-ring, 3px solid #e8b93c);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+/* ============================================================
+   3. Kinetic menu control
+   ============================================================ */
+
+/* Targets the existing v4.1 markup (.menu-control__glyph > i x3) so no
+   structural change is needed — only the choreography changes. */
+.menu-control__glyph {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 12px;
+  flex: 0 0 auto;
+}
+
+.menu-control__glyph i {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: center;
+  transition:
+    transform 220ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    opacity 160ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.menu-control__glyph i:nth-child(1) {
+  top: 0;
+}
+
+.menu-control__glyph i:nth-child(2) {
+  top: 5px;
+  transform: scaleX(0.72);
+  transform-origin: left center;
+}
+
+.menu-control__glyph i:nth-child(3) {
+  top: 10px;
+}
+
+/* Hover completes the short middle rule — scaleX, never a width animation. */
+.menu-control:hover .menu-control__glyph i:nth-child(2) {
+  transform: scaleX(1);
+}
+
+/* The close morph belongs to the DRAWER, not the rail. On desktop
+   aria-expanded reports whether the rail is expanded, so keying the X off it
+   would show "close" whenever the rail is simply open. data-drawer-open is
+   true only when the narrow off-canvas drawer is actually covering content. */
+.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(1) {
+  transform: translateY(5px) rotate(45deg);
+}
+
+.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0.2);
+}
+
+.menu-control[data-drawer-open="true"] .menu-control__glyph i:nth-child(3) {
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+/* On desktop the collapsed rail nudges the rules toward a compact mark
+   instead — a state change without a false "close" signal. */
+.menu-control[aria-expanded="false"]:not([data-drawer-open="true"])
+  .menu-control__glyph
+  i:nth-child(2) {
+  transform: scaleX(0.44);
+}
+
+.menu-control:active {
+  transform: translateY(1px);
+}
+
+/* ============================================================
+   4. Compact glossy back control
+   The rejected reference was a large thin outlined circle.
+   ============================================================ */
+
+.back-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px 0 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  background: var(--glass-solid-raised);
+  box-shadow: var(--glass-shadow);
+  color: var(--ink, #241416);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    transform var(--t-press) var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    box-shadow 200ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    border-color 200ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@supports (backdrop-filter: blur(2px)) {
+  .back-control {
+    background: var(--glass-raised);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  }
+}
+
+.back-control__glyph {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.4));
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+  transition: transform 200ms var(--ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+[data-theme="dark"] .back-control__glyph {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Directional travel: the arrow moves the way it takes you. */
+.back-control:hover .back-control__glyph {
+  transform: translateX(-3px);
+}
+
+.back-control:active {
+  transform: translateY(1px);
+}
+
+.back-control:hover {
+  border-color: var(--accent-line, rgba(232, 185, 60, 0.46));
+}
+
+/* ============================================================
+   5. Reduced motion
+   State still changes; travel choreography is removed.
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* transition: none, not a 0.01ms duration — the travel choreography is
+     removed outright, while the plate still lands on the correct endpoint so
+     the state remains readable. */
+  .celestial__plate,
+  .celestial__slot,
+  .celestial__rays,
+  .menu-control__glyph i,
+  .back-control,
+  .back-control__glyph {
+    transition: none !important;
+  }
+
+  .celestial__sheen,
+  .celestial:active .celestial__sheen {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .celestial__slot--moon,
+  [data-theme="dark"] .celestial__slot--sun {
+    transform: none;
+  }
+
+  [data-theme="dark"] .celestial__rays {
+    transform: none;
+  }
+
+  .back-control:hover .back-control__glyph,
+  .celestial:active .celestial__plate {
+    transform: none;
+  }
+
+  [data-theme="dark"] .celestial:active .celestial__plate {
+    transform: translateX(var(--celestial-travel));
+  }
+}

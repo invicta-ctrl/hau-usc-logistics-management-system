@@ -1,4 +1,6 @@
-# Permanent Staging Sandbox
+# Permanent Staging Sandbox (superseded runtime model)
+
+> The permanent post-`v0.8.0` staging model is the [Isolated Staging Playground](./ISOLATED_STAGING_PLAYGROUND.md). This document remains recovery history for the prior synthetic sandbox and must not be used to create a staging Git branch or bind new candidates to its retired data model.
 
 Staging is a permanent isolated environment, not a permanent Git branch. It uses a dedicated staging Worker, D1, R2, secrets, provider configuration, and an exact recipient allowlist. The allowlist, sender, and private identity fixture are Worker secrets; the deployable config carries only a safe recipient count. The isolated fixture does not require a production Google roster binding, and production resources are never valid staging inputs.
 

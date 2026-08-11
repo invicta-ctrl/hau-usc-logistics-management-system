@@ -1,41 +1,60 @@
 # Current Environment Handoff
 
-FROM: CODEX
-TO: EARL / NEXT AUTHORIZED AGENT
-BRANCH: GIT_BRANCH
+FROM: SOL_MAX:/root
+TO: TERRA_MAX:/root/integration_terra_v3
+BRANCH: release/v0.8.1-isolated-staging-playground
 HEAD: GIT_HEAD
-UPSTREAM: GIT_UPSTREAM
-WORKTREE: D:/Documents/Codex/HAU-USC Logistics/active/hau-usc-logistics-management-system
+TREE: GIT_TREE
+UPSTREAM: origin/release/v0.8.1-isolated-staging-playground@GIT_HEAD
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_v3
+TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_TRANSFER_FROM: NONE
+LOCK_TRANSFER_TO: TERRA_MAX:/root/integration_terra_v3
+LOCK_TRANSFER_AUTHORITY: SOL_EXPLICIT_A3_PRESERVATION_VERIFIED_V81_S00_CONTINUITY
+LOCK_TRANSFER_REASON: PRESERVATION_VERIFIED_ENTER_V81_S00
+LOCK_TRANSFER_AT: 2026-08-11T20:18:09.9420229+08:00
+LOCK_ACQUIRED_AT: 2026-08-11T20:18:09.9420229+08:00
+LOCK_HEARTBEAT_AT: 2026-08-11T20:18:09.9420229+08:00
+MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
+MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
+RELEASE: v0.8.1
+RELEASE_STATE: V81-S00_INTAKE
+RELEASE_STATUS: V81-S00_INTAKE
+STATUS: V81-S00_INTAKE
+S00_STATUS: ENTERED
+PRIVATE_PRESERVATION: VERIFIED
+UNKNOWN_WORK_AT_RISK: 0
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
-MILESTONE: v0.8.0 Inventory Truth and Ledger Lock
-SLICE: 3 OF 3 - FINAL
-OUTCOME: RELEASED
-FINAL_CANDIDATE_SHA: 26ee284cf066379e28a60511568053afd92c8768
-ACCEPTED_MAIN_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-PR: 21
-TAG: v0.8.0
-GITHUB_RELEASE: v0.8.0
-RUNTIME_VERSION: 0.8.0
-SCHEMA: 30
-LATEST_MIGRATION: 0030_production_access_and_operations.sql
-NEW_MIGRATION: NONE
-MASTER_AUDIT: CLEAN
-COMPLETED: protected candidate, staging, recovery, merge, production deployment, smoke, reconciliation, tag, GitHub Release, and durable closeout
-VALIDATION: focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; exact-head, PR, main CI, CodeQL, recovery, full-stack smoke, and reconciliation green
-EXTERNAL_ACTIONS: protected GitHub push/PR/merge/tag/release plus exact isolated staging and production deployments; no Google or provider/email write
+ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
+COMPLETED: A3 private preservation VERIFIED; V81-S00 intake entered; no reconciliation action performed yet.
+VALIDATION: Capture/status/proof/root hashes verified; fsck 28/121/133 missing0; stash parents3; refs/private0; index4/4 mismatch0; provider projections unchanged.
+EXTERNAL_ACTIONS: NONE_REPOSITORY_RUNTIME_PROVIDER_DEPLOY_PR_MIGRATION
 BLOCKER: NONE
-LOCAL_VALIDATION: focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; build/parity/types/dry-run/governance/privacy green; independent review zero unresolved P0/P1
-STAGING: exact candidate deployed; readiness/protection/isolation and full-stack smoke passed; private backup/restore integrity and FK proof passed; reconciliation 20/20 with zero discrepancies
-PRODUCTION: exact accepted main deployed; readiness/protection/full-stack smoke passed; postdeploy reconciliation 20/20; no unexpected business-row, ledger, reservation, request, lending, release, schema, or migration change
-RECOVERY: fresh private D1 exports, Time Travel evidence, isolated restore proof, Worker rollback versions, R2 metadata, and binding fingerprints retained outside Git
-ROLLBACK_REQUIRED: NO
-GOOGLE_WRITES: NONE
-PROVIDER_EMAIL_SENDS: NONE
-HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: Execute the separately accepted Isolated Staging Playground conversion before v0.8.1; do not begin it automatically.
-RESUME_COMMANDS: git status --short --branch; git fetch --prune origin; git rev-parse origin/main; npm run handoff:verify; npm run check:governance
-PROHIBITED_ACTIONS: no automatic playground or v0.8.1 work, production mutation, migration, tag movement, recovery cleanup, branch deletion, Google write, or provider/email send without fresh authority
+HANDOFF_STATUS: ACTIVE_V81_S00_RECONCILIATION
+CAPTURE_STATUS: VERIFIED
+CAPTURE_VERIFIED_AT: 2026-08-11T20:02:59.4860308+08:00
+CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
+RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
+MANIFEST_ROOT_SHA256: 074FEB5B78477731C5C91EBDCD4704E108FFB0EA9D9EB2284CF4C8D19887F21D
+SOL_REVIEW: PASS
+LUNA_REVIEW: PASS_NO_P0_P1
+GIT_COPY_ROWS: 1020
+INDEX_FILES: 4/4; MISMATCH=0
+PRIMARY_PRESERVED: 46;4461409;804CF85CF1D46C9ACFEA5B60A548472C672B546B932A9945B31ED4BF39521A70
+SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6AFACEA8BFD9F7AC0D
+DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
+GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
+FETCH_HEAD_VOLATILITY: RELATIVE_PATH=worktrees/playground-owner-feedback-2026-08-10/FETCH_HEAD; VOLATILE_GIT_FETCH_RESULT_METADATA; RESTORATION_REQUIRED=FALSE
+RETAINED_TEMP_RESIDUE: NONBLOCKING_NO_CLEANUP_RETRY
+SOURCE_PROVIDER_STATE: UNCHANGED_READ_ONLY_PROOF
+PRESERVATION_EXTERNAL_ACTIONS: NONE_REPOSITORY_RUNTIME_PROVIDER_DEPLOY_PR_MIGRATION
+RESUME_COMMANDS: Read CURRENT, CURRENT_TASK, CURRENT_HANDOFF, and the accepted specification; perform the bounded V81-S00 read-only lineage reconciliation.
+PROHIBITED_ACTIONS: No force-push, reset, clean, discard, provider write, Production mutation, ref mutation, merge, deploy, migration, or untracked-artifact staging.
+NEXT_ACTION_SCOPE: V81_S00_READ_ONLY_LINEAGE_RECONCILIATION
+NEXT_EXACT_ACTION: Resolve current main, accepted v0.8.0 Production evidence, PR #23, Playground/Production identity, worktrees/stashes/untracked sets, and main-merge deployment coupling; review only the current logical delta and begin bounded v0.8.1 stabilization without force-push, reset, clean, discard, provider write, or Production mutation.

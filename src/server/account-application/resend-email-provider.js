@@ -113,7 +113,7 @@ export function createResendEmailProvider({
       if (
         !RECIPIENT_PATTERN.test(recipient) ||
         recipient.length > 254 ||
-        !code ||
+        !/^\d{8}$/u.test(code) ||
         (allowedRecipients && !allowedRecipients.has(recipient))
       ) {
         throw providerError('EMAIL_PROVIDER_REJECTED');

@@ -1,5 +1,7 @@
 const runtime = globalThis.__HAU_RUNTIME_CONFIG__ ?? {};
-const buildMode = String(import.meta.env?.MODE ?? 'development').trim().toLowerCase();
+const buildMode = String(import.meta.env?.MODE ?? 'development')
+  .trim()
+  .toLowerCase();
 const isCloudflareBuild = buildMode === 'staging' || buildMode === 'production';
 
 export function booleanFlag(value, fallback = false) {
@@ -18,13 +20,18 @@ const backendMode =
   isCloudflareBuild && configuredBackendMode === 'mock' ? 'unconfigured' : configuredBackendMode;
 
 export const config = Object.freeze({
-  appVersion: '0.8.0',
+  appVersion: '0.8.1',
   schemaVersion: 3,
   previewMode: backendMode === 'mock',
   backendMode,
-  appEnvironment: runtime.appEnvironment ?? import.meta.env?.VITE_APP_ENV ?? (isCloudflareBuild ? buildMode : 'development'),
+  appEnvironment:
+    runtime.appEnvironment ??
+    import.meta.env?.VITE_APP_ENV ??
+    (isCloudflareBuild ? buildMode : 'development'),
   bootstrapContractVersion: Number(
-    runtime.bootstrapContractVersion ?? import.meta.env?.VITE_BOOTSTRAP_CONTRACT_VERSION ?? (isCloudflareBuild ? 2 : 1),
+    runtime.bootstrapContractVersion ??
+      import.meta.env?.VITE_BOOTSTRAP_CONTRACT_VERSION ??
+      (isCloudflareBuild ? 2 : 1),
   ),
   compositeRequestsEnabled: booleanFlag(
     runtime.compositeRequestsEnabled ?? import.meta.env?.VITE_COMPOSITE_REQUESTS_ENABLED,

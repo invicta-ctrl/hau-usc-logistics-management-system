@@ -1,29 +1,68 @@
 # Current Bounded Task
 
-INTENT: DEPLOYMENT
-MODE: COMPLETE
-OBJECTIVE: Release v0.8.0 Inventory Truth and Ledger Lock through protected staging and production.
-RESULT: RELEASED
-TARGET: protected main release v0.8.0
+INTENT: V81_S00_READ_ONLY_LINEAGE_RECONCILIATION
+MODE: EXECUTE
+OBJECTIVE: Reconcile the current logical delta for bounded v0.8.1 stabilization after verified A3 preservation, without a runtime, provider, deployment, migration, merge, or Production mutation.
+TARGET: Current main lineage, accepted v0.8.0 Production evidence, PR #23, Playground/Production identity, worktrees, stashes, untracked sets, and main-merge deployment coupling.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.8.0-staging-production-master-release.md
-AUTHORITY: Earl's accepted master-release prompt, protected Git history, exact runtime evidence, and repository release runbooks
-REQUIRED_MODEL: CODEX
-FINAL_CANDIDATE_SHA: 26ee284cf066379e28a60511568053afd92c8768
-ACCEPTED_MAIN_SHA: 3059098ff2a2935fec59df52748ccae420aadba7
-TAG: v0.8.0
-PR: 21
-RUNTIME: 0.8.0 in isolated staging and production
-SCHEMA: 30
-LATEST_MIGRATION: 0030_production_access_and_operations.sql
-NEW_MIGRATION: NONE
-VERIFICATION: local focused 2/2; canonical 125 files/868 tests; Worker/browser 58/58; exact-head and protected PR CI green; staging and production recovery, restore, full-stack smoke, and 20/20 reconciliation green
-RISK: CLOSED - production release completed with rollback not required
-SCOPE: completed v0.8.0 Slice 3 release and repository-native closeout only
-OUT_OF_SCOPE: playground implementation, v0.8.1+, migrations, further deployment, data mutation, or recovery cleanup
-STOP_CONDITIONS: any new action requires a separately accepted specification and fresh exact-state handshake
-EXTERNAL_WRITES: protected GitHub push/PR/merge/tag/release; exact isolated staging deploy; exact production deploy; no Google or provider/email write
-ACTIVE_WRITER: NONE
-HANDOFF_STATUS: READY_FOR_HANDOFF
-NEXT_EXACT_ACTION: Execute the separately accepted Isolated Staging Playground conversion before v0.8.1; do not begin it automatically.
+ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
+AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; Sol operational transfer; sanitized active specification; live Git and preservation evidence.
+REQUIRED_MODEL: GPT-5.6 SOL
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_v3
+TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_TRANSFER_FROM: NONE
+LOCK_TRANSFER_TO: TERRA_MAX:/root/integration_terra_v3
+LOCK_TRANSFER_AUTHORITY: SOL_EXPLICIT_A3_PRESERVATION_VERIFIED_V81_S00_CONTINUITY
+LOCK_TRANSFER_REASON: PRESERVATION_VERIFIED_ENTER_V81_S00
+LOCK_TRANSFER_AT: 2026-08-11T20:18:09.9420229+08:00
+LOCK_ACQUIRED_AT: 2026-08-11T20:18:09.9420229+08:00
+LOCK_HEARTBEAT_AT: 2026-08-11T20:18:09.9420229+08:00
+MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
+MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
+RELEASE: v0.8.1
+RELEASE_STATE: V81-S00_INTAKE
+RELEASE_STATUS: V81-S00_INTAKE
+STATUS: V81-S00_INTAKE
+S00_STATUS: ENTERED
+PRIVATE_PRESERVATION: VERIFIED
+UNKNOWN_WORK_AT_RISK: 0
+BRANCH: release/v0.8.1-isolated-staging-playground
+HEAD: GIT_HEAD
+TREE: GIT_TREE
+UPSTREAM: origin/release/v0.8.1-isolated-staging-playground@GIT_HEAD
+SOURCE_HEAD_AT_S00_ENTRY: edc953914bcfb4afaa52478ae88d8c26401502d6
+SOURCE_TREE_AT_S00_ENTRY: ccfd574b21e07387506217d03d293a366cfdc8b3
+SOURCE_UPSTREAM_AT_S00_ENTRY: origin/release/v0.8.1-isolated-staging-playground@edc953914bcfb4afaa52478ae88d8c26401502d6
+WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
+WORKTREE_STATE: GIT_STATUS
+RISK: HIGH_GOVERNANCE_CONTINUITY_WITH_READ_ONLY_RECONCILIATION
+SCOPE: S00 lineage and deployment-coupling reconciliation only; preserve the verified 46 untracked artifacts and all A3 evidence.
+OUT_OF_SCOPE: Force-push, reset, clean, discard, ref change, merge, runtime change, provider write, Production mutation, deployment, PR action, migration, and untracked-artifact staging.
+VERIFICATION: npm.cmd run handoff:verify; git diff --check; exact four-file Prettier; structural privacy; canonical NEXT equality; five-path diff scope; staged0 before the explicit five-path stage.
+STOP_CONDITIONS: Source identity drift, competing writer, preservation hash/ref/object mismatch, privacy exposure, unexpected dirty tracked state, provider or Production crossover, or scope expansion.
+SKILLS: NONE_REQUIRED_GOVERNANCE_CONTINUITY
+CAPTURE_STATUS: VERIFIED
+CAPTURE_VERIFIED_AT: 2026-08-11T20:02:59.4860308+08:00
+CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
+RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
+MANIFEST_ROOT_SHA256: 074FEB5B78477731C5C91EBDCD4704E108FFB0EA9D9EB2284CF4C8D19887F21D
+SOL_REVIEW: PASS
+LUNA_REVIEW: PASS_NO_P0_P1
+GIT_COPY_ROWS: 1020
+INDEX_FILES: 4/4; MISMATCH=0
+PRIMARY_PRESERVED: 46;4461409;804CF85CF1D46C9ACFEA5B60A548472C672B546B932A9945B31ED4BF39521A70
+SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6AFACEA8BFD9F7AC0D
+DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
+GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
+FETCH_HEAD_VOLATILITY: RELATIVE_PATH=worktrees/playground-owner-feedback-2026-08-10/FETCH_HEAD; VOLATILE_GIT_FETCH_RESULT_METADATA; RESTORATION_REQUIRED=FALSE
+RETAINED_TEMP_RESIDUE: NONBLOCKING_NO_CLEANUP_RETRY
+SOURCE_PROVIDER_STATE: UNCHANGED_READ_ONLY_PROOF
+PRESERVATION_EXTERNAL_ACTIONS: NONE_REPOSITORY_RUNTIME_PROVIDER_DEPLOY_PR_MIGRATION
+BLOCKER: NONE
+HANDOFF_STATUS: ACTIVE_V81_S00_RECONCILIATION
+NEXT_ACTION_SCOPE: V81_S00_READ_ONLY_LINEAGE_RECONCILIATION
+NEXT_EXACT_ACTION: Resolve current main, accepted v0.8.0 Production evidence, PR #23, Playground/Production identity, worktrees/stashes/untracked sets, and main-merge deployment coupling; review only the current logical delta and begin bounded v0.8.1 stabilization without force-push, reset, clean, discard, provider write, or Production mutation.

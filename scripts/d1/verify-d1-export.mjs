@@ -25,7 +25,14 @@ export async function restoreAndVerifyD1Export(
     // immediate foreign-key enforcement. Load the private proof copy with
     // enforcement disabled, then fail closed on the complete restored graph.
     database.exec('PRAGMA foreign_keys = OFF');
-    database.exec(exportSql);
+    database.exec('BEGIN IMMEDIATE');
+    try {
+      database.exec(exportSql);
+      database.exec('COMMIT');
+    } catch (error) {
+      database.exec('ROLLBACK');
+      throw error;
+    }
     database.exec('PRAGMA foreign_keys = ON');
     const integrityOk =
       String(database.prepare('PRAGMA integrity_check').get()?.integrity_check ?? '').toLowerCase() === 'ok';

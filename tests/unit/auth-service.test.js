@@ -283,6 +283,31 @@ describe('v0.6 authentication and onboarding service', () => {
     ).rejects.toMatchObject({ code: 'STARTER_ASSIGNMENT_INVALID' });
   });
 
+  it('issues a playground session only for an active, onboarded, unlocked System Owner', async () => {
+    const { service, repository } = context;
+    await activate(service, { accessId: 'HAU-PLAYGROUND-OWNER-001' });
+    const account = repository.inspect().accounts[0];
+    const owner = { ...account, roleId: 'SYSTEM_OWNER' };
+    await repository.saveAccount(owner);
+
+    const issued = await service.issuePlaygroundSession({ accountId: owner.id });
+    expect(issued).toMatchObject({
+      state: 'AUTHENTICATED',
+      user: { authorization: { roleId: 'SYSTEM_OWNER' } },
+    });
+    expect(issued.sessionToken).toBeTruthy();
+    expect(issued.csrfToken).toBeTruthy();
+    expect(repository.inspect().auditEvents.at(-1)).toMatchObject({ event: 'PLAYGROUND_SESSION_ISSUED' });
+
+    await repository.saveAccount({ ...owner, lockedAt: '2026-07-21T08:05:00.000Z' });
+    await expect(service.issuePlaygroundSession({ accountId: owner.id })).rejects.toMatchObject({
+      code: 'ACCOUNT_UNAVAILABLE',
+    });
+    await expect(service.issuePlaygroundSession({ accountId: 'browser-selected-id' })).rejects.toMatchObject({
+      code: 'ACCOUNT_UNAVAILABLE',
+    });
+  });
+
   it('rejects wrong passwords, expired temporary passwords, and activation replay', async () => {
     const { service, clock } = context;
     await service.createStarterAccount({

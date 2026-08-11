@@ -7,6 +7,16 @@ const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
 describe('v0.8.0 release pipeline', () => {
+  it('does not require retired generated Apps Script UI artifacts for a V5 clean checkout', async () => {
+    const check = await read('scripts/check-apps-script.mjs');
+
+    expect(check).toContain(
+      "const v5WorkerCandidate = applicationIndex.includes('./v5/integration/entry.js')",
+    );
+    expect(check).toContain('requiredFiles.filter((file) => !generatedAppsScriptFiles.has(file))');
+    expect(check).toContain('Legacy generated UI artifacts are not applicable');
+  });
+
   it('keeps the Cloudflare preview static, manually gated, and free of protected bindings', async () => {
     const [workflow, config, handoff] = await Promise.all([
       read('.github/workflows/cloudflare-preview.yml'),
@@ -70,27 +80,40 @@ describe('v0.8.0 release pipeline', () => {
     expect(config).not.toHaveProperty('vars');
   });
 
-  it('packages an exact checked candidate without any deployment step or provider secret', async () => {
+  it('packages an exact checked candidate, deploys only to playground, and stops for Earl', async () => {
     const workflow = await read('.github/workflows/release-candidate.yml');
 
     expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\s+push:/mu);
     expect(workflow).toContain('environment: release-candidate');
     expect(workflow).toContain('ref: ${{ inputs.candidate_sha }}');
+    expect(workflow).toContain('refs/remotes/origin/${EXPECTED_BRANCH}');
     expect(workflow).toContain('npm run check');
     expect(workflow).toContain('create-release-candidate-manifest.mjs');
+    expect(workflow).toContain('.release/candidate.json');
+    expect(workflow).toContain('release-candidate-${{ steps.identity.outputs.sha }}');
     expect(workflow).toContain('actions/upload-artifact@v4');
-    expect(workflow).not.toMatch(/wrangler deploy|CLOUDFLARE_API_TOKEN|pull_request_target/u);
+    expect(workflow).not.toContain('apps-script/');
+    expect(workflow).toContain('environment: isolated-staging-playground');
+    expect(workflow).toContain('deploy-playground.mjs');
+    expect(workflow).toContain('CLOUDFLARE_API_TOKEN');
+    expect(workflow).toContain('attempt <= 15');
+    expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");
+    expect(workflow).toContain('version?.candidateSha === expected');
+    expect(workflow).toContain('Stop for Earl manual testing');
+    expect(workflow).not.toContain('deploy-environment.mjs production');
+    expect(workflow).not.toContain('pull_request_target');
   });
 
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
     const manifest = await createReleaseCandidateManifest();
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.0' });
+    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.1' });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);
     expect(manifest.artifacts.shareableHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
-    expect(manifest.artifacts.appsScriptHtmlSha256).toMatch(/^[0-9a-f]{64}$/u);
+    expect(manifest.artifacts).not.toHaveProperty('appsScriptHtmlSha256');
   });
 
   it('fails closed around staging smoke, recovery identity, and live deployment authorization', async () => {
@@ -120,7 +143,9 @@ describe('v0.8.0 release pipeline', () => {
     expect(deploy).toContain("path.join(repoRoot, 'dist')");
     expect(deploy).toContain('const artifactDirectory = path.join(repoRoot, expected.artifactDirectory)');
     expect(deploy).toContain("path.join(repoRoot, 'scripts', 'verify-deploy-artifact.mjs')");
-    expect(deploy).toContain("[wranglerExecutable, 'deploy', '-c', configPath, '--assets', artifactDirectory]");
+    expect(deploy).toContain(
+      "[wranglerExecutable, 'deploy', '-c', configPath, '--assets', artifactDirectory]",
+    );
     expect(deploy).not.toContain("execFileSync('npx', ['wrangler', 'deploy'");
     expect(deploy).toContain("target === 'staging' ? 'release/v0.8.0-inventory-truth-ledger-lock' : 'main'");
     expect(privateConfigs).toContain('resolvePrivatePath');

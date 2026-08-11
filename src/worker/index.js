@@ -1,7 +1,7 @@
 import { CAPABILITIES } from '../domain/permissions.js';
 import { AccessManagementError, createAccessManagementService } from '../server/access/service.js';
 import { createPasswordKdf, createTokenCrypto } from '../server/auth/crypto.js';
-import { AUTH_COOKIE, DEVELOPMENT_AUTH_COOKIE } from '../server/auth/cookies.js';
+import { AUTH_COOKIE, DEVELOPMENT_AUTH_COOKIE, serializeAuthCookie } from '../server/auth/cookies.js';
 import { createAuthHttpHandler, statusForAuthError } from '../server/auth/http-handler.js';
 import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
@@ -26,6 +26,11 @@ import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
 import { createReferenceLinkService } from '../server/reference-link-service.js';
+import {
+  createPlaygroundService,
+  isPlaygroundRuntime,
+  markPlaygroundModified,
+} from '../server/playground-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
@@ -469,6 +474,7 @@ async function version(env, requestId) {
     ok: true,
     correlationId: requestId,
     ...safeReleaseIdentity(env),
+    playground: isPlaygroundRuntime(env),
     database: {
       schemaVersion: schema?.value ?? '0',
       latestMigration: migration?.name ?? '',
@@ -478,6 +484,15 @@ async function version(env, requestId) {
 
 async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
+  if (url.pathname === '/api/playground/session' && request.method === 'POST' && !isPlaygroundRuntime(env)) {
+    return json(
+      {
+        error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED', message: 'The requested resource was not found.' },
+        correlationId: requestId,
+      },
+      404,
+    );
+  }
   const {
     access,
     accountApplications,
@@ -503,6 +518,54 @@ async function handleApi(request, env, requestId, executionContext) {
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return version(env, requestId);
+    }
+    if (url.pathname === '/api/playground/session' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      await body(request);
+      const owner = await env.DB.prepare(
+        `SELECT id FROM accounts
+         WHERE status = 'ACTIVE'
+           AND role_id = 'SYSTEM_OWNER'
+           AND onboarding_completed_at IS NOT NULL
+           AND locked_at IS NULL
+         ORDER BY created_at, id
+         LIMIT 1`,
+      ).first();
+      if (!owner?.id) {
+        throw new ApiError('PLAYGROUND_OWNER_UNAVAILABLE', 'The playground owner session is unavailable.', {
+          status: 503,
+        });
+      }
+      const issued = await auth.issuePlaygroundSession({ accountId: owner.id });
+      return json(
+        {
+          state: issued.state,
+          csrfToken: issued.csrfToken,
+          user: issued.user,
+          expiresAt: issued.expiresAt,
+          correlationId: requestId,
+        },
+        200,
+        { 'set-cookie': serializeAuthCookie(AUTH_COOKIE.session, issued.sessionToken) },
+      );
+    }
+    if (url.pathname === '/api/playground/status' && request.method === 'GET') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN);
+      return json({
+        ...(await createPlaygroundService(env).status()),
+        correlationId: requestId,
+        actor: { accountId: authorized.account.id },
+      });
+    }
+    if (url.pathname === '/api/playground/operation' && request.method === 'POST') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true });
+      return json({
+        ...(await createPlaygroundService(env).requestOperation({
+          ...(await body(request)),
+          actorAccountId: authorized.account.id,
+        })),
+        correlationId: requestId,
+      });
     }
     if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
@@ -1296,6 +1359,14 @@ export default {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();
       const response = await handleApi(request, env, requestId, executionContext);
+      if (
+        response.ok &&
+        isPlaygroundRuntime(env) &&
+        !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
+        !url.pathname.startsWith('/api/playground/')
+      ) {
+        executionContext.waitUntil(markPlaygroundModified(env.DB));
+      }
       response.headers.set('x-correlation-id', requestId);
       structuredLog({
         event: 'API_REQUEST_COMPLETED',

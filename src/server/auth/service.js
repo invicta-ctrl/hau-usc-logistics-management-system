@@ -343,6 +343,33 @@ export function createAuthService({
     return { state: 'AUTHENTICATED', csrfToken, user: sessionUserDto(current.account, session) };
   }
 
+  async function issuePlaygroundSession({ accountId } = {}) {
+    const account = await repository.getAccountById(accountId);
+    assert(
+      account?.status === ACCOUNT_STATUS.ACTIVE &&
+        account.onboardingCompletedAt &&
+        !account.lockedAt &&
+        account.roleId === 'SYSTEM_OWNER',
+      'ACCOUNT_UNAVAILABLE',
+    );
+    const authorization = accountAuthorization(account);
+    assert(
+      authorization.active &&
+        authorization.mappingStatus === 'MAPPED' &&
+        authorization.capabilities.includes(CAPABILITIES.SYSTEM_ADMIN),
+      'CAPABILITY_REQUIRED',
+    );
+    const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
+    await audit('PLAYGROUND_SESSION_ISSUED', account.id, { roleId: account.roleId });
+    return {
+      state: 'AUTHENTICATED',
+      sessionToken: issued.token,
+      csrfToken: issued.csrfToken,
+      user: sessionUserDto(account, issued.session),
+      expiresAt: issued.session.expiresAt,
+    };
+  }
+
   async function authenticate({ sessionToken } = {}) {
     const current = await readSession(sessionToken);
     return {
@@ -472,6 +499,7 @@ export function createAuthService({
     createStarterAccount,
     login,
     activateStarter,
+    issuePlaygroundSession,
     authenticate,
     authorizeSession,
     getSession,

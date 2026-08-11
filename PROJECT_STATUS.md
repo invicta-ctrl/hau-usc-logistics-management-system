@@ -2,21 +2,27 @@
 
 ## Current state
 
-- **Milestone:** v0.8.0 Inventory Truth and Ledger Lock is released and closed.
-- **Release identity:** candidate `26ee284cf066379e28a60511568053afd92c8768`; protected-main release `3059098ff2a2935fec59df52748ccae420aadba7`; annotated tag and GitHub Release `v0.8.0` resolve to that accepted main SHA.
-- **Runtime:** isolated staging and production report v0.8.0, schema 30, migration `0030_production_access_and_operations.sql`, readiness true, and protected configuration true.
-- **Migration:** `NONE_REQUIRED`; no migration was created or applied for v0.8.0.
-- **Inventory:** all four Slice 1 findings are closed by repair. The final invariant matrix is green, and pre/post-deploy reconciliation passes 20/20 with zero blocking or quarantine discrepancies.
-- **Recovery:** fresh private D1 export/Time Travel, isolated restore integrity/FK proof, Worker rollback, R2 metadata, and binding evidence are retained outside Git.
-- **External boundaries:** no Google write or provider/email send occurred. Production business data and immutable history were not rewritten.
-- **Writer:** none; handoff is ready.
-- **Next action:** execute the separately accepted Isolated Staging Playground conversion before v0.8.1. Do not begin it automatically.
+- **Milestone:** V0.8.1 Design DNA Research Gate, initial governance commit `4825f02dfa96b9e5e6fe018d1bfd252d7720f47d`, and the bounded post-commit closure-truth repair are complete; Luna's pre-commit final content audit PASS occurred before this closure commit, and an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff; implementation remains unauthorized pending Earl's design-direction decision.
+- **Design research:** eight independent live-reference studies, a reference matrix, one coherent USC Design DNA, proposed design/component/motion/3D/accessibility/performance systems, a module rollout plan, and an owner-facing gate handoff are complete under `docs/design/`.
+- **Proposed direction:** “Institutional Logistics Ledger” — a calm operational workbench with unequal overview hierarchy, evidence-led records, scarce gold focus, restrained continuity motion, and a 2D-authoritative optional spatial strategy.
+- **Design authority:** incumbent `DESIGN.md`, V5 source, and runtime fingerprint remain authoritative until Earl explicitly accepts a bounded implementation slice.
+- **Orchestration governance:** GPT-5.6 Sol is the sole read-only orchestrator with zero Sol children; Terra MAX is the sole writer class with one canonical integration writer and a 16-child cap; Luna MAX is read-only with a 16-child cap; only Sol may spawn at depth one.
+- **Production identity:** protected production remains `v0.8.0` at `3059098ff2a2935fec59df52748ccae420aadba7`; no production deployment, migration, or business-data mutation occurred.
+- **Playground:** exact frozen branch-tip candidate deploys only by explicit workflow dispatch to distinct working D1/R2 bindings; readiness, safe status, module switcher, real-login path, session protection, dirty/reset reconciliation, and CLEAN state pass.
+- **Parity:** the one-way production-derived D1/R2 baseline is verified with explicit privacy exceptions; credentials, sessions, private evidence, and protected roster identity are excluded or replaced deterministically.
+- **Git:** permanent pointers are `main`, `backup/last-known-good`, and `regression/r1` through `regression/r3`; the only active temporary production-bound branch is `release/v0.8.1-isolated-staging-playground`. No staging, playground, production, or develop branch was created.
+- **Migration:** `NONE_REQUIRED`; schema 30 and `0030_production_access_and_operations.sql` remain current.
+- **Recovery:** prior staging Worker/D1/R2, fresh private exports, D1 reset bookmarks, R2 manifests, and rollback evidence remain outside Git.
+- **External boundaries:** Google writes and provider/email sends are none. Production D1 and R2 read-only pre/post fingerprints are unchanged.
+- **Writer:** `ACTIVE_WRITER: NONE`; the canonical governance-only lock is released after `TERRA_MAX:terra_governance_writer` completed the closure-truth repair; no product/runtime file was in scope.
+- **Next action:** Earl reviews the Design Gate and explicitly approves, rejects, or amends the proposed Institutional Logistics Ledger direction and bounded `admin.overview` first slice; do not implement or deploy before that decision.
 
 ## Verification
 
-- Focused authorized test: 2/2 passed at the affected widths.
-- Canonical repository gate: 125 files / 868 tests passed, including deterministic build/parity, Cloudflare types, and dry-run.
-- Exact-source Worker/browser: 58/58 passed.
-- Exact-head workflow, protected PR checks, main-push CI, and CodeQL passed.
-- Staging and production full-stack smoke, exact identity, recovery, restore, and reconciliation passed.
-- Fresh independent high-risk review found zero unresolved P0/P1.
+- Focused governance validation passed before the initial normal commit/push: pre-final Sol review and Luna review/recheck; `tests/unit/codex-governance.test.js` (14 tests); `check:agents` (12 project files); `check:continuation`; and `handoff:verify`. Markdown/JavaScript formatting, `git diff --check`, the complete logical-diff review, and the targeted active-governance contradiction scan passed; TOML is validated by the repository's restricted-TOML governance check. The completed post-commit closure-truth repair reran focused Prettier, `git diff --check`, `check:governance`, `handoff:verify`, ledger/record coherence, targeted contradiction/no-disallowed-path checks, and complete-diff review successfully; Luna's pre-commit final content audit PASS occurred before this closure commit, and an independent read-only exact-SHA audit follows normal closure commit/push before Sol's owner handoff.
+- Research documentation and the completed governance amendment passed their applicable link/path, formatting, governance, handoff, focused validation, and complete-diff reviews; neither changed application, build, generated artifact, migration, or provider configuration.
+- Live public-reference research covered search/filter/command/component-preview/3D-orbit states. The managed browser was fixed at 1280 × 720, so implementation-phase responsive testing remains required.
+- Canonical `npm run check`: governance/handoff, lint (zero errors; one existing warning), deterministic build, 133 files / 891 tests, Apps Script, dist parity, Cloudflare types, and dry-run pass.
+- Playground suite: 8 files / 23 tests pass, including production-denial, branch-governance, baseline, reset, read-only R2 fingerprint, and session-guard coverage.
+- Live privileged playground probe and deliberate D1/R2 dirty/reset rehearsal pass.
+- Production D1 export integrity/FK/schema/migration and exact pre/post fingerprint pass; safe R2 pre/post fingerprint evidence is retained privately.

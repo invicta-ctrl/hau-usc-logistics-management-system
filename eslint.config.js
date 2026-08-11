@@ -20,7 +20,7 @@ export default [
     rules: { 'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }] },
   },
   {
-    files: ['tests/**/*.js', '*.config.js', 'scripts/**/*.mjs', 'tools/**/*.mjs'],
+    files: ['tests/**/*.js', '*.config.js', 'scripts/**/*.mjs', 'tools/**/*.mjs', 'src/v5/tools/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

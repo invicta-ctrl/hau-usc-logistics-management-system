@@ -25,13 +25,30 @@ Then perform the required Git handshake. Expand the read set only through an act
 
 ## Writer lock and transfer
 
-ACTIVE_WRITER is a hard lock. Only that writer edits the branch. A handoff keeps the lock active until a reviewed transfer or completion explicitly changes it to NONE.
+`ACTIVE_WRITER` is a hard, singular canonical-branch lock. During a writing task
+it names exactly one `TERRA_INTEGRATION_WRITER` as
+`TERRA_MAX:<task-or-agent-id>`; Sol and Luna never hold it. A handoff keeps the
+lock active until an approved transfer or completed task explicitly changes it to
+`NONE`.
 
-A valid transfer records branch, HEAD, upstream state, worktree state, accepted specification, completed work, verification, blocker, next exact action, resume commands, and prohibited actions. Run npm run handoff:verify before transfer.
+A valid transfer records branch, HEAD, upstream state, worktree state, accepted
+specification, governance amendment when applicable, completed work,
+verification, blocker, next exact action, resume commands, prohibited actions,
+and the task-local Terra/Luna delegation ledger. Run `npm.cmd run handoff:verify`
+before transfer.
 
 ## Model routing and escalation
 
-The current task's REQUIRED_MODEL is authoritative for ordinary implementation. Route decisions by risk, not by historical version labels:
+The root `AGENTS.md` model policy is mandatory. `REQUIRED_MODEL: GPT-5.6 SOL`
+identifies the sole read-only top-level orchestrator, not the writer. Sol alone
+may create child tasks, with one delegation level: zero Sol children, up to 16
+Terra MAX writer-class children, and up to 16 Luna MAX read-only reviewer
+children. No silent substitution is allowed.
+
+Every writing task has one canonical Terra Integration Writer. Additional Terra
+work requires isolated non-overlapping scopes. Luna reports independent findings
+to Sol without editing the repository or provider state. Route decisions by risk,
+not by historical model language in preserved specifications:
 
 - Escalate before changing authentication/session architecture, authorization/capability semantics, ledger or immutable-record invariants, migration/database architecture, recovery guarantees, secrets/privacy posture, or a production boundary.
 - Stop on a material unresolved escalation; record the affected scope and exact decision required.

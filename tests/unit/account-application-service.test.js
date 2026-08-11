@@ -523,12 +523,24 @@ describe('account-application service', () => {
     const unknown = await configured.service.startEmailVerification({ email: 'unknown@example.test' });
     expect(approved).toEqual(unknown);
     expect(configured.sent).toHaveLength(1);
+    expect(configured.sent[0].verificationCode).toMatch(/^\d{8}$/u);
     expect(configured.repository.inspect().challenges).toHaveLength(1);
 
     const failClosed = testContext({ providerConfigured: false });
     const unavailable = await failClosed.service.startEmailVerification({ email: 'eligible@example.test' });
     expect(unavailable).toEqual(approved);
     expect(failClosed.repository.inspect().challenges).toEqual([]);
+  });
+
+  it('rejects malformed verification codes without weakening the generic failure boundary', async () => {
+    const context = testContext();
+    await context.service.startEmailVerification({ email: 'eligible@example.test' });
+
+    for (const code of ['', '1234567', '123456789', '12AB5678', ' 1234567 ']) {
+      await expect(
+        context.service.confirmEmailVerification({ email: 'eligible@example.test', code }),
+      ).rejects.toMatchObject({ code: 'VERIFICATION_INVALID' });
+    }
   });
 
   it('stores only verification/status digests and returns each opaque credential boundary once', async () => {
