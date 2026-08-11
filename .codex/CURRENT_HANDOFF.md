@@ -13,23 +13,33 @@ TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
 LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
-LOCK_CONTINUITY: A3_V81_S02_BRANCH_BOUNDARY
-LOCK_HEARTBEAT_AT: 2026-08-11T21:03:13.3549823+08:00
+LOCK_CONTINUITY: A3_V81_S03_S04_GOVERNANCE_CLASSIFICATION
+LOCK_HEARTBEAT_AT: 2026-08-11T21:32:34.5783790+08:00
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
+MILESTONE: V81-S04_CLASSIFICATION_ACCEPTED
 RELEASE: v0.8.1
-RELEASE_STATE: V81-S02_BRANCH_READY
-RELEASE_STATUS: V81-S02_BRANCH_READY
-STATUS: V81-S02_BRANCH_READY
+RELEASE_STATE: V81-S04_CLASSIFICATION_ACCEPTED
+RELEASE_STATUS: V81-S04_CLASSIFICATION_ACCEPTED
+STATUS: V81-S04_CLASSIFICATION_ACCEPTED
 V81_S00: PASS
 V81_S01: PASS_ACCEPTED_A3_SPEC
 V81_S02: PASS_BRANCH_READY
+V81_S03: PASS_ANNOTATION_LEDGER_42
+V81_S04: PASS_CLASSIFICATION_ACCEPTED
 PRIVATE_PRESERVATION: VERIFIED
 UNKNOWN_WORK_AT_RISK: 0
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
 EXECUTION_PACKET: .codex/releases/v0.8.1/V0_8_1_EXECUTION_PACKET.md
+ANNOTATION_LEDGER: .codex/releases/v0.8.1/V0_8_1_ANNOTATION_LEDGER.md
+ANNOTATION_LEDGER_COUNTS: ROWS=42; A=7; B=13; C=11; D=3; E=8; F=0
+S04_R1_SELECTION: V-01,V-02,V-04,V-06,V-07,V-08,V-09,V-25,V-39
+S04_R2_SELECTION: V-12,V-17,V-20,V-22,V-33
+S04_EVIDENCE_ONLY_NO_CODE: V-13,V-18,V-21,V-32
+S04_DEFERRED: B=EVIDENCE_REQUIRED; D/E/F=DEFERRED; F_COUNT=0
+HALLMARK_AUDIT: DESIGN_MD_AND_INSPECTED_LANDING_STAMPS=TRUTHFUL; NAMED_SLOP_FINDINGS=CRITICAL0/MAJOR0/MINOR0; OWNER_FINDINGS=OPERATIONAL_CONTEXT_COPY_CONTRACT_EVIDENCE
 BASE_MAIN_SHA: b08653f02a7461084a4a34dfae1de67d5cb8ca57
 BASE_MAIN_TREE: 0c1b2caeba23f6f3ac873d00e243cf0d4d7987a4
 PR23: MERGED; HEAD=0e7655f1f316904a90271963ea3016533c1d1174; MAIN_TREE_PARITY=PASS
@@ -37,11 +47,11 @@ MAIN_CI: PASS
 MAIN_CODEQL: PASS
 MAIN_MERGE_AUTO_PRODUCTION_DEPLOY: FALSE
 PRODUCTION: UNCHANGED; ENVIRONMENT=PRODUCTION; APP=v0.8.0; CANDIDATE=3059098; SCHEMA=30; OK=TRUE; READY=TRUE
-COMPLETED: V81-S00 lineage reconciliation PASS; V81-S01 accepted A3 specification PASS; V81-S02 final-stabilization branch and packet ready.
-VALIDATION: PR23 merged; main tree parity PASS; main CI and CodeQL PASS; Production unchanged; preservation hashes and untracked46 retained.
-EXTERNAL_ACTIONS: NONE_PRODUCT_PROVIDER_DEPLOY_PR_MIGRATION_RUNTIME
+COMPLETED: V81-S00 lineage reconciliation PASS; V81-S01 accepted A3 specification PASS; V81-S02 branch ready; V81-S03 sanitized 42-row ledger complete; V81-S04 locked classification and R1/R2 selection accepted; no product mutation.
+VALIDATION: S03 records current-source reproduction or explicit render/contract evidence gaps; S04 class counts and selections are locked; product tests are not run by this governance-only scope; S05 requires fresh high-risk Luna audit before product edits.
+EXTERNAL_ACTIONS: NONE_PRODUCT_PROVIDER_DEPLOY_PR_MIGRATION_RUNTIME; GOVERNANCE_RECORDS_ONLY
 BLOCKER: NONE
-HANDOFF_STATUS: ACTIVE_V81_FINAL_STABILIZATION
+HANDOFF_STATUS: ACTIVE_V81_S04_CLASSIFICATION_ACCEPTED
 CAPTURE_STATUS: VERIFIED
 CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
 RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
@@ -50,7 +60,7 @@ PRIMARY_PRESERVED: 46;4461409;804CF85CF1D46C9ACFEA5B60A548472C672B546B932A9945B3
 SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6AFACEA8BFD9F7AC0D
 DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
 GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
-RESUME_COMMANDS: Read the three current records and the execution packet; enter the bounded V81-S03 annotation-ledger and defect-reproduction gate.
+RESUME_COMMANDS: Read the three current records, execution packet, and annotation ledger; enter only the bounded V81-S05 repair-design and contract-test-plan gate.
 PROHIBITED_ACTIONS: No provider, Playground, Production, migration, merge, recovery-pointer, runtime, broad-redesign, early-PIH, force-push, reset, clean, discard, or untracked-artifact staging action.
-NEXT_ACTION_SCOPE: V81_S03_ANNOTATION_AND_DEFECT_REPRODUCTION
-NEXT_EXACT_ACTION: Enter V81-S03, build the 42-item owner-annotation ledger, reproduce the five known blocker families and affected daily-use routes against current source, classify A/B/C for bounded v0.8.1 repair and defer D/E/F under A3, then implement only confirmed defects with focused tests; no provider, Playground, Production, migration, merge, or recovery-pointer action before the named gates.
+NEXT_ACTION_SCOPE: V81_S05_FOCUSED_REPAIR_DESIGN_AND_CONTRACT_TEST_PLAN
+NEXT_EXACT_ACTION: Enter V81-S05, design the two accepted bounded repair slices R1 access/copy/form clarity and R2 queue discovery/contextual affordances with exact source seams, contract invariants, accessibility behavior, focused tests, rollback scope, and a fresh high-risk Luna audit before product edits; B remains evidence-required and D/E/F deferred; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.

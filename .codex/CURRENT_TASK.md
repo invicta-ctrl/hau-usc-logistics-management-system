@@ -1,31 +1,35 @@
 # Current Bounded Task
 
-INTENT: V81_S02_BRANCH_BOUNDARY
+INTENT: V81_S03_S04_GOVERNANCE_CLASSIFICATION
 MODE: EXECUTE
-OBJECTIVE: Establish the durable v0.8.1 final-stabilization branch and execution packet, then enter S03 annotation-ledger and defect reproduction without product mutation.
-TARGET: release/v0.8.1-final-stabilization from accepted main; owner-annotation evidence; current source and daily-use routes.
+OBJECTIVE: Complete the sanitized 42-row S03 annotation ledger and accept the locked S04 classification and bounded R1/R2 repair selection without product mutation.
+TARGET: release/v0.8.1-final-stabilization; owner-annotation evidence; current source and daily-use route seams; S05 repair-design boundary.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
 EXECUTION_PACKET: .codex/releases/v0.8.1/V0_8_1_EXECUTION_PACKET.md
-AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; Sol authorized the V81 post-main-merge S02 branch boundary.
+ANNOTATION_LEDGER: .codex/releases/v0.8.1/V0_8_1_ANNOTATION_LEDGER.md
+AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; Sol authorized the bounded V81-S03/S04 governance-only classification task.
 REQUIRED_MODEL: GPT-5.6 SOL
 ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_v3
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
 LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
-LOCK_CONTINUITY: A3_V81_S02_BRANCH_BOUNDARY
-LOCK_HEARTBEAT_AT: 2026-08-11T21:03:13.3549823+08:00
+LOCK_CONTINUITY: A3_V81_S03_S04_GOVERNANCE_CLASSIFICATION
+LOCK_HEARTBEAT_AT: 2026-08-11T21:32:34.5783790+08:00
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
+MILESTONE: V81-S04_CLASSIFICATION_ACCEPTED
 RELEASE: v0.8.1
-RELEASE_STATE: V81-S02_BRANCH_READY
-RELEASE_STATUS: V81-S02_BRANCH_READY
-STATUS: V81-S02_BRANCH_READY
+RELEASE_STATE: V81-S04_CLASSIFICATION_ACCEPTED
+RELEASE_STATUS: V81-S04_CLASSIFICATION_ACCEPTED
+STATUS: V81-S04_CLASSIFICATION_ACCEPTED
 V81_S00: PASS
 V81_S01: PASS_ACCEPTED_A3_SPEC
 V81_S02: PASS_BRANCH_READY
+V81_S03: PASS_ANNOTATION_LEDGER_42
+V81_S04: PASS_CLASSIFICATION_ACCEPTED
 PRIVATE_PRESERVATION: VERIFIED
 UNKNOWN_WORK_AT_RISK: 0
 BRANCH: release/v0.8.1-final-stabilization
@@ -41,12 +45,18 @@ MAIN_MERGE_AUTO_PRODUCTION_DEPLOY: FALSE
 PRODUCTION: UNCHANGED; ENVIRONMENT=PRODUCTION; APP=v0.8.0; CANDIDATE=3059098; SCHEMA=30; OK=TRUE; READY=TRUE
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 WORKTREE_STATE: GIT_STATUS
-RISK: HIGH_GOVERNANCE_AND_DEFECT_REPRODUCTION_BOUNDARY
-SCOPE: S02 records and execution packet only; S03 follows with a 42-item ledger and reproduction of the five known blocker families.
+ANNOTATION_LEDGER_COUNTS: ROWS=42; A=7; B=13; C=11; D=3; E=8; F=0
+S04_R1_SELECTION: V-01,V-02,V-04,V-06,V-07,V-08,V-09,V-25,V-39
+S04_R2_SELECTION: V-12,V-17,V-20,V-22,V-33
+S04_EVIDENCE_ONLY_NO_CODE: V-13,V-18,V-21,V-32
+S04_DEFERRED: B=EVIDENCE_REQUIRED; D/E/F=DEFERRED; F_COUNT=0
+HALLMARK_AUDIT: DESIGN_MD_AND_INSPECTED_LANDING_STAMPS=TRUTHFUL; NAMED_SLOP_FINDINGS=CRITICAL0/MAJOR0/MINOR0; OWNER_FINDINGS=OPERATIONAL_CONTEXT_COPY_CONTRACT_EVIDENCE
+RISK: HIGH_GOVERNANCE_CLASSIFICATION_WITHOUT_PRODUCT_MUTATION
+SCOPE: Create the sanitized S03 ledger and synchronize three current-chain records for S04 classification only.
 OUT_OF_SCOPE: Product/runtime/provider/Playground/Production/migration/merge/recovery-pointer action, broad redesign, early PIH work, untracked-artifact staging, force-push, reset, clean, discard, or ref mutation.
-VERIFICATION: npm.cmd run handoff:verify; git diff --check; exact four-Markdown Prettier; structural privacy; duplicate-key and identical-NEXT checks; exact four-path diff scope; staged0 before commit; untracked46 unchanged.
+VERIFICATION: npm.cmd run handoff:verify; git diff --check; exact four-Markdown Prettier; deterministic privacy; exact 42-row class and selection checks; identical shared fields and NEXT; exact four-path diff scope; staged0 before commit; untracked46 unchanged.
 STOP_CONDITIONS: Source or main drift, competing writer, preservation mismatch, privacy exposure, unexpected tracked change, provider or Production crossover, scope expansion, or failed governance validation.
-SKILLS: NONE_REQUIRED_GOVERNANCE_BRANCH_BOUNDARY
+SKILLS: HALLMARK_AUDIT_GOVERNANCE_EVIDENCE_ONLY
 CAPTURE_STATUS: VERIFIED
 CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
 RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
@@ -56,6 +66,6 @@ SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6
 DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
 GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
 BLOCKER: NONE
-HANDOFF_STATUS: ACTIVE_V81_FINAL_STABILIZATION
-NEXT_ACTION_SCOPE: V81_S03_ANNOTATION_AND_DEFECT_REPRODUCTION
-NEXT_EXACT_ACTION: Enter V81-S03, build the 42-item owner-annotation ledger, reproduce the five known blocker families and affected daily-use routes against current source, classify A/B/C for bounded v0.8.1 repair and defer D/E/F under A3, then implement only confirmed defects with focused tests; no provider, Playground, Production, migration, merge, or recovery-pointer action before the named gates.
+HANDOFF_STATUS: ACTIVE_V81_S04_CLASSIFICATION_ACCEPTED
+NEXT_ACTION_SCOPE: V81_S05_FOCUSED_REPAIR_DESIGN_AND_CONTRACT_TEST_PLAN
+NEXT_EXACT_ACTION: Enter V81-S05, design the two accepted bounded repair slices R1 access/copy/form clarity and R2 queue discovery/contextual affordances with exact source seams, contract invariants, accessibility behavior, focused tests, rollback scope, and a fresh high-risk Luna audit before product edits; B remains evidence-required and D/E/F deferred; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.
