@@ -35,6 +35,11 @@ test('verified STAGING exposes the complete searchable Playground Index with a s
 
   await expect(page.getByRole('heading', { name: 'Isolated Staging Playground Index' })).toBeVisible();
   await expect(page.locator('.preview-bar')).toContainText('Isolated Staging Playground');
+  const releaseIdentity = page.locator('[data-playground-release-identity]');
+  await expect(releaseIdentity).toHaveText(
+    `STAGING TEST ENV | v0.8.1-playground.test | SHA ${'b'.repeat(12)}`,
+  );
+  await expect(releaseIdentity).not.toContainText('b'.repeat(40));
   await expect(page.locator('[data-index-group]')).toHaveCount(GROUPS.length);
   await expect(page.locator('[data-index-item]')).toHaveCount(SURFACES.length);
   await expect(page.locator('#index-search-status')).toHaveText(`${SURFACES.length} routes available`);
@@ -68,6 +73,7 @@ test('production identity cannot activate playground chrome or the Index route',
 
   await expect(page.getByRole('heading', { name: 'Holy Angel University Student Council' })).toBeVisible();
   await expect(page.locator('.preview-bar')).toHaveCount(0);
+  await expect(page.locator('[data-playground-release-identity]')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Isolated Staging Playground Index' })).toHaveCount(0);
   await expect(page.locator('[href="#/index"]')).toHaveCount(0);
   await expect(page).toHaveURL(/#\/public\.landing$/u);
@@ -75,6 +81,37 @@ test('production identity cannot activate playground chrome or the Index route',
   expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
+});
+
+test('invalid release identity cannot activate the Playground cue or owner session', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The invalid identity guard runs once.');
+  const requests = await installV5ApiFixture(page, { environment: STAGING });
+  await page.route('**/api/version', async (route) => {
+    if (new URL(route.request().url()).pathname !== '/api/version') return route.fallback();
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        environment: 'STAGING',
+        playground: true,
+        appVersion: '0.8.1-playground.test',
+        releaseVersion: '0.8.1-playground.other',
+        candidateSha: 'B'.repeat(40),
+        database: { schemaVersion: '30' },
+      }),
+    });
+  });
+
+  await page.goto('/#/index');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'Holy Angel University Student Council' })).toBeVisible();
+  await expect(page.locator('[data-playground-release-identity]')).toHaveCount(0);
+  expect((await integrationStatus(page)).playgroundVerified).toBe(false);
+  expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
 });
 
 test('published public announcement drives the major-event landing content without arbitrary markup', async ({
@@ -387,11 +424,11 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
   );
   const requestRow = page.locator('[data-act="select:request"]').first();
   await expect(requestRow).toBeVisible();
+  let activeRequestMount;
   if (mobileViewport) {
     await requestRow.click();
-    const activeDrawerMount = page.locator('.drawer:visible [data-v5-contextual-mount="request.queue"]');
-    await expect(activeDrawerMount).toHaveCount(1);
-    await expect(activeDrawerMount.locator('[data-v5-command="request-review"]')).toBeVisible();
+    activeRequestMount = page.locator('.drawer:visible [data-v5-contextual-mount="request.queue"]');
+    await expect(activeRequestMount).toHaveCount(1);
     expect(
       await page.locator('#surface-main [data-v5-command="request-review"]').evaluateAll(
         (forms) =>
@@ -404,11 +441,21 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
       ),
     ).toBe(0);
   } else {
-    const activeDesktopMount = page.locator(
-      '.split__detail:visible [data-v5-contextual-mount="request.queue"]',
-    );
-    await expect(activeDesktopMount.locator('[data-v5-command="request-review"]')).toBeVisible();
+    activeRequestMount = page.locator('.split__detail:visible [data-v5-contextual-mount="request.queue"]');
   }
+  for (const command of ['request-review', 'request-information', 'request-reject', 'request-reserve']) {
+    const form = activeRequestMount.locator(`[data-v5-command="${command}"]`);
+    await expect(form).toBeVisible();
+    await expect(form.locator('input[name="requestId"]')).toHaveValue('REQ-DEMO-431');
+  }
+  await expect(
+    activeRequestMount.locator('[data-v5-command="request-reserve"] option[value^="RQL-DEMO-431-"]'),
+  ).toHaveCount(1);
+  expect(
+    await activeRequestMount
+      .locator('input[name="requestId"]')
+      .evaluateAll((inputs) => inputs.map((input) => input.value)),
+  ).toEqual(Array(4).fill('REQ-DEMO-431'));
   await expect(page.locator('[data-v5-parity-mount="fallback"]')).toHaveCount(0);
 
   await page.goto('/#/events.series');
@@ -422,6 +469,138 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
   );
   await expect(eventForm).toBeVisible();
   await expect(eventForm.locator('input, select, textarea').first()).toBeFocused();
+});
+
+test('off-canvas navigation is inert when closed and preserves deterministic focus', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The exact 1023/1024 boundary runs once.');
+  await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+  await page.setViewportSize({ width: 1023, height: 800 });
+  await page.goto('/#/request.queue');
+  await waitForV5(page);
+
+  const rail = page.locator('#primary-navigation');
+  const toggle = page.locator('[data-act="toggle-rail"]');
+  await expect(rail).toHaveAttribute('inert', '');
+  await expect(rail).toHaveAttribute('aria-hidden', 'true');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(await rail.locator(':focus').count()).toBe(0);
+
+  await toggle.click();
+  await expect(rail).not.toHaveAttribute('inert', '');
+  await expect(rail).not.toHaveAttribute('aria-hidden', 'true');
+  await expect(rail.locator('.nav-item:visible').first()).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(rail).toHaveAttribute('inert', '');
+  await expect(toggle).toBeFocused();
+
+  await toggle.click();
+  await page.locator('.rail__scrim').click();
+  await expect(rail).toHaveAttribute('inert', '');
+  await expect(toggle).toBeFocused();
+
+  await toggle.click();
+  await rail.locator('[data-act="go"][data-id="admin.overview"]').click();
+  await expect(page).toHaveURL(/#\/admin\.overview$/u);
+  await expect(page.locator('#surface-main')).toBeFocused();
+  await expect(rail).toHaveAttribute('inert', '');
+  await expectNoHorizontalOverflow(page);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await toggle.click();
+  await expect(rail).not.toHaveAttribute('inert', '');
+  await page.keyboard.press('Escape');
+  await expect(toggle).toBeFocused();
+
+  await page.setViewportSize({ width: 1024, height: 800 });
+  await expect(rail).not.toHaveAttribute('inert', '');
+  await expect(rail).not.toHaveAttribute('aria-hidden', 'true');
+  await page.locator('[data-act="open-menu"]').click();
+  await expect(rail).toHaveAttribute('inert', '');
+  await page.getByRole('menuitem', { name: 'Session details' }).click();
+  await expect(rail).not.toHaveAttribute('inert', '');
+  await expectNoHorizontalOverflow(page);
+});
+
+test('admin overview remains visible and unclipped at the governed responsive widths', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The responsive evidence matrix runs once.');
+  await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+  for (const width of [320, 390, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/#/admin.overview');
+    await waitForV5(page);
+    await page.waitForFunction(() =>
+      globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('admin.overview'),
+    );
+    for (const selector of [
+      '.overview-briefing',
+      '.overview-workbench',
+      '.overview-workbench__primary',
+      '.overview-workbench__support',
+    ]) {
+      const box = await page.locator(selector).boundingBox();
+      expect(box, `${selector} must render at ${width}px`).not.toBeNull();
+      expect(box.x, `${selector} left edge at ${width}px`).toBeGreaterThanOrEqual(-1);
+      expect(box.x + box.width, `${selector} right edge at ${width}px`).toBeLessThanOrEqual(width + 1);
+    }
+    await expect(
+      page.getByRole('heading', { name: 'Decisions, custody, and release in one line of sight.' }),
+    ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+  }
+});
+
+test('sticky public masthead never overlaps the hero heading at governed scroll positions', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The sticky geometry matrix runs once.');
+  await installV5ApiFixture(page, { environment: STAGING });
+
+  const expectNoStickyOverlap = async (width, label) => {
+    const geometry = await page.evaluate(() => {
+      const masthead = document.querySelector('.public__bar')?.getBoundingClientRect();
+      const heading = document.querySelector('.landing-hero h1')?.getBoundingClientRect();
+      if (!masthead || !heading) return null;
+      const overlapX = Math.max(
+        0,
+        Math.min(masthead.right, heading.right) - Math.max(masthead.left, heading.left),
+      );
+      const overlapY = Math.max(
+        0,
+        Math.min(masthead.bottom, heading.bottom) - Math.max(masthead.top, heading.top),
+      );
+      const pointX = Math.min(window.innerWidth - 1, Math.max(0, heading.left + heading.width / 2));
+      const pointY = Math.min(window.innerHeight - 1, Math.max(0, heading.top + heading.height / 2));
+      const headingVisible = heading.bottom > 0 && heading.top < window.innerHeight;
+      const pointOwner = headingVisible ? document.elementFromPoint(pointX, pointY) : null;
+      return {
+        overlapArea: overlapX * overlapY,
+        headingVisible,
+        headingOwnsCenter: !headingVisible || Boolean(pointOwner?.closest('.landing-hero h1')),
+      };
+    });
+    expect(geometry, `geometry exists at ${width}px ${label}`).not.toBeNull();
+    expect(geometry.overlapArea, `no overlap at ${width}px ${label}`).toBe(0);
+    expect(geometry.headingOwnsCenter, `hero heading is unobscured at ${width}px ${label}`).toBe(true);
+  };
+
+  for (const width of [320, 390, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/#/public.landing');
+    await waitForV5(page);
+    await expectNoStickyOverlap(width, 'initial');
+    await page
+      .locator('.landing-hero h1')
+      .evaluate((heading) => heading.scrollIntoView({ block: 'center', behavior: 'auto' }));
+    await expectNoStickyOverlap(width, 'scrollIntoView');
+    await page.evaluate(() => window.scrollBy({ top: 240, behavior: 'auto' }));
+    await expectNoStickyOverlap(width, 'representative scroll');
+    await expectNoHorizontalOverflow(page);
+  }
 });
 
 test('Test Real Login Flow disables convenience unlock until the tester resumes it', async ({

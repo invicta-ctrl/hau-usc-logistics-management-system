@@ -9,6 +9,18 @@
    reference ids and secondary metadata are the first to go. */
 
 /* ---- 1180px: detail leaves the split and becomes a drawer ---- */
+@media (max-width: 640px) {
+  .preview-bar__brand {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .preview-bar__identity {
+    flex-basis: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
 @container app (max-width: 1180px) {
   .split {
     grid-template-columns: minmax(0, 1fr);

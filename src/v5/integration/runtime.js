@@ -103,6 +103,8 @@ const text = (...values) => {
 };
 
 const PLAYGROUND_REAL_LOGIN_KEY = 'hau-usc-playground-real-login';
+const RELEASE_VERSION_PATTERN =
+  /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u;
 
 function realLoginRequested() {
   try {
@@ -301,9 +303,13 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function render(nextVariant) {
+    const restoreMainFocus = document.activeElement?.id === 'surface-main';
     if (nextVariant) app.integrationState.variant = nextVariant;
     app.integrationRender();
-    queueMicrotask(afterRender);
+    queueMicrotask(() => {
+      afterRender();
+      if (restoreMainFocus) document.dispatchEvent(new CustomEvent('hau:v5-focus-main'));
+    });
   }
 
   function routeState(currentRoute, wanted, fallback = 'populated') {
@@ -532,19 +538,31 @@ export function createV5Runtime({ backend, app }) {
     try {
       const [identity, health] = await Promise.all([backend.version(), backend.health()]);
       integration.releaseIdentity = identity;
+      const appVersion = text(identity?.appVersion);
+      const releaseVersion = text(identity?.releaseVersion);
+      const candidateSha = text(identity?.candidateSha);
       integration.playgroundVerified = Boolean(
+        identity?.ok === true &&
         identity?.playground === true &&
         String(identity?.environment ?? '').toUpperCase() === 'STAGING' &&
+        health?.ok === true &&
         String(health?.environment ?? '').toUpperCase() === 'STAGING' &&
         health?.database?.connected === true &&
         health?.dependencies?.d1 === true &&
         health?.dependencies?.brandAssets === true &&
-        health?.dependencies?.evidenceAssets === true,
+        health?.dependencies?.evidenceAssets === true &&
+        RELEASE_VERSION_PATTERN.test(appVersion) &&
+        appVersion === releaseVersion &&
+        /^[0-9a-f]{40}$/u.test(candidateSha),
       );
     } catch {
+      integration.releaseIdentity = null;
       integration.playgroundVerified = false;
     }
-    app.integrationSetPlaygroundContext(integration.playgroundVerified);
+    app.integrationSetPlaygroundContext(
+      integration.playgroundVerified,
+      integration.playgroundVerified ? integration.releaseIdentity : null,
+    );
   }
 
   async function pollScopedRevision() {

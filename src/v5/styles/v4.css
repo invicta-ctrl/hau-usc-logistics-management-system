@@ -2704,6 +2704,11 @@ button[aria-disabled="true"],
     display: none;
   }
 
+  .overview-briefing,
+  .overview-workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .account-button__text {
     display: none;
   }
@@ -3289,4 +3294,9 @@ button[aria-disabled="true"],
     flex: 1 1 auto;
     padding-inline: 8px;
   }
+}
+
+.public--landing .public__bar {
+  position: relative;
+  top: auto;
 }

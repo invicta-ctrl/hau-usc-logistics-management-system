@@ -43,6 +43,7 @@ const state = {
   theme: initialTheme(),
   viewport: 'desktop',
   playgroundVerified: false,
+  releaseIdentity: null,
   authorizedRoutes: [],
   accountName: 'Authorized user',
   role: 'ADMINISTRATOR',
@@ -162,6 +163,59 @@ let lastFocusedSelector = null;
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+function frameWidth() {
+  const width = root.querySelector('.frame')?.clientWidth;
+  return Number.isFinite(width) && width > 0 ? width : window.innerWidth;
+}
+
+function narrowRail() {
+  return frameWidth() <= 1023;
+}
+
+function focusMenuControl() {
+  document.querySelector('[data-act="toggle-rail"]')?.focus({ preventScroll: true });
+}
+
+function focusRailEntry() {
+  const railNode = document.getElementById('primary-navigation');
+  if (!railNode) return;
+  const firstVisible = [...railNode.querySelectorAll(FOCUSABLE)].find(
+    (node) => node.offsetParent !== null && !node.closest('[inert],[aria-hidden="true"]'),
+  );
+  (firstVisible ?? railNode).focus({ preventScroll: true });
+}
+
+function syncRailAccessibility() {
+  const railNode = document.getElementById('primary-navigation');
+  const menuControl = document.querySelector('[data-act="toggle-rail"]');
+  if (!railNode || !menuControl) return;
+  const narrow = narrowRail();
+  const open = narrow ? state.drawer === 'open' : state.rail === 'expanded';
+  const hidden = Boolean(state.overlay) || (narrow && !open);
+  const focusWasInside = railNode.contains(document.activeElement);
+  railNode.inert = hidden;
+  if (hidden) {
+    railNode.setAttribute('inert', '');
+    railNode.setAttribute('aria-hidden', 'true');
+  } else {
+    railNode.removeAttribute('inert');
+    railNode.removeAttribute('aria-hidden');
+  }
+  menuControl.dataset.drawerOpen = String(narrow && open);
+  menuControl.setAttribute('aria-expanded', String(open));
+  menuControl.setAttribute(
+    'aria-label',
+    narrow
+      ? open
+        ? 'Close navigation'
+        : 'Open navigation'
+      : open
+        ? 'Collapse navigation'
+        : 'Expand navigation',
+  );
+  if (hidden && focusWasInside) focusMenuControl();
+}
+
 function trapFocus(container, preferred = null) {
   const nodes = [...container.querySelectorAll(FOCUSABLE)].filter(
     (n) => n.offsetParent !== null || n === document.activeElement,
@@ -192,6 +246,8 @@ function focusMain() {
   main.focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
+
+document.addEventListener('hau:v5-focus-main', focusMain);
 
 function describeFocus(el) {
   if (!el || el === document.body) return null;
@@ -303,11 +359,14 @@ function toast(message, tone = 'info') {
 
 function playgroundBar() {
   if (!PLAYGROUND_UI_ALLOWED || !state.playgroundVerified) return '';
+  const releaseVersion = esc(state.releaseIdentity?.releaseVersion ?? '');
+  const candidatePrefix = esc(state.releaseIdentity?.candidateSha?.slice(0, 12) ?? '');
   return `<div class="preview-bar"${state.overlay ? ' inert aria-hidden="true"' : ''}>
     <div class="preview-bar__brand">
       ${icon('box', 'icon--sm')}
       <span>HAU-USC Logistics · Isolated Staging Playground</span>
       <span class="preview-bar__tag">Test environment</span>
+      <span class="preview-bar__identity" data-playground-release-identity>STAGING TEST ENV | v${releaseVersion} | SHA ${candidatePrefix}</span>
     </div>
     ${state.surface === 'index' ? themeToggle(state.theme === 'dark') : ''}
     <a class="btn btn--sm" href="#/index">${icon('home', 'icon--sm')}Index</a>
@@ -368,7 +427,8 @@ function routeCode(id) {
   return `${prefix}-${String(index + 1).padStart(2, '0')}`;
 }
 
-function rail() {
+function rail(narrow) {
+  const hidden = Boolean(state.overlay) || (narrow && state.drawer !== 'open');
   const navItem = (n, index, bank) =>
     `<button class="nav-item" type="button" data-act="go" data-id="${n.id}"${
       n.id === state.surface ? ' aria-current="page"' : ''
@@ -380,8 +440,8 @@ function rail() {
 
   const ws = WORKSPACES.find((w) => w.id === state.workspace);
 
-  return `<aside class="rail" id="primary-navigation" aria-label="Primary"${
-    state.overlay ? ' inert aria-hidden="true"' : ''
+  return `<aside class="rail" id="primary-navigation" tabindex="-1" aria-label="Primary"${
+    hidden ? ' inert aria-hidden="true"' : ''
   }>
     <div class="rail__brand">
       <div class="rail__marks"><span class="rail__mark">HAU</span><span class="rail__mark">USC</span></div>
@@ -412,10 +472,9 @@ function rail() {
   <button class="rail__scrim" type="button" data-act="close-drawer" aria-label="Close navigation"></button>`;
 }
 
-function topbar() {
+function topbar(narrow) {
   const role = ROLE_VIEWS.find((r) => r.id === state.role);
   const surface = byId(state.surface);
-  const narrow = state.viewport !== 'desktop' || window.innerWidth <= 1023;
   const navOpen = narrow ? state.drawer === 'open' : state.rail === 'expanded';
   return `<header class="topbar">
     <button class="menu-control" type="button" data-act="toggle-rail"
@@ -636,11 +695,12 @@ function render() {
     body = `<div class="frame" data-viewport="${state.viewport}">${surface.render(surfaceContext)}</div>`;
   } else {
     const routeSequence = renderReason === 'boot' || renderReason === 'route';
+    const railIsNarrow = narrowRail();
     body = `<div class="frame" data-viewport="${state.viewport}">
       <div class="shell" data-rail="${state.rail}" data-drawer="${state.drawer}">
-        ${rail()}
+        ${rail(railIsNarrow)}
         <section class="workspace"${state.overlay ? ' inert aria-hidden="true"' : ''}>
-          ${topbar()}
+          ${topbar(railIsNarrow)}
           <div class="route-progress" data-run="${routeSequence}" aria-hidden="true">
             <span class="route-progress__line"></span>
             <span class="route-progress__code">${routeCode(state.surface)}</span>
@@ -661,6 +721,7 @@ function render() {
   root.innerHTML = `${playgroundBar()}${body}
     <div class="toast-region" id="toast-region" role="status" aria-live="polite"></div>`;
 
+  syncRailAccessibility();
   syncPlaygroundBarHeight();
   document.dispatchEvent(new CustomEvent('hau:v5-rendered', { detail: { surface: state.surface } }));
 }
@@ -715,16 +776,27 @@ document.addEventListener('click', (event) => {
   if (act === 'theme') return setTheme(el.dataset.v);
   if (act === 'toggle-theme') return setTheme(state.theme === 'dark' ? 'light' : 'dark');
   if (act === 'toggle-rail') {
-    return updateView('local', () => {
-      const narrow = state.viewport !== 'desktop' || window.innerWidth <= 1023;
-      if (narrow) state.drawer = state.drawer === 'open' ? 'closed' : 'open';
-      else state.rail = state.rail === 'expanded' ? 'collapsed' : 'expanded';
-    });
+    const narrow = narrowRail();
+    const opening = narrow && state.drawer !== 'open';
+    return updateView(
+      'local',
+      () => {
+        if (narrow) state.drawer = opening ? 'open' : 'closed';
+        else state.rail = state.rail === 'expanded' ? 'collapsed' : 'expanded';
+      },
+      () => {
+        if (narrow) opening ? focusRailEntry() : focusMenuControl();
+      },
+    );
   }
   if (act === 'close-drawer') {
-    return updateView('local', () => {
-      state.drawer = 'closed';
-    });
+    return updateView(
+      'local',
+      () => {
+        state.drawer = 'closed';
+      },
+      focusMenuControl,
+    );
   }
   if (act === 'open-menu') return openOverlay('menu');
   if (act === 'open-notifications') return openOverlay('notifications');
@@ -893,9 +965,14 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     if (state.overlay) return closeOverlay();
     if (state.drawer === 'open') {
-      updateView('local', () => {
-        state.drawer = 'closed';
-      });
+      event.preventDefault();
+      updateView(
+        'local',
+        () => {
+          state.drawer = 'closed';
+        },
+        focusMenuControl,
+      );
     }
     return;
   }
@@ -945,10 +1022,16 @@ window.addEventListener('hashchange', () => {
   if (id !== state.surface) go(id);
 });
 
+window.addEventListener('resize', syncRailAccessibility);
+
 // Exported by scripts/v5-application-plugin.mjs in the integrated application build.
 // eslint-disable-next-line no-unused-vars
-function setPlaygroundContext(verified) {
-  state.playgroundVerified = PLAYGROUND_UI_ALLOWED && verified === true;
+function setPlaygroundContext(verified, releaseIdentity = null) {
+  const releaseVersion = String(releaseIdentity?.releaseVersion ?? '').trim();
+  const candidateSha = String(releaseIdentity?.candidateSha ?? '').trim();
+  const identityIsSafe = Boolean(releaseVersion && /^[0-9a-f]{40}$/u.test(candidateSha));
+  state.playgroundVerified = PLAYGROUND_UI_ALLOWED && verified === true && identityIsSafe;
+  state.releaseIdentity = state.playgroundVerified ? { releaseVersion, candidateSha } : null;
   const requested = location.hash.replace(/^#\/?/, '') || 'public.landing';
   if (state.playgroundVerified && requested === 'index') go('index');
   else if (!state.playgroundVerified && (state.surface === 'index' || requested === 'index')) {
