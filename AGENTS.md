@@ -23,12 +23,33 @@ Git state -> AGENTS.md -> .codex/CURRENT.md -> .codex/CURRENT_TASK.md -> .codex/
 - Non-trivial behavior, architecture, migration, deployment, destructive maintenance, or external action requires an accepted specification or amendment. Implement only that scope.
 - Stop and record a material conflict, missing acceptance criterion, privacy/security uncertainty, migration need, unknown dirty work, or production crossover. Do not invent a resolution.
 
+## Accepted mainline governance amendment — 2026-08-10
+
+This `AGENTS.md` section is the durable accepted governance amendment at the
+first step of the canonical continuity chain, so its authority is reconstructable
+before a current pointer is read.
+
+- **STATUS:** ACCEPTED
+- **OWNER:** Earl
+- **DIRECTIVE:** `QUICK Mainline AGENTS Governance Sync + Fast Document-Fix Mode`
+- **AUTHORIZED_SCOPE:** Root Sol/Terra/Luna sync, Quick Document Fix Mode,
+  directly coupled enforcement, and branch/commit/PR/merge to `main`.
+- **EXCLUDED_SCOPE:** Runtime, deploy, provider, database, migration,
+  production-data, recovery, frontend, and release behavior.
+- **LINEAGE:** Main-governance lineage is distinct from deployed Production
+  runtime.
+- **LEGACY_CURRENT_TASK_METADATA:** Legacy current/task `REQUIRED_MODEL: CODEX`
+  remains superseded and non-authoritative for model routing and does not require
+  a current-chain rewrite for this explicitly accepted bootstrap.
+
 ## Orchestration, writer lock, and delegation
 
 This repository has one canonical model architecture. It applies to every active
 task and cannot be changed by a nested instruction, historical specification, or
-ad hoc delegation. The current task retains `REQUIRED_MODEL: GPT-5.6 SOL` to
-identify the required top-level orchestrator; it never grants Sol write authority.
+ad hoc delegation. On `main`, legacy `REQUIRED_MODEL: CODEX` metadata in the
+current records is explicitly superseded and non-authoritative for model routing.
+A separately accepted current-chain task is required before normalizing those
+records.
 
 ```text
 ORCHESTRATOR_MODEL: GPT-5.6 Sol
@@ -103,7 +124,8 @@ MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task
 
 ## Permanent Git branch and playground release policy
 
-The repository uses environment-independent Git history. Staging/playground and production are deployment environments, never permanent Git branches.
+The repository uses environment-independent Git history. Staging/playground and
+production are deployment environments, never permanent Git branches.
 
 ### Permanent retained branches
 
@@ -115,13 +137,16 @@ The only permanent retained branch pointers are:
 - `regression/r2` — next older retained verified production state.
 - `regression/r3` — oldest retained recovery pointer.
 
-Do not create or retain permanent `staging`, `playground`, `production`, `prod`, `develop`, `dev`, `working`, or `next` branches.
+Do not create or retain permanent `staging`, `playground`, `production`, `prod`,
+`develop`, `dev`, `working`, or `next` branches.
 
-Immutable tags/releases and verified recovery artifacts preserve history beyond these five movable pointers.
+Immutable tags/releases and verified recovery artifacts preserve history beyond
+these five movable pointers.
 
 ### Temporary implementation branch
 
-At most one production-bound implementation branch may be active unless Earl explicitly authorizes otherwise.
+At most one production-bound implementation branch may be active unless Earl
+explicitly authorizes otherwise.
 
 Use one of:
 
@@ -129,11 +154,13 @@ Use one of:
 - `fix/vX.Y.Z-<slug>` for bounded fixes;
 - `hotfix/vX.Y.Z-<slug>` only for a true urgent production patch.
 
-The temporary branch is the active writer branch. It is deleted after accepted production release or explicit closure.
+The temporary branch is the active writer branch. It is deleted after accepted
+production release or explicit closure.
 
 ### Mandatory release path after v0.8.0
 
-Every production-bound version, feature, update, fix, patch, or hotfix after `v0.8.0` follows:
+Every production-bound version, feature, update, fix, patch, or hotfix after
+`v0.8.0` follows:
 
 `temporary branch -> focused verification -> frozen exact candidate -> Isolated Staging Playground -> automated acceptance -> Earl manual testing -> Earl explicit production GO -> protected accepted main lineage -> production -> smoke/reconciliation -> rotate recovery pointers -> delete temporary branch`
 
@@ -143,19 +170,24 @@ A green CI run or successful playground deployment is not production approval.
 
 Production promotion requires Earl's explicit GO for the exact tested candidate.
 
-If code changes after Earl tests a candidate, that approval is invalid. Freeze and deploy a new candidate and obtain new approval.
+If code changes after Earl tests a candidate, that approval is invalid. Freeze
+and deploy a new candidate and obtain new approval.
 
 ### Candidate identity
 
-Record the exact candidate commit/tree and deterministic application artifact identity used in the playground.
+Record the exact candidate commit/tree and deterministic application artifact
+identity used in the playground.
 
-Protected merge mechanics may create a different commit SHA on `main`; if so, prove that the accepted `main` tree/application artifact is identical to the exact playground-tested candidate before production.
+Protected merge mechanics may create a different commit SHA on `main`; if so,
+prove that the accepted `main` tree/application artifact is identical to the
+exact playground-tested candidate before production.
 
 Never silently rebuild different source for production.
 
 ### Recovery pointer rotation
 
-Move recovery pointers only after the new production release passes required production smoke, reconciliation, and rollback-readiness checks.
+Move recovery pointers only after the new production release passes required
+production smoke, reconciliation, and rollback-readiness checks.
 
 After successful production acceptance:
 
@@ -169,9 +201,94 @@ Never rotate pointers merely because a PR merged.
 
 ### Environment rule
 
-The Isolated Staging Playground and Production must use distinct provider bindings. Never solve environment parity by pointing playground code at production D1, R2, secrets, queues, or mutable production resources.
+The Isolated Staging Playground and Production must use distinct provider
+bindings. Never solve environment parity by pointing playground code at
+production D1, R2, secrets, queues, or mutable production resources.
 
-Production data may flow one way into an isolated playground baseline under the accepted refresh runbook. Playground data never synchronizes back into production.
+Production data may flow one way into an isolated playground baseline under the
+accepted refresh runbook. Playground data never synchronizes back into
+production.
+
+## Quick Document Fix Mode
+
+Quick Document Fix Mode is available only when all requested changes are a
+small, clearly bounded documentation or instruction correction with no runtime,
+generated-artifact, dependency, schema, data, provider, database, Google,
+recovery, credential, or other external-state mutation, except the explicitly
+authorized Git branch/commit/push/PR/merge path. It never waives the accepted
+scope, safety, or active-writer requirements.
+
+### Eligibility
+
+- The owner request identifies the exact document or governance-instruction
+  correction and does not require a behavior, release, deployment, migration, or
+  provider change.
+- This mode explicitly excludes Git-history rewrites, deletion of unknown work,
+  executable security, authentication, or authorization changes, broad
+  architecture decisions, and runtime, generated-artifact, dependency, schema,
+  data, migration, provider, database, Google, recovery, credential, or other
+  external-state effects outside the explicitly authorized Git path.
+- Targeted reads can establish the authoritative wording and a focused
+  documentation-governance check can verify the result.
+- The Git handshake is clean and no conflicting active writer, scope conflict,
+  or current-chain transfer is present.
+
+### Fast workflow (10 steps)
+
+1. Sol reads the exact target and direct authority for the requested correction.
+2. Sol defines the minimal diff, including the owned and excluded paths.
+3. Sol assigns ONE Terra MAX writer. Default staffing is one Terra Integration
+   Writer, zero Luna reviewers, and zero Sol children.
+4. Terra edits only the required documents and directly coupled
+   documentation-governance validator or test assertions.
+5. Terra runs focused documentation-governance validation for the changed paths.
+6. Sol reviews the complete diff once.
+7. Terra repairs only material defects found in that one review; do not start a
+   repeated audit loop.
+8. Terra commits exactly once when the accepted task authorizes the commit.
+9. Terra pushes and merges only through the smallest permitted repository path
+   when the accepted task authorizes that path.
+10. When the requested document is present, focused validation passes, the
+    complete diff has been reviewed, and the required push/merge is complete,
+    STOP.
+
+### Limited Luna triggers
+
+The default is zero Luna reviewers. Sol may add a bounded Luna review only when
+a material policy contradiction, security or privacy ambiguity, or focused
+verification failure cannot be resolved by deterministic first-party reads; Earl
+explicitly requests an independent audit; or a genuinely large diff where one
+independent read materially reduces risk.
+
+### Verification, continuity, and stop condition
+
+Run proportional documentation-only verification: focused formatting, `git diff
+--check`, and the directly coupled unit or governance check. Ordinary
+Markdown/document-only work does not voluntarily run full browser/e2e suites,
+application builds, database, migration, provider, or deployment tests, CodeQL,
+or broad matrices. If branch protection requires checks, wait only for the
+required merge checks and do not add manual CI rounds. Do not repeat audit loops
+after the focused review passes; reopen only for a materially new fact, a failed
+check, or an owner amendment.
+
+Use minimal continuity updates. Add one concise factual entry only when the
+document is part of the current chain, active governance or the exact next action
+changes, or the repository requires a specific record. Otherwise do not rewrite
+status, changelog, or current records. For this bootstrap sync, do not add
+continuity files.
+
+Stop Quick Document Fix Mode immediately if the change needs runtime behavior,
+generated output, a migration, external mutation outside the explicitly
+authorized Git path, a broader accepted
+specification, a current-chain rewrite, an unresolved policy conflict, or any
+other work outside the declared documentation-only scope. Return to the normal
+governed workflow and report the exact blocker.
+
+### Success stop condition
+
+The requested document must be present, focused validation must pass, the
+complete diff must be reviewed, and the required push/merge must be complete.
+Then STOP.
 
 ## Required Git handshake
 
@@ -183,4 +300,4 @@ Before edits, record repository root, branch, HEAD, upstream, and git status --s
 - Preserve migrations, immutable ledger/audit/history/evidence records, backups, rollback material, release tags, and the approved legacy visual baseline.
 - Production promotion, provider writes, database mutation, migration application, access seeding, Drive/Sheet changes, and PR/branch cleanup require the exact authorization and runbook named by the accepted task.
 - Run focused checks for changed code. Documentation-only work uses the relevant governance and continuity checks; do not claim runtime verification that did not run.
-- Before a handoff, review the logical diff; update PROJECT_STATUS.md, CHANGELOG.md, docs/WORK_CONTINUATION.md, and the current chain with verified facts; then report unrun checks and external-state uncertainty honestly.
+- Before a normal governed handoff, review the logical diff and update the required PROJECT_STATUS.md, CHANGELOG.md, docs/WORK_CONTINUATION.md, and current-chain records with verified facts; then report unrun checks and external-state uncertainty honestly. Quick Document Fix Mode instead follows its explicit minimal-continuity rule.

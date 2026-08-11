@@ -14,29 +14,15 @@ const REQUIRED_FILES = [
   '.codex/CURRENT_HANDOFF.md',
   '.codex/PHASE_AND_CONTEXT_POLICY.md',
   '.codex/TASK_HISTORY.md',
-  '.codex/specs/active/sol-terra-luna-orchestration-governance-amendment.md',
 ];
 
-const REQUIRED_CURRENT_ROUTING = [
-  ['REQUIRED_MODEL GPT-5.6 SOL', /^REQUIRED_MODEL:\s*GPT-5\.6 SOL\s*$/im],
-  ['ORCHESTRATOR_MODEL GPT-5.6 SOL', /^ORCHESTRATOR_MODEL:\s*GPT-5\.6 SOL\s*$/im],
-  ['ORCHESTRATOR_WRITES FORBIDDEN', /^ORCHESTRATOR_WRITES:\s*FORBIDDEN\s*$/im],
-  ['WRITER_MODEL TERRA MAX', /^WRITER_MODEL:\s*TERRA MAX\s*$/im],
-  ['READER_MODEL LUNA MAX', /^READER_MODEL:\s*LUNA MAX\s*$/im],
-  ['MAX_SOL_SUBAGENTS 0', /^MAX_SOL_SUBAGENTS:\s*0\s*$/im],
-  ['MAX_TERRA_SUBAGENTS 16', /^MAX_TERRA_SUBAGENTS:\s*16\s*$/im],
-  ['MAX_LUNA_SUBAGENTS 16', /^MAX_LUNA_SUBAGENTS:\s*16\s*$/im],
-  ['DELEGATION_DEPTH 1', /^DELEGATION_DEPTH:\s*1\s*$/im],
-  ['SUBAGENT_SPAWNER SOL_ONLY', /^SUBAGENT_SPAWNER:\s*SOL_ONLY\s*$/im],
-  [
-    'MODEL_SUBSTITUTION forbidden',
-    /^MODEL_SUBSTITUTION:\s*FORBIDDEN_UNLESS_EARL_EXPLICITLY_AMENDS_TASK\s*$/im,
-  ],
-  [
-    'GOVERNANCE_AMENDMENT canonical path',
-    /^GOVERNANCE_AMENDMENT:\s*\.codex\/specs\/active\/sol-terra-luna-orchestration-governance-amendment\.md\s*$/im,
-  ],
-];
+function hasTenStepQuickDocumentWorkflow(text) {
+  const section = text.match(/### Fast workflow \(10 steps\)\r?\n([\s\S]*?)(?=\r?\n### |\r?\n## |$)/i);
+  if (!section) return false;
+  return Array.from({ length: 10 }, (_, index) =>
+    new RegExp(`^${index + 1}\\.\\s+`, 'm').test(section[1]),
+  ).every(Boolean);
+}
 
 export function validateAgentInstructions(text) {
   const required = [
@@ -47,6 +33,33 @@ export function validateAgentInstructions(text) {
     [
       'canonical continuity chain',
       /AGENTS\.md\s*->\s*\.codex\/CURRENT\.md\s*->\s*\.codex\/CURRENT_TASK\.md\s*->\s*\.codex\/CURRENT_HANDOFF\.md/i,
+    ],
+    ['accepted mainline governance amendment', /## Accepted mainline governance amendment — 2026-08-10/i],
+    [
+      'accepted mainline governance amendment durability',
+      /`?AGENTS\.md`? section is the durable accepted governance amendment at the\s+first step of the canonical continuity chain/i,
+    ],
+    ['accepted mainline governance amendment status', /STATUS:\*{0,2}\s*ACCEPTED/i],
+    ['accepted mainline governance amendment owner', /OWNER:\*{0,2}\s*Earl/i],
+    [
+      'accepted mainline governance amendment directive',
+      /QUICK Mainline AGENTS Governance Sync \+ Fast Document-Fix Mode/i,
+    ],
+    [
+      'accepted mainline governance amendment scope',
+      /Root Sol\/Terra\/Luna sync[\s\S]*?Quick Document Fix Mode[\s\S]*?directly coupled enforcement[\s\S]*?branch\/commit\/PR\/merge to `?main`?/i,
+    ],
+    [
+      'accepted mainline governance amendment exclusions',
+      /Runtime,\s+deploy,\s+provider,\s+database,\s+migration,\s+production-data,\s+recovery,\s+frontend,\s+and release behavior/i,
+    ],
+    [
+      'accepted mainline governance/runtime distinction',
+      /Main-governance lineage is distinct from deployed Production\s+runtime/i,
+    ],
+    [
+      'accepted mainline governance legacy bootstrap exception',
+      /Legacy current\/task\s+`?REQUIRED_MODEL:\s*CODEX`?\s+remains superseded and non-authoritative[\s\S]*?does not require\s+a current-chain rewrite for this explicitly accepted bootstrap/i,
     ],
     ['GPT-5.6 Sol orchestrator', /ORCHESTRATOR_MODEL:\s*GPT-5\.6 Sol/i],
     ['Sol writes forbidden', /ORCHESTRATOR_WRITES:\s*FORBIDDEN/i],
@@ -62,18 +75,67 @@ export function validateAgentInstructions(text) {
     ['delegation depth one', /DELEGATION_DEPTH:\s*1\b/i],
     ['Sol-only child spawner', /SUBAGENT_SPAWNER:\s*Sol only/i],
     ['no silent model substitution', /MODEL_SUBSTITUTION:\s*forbidden/i],
+    [
+      'legacy current metadata superseded',
+      /legacy\s+`?REQUIRED_MODEL:\s*CODEX`?\s+metadata[\s\S]*?superseded and non-authoritative/i,
+    ],
+    ['permanent branch and playground policy', /Permanent Git branch and playground release policy/i],
+    ['isolated staging playground policy', /Isolated Staging Playground/i],
+    ['Quick Document Fix Mode', /## Quick Document Fix Mode/i],
+    ['Quick Document Fix eligibility', /Quick Document Fix Mode is available only when all/i],
+    ['Quick Document Fix eligibility section', /### Eligibility/i],
+    [
+      'Quick Document Fix default staffing',
+      /one Terra Integration\s+Writer,\s+zero Luna reviewers,\s+and\s+zero Sol children/i,
+    ],
+    ['ten-step fast workflow', hasTenStepQuickDocumentWorkflow],
+    ['Quick Document Fix authorized Git path', /authorized Git branch\/commit\/push\/PR\/merge path/i],
+    ['Quick Document Fix excludes Git-history rewrites', /excludes Git-history rewrites/i],
+    ['Quick Document Fix excludes unknown-work deletion', /deletion of unknown work/i],
+    [
+      'Quick Document Fix excludes executable authorization changes',
+      /executable security, authentication, or authorization changes/i,
+    ],
+    ['Quick Document Fix excludes broad architecture decisions', /broad\s+architecture decisions/i],
+    ['Quick Document Fix Sol reads authority', /Sol reads the exact target and direct authority/i],
+    ['Quick Document Fix Sol defines minimal diff', /Sol defines the minimal diff/i],
+    ['Quick Document Fix one Terra assignment', /Sol assigns ONE Terra MAX writer/i],
+    ['Quick Document Fix Terra-only document edit', /Terra edits only the required documents/i],
+    ['Quick Document Fix Terra validation', /Terra runs focused documentation-governance validation/i],
+    ['Quick Document Fix one Sol review', /Sol reviews the complete diff once/i],
+    ['Quick Document Fix material-only repair', /repairs only material defects/i],
+    ['Quick Document Fix commit once', /commits exactly once/i],
+    [
+      'Quick Document Fix push and merge',
+      /pushes and merges only through the smallest permitted repository path/i,
+    ],
+    ['limited Luna triggers', /The default is zero Luna reviewers/i],
+    ['Luna Earl audit trigger', /Earl\s+explicitly requests an independent audit/i],
+    ['Luna large-diff trigger', /genuinely large diff where one\s+independent read materially reduces risk/i],
+    ['no repeated audit loops', /Do not repeat audit loops/i],
+    ['proportional documentation-only verification', /Run proportional documentation-only verification/i],
+    ['documentation-only test exclusions', /does not voluntarily run full browser\/e2e suites/i],
+    ['documentation-only CodeQL exclusion', /CodeQL/i],
+    ['required merge checks only', /wait only for the\s+required merge checks/i],
+    ['minimal continuity updates', /Use minimal continuity updates/i],
+    ['current-chain continuity trigger', /document is part of the current chain/i],
+    ['active-governance continuity trigger', /active governance or the exact next action\s+changes/i],
+    ['repository-record continuity trigger', /repository requires a specific record/i],
+    ['one concise continuity entry', /Add one concise factual entry only when/i],
+    ['bootstrap continuity exception', /For this bootstrap sync, do not add\s+continuity files/i],
+    ['Quick Document Fix stop condition', /Stop Quick Document Fix Mode immediately/i],
+    [
+      'Quick Document Fix success stop',
+      /requested document must be present, focused validation must pass, the\s+complete diff must be reviewed, and the required push\/merge must be complete\.\s+Then STOP\./i,
+    ],
     ['specification gate', /accepted specification or amendment/i],
   ];
-  const errors = required.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
+  const errors = required
+    .filter(([, pattern]) => !(pattern instanceof RegExp ? pattern.test(text) : pattern(text)))
+    .map(([name]) => name);
   const obsolete = [
-    ['obsolete Codex-only writer language', /Codex is the only writer/i],
+    ['obsolete Codex-only writer language', /Codex is the only writer by default/i],
     ['obsolete two-read-only-subagent cap', /at most two concurrent read-only subagents/i],
-    ['Sol direct-write permission', /Sol may (?:directly )?(?:edit|write|mutate)/i],
-    [
-      'Sol-child permission',
-      /(?:Sol (?:may|can|is allowed to) (?:spawn|create)|Sol child(?:ren)? (?:are )?allowed)/i,
-    ],
-    ['Luna writer permission', /Luna (?:may )?(?:write|edit|mutate)/i],
   ];
   return [...errors, ...obsolete.filter(([, pattern]) => pattern.test(text)).map(([name]) => name)];
 }
@@ -171,6 +233,7 @@ export function validateAgentToml(text, expectedName) {
       typeof agent.developer_instructions === 'string' && agent.developer_instructions.trim().length > 0,
     ],
     ['read-only instructions', /Do not edit files/i.test(agent.developer_instructions || '')],
+    ['no agent spawning', /Do not[\s\S]{0,500}spawn agents/i.test(agent.developer_instructions || '')],
     ['read-only sandbox', agent.sandbox_mode === 'read-only'],
     ['maximum reasoning', agent.model_reasoning_effort === 'max'],
   ];
@@ -209,21 +272,17 @@ export function validateProjectConfig(text) {
   }
 
   const agents = parsed.sections.agents || Object.create(null);
-  if (agents.max_concurrent_threads_per_session !== 32) {
-    errors.push('max_concurrent_threads_per_session must be 32');
+  if (agents.max_threads !== 32) {
+    errors.push('max_threads must be 32');
   }
   if (agents.max_depth !== 1) errors.push('max_depth must be 1');
   if (agents.interrupt_message !== false) errors.push('interrupt_message must be false');
   for (const key of Object.keys(agents)) {
-    if (!['max_concurrent_threads_per_session', 'max_depth', 'interrupt_message'].includes(key)) {
+    if (!['max_threads', 'max_depth', 'interrupt_message'].includes(key)) {
       errors.push(`unsupported [agents] field ${key}`);
     }
   }
   return errors;
-}
-
-export function validateCurrentModelRouting(text) {
-  return REQUIRED_CURRENT_ROUTING.filter(([, pattern]) => !pattern.test(text)).map(([name]) => name);
 }
 
 export function validateProjectAgentFiles(root) {
@@ -245,14 +304,6 @@ export function validateProjectAgentFiles(root) {
   if (fs.existsSync(configPath)) {
     for (const item of validateProjectConfig(fs.readFileSync(configPath, 'utf8'))) {
       errors.push(`.codex/config.toml ${item}`);
-    }
-  }
-
-  for (const relative of ['.codex/CURRENT.md', '.codex/CURRENT_TASK.md', '.codex/CURRENT_HANDOFF.md']) {
-    const file = path.join(root, relative);
-    if (!fs.existsSync(file)) continue;
-    for (const item of validateCurrentModelRouting(fs.readFileSync(file, 'utf8'))) {
-      errors.push(`${relative} missing ${item}`);
     }
   }
 

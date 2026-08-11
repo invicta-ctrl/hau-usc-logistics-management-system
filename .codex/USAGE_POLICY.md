@@ -38,19 +38,21 @@ required complete suite once at the final gate of a bounded unit.
 
 ## Orchestration and delegation
 
-The repository-root `AGENTS.md` is the canonical model policy. The task records
-`REQUIRED_MODEL: GPT-5.6 SOL` because Sol is the sole top-level, read-only
-orchestrator; that field never authorizes Sol to write.
+The repository-root `AGENTS.md` is the canonical model policy. On `main`, legacy
+`REQUIRED_MODEL: CODEX` metadata in current records is explicitly superseded and
+non-authoritative for model routing; a separately accepted task is required to
+normalize those records.
 
-Only Sol may create child tasks, with `DELEGATION_DEPTH: 1`. Sol may use up to
-16 Terra MAX writer-class children and up to 16 Luna MAX read-only reviewer
-children. Sol children are forbidden. Do not substitute another model class when
+Only Sol may create child tasks, with `DELEGATION_DEPTH: 1`. Sol children are
+forbidden (`MAX_SOL_SUBAGENTS: 0`). Sol may use up to 16 Terra MAX writer-class
+children (`MAX_TERRA_SUBAGENTS: 16`) and up to 16 Luna MAX read-only reviewer
+children (`MAX_LUNA_SUBAGENTS: 16`). Do not substitute another model class when
 the required route is unavailable; stop and report the routing blocker.
 
 Each writing task names one `TERRA_INTEGRATION_WRITER` as the sole canonical
 branch/worktree writer. Additional Terra work is allowed only in isolated,
 non-overlapping worktrees or patch scopes. Luna performs bounded mapping, log
-triage, review, or audit only and never mutates repository/provider state.
+triage, review, or audit only and never mutates repository or provider state.
 
 Use deterministic scripts and targeted inspection first. Each task-local ledger
 row states agent ID, model, role, mode, scope, worktree or patch, owned and
