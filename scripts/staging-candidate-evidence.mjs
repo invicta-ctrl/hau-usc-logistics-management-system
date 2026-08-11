@@ -10,13 +10,15 @@ import { reconcileInventoryDatabase } from './d1/reconcile-inventory-truth.mjs';
 import { validatePhase3AuthorizationPackage } from './phase3-staging-authorization.mjs';
 import { resolvePrivatePath } from './private-path.mjs';
 import {
+  assertReleaseBackupTuple,
   exactDatabaseIdFromInventory,
   parseWranglerJsonOutput,
+  readPackageReleaseVersion,
   validateStagingSandboxConfig,
+  validateReleaseCandidateIdentity,
 } from './staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const expectedBranch = 'release/v0.8.0-inventory-truth-ledger-lock';
 const expectedDatabase = 'hau-usc-logistics-staging-sandbox-v0721';
 
 function argument(name) {
@@ -60,11 +62,12 @@ async function main() {
     cwd: repoRoot,
     encoding: 'utf8',
   }).trim();
+  const releaseVersion = await readPackageReleaseVersion(repoRoot);
   const status = execFileSync('git', ['status', '--porcelain'], {
     cwd: repoRoot,
     encoding: 'utf8',
   }).trim();
-  if (branch !== expectedBranch || status) throw new Error('FROZEN_CANDIDATE_REQUIRED');
+  if (status) throw new Error('FROZEN_CANDIDATE_REQUIRED');
 
   const [stagingRaw, productionRaw, authorizationRaw] = await Promise.all([
     readFile(stagingConfigPath, 'utf8'),
@@ -78,7 +81,13 @@ async function main() {
     allowStagingCandidate: true,
   });
   if (!separation.valid) throw new Error('ENVIRONMENT_SEPARATION_FAILED');
-  if (staging.vars?.APP_VERSION !== '0.8.0' || staging.vars?.CANDIDATE_SHA !== head) {
+  const stagingIdentity = validateReleaseCandidateIdentity(staging, {
+    releaseVersion,
+    head,
+    branch,
+    mode: 'staging',
+  });
+  if (!stagingIdentity.valid) {
     throw new Error('STAGING_CANDIDATE_CONFIG_IDENTITY_FAILED');
   }
   const authorizationPackage = JSON.parse(authorizationRaw);
@@ -100,6 +109,7 @@ async function main() {
   const configValidation = validateStagingSandboxConfig(staging, {
     configPath: stagingConfigPath,
     repoRoot,
+    releaseVersion,
     head,
     branch,
     command: 'evidence',
@@ -119,9 +129,10 @@ async function main() {
 
   await mkdir(privateDirectory, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/gu, '-');
-  const exportPath = path.join(privateDirectory, `v080-staging-backup-${stamp}.sql`);
-  const restorePath = path.join(privateDirectory, `v080-staging-restore-${stamp}.sqlite`);
-  const manifestPath = path.join(privateDirectory, `v080-staging-recovery-${stamp}.json`);
+  const releaseLabel = `v${releaseVersion}`;
+  const exportPath = path.join(privateDirectory, `${releaseLabel}-staging-backup-${stamp}.sql`);
+  const restorePath = path.join(privateDirectory, `${releaseLabel}-staging-restore-${stamp}.sqlite`);
+  const manifestPath = path.join(privateDirectory, `${releaseLabel}-staging-recovery-${stamp}.json`);
 
   const deploymentsRaw = runWrangler(stagingConfigPath, ['deployments', 'list', '--json']);
   const deployments = parseWranglerJsonOutput(deploymentsRaw);
@@ -131,6 +142,9 @@ async function main() {
   const timeTravel = parseWranglerJsonOutput(
     runWrangler(stagingConfigPath, ['d1', 'time-travel', 'info', 'DB', '--json']),
   );
+  if (typeof timeTravel?.bookmark !== 'string' || !timeTravel.bookmark.trim()) {
+    throw new Error('STAGING_TIME_TRAVEL_BOOKMARK_MISSING');
+  }
   runWrangler(stagingConfigPath, ['d1', 'export', 'DB', '--remote', '--output', exportPath]);
   const isolatedRestore = await restoreAndVerifyD1Export(exportPath, restorePath, {
     expectedSchema: '30',
@@ -152,12 +166,29 @@ async function main() {
   }
 
   const [exportBytes] = await Promise.all([readFile(exportPath)]);
+  const fingerprints = {
+    stagingConfigSha256: sha256(stagingRaw),
+    productionConfigSha256: sha256(productionRaw),
+    exportSha256: sha256(exportBytes),
+    r2MetadataSha256: sha256(JSON.stringify(r2Metadata)),
+  };
+  assertReleaseBackupTuple({
+    exportSha256: fingerprints.exportSha256,
+    isolatedRestore,
+    reconciliation,
+    priorWorkerDeployment: deployments[0],
+    deploymentsSnapshot: deployments,
+    r2Metadata,
+    fingerprints,
+    timeTravelBookmark: timeTravel.bookmark,
+  });
   await writeFile(
     manifestPath,
     `${JSON.stringify(
       {
         schemaVersion: 1,
         environment: 'STAGING',
+        releaseVersion,
         candidateSha: head,
         candidateBranch: branch,
         createdAt: new Date().toISOString(),
@@ -168,12 +199,7 @@ async function main() {
           bucketBindings: staging.r2_buckets,
           baseUrl: configValidation.safe.baseUrl,
         },
-        fingerprints: {
-          stagingConfigSha256: sha256(stagingRaw),
-          productionConfigSha256: sha256(productionRaw),
-          exportSha256: sha256(exportBytes),
-          r2MetadataSha256: sha256(JSON.stringify(r2Metadata)),
-        },
+        fingerprints,
         rollback: {
           priorWorkerDeployment: deployments[0],
           deploymentsSnapshot: deployments,
@@ -191,6 +217,7 @@ async function main() {
   process.stdout.write(
     `${JSON.stringify({
       environment: 'STAGING',
+      releaseVersion,
       candidateSha: head,
       workerMatch: configValidation.safe.workerMatch,
       databaseMatch: configValidation.safe.databaseMatch,
@@ -202,6 +229,8 @@ async function main() {
       priorWorkerRollbackCaptured: true,
       liveR2IdentityCaptured: true,
       configurationFingerprintsCaptured: true,
+      timeTravelBookmarkCaptured: true,
+      backupTupleVerified: true,
       privateEvidenceWritten: true,
     })}\n`,
   );

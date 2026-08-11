@@ -13,9 +13,15 @@ import {
 } from './production-authorization.mjs';
 import { resolvePrivatePath } from './private-path.mjs';
 import {
+  assertReleaseBackupTuple,
   exactDatabaseIdFromInventory,
   parseWranglerJsonOutput,
+  readPackageReleaseVersion,
+  releaseIdentityModeForRecovery,
+  RELEASE_MIGRATION,
+  RELEASE_SCHEMA_VERSION,
   validateStagingSandboxConfig,
+  validateReleaseCandidateIdentity,
 } from './staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -25,7 +31,6 @@ const expectedBuckets = Object.freeze([
   'hau-usc-logistics-production-assets',
   'hau-usc-logistics-production-evidence',
 ]);
-const expectedMigration = '0030_production_access_and_operations.sql';
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
 function argument(name) {
@@ -67,10 +72,8 @@ async function main() {
     label: 'Production backup manifest',
     allowMissing: true,
   });
+  const releaseVersion = await readPackageReleaseVersion(repoRoot);
   const currentCandidate = await productionCandidateEvidence();
-  if (!['main', 'release/v0.8.0-inventory-truth-ledger-lock'].includes(currentCandidate.branch)) {
-    throw new Error('PRODUCTION_RECOVERY_SOURCE_BRANCH_INVALID');
-  }
   const [stagingRaw, productionRaw, authorizationRaw] = await Promise.all([
     readFile(stagingConfigPath, 'utf8'),
     readFile(productionConfigPath, 'utf8'),
@@ -96,6 +99,17 @@ async function main() {
     expectedSha: currentCandidate.releaseSha,
   });
   if (!separation.valid) throw new Error('ENVIRONMENT_SEPARATION_FAILED');
+  const identityMode = releaseIdentityModeForRecovery(currentCandidate.branch);
+  const stagingIdentity = validateReleaseCandidateIdentity(staging, {
+    releaseVersion,
+    head: currentCandidate.releaseSha,
+    branch: currentCandidate.branch,
+    mode: identityMode,
+  });
+  if (!stagingIdentity.valid) throw new Error('PRODUCTION_RECOVERY_SOURCE_BRANCH_INVALID');
+  if (production.name !== expectedWorker || production.vars?.ENVIRONMENT !== 'PRODUCTION') {
+    throw new Error('PRODUCTION_CONFIG_IDENTITY_FAILED');
+  }
   const stagingInventory = parseWranglerJsonOutput(runWrangler(stagingConfigPath, ['d1', 'list', '--json']));
   const stagingDatabaseId = exactDatabaseIdFromInventory(
     stagingInventory,
@@ -104,6 +118,10 @@ async function main() {
   const stagingValidation = validateStagingSandboxConfig(staging, {
     configPath: stagingConfigPath,
     repoRoot,
+    releaseVersion,
+    head: currentCandidate.releaseSha,
+    branch: currentCandidate.branch,
+    identityMode,
     command: 'status',
     expectedDatabaseId: stagingDatabaseId,
   });
@@ -117,14 +135,6 @@ async function main() {
     stagingR2Metadata.push({ binding: binding.binding, info });
   }
   if (stagingR2Metadata.length !== 2) throw new Error('STAGING_R2_IDENTITY_FAILED');
-  if (
-    production.name !== expectedWorker ||
-    production.vars?.ENVIRONMENT !== 'PRODUCTION' ||
-    production.vars?.APP_VERSION !== '0.8.0' ||
-    production.vars?.CANDIDATE_SHA !== currentCandidate.releaseSha
-  ) {
-    throw new Error('PRODUCTION_CONFIG_IDENTITY_FAILED');
-  }
 
   const inventory = parseWranglerJsonOutput(runWrangler(productionConfigPath, ['d1', 'list', '--json']));
   const databaseId = exactDatabaseIdFromInventory(inventory, expectedDatabase);
@@ -153,18 +163,19 @@ async function main() {
   const timeTravel = parseWranglerJsonOutput(
     runWrangler(productionConfigPath, ['d1', 'time-travel', 'info', 'DB', '--json']),
   );
-  if (typeof timeTravel?.bookmark !== 'string' || !timeTravel.bookmark) {
+  if (typeof timeTravel?.bookmark !== 'string' || !timeTravel.bookmark.trim()) {
     throw new Error('PRODUCTION_TIME_TRAVEL_BOOKMARK_MISSING');
   }
 
   await mkdir(privateDirectory, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/gu, '-');
-  const exportPath = path.join(privateDirectory, `v080-production-backup-${stamp}.sql`);
-  const restorePath = path.join(privateDirectory, `v080-production-restore-${stamp}.sqlite`);
+  const releaseLabel = `v${releaseVersion}`;
+  const exportPath = path.join(privateDirectory, `${releaseLabel}-production-backup-${stamp}.sql`);
+  const restorePath = path.join(privateDirectory, `${releaseLabel}-production-restore-${stamp}.sqlite`);
   runWrangler(productionConfigPath, ['d1', 'export', 'DB', '--remote', '--output', exportPath]);
   const isolatedRestore = await restoreAndVerifyD1Export(exportPath, restorePath, {
-    expectedSchema: '30',
-    expectedMigration,
+    expectedSchema: RELEASE_SCHEMA_VERSION,
+    expectedMigration: RELEASE_MIGRATION,
     requireImmutableHistory: true,
   });
   const restored = new DatabaseSync(restorePath, { readOnly: true });
@@ -194,14 +205,36 @@ async function main() {
   if (reconciliation.summary.disposition !== 'RECONCILED') {
     throw new Error('PRODUCTION_BACKUP_RECONCILIATION_FAILED');
   }
+  if (syntheticActiveAccounts !== 0) {
+    throw new Error('PRODUCTION_SYNTHETIC_ACTIVE_ACCOUNTS_FOUND');
+  }
   const exportBytes = await readFile(exportPath);
   const capturedAt = new Date().toISOString();
+  const fingerprints = {
+    stagingConfigSha256: sha256(stagingRaw),
+    productionConfigSha256: sha256(productionRaw),
+    stagingR2MetadataSha256: sha256(JSON.stringify(stagingR2Metadata)),
+    r2MetadataSha256: sha256(JSON.stringify(r2Metadata)),
+  };
+  assertReleaseBackupTuple({
+    exportSha256: sha256(exportBytes),
+    isolatedRestore,
+    reconciliation,
+    priorWorkerDeployment: deployments[0],
+    deploymentsSnapshot: deployments,
+    r2Metadata,
+    fingerprints,
+    timeTravelBookmark: timeTravel.bookmark,
+    syntheticActiveAccounts,
+    requireNoSyntheticActiveAccounts: true,
+  });
   await writeFile(
     manifestPath,
     `${JSON.stringify(
       {
         schemaVersion: 1,
         environment: 'PRODUCTION',
+        releaseVersion,
         candidateSha: currentCandidate.releaseSha,
         candidateBranch: currentCandidate.branch,
         evidencePhase: currentCandidate.branch === 'main' ? 'POST_MERGE_FINAL' : 'PRE_MERGE_READ_ONLY',
@@ -210,6 +243,7 @@ async function main() {
         integrity: ['ok'],
         foreignKeyViolations: 0,
         bookmarkPresent: true,
+        timeTravelBookmark: timeTravel.bookmark,
         testDataPromotionConfirmed: false,
         syntheticActiveAccounts,
         target: {
@@ -218,12 +252,7 @@ async function main() {
           databaseId,
           bucketBindings: production.r2_buckets,
         },
-        fingerprints: {
-          stagingConfigSha256: sha256(stagingRaw),
-          productionConfigSha256: sha256(productionRaw),
-          stagingR2MetadataSha256: sha256(JSON.stringify(stagingR2Metadata)),
-          r2MetadataSha256: sha256(JSON.stringify(r2Metadata)),
-        },
+        fingerprints,
         rollback: {
           priorWorkerDeployment: deployments[0],
           deploymentsSnapshot: deployments,
@@ -242,6 +271,7 @@ async function main() {
   process.stdout.write(
     `${JSON.stringify({
       environment: 'PRODUCTION',
+      releaseVersion,
       candidateSha: currentCandidate.releaseSha,
       evidencePhase: currentCandidate.branch === 'main' ? 'POST_MERGE_FINAL' : 'PRE_MERGE_READ_ONLY',
       backupCaptured: true,
@@ -251,10 +281,10 @@ async function main() {
       priorWorkerRollbackCaptured: true,
       liveR2IdentityCaptured: true,
       timeTravelBookmarkCaptured: true,
+      backupTupleVerified: true,
       privateEvidenceWritten: true,
     })}\n`,
   );
-  if (syntheticActiveAccounts !== 0) throw new Error('PRODUCTION_SYNTHETIC_ACTIVE_ACCOUNTS_FOUND');
 }
 
 main().catch((error) => {

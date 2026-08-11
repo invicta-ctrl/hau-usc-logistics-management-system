@@ -27,7 +27,12 @@ import {
 } from './production-authorization.mjs';
 import { validateProductionLaunchPreflight } from './production-launch-preflight.mjs';
 import { resolvePrivatePath } from './private-path.mjs';
-import { exactDatabaseIdFromInventory, unexpectedStagingConfigKeys } from './staging-sandbox-lib.mjs';
+import {
+  exactDatabaseIdFromInventory,
+  readPackageReleaseVersion,
+  unexpectedStagingConfigKeys,
+  validateReleaseCandidateIdentity,
+} from './staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 const wranglerExecutable = path.join(repoRoot, 'node_modules', 'wrangler', 'bin', 'wrangler.js');
@@ -75,6 +80,9 @@ const expected =
       .toLowerCase()
   ];
 if (!expected) fail('the first argument must be "staging" or "production".');
+const releaseVersion = await readPackageReleaseVersion(repoRoot).catch(() =>
+  fail('package.json must declare a valid authoritative release version.'),
+);
 
 const configIndex = rest.indexOf('--config');
 const rawConfigPath = configIndex === -1 ? '' : rest[configIndex + 1];
@@ -206,7 +214,31 @@ if (target === 'staging') {
     fail(`the staging config declares ${extraConfigKeys.length} unapproved top-level configuration key(s).`);
 }
 
-// 2. It must carry exactly one real, resolved D1 binding, and it must be the
+// 2. Refuse an unfrozen or incorrectly targeted candidate before any provider
+// inventory call. The package version is the sole release identity authority.
+const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
+const candidateSha = config?.vars?.CANDIDATE_SHA;
+if (!candidateSha || candidateSha === 'REPLACE_AT_CANDIDATE_FREEZE')
+  fail('the config still carries the placeholder CANDIDATE_SHA. Regenerate it at candidate freeze.');
+if (candidateSha !== head)
+  fail(`the config pins CANDIDATE_SHA ${candidateSha.slice(0, 12)}..., but HEAD is ${head.slice(0, 12)}...`);
+const branch = execFileSync('git', ['branch', '--show-current'], {
+  cwd: repoRoot,
+  encoding: 'utf8',
+}).trim();
+const releaseIdentity = validateReleaseCandidateIdentity(config, {
+  releaseVersion,
+  head,
+  branch,
+  mode: target === 'production' ? 'production' : 'staging',
+});
+if (!releaseIdentity.valid) {
+  fail(`the ${target} deployment release identity is invalid: ${releaseIdentity.issues.join(', ')}.`);
+}
+const status = execFileSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' }).trim();
+if (status) fail('the working tree is dirty. Deploy only a committed, frozen candidate.');
+
+// 3. It must carry exactly one real, resolved D1 binding, and it must be the
 //    binding the Worker actually reads. Checking only d1_databases[0] would let
 //    a config whose first entry looks right bind `DB` to the other
 //    environment's database on a later entry — the exact target confusion this
@@ -240,32 +272,13 @@ const exactDatabaseId = exactDatabaseIdFromInventory(inventory, expected.d1);
 if (!exactDatabaseId || database.database_id !== exactDatabaseId)
   fail('the configured D1 identifier does not match the exact named database in the account inventory.');
 
-// 3. R2 bindings must match the environment, so staging can never write production objects.
+// 4. R2 bindings must match the environment, so staging can never write production objects.
 const buckets = (config.r2_buckets ?? []).map((entry) => entry.bucket_name);
 for (const bucket of expected.buckets)
   if (!buckets.includes(bucket)) fail(`the config is missing the ${target} R2 bucket ${bucket}.`);
 const foreign = buckets.filter((bucket) => !expected.buckets.includes(bucket));
 if (foreign.length)
   fail(`the config binds ${foreign.length} R2 bucket(s) outside the ${target} environment.`);
-
-// 4. The candidate SHA must be resolved and match the tree being deployed.
-const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-const candidateSha = config?.vars?.CANDIDATE_SHA;
-if (!candidateSha || candidateSha === 'REPLACE_AT_CANDIDATE_FREEZE')
-  fail('the config still carries the placeholder CANDIDATE_SHA. Regenerate it at candidate freeze.');
-if (candidateSha !== head)
-  fail(`the config pins CANDIDATE_SHA ${candidateSha.slice(0, 12)}..., but HEAD is ${head.slice(0, 12)}...`);
-const branch = execFileSync('git', ['branch', '--show-current'], {
-  cwd: repoRoot,
-  encoding: 'utf8',
-}).trim();
-const requiredBranch = target === 'staging' ? 'release/v0.8.0-inventory-truth-ledger-lock' : 'main';
-if (branch !== requiredBranch || config?.vars?.CANDIDATE_BRANCH !== requiredBranch) {
-  fail(`the ${target} deployment requires the exact accepted ${requiredBranch} branch identity.`);
-}
-
-const status = execFileSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' }).trim();
-if (status) fail('the working tree is dirty. Deploy only a committed, frozen candidate.');
 
 // 5. Rebuild deterministically, so a stale or tracked dist can never be the
 //    deployment authority, then assert the artifact is the right build mode.

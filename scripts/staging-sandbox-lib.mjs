@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 export const STAGING_SANDBOX_TARGET = Object.freeze({
@@ -14,10 +15,7 @@ function classificationRule(entity, syntheticPredicate, activePredicate = '1 = 1
 }
 
 export const SANDBOX_CLASSIFICATION_RULES = Object.freeze([
-  classificationRule(
-    'accounts',
-    "id LIKE 'SBX-%' OR id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')",
-  ),
+  classificationRule('accounts', "id LIKE 'SBX-%' OR id IN ('SYSTEM-IMPORT', 'SYSTEM-PUBLIC-REQUEST')"),
   classificationRule('sessions', "account_id LIKE 'SBX-%'"),
   classificationRule('password_reset_tokens', "account_id LIKE 'SBX-%'"),
   classificationRule(
@@ -44,11 +42,7 @@ export const SANDBOX_CLASSIFICATION_RULES = Object.freeze([
   classificationRule('lending_handoffs', "id LIKE 'SBX-%'"),
   classificationRule('lending_returns', "id LIKE 'SBX-%'"),
   classificationRule('release_confirmations', "id LIKE 'SBX-%'"),
-  classificationRule(
-    'email_verification_challenges',
-    '0',
-    "status IN ('PENDING', 'VERIFIED')",
-  ),
+  classificationRule('email_verification_challenges', '0', "status IN ('PENDING', 'VERIFIED')"),
   classificationRule(
     'account_applications',
     '0',
@@ -68,8 +62,12 @@ export function sandboxClassificationQuery(rule) {
 }
 
 const SHA = /^[0-9a-f]{40}$/u;
-const BRANCH = /^[A-Za-z0-9][A-Za-z0-9._/-]{0,127}$/u;
+const SHA256 = /^[0-9a-f]{64}$/u;
+const PACKAGE_VERSION =
+  /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 const PLACEHOLDER = /(?:REPLACE|TBD|TODO|UNKNOWN|00000000-0000-0000-0000-000000000000)/iu;
+export const RELEASE_SCHEMA_VERSION = '30';
+export const RELEASE_MIGRATION = '0030_production_access_and_operations.sql';
 const ALLOWED_STAGING_CONFIG_KEYS = Object.freeze([
   'assets',
   'compatibility_date',
@@ -83,6 +81,122 @@ const ALLOWED_STAGING_CONFIG_KEYS = Object.freeze([
   'vars',
   'workers_dev',
 ]);
+
+function escapeRegExp(value) {
+  return String(value).replace(/[|\\{}()[\]^$+*?.]/gu, '\\$&');
+}
+
+export async function readPackageReleaseVersion(repoRoot) {
+  const packagePath = path.join(repoRoot, 'package.json');
+  const packageJson = JSON.parse(await readFile(packagePath, 'utf8'));
+  const releaseVersion = String(packageJson?.version ?? '').trim();
+  if (!PACKAGE_VERSION.test(releaseVersion)) throw new Error('PACKAGE_RELEASE_VERSION_INVALID');
+  return releaseVersion;
+}
+
+export function temporaryReleaseBranchPattern(releaseVersion) {
+  const version = String(releaseVersion ?? '').trim();
+  if (!PACKAGE_VERSION.test(version)) return null;
+  return new RegExp(`^(?:release|fix|hotfix)\\/v${escapeRegExp(version)}-[A-Za-z0-9][A-Za-z0-9._-]*$`, 'u');
+}
+
+export function releaseIdentityModeForRecovery(branch) {
+  return String(branch ?? '').trim() === 'main' ? 'production' : 'recovery';
+}
+
+export function validateReleaseCandidateIdentity(
+  config,
+  { releaseVersion = '', head = '', branch = '', mode = 'staging' } = {},
+) {
+  const issues = [];
+  const packageVersion = String(releaseVersion ?? '').trim();
+  const currentHead = String(head ?? '').trim();
+  const currentBranch = String(branch ?? '').trim();
+  const candidateSha = String(config?.vars?.CANDIDATE_SHA ?? '').trim();
+  const candidateBranch = String(config?.vars?.CANDIDATE_BRANCH ?? '').trim();
+  const appVersion = String(config?.vars?.APP_VERSION ?? '').trim();
+  const temporaryBranch = temporaryReleaseBranchPattern(packageVersion);
+
+  if (!temporaryBranch) issues.push('PACKAGE_RELEASE_VERSION_INVALID');
+  if (!SHA.test(currentHead)) issues.push('GIT_HEAD_INVALID');
+  if (!SHA.test(candidateSha) || candidateSha !== currentHead) issues.push('CANDIDATE_SHA_HEAD_MISMATCH');
+  if (appVersion !== packageVersion) issues.push('APP_VERSION_PACKAGE_MISMATCH');
+
+  if (mode === 'production') {
+    if (currentBranch !== 'main' || candidateBranch !== 'main') {
+      issues.push('PRODUCTION_MAIN_BRANCH_REQUIRED');
+    }
+  } else if (mode === 'staging' || mode === 'recovery') {
+    if (!temporaryBranch?.test(currentBranch) || !temporaryBranch.test(candidateBranch)) {
+      issues.push('CANDIDATE_BRANCH_RELEASE_VERSION_MISMATCH');
+    }
+    if (candidateBranch !== currentBranch) issues.push('CANDIDATE_BRANCH_HEAD_MISMATCH');
+  } else {
+    issues.push('RELEASE_IDENTITY_MODE_INVALID');
+  }
+
+  return Object.freeze({
+    valid: issues.length === 0,
+    issues: Object.freeze([...new Set(issues)]),
+    safe: Object.freeze({
+      releaseVersion: PACKAGE_VERSION.test(packageVersion) ? packageVersion : '',
+      appVersion: appVersion === packageVersion ? appVersion : '',
+      candidateSha: SHA.test(candidateSha) ? candidateSha : '',
+      candidateBranch,
+    }),
+  });
+}
+
+export function validateReleaseBackupTuple({
+  exportSha256,
+  isolatedRestore,
+  reconciliation,
+  priorWorkerDeployment,
+  deploymentsSnapshot,
+  r2Metadata,
+  fingerprints,
+  timeTravelBookmark,
+  syntheticActiveAccounts,
+  requireNoSyntheticActiveAccounts = false,
+} = {}) {
+  const issues = [];
+  if (!SHA256.test(String(exportSha256 ?? ''))) issues.push('BACKUP_EXPORT_SHA_MISSING');
+  if (isolatedRestore?.integrityOk !== true) issues.push('BACKUP_RESTORE_INTEGRITY_FAILED');
+  if (Number(isolatedRestore?.foreignKeyViolations) !== 0) issues.push('BACKUP_RESTORE_FOREIGN_KEYS_FAILED');
+  if (String(isolatedRestore?.operationalSchema ?? '') !== RELEASE_SCHEMA_VERSION)
+    issues.push('BACKUP_RESTORE_SCHEMA_MISMATCH');
+  if (String(isolatedRestore?.latestMigration ?? '') !== RELEASE_MIGRATION)
+    issues.push('BACKUP_RESTORE_MIGRATION_MISMATCH');
+  if (reconciliation?.summary?.disposition !== 'RECONCILED') issues.push('BACKUP_RECONCILIATION_FAILED');
+  if (!priorWorkerDeployment || !Array.isArray(deploymentsSnapshot) || deploymentsSnapshot.length < 1)
+    issues.push('BACKUP_PRIOR_WORKER_SNAPSHOT_MISSING');
+  if (!Array.isArray(r2Metadata) || r2Metadata.length !== 2) issues.push('BACKUP_R2_METADATA_MISSING');
+  for (const key of ['stagingConfigSha256', 'productionConfigSha256', 'r2MetadataSha256']) {
+    if (!SHA256.test(String(fingerprints?.[key] ?? ''))) {
+      issues.push('BACKUP_FINGERPRINTS_INVALID');
+      break;
+    }
+  }
+  if (typeof timeTravelBookmark !== 'string' || !timeTravelBookmark.trim())
+    issues.push('TIME_TRAVEL_BOOKMARK_MISSING');
+  if (
+    requireNoSyntheticActiveAccounts &&
+    (!Number.isSafeInteger(syntheticActiveAccounts) || syntheticActiveAccounts !== 0)
+  ) {
+    issues.push('PRODUCTION_SYNTHETIC_ACTIVE_ACCOUNTS_FOUND');
+  }
+
+  return Object.freeze({
+    valid: issues.length === 0,
+    issues: Object.freeze([...new Set(issues)]),
+  });
+}
+
+export function assertReleaseBackupTuple(tuple) {
+  const result = validateReleaseBackupTuple(tuple);
+  if (!result.valid) throw new Error('BACKUP_TUPLE_INVALID');
+  return result;
+}
 
 export function isInside(parent, candidate) {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -133,7 +247,16 @@ export function parseWranglerJsonOutput(output) {
 
 export function validateStagingSandboxConfig(
   config,
-  { configPath, repoRoot, head = '', branch = '', command = 'status', expectedDatabaseId = '' } = {},
+  {
+    configPath,
+    repoRoot,
+    releaseVersion = '',
+    head = '',
+    branch = '',
+    identityMode = 'staging',
+    command = 'status',
+    expectedDatabaseId = '',
+  } = {},
 ) {
   const issues = [];
   if (!path.isAbsolute(configPath ?? '')) issues.push('PRIVATE_CONFIG_ABSOLUTE_PATH_REQUIRED');
@@ -175,16 +298,13 @@ export function validateStagingSandboxConfig(
   if (resourceValues.some((value) => /production/iu.test(String(value ?? ''))))
     issues.push('PRODUCTION_RESOURCE_CROSSOVER');
 
-  const candidateSha = String(config?.vars?.CANDIDATE_SHA ?? '')
-    .trim()
-    .toLowerCase();
-  if (!SHA.test(candidateSha)) issues.push('CANDIDATE_SHA_INVALID');
-  const candidateBranch = String(config?.vars?.CANDIDATE_BRANCH ?? '').trim();
-  if (!BRANCH.test(candidateBranch)) issues.push('CANDIDATE_BRANCH_INVALID');
-  if (command !== 'status' && head && candidateSha !== head.toLowerCase())
-    issues.push('CANDIDATE_SHA_HEAD_MISMATCH');
-  if (command !== 'status' && branch && candidateBranch !== branch)
-    issues.push('CANDIDATE_BRANCH_HEAD_MISMATCH');
+  const releaseIdentity = validateReleaseCandidateIdentity(config, {
+    releaseVersion,
+    head,
+    branch,
+    mode: identityMode,
+  });
+  issues.push(...releaseIdentity.issues);
 
   const baseUrl = String(config?.vars?.SANDBOX_BASE_URL ?? '').trim();
   try {
@@ -214,8 +334,10 @@ export function validateStagingSandboxConfig(
         Boolean(expectedDatabaseId) &&
         database?.database_id === expectedDatabaseId,
       bucketMatch: JSON.stringify(bucketBindings) === JSON.stringify(expectedBucketBindings),
-      candidateSha: SHA.test(candidateSha) ? candidateSha : '',
-      candidateBranch: BRANCH.test(candidateBranch) ? candidateBranch : '',
+      releaseVersion: releaseIdentity.safe.releaseVersion,
+      appVersion: releaseIdentity.safe.appVersion,
+      candidateSha: releaseIdentity.safe.candidateSha,
+      candidateBranch: releaseIdentity.safe.candidateBranch,
       allowlistCount: Number.isSafeInteger(allowlistCount) ? allowlistCount : 0,
       baseUrl,
     }),
@@ -248,7 +370,11 @@ export function assertSandboxMutationReady({ configResult, classification, comma
 export async function waitForSandboxLifecycleState(
   readState,
   expectedGeneration,
-  { attempts = 10, intervalMs = 1_000, delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)) } = {},
+  {
+    attempts = 10,
+    intervalMs = 1_000,
+    delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  } = {},
 ) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const state = await readState();

@@ -6,7 +6,7 @@ import { createReleaseCandidateManifest } from '../../scripts/create-release-can
 const root = resolve(import.meta.dirname, '../..');
 const read = (file) => readFile(resolve(root, file), 'utf8');
 
-describe('v0.8.0 release pipeline', () => {
+describe('authoritative release pipeline', () => {
   it('does not require retired generated Apps Script UI artifacts for a V5 clean checkout', async () => {
     const check = await read('scripts/check-apps-script.mjs');
 
@@ -101,14 +101,18 @@ describe('v0.8.0 release pipeline', () => {
     expect(workflow).toContain("headers: { 'cache-control': 'no-cache' }");
     expect(workflow).toContain('version?.candidateSha === expected');
     expect(workflow).toContain('Stop for Earl manual testing');
+    expect(workflow).toContain('WAIT FOR EARL. No production job exists in this workflow.');
     expect(workflow).not.toContain('deploy-environment.mjs production');
     expect(workflow).not.toContain('pull_request_target');
   });
 
   it('binds the candidate manifest to the release, commit, and generated artifacts', async () => {
-    const manifest = await createReleaseCandidateManifest();
+    const [manifest, packageJson] = await Promise.all([
+      createReleaseCandidateManifest(),
+      read('package.json').then(JSON.parse),
+    ]);
 
-    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: '0.8.1' });
+    expect(manifest).toMatchObject({ schemaVersion: 1, releaseVersion: packageJson.version });
     expect(manifest.candidate.releaseSha).toMatch(/^[0-9a-f]{40}$/u);
     expect(manifest.candidate.distSha256).toMatch(/^[0-9a-f]{64}$/u);
     expect(manifest.artifacts.cloudflareHtmlSha256).toBe(manifest.candidate.distSha256);
@@ -117,25 +121,43 @@ describe('v0.8.0 release pipeline', () => {
   });
 
   it('fails closed around staging smoke, recovery identity, and live deployment authorization', async () => {
-    const [smoke, stagingEvidence, productionEvidence, deploy, privateConfigs] = await Promise.all([
-      read('scripts/staging-candidate-smoke.mjs'),
-      read('scripts/staging-candidate-evidence.mjs'),
-      read('scripts/production-recovery-evidence.mjs'),
-      read('scripts/deploy-environment.mjs'),
-      read('scripts/create-private-cloudflare-configs.mjs'),
-    ]);
+    const [packageJson, smoke, stagingEvidence, productionEvidence, deploy, privateConfigs, sandbox] =
+      await Promise.all([
+        read('package.json').then(JSON.parse),
+        read('scripts/staging-candidate-smoke.mjs'),
+        read('scripts/staging-candidate-evidence.mjs'),
+        read('scripts/production-recovery-evidence.mjs'),
+        read('scripts/deploy-environment.mjs'),
+        read('scripts/create-private-cloudflare-configs.mjs'),
+        read('scripts/staging-sandbox.mjs'),
+      ]);
 
+    expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
     expect(smoke).toContain("post(baseUrl, '/api/admin/access/directory')");
     expect(smoke).toContain("authenticated.post('/api/getEssentialBootstrapData'");
     expect(smoke).toContain("'inventory',");
     expect(smoke).toContain('data: { module, page: 1, pageSize: 10 }');
     expect(smoke).toContain('validateEnvironmentSeparation');
+    expect(smoke).toContain('readPackageReleaseVersion');
+    expect(smoke).toContain('validateReleaseCandidateIdentity');
+    expect(smoke).toContain('version.releaseVersion !== releaseVersion');
     expect(stagingEvidence).toContain("'r2', 'bucket', 'info'");
+    expect(stagingEvidence).toContain('STAGING_TIME_TRAVEL_BOOKMARK_MISSING');
+    expect(stagingEvidence).toContain('assertReleaseBackupTuple');
     expect(productionEvidence).toContain("'d1', 'time-travel', 'info'");
     expect(productionEvidence).toContain("'r2', 'bucket', 'info'");
     expect(productionEvidence).toContain('validateStagingSandboxConfig');
     expect(productionEvidence).toContain('restoreAndVerifyD1Export');
     expect(productionEvidence).toContain('reconcileInventoryDatabase');
+    expect(productionEvidence).toContain('readPackageReleaseVersion');
+    expect(productionEvidence).toContain('releaseIdentityModeForRecovery');
+    expect(productionEvidence).toContain('validateReleaseCandidateIdentity');
+    expect(productionEvidence).toContain('identityMode,');
+    expect(productionEvidence).toContain(
+      "currentCandidate.branch === 'main' ? 'POST_MERGE_FINAL' : 'PRE_MERGE_READ_ONLY'",
+    );
+    expect(productionEvidence).toContain('assertReleaseBackupTuple');
+    expect(productionEvidence).toContain('PRODUCTION_SYNTHETIC_ACTIVE_ACCOUNTS_FOUND');
     expect(deploy).toContain("actions?.workerDeploy !== 'APPROVED'");
     expect(deploy).toContain('result.launchAuthorized');
     expect(deploy).toContain('validateProductionLaunchPreflight');
@@ -147,7 +169,45 @@ describe('v0.8.0 release pipeline', () => {
       "[wranglerExecutable, 'deploy', '-c', configPath, '--assets', artifactDirectory]",
     );
     expect(deploy).not.toContain("execFileSync('npx', ['wrangler', 'deploy'");
-    expect(deploy).toContain("target === 'staging' ? 'release/v0.8.0-inventory-truth-ledger-lock' : 'main'");
+    expect(deploy).toContain('readPackageReleaseVersion');
+    expect(deploy).toContain('validateReleaseCandidateIdentity');
+    expect(deploy).toContain("mode: target === 'production' ? 'production' : 'staging'");
+    expect(deploy).not.toContain('release/v0.8.0-inventory-truth-ledger-lock');
+    expect(sandbox).toContain('runtime.releaseVersion === releaseVersion');
+    expect(sandbox).toContain('readPackageReleaseVersion');
+    const sandboxIdentityGuard = sandbox.indexOf(
+      'const releaseIdentity = validateReleaseCandidateIdentity(config, {',
+    );
+    const sandboxProviderInventory = sandbox.indexOf(
+      'const stagingDatabaseId = expectedDatabaseId(configPath);',
+    );
+    const sandboxIdentityRejection = sandbox.indexOf('if (!releaseIdentity.valid)');
+    const sandboxFullValidation = sandbox.indexOf(
+      'const configResult = validateStagingSandboxConfig(config, {',
+    );
+    expect(sandboxIdentityGuard).toBeGreaterThan(-1);
+    expect(sandboxIdentityRejection).toBeGreaterThan(sandboxIdentityGuard);
+    expect(sandboxProviderInventory).toBeGreaterThan(sandboxIdentityRejection);
+    expect(sandboxFullValidation).toBeGreaterThan(sandboxProviderInventory);
+
+    const recoveryIdentityGuard = productionEvidence.indexOf(
+      'const stagingIdentity = validateReleaseCandidateIdentity(staging, {',
+    );
+    const productionConfigGuard = productionEvidence.indexOf(
+      "if (production.name !== expectedWorker || production.vars?.ENVIRONMENT !== 'PRODUCTION')",
+    );
+    const recoveryIdentityRejection = productionEvidence.indexOf('if (!stagingIdentity.valid)');
+    const recoveryProviderInventory = productionEvidence.indexOf(
+      "runWrangler(stagingConfigPath, ['d1', 'list', '--json'])",
+    );
+    const recoveryFullValidation = productionEvidence.indexOf(
+      'const stagingValidation = validateStagingSandboxConfig(staging, {',
+    );
+    expect(recoveryIdentityGuard).toBeGreaterThan(-1);
+    expect(recoveryIdentityRejection).toBeGreaterThan(recoveryIdentityGuard);
+    expect(productionConfigGuard).toBeGreaterThan(recoveryIdentityRejection);
+    expect(recoveryProviderInventory).toBeGreaterThan(productionConfigGuard);
+    expect(recoveryFullValidation).toBeGreaterThan(recoveryProviderInventory);
     expect(privateConfigs).toContain('resolvePrivatePath');
     expect(privateConfigs).toContain("main: path.join(repoRoot, 'src', 'worker', 'index.js')");
     expect(privateConfigs).toContain("directory: path.join(repoRoot, 'dist')");

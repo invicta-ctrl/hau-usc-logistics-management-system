@@ -5,10 +5,15 @@ import { fileURLToPath } from 'node:url';
 import { request as apiRequest } from '@playwright/test';
 import { parseJsonConfig, validateEnvironmentSeparation } from './cloudflare-environment-preflight.mjs';
 import { resolvePrivatePath } from './private-path.mjs';
+import {
+  readPackageReleaseVersion,
+  RELEASE_MIGRATION,
+  RELEASE_SCHEMA_VERSION,
+  validateReleaseCandidateIdentity,
+} from './staging-sandbox-lib.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
-const expectedBranch = 'release/v0.8.0-inventory-truth-ledger-lock';
-const expectedMigration = '0030_production_access_and_operations.sql';
+const expectedMigration = RELEASE_MIGRATION;
 
 function argument(name) {
   const index = process.argv.indexOf(name);
@@ -41,7 +46,7 @@ async function main() {
     cwd: repoRoot,
     encoding: 'utf8',
   }).trim();
-  if (branch !== expectedBranch) throw new Error('RELEASE_BRANCH_REQUIRED');
+  const releaseVersion = await readPackageReleaseVersion(repoRoot);
 
   const productionConfigPath = await resolvePrivatePath(argument('--production-config'), {
     repoRoot,
@@ -61,6 +66,13 @@ async function main() {
     allowStagingCandidate: true,
   });
   if (!separation.valid) throw new Error('ENVIRONMENT_SEPARATION_FAILED');
+  const configIdentity = validateReleaseCandidateIdentity(config, {
+    releaseVersion,
+    head,
+    branch,
+    mode: 'staging',
+  });
+  if (!configIdentity.valid) throw new Error('STAGING_CANDIDATE_IDENTITY_CONFIG_INVALID');
   if (
     typeof credential?.accessId !== 'string' ||
     !credential.accessId.trim() ||
@@ -72,8 +84,6 @@ async function main() {
   const baseUrl = String(config.vars?.SANDBOX_BASE_URL ?? '');
   if (
     config.vars?.ENVIRONMENT !== 'STAGING' ||
-    config.vars?.APP_VERSION !== '0.8.0' ||
-    config.vars?.CANDIDATE_SHA !== head ||
     !/^https:\/\//u.test(baseUrl) ||
     /prod(uction)?/iu.test(new URL(baseUrl).hostname)
   ) {
@@ -97,19 +107,19 @@ async function main() {
   const [version, readiness] = await Promise.all([versionResponse.json(), readinessResponse.json()]);
   if (
     version.environment !== 'STAGING' ||
-    version.appVersion !== '0.8.0' ||
-    version.releaseVersion !== '0.8.0' ||
+    version.appVersion !== releaseVersion ||
+    version.releaseVersion !== releaseVersion ||
     version.candidateSha !== head ||
-    version.database?.schemaVersion !== '30' ||
+    version.database?.schemaVersion !== RELEASE_SCHEMA_VERSION ||
     version.database?.latestMigration !== expectedMigration
   ) {
     throw new Error('STAGING_VERSION_IDENTITY_MISMATCH');
   }
   if (
     readiness.environment !== 'STAGING' ||
-    readiness.appVersion !== '0.8.0' ||
+    readiness.appVersion !== releaseVersion ||
     readiness.candidateSha !== head ||
-    readiness.database?.schemaVersion !== '30' ||
+    readiness.database?.schemaVersion !== RELEASE_SCHEMA_VERSION ||
     readiness.database?.latestMigration !== expectedMigration ||
     readiness.ready !== true ||
     readiness.dependencies?.protectedConfiguration !== true
@@ -170,8 +180,8 @@ async function main() {
     `${JSON.stringify({
       environment: 'STAGING',
       candidateSha: head,
-      version: '0.8.0',
-      schemaVersion: '30',
+      version: releaseVersion,
+      schemaVersion: RELEASE_SCHEMA_VERSION,
       latestMigration: expectedMigration,
       routes: routeResults,
       readiness: true,

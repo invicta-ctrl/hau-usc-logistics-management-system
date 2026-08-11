@@ -10,9 +10,13 @@ import {
   assertSandboxMutationReady,
   exactDatabaseIdFromInventory,
   parseWranglerJsonOutput,
+  readPackageReleaseVersion,
+  RELEASE_MIGRATION,
+  RELEASE_SCHEMA_VERSION,
   safeSandboxErrorMessage,
   sandboxClassificationQuery,
   summarizeSandboxClassification,
+  validateReleaseCandidateIdentity,
   validateStagingSandboxConfig,
   waitForSandboxLifecycleState,
 } from './staging-sandbox-lib.mjs';
@@ -168,8 +172,8 @@ async function captureAndVerifyBackup(configPath, privateDirectory, head, databa
     exportPath,
     path.join(restoreDirectory, 'restored.sqlite'),
     {
-      expectedSchema: '30',
-      expectedMigration: '0030_production_access_and_operations.sql',
+      expectedSchema: RELEASE_SCHEMA_VERSION,
+      expectedMigration: RELEASE_MIGRATION,
       requireImmutableHistory: true,
     },
   );
@@ -232,6 +236,7 @@ async function runtimeStatus(baseUrl) {
     readinessStatus: readinessResponse.status,
     environment: version?.environment ?? '',
     appVersion: version?.appVersion ?? '',
+    releaseVersion: version?.releaseVersion ?? '',
     candidateSha: version?.candidateSha ?? '',
     schemaVersion: version?.database?.schemaVersion ?? readiness?.database?.schemaVersion ?? '',
     latestMigration: version?.database?.latestMigration ?? readiness?.database?.latestMigration ?? '',
@@ -257,13 +262,25 @@ async function main() {
     cwd: repoRoot,
     encoding: 'utf8',
   }).trim();
+  const releaseVersion = await readPackageReleaseVersion(repoRoot);
+  const releaseIdentity = validateReleaseCandidateIdentity(config, {
+    releaseVersion,
+    head,
+    branch,
+    mode: 'staging',
+  });
+  if (!releaseIdentity.valid) {
+    throw new Error(`Sandbox ${command} refused: ${releaseIdentity.issues.join(', ')}`);
+  }
+  const stagingDatabaseId = expectedDatabaseId(configPath);
   const configResult = validateStagingSandboxConfig(config, {
     configPath,
     repoRoot,
+    releaseVersion,
     head,
     branch,
     command,
-    expectedDatabaseId: expectedDatabaseId(configPath),
+    expectedDatabaseId: stagingDatabaseId,
   });
   if (!configResult.valid) {
     throw new Error(`Sandbox ${command} refused: ${configResult.issues.join(', ')}`);
@@ -274,13 +291,15 @@ async function main() {
   const runtimeMatch =
     runtime.versionStatus === 200 &&
     runtime.environment === 'STAGING' &&
-    runtime.appVersion === '0.8.0' &&
+    runtime.appVersion === releaseVersion &&
+    runtime.releaseVersion === releaseVersion &&
     runtime.candidateSha === configResult.safe.candidateSha &&
-    runtime.schemaVersion === '30' &&
-    runtime.latestMigration === '0030_production_access_and_operations.sql';
+    runtime.schemaVersion === RELEASE_SCHEMA_VERSION &&
+    runtime.latestMigration === RELEASE_MIGRATION;
   const status = {
     environment: runtime.environment,
     appVersion: runtime.appVersion,
+    releaseVersion: runtime.releaseVersion,
     candidateSha: runtime.candidateSha,
     candidateBranch: configResult.safe.candidateBranch,
     schemaVersion: runtime.schemaVersion,

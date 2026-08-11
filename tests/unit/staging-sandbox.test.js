@@ -1,12 +1,17 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   SANDBOX_CLASSIFICATION_RULES,
   assertSandboxMutationReady,
   parseWranglerJsonOutput,
+  releaseIdentityModeForRecovery,
   safeSandboxErrorMessage,
   sandboxClassificationQuery,
   summarizeSandboxClassification,
+  temporaryReleaseBranchPattern,
+  validateReleaseBackupTuple,
+  validateReleaseCandidateIdentity,
   validateStagingSandboxConfig,
   waitForSandboxLifecycleState,
 } from '../../scripts/staging-sandbox-lib.mjs';
@@ -14,7 +19,10 @@ import {
 const repoRoot = path.resolve('D:/workspace/repo');
 const configPath = path.resolve('D:/private/wrangler.staging.private.jsonc');
 const head = 'a'.repeat(40);
-const branch = 'feat/v0.7.3-synthetic';
+const releaseVersion = JSON.parse(
+  readFileSync(path.resolve(import.meta.dirname, '../../package.json'), 'utf8'),
+).version;
+const branch = `release/v${releaseVersion}-sandbox-test`;
 const stagingDatabaseId = '11111111-1111-4111-8111-111111111111';
 
 function config(overrides = {}) {
@@ -25,6 +33,7 @@ function config(overrides = {}) {
     preview_urls: false,
     vars: {
       ENVIRONMENT: 'STAGING',
+      APP_VERSION: releaseVersion,
       CANDIDATE_SHA: head,
       CANDIDATE_BRANCH: branch,
       SANDBOX_BASE_URL: 'https://hau-usc-logistics-staging.example.workers.dev',
@@ -57,6 +66,7 @@ function validate(value, command = 'status') {
   return validateStagingSandboxConfig(value, {
     configPath,
     repoRoot,
+    releaseVersion,
     head,
     branch,
     command,
@@ -65,6 +75,130 @@ function validate(value, command = 'status') {
 }
 
 describe('permanent staging sandbox guards', () => {
+  it('derives temporary candidate identity from package.json and rejects retired or permanent branches', () => {
+    const currentPattern = temporaryReleaseBranchPattern(releaseVersion);
+    expect(currentPattern?.test(branch)).toBe(true);
+    expect(
+      validateReleaseCandidateIdentity(config(), { releaseVersion, head, branch, mode: 'staging' }),
+    ).toMatchObject({ valid: true });
+
+    for (const rejectedBranch of ['release/v0.8.0-retired', 'main', 'staging']) {
+      const result = validateReleaseCandidateIdentity(
+        config({ vars: { CANDIDATE_BRANCH: rejectedBranch } }),
+        { releaseVersion, head, branch: rejectedBranch, mode: 'staging' },
+      );
+      expect(result.valid).toBe(false);
+      expect(result.issues).toContain('CANDIDATE_BRANCH_RELEASE_VERSION_MISMATCH');
+    }
+
+    expect(
+      validateReleaseCandidateIdentity(
+        config({ vars: { CANDIDATE_BRANCH: `fix/v${releaseVersion}-other` } }),
+        { releaseVersion, head, branch, mode: 'staging' },
+      ).issues,
+    ).toContain('CANDIDATE_BRANCH_HEAD_MISMATCH');
+    expect(
+      validateReleaseCandidateIdentity(config({ vars: { APP_VERSION: '0.0.0' } }), {
+        releaseVersion,
+        head,
+        branch,
+        mode: 'staging',
+      }).issues,
+    ).toContain('APP_VERSION_PACKAGE_MISMATCH');
+    expect(
+      validateReleaseCandidateIdentity(config({ vars: { CANDIDATE_SHA: 'b'.repeat(40) } }), {
+        releaseVersion,
+        head,
+        branch,
+        mode: 'staging',
+      }).issues,
+    ).toContain('CANDIDATE_SHA_HEAD_MISMATCH');
+  });
+
+  it('requires main for a production deployment identity', () => {
+    expect(
+      validateReleaseCandidateIdentity(config(), { releaseVersion, head, branch, mode: 'production' }).issues,
+    ).toContain('PRODUCTION_MAIN_BRANCH_REQUIRED');
+    expect(
+      validateReleaseCandidateIdentity(config({ vars: { CANDIDATE_BRANCH: 'main' } }), {
+        releaseVersion,
+        head,
+        branch: 'main',
+        mode: 'production',
+      }),
+    ).toMatchObject({ valid: true });
+  });
+
+  it('selects a reachable identity mode for pre-merge and post-merge recovery evidence', () => {
+    const mainMode = releaseIdentityModeForRecovery('main');
+    expect(mainMode).toBe('production');
+    expect(
+      validateReleaseCandidateIdentity(config({ vars: { CANDIDATE_BRANCH: 'main' } }), {
+        releaseVersion,
+        head,
+        branch: 'main',
+        mode: mainMode,
+      }),
+    ).toMatchObject({ valid: true });
+    expect(
+      validateStagingSandboxConfig(config({ vars: { CANDIDATE_BRANCH: 'main' } }), {
+        configPath,
+        repoRoot,
+        releaseVersion,
+        head,
+        branch: 'main',
+        identityMode: mainMode,
+        command: 'status',
+        expectedDatabaseId: stagingDatabaseId,
+      }),
+    ).toMatchObject({ valid: true });
+
+    const temporaryMode = releaseIdentityModeForRecovery(branch);
+    expect(temporaryMode).toBe('recovery');
+    expect(
+      validateReleaseCandidateIdentity(config(), {
+        releaseVersion,
+        head,
+        branch,
+        mode: temporaryMode,
+      }),
+    ).toMatchObject({ valid: true });
+  });
+
+  it('requires every release backup tuple field before evidence can pass', () => {
+    const tuple = {
+      exportSha256: 'b'.repeat(64),
+      isolatedRestore: {
+        integrityOk: true,
+        foreignKeyViolations: 0,
+        operationalSchema: '30',
+        latestMigration: '0030_production_access_and_operations.sql',
+      },
+      reconciliation: { summary: { disposition: 'RECONCILED' } },
+      priorWorkerDeployment: { id: 'prior-deployment' },
+      deploymentsSnapshot: [{ id: 'prior-deployment' }],
+      r2Metadata: [{ binding: 'BRAND_ASSETS' }, { binding: 'EVIDENCE_ASSETS' }],
+      fingerprints: {
+        stagingConfigSha256: 'c'.repeat(64),
+        productionConfigSha256: 'd'.repeat(64),
+        r2MetadataSha256: 'e'.repeat(64),
+      },
+      timeTravelBookmark: 'bookmark-value',
+      syntheticActiveAccounts: 0,
+      requireNoSyntheticActiveAccounts: true,
+    };
+    expect(validateReleaseBackupTuple(tuple)).toMatchObject({ valid: true });
+    expect(validateReleaseBackupTuple({ ...tuple, timeTravelBookmark: '   ' }).issues).toContain(
+      'TIME_TRAVEL_BOOKMARK_MISSING',
+    );
+    expect(validateReleaseBackupTuple({ ...tuple, priorWorkerDeployment: null }).issues).toContain(
+      'BACKUP_PRIOR_WORKER_SNAPSHOT_MISSING',
+    );
+    expect(validateReleaseBackupTuple({ ...tuple, syntheticActiveAccounts: 1 }).issues).toContain(
+      'PRODUCTION_SYNTHETIC_ACTIVE_ACCOUNTS_FOUND',
+    );
+  });
+
   it('accepts only the exact isolated staging resource set', () => {
     expect(validate(config()).valid).toBe(true);
     expect(validate(config({ name: 'hau-usc-logistics-production' })).issues).toContain(
@@ -118,6 +252,7 @@ describe('permanent staging sandbox guards', () => {
       validateStagingSandboxConfig(config(), {
         configPath: 'wrangler.staging.jsonc',
         repoRoot,
+        releaseVersion,
         head,
         branch,
         command: 'seed',
@@ -193,9 +328,7 @@ describe('permanent staging sandbox guards', () => {
   });
 
   it('parses Wrangler JSON after a provider status banner', () => {
-    expect(parseWranglerJsonOutput('Checking D1 export...\n[{"success":true}]')).toEqual([
-      { success: true },
-    ]);
+    expect(parseWranglerJsonOutput('Checking D1 export...\n[{"success":true}]')).toEqual([{ success: true }]);
     expect(() => parseWranglerJsonOutput('Checking D1 export...')).toThrow(
       'Wrangler returned an invalid JSON response.',
     );
