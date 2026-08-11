@@ -1,31 +1,32 @@
 # Current Bounded Task
 
-INTENT: V81_S07_R2_IMPLEMENTATION_AND_HIGH_RISK_REVIEW_PREPARATION
+INTENT: V81_S08_EVIDENCE_ACCEPTANCE_AND_GOVERNANCE_COMMIT_PREPARATION
 MODE: EXECUTE
-OBJECTIVE: Implement only accepted V81-S07 R2 contextual search and affordance repairs, preserve all protected contracts and deferred work, and stop uncommitted for Sol, fresh Luna, and impl-validator review before the exact S07 commit/push.
-TARGET: release/v0.8.1-final-stabilization; accepted R2 source/test packet; S07 high-risk review and commit boundary.
+OBJECTIVE: Preserve the accepted V81-S08 daily-use route regression evidence, its test-only/non-product boundary, and deferred work; stop uncommitted for the final incremental audit before the exact five-path governance commit/push.
+TARGET: release/v0.8.1-final-stabilization; accepted S08 test-and-governance evidence packet; governance commit boundary.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
 EXECUTION_PACKET: .codex/releases/v0.8.1/V0_8_1_EXECUTION_PACKET.md
 ANNOTATION_LEDGER: .codex/releases/v0.8.1/V0_8_1_ANNOTATION_LEDGER.md
 REPAIR_PLAN: .codex/releases/v0.8.1/V0_8_1_REPAIR_PLAN.md
-AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; accepted V81-S05 repair plan at f8a53d15db6c036566032e53e96537e785a6a849; S06 R1 durable at e5a20958e2073a18884acfddbcb3e6ce0f627b66; accepted S07 R2 scope awaits fresh Sol, Luna, and impl-validator review.
+DAILY_USE_REGRESSION_EVIDENCE: .codex/releases/v0.8.1/V0_8_1_DAILY_USE_REGRESSION_EVIDENCE.md
+AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; S07 R2 is durable at e811ceceba730a53186f022df721909e01f776d8; Sol accepted S08 evidence and the fresh Luna evidence review passed.
 REQUIRED_MODEL: GPT-5.6 SOL
 ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_v3
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
 LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
-LOCK_CONTINUITY: A3_V81_S07_R2_ACCEPTED_GOVERNANCE_COMMIT_PENDING
-LOCK_HEARTBEAT_AT: 2026-08-12T00:41:27.4148203+08:00
+LOCK_CONTINUITY: A3_V81_S08_EVIDENCE_ACCEPTED_COMMIT_PENDING
+LOCK_HEARTBEAT_AT: 2026-08-12T01:34:31.2400834+08:00
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
-MILESTONE: V81-S07_R2_ACCEPTED_READY_FOR_COMMIT
+MILESTONE: V81-S08_EVIDENCE_ACCEPTED_READY_FOR_COMMIT
 RELEASE: v0.8.1
-RELEASE_STATE: V81-S07_R2_ACCEPTED_READY_FOR_COMMIT
-RELEASE_STATUS: V81-S07_R2_ACCEPTED_READY_FOR_COMMIT
-STATUS: V81-S07_R2_ACCEPTED_READY_FOR_COMMIT
+RELEASE_STATE: V81-S08_EVIDENCE_ACCEPTED_READY_FOR_COMMIT
+RELEASE_STATUS: V81-S08_EVIDENCE_ACCEPTED_READY_FOR_COMMIT
+STATUS: V81-S08_EVIDENCE_ACCEPTED_READY_FOR_COMMIT
 V81_S00: PASS
 V81_S01: PASS_ACCEPTED_A3_SPEC
 V81_S02: PASS_BRANCH_READY
@@ -33,7 +34,8 @@ V81_S03: PASS_ANNOTATION_LEDGER_42
 V81_S04: PASS_CLASSIFICATION_ACCEPTED
 V81_S05: PASS_GOVERNANCE_COMMITTED_f8a53d15db6c036566032e53e96537e785a6a849
 V81_S06: PASS_GOVERNANCE_COMMITTED_e5a20958e2073a18884acfddbcb3e6ce0f627b66
-V81_S07: R2_ACCEPTED_READY_FOR_COMMIT
+V81_S07: PASS_GOVERNANCE_COMMITTED_e811ceceba730a53186f022df721909e01f776d8
+V81_S08: EVIDENCE_ACCEPTED_READY_FOR_COMMIT
 PRIVATE_PRESERVATION: VERIFIED
 UNKNOWN_WORK_AT_RISK: 0
 BRANCH: release/v0.8.1-final-stabilization
@@ -85,7 +87,8 @@ S06_ACCEPTED_SOURCE_TEST_SCOPE: src/v5/integration/admin-parity.js;src/v5/integr
 S06_FINDINGS_CORRECTED: READFILE_IMPORT; ACTIVATION_SPECIFIC_RENDER_CSRF; REQUIRED_R1_E2E_COVERAGE
 S06_PRODUCT_ACCEPTANCE: PASS
 S06_ACCEPTANCE_WARNINGS: VITEST_PLAYWRIGHT=UNRUN_TOOLING_NO_EFFECT; OPERATIONS_UNIT_PRETTIER=PREEXISTING_BASELINE_MISMATCH; R1_FORMATTER_OVERLAP=0; DETERMINISTIC_AND_STATIC_PROOFS=PASS
-S07_R2_STATE: ACCEPTED_UNCOMMITTED_READY_FOR_COMMIT
+S07_R2_STATE: GOVERNANCE_COMMITTED_e811ceceba730a53186f022df721909e01f776d8
+S07_DURABLE_COMMIT: e811ceceba730a53186f022df721909e01f776d8
 S07_BASELINE_SHA: e5a20958e2073a18884acfddbcb3e6ce0f627b66
 S07_BASELINE_TREE: a01397876851cf9fb10221ebbe4ea5bbf7291383
 S07_R2_SCOPE: V-12,V-17,V-20,V-22,V-33
@@ -108,12 +111,33 @@ S07_ACCEPTED_SOURCE_TEST_SCOPE: src/v5/src/surfaces/operations.js;src/v5/integra
 S07_FINDINGS_CORRECTED: ACTIVE_MOBILE_DRAWER_CONTEXTUAL_MOUNT; FRAME_WIDTH_RELEASE_CAPTURE_INTERCEPTION; E2E_RENDERED_ROW_IDS_AND_REQUEST_RESET; SESSION_BOUNDARY_ROUTE_SEARCH_CLEAR
 S07_PRODUCT_ACCEPTANCE: PASS
 S07_ACCEPTANCE_WARNINGS: VITEST_PLAYWRIGHT=UNRUN_TOOLING_NO_EFFECT; PRETTIER_BASELINES=IDENTICAL_HEAD_CURRENT; R2_FORMATTER_OVERLAP=0; STATIC_AND_CONTROLLER_PROOFS=PASS
-RISK: HIGH_SELECTED_RECORD_AUTHORIZATION_CAPABILITY_AND_RELEASE_ID_FAIL_CLOSED_PRESERVATION
-SCOPE: Implement only accepted S07 R2 route-local authorized-DOM search and contextual request/release/events mounts, including active mobile drawer selection, frame-width release interception, and route-search clearing at every session boundary; no B/D/E/F or external action before fresh high-risk review and exact S07 persistence.
-OUT_OF_SCOPE: R1 rewrite; B/D/E/F implementation; endpoint/payload/enum/capability/authorization/revision/audit/migration/schema/provider/environment/route-registry change; V24 ID synchronization/prefill; Playground/Production/migration/merge/recovery-pointer action, broad redesign, early PIH work, untracked-artifact staging, force-push, reset, clean, discard, or ref mutation.
-VERIFICATION: handoff verify; check:governance; node --check; exact Prettier with documented identical HEAD/current baseline mismatches and R2 overlap0; git diff --check; dependency-free controller/bootstrap-merge/mobile-frame/session-boundary proof; privacy and contract-string scans; identical S07 fields/NEXT; exact eight-path scope; staged0; untracked46 unchanged; acceptance is recorded and governance commit/push parity is required before S08.
-STOP_CONDITIONS: Source or main drift, competing writer, preservation mismatch, privacy exposure, unexpected tracked change, record mismatch, endpoint/payload/capability/schema/record-scope drift, release-ID divergence exposing a form, widened record set, provider or Production crossover, scope expansion, failed validation, or any need outside the accepted S07 allowlist.
-SKILLS: HALLMARK_COMPONENT_SCOPE_PRESERVATION
+S08_EVIDENCE_STATE: ACCEPTED_UNCOMMITTED_READY_FOR_COMMIT
+S08_EVIDENCE_PACKET: .codex/releases/v0.8.1/V0_8_1_DAILY_USE_REGRESSION_EVIDENCE.md
+S08_EVIDENCE_RECORDED_AT: 2026-08-12T01:17:39.5834680+08:00
+SOL_V81_S08_EVIDENCE_ACCEPTANCE: PASS
+LUNA_V81_S08_EVIDENCE_REVIEW: PASS_NO_P0_P1_P2_P3
+S08_REVIEW_TIMESTAMP: 2026-08-12T01:34:31.2400834+08:00
+S08_BASELINE_SHA: e811ceceba730a53186f022df721909e01f776d8
+S08_BASELINE_TREE: 7c594320ee54f26778c9670380fb8927b7a758d1
+S08_PACKET_SCOPE: .codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;.codex/releases/v0.8.1/V0_8_1_DAILY_USE_REGRESSION_EVIDENCE.md;tests/e2e/v5-current-application.spec.js
+S08_RUNNER_RESTORATION: NPM_CI=PASS; PACKAGES=169; PACKAGE_LOCK_SHA256=415E0545A66C1CFF50A3256C4A7BD6DB9676C6DF17E475FF8D19AEBE6D4DB622; TRACKED_LOCKFILE_UNCHANGED=TRUE
+S08_VITEST: PASS; FILES=3; TESTS=25
+S08_PLAYWRIGHT: PASS; COMBINED=76_PASS/32_SKIP/0_FAIL; WIDTHS=320,375,390,414,768,1024,1280,1440,1920
+S08_GATE_REUSE: A3_UNCHANGED_67_PASS_32_SKIP_PLUS_9_AFFECTED_TESTS_RERUN_PASS
+S08_TEST_ONLY_CORRECTIONS: RESET_HELPER_DIRECT_DESCRIPTION_LOCATOR; LENDING_AUTHORIZED_FIXTURE_LOAN_DEMO_221; SIGNIN_FORMDATA_PASSWORD_LOCATOR
+S08_PRODUCT_SOURCE_CHANGE: NONE
+S08_RUNNER_ORPHANS: NONE
+S08_OPEN_P0: 0
+S08_OPEN_P1: 0
+S08_DEFERRED: B=EVIDENCE_REQUIRED; D/E/F=DEFERRED
+S08_PRESERVATION: PRESERVED46; CAPTURE=VERIFIED; PRIVATE_REFS=0; GIT_LOCKS=0; GIT_PROCESSES=0; LIVE_SOURCE_PROVIDER=UNCHANGED
+S08_EXTERNAL_ACTIONS: NONE_PROVIDER_PLAYGROUND_PRODUCTION_PR_DEPLOY_MIGRATION_MERGE_RECOVERY_POINTER_RUNTIME
+RISK: MEDIUM_EVIDENCE_AND_TEST_HARNESS_ONLY; NO_PRODUCT_OR_EXTERNAL_CHANGE
+SCOPE: Record the exact S08 five-path evidence packet: three current-chain records, the daily-use evidence document, and the existing E2E harness/fixture correction. Preserve all product contracts, B/D/E/F deferrals, capture evidence, and the 46 untracked artifacts.
+OUT_OF_SCOPE: Product/test behavior beyond the already-corrected E2E harness; endpoint/payload/enum/capability/authorization/revision/audit/migration/schema/provider/environment/route-registry change; S09 implementation; Playground/Production/migration/merge/recovery-pointer action; broad redesign, early PIH work, untracked-artifact staging, force-push, reset, clean, discard, or ref mutation.
+VERIFICATION: handoff verify; check:governance; node syntax for the E2E file; git diff --check; exact Markdown and E2E-file Prettier; structural privacy scan; duplicate-key and shared-NEXT equality; exact five-path scope; staged0; preserved46 unchanged; final incremental audit before the exact five-path commit/push.
+STOP_CONDITIONS: Source or main drift, competing writer, preservation mismatch, privacy exposure, unexpected tracked change, record mismatch, product-source change, failed evidence predicate, widened scope, provider or Production crossover, failed validation, or any need outside the accepted S08 evidence scope.
+SKILLS: NONE_REQUIRED_FOR_EVIDENCE_ONLY
 CAPTURE_STATUS: VERIFIED
 CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
 RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
@@ -123,6 +147,6 @@ SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6
 DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
 GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
 BLOCKER: NONE
-HANDOFF_STATUS: ACTIVE_V81_S07_R2_ACCEPTED_READY_FOR_COMMIT
-NEXT_ACTION_SCOPE: V81_S07_GOVERNANCE_COMMIT_PUSH_THEN_S08
-NEXT_EXACT_ACTION: Commit and normally push only the accepted V81-S07 eight-file R2 packet, verify local/upstream/remote parity and preserved46, then enter V81-S08 to complete daily-use route regression evidence; B/D/E/F remain deferred; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.
+HANDOFF_STATUS: ACTIVE_V81_S08_EVIDENCE_ACCEPTED_READY_FOR_COMMIT
+NEXT_ACTION_SCOPE: V81_S08_GOVERNANCE_COMMIT_PUSH_THEN_S09
+NEXT_EXACT_ACTION: Commit and normally push only the accepted V81-S08 five-path evidence packet, verify local/upstream/remote parity and preserved46, then enter V81-S09 privacy/accessibility/invariant review; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.

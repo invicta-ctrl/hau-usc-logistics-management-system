@@ -159,7 +159,7 @@ test('public sign-in keeps reset collapsed and renders starter activation only a
   const reset = page.locator('details[data-v5-admin-parity="auth-reset"]');
   await expect(reset).toBeVisible();
   await expect(reset.locator('summary')).toHaveText('Complete password reset');
-  await expect(reset.locator('p.muted')).toHaveText(
+  await expect(reset.locator(':scope > .panel__body > p.muted')).toHaveText(
     'Paste the reset token from your approved password-recovery message.',
   );
   expect(await reset.evaluate((element) => element.open)).toBe(false);
@@ -177,7 +177,10 @@ test('public sign-in keeps reset collapsed and renders starter activation only a
     });
   });
   await page.getByLabel('Username').fill('synthetic.activation');
-  await page.getByLabel('Password').fill('synthetic-activation-password');
+  await page
+    .locator('.auth-card--signin form')
+    .locator('input[name="p"]')
+    .fill('synthetic-activation-password');
   await page.locator('.auth-card--signin form').getByRole('button', { name: 'Sign in' }).click();
 
   const activation = page.locator('[data-v5-admin-parity="auth-activate"]');
@@ -258,7 +261,7 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
     const body = request.postDataJSON?.() ?? {};
     if (
       new URL(request.url()).pathname !== '/api/getBootstrapModule' ||
-      !['release', 'request'].includes(body.module)
+      !['lending', 'release', 'request'].includes(body.module)
     ) {
       return route.fallback();
     }
@@ -295,18 +298,33 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
               },
             ],
           }
-        : (() => {
-            const requestFixture = createRequestQueueFixture();
-            return {
+        : body.module === 'lending'
+          ? {
               ...fixture.data,
-              requests: requestFixture.requests.map((entry) => ({ ...entry, id: 'REQ-DEMO-431' })),
-              requestLines: requestFixture.requestLines.map((line, index) => ({
-                ...line,
-                id: `RQL-DEMO-431-${index + 1}`,
-                requestId: 'REQ-DEMO-431',
-              })),
-            };
-          })();
+              lendingTickets: [
+                {
+                  id: 'LOAN-DEMO-221',
+                  itemId: 'SYNTHETIC-ITEM-001',
+                  borrowerName: 'Synthetic authorized borrower',
+                  borrowerType: 'USC_STAFF',
+                  quantity: 1,
+                  status: 'ACTIVE',
+                  returnBy: '2026-08-15',
+                },
+              ],
+            }
+          : (() => {
+              const requestFixture = createRequestQueueFixture();
+              return {
+                ...fixture.data,
+                requests: requestFixture.requests.map((entry) => ({ ...entry, id: 'REQ-DEMO-431' })),
+                requestLines: requestFixture.requestLines.map((line, index) => ({
+                  ...line,
+                  id: `RQL-DEMO-431-${index + 1}`,
+                  requestId: 'REQ-DEMO-431',
+                })),
+              };
+            })();
     return route.fulfill({
       status: 200,
       contentType: 'application/json',
