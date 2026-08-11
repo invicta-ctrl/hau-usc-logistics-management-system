@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { GROUPS, SURFACES } from '../../src/v5/src/registry.js';
+import { createBootstrapModuleFixture } from '../fixtures/essential-bootstrap-fixtures.js';
 import {
   PRODUCTION,
   STAGING,
@@ -145,6 +146,106 @@ test('public intake stays public while an internal route receives the guarded pl
   await expectNoHorizontalOverflow(page);
 });
 
+test('public sign-in keeps reset collapsed and renders starter activation only after an activation-required login', async ({
+  page,
+}) => {
+  await installV5ApiFixture(page, { environment: STAGING });
+  await page.goto('/#/public.signin');
+  await waitForV5(page);
+
+  const reset = page.locator('details[data-v5-admin-parity="auth-reset"]');
+  await expect(reset).toBeVisible();
+  await expect(reset.locator('summary')).toHaveText('Complete password reset');
+  await expect(reset.locator('p.muted')).toHaveText(
+    'Paste the reset token from your approved password-recovery message.',
+  );
+  expect(await reset.evaluate((element) => element.open)).toBe(false);
+  await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toHaveCount(0);
+
+  await page.route('**/api/auth/login', async (route) => {
+    const request = route.request();
+    if (request.method() !== 'POST' || new URL(request.url()).pathname !== '/api/auth/login') {
+      return route.fallback();
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ state: 'ACTIVATION_REQUIRED', csrfToken: 'csrf-activation-e2e' }),
+    });
+  });
+  await page.getByLabel('Username').fill('synthetic.activation');
+  await page.getByLabel('Password').fill('synthetic-activation-password');
+  await page.locator('.auth-card--signin form').getByRole('button', { name: 'Sign in' }).click();
+
+  const activation = page.locator('[data-v5-admin-parity="auth-activate"]');
+  await expect(activation).toBeVisible();
+  await expect(activation.getByText('USC work email', { exact: true })).toBeVisible();
+  await expect(activation.getByText('Use your approved USC work email.', { exact: true })).toBeVisible();
+});
+
+test('authenticated R1 lending and release forms preserve labels and release identity separation', async ({
+  page,
+}) => {
+  await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+  await page.route('**/api/getBootstrapModule', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON?.() ?? {};
+    if (new URL(request.url()).pathname !== '/api/getBootstrapModule' || body.module !== 'release') {
+      return route.fallback();
+    }
+    const fixture = createBootstrapModuleFixture({
+      backendMode: 'rest',
+      environment: STAGING,
+      module: 'release',
+      rows: 2,
+    });
+    fixture.data = {
+      ...fixture.data,
+      requests: [{ id: 'REQ-S06-RELEASE-001', status: 'READY_FOR_RELEASE' }],
+      requestLines: [
+        {
+          id: 'RQL-S06-RELEASE-001',
+          requestId: 'REQ-S06-RELEASE-001',
+          description: 'Synthetic authorized release item',
+          requestedQuantity: 1,
+          releasedQuantity: 0,
+          unit: 'piece',
+        },
+      ],
+    };
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixture),
+    });
+  });
+
+  await page.goto('/#/lending.queue');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('lending.queue'),
+  );
+  const lending = page.locator('[data-v5-command="lending-create"]');
+  await expect(lending).toBeVisible();
+  await expect(lending.locator('option[value="USC_STAFF"]')).toHaveText('USC Staff/Officer');
+  await expect(lending.getByText('Student ID No.', { exact: true })).toBeVisible();
+  await expect(lending.getByText('Contact Number', { exact: true })).toBeVisible();
+  await expect(lending.locator('[name="notes"]')).toHaveCount(0);
+
+  await page.goto('/#/release.desk');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('release.desk'),
+  );
+  const release = page.locator('[data-v5-command="release-confirm"]');
+  await expect(release).toBeVisible();
+  await expect(release.getByText('Request Ticket ID', { exact: true })).toBeVisible();
+  await expect(release.getByText('Release item', { exact: true })).toBeVisible();
+  expect(await release.locator('input[name="recipientConfirmed"]').evaluate((input) => input.required)).toBe(
+    true,
+  );
+});
+
 test('Test Real Login Flow disables convenience unlock until the tester resumes it', async ({
   page,
 }, testInfo) => {
@@ -240,6 +341,9 @@ test('light and dark V5 themes remain usable at the configured responsive width'
   await page.goto('/#/public.landing');
   await waitForV5(page);
 
+  await expect(page.locator('.landing-hero__content > p')).toHaveText(
+    "As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.",
+  );
   const heroMedia = page.locator('.landing-hero__media');
   await expect(heroMedia).toBeVisible();
   await expect.poll(() => heroMedia.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);

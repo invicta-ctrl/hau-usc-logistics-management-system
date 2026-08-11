@@ -65,7 +65,7 @@ export const landing = () =>
         alt="USC current major event" width="960" height="356" decoding="async" fetchpriority="high" />
       <div class="landing-hero__content">
         <h1 id="landing-title">Holy Angel University Student Council</h1>
-        <p>The university's highest student governing body, representing the tertiary student community through leadership, service, and shared responsibility.</p>
+        <p>As the University's highest student governing body, the Council represents the tertiary student community through leadership, service, and shared responsibility.</p>
         <div class="landing-hero__actions">
           <a class="btn btn--primary" href="#/public.signin">Staff sign in${icon('arrow-right')}</a>
           <a class="landing-link" href="https://www.facebook.com/holyangeluniversitysc" target="_blank" rel="noopener noreferrer">Visit the official USC Facebook page${icon('arrow-right', 'icon--sm')}</a>

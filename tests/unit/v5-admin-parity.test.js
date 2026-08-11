@@ -80,6 +80,50 @@ function controllerFor(backend, integration = { session: { csrfToken: 'csrf-exac
   });
 }
 
+function renderPublicSignin(integration) {
+  const root = {
+    children: [],
+    append(...children) {
+      this.children.push(...children);
+    },
+    querySelectorAll: () => [],
+  };
+  const document = {
+    createElement(tagName) {
+      return {
+        tagName: tagName.toUpperCase(),
+        children: [],
+        dataset: {},
+        attributes: {},
+        textContent: '',
+        append(...children) {
+          this.children.push(...children);
+        },
+        setAttribute(name, value) {
+          this.attributes[name] = String(value);
+        },
+      };
+    },
+    getElementById: (id) => (id === 'surface-main' ? root : null),
+  };
+  vi.stubGlobal('document', document);
+  vi.stubGlobal('location', { hash: '#/public.signin' });
+  try {
+    controllerFor(backendStub(), integration).afterRender();
+    return root;
+  } finally {
+    vi.unstubAllGlobals();
+  }
+}
+
+function descendants(node) {
+  return [node, ...node.children.flatMap((child) => descendants(child))];
+}
+
+function nodeText(node) {
+  return [node.textContent, ...node.children.map((child) => nodeText(child))].join(' ');
+}
+
 describe('V5 admin and public parity controller', () => {
   it('submits the exact starter activation profile and fails closed without activation CSRF', async () => {
     const backend = backendStub();
@@ -119,6 +163,53 @@ describe('V5 admin and public parity controller', () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(blockedBackend.auth.activate).not.toHaveBeenCalled();
+  });
+
+  it('keeps public authentication controls CSRF-gated and reset transport unchanged', async () => {
+    const noCsrfRoot = renderPublicSignin({});
+    const noCsrfNodes = descendants(noCsrfRoot);
+    expect(noCsrfNodes.map((node) => node.dataset?.v5AdminForm)).not.toContain('auth-activate');
+    expect(noCsrfNodes.map((node) => node.dataset?.v5AdminForm)).toContain('auth-reset');
+    expect(noCsrfRoot.children).toHaveLength(1);
+    expect(noCsrfRoot.children[0].tagName).toBe('DETAILS');
+    expect(noCsrfRoot.children[0].children[0]).toMatchObject({
+      tagName: 'SUMMARY',
+      textContent: 'Complete password reset',
+    });
+    expect(nodeText(noCsrfRoot)).toContain(
+      'Paste the reset token from your approved password-recovery message.',
+    );
+
+    const ordinarySessionRoot = renderPublicSignin({ session: { csrfToken: 'ordinary-session' } });
+    expect(descendants(ordinarySessionRoot).map((node) => node.dataset?.v5AdminForm)).not.toContain(
+      'auth-activate',
+    );
+
+    const activationRoot = renderPublicSignin({ activationCsrfToken: 'csrf-activation' });
+    const activationPanel = descendants(activationRoot).find(
+      (node) => node.dataset?.v5AdminParity === 'auth-activate',
+    );
+    expect(activationPanel).toBeDefined();
+    expect(nodeText(activationPanel)).toContain('USC work email');
+    expect(nodeText(activationPanel)).toContain('Use your approved USC work email.');
+
+    const backend = backendStub();
+    submit(
+      controllerFor(backend),
+      form('auth-reset', {
+        resetToken: 'opaque-reset-token',
+        password: 'correct horse battery staple',
+        confirmPassword: 'correct horse battery staple',
+      }),
+    );
+    await completed(backend.auth.request);
+    expect(backend.auth.request).toHaveBeenCalledWith('/api/auth/reset/complete', {
+      body: {
+        resetToken: 'opaque-reset-token',
+        password: 'correct horse battery staple',
+        confirmPassword: 'correct horse battery staple',
+      },
+    });
   });
 
   it('sends the complete verified public application contract without inventing identifiers', async () => {

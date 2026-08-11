@@ -291,12 +291,12 @@ function lendingCreateForm(context) {
         required: true,
         options: [
           { value: 'ANGELITE', label: 'Angelite student' },
-          { value: 'USC_STAFF', label: 'USC staff or officer' },
+          { value: 'USC_STAFF', label: 'USC Staff/Officer' },
         ],
       }),
-      field('studentIdNumber', 'Student or account reference', { required: true, maxLength: 8 }),
+      field('studentIdNumber', 'Student ID No.', { required: true, maxLength: 8 }),
       field('department', 'Department or organization', { required: true, maxLength: 120 }),
-      field('contact', 'Contact', { required: true, maxLength: 120 }),
+      field('contact', 'Contact Number', { maxLength: 120 }),
       field('quantity', 'Quantity', { kind: 'number', required: true, min: 0.01, step: 'any' }),
       field('ticketType', 'Ticket type', {
         kind: 'select',
@@ -308,7 +308,6 @@ function lendingCreateForm(context) {
       }),
       field('purpose', 'Purpose', { kind: 'textarea', required: true, maxLength: 500 }),
       field('dueAt', 'Due date or time', { kind: 'datetime-local' }),
-      field('notes', 'Notes', { kind: 'textarea', maxLength: 500 }),
     ],
     invoke: (data) => {
       const item = items.find((entry) => recordId(entry) === data.itemId);
@@ -497,8 +496,8 @@ function releaseForms(context) {
       title: 'Record physical release',
       capability: ROUTE_CAPABILITY.FULFILL_RELEASE,
       fields: [
-        field('requestId', 'Request', { value: requestId, readonly: true, required: true }),
-        field('requestLineId', 'Ready release line', {
+        field('requestId', 'Request Ticket ID', { value: requestId, readonly: true, required: true }),
+        field('requestLineId', 'Release item', {
           kind: 'select',
           required: true,
           options: optionRows(

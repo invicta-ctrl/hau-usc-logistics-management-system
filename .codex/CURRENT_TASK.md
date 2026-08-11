@@ -1,37 +1,38 @@
 # Current Bounded Task
 
-INTENT: V81_S05_ACCEPTANCE_RECORD_MATERIALIZATION
+INTENT: V81_S06_IMPLEMENTATION_ACCEPTANCE_RECORD_MATERIALIZATION
 MODE: EXECUTE
-OBJECTIVE: Record accepted V81-S05 R1/R2 plan evidence, then stop uncommitted for a final read-only acceptance-record audit before the governed four-file commit.
-TARGET: release/v0.8.1-final-stabilization; accepted R1/R2 repair plan; Sol/Luna acceptance evidence; S06 R1 boundary.
+OBJECTIVE: Record accepted V81-S06 R1 review evidence, preserve all protected contracts and deferred work, and stop uncommitted for the final mechanical audit before the exact nine-file commit/push.
+TARGET: release/v0.8.1-final-stabilization; accepted R1 source/test packet; S06 governance commit/push boundary.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
 EXECUTION_PACKET: .codex/releases/v0.8.1/V0_8_1_EXECUTION_PACKET.md
 ANNOTATION_LEDGER: .codex/releases/v0.8.1/V0_8_1_ANNOTATION_LEDGER.md
 REPAIR_PLAN: .codex/releases/v0.8.1/V0_8_1_REPAIR_PLAN.md
-AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; Luna V81-S05 high-risk rereview PASS_NO_P0_P1_P2_P3; Sol V81-S05 plan acceptance PASS.
+AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE; accepted V81-S05 repair plan at f8a53d15db6c036566032e53e96537e785a6a849; Luna V81-S06 implementation review PASS_NO_P0_P1_P2_P3; Sol V81-S06 implementation acceptance PASS.
 REQUIRED_MODEL: GPT-5.6 SOL
 ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_v3
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
 LOCK_HOLDER: TERRA_MAX:/root/integration_terra_v3
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
-LOCK_CONTINUITY: A3_V81_S05_PLAN_ACCEPTED_GOVERNANCE_COMMIT_PENDING
-LOCK_HEARTBEAT_AT: 2026-08-11T21:53:26.9709282+08:00
+LOCK_CONTINUITY: A3_V81_S06_R1_ACCEPTED_GOVERNANCE_COMMIT_PENDING
+LOCK_HEARTBEAT_AT: 2026-08-11T23:21:57.5137766+08:00
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: V0.8.1_FINAL_STABILIZATION
-MILESTONE: V81-S05_PLAN_ACCEPTED_READY_FOR_COMMIT
+MILESTONE: V81-S06_R1_ACCEPTED_READY_FOR_COMMIT
 RELEASE: v0.8.1
-RELEASE_STATE: V81-S05_PLAN_ACCEPTED_READY_FOR_COMMIT
-RELEASE_STATUS: V81-S05_PLAN_ACCEPTED_READY_FOR_COMMIT
-STATUS: V81-S05_PLAN_ACCEPTED_READY_FOR_COMMIT
+RELEASE_STATE: V81-S06_R1_ACCEPTED_READY_FOR_COMMIT
+RELEASE_STATUS: V81-S06_R1_ACCEPTED_READY_FOR_COMMIT
+STATUS: V81-S06_R1_ACCEPTED_READY_FOR_COMMIT
 V81_S00: PASS
 V81_S01: PASS_ACCEPTED_A3_SPEC
 V81_S02: PASS_BRANCH_READY
 V81_S03: PASS_ANNOTATION_LEDGER_42
 V81_S04: PASS_CLASSIFICATION_ACCEPTED
-V81_S05: PLAN_ACCEPTED_READY_FOR_COMMIT
+V81_S05: PASS_GOVERNANCE_COMMITTED_f8a53d15db6c036566032e53e96537e785a6a849
+V81_S06: R1_ACCEPTED_READY_FOR_COMMIT
 PRIVATE_PRESERVATION: VERIFIED
 UNKNOWN_WORK_AT_RISK: 0
 BRANCH: release/v0.8.1-final-stabilization
@@ -53,7 +54,7 @@ S04_R2_SELECTION: V-12,V-17,V-20,V-22,V-33
 S04_EVIDENCE_ONLY_NO_CODE: V-13,V-18,V-21,V-32
 S04_DEFERRED: B=EVIDENCE_REQUIRED; D/E/F=DEFERRED; F_COUNT=0
 HALLMARK_AUDIT: DESIGN_MD_AND_INSPECTED_LANDING_STAMPS=TRUTHFUL; NAMED_SLOP_FINDINGS=CRITICAL0/MAJOR0/MINOR0; OWNER_FINDINGS=OPERATIONAL_CONTEXT_COPY_CONTRACT_EVIDENCE
-S05_PLAN_STATE: ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT
+S05_PLAN_STATE: GOVERNANCE_COMMITTED_f8a53d15db6c036566032e53e96537e785a6a849
 SOL_V81_S05_PLAN_ACCEPTANCE: PASS
 LUNA_V81_S05_HIGH_RISK_REVIEW: PASS_NO_P0_P1_P2_P3
 S05_ACCEPTANCE_TIMESTAMP: 2026-08-11T22:08:34.9301739+08:00
@@ -64,12 +65,30 @@ PRODUCT_EDITS_AT_ACCEPTANCE: NONE
 S05_R1_SCOPE: V-01,V-02,V-04,V-06,V-07,V-08,V-09,V-25,V-39; TARGET_GATE=S06
 S05_R2_SCOPE: V-12,V-17,V-20,V-22,V-33; TARGET_GATE=S07
 S05_DEFERRED: B=EVIDENCE_REQUIRED; D/E/F=DEFERRED; NO_B_D_E_F_IMPLEMENTATION
-RISK: HIGH_AUTH_CAPABILITY_AND_RECORD_SCOPE_ACCEPTANCE_BOUNDARY
-SCOPE: Record Sol/Luna acceptance only in the four-file governance packet; no product mutation or governance persistence in this task.
-OUT_OF_SCOPE: Product/runtime/provider/Playground/Production/migration/merge/recovery-pointer action, broad redesign, early PIH work, untracked-artifact staging, force-push, reset, clean, discard, or ref mutation.
-VERIFICATION: npm.cmd run handoff:verify; git diff --check; exact four-Markdown Prettier; deterministic privacy; identical acceptance fields and NEXT; exact four-path diff scope; staged0; untracked46 unchanged; final read-only acceptance-record audit required before persistence.
-STOP_CONDITIONS: Source or main drift, competing writer, preservation mismatch, privacy exposure, unexpected tracked change, acceptance-record mismatch, endpoint/payload/capability/schema/record-scope drift, provider or Production crossover, scope expansion, or failed governance validation.
-SKILLS: NONE_REQUIRED_GOVERNANCE_PLAN_MATERIALIZATION
+S06_R1_STATE: ACCEPTED_UNCOMMITTED_READY_FOR_COMMIT
+S06_R1_SCOPE: V-01,V-02,V-04,V-06,V-07,V-08,V-09,V-25,V-39
+S06_CHANGED_PATHS: src/v5/integration/admin-parity.js;src/v5/integration/operations-parity.js;src/v5/src/surfaces/public.js;tests/unit/v5-admin-parity.test.js;tests/unit/v5-operations-parity.test.js;tests/e2e/v5-current-application.spec.js
+S06_VALIDATION: NODE_CHECK=PASS; GIT_DIFF_CHECK=PASS; CHECK_GOVERNANCE=PASS; ADMIN_RENDER_AND_GENERIC_CSRF=PASS; OPERATIONS_PUBLIC_CONTRACT=PASS; E2E_STATIC_ROUTE_LOCATOR_IMPORT=PASS; CONTRACT_STRINGS=PASS; PRIVACY=PASS
+S06_VALIDATOR_CORRECTIONS: ACTIVATION_RENDER_CSRF_ONLY=PASS; ORDINARY_SESSION_RENDER_OMISSION=PASS; E2E_AUTH_AND_LENDING_RELEASE_COVERAGE=ADDED_STATIC_VALIDATED
+S06_E2E_COVERAGE: PUBLIC_SIGNIN_ACTIVATION_ROUTE_AND_AUTHENTICATED_LENDING_RELEASE_LABELS_STATIC_VALIDATED; PLAYWRIGHT_UNRUN_TOOLING_NO_EFFECT
+S06_FORMATTER: PREEXISTING_BASELINE_MISMATCH_TOOLING_NO_EFFECT; OPERATIONS_TEST_HEAD_AND_CURRENT=RAW_LINE_204_TO_FORMATTED_204_210; R1_FORMATTER_OVERLAP=0
+S06_UNRUN_CHECKS: VITEST=UNRUN_TOOLING_NO_EFFECT_LOCAL_BINARY_ABSENT; PLAYWRIGHT=UNRUN_TOOLING_NO_EFFECT_LOCAL_BINARY_ABSENT
+S06_DEFERRED: B=EVIDENCE_REQUIRED; R2/D/E/F=DEFERRED; NO_R2_OR_B_D_E_F_IMPLEMENTATION
+SOL_V81_S06_IMPLEMENTATION_ACCEPTANCE: PASS
+LUNA_V81_S06_IMPLEMENTATION_REVIEW: PASS_NO_P0_P1_P2_P3
+S06_REVIEW_TIMESTAMP: 2026-08-11T23:21:57.5137766+08:00
+S06_REVIEW_BASELINE_SHA: f8a53d15db6c036566032e53e96537e785a6a849
+S06_REVIEW_BASELINE_TREE: 805a6c8dd95940cdd4b8ba468a73a571bdc712b8
+S06_ACCEPTED_SOURCE_TEST_SCOPE: src/v5/integration/admin-parity.js;src/v5/integration/operations-parity.js;src/v5/src/surfaces/public.js;tests/unit/v5-admin-parity.test.js;tests/unit/v5-operations-parity.test.js;tests/e2e/v5-current-application.spec.js
+S06_FINDINGS_CORRECTED: READFILE_IMPORT; ACTIVATION_SPECIFIC_RENDER_CSRF; REQUIRED_R1_E2E_COVERAGE
+S06_PRODUCT_ACCEPTANCE: PASS
+S06_ACCEPTANCE_WARNINGS: VITEST_PLAYWRIGHT=UNRUN_TOOLING_NO_EFFECT; OPERATIONS_UNIT_PRETTIER=PREEXISTING_BASELINE_MISMATCH; R1_FORMATTER_OVERLAP=0; DETERMINISTIC_AND_STATIC_PROOFS=PASS
+RISK: HIGH_AUTH_CAPABILITY_AND_CONTRACT_PRESERVATION_GOVERNANCE_COMMIT_BOUNDARY
+SCOPE: Record accepted S06 R1 evidence only; no R2, B, D, E, F, provider, or deployment action before the exact nine-file governance persistence.
+OUT_OF_SCOPE: R2 operations/runtime work; B/D/E/F implementation; endpoint/payload/enum/capability/authorization/revision/audit/migration/schema/provider/environment/route-registry change; Playground/Production/migration/merge/recovery-pointer action, broad redesign, early PIH work, untracked-artifact staging, force-push, reset, clean, discard, or ref mutation.
+VERIFICATION: handoff verify; check:governance; node --check; exact Prettier with documented pre-existing operations-test baseline mismatch; git diff --check; privacy and contract-string scans; identical S06 acceptance fields/NEXT; exact nine-path scope; staged0; untracked46 unchanged; final mechanical audit required before persistence.
+STOP_CONDITIONS: Source or main drift, competing writer, preservation mismatch, privacy exposure, unexpected tracked change, acceptance-record mismatch, endpoint/payload/capability/schema/record-scope drift, provider or Production crossover, scope expansion, failed governance validation, or any need outside the accepted S06 allowlist.
+SKILLS: HALLMARK_COMPONENT_SCOPE_PRESERVATION
 CAPTURE_STATUS: VERIFIED
 CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
 RESTORE_PROOF_SHA256: C5862AE00F84A0DE49AF9C02A3E61EDC20272150ED53531FC3219B88D3A56473
@@ -79,6 +98,6 @@ SECONDARY_CLASSIFIED: 38;9585037;4F35AC32798447A1FF5EE8BC3663621E89CC981B01F1EA6
 DESIGN_DNA_PRESERVED: 3;35666;53D313A94FD0BC4516514651ED4B9F571E1C412BF4C5C55545400995CBBB18E7
 GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=3; PRIVATE_REFS=0
 BLOCKER: NONE
-HANDOFF_STATUS: ACTIVE_V81_S05_PLAN_ACCEPTED_READY_FOR_COMMIT
-NEXT_ACTION_SCOPE: V81_S05_GOVERNANCE_COMMIT_PUSH_THEN_S06
-NEXT_EXACT_ACTION: Commit and normally push only the accepted V81-S05 four-file governance packet, verify local/upstream/remote parity and preserved46, then enter V81-S06 and implement only R1 under the accepted repair plan; B remains evidence-required and R2/D/E/F remain outside S06; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.
+HANDOFF_STATUS: ACTIVE_V81_S06_R1_ACCEPTED_READY_FOR_COMMIT
+NEXT_ACTION_SCOPE: V81_S06_COMMIT_PUSH_THEN_S07
+NEXT_EXACT_ACTION: Commit and normally push only the accepted V81-S06 nine-file R1 packet, verify local/upstream/remote parity and preserved46, then enter V81-S07 and implement only R2 under the accepted repair plan; B/D/E/F remain deferred; no provider, Playground, Production, migration, merge, deploy, or recovery-pointer action.

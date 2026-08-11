@@ -310,6 +310,100 @@ describe('V5 operations parity controller', () => {
     );
   });
 
+  it('keeps R1 lending presentation optional where the contract is optional and release identities distinct', async () => {
+    const lendingDocument = setup('lending.queue');
+    const createLendingTicket = vi.fn().mockResolvedValue({ ok: true });
+    const lendingController = createOperationsParityController({
+      backend: { commands: { createLendingTicket }, api: {} },
+      app: {},
+      getState: () => ({
+        inventoryItems: [{ id: 'ITM-REAL-1', name: 'Cable reel', unit: 'piece', status: 'ACTIVE' }],
+      }),
+      getSelection: () => ({}),
+      getCapabilities: () => ['lending.create'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(lendingController.afterRender()).toBe(1);
+    const lendingForm = form(lendingDocument, 'lending-create');
+    expect(lendingForm.querySelectorAll('label').map((node) => node.textContent)).toEqual(
+      expect.arrayContaining(['Student ID No.', 'Contact Number']),
+    );
+    expect(control(lendingForm, 'borrowerType').children.map((node) => node.textContent)).toContain(
+      'USC Staff/Officer',
+    );
+    expect(control(lendingForm, 'studentIdNumber')).toMatchObject({ required: true, maxLength: 8 });
+    expect(control(lendingForm, 'contact').required).toBe(false);
+    expect(control(lendingForm, 'notes')).toBeUndefined();
+
+    control(lendingForm, 'itemId').value = 'ITM-REAL-1';
+    control(lendingForm, 'borrowerName').value = 'Authorized borrower';
+    control(lendingForm, 'borrowerType').value = 'USC_STAFF';
+    control(lendingForm, 'studentIdNumber').value = '12345678';
+    control(lendingForm, 'department').value = 'Logistics';
+    control(lendingForm, 'quantity').value = '2';
+    control(lendingForm, 'ticketType').value = 'LOAN';
+    control(lendingForm, 'purpose').value = 'Authorized event support.';
+    submit(lendingController, lendingForm);
+    await vi.waitFor(() =>
+      expect(createLendingTicket).toHaveBeenCalledWith({
+        itemId: 'ITM-REAL-1',
+        borrowerName: 'Authorized borrower',
+        borrowerType: 'USC_STAFF',
+        studentIdNumber: '12345678',
+        department: 'Logistics',
+        quantity: 2,
+        ticketType: 'LOAN',
+        purpose: 'Authorized event support.',
+        unit: 'piece',
+        clientRequestId: 'lending-create:00000000-0000-4000-8000-000000000001',
+      }),
+    );
+
+    const releaseDocument = setup('release.desk');
+    const confirmRelease = vi.fn().mockResolvedValue({ ok: true });
+    const releaseController = createOperationsParityController({
+      backend: { commands: { confirmRelease }, api: {} },
+      app: {},
+      getState: () => ({
+        requests: [{ id: 'REQ-REAL-1' }],
+        requestLines: [{ id: 'RL-REAL-1', requestId: 'REQ-REAL-1', description: 'Cable reel' }],
+      }),
+      getSelection: () => ({ selectedRequestId: 'REQ-REAL-1', selectedReleaseId: 'REQ-REAL-1' }),
+      getCapabilities: () => ['fulfillment.release'],
+      refresh: vi.fn(),
+      toast: vi.fn(),
+    });
+
+    expect(releaseController.afterRender()).toBe(1);
+    const releaseForm = form(releaseDocument, 'release-confirm');
+    expect(releaseForm.querySelectorAll('label').map((node) => node.textContent)).toEqual(
+      expect.arrayContaining(['Request Ticket ID', 'Release item']),
+    );
+    expect(control(releaseForm, 'recipientConfirmed').required).toBe(true);
+    control(releaseForm, 'requestLineId').value = 'RL-REAL-1';
+    control(releaseForm, 'quantity').value = '1';
+    control(releaseForm, 'recipientName').value = 'Authorized recipient';
+    control(releaseForm, 'recipientRole').value = 'Officer';
+    control(releaseForm, 'department').value = 'Logistics';
+    control(releaseForm, 'evidenceId').value = 'EVD-REAL-1';
+    control(releaseForm, 'recipientConfirmed').checked = true;
+    submit(releaseController, releaseForm);
+    await vi.waitFor(() =>
+      expect(confirmRelease).toHaveBeenCalledWith({
+        requestId: 'REQ-REAL-1',
+        lines: [{ requestLineId: 'RL-REAL-1', quantity: 1 }],
+        recipientName: 'Authorized recipient',
+        recipientRole: 'Officer',
+        department: 'Logistics',
+        evidenceId: 'EVD-REAL-1',
+        recipientConfirmed: true,
+        clientRequestId: 'release:00000000-0000-4000-8000-000000000001',
+      }),
+    );
+  });
+
   it('passes a cycle count through the current direct API path with the real selected item', async () => {
     const document = setup('inventory.item');
     const call = vi.fn().mockResolvedValue({ ok: true });

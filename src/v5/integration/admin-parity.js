@@ -12,6 +12,9 @@ const CAPABILITY = Object.freeze({
 });
 
 const text = (value) => String(value ?? '').trim();
+const activationCsrf = (integration) =>
+  text(integration?.activationCsrfToken ?? integration?.activation?.csrfToken);
+const csrfToken = (integration) => activationCsrf(integration) || text(integration?.session?.csrfToken);
 const csv = (value) =>
   text(value)
     .split(',')
@@ -108,13 +111,14 @@ function field(spec) {
   return wrapper;
 }
 
-function formPanel({ title, description, action, fields, submit = 'Run action' }) {
-  const panel = element('section', {
+function formPanel({ title, description, action, fields, submit = 'Run action', disclosure = false }) {
+  const panel = element(disclosure ? 'details' : 'section', {
     className: 'panel',
     dataset: { v5AdminParity: action, v5ParityActions: action },
   });
   const body = element('div', { className: 'panel__body' });
-  body.append(element('h2', { className: 'block-title', textContent: title }));
+  if (disclosure) panel.append(element('summary', { textContent: title }));
+  else body.append(element('h2', { className: 'block-title', textContent: title }));
   if (description) body.append(element('p', { className: 'muted', textContent: description }));
   const form = element('form', { className: 'form-grid', dataset: { v5AdminForm: action } });
   form.noValidate = false;
@@ -224,33 +228,47 @@ const revisionFields = [
 ];
 
 function publicPanels(currentRoute, integration = {}) {
-  if (currentRoute === 'public.signin')
-    return [
-      formPanel({
-        title: 'Complete starter account activation',
-        description: 'Available only after a successful starter-account sign in in this browser session.',
-        action: 'auth-activate',
-        submit: 'Activate account',
-        fields: [
-          { label: 'Full name', name: 'fullName', required: true },
-          { label: 'Mobile number', name: 'mobileNumber', type: 'tel', required: true },
-          { label: 'Verified email', name: 'email', type: 'email', required: true },
-          { label: 'New password', name: 'password', type: 'password', required: true },
-          { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
-        ],
-      }),
+  if (currentRoute === 'public.signin') {
+    const panels = [];
+    if (activationCsrf(integration)) {
+      panels.push(
+        formPanel({
+          title: 'Complete starter account activation',
+          description: 'Available only after a successful starter-account sign in in this browser session.',
+          action: 'auth-activate',
+          submit: 'Activate account',
+          fields: [
+            { label: 'Full name', name: 'fullName', required: true },
+            { label: 'Mobile number', name: 'mobileNumber', type: 'tel', required: true },
+            {
+              label: 'USC work email',
+              name: 'email',
+              type: 'email',
+              required: true,
+              hint: 'Use your approved USC work email.',
+            },
+            { label: 'New password', name: 'password', type: 'password', required: true },
+            { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
+          ],
+        }),
+      );
+    }
+    panels.push(
       formPanel({
         title: 'Complete password reset',
-        description: 'Use the opaque reset token issued through the approved recovery channel.',
+        description: 'Paste the reset token from your approved password-recovery message.',
         action: 'auth-reset',
         submit: 'Reset password',
+        disclosure: true,
         fields: [
           { label: 'Reset token', name: 'resetToken', type: 'password', required: true },
           { label: 'New password', name: 'password', type: 'password', required: true },
           { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
         ],
       }),
-    ];
+    );
+    return panels;
+  }
   if (currentRoute === 'public.verify')
     return [
       formPanel({
@@ -741,12 +759,7 @@ export function createAdminParityController({
     throw new TypeError('The V5 backend auth, API, and command adapters are required.');
   }
 
-  const csrf = () =>
-    text(
-      getIntegration()?.activationCsrfToken ??
-        getIntegration()?.activation?.csrfToken ??
-        getIntegration()?.session?.csrfToken,
-    );
+  const csrf = () => csrfToken(getIntegration());
 
   function afterRender() {
     if (typeof document === 'undefined') return;
