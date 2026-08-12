@@ -67,6 +67,14 @@ const DEFAULT_ROUTE_BY_WORKSPACE = Object.freeze({
   materials: 'materials.overview',
 });
 
+const WORKSPACE_BY_OVERVIEW_ROUTE = Object.freeze({
+  'admin.overview': 'administrator',
+  'director.overview': 'director',
+  'food.overview': 'food',
+  'inventory.overview': 'inventory-pantry',
+  'materials.overview': 'materials',
+});
+
 const AUTHENTICATED_ROUTE_IDS = new Set([...Object.keys(MODULE_BY_ROUTE), ...SPECIAL_ROUTES]);
 
 export function selectDefaultWorkspaceRoute(defaultWorkspaceId, authorizedRoutes = []) {
@@ -221,6 +229,23 @@ const ROUTE_CAPABILITY = Object.freeze({
   'owner.health': 'system.diagnostics',
   'audit.activity': 'view.audit',
 });
+
+function normalizedValues(values, { lowercase = false } = {}) {
+  return new Set(
+    (Array.isArray(values) ? values : [])
+      .map((value) => String(value ?? '').trim())
+      .map((value) => (lowercase ? value.toLowerCase() : value))
+      .filter(Boolean),
+  );
+}
+
+export function isV5RouteAuthorized(currentRoute, capabilityValues = [], workspaceIds = []) {
+  if (currentRoute === 'account.profile') return true;
+  const neededCapability = ROUTE_CAPABILITY[currentRoute] ?? 'view.internal';
+  if (!normalizedValues(capabilityValues).has(neededCapability)) return false;
+  const requiredWorkspaceId = WORKSPACE_BY_OVERVIEW_ROUTE[currentRoute];
+  return !requiredWorkspaceId || normalizedValues(workspaceIds, { lowercase: true }).has(requiredWorkspaceId);
+}
 
 const ROUTE_STATES = Object.freeze({
   'request.queue': new Set(['populated', 'loading', 'empty', 'stale', 'denied']),
@@ -715,8 +740,8 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function allowed(currentRoute) {
-    const needed = ROUTE_CAPABILITY[currentRoute] ?? 'view.internal';
-    return currentRoute === 'account.profile' || capabilities().has(needed);
+    const authorization = integration.essential?.currentUser?.authorization;
+    return isV5RouteAuthorized(currentRoute, authorization?.capabilities, authorization?.workspaceIds);
   }
 
   function authorizedRouteIds() {

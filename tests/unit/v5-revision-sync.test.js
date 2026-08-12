@@ -4,6 +4,7 @@ import {
   createV5AsyncBoundary,
   createV5RevisionSync,
   createV5ScopedRevisionReader,
+  isV5RouteAuthorized,
   isV5AuthenticationBoundaryCode,
   selectDefaultWorkspaceRoute,
 } from '../../src/v5/integration/runtime.js';
@@ -76,6 +77,42 @@ describe('V5 default workspace routing', () => {
 
   it('never treats an unrecognized route as an authorized fallback', () => {
     expect(selectDefaultWorkspaceRoute('administrator', ['admin.unrecognized'])).toBe('public.signin');
+  });
+});
+
+describe('V5 workspace pre-read authorization', () => {
+  it.each([
+    ['admin.overview', 'administrator', 'view.internal'],
+    ['director.overview', 'director', 'view.all.summary'],
+    ['food.overview', 'food', 'view.internal'],
+    ['inventory.overview', 'inventory-pantry', 'view.inventory'],
+    ['materials.overview', 'materials', 'view.internal'],
+  ])('maps %s only to workspace %s with capability %s', (routeId, workspaceId, capability) => {
+    expect(isV5RouteAuthorized(routeId, [capability], [workspaceId])).toBe(true);
+    expect(isV5RouteAuthorized(routeId, [capability], ['unrelated-workspace'])).toBe(false);
+    expect(isV5RouteAuthorized(routeId, [], [workspaceId])).toBe(false);
+  });
+
+  it('denies Food Committee access to Materials before a module read', () => {
+    const moduleRead = vi.fn();
+    if (isV5RouteAuthorized('materials.overview', ['view.internal'], ['food'])) moduleRead();
+
+    expect(moduleRead).not.toHaveBeenCalled();
+  });
+
+  it('fails closed for missing or empty workspaces and never treats a default as a grant', () => {
+    expect(isV5RouteAuthorized('materials.overview', ['view.internal'])).toBe(false);
+    expect(isV5RouteAuthorized('materials.overview', ['view.internal'], [])).toBe(false);
+    expect(selectDefaultWorkspaceRoute('materials', ['account.profile'])).toBe('account.profile');
+    expect(isV5RouteAuthorized('materials.overview', ['view.internal'], [])).toBe(false);
+  });
+
+  it('honors multiple projected workspaces without widening unrelated routes', () => {
+    const workspaceIds = [' FOOD ', 'Materials'];
+    expect(isV5RouteAuthorized('food.overview', ['view.internal'], workspaceIds)).toBe(true);
+    expect(isV5RouteAuthorized('materials.overview', ['view.internal'], workspaceIds)).toBe(true);
+    expect(isV5RouteAuthorized('director.overview', ['view.all.summary'], workspaceIds)).toBe(false);
+    expect(isV5RouteAuthorized('request.queue', ['view.request'], [])).toBe(true);
   });
 });
 

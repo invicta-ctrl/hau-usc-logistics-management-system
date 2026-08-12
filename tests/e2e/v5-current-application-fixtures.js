@@ -63,6 +63,8 @@ function essential(environment) {
       roleId: 'SYSTEM_OWNER',
       roleLabel: 'System Owner',
       capabilities: Object.values(CAPABILITIES),
+      workspaceIds: ['administrator', 'director', 'food', 'inventory-pantry', 'materials'],
+      defaultWorkspaceId: 'administrator',
     },
   };
   return result;
