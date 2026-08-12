@@ -2,12 +2,18 @@ import {
   applyAccounts,
   applyHealth,
   applyOperationalState,
+  clearBackendViewModels,
   roleForV5,
   viewModelCounts,
   workspaceForV5,
 } from './view-models.js';
 import { createAdminParityController } from './admin-parity.js';
 import { createOperationsParityController } from './operations-parity.js';
+import {
+  createRevisionPoller,
+  normalizeScopedRevisionPayload,
+  revisionChanged,
+} from '../../app/revision-sync.js';
 import landingMediaUrl from '../assets/images/usc-facebook-cover-youth-development-day-2026.jpg?url';
 
 const MODULE_BY_ROUTE = Object.freeze({
@@ -52,6 +58,145 @@ const SPECIAL_ROUTES = new Set([
   'account.profile',
   'owner.health',
 ]);
+
+const DEFAULT_ROUTE_BY_WORKSPACE = Object.freeze({
+  administrator: 'admin.overview',
+  director: 'director.overview',
+  food: 'food.overview',
+  'inventory-pantry': 'inventory.overview',
+  materials: 'materials.overview',
+});
+
+const AUTHENTICATED_ROUTE_IDS = new Set([...Object.keys(MODULE_BY_ROUTE), ...SPECIAL_ROUTES]);
+
+export function selectDefaultWorkspaceRoute(defaultWorkspaceId, authorizedRoutes = []) {
+  const workspaceId = String(defaultWorkspaceId ?? '')
+    .trim()
+    .toLowerCase();
+  const allowedRoutes = [
+    ...new Set(
+      (Array.isArray(authorizedRoutes) ? authorizedRoutes : [])
+        .map((routeId) => String(routeId ?? '').trim())
+        .filter((routeId) => AUTHENTICATED_ROUTE_IDS.has(routeId)),
+    ),
+  ];
+  const mappedRoute = DEFAULT_ROUTE_BY_WORKSPACE[workspaceId];
+  if (mappedRoute && allowedRoutes.includes(mappedRoute)) return mappedRoute;
+  if (allowedRoutes.includes('account.profile')) return 'account.profile';
+  return allowedRoutes[0] ?? 'public.signin';
+}
+
+export function isV5AuthenticationBoundaryCode(value) {
+  const code = String(value ?? '')
+    .trim()
+    .toUpperCase();
+  return code === 'SESSION_REQUIRED' || code === 'SESSION_INVALID' || code.startsWith('AUTH_');
+}
+
+export function createV5ScopedRevisionReader({
+  readRevision,
+  onAuthenticationBoundary,
+  captureContext = () => null,
+  isContextCurrent = () => true,
+} = {}) {
+  if (typeof readRevision !== 'function') throw new TypeError('A revision reader is required.');
+  if (typeof onAuthenticationBoundary !== 'function') {
+    throw new TypeError('An authentication-boundary handler is required.');
+  }
+  if (typeof captureContext !== 'function' || typeof isContextCurrent !== 'function') {
+    throw new TypeError('Revision context guards must be functions.');
+  }
+  let epoch = 0;
+  const guardedRead = async (...args) => {
+    const readEpoch = epoch;
+    const context = captureContext(...args);
+    try {
+      return await readRevision(...args);
+    } catch (error) {
+      if (isV5AuthenticationBoundaryCode(error?.code) && readEpoch === epoch && isContextCurrent(context)) {
+        onAuthenticationBoundary(error);
+      }
+      throw error;
+    }
+  };
+  guardedRead.invalidate = () => {
+    epoch += 1;
+  };
+  return guardedRead;
+}
+
+export function canCommitV5RevisionRefresh({ scope, expectedRevision, returnedRevision } = {}) {
+  const expectedScope = String(scope ?? '')
+    .trim()
+    .toLowerCase();
+  return Boolean(
+    expectedScope &&
+    String(expectedRevision?.scope ?? '')
+      .trim()
+      .toLowerCase() === expectedScope &&
+    String(returnedRevision?.scope ?? '')
+      .trim()
+      .toLowerCase() === expectedScope &&
+    Number.isInteger(expectedRevision?.token) &&
+    expectedRevision.token >= 0 &&
+    returnedRevision?.token === expectedRevision.token,
+  );
+}
+
+export function createV5AsyncBoundary({ getRoute, getAuthGeneration, isActive } = {}) {
+  if (typeof getRoute !== 'function') throw new TypeError('A current route reader is required.');
+  if (typeof getAuthGeneration !== 'function') {
+    throw new TypeError('An authentication generation reader is required.');
+  }
+  if (typeof isActive !== 'function') throw new TypeError('A runtime activity reader is required.');
+
+  let navigationGeneration = 0;
+  let runtimeGeneration = 0;
+  let signInGeneration = 0;
+  const captureRuntime = (parent = () => true) => {
+    const expectedRuntime = runtimeGeneration;
+    return () => parent() && isActive() && runtimeGeneration === expectedRuntime;
+  };
+
+  return Object.freeze({
+    beginRoute(expectedRoute, parent = () => true) {
+      const expectedNavigation = ++navigationGeneration;
+      const expectedRuntime = runtimeGeneration;
+      const expectedAuth = getAuthGeneration();
+      return () =>
+        parent() &&
+        isActive() &&
+        runtimeGeneration === expectedRuntime &&
+        navigationGeneration === expectedNavigation &&
+        getAuthGeneration() === expectedAuth &&
+        getRoute() === expectedRoute;
+    },
+    beginSignIn(parent = () => true) {
+      const expectedSignIn = ++signInGeneration;
+      const expectedNavigation = ++navigationGeneration;
+      const expectedRuntime = runtimeGeneration;
+      return () =>
+        parent() &&
+        isActive() &&
+        runtimeGeneration === expectedRuntime &&
+        navigationGeneration === expectedNavigation &&
+        signInGeneration === expectedSignIn &&
+        getRoute() === 'public.signin';
+    },
+    captureRuntime,
+    invalidateNavigation() {
+      navigationGeneration += 1;
+    },
+    invalidateSignIn() {
+      signInGeneration += 1;
+    },
+    invalidateRuntime() {
+      runtimeGeneration += 1;
+      navigationGeneration += 1;
+      signInGeneration += 1;
+    },
+  });
+}
 
 const ROUTE_CAPABILITY = Object.freeze({
   'admin.overview': 'view.internal',
@@ -241,6 +386,176 @@ function firstCollection(result, ...keys) {
   return [];
 }
 
+export function createV5RevisionSync({
+  readRevision,
+  refresh,
+  getScope,
+  getSession,
+  getGeneration = () => 0,
+  getRoute = getScope,
+  acceptedRevisions = new Map(),
+  documentTarget = globalThis.document,
+  windowTarget = globalThis.window,
+  isOnline = () => globalThis.navigator?.onLine !== false,
+  schedule,
+  cancel,
+  now,
+  random,
+} = {}) {
+  if (typeof readRevision !== 'function') throw new TypeError('A revision reader is required.');
+  if (typeof refresh !== 'function') throw new TypeError('A revision refresh is required.');
+  if (typeof getScope !== 'function') throw new TypeError('An active revision scope is required.');
+  if (typeof getSession !== 'function') throw new TypeError('An active session reader is required.');
+
+  const currentTime = typeof now === 'function' ? now : () => Date.now();
+  let started = false;
+  let epoch = 0;
+  let lastActiveAt = currentTime();
+  const activeScope = () =>
+    getSession()
+      ? String(getScope() ?? '')
+          .trim()
+          .toLowerCase()
+      : '';
+  const visible = () => documentTarget?.visibilityState !== 'hidden';
+  const seed = (scope, revision, { isCurrent } = {}) => {
+    if (typeof isCurrent === 'function' && !isCurrent()) return false;
+    const expectedScope = String(scope ?? '')
+      .trim()
+      .toLowerCase();
+    if (!revision || revision.scope !== expectedScope || revision.token === undefined) return false;
+    let normalized;
+    try {
+      normalized = normalizeScopedRevisionPayload(
+        {
+          contract: 'scoped-revision',
+          contractVersion: 1,
+          enabled: true,
+          globalRevision: 0,
+          environment: '',
+          metrics: {},
+          ...revision,
+          scope: expectedScope,
+        },
+        expectedScope,
+      );
+    } catch {
+      return false;
+    }
+    const accepted = acceptedRevisions.get(expectedScope);
+    if (accepted && normalized.token < accepted.token) return false;
+    acceptedRevisions.set(expectedScope, normalized);
+    return true;
+  };
+
+  const createPoller = () =>
+    createRevisionPoller({
+      readRevision,
+      getScope: activeScope,
+      isVisible: visible,
+      isOnline,
+      isActive: () => {
+        if (!getSession()) return false;
+        if (typeof documentTarget?.hasFocus !== 'function') return true;
+        return documentTarget.hasFocus() || currentTime() - lastActiveAt <= 60_000;
+      },
+      onRevision: async (incoming) => {
+        const accepted = acceptedRevisions.get(incoming.scope);
+        if (!accepted) {
+          seed(incoming.scope, incoming);
+          return true;
+        }
+        if (!revisionChanged(accepted, incoming)) return true;
+        const refreshEpoch = epoch;
+        const refreshGeneration = getGeneration();
+        const refreshRoute = getRoute();
+        const isCurrent = () =>
+          epoch === refreshEpoch &&
+          getGeneration() === refreshGeneration &&
+          getRoute() === refreshRoute &&
+          activeScope() === incoming.scope;
+        if (!isCurrent()) return false;
+        const refreshed = await refresh(incoming.scope, incoming, {
+          epoch: refreshEpoch,
+          generation: refreshGeneration,
+          route: refreshRoute,
+          isCurrent,
+        });
+        if (refreshed === false || !isCurrent()) return false;
+        return !revisionChanged(acceptedRevisions.get(incoming.scope), incoming);
+      },
+      schedule,
+      cancel,
+      now,
+      random,
+    });
+  let poller = createPoller();
+
+  const resetPoller = () => {
+    poller.stop();
+    poller = createPoller();
+    lastActiveAt = currentTime();
+    if (started) poller.start();
+  };
+
+  const onVisibilityChange = () => {
+    if (visible()) void poller.resume('visible');
+    else poller.pause('hidden');
+  };
+  const onFocus = () => {
+    lastActiveAt = currentTime();
+    void poller.resume('focus');
+  };
+  const onOnline = () => void poller.resume('online');
+  const onOffline = () => poller.pause('offline');
+
+  return Object.freeze({
+    start() {
+      if (started) return;
+      started = true;
+      documentTarget?.addEventListener?.('visibilitychange', onVisibilityChange);
+      windowTarget?.addEventListener?.('focus', onFocus);
+      windowTarget?.addEventListener?.('online', onOnline);
+      windowTarget?.addEventListener?.('offline', onOffline);
+      poller.start();
+    },
+    stop() {
+      if (!started) return;
+      started = false;
+      poller.stop();
+      documentTarget?.removeEventListener?.('visibilitychange', onVisibilityChange);
+      windowTarget?.removeEventListener?.('focus', onFocus);
+      windowTarget?.removeEventListener?.('online', onOnline);
+      windowTarget?.removeEventListener?.('offline', onOffline);
+    },
+    seed,
+    clear() {
+      epoch += 1;
+      acceptedRevisions.clear();
+      resetPoller();
+    },
+    check(reason = 'manual') {
+      return poller.check(reason);
+    },
+    resume(reason = 'resume') {
+      return poller.resume(reason);
+    },
+    acceptedToken(scope) {
+      return acceptedRevisions.get(
+        String(scope ?? '')
+          .trim()
+          .toLowerCase(),
+      )?.token;
+    },
+    get inFlight() {
+      return poller.inFlight;
+    },
+    get failures() {
+      return poller.failures;
+    },
+  });
+}
+
 export function createV5Runtime({ backend, app }) {
   const integration = {
     session: null,
@@ -277,9 +592,123 @@ export function createV5Runtime({ backend, app }) {
     playgroundStatus: null,
     scopedRevisions: new Map(),
     routeSearch: new Map(),
-    revisionTimer: null,
+    authGeneration: 0,
     started: false,
   };
+
+  const asyncBoundary = createV5AsyncBoundary({
+    getRoute: route,
+    getAuthGeneration: () => integration.authGeneration,
+    isActive: () => integration.started,
+  });
+
+  let authenticationBoundaryInProgress = false;
+  const handleScopedRevisionAuthenticationBoundary = (error) => {
+    if (authenticationBoundaryInProgress || !integration.started) return;
+    authenticationBoundaryInProgress = true;
+    try {
+      handleAuthenticationBoundary(error);
+    } finally {
+      authenticationBoundaryInProgress = false;
+    }
+  };
+  const scopedRevisionReader = createV5ScopedRevisionReader({
+    readRevision: (scope) => backend.commands.getScopedRevision(scope),
+    onAuthenticationBoundary: handleScopedRevisionAuthenticationBoundary,
+    captureContext: (scope, request = {}) => ({
+      authGeneration: integration.authGeneration,
+      requestId: request.requestId,
+      route: route(),
+      scope: String(scope ?? '')
+        .trim()
+        .toLowerCase(),
+    }),
+    isContextCurrent: (context) =>
+      integration.started &&
+      Boolean(integration.session) &&
+      context.authGeneration === integration.authGeneration &&
+      context.route === route() &&
+      context.scope === MODULE_BY_ROUTE[route()],
+  });
+  const revisionSync = createV5RevisionSync({
+    readRevision: scopedRevisionReader,
+    refresh: async (scope, incoming, { isCurrent }) => {
+      const currentRoute = route();
+      if (MODULE_BY_ROUTE[currentRoute] !== scope || !isCurrent()) return false;
+      const committed = await loadRoute(currentRoute, {
+        refresh: true,
+        canCommit: isCurrent,
+        expectedRevision: incoming,
+      });
+      return (
+        committed !== false &&
+        isCurrent() &&
+        route() === currentRoute &&
+        !revisionChanged(integration.scopedRevisions.get(scope), incoming)
+      );
+    },
+    getScope: () => MODULE_BY_ROUTE[route()] ?? '',
+    getSession: () => integration.session,
+    getGeneration: () => integration.authGeneration,
+    getRoute: route,
+    acceptedRevisions: integration.scopedRevisions,
+  });
+  let signOutInFlight = null;
+
+  function clearAuthenticatedProjection() {
+    integration.session = null;
+    integration.essential = null;
+    integration.state = null;
+    integration.accessDirectory = null;
+    integration.inventoryDetail = null;
+    integration.profile = null;
+    integration.referenceWorkspace = null;
+    integration.referenceLinks = null;
+    integration.brandAssets = null;
+    integration.playgroundStatus = null;
+    integration.activationCsrfToken = '';
+    integration.selectedRequestId = '';
+    integration.selectedLoanId = '';
+    integration.selectedReleaseId = '';
+    integration.selectedInventoryId = '';
+    integration.selectedRestockId = '';
+    integration.selectedDeliverableId = '';
+    integration.selectedReleaseConfirmationId = '';
+    integration.selectedEventSeriesId = '';
+    integration.selectedEventDayId = '';
+    integration.selectedActivityId = '';
+    integration.selectedComponentId = '';
+    integration.connectedRoutes.clear();
+    integration.failedRoutes.clear();
+    integration.routeSearch.clear();
+    clearBackendViewModels();
+  }
+
+  function advanceAuthGeneration({ invalidateNavigation = true } = {}) {
+    integration.authGeneration += 1;
+    if (invalidateNavigation) asyncBoundary.invalidateNavigation();
+    scopedRevisionReader.invalidate();
+    revisionSync.clear();
+    clearAuthenticatedProjection();
+  }
+
+  function handleAuthenticationBoundary(error) {
+    if (!isV5AuthenticationBoundaryCode(error?.code)) return false;
+    const unavailable = String(error?.code ?? '').toUpperCase() === 'AUTH_SERVICE_UNAVAILABLE';
+    asyncBoundary.invalidateSignIn();
+    advanceAuthGeneration();
+    app.integrationSetAuthorizedRoutes([]);
+    app.integrationCloseOverlay();
+    app.integrationGo('public.signin');
+    app.integrationState.variant = unavailable ? 'unavailable' : 'populated';
+    app.integrationRender();
+    queueMicrotask(afterRender);
+    toast(
+      unavailable ? 'The sign-in service is temporarily unavailable.' : 'Your session ended. Sign in again.',
+      true,
+    );
+    return true;
+  }
 
   function capabilities() {
     return new Set(integration.essential?.currentUser?.authorization?.capabilities ?? []);
@@ -290,8 +719,12 @@ export function createV5Runtime({ backend, app }) {
     return currentRoute === 'account.profile' || capabilities().has(needed);
   }
 
+  function authorizedRouteIds() {
+    return [...new Set([...Object.keys(MODULE_BY_ROUTE), ...SPECIAL_ROUTES])].filter(allowed);
+  }
+
   function syncAuthorizedRoutes() {
-    const routeIds = [...new Set([...Object.keys(MODULE_BY_ROUTE), ...SPECIAL_ROUTES])].filter(allowed);
+    const routeIds = authorizedRouteIds();
     app.integrationSetAuthorizedRoutes(
       routeIds,
       text(
@@ -414,15 +847,25 @@ export function createV5Runtime({ backend, app }) {
     region.append(node);
   }
 
-  async function ensureAuthenticated() {
-    if (integration.session && integration.state) return true;
-    integration.session = await backend.session();
-    if (!integration.session && integration.playgroundVerified && !realLoginRequested()) {
-      const issued = await backend.playgroundSession();
-      integration.session = issued?.user ? issued : null;
+  async function ensureAuthenticated({ canCommit = () => true } = {}) {
+    if (!canCommit()) return false;
+    const pendingSignOut = signOutInFlight;
+    if (pendingSignOut) {
+      await pendingSignOut;
+      if (!canCommit()) return false;
     }
-    if (!integration.session) return false;
+    if (integration.session && integration.state) return true;
+    let session = await backend.session();
+    if (!canCommit()) return false;
+    if (!session && integration.playgroundVerified && !realLoginRequested()) {
+      const issued = await backend.playgroundSession();
+      if (!canCommit()) return false;
+      session = issued?.user ? issued : null;
+    }
+    if (!session) return false;
     const boot = await backend.bootstrap();
+    if (!canCommit()) return false;
+    integration.session = session;
     integration.essential = boot.essential;
     integration.state = boot.state;
     app.integrationState.role = roleForV5(boot.essential.currentUser);
@@ -431,44 +874,49 @@ export function createV5Runtime({ backend, app }) {
     return true;
   }
 
-  async function loadModule(currentRoute, module) {
+  async function loadModule(currentRoute, module, { canCommit = () => true, expectedRevision = null } = {}) {
     const loaded = await backend.module(integration.state, module);
-    integration.state = loaded.state;
-    if (!integration.selectedRequestId) {
-      integration.selectedRequestId = text(integration.state.requests?.[0]?.id);
+    if (!canCommit()) return false;
+    let nextState = loaded.state;
+    const returnedRevision = nextState.scopeRevisions?.[module];
+    if (
+      expectedRevision &&
+      !canCommitV5RevisionRefresh({ scope: module, expectedRevision, returnedRevision })
+    ) {
+      return false;
     }
-    if (!integration.selectedLoanId) {
-      integration.selectedLoanId = text(integration.state.lendingTickets?.[0]?.id);
-    }
-    if (!integration.selectedReleaseId) {
-      integration.selectedReleaseId = text(integration.state.requests?.[0]?.id);
-    }
-    if (!integration.selectedInventoryId) {
-      integration.selectedInventoryId = text(integration.state.inventoryItems?.[0]?.id);
-    }
-    if (currentRoute === 'inventory.item' && integration.selectedInventoryId) {
-      integration.inventoryDetail = await backend.api.getInventoryItem({
-        itemId: integration.selectedInventoryId,
+    const selectedRequestId = text(integration.selectedRequestId, nextState.requests?.[0]?.id);
+    const selectedLoanId = text(integration.selectedLoanId, nextState.lendingTickets?.[0]?.id);
+    const selectedReleaseId = text(integration.selectedReleaseId, nextState.requests?.[0]?.id);
+    const selectedInventoryId = text(integration.selectedInventoryId, nextState.inventoryItems?.[0]?.id);
+    let inventoryDetail = integration.inventoryDetail;
+    if (currentRoute === 'inventory.item' && selectedInventoryId) {
+      inventoryDetail = await backend.api.getInventoryItem({
+        itemId: selectedInventoryId,
       });
-      const detailItem = integration.inventoryDetail?.item;
-      integration.state = {
-        ...integration.state,
+      if (!canCommit()) return false;
+      const detailItem = inventoryDetail?.item;
+      nextState = {
+        ...nextState,
         inventoryItems: detailItem
           ? [
-              ...integration.state.inventoryItems.filter(
-                (item) => text(item.id, item.itemId) !== integration.selectedInventoryId,
+              ...nextState.inventoryItems.filter(
+                (item) => text(item.id, item.itemId) !== selectedInventoryId,
               ),
               detailItem,
             ]
-          : integration.state.inventoryItems,
-        ledgerTransactions: firstCollection(
-          integration.inventoryDetail,
-          'ledgerTransactions',
-          'movements',
-          'ledger',
-        ),
+          : nextState.inventoryItems,
+        ledgerTransactions: firstCollection(inventoryDetail, 'ledgerTransactions', 'movements', 'ledger'),
       };
     }
+    if (!canCommit()) return false;
+    integration.state = nextState;
+    integration.selectedRequestId = selectedRequestId;
+    integration.selectedLoanId = selectedLoanId;
+    integration.selectedReleaseId = selectedReleaseId;
+    integration.selectedInventoryId = selectedInventoryId;
+    if (currentRoute === 'inventory.item') integration.inventoryDetail = inventoryDetail;
+    revisionSync.seed(module, nextState.scopeRevisions?.[module], { isCurrent: canCommit });
     applyOperationalState(integration.state, {
       selectedRequestId: integration.selectedRequestId,
       selectedInventoryId: integration.selectedInventoryId,
@@ -478,35 +926,47 @@ export function createV5Runtime({ backend, app }) {
     return loaded.response;
   }
 
-  async function loadSpecial(currentRoute) {
+  async function loadSpecial(currentRoute, { canCommit = () => true } = {}) {
     if (currentRoute === 'events.series') {
       const result = await backend.commands.getEventManagement({});
-      integration.state = {
+      if (!canCommit()) return false;
+      const nextState = {
         ...integration.state,
         eventSeries: firstCollection(result, 'eventSeries', 'series'),
         eventDays: firstCollection(result, 'eventDays', 'days'),
         events: firstCollection(result, 'events', 'activities'),
       };
-      applyOperationalState(integration.state, {
+      if (!canCommit()) return false;
+      integration.state = nextState;
+      applyOperationalState(nextState, {
         selectedRequestId: integration.selectedRequestId,
         selectedInventoryId: integration.selectedInventoryId,
       });
     } else if (currentRoute === 'admin.access' || currentRoute === 'admin.directory') {
       const result = await backend.api.listAccessAccounts({ limit: 100, offset: 0 });
+      if (!canCommit()) return false;
       integration.accessDirectory = result;
       applyAccounts(result);
     } else if (currentRoute === 'admin.reference') {
-      integration.referenceWorkspace = await backend.commands.getReferenceAdminWorkspace({
+      const result = await backend.commands.getReferenceAdminWorkspace({
         domain: 'VENUES',
         status: 'ALL',
         limit: 100,
       });
+      if (!canCommit()) return false;
+      integration.referenceWorkspace = result;
     } else if (currentRoute === 'admin.links') {
-      integration.referenceLinks = await backend.api.listReferenceLinks({ page: 1, pageSize: 100 });
+      const result = await backend.api.listReferenceLinks({ page: 1, pageSize: 100 });
+      if (!canCommit()) return false;
+      integration.referenceLinks = result;
     } else if (currentRoute === 'admin.brand') {
-      integration.brandAssets = await backend.api.listBrandAssets({});
+      const result = await backend.api.listBrandAssets({});
+      if (!canCommit()) return false;
+      integration.brandAssets = result;
     } else if (currentRoute === 'account.profile') {
-      integration.profile = await backend.profile();
+      const result = await backend.profile();
+      if (!canCommit()) return false;
+      integration.profile = result;
     } else if (currentRoute === 'owner.health') {
       const [health, readiness, version, evidence] = await Promise.all([
         backend.health(),
@@ -514,34 +974,45 @@ export function createV5Runtime({ backend, app }) {
         backend.version(),
         backend.api.getEvidenceSystemStatus({}).catch(() => null),
       ]);
+      if (!canCommit()) return false;
       applyHealth({ health, readiness, version, evidence });
     }
+    if (!canCommit()) return false;
     integration.connectedRoutes.add(currentRoute);
+    return true;
   }
 
-  async function loadAdvertisements() {
+  async function loadAdvertisements({ canCommit = () => true } = {}) {
     const result = await backend.publicAdvertisements();
-    integration.advertisements = firstCollection(result, 'items', 'advertisements');
-    integration.connectedRoutes.add('public.landing');
-    const mediaUrl = text(integration.advertisements[0]?.mediaUrl, integration.advertisements[0]?.imageUrl);
+    if (!canCommit()) return false;
+    const advertisements = firstCollection(result, 'items', 'advertisements');
+    const mediaUrl = text(advertisements[0]?.mediaUrl, advertisements[0]?.imageUrl);
+    let dynamicMedia = 'NOT_PRESENT';
     if (mediaUrl) {
-      integration.dynamicMedia = await new Promise((resolve) => {
+      dynamicMedia = await new Promise((resolve) => {
         const image = new Image();
         image.addEventListener('load', () => resolve('PASS'), { once: true });
         image.addEventListener('error', () => resolve('FAIL'), { once: true });
         image.src = mediaUrl;
       });
     }
+    if (!canCommit()) return false;
+    integration.advertisements = advertisements;
+    integration.dynamicMedia = dynamicMedia;
+    integration.connectedRoutes.add('public.landing');
+    return true;
   }
 
-  async function verifyPlaygroundContext() {
+  async function verifyPlaygroundContext({ canCommit = () => true } = {}) {
+    let releaseIdentity = null;
+    let playgroundVerified = false;
     try {
       const [identity, health] = await Promise.all([backend.version(), backend.health()]);
-      integration.releaseIdentity = identity;
+      releaseIdentity = identity;
       const appVersion = text(identity?.appVersion);
       const releaseVersion = text(identity?.releaseVersion);
       const candidateSha = text(identity?.candidateSha);
-      integration.playgroundVerified = Boolean(
+      playgroundVerified = Boolean(
         identity?.ok === true &&
         identity?.playground === true &&
         String(identity?.environment ?? '').toUpperCase() === 'STAGING' &&
@@ -556,95 +1027,115 @@ export function createV5Runtime({ backend, app }) {
         /^[0-9a-f]{40}$/u.test(candidateSha),
       );
     } catch {
-      integration.releaseIdentity = null;
-      integration.playgroundVerified = false;
+      releaseIdentity = null;
+      playgroundVerified = false;
     }
+    if (!canCommit()) return false;
+    integration.releaseIdentity = releaseIdentity;
+    integration.playgroundVerified = playgroundVerified;
     app.integrationSetPlaygroundContext(
       integration.playgroundVerified,
       integration.playgroundVerified ? integration.releaseIdentity : null,
     );
+    return true;
   }
 
-  async function pollScopedRevision() {
-    const currentRoute = route();
-    const scope = MODULE_BY_ROUTE[currentRoute];
-    if (!integration.session || !scope || document.visibilityState === 'hidden') return;
-    try {
-      const revision = await backend.commands.getScopedRevision(scope);
-      if (revision?.enabled !== true || revision?.token === undefined) return;
-      const previous = integration.scopedRevisions.get(scope);
-      integration.scopedRevisions.set(scope, revision.token);
-      if (previous !== undefined && previous !== revision.token) {
-        await loadRoute(currentRoute, { refresh: true });
-      }
-    } catch {
-      // Polling is advisory. Route reads and explicit refresh remain authoritative.
-    }
-  }
-
-  async function loadPublic(currentRoute) {
+  async function loadPublic(currentRoute, { canCommit = () => true } = {}) {
+    if (!canCommit()) return false;
     if (currentRoute === 'index' && integration.playgroundVerified) {
-      const authenticated = await ensureAuthenticated();
+      const authenticated = await ensureAuthenticated({ canCommit });
+      if (!canCommit()) return false;
       if (authenticated && capabilities().has('system.admin')) {
-        integration.playgroundStatus = await backend.playgroundStatus();
+        const playgroundStatus = await backend.playgroundStatus();
+        if (!canCommit()) return false;
+        integration.playgroundStatus = playgroundStatus;
       }
     }
-    if (currentRoute === 'public.landing') await loadAdvertisements();
+    if (currentRoute === 'public.landing') {
+      return loadAdvertisements({ canCommit });
+    }
     if (currentRoute === 'public.request-intake') {
-      integration.requestOptions ??= await backend.publicRequestOptions();
+      if (!integration.requestOptions) {
+        const requestOptions = await backend.publicRequestOptions();
+        if (!canCommit()) return false;
+        integration.requestOptions = requestOptions;
+      }
+      if (!canCommit()) return false;
       integration.connectedRoutes.add(currentRoute);
     }
     if (currentRoute === 'public.lending-intake') {
-      integration.lendingCatalog ??= await backend.publicLendingCatalog();
+      if (!integration.lendingCatalog) {
+        const lendingCatalog = await backend.publicLendingCatalog();
+        if (!canCommit()) return false;
+        integration.lendingCatalog = lendingCatalog;
+      }
+      if (!canCommit()) return false;
       integration.connectedRoutes.add(currentRoute);
     }
+    return canCommit();
   }
 
-  async function loadRoute(currentRoute = route(), { refresh = false } = {}) {
+  async function loadRoute(
+    currentRoute = route(),
+    { refresh = false, canCommit: parentCanCommit = () => true, expectedRevision = null } = {},
+  ) {
+    const canCommit = asyncBoundary.beginRoute(currentRoute, parentCanCommit);
     try {
+      if (!canCommit()) return false;
       if (PUBLIC_ROUTES.has(currentRoute)) {
-        await loadPublic(currentRoute);
+        const committed = await loadPublic(currentRoute, { canCommit });
+        if (committed === false || !canCommit()) return false;
         afterRender();
-        return;
+        return true;
       }
-      const authenticated = await ensureAuthenticated();
+      const authenticated = await ensureAuthenticated({ canCommit });
+      if (!canCommit()) return false;
       if (!authenticated) {
         app.integrationGo('public.signin');
-        return;
+        return true;
       }
       if (!allowed(currentRoute)) {
         integration.failedRoutes.set(currentRoute, 'DENIED');
         render(routeState(currentRoute, 'denied'));
-        return;
+        return true;
       }
       if (ROUTES_WITHOUT_DATA_SLOT.has(currentRoute)) {
         integration.failedRoutes.set(currentRoute, 'PROTOTYPE_ONLY_UNSUPPORTED');
         afterRender();
-        return;
+        return true;
       }
       const loading = routeState(currentRoute, 'loading', 'populated');
-      if (loading === 'loading') render('loading');
+      if (loading === 'loading' && !expectedRevision) render('loading');
       const module = MODULE_BY_ROUTE[currentRoute];
-      if (module) await loadModule(currentRoute, module, { refresh });
-      else if (SPECIAL_ROUTES.has(currentRoute)) await loadSpecial(currentRoute);
-      else return;
+      if (module) {
+        const committed = await loadModule(currentRoute, module, {
+          refresh,
+          canCommit,
+          expectedRevision: refresh ? expectedRevision : null,
+        });
+        if (committed === false || !canCommit()) return false;
+      } else if (SPECIAL_ROUTES.has(currentRoute)) {
+        const committed = await loadSpecial(currentRoute, { canCommit });
+        if (committed === false || !canCommit()) return false;
+      } else return false;
+      if (!canCommit()) return false;
       const counts = viewModelCounts();
       const empty =
         (currentRoute === 'request.queue' && counts.requests === 0) ||
         (currentRoute === 'lending.queue' && counts.loans === 0) ||
         (currentRoute === 'admin.overview' && counts.requests + counts.inventory === 0);
       render(routeState(currentRoute, empty ? 'empty' : 'populated'));
+      return true;
     } catch (error) {
+      if (!canCommit()) return false;
+      if (handleAuthenticationBoundary(error)) return false;
+      if (expectedRevision) return false;
       integration.failedRoutes.set(currentRoute, text(error?.code, 'SERVICE_ERROR'));
-      if (!PUBLIC_ROUTES.has(currentRoute) && String(error?.code ?? '').startsWith('AUTH_')) {
-        app.integrationGo('public.signin');
-        app.integrationState.variant = 'unavailable';
-        app.integrationRender();
-        queueMicrotask(afterRender);
-      } else if (currentRoute === 'public.signin') render(routeState(currentRoute, 'unavailable'));
+      if (currentRoute === 'public.signin') render(routeState(currentRoute, 'unavailable'));
       else if (PUBLIC_ROUTES.has(currentRoute)) render(routeState(currentRoute, 'error'));
       else render(routeState(currentRoute, 'denied'));
       toast(safeMessage(error), true);
+      return false;
     }
   }
 
@@ -1385,49 +1876,75 @@ export function createV5Runtime({ backend, app }) {
 
   async function signIn(form) {
     const values = Object.fromEntries(new FormData(form));
+    const canCommit = asyncBoundary.beginSignIn();
+    if (!canCommit()) return;
     render('loading');
     try {
+      const pendingSignOut = signOutInFlight;
+      if (pendingSignOut) {
+        await pendingSignOut;
+        if (!canCommit()) return;
+      }
       const result = await backend.login(values.u, values.p);
+      if (!canCommit()) return;
       if (result?.state === 'ACTIVATION_REQUIRED' && result.csrfToken) {
+        integration.session = null;
+        advanceAuthGeneration({ invalidateNavigation: false });
+        if (!canCommit()) return;
         integration.activationCsrfToken = result.csrfToken;
         integration.routeSearch.clear();
-        integration.session = null;
         render('populated');
         toast('Starter account verified. Complete activation below.');
         return;
       }
       if (!result?.user) {
+        if (!canCommit()) return;
         render('error');
         return;
       }
       integration.routeSearch.clear();
+      advanceAuthGeneration({ invalidateNavigation: false });
+      if (!canCommit()) return;
       integration.session = result;
       setRealLoginRequested(false);
       integration.activationCsrfToken = '';
-      integration.state = null;
-      await ensureAuthenticated();
+      const expectedAuthGeneration = integration.authGeneration;
+      const canCommitSession = () => canCommit() && integration.authGeneration === expectedAuthGeneration;
+      const authenticated = await ensureAuthenticated({ canCommit: canCommitSession });
+      if (!authenticated || !canCommitSession()) return;
       app.integrationGo(
-        integration.essential?.currentUser?.authorization?.defaultWorkspaceId === 'director'
-          ? 'director.overview'
-          : 'admin.overview',
+        selectDefaultWorkspaceRoute(
+          integration.essential?.currentUser?.authorization?.defaultWorkspaceId,
+          authorizedRouteIds(),
+        ),
       );
     } catch (error) {
+      if (!canCommit()) return;
+      const code = String(error?.code ?? '').toUpperCase();
+      if (code === 'SESSION_REQUIRED' || code === 'SESSION_INVALID') {
+        handleAuthenticationBoundary(error);
+        return;
+      }
       render(error?.code === 'AUTH_SERVICE_UNAVAILABLE' ? 'unavailable' : 'error');
     }
   }
 
   async function signOut() {
-    try {
-      await backend.logout();
-    } finally {
-      integration.session = null;
-      integration.activationCsrfToken = '';
-      integration.essential = null;
-      integration.state = null;
-      integration.routeSearch.clear();
-      app.integrationSetAuthorizedRoutes([]);
-      app.integrationCloseOverlay();
-      app.integrationGo('public.signin');
+    asyncBoundary.invalidateSignIn();
+    advanceAuthGeneration();
+    const expectedAuthGeneration = integration.authGeneration;
+    app.integrationSetAuthorizedRoutes([]);
+    app.integrationCloseOverlay();
+    const logout = backend.logout().then(
+      () => true,
+      () => false,
+    );
+    signOutInFlight = logout;
+    app.integrationGo('public.signin');
+    const confirmed = await logout;
+    if (signOutInFlight === logout) signOutInFlight = null;
+    if (!confirmed && integration.started && integration.authGeneration === expectedAuthGeneration) {
+      toast('The local session ended, but the server could not confirm sign out.', true);
     }
   }
 
@@ -1529,9 +2046,10 @@ export function createV5Runtime({ backend, app }) {
       event.preventDefault();
       event.stopImmediatePropagation();
       setRealLoginRequested(false);
+      asyncBoundary.invalidateSignIn();
       integration.session = null;
-      integration.state = null;
       integration.routeSearch.clear();
+      advanceAuthGeneration();
       app.integrationGo('index');
       return;
     }
@@ -1556,7 +2074,9 @@ export function createV5Runtime({ backend, app }) {
     if (action === 'refresh') {
       event.preventDefault();
       event.stopImmediatePropagation();
-      void loadRoute(route(), { refresh: true }).then(() => toast('Current authorized data loaded.'));
+      void loadRoute(route(), { refresh: true })
+        .then(() => revisionSync.check('manual'))
+        .then(() => toast('Current authorized data loaded.'));
       return;
     }
     if (action === 'confirm-accept') {
@@ -1681,20 +2201,47 @@ export function createV5Runtime({ backend, app }) {
   async function start() {
     if (integration.started) return integration;
     integration.started = true;
+    const canCommit = asyncBoundary.captureRuntime();
     document.addEventListener('click', onClick, true);
     document.addEventListener('change', onChange, true);
     document.addEventListener('input', onInput, true);
     document.addEventListener('submit', onSubmit, true);
     document.addEventListener('hau:v5-rendered', afterRender);
-    window.addEventListener('hashchange', () => void loadRoute());
-    await verifyPlaygroundContext();
+    window.addEventListener('hashchange', onHashChange);
+    window.addEventListener('beforeunload', stop, { once: true });
+    const contextCommitted = await verifyPlaygroundContext({ canCommit });
+    if (contextCommitted === false || !canCommit()) return integration;
     await loadRoute();
-    integration.revisionTimer = setInterval(() => void pollScopedRevision(), 30_000);
+    if (!canCommit()) return integration;
+    revisionSync.start();
     return integration;
+  }
+
+  async function onHashChange() {
+    const loaded = await loadRoute();
+    if (loaded === false) return;
+    await revisionSync.resume('scope-change');
+  }
+
+  function stop() {
+    if (!integration.started) return;
+    integration.started = false;
+    asyncBoundary.invalidateRuntime();
+    scopedRevisionReader.invalidate();
+    revisionSync.stop();
+    revisionSync.clear();
+    document.removeEventListener('click', onClick, true);
+    document.removeEventListener('change', onChange, true);
+    document.removeEventListener('input', onInput, true);
+    document.removeEventListener('submit', onSubmit, true);
+    document.removeEventListener('hau:v5-rendered', afterRender);
+    window.removeEventListener('hashchange', onHashChange);
+    window.removeEventListener('beforeunload', stop);
   }
 
   return Object.freeze({
     start,
+    stop,
     loadRoute,
     afterRender,
     status() {

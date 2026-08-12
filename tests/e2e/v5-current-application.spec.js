@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { GROUPS, SURFACES } from '../../src/v5/src/registry.js';
 import {
   createBootstrapModuleFixture,
+  createEssentialBootstrapFixture,
   createRequestQueueFixture,
 } from '../fixtures/essential-bootstrap-fixtures.js';
 import {
@@ -20,6 +21,20 @@ async function expectNoHorizontalOverflow(page) {
   );
   expect(metrics.bodyWidth, `body overflow at ${metrics.viewportWidth}px`).toBeLessThanOrEqual(
     metrics.viewportWidth + 1,
+  );
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((next) => {
+    resolve = next;
+  });
+  return { promise, resolve };
+}
+
+async function settleBrowserTasks(page) {
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
   );
 }
 
@@ -224,6 +239,117 @@ test('public sign-in keeps reset collapsed and renders starter activation only a
   await expect(activation).toBeVisible();
   await expect(activation.getByText('USC work email', { exact: true })).toBeVisible();
   await expect(activation.getByText('Use your approved USC work email.', { exact: true })).toBeVisible();
+});
+
+test('successful sign-in selects only the server-authorized default workspace route', async ({
+  context,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The default route matrix runs once.');
+  const matrix = [
+    {
+      workspaceId: 'administrator',
+      capabilities: ['view.internal'],
+      expectedRoute: 'admin.overview',
+    },
+    {
+      workspaceId: 'director',
+      capabilities: ['view.all.summary'],
+      expectedRoute: 'director.overview',
+    },
+    { workspaceId: 'food', capabilities: ['view.internal'], expectedRoute: 'food.overview' },
+    {
+      workspaceId: 'inventory-pantry',
+      capabilities: ['view.inventory'],
+      expectedRoute: 'inventory.overview',
+    },
+    {
+      workspaceId: 'materials',
+      capabilities: ['view.internal'],
+      expectedRoute: 'materials.overview',
+    },
+    {
+      workspaceId: 'director',
+      capabilities: ['view.internal'],
+      explicitDenies: ['view.all.summary'],
+      expectedRoute: 'account.profile',
+      deniedRoute: 'director.overview',
+    },
+  ];
+
+  for (const routeCase of matrix) {
+    await test.step(`${routeCase.workspaceId} -> ${routeCase.expectedRoute}${routeCase.deniedRoute ? ' (mapped route denied)' : ''}`, async () => {
+      const page = await context.newPage();
+      const pageErrors = [];
+      page.on('pageerror', (error) => pageErrors.push(error.message));
+      await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+      const bootstrap = createEssentialBootstrapFixture({
+        backendMode: 'rest',
+        environment: STAGING,
+      });
+      bootstrap.currentUser = {
+        ...bootstrap.currentUser,
+        authorization: {
+          ...bootstrap.currentUser.authorization,
+          capabilities: routeCase.capabilities,
+          workspaceIds: [routeCase.workspaceId],
+          defaultWorkspaceId: routeCase.workspaceId,
+          explicitDenies: routeCase.explicitDenies ?? [],
+        },
+      };
+
+      await page.route('**/api/getEssentialBootstrapData', async (route) => {
+        if (new URL(route.request().url()).pathname !== '/api/getEssentialBootstrapData') {
+          return route.fallback();
+        }
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(bootstrap),
+        });
+      });
+      await page.route('**/api/auth/login', async (route) => {
+        if (
+          route.request().method() !== 'POST' ||
+          new URL(route.request().url()).pathname !== '/api/auth/login'
+        ) {
+          return route.fallback();
+        }
+        return route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            state: 'AUTHENTICATED',
+            csrfToken: 'csrf-default-route-e2e',
+            user: { accountId: 'SYNTHETIC-OWNER-001', displayName: 'Synthetic Owner' },
+          }),
+        });
+      });
+
+      try {
+        await page.goto('/#/public.signin');
+        await waitForV5(page);
+        await page.getByLabel('Username').fill('synthetic.owner');
+        await page
+          .locator('.auth-card--signin form')
+          .locator('input[name="p"]')
+          .fill('synthetic-owner-password');
+        await page.locator('.auth-card--signin form').getByRole('button', { name: 'Sign in' }).click();
+
+        await expect.poll(() => new URL(page.url()).hash).toBe(`#/${routeCase.expectedRoute}`);
+        await expect
+          .poll(async () => (await integrationStatus(page)).currentRoute)
+          .toBe(routeCase.expectedRoute);
+        expect((await integrationStatus(page)).authenticated).toBe(true);
+        if (routeCase.deniedRoute) {
+          await expect(page.locator(`[data-act="go"][data-id="${routeCase.deniedRoute}"]`)).toHaveCount(0);
+        }
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await page.close();
+      }
+    });
+  }
 });
 
 test('authenticated R1 lending and release forms preserve labels and release identity separation', async ({
@@ -469,6 +595,402 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
   );
   await expect(eventForm).toBeVisible();
   await expect(eventForm.locator('input, select, textarea').first()).toBeFocused();
+});
+
+test('an already-open V5 queue refetches once for a strictly newer scoped revision', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The revision-sync browser contract runs once.');
+  const requests = await installV5ApiFixture(page, {
+    environment: STAGING,
+    authenticated: true,
+  });
+  const baseline = createRequestQueueFixture();
+  let queue = baseline;
+  let scopeToken = 7;
+  let moduleScopeToken = 7;
+  let moduleReads = 0;
+  let revisionReads = 0;
+
+  await page.route('**/api/getBootstrapModule', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON?.() ?? {};
+    if (new URL(request.url()).pathname !== '/api/getBootstrapModule' || body.module !== 'request') {
+      return route.fallback();
+    }
+    moduleReads += 1;
+    const fixture = createBootstrapModuleFixture({
+      backendMode: 'rest',
+      environment: STAGING,
+      module: 'request',
+      rows: 2,
+    });
+    fixture.data = {
+      ...fixture.data,
+      requests: queue.requests,
+      requestLines: queue.requestLines,
+    };
+    fixture.pagination.total = queue.requests.length;
+    fixture.scopeRevision = {
+      scope: 'request',
+      token: moduleScopeToken,
+      updatedAt: '2026-08-12T00:00:00.000Z',
+    };
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixture),
+    });
+  });
+  await page.route('**/api/getScopedRevision', async (route) => {
+    const request = route.request();
+    const body = request.postDataJSON?.() ?? {};
+    if (new URL(request.url()).pathname !== '/api/getScopedRevision' || body.scope !== 'request') {
+      return route.fallback();
+    }
+    revisionReads += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        ok: true,
+        correlationId: `COR-REVISION-${revisionReads}`,
+        data: {
+          contract: 'scoped-revision',
+          contractVersion: 1,
+          enabled: true,
+          scope: 'request',
+          token: scopeToken,
+          globalRevision: scopeToken,
+          updatedAt: '2026-08-12T00:00:00.000Z',
+          environment: STAGING,
+          metrics: { revisionReads: 1, moduleReads: 0, requestCount: 1 },
+        },
+      }),
+    });
+  });
+
+  await page.goto('/#/request.queue');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('request.queue'),
+  );
+  await expect(page.locator('[data-act="select:request"][data-ref="REQ-RV01-001"]')).toBeVisible();
+  expect(moduleReads).toBe(1);
+  const authenticatedSessionReads = requests.filter((entry) => entry.pathname === '/api/auth/session').length;
+  await page.evaluate(() => {
+    globalThis.__HAU_V5_REVISION_RENDER_COUNT__ = 0;
+    document.addEventListener('hau:v5-rendered', () => {
+      globalThis.__HAU_V5_REVISION_RENDER_COUNT__ += 1;
+    });
+  });
+
+  const addedId = 'REQ-RV01-002';
+  queue = {
+    requests: [
+      ...baseline.requests,
+      {
+        ...baseline.requests[0],
+        id: addedId,
+        purpose: 'Synthetic request delivered by scoped revision refresh',
+      },
+    ],
+    requestLines: [
+      ...baseline.requestLines,
+      ...baseline.requestLines.map((line, index) => ({
+        ...line,
+        id: `RL-RV01-10${index + 1}`,
+        requestId: addedId,
+      })),
+    ],
+  };
+  scopeToken = 8;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+  await expect.poll(() => moduleReads).toBe(2);
+  await expect.poll(() => revisionReads).toBe(1);
+  await expect(page.locator(`[data-act="select:request"][data-ref="${addedId}"]`)).toHaveCount(0);
+  expect((await integrationStatus(page)).counts.requests).toBe(1);
+  expect(await page.evaluate(() => globalThis.__HAU_V5_REVISION_RENDER_COUNT__)).toBe(0);
+
+  moduleScopeToken = 8;
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+  await expect(page.locator(`[data-act="select:request"][data-ref="${addedId}"]`)).toBeVisible();
+  await expect.poll(() => moduleReads).toBe(3);
+  expect(revisionReads).toBe(2);
+  expect(await page.evaluate(() => globalThis.__HAU_V5_REVISION_RENDER_COUNT__)).toBe(1);
+
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => revisionReads).toBe(3);
+  expect(moduleReads).toBe(3);
+  expect(await page.evaluate(() => globalThis.__HAU_V5_REVISION_RENDER_COUNT__)).toBe(1);
+  expect(requests.filter((entry) => entry.pathname === '/api/auth/session')).toHaveLength(
+    authenticatedSessionReads,
+  );
+  await page.evaluate(() => globalThis.__HAU_V5_INTEGRATION__.stop());
+});
+
+test('revision authentication failure ends the session without retrying or retaining private projection', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The revision auth boundary runs once.');
+  await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+  const marker = 'PRIVATE_REVISION_FAILURE_DETAIL_MUST_NOT_RENDER';
+  let revisionReads = 0;
+  await page.route('**/api/getScopedRevision', async (route) => {
+    if (new URL(route.request().url()).pathname !== '/api/getScopedRevision') {
+      return route.fallback();
+    }
+    revisionReads += 1;
+    return route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 'SESSION_INVALID', message: marker }),
+    });
+  });
+
+  await page.goto('/#/request.queue');
+  await waitForV5(page);
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('request.queue'),
+  );
+  expect(Object.values((await integrationStatus(page)).counts).some((count) => count > 0)).toBe(true);
+
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect.poll(() => new URL(page.url()).hash).toBe('#/public.signin');
+  await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+  const status = await integrationStatus(page);
+  expect(status.authenticated).toBe(false);
+  expect(status.connectedRoutes).toEqual([]);
+  expect(Object.values(status.counts).every((count) => count === 0)).toBe(true);
+  await expect(page.locator('body')).not.toContainText(marker);
+  expect(revisionReads).toBe(1);
+
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await settleBrowserTasks(page);
+  expect(revisionReads).toBe(1);
+});
+
+test('ordinary module loads cannot commit after navigation, same-account reauthentication, or stop', async ({
+  context,
+}, testInfo) => {
+  test.setTimeout(60_000);
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The async boundary contract runs once.');
+
+  const openDeferredRequestPage = async ({ logoutRelease } = {}) => {
+    const page = await context.newPage();
+    const requests = await installV5ApiFixture(page, {
+      environment: STAGING,
+      authenticated: true,
+    });
+    const started = deferred();
+    const release = deferred();
+    if (logoutRelease) {
+      await page.route('**/api/auth/logout', async (route) => {
+        await logoutRelease.promise;
+        return route.fallback();
+      });
+    }
+    await page.route('**/api/getBootstrapModule', async (route) => {
+      const request = route.request();
+      const body = request.postDataJSON?.() ?? {};
+      if (new URL(request.url()).pathname !== '/api/getBootstrapModule' || body.module !== 'request') {
+        return route.fallback();
+      }
+      started.resolve();
+      await release.promise;
+      const fixture = createBootstrapModuleFixture({
+        backendMode: 'rest',
+        environment: STAGING,
+        module: 'request',
+        rows: 2,
+      });
+      fixture.data = { ...fixture.data, ...createRequestQueueFixture() };
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(fixture),
+      });
+    });
+    await page.goto('/#/request.queue');
+    await started.promise;
+    return { page, release, requests };
+  };
+
+  await test.step('rapid route replacement', async () => {
+    const { page, release } = await openDeferredRequestPage();
+    try {
+      await page.evaluate(() => {
+        location.hash = '#/inventory.catalog';
+      });
+      await expect
+        .poll(async () => (await integrationStatus(page)).connectedRoutes)
+        .toContain('inventory.catalog');
+      const staleResponse = page.waitForResponse((response) => {
+        const request = response.request();
+        return (
+          new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+          request.postDataJSON?.()?.module === 'request'
+        );
+      });
+      release.resolve();
+      await staleResponse;
+      await settleBrowserTasks(page);
+
+      const status = await integrationStatus(page);
+      expect(status.currentRoute).toBe('inventory.catalog');
+      expect(status.connectedRoutes).toContain('inventory.catalog');
+      expect(status.connectedRoutes).not.toContain('request.queue');
+      expect(status.counts).toMatchObject({ requests: 0, inventory: 2 });
+    } finally {
+      release.resolve();
+      await page.close();
+    }
+  });
+
+  await test.step('sign-out and same-account playground reauthentication', async () => {
+    const logoutRelease = deferred();
+    const { page, release, requests } = await openDeferredRequestPage({ logoutRelease });
+    try {
+      await page.locator('[data-act="open-menu"]').click();
+      await page.getByRole('menuitem', { name: 'Sign out' }).click();
+      await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+      const sessionReadsBefore = requests.filter(({ pathname }) => pathname === '/api/auth/session').length;
+      const playgroundReadsBefore = requests.filter(
+        ({ pathname }) => pathname === '/api/playground/session',
+      ).length;
+      await page.evaluate(() => {
+        location.hash = '#/index';
+      });
+      await settleBrowserTasks(page);
+      expect(requests.filter(({ pathname }) => pathname === '/api/auth/session')).toHaveLength(
+        sessionReadsBefore,
+      );
+      expect(requests.filter(({ pathname }) => pathname === '/api/playground/session')).toHaveLength(
+        playgroundReadsBefore,
+      );
+      logoutRelease.resolve();
+      await expect(page.getByRole('heading', { name: 'Isolated Staging Playground Index' })).toBeVisible();
+      await expect.poll(async () => (await integrationStatus(page)).authenticated).toBe(true);
+
+      const staleResponse = page.waitForResponse((response) => {
+        const request = response.request();
+        return (
+          new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+          request.postDataJSON?.()?.module === 'request'
+        );
+      });
+      release.resolve();
+      await staleResponse;
+      await settleBrowserTasks(page);
+
+      const status = await integrationStatus(page);
+      expect(status.currentRoute).toBe('index');
+      expect(status.authenticated).toBe(true);
+      expect(status.connectedRoutes).not.toContain('request.queue');
+      expect(status.counts.requests).toBe(0);
+    } finally {
+      logoutRelease.resolve();
+      release.resolve();
+      await page.close();
+    }
+  });
+
+  await test.step('runtime stop', async () => {
+    const { page, release } = await openDeferredRequestPage();
+    try {
+      await page.evaluate(() => globalThis.__HAU_V5_INTEGRATION__.stop());
+      const staleResponse = page.waitForResponse((response) => {
+        const request = response.request();
+        return (
+          new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+          request.postDataJSON?.()?.module === 'request'
+        );
+      });
+      release.resolve();
+      await staleResponse;
+      await settleBrowserTasks(page);
+
+      const status = await integrationStatus(page);
+      expect(status.currentRoute).toBe('request.queue');
+      expect(status.connectedRoutes).not.toContain('request.queue');
+      expect(status.counts.requests).toBe(0);
+    } finally {
+      release.resolve();
+      await page.close();
+    }
+  });
+});
+
+test('session boundary failures clear authenticated projections and render only safe sign-in state', async ({
+  context,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The session boundary matrix runs once.');
+  const marker = 'PRIVATE_BACKEND_DETAIL_MUST_NOT_RENDER';
+  const cases = [
+    {
+      routeId: 'request.queue',
+      pathname: '/api/getBootstrapModule',
+      module: 'request',
+      code: 'SESSION_INVALID',
+    },
+    { routeId: 'account.profile', pathname: '/api/me/profile', code: 'SESSION_REQUIRED' },
+    {
+      routeId: 'public.request-intake',
+      pathname: '/api/public/request/options',
+      code: 'SESSION_INVALID',
+    },
+  ];
+
+  for (const failure of cases) {
+    await test.step(`${failure.routeId} -> ${failure.code}`, async () => {
+      const page = await context.newPage();
+      const pageErrors = [];
+      page.on('pageerror', (error) => pageErrors.push(error.message));
+      await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+      await page.route('**/api/**', async (route) => {
+        const request = route.request();
+        const body = request.postDataJSON?.() ?? {};
+        if (
+          new URL(request.url()).pathname !== failure.pathname ||
+          (failure.module && body.module !== failure.module)
+        ) {
+          return route.fallback();
+        }
+        return route.fulfill({
+          status: 401,
+          contentType: 'application/json',
+          body: JSON.stringify({ code: failure.code, message: marker }),
+        });
+      });
+
+      try {
+        if (failure.routeId === 'request.queue') {
+          await page.goto('/#/inventory.catalog');
+          await waitForV5(page);
+          await expect.poll(async () => (await integrationStatus(page)).counts.inventory).toBe(2);
+          await page.evaluate(() => {
+            location.hash = '#/request.queue';
+          });
+        } else {
+          await page.goto(`/#/${failure.routeId}`);
+          await waitForV5(page);
+        }
+        await expect.poll(() => new URL(page.url()).hash).toBe('#/public.signin');
+        await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
+        const status = await integrationStatus(page);
+        expect(status.authenticated).toBe(false);
+        expect(status.connectedRoutes).not.toContain(failure.routeId);
+        expect(status.failedRoutes).not.toHaveProperty(failure.routeId);
+        expect(Object.values(status.counts).every((count) => count === 0)).toBe(true);
+        await expect(page.locator('body')).not.toContainText(marker);
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await page.close();
+      }
+    });
+  }
 });
 
 test('off-canvas navigation is inert when closed and preserves deterministic focus', async ({
