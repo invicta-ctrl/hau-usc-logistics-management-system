@@ -1,7 +1,7 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_V5_FUNCTIONAL_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
-- **State:** `V5_FUNCTIONAL_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S12_RV01_POST_REVIEW_TRUTH_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **State:** `RV01_POST_REVIEW_TRUTH_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Internal stabilization verification complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
@@ -12,7 +12,7 @@
 - **Durable recovery-amendment tree:** `e26e7d44b5454b3fc2025b4647d232abf274cf56`
 - **Durable legacy-browser-gate amendment commit:** `1a93bb01acc5a732b3f9180be93d1d04d8001114`
 - **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
-- **Current canonical identity:** local commit `a132b7955636509a629e31bc3499ca9b52e182a4`, tree `c0df1b449a28d67d67facba351e5ac9998c3278d`; upstream remains `9c270c098fb926dbc3d7c2eb29b40b5be96c55ef`, local is ahead by `3`, and exactly the two authorized generated HTML outputs are dirty and unstaged at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`; preserved46 and capture remain verified.
+- **Current canonical identity:** local commit `0ff509d7807ea932a63dbb33fc90b6c1a65614f4`, tree `28246e6acc4a5c18a53890667eccd2a8409d9114`; upstream remains `415dda5a3036fa9d865237bf36ec52cba75a69e4`, local is ahead by `1`, and exactly the two authorized generated HTML outputs are dirty and unstaged at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`; staged count is `0`, preserved count is `46`, and capture remains verified.
 - **Recorded at:** `2026-08-12T09:53:53.1092205+08:00`
 - **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_accelerated`
 - **Sol S12 boundary acceptance:** `PASS`
@@ -54,7 +54,7 @@
 - **Cloudflare-local closure amendment review timestamp:** `2026-08-12T21:38:32.6856135+08:00`
 - **Durable prior Cloudflare-local closure governance commit:** `05f418b1ab7953fb779787c55a0262376b2440af`, tree `345637cecf0fb36f0815367356f0b859d5dad7f1`
 - **Final Cloudflare-local closure amendment recorded at:** `2026-08-12T22:35:51.6868696+08:00`
-- **Current open product P0/P1:** `0/1`
+- **Current open product P0/P1:** `0/0`
 - **Sol final Cloudflare-local closure acceptance:** `PASS`
 - **Fresh Luna Lane D plan review:** `PASS_NO_P0_P1_P2_P3`
 - **Fresh Luna Lane A2 plan review:** `PASS_NO_P0_P1_P2_P3`
@@ -62,10 +62,15 @@
 - **Final Cloudflare-local closure review timestamp:** `2026-08-12T22:57:36.8890849+08:00`
 - **Final Cloudflare-local closure amendment validation:** `HANDOFF_VERIFY=PASS; CHECK_GOVERNANCE=PASS; GIT_DIFF_CHECK=PASS; MARKDOWN_PRETTIER_4=PASS; STRUCTURAL_PRIVACY=PASS; DUPLICATE_KEYS=0; COMMON_FIELDS=0; NEXT_EQUAL=PASS; COHERENCE=PASS; SCOPE=EXACT_FOUR_GOVERNANCE_PATHS; RETAINED_OUTPUT2=UNCHANGED; STAGED=0; PRESERVED46=PASS`
 - **V5-functional closure amendment recorded at:** `2026-08-13T00:13:13.7108105+08:00`
-- **V5-functional closure state:** `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`; exact future test scope is `tests/e2e/v5-current-application.spec.js` only.
+- **V5-functional closure state:** `GOVERNANCE_COMMITTED_DURABLE_415dda5a3036fa9d865237bf36ec52cba75a69e4`; implementation is integrated at local `0ff509d7807ea932a63dbb33fc90b6c1a65614f4` and exact future test scope is closed.
 - **Sol V5-functional closure amendment acceptance:** `PASS`
 - **Fresh Luna V5-functional closure plan review:** `PASS_NO_P0_P1_P2_P3`
 - **V5-functional closure amendment review timestamp:** `2026-08-13T00:31:06.0245810+08:00`
+- **RV01 post-review truth closure amendment recorded at:** `2026-08-13T01:36:09.5109390+08:00`
+- **RV01 post-review truth closure amendment state:** `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`; exact future test scope is `tests/cloudflare-e2e/rv01-request-visibility.spec.js` only.
+- **Sol RV01 post-review truth closure amendment acceptance:** `PASS`
+- **Fresh Luna RV01 post-review truth closure plan review:** `PASS_NO_P0_P1_P2_P3`
+- **RV01 post-review truth closure amendment review timestamp:** `2026-08-13T01:57:20.1016382+08:00`
 
 ## Durable S11 handoff
 
@@ -279,14 +284,24 @@ The historical D/A2/R2 implementation became permitted only after the exact four
 
 ## V5 functional closure amendment
 
-The canonical operational baseline is commit `a132b7955636509a629e31bc3499ca9b52e182a4`, tree `c0df1b449a28d67d67facba351e5ac9998c3278d`; upstream is `9c270c098fb926dbc3d7c2eb29b40b5be96c55ef`, so local is intentionally ahead by `3`. The combined Node 22 check passed `139/139` files and `978/978` tests. The fresh V5 functional gate then stopped at `84` pass, `112` intentional skips, and `2` failures. V5 visual, Cloudflare-local `58`, and the four build/verify gates are unrun. Staged count is `0`, preserved count is `46`, and only `dist/index.html` plus `HAU-USC_Logistics-Prototype-Shareable.html` are dirty, byte-identical at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`.
+The amendment was committed durably at `415dda5a3036fa9d865237bf36ec52cba75a69e4`. Its independently audited test-only implementation is integrated at local `0ff509d7807ea932a63dbb33fc90b6c1a65614f4`, tree `28246e6acc4a5c18a53890667eccd2a8409d9114`; upstream remains `415dda5a3036fa9d865237bf36ec52cba75a69e4`, so local is intentionally ahead by `1`. The combined Node 22 check remains green at `139/139` files and `978/978` tests. The full V5 functional gate passed `118` with `152` intentional skips and zero failures of `270`; V5 visual passed `5/5`. Fresh-D1 Cloudflare-local stopped at `57` pass and `1` failure of `58`; the four build/verify gates are unrun. Staged count is `0`, preserved count is `46`, and only `dist/index.html` plus `HAU-USC_Logistics-Prototype-Shareable.html` are dirty, byte-identical at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`.
 
 The two failures are test-contract defects, not a product, runtime, fixture, API, authentication, authorization, privacy, or data defect:
 
 - **F1:** The public-to-`request.queue` contract uses the same Request Center heading and request-log records before its fixture response; its line-200 integration-status read races the guarded playground-session bootstrap/module commit. Correct only the test by polling until integration status reports `authenticated: true` and `currentRoute: request.queue`, retaining the existing public/request assertions and without changing a timeout.
 - **F2:** The six-case route matrix consumes one shared `30s` test budget. Its final case starts at about `25.8s`, clicks near `29.7s`, and the overall timeout prevents `/api/auth/login` from beginning. Define each case as its own test at definition time under the existing `v5-chromium-1440` project skip, retaining the same assertions and without changing a timeout or skip.
 
-This amendment authorizes no product change. Its future implementation scope is exactly `tests/e2e/v5-current-application.spec.js`; no runtime, fixture, API, source, generated-output, timeout, skip, or configuration path is authorized. The fresh read-only Luna plan audit and Sol acceptance are `PASS`; the exact four governance paths remain uncommitted pending one final fresh incremental packet audit. Only after that audit passes, the exact four paths are committed and normally pushed, and local/upstream/live-remote parity with staged0 and preserved46 is proved may one isolated test-only Terra worker amend that sole test file.
+This amendment authorized no product change. Its implementation scope was exactly `tests/e2e/v5-current-application.spec.js`; no runtime, fixture, API, source, generated-output, timeout, skip, or configuration path changed. Fresh read-only plan and implementation audits returned `PASS_NO_P0_P1_P2_P3`. The resolved F1/F2 polling and six definition-time tests plus the later four-way aggregate split remain durable test-contract history; the resulting V5 functional and visual evidence above is current.
+
+## RV01 post-review truth closure amendment
+
+The current operational baseline is local `0ff509d7807ea932a63dbb33fc90b6c1a65614f4`, tree `28246e6acc4a5c18a53890667eccd2a8409d9114`, with upstream `415dda5a3036fa9d865237bf36ec52cba75a69e4` and local ahead by `1`. The retained Node 22 check is green at `139/139` files and `978/978` tests, full V5 functional passed `118` with `152` intentional skips and zero failures of `270`, and V5 visual passed `5/5`. The one fresh-D1 Cloudflare-local run stopped at `57` pass and `1` failure of `58`; its authoritative `.last-run.json` SHA-256 is `D00BC24D35BD91D95AFC57CED8D3608CE00B0A1491C90F5B421FDACFA395E396`. The four build/verify gates are unrun.
+
+The remaining failure is a stale post-review UI assertion, not a product, selector, API, D1, authentication, authorization, privacy, or data defect. The review API returned `200 ACCEPTED`; the canonical refresh returned the request module at `200`, with parent status `ACCEPTED` and line statuses `FOR_CANVASSING` and `READY_TO_RESERVE`. Accepted rows intentionally remain queued, and the later RV01 sorting test proves that retained-queue contract. Only the old expectations at the pre-amendment lines 546-547 are stale: they expect the review form to become hidden and the submitted row to disappear.
+
+The future implementation scope is exactly `tests/cloudflare-e2e/rv01-request-visibility.spec.js`. Replace only those two stale expectations and their comment. After canonical refresh, assert that `submittedRow` remains visible and that its ancestor `tr` contains the exact visible text `Accepted`; do not assert a raw enum. Preserve the explicit two-line review decisions, refresh without relogin, downstream procurement and restocking flow, and every API, D1, privacy, authentication, and authorization assertion. No source, runtime, fixture, API, unit, status-gating, timeout, skip, generated-output, or assertion-weakening change is authorized.
+
+Fresh read-only Luna plan review returned `PASS_NO_P0_P1_P2_P3`, and Sol acceptance is `PASS`. The exact-four packet is accepted uncommitted pending one final fresh incremental packet audit. After that audit passes, persist and normally push only the exact four governance paths and prove local/upstream/live-remote parity with staged0, the two retained generated outputs, and preserved46. Only then may one isolated test-only worker apply the one-file contract, run static gates, obtain a fresh independent implementation audit, and integrate unchanged. Run one full `npm.cmd run test:e2e:cloudflare:local` fresh-D1 gate, not a focused substitute. If all `58` pass, run the four remaining build/verify gates. The already-green full V5 functional and visual evidence remains valid because this Cloudflare-only test edit does not invalidate it.
 
 ## Retained recovery clone
 
@@ -304,14 +319,11 @@ The accepted recovery clone already ran `npm.cmd ci` once with the committed `pa
 
 ## One-pass internal stabilization gate
 
-The pre-repair gates and earlier combined failures remain truthful historical evidence. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. P, G, A, T, the mobile gap, W, A closure, R, D, A2, and R2 are integrated. The current combined `npm.cmd run check` is green at `139/139` files and `978/978` tests, bound to local `a132b795`; the fresh V5 functional gate is the current stop at `84` pass, `112` intentional skips, and `2` failures. No operational command may run before the V5-functional closure amendment is audited, accepted, persisted, and its exact test-only worker is implemented, audited, and combined.
+The pre-repair gates and earlier combined failures remain truthful historical evidence. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. P, G, A, T, the mobile gap, W, A closure, R, D, A2, R2, and the V5-functional closure are integrated. The current combined `npm.cmd run check` remains green at `139/139` files and `978/978` tests; full V5 functional passed `118` with `152` intentional skips and zero failures of `270`; V5 visual passed `5/5`. The fresh-D1 Cloudflare-local gate is the current stop at `57` pass and `1` failure of `58`. No operational command may run before the RV01 post-review truth closure amendment is audited, accepted, persisted, and its exact test-only worker is implemented, audited, and combined.
 
-After the accepted F1/F2 test-only implementation is independently audited and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. First run static gates and the existing focused V5 command for the two contracts exactly once. If it passes, run the remaining gates once in this order:
+After the accepted RV01 test-only implementation is independently audited and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the remaining gates once in this order:
 
 ```powershell
-npm.cmd run check
-npm.cmd run test:e2e:v5
-npm.cmd run test:e2e:v5:visual
 npm.cmd run test:e2e:cloudflare:local
 npm.cmd run build:cloudflare
 npm.cmd run verify:deploy:artifact -- staging .wrangler/build/staging
@@ -319,18 +331,18 @@ npm.cmd run build:cloudflare:production
 npm.cmd run verify:deploy:artifact -- production .wrangler/build/production
 ```
 
-The future F1/F2 worker runs static checks and the existing focused V5 project selection for only those two contracts once before its implementation audit. It must not change any test timeout or skip. The V5 visual gate remains unrun and must run once after a green full V5 functional rerun before Cloudflare-local and the remaining build/verify gates.
+The future RV01 worker runs static checks before its fresh independent implementation audit. It must not change any test timeout or skip and must not run a focused browser substitute. Full V5 functional and V5 visual remain green and uninvalidated by the sole Cloudflare test-path change.
 
 The completed and remaining browser dispositions are exact:
 
-- V5 functional stopped at `84` pass, `112` intentional skips, and `2` failures; after a green focused F1/F2 command, rerun it once across its existing nine widths.
-- V5 visual is unrun at this current baseline. Run it once after a green full V5 functional rerun.
+- V5 functional passed `118` with `152` intentional skips and zero failures of `270` across its existing nine widths; do not rerun it for the RV01 test-only closure.
+- V5 visual passed `5/5`; do not rerun it for the RV01 test-only closure.
 - Full local E2E is retained only as the completed obsolete-contract diagnostic summarized above, not a release gate.
-- Local Cloudflare/D1 E2E retains the earlier `36/22`, `50/8`, and `55/3` diagnostics. It is authorized for exactly one fresh-D1 post-combine rerun only after the focused and full V5 gates are green.
+- Local Cloudflare/D1 E2E retains the earlier `36/22`, `50/8`, `55/3`, and current `57/1` diagnostics. It is authorized for exactly one full fresh-D1 post-combine rerun after the one-file RV01 implementation audit and integration.
 
 The accepted recovery `npm.cmd run check` remains the exact full repository gate: governance, ESLint, deterministic preview build, the complete Vitest suite, Apps Script validation, V5 distribution parity, Cloudflare types, staging build, and Wrangler dry-run. The remaining explicit staging and Production builds must remain isolated under `.wrangler/build/staging` and `.wrangler/build/production`; each must pass `verify:deploy:artifact` for its exact target. None may be deployed.
 
-The S09, S10, and S11 results remain accepted baselines. All earlier S12 evidence remains truthful history. The current combined check is green; V5 functional is stopped at the exact two-contract failure boundary; V5 visual, Cloudflare-local, and four build/verify gates are unrun. The F1/F2 test-only change invalidates the V5 functional and subsequent gate evidence. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
+The S09, S10, and S11 results remain accepted baselines. All earlier S12 evidence remains truthful history. The current combined check, V5 functional, and V5 visual gates are green; Cloudflare-local is stopped at the exact single stale post-review assertion boundary; the four build/verify gates are unrun. The RV01 test-only change invalidates only the Cloudflare-local and subsequent unrun gate evidence. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
 
 ## Deterministic integrity, static, security, and privacy evidence
 
@@ -338,7 +350,7 @@ The operational run must also prove, without printing matched content or private
 
 - package version is exactly `0.8.1`; the attached branch is `release/v0.8.1-final-stabilization`; local HEAD, upstream, and live remote equal the pushed recovery candidate; divergence is `0/0`;
 - local `core.autocrlf` is exactly `false`; the protected visual-baseline LF sentinel and Git blob match; portable Node is exactly `v22.23.2`; the official archive checksum, extracted file set, adjacent npm, process-scoped environment, and no-competing-Node/`workerd` predicates pass;
-- historical check evidence remains bound to its recorded candidates; the current green combined check remains bound to local `a132b795`; and the future F1/F2 reruns must bind to the sole authorized test path, unchanged lockfile and workflows, and the retained generator-produced outputs only;
+- historical check evidence remains bound to its recorded candidates; the current green combined check plus V5 functional and visual evidence remains bound to local `0ff509d`; and the future RV01 full Cloudflare-local rerun must bind to the sole authorized test path, unchanged lockfile and workflows, and the retained generator-produced outputs only;
 - default `git diff --check`, `git -c core.whitespace=cr-at-eol diff --check`, `npm.cmd run check:governance`, and the exact candidate status/scope checks pass;
 - a deterministic count-only scan of the candidate delta reports no new private-key block, recognized bearer/token format, explicit credential assignment, raw provider identifier, disallowed live email domain, or personal-data fixture; only labels, counts, and paths safe for repository evidence may be recorded;
 - `dist/index.html` and the root shareable retain the current generator-produced `640105`-byte SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A` output unless an authorized later build deterministically proves another candidate-bound result; they remain byte-identical with required V5 markers, no effective Production Playground capability, while `dist/_headers` remains unchanged;
@@ -352,7 +364,7 @@ Local CodeQL CLI is not part of this boundary, and `.github/workflows/ci.yml` pl
 
 ## Expected result and evidence handling
 
-After acceptance, the existing combined implementation scope is eleven unique paths. The F1/F2 closure amends only the already-in-scope `tests/e2e/v5-current-application.spec.js`; it adds no product path. The two Integration-only generated HTML outputs retain the maximum authorized combined scope of `13`. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. Retained failed-clone and recovery-clone evidence must remain preserved.
+After acceptance, the existing combined implementation scope remains eleven unique paths. The RV01 closure amends only the already-in-scope `tests/cloudflare-e2e/rv01-request-visibility.spec.js`; it adds no product path. The two Integration-only generated HTML outputs retain the maximum authorized combined scope of `13`. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. Retained failed-clone and recovery-clone evidence must remain preserved.
 
 The official portable Node archive, checksum file, extracted runtime, operational logs, reports, screenshots, traces, local D1 state, Cloudflare build output, and count-only evidence must remain in the existing immutable private/tooling directory or as classified ephemeral/ignored output. They may not enter Git. A later S12 closeout may write only the three current records and this packet after a separate accepted evidence review.
 
@@ -366,10 +378,10 @@ Stop at the first occurrence of:
 - any failed remaining local Worker/D1, build, deploy-artifact, governance, static, security, privacy, identity, artifact, cleanup, or orphan-process predicate;
 - any unexpected or out-of-scope tracked delta outside the authorized maximum-thirteen-path combined scope; any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
 - any command rerun beyond the exact post-combine authorization, variant, alternate runtime source, timeout increase, package script/spec skip, out-of-lane source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
-- any scope overlap or unauthorized path; any source/runtime/fixture/API/generated-output change; timeout or skip change; F1 request assertion weakening or failure to poll both authenticated and `request.queue`; F2 assertion weakening or loss of the existing `v5-chromium-1440` project skip; privacy, authentication, scope, token, D1, or API invariant failure; unknown diff; product failure; new P0 or P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
+- any scope overlap or unauthorized path; any source/runtime/fixture/API/unit/status-gating/generated-output change; timeout, skip, or assertion weakening; reviewed row absence; failure of the submitted row ancestor `tr` to contain exact visible text `Accepted`; loss of either explicit line decision, refresh-without-relogin, downstream procurement/restocking, API, D1, privacy, authentication, or authorization assertion; unknown diff; product failure; new P0 or P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
 
-Explicitly excluded before governance persistence are all F1/F2 test implementation, worktree, npm, test, and build actions. After acceptance, edits outside exact `tests/e2e/v5-current-application.spec.js` and the already-retained conditional Integration outputs remain forbidden. No backend, view-model, API, schema, migration, package script/spec skip, timeout, runtime, fixture, dependency, lockfile, workflow, deployed HTTPS staging auth, Phase 23 acceptance, provider/private-config/live D1/R2/Google read or write, deploy, seed/reset, live restore, R2 write, staging smoke, release manifest, candidate freeze, Playground, Production, merge, tag, release, recovery pointer, ref, or S13+ action is authorized. No further runtime download, extraction, or dependency installation is authorized.
+Explicitly excluded before governance persistence are all RV01 test implementation, worktree, npm, test, and build actions. After acceptance, edits outside exact `tests/cloudflare-e2e/rv01-request-visibility.spec.js` and the already-retained conditional Integration outputs remain forbidden. No backend, view-model, API, schema, migration, package script/spec skip, timeout, status-gating, runtime, fixture, unit, dependency, lockfile, workflow, deployed HTTPS staging auth, Phase 23 acceptance, provider/private-config/live D1/R2/Google read or write, deploy, seed/reset, live restore, R2 write, staging smoke, release manifest, candidate freeze, Playground, Production, merge, tag, release, recovery pointer, ref, or S13+ action is authorized. No further runtime download, extraction, or dependency installation is authorized.
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact S12 V5-functional closure governance amendment limited to tests/e2e/v5-current-application.spec.js; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push the full local chain, verify local/upstream/live-remote parity plus staged0, the two unstaged generated HTML outputs at SHA-256 A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A, and preserved46, then create one isolated test-only Terra worker for F1 status polling and F2 per-case definitions; run static gates and the existing focused V5 command for those two contracts once, then if green full V5 functional once followed by V5 visual and remaining S12 gates per packet; no runtime, fixture, API, timeout, skip, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained generated-output mutation before durable governance parity.
+NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact S12 RV01 post-review truth closure amendment limited to tests/cloudflare-e2e/rv01-request-visibility.spec.js; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push the full local chain, verify local/upstream/live-remote parity plus staged0, the two unstaged generated HTML outputs at SHA-256 A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A, and preserved46, then create one isolated test-only Terra worker to replace only the stale hidden-form and removed-row expectations with reviewed-row-visible and submittedRow ancestor tr exact Accepted text assertions while preserving every other review, refresh-without-relogin, downstream procurement/restocking, API, D1, and privacy assertion; run static gates and obtain one fresh independent Luna implementation audit, integrate unchanged, run one full test:e2e:cloudflare:local fresh-D1 gate, and if green run the four remaining build/verify gates per packet; no V5 functional or visual rerun, source, runtime, fixture, API, unit, status-gating, timeout, skip, provider, private-data, deployment, migration, ref, S13+, or retained-output mutation before durable governance parity.
