@@ -1,14 +1,17 @@
 # V0.8.1 S10 Rollback and Release-Candidate Evidence Boundary
 
-- **Status:** `V81-S10_TOOLING_CONFIG_REGEN_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S10_EVIDENCE_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **State:** `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Rollback and release-candidate evidence complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Pushed boundary commit:** `bb65250699c35546b476b41365dc0370224f349d`
 - **Pushed boundary tree:** `f73224c8d2ebe38174d2c7f119ec243ef0aaef98`
 - **Pushed boundary parent:** `d4449d60340e55ee7317a3a14eedf910f7f0516a`
+- **Pushed tooling-amendment commit:** `d94b25e485ea4bd317b82ff9cef0d846369a078c`
+- **Pushed tooling-amendment tree:** `b1a51666625b6881db15e00a1e6020c4d162ddf4`
+- **Pushed tooling-amendment parent:** `bb65250699c35546b476b41365dc0370224f349d`
 - **Package version:** `0.8.1`
-- **Boundary durable state:** local, upstream, and live remote are equal at the pushed boundary commit; divergence is `0/0`, tracked and staged counts are `0/0`, and preserved46 remains untouched.
+- **Operational-candidate durable state:** canonical, upstream, live remote, and the clean branch-tracking evidence clone are equal at the pushed tooling-amendment commit; divergence is `0/0`, canonical tracked and staged counts are `0/0`, clone status is `0`, and preserved46 remains untouched.
 - **Sol acceptance:** `PASS`
 - **Luna S10 boundary review:** `PASS_NO_P0_P1_P2_P3`
 - **Review timestamp:** `2026-08-12T06:05:49.9949725+08:00`
@@ -16,7 +19,11 @@
 - **Sol tooling-amendment acceptance:** `PASS`
 - **Fresh Luna tooling-amendment review:** `PASS_NO_P0_P1_P2_P3`
 - **Amendment review timestamp:** `2026-08-12T06:50:40.4383281+08:00`
-- **Amendment review state:** accepted and uncommitted, ready for the exact governance commit after one final fresh Luna packet audit; no configuration generation or S10 evidence execution is authorized before the exact four-path amendment is committed, normally pushed, and verified at parity.
+- **Amendment durable state:** governance committed, normally pushed, and verified at local/upstream/live-remote parity.
+- **Sol S10 evidence acceptance:** `PASS`
+- **Fresh Luna S10 evidence audit:** `PASS_NO_P0_P1_P2_P3`
+- **Evidence review timestamp:** `2026-08-12T07:48:26.0402494+08:00`
+- **Evidence acceptance state:** accepted and uncommitted, ready for the exact governance commit after one final fresh Luna packet audit.
 
 ## Accepted boundary
 
@@ -123,6 +130,22 @@ npm.cmd run production:recovery:evidence -- --staging-config <ABS_PRIVATE_STAGIN
 
 Only safe booleans, counts, schema/migration labels, candidate SHA, cryptographic digests, and sanitized disposition labels may be copied into the later S10 closeout packet.
 
+## Accepted S10 operational evidence
+
+The exact operational candidate was `d94b25e485ea4bd317b82ff9cef0d846369a078c` / `b1a51666625b6881db15e00a1e6020c4d162ddf4` on `release/v0.8.1-final-stabilization`. Canonical, upstream, live remote, and the independent clean branch-tracking evidence clone matched that identity; canonical tracked/staged counts and clone status were `0/0` and `0` respectively.
+
+- Focused local validation passed: Vitest `5` files / `38` tests, `node --check` across `11` files, and ESLint across `11` files. The package-lock SHA-256 remained `E9EE00E258A0FEA40717D6C30CC1D30C2CBDA1D581388E051A6D043FFC7BB07D` with drift `0`.
+- The `11` Prettier warnings were independently adjudicated `TOOLING_NO_EFFECT_CONTINUE`, category `CHECKOUT_LINE_ENDING_PRESENTATION_ONLY`: all `11` HEAD/index/clean-filtered worktree blob OIDs matched, the checkout contained `2,892` CRLF line endings where HEAD contained `2,892` LF line endings, LF-normalized checkout bytes equaled HEAD for all `11`, BOM and trailing-whitespace counts were `0`, and the same-config in-memory formatter output for checkout and HEAD equaled raw HEAD with no HEAD formatting delta. Repository EOL attributes were unspecified and system `core.autocrlf` was `true`.
+- Exactly one preparatory D1 inventory, one configuration-generator invocation, one staging-authorization initialization and check, one staging evidence command, one Production-authorization initialization and S10-specific validation, and one Production recovery-evidence command ran. Retries and alternate variants were `0`.
+- Safe configuration and authorization hashes were: D1 inventory `E36E3413666FB5C398CBB8961E6382F58A399C44492CF158FE2C1789F02DBC37`; staging input `334322871487630348DBB6B877F1ED40A2A9BDCBE60AC22D28EA46ACE9026BDC`; staging config `4CC71B774A3E3EB2A60657731230C229D9B571FADCCA6F16A056AD42DC855E34`; Production config `5AA4F78FAD5F555E8383E97B93415B647A3AE8C839253D580B9FB51815B87F4B`; staging authorization `9D2427EB114A19FFA085CD2DF1AA31D500007EB2E872C92EDF8EBB4116BA4F7E`; Production authorization `7FC3B2EFD6A94214468510E8D26730D7F3A84342EAA2F4B66BB9CB067E6FC36E`.
+- Staging authorization was valid with only `cloudflareRead` and `d1Backup` approved, the other `10` actions denied, and pending actions `0`. Staging evidence passed with export SHA-256 `49857EF655846015D7C87F3A65FCF91C92E9EE3D1FF535F9C223E45EF505AF7A`, manifest SHA-256 `A591D08E3071E544A80F687BA497D6C0E84060535D95BF867AD08AE46A067355`, and isolated-restore SHA-256 `62F1E4D48397A1432991180D39F0CC2420305188A3D3D0FDFE0DDC6C941395A4`. The tuple proved integrity PASS, foreign-key violations `0`, schema `30`, migration `0030_production_access_and_operations.sql`, reconciliation `20/20`, discrepancies `0`, disposition `RECONCILED`, prior Worker deployments `10`, R2 metadata count `2`, a nonempty bookmark, and configuration fingerprints `2`.
+- Production authorization was valid with `launchAuthorized=false`, only `productionBackup` approved, the other `7` actions denied, and pending actions `0`. Production recovery evidence passed in `PRE_MERGE_READ_ONLY` with export SHA-256 `7A6E9DEBABD76D7ED39D2F7A7D9DE8AD70A23F586F3D5F3E3B7B0AAEA23A3961`, manifest SHA-256 `BC82075D5D6426C65D7C19ABA95DB7C237E2A8F0632E0F810E99B5888D258E02`, and isolated-restore SHA-256 `7EF245B9B708AD321CFE36A1ECEA7CC4164753AA1723977F6A881F80F6CE2FC8`. The tuple proved integrity PASS, foreign-key violations `0`, schema `30`, migration `0030_production_access_and_operations.sql`, reconciliation `20/20`, discrepancies `0`, disposition `RECONCILED`, prior Worker deployments `7`, Production and staging R2 metadata counts `2/2`, a nonempty bookmark, configuration fingerprints `4`, and active synthetic Production accounts `0`.
+- The immutable candidate-scoped private root outside Git contains `12` files / `5,911,700` bytes: inputs `4`, configs `2`, staging `3`, and Production `3`. Its independently reproduced manifest root is `F6FD97B539ABDFC24BE4560F1D33E8A0E079DE57616237BD112BF41BDAA7666C`; candidate JSON equality and the manifest-root serialization, ordering, and hash proof passed. The predecessor root remains unchanged and empty.
+- Provider operations were limited to read-only D1 inventory, deployment history, R2 metadata, Time Travel, and D1 export. Private writes were limited to the accepted input, configuration, authorization, and evidence artifacts. Raw identifiers and secrets in Git were `0`.
+- Deployment, migration, seed/reset, live restore, R2 write, smoke, auth E2E, release-manifest generation, recovery-pointer change, ref action, and canonical source/test edits were all `0`.
+
+Fresh independent evidence audit and Sol acceptance are both PASS. S10 closes with P0 `0` and P1 `0`; the broader release P2/P3 mapping remains `23/5/4/1/9`, with no program-wide none claim.
+
 ## Explicit exclusions
 
 S10 authorizes no deployment, migration, staging seed/reset, provider mutation, live-database restore, R2 write, recovery-pointer change, source/test edit, release-manifest generation, or ref mutation. It does not run `deploy-environment.mjs`, even with `--dry-run`, because that rebuilds repository artifacts. It does not run staging candidate smoke or `tests/staging-e2e/staging-auth-access.spec.js`; those can create sessions or operational fixtures and remain required only at their later governed Playground/preflight gate. It does not perform live Production launch preflight or Production authorization for deployment.
@@ -150,6 +173,6 @@ Stop before or during S10 evidence on any of the following:
 
 ## Current boundary and exact next action
 
-This record is `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. The pushed S10 boundary is durable at `bb65250699c35546b476b41365dc0370224f349d` / `f73224c8d2ebe38174d2c7f119ec243ef0aaef98`, parent `d4449d60340e55ee7317a3a14eedf910f7f0516a`. No clone update, private-file creation or modification, provider call, operational npm command, source/test edit, stage, commit, push, or S10 evidence execution has occurred during this amendment materialization or acceptance.
+This record is `ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. The original S10 boundary remains durable at `bb65250699c35546b476b41365dc0370224f349d` / `f73224c8d2ebe38174d2c7f119ec243ef0aaef98`, parent `d4449d60340e55ee7317a3a14eedf910f7f0516a`; the pushed tooling amendment and accepted operational candidate are `d94b25e485ea4bd317b82ff9cef0d846369a078c` / `b1a51666625b6881db15e00a1e6020c4d162ddf4`, parent `bb65250699c35546b476b41365dc0370224f349d`. This acceptance materialization changes only the exact four governance paths and performs no provider/private/clone/source/test/deployment/migration/seed/reset/live restore/R2 write/smoke/auth E2E/release-manifest/recovery-pointer/ref action.
 
-**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S10 tooling/config-regeneration amendment paths; only after that audit remains `PASS`, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S10_ROLLBACK_RELEASE_CANDIDATE_EVIDENCE.md`, normally push, verify local/upstream/live-remote parity and preserved46, fast-forward the existing clean evidence clone to the new pushed SHA without deleting or recloning it, then create the new private config/input subdirectory, generate and validate candidate-scoped configurations and authorization packages, and execute each accepted S10 evidence command exactly once; no source/test edit, deployment, migration, seed/reset, live restore, R2 write, recovery-pointer change, staging smoke/auth E2E, release-manifest generation, provider mutation, or canonical ref action.
+**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S10 evidence governance paths; only after that audit remains `PASS`, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S10_ROLLBACK_RELEASE_CANDIDATE_EVIDENCE.md`, normally push, verify local/upstream/live-remote parity and preserved46, then enter V81-S11 candidate integrity and generated-artifact parity; no provider/private/clone/source/test/deployment/migration/seed/reset/live restore/R2 write/smoke/auth E2E/release-manifest/recovery-pointer/ref action before S10 governance push parity.
