@@ -352,6 +352,55 @@ test('successful sign-in selects only the server-authorized default workspace ro
   }
 });
 
+test('a Food session sees a data-free denial for the Materials overview before backend reads', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The denied overview contract runs once.');
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+  const bootstrap = createEssentialBootstrapFixture({ backendMode: 'rest', environment: STAGING });
+  bootstrap.currentUser = {
+    ...bootstrap.currentUser,
+    authorization: {
+      ...bootstrap.currentUser.authorization,
+      capabilities: ['view.internal'],
+      workspaceIds: ['food'],
+      defaultWorkspaceId: 'food',
+      explicitDenies: [],
+    },
+  };
+  await page.route('**/api/getEssentialBootstrapData', async (route) => {
+    if (new URL(route.request().url()).pathname !== '/api/getEssentialBootstrapData') {
+      return route.fallback();
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(bootstrap),
+    });
+  });
+
+  await page.goto('/#/materials.overview');
+  await waitForV5(page);
+
+  await expect(page).toHaveURL(/#\/materials\.overview$/u);
+  await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
+  await expect(
+    page.locator('.overview-command, [data-v5-operations-parity], [data-v5-admin-parity], table'),
+  ).toHaveCount(0);
+  const protectedDataPaths = new Set([
+    '/api/getBootstrapModule',
+    '/api/getEventManagement',
+    '/api/admin/access/directory',
+    '/api/getReferenceAdminWorkspace',
+    '/api/admin/reference-links/list',
+    '/api/owner/brand-assets/list',
+    '/api/me/profile',
+    '/api/readiness',
+    '/api/owner/evidence/status',
+  ]);
+  expect(requests.filter(({ pathname }) => protectedDataPaths.has(pathname))).toEqual([]);
+});
+
 test('authenticated R1 lending and release forms preserve labels and release identity separation', async ({
   page,
 }) => {

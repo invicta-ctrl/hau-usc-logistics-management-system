@@ -6,8 +6,10 @@ import {
   createV5ScopedRevisionReader,
   isV5RouteAuthorized,
   isV5AuthenticationBoundaryCode,
+  resolveV5RouteState,
   selectDefaultWorkspaceRoute,
 } from '../../src/v5/integration/runtime.js';
+import { overview } from '../../src/v5/src/surfaces/operations.js';
 
 const scopedEnvelope = ({ scope = 'request', token = 1, enabled = true } = {}) => ({
   ok: true,
@@ -98,6 +100,22 @@ describe('V5 workspace pre-read authorization', () => {
     if (isV5RouteAuthorized('materials.overview', ['view.internal'], ['food'])) moduleRead();
 
     expect(moduleRead).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'admin.overview',
+    'director.overview',
+    'food.overview',
+    'inventory.overview',
+    'materials.overview',
+  ])('renders %s as an explicit denied state without overview data', (routeId) => {
+    expect(resolveV5RouteState(routeId, 'denied')).toBe('denied');
+
+    const rendered = overview(routeId, { state: 'denied' });
+    expect(rendered).toContain('You do not have access to this area');
+    expect(rendered).not.toContain('overview-command');
+    expect(rendered).not.toContain('<table');
+    expect(rendered).not.toContain('>Refresh</button>');
   });
 
   it('fails closed for missing or empty workspaces and never treats a default as a grant', () => {

@@ -250,13 +250,21 @@ export function isV5RouteAuthorized(currentRoute, capabilityValues = [], workspa
 const ROUTE_STATES = Object.freeze({
   'request.queue': new Set(['populated', 'loading', 'empty', 'stale', 'denied']),
   'inventory.catalog': new Set(['populated', 'loading']),
-  'admin.overview': new Set(['populated', 'loading', 'empty', 'unavailable']),
+  'admin.overview': new Set(['populated', 'loading', 'empty', 'unavailable', 'denied']),
+  'director.overview': new Set(['populated', 'denied']),
+  'food.overview': new Set(['populated', 'denied']),
+  'inventory.overview': new Set(['populated', 'denied']),
+  'materials.overview': new Set(['populated', 'denied']),
   'lending.queue': new Set(['populated', 'empty']),
   'admin.access': new Set(['populated', 'denied']),
   'owner.health': new Set(['populated', 'denied']),
   'public.signin': new Set(['populated', 'loading', 'error', 'unavailable']),
   'public.request-intake': new Set(['populated', 'error']),
 });
+
+export function resolveV5RouteState(currentRoute, wanted, fallback = 'populated') {
+  return ROUTE_STATES[currentRoute]?.has(wanted) ? wanted : fallback;
+}
 
 const ROUTES_WITHOUT_DATA_SLOT = new Set(['public.register']);
 const ROUTE_SEARCH_LABELS = Object.freeze({
@@ -770,10 +778,6 @@ export function createV5Runtime({ backend, app }) {
     });
   }
 
-  function routeState(currentRoute, wanted, fallback = 'populated') {
-    return ROUTE_STATES[currentRoute]?.has(wanted) ? wanted : fallback;
-  }
-
   function toast(message, error = false) {
     app.integrationToast(text(message), error ? 'error' : 'info');
   }
@@ -1121,7 +1125,7 @@ export function createV5Runtime({ backend, app }) {
       }
       if (!allowed(currentRoute)) {
         integration.failedRoutes.set(currentRoute, 'DENIED');
-        render(routeState(currentRoute, 'denied'));
+        render(resolveV5RouteState(currentRoute, 'denied'));
         return true;
       }
       if (ROUTES_WITHOUT_DATA_SLOT.has(currentRoute)) {
@@ -1129,7 +1133,7 @@ export function createV5Runtime({ backend, app }) {
         afterRender();
         return true;
       }
-      const loading = routeState(currentRoute, 'loading', 'populated');
+      const loading = resolveV5RouteState(currentRoute, 'loading', 'populated');
       if (loading === 'loading' && !expectedRevision) render('loading');
       const module = MODULE_BY_ROUTE[currentRoute];
       if (module) {
@@ -1149,16 +1153,16 @@ export function createV5Runtime({ backend, app }) {
         (currentRoute === 'request.queue' && counts.requests === 0) ||
         (currentRoute === 'lending.queue' && counts.loans === 0) ||
         (currentRoute === 'admin.overview' && counts.requests + counts.inventory === 0);
-      render(routeState(currentRoute, empty ? 'empty' : 'populated'));
+      render(resolveV5RouteState(currentRoute, empty ? 'empty' : 'populated'));
       return true;
     } catch (error) {
       if (!canCommit()) return false;
       if (handleAuthenticationBoundary(error)) return false;
       if (expectedRevision) return false;
       integration.failedRoutes.set(currentRoute, text(error?.code, 'SERVICE_ERROR'));
-      if (currentRoute === 'public.signin') render(routeState(currentRoute, 'unavailable'));
-      else if (PUBLIC_ROUTES.has(currentRoute)) render(routeState(currentRoute, 'error'));
-      else render(routeState(currentRoute, 'denied'));
+      if (currentRoute === 'public.signin') render(resolveV5RouteState(currentRoute, 'unavailable'));
+      else if (PUBLIC_ROUTES.has(currentRoute)) render(resolveV5RouteState(currentRoute, 'error'));
+      else render(resolveV5RouteState(currentRoute, 'denied'));
       toast(safeMessage(error), true);
       return false;
     }
@@ -1720,7 +1724,7 @@ export function createV5Runtime({ backend, app }) {
       ]);
     }
     adminParity.afterRender();
-    operationsParity.afterRender();
+    if (app.integrationState.variant !== 'denied') operationsParity.afterRender();
     bindRouteSearch(currentRoute);
   }
 

@@ -87,6 +87,8 @@ const OVERVIEW_CONFIG = {
 
 export function overview(id, { state }) {
   const cfg = OVERVIEW_CONFIG[id];
+  if (state === 'denied') return `${pageHead(cfg)}${deniedState()}`;
+
   const head = pageHead({ ...cfg, actions: refreshAction });
 
   if (state === 'unavailable') {
