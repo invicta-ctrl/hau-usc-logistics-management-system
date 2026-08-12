@@ -417,6 +417,20 @@ describe('V5 operations parity controller', () => {
 
   it('clears route-local search state at every session boundary', async () => {
     const runtime = await readFile(new URL('../../src/v5/integration/runtime.js', import.meta.url), 'utf8');
+    const projectionStart = runtime.indexOf('function clearAuthenticatedProjection()');
+    const generationStart = runtime.indexOf('function advanceAuthGeneration');
+    const boundaryStart = runtime.indexOf('function handleAuthenticationBoundary');
+    const signOutStart = runtime.indexOf('async function signOut()');
+    const playgroundOperationStart = runtime.indexOf('async function requestPlaygroundOperation');
+    const clearAuthenticatedProjection = runtime.slice(projectionStart, generationStart);
+    const advanceAuthGeneration = runtime.slice(generationStart, boundaryStart);
+    const signOut = runtime.slice(signOutStart, playgroundOperationStart);
+
+    expect(projectionStart).toBeGreaterThanOrEqual(0);
+    expect(generationStart).toBeGreaterThan(projectionStart);
+    expect(boundaryStart).toBeGreaterThan(generationStart);
+    expect(signOutStart).toBeGreaterThan(boundaryStart);
+    expect(playgroundOperationStart).toBeGreaterThan(signOutStart);
 
     expect(runtime).toMatch(
       /result\?\.state === 'ACTIVATION_REQUIRED'[\s\S]*integration\.activationCsrfToken = result\.csrfToken;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*integration\.session = null;/u,
@@ -424,11 +438,17 @@ describe('V5 operations parity controller', () => {
     expect(runtime).toMatch(
       /if \(!result\?\.user\)[\s\S]*return;[\s\S]*\}\s*integration\.routeSearch\.clear\(\);[\s\S]*integration\.session = result;/u,
     );
-    expect(runtime).toMatch(
-      /async function signOut\(\)[\s\S]*finally \{[\s\S]*integration\.state = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*app\.integrationGo\('public\.signin'\);/u,
+    expect(clearAuthenticatedProjection).toMatch(
+      /integration\.state = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*clearBackendViewModels\(\);/u,
+    );
+    expect(advanceAuthGeneration).toMatch(
+      /integration\.authGeneration \+= 1;[\s\S]*clearAuthenticatedProjection\(\);/u,
+    );
+    expect(signOut).toMatch(
+      /advanceAuthGeneration\(\);[\s\S]*const logout = backend\.logout\(\)[\s\S]*app\.integrationGo\('public\.signin'\);[\s\S]*const confirmed = await logout;/u,
     );
     expect(runtime).toMatch(
-      /action === 'resume-playground'[\s\S]*integration\.session = null;[\s\S]*integration\.state = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*app\.integrationGo\('index'\);/u,
+      /action === 'resume-playground'[\s\S]*integration\.session = null;[\s\S]*integration\.routeSearch\.clear\(\);[\s\S]*advanceAuthGeneration\(\);[\s\S]*app\.integrationGo\('index'\);/u,
     );
     expect([...runtime.matchAll(/integration\.routeSearch\.clear\(\)/gu)]).toHaveLength(4);
   });
