@@ -197,7 +197,12 @@ test('public intake stays public while an internal route receives the guarded pl
   await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
   expect(requests.some(({ pathname }) => pathname === '/api/auth/session')).toBe(true);
   expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(true);
-  expect((await integrationStatus(page)).authenticated).toBe(true);
+  await expect
+    .poll(async () => {
+      const status = await integrationStatus(page);
+      return { authenticated: status.authenticated, currentRoute: status.currentRoute };
+    })
+    .toEqual({ authenticated: true, currentRoute: 'request.queue' });
   await expectNoHorizontalOverflow(page);
 });
 
@@ -241,116 +246,114 @@ test('public sign-in keeps reset collapsed and renders starter activation only a
   await expect(activation.getByText('Use your approved USC work email.', { exact: true })).toBeVisible();
 });
 
-test('successful sign-in selects only the server-authorized default workspace route', async ({
-  context,
-}, testInfo) => {
-  test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The default route matrix runs once.');
-  const matrix = [
-    {
-      workspaceId: 'administrator',
-      capabilities: ['view.internal'],
-      expectedRoute: 'admin.overview',
-    },
-    {
-      workspaceId: 'director',
-      capabilities: ['view.all.summary'],
-      expectedRoute: 'director.overview',
-    },
-    { workspaceId: 'food', capabilities: ['view.internal'], expectedRoute: 'food.overview' },
-    {
-      workspaceId: 'inventory-pantry',
-      capabilities: ['view.inventory'],
-      expectedRoute: 'inventory.overview',
-    },
-    {
-      workspaceId: 'materials',
-      capabilities: ['view.internal'],
-      expectedRoute: 'materials.overview',
-    },
-    {
-      workspaceId: 'director',
-      capabilities: ['view.internal'],
-      explicitDenies: ['view.all.summary'],
-      expectedRoute: 'account.profile',
-      deniedRoute: 'director.overview',
-    },
-  ];
+const defaultWorkspaceRouteCases = [
+  {
+    workspaceId: 'administrator',
+    capabilities: ['view.internal'],
+    expectedRoute: 'admin.overview',
+  },
+  {
+    workspaceId: 'director',
+    capabilities: ['view.all.summary'],
+    expectedRoute: 'director.overview',
+  },
+  { workspaceId: 'food', capabilities: ['view.internal'], expectedRoute: 'food.overview' },
+  {
+    workspaceId: 'inventory-pantry',
+    capabilities: ['view.inventory'],
+    expectedRoute: 'inventory.overview',
+  },
+  {
+    workspaceId: 'materials',
+    capabilities: ['view.internal'],
+    expectedRoute: 'materials.overview',
+  },
+  {
+    workspaceId: 'director',
+    capabilities: ['view.internal'],
+    explicitDenies: ['view.all.summary'],
+    expectedRoute: 'account.profile',
+    deniedRoute: 'director.overview',
+  },
+];
 
-  for (const routeCase of matrix) {
-    await test.step(`${routeCase.workspaceId} -> ${routeCase.expectedRoute}${routeCase.deniedRoute ? ' (mapped route denied)' : ''}`, async () => {
-      const page = await context.newPage();
-      const pageErrors = [];
-      page.on('pageerror', (error) => pageErrors.push(error.message));
-      await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+for (const routeCase of defaultWorkspaceRouteCases) {
+  test(`successful sign-in selects only the server-authorized default workspace route: ${routeCase.workspaceId} -> ${routeCase.expectedRoute}${routeCase.deniedRoute ? ' (mapped route denied)' : ''}`, async ({
+    context,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'v5-chromium-1440', 'The default route matrix runs once.');
+    const page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(error.message));
+    await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
 
-      const bootstrap = createEssentialBootstrapFixture({
-        backendMode: 'rest',
-        environment: STAGING,
-      });
-      bootstrap.currentUser = {
-        ...bootstrap.currentUser,
-        authorization: {
-          ...bootstrap.currentUser.authorization,
-          capabilities: routeCase.capabilities,
-          workspaceIds: [routeCase.workspaceId],
-          defaultWorkspaceId: routeCase.workspaceId,
-          explicitDenies: routeCase.explicitDenies ?? [],
-        },
-      };
-
-      await page.route('**/api/getEssentialBootstrapData', async (route) => {
-        if (new URL(route.request().url()).pathname !== '/api/getEssentialBootstrapData') {
-          return route.fallback();
-        }
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify(bootstrap),
-        });
-      });
-      await page.route('**/api/auth/login', async (route) => {
-        if (
-          route.request().method() !== 'POST' ||
-          new URL(route.request().url()).pathname !== '/api/auth/login'
-        ) {
-          return route.fallback();
-        }
-        return route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            state: 'AUTHENTICATED',
-            csrfToken: 'csrf-default-route-e2e',
-            user: { accountId: 'SYNTHETIC-OWNER-001', displayName: 'Synthetic Owner' },
-          }),
-        });
-      });
-
-      try {
-        await page.goto('/#/public.signin');
-        await waitForV5(page);
-        await page.getByLabel('Username').fill('synthetic.owner');
-        await page
-          .locator('.auth-card--signin form')
-          .locator('input[name="p"]')
-          .fill('synthetic-owner-password');
-        await page.locator('.auth-card--signin form').getByRole('button', { name: 'Sign in' }).click();
-
-        await expect.poll(() => new URL(page.url()).hash).toBe(`#/${routeCase.expectedRoute}`);
-        await expect
-          .poll(async () => (await integrationStatus(page)).currentRoute)
-          .toBe(routeCase.expectedRoute);
-        expect((await integrationStatus(page)).authenticated).toBe(true);
-        if (routeCase.deniedRoute) {
-          await expect(page.locator(`[data-act="go"][data-id="${routeCase.deniedRoute}"]`)).toHaveCount(0);
-        }
-        expect(pageErrors).toEqual([]);
-      } finally {
-        await page.close();
-      }
+    const bootstrap = createEssentialBootstrapFixture({
+      backendMode: 'rest',
+      environment: STAGING,
     });
-  }
-});
+    bootstrap.currentUser = {
+      ...bootstrap.currentUser,
+      authorization: {
+        ...bootstrap.currentUser.authorization,
+        capabilities: routeCase.capabilities,
+        workspaceIds: [routeCase.workspaceId],
+        defaultWorkspaceId: routeCase.workspaceId,
+        explicitDenies: routeCase.explicitDenies ?? [],
+      },
+    };
+
+    await page.route('**/api/getEssentialBootstrapData', async (route) => {
+      if (new URL(route.request().url()).pathname !== '/api/getEssentialBootstrapData') {
+        return route.fallback();
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(bootstrap),
+      });
+    });
+    await page.route('**/api/auth/login', async (route) => {
+      if (
+        route.request().method() !== 'POST' ||
+        new URL(route.request().url()).pathname !== '/api/auth/login'
+      ) {
+        return route.fallback();
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          state: 'AUTHENTICATED',
+          csrfToken: 'csrf-default-route-e2e',
+          user: { accountId: 'SYNTHETIC-OWNER-001', displayName: 'Synthetic Owner' },
+        }),
+      });
+    });
+
+    try {
+      await page.goto('/#/public.signin');
+      await waitForV5(page);
+      await page.getByLabel('Username').fill('synthetic.owner');
+      await page
+        .locator('.auth-card--signin form')
+        .locator('input[name="p"]')
+        .fill('synthetic-owner-password');
+      await page.locator('.auth-card--signin form').getByRole('button', { name: 'Sign in' }).click();
+
+      await expect.poll(() => new URL(page.url()).hash).toBe(`#/${routeCase.expectedRoute}`);
+      await expect
+        .poll(async () => (await integrationStatus(page)).currentRoute)
+        .toBe(routeCase.expectedRoute);
+      expect((await integrationStatus(page)).authenticated).toBe(true);
+      if (routeCase.deniedRoute) {
+        await expect(page.locator(`[data-act="go"][data-id="${routeCase.deniedRoute}"]`)).toHaveCount(0);
+      }
+      expect(pageErrors).toEqual([]);
+    } finally {
+      await page.close();
+    }
+  });
+}
 
 test('a Food session sees a data-free denial for the Materials overview before backend reads', async ({
   page,
@@ -464,9 +467,7 @@ test('authenticated R1 lending and release forms preserve labels and release ide
   );
 });
 
-test('authenticated R2 queues search loaded rows and keep contextual operations selected and fail closed', async ({
-  page,
-}, testInfo) => {
+async function installR2QueueFixture(page) {
   const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
   await page.route('**/api/getBootstrapModule', async (route) => {
     const request = route.request();
@@ -543,7 +544,11 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
       body: JSON.stringify(fixture),
     });
   });
+  return requests;
+}
 
+test('authenticated R2 lending queue searches loaded rows', async ({ page }) => {
+  await installR2QueueFixture(page);
   await page.goto('/#/lending.queue');
   await waitForV5(page);
   await page.waitForFunction(() =>
@@ -559,7 +564,12 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
   await expect(page.locator('[data-v5-route-search-status="lending.queue"]')).toContainText(
     'authorized loans shown',
   );
+});
 
+test('authenticated R2 release desk searches loaded rows and keeps contextual operations selected and fail closed', async ({
+  page,
+}, testInfo) => {
+  const requests = await installR2QueueFixture(page);
   await page.goto('/#/release.desk');
   await waitForV5(page);
   await page.waitForFunction(() =>
@@ -590,7 +600,13 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
   await expect(page.locator('[data-v5-command="release-confirm"]')).toHaveCount(0);
   expect(requests).toHaveLength(requestsBeforeMismatch);
   if (mobileViewport) await expect(visibleDrawer).toHaveCount(0);
+});
 
+test('authenticated R2 request queue keeps contextual operations selected and fail closed', async ({
+  page,
+}, testInfo) => {
+  await installR2QueueFixture(page);
+  const mobileViewport = (testInfo.project.use.viewport?.width ?? page.viewportSize()?.width ?? 1440) < 1181;
   await page.goto('/#/request.queue');
   await page.reload();
   await waitForV5(page);
@@ -632,7 +648,10 @@ test('authenticated R2 queues search loaded rows and keep contextual operations 
       .evaluateAll((inputs) => inputs.map((input) => input.value)),
   ).toEqual(Array(4).fill('REQ-DEMO-431'));
   await expect(page.locator('[data-v5-parity-mount="fallback"]')).toHaveCount(0);
+});
 
+test('authenticated R2 events series focuses the new-event form', async ({ page }) => {
+  await installR2QueueFixture(page);
   await page.goto('/#/events.series');
   await waitForV5(page);
   const newEvent = page.locator('[data-v5-new-event]');
