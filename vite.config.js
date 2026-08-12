@@ -35,9 +35,7 @@ function standaloneClassicScript() {
     generateBundle(_options, bundle) {
       const html = bundle['index.html'];
       if (!html || typeof html.source !== 'string') return;
-      const moduleScript = html.source.match(
-        /<script type="module" crossorigin>([\s\S]*?)<\/script>/u,
-      );
+      const moduleScript = html.source.match(/<script type="module" crossorigin>([\s\S]*?)<\/script>/u);
       if (!moduleScript) throw new Error('The inlined V5 module script is missing.');
       const withoutModuleScript = html.source.replace(moduleScript[0], '');
       if (!withoutModuleScript.includes('</body>')) {
@@ -45,6 +43,7 @@ function standaloneClassicScript() {
       }
       html.source = withoutModuleScript
         .replace('</body>', `<script>${moduleScript[1]}</script>\n</body>`)
+        .replace(/\r+\n?/gu, '\n')
         .replace(/[ \t]+$/gmu, '');
     },
   };
