@@ -1,7 +1,7 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_LEGACY_BROWSER_GATE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
-- **State:** `LEGACY_BROWSER_GATE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S12_CLOUDFLARE_LOCAL_P1_REPAIR_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **State:** `CLOUDFLARE_LOCAL_P1_REPAIR_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Internal stabilization verification complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
@@ -10,7 +10,9 @@
 - **Durable S12 boundary tree:** `4738feffb676bbba36f36e936ab684722d00baf9`
 - **Durable recovery-amendment commit:** `4ded0bc2ed34211d5338d91cc235c6127a628222`
 - **Durable recovery-amendment tree:** `e26e7d44b5454b3fc2025b4647d232abf274cf56`
-- **Current parity:** local, upstream, and live remote equal the durable recovery-amendment commit with divergence `0/0`; canonical tracked and staged counts are `0/0`; preserved46 and capture remain verified.
+- **Durable legacy-browser-gate amendment commit:** `1a93bb01acc5a732b3f9180be93d1d04d8001114`
+- **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
+- **Current parity:** local, upstream, and live remote equal the durable legacy-browser-gate amendment commit with divergence `0/0`; canonical tracked and staged counts are `0/0`; preserved46 and capture remain verified.
 - **Recorded at:** `2026-08-12T09:53:53.1092205+08:00`
 - **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_accelerated`
 - **Sol S12 boundary acceptance:** `PASS`
@@ -25,6 +27,13 @@
 - **Fresh Luna legacy-browser-gate amendment review:** `PASS_NO_P0_P1_P2_P3`
 - **Legacy-browser-gate amendment review timestamp:** `2026-08-12T12:54:50.6274076+08:00`
 - **Legacy-browser-gate amendment validation:** `HANDOFF_VERIFY=PASS; CHECK_GOVERNANCE=PASS; GIT_DIFF_CHECK=PASS; MARKDOWN_PRETTIER_4=PASS; STRUCTURAL_PRIVACY=PASS; DUPLICATE_KEYS=0; COMMON_FIELDS=0; NEXT_EQUAL=PASS; COHERENCE=PASS; SCOPE=EXACT_FOUR_PATH; STAGED=0; PRESERVED46=PASS`
+- **Cloudflare-local P1 repair amendment recorded at:** `2026-08-12T13:34:32.9482317+08:00`
+- **Open product P0/P1:** `0/1`
+- **Sol Cloudflare-local P1 repair amendment acceptance:** `PASS`
+- **Fresh Luna Lane P plan review:** `PASS_NO_P0_P1_P2_P3`
+- **Fresh Luna Lane A plan review:** `PASS`
+- **Cloudflare-local P1 repair amendment review timestamp:** `2026-08-12T14:01:17.6057479+08:00`
+- **Cloudflare-local P1 repair amendment validation:** `HANDOFF_VERIFY=PASS; CHECK_GOVERNANCE=PASS; GIT_DIFF_CHECK=PASS; MARKDOWN_PRETTIER_4=PASS; STRUCTURAL_PRIVACY=PASS; DUPLICATE_KEYS=0; COMMON_FIELDS=0; NEXT_EQUAL=PASS; COHERENCE=PASS; SCOPE=EXACT_FOUR_PATH; STAGED=0; PRESERVED46=PASS`
 
 ## Durable S11 handoff
 
@@ -48,7 +57,7 @@ The retained attached branch-tracking clone `D:/Documents/Codex/HAU-USC Logistic
 - `tests/unit/visual-baseline.test.js` / `keeps the protected historical baseline byte-identical` expected canonical-LF SHA-256 `06dc6c4e62ac6db1e873f5f18dd6531dd6a9f91e3a1b1d27e89582eac3f04a84` and received CRLF-checkout SHA-256 `3d5fe083a44523e455eabe843590cfed17872cce5ac49677113ff6f9419787f4`.
 - The retained failed clone remains untouched with staged count `0` and exactly two tracked EOL-presentation paths reported by status: `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`. Their accepted S11 content hash remains unchanged; do not clean, reset, normalize, rebuild, reuse, or advance this clone.
 
-Independent read-only diagnoses found no product P0 or P1. The visual mismatch is checkout presentation from `core.autocrlf=true`; the protected Git blob is unchanged. The four timeouts are Miniflare contention under Node 26 with Vitest parallelism, while the repository CI standard is Node 22. No timeout increase, source edit, Vitest/config edit, or test relaxation is authorized.
+Independent read-only diagnoses of that first `check` run found no product P0 or P1 in those five failures. The visual mismatch is checkout presentation from `core.autocrlf=true`; the protected Git blob is unchanged. The four timeouts are Miniflare contention under Node 26 with Vitest parallelism, while the repository CI standard is Node 22. No timeout increase, source edit, Vitest/config edit, or test relaxation is authorized.
 
 The accepted runner/EOL recovery amendment is durably committed and pushed at `4ded0bc2ed34211d5338d91cc235c6127a628222`, tree `e26e7d44b5454b3fc2025b4647d232abf274cf56`, parent `aa083567f1fd12600eb107c213d8ffa0d50060bb`. Local, upstream, and live remote equal that commit with divergence `0/0`; canonical tracked/index counts are `0/0`; preserved46, capture, private-ref, lock, and Git-process checks passed.
 
@@ -61,26 +70,71 @@ The recovery run produced these exact one-pass results:
 - V5 visual passed `5/5` with zero failures across widths `320`, `390`, `768`, `1024`, and `1440`.
 - The full `npm.cmd run test:e2e` diagnostic ran exactly once, exited `1` after `262.04s`, and reported `61` passed, `408` skipped, and `131` failed of `600`. The retained sanitized log SHA-256 is `3fe4ceaee6a0aebb793741fafeb01a2f97a1ccbb9c328cd72bc5834d57ffea25`; it must not be rerun.
 - Mechanical clustering found `74` unique failing titles in `18` specs: `101` missing legacy `#loading` assertions across `14` specs; `17` retired `AUTHORITATIVE_VISUAL` assembly assertions, comprising `16` Apps Script packaging cases plus `1` lending assembly case; and `13` residual legacy pathname, DOM, content, or geometry assumptions. Project failure counts were `7`, `70`, `7`, `7`, `33`, and `7` at Chromium widths `320`, `390`, `768`, `1024`, `1366`, and `1440` respectively.
-- The root cause is a deterministic obsolete pre-V5 verification contract. Current `src/index.html` mounts V5 at `#app` and uses hash routes; it intentionally has no legacy `#loading`, old pathname shell, or legacy `AUTHORITATIVE_VISUAL` injection marker. There is no `RESPONSE_VALIDATION` behavior failure and no product P0 or P1; the verification-contract P1 is resolved by the accepted legacy-browser-gate amendment.
+- The root cause of the legacy diagnostic is a deterministic obsolete pre-V5 verification contract. Current `src/index.html` mounts V5 at `#app` and uses hash routes; it intentionally has no legacy `#loading`, old pathname shell, or legacy `AUTHORITATIVE_VISUAL` injection marker. There is no `RESPONSE_VALIDATION` behavior failure and no product P0 or P1 within that legacy failure family; its verification-contract P1 is resolved by the accepted legacy-browser-gate amendment.
 
 Repository policy confirms the mismatch: `npm.cmd run check` excludes the full legacy `test:e2e` matrix; `.github/workflows/ci.yml` requires `check` plus `test:e2e:v5`; `.github/workflows/release-candidate.yml` requires `check`; only this S12 packet mistakenly added the legacy full matrix. The amendment retires `npm.cmd run test:e2e` from the v0.8.1 S12 gate while preserving the package script and specs as historical diagnostics. No skip, test, source, Playwright/config, plugin, or index edit is allowed. Restoring the legacy marker is forbidden because `check:apps-script` rejects it for the V5 Worker candidate; current Apps Script and unit bundle coverage remains required.
 
+The legacy-browser-gate amendment is durably committed and pushed at `1a93bb01acc5a732b3f9180be93d1d04d8001114`, tree `705e4129019aa15533ff375db42792b8dabb0b85`, parent `4ded0bc2ed34211d5338d91cc235c6127a628222`. Local, upstream, and live remote equal that commit with divergence `0/0`; canonical tracked/index counts are `0/0`; preserved46, capture, private-ref, lock, and Git-process checks passed.
+
+## Cloudflare-local one-pass evidence and confirmed product P1
+
+The retained LF recovery clone was fast-forwarded to the durable legacy-browser-gate commit and remained attached, upstream-equal, tracked/index clean, and bound to the preserved portable Node runtime. `npm.cmd run test:e2e:cloudflare:local` then ran exactly once, exited `1` after `635.2s` wrapper time (`10.5m` reported by Playwright), and returned `36` passed and `22` failed of `58`.
+
+Only the console capture, the current `test-results/.last-run.json`, and the current `22` failure directories are authoritative for this run. The retained `playwright-report` belongs to an earlier full legacy E2E run and is explicitly stale and excluded from Cloudflare-local evidence.
+
+The mechanical outcome is exact:
+
+- `tests/cloudflare-e2e/local-worker.spec.js` accounts for `20` failures and `19` passes; `tests/cloudflare-e2e/rv01-request-visibility.spec.js` accounts for `2` failures and `17` passes.
+- `18` failures are obsolete `Access ID` locator/timeouts, including one approximately `60s` case; `3` are stale locators; and `1` is a stale pathname expectation.
+- No HTTP or API status assertion failed. Fourteen failures occurred before any API assertion; eight occurred only after successful setup/API work. The `36` passes preserve current API, D1, authentication, request, inventory, and revision-related coverage as a baseline.
+
+Static contract tracing independently confirms one product P1 in V5 revision polling:
+
+- The Worker returns `{ok,correlationId,data:{contract,enabled,scope,token}}`; the backend and legacy runtime adapters pass that envelope through unchanged.
+- `src/v5/integration/runtime.js` reads `enabled` and `token` from the envelope root, so it drops every valid poll. Its separate integration revision map is also not seeded even though `state.scopeRevisions` already holds module tokens, and the current loop is a bare `30s` interval.
+- Existing `src/app/revision-sync.js` already supports envelope normalization, same-scope validation, monotonic tokens, single-flight refresh, backoff, visibility, online, and resume behavior. It may be imported and reused unchanged; it is not an authorized write path.
+
+This is `OPEN_PRODUCT_P1=1` with product P0 `0`. It is separate from the obsolete-selector failures and from the resolved legacy-browser verification-contract P1.
+
+## Exact disjoint repair lanes accepted pending governance persistence
+
+After this amendment is accepted, committed, normally pushed, and parity is proved, create two isolated local-only worker branches/worktrees from that exact governance candidate. Workers must not push. Their ownership is disjoint, and `tests/cloudflare-e2e/rv01-request-visibility.spec.js` belongs only to Lane P.
+
+### Lane P - revision polling and near-live request visibility
+
+Lane P may write only:
+
+- `src/v5/integration/runtime.js`
+- new focused `tests/unit/v5-revision-sync.test.js`
+- `tests/e2e/v5-current-application.spec.js`
+- `tests/cloudflare-e2e/rv01-request-visibility.spec.js`
+
+The new focused unit file is chosen because the runtime timer, envelope, scope, and lifecycle contract does not fit cleanly in the existing backend-integration unit. Lane P must reuse `src/app/revision-sync.js` unchanged; seed each module immediately from `state.scopeRevisions[module]` after module load; unwrap and validate the Worker envelope; issue exactly one refetch for a strictly newer token in the same scope; and ignore unchanged, backward, or mismatched scope/token results. Enabled-state, visibility, online, resume, single-flight, and backoff behavior must remain intact. An already-open authenticated V5 `request.queue` view must update after a separate public submission without reload or relogin and must allow an explicit line decision. The two obsolete RV01 route/DOM expectations must be ported to current V5 semantics. Worker, API, schema, migration, provider, authorization, privacy, and payload contracts remain unchanged.
+
+### Lane A - current V5 Cloudflare-local UI selectors
+
+Lane A may write only `tests/cloudflare-e2e/local-worker.spec.js`. It may port only stale UI/path selectors to current V5 hash routes, the `Username` sign-in control, and current semantic surface markers while preserving every API and D1 assertion plus all `19` current passes. It must not add skips, increase timeouts, or edit source, package scripts, Playwright configuration, APIs, Worker code, schema, migration, or provider state.
+
+Each worker must run focused syntax, formatting, and lint checks. Lane P must run its focused revision unit, focused V5 coverage, and RV01 file once; Lane A must run the local-worker file once. Each lane then requires a fresh read-only Luna implementation audit. The Integration writer alone combines both accepted, non-overlapping commits and owns combined scope and regression audits.
+
+After both lanes are combined, rerun `npm.cmd run check` once and V5 functional once because the runtime changed. Run V5 visual only if a visual diff exists; none is expected. Then rerun the full Cloudflare-local suite exactly once. Never rerun the retired full `test:e2e` matrix or any S09-S11 gate. If the combined Cloudflare-local rerun is green, continue the four still-unrun staging/Production build and deploy-artifact verification commands once in their established order.
+
 ## Exact governance boundary
 
-Before this accepted legacy-browser-gate amendment is durably pushed, the only authorized writes are:
+Before this Cloudflare-local P1 repair amendment is reviewed and durably pushed, the only authorized writes are:
 
 - `.codex/CURRENT.md`
 - `.codex/CURRENT_TASK.md`
 - `.codex/CURRENT_HANDOFF.md`
 - `.codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md`
 
-No clone fast-forward, runtime download, npm, test, build, package script/spec skip, source/test/config/plugin/index edit, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized while this accepted amendment remains uncommitted and pending one final fresh Luna packet audit. Focused governance verification of these four Markdown paths is authorized.
+Implementation is authorized only after this accepted amendment is committed in the exact four governance paths, normally pushed, and verified at local/upstream/live-remote parity with preserved46. Until then, no implementation worktree, runtime download, npm, test, build, source/test/config edit, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized. Focused governance verification of these four Markdown paths is authorized.
 
-The current operational baseline is the exact pushed recovery-amendment commit above. The next operational candidate is the exact governance commit created from that baseline after this amendment is accepted and pushed; its future commit and tree must not be invented here.
+The current operational baseline is the exact pushed legacy-browser-gate amendment commit above. The next operational candidate is the exact governance commit created from that baseline after this amendment is accepted and pushed; its future commit and tree must not be invented here.
 
 ## Retained recovery clone
 
-After this amendment is accepted, committed, normally pushed, and parity is proved, fast-forward the retained clean recovery clone only, using `ff-only`, to the exact pushed governance candidate. Verify its attached upstream, HEAD/tree parity, tracked/index status `0/0`, `core.autocrlf=false`, canonical-LF sentinel, unchanged package lock, and unchanged source/test/config/artifact/workflow blobs before any remaining command. Do not create a replacement clone or rerun dependency installation, `check`, V5 functional, V5 visual, or the retired full legacy matrix.
+The retained clean recovery clone is preserved at the durable legacy-browser-gate commit with the ignored Cloudflare-local evidence above. Do not clean, reset, delete, repurpose, or discard it. The two implementation lanes use new isolated worker worktrees only after this amendment is accepted and pushed; neither worker may reuse the evidence clone.
 
 Do not reuse, advance, clean, reset, delete, or normalize `worktrees/v081-s12-internal-verification-aa083567`. That retained failed clone intentionally remains at its recorded first-run state with exactly the two EOL-presentation HTML paths reported by status. Preserve the recovery clone's ignored evidence, `worktrees/v081-s10-evidence-bb652506`, and the isolated S11 implementation worktree; no evidence or worker clone may be repurposed.
 
@@ -94,11 +148,13 @@ The accepted recovery clone already ran `npm.cmd ci` once with the committed `pa
 
 ## One-pass internal stabilization gate
 
-The exact-candidate `npm.cmd run check`, V5 functional, and V5 visual gates are accepted green and remain valid because the legacy diagnostic caused no source, test, config, artifact, lock, or workflow change. Do not rerun them. The full `npm.cmd run test:e2e` command is retired from this v0.8.1 S12 gate and must not be rerun. After amendment persistence, push parity, and the recovery-clone fast-forward, run only the remaining commands once, in order, under the preserved portable Node runtime.
+The exact-candidate `npm.cmd run check`, V5 functional, and V5 visual gates were green before the confirmed runtime repair. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. The first Cloudflare-local run is the retained failure evidence above and must not be rerun before both repair lanes are accepted and combined.
 
-Every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable:
+After both lanes are accepted and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the invalidated and remaining gates once in this order:
 
 ```powershell
+npm.cmd run check
+npm.cmd run test:e2e:v5
 npm.cmd run test:e2e:cloudflare:local
 npm.cmd run build:cloudflare
 npm.cmd run verify:deploy:artifact -- staging .wrangler/build/staging
@@ -106,16 +162,18 @@ npm.cmd run build:cloudflare:production
 npm.cmd run verify:deploy:artifact -- production .wrangler/build/production
 ```
 
+If and only if the combined diff has a visual change, run `npm.cmd run test:e2e:v5:visual` once immediately after V5 functional; no visual diff is expected.
+
 The completed and remaining browser dispositions are exact:
 
-- V5 functional is complete and accepted at `80` pass, `64` intentional skip, zero fail across its nine widths.
+- V5 functional is complete at `80` pass, `64` intentional skip, zero fail across its nine widths and becomes invalidated only when the accepted runtime repair is combined; rerun it once then.
 - V5 visual is complete and accepted at `5/5`, zero fail across its five widths.
 - Full local E2E is retained only as the completed obsolete-contract diagnostic summarized above, not a release gate.
-- Local Cloudflare/D1 E2E remains pending once against the repository-managed local Worker and fresh isolated local D1 state.
+- Local Cloudflare/D1 E2E has one retained failed diagnostic (`36` pass, `22` fail) and is authorized for exactly one post-combine rerun after both disjoint repairs pass focused review.
 
 The accepted recovery `npm.cmd run check` remains the exact full repository gate: governance, ESLint, deterministic preview build, the complete Vitest suite, Apps Script validation, V5 distribution parity, Cloudflare types, staging build, and Wrangler dry-run. The remaining explicit staging and Production builds must remain isolated under `.wrangler/build/staging` and `.wrangler/build/production`; each must pass `verify:deploy:artifact` for its exact target. None may be deployed.
 
-The S09, S10, and S11 results remain accepted baselines. The S12 `check`, V5 functional, and V5 visual results are exact-candidate evidence and remain uninvalidated; the retired legacy diagnostic neither substitutes for nor invalidates them.
+The S09, S10, and S11 results remain accepted baselines. The pre-repair S12 `check`, V5 functional, and V5 visual results remain truthful historical evidence. Combining the exact five intentional Lane P and Lane A source/test paths invalidates `check` and V5 functional, so both require one post-combine rerun; V5 visual requires one rerun only if the combined diff is visual. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
 
 ## Deterministic integrity, static, security, and privacy evidence
 
@@ -123,7 +181,7 @@ The operational run must also prove, without printing matched content or private
 
 - package version is exactly `0.8.1`; the attached branch is `release/v0.8.1-final-stabilization`; local HEAD, upstream, and live remote equal the pushed recovery candidate; divergence is `0/0`;
 - local `core.autocrlf` is exactly `false`; the protected visual-baseline LF sentinel and Git blob match; portable Node is exactly `v22.23.2`; the official archive checksum, extracted file set, adjacent npm, process-scoped environment, and no-competing-Node/`workerd` predicates pass;
-- the accepted `npm.cmd run check` result remains bound to unchanged source, test, config, artifact, lock, and workflow blobs after the governance-only fast-forward;
+- the pre-repair `npm.cmd run check` evidence remains bound to the pre-repair candidate, while the post-combine rerun is bound to exactly the five allowed implementation paths plus unchanged config, artifacts, lockfile, and workflows;
 - default `git diff --check`, `git -c core.whitespace=cr-at-eol diff --check`, `npm.cmd run check:governance`, and the exact candidate status/scope checks pass;
 - a deterministic count-only scan of the candidate delta reports no new private-key block, recognized bearer/token format, explicit credential assignment, raw provider identifier, disallowed live email domain, or personal-data fixture; only labels, counts, and paths safe for repository evidence may be recorded;
 - `dist/index.html`, the root shareable, and `dist/_headers` retain the exact committed S11 bytes and hashes after all builds; preview and root remain byte-identical with required V5 markers, no external runtime asset, no effective Production Playground capability, CR `0`, BOM `0`, and trailing-whitespace lines `0`;
@@ -137,7 +195,7 @@ Local CodeQL CLI is not part of this boundary, and `.github/workflows/ci.yml` pl
 
 ## Expected result and evidence handling
 
-The expected tracked result in the retained LF recovery clone is `NO_OP`: no source, test, generated artifact, dependency, lockfile, workflow, or Playground change arises from the remaining operational gate. `dist/index.html` and the root shareable must remain the committed exact S11 bytes. Any unexpected tracked delta stops the run; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. The retained failed clone's two EOL-presentation status paths are historical evidence and must remain untouched.
+After acceptance, the only expected tracked changes are the exact disjoint Lane P and Lane A source/test paths listed above. `dist/index.html`, the root shareable, `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. The retained failed clone's two EOL-presentation status paths and the recovery clone's Cloudflare-local outputs are historical evidence and must remain untouched.
 
 The official portable Node archive, checksum file, extracted runtime, operational logs, reports, screenshots, traces, local D1 state, Cloudflare build output, and count-only evidence must remain in the existing immutable private/tooling directory or as classified ephemeral/ignored output. They may not enter Git. A later S12 closeout may write only the three current records and this packet after a separate accepted evidence review.
 
@@ -147,14 +205,14 @@ Stop at the first occurrence of:
 
 - candidate branch, HEAD, tree, upstream, live-remote, divergence, cleanliness, preservation, capture, writer, lock, or process drift;
 - preserved portable Node `v22.23.2`, adjacent npm, archive checksum, process-environment restoration, local `core.autocrlf=false`, or canonical-LF sentinel failure;
-- any repository test/build Node or `workerd` process, any attempt to rerun `npm.cmd ci`, `check`, V5 functional, V5 visual, or the retired full matrix, or any `package-lock.json` change; unrelated desktop MCP and CodeGraph Node processes are non-operational and do not trigger this stop;
+- any repository test/build Node or `workerd` process; any premature rerun of `npm.cmd ci`, `check`, V5 functional, Cloudflare-local, or the retired full matrix; any V5 visual run without a visual diff; or any `package-lock.json` change; unrelated desktop MCP and CodeGraph Node processes are non-operational and do not trigger this stop;
 - any failed remaining local Worker/D1, build, deploy-artifact, governance, static, security, privacy, identity, artifact, cleanup, or orphan-process predicate;
-- any tracked source, test, generated artifact, dependency, lockfile, workflow, Playground, or unexpected file delta;
-- any need for a rerun, variant, alternate runtime source, timeout increase, package script/spec skip, source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
-- any new P0/P1, material privacy/security uncertainty, or inability to preserve sanitized evidence.
+- any uncommitted, unexpected, or out-of-scope tracked delta outside the exact five Lane P and Lane A implementation paths; any generated artifact, dependency, lockfile, workflow, or Playground delta;
+- any command rerun beyond the exact post-combine authorization, variant, alternate runtime source, timeout increase, package script/spec skip, out-of-lane source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
+- any scope overlap; missing focused-unit decision; regression; privacy, authentication, scope, or token failure; D1/API invariant failure; unknown diff; new P0 or additional P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
 
-Explicitly excluded at S12 are package script/spec skip, timeout/source/config/test/plugin/index edits, deployed HTTPS staging auth, Phase 23 acceptance, provider and private-config reads or writes, live D1/R2/Google access, deploy, migration, seed/reset, live restore, R2 write, staging smoke, release-manifest creation, candidate freeze, Playground, Production, merge, tag, release, recovery-pointer, ref, and S13+ actions. No further runtime download, extraction, or dependency installation is authorized.
+Explicitly excluded at S12 are package script/spec skip, timeout changes, edits outside the exact Lane P and Lane A paths, any edit to `src/app/revision-sync.js`, Worker/API/schema/migration changes, deployed HTTPS staging auth, Phase 23 acceptance, provider and private-config reads or writes, live D1/R2/Google access, deploy, migration, seed/reset, live restore, R2 write, staging smoke, release-manifest creation, candidate freeze, Playground, Production, merge, tag, release, recovery-pointer, ref, and S13+ actions. No further runtime download, extraction, or dependency installation is authorized.
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna packet audit of the accepted S12 legacy-browser-gate amendment; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push, verify local/upstream/live-remote parity and preserved46, then fast-forward the retained clean S12 recovery clone to the exact pushed governance candidate without rerunning npm check or the accepted V5 functional/visual gates and run, once in order, npm.cmd run test:e2e:cloudflare:local, npm.cmd run build:cloudflare, npm.cmd run verify:deploy:artifact -- staging .wrangler/build/staging, npm.cmd run build:cloudflare:production, and npm.cmd run verify:deploy:artifact -- production .wrangler/build/production; preserve the portable Node runtime and all retained evidence; no package script/spec skip, source/test/config/plugin/index edit, provider/private/live-data, deployment, migration, manifest, freeze, Playground, Production, ref, S13+, or retired full test:e2e rerun.
+NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted S12 Cloudflare-local P1 repair amendment; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push and verify local/upstream/live-remote parity plus preserved46, then create two isolated local-only worker branches/worktrees from that exact pushed governance candidate for the disjoint accepted Lane P and Lane A scopes; no implementation, worktree creation, npm, test, build, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained-evidence mutation before governance persistence and lane authorization.
