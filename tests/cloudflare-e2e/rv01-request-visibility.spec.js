@@ -542,9 +542,11 @@ test('a reviewer routes each line of a public request through the shipped Main H
   }
   await form.getByRole('button', { name: 'Submit explicit line review' }).click();
 
-  // The command surface closes and the queue reflects canonical refreshed truth.
-  await expect(form).toBeHidden();
-  await expect(submittedRow).toHaveCount(0, { timeout: 15_000 });
+  // The reviewed request remains queued and exposes canonical accepted status.
+  await expect(submittedRow.first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    submittedRow.first().locator('xpath=ancestor::tr[1]').getByText('Accepted', { exact: true }),
+  ).toBeVisible();
 
   // Downstream ownership is exactly one procurement item, created only by review.
   const csrfToken = await login(request, 'LOCAL.OWNER');
