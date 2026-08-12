@@ -1,7 +1,7 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_REPAIR_SCOPE_EXPANSION_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
-- **State:** `REPAIR_SCOPE_EXPANSION_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S12_STATIC_TEST_CONTRACT_SCOPE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **State:** `STATIC_TEST_CONTRACT_SCOPE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Internal stabilization verification complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
@@ -12,7 +12,7 @@
 - **Durable recovery-amendment tree:** `e26e7d44b5454b3fc2025b4647d232abf274cf56`
 - **Durable legacy-browser-gate amendment commit:** `1a93bb01acc5a732b3f9180be93d1d04d8001114`
 - **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
-- **Current canonical identity:** commit `947c15d26df9ff37ee0e3b40721c59712d4daddd`, tree `38f9390168282425be6fde444bb317912e86ef78`; local, upstream, and remote-tracking parity pass with divergence `0/0`; canonical tracked and staged counts were `0/0` before this exact-four amendment; preserved46 and capture remain verified.
+- **Current canonical identity:** local commit `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`; upstream and remote remain `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`, divergence is `3/0`, and exactly the two authorized generated HTML outputs are dirty and unstaged; preserved46 and capture remain verified.
 - **Recorded at:** `2026-08-12T09:53:53.1092205+08:00`
 - **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_accelerated`
 - **Sol S12 boundary acceptance:** `PASS`
@@ -42,6 +42,10 @@
 - **Sol repair-scope expansion acceptance:** `PASS`
 - **Repair-scope expansion review timestamp:** `2026-08-12T16:20:43.8633637+08:00`
 - **Repair-scope expansion amendment validation:** `HANDOFF_VERIFY=PASS; CHECK_GOVERNANCE=PASS; GIT_DIFF_CHECK=PASS; MARKDOWN_PRETTIER_4=PASS; STRUCTURAL_PRIVACY=PASS; DUPLICATE_KEYS=0; COMMON_FIELDS=0; NEXT_EQUAL=PASS; COHERENCE=PASS; SCOPE=EXACT_FOUR_PATH; STAGED=0; PRESERVED46=PASS`
+- **Static-test-contract scope amendment recorded at:** `2026-08-12T19:15:12.2514522+08:00`
+- **Sol static-test-contract scope acceptance:** `PASS`
+- **Fresh Luna static-test-contract scope review:** `PASS_NO_P0_P1_P2_P3`
+- **Static-test-contract scope review timestamp:** `2026-08-12T19:35:43.2744931+08:00`
 
 ## Durable S11 handoff
 
@@ -157,24 +161,38 @@ Use a callback replacer so arbitrary module text, including all four adversarial
 
 ### Integration-only conditional generated outputs
 
-Only the Integration writer may include `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`, and only if the combined build regenerates different bytes. They must be byte-identical to each other, contain zero CR bytes, retain all required V5 markers, and be generator-produced rather than hand-edited. `dist/_headers` must remain unchanged. The three worker scopes are pairwise disjoint: Lane P `4`, Lane A `2`, Lane G `2`; with the two conditional generated outputs, the maximum authorized combined scope is `10` paths.
+Only the Integration writer may include `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`, and only if the combined build regenerates different bytes. They must be byte-identical to each other, contain zero CR bytes, retain all required V5 markers, and be generator-produced rather than hand-edited. `dist/_headers` must remain unchanged. The three worker scopes are pairwise disjoint: Lane P `4`, Lane A `2`, Lane G `2`. Lane T adds one disjoint test-contract path below; with the two conditional generated outputs, the maximum authorized combined scope is `11` paths.
 
-Lane P must run focused syntax, formatting, lint, unit, and V5 coverage, but must not rerun RV01 before the generator is combined. Lane A must run focused syntax, formatting, and lint only; no additional browser run is allowed before combine because route and generator dependencies remain open. Lane G must run syntax, formatting, lint, and the focused dist verifier. Each lane then requires a fresh independent read-only Luna implementation audit. The Integration writer alone combines the accepted commits, verifies pairwise overlap `0` and maximum scope `10`, and owns combined scope and regression audits.
+Lane P ran focused syntax, formatting, lint, unit, and V5 coverage; Lane A ran focused syntax, formatting, and lint; and Lane G ran syntax, formatting, lint, and the focused dist verifier. Each implementation received a fresh independent read-only Luna audit. The Integration writer combined the accepted commits unchanged, verified pairwise overlap `0` across their exact eight paths, and retained sole ownership of combined scope and regression audits.
 
-After P, G, and A are combined, run `npm.cmd run check` exactly once under portable Node 22 with `VITEST_MAX_WORKERS=1`, V5 functional once, V5 visual once because `v4.css` changes, and the complete Cloudflare-local `58`-test suite once against a fresh local D1. Never rerun the retired full `test:e2e` matrix or any S09-S11 gate. If all are green, continue the four still-unrun staging/Production build and deploy-artifact verification commands exactly once in their established order.
+Canonical Integration cherry-picked P, G, and A unchanged in that order: P became `a621341e1f2e5d56f6e45b6bd840ef8fa4d6e7e5`, G became `f72714fffedf5a44f31f0994e26e7a520ac53aab`, and A became `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`. Their base is `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`; conflicts and prohibited paths are zero.
+
+The combined `npm.cmd run check` ran exactly once under portable Node 22 with `VITEST_MAX_WORKERS=1`. Governance, lint, and its deterministic build passed, then Vitest stopped on one failure after `127.01s`: `138/139` test files and `964/965` tests passed. The sole failure is `tests/unit/v5-operations-parity.test.js`, test `clears route-local search state at every session boundary`. V5 functional, V5 visual, Cloudflare-local `58`, and all four staging/Production build-verification gates remain unrun.
+
+The deterministic build left exactly the two authorized generated outputs dirty and unstaged. `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are byte-identical at `639260` bytes with SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A`, LF `826`, CR `0`, BOM `0`, and trailing-whitespace lines `0`. `dist/_headers`, `package-lock.json`, `.github/workflows/ci.yml`, and `.github/workflows/release-candidate.yml` remain blob-identical to HEAD.
+
+### Lane T - stale static session-boundary source contract
+
+Fresh diagnosis confirms the runtime product behavior is correct and adds no product P0 or P1. The stale unit assertion expects a `signOut` `finally` block and literal `integration.routeSearch.clear()` inside `signOut`. The combined runtime instead calls `advanceAuthGeneration()` before the awaited logout; `advanceAuthGeneration()` invokes `clearAuthenticatedProjection()`, which clears `integration.state`, route-local search, and the rest of the authenticated projection immediately. Existing V5 E2E covers delayed logout followed by relogin.
+
+After this amendment is accepted and durably persisted, Lane T may edit only:
+
+- `tests/unit/v5-operations-parity.test.js`
+
+Lane T may update static assertions only so they recognize the centralized `clearAuthenticatedProjection` -> `advanceAuthGeneration` -> `signOut` ordering while preserving every product, runtime, privacy, authentication, route-search, and test invariant. It may not edit runtime or any other source, test, configuration, package, generated artifact, timeout, or skip. The exact failure above is the reproduction evidence. After implementation, run the focused `v5-operations-parity` unit once; only after it passes may the invalidated combined `npm.cmd run check` run once. No other S12 gate may run before that combined check is green.
 
 ## Exact governance boundary
 
-Before this accepted repair-scope expansion amendment is durably pushed, the only authorized writes are:
+Before this accepted static-test-contract scope amendment is durably persisted, the only newly authorized writes are:
 
 - `.codex/CURRENT.md`
 - `.codex/CURRENT_TASK.md`
 - `.codex/CURRENT_HANDOFF.md`
 - `.codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md`
 
-Implementation is authorized only after the accepted exact four governance paths are committed, normally pushed, and verified at local/upstream/live-remote parity with preserved46. Until then, no worker resume or creation, runtime download, npm, test, build, source/test/config edit, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized. Focused governance verification of these four Markdown paths is authorized.
+Lane T implementation is authorized only after the accepted exact four governance paths are committed, normally pushed, and verified at local/upstream/live-remote parity with preserved46. Until then, no test/runtime/generated-output edit, runtime download, npm, test, build, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized. Focused governance verification of these four Markdown paths is authorized, while the existing two generated-output deltas must remain byte-preserved and unstaged.
 
-The current operational baseline is canonical commit `947c15d26df9ff37ee0e3b40721c59712d4daddd`, tree `38f9390168282425be6fde444bb317912e86ef78`; `1a93bb01acc5a732b3f9180be93d1d04d8001114` is its historical parent lineage. The next operational candidate is the exact governance commit created from the current baseline after this amendment is accepted and pushed; its future commit and tree must not be invented here.
+The current local operational baseline is canonical commit `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`; upstream and live remote remain `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`, so divergence is intentionally `3/0`. The next operational candidate is the future exact governance commit created after this amendment is accepted; its commit and tree must not be invented here.
 
 ## Retained recovery clone
 
@@ -192,11 +210,12 @@ The accepted recovery clone already ran `npm.cmd ci` once with the committed `pa
 
 ## One-pass internal stabilization gate
 
-The exact-candidate `npm.cmd run check`, V5 functional, and V5 visual gates were green before the confirmed runtime repair. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. The first Cloudflare-local run is the retained failure evidence above and must not be rerun before Lane P, Lane A, and Lane G are accepted and combined.
+The pre-repair exact-candidate `npm.cmd run check`, V5 functional, and V5 visual gates remain truthful historical evidence. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. P, G, and A are now combined; their first combined `npm.cmd run check` is the retained single-failure evidence above. No later gate may run until Lane T is accepted, implemented, focused-green, and the invalidated combined check is green.
 
-After Lane P, Lane A, and Lane G are accepted and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the invalidated and remaining gates once in this order:
+After Lane T is accepted, implemented, and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the invalidated and remaining gates once in this order:
 
 ```powershell
+npx.cmd --no-install vitest run tests/unit/v5-operations-parity.test.js
 npm.cmd run check
 npm.cmd run test:e2e:v5
 npm.cmd run test:e2e:v5:visual
@@ -218,7 +237,7 @@ The completed and remaining browser dispositions are exact:
 
 The accepted recovery `npm.cmd run check` remains the exact full repository gate: governance, ESLint, deterministic preview build, the complete Vitest suite, Apps Script validation, V5 distribution parity, Cloudflare types, staging build, and Wrangler dry-run. The remaining explicit staging and Production builds must remain isolated under `.wrangler/build/staging` and `.wrangler/build/production`; each must pass `verify:deploy:artifact` for its exact target. None may be deployed.
 
-The S09, S10, and S11 results remain accepted baselines. The pre-repair S12 `check`, V5 functional, and V5 visual results remain truthful historical evidence. Combining the exact P4/A2/G2 paths plus up to two conditional generated outputs invalidates `check`, V5 functional, and V5 visual, so all three require one post-combine rerun. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
+The S09, S10, and S11 results remain accepted baselines. The pre-repair S12 `check`, V5 functional, and V5 visual results remain truthful historical evidence. Combining the exact P4/A2/G2 paths plus the two conditional generated outputs invalidated `check`, V5 functional, and V5 visual. The first combined check stopped only on the stale static contract; Lane T invalidates that unit and the combined check, so the focused unit and full check each require one post-T run. V5 functional and V5 visual remain unrun on the combined candidate. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
 
 ## Deterministic integrity, static, security, and privacy evidence
 
@@ -226,10 +245,10 @@ The operational run must also prove, without printing matched content or private
 
 - package version is exactly `0.8.1`; the attached branch is `release/v0.8.1-final-stabilization`; local HEAD, upstream, and live remote equal the pushed recovery candidate; divergence is `0/0`;
 - local `core.autocrlf` is exactly `false`; the protected visual-baseline LF sentinel and Git blob match; portable Node is exactly `v22.23.2`; the official archive checksum, extracted file set, adjacent npm, process-scoped environment, and no-competing-Node/`workerd` predicates pass;
-- the pre-repair `npm.cmd run check` evidence remains bound to the pre-repair candidate, while the post-combine rerun is bound to the exact authorized maximum-ten-path combined scope, unchanged lockfile and workflows, and generator-produced conditional artifacts only;
+- the pre-repair `npm.cmd run check` evidence remains bound to the pre-repair candidate, the retained failed combined check remains bound to local `45a3a0af` and the exact P4/A2/G2 plus generated-output scope, and the post-T rerun is bound to the exact authorized maximum-eleven-path combined scope, unchanged lockfile and workflows, and generator-produced conditional artifacts only;
 - default `git diff --check`, `git -c core.whitespace=cr-at-eol diff --check`, `npm.cmd run check:governance`, and the exact candidate status/scope checks pass;
 - a deterministic count-only scan of the candidate delta reports no new private-key block, recognized bearer/token format, explicit credential assignment, raw provider identifier, disallowed live email domain, or personal-data fixture; only labels, counts, and paths safe for repository evidence may be recorded;
-- `dist/index.html`, the root shareable, and `dist/_headers` retain the exact committed S11 bytes and hashes after all builds; preview and root remain byte-identical with required V5 markers, no external runtime asset, no effective Production Playground capability, CR `0`, BOM `0`, and trailing-whitespace lines `0`;
+- `dist/index.html` and the root shareable retain the current generator-produced `639260`-byte SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A` output unless an authorized later build deterministically proves another candidate-bound result; they remain byte-identical with required V5 markers, no effective Production Playground capability, CR `0`, BOM `0`, and trailing-whitespace lines `0`, while `dist/_headers` remains unchanged;
 - worker-source, Google-mapping, and migration hashes are deterministically bound to the exact candidate without creating a release manifest;
 - ignored `.wrangler`, Playwright report, test-result, and OS-temporary outputs are either removed safely or retained only in a new classified ignored/private evidence location; no unclassified file remains;
 - no Vite, Playwright, Wrangler, Worker, Node test-runner, or Git process remains orphaned after the gate.
@@ -240,7 +259,7 @@ Local CodeQL CLI is not part of this boundary, and `.github/workflows/ci.yml` pl
 
 ## Expected result and evidence handling
 
-After acceptance, expected tracked changes are only Lane P's four paths, Lane A's two paths, Lane G's two paths, and the two Integration-only generated HTML outputs if the combined build changes their bytes. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. The retained failed clone's two EOL-presentation status paths, recovery-clone evidence, and frozen partial workers must remain preserved.
+After acceptance, expected tracked changes are only Lane P's four paths, Lane A's two paths, Lane G's two paths, Lane T's one test-contract path, and the two Integration-only generated HTML outputs. The maximum combined scope is `11`. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. The retained failed clone's two EOL-presentation status paths and recovery-clone evidence must remain preserved.
 
 The official portable Node archive, checksum file, extracted runtime, operational logs, reports, screenshots, traces, local D1 state, Cloudflare build output, and count-only evidence must remain in the existing immutable private/tooling directory or as classified ephemeral/ignored output. They may not enter Git. A later S12 closeout may write only the three current records and this packet after a separate accepted evidence review.
 
@@ -252,12 +271,12 @@ Stop at the first occurrence of:
 - preserved portable Node `v22.23.2`, adjacent npm, archive checksum, process-environment restoration, local `core.autocrlf=false`, or canonical-LF sentinel failure;
 - any repository test/build Node or `workerd` process; any premature rerun of `npm.cmd ci`, `check`, V5 functional, Cloudflare-local, or the retired full matrix; any V5 visual run without a visual diff; or any `package-lock.json` change; unrelated desktop MCP and CodeGraph Node processes are non-operational and do not trigger this stop;
 - any failed remaining local Worker/D1, build, deploy-artifact, governance, static, security, privacy, identity, artifact, cleanup, or orphan-process predicate;
-- any unexpected or out-of-scope tracked delta outside the authorized maximum-ten-path combined scope; any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
+- any unexpected or out-of-scope tracked delta outside the authorized maximum-eleven-path combined scope; any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
 - any command rerun beyond the exact post-combine authorization, variant, alternate runtime source, timeout increase, package script/spec skip, out-of-lane source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
 - any scope overlap; missing route or generator regression; hidden mobile logout; wrong default route; replacement-token expansion; regression; privacy, authentication, scope, or token failure; D1/API invariant failure; unknown diff; remaining P1; new P0 or additional P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
 
-Explicitly excluded at S12 are package script/spec skip, timeout changes, edits outside the exact P/A/G and conditional Integration-output paths, any edit to `src/app/revision-sync.js`, Worker/API/schema/migration changes, deployed HTTPS staging auth, Phase 23 acceptance, provider and private-config reads or writes, live D1/R2/Google access, deploy, migration, seed/reset, live restore, R2 write, staging smoke, release-manifest creation, candidate freeze, Playground, Production, merge, tag, release, recovery-pointer, ref, and S13+ actions. No further runtime download, extraction, or dependency installation is authorized.
+Explicitly excluded at S12 are package script/spec skip, timeout changes, edits outside the exact P/A/G/T and conditional Integration-output paths, any runtime change for Lane T, any edit to `src/app/revision-sync.js`, Worker/API/schema/migration changes, deployed HTTPS staging auth, Phase 23 acceptance, provider and private-config reads or writes, live D1/R2/Google access, deploy, migration, seed/reset, live restore, R2 write, staging smoke, release-manifest creation, candidate freeze, Playground, Production, merge, tag, release, recovery-pointer, ref, and S13+ actions. No further runtime download, extraction, or dependency installation is authorized.
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted S12 repair-scope expansion amendment; after PASS, stage, commit, and normally push exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md and verify local/upstream/live-remote parity plus preserved46; only after durable governance parity resume the preserved Lane P and Lane A workers and create the isolated local-only Lane G worker; no worker resume, new worker, implementation, npm, test, build, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained-evidence mutation before that authorization.
+NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted S12 static-test-contract scope amendment; after PASS, stage, commit, and normally push exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md while preserving the two unstaged generated HTML outputs, then verify local/upstream/live-remote parity for the governance chain plus staged0 and preserved46; only after durable governance parity implement Lane T in tests/unit/v5-operations-parity.test.js and follow the accepted T-first validation sequence; no Lane T edit, npm, test, build, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained generated-output mutation before that authorization.
