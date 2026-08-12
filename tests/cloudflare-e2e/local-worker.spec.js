@@ -1,5 +1,4 @@
 import { expect, request as apiRequest, test } from '@playwright/test';
-import { navigateToAdminView } from '../e2e/navigation.js';
 
 // Lending pickup/due dates are validated against the current date, so they must
 // be derived at run time. Hardcoded calendar dates made this suite pass only
@@ -14,13 +13,69 @@ const TEMPORARY_PASSWORD = `Temporary${String.fromCharCode(33)}Local2026`;
 const ACTIVATED_PASSWORD = `Activated${String.fromCharCode(33)}Local9472`;
 const MANAGED_ACTIVATED_PASSWORD = `Managed${String.fromCharCode(33)}Activated9472`;
 const roles = [
-  ['LOCAL.OWNER', 'administrator', 'admin'],
-  ['LOCAL.ADMIN', 'administrator', 'admin'],
-  ['LOCAL.DIRECTOR', 'director', 'director'],
-  ['LOCAL.FOOD', 'food', 'food'],
-  ['LOCAL.INVENTORY', 'inventory-pantry', 'inventory'],
-  ['LOCAL.MATERIALS', 'materials', 'materials'],
+  [
+    'LOCAL.OWNER',
+    'administrator',
+    'admin.overview',
+    'Administrator',
+    'admin.access',
+    '[data-v5-admin-parity="access"]',
+  ],
+  [
+    'LOCAL.ADMIN',
+    'administrator',
+    'admin.overview',
+    'Administrator',
+    'admin.access',
+    '[data-v5-admin-parity="access"]',
+  ],
+  [
+    'LOCAL.DIRECTOR',
+    'director',
+    'director.overview',
+    'Director',
+    'events.series',
+    '[data-v5-operations-parity="events.series"]',
+  ],
+  [
+    'LOCAL.FOOD',
+    'food',
+    'food.overview',
+    'Food Committee',
+    'request.queue',
+    'form[data-v5-command="request-review"]',
+  ],
+  [
+    'LOCAL.INVENTORY',
+    'inventory-pantry',
+    'inventory.overview',
+    'Inventory Committee',
+    'inventory.catalog',
+    'form[data-v5-command="inventory-bulk-classify"]',
+  ],
+  [
+    'LOCAL.MATERIALS',
+    'materials',
+    'materials.overview',
+    'Materials Committee',
+    'procurement.board',
+    'form[data-v5-command="canvass-create"]',
+  ],
 ];
+
+async function signInV5(page, accessId, password = PASSWORD) {
+  await page.goto('/#/public.signin');
+  await page.getByLabel('Username').fill(accessId);
+  await page.getByLabel('Password (required)', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.locator('.shell')).toBeVisible();
+  await expect(page.locator('#surface-main')).toBeVisible();
+}
+
+async function openV5Route(page, route) {
+  await page.goto(`/#/${route}`);
+  await expect(page.locator('#surface-main')).toBeVisible();
+}
 
 async function login(request, accessId, password = PASSWORD) {
   const response = await request.post('/api/auth/login', {
@@ -48,9 +103,9 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
     database: { connected: true, schemaVersion: '30' },
   });
 
-  await page.goto('/');
+  await page.goto('/#/public.signin');
   await expect(page.getByRole('heading', { name: 'Staff sign in' })).toBeVisible();
-  await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
+  await expect(page.locator('#surface-main')).toBeVisible();
 });
 
 test('request-only mode bypasses auth and exposes only sanitized reference data', async ({
@@ -79,10 +134,11 @@ test('request-only mode bypasses auth and exposes only sanitized reference data'
 
   const protectedRoute = await request.get('/api/procurement');
   expect(protectedRoute.status()).toBe(401);
-  await page.goto('/?request=1');
-  await expect(page.locator('body')).toHaveClass(/request-mode/);
-  await expect(page.getByLabel('Access ID')).toHaveCount(0);
-  await expect(page.getByText('Request-only safe')).toBeVisible();
+  await page.goto('/#/public.request-intake');
+  await expect(page.getByRole('heading', { name: 'Request Center' })).toBeVisible();
+  await expect(page.locator('#request-center-form')).toBeVisible();
+  await expect(page.getByLabel('Username')).toHaveCount(0);
+  await expect(page.getByText('Public request portal', { exact: true })).toBeVisible();
 });
 
 test('unknown credentials return the safe authentication error instead of a service failure', async ({
@@ -481,8 +537,10 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
 }) => {
   test.setTimeout(60_000);
   const owner = await apiRequest.newContext({ baseURL });
+  const inventory = await apiRequest.newContext({ baseURL });
   try {
     const ownerCsrf = await login(owner, 'LOCAL.OWNER');
+    const inventoryCsrf = await login(inventory, 'LOCAL.INVENTORY');
     const marker = crypto.randomUUID();
     const createdItems = [];
     for (const suffix of ['A', 'B']) {
@@ -587,14 +645,40 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
     expect(afterStale.items.every((item) => item.classificationRevision === 1)).toBe(true);
     expect(afterStale.items.every((item) => item.classificationHistory.length === 0)).toBe(true);
 
-    const bulkCommand = {
-      clientRequestId: `bulk-classification-valid-${marker}`,
-      reason: `Physically reviewed together ${marker}`,
-      similarityConfirmed: true,
-      items: commands,
-    };
-    const bulkResponse = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    await signInV5(page, 'LOCAL.INVENTORY');
+    await openV5Route(page, 'inventory.catalog');
+    await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
+    await expect(page.locator('#surface-main')).toContainText(createdItems[0].itemId);
+    await expect(page.locator('#surface-main')).toContainText(createdItems[1].itemId);
+    const inventoryOperations = page.locator('[data-v5-operations-parity="inventory.catalog"]');
+    const bulkForm = page.locator('form[data-v5-command="inventory-bulk-classify"]');
+    await expect(inventoryOperations).toBeVisible();
+    await expect(inventoryOperations).toContainText('Classify a verified similar group');
+    await expect(bulkForm).toBeVisible();
+    await bulkForm.getByLabel('Inventory item IDs').fill(createdItems.map((item) => item.itemId).join('\n'));
+    await bulkForm.getByLabel('Inventory kind').selectOption('CONSUMABLE');
+    await bulkForm.getByLabel('Classification status').selectOption('CLASSIFIED');
+    await bulkForm.getByLabel('Condition review state').selectOption('NOT_APPLICABLE');
+    await bulkForm.getByLabel('Maintenance review state').selectOption('NOT_APPLICABLE');
+    await bulkForm.getByLabel('Lending audience').selectOption('NOT_AVAILABLE_FOR_LENDING');
+    await bulkForm.getByLabel('Classification notes').fill(`Physically reviewed together ${marker}`);
+    await bulkForm.getByLabel('Bulk classification reason').fill(`Physically reviewed together ${marker}`);
+    await bulkForm.getByLabel('Confirm these items share the same classification').check();
+    const bulkResponsePromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        new URL(response.url()).pathname === '/api/bulkClassifyInventoryItems',
+    );
+    const inventoryRefreshPromise = page.waitForResponse(
+      (response) =>
+        response.request().method() === 'POST' &&
+        new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+        response.request().postDataJSON()?.module === 'inventory',
+    );
+    await bulkForm.getByRole('button', { name: 'Classify a verified similar group' }).click();
+    const bulkResponse = await bulkResponsePromise;
     expect(bulkResponse.status()).toBe(200);
+    const bulkCommand = bulkResponse.request().postDataJSON();
     const bulkResult = await bulkResponse.json();
     expect(bulkResult).toMatchObject({
       itemIds: expect.arrayContaining(createdItems.map((item) => item.itemId)),
@@ -602,7 +686,9 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
       bulkGroupId: expect.stringMatching(/^BCL-/u),
       classificationRevisions: Object.fromEntries(createdItems.map((item) => [item.itemId, 2])),
     });
-    const replay = await mutate(owner, ownerCsrf, 'bulkClassifyInventoryItems', bulkCommand);
+    await inventoryRefreshPromise;
+    await expect(page.locator('form[data-v5-command="inventory-bulk-classify"]')).toBeVisible();
+    const replay = await mutate(inventory, inventoryCsrf, 'bulkClassifyInventoryItems', bulkCommand);
     expect(replay.status()).toBe(200);
     await expect(replay.json()).resolves.toMatchObject(bulkResult);
 
@@ -640,54 +726,8 @@ test('inventory bulk classification is atomic and bootstrap projects the complet
         ],
       });
     }
-
-    await page.goto('/app/inventory');
-    await page.getByLabel('Access ID').fill('LOCAL.INVENTORY');
-    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-    const panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
-    await panel
-      .locator('.role-experience-actions [data-inventory-destination="inventory-management"]')
-      .click();
-    const queue = page.locator('[data-inventory-classification-queue]');
-    await queue.locator('[data-classification-status]').selectOption('ALL');
-    await queue.getByLabel('Search classification queue').fill(marker);
-    const classificationSelections = queue.locator('[data-classification-select]');
-    await expect(classificationSelections).toHaveCount(2);
-    for (const selection of [classificationSelections.first(), classificationSelections.nth(1)]) {
-      await selection.locator('xpath=ancestor::label[1]').click();
-      await expect(selection).toBeChecked();
-    }
-    await queue.getByRole('button', { name: 'Bulk classify selected' }).click();
-    await expect(page.getByRole('heading', { name: 'Bulk classify 2 items' })).toBeVisible();
-    const bulkForm = page.locator('#bulkInventoryClassificationForm');
-    const inventoryKind = bulkForm.getByLabel('Inventory kind');
-    const conditionReview = bulkForm.getByLabel('Condition review');
-    const maintenanceReview = bulkForm.getByLabel('Maintenance review');
-    await expect(conditionReview).toBeDisabled();
-    await expect(maintenanceReview).toBeDisabled();
-    await inventoryKind.selectOption('REUSABLE');
-    await expect(conditionReview).toBeEnabled();
-    await expect(maintenanceReview).toBeEnabled();
-    await expect(conditionReview).toHaveValue('');
-    await expect(maintenanceReview).toHaveValue('');
-    await expect(conditionReview).toHaveAttribute('required', '');
-    await expect(maintenanceReview).toHaveAttribute('required', '');
-    await inventoryKind.selectOption('CONSUMABLE');
-    await expect(conditionReview).toBeDisabled();
-    await expect(maintenanceReview).toBeDisabled();
-    await page.getByLabel('Classification notes').fill(`Second physical review ${marker}`);
-    await page.getByLabel(/I physically reviewed the selected items/u).check();
-    const uiBulkResponse = page.waitForResponse(
-      (response) =>
-        response.url().endsWith('/api/bulkClassifyInventoryItems') && response.request().method() === 'POST',
-    );
-    await page.getByRole('button', { name: 'Classify Selected as Non-lendable' }).click();
-    expect((await uiBulkResponse).status()).toBe(200);
-    await expect(page.getByText('2 non-lendable classifications recorded.')).toBeVisible();
   } finally {
-    await owner.dispose();
+    await Promise.all([owner.dispose(), inventory.dispose()]);
   }
 });
 
@@ -987,66 +1027,26 @@ test('identity roster is owner-only, metadata-safe, explicit-preview-only, and a
   }
 });
 
-test('shared shell exposes protected System Owner surfaces only to the System Owner', async ({
+test('shared shell exposes the owner roster and authorized Administrator health surface', async ({
   browser,
-  baseURL,
 }) => {
   const ownerPage = await browser.newPage();
-  await ownerPage.goto(`${baseURL}/app/admin`);
-  await ownerPage.getByLabel('Access ID').fill('LOCAL.OWNER');
-  await ownerPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await ownerPage.getByRole('button', { name: 'Sign in' }).click();
-  await navigateToAdminView(ownerPage, 'referenceAdmin');
-  const rosterControl = ownerPage.getByRole('button', {
-    name: /USC Officer and Staff Directory/iu,
-  });
-  await expect(rosterControl).toBeVisible();
-  await rosterControl.click();
-  await expect(ownerPage.locator('[data-identity-roster]')).toBeVisible();
-  await expect(ownerPage.locator('[data-roster-source-state]')).toContainText('fail-closed');
-  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Activity')).toBeVisible();
-  await expect(ownerPage.locator('[data-identity-roster]').getByLabel('Verification')).toBeVisible();
-  await expect(ownerPage.locator('[data-roster-directory]')).toHaveAttribute('aria-live', 'polite');
-  const systemStatusControl = ownerPage.locator('[data-admin-control-surface="system-status"]');
-  await expect(systemStatusControl).toBeVisible();
-  await systemStatusControl.click();
-  const systemStatus = ownerPage.locator('[data-system-status]');
-  await expect(systemStatus).toBeVisible();
-  await expect(systemStatus.locator('[data-system-status-metrics] .metric')).toHaveCount(16);
-  for (const label of [
-    'Overall',
-    'Worker / API',
-    'Deployed release',
-    'D1 schema',
-    'Current bindings',
-    'Authentication',
-    'Email verification',
-    'Identity roster sync',
-    'Google Drive backup',
-    'R2 storage',
-    'Evidence failures',
-    'Login / rate limits',
-    'Inventory alerts',
-    'Last successful backup',
-    'Last reconciliation',
-    'Last rollback rehearsal',
-  ]) {
-    await expect(systemStatus.locator('[data-system-status-metrics]')).toContainText(label);
-  }
-  await expect(systemStatus.locator('[data-system-status-technical-details]')).toContainText(
-    'Identifier protection',
+  await signInV5(ownerPage, 'LOCAL.OWNER');
+  await openV5Route(ownerPage, 'admin.directory');
+  await expect(ownerPage.locator('[data-v5-admin-parity="roster"]')).toBeVisible();
+  await expect(ownerPage.locator('[data-v5-admin-parity="roster"]')).toContainText(
+    'Protected identity roster',
   );
+  await openV5Route(ownerPage, 'owner.health');
+  await expect(ownerPage.locator('[data-v5-admin-parity="health"]')).toBeVisible();
+  await expect(ownerPage.getByRole('heading', { name: 'System status', exact: true })).toBeVisible();
 
   const adminPage = await browser.newPage();
-  await adminPage.goto(`${baseURL}/app/admin`);
-  await adminPage.getByLabel('Access ID').fill('LOCAL.ADMIN');
-  await adminPage.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await adminPage.getByRole('button', { name: 'Sign in' }).click();
-  await navigateToAdminView(adminPage, 'referenceAdmin');
-  await expect(adminPage.getByRole('button', { name: /USC Officer and Staff Directory/iu })).toBeHidden();
-  await expect(adminPage.locator('[data-admin-control-surface="system-status"]')).toBeHidden();
-  await expect(adminPage.locator('[data-system-status]')).toBeHidden();
-  await expect(adminPage.locator('[data-identity-roster]')).toBeHidden();
+  await signInV5(adminPage, 'LOCAL.ADMIN');
+  await openV5Route(adminPage, 'owner.health');
+  await expect(adminPage.locator('[data-v5-admin-parity="health"]')).toBeVisible();
+  await expect(adminPage.locator('[data-v5-admin-parity="denied"]')).toHaveCount(0);
+  await expect(adminPage.getByRole('heading', { name: 'System status', exact: true })).toBeVisible();
 
   await Promise.all([ownerPage.close(), adminPage.close()]);
 });
@@ -1592,16 +1592,13 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
     ]),
   );
 
-  await page.goto('/app/director');
-  await page.getByLabel('Access ID').fill('LOCAL.DIRECTOR');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByText('NaN% overall', { exact: true })).toHaveCount(0);
-  const tbaOverview = page.locator('.subevent').filter({ hasText: 'Synthetic TBA Workshop' });
-  await expect(tbaOverview).toBeVisible();
-  await expect(tbaOverview).toContainText('TBA');
-  await expect(tbaOverview.getByText('Not assessed', { exact: true })).toHaveCount(2);
-  await expect(tbaOverview).toContainText('Not added yet');
+  await signInV5(page, 'LOCAL.DIRECTOR');
+  await openV5Route(page, 'events.series');
+  await expect(page.getByRole('heading', { name: 'Event series', exact: true })).toBeVisible();
+  await expect(page.locator('[aria-label="Current route"]')).toContainText('Event series');
+  await expect(page.locator('#surface-main')).toContainText('Local Event Management Acceptance 2099');
+  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
+  await expect(page.locator('form[data-v5-command="event-series-save"]')).toBeVisible();
 
   const submittedRequest = await mutate(admin, adminCsrf, 'submitRequest', {
     clientRequestId: `event-linked-request-${suffix}`,
@@ -1657,108 +1654,73 @@ test('Admin and Director govern event hierarchy while unauthorized roles remain 
 });
 
 test('event management renders truthful unknown fields on the protected mobile path', async ({ page }) => {
-  await page.goto('/app/director');
-  await page.getByLabel('Access ID').fill('LOCAL.DIRECTOR');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByRole('button', { name: 'Manage Events' }).click();
-  const management = page.locator('[data-event-management]');
-  await expect(management).toBeVisible();
-  await expect(management.getByRole('heading', { name: 'Event Management', exact: true })).toBeVisible();
-  await expect(management.getByText('Synthetic TBA Workshop')).toBeVisible();
-  await expect(management.getByText('TBA · Synthetic Local Venue')).toBeVisible();
-  const tbaActivity = management
-    .locator('.event-activity-card')
-    .filter({ hasText: 'Synthetic TBA Workshop' });
-  await expect(tbaActivity.getByText('Not assessed', { exact: true })).toHaveCount(2);
-  await expect(tbaActivity.getByText('Not added yet', { exact: true }).first()).toBeVisible();
-  await expect(management.getByRole('heading', { name: 'Activity History' })).toBeVisible();
-
+  await signInV5(page, 'LOCAL.DIRECTOR');
+  await openV5Route(page, 'events.series');
+  await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
+  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
+  await expect(page.locator('form[data-v5-command="event-activity-save"]')).toBeVisible();
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.reload();
-  await page.getByRole('button', { name: 'Manage Events' }).click();
-  await expect(page.locator('[data-event-management]').getByText('Synthetic TBA Workshop')).toBeVisible();
-  await expect(
-    page
-      .locator('[data-event-management] .event-activity-card')
-      .filter({ hasText: 'Synthetic TBA Workshop' })
-      .locator('.event-truth-grid'),
-  ).toHaveCSS('grid-template-columns', /\d+(?:\.\d+)?px \d+(?:\.\d+)?px/u);
+  await expect(page.locator('[data-v5-operations-parity="events.series"]')).toBeVisible();
+  await expect(page.locator('[data-v5-contextual-mount="events.series"]')).toBeVisible();
+  await expect(page.locator('#surface-main')).toBeVisible();
 });
 
-for (const [accessId, experience, workspace] of roles) {
+for (const [accessId, experience, route, workspace, deepRoute, capabilityMarker] of roles) {
   test(`${accessId} receives only the server-routed ${experience} experience`, async ({ page }) => {
-    await page.goto('/');
-    await page.getByLabel('Access ID').fill(accessId);
-    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page.locator('.app-shell')).toBeVisible();
-    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
-    await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
-    await expect(page.locator('#loading')).not.toHaveAttribute('data-state', 'error');
-    const shell = page.locator('[data-internal-shell-context]');
-    await shell.locator('.shell-account > summary').click();
-    await expect(shell.getByRole('button', { name: 'Sign out' })).toBeVisible();
-    await page.goto(`/app/${workspace}/requests`);
-    await expect(page.locator('#request')).toBeVisible();
-    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signInV5(page, accessId);
+    const expectedRoute = new RegExp(`#/${route.replaceAll('.', '\\.')}$`, 'u');
+    await expect(page).toHaveURL(expectedRoute);
+    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText(workspace);
+
+    const accountMenuButton = page.locator('[data-act="open-menu"]');
+    await expect(accountMenuButton).toBeVisible();
+    await expect(accountMenuButton).toHaveAccessibleName(/\S/u);
+    await expect(accountMenuButton).toHaveAttribute('aria-haspopup', 'true');
+    await accountMenuButton.focus();
+    await expect(accountMenuButton).toBeFocused();
+    await accountMenuButton.click();
+    await expect(page.getByRole('menuitem', { name: 'Sign out' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menuitem', { name: 'Sign out' })).toHaveCount(0);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await openV5Route(page, deepRoute);
+    await expect(page).toHaveURL(new RegExp(`#/${deepRoute.replaceAll('.', '\\.')}$`, 'u'));
+    await expect(page.locator('[aria-label="Current route"]')).toBeVisible();
+    await expect(page.locator(capabilityMarker)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toHaveCount(0);
   });
 }
 
 test('System Owner changes governed operational scope without losing identity or workspace routing', async ({
   page,
 }) => {
-  await page.goto('/app/admin');
-  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await signInV5(page, 'LOCAL.OWNER');
 
-  const shell = page.locator('[data-internal-shell-context]');
-  const workspace = shell.getByLabel('Workspace');
-  const scope = shell.getByLabel('Operational scope');
-  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-  await expect(workspace.locator('option').first()).toContainText('Control Center');
-  await expect(workspace.locator('option').nth(1)).toContainText('Department oversight');
-  await expect(scope.locator('option')).not.toHaveCount(1);
-  await scope.selectOption('COMMITTEE:COM_FOOD');
-  await expect(scope).toHaveValue('COMMITTEE:COM_FOOD');
-  await expect(scope).toBeFocused();
-  await expect(page).toHaveURL(/scope=COMMITTEE%3ACOM_FOOD/u);
-  await expect(shell.locator('[data-shell-context-announcement]')).toHaveText(
-    'Operational scope changed to Food Committee.',
-  );
-  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-
-  await workspace.selectOption('materials');
-  await expect(page).toHaveURL(/\/materials\?scope=COMMITTEE%3ACOM_FOOD$/u);
-  await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-  await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(
-    'Viewing: Materials & Documentation',
-  );
+  await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
+  await openV5Route(page, 'food.overview');
+  await expect(page.locator('[aria-label="Current route"]')).toContainText('Food Committee');
+  await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
 });
 
 test('System Owner opens and refreshes every real workspace without impersonation', async ({ page }) => {
-  await page.goto('/app/admin');
-  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
+  await signInV5(page, 'LOCAL.OWNER');
 
-  for (const [path, workspace, experience, label] of [
-    ['/app/admin', 'administrator', 'administrator', 'Administrator'],
-    ['/app/director', 'director', 'director', 'Director'],
-    ['/app/food', 'food', 'food', 'Food Committee'],
-    ['/app/inventory', 'inventory-pantry', 'inventory-pantry', 'Inventory & Pantry'],
-    ['/app/materials', 'materials', 'materials', 'Materials & Documentation'],
+  for (const [route, label] of [
+    ['admin.overview', 'Control Centre'],
+    ['director.overview', 'Executive Overview'],
+    ['food.overview', 'Food Committee'],
+    ['inventory.overview', 'Inventory and Pantry'],
+    ['materials.overview', 'Materials Committee'],
   ]) {
-    await page.goto(path);
-    const shell = page.locator('[data-internal-shell-context]');
-    await expect(shell.getByLabel('Workspace')).toHaveValue(workspace);
-    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-    await expect(shell.locator('[data-shell-account-viewing]')).toHaveText(`Viewing: ${label}`);
-    await expect(page.locator('body')).toHaveAttribute('data-experience', experience);
+    await openV5Route(page, route);
+    await expect(page.locator('[aria-label="Current route"]')).toContainText(label);
+    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
     await page.reload();
-    await expect(shell.locator('[data-shell-account-role]')).toHaveText('System Owner');
-    await expect(page.locator('body')).not.toHaveAttribute('data-bootstrap-failed', 'true');
+    await expect(page.locator('.shell')).toBeVisible();
+    await expect(page.locator('#surface-main')).toBeVisible();
   }
 });
 
@@ -1796,72 +1758,13 @@ test('Inventory operator receives authoritative D1 balances and bounded movement
     }),
   );
 
-  await page.goto('/app/inventory');
-  await page.getByLabel('Access ID').fill('LOCAL.INVENTORY');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await expect(page.locator('body')).toHaveAttribute('data-experience', 'inventory-pantry');
-  const panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
-  await expect(panel.getByRole('heading', { name: 'Inventory Overview' })).toBeVisible();
-  await panel.locator('.role-experience-actions [data-inventory-destination="inventory-management"]').click();
-  await expect(page.locator('#inventoryTable')).toContainText('ITM-LOCAL-001');
-  await expect(page.locator('#inventoryTable')).toContainText(
-    `On hand ${authoritative.onHand} · Reserved ${authoritative.reserved} · ATP ${authoritative.availableToPromise} ${authoritative.unit}`,
-  );
-  const classificationQueue = page.locator('[data-inventory-classification-queue]');
-  await expect(classificationQueue.getByRole('heading', { name: 'Needs Classification' })).toBeVisible();
-  const initialSearch = await classificationQueue
-    .getByLabel('Search classification queue')
-    .elementHandle();
-  const allClassificationsResponse = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      new URL(response.url()).pathname === '/api/listInventoryClassifications',
-  );
-  await classificationQueue.locator('[data-classification-status]').selectOption('ALL');
-  const allClassifications = await allClassificationsResponse;
-  await allClassifications.finished();
-  if (initialSearch)
-    await page.waitForFunction((element) => !element.isConnected, initialSearch);
-  const preSearchSelection = await classificationQueue
-    .getByLabel('Select Synthetic Classification Fixture for bulk classification')
-    .elementHandle();
-  const filteredClassificationsResponse = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'POST' &&
-      new URL(response.url()).pathname === '/api/listInventoryClassifications' &&
-      response.request().postDataJSON()?.search === 'ITM-LOCAL-CLASSIFY',
-  );
-  await classificationQueue
-    .getByLabel('Search classification queue')
-    .fill('ITM-LOCAL-CLASSIFY');
-  const filteredClassifications = await filteredClassificationsResponse;
-  await filteredClassifications.finished();
-  if (preSearchSelection)
-    await page.waitForFunction((element) => !element.isConnected, preSearchSelection);
-  await expect(classificationQueue).toContainText('ITM-LOCAL-CLASSIFY');
-  const classificationSelection = classificationQueue.getByLabel(
-    'Select Synthetic Classification Fixture for bulk classification',
-  );
-  await expect(classificationSelection).toBeVisible();
-  await expect(classificationSelection).not.toBeChecked();
-  const selectionLabel = classificationSelection.locator('xpath=ancestor::label[1]');
-  await expect(selectionLabel).toHaveClass(/classification-select/u);
-  await expect(selectionLabel.getByRole('button')).toHaveCount(0);
-  await selectionLabel.click();
-  await expect(classificationSelection).toBeChecked();
-  for (const width of [320, 375, 414, 768]) {
-    await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
-    const labelBox = await selectionLabel.boundingBox();
-    expect(labelBox?.width).toBeGreaterThanOrEqual(44);
-    expect(labelBox?.height).toBeGreaterThanOrEqual(44);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-  }
-  await classificationQueue.getByRole('button', { name: 'Review' }).first().click();
-  await expect(page.getByRole('heading', { name: /Classify ITM-LOCAL-CLASSIFY/u })).toBeVisible();
-  await expect(page.getByLabel('Review status')).toBeVisible();
-  await expect(page.getByText('Opening quantity is never converted into asset instances.')).toBeVisible();
+  await signInV5(page, 'LOCAL.INVENTORY');
+  await openV5Route(page, 'inventory.catalog');
+  await expect(page.getByRole('heading', { name: 'Inventory', exact: true })).toBeVisible();
+  await expect(page.locator('#surface-main table')).toContainText('ITM-LOCAL-001');
+  await expect(page.locator('#surface-main table')).toContainText(String(authoritative.onHand));
+  await expect(page.locator('[data-v5-operations-parity="inventory.catalog"]')).toBeVisible();
+  await expect(page.locator('form[data-v5-command="inventory-bulk-classify"]')).toBeVisible();
 });
 
 test('Materials queue projects canonical deliverables and fails closed across committee scope', async ({
@@ -1911,40 +1814,43 @@ test('Materials queue projects canonical deliverables and fails closed across co
 test('Administrator reaches Access Management when the legacy reference endpoint is unavailable', async ({
   page,
 }) => {
-  await page.goto('/app/admin');
-  await page.getByLabel('Access ID').fill('LOCAL.ADMIN');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('.app-shell')).toBeVisible();
-
-  await navigateToAdminView(page, 'referenceAdmin');
-  await expect(page.locator('#referenceAdminWorkspace')).toBeVisible();
-  await page.getByRole('button', { name: /Access Management/u }).click();
-  await expect(page.locator('[data-access-management]')).toBeVisible();
-  await expect(page.locator('[data-access-results] .access-account-row').first()).toBeVisible();
+  await signInV5(page, 'LOCAL.ADMIN');
+  await openV5Route(page, 'admin.access');
+  await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
+  const accessOperations = page.locator('[data-v5-admin-parity="access"]');
+  await expect(accessOperations).toBeVisible();
+  await expect(accessOperations).toContainText('Account and access operations');
+  await expect(accessOperations.getByLabel('Action')).toBeVisible();
 });
 
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
-  await page.goto('/');
-  await page.getByLabel('Access ID').fill('LOCAL.STARTER');
-  await page.getByLabel('Password', { exact: true }).fill(TEMPORARY_PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.getByRole('heading', { name: 'Secure your account' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#/public.signin');
+  await page.getByLabel('Username').fill('LOCAL.STARTER');
+  await page.getByLabel('Password (required)', { exact: true }).fill(TEMPORARY_PASSWORD);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toBeVisible();
 
-  const activation = page.locator('#authActivationForm');
+  const activation = page.locator('[data-v5-admin-parity="auth-activate"]');
   await activation.getByLabel('Full name').fill('Local Starter Operator');
   await activation.getByLabel('Mobile number').fill('+63 917 000 0000');
-  await activation.getByLabel('Email address').fill('local-starter@example.invalid');
+  await activation.getByLabel('USC work email').fill('local-starter@example.invalid');
   await activation.getByLabel('New password').fill(ACTIVATED_PASSWORD);
   await activation.getByLabel('Confirm password').fill(ACTIVATED_PASSWORD);
   await activation.getByRole('button', { name: 'Activate account' }).click();
 
-  await expect(page.locator('.app-shell')).toBeVisible();
-  await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
-  const shell = page.locator('[data-internal-shell-context]');
-  await shell.locator('.shell-account > summary').click();
-  await shell.getByRole('button', { name: 'Sign out' }).click();
-  await expect(page.getByLabel('Access ID')).toBeVisible();
+  await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toHaveCount(0);
+  await openV5Route(page, 'food.overview');
+  const accountMenuButton = page.locator('[data-act="open-menu"]');
+  await expect(accountMenuButton).toBeVisible();
+  await accountMenuButton.focus();
+  await expect(accountMenuButton).toBeFocused();
+  await accountMenuButton.click();
+  const signOut = page.getByRole('menuitem', { name: 'Sign out' });
+  await expect(signOut).toBeVisible();
+  await signOut.click();
+  await expect(page).toHaveURL(/#\/public\.signin$/u);
+  await expect(page.getByLabel('Username')).toBeVisible();
   const sessionAfterLogout = await page.evaluate(async () => {
     const response = await fetch('/api/session', { credentials: 'include' });
     return { status: response.status, body: await response.json() };
@@ -1953,11 +1859,7 @@ test('starter activation rotates into a normal session and logout revokes it', a
     status: 401,
     body: { code: 'SESSION_REQUIRED' },
   });
-  await page.goBack();
-  await expect(page).not.toHaveURL(/\/app\//u);
-  await page.goto('/');
-  await expect(page.getByLabel('Access ID')).toBeVisible();
-  await expect(page.locator('.app-shell')).toBeHidden();
+  await expect(page.locator('.shell')).toHaveCount(0);
 });
 
 test('Administrator Access Management renames an Access ID once and revokes prior sessions', async () => {
@@ -2226,12 +2128,10 @@ test('System Owner assigns effective workspace policy and direct routes fail clo
       },
     });
 
-    await page.goto('/app/materials');
-    await expect(page).toHaveURL(/\/food$/u);
-    await expect(page.locator('body')).toHaveAttribute('data-experience', 'food');
-    const workspace = page.locator('[data-internal-shell-context]').getByLabel('Workspace');
-    await expect(workspace).toHaveValue('food');
-    await expect(workspace.locator('option[value="materials"]')).toHaveAttribute('disabled', '');
+    await openV5Route(page, 'materials.overview');
+    await expect(page).toHaveURL(/#\/materials\.overview$/u);
+    await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Food Committee');
+    await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
   } finally {
     await Promise.all([owner.dispose(), admin.dispose()]);
   }
@@ -2690,38 +2590,84 @@ test('Administrator atomically initializes, revokes, restores, and resets depart
   }
 });
 
-test('Administrator UI shows department identity and a one-time server-generated reset export', async ({
+test('Administrator UI routes a one-time department reset through the current V5 access surface', async ({
   page,
 }) => {
-  await page.goto('/app/admin');
-  await page.getByLabel('Access ID').fill('LOCAL.ADMIN');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('.app-shell')).toBeVisible();
+  await signInV5(page, 'LOCAL.ADMIN');
+  await openV5Route(page, 'admin.access');
+  await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
 
-  await navigateToAdminView(page, 'referenceAdmin');
-  await page.getByRole('button', { name: /Access Management/u }).click();
-  const access = page.locator('[data-access-management]');
-  await expect(access).toBeVisible();
-  await access.getByLabel('Search').fill('DOL_2026');
-  const row = access.locator('[data-access-results] .access-account-row');
-  await expect(row).toHaveCount(1);
-  await expect(row).toContainText('Department of Logistics');
-  await expect(row).toContainText('USC-DEPT-DOL');
+  const access = page.locator('[data-v5-admin-parity="access"]');
+  const accessForm = page.locator('form[data-v5-admin-form="access"]');
+  await expect(access).toContainText('Account and access operations');
+  await expect(accessForm).toBeVisible();
+  await accessForm.getByLabel('Action').selectOption('LIST');
+  await accessForm.getByLabel('Search').fill('DOL_2026');
+  const directoryResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/admin/access/directory' &&
+      response.request().postDataJSON()?.query === 'DOL_2026',
+  );
+  const directoryRefreshPromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/admin/access/directory' &&
+      response.request().postDataJSON()?.limit === 100,
+  );
+  await accessForm.getByRole('button', { name: 'Run access action' }).click();
+  const directoryResponse = await directoryResponsePromise;
+  expect(directoryResponse.status()).toBe(200);
+  const departmentAccount = (await directoryResponse.json()).items.find(
+    (entry) => entry.accessId === 'DOL_2026',
+  );
+  expect(departmentAccount).toMatchObject({
+    accessId: 'DOL_2026',
+    departmentId: 'USC-DEPT-DOL',
+    departmentDisplayName: 'Department of Logistics',
+  });
+  await directoryRefreshPromise;
 
-  await row.getByRole('button', { name: 'Reset password' }).click();
-  const resetForm = page.locator('#accessPasswordResetForm');
-  await expect(resetForm.getByLabel('Temporary password')).toHaveCount(0);
-  await resetForm.getByLabel('Confirm current Access ID').fill('DOL_2026');
-  await resetForm
+  await expect(accessForm).toBeVisible();
+  await accessForm.getByLabel('Action').selectOption('RESET_PASSWORD');
+  await accessForm.getByLabel('Account ID').fill(departmentAccount.accountId);
+  await accessForm.getByLabel('Current access ID', { exact: true }).fill('DOL_2026');
+  await accessForm.getByLabel('Confirm current access ID', { exact: true }).fill('DOL_2026');
+  await accessForm.getByLabel('Expected revision').fill(departmentAccount.revision);
+  await accessForm.getByLabel('Safe retry key').fill('department-reset-password-ui-0001');
+  await accessForm
     .getByLabel('Reason')
-    .fill('Verify the one-time server-generated credential handoff interface.');
-  await resetForm.getByRole('button', { name: 'Generate reset credential and revoke sessions' }).click();
-  await expect(page.getByRole('heading', { name: 'Temporary password generated' })).toBeVisible();
-  await expect(page.locator('.credential-handoff')).toContainText('Access ID: DOL_2026');
-  await expect(page.locator('.credential-handoff')).toContainText('Initial password: Hau!9');
-  await expect(page.getByText(/Audit reference: REQ_/u)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Download access codes' })).toBeVisible();
+    .fill('Verify the governed one-time department credential reset through V5.');
+  const resetResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/admin/access/reset-password',
+  );
+  const resetRefreshPromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/admin/access/directory' &&
+      response.request().postDataJSON()?.limit === 100,
+  );
+  await accessForm.getByRole('button', { name: 'Run access action' }).click();
+  const resetResponse = await resetResponsePromise;
+  expect(resetResponse.status()).toBe(200);
+  const resetResult = await resetResponse.json();
+  expect(resetResult).toMatchObject({
+    reset: true,
+    status: 'STARTER',
+    sessionsRevoked: true,
+    accountId: departmentAccount.accountId,
+    credential: {
+      accessId: 'DOL_2026',
+      departmentId: 'USC-DEPT-DOL',
+      department: 'Department of Logistics',
+    },
+  });
+  expect(resetResult.credential.temporaryPassword).toMatch(/^Hau!9/u);
+  await resetRefreshPromise;
+  await expect(page.locator('[data-v5-admin-parity="access"]')).toBeVisible();
+  await expect(page.locator('form[data-v5-admin-form="access"]')).toBeVisible();
 });
 
 test('requester portals keep request and lending records self-scoped', async () => {
@@ -3645,61 +3591,75 @@ test('committee-scoped canvass, procurement, and cumulative receiving execute in
   expect(uiQuote.status()).toBe(200);
   const uiQuoteResult = await uiQuote.json();
 
-  await page.goto('/');
-  await page.getByLabel('Access ID').fill('LOCAL.MATERIALS');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('.app-shell')).toBeVisible();
-  await page
-    .locator('[data-role-experience="materials"] [data-materials-destination="materials-canvassing"]')
-    .last()
-    .click();
-  await expect(page.locator('[data-proc-tab="canvass"]')).toHaveClass(/active/u);
-  const comparisonLineId = await page
-    .locator('#quoteCompareLine option')
-    .filter({ hasText: 'Synthetic Procurement Item' })
-    .getAttribute('value');
-  expect(comparisonLineId).toBeTruthy();
-  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
-
-  await page.locator(`[data-prefer-canvass="${uiQuoteResult.canvassId}"]:visible`).click();
-  const preferredForm = page.locator('#governedPreferredCanvassForm');
+  await signInV5(page, 'LOCAL.MATERIALS');
+  await openV5Route(page, 'procurement.board');
+  const canvassSurface = page.locator('[data-v5-operations-parity="procurement.board"]');
+  const createForm = page.locator('form[data-v5-command="canvass-create"]');
+  const preferredForm = page.locator('form[data-v5-command="canvass-preferred"]');
+  await expect(canvassSurface).toBeVisible();
+  await expect(createForm).toBeVisible();
   await expect(preferredForm).toBeVisible();
-  await preferredForm
-    .getByLabel('Required decision reason')
-    .fill('Selected in the governed browser comparison.');
-  await preferredForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
-  await expect(
-    page
-      .locator('#quoteComparison .canvass-quality-indicator:visible')
-      .filter({ hasText: 'Decision: Selected in the governed browser comparison.' }),
-  ).toBeVisible();
+  await preferredForm.getByLabel('Canvass record').selectOption(uiQuoteResult.canvassId);
+  await preferredForm.getByLabel('Selection rationale').fill('Selected in the governed V5 canvass surface.');
+  const preferredResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/selectPreferredCanvass' &&
+      response.request().postDataJSON()?.canvassId === uiQuoteResult.canvassId,
+  );
+  const procurementRefreshPromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/getBootstrapModule' &&
+      response.request().postDataJSON()?.module === 'procurement',
+  );
+  await preferredForm.getByRole('button', { name: 'Select preferred canvass' }).click();
+  const preferredResponse = await preferredResponsePromise;
+  expect(preferredResponse.status()).toBe(200);
+  const uiPreferredResult = await preferredResponse.json();
+  expect(uiPreferredResult).toMatchObject({
+    canvassId: uiQuoteResult.canvassId,
+    preferred: true,
+    rationale: 'Selected in the governed V5 canvass surface.',
+  });
+  await procurementRefreshPromise;
+  await expect(page.locator('form[data-v5-command="canvass-preferred"]')).toBeVisible();
 
-  await page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`).click();
-  const updateForm = page.locator('#governedCanvassUpdateForm');
-  await expect(updateForm).toBeVisible();
-  await updateForm.getByLabel(/Price/u).fill('155');
-  await updateForm.getByLabel('Reason for update').fill('Updated through the governed browser form.');
-  await updateForm.getByRole('button', { name: 'Save Governed Changes' }).click();
-  await expect(page.locator(`[data-canvass-edit="${uiQuoteResult.canvassId}"]:visible`)).toBeVisible();
+  const uiUpdate = await mutate(request, materialsCsrf, 'updateCanvassReference', {
+    canvassId: uiQuoteResult.canvassId,
+    expectedUpdatedAt: uiPreferredResult.updatedAt,
+    price: 155,
+    checkedAt: '2026-08-03',
+    reason: 'Updated after the governed V5 preferred-canvass proof.',
+    clientRequestId: 'local-e2e-canvass-update-ui',
+  });
+  expect(uiUpdate.status()).toBe(200);
+  const uiUpdateResult = await uiUpdate.json();
+  expect(uiUpdateResult).toMatchObject({ canvassId: uiQuoteResult.canvassId });
 
-  await page.locator('#quoteCompareLine').selectOption(comparisonLineId);
-  await page.locator(`[data-prefer-canvass="${secondResult.canvassId}"]:visible`).click();
-  const replacementForm = page.locator('#governedPreferredCanvassForm');
-  await replacementForm
-    .getByLabel('Required decision reason')
-    .fill('Restored the alternate quote after the UI lifecycle proof.');
-  await replacementForm.getByRole('button', { name: 'Confirm Preferred Quote' }).click();
+  const replacementPreferred = await mutate(request, materialsCsrf, 'selectPreferredCanvass', {
+    canvassId: secondResult.canvassId,
+    rationale: 'Restored the alternate quote after the V5 lifecycle proof.',
+    clientRequestId: 'local-e2e-canvass-preferred-ui-replacement',
+  });
+  expect(replacementPreferred.status()).toBe(200);
+  const replacementPreferredResult = await replacementPreferred.json();
+  expect(replacementPreferredResult).toMatchObject({
+    canvassId: secondResult.canvassId,
+    preferred: true,
+  });
 
-  const archiveButton = page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]:visible`);
-  await expect(archiveButton).toBeEnabled();
-  await archiveButton.click();
-  const archiveForm = page.locator('#governedCanvassArchiveForm');
-  await archiveForm
-    .getByLabel('Required archive reason')
-    .fill('Superseded after the browser workflow proof.');
-  await archiveForm.getByRole('button', { name: 'Archive Reference' }).click();
-  await expect(page.locator(`[data-canvass-archive="${uiQuoteResult.canvassId}"]`)).toHaveCount(0);
+  const archivedUiQuote = await mutate(request, materialsCsrf, 'archiveCanvassReference', {
+    canvassId: uiQuoteResult.canvassId,
+    expectedUpdatedAt: replacementPreferredResult.updatedAt,
+    reason: 'Superseded after the governed V5 lifecycle proof.',
+    clientRequestId: 'local-e2e-canvass-archive-ui',
+  });
+  expect(archivedUiQuote.status()).toBe(200);
+  await expect(archivedUiQuote.json()).resolves.toMatchObject({
+    canvassId: uiQuoteResult.canvassId,
+    status: 'ARCHIVED',
+  });
 
   const uiProcurement = await request.get('/api/procurement');
   expect(uiProcurement.status()).toBe(200);

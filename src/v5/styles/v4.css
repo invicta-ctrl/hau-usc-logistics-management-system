@@ -2794,8 +2794,7 @@ button[aria-disabled="true"],
 
   .menu-control__label,
   .searchpill > span,
-  .searchpill kbd,
-  .topbar__actions .account-button {
+  .searchpill kbd {
     display: none;
   }
 
@@ -2808,6 +2807,33 @@ button[aria-disabled="true"],
 
   .topbar__actions {
     margin-inline-start: 0;
+  }
+
+  .topbar__actions .account-button {
+    display: inline-flex;
+    justify-content: center;
+    min-height: 48px;
+    min-width: 48px;
+    padding: 4px;
+    position: relative;
+  }
+
+  .topbar__actions .account-button > .icon {
+    display: none;
+  }
+
+  .account-button__text {
+    border: 0;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    display: block;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
   }
 
   .theme-toggle {
