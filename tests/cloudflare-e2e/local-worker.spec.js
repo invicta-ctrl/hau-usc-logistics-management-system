@@ -37,14 +37,7 @@ const roles = [
     'events.series',
     '[data-v5-operations-parity="events.series"]',
   ],
-  [
-    'LOCAL.FOOD',
-    'food',
-    'food.overview',
-    'Food Committee',
-    'request.queue',
-    'form[data-v5-command="request-review"]',
-  ],
+  ['LOCAL.FOOD', 'food', 'food.overview', 'Food Committee', 'request.queue', '.state'],
   [
     'LOCAL.INVENTORY',
     'inventory-pantry',
@@ -1690,6 +1683,11 @@ for (const [accessId, experience, route, workspace, deepRoute, capabilityMarker]
     await expect(page).toHaveURL(new RegExp(`#/${deepRoute.replaceAll('.', '\\.')}$`, 'u'));
     await expect(page.locator('[aria-label="Current route"]')).toBeVisible();
     await expect(page.locator(capabilityMarker)).toBeVisible();
+    if (accessId === 'LOCAL.FOOD') {
+      await expect(
+        page.getByRole('heading', { name: 'No requests in this scope', exact: true }),
+      ).toBeVisible();
+    }
     await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toHaveCount(0);
   });
 }
@@ -1701,7 +1699,7 @@ test('System Owner changes governed operational scope without losing identity or
 
   await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
   await openV5Route(page, 'food.overview');
-  await expect(page.locator('[aria-label="Current route"]')).toContainText('Food Committee');
+  await expect(page.locator('[aria-label="Current route"]')).toContainText('Food committee');
   await expect(page.locator('[aria-label="Current authorized workspace"]')).toContainText('Administrator');
 });
 
@@ -1709,11 +1707,11 @@ test('System Owner opens and refreshes every real workspace without impersonatio
   await signInV5(page, 'LOCAL.OWNER');
 
   for (const [route, label] of [
-    ['admin.overview', 'Control Centre'],
-    ['director.overview', 'Executive Overview'],
-    ['food.overview', 'Food Committee'],
-    ['inventory.overview', 'Inventory and Pantry'],
-    ['materials.overview', 'Materials Committee'],
+    ['admin.overview', 'Administrator overview'],
+    ['director.overview', 'Director overview'],
+    ['food.overview', 'Food committee'],
+    ['inventory.overview', 'Inventory committee'],
+    ['materials.overview', 'Materials committee'],
   ]) {
     await openV5Route(page, route);
     await expect(page.locator('[aria-label="Current route"]')).toContainText(label);
@@ -1820,7 +1818,7 @@ test('Administrator reaches Access Management when the legacy reference endpoint
   const accessOperations = page.locator('[data-v5-admin-parity="access"]');
   await expect(accessOperations).toBeVisible();
   await expect(accessOperations).toContainText('Account and access operations');
-  await expect(accessOperations.getByLabel('Action')).toBeVisible();
+  await expect(accessOperations.getByLabel('Action', { exact: true })).toBeVisible();
 });
 
 test('starter activation rotates into a normal session and logout revokes it', async ({ page }) => {
@@ -1835,8 +1833,8 @@ test('starter activation rotates into a normal session and logout revokes it', a
   await activation.getByLabel('Full name').fill('Local Starter Operator');
   await activation.getByLabel('Mobile number').fill('+63 917 000 0000');
   await activation.getByLabel('USC work email').fill('local-starter@example.invalid');
-  await activation.getByLabel('New password').fill(ACTIVATED_PASSWORD);
-  await activation.getByLabel('Confirm password').fill(ACTIVATED_PASSWORD);
+  await activation.getByLabel('New password', { exact: true }).fill(ACTIVATED_PASSWORD);
+  await activation.getByLabel('Confirm new password', { exact: true }).fill(ACTIVATED_PASSWORD);
   await activation.getByRole('button', { name: 'Activate account' }).click();
 
   await expect(page.locator('[data-v5-admin-parity="auth-activate"]')).toHaveCount(0);
@@ -2601,7 +2599,7 @@ test('Administrator UI routes a one-time department reset through the current V5
   const accessForm = page.locator('form[data-v5-admin-form="access"]');
   await expect(access).toContainText('Account and access operations');
   await expect(accessForm).toBeVisible();
-  await accessForm.getByLabel('Action').selectOption('LIST');
+  await accessForm.getByLabel('Action', { exact: true }).selectOption('LIST');
   await accessForm.getByLabel('Search').fill('DOL_2026');
   const directoryResponsePromise = page.waitForResponse(
     (response) =>
@@ -2629,7 +2627,7 @@ test('Administrator UI routes a one-time department reset through the current V5
   await directoryRefreshPromise;
 
   await expect(accessForm).toBeVisible();
-  await accessForm.getByLabel('Action').selectOption('RESET_PASSWORD');
+  await accessForm.getByLabel('Action', { exact: true }).selectOption('RESET_PASSWORD');
   await accessForm.getByLabel('Account ID').fill(departmentAccount.accountId);
   await accessForm.getByLabel('Current access ID', { exact: true }).fill('DOL_2026');
   await accessForm.getByLabel('Confirm current access ID', { exact: true }).fill('DOL_2026');
