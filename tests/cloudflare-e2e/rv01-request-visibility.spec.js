@@ -434,13 +434,13 @@ test('a reviewer routes each line of a public request through the shipped Main H
   // Context B opens and authenticates the V5 queue before Context A submits.
   await page.goto('/#/public.signin');
   await page.getByLabel('Username').fill('LOCAL.OWNER');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+  await page.getByLabel('Password (required)', { exact: true }).fill(PASSWORD);
   const overviewRevision = page.waitForResponse((response) => {
     if (new URL(response.url()).pathname !== '/api/getScopedRevision') return false;
     return response.request().postDataJSON?.()?.scope === 'overview';
   });
   await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('.app-shell')).toBeVisible();
+  await expect(page.locator('.shell')).toBeVisible();
   await overviewRevision;
   const baselineRevision = page.waitForResponse((response) => {
     if (new URL(response.url()).pathname !== '/api/getScopedRevision') return false;
