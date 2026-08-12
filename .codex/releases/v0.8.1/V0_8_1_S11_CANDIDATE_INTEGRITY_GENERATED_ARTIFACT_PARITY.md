@@ -1,7 +1,7 @@
 # V0.8.1 S11 Candidate Integrity and Generated-Artifact Parity
 
-- **Status:** `V81-S11_GENERATOR_EOL_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
-- **State:** `GENERATOR_EOL_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S11_ARTIFACT_PARITY_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **State:** `ARTIFACT_PARITY_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Candidate integrity and generated-artifact parity complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **S11 baseline commit:** `650962f55061d38dce6ddfdaef057b71eb97d114`
@@ -18,18 +18,30 @@
 - **Sol generator-EOL amendment acceptance:** `PASS`
 - **Fresh Luna generator-EOL amendment review:** `PASS_NO_P0_P1_P2_P3`
 - **Amendment review timestamp:** `2026-08-12T08:56:33.5425803+08:00`
-- **Amendment review state:** accepted and uncommitted, ready for the exact governance commit after one final fresh packet audit.
+- **Generator-repair boundary commit:** `912759ee1388155fefdf40d558e3973442126e02`
+- **Generator-repair boundary tree:** `58a38464aa4df938ba50b9bfa3cec3cf91cfe530`
+- **Generator-repair boundary parent:** `fd07baab2791c99528c607f7b8887d52d18e3236`
+- **Integrated implementation commit:** `ecb4bfd2c16a503d00abe517624ca2035c460353`
+- **Integrated implementation tree:** `1472d6b7310f867e2c759b2d7b599dec9f58c87e`
+- **Integrated implementation parent:** `912759ee1388155fefdf40d558e3973442126e02`
+- **Source worker commit:** `562edfa6ead0b5f641adf84d43276287d6d9914e`
+- **Worker and integrated tree equality:** `PASS`
+- **Sol S11 artifact-parity acceptance:** `PASS`
+- **Fresh Luna implementation audit:** `PASS_NO_P0_P1_P2_P3`
+- **Fresh Luna combined audit:** `PASS`
+- **Artifact-parity review timestamp:** `2026-08-12T09:23:04.5919806+08:00`
+- **Review state:** accepted and uncommitted, ready for the exact governance commit after one final fresh packet audit.
 
 ## Exact governance boundary
 
-The S11 boundary is durable at `fd07baab2791c99528c607f7b8887d52d18e3236` / `70e2ab6e5bdff48aedc12b6b8bbe6be83e5fd7ec`. This amendment records the exact generator defect reproduced by the accepted one-pass S11 evidence run and narrows the future repair. Its current write scope is exactly:
+The original S11 boundary is durable at `fd07baab2791c99528c607f7b8887d52d18e3236` / `70e2ab6e5bdff48aedc12b6b8bbe6be83e5fd7ec`, and the generator-repair boundary is durably pushed at `912759ee1388155fefdf40d558e3973442126e02` / `58a38464aa4df938ba50b9bfa3cec3cf91cfe530`. The audited implementation is integrated locally at `ecb4bfd2c16a503d00abe517624ca2035c460353` / `1472d6b7310f867e2c759b2d7b599dec9f58c87e`, one commit ahead of upstream. This acceptance record's current write scope is exactly:
 
 - `.codex/CURRENT.md`
 - `.codex/CURRENT_TASK.md`
 - `.codex/CURRENT_HANDOFF.md`
 - `.codex/releases/v0.8.1/V0_8_1_S11_CANDIDATE_INTEGRITY_GENERATED_ARTIFACT_PARITY.md`
 
-No implementation, build, clone update or creation, artifact, source, test, script, workflow, dependency, package-lock, schema, provider, private-configuration, live-data, deployment, migration, Playground, Production, ref, or S12+ action is authorized while this amendment remains uncommitted or pending review. The focused governance commands required to validate these four Markdown paths remain authorized.
+No build, source, test, artifact, clone, script, workflow, dependency, package-lock, schema, provider, private-configuration, live-data, deployment, migration, Playground, Production, ref, or S12+ action is authorized while this acceptance record remains uncommitted or pending final audit. The focused governance commands required to validate these four Markdown paths remain authorized.
 
 ## Reproduced generator-EOL defect
 
@@ -53,18 +65,20 @@ Default `git diff --check` exits `2` with 58 true trailing-whitespace diagnostic
 
 Preserve the dirty evidence clone exactly as reproduced. Do not reset, clean, normalize, hand-edit, build in, advance, delete, reclone, or reuse it for implementation.
 
-Only after one final fresh packet audit remains `PASS`, this accepted exact four-path amendment is committed and normally pushed, and local/upstream/live-remote parity is proved may Sol create a new isolated Worker Terra branch/worktree from the pushed amendment commit. That new isolated checkout owns the exact future implementation scope below and must begin clean with an exact branch, `HEAD`, tree, upstream, and writer-lock handshake. No shared or canonical implementation is allowed.
+The generator-repair amendment was durably pushed at `912759ee1388155fefdf40d558e3973442126e02`. A new isolated Worker Terra worktree on `task/v0.8.1-s11-generator-eol` began clean at that commit. It produced commit `562edfa6ead0b5f641adf84d43276287d6d9914e`, tree `1472d6b7310f867e2c759b2d7b599dec9f58c87e`, parent `912759ee1388155fefdf40d558e3973442126e02`. Fresh Luna implementation audit returned `PASS_NO_P0_P1_P2_P3`.
+
+Canonical Integration Terra cherry-picked that commit unchanged as `ecb4bfd2c16a503d00abe517624ca2035c460353`, with the same tree and parent. The cherry-pick had no conflict and no prohibited path. The retained dirty evidence clone remains preserved and was not reused or modified.
 
 ## Exact generated-artifact set
 
-The future Worker Terra implementation write scope is exactly:
+The completed implementation scope is exactly:
 
 - `vite.config.js`
 - `tests/unit/v5-dist-verifier.test.js`
 - `dist/index.html`
 - `HAU-USC_Logistics-Prototype-Shareable.html`
 
-`vite.config.js` must normalize the final post-plugin HTML source EOL representation to canonical LF before assigning or returning `html.source`. Do not hand-edit either generated artifact. The focused regression must prove that generated preview output and the root shareable contain zero CR bytes and no trailing whitespace, remain byte-identical, and preserve the required V5 markers.
+`vite.config.js` now normalizes the final post-plugin HTML source EOL representation to canonical LF before assigning `html.source`. The generated artifacts were produced through the build pipeline and were not hand-edited. The focused regression proves that generated preview output and the root shareable contain zero CR bytes and no trailing whitespace, remain byte-identical, and preserve the required V5 markers.
 
 The build may regenerate only `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html`; those two artifacts must remain byte-identical. `dist/_headers` may be verified but must remain byte-identical to `src/public/_headers` and have no Git delta. Stop on any fifth path, any change to `dist/_headers`, any CR byte, any trailing whitespace, or any mismatch.
 
@@ -72,7 +86,7 @@ Do not edit `scripts/verify-v5-dist.mjs`, `scripts/create-v5-shareable.mjs`, `sr
 
 ## One-pass generation and parity commands
 
-After the amendment is persisted and the new isolated worker checkout passes its clean identity handshake, implement the canonical-LF repair and focused regression, then run exactly once:
+The isolated implementation worker ran the repair build exactly once, followed by the accepted verification commands:
 
 ```powershell
 npm.cmd run build
@@ -82,54 +96,58 @@ npx.cmd --no-install vitest run tests/unit/v5-dist-verifier.test.js
 
 The accepted `verify:dist` implementation creates one fresh preview build and one fresh Production build under a disposable OS-temporary directory, compares the tracked `dist` file set and bytes with the fresh preview build, checks the root shareable against `dist/index.html`, validates required V5 markers and classic inline-script syntax, rejects external runtime assets and module scripts, and proves that the fresh Production artifact exposes no effective Playground capability marker. Its temporary directory must be removed by the verifier. These internal verifier builds are required parity probes, not retries or alternate operational builds.
 
-Run `node --check`, Prettier, and ESLint only across the changed JavaScript paths. Run the focused verifier test, `git diff --check`, `git -c core.whitespace=cr-at-eol diff --check`, exact four-path implementation-scope checks, root/dist byte comparison, required-marker checks, and the repository governance gates. Do not rerun the retained dirty clone and do not enter the S12 full stabilization suite.
+After canonical cherry-pick, no operational build was rerun because no source changed during integration. The invalidated combined-tree checks reran only `node --check`, Prettier, and ESLint across `vite.config.js` and `tests/unit/v5-dist-verifier.test.js`; `verify:dist`; the focused three-test verifier; governance; both commit-range diff-check modes; exact scope; and independent artifact/supporting-file integrity. The retained dirty clone was not rerun, and the S12 suite did not begin.
 
-## Disposable candidate manifest and binding
+## Candidate-manifest disposition
 
-Candidate-manifest generation is paused during the generator-EOL amendment and its isolated implementation. After the repair is independently reviewed, integrated, durably pushed, and separately authorized for resumed S11 evidence, create exactly one new candidate manifest at a never-before-existing ignored `.release/` path named for that pushed candidate commit:
+No candidate manifest was created during S11 reproduction, repair, integration, validation, or acceptance. Candidate-manifest generation and binding may occur only under a separately accepted V81-S12 boundary. No `.release` path is present or authorized by this closeout.
 
-```powershell
-node scripts/create-release-candidate-manifest.mjs .release/s11-candidate-<FULL_BOUNDARY_SHA>.json
-```
+## Accepted implementation and parity evidence
 
-The generator's exclusive-create guard must succeed on the first attempt. The ignored manifest is disposable evidence, must never be staged or committed, and contains no private configuration or live data. It must bind:
+The exact implementation scope is four paths: `vite.config.js`, `tests/unit/v5-dist-verifier.test.js`, `dist/index.html`, and `HAU-USC_Logistics-Prototype-Shareable.html`. The generator and test paths are the first two; the latter two are generated outputs. Worker commit and integrated commit have identical tree `1472d6b7310f867e2c759b2d7b599dec9f58c87e`.
 
-- package version `0.8.1`;
-- current branch and exact boundary `HEAD`;
-- `dist/index.html` and root-shareable SHA-256 values;
-- the deterministic Worker-source SHA-256 derived from sorted domain, server, Worker, and `wrangler.jsonc` inputs;
-- the Google-mapping SHA-256;
-- the complete sorted migration-name-to-SHA-256 map.
+The implementation worker performed the only repair build, exactly once. Canonical integration did not rerun `npm.cmd run build`. The accepted `verify:dist` temporary preview and Production builds are parity probes, not operational rebuilds.
 
-The S11 evidence tuple separately records exact `HEAD^{tree}` because the existing manifest schema binds `HEAD` but does not contain a tree field. Prove the manifest's two HTML hashes equal the independently calculated artifact hashes and prove the manifest candidate object equals a fresh in-memory `productionCandidateEvidence({ requireRepositoryReady: false })` result without changing the manifest.
+Combined-tree invalidated validation passed:
+
+- Node syntax checks: two files;
+- Prettier: two files;
+- ESLint: two files;
+- `verify:dist`: `627280` bytes, SHA-256 prefix `264416024868E943`;
+- focused verifier: one file, three tests;
+- governance: agent instructions 11 files and continuation 14 required fields;
+- default commit-range `git diff --check` and `core.whitespace=cr-at-eol` commit-range diff check;
+- exact four-path implementation scope, tracked/index cleanliness, and preserved46.
+
+Both generated HTML artifacts are `627280` bytes and have SHA-256 `264416024868E94378783FE29E47FE82542E67DB1332AFA46C9A487899018DCB`. They are byte-identical; each has 826 LF bytes, zero CR bytes, no BOM, zero trailing-whitespace lines, and every required V5 marker.
+
+`dist/_headers` remains byte-identical to `src/public/_headers`, unchanged from the parent, with SHA-256 `CB56F0BD684421CFC6C64D68F1CC9C20F65D5B6029F8CF7B939221BE1DA51D92`. `package-lock.json` retains Git blob `96c7ae23c4486079ecf10675201048dd385470a7` unchanged from the parent. Its LF worktree SHA-256 is `415E0545A66C1CFF50A3256C4A7BD6DB9676C6DF17E475FF8D19AEBE6D4DB622`; the previously recorded `E9EE00E258A0FEA40717D6C30CC1D30C2CBDA1D581388E051A6D043FFC7BB07D` is the equivalent CRLF checkout presentation. This advisory is non-blocking because the Git blob is unchanged.
+
+Fresh Luna implementation review is `PASS_NO_P0_P1_P2_P3`, fresh combined Luna audit is `PASS`, and Sol S11 artifact-parity acceptance is `PASS`. S11 has open P0 `0` and open P1 `0`. The broader P2/P3 release mapping remains `23/5/4/1/9`; this record makes no program-wide none claim.
 
 ## Invariants and exclusions
 
-- Package version, branch, `HEAD`, tree, upstream, and live remote remain exact throughout the evidence run.
+- Package version and branch remain exact. Local `HEAD` is the accepted integrated implementation, one commit ahead of the generator-repair boundary still held by upstream and live remote until the authorized closeout push.
 - `dist/index.html` and the root shareable are byte-identical and have the same nonempty SHA-256 and byte count.
 - Tracked `dist` contains exactly `_headers` and `index.html`; fresh preview output has the same file set and bytes.
 - Fresh Production output contains no effective Playground capability marker.
 - Source beyond `vite.config.js`, tests beyond `tests/unit/v5-dist-verifier.test.js`, all scripts, workflow, Playground files, dependencies, and `package-lock.json` remain unchanged.
 - `dist/_headers` remains byte-identical and unchanged.
 - Generated preview and root-shareable HTML contain zero CR bytes and no trailing whitespace.
-- No ignored manifest is created during the amendment implementation.
+- No ignored manifest was created during S11.
 - No provider or private-configuration read, live-data access, deployment, migration, environment mutation, release upload, recovery-pointer change, ref mutation, S12 verification, or later gate is authorized.
 
 ## Stop conditions
 
 Stop on any of the following:
 
-- canonical, retained evidence-clone, or new worker branch, `HEAD`, tree, upstream, live-remote, cleanliness, preservation, capture, lock, or writer drift;
-- missing dependencies or a perceived need to install, update, or repair them;
-- an unexpected `dist` file, missing `_headers` or `index.html`, any `dist/_headers` delta, or any tracked/untracked output outside the exact four-path implementation scope;
-- any CR byte, trailing whitespace, fifth changed path, hand edit, normalization outside the generator, or script/package-lock/workflow/Playground drift;
-- shareable/dist byte or hash mismatch, fresh-preview file/byte mismatch, required-marker failure, invalid classic inline script, external runtime dependency, module script, or Production Playground exposure;
-- package, branch, `HEAD`, tree, Worker-source, Google-mapping, migration, artifact, or manifest binding mismatch;
-- any retry, alternate output, reuse or mutation of the retained dirty evidence clone, or attempt to create a candidate manifest during the amendment implementation;
-- any source beyond `vite.config.js`, test beyond `tests/unit/v5-dist-verifier.test.js`, script, workflow, Playground, package-lock, dependency, provider, private-configuration, live-data, deployment, migration, ref, S12+, or other unapproved-path action.
+- canonical local implementation, upstream, live-remote, cleanliness, preservation, capture, lock, or writer drift;
+- any unexpected governance path, record contradiction, privacy exposure, duplicate key, common-field mismatch, unequal NEXT, staged path, or preservation change;
+- any build, source/test/artifact, clone, manifest, script, workflow, Playground, package-lock, dependency, provider, private-configuration, live-data, deployment, migration, ref, S12+, or other unapproved action before closeout push parity;
+- any attempt to stage, commit, or push before the final fresh packet audit remains `PASS`.
 
 ## Current boundary and exact next action
 
-This record is `GENERATOR_EOL_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. The S11 boundary is durable at `fd07baab2791c99528c607f7b8887d52d18e3236` / `70e2ab6e5bdff48aedc12b6b8bbe6be83e5fd7ec`, parent `650962f55061d38dce6ddfdaef057b71eb97d114`, with parity `0/0`. The dirty evidence clone is retained at that boundary with exactly the two generated HTML artifacts changed and staged count zero. Fresh Luna amendment review is `PASS_NO_P0_P1_P2_P3` and Sol amendment acceptance is `PASS`. During this amendment materialization and acceptance, no implementation, build, clone action, artifact/source/test/script/package-lock/workflow/Playground change, provider/private-config/live-data access, deployment, migration, stage, commit, push, fetch, ref, or S12+ action has occurred.
+This record is `ARTIFACT_PARITY_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`. The generator-repair boundary is durable at `912759ee1388155fefdf40d558e3973442126e02` / `58a38464aa4df938ba50b9bfa3cec3cf91cfe530`, parent `fd07baab2791c99528c607f7b8887d52d18e3236`. The accepted implementation is local at `ecb4bfd2c16a503d00abe517624ca2035c460353` / `1472d6b7310f867e2c759b2d7b599dec9f58c87e`, parent `912759ee1388155fefdf40d558e3973442126e02`, one commit ahead of upstream and live remote. The implementation and combined audits pass, P0/P1 are zero, and no provider, private, deployment, migration, remote-ref, or S12 action occurred.
 
-**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S11 generator-EOL amendment governance paths; only after that audit remains `PASS`, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S11_CANDIDATE_INTEGRITY_GENERATED_ARTIFACT_PARITY.md`, normally push, verify local/upstream/live-remote parity and preserved46, then create a new isolated Worker Terra branch/worktree from the pushed amendment for only `vite.config.js`, `tests/unit/v5-dist-verifier.test.js`, `dist/index.html`, and `HAU-USC_Logistics-Prototype-Shareable.html`; preserve the retained dirty evidence clone, require `dist/_headers` unchanged, and do not implement, build, update a clone, access provider/private/live data, deploy, migrate, mutate refs, or begin S12+ before governance push parity.
+**NEXT_EXACT_ACTION:** Run one final fresh read-only Luna audit of the exact four accepted S11 artifact-parity governance paths; only after that audit remains `PASS`, stage and commit exactly `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, and `.codex/releases/v0.8.1/V0_8_1_S11_CANDIDATE_INTEGRITY_GENERATED_ARTIFACT_PARITY.md`, normally push the resulting two-commit chain, verify local/upstream/live-remote parity and preserved46, then enter V81-S12 under a separate accepted boundary; no build, source/test/artifact, provider/private/live-data, deployment, migration, ref, or S12+ action before push parity.
