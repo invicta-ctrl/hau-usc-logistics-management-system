@@ -2592,7 +2592,16 @@ test('Administrator UI routes a one-time department reset through the current V5
   page,
 }) => {
   await signInV5(page, 'LOCAL.ADMIN');
+  const initialDirectoryResponsePromise = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      new URL(response.url()).pathname === '/api/admin/access/directory' &&
+      response.request().postDataJSON()?.limit === 100 &&
+      response.request().postDataJSON()?.offset === 0,
+  );
   await openV5Route(page, 'admin.access');
+  const initialDirectoryResponse = await initialDirectoryResponsePromise;
+  expect(initialDirectoryResponse.status()).toBe(200);
   await expect(page.getByRole('heading', { name: 'Accounts and Access', exact: true })).toBeVisible();
 
   const access = page.locator('[data-v5-admin-parity="access"]');
