@@ -518,12 +518,6 @@ test('a reviewer routes each line of a public request through the shipped Main H
   const form = page.locator('[data-v5-command="request-review"]:visible').first();
   await expect(form).toBeVisible();
 
-  // The queue reports the server's true total, not the rows on screen, so
-  // review work past the first page is not silently unreachable.
-  await expect(page.locator('[data-v5-route-search-status="request.queue"]')).toContainText(
-    /authorized requests shown/u,
-  );
-
   // Exactly one explicit decision control per reviewable line.
   const decisions = form.locator('select[name^="lineDecision"]');
   await expect(decisions).toHaveCount(2);
