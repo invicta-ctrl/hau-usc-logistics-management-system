@@ -1,7 +1,7 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_STATIC_TEST_CONTRACT_SCOPE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
-- **State:** `STATIC_TEST_CONTRACT_SCOPE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **Status:** `V81-S12_CLOUDFLARE_LOCAL_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
+- **State:** `CLOUDFLARE_LOCAL_CLOSURE_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT`
 - **Objective:** Internal stabilization verification complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
@@ -12,7 +12,7 @@
 - **Durable recovery-amendment tree:** `e26e7d44b5454b3fc2025b4647d232abf274cf56`
 - **Durable legacy-browser-gate amendment commit:** `1a93bb01acc5a732b3f9180be93d1d04d8001114`
 - **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
-- **Current canonical identity:** local commit `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`; upstream and remote remain `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`, divergence is `3/0`, and exactly the two authorized generated HTML outputs are dirty and unstaged; preserved46 and capture remain verified.
+- **Current canonical identity:** local commit `43ab869d762041fd3f40f2e536e705cec64f1add`, tree `a3f841dbfec52007cef0e6243e4daa5640261334`; upstream remains `49a09f4bad323016d1e18a634db13ae04f5eb532`, local is ahead by `2`, and exactly the two authorized generated HTML outputs are dirty and unstaged at SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A`; preserved46 and capture remain verified.
 - **Recorded at:** `2026-08-12T09:53:53.1092205+08:00`
 - **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_accelerated`
 - **Sol S12 boundary acceptance:** `PASS`
@@ -46,6 +46,12 @@
 - **Sol static-test-contract scope acceptance:** `PASS`
 - **Fresh Luna static-test-contract scope review:** `PASS_NO_P0_P1_P2_P3`
 - **Static-test-contract scope review timestamp:** `2026-08-12T19:35:43.2744931+08:00`
+- **Cloudflare-local closure amendment recorded at:** `2026-08-12T21:15:47.5524268+08:00`
+- **Sol Cloudflare-local closure acceptance:** `PASS`
+- **Fresh Luna Lane W plan review:** `PASS_NO_P0_P1_P2_P3`
+- **Fresh Luna Lane A closure review:** `PASS_NO_P0_P1_P2_P3`
+- **Fresh Luna Lane R plan review:** `PASS_NO_P0_P1_P2_P3`
+- **Cloudflare-local closure amendment review timestamp:** `2026-08-12T21:38:32.6856135+08:00`
 
 ## Durable S11 handoff
 
@@ -100,12 +106,12 @@ The mechanical outcome is exact:
 - `18` failures are obsolete `Access ID` locator/timeouts, including one approximately `60s` case; `3` are stale locators; and `1` is a stale pathname expectation.
 - No HTTP or API status assertion failed. Fourteen failures occurred before any API assertion; eight occurred only after successful setup/API work. The `36` passes preserve current API, D1, authentication, request, inventory, and revision-related coverage as a baseline.
 
-Static contract tracing and the frozen worker evidence confirm four disjoint product P1 families with product P0 `0`:
+Historical static contract tracing and frozen worker evidence confirmed four disjoint product P1 families with product P0 `0` before the accepted P/G/A/T integration:
 
 - The Worker returns `{ok,correlationId,data:{contract,enabled,scope,token}}`; the backend and legacy runtime adapters pass that envelope through unchanged.
 - `src/v5/integration/runtime.js` reads `enabled` and `token` from the envelope root, so it drops every valid poll. Its separate integration revision map is also not seeded even though `state.scopeRevisions` already holds module tokens, and the current loop is a bare `30s` interval.
 - Existing `src/app/revision-sync.js` already supports envelope normalization, same-scope validation, monotonic tokens, single-flight refresh, backoff, visibility, online, and resume behavior. It may be imported and reused unchanged; it is not an authorized write path.
-- The same V5 routing seam does not reliably map the authenticated default workspace to its authoritative route. The required mapping is Administrator to `admin.overview`, Director to `director.overview`, Food Committee to `food.overview`, Inventory and Pantry to `inventory.overview`, and Materials Committee to `materials.overview`. A mapped route may be selected only when present and allowed in the server-projected `authorizedRoutes`; otherwise choose a deterministic safe authorized fallback, such as the first safe route or `account.profile` when authorized, and never select an unauthorized route.
+- The same V5 routing seam did not reliably map the authenticated default workspace to its authoritative route. The required mapping is Administrator to `admin.overview`, Director to `director.overview`, Food Committee to `food.overview`, Inventory and Pantry to `inventory.overview`, and Materials Committee to `materials.overview`. Here and throughout this packet, "server-projected authorized routes" means route IDs derived client-side from server-projected capabilities plus normalized `workspaceIds`; it does not mean a literal server `authorizedRoutes` field and authorizes no backend, API, payload, schema, or view-model change.
 - At viewport widths at or below `767px`, current CSS hides the sole account trigger and therefore makes the profile/session/sign-out action unreachable. This is a product accessibility and session-boundary failure, not a test-only selector mismatch.
 - The Vite HTML generator inserts module text through a JavaScript replacement string, so replacement metapatterns expand rather than remaining byte-exact. The exact adversarial tokens are:
 
@@ -118,7 +124,7 @@ Static contract tracing and the frozen worker evidence confirm four disjoint pro
 
   The committed artifacts remain clean, so there is no current live impact. The frozen Lane P minified bundle exposed one script pair, four `</body>` occurrences, and one `Unexpected token`, making this release-blocking.
 
-The exact open families are `V5_REVISION_POLL_ENVELOPE_BASELINE_LIFECYCLE`, `V5_GENERATOR_REPLACEMENT_STRING_EXPANSION`, `MOBILE_ACCOUNT_LOGOUT_UNREACHABLE`, and `DEFAULT_WORKSPACE_ROUTE_MISMAPPING`. Thus `OPEN_PRODUCT_P1=4`; they remain separate from the resolved legacy-browser verification-contract P1.
+The prior exact families were `V5_REVISION_POLL_ENVELOPE_BASELINE_LIFECYCLE`, `V5_GENERATOR_REPLACEMENT_STRING_EXPANSION`, `MOBILE_ACCOUNT_LOGOUT_UNREACHABLE`, and `DEFAULT_WORKSPACE_ROUTE_MISMAPPING`. They are now integrated, and the post-combine npm, V5 functional, and V5 visual gates below are green. The current closure evidence isolates one open product P1, `V5_WORKSPACE_CAPABILITY_AND_WORKSPACE_ID_PRE_READ_AUTHORIZATION`; the bounded Lane A and Lane R failures are test-contract corrections, not additional product P1s.
 
 ## Frozen partial worker evidence
 
@@ -126,9 +132,9 @@ Lane P remains frozen, uncommitted, and unstaged at base `947c15d26df9ff37ee0e3b
 
 Lane A remains frozen, uncommitted, and unstaged at the same base and tree in `worktrees/v081-s12-lane-a-current-ui`, with only `tests/cloudflare-e2e/local-worker.spec.js` modified, working blob `3ecd5e455536343a12011962ccca850f0a6fa68d`. Partial V5 ports and static checks are green. Progressive authorized attempts validated the first `17` tests, then stopped at the mobile hidden-account path. Its current diff removed the account-menu assertions under an earlier test-only interpretation; those assertions must be restored after this amendment. The later bounded diagnostic was interrupted and has no result claim. Preserve the entire partial diff without revert.
 
-## Exact disjoint repair lanes accepted pending governance persistence
+## Historical accepted P/A/G repair lanes
 
-Fresh independent Lane P, Lane A, and Lane G plan audits all returned `PASS_NO_P0_P1_P2_P3`, and Sol accepted this amendment. Only after the exact four governance paths are committed and normally pushed and parity is proved may the frozen workers resume and the new Lane G worker be created. All workers remain local-only with no upstream or push.
+Fresh independent Lane P, Lane A, and Lane G plan audits all returned `PASS_NO_P0_P1_P2_P3`, and Sol accepted that earlier amendment. Its governance was durably persisted; all three workers completed, received independent implementation audits, and were integrated as recorded below. Their worktrees remain local-only historical evidence with no upstream or push.
 
 ### Lane P - revision polling and near-live request visibility
 
@@ -165,38 +171,68 @@ Only the Integration writer may include `dist/index.html` and `HAU-USC_Logistics
 
 Lane P ran focused syntax, formatting, lint, unit, and V5 coverage; Lane A ran focused syntax, formatting, and lint; and Lane G ran syntax, formatting, lint, and the focused dist verifier. Each implementation received a fresh independent read-only Luna audit. The Integration writer combined the accepted commits unchanged, verified pairwise overlap `0` across their exact eight paths, and retained sole ownership of combined scope and regression audits.
 
-Canonical Integration cherry-picked P, G, and A unchanged in that order: P became `a621341e1f2e5d56f6e45b6bd840ef8fa4d6e7e5`, G became `f72714fffedf5a44f31f0994e26e7a520ac53aab`, and A became `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`. Their base is `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`; conflicts and prohibited paths are zero.
+Canonical Integration cherry-picked P, G, and A unchanged in that order: P became `a621341e1f2e5d56f6e45b6bd840ef8fa4d6e7e5`, G became `f72714fffedf5a44f31f0994e26e7a520ac53aab`, and A became `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`. Their base is `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`; conflicts and prohibited paths are zero. Lane T later integrated as `76aedf329ddf406a5c06c2d6ea35a7b7d970036d`, and the audited mobile topbar gap repair integrated as current canonical `43ab869d762041fd3f40f2e536e705cec64f1add`, tree `a3f841dbfec52007cef0e6243e4daa5640261334`.
 
-The combined `npm.cmd run check` ran exactly once under portable Node 22 with `VITEST_MAX_WORKERS=1`. Governance, lint, and its deterministic build passed, then Vitest stopped on one failure after `127.01s`: `138/139` test files and `964/965` tests passed. The sole failure is `tests/unit/v5-operations-parity.test.js`, test `clears route-local search state at every session boundary`. V5 functional, V5 visual, Cloudflare-local `58`, and all four staging/Production build-verification gates remain unrun.
+After Lane T integrated, the invalidated combined `npm.cmd run check` ran exactly once under portable Node 22 with `VITEST_MAX_WORKERS=1` and passed `139/139` test files and `965/965` tests. The accepted one-line mobile topbar gap repair then closed the reproduced `320px` overflow. Its invalidated V5 functional rerun passed `85` with `104` intentional skips and zero failures across all nine widths, and V5 visual passed `5/5` across its five widths. The four staging/Production build-verification gates remain unrun.
 
 The deterministic build left exactly the two authorized generated outputs dirty and unstaged. `dist/index.html` and `HAU-USC_Logistics-Prototype-Shareable.html` are byte-identical at `639260` bytes with SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A`, LF `826`, CR `0`, BOM `0`, and trailing-whitespace lines `0`. `dist/_headers`, `package-lock.json`, `.github/workflows/ci.yml`, and `.github/workflows/release-candidate.yml` remain blob-identical to HEAD.
 
-### Lane T - stale static session-boundary source contract
+### Lane T - integrated stale static session-boundary source contract
 
-Fresh diagnosis confirms the runtime product behavior is correct and adds no product P0 or P1. The stale unit assertion expects a `signOut` `finally` block and literal `integration.routeSearch.clear()` inside `signOut`. The combined runtime instead calls `advanceAuthGeneration()` before the awaited logout; `advanceAuthGeneration()` invokes `clearAuthenticatedProjection()`, which clears `integration.state`, route-local search, and the rest of the authenticated projection immediately. Existing V5 E2E covers delayed logout followed by relogin.
+Fresh diagnosis confirmed the runtime product behavior was correct and added no product P0 or P1. The stale unit assertion expected a `signOut` `finally` block and literal `integration.routeSearch.clear()` inside `signOut`. The combined runtime instead calls `advanceAuthGeneration()` before the awaited logout; `advanceAuthGeneration()` invokes `clearAuthenticatedProjection()`, which clears `integration.state`, route-local search, and the rest of the authenticated projection immediately. Existing V5 E2E covers delayed logout followed by relogin.
 
-After this amendment is accepted and durably persisted, Lane T may edit only:
+Lane T edited only:
 
 - `tests/unit/v5-operations-parity.test.js`
 
-Lane T may update static assertions only so they recognize the centralized `clearAuthenticatedProjection` -> `advanceAuthGeneration` -> `signOut` ordering while preserving every product, runtime, privacy, authentication, route-search, and test invariant. It may not edit runtime or any other source, test, configuration, package, generated artifact, timeout, or skip. The exact failure above is the reproduction evidence. After implementation, run the focused `v5-operations-parity` unit once; only after it passes may the invalidated combined `npm.cmd run check` run once. No other S12 gate may run before that combined check is green.
+Lane T updated only the stale static assertions to recognize the centralized `clearAuthenticatedProjection` -> `advanceAuthGeneration` -> `signOut` ordering while preserving every product, runtime, privacy, authentication, route-search, and test invariant. Its focused unit passed, its fresh implementation audit returned `PASS_NO_P0_P1_P2_P3`, and the unchanged local commit was integrated as `76aedf329ddf406a5c06c2d6ea35a7b7d970036d`. No runtime or other source, test, configuration, package, generated artifact, timeout, or skip changed in Lane T.
+
+## Cloudflare-local closure evidence and exact disjoint lanes
+
+At current canonical `43ab869d762041fd3f40f2e536e705cec64f1add`, tree `a3f841dbfec52007cef0e6243e4daa5640261334`, `npm.cmd run test:e2e:cloudflare:local` ran exactly once against a newly created temporary D1 state. It exited `1` after `88.9s` wrapper time (`1.5m` reported by Playwright), with `50` passed and `8` failed of `58`. The authoritative `.last-run.json` SHA-256 is `7E4EF0D6AE977EA97D299A14208FFCF391674CBF4A00E3A9211CA60726601D10`; exactly eight current failure directories retain sanitized error context, screenshot, and trace evidence. No HTTP, API, or D1 assertion failed.
+
+The exact mechanical diagnosis is:
+
+- `tests/cloudflare-e2e/local-worker.spec.js` accounts for seven failures. The bounded stale test-contract families are Food Committee's current empty state instead of a `request-review` marker; current route-marker labels in the System Owner scope-switch and all-workspace list; exact `Action` label selection at the three diagnosed call sites around lines `1823`, `2604`, and `2632`; and exact `New password` plus `Confirm new password` labels. These may require more than six textual line edits, but only those exact diagnosed families are authorized. The genuine Food-to-Materials denial assertion and every API/D1 assertion must remain.
+- `tests/cloudflare-e2e/rv01-request-visibility.spec.js` accounts for one timeout before the API assertion because it still requests exact `Password`; it may change only to exact `Password (required)` and wait for `.shell`.
+- One product P1 is confirmed in `src/v5/integration/runtime.js`: for the five overview routes only, an existing capability and a normalized server-projected `workspaceIds` membership must both be present before any module or special read. Missing or empty `workspaceIds` must fail closed. `defaultWorkspace` selects among already authorized workspaces; it grants nothing. Public, account, shared, operational, admin, and audit behavior must not change.
+
+### Lane W - five-workspace pre-read authorization
+
+Lane W may write only:
+
+- `src/v5/integration/runtime.js`
+- `tests/unit/v5-revision-sync.test.js`
+- `tests/e2e/v5-current-application-fixtures.js`
+
+Map only `admin.overview`, `director.overview`, `food.overview`, `inventory.overview`, and `materials.overview` to their matching workspace IDs. Before module or special reads, require both the existing capability and normalized server `workspaceIds`; missing or empty IDs fail closed for these five. `defaultWorkspace` remains selection-only. The owner fixture must expose all five workspace IDs with Administrator as default. The focused unit matrix must cover the mapping, Food-to-Materials denial before read, missing IDs, empty IDs, multiple workspaces, and default-only-without-grant. No backend, schema, API, payload, view-model, public, account, shared, operational, admin, or audit change is authorized.
+
+### Lane A closure - diagnosed local-worker assertions
+
+Lane A closure may write only `tests/cloudflare-e2e/local-worker.spec.js`. It may correct only the diagnosed families above, using exact label and current semantic assertions while retaining the genuine Food-to-Materials denied assertion and every API/D1 invariant. No skip, timeout, product source, configuration, role, authorization, or assertion weakening is allowed.
+
+### Lane R - RV01 sign-in boot contract
+
+Lane R may write only `tests/cloudflare-e2e/rv01-request-visibility.spec.js`, changing exact `Password` to exact `Password (required)` and using `.shell` as the sole current boot assertion. No other selector, route, runtime, API, D1, timeout, or behavior change is authorized.
+
+Lane W, Lane A closure, and Lane R are pairwise disjoint. Workers run no browser tests: Lane W runs focused unit and static checks; Lane A and Lane R run static checks only. Each implementation requires a fresh independent read-only Luna audit before Integration combines it. The existing unique implementation scope is nine paths; Lane W adds one new fixture path while amending two existing paths, Lane A and Lane R amend existing paths, and the two conditional generated outputs remain Integration-only. The maximum unique combined candidate scope is therefore `12` paths.
 
 ## Exact governance boundary
 
-Before this accepted static-test-contract scope amendment is durably persisted, the only newly authorized writes are:
+The fresh Lane W, Lane A closure, and Lane R plan audits are `PASS_NO_P0_P1_P2_P3`, and Sol acceptance is `PASS`. Before this accepted Cloudflare-local closure amendment is durably persisted, the only authorized writes are:
 
 - `.codex/CURRENT.md`
 - `.codex/CURRENT_TASK.md`
 - `.codex/CURRENT_HANDOFF.md`
 - `.codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md`
 
-Lane T implementation is authorized only after the accepted exact four governance paths are committed, normally pushed, and verified at local/upstream/live-remote parity with preserved46. Until then, no test/runtime/generated-output edit, runtime download, npm, test, build, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized. Focused governance verification of these four Markdown paths is authorized, while the existing two generated-output deltas must remain byte-preserved and unstaged.
+Lane W, Lane A closure, and Lane R implementation is authorized only after the accepted exact four governance paths are committed, normally pushed, and verified at local/upstream/live-remote parity with preserved46. Until then, no source, test, fixture, generated-output, worktree, runtime-download, npm, test, build, provider, private-configuration, live-data, deployment, migration, release-manifest, candidate-freeze, Playground, Production, ref, or S13+ action is authorized. Focused governance verification of these four Markdown paths is authorized, while the existing two generated-output deltas must remain byte-preserved and unstaged.
 
-The current local operational baseline is canonical commit `45a3a0af289f82291e190633dae4c68b5af0a5b6`, tree `cd47c05d51fe41c441579ca8d2f97ef4dcbbaf2f`; upstream and live remote remain `b061f581656ba57ee092a9d7f8b22e5f8215dd9a`, so divergence is intentionally `3/0`. The next operational candidate is the future exact governance commit created after this amendment is accepted; its commit and tree must not be invented here.
+The current local operational baseline is canonical commit `43ab869d762041fd3f40f2e536e705cec64f1add`, tree `a3f841dbfec52007cef0e6243e4daa5640261334`; upstream remains `49a09f4bad323016d1e18a634db13ae04f5eb532`, so local is intentionally ahead by `2`. Staged count is `0`, preserved count is `46`, and only `dist/index.html` plus `HAU-USC_Logistics-Prototype-Shareable.html` are dirty at identical SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A`. The next operational candidate is the future exact governance commit created after this amendment is accepted; its commit and tree must not be invented here.
 
 ## Retained recovery clone
 
-The retained recovery clone is preserved with the ignored Cloudflare-local evidence above. Do not clean, reset, delete, repurpose, or discard it. Preserve the frozen Lane P and Lane A worktrees at `947c15d` without revert, reset, cleanup, test, or resume. Only after durable governance parity may those workers resume and a new isolated Lane G worktree be created; no worker may reuse an evidence clone.
+The retained recovery clone and prior worker worktrees are preserved as historical evidence. Do not clean, reset, delete, repurpose, discard, or reuse them for Lane W, Lane A closure, or Lane R. After durable closure-governance parity, create or use only separately authorized isolated local-only worktrees at the exact pushed boundary; no worker may reuse an evidence clone.
 
 Do not reuse, advance, clean, reset, delete, or normalize `worktrees/v081-s12-internal-verification-aa083567`. That retained failed clone intentionally remains at its recorded first-run state with exactly the two EOL-presentation HTML paths reported by status. Preserve the recovery clone's ignored evidence, `worktrees/v081-s10-evidence-bb652506`, and the isolated S11 implementation worktree; no evidence or worker clone may be repurposed.
 
@@ -210,15 +246,14 @@ The accepted recovery clone already ran `npm.cmd ci` once with the committed `pa
 
 ## One-pass internal stabilization gate
 
-The pre-repair exact-candidate `npm.cmd run check`, V5 functional, and V5 visual gates remain truthful historical evidence. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. P, G, and A are now combined; their first combined `npm.cmd run check` is the retained single-failure evidence above. No later gate may run until Lane T is accepted, implemented, focused-green, and the invalidated combined check is green.
+The pre-repair gates and first combined failure remain truthful historical evidence. The full `npm.cmd run test:e2e` command remains retired from this v0.8.1 S12 gate and must not be rerun. P, G, A, T, and the mobile gap are integrated. The post-T combined `npm.cmd run check`, post-gap V5 functional, and V5 visual gates are green; the fresh-D1 Cloudflare-local `50/8` result is the current stop evidence. No operational command may run before this closure amendment is audited, accepted, persisted, and its exact workers are implemented, audited, and combined.
 
-After Lane T is accepted, implemented, and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the invalidated and remaining gates once in this order:
+After accepted Lane W, Lane A closure, and Lane R are implemented, independently audited, and combined, every `npm.cmd` below means the absolute `npm.cmd` adjacent to the checksum-verified portable Node executable. Run the invalidated and remaining gates once in this order:
 
 ```powershell
-npx.cmd --no-install vitest run tests/unit/v5-operations-parity.test.js
 npm.cmd run check
 npm.cmd run test:e2e:v5
-npm.cmd run test:e2e:v5:visual
+# Run npm.cmd run test:e2e:v5:visual only if a deterministic visual/CSS diff exists.
 npm.cmd run test:e2e:cloudflare:local
 npm.cmd run build:cloudflare
 npm.cmd run verify:deploy:artifact -- staging .wrangler/build/staging
@@ -226,18 +261,18 @@ npm.cmd run build:cloudflare:production
 npm.cmd run verify:deploy:artifact -- production .wrangler/build/production
 ```
 
-The V5 visual command is mandatory once immediately after V5 functional because Lane A authorizes `v4.css`.
+Lane W runs its focused `v5-revision-sync` unit before its implementation audit. Lane A closure and Lane R run static checks only. The current V5 visual result remains valid because W/A/R do not authorize visual or CSS changes; its rerun is a conditional no-op unless the combined diff deterministically changes visual output.
 
 The completed and remaining browser dispositions are exact:
 
-- V5 functional is complete at `80` pass, `64` intentional skip, zero fail across its nine widths and becomes invalidated when the accepted runtime and route repair is combined; rerun it once then.
-- V5 visual is complete and accepted at `5/5`, zero fail across its five widths, but `v4.css` invalidates it; rerun it once after combine.
+- V5 functional is complete at `85` pass, `104` intentional skip, zero fail across its nine widths and becomes invalidated by Lane W runtime and fixture changes; rerun it once after combine.
+- V5 visual is complete and accepted at `5/5`, zero fail across its five widths. W/A/R authorize no visual or CSS path, so retain it without rerun unless a deterministic visual diff appears.
 - Full local E2E is retained only as the completed obsolete-contract diagnostic summarized above, not a release gate.
-- Local Cloudflare/D1 E2E has one retained failed diagnostic (`36` pass, `22` fail) and is authorized for exactly one post-combine rerun after Lane P, Lane A, and Lane G are accepted, independently audited, and combined.
+- Local Cloudflare/D1 E2E retains the earlier `36/22` diagnostic and the current authoritative closure run (`50` pass, `8` fail). It is authorized for exactly one fresh-D1 post-combine rerun after W/A/R are accepted, independently audited, and combined.
 
 The accepted recovery `npm.cmd run check` remains the exact full repository gate: governance, ESLint, deterministic preview build, the complete Vitest suite, Apps Script validation, V5 distribution parity, Cloudflare types, staging build, and Wrangler dry-run. The remaining explicit staging and Production builds must remain isolated under `.wrangler/build/staging` and `.wrangler/build/production`; each must pass `verify:deploy:artifact` for its exact target. None may be deployed.
 
-The S09, S10, and S11 results remain accepted baselines. The pre-repair S12 `check`, V5 functional, and V5 visual results remain truthful historical evidence. Combining the exact P4/A2/G2 paths plus the two conditional generated outputs invalidated `check`, V5 functional, and V5 visual. The first combined check stopped only on the stale static contract; Lane T invalidates that unit and the combined check, so the focused unit and full check each require one post-T run. V5 functional and V5 visual remain unrun on the combined candidate. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
+The S09, S10, and S11 results remain accepted baselines. The pre-repair and first-combine S12 evidence remains truthful history. The post-T combined check, post-gap V5 functional, and V5 visual are now green. W/A/R changes invalidate the combined check, V5 functional, and Cloudflare-local only; V5 visual remains valid absent a deterministic visual diff. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
 
 ## Deterministic integrity, static, security, and privacy evidence
 
@@ -245,7 +280,7 @@ The operational run must also prove, without printing matched content or private
 
 - package version is exactly `0.8.1`; the attached branch is `release/v0.8.1-final-stabilization`; local HEAD, upstream, and live remote equal the pushed recovery candidate; divergence is `0/0`;
 - local `core.autocrlf` is exactly `false`; the protected visual-baseline LF sentinel and Git blob match; portable Node is exactly `v22.23.2`; the official archive checksum, extracted file set, adjacent npm, process-scoped environment, and no-competing-Node/`workerd` predicates pass;
-- the pre-repair `npm.cmd run check` evidence remains bound to the pre-repair candidate, the retained failed combined check remains bound to local `45a3a0af` and the exact P4/A2/G2 plus generated-output scope, and the post-T rerun is bound to the exact authorized maximum-eleven-path combined scope, unchanged lockfile and workflows, and generator-produced conditional artifacts only;
+- historical check evidence remains bound to its recorded candidates, the green post-T check and post-gap V5 gates remain bound to local `43ab869d`, and the future W/A/R reruns must bind to the exact authorized maximum-twelve-path combined scope, unchanged lockfile and workflows, and generator-produced conditional artifacts only;
 - default `git diff --check`, `git -c core.whitespace=cr-at-eol diff --check`, `npm.cmd run check:governance`, and the exact candidate status/scope checks pass;
 - a deterministic count-only scan of the candidate delta reports no new private-key block, recognized bearer/token format, explicit credential assignment, raw provider identifier, disallowed live email domain, or personal-data fixture; only labels, counts, and paths safe for repository evidence may be recorded;
 - `dist/index.html` and the root shareable retain the current generator-produced `639260`-byte SHA-256 `032AE81CB728A21E87D1CA97F65EC12A08308EA4E822FCF3481C04C16615529A` output unless an authorized later build deterministically proves another candidate-bound result; they remain byte-identical with required V5 markers, no effective Production Playground capability, CR `0`, BOM `0`, and trailing-whitespace lines `0`, while `dist/_headers` remains unchanged;
@@ -259,7 +294,7 @@ Local CodeQL CLI is not part of this boundary, and `.github/workflows/ci.yml` pl
 
 ## Expected result and evidence handling
 
-After acceptance, expected tracked changes are only Lane P's four paths, Lane A's two paths, Lane G's two paths, Lane T's one test-contract path, and the two Integration-only generated HTML outputs. The maximum combined scope is `11`. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. The retained failed clone's two EOL-presentation status paths and recovery-clone evidence must remain preserved.
+After acceptance, the existing unique implementation scope remains nine paths. Lane W adds only `tests/e2e/v5-current-application-fixtures.js` while amending the existing runtime and revision-sync unit paths; Lane A closure and Lane R amend existing test paths. With the two Integration-only generated HTML outputs, the maximum combined scope is `12`. The generated HTML files must remain byte-identical to each other; `dist/_headers`, dependencies, `package-lock.json`, workflows, and Playground files must remain unchanged. Any other tracked delta stops the work; do not hand-edit, normalize, stage, retry, or select an alternate command to erase it. Retained failed-clone and recovery-clone evidence must remain preserved.
 
 The official portable Node archive, checksum file, extracted runtime, operational logs, reports, screenshots, traces, local D1 state, Cloudflare build output, and count-only evidence must remain in the existing immutable private/tooling directory or as classified ephemeral/ignored output. They may not enter Git. A later S12 closeout may write only the three current records and this packet after a separate accepted evidence review.
 
@@ -271,12 +306,12 @@ Stop at the first occurrence of:
 - preserved portable Node `v22.23.2`, adjacent npm, archive checksum, process-environment restoration, local `core.autocrlf=false`, or canonical-LF sentinel failure;
 - any repository test/build Node or `workerd` process; any premature rerun of `npm.cmd ci`, `check`, V5 functional, Cloudflare-local, or the retired full matrix; any V5 visual run without a visual diff; or any `package-lock.json` change; unrelated desktop MCP and CodeGraph Node processes are non-operational and do not trigger this stop;
 - any failed remaining local Worker/D1, build, deploy-artifact, governance, static, security, privacy, identity, artifact, cleanup, or orphan-process predicate;
-- any unexpected or out-of-scope tracked delta outside the authorized maximum-eleven-path combined scope; any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
+- any unexpected or out-of-scope tracked delta outside the authorized maximum-twelve-path combined scope; any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
 - any command rerun beyond the exact post-combine authorization, variant, alternate runtime source, timeout increase, package script/spec skip, out-of-lane source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
-- any scope overlap; missing route or generator regression; hidden mobile logout; wrong default route; replacement-token expansion; regression; privacy, authentication, scope, or token failure; D1/API invariant failure; unknown diff; remaining P1; new P0 or additional P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
+- any scope overlap; unauthorized module or special read; missing or empty workspace fail-open; route-map expansion beyond the five overview routes; public, account, shared, operational, admin, or audit semantic change; assertion weakening; privacy, authentication, scope, token, D1, or API invariant failure; unknown diff; remaining P1; new P0 or additional P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
 
-Explicitly excluded at S12 are package script/spec skip, timeout changes, edits outside the exact P/A/G/T and conditional Integration-output paths, any runtime change for Lane T, any edit to `src/app/revision-sync.js`, Worker/API/schema/migration changes, deployed HTTPS staging auth, Phase 23 acceptance, provider and private-config reads or writes, live D1/R2/Google access, deploy, migration, seed/reset, live restore, R2 write, staging smoke, release-manifest creation, candidate freeze, Playground, Production, merge, tag, release, recovery-pointer, ref, and S13+ actions. No further runtime download, extraction, or dependency installation is authorized.
+Explicitly excluded before governance persistence are all W/A/R implementation, worktree, npm, test, and build actions. After acceptance, edits outside exact W/A/R paths and conditional Integration outputs remain forbidden. No literal server `authorizedRoutes` field, backend, view-model, API, schema, migration, package script/spec skip, timeout, `src/app/revision-sync.js`, dependency, lockfile, workflow, deployed HTTPS staging auth, Phase 23 acceptance, provider/private-config/live D1/R2/Google read or write, deploy, seed/reset, live restore, R2 write, staging smoke, release manifest, candidate freeze, Playground, Production, merge, tag, release, recovery pointer, ref, or S13+ action is authorized. No further runtime download, extraction, or dependency installation is authorized.
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted S12 static-test-contract scope amendment; after PASS, stage, commit, and normally push exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md while preserving the two unstaged generated HTML outputs, then verify local/upstream/live-remote parity for the governance chain plus staged0 and preserved46; only after durable governance parity implement Lane T in tests/unit/v5-operations-parity.test.js and follow the accepted T-first validation sequence; no Lane T edit, npm, test, build, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained generated-output mutation before that authorization.
+NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact Lane W, Lane A closure, and Lane R governance amendment; after PASS, stage, commit, and normally push exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md while preserving the two unstaged generated HTML outputs, then verify local/upstream/live-remote parity plus staged0 and preserved46; only after durable governance parity create isolated local-only W, A, and R workers for their exact disjoint scopes; no implementation, worker mutation, npm, test, build, provider, private-data, deployment, migration, ref, S13+, retired full test:e2e rerun, or retained generated-output mutation before that authorization.
