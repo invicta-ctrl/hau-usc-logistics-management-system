@@ -2782,6 +2782,7 @@ button[aria-disabled="true"],
   }
 
   .topbar {
+    column-gap: 6px;
     grid-template-columns: auto minmax(48px, 1fr) auto;
     min-height: 68px;
     padding-inline: 12px;
