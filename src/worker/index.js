@@ -7,6 +7,7 @@ import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { createD1AccountApplicationRepository } from '../server/d1/account-application-repository.js';
+import { createD1IdentityFoundationRepository } from '../server/d1/identity-foundation-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
 import { createD1ProfileRepository } from '../server/d1/profile-repository.js';
 import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
@@ -34,6 +35,10 @@ import {
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
+import {
+  createIdentityFoundationReconciliationService,
+  IdentityFoundationReconciliationError,
+} from '../server/identity-foundation/reconciliation.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
 import {
   createAccountApplicationActivationHandoff,
@@ -205,6 +210,7 @@ function json(value, status = 200, additionalHeaders = {}) {
 function services(env) {
   const repository = createD1AuthRepository(env.DB);
   const accessRepository = createD1AccessManagementRepository(env.DB);
+  const identityFoundationRepository = createD1IdentityFoundationRepository(env.DB);
   const rosterRepository = createD1IdentityRosterRepository(env.DB);
   const accountApplicationRepository = createD1AccountApplicationRepository(env.DB);
   const passwordKdf = createPasswordKdf({
@@ -334,6 +340,11 @@ function services(env) {
     }),
     crypto: rosterCrypto,
   });
+  const identityFoundationReconciliation = createIdentityFoundationReconciliationService({
+    legacyRosterRepository: rosterRepository,
+    foundationRepository: identityFoundationRepository,
+    crypto: rosterCrypto,
+  });
   const profile = createProfileService({
     repository: createD1ProfileRepository(env.DB),
     passwordKdf,
@@ -352,6 +363,7 @@ function services(env) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
     operationalHealth,
@@ -500,6 +512,7 @@ async function handleApi(request, env, requestId, executionContext) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
     operationalHealth,
@@ -1074,6 +1087,14 @@ async function handleApi(request, env, requestId, executionContext) {
       throw new IdentityRosterError('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
     }
 
+    if (
+      url.pathname === '/api/owner/identity-foundation/reconciliation-preview' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await identityFoundationReconciliation.preview({ actor })) });
+    }
+
     if (url.pathname.startsWith('/api/owner/evidence/') && request.method === 'POST') {
       const mutation = url.pathname !== '/api/owner/evidence/status';
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation })).account;
@@ -1275,12 +1296,14 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
       error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
       error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError

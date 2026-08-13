@@ -282,6 +282,9 @@ export function createLegacyRuntimeAdapter(
         remote.rollbackIdentityRosterSync(command),
       );
     },
+    previewCanonicalIdentityReconciliation(payload = {}) {
+      return remote.previewCanonicalIdentityReconciliation(payload);
+    },
     getIdentityRosterSelfProfile(payload = {}) {
       return remote.getIdentityRosterSelfProfile(payload);
     },

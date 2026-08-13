@@ -184,6 +184,43 @@ describe('schema-31 canonical identity foundation', () => {
     await expect(repository.getActiveAccountStaffLink('ACCOUNT-SYNTHETIC-0001')).resolves.toEqual(link);
   });
 
+  it('reads only opaque canonical and verified-account matching fields for reconciliation planning', async () => {
+    const repository = await migratedRepository();
+    const fingerprint = 'FP-SYNTHETIC-RECONCILIATION-0001';
+    await repository.createPerson(person(firstPersonId));
+    await repository.createPersonEmail(
+      email({
+        id: 'EML-SYNTHETIC-RECONCILIATION-0001',
+        personId: firstPersonId,
+        fingerprint,
+        primary: true,
+      }),
+    );
+    sqlite
+      .prepare(
+        `UPDATE accounts
+         SET verified_email_fingerprint = ?1, profile_email_verified_at = ?2
+         WHERE id = ?3`,
+      )
+      .run(fingerprint, time, 'ACCOUNT-SYNTHETIC-0001');
+
+    await expect(repository.listCanonicalEmailMatches(fingerprint)).resolves.toEqual([
+      {
+        id: 'EML-SYNTHETIC-RECONCILIATION-0001',
+        personId: firstPersonId,
+        state: PERSON_EMAIL_STATE.ACTIVE,
+        verificationState: PERSON_EMAIL_VERIFICATION_STATE.VERIFIED,
+      },
+    ]);
+    await expect(repository.listAccountsByVerifiedEmailFingerprint(fingerprint)).resolves.toEqual([
+      {
+        id: 'ACCOUNT-SYNTHETIC-0001',
+        status: 'ACTIVE',
+        profileEmailVerifiedAt: time,
+      },
+    ]);
+  });
+
   it('retains assignment provenance with nullable unproven dates and only collapses exact fingerprints', async () => {
     const repository = await migratedRepository();
     await repository.createPerson(person(firstPersonId));

@@ -30,6 +30,25 @@ function mapEmail(row) {
   };
 }
 
+function mapCanonicalEmailMatch(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    personId: row.person_id,
+    state: row.state,
+    verificationState: row.verification_state,
+  };
+}
+
+function mapVerifiedAccountCandidate(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    status: row.status,
+    profileEmailVerifiedAt: row.profile_email_verified_at ?? null,
+  };
+}
+
 function mapAccountStaffLink(row) {
   if (!row) return null;
   return {
@@ -87,6 +106,32 @@ export function createD1IdentityFoundationRepository(db) {
         .bind(personId)
         .all();
       return result.results.map(mapEmail);
+    },
+
+    async listCanonicalEmailMatches(normalizedEmailFingerprint) {
+      const result = await db
+        .prepare(
+          `SELECT id, person_id, state, verification_state
+           FROM person_emails
+           WHERE normalized_email_fingerprint = ?1
+           ORDER BY person_id, id`,
+        )
+        .bind(normalizedEmailFingerprint)
+        .all();
+      return result.results.map(mapCanonicalEmailMatch);
+    },
+
+    async listAccountsByVerifiedEmailFingerprint(verifiedEmailFingerprint) {
+      const result = await db
+        .prepare(
+          `SELECT id, status, profile_email_verified_at
+           FROM accounts
+           WHERE verified_email_fingerprint = ?1
+           ORDER BY id`,
+        )
+        .bind(verifiedEmailFingerprint)
+        .all();
+      return result.results.map(mapVerifiedAccountCandidate);
     },
 
     async createPersonEmail(value) {

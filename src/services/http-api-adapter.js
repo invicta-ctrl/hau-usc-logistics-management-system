@@ -64,6 +64,7 @@ for (const [method, path] of Object.entries({
   listIdentityRoster: '/api/owner/identity-roster/directory',
   applyIdentityRosterSync: '/api/owner/identity-roster/apply',
   rollbackIdentityRosterSync: '/api/owner/identity-roster/rollback',
+  previewCanonicalIdentityReconciliation: '/api/owner/identity-foundation/reconciliation-preview',
   getIdentityRosterSelfProfile: '/api/identity-roster/self',
   getLendingUsage: '/api/lending/usage',
   listAdvertisements: '/api/admin/advertisements/list',

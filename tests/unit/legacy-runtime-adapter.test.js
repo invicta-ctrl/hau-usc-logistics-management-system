@@ -12,6 +12,7 @@ const EXPECTED_PROTECTED_METHODS = [
   'previewIdentityRosterSync',
   'applyIdentityRosterSync',
   'rollbackIdentityRosterSync',
+  'previewCanonicalIdentityReconciliation',
   'getIdentityRosterSelfProfile',
 ];
 
@@ -42,11 +43,13 @@ describe('legacy production runtime service contract', () => {
     await adapter.getIdentityRosterStatus({ page: 1 });
     await adapter.listIdentityRoster({ query: 'synthetic' });
     await adapter.previewIdentityRosterSync({});
+    await adapter.previewCanonicalIdentityReconciliation({});
     await adapter.getIdentityRosterSelfProfile({});
 
     expect(remote.getIdentityRosterStatus).toHaveBeenCalledWith({ page: 1 });
     expect(remote.listIdentityRoster).toHaveBeenCalledWith({ query: 'synthetic' });
     expect(remote.previewIdentityRosterSync).toHaveBeenCalledWith({});
+    expect(remote.previewCanonicalIdentityReconciliation).toHaveBeenCalledWith({});
     expect(remote.getIdentityRosterSelfProfile).toHaveBeenCalledWith({});
   });
 
