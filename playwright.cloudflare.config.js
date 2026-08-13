@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: './tests/cloudflare-e2e',
   timeout: 30_000,
   fullyParallel: false,
+  workers: 1,
   reporter: [['list']],
   use: {
     baseURL: process.env.HAU_CLOUDFLARE_BASE_URL || 'http://127.0.0.1:8787',
