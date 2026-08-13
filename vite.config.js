@@ -74,6 +74,8 @@ export default defineConfig(async () => ({
   test: {
     environment: 'node',
     include: ['../tests/**/*.test.js'],
+    fileParallelism: false,
+    testTimeout: 10_000,
     coverage: { reporter: ['text', 'json-summary'] },
   },
 }));
