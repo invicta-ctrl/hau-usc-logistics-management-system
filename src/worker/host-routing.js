@@ -32,6 +32,10 @@ export function resolveHostRoute(input, environment, recoveryHostname) {
     return { action: 'allow' };
   }
 
+  if (runtimeEnvironment === 'STAGING' && hostname === 'playground.hausc.org') {
+    return { action: 'allow' };
+  }
+
   if (!Object.hasOwn(ENTRY_PATH_BY_HOST, hostname)) return { action: 'reject' };
   const entryPath = ENTRY_PATH_BY_HOST[hostname];
   if (entryPath && url.pathname === '/') {

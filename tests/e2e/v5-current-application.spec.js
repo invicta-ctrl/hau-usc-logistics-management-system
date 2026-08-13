@@ -98,6 +98,20 @@ test('production identity cannot activate playground chrome or the Index route',
   expect(pageErrors).toEqual([]);
 });
 
+test('unauthenticated Staff sign in return to portals stays public without session reads', async ({
+  page,
+}) => {
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: false });
+  await page.goto('/#/public.signin');
+  await waitForV5(page);
+
+  await page.getByRole('link', { name: 'Return to Portals' }).click();
+
+  await expect(page).toHaveURL(/#\/public\.landing$/u);
+  expect(requests.some(({ pathname }) => pathname === '/api/auth/session')).toBe(false);
+  expect(requests.some(({ pathname }) => pathname === '/api/playground/session')).toBe(false);
+});
+
 test('invalid release identity cannot activate the Playground cue or owner session', async ({
   page,
 }, testInfo) => {
