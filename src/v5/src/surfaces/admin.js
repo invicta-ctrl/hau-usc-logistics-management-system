@@ -156,8 +156,8 @@ export const profile = () => `${pageHead({
   <div class="panel"><div class="panel__body">
     <h2 class="block-title">Password</h2>
     <form style="display:grid;gap:16px" onsubmit="return false">
-      ${field({ label: 'Current password', name: 'cur', type: 'password', required: true })}
-      ${field({ label: 'New password', name: 'nw', type: 'password', required: true, hint: 'At least 12 characters.' })}
+      ${field({ label: 'Current password', name: 'cur', type: 'password', required: true, autocomplete: 'current-password', passwordVisibility: true })}
+      ${field({ label: 'New password', name: 'nw', type: 'password', required: true, autocomplete: 'new-password', passwordVisibility: true, hint: 'At least 12 characters.' })}
       <button class="btn btn--primary" type="submit" data-act="open-parity-actions" style="justify-self:start">Update password</button>
     </form>
   </div></div>

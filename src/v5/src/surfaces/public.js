@@ -139,6 +139,8 @@ export function signin({ state }) {
           name: 'p',
           type: 'password',
           required: true,
+          autocomplete: 'current-password',
+          passwordVisibility: true,
           error: invalid ? 'Enter your password to continue.' : '',
         })}
         <button class="btn btn--primary" type="submit"${
@@ -161,7 +163,7 @@ export const register = () =>
         ${field({ label: 'Full name', name: 'n', required: true })}
         ${field({ label: 'Institutional email', name: 'e', type: 'email', required: true, hint: 'Must match the protected directory exactly.' })}
         ${field({ label: 'Username', name: 'u', required: true, hint: 'Letters, numbers, and dots only.' })}
-        ${field({ label: 'Password', name: 'p', type: 'password', required: true, hint: 'At least 12 characters.' })}
+        ${field({ label: 'Password', name: 'p', type: 'password', required: true, autocomplete: 'new-password', passwordVisibility: true, hint: 'At least 12 characters.' })}
         <button class="btn btn--primary" type="submit">Create account</button>
       </form>
       <p class="auth-alt">Already have one? <a href="#/public.signin">Sign in</a></p>

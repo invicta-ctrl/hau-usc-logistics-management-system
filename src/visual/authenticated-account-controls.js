@@ -1,4 +1,5 @@
 import { AppError } from '../app/errors.js';
+import { attachPasswordVisibilityControls, passwordFieldMarkup } from './password-visibility.js';
 
 const CAPABILITIES = Object.freeze({
   ADMIN_REVIEW: 'account_application.admin_review',
@@ -97,7 +98,7 @@ function profileForms(profile) {
     <details><summary>Change username</summary>
       <form class="auth-form" data-profile-username>
         <label>New username<input name="username" autocomplete="username" minlength="4" maxlength="32" pattern="[a-z0-9](?:[a-z0-9]|[._-](?=[a-z0-9])){2,30}[a-z0-9]" required spellcheck="false"></label>
-        <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" maxlength="128" required></label>
+        ${passwordFieldMarkup({ id: 'profileUsernameCurrentPassword', name: 'currentPassword', label: 'Current password', autocomplete: 'current-password' })}
         <label>Reason<textarea name="reason" maxlength="500" required>Self-service username change</textarea></label>
         <p class="auth-help">Changing the username revokes all active sessions.</p>
         <button class="primary" type="submit">Change username and sign out</button>
@@ -105,9 +106,9 @@ function profileForms(profile) {
     </details>
     <details><summary>Change password</summary>
       <form class="auth-form" data-profile-password>
-        <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" maxlength="128" required></label>
-        <label>New password<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
-        <label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+        ${passwordFieldMarkup({ id: 'profilePasswordCurrent', name: 'currentPassword', label: 'Current password', autocomplete: 'current-password' })}
+        ${passwordFieldMarkup({ id: 'profilePasswordNew', name: 'newPassword', label: 'New password', autocomplete: 'new-password', minlength: '12' })}
+        ${passwordFieldMarkup({ id: 'profilePasswordConfirm', name: 'confirmPassword', label: 'Confirm new password', autocomplete: 'new-password', minlength: '12' })}
         <p class="auth-help">Changing the password revokes all active sessions.</p>
         <button class="primary" type="submit">Change password and sign out</button>
       </form>
@@ -141,6 +142,7 @@ function mountProfileDialog({ client, session, onSessionInvalidated }) {
 
   const render = () => {
     layer.body.innerHTML = `${profileOverview(profile)}<div class="account-control-status" data-profile-status aria-live="polite"></div>${profileForms(profile)}`;
+    attachPasswordVisibilityControls(layer.body);
     const contact = layer.body.querySelector('[data-profile-contact]');
     contact.addEventListener('submit', async (event) => {
       event.preventDefault();

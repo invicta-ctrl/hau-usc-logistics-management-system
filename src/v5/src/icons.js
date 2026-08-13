@@ -49,6 +49,9 @@ const PATHS = {
   activity: '<path d="M3 12h4l3 7 4-14 3 7h4" stroke-linecap="round" stroke-linejoin="round"/>',
   plus: '<path d="M12 5v14M5 12h14" stroke-linecap="round"/>',
   filter: '<path d="M4 6h16l-6 7v5l-4 2v-7Z" stroke-linejoin="round"/>',
+  eye: '<path d="M2.5 12s3.2-5.5 9.5-5.5S21.5 12 21.5 12 18.3 17.5 12 17.5 2.5 12 2.5 12Z" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.75"/>',
+  'eye-off':
+    '<path d="m3 3 18 18M10.6 6.7A9.8 9.8 0 0 1 12 6.5c6.3 0 9.5 5.5 9.5 5.5a17 17 0 0 1-3.2 3.8M6.2 6.2A17 17 0 0 0 2.5 12s3.2 5.5 9.5 5.5a9.7 9.7 0 0 0 3.1-.5M9.8 9.8a3.1 3.1 0 0 0 4.4 4.4" stroke-linecap="round" stroke-linejoin="round"/>',
 };
 
 export const ICON_NAMES = Object.keys(PATHS);

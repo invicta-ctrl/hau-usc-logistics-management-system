@@ -726,6 +726,50 @@ table.q tbody tr[aria-selected="true"] {
   font-size: var(--t-xs);
 }
 
+.field__password-control {
+  position: relative;
+  display: block;
+}
+
+.field__password-control > input {
+  padding-right: 5.25rem;
+}
+
+.field__password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 36px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: calc(var(--r-sm) - 2px);
+  background: transparent;
+  color: var(--ox-800);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.field__password-toggle[aria-pressed="true"] {
+  background: var(--cream);
+}
+
+@media (hover: hover) {
+  .field__password-toggle:hover {
+    background: var(--cream);
+  }
+}
+
+[data-theme="dark"] .field__password-toggle[aria-pressed="true"],
+[data-theme="dark"] .field__password-toggle:hover {
+  background: var(--paper-2);
+}
+
 /* Every text-like control, including password, search, file and tel.
    Listing types individually silently drops the ones you forget. */
 .field input:not([type="checkbox"]):not([type="radio"]),

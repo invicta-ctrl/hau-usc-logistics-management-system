@@ -1,3 +1,5 @@
+import { passwordVisibilityToggleDefinition, togglePasswordVisibility } from '../src/password-visibility.js';
+
 const CAPABILITY = Object.freeze({
   ACCESS: 'access.admin',
   APPLICATION_ADMIN: 'account_application.admin_review',
@@ -101,7 +103,19 @@ function field(spec) {
     checkbox.append(control, words);
     return checkbox;
   }
-  wrapper.append(label, control);
+  if (spec.passwordVisibility && spec.type === 'password') {
+    const passwordControl = element('span', { className: 'field__password-control' });
+    const toggle = passwordVisibilityToggleDefinition(id);
+    const button = element('button', {
+      className: 'field__password-toggle',
+      attrs: toggle.attrs,
+    });
+    button.innerHTML = toggle.content;
+    passwordControl.append(control, button);
+    wrapper.append(label, passwordControl);
+  } else {
+    wrapper.append(label, control);
+  }
   const help = element('span', {
     className: 'field__message field__hint',
     textContent: spec.hint || '',
@@ -247,8 +261,22 @@ function publicPanels(currentRoute, integration = {}) {
               required: true,
               hint: 'Use your approved USC work email.',
             },
-            { label: 'New password', name: 'password', type: 'password', required: true },
-            { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
+            {
+              label: 'New password',
+              name: 'password',
+              type: 'password',
+              required: true,
+              autocomplete: 'new-password',
+              passwordVisibility: true,
+            },
+            {
+              label: 'Confirm new password',
+              name: 'confirmPassword',
+              type: 'password',
+              required: true,
+              autocomplete: 'new-password',
+              passwordVisibility: true,
+            },
           ],
         }),
       );
@@ -262,8 +290,22 @@ function publicPanels(currentRoute, integration = {}) {
         disclosure: true,
         fields: [
           { label: 'Reset token', name: 'resetToken', type: 'password', required: true },
-          { label: 'New password', name: 'password', type: 'password', required: true },
-          { label: 'Confirm new password', name: 'confirmPassword', type: 'password', required: true },
+          {
+            label: 'New password',
+            name: 'password',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
+          {
+            label: 'Confirm new password',
+            name: 'confirmPassword',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
         ],
       }),
     );
@@ -345,8 +387,22 @@ function publicPanels(currentRoute, integration = {}) {
           { label: 'Request Center access', name: 'requestCenterAccess', type: 'checkbox' },
           { label: 'Lending self-service', name: 'lendingSelfService', type: 'checkbox' },
           { label: 'Internal lending operations', name: 'internalLendingOperations', type: 'checkbox' },
-          { label: 'Password', name: 'password', type: 'password', required: true },
-          { label: 'Confirm password', name: 'confirmPassword', type: 'password', required: true },
+          {
+            label: 'Password',
+            name: 'password',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
+          {
+            label: 'Confirm password',
+            name: 'confirmPassword',
+            type: 'password',
+            required: true,
+            autocomplete: 'new-password',
+            passwordVisibility: true,
+          },
         ],
       }),
     ];
@@ -687,9 +743,27 @@ function profilePanel() {
       { label: 'Expected profile revision', name: 'expectedRevision' },
       { label: 'Mobile or contact number', name: 'mobileNumber' },
       { label: 'New username', name: 'username' },
-      { label: 'Current password', name: 'currentPassword', type: 'password' },
-      { label: 'New password', name: 'newPassword', type: 'password' },
-      { label: 'Confirm new password', name: 'confirmPassword', type: 'password' },
+      {
+        label: 'Current password',
+        name: 'currentPassword',
+        type: 'password',
+        autocomplete: 'current-password',
+        passwordVisibility: true,
+      },
+      {
+        label: 'New password',
+        name: 'newPassword',
+        type: 'password',
+        autocomplete: 'new-password',
+        passwordVisibility: true,
+      },
+      {
+        label: 'Confirm new password',
+        name: 'confirmPassword',
+        type: 'password',
+        autocomplete: 'new-password',
+        passwordVisibility: true,
+      },
       { label: 'Proposed legal name', name: 'legalName' },
       { label: 'Proposed email', name: 'email', type: 'email' },
       { label: 'Reason', name: 'reason', type: 'textarea' },
@@ -1144,6 +1218,12 @@ export function createAdminParityController({
   }
 
   function onClick(event) {
+    const passwordToggle = event?.target?.closest?.('[data-password-visibility-toggle]');
+    if (passwordToggle) {
+      event.preventDefault?.();
+      event.stopImmediatePropagation?.();
+      return togglePasswordVisibility(passwordToggle, document);
+    }
     const control = event?.target?.closest?.('[data-v5-admin-action]');
     if (!control) return false;
     event.preventDefault?.();

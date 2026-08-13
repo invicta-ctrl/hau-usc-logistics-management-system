@@ -4,6 +4,7 @@ import { setRuntimeReleaseIdentity } from '../app/release-identity.js';
 import { clearAuthSession, getAuthSession, setAuthSession } from '../auth/session-state.js';
 import { AuthApiClient } from '../services/auth-api-client.js';
 import { createAuthenticatedAccountControlButtons } from './authenticated-account-controls.js';
+import { attachPasswordVisibilityControls, passwordFieldMarkup } from './password-visibility.js';
 import { mountPublicLendingPortal } from './public-lending-portal.js';
 import {
   consumeApplicationStatusToken,
@@ -100,42 +101,8 @@ function safeAuthErrorText(error) {
   return `${error.message}${reference}`;
 }
 
-const EYE_ICON = `
-  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" fill="none" stroke="currentColor" stroke-width="1.8"/>
-    <circle cx="12" cy="12" r="2.75" fill="none" stroke="currentColor" stroke-width="1.8"/>
-  </svg>`;
-
-const EYE_OFF_ICON = `
-  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-    <path d="M3 3l18 18M10.6 6.1A10 10 0 0 1 12 6c6 0 9.5 6 9.5 6a15 15 0 0 1-2.5 3.1M6.2 6.3A15.7 15.7 0 0 0 2.5 12s3.5 6 9.5 6a9.8 9.8 0 0 0 3-.5M9.9 9.8a3 3 0 0 0 4.3 4.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-  </svg>`;
-
 function passwordControl({ id, name, autocomplete, label = 'Password', describedBy = '', minlength = '' }) {
-  return `
-    <label for="${id}">${escapeHtml(label)}</label>
-    <div class="auth-password-control">
-      <input id="${id}" name="${name}" type="password" autocomplete="${autocomplete}" required ${minlength ? `minlength="${minlength}"` : ''} maxlength="128" ${describedBy ? `aria-describedby="${describedBy}"` : ''}>
-      <button class="auth-password-toggle" type="button" data-password-toggle="${id}" aria-label="Show password" aria-pressed="false">${EYE_ICON}<span>Show</span></button>
-    </div>`;
-}
-
-function attachPasswordControls(container) {
-  container.querySelectorAll('[data-password-toggle]').forEach((button) => {
-    button.addEventListener('click', () => {
-      const input = container.querySelector(`#${button.dataset.passwordToggle}`);
-      if (!input) return;
-      const start = input.selectionStart;
-      const end = input.selectionEnd;
-      const reveal = input.type === 'password';
-      input.type = reveal ? 'text' : 'password';
-      button.setAttribute('aria-label', reveal ? 'Hide password' : 'Show password');
-      button.setAttribute('aria-pressed', String(reveal));
-      button.innerHTML = `${reveal ? EYE_OFF_ICON : EYE_ICON}<span>${reveal ? 'Hide' : 'Show'}</span>`;
-      input.focus({ preventScroll: true });
-      if (start !== null && end !== null) input.setSelectionRange(start, end);
-    });
-  });
+  return passwordFieldMarkup({ id, name, autocomplete, label, describedBy, minlength });
 }
 
 function attachRecoveryHelp(container) {
@@ -338,7 +305,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
     if (!form) {
       root.innerHTML = loginMarkup(error, { portal: false, requestPortal: requesterPortal });
       form = root.querySelector('#authLoginForm');
-      attachPasswordControls(root);
+      attachPasswordVisibilityControls(root);
       attachRecoveryHelp(root);
       form.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -365,7 +332,7 @@ export async function startAuthenticatedRuntime({ backendMode, baseUrl, requestO
 
   const renderActivation = (error) => {
     root.innerHTML = activationMarkup(error);
-    attachPasswordControls(root);
+    attachPasswordVisibilityControls(root);
     const form = root.querySelector('#authActivationForm');
     form.addEventListener('submit', async (event) => {
       event.preventDefault();

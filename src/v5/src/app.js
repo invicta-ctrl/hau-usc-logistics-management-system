@@ -2,6 +2,7 @@
 
 import { icon, spriteMarkup } from './icons.js';
 import { esc, themeToggle } from './components.js';
+import { togglePasswordVisibility } from './password-visibility.js';
 import { GROUPS, NAV, NAV_ADMIN, SURFACES, TABS, byId } from './registry.js';
 import { setPublicTheme } from './surfaces/public.js';
 import { requestDetailParts } from './surfaces/operations.js';
@@ -771,6 +772,10 @@ document.addEventListener('click', (event) => {
   }
   const act = el.dataset.act;
 
+  if (act === 'toggle-password-visibility') {
+    event.preventDefault();
+    return togglePasswordVisibility(el, document);
+  }
   if (act === 'go') return go(el.dataset.id);
   if (act.startsWith('go:')) return go(act.slice(3));
   if (act === 'theme') return setTheme(el.dataset.v);
