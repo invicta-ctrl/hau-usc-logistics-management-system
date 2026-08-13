@@ -7,7 +7,12 @@ import {
   createProductionAuthorizationTemplate,
   PRODUCTION_ACTIONS,
 } from '../../scripts/production-authorization.mjs';
-import { validateProductionLaunchPreflight } from '../../scripts/production-launch-preflight.mjs';
+import {
+  REQUIRED_PRODUCTION_PROVIDER_BINDING_NAMES,
+  PRODUCTION_WORKER_NAME,
+  selectCurrentProductionDeploymentVersion,
+  validateProductionLaunchPreflight,
+} from '../../scripts/production-launch-preflight.mjs';
 
 const sha = 'a'.repeat(40);
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
@@ -23,7 +28,7 @@ let directory;
 let paths;
 
 const config = (environment, marker) => ({
-  name: `worker-${environment.toLowerCase()}`,
+  name: environment === 'PRODUCTION' ? PRODUCTION_WORKER_NAME : `worker-${environment.toLowerCase()}`,
   preview_urls: false,
   assets: { run_worker_first: ['/api/*', '/brand/*', '/media/*'] },
   observability: {
@@ -35,6 +40,8 @@ const config = (environment, marker) => ({
     { binding: 'BRAND_ASSETS', bucket_name: `brand-${marker}` },
     { binding: 'EVIDENCE_ASSETS', bucket_name: `evidence-${marker}` },
   ],
+  keep_vars: true,
+  secrets: { required: [...REQUIRED_PRODUCTION_PROVIDER_BINDING_NAMES] },
   vars: {
     ENVIRONMENT: environment,
     CANDIDATE_SHA: sha,
@@ -48,7 +55,7 @@ const config = (environment, marker) => ({
 beforeAll(() => {
   directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hau-production-preflight-'));
   paths = Object.fromEntries(
-    ['authorization', 'staging', 'production', 'secrets', 'google', 'backup'].map((name) => {
+    ['authorization', 'staging', 'production', 'google', 'backup'].map((name) => {
       const file = path.join(directory, `${name}.json`);
       fs.writeFileSync(file, '{}', { mode: 0o600 });
       return [name, file];
@@ -123,27 +130,14 @@ async function fixture() {
     stagingConfigRaw,
     productionConfig,
     productionConfigRaw,
-    productionSecrets: {
+    providerBindingInventory: {
       schemaVersion: 1,
       environment: 'PRODUCTION',
-      secrets: Object.fromEntries(
-        [
-          'PASSWORD_PEPPER',
-          'TRACKING_LINK_SECRET',
-          'PROTECTED_PROFILE_ENCRYPTION_KEY',
-          'ROSTER_DATA_ENCRYPTION_KEY',
-          'GOOGLE_ROSTER_PRIVATE_KEY',
-          'GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET',
-          'GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN',
-          'GOOGLE_EVIDENCE_OAUTH_CLIENT_ID',
-          'GOOGLE_DRIVE_ROOT_FOLDER_ID',
-          'GOOGLE_DRIVE_RECEIPTS_FOLDER_ID',
-          'GOOGLE_DRIVE_CANVASS_FOLDER_ID',
-          'GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID',
-          'GOOGLE_EVIDENCE_RELEASE_FOLDER_ID',
-          'GOOGLE_DRIVE_LENDING_FOLDER_ID',
-        ].map((name, index) => [name, String(index + 1).repeat(48)]),
-      ),
+      workerName: productionConfig.name,
+      accountFingerprint: '1'.repeat(64),
+      deploymentVersionFingerprint: '2'.repeat(64),
+      secretNames: [...REQUIRED_PRODUCTION_PROVIDER_BINDING_NAMES],
+      bindings: REQUIRED_PRODUCTION_PROVIDER_BINDING_NAMES.map((name) => ({ name, type: 'secret_text' })),
     },
     googleConfig: {
       schemaVersion: 1,
@@ -186,6 +180,41 @@ async function fixture() {
 }
 
 describe('production launch preflight', () => {
+  it('selects the unique active version from an unsorted deployment inventory', () => {
+    expect(
+      selectCurrentProductionDeploymentVersion([
+        {
+          created_on: '2026-08-12T00:00:00.000Z',
+          versions: [{ version_id: 'older-version', percentage: 100 }],
+        },
+        {
+          created_on: '2026-08-13T00:00:00.000Z',
+          versions: [{ version_id: 'current-version', current: true }],
+        },
+      ]),
+    ).toBe('current-version');
+  });
+
+  it('fails closed when the newest deployment or active version is ambiguous', () => {
+    expect(() =>
+      selectCurrentProductionDeploymentVersion([
+        { created_on: '2026-08-13T00:00:00.000Z', versions: [{ version_id: 'a', percentage: 100 }] },
+        { created_on: '2026-08-13T00:00:00.000Z', versions: [{ version_id: 'b', percentage: 100 }] },
+      ]),
+    ).toThrow('timestamp is conflicting');
+    expect(() =>
+      selectCurrentProductionDeploymentVersion([
+        {
+          created_on: '2026-08-13T00:00:00.000Z',
+          versions: [
+            { version_id: 'a', percentage: 100 },
+            { version_id: 'b', current: true },
+          ],
+        },
+      ]),
+    ).toThrow('active version identity is missing or conflicting');
+  });
+
   it('authorizes only a fresh exact-candidate separated package', async () => {
     expect(await validateProductionLaunchPreflight(await fixture())).toMatchObject({
       valid: true,
@@ -217,6 +246,19 @@ describe('production launch preflight', () => {
     });
   });
 
+  it('allows an extra provider-held secret_text binding while requiring the exact fourteen', async () => {
+    const value = await fixture();
+    value.providerBindingInventory.bindings.push({
+      name: 'ACCOUNT_APPLICATION_RESEND_API_KEY',
+      type: 'secret_text',
+    });
+    expect(await validateProductionLaunchPreflight(value)).toMatchObject({
+      valid: true,
+      launchAuthorized: true,
+      issues: [],
+    });
+  });
+
   it.each([
     [
       'staging D1 binding',
@@ -234,7 +276,45 @@ describe('production launch preflight', () => {
       (value) => (value.googleConfig.evidenceDrive.status = 'NOT_CONFIGURED'),
       'evidence Drive status',
     ],
-    ['missing secret', (value) => delete value.productionSecrets.secrets.PASSWORD_PEPPER, 'PASSWORD_PEPPER'],
+    [
+      'missing provider binding',
+      (value) => {
+        value.providerBindingInventory.bindings = value.providerBindingInventory.bindings.filter(
+          (binding) => binding.name !== 'PASSWORD_PEPPER',
+        );
+      },
+      'PASSWORD_PEPPER',
+    ],
+    [
+      'wrong provider binding type',
+      (value) => (value.providerBindingInventory.bindings[0].type = 'plain_text'),
+      'secret_text',
+    ],
+    [
+      'wrong provider worker',
+      (value) => (value.providerBindingInventory.workerName = 'other-production-worker'),
+      'worker does not match',
+    ],
+    [
+      'wrong configured production worker',
+      (value) => (value.productionConfig.name = 'other-production-worker'),
+      'private production config Worker',
+    ],
+    [
+      'wrong provider environment',
+      (value) => (value.providerBindingInventory.environment = 'STAGING'),
+      'environment must be PRODUCTION',
+    ],
+    [
+      'missing required provider declaration',
+      (value) => value.productionConfig.secrets.required.pop(),
+      'secrets.required',
+    ],
+    [
+      'provider binding preservation disabled',
+      (value) => (value.productionConfig.keep_vars = false),
+      'keep_vars must be true',
+    ],
     [
       'test data promotion',
       (value) => (value.backupManifest.testDataPromotionConfirmed = true),

@@ -9,8 +9,8 @@
 //
 // Usage:
 //   node scripts/deploy-environment.mjs <staging|production> --config <absolute-private-config> [--dry-run]
-// Production live deployments also require --staging-config and --secrets so
-// the mandatory launch preflight cannot be skipped.
+// Production live deployments also require --staging-config. Required
+// provider-held secret_text bindings are attested live; plaintext is never supplied.
 //
 // Private identifiers are read but never printed.
 
@@ -25,7 +25,10 @@ import {
   productionCandidateEvidence,
   validateProductionAuthorizationPackage,
 } from './production-authorization.mjs';
-import { validateProductionLaunchPreflight } from './production-launch-preflight.mjs';
+import {
+  readProductionProviderBindingInventory,
+  validateProductionLaunchPreflight,
+} from './production-launch-preflight.mjs';
 import { resolvePrivatePath } from './private-path.mjs';
 import {
   exactDatabaseIdFromInventory,
@@ -89,6 +92,9 @@ const rawConfigPath = configIndex === -1 ? '' : rest[configIndex + 1];
 const authorizationIndex = rest.indexOf('--authorization');
 const authorizationPath = authorizationIndex === -1 ? '' : rest[authorizationIndex + 1];
 const dryRun = rest.includes('--dry-run');
+if (target === 'production' && rest.includes('--secrets')) {
+  fail('production plaintext --secrets input is prohibited; provider-held bindings must be attested live.');
+}
 if (!rawConfigPath || !path.isAbsolute(rawConfigPath)) {
   fail(
     'an absolute --config path to the private Wrangler config is required. ' +
@@ -108,6 +114,7 @@ if (!sameLocalPath(config.assets?.directory, path.join(repoRoot, 'dist'))) {
   fail('the private config does not target the canonical repository asset directory.');
 }
 
+let productionLaunchInputs;
 if (!dryRun) {
   if (!authorizationPath || !path.isAbsolute(authorizationPath)) {
     fail('an absolute private --authorization package is required for a live deployment.');
@@ -146,21 +153,14 @@ if (!dryRun) {
     }
 
     const stagingConfigIndex = rest.indexOf('--staging-config');
-    const secretsIndex = rest.indexOf('--secrets');
     const rawStagingConfigPath = stagingConfigIndex === -1 ? '' : rest[stagingConfigIndex + 1];
-    const rawSecretsPath = secretsIndex === -1 ? '' : rest[secretsIndex + 1];
-    if (!rawStagingConfigPath || !rawSecretsPath) {
-      fail('live production deployment requires private --staging-config and --secrets inputs.');
+    if (!rawStagingConfigPath) {
+      fail('live production deployment requires a private --staging-config input.');
     }
-    const [stagingConfigPath, secretsPath, googleConfigPath, backupManifestPath] = await Promise.all([
+    const [stagingConfigPath, googleConfigPath, backupManifestPath] = await Promise.all([
       resolvePrivatePath(rawStagingConfigPath, {
         repoRoot,
         label: 'Private staging config',
-        kind: 'file',
-      }),
-      resolvePrivatePath(rawSecretsPath, {
-        repoRoot,
-        label: 'Private production secrets',
         kind: 'file',
       }),
       resolvePrivatePath(authorization.target?.privateGoogleConfigPath, {
@@ -174,27 +174,20 @@ if (!dryRun) {
         kind: 'file',
       }),
     ]).catch(() => fail('all production launch-preflight inputs must remain outside the repository.'));
-    const [stagingRaw, productionSecrets, googleConfig, backupManifest] = await Promise.all([
+    const [stagingRaw, googleConfig, backupManifest] = await Promise.all([
       readFile(stagingConfigPath, 'utf8'),
-      readFile(secretsPath, 'utf8').then(JSON.parse),
       readFile(googleConfigPath, 'utf8').then(JSON.parse),
       readFile(backupManifestPath, 'utf8').then(JSON.parse),
     ]).catch(() => fail('a production launch-preflight input could not be read.'));
-    const launchPreflight = await validateProductionLaunchPreflight({
+    productionLaunchInputs = {
       authorization,
       authorizationPath: resolvedAuthorizationPath,
       currentCandidate,
       stagingConfig: parseJsonConfig(stagingRaw),
       stagingConfigRaw: stagingRaw,
-      productionConfig: config,
-      productionConfigRaw: raw,
-      productionSecrets,
       googleConfig,
       backupManifest,
-    });
-    if (!launchPreflight.valid || !launchPreflight.launchAuthorized) {
-      fail('the mandatory production launch preflight is not authorized for the active launch window.');
-    }
+    };
   }
 }
 
@@ -237,6 +230,22 @@ if (!releaseIdentity.valid) {
 }
 const status = execFileSync('git', ['status', '--porcelain'], { cwd: repoRoot, encoding: 'utf8' }).trim();
 if (status) fail('the working tree is dirty. Deploy only a committed, frozen candidate.');
+
+if (target === 'production' && !dryRun) {
+  const providerBindingInventory = readProductionProviderBindingInventory({
+    configPath,
+    productionConfig: config,
+  });
+  const launchPreflight = await validateProductionLaunchPreflight({
+    ...productionLaunchInputs,
+    productionConfig: config,
+    productionConfigRaw: raw,
+    providerBindingInventory,
+  });
+  if (!launchPreflight.valid || !launchPreflight.launchAuthorized) {
+    fail('the mandatory production launch preflight is not authorized for the active launch window.');
+  }
+}
 
 // 3. It must carry exactly one real, resolved D1 binding, and it must be the
 //    binding the Worker actually reads. Checking only d1_databases[0] would let

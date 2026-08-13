@@ -121,16 +121,25 @@ describe('authoritative release pipeline', () => {
   });
 
   it('fails closed around staging smoke, recovery identity, and live deployment authorization', async () => {
-    const [packageJson, smoke, stagingEvidence, productionEvidence, deploy, privateConfigs, sandbox] =
-      await Promise.all([
-        read('package.json').then(JSON.parse),
-        read('scripts/staging-candidate-smoke.mjs'),
-        read('scripts/staging-candidate-evidence.mjs'),
-        read('scripts/production-recovery-evidence.mjs'),
-        read('scripts/deploy-environment.mjs'),
-        read('scripts/create-private-cloudflare-configs.mjs'),
-        read('scripts/staging-sandbox.mjs'),
-      ]);
+    const [
+      packageJson,
+      smoke,
+      stagingEvidence,
+      productionEvidence,
+      deploy,
+      privateConfigs,
+      sandbox,
+      preflight,
+    ] = await Promise.all([
+      read('package.json').then(JSON.parse),
+      read('scripts/staging-candidate-smoke.mjs'),
+      read('scripts/staging-candidate-evidence.mjs'),
+      read('scripts/production-recovery-evidence.mjs'),
+      read('scripts/deploy-environment.mjs'),
+      read('scripts/create-private-cloudflare-configs.mjs'),
+      read('scripts/staging-sandbox.mjs'),
+      read('scripts/production-launch-preflight.mjs'),
+    ]);
 
     expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/u);
     expect(smoke).toContain("post(baseUrl, '/api/admin/access/directory')");
@@ -161,6 +170,10 @@ describe('authoritative release pipeline', () => {
     expect(deploy).toContain("actions?.workerDeploy !== 'APPROVED'");
     expect(deploy).toContain('result.launchAuthorized');
     expect(deploy).toContain('validateProductionLaunchPreflight');
+    expect(deploy).toContain('readProductionProviderBindingInventory');
+    expect(deploy).toContain('production plaintext --secrets input is prohibited');
+    expect(deploy).not.toContain("const secretsIndex = rest.indexOf('--secrets')");
+    expect(deploy).not.toContain("label: 'Private production secrets'");
     expect(deploy).toContain("path.join(repoRoot, 'src', 'worker', 'index.js')");
     expect(deploy).toContain("path.join(repoRoot, 'dist')");
     expect(deploy).toContain('const artifactDirectory = path.join(repoRoot, expected.artifactDirectory)');
@@ -173,6 +186,12 @@ describe('authoritative release pipeline', () => {
     expect(deploy).toContain('validateReleaseCandidateIdentity');
     expect(deploy).toContain("mode: target === 'production' ? 'production' : 'staging'");
     expect(deploy).not.toContain('release/v0.8.0-inventory-truth-ledger-lock');
+    expect(preflight).toContain('REQUIRED_PRODUCTION_PROVIDER_BINDING_NAMES');
+    expect(preflight).toContain('secrets.required');
+    expect(preflight).toContain("['secret', 'list', '--config', configPath]");
+    expect(preflight).toContain("'versions',");
+    expect(preflight).toContain("'view',");
+    expect(preflight).not.toContain('productionSecrets');
     expect(sandbox).toContain('runtime.releaseVersion === releaseVersion');
     expect(sandbox).toContain('readPackageReleaseVersion');
     const sandboxIdentityGuard = sandbox.indexOf(
