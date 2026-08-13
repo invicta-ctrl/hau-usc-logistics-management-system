@@ -1867,7 +1867,53 @@ test('Administrator Access Management renames an Access ID once and revokes prio
   const fresh = await apiRequest.newContext({ baseURL });
   try {
     const adminCsrf = await login(admin, 'LOCAL.ADMIN');
-    const targetCsrf = await login(target, 'LOCAL.FOOD');
+    const created = await admin.post('/api/admin/access/create-account', {
+      headers: { 'x-csrf-token': adminCsrf },
+      data: {
+        accessId: 'LOCAL.RENAME.SOURCE',
+        roleId: 'DOL_STAFF',
+        committeeIds: ['COM_FOOD'],
+        defaultCommitteeId: 'COM_FOOD',
+        reason: 'Create the synthetic access ID rename regression account.',
+        confirmed: true,
+      },
+    });
+    expect(created.status()).toBe(200);
+    const createdResult = await created.json();
+    expect(createdResult).toMatchObject({
+      created: true,
+      account: {
+        accessId: 'LOCAL.RENAME.SOURCE',
+        roleId: 'DOL_STAFF',
+        committeeIds: ['COM_FOOD'],
+        firstLoginPending: true,
+      },
+    });
+
+    const starter = await target.post('/api/auth/login', {
+      data: {
+        accessId: 'LOCAL.RENAME.SOURCE',
+        password: createdResult.credential.temporaryPassword,
+      },
+    });
+    expect(starter.status()).toBe(200);
+    const starterResult = await starter.json();
+    expect(starterResult.state).toBe('ACTIVATION_REQUIRED');
+    const activated = await target.post('/api/auth/activate', {
+      headers: { 'x-csrf-token': starterResult.csrfToken },
+      data: {
+        profile: {
+          fullName: 'Synthetic Access ID Rename Operator',
+          mobileNumber: '+63 917 000 0016',
+          email: 'local-rename@example.invalid',
+        },
+        password: MANAGED_ACTIVATED_PASSWORD,
+        confirmPassword: MANAGED_ACTIVATED_PASSWORD,
+      },
+    });
+    expect(activated.status()).toBe(200);
+    expect((await activated.json()).state).toBe('AUTHENTICATED');
+    const targetCsrf = await login(target, 'LOCAL.RENAME.SOURCE', MANAGED_ACTIVATED_PASSWORD);
 
     const denied = await target.post('/api/admin/access/directory', {
       headers: { 'x-csrf-token': targetCsrf },
@@ -1877,7 +1923,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
 
     const directory = await admin.post('/api/admin/access/directory', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { query: 'LOCAL.FOOD', status: 'ALL', page: 1, pageSize: 20 },
+      data: { query: 'LOCAL.RENAME.SOURCE', status: 'ALL', page: 1, pageSize: 20 },
     });
     expect(directory.status()).toBe(200);
     const directoryResult = await directory.json();
@@ -1887,7 +1933,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
         {
           accountId: expect.any(String),
           revision: expect.any(String),
-          accessId: 'LOCAL.FOOD',
+          accessId: 'LOCAL.RENAME.SOURCE',
           roleId: 'DOL_STAFF',
           committeeIds: ['COM_FOOD'],
         },
@@ -1898,11 +1944,11 @@ test('Administrator Access Management renames an Access ID once and revokes prio
     const command = {
       accountId: managedAccount.accountId,
       expectedRevision: managedAccount.revision,
-      currentAccessId: 'LOCAL.FOOD',
-      confirmCurrentAccessId: 'LOCAL.FOOD',
-      proposedAccessId: 'LOCAL.FOOD.RENAMED',
+      currentAccessId: 'LOCAL.RENAME.SOURCE',
+      confirmCurrentAccessId: 'LOCAL.RENAME.SOURCE',
+      proposedAccessId: 'LOCAL.RENAME.TARGET',
       reason: 'Synthetic Access ID rename regression coverage.',
-      idempotencyKey: 'local-access-id-change-0001',
+      idempotencyKey: 'local-access-id-change-rename-0001',
     };
     const preview = await admin.post('/api/admin/access/preview-access-id', {
       headers: { 'x-csrf-token': adminCsrf },
@@ -1910,7 +1956,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
     });
     expect(preview.status()).toBe(200);
     await expect(preview.json()).resolves.toMatchObject({
-      normalizationPreview: 'LOCAL.FOOD.RENAMED',
+      normalizationPreview: 'LOCAL.RENAME.TARGET',
       immutableAccountIdPreserved: true,
       roleAndCapabilitiesUnchanged: true,
     });
@@ -1930,11 +1976,11 @@ test('Administrator Access Management renames an Access ID once and revokes prio
     const revokedSession = await target.get('/api/requests');
     expect(revokedSession.status()).toBe(401);
     const oldLogin = await fresh.post('/api/auth/login', {
-      data: { accessId: 'LOCAL.FOOD', password: PASSWORD },
+      data: { accessId: 'LOCAL.RENAME.SOURCE', password: MANAGED_ACTIVATED_PASSWORD },
     });
     expect(oldLogin.status()).toBe(401);
     const newLogin = await fresh.post('/api/auth/login', {
-      data: { accessId: 'LOCAL.FOOD.RENAMED', password: PASSWORD },
+      data: { accessId: 'LOCAL.RENAME.TARGET', password: MANAGED_ACTIVATED_PASSWORD },
     });
     expect(newLogin.status()).toBe(200);
 
@@ -1947,7 +1993,7 @@ test('Administrator Access Management renames an Access ID once and revokes prio
 
     const history = await admin.post('/api/admin/access/history', {
       headers: { 'x-csrf-token': adminCsrf },
-      data: { accountId: managedAccount.accountId, currentAccessId: 'LOCAL.FOOD.RENAMED' },
+      data: { accountId: managedAccount.accountId, currentAccessId: 'LOCAL.RENAME.TARGET' },
     });
     expect(history.status()).toBe(200);
     const historyResult = await history.json();
@@ -1956,8 +2002,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       expect.arrayContaining([expect.objectContaining({ action: 'ACCESS_ID_CHANGED' })]),
     );
     expect(historyResult.history[0]).toMatchObject({
-      oldAccessId: 'LOCAL.FOOD',
-      newAccessId: 'LOCAL.FOOD.RENAMED',
+      oldAccessId: 'LOCAL.RENAME.SOURCE',
+      newAccessId: 'LOCAL.RENAME.TARGET',
       environment: 'DEVELOPMENT',
     });
 
@@ -1966,8 +2012,8 @@ test('Administrator Access Management renames an Access ID once and revokes prio
       data: {
         accountId: managedAccount.accountId,
         expectedRevision: changedResult.revision,
-        currentAccessId: 'LOCAL.FOOD.RENAMED',
-        confirmCurrentAccessId: 'LOCAL.FOOD.RENAMED',
+        currentAccessId: 'LOCAL.RENAME.TARGET',
+        confirmCurrentAccessId: 'LOCAL.RENAME.TARGET',
         proposedAccessId: 'LOCAL_ADMIN',
       },
     });

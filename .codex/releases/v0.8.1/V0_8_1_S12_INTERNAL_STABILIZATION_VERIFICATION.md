@@ -1,7 +1,7 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_A5_CLOUDFLARE_WORKER_SERIALIZATION_REPAIR_AUTHORIZED_LOCAL_COMMIT_PENDING_REVIEW_PUSH_RERUN`
-- **State:** `CLOUDFLARE_WORKER_SERIALIZATION_REPAIR_AUTHORIZED_LOCAL_COMMIT_PENDING_REVIEW_PUSH_RERUN`
+- **Status:** `V81-S12_A5_TEST_FIXTURE_ISOLATION_CORRECTION_AUTHORIZED_LOCAL_COMMIT_PENDING_REVIEW_PUSH_POST_FIX_RERUN`
+- **State:** `A5_TEST_FIXTURE_ISOLATION_CORRECTION_AUTHORIZED_LOCAL_COMMIT_PENDING_REVIEW_PUSH_POST_FIX_RERUN`
 - **Objective:** Internal stabilization verification complete.
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
@@ -12,8 +12,8 @@
 - **Durable recovery-amendment tree:** `e26e7d44b5454b3fc2025b4647d232abf274cf56`
 - **Durable legacy-browser-gate amendment commit:** `1a93bb01acc5a732b3f9180be93d1d04d8001114`
 - **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
-- **Pre-A5-repair parity identity:** local and upstream commit `d8ec7cfc342fdad97b03328880cdcf780a2fb9a5`, tree `4bac20ce4e745ab673526776f2ff47f48d123220`, divergence `0/0`; exactly the two authorized generated HTML outputs are dirty and unstaged at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`; staged count is `0`, preserved count is `46`, and capture remains verified.
-- **Recorded at:** `2026-08-12T09:53:53.1092205+08:00`
+- **Pre-A5-fixture-isolation parity identity:** local and upstream commit `ad6b2b390c27f337191d6e7405c0692b4b5fef44`, tree `5b104645317699ca3c2052b7d3ae87fc70240b74`, divergence `0/0`; exactly the two authorized generated HTML outputs are dirty and unstaged at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`; staged count is `0`, preserved count is `46`, and capture remains verified.
+- **Recorded at:** `2026-08-13T13:28:04+08:00`
 - **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_a5_fast`
 - **Sol S12 boundary acceptance:** `PASS`
 - **Fresh Luna boundary review:** `PASS_NO_P0_P1_P2_P3`
@@ -343,7 +343,7 @@ npm.cmd run build:cloudflare:production
 npm.cmd run verify:deploy:artifact -- production .wrangler/build/production
 ```
 
-The integrated startup-budget and local A5 test-synchronization corrections passed syntax, exact-scope assertions, Prettier, ESLint, and diff hygiene. The only permitted Playwright configuration lines are the integrated `webServer.timeout: 120_000` and A5 `workers: 1` adjacent to `fullyParallel: false`; the top-level per-test timeout remains `30_000`, and no test, retry, or skip changed. Full V5 functional and V5 visual remain green and uninvalidated.
+The integrated startup-budget and A5 `workers: 1` test-synchronization corrections passed syntax, exact-scope assertions, Prettier, ESLint, and diff hygiene as historical pre-fixture evidence. The only permitted Playwright configuration lines remain `webServer.timeout: 120_000` and A5 `workers: 1` adjacent to `fullyParallel: false`; the top-level per-test timeout remains `30_000`. The current fixture-isolation correction is the sole authorized test edit in `tests/cloudflare-e2e/local-worker.spec.js`, pending independent review, push/parity, and one post-fix rerun; no retry or skip changes are authorized. Full V5 functional and V5 visual remain green and uninvalidated.
 
 The completed and remaining browser dispositions are exact:
 
@@ -354,7 +354,7 @@ The completed and remaining browser dispositions are exact:
 
 The accepted recovery `npm.cmd run check` remains the exact full repository gate: governance, ESLint, deterministic preview build, the complete Vitest suite, Apps Script validation, V5 distribution parity, Cloudflare types, staging build, and Wrangler dry-run. The remaining explicit staging and Production builds must remain isolated under `.wrangler/build/staging` and `.wrangler/build/production`; each must pass `verify:deploy:artifact` for its exact target. None may be deployed.
 
-The S09, S10, and S11 results remain accepted baselines. All earlier S12 evidence remains truthful history. The current combined check, V5 functional, and V5 visual gates are green; RV01 post-review truth is integrated; the startup-budget correction is integrated; Cloudflare-local `57/58` is classified as the invalidated cross-test contract failure; and the four build/verify gates are unrun. The A5 `workers: 1` runner-synchronization correction invalidates only the Cloudflare-local result and subsequent unrun gate evidence. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
+The S09, S10, and S11 results remain accepted baselines. All earlier S12 evidence remains truthful history. The current combined check, V5 functional, and V5 visual gates are green; RV01 post-review truth is integrated; the startup-budget and A5 `workers: 1` corrections are historical pre-fixture evidence; the ad6b2b3 Cloudflare-local `57/58` result is classified as a cross-file `LOCAL.FOOD` rename fixture contract failure; and the four build/verify gates are unrun. The current fixture-isolation correction is pending independent review, push/parity, and one post-fix Cloudflare58 rerun. The retired legacy diagnostic neither substitutes for nor invalidates these rules.
 
 ## Deterministic integrity, static, security, and privacy evidence
 
@@ -388,15 +388,15 @@ Stop at the first occurrence of:
 - preserved portable Node `v22.23.2`, adjacent npm, archive checksum, process-environment restoration, local `core.autocrlf=false`, or canonical-LF sentinel failure;
 - any repository test/build Node or `workerd` process; any premature rerun of `npm.cmd ci`, `check`, V5 functional, V5 visual, Cloudflare-local, or the retired full matrix before accepted startup-budget implementation integration; or any `package-lock.json` change; unrelated desktop MCP and CodeGraph Node processes are non-operational and do not trigger this stop;
 - any failed remaining local Worker/D1, build, deploy-artifact, governance, static, security, privacy, identity, artifact, cleanup, or orphan-process predicate;
-- any unexpected or out-of-scope tracked delta outside the exact five-path A5 repair scope (`playwright.cloudflare.config.js` and the four active S12 governance records); any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
-- any command rerun beyond the exact invalidated-rerun authorization, variant, alternate runtime source, timeout change, config line other than the integrated Playwright `webServer.timeout: 120_000` and A5 `workers: 1`, package script/spec skip, out-of-lane source/config/test/plugin/index edit, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
-- any scope overlap or unauthorized path; any configuration line outside the integrated `webServer.timeout` and A5 `workers: 1` lines; any source/runtime/fixture/API/unit/status-gating/generated-output change; top-level per-test timeout, retry, skip, or assertion weakening; repeated startup timeout; test/API/D1/privacy failure outside the classified invalidated cross-test contract; unknown diff; product failure; new P0 or P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
+- any unexpected or out-of-scope tracked delta outside the exact five-path A5 fixture-isolation scope (`tests/cloudflare-e2e/local-worker.spec.js` and the four active S12 governance records); any hand-edited artifact, dependency, lockfile, workflow, Playground, or unchanged-headers delta;
+- any command rerun beyond the exact post-fix-rerun authorization, variant, alternate runtime source, timeout change, package script/spec skip, product/config/spec change, test edit other than the sole dedicated fixture edit in `tests/cloudflare-e2e/local-worker.spec.js`, hand edit, normalization, manifest, freeze, provider/private-config/live read, HTTPS staging-auth or Phase 23 test, deployment, migration, Playground, Production, ref mutation, or S13+ action;
+- any scope overlap or unauthorized path; any product/config/spec change or test edit other than the sole `local-worker.spec.js` dedicated synthetic-account fixture edit; any source/runtime/API/unit/status-gating/generated-output change; top-level per-test timeout, retry, skip, or assertion weakening; repeated startup timeout; test/API/D1/privacy failure outside the classified cross-test contract; unknown diff; product failure; new P0 or P1; material privacy/security uncertainty; or inability to preserve sanitized evidence.
 
-The integrated `webServer.timeout` correction and local A5 `workers: 1` test-synchronization correction are the sole Playwright configuration actions authorized in this packet. After A5 review/push parity, exactly one invalidated Cloudflare58 rerun is authorized; no other worktree, npm, test, or build action is authorized beforehand. Edits outside exact `playwright.cloudflare.config.js` and the four active S12 governance records remain forbidden. No configuration line other than `webServer.timeout: 120_000` and `workers: 1`, backend, view-model, API, schema, migration, package script/spec skip, top-level per-test timeout, retry, status-gating, runtime, fixture, unit, test, dependency, lockfile, workflow, deployed HTTPS staging auth, Phase 23 acceptance, provider/private-config/live D1/R2/Google read or write, deploy, seed/reset, live restore, R2 write, staging smoke, release manifest, candidate freeze, Playground, Production, merge, tag, release, recovery pointer, ref, or S13+ action is authorized. No further runtime download, extraction, or dependency installation is authorized.
+The integrated `webServer.timeout` correction and local A5 `workers: 1` test-synchronization correction remain the sole Playwright configuration actions. The sole newly authorized test edit is the dedicated synthetic DOL_STAFF/COM_FOOD fixture create/activate and `LOCAL.RENAME.SOURCE` to `LOCAL.RENAME.TARGET` rename coverage in `tests/cloudflare-e2e/local-worker.spec.js`; it must not alter product behavior, RV01, configuration, or the accepted specification. After independent review and push/parity, exactly one post-fix Cloudflare58 rerun is authorized; no other worktree, npm, test, or build action is authorized beforehand. All other test edits and every backend, view-model, API, schema, migration, package script/spec skip, top-level per-test timeout, retry, status-gating, runtime, fixture, unit, dependency, lockfile, workflow, provider/private-config/live D1/R2/Google read or write, deploy, seed/reset, live restore, R2 write, staging smoke, release manifest, candidate freeze, Playground, Production, merge, tag, release, recovery pointer, ref, or S13+ action remain forbidden. No further runtime download, extraction, or dependency installation is authorized.
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one fresh independent review of the combined S12 A5 configuration-serialization correction and evidence records; after pass, push the single local repair commit and verify local/upstream/live-remote parity, then run exactly one invalidated npm.cmd run test:e2e:cloudflare:local fresh-D1 58-test gate using the documented process-local Node22 runtime; if and only if 58/58 pass run exactly once each build:cloudflare; verify:deploy:artifact -- staging .wrangler/build/staging; build:cloudflare:production; verify:deploy:artifact -- production .wrangler/build/production; stop on any failure and do not begin S13 or provider actions.
+NEXT_EXACT_ACTION: Obtain one fresh independent review of the combined S12 A5 test-fixture-isolation correction and evidence records; after pass, push the single local correction commit and verify local/upstream/live-remote parity, then run exactly one post-fix npm.cmd run test:e2e:cloudflare:local fresh-D1 58-test gate using the documented process-local Node22 runtime; if and only if 58/58 pass run exactly once each build:cloudflare; verify:deploy:artifact -- staging .wrangler/build/staging; build:cloudflare:production; verify:deploy:artifact -- production .wrangler/build/production; stop on any failure and do not begin S13 or provider actions.
 
 ## V1R7-A5 Integration Writer Takeover
 
@@ -406,7 +406,7 @@ OLD_WRITER_STATUS: INACTIVE_USAGE_BLOCKED
 V1R7_A5_TAKEOVER_RECORDED_AT: 2026-08-13T12:28:03+08:00
 V1R7_A5_WORKTREE_INVENTORY: REGISTERED=22;EXTRAS=3
 V1R7_A5_PRESERVATION: UNRELATED_UNIQUE_DIRTY_WORKTREES_AND_GLOBAL_STASH_RETAINED;EVIDENCE_CLONES_RETAINED;WORKER_PATCH_EQUIVALENTS_RETAINED;ONLY_5092925_UNINTEGRATED
-V1R7_A5_CANONICAL_GIT: HEAD=d8ec7cfc342fdad97b03328880cdcf780a2fb9a5;TREE=4bac20ce4e745ab673526776f2ff47f48d123220;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A
+V1R7_A5_TAKEOVER_PRE_SERIALIZATION_CANONICAL_GIT_HISTORICAL: HEAD=d8ec7cfc342fdad97b03328880cdcf780a2fb9a5;TREE=4bac20ce4e745ab673526776f2ff47f48d123220;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A
 
 ## V1R7-A5 Cloudflare Worker Serialization Repair
 
@@ -419,3 +419,13 @@ S12_A5_CLOUDFLARE58_INVALIDATED_RESULT: CURRENT_TEST_CONTRACT_FAILURE;COMMAND_ON
 S12_A5_CROSS_TEST_SESSION_PROOF: rv01-request-visibility.spec.js_LINES1618_1651_UPDATES_THEN_RESTORES_LOCAL.ADMIN_POLICY;REPOSITORY_SESSION_DELETE_LINE392_DELETES_ALL_SESSIONS_FOR_THAT_ACCOUNT;TIMING=POLICY_CHANGE_2026-08-13T04:37:52.787Z_RESTORE_2026-08-13T04:37:53.690Z_SAVE_EVENT_ACTIVITY_2026-08-13T04:37:53.967Z_277MS_AFTER_RESTORE;PRODUCT_SOURCE=NO_OP
 
 S12_A5_CONFIG_SERIALIZATION_CORRECTION: playwright.cloudflare.config.js_ONLY;ADD_workers_1_ADJACENT_TO_fullyParallel_false;RETAIN_TOP_LEVEL_timeout_30_000_AND_webServer_timeout_120_000;NO_PRODUCT_SOURCE_TEST_OR_SPEC_CHANGE;AUTHORIZE_EXACTLY_ONE_INVALIDATED_CLOUDFLARE58_RERUN_AFTER_REVIEW_PUSH_PARITY
+
+## V1R7-A5 Test Fixture Isolation Correction
+
+S12_A5_CLOUDFLARE58_AD6_RESULT: CURRENT_TEST_CONTRACT_FAILURE;COMMAND_ONCE=npm.cmd_run_test:e2e:cloudflare:local;EXIT=1;PASS=57;FAIL=1;TOTAL=58;DURATION_SECONDS=86.367;PREVIOUS_EVENT_TEST=PASS;SOLE_FAILURE=tests/cloudflare-e2e/rv01-request-visibility.spec.js:225_LOGIN_LOCAL.FOOD_EXPECTED200_RECEIVED401;SAFE_RESPONSE=AUTHENTICATION_FAILED_ACCESS_ID_OR_PASSWORD_INCORRECT;FAILURE_ARTIFACTS_PRESERVED=PASS
+
+S12_A5_FIXTURE_CONTRACT_PROOF: FAILED_RUN_D1=LOCAL.FOOD_ABSENT_LOCAL.FOOD.RENAMED_ACTIVE_UNLOCKED_NO_RATE_LIMIT;LOCAL_WORKER_RENAME_TEST_LINES1863_1979_PERMANENTLY_RENAMES_SHARED_LOCAL.FOOD_TO_LOCAL.FOOD.RENAMED_AND_REVOKES_PRIOR_SESSIONS;PRODUCT_RENAME_AUTH=NO_OP;NO_RV01_FALLBACK;NO_REVERSE_RENAME_BECAUSE_IMMUTABLE_BASELINE_RESERVATIONS_PREVENT_REUSE
+
+S12_A5_FIXTURE_ISOLATION_CORRECTION: tests/cloudflare-e2e/local-worker.spec.js_ONLY;CREATE_AND_ACTIVATE_DEDICATED_SYNTHETIC_DOL_STAFF_COM_FOOD_ACCOUNT_VIA_EXISTING_CREATE_ACCOUNT_ACTIVATION_FLOW;RENAME_LOCAL.RENAME.SOURCE_TO_LOCAL.RENAME.TARGET;RETAIN_REVOCATION_REPLAY_HISTORY_COLLISION_ASSERTIONS;NO_PRODUCT_CONFIG_SPEC_RV01_FALLBACK_OR_REVERSE_RENAME_CHANGE;AUTHORIZE_EXACTLY_ONE_POST_FIX_CLOUDFLARE58_RERUN_AFTER_REVIEW_PUSH_PARITY
+
+V1R7_A5_WRITER_RETRANSFER: FROM=TERRA_MAX:/root/integration_terra_a5;TO=TERRA_MAX:/root/integration_terra_a5_fast;RECORDED_AT=2026-08-13T13:50:49+08:00;ACTIVE_WRITER_LOCK_OWNER_TASK=FAST
