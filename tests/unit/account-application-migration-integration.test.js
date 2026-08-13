@@ -74,7 +74,7 @@ describe('account-application verification migration integration', () => {
     expect(sqlite.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
     expect(
       sqlite.prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'").get(),
-    ).toEqual({ value: '30' });
+    ).toEqual({ value: '31' });
     const purpose = EMAIL_VERIFICATION_PURPOSE.ACCOUNT_APPLICATION;
     const challenge = await repository.createVerificationChallenge({
       id: 'CHALLENGE-SCHEMA-30-001',
