@@ -750,6 +750,9 @@ const QUARANTINE = Object.freeze([
 
 export function reconcileInventoryDatabase(database, { environment = 'LOCAL_TEST', candidateSha = '' } = {}) {
   if (!ENVIRONMENTS.has(environment)) throw new Error('Unsupported sanitized reconciliation environment.');
+  if (environment === 'PRODUCTION_READ_ONLY' && !SHA.test(candidateSha)) {
+    throw new Error('Production read-only reconciliation requires an exact lowercase candidate SHA.');
+  }
   if (candidateSha && !SHA.test(candidateSha))
     throw new Error('Candidate SHA must be an exact lowercase commit SHA.');
 

@@ -78,6 +78,33 @@ describe('schema-30 Inventory reconciliation', () => {
     });
   });
 
+  it('requires a candidate-bound result for Production read-only reconciliation', async () => {
+    const sqlite = await schema30();
+    addInventoryFixture(sqlite);
+
+    expect(() => reconcileInventoryDatabase(sqlite, { environment: 'PRODUCTION_READ_ONLY' })).toThrow(
+      'Production read-only reconciliation requires an exact lowercase candidate SHA.',
+    );
+
+    const result = reconcileInventoryDatabase(sqlite, {
+      environment: 'PRODUCTION_READ_ONLY',
+      candidateSha: 'b'.repeat(40),
+    });
+
+    expect(result).toMatchObject({
+      environment: 'PRODUCTION_READ_ONLY',
+      candidateSha: 'b'.repeat(40),
+      database: {
+        operationalSchema: '30',
+        latestMigration: '0030_production_access_and_operations.sql',
+      },
+      summary: {
+        checksExecuted: expect.any(Number),
+        disposition: 'RECONCILED',
+      },
+    });
+  });
+
   it('blocks a fixture with overconsumption, direct opening stock, and an orphan transfer effect', async () => {
     const sqlite = await schema30();
     addInventoryFixture(sqlite);
