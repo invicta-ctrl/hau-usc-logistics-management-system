@@ -396,4 +396,14 @@ Explicitly excluded before governance persistence are all Playwright configurati
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact S12 Cloudflare fresh-D1 startup budget amendment limited to playwright.cloudflare.config.js; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push the full local chain, and verify local/upstream/live-remote parity plus staged0, the two unstaged generated HTML outputs at SHA-256 A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A, and preserved46; only after durable parity create one isolated local-only worker to change only webServer.timeout from 60_000 to 120_000 in playwright.cloudflare.config.js while retaining the top-level per-test timeout 30_000, run static gates and obtain one fresh independent Luna implementation audit, integrate unchanged, run exactly one full npm.cmd run test:e2e:cloudflare:local fresh-D1 gate, and if all 58 pass run the four remaining build/verify gates in packet order; no other config line/path, source, test, script, schema, migration, package, API, retry, skip, output, provider, deployment, or ref action before governance parity.
+NEXT_EXACT_ACTION: Integrate audited 509292524ced28ac7150025828691c1561b45c5b with its exact one-path/one-line change to playwright.cloudflare.config.js (webServer.timeout 60_000 to 120_000 while top-level per-test timeout 30_000 remains unchanged), prove scope and parity, run exactly one npm.cmd run test:e2e:cloudflare:local fresh-D1 58-test gate, and only if 58/58 passes run exactly once each build:cloudflare; verify:deploy:artifact -- staging .wrangler/build/staging; build:cloudflare:production; verify:deploy:artifact -- production .wrangler/build/production; stop on any failure and do not begin S13 or provider actions.
+
+## V1R7-A5 Integration Writer Takeover
+
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_a5_fast
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_a5_fast
+OLD_WRITER_STATUS: INACTIVE_USAGE_BLOCKED
+V1R7_A5_TAKEOVER_RECORDED_AT: 2026-08-13T12:28:03+08:00
+V1R7_A5_WORKTREE_INVENTORY: REGISTERED=22;EXTRAS=3
+V1R7_A5_PRESERVATION: UNRELATED_UNIQUE_DIRTY_WORKTREES_AND_GLOBAL_STASH_RETAINED;EVIDENCE_CLONES_RETAINED;WORKER_PATCH_EQUIVALENTS_RETAINED;ONLY_5092925_UNINTEGRATED
+V1R7_A5_CANONICAL_GIT: HEAD=32ae56c96f1a8beaa9d927eb85e9258baf192fa8;TREE=733057e778ba2d7546e1541ac86cec0d841934c9;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A

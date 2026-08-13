@@ -3,14 +3,14 @@
 FROM: TERRA_MAX:/root/integration_terra_v3
 TO: TERRA_MAX:/root/integration_terra_accelerated
 BRANCH: release/v0.8.1-final-stabilization
-HEAD: 5602a42c251f6ddfdb20694ed4b37ca189fbb85c
-TREE: 48a06e50a92cf0ddd0eb46bf9694a4508a01ec76
-UPSTREAM: origin/release/v0.8.1-final-stabilization@f5fcfafc779d3a62d9feb255858d5a3f7bac5d8f;LOCAL_AHEAD=1
+HEAD: 32ae56c96f1a8beaa9d927eb85e9258baf192fa8
+TREE: 733057e778ba2d7546e1541ac86cec0d841934c9
+UPSTREAM: origin/release/v0.8.1-final-stabilization@32ae56c96f1a8beaa9d927eb85e9258baf192fa8;LOCAL_AHEAD=0
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/playground-owner-feedback-2026-08-10
 WORKTREE_STATE: DIRTY_AUTHORIZED_UNCOMMITTED_EXACT_FOUR_GOVERNANCE_PLUS_TWO_GENERATED_HTML_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_AMENDMENT;PRE_EDIT_HEAD_5602a42_TREE_48a06e5_AHEAD1_TRACKED_DIRTY2_STAGED0_PRESERVED46
-ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_accelerated
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_a5_fast
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
-LOCK_HOLDER: TERRA_MAX:/root/integration_terra_accelerated
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_a5_fast
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
 LOCK_CONTINUITY: A3_V81_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT
@@ -526,4 +526,8 @@ GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=
 RESUME_COMMANDS: Obtain one final fresh Luna incremental packet audit, then persist only the exact four governance paths and prove parity plus staged0/output2/preserved46 before creating one isolated config-only worker; after static gates and fresh independent implementation audit, integrate unchanged and run one full Cloudflare-local58 fresh-D1 gate, then only if green the four remaining build/verify gates.
 PROHIBITED_ACTIONS: Before startup-budget governance persistence and parity, no config/source/test/script/schema/migration/package/API/generated-output edit, worker mutation, npm, test, build, provider/private-config/live-data action, deploy, manifest, freeze, Playground, Production, recovery-pointer, unrelated ref, S13+, force-push, reset, clean, discard, timeout/retry/skip change, V5 functional or visual rerun, retired full test:e2e rerun, or command variant.
 NEXT_ACTION_SCOPE: V81_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_FINAL_INCREMENTAL_PACKET_AUDIT_THEN_EXACT4_GOVERNANCE_PERSISTENCE_PARITY_THEN_ONE_FILE_WORKER
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact S12 Cloudflare fresh-D1 startup budget amendment limited to playwright.cloudflare.config.js; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push the full local chain, and verify local/upstream/live-remote parity plus staged0, the two unstaged generated HTML outputs at SHA-256 A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A, and preserved46; only after durable parity create one isolated local-only worker to change only webServer.timeout from 60_000 to 120_000 in playwright.cloudflare.config.js while retaining the top-level per-test timeout 30_000, run static gates and obtain one fresh independent Luna implementation audit, integrate unchanged, run exactly one full npm.cmd run test:e2e:cloudflare:local fresh-D1 gate, and if all 58 pass run the four remaining build/verify gates in packet order; no other config line/path, source, test, script, schema, migration, package, API, retry, skip, output, provider, deployment, or ref action before governance parity.
+NEXT_EXACT_ACTION: Integrate audited 509292524ced28ac7150025828691c1561b45c5b with its exact one-path/one-line change to playwright.cloudflare.config.js (webServer.timeout 60_000 to 120_000 while top-level per-test timeout 30_000 remains unchanged), prove scope and parity, run exactly one npm.cmd run test:e2e:cloudflare:local fresh-D1 58-test gate, and only if 58/58 passes run exactly once each build:cloudflare; verify:deploy:artifact -- staging .wrangler/build/staging; build:cloudflare:production; verify:deploy:artifact -- production .wrangler/build/production; stop on any failure and do not begin S13 or provider actions.
+
+V1R7_A5_TAKEOVER: TERRA_MAX:/root/integration_terra_a5_fast;RECORDED_AT=2026-08-13T12:28:03+08:00;OLD_WRITER_STATUS=INACTIVE_USAGE_BLOCKED;REGISTERED_WORKTREES=22;EXTRAS=3;PRESERVED=UNRELATED_UNIQUE_DIRTY_WORKTREES_AND_GLOBAL_STASH_RETAINED,EVIDENCE_CLONES_RETAINED,WORKER_PATCH_EQUIVALENTS_RETAINED,ONLY_5092925_UNINTEGRATED
+OLD_WRITER_STATUS: INACTIVE_USAGE_BLOCKED
+V1R7_A5_CANONICAL_GIT: HEAD=32ae56c96f1a8beaa9d927eb85e9258baf192fa8;TREE=733057e778ba2d7546e1541ac86cec0d841934c9;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A

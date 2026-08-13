@@ -13,9 +13,9 @@ REPAIR_PLAN: .codex/releases/v0.8.1/V0_8_1_REPAIR_PLAN.md
 DAILY_USE_REGRESSION_EVIDENCE: .codex/releases/v0.8.1/V0_8_1_DAILY_USE_REGRESSION_EVIDENCE.md
 AUTHORITY: Earl accepted V1R7-A3 FINAL STANDALONE and authorized automatic continuation. The RV01 post-review truth closure governance is durable at f5fcfafc779d3a62d9feb255858d5a3f7bac5d8f, and its independently audited one-file implementation is integrated unchanged at local 5602a42c251f6ddfdb20694ed4b37ca189fbb85c/tree 48a06e50a92cf0ddd0eb46bf9694a4508a01ec76. The retained combined Node22 npm check is green at 139/139 files and 978/978 tests; full V5 functional passed 118 with 152 intentional skips and zero failures of 270; V5 visual passed 5/5. Two identical full Cloudflare-local commands then stopped before all tests because sequential fresh-D1 startup exceeded the fixed 60-second Playwright webServer budget. Fresh Luna plan review is PASS_NO_P0_P1_P2_P3 and Sol acceptance is PASS. This turn materializes only exact-four accepted-uncommitted governance truth pending one final incremental packet audit. No config, source, test, output, worker, npm, build, stage, commit, push, provider, or ref action is authorized.
 REQUIRED_MODEL: Terra MAX
-ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_accelerated
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_a5_fast
 TERRA_WRITER: TERRA_MAX:TERRA_INTEGRATION_V1R7A3
-LOCK_HOLDER: TERRA_MAX:/root/integration_terra_accelerated
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_a5_fast
 WRITER_LOCK: HELD
 LOCK_STATUS: HELD
 LOCK_CONTINUITY: A3_V81_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT
@@ -46,9 +46,9 @@ V81_S12: CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_AMENDMENT_ACCEPTED_UNCOMMITTED_READY
 PRIVATE_PRESERVATION: VERIFIED
 UNKNOWN_WORK_AT_RISK: 0
 BRANCH: release/v0.8.1-final-stabilization
-HEAD: 5602a42c251f6ddfdb20694ed4b37ca189fbb85c
-TREE: 48a06e50a92cf0ddd0eb46bf9694a4508a01ec76
-UPSTREAM: origin/release/v0.8.1-final-stabilization@f5fcfafc779d3a62d9feb255858d5a3f7bac5d8f;LOCAL_AHEAD=1
+HEAD: 32ae56c96f1a8beaa9d927eb85e9258baf192fa8
+TREE: 733057e778ba2d7546e1541ac86cec0d841934c9
+UPSTREAM: origin/release/v0.8.1-final-stabilization@32ae56c96f1a8beaa9d927eb85e9258baf192fa8;LOCAL_AHEAD=0
 BASE_MAIN_SHA: b08653f02a7461084a4a34dfae1de67d5cb8ca57
 BASE_MAIN_TREE: 0c1b2caeba23f6f3ac873d00e243cf0d4d7987a4
 PR23: MERGED; HEAD=0e7655f1f316904a90271963ea3016533c1d1174; MAIN_TREE_PARITY=PASS
@@ -531,4 +531,8 @@ GIT_OBJECT_PROOF: FSCK=28_COMMITS/121_TREES/133_BLOBS; MISSING=0; STASH_PARENTS=
 BLOCKER: INFRASTRUCTURE_GATE_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_PENDING_GOVERNANCE_AND_IMPLEMENTATION
 HANDOFF_STATUS: ACTIVE_V81_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_AMENDMENT_ACCEPTED_UNCOMMITTED_READY_FOR_GOVERNANCE_COMMIT
 NEXT_ACTION_SCOPE: V81_S12_CLOUDFLARE_FRESH_D1_STARTUP_BUDGET_FINAL_INCREMENTAL_PACKET_AUDIT_THEN_EXACT4_GOVERNANCE_PERSISTENCE_PARITY_THEN_ONE_FILE_WORKER
-NEXT_EXACT_ACTION: Obtain one final fresh read-only Luna incremental packet audit of the accepted exact S12 Cloudflare fresh-D1 startup budget amendment limited to playwright.cloudflare.config.js; after PASS, stage and commit exactly .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md, and .codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md, normally push the full local chain, and verify local/upstream/live-remote parity plus staged0, the two unstaged generated HTML outputs at SHA-256 A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A, and preserved46; only after durable parity create one isolated local-only worker to change only webServer.timeout from 60_000 to 120_000 in playwright.cloudflare.config.js while retaining the top-level per-test timeout 30_000, run static gates and obtain one fresh independent Luna implementation audit, integrate unchanged, run exactly one full npm.cmd run test:e2e:cloudflare:local fresh-D1 gate, and if all 58 pass run the four remaining build/verify gates in packet order; no other config line/path, source, test, script, schema, migration, package, API, retry, skip, output, provider, deployment, or ref action before governance parity.
+NEXT_EXACT_ACTION: Integrate audited 509292524ced28ac7150025828691c1561b45c5b with its exact one-path/one-line change to playwright.cloudflare.config.js (webServer.timeout 60_000 to 120_000 while top-level per-test timeout 30_000 remains unchanged), prove scope and parity, run exactly one npm.cmd run test:e2e:cloudflare:local fresh-D1 58-test gate, and only if 58/58 passes run exactly once each build:cloudflare; verify:deploy:artifact -- staging .wrangler/build/staging; build:cloudflare:production; verify:deploy:artifact -- production .wrangler/build/production; stop on any failure and do not begin S13 or provider actions.
+
+V1R7_A5_TAKEOVER: TERRA_MAX:/root/integration_terra_a5_fast;RECORDED_AT=2026-08-13T12:28:03+08:00;OLD_WRITER_STATUS=INACTIVE_USAGE_BLOCKED;REGISTERED_WORKTREES=22;EXTRAS=3;PRESERVED=UNRELATED_UNIQUE_DIRTY_WORKTREES_AND_GLOBAL_STASH_RETAINED,EVIDENCE_CLONES_RETAINED,WORKER_PATCH_EQUIVALENTS_RETAINED,ONLY_5092925_UNINTEGRATED
+OLD_WRITER_STATUS: INACTIVE_USAGE_BLOCKED
+V1R7_A5_CANONICAL_GIT: HEAD=32ae56c96f1a8beaa9d927eb85e9258baf192fa8;TREE=733057e778ba2d7546e1541ac86cec0d841934c9;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A
