@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 import { environmentReadinessIssues, safeReleaseIdentity } from '../../src/server/environment.js';
 import { redactLogDetails, structuredLog } from '../../src/server/observability.js';
@@ -8,6 +9,10 @@ import {
 import { createConfigPair, decodeJsonBuffer } from '../../scripts/create-private-cloudflare-configs.mjs';
 import { createSecretPackage } from '../../scripts/cloudflare-secret-package.mjs';
 import { buildPrivateStagingIdentityPackage } from '../../scripts/configure-staging-identity-fixture.mjs';
+
+const releaseVersion = JSON.parse(
+  readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
+).version;
 
 const binding = (environment, name, databaseId, bucketName) => ({
   name,
@@ -216,7 +221,7 @@ describe('v0.7 environment and observability foundation', () => {
     );
     expect(pair.staging).toMatchObject({
       name: 'hau-usc-logistics-staging',
-      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: '0.8.1' },
+      vars: { ENVIRONMENT: 'STAGING', APP_VERSION: releaseVersion },
       r2_buckets: [
         {
           binding: 'BRAND_ASSETS',
@@ -234,7 +239,7 @@ describe('v0.7 environment and observability foundation', () => {
     expect(pair.production.assets.run_worker_first).toEqual(['/api/*', '/brand/*', '/media/*']);
     expect(pair.production).toMatchObject({
       name: 'hau-usc-logistics-production',
-      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: '0.8.1' },
+      vars: { ENVIRONMENT: 'PRODUCTION', APP_VERSION: releaseVersion },
       r2_buckets: [
         { binding: 'BRAND_ASSETS', bucket_name: 'hau-usc-logistics-production-assets' },
         { binding: 'EVIDENCE_ASSETS', bucket_name: 'hau-usc-logistics-production-evidence' },
