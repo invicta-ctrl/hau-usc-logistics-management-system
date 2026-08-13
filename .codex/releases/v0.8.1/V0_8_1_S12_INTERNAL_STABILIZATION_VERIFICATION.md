@@ -1,8 +1,11 @@
 # V0.8.1 S12 Internal Stabilization Verification
 
-- **Status:** `V81-S12_COMPLETE_S13_EXACT_CANDIDATE_FREEZE_HANDSHAKE_AWAITING_AUTHORIZATION`
-- **State:** `S12_COMPLETE_VERIFIED_CANDIDATE_b32f206_S13_EXACT_CANDIDATE_FREEZE_HANDSHAKE_AWAITING_AUTHORIZATION`
-- **Objective:** Internal stabilization verification complete.
+- **Status:** `V81-S12_COMPLETE_S13_RELEASE_CANDIDATE_WORKFLOW_AUTHORIZED_LOCAL_GOVERNANCE_CHILD_PENDING_INDEPENDENT_PASS`
+- **State:** `S12_COMPLETE_VERIFIED_IMPLEMENTATION_b32f206_CLOSEOUT_d25ee360_S13_GOVERNANCE_CHILD_GIT_HEAD_PENDING_INDEPENDENT_PASS`
+- **Objective:** Internal stabilization verification complete; current A5 S13 release-candidate workflow governance child pending independent PASS.
+
+AUTHORITY: The current accepted owner Earl V1R7-A5 instruction supersedes the prior separate-S13-authorization wait only for this exact release-candidate workflow: after independent PASS, push the exact governance child, verify local/upstream/live-remote parity and provider prerequisites, dispatch release-candidate.yml exactly once with that child SHA on release/v0.8.1-final-stabilization, monitor to terminal, stop on failure, and take no Production action.
+
 - **Canonical branch:** `release/v0.8.1-final-stabilization`
 - **Boundary baseline commit:** `7e572e9347033b8d59ed4491ef0d6477f01b7115`
 - **Boundary baseline tree:** `835f9679b6119a3b51c3eabd759a98d0e4a9acba`
@@ -14,7 +17,7 @@
 - **Durable legacy-browser-gate amendment tree:** `705e4129019aa15533ff375db42792b8dabb0b85`
 - **Pre-A5-fixture-isolation parity identity:** local and upstream commit `ad6b2b390c27f337191d6e7405c0692b4b5fef44`, tree `5b104645317699ca3c2052b7d3ae87fc70240b74`, divergence `0/0`; exactly the two authorized generated HTML outputs are dirty and unstaged at `640105` bytes and SHA-256 `A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A`; staged count is `0`, preserved count is `46`, and capture remains verified.
 - **Recorded at:** `2026-08-13T13:28:04+08:00`
-- **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_a5_fast`
+- **Writer lock:** `HELD` by `TERRA_MAX:/root/integration_terra_a5`; final transfer from `TERRA_MAX:/root/s13_governance_writer` was `INTERRUPTED_NO_WRITE`, with no concurrent writer.
 - **Sol S12 boundary acceptance:** `PASS`
 - **Fresh Luna boundary review:** `PASS_NO_P0_P1_P2_P3`
 - **Boundary review timestamp:** `2026-08-12T10:50:09.4956401+08:00`
@@ -396,14 +399,21 @@ The integrated `webServer.timeout` correction and local A5 `workers: 1` test-syn
 
 ## Exact next action
 
-NEXT_EXACT_ACTION: Await separate accepted authorization for the S13 exact-candidate-freeze handshake; when authorized, reverify the pushed S12 candidate identity, Git parity, artifact hashes, and preserved outputs before any freeze or provider action; do not execute S13, deployment, or provider action now.
+NEXT_ACTION_SCOPE: V81_S13_RELEASE_CANDIDATE_WORKFLOW_AUTHORIZED_INDEPENDENT_PASS_PENDING
+NEXT_EXACT_ACTION: After independent PASS, push this exact governance child; verify local/upstream/live-remote parity and provider prerequisites; dispatch release-candidate.yml exactly once with this governance child's exact SHA and branch release/v0.8.1-final-stabilization; monitor to terminal; stop on any failure and take no Production action.
+
+**Historical/superseded S13 wait:** The former separate-authorization / no-S13 action wording above is historical S12 evidence only. The current accepted V1R7-A5 owner instruction supersedes that wait solely for the exact release-candidate workflow next action; it does not authorize Production or any other provider action.
 
 ## V1R7-A5 Integration Writer Takeover
 
-ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_a5_fast
-LOCK_HOLDER: TERRA_MAX:/root/integration_terra_a5_fast
-OLD_WRITER_STATUS: INACTIVE_USAGE_BLOCKED
-V1R7_A5_TAKEOVER_RECORDED_AT: 2026-08-13T12:28:03+08:00
+ACTIVE_WRITER: TERRA_MAX:/root/integration_terra_a5
+LOCK_HOLDER: TERRA_MAX:/root/integration_terra_a5
+OWNER_TASK: /root/integration_terra_a5
+WRITER_TRANSFER_FROM: TERRA_MAX:/root/s13_governance_writer
+WRITER_TRANSFER_TO: TERRA_MAX:/root/integration_terra_a5
+WRITER_TRANSFERRED_AT: 2026-08-13T15:29:29+08:00
+OLD_WRITER_STATUS: INTERRUPTED_NO_WRITE
+V1R7_A5_TAKEOVER_RECORDED_AT: 2026-08-13T15:29:29+08:00
 V1R7_A5_WORKTREE_INVENTORY: REGISTERED=22;EXTRAS=3
 V1R7_A5_PRESERVATION: UNRELATED_UNIQUE_DIRTY_WORKTREES_AND_GLOBAL_STASH_RETAINED;EVIDENCE_CLONES_RETAINED;WORKER_PATCH_EQUIVALENTS_RETAINED;ONLY_5092925_UNINTEGRATED
 V1R7_A5_TAKEOVER_PRE_SERIALIZATION_CANONICAL_GIT_HISTORICAL: HEAD=d8ec7cfc342fdad97b03328880cdcf780a2fb9a5;TREE=4bac20ce4e745ab673526776f2ff47f48d123220;UPSTREAM_PARITY=0/0;STAGED=0;DIRTY_TRACKED_ONLY=dist/index.html,HAU-USC_Logistics-Prototype-Shareable.html;OUTPUT_SHA256=A4FB610517C9336B1C68AD3CEEE8BE982CECEF3E558407F6769FCDD9B6C7316A
@@ -428,8 +438,11 @@ S12_A5_FIXTURE_CONTRACT_PROOF: FAILED_RUN_D1=LOCAL.FOOD_ABSENT_LOCAL.FOOD.RENAME
 
 S12_A5_FIXTURE_ISOLATION_CORRECTION: tests/cloudflare-e2e/local-worker.spec.js_ONLY;CREATE_AND_ACTIVATE_DEDICATED_SYNTHETIC_DOL_STAFF_COM_FOOD_ACCOUNT_VIA_EXISTING_CREATE_ACCOUNT_ACTIVATION_FLOW;RENAME_LOCAL.RENAME.SOURCE_TO_LOCAL.RENAME.TARGET;RETAIN_REVOCATION_REPLAY_HISTORY_COLLISION_ASSERTIONS;NO_PRODUCT_CONFIG_SPEC_RV01_FALLBACK_OR_REVERSE_RENAME_CHANGE;AUTHORIZE_EXACTLY_ONE_POST_FIX_CLOUDFLARE58_RERUN_AFTER_REVIEW_PUSH_PARITY
 
-V1R7_A5_WRITER_RETRANSFER: FROM=TERRA_MAX:/root/integration_terra_a5;TO=TERRA_MAX:/root/integration_terra_a5_fast;RECORDED_AT=2026-08-13T13:50:49+08:00;ACTIVE_WRITER_LOCK_OWNER_TASK=FAST
+V1R7_A5_WRITER_RETRANSFER_HISTORICAL: FROM=TERRA_MAX:/root/integration_terra_a5;TO=TERRA_MAX:/root/integration_terra_a5_fast;RECORDED_AT=2026-08-13T13:50:49+08:00;ACTIVE_WRITER_LOCK_OWNER_TASK=FAST
+V1R7_A5_WRITER_RETRANSFER: FROM=TERRA_MAX:/root/s13_governance_writer;TO=TERRA_MAX:/root/integration_terra_a5;RECORDED_AT=2026-08-13T15:29:29+08:00;REASON=INTERRUPTED_NO_WRITE;NO_CONCURRENT_WRITER=TRUE
 
 ## S12 Closeout
 
-S12_CLOSEOUT_RESULT: CANDIDATE_HEAD=b32f206eb8d7795c80a42faed341a912d0939aac;TREE=4ad6a63644d1ad630f5502ee627e6e2c98dcafb6;PUSH_PARITY=0/0;CLOUDFLARE_LOCAL=PASS_58_OF_58_DURATION_SECONDS74.231;STAGING_BUILD=PASS_DURATION_SECONDS1.439;STAGING_ARTIFACT=PASS_BYTES639833_SHA256_6FD10D02D0E3CF6C508014687EEBC3C30B50A92AEAC1547A10C0D0BF5E70A8F5;PRODUCTION_BUILD=PASS_DURATION_SECONDS1.410;PRODUCTION_ARTIFACT=PASS_BYTES637603_SHA256_B8D2B206BDD7A9528450E196EFF3A3BA595AC90A8BCC6AB9E2800A6EF9A02BEB;OPEN_PRODUCT_P0=0;OPEN_PRODUCT_P1=0;PRESERVED_OUTPUT2=PASS;UNTRACKED_APPROVED=PASS;S13_EXACT_CANDIDATE_FREEZE_HANDSHAKE_NEXT
+S12_IMPLEMENTATION_BASELINE: CANDIDATE_HEAD=b32f206eb8d7795c80a42faed341a912d0939aac;TREE=4ad6a63644d1ad630f5502ee627e6e2c98dcafb6;PUSH_PARITY=0/0;CLOUDFLARE_LOCAL=PASS_58_OF_58_DURATION_SECONDS74.231;STAGING_BUILD=PASS_DURATION_SECONDS1.439;STAGING_ARTIFACT=PASS_BYTES639833_SHA256_6FD10D02D0E3CF6C508014687EEBC3C30B50A92AEAC1547A10C0D0BF5E70A8F5;PRODUCTION_BUILD=PASS_DURATION_SECONDS1.410;PRODUCTION_ARTIFACT=PASS_BYTES637603_SHA256_B8D2B206BDD7A9528450E196EFF3A3BA595AC90A8BCC6AB9E2800A6EF9A02BEB;OPEN_PRODUCT_P0=0;OPEN_PRODUCT_P1=0
+S12_CLOSEOUT_BASELINE: HEAD=d25ee36093789e2054d2988f629e140f796efab6;TREE=2536a2076c4f5364d2a64fa5e1ff9a4f6bece500;UPSTREAM_REMOTE_PARITY=0/0;STAGED=0;PRESERVED_OUTPUT2=PASS;UNTRACKED_APPROVED=PASS
+S13_WORKFLOW_CANDIDATE: GOVERNANCE_CHILD=GIT_HEAD;TREE=GIT_TREE;PARENT=d25ee36093789e2054d2988f629e140f796efab6;EXACT_SCOPE=.codex/CURRENT.md,.codex/CURRENT_TASK.md,.codex/CURRENT_HANDOFF.md,.codex/releases/v0.8.1/V0_8_1_S12_INTERNAL_STABILIZATION_VERIFICATION.md;DISPATCH_AFTER_INDEPENDENT_PASS_PUSH_PARITY_AND_PROVIDER_PREREQUISITES;NO_PUSH_DISPATCH_PROVIDER_THIS_TURN
