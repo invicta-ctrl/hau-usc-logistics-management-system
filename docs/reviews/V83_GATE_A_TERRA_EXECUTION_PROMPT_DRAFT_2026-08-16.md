@@ -126,19 +126,29 @@ may be touched.
 
 ## Commit and stop
 
-- Commit exactly one coherent slice: the new test file only.
-- Do not push to the active V83 release branch from this research workflow; push only
-  to the branch the current chain/handoff designates for Gate A.
-- `.codex` continuity records are NOT part of the Gate A implementation diff. Terra
-  may update canonical `.codex` continuity records only after Gate A verification,
-  and only if Thursday's live repository authority explicitly requires that normal
-  handoff recording. Any such continuity update must contain no product behavior
-  change, record only verified Gate A facts/results, follow the live
-  writer-lock/handoff policy, remain separate in purpose from the test
-  implementation, and never be inferred merely from this preparation document. If
-  Thursday's live authority does not require a `.codex` update, Terra must not create
-  one.
-- Stop before Gate B. Record unrun checks and external-state uncertainty honestly.
+1. Revalidate live repository authority and writer lock.
+2. Implement only the Gate A test fixture.
+3. Run the required tests and static checks (see Verification).
+4. Terra reviews its complete local diff itself; confirm only authorized
+   implementation paths changed.
+5. Confirm no product/runtime/migration write entered the diff.
+6. Commit one coherent Gate A candidate.
+7. Push to the temporary task branch authorized by the live repository; report the
+   exact pushed SHA.
+8. Stop for GPT-5.6 Sol Web audit of that exact pushed SHA.
+9. Do not start Gate B.
+10. Do not integrate, merge, or promote the Gate A candidate before Sol review.
+11. `.codex` continuity records are NOT part of the Gate A implementation diff.
+    Terra may update canonical `.codex` continuity records only after Gate A
+    verification, and only if Thursday's live repository authority explicitly
+    requires that normal handoff recording. Any such continuity update must contain
+    no product behavior change, record only verified Gate A facts/results, follow
+    the live writer-lock/handoff policy, remain separate in purpose from the test
+    implementation, and never be inferred merely from this preparation document. If
+    Thursday's live authority does not require a `.codex` update, Terra must not
+    create one. Continuity recording never changes the rule that Sol audits an exact
+    pushed repository state.
+12. Record unrun checks and external-state uncertainty honestly.
 
 ## Stop conditions
 
@@ -146,3 +156,7 @@ Stop on: wrong/unverified environment; any provider or production crossover; a d
 or unknown target; any migration modification; missing reset proof; a failing test
 that cannot be explained by the reviewed design; privacy/recipient uncertainty;
 exact-SHA drift; or an unresolved P0/P1 finding from Sol review.
+
+Terra reviews the complete local diff before committing. Sol performs the independent
+review only after the candidate SHA is pushed and repository-accessible; Sol cannot
+inspect an uncommitted worktree, local-only files, or local terminal output.

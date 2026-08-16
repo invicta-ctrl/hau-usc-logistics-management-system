@@ -375,10 +375,21 @@ Order Terra should later follow (after fresh-state revalidation):
 11. `npx eslint tests/unit/identity-foundation-gate-a-fixture.test.js` (EXISTING tool).
 12. `npx prettier --check tests/unit/identity-foundation-gate-a-fixture.test.js` (EXISTING tool).
 13. `git diff --check` (EXISTING).
-14. Complete logical diff review by Sol before commit (EXISTING workflow).
+14. Terra reviews its complete local diff itself and confirms only the authorized
+    implementation path changed (EXISTING workflow).
+15. Terra commits the coherent Gate A slice and pushes the exact task-branch commit,
+    then reports the exact pushed SHA (EXISTING workflow).
+16. GPT-5.6 Sol Web audits that exact pushed SHA; any blocking Sol finding is
+    corrected and re-pushed; integration, canonical handoff updates, or the next
+    gate proceed only after Sol acceptance.
 
 Build, Cloudflare, e2e, migration, deploy, provider, and recovery commands are NOT
 required for a test-only fixture and must not be run by Terra for Gate A.
+
+Terra remains responsible for reviewing the complete local diff **before committing**.
+Sol performs the independent review only **after the candidate SHA becomes
+repository-accessible**. Sol cannot inspect an uncommitted worktree, local-only
+files, local terminal output not represented in Git, or hidden local state.
 
 ## 14. Reset / rollback
 

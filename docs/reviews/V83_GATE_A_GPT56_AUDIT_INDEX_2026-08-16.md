@@ -18,6 +18,22 @@ audited. The corrected preparation SHA is reported externally by the preparer af
 the correction commit. The final Sol audit must use that newly reported correction
 SHA, not an unspecified branch tip.
 
+Future Gate A candidate audit contract (Terra fills after implementation):
+
+```text
+GATE_A_CANDIDATE_SHA:    <exact pushed Terra SHA>
+GATE_A_CANDIDATE_BRANCH: <temporary task branch>
+
+AUDIT RULE:
+Audit the exact SHA, not an unspecified branch tip and not local-only state.
+Compare the Gate A candidate against its exact parent/base and verify that only the
+accepted Gate A scope changed.
+```
+
+Sol reviews the candidate only after Terra commits and pushes it. Terra remains
+responsible for reviewing its complete local diff before committing; Sol cannot
+inspect an uncommitted worktree, local-only files, or local terminal output.
+
 Load-bearing source files:
 
 - src/server/identity-foundation/reconciliation.js
