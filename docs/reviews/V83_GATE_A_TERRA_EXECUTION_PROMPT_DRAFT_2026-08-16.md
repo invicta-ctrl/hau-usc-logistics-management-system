@@ -45,7 +45,8 @@ OUT OF SCOPE (prohibited):
 
 - Product source, worker routes, adapters, and generated artifacts.
 - Any migration change; do not create 0032 and do not modify 0031.
-- Any `.codex` file change.
+- Any `.codex` file change as part of the Gate A implementation diff (post-verification
+  continuity handling is defined under "Commit and stop").
 - A production ID-D apply service or route.
 - Assignment (staff_assignments) writes or semantics.
 - Gate B, provider reads, Google/Sheets/Drive, D1/R2, Figma, Playground, Production,
@@ -53,9 +54,15 @@ OUT OF SCOPE (prohibited):
 
 ## Authorized writes
 
-Only the new test file may be written. All other paths are read-only dependencies.
-Use obviously synthetic identities (`example.invalid` domains, `SYNTHETIC` markers)
-and the fixture-only crypto constant
+AUTHORIZED IMPLEMENTATION WRITE:
+
+```text
+tests/unit/identity-foundation-gate-a-fixture.test.js
+```
+
+No product/runtime/migration write is authorized. All other paths are read-only
+dependencies. Use obviously synthetic identities (`example.invalid` domains,
+`SYNTHETIC` markers) and the fixture-only crypto constant
 `SYNTHETIC-GATE-A-SECRET-2026-08-16-NOT-PRODUCTION`. Never read or write real data.
 
 ## Required proofs
@@ -64,12 +71,14 @@ and the fixture-only crypto constant
    `PRAGMA integrity_check` ok, `PRAGMA foreign_key_check` empty, `app_metadata`
    `operational_schema_version = '31'`, four canonical tables exist and are empty,
    and a malformed `person_id` insert throws.
-2. **First apply**: for S01/S03 (and the combined S04) perform the fixture-level
-   canonical creation pass and assert the exact expected canonical-person, email, and
-   link counts.
-3. **Idempotent second apply**: rerun the same pass; assert zero new rows and
-   `canonicalPersonCreateCount: 0`, `explicitAccountLinkCandidateCount: 0`; assert the
-   roster re-apply path returns `replayed` without new entries (S17).
+2. **First synthetic canonical-row orchestration**: for S01/S03 (and the combined
+   S04) perform the fixture-only synthetic write-harness pass and assert the exact
+   expected canonical-person, email, and link counts.
+3. **Repeated orchestration (fixture repeatability)**: rerun the same pass; assert
+   zero new rows and `canonicalPersonCreateCount: 0`,
+   `explicitAccountLinkCandidateCount: 0`; assert the roster re-apply path returns
+   `replayed` without new entries (S17). This proves fixture repeatability only — it
+   does NOT prove Production ID-D idempotency.
 4. **Reset**: close the in-memory database and recreate; assert the clean schema-31
    empty state.
 5. **Fail-closed cases**: S05-S16 exactly as designed, asserting both preview counts
@@ -77,6 +86,29 @@ and the fixture-only crypto constant
 6. **Safety flags**: every scenario asserts `safety.dataMutation === false`,
    `providerRead === false`, `privilegeMutation === false`,
    `effectiveDatesInvented === false`, and that `staff_assignments` stays empty.
+
+Proof boundary (record in the test descriptions and handoff):
+
+```text
+PROVEN BY GATE A
+
+- migration 0031 can be replayed safely in an in-memory local database;
+- schema constraints behave as designed;
+- current repository primitives can create synthetic canonical rows;
+- ID-C preview behavior can be exercised against deterministic synthetic state;
+- ambiguous/error paths fail closed;
+- fixture orchestration can itself be made repeatable without duplicate fixture effects;
+- reset returns the disposable local environment to a known state.
+
+NOT PROVEN BY GATE A
+
+- Production ID-D transactional apply behavior;
+- Production ID-D idempotency;
+- concurrency behavior of a future apply service;
+- rollback semantics of a future Production apply service;
+- provider-backed canonical migration;
+- authorization for a Production apply route/service.
+```
 
 ## Verification (in order)
 
@@ -97,8 +129,15 @@ may be touched.
 - Commit exactly one coherent slice: the new test file only.
 - Do not push to the active V83 release branch from this research workflow; push only
   to the branch the current chain/handoff designates for Gate A.
-- Update only the repository records the accepted task requires; do not edit `.codex`
-  unless the accepted Gate A task explicitly authorizes the three current records.
+- `.codex` continuity records are NOT part of the Gate A implementation diff. Terra
+  may update canonical `.codex` continuity records only after Gate A verification,
+  and only if Thursday's live repository authority explicitly requires that normal
+  handoff recording. Any such continuity update must contain no product behavior
+  change, record only verified Gate A facts/results, follow the live
+  writer-lock/handoff policy, remain separate in purpose from the test
+  implementation, and never be inferred merely from this preparation document. If
+  Thursday's live authority does not require a `.codex` update, Terra must not create
+  one.
 - Stop before Gate B. Record unrun checks and external-state uncertainty honestly.
 
 ## Stop conditions

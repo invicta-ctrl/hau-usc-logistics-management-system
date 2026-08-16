@@ -140,7 +140,28 @@ Gate A needs: applying existing `0031` only, fixture inserts only, and test help
 ## 6. ID-D intended write semantics
 
 Reconstructed from the A6 decision table, existing contracts, and existing repository
-methods. Gate A proves these at fixture level only.
+methods. These are the accepted identity semantics. Gate A exercises only the
+fixture-level, test-only subset and does not prove any Production apply behavior.
+
+PROVEN BY GATE A:
+
+- migration 0031 can be replayed safely in an in-memory local database;
+- schema constraints behave as designed;
+- current repository primitives can create synthetic canonical rows;
+- ID-C preview behavior can be exercised against deterministic synthetic state;
+- ambiguous/error paths fail closed;
+- fixture orchestration can itself be made repeatable without duplicate fixture
+  effects;
+- reset returns the disposable local environment to a known state.
+
+NOT PROVEN BY GATE A:
+
+- Production ID-D transactional apply behavior;
+- Production ID-D idempotency;
+- concurrency behavior of a future apply service;
+- rollback semantics of a future Production apply service;
+- provider-backed canonical migration;
+- authorization for a Production apply route/service.
 
 AUTHORIZED / PROVEN:
 
@@ -161,7 +182,9 @@ UNVERIFIED:
 - The persisted applied roster projection still matches the live private source
   (Gate B is required before any canonical mutation from live data).
 - The identity-key secret has never rotated since account onboarding (see finding 4
-  of the prior review; Gate B must include a drift check).
+  of the prior review). Gate B may compare fingerprints and counts, but it cannot
+  attribute quarantine cause to secret rotation with current ID-C output; see
+  section 18.
 
 NOT YET AUTHORIZED:
 
@@ -171,6 +194,9 @@ NOT YET AUTHORIZED:
 - Assignment (staff_assignments) creation semantics. The ID-C preview plans zero
   assignments (`assignmentCreateCount: 0`); Gate A must not invent assignment writes.
 - Any role/capability derivation from organizational position.
+
+Any future Production ID-D apply service remains `NOT_YET_AUTHORIZED`. Gate A must
+not imply otherwise.
 
 ## 7. Synthetic fixture design
 
@@ -191,30 +217,31 @@ Provider-free harness (inline in the new test file, matching the existing
 
 Scenario set (fresh fixture per scenario unless noted):
 
-| SCENARIO ID | PURPOSE                 | SYNTHETIC INPUT                                              | PRECONDITIONS                        | EXPECTED PEOPLE | EXPECTED EMAILS | EXPECTED LINKS | EXPECTED QUARANTINE/UNRESOLVED | MUTATIONS                    | NO-OPS                                          | FAIL-CLOSED RESULT                               | IDEMPOTENT RERUN                        | RESET    |
-| ----------- | ----------------------- | ------------------------------------------------------------ | ------------------------------------ | --------------- | --------------- | -------------- | ------------------------------ | ---------------------------- | ----------------------------------------------- | ------------------------------------------------ | --------------------------------------- | -------- |
-| S00         | migration proof         | -                                                            | fresh DB                             | 0               | 0               | 0              | 0                              | schema version 31            | -                                               | bad person_id INSERT throws                      | re-replay starts empty                  | close DB |
-| S01         | clean new person        | entry P1 (F1, active, VERIFIED)                              | applied run accepted=1               | 0->1            | 0->1            | 0              | 0                              | create person + email row    | -                                               | -                                                | 2nd pass: create=0, zero rows added     | close DB |
-| S02         | clean email             | entry P1 (F1)                                                | person PER-E with F1 ACTIVE/VERIFIED | 1               | 1               | 0              | 0                              | none                         | duplicate email insert rejected by unique index | duplicate active-verified fingerprint throws     | emails stays 1                          | close DB |
-| S03         | deterministic link      | entry P1 (F1); account A1 ACTIVE+verified F1                 | PER-E with F1                        | 1               | 1               | 0->1           | 0                              | create ACTIVE link A1->PER-E | -                                               | -                                                | 2nd pass: existingLink=1, links stays 1 | close DB |
-| S04         | idempotent rerun        | S01+S03 dataset                                              | after first apply                    | 2               | 2               | 1              | 0                              | none                         | preview create=0, linkCand=0                    | -                                                | zero new rows on 2nd pass               | close DB |
-| S05         | duplicate prevention    | duplicate ACTIVE/VERIFIED fingerprint; duplicate ACTIVE link | PER-E with F1                        | 1               | 1               | 1              | 0                              | none                         | both duplicate inserts rejected                 | second insert throws                             | counts unchanged                        | close DB |
-| S06         | ambiguous candidate     | A1 ACTIVE + A3 STARTER, both verified F1                     | PER-E with F1                        | 1               | 1               | 0              | 1                              | none                         | no link written                                 | accountCandidates>1 quarantines                  | unchanged                               | close DB |
-| S07         | empty email             | entry identityKey F0=identityKey(''), profile email ''       | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine (no email)                            | unchanged                               | close DB |
-| S08         | identity-key mismatch   | stored key F9 != recomputed F1                               | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine                                       | unchanged                               | close DB |
-| S09         | decrypt failure         | malformed envelope                                           | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine                                       | unchanged                               | close DB |
-| S10         | inactive account        | A1 DISABLED or verified-at NULL                              | PER-E with F1                        | 1               | 1               | 0              | 0                              | none                         | no link candidate                               | account excluded                                 | unchanged                               | close DB |
-| S11         | unverified row          | entry profile VERIFICATION_RESULT UNVERIFIED                 | applied run                          | 0               | 0               | 0              | 0                              | none                         | preservedInactiveOrUnverified=1                 | not a candidate                                  | unchanged                               | close DB |
-| S12         | existing correct link   | A1 ACTIVE + ACTIVE link A1->PER-E                            | PER-E with F1                        | 1               | 1               | 1              | 0                              | none                         | existingLink=1, no new link                     | -                                                | unchanged                               | close DB |
-| S13         | conflicting link        | A1 ACTIVE + ACTIVE link A1->PER-OTHER                        | PER-E with F1                        | 2               | 2               | 1              | 1                              | none                         | quarantine; link untouched                      | link person mismatch quarantines                 | unchanged                               | close DB |
-| S14         | similar names, no match | entries P1 F1 + P5 F5, no canonical rows                     | applied run accepted=2               | 0->2            | 0->2            | 0              | 0                              | two distinct persons         | no name comparison exists                       | -                                                | create=0 on 2nd pass                    | close DB |
-| S15         | no auto-merge           | PER-E F1 seeded; entries P1 F1 + P5 F5                       | applied run                          | 1->2            | 1->2            | 0              | 0                              | create only F5's person      | F1 resolves to existing PER-E                   | -                                                | total people 2                          | close DB |
-| S16         | isolated failure        | entry1 corrupt + entry2 clean F2                             | applied run accepted=2               | 0->1            | 0->1            | 0              | 1                              | create only clean person     | corrupt entry untouched                         | READY_WITH_QUARANTINE                            | unchanged                               | close DB |
-| S17         | synthetic pipeline      | in-memory source 6 rows (2 duplicate-rejected, 4 accepted)   | fresh roster tables                  | 0               | 0               | 0              | 0                              | preview->apply: entries=4    | re-apply runId returns replayed                 | source validator rejects duplicate email/student | reconcile 4/4                           | close DB |
+| SCENARIO ID | PURPOSE                  | SYNTHETIC INPUT                                              | PRECONDITIONS                        | EXPECTED PEOPLE | EXPECTED EMAILS | EXPECTED LINKS | EXPECTED QUARANTINE/UNRESOLVED | MUTATIONS                    | NO-OPS                                          | FAIL-CLOSED RESULT                               | REPEAT ORCHESTRATION RESULT           | RESET    |
+| ----------- | ------------------------ | ------------------------------------------------------------ | ------------------------------------ | --------------- | --------------- | -------------- | ------------------------------ | ---------------------------- | ----------------------------------------------- | ------------------------------------------------ | ------------------------------------- | -------- |
+| S00         | migration proof          | -                                                            | fresh DB                             | 0               | 0               | 0              | 0                              | schema version 31            | -                                               | bad person_id INSERT throws                      | re-replay starts empty                | close DB |
+| S01         | clean new person         | entry P1 (F1, active, VERIFIED)                              | applied run accepted=1               | 0->1            | 0->1            | 0              | 0                              | create person + email row    | -                                               | -                                                | repeat: create=0, zero rows added     | close DB |
+| S02         | clean email              | entry P1 (F1)                                                | person PER-E with F1 ACTIVE/VERIFIED | 1               | 1               | 0              | 0                              | none                         | duplicate email insert rejected by unique index | duplicate active-verified fingerprint throws     | emails stays 1                        | close DB |
+| S03         | deterministic link       | entry P1 (F1); account A1 ACTIVE+verified F1                 | PER-E with F1                        | 1               | 1               | 0->1           | 0                              | create ACTIVE link A1->PER-E | -                                               | -                                                | repeat: existingLink=1, links stays 1 | close DB |
+| S04         | repeatable orchestration | S01+S03 dataset                                              | after first orchestration            | 2               | 2               | 1              | 0                              | none                         | preview create=0, linkCand=0                    | -                                                | repeat: zero new rows                 | close DB |
+| S05         | duplicate prevention     | duplicate ACTIVE/VERIFIED fingerprint; duplicate ACTIVE link | PER-E with F1                        | 1               | 1               | 1              | 0                              | none                         | both duplicate inserts rejected                 | second insert throws                             | counts unchanged                      | close DB |
+| S06         | ambiguous candidate      | A1 ACTIVE + A3 STARTER, both verified F1                     | PER-E with F1                        | 1               | 1               | 0              | 1                              | none                         | no link written                                 | accountCandidates>1 quarantines                  | unchanged                             | close DB |
+| S07         | empty email              | entry identityKey F0=identityKey(''), profile email ''       | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine (no email)                            | unchanged                             | close DB |
+| S08         | identity-key mismatch    | stored key F9 != recomputed F1                               | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine                                       | unchanged                             | close DB |
+| S09         | decrypt failure          | malformed envelope                                           | applied run                          | 0               | 0               | 0              | 1                              | none                         | no candidate                                    | quarantine                                       | unchanged                             | close DB |
+| S10         | inactive account         | A1 DISABLED or verified-at NULL                              | PER-E with F1                        | 1               | 1               | 0              | 0                              | none                         | no link candidate                               | account excluded                                 | unchanged                             | close DB |
+| S11         | unverified row           | entry profile VERIFICATION_RESULT UNVERIFIED                 | applied run                          | 0               | 0               | 0              | 0                              | none                         | preservedInactiveOrUnverified=1                 | not a candidate                                  | unchanged                             | close DB |
+| S12         | existing correct link    | A1 ACTIVE + ACTIVE link A1->PER-E                            | PER-E with F1                        | 1               | 1               | 1              | 0                              | none                         | existingLink=1, no new link                     | -                                                | unchanged                             | close DB |
+| S13         | conflicting link         | A1 ACTIVE + ACTIVE link A1->PER-OTHER                        | PER-E with F1                        | 2               | 2               | 1              | 1                              | none                         | quarantine; link untouched                      | link person mismatch quarantines                 | unchanged                             | close DB |
+| S14         | similar names, no match  | entries P1 F1 + P5 F5, no canonical rows                     | applied run accepted=2               | 0->2            | 0->2            | 0              | 0                              | two distinct persons         | no name comparison exists                       | -                                                | repeat: create=0                      | close DB |
+| S15         | no auto-merge            | PER-E F1 seeded; entries P1 F1 + P5 F5                       | applied run                          | 1->2            | 1->2            | 0              | 0                              | create only F5's person      | F1 resolves to existing PER-E                   | -                                                | total people 2                        | close DB |
+| S16         | isolated failure         | entry1 corrupt + entry2 clean F2                             | applied run accepted=2               | 0->1            | 0->1            | 0              | 1                              | create only clean person     | corrupt entry untouched                         | READY_WITH_QUARANTINE                            | unchanged                             | close DB |
+| S17         | synthetic pipeline       | in-memory source 6 rows (2 duplicate-rejected, 4 accepted)   | fresh roster tables                  | 0               | 0               | 0              | 0                              | preview->apply: entries=4    | re-apply runId returns replayed                 | source validator rejects duplicate email/student | reconcile 4/4                         | close DB |
 
-The critical proofs are S01/S03/S04 (first apply = expected effects, second apply =
-zero additional effects), S16 (one failure cannot corrupt unrelated candidates), and
-S17 (the real roster pipeline runs provider-free and its re-apply is replayed).
+The critical proofs are S01/S03/S04 (first synthetic orchestration = expected
+effects; repeated orchestration = zero additional effects — fixture repeatability,
+not Production idempotency), S16 (one failure cannot corrupt unrelated candidates),
+and S17 (the real roster pipeline runs provider-free and its re-apply is replayed).
 
 ## 8. Expected database reconciliation
 
@@ -225,11 +252,17 @@ BEFORE MIGRATION:          no canonical tables
 AFTER 0031:                schema 31; canonical_people=0, person_emails=0,
                            account_staff_links=0, staff_assignments=0; integrity ok; FK 0
 AFTER FIXTURE SEED:        S01/S04/S14/S15/S16 add only the rows their table lists
-AFTER ID-D LOCAL APPLY:    first pass writes exactly the rows listed in MUTATIONS
-AFTER SECOND IDENTICAL APPLY: zero new canonical_people / person_emails /
+AFTER FIRST SYNTHETIC
+CANONICAL-ROW ORCHESTRATION: first pass writes exactly the rows listed in MUTATIONS
+                             (fixture-only synthetic write harness)
+AFTER REPEATED ORCHESTRATION: zero new canonical_people / person_emails /
                            account_staff_links rows; preview createCount=0
 AFTER RESET:               fresh migrated DB; schema 31; all four canonical tables empty
 ```
+
+These proofs are fixture-only. They do not prove Production ID-D apply behavior,
+idempotency, concurrency, rollback, provider-backed migration, or authorization for
+a Production apply route/service.
 
 Load-bearing assertions Terra must add:
 
@@ -237,7 +270,7 @@ Load-bearing assertions Terra must add:
 2. `person_emails` unique active-verified fingerprints == rows with that state.
 3. `account_staff_links` active-link-per-account uniqueness holds.
 4. `staff_assignments` stays empty across every Gate A scenario (no assignment writes).
-5. Second identical pass produces zero net inserts.
+5. Repeated orchestration produces zero net inserts (fixture repeatability).
 6. Reset produces the empty schema-31 state.
 
 ## 9. Current test results
@@ -281,7 +314,7 @@ Node 22.23.2 for earlier runs; both Node lines pass for this focused set (22 cit
 | existing-link mismatch           | none                                                       | NOT_COVERED       | YES                  | S13                                                                                  |
 | no name-based linking            | none                                                       | NOT_COVERED       | YES                  | S14 proves no name comparison                                                        |
 | mutation prevention              | worker-route-contract.test.js                              | COVERED           | NO                   | already asserts no apply route                                                       |
-| idempotency                      | roster apply replayed (not directly tested in the 8 files) | PARTIALLY_COVERED | YES                  | S04 second-pass + S17 replayed                                                       |
+| fixture repeatability            | roster apply replayed (not directly tested in the 8 files) | PARTIALLY_COVERED | YES                  | S04 repeated orchestration + S17 replayed; does NOT prove Production idempotency     |
 | rollback/reset                   | none                                                       | NOT_COVERED       | YES                  | in-memory close/recreate proof                                                       |
 | assignment handling              | migration test (schema only)                               | PARTIALLY_COVERED | NO                   | assignments stay empty by design in Gate A                                           |
 
@@ -292,7 +325,8 @@ with inline helpers only. No existing test file changes. Required coverage:
 
 - S00: schema 31 applied once, integrity ok, FK 0, four tables empty, malformed
   `person_id` rejected.
-- S01-S04: first-apply effects and second-apply zero effects for person, email, link.
+- S01-S04: first-orchestration effects and repeat-orchestration zero effects for
+  person, email, link (fixture repeatability, not Production idempotency).
 - S05: duplicate fingerprint/link inserts rejected; counts unchanged.
 - S06: two eligible accounts quarantine; no link.
 - S07/S08/S09: empty email, identityKey mismatch, decrypt failure quarantine; no writes.
@@ -330,9 +364,10 @@ Order Terra should later follow (after fresh-state revalidation):
 1. `git fetch --prune origin` and re-verify branch/HEAD/tree/spec/writer-lock parity (EXISTING).
 2. Replay migrations in-memory; assert S00 (EXISTING pattern).
 3. Initialize fixture scenarios S01-S17 (PROPOSED: new test file).
-4. First local apply assertions (PROPOSED).
-5. Database reconciliation assertions after first apply (PROPOSED).
-6. Second identical apply + idempotency assertions (PROPOSED).
+4. First synthetic canonical-row orchestration assertions (PROPOSED).
+5. Database reconciliation assertions after first orchestration (PROPOSED).
+6. Repeated orchestration + fixture-repeatability assertions (PROPOSED; not
+   Production idempotency).
 7. Negative/fail-closed cases S05-S16 (PROPOSED).
 8. Reset + post-reset reconciliation (PROPOSED).
 9. `npm.cmd run test -- tests/unit/identity-foundation-gate-a-fixture.test.js` (PROPOSED once file exists).
@@ -370,19 +405,19 @@ required for a test-only fixture and must not be run by Terra for Gate A.
 
 ## 16. Risks
 
-| RISK                                                  | SEVERITY | MITIGATION                                                       |
-| ----------------------------------------------------- | -------- | ---------------------------------------------------------------- |
-| Fixture secretly assumes production ID-D apply exists | HIGH     | Explicit NOT_YET_AUTHORIZED marker; test-side orchestration only |
-| Silent name-based inference                           | HIGH     | S14 proves the code path has no name comparison                  |
-| Silent account-link assumption                        | HIGH     | S06/S12/S13 prove ambiguity and conflict quarantine              |
-| Email normalization assumption drift                  | MEDIUM   | contracts + crypto normalization asserted together               |
-| Secret rotation masking candidates                    | MEDIUM   | recorded as finding; Gate B drift check required                 |
-| Accidental assignment creation                        | HIGH     | assignmentCreateCount stays 0; staff_assignments asserted empty  |
-| Migration irreversibility                             | MEDIUM   | 0031 is additive-empty; fixture is in-memory                     |
-| False expected counts                                 | MEDIUM   | counts derived from scenario table; second-pass zero-delta proof |
-| Tests reproduce implementation, not invariants        | MEDIUM   | every scenario asserts DB state, not just preview numbers        |
-| Private data leakage                                  | HIGH     | synthetic-only data; no real values                              |
-| Local-only audit dependency                           | HIGH     | all facts are in pushed repo files (these three documents)       |
+| RISK                                                  | SEVERITY | MITIGATION                                                                                              |
+| ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| Fixture secretly assumes production ID-D apply exists | HIGH     | Explicit NOT_YET_AUTHORIZED marker; PROVEN/NOT PROVEN split; test-only synthetic write harness          |
+| Silent name-based inference                           | HIGH     | S14 proves the code path has no name comparison                                                         |
+| Silent account-link assumption                        | HIGH     | S06/S12/S13 prove ambiguity and conflict quarantine                                                     |
+| Email normalization assumption drift                  | MEDIUM   | contracts + crypto normalization asserted together                                                      |
+| Secret rotation masking candidates                    | MEDIUM   | recorded as finding; Gate B cannot attribute quarantine cause; unexpected pattern => UNVERIFIED + BLOCK |
+| Accidental assignment creation                        | HIGH     | assignmentCreateCount stays 0; staff_assignments asserted empty                                         |
+| Migration irreversibility                             | MEDIUM   | 0031 is additive-empty; fixture is in-memory                                                            |
+| False expected counts                                 | MEDIUM   | counts derived from scenario table; repeat-orchestration zero-delta proof                               |
+| Tests reproduce implementation, not invariants        | MEDIUM   | every scenario asserts DB state, not just preview numbers                                               |
+| Private data leakage                                  | HIGH     | synthetic-only data; no real values                                                                     |
+| Local-only audit dependency                           | HIGH     | all facts are in pushed repo files (these three documents)                                              |
 
 ## 17. UNVERIFIED items
 
@@ -393,6 +428,8 @@ required for a test-only fixture and must not be run by Terra for Gate A.
   confirmed as of 2026-08-16. Any Thursday write requires a fresh transfer/release.
 - CI runner Node version for the future Gate A run (22 cited, 26 verified locally).
 - Whether the audit requires an Opus 5 pass before Terra execution (Sol decision).
+- The cause of any aggregate ID-C quarantine cannot be attributed with current ID-C
+  output (no reason breakdown is exposed).
 
 ## 18. Gate B prerequisites
 
@@ -400,41 +437,50 @@ Gate B is NOT performed here. Required later shape:
 
 - Why: ID-C reconciles the persisted projection against itself; the live source is
   unobserved, so projection freshness is unproven before canonical mutation.
-- What to verify: read the approved roster source via the existing
-  `createGoogleSheetsRosterSource` (spreadsheet id + range + service account), compute
-  `crypto.fingerprint(fingerprintSource)` and row counts, and compare with the latest
-  APPLIED run's `source_fingerprint`, `source_row_count`, `accepted_count`,
-  `rejection_count`.
+- What Gate B may establish with current evidence: the approved live-source
+  fingerprint; source row count; accepted count; rejection count; the persisted
+  applied-run fingerprint/counts; ID-C overall status; and ID-C aggregate
+  candidate/quarantine counts.
+- What Gate B cannot currently establish: attribution of aggregate quarantine to
+  secret rotation, identity-key mismatch, decrypt failure, or email mismatch, unless
+  a separately accepted privacy-safe diagnostic provides that evidence.
 - Minimum permissions: the existing service-account `spreadsheets.readonly` scope;
   no new scope; read-only.
 - Must not retrieve/emit: names, student IDs, review notes, or any row values.
   Compute counts and fingerprint in memory and emit only those plus status.
 - Redaction: counts + `SHA256` fingerprint only; no values in logs or Git.
 - Comparison rule: equal fingerprint AND equal counts => fresh; any difference => BLOCK.
-- Secret-drift detection: after the probe, re-run ID-C. If the source fingerprint
-  matches but every verified-active entry quarantines on `identityKey` mismatch, treat
-  it as a secret-drift signal and BLOCK.
+- SECRET/FINGERPRINT DRIFT: current ID-C cannot prove the cause of aggregate
+  quarantine. If Gate B confirms source fingerprint/count freshness but ID-C produces
+  an unexpected material quarantine pattern, classify the cause as UNVERIFIED and
+  BLOCK canonical mutation. Do not diagnose secret rotation from `quarantineCount`
+  alone. A reason-coded privacy-safe diagnostic may be designed later only through
+  separately accepted scope if determining the cause becomes necessary.
 - Continuation result: fingerprint/counts equal and ID-C returns READY or
   READY_WITH_QUARANTINE with zero BLOCKED statuses.
 - Blocking result: any count/fingerprint mismatch, BLOCKED status, provider error, or
-  drift signal.
+  an unexpected quarantine pattern whose cause cannot be attributed (UNVERIFIED =>
+  BLOCK).
 
 ## 19. GPT-5.6 Sol audit questions
 
-1. Is the Gate A fixture actually authorized by A6?
-2. Does the design accidentally invent identity semantics?
-3. Are canonical-person/email/account-link expectations consistent with migration 0031?
-4. Is any name-based or unsupported inference present?
-5. Are ambiguous identities guaranteed to fail closed?
-6. Is the fixture genuinely provider-free?
-7. Are the proposed tests sufficient?
-8. Does the idempotency proof actually prove duplicate prevention?
-9. Is reset/rollback adequate?
-10. Does any proposed step cross into Gate B?
-11. Are any assignments or permissions being fabricated?
-12. Is there any reason Opus 5 is needed before Terra execution?
-13. Is the Terra prompt safe and sufficiently bounded?
-14. What, if anything, must be corrected before Thursday?
+1. Were all four prior Sol findings corrected?
+2. Is Gate A now described strictly as a fixture/test proof rather than a Production
+   apply proof?
+3. Is Production ID-D apply behavior clearly `NOT_YET_AUTHORIZED` and unproven?
+4. Are migration 0031 expectations accurate?
+5. Is the synthetic fixture still provider-free?
+6. Is any name-based identity inference present?
+7. Are ambiguity and conflicts fail-closed?
+8. Are assignments still excluded?
+9. Is authorization/privilege inference still excluded?
+10. Is fixture repeatability distinguished from future Production idempotency?
+11. Is reset sufficient for the disposable in-memory fixture?
+12. Is the `.codex` policy internally consistent?
+13. Is Gate B still separate?
+14. Is secret-rotation diagnosis correctly marked unverified with current ID-C?
+15. Is Opus required before Terra execution?
+16. Is the Terra prompt ready for Thursday execution after live-state revalidation?
 
 ## 20. Final Gate A readiness verdict
 
@@ -442,4 +488,5 @@ Gate B is NOT performed here. Required later shape:
 migration fixture, the synthetic scenario set covers the identity invariants the A6
 specification names, the current focused suite reproduces 31/31, and no product,
 migration, `.codex`, provider, or production mutation is required by this preparation
-or by the drafted Terra prompt.
+or by the drafted Terra prompt. The preparation describes only fixture/test-level
+proofs; Production ID-D apply behavior remains `NOT_YET_AUTHORIZED` and unproven.
