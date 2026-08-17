@@ -9,6 +9,7 @@ import { createD1AccessManagementRepository } from '../server/d1/access-manageme
 import { createD1AccountApplicationRepository } from '../server/d1/account-application-repository.js';
 import { createD1IdentityFoundationRepository } from '../server/d1/identity-foundation-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
+import { createD1IdentitySourceProjectionRepository } from '../server/d1/identity-source-projection-repository.js';
 import { createD1ProfileRepository } from '../server/d1/profile-repository.js';
 import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
@@ -39,6 +40,10 @@ import {
   createIdentityFoundationReconciliationService,
   IdentityFoundationReconciliationError,
 } from '../server/identity-foundation/reconciliation.js';
+import {
+  createIdentitySourceProjectionProbeService,
+  IdentitySourceProjectionProbeError,
+} from '../server/identity-foundation/source-projection-probe.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
 import {
   createAccountApplicationActivationHandoff,
@@ -212,6 +217,7 @@ function services(env) {
   const accessRepository = createD1AccessManagementRepository(env.DB);
   const identityFoundationRepository = createD1IdentityFoundationRepository(env.DB);
   const rosterRepository = createD1IdentityRosterRepository(env.DB);
+  const sourceProjectionRepository = createD1IdentitySourceProjectionRepository(env.DB);
   const accountApplicationRepository = createD1AccountApplicationRepository(env.DB);
   const passwordKdf = createPasswordKdf({
     timingSafeEqual: constantTimeEqual,
@@ -330,20 +336,28 @@ function services(env) {
   });
   const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
+  const googleRosterSource = createGoogleSheetsRosterSource({
+    spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
+    range: env.GOOGLE_ROSTER_RANGE,
+    serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+    serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
+    fingerprint: rosterCrypto.fingerprint,
+  });
   const identityRoster = createIdentityRosterService({
     repository: rosterRepository,
-    source: createGoogleSheetsRosterSource({
-      spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
-      range: env.GOOGLE_ROSTER_RANGE,
-      serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
-      serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
-    }),
+    source: googleRosterSource,
     crypto: rosterCrypto,
   });
   const identityFoundationReconciliation = createIdentityFoundationReconciliationService({
     legacyRosterRepository: rosterRepository,
     foundationRepository: identityFoundationRepository,
     crypto: rosterCrypto,
+  });
+  const sourceProjectionProbe = createIdentitySourceProjectionProbeService({
+    source: googleRosterSource,
+    repository: sourceProjectionRepository,
+    reconciliation: identityFoundationReconciliation,
+    executionAuthorized: false,
   });
   const profile = createProfileService({
     repository: createD1ProfileRepository(env.DB),
@@ -366,6 +380,7 @@ function services(env) {
     identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
     operationalHealth,
     operations,
     profile,
@@ -515,6 +530,7 @@ async function handleApi(request, env, requestId, executionContext) {
     identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
     operationalHealth,
     operations,
     profile,
@@ -1095,6 +1111,14 @@ async function handleApi(request, env, requestId, executionContext) {
       return json({ ok: true, ...(await identityFoundationReconciliation.preview({ actor })) });
     }
 
+    if (
+      url.pathname === '/api/owner/identity-foundation/source-projection-probe' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await sourceProjectionProbe.probe({ actor })) });
+    }
+
     if (url.pathname.startsWith('/api/owner/evidence/') && request.method === 'POST') {
       const mutation = url.pathname !== '/api/owner/evidence/status';
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation })).account;
@@ -1297,6 +1321,7 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
       error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
       error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
@@ -1304,6 +1329,7 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
       error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
       error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError
