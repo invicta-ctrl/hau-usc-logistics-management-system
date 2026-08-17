@@ -28,7 +28,16 @@ describe('canonical identity reconciliation Worker route contract', () => {
     expect(route).not.toContain('body(request)');
     expect(source).toContain('createD1IdentitySourceProjectionRepository');
     expect(source).toContain('createIdentitySourceProjectionProbeService');
-    expect(source).toContain('executionAuthorized: false');
+    expect(source).toContain('isIdentitySourceProjectionProbeExecutionAuthorized');
+    expect(source).toContain('executionAuthorized: isIdentitySourceProjectionProbeExecutionAuthorized(env)');
+    expect(source).not.toContain('executionAuthorized: false');
+    const probeRegistration = source.slice(
+      source.indexOf('const sourceProjectionProbe ='),
+      source.indexOf('const profile ='),
+    );
+    expect(probeRegistration).not.toContain('request');
+    expect(probeRegistration).not.toContain('body');
+    expect(probeRegistration).not.toContain('searchParams');
     expect(source).not.toContain('/api/owner/identity-foundation/source-projection-probe-apply');
     expect(source).not.toContain('sourceProjectionProbe.apply');
   });

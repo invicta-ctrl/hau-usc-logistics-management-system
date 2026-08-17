@@ -5,6 +5,7 @@ import {
   SOURCE_PROJECTION_PROBE_REQUEST_TIMEOUT_MS,
   SOURCE_PROJECTION_PROBE_TOTAL_TIMEOUT_MS,
   createIdentitySourceProjectionProbeService,
+  isIdentitySourceProjectionProbeExecutionAuthorized,
 } from '../../src/server/identity-foundation/source-projection-probe.js';
 
 const owner = { id: 'OWNER-SYNTHETIC', roleId: ROLES.SYSTEM_OWNER };
@@ -128,6 +129,35 @@ async function expectOverallDeadlineFailure({ service, deadline, pending, resume
 }
 
 describe('identity source-projection probe', () => {
+  it('authorizes execution only for the exact staging-only boolean and candidate identity gate', () => {
+    const authorizedSha = '0123456789abcdef0123456789abcdef01234567';
+    const allowed = {
+      ENVIRONMENT: 'STAGING',
+      PLAYGROUND_MODE: true,
+      IDENTITY_SOURCE_PROJECTION_PROBE_ENABLED: true,
+      IDENTITY_SOURCE_PROJECTION_PROBE_AUTHORIZED_SHA: authorizedSha,
+      CANDIDATE_SHA: authorizedSha,
+    };
+
+    expect(isIdentitySourceProjectionProbeExecutionAuthorized(allowed)).toBe(true);
+    for (const blocked of [
+      { ...allowed, ENVIRONMENT: 'PRODUCTION' },
+      { ...allowed, ENVIRONMENT: undefined },
+      { ...allowed, PLAYGROUND_MODE: undefined },
+      { ...allowed, IDENTITY_SOURCE_PROJECTION_PROBE_ENABLED: undefined },
+      { ...allowed, PLAYGROUND_MODE: 'true' },
+      { ...allowed, IDENTITY_SOURCE_PROJECTION_PROBE_ENABLED: 'true' },
+      { ...allowed, IDENTITY_SOURCE_PROJECTION_PROBE_AUTHORIZED_SHA: undefined },
+      { ...allowed, IDENTITY_SOURCE_PROJECTION_PROBE_AUTHORIZED_SHA: authorizedSha.toUpperCase() },
+      { ...allowed, CANDIDATE_SHA: undefined },
+      { ...allowed, CANDIDATE_SHA: authorizedSha.toUpperCase() },
+      { ...allowed, CANDIDATE_SHA: authorizedSha.slice(0, -1) },
+      { ...allowed, CANDIDATE_SHA: '89abcdef0123456789abcdef0123456789abcdef' },
+    ]) {
+      expect(isIdentitySourceProjectionProbeExecutionAuthorized(blocked)).toBe(false);
+    }
+  });
+
   it('keeps live probe execution blocked by default before provider or repository access', async () => {
     const { service, source, repository, reconciliation } = context({ executionAuthorized: false });
 

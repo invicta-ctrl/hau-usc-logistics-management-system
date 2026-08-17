@@ -23,6 +23,22 @@ export class IdentitySourceProjectionProbeError extends Error {
 }
 
 const MAX_COUNT = 1_000_000;
+const LOWERCASE_SHA40 = /^[0-9a-f]{40}$/u;
+
+export function isIdentitySourceProjectionProbeExecutionAuthorized(env = {}) {
+  const authorizedSha = env.IDENTITY_SOURCE_PROJECTION_PROBE_AUTHORIZED_SHA;
+  const candidateSha = env.CANDIDATE_SHA;
+  return (
+    env.ENVIRONMENT === 'STAGING' &&
+    env.PLAYGROUND_MODE === true &&
+    env.IDENTITY_SOURCE_PROJECTION_PROBE_ENABLED === true &&
+    typeof authorizedSha === 'string' &&
+    LOWERCASE_SHA40.test(authorizedSha) &&
+    typeof candidateSha === 'string' &&
+    LOWERCASE_SHA40.test(candidateSha) &&
+    authorizedSha === candidateSha
+  );
+}
 
 function fail(code, options) {
   throw new IdentitySourceProjectionProbeError(code, options);

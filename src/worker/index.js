@@ -43,6 +43,7 @@ import {
 import {
   createIdentitySourceProjectionProbeService,
   IdentitySourceProjectionProbeError,
+  isIdentitySourceProjectionProbeExecutionAuthorized,
 } from '../server/identity-foundation/source-projection-probe.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
 import {
@@ -357,7 +358,7 @@ function services(env) {
     source: googleRosterSource,
     repository: sourceProjectionRepository,
     reconciliation: identityFoundationReconciliation,
-    executionAuthorized: false,
+    executionAuthorized: isIdentitySourceProjectionProbeExecutionAuthorized(env),
   });
   const profile = createProfileService({
     repository: createD1ProfileRepository(env.DB),
