@@ -166,20 +166,25 @@ function safeResult({ status, live = null, persisted = null, idc = null, provide
 
 async function withinOverallTimeout(read, { setTimeoutImpl, clearTimeoutImpl }) {
   const controller = new AbortController();
-  let timedOut = false;
-  const timer = setTimeoutImpl(() => {
-    timedOut = true;
-    controller.abort();
-  }, SOURCE_PROJECTION_PROBE_TOTAL_TIMEOUT_MS);
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeoutImpl(() => {
+      controller.abort();
+      reject(
+        new IdentitySourceProjectionProbeError('IDENTITY_SOURCE_PROJECTION_PROBE_TIMEOUT', { status: 504 }),
+      );
+    }, SOURCE_PROJECTION_PROBE_TOTAL_TIMEOUT_MS);
+  });
   try {
-    return await read(controller.signal);
-  } catch (error) {
-    if (timedOut || controller.signal.aborted) {
-      fail('IDENTITY_SOURCE_PROJECTION_PROBE_TIMEOUT', { status: 504 });
-    }
-    throw error;
+    return await Promise.race([Promise.resolve().then(() => read(controller.signal)), deadline]);
   } finally {
     clearTimeoutImpl(timer);
+  }
+}
+
+function assertOverallDeadlineNotAborted(signal) {
+  if (signal.aborted) {
+    fail('IDENTITY_SOURCE_PROJECTION_PROBE_TIMEOUT', { status: 504 });
   }
 }
 
@@ -206,93 +211,99 @@ export function createIdentitySourceProjectionProbeService({
         fail('IDENTITY_SOURCE_PROJECTION_PROBE_EXECUTION_BLOCKED', { status: 423 });
       }
 
-      const persisted = persistedSummary(await repository.readLatestAppliedCounts());
-      if (!persisted) {
-        return safeResult({
-          status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_NO_APPLIED_PROJECTION,
-          providerRead: false,
-          blocker: 'NO_APPLIED_PROJECTION',
-        });
-      }
-      if (!consistentPersistedProjection(persisted)) {
-        return safeResult({
-          status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_PERSISTED_PROJECTION_MISMATCH,
-          persisted,
-          providerRead: false,
-          blocker: 'PERSISTED_PROJECTION_MISMATCH',
-        });
-      }
+      return withinOverallTimeout(
+        async (signal) => {
+          const persistedRecord = await repository.readLatestAppliedCounts();
+          assertOverallDeadlineNotAborted(signal);
+          const persisted = persistedSummary(persistedRecord);
+          if (!persisted) {
+            return safeResult({
+              status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_NO_APPLIED_PROJECTION,
+              providerRead: false,
+              blocker: 'NO_APPLIED_PROJECTION',
+            });
+          }
+          if (!consistentPersistedProjection(persisted)) {
+            return safeResult({
+              status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_PERSISTED_PROJECTION_MISMATCH,
+              persisted,
+              providerRead: false,
+              blocker: 'PERSISTED_PROJECTION_MISMATCH',
+            });
+          }
 
-      const idc = idcSummary(await reconciliation.preview({ actor }));
-      const idcReady = [
-        IDENTITY_FOUNDATION_RECONCILIATION_STATUS.READY,
-        IDENTITY_FOUNDATION_RECONCILIATION_STATUS.READY_WITH_QUARANTINE,
-      ].includes(idc.status);
-      if (
-        !idcReady ||
-        idc.projectionDiscrepancy !== 0 ||
-        !sameProjectionSummary(idc, persisted) ||
-        !consistentPersistedProjection(idc)
-      ) {
-        return safeResult({
-          status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_ID_C_RECONCILIATION_MISMATCH,
-          persisted,
-          idc,
-          providerRead: false,
-          blocker: 'ID_C_RECONCILIATION_MISMATCH',
-        });
-      }
+          const reconciliationPlan = await reconciliation.preview({ actor });
+          assertOverallDeadlineNotAborted(signal);
+          const idc = idcSummary(reconciliationPlan);
+          const idcReady = [
+            IDENTITY_FOUNDATION_RECONCILIATION_STATUS.READY,
+            IDENTITY_FOUNDATION_RECONCILIATION_STATUS.READY_WITH_QUARANTINE,
+          ].includes(idc.status);
+          if (
+            !idcReady ||
+            idc.projectionDiscrepancy !== 0 ||
+            !sameProjectionSummary(idc, persisted) ||
+            !consistentPersistedProjection(idc)
+          ) {
+            return safeResult({
+              status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_ID_C_RECONCILIATION_MISMATCH,
+              persisted,
+              idc,
+              providerRead: false,
+              blocker: 'ID_C_RECONCILIATION_MISMATCH',
+            });
+          }
 
-      let live;
-      try {
-        const summary = await withinOverallTimeout(
-          (signal) =>
-            source.readProjectionSummary({
+          let live;
+          try {
+            const summary = await source.readProjectionSummary({
               requestTimeoutMs: SOURCE_PROJECTION_PROBE_REQUEST_TIMEOUT_MS,
               signal,
-            }),
-          { setTimeoutImpl, clearTimeoutImpl },
-        );
-        live = Object.freeze({
-          sourceFingerprint: sourceFingerprint(summary?.sourceFingerprint),
-          ...sourceCounts(summary),
-        });
-      } catch (error) {
-        if (error instanceof IdentitySourceProjectionProbeError) throw error;
-        if (String(error?.code ?? '') === 'ROSTER_SOURCE_TIMEOUT') {
-          fail('IDENTITY_SOURCE_PROJECTION_PROBE_TIMEOUT', { status: 504 });
-        }
-        fail('IDENTITY_SOURCE_PROJECTION_PROBE_SOURCE_UNAVAILABLE', { status: 502 });
-      }
+            });
+            assertOverallDeadlineNotAborted(signal);
+            live = Object.freeze({
+              sourceFingerprint: sourceFingerprint(summary?.sourceFingerprint),
+              ...sourceCounts(summary),
+            });
+          } catch (error) {
+            if (error instanceof IdentitySourceProjectionProbeError) throw error;
+            if (signal.aborted || String(error?.code ?? '') === 'ROSTER_SOURCE_TIMEOUT') {
+              fail('IDENTITY_SOURCE_PROJECTION_PROBE_TIMEOUT', { status: 504 });
+            }
+            fail('IDENTITY_SOURCE_PROJECTION_PROBE_SOURCE_UNAVAILABLE', { status: 502 });
+          }
 
-      if (live.sourceFingerprint !== persisted.sourceFingerprint || !sameCountSummary(live, persisted)) {
-        return safeResult({
-          status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_LIVE_SOURCE_MISMATCH,
-          live,
-          persisted,
-          idc,
-          providerRead: true,
-          blocker: 'LIVE_SOURCE_MISMATCH',
-        });
-      }
-      if (idc.quarantineCount > 0) {
-        return safeResult({
-          status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_QUARANTINE,
-          live,
-          persisted,
-          idc,
-          providerRead: true,
-          blocker: 'QUARANTINE',
-        });
-      }
-      return safeResult({
-        status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.COUNTS_MATCH_READ_ONLY,
-        live,
-        persisted,
-        idc,
-        providerRead: true,
-        blocker: 'NOT_AUTHORIZED',
-      });
+          if (live.sourceFingerprint !== persisted.sourceFingerprint || !sameCountSummary(live, persisted)) {
+            return safeResult({
+              status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_LIVE_SOURCE_MISMATCH,
+              live,
+              persisted,
+              idc,
+              providerRead: true,
+              blocker: 'LIVE_SOURCE_MISMATCH',
+            });
+          }
+          if (idc.quarantineCount > 0) {
+            return safeResult({
+              status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.BLOCKED_QUARANTINE,
+              live,
+              persisted,
+              idc,
+              providerRead: true,
+              blocker: 'QUARANTINE',
+            });
+          }
+          return safeResult({
+            status: IDENTITY_SOURCE_PROJECTION_PROBE_STATUS.COUNTS_MATCH_READ_ONLY,
+            live,
+            persisted,
+            idc,
+            providerRead: true,
+            blocker: 'NOT_AUTHORIZED',
+          });
+        },
+        { setTimeoutImpl, clearTimeoutImpl },
+      );
     },
   });
 }
