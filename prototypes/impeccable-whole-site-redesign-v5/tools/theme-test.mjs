@@ -25,6 +25,11 @@ const readToggle = () =>
     const cs = (el) => getComputedStyle(el);
     return {
       theme: document.body.dataset.theme,
+      /* The token layer keys off the root element, so the body flag alone
+         cannot prove the theme applied — it once read `light` over a page that
+         was still fully dark. Record what the root says and what it paints. */
+      rootTheme: document.documentElement.dataset.theme,
+      ground: cs(document.documentElement).backgroundColor,
       pressed: btn.getAttribute('aria-pressed'),
       label: btn.getAttribute('aria-label'),
       sunOpacity: +cs(sun).opacity,
@@ -68,7 +73,7 @@ const readToggle = () =>
 
   /* mid-transition sample proves the icon animates rather than snapping */
   await page.evaluate(() => document.querySelector('.celestial').click());
-  await page.waitForFunction(() => document.body.dataset.theme === 'dark');
+  await page.waitForFunction(() => document.documentElement.dataset.theme === 'dark');
   await page.waitForTimeout(80);
   results.midTransition = await page.evaluate(readToggle);
   await ctx.close();
@@ -84,7 +89,7 @@ const readToggle = () =>
   await page.reload();
   await page.waitForTimeout(400);
   results.afterReload = await page.evaluate(() => ({
-    theme: document.body.dataset.theme,
+    theme: document.documentElement.dataset.theme,
     stored: localStorage.getItem('hau-usc-v4-theme'),
   }));
   await ctx.close();
@@ -97,7 +102,7 @@ for (const scheme of ['dark', 'light']) {
   await page.goto(url);
   await page.waitForTimeout(300);
   results[`firstRun_system_${scheme}`] = await page.evaluate(() => ({
-    theme: document.body.dataset.theme,
+    theme: document.documentElement.dataset.theme,
     stored: localStorage.getItem('hau-usc-v4-theme'),
   }));
   await ctx.close();
@@ -112,7 +117,7 @@ for (const scheme of ['dark', 'light']) {
   await page.waitForTimeout(300);
   await page.reload();
   await page.waitForTimeout(300);
-  results.storedBeatsSystem = await page.evaluate(() => document.body.dataset.theme);
+  results.storedBeatsSystem = await page.evaluate(() => document.documentElement.dataset.theme);
   await ctx.close();
 }
 
@@ -155,6 +160,11 @@ const checks = {
   darkStateTruthful:
     cycleDark.theme === 'dark' && cycleDark.pressed === 'true' && cycleDark.label === 'Switch to light mode',
   returnsToLight: cycleLightAgain.theme === 'light' && cycleLightAgain.pressed === 'false',
+  /* Both nodes must agree, or the announced state outruns the rendered one. */
+  rootAndBodyAgree: results.cycle.every((entry) => entry.rootTheme === entry.theme),
+  /* And the switch has to repaint, not just relabel. */
+  groundRepaintsOnSwitch:
+    cycleLight.ground !== cycleDark.ground && cycleLightAgain.ground === cycleLight.ground,
   bothEndpointsRemainVisible: results.cycle.every((entry) => entry.endpointsVisible),
   wideCelestialCapsule: cycleLight.trackWidth >= 70 && cycleLight.trackHeight >= 36,
   plateChangesEndpoint: cycleLight.thumbTransform !== cycleDark.thumbTransform,
