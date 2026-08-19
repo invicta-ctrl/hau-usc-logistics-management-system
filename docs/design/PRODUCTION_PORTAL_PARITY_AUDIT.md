@@ -824,3 +824,101 @@ pinning after each retext, and a render check before moving to the next page.
 
 D-04 stays open, but it is now a measured, ordered list of seven pages plus one
 Bahnschrift pocket rather than a file-wide assertion.
+
+## 19. Token system — D-02 closed, coverage measured and raised
+
+### 19.1 D-02 — the blur ladder had two disagreeing sources
+
+Measured, not assumed:
+
+| Step | `material/blur/*` variable | Material effect style | Bound? |
+|---|---|---|---|
+| G1 | 12 | 16 | no |
+| G2 | 18 | 22 | no |
+| G3 | 24 | 30 | no |
+| G4 | 28 | 36 | no |
+
+Two numbers per step, neither referencing the other. **The effect styles won**,
+because they are what a viewer actually sees and what `glass.css` already
+mirrors. The variables were corrected up to 16/22/30/36 in both modes, and each
+Material style's `BACKGROUND_BLUR` radius is now **bound** to its variable.
+
+There is now one number per step. Changing `material/blur/g2` changes what
+renders; previously it changed nothing at all, which is the worst state for a
+token to be in — present, authoritative-looking, and inert.
+
+`glass.css` was updated to match, replacing the note that recorded the
+divergence.
+
+### 19.2 Variable coverage was far worse than recorded
+
+The Public Lending dark pass found "only 2 unbound fills" and that was read as
+evidence the file is token-driven. It was evidence about **one cloned portal**.
+Across every CURRENT lane in the document:
+
+```text
+solid paints (fills + strokes):  45,137
+unbound before:                  14,583   (32.3% unbound)
+```
+
+A third of the file was painted, not tokenised. Any dark-mode or palette change
+would have missed all of it.
+
+### 19.3 The binding pass, and what it deliberately did not do
+
+A hex-to-token map was built from the **Light** mode of Semantic Color,
+Primitives and Glass Material. Two exclusions were built in:
+
+- **Ambiguous hexes are dropped, not guessed.** Five colours resolve to more
+  than one token; binding those would repeat the inference that produced the 54
+  unproven colours at §3.1.
+- **Baseline capture pages 00–03 are excluded entirely.** They document what
+  production and playground actually render, in Segoe UI, Georgia and raw hex.
+  Tokenising them would falsify the baseline.
+
+Superseded and historical lanes were excluded throughout.
+
+```text
+bound this pass:   7,210 paints across 24 pages
+unbound after:     7,373
+coverage:          67.7%  ->  83.7%
+```
+
+Light-mode appearance is unchanged by construction: every binding preserves the
+exact colour it replaced. The gain is that these surfaces now follow a mode
+switch and a palette edit instead of ignoring both.
+
+The two unbound status dots at `300:585` and `300:609`, recorded at §13.5, were
+swept up by this pass and are now bound.
+
+### 19.4 What remains unbound, and why it is not simply "more of the same"
+
+The largest remaining pockets are `#000000` (1,401), `#f2d15c` (804) and
+`#2e2423` (622). Black is not a token and should not become one by default —
+most instances are icon or divider work that needs a role decision first.
+`#f2d15c` is a gold that exists in no collection, which means either a token is
+missing or the value is wrong; that is a design decision, not a mechanical bind.
+
+FD-TOKENS therefore stays `IN_PROGRESS`. The remaining 7,373 need role
+judgement, and mechanically binding them would trade one silent problem for
+another.
+
+### 19.5 A sweep that was wrong, and was reverted
+
+Following §17.4, a document-wide sweep looked for text nodes overflowing their
+parent horizontally and pinned them. It flagged 20 nodes and squeezed 19 to
+their parent's width. That was **wrong**.
+
+Sixteen of them were the "Department of Logistics" wordmark inside a 208px
+container that sits in a 620px masthead. The parent is narrow because a sibling
+sized it, not because the text was misbehaving; the lockup rendered on one line
+and looked correct. The sweep wrapped it to two lines on pages 15 and 90.
+
+All 19 were reverted to `WIDTH_AND_HEIGHT` and re-verified by render. Only one
+genuine paragraph wrap was kept.
+
+**The rule that replaces the bad heuristic:** a text node wider than its parent
+is not evidence of a defect. It is evidence only when the parent's width is
+*independently* fixed — an explicit width or a FILL inside a sized column — not
+when the parent hugs its content. Overflow is a symptom with two causes and the
+sweep only handled one of them.

@@ -17,10 +17,12 @@
    acrylic recipe adds noise on top of the blur rather than hoping it comes
    through.
 
-   Blur ladder — the values that actually render, matching the Figma effect
-   styles. Note the Figma material/blur/* VARIABLES say 12/18/24/28 and do not
-   bind to the effect styles; that divergence is logged as D-02. These are the
-   effect-style values, which are what a viewer sees. */
+   Blur ladder — single-sourced. The Figma material/blur/g1-g4 variables now
+   hold 16/22/30/36 and each Material effect style's background-blur radius is
+   bound to its variable, so there is one number per step instead of two that
+   disagreed. D-02 closed: the variables previously said 12/18/24/28 while the
+   effect styles rendered these values, and the rendered values won because
+   they are what a viewer actually sees. */
 
 :root {
   --g1-blur: 16px;
