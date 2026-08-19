@@ -1211,3 +1211,64 @@ Caught by rendering both routes rather than only the one being changed. The
 Figma work has enforced "assert exactly one occurrence before mutating" since
 §13; the same discipline was not applied to the prototype edit. It is now:
 both routes are rendered and checked after any shared-markup change.
+
+## 26. D-04 closed — the typeface conversion
+
+**Zero off-system font usage across all 23,189 CURRENT-lane text nodes.**
+
+1,380 nodes converted across eight pages, no failures, no manual pinning
+required:
+
+| Page | Converted |
+|---|---|
+| 20 — Overview / Command Center | 755 |
+| 15 — HAU USC Landing | 625 |
+| 80 — Administration + Governance | 64 |
+| 90 — Public + Authentication | 64 |
+| 11 — Foundations | 59 |
+| 30 — Inventory | 16 (Bahnschrift) |
+| 70 — Restocking + Procurement + Events | 16 |
+| 10 — Authority + Design Handoff | 14 |
+
+### The mapping rule, stated before the first change
+
+- **Bahnschrift → Bricolage Grotesque.** It is the *fallback* in the display
+  stack, so any node carrying it was authored while the real display face was
+  unavailable and the substitution was silently accepted. Those 16 nodes on
+  Inventory were never a design choice.
+- **Inter Bold or SemiBold at ≥18px → Bricolage Grotesque**, matching weight.
+  Display sizes belong to the display family.
+- **Everything else Inter → IBM Plex Sans**, matching weight.
+
+Both target families carry every weight the mapping needs, checked against
+`listAvailableFontsAsync` before starting rather than discovered by failure.
+
+### The width protection that turned out to be unnecessary
+
+Inter and IBM Plex Sans have different metrics, so §18.3 flagged this conversion
+as the §17.4 width-growth failure at scale. The guard was built in: record each
+node's width, and if it grows **and its parent has an independently determined
+width**, pin it back. If the parent hugs, the text is what sized it, so
+re-measuring is correct — that is the §19.5 rule, learned from wrapping the
+"Department of Logistics" lockup.
+
+**Zero nodes needed pinning.** The guard cost nothing and the fear was
+unfounded, but the alternative was finding out by breaking 1,380 layouts.
+
+### The 313 that were never drift
+
+An intermediate census reported 313 remaining off-system nodes. They were
+`MIXED` — text nodes carrying more than one font family, which the whole-node
+reader cannot resolve, so the census counted them as unknown. Walking every one
+range by range found **zero** off-system ranges: they mix IBM Plex Sans with IBM
+Plex Mono, both mandated.
+
+A census that cannot read a value should report it as unknown, not as a failure.
+This one did the latter, and would have sent the next session hunting 313
+defects that do not exist.
+
+### Still correctly excluded
+
+Pages `00`–`03` keep Inter, Segoe UI and Georgia. They are capture pages that
+document what production and playground actually render; converting them would
+falsify the baseline they exist to hold.

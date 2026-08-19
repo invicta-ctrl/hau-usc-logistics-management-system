@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       72.5%
-GATES:                  34 VERIFIED · 10 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       74.5%
+GATES:                  35 VERIFIED · 9 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        72.5
+VERIFIED WEIGHT:        74.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 12 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 11 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -117,7 +117,7 @@ not change without an owner decision.
 | `FD-STRUCTURE` No clipped authored content, document-wide | 4.0    | VERIFIED    | full-document scan   | any frame gains a fixed height smaller than its content | 22 clipping faults repaired; re-scan returns 0                          |
 | `FD-TOKENS` Variable-binding coverage sweep | 3.0 | IN_PROGRESS | 45,137 solid paints across CURRENT lanes | new literal fills appear | Coverage 67.7% → 83.7%; 7,210 exact-match binds, audit §19.2–19.4. Remaining 7,373 need role decisions |
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
-| `FD-TYPE` Typeface reconciliation | 2.0 | IN_PROGRESS | census of 23,825 CURRENT-lane text nodes | new off-system family appears | D-04 re-measured at audit §18: 2,862 off-system of 23,825; 4 baseline pages excluded as correct; real drift is 7 pages plus 16 Bahnschrift on Inventory |
+| `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
 | `FD-COLOUR` 54 inferred colours on page 15 proven         | 2.0    | IN_PROGRESS | §3.1 incident record | —                                                       | 206 exact, 23 role-mapped, 54 inferred and unproven                     |
 | `FD-MODULES` Remaining module pages current               | 2.0    | IN_PROGRESS | pages 20–99          | —                                                       | Overview, Inventory, Lending, Release partially reconciled              |
 
