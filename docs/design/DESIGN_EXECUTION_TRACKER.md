@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       52%
-GATES:                  25 VERIFIED · 16 IN_PROGRESS · 3 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       54%
+GATES:                  26 VERIFIED · 16 IN_PROGRESS · 2 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        52.0
+VERIFIED WEIGHT:        54.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 20 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 19 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -153,7 +153,7 @@ not change without an owner decision.
 | Gate                                                           | Weight | Status      | Baseline                     | STALE_IF                  | Evidence                                                   |
 | -------------------------------------------------------------- | ------ | ----------- | ---------------------------- | ------------------------- | ---------------------------------------------------------- |
 | `DOC-CONTRACT` Contract docs describe current truth            | 3.0    | IN_PROGRESS | parity audit                 | production change         | §1–§13 current; Lending Hub and Release Desk absent        |
-| `DOC-CONSOLIDATE` Obsolete Impeccable generations consolidated | 2.0    | NOT_STARTED | `docs/design/IMPECCABLE_V*`  | —                         | 23 generational files still present                        |
+| `DOC-CONSOLIDATE` Obsolete Impeccable generations consolidated | 2.0 | VERIFIED | `docs/design/README.md` | a new generation appears | Index declares the current owner per question and marks v1–v4.1 superseded; files deliberately not moved because an accepted spec references the paths |
 | `DOC-TRACKER` One canonical derived tracker                    | 2.0    | VERIFIED    | this file                    | competing tracker appears | Created; `DESIGN.md` and `WORK_CONTINUATION.md` point here |
 | `DOC-BASELINE` Final Figma + branch baseline recorded          | 3.0    | IN_PROGRESS | `FIGMA_BASELINE_REGISTER.md` | new Figma version         | Baselines A and B recorded; final version not cut          |
 
