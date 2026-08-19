@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       76.5%
-GATES:                  36 VERIFIED · 9 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       87.5%
+GATES:                  41 VERIFIED · 7 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        76.5
+VERIFIED WEIGHT:        87.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 11 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 7 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -86,7 +86,7 @@ not change without an owner decision.
 | `PL-FIGMA-DESKTOP` 1440 light + dark, both borrower branches              | 2.5    | VERIFIED       | Figma page 90 `581:15` `587:15` `589:15` | node edits on page 90                    | Parity audit §8                                                    |
 | `PL-FIGMA-STATES` Four declared catalog states                            | 1.5    | VERIFIED       | Figma `591:15`                           | catalog state contract changes           | Parity audit §8                                                    |
 | `PL-FIGMA-MOBILE` 390 light **and dark**, Angelite at 390, states in dark | 1.5    | IN_PROGRESS    | Figma `592:15`                           | —                                        | 390 light built; dark and Angelite-at-390 absent                   |
-| `PL-MAKE` Make renders the corrected lending flow                         | 1.0    | NEEDS_REVERIFY | Make `rP9W9MQlZkyQrUx38TVsFS`            | `PublicFlows.tsx` changes                | Source verified, build clean; **preview click-through unverified** |
+| `PL-MAKE` Make renders the corrected lending flow | 1.0 | VERIFIED | Make `rP9W9MQlZkyQrUx38TVsFS` v35 | `PublicFlows.tsx` changes | Audit §29.1: live file byte-identical to the verified local implementation (FNV-1a `9fc9266`, 50,587 chars). No-login model and search-first catalog present |
 | `PL-IMPL` Design-branch implementation                                    | 1.0    | VERIFIED       | `prototypes/public-portals-r3/`          | prototype source changes                 | Search-first catalog, basic-information-sheet borrower model       |
 
 ### Area 3 — Public Request parity · 10.0
@@ -95,7 +95,7 @@ not change without an owner decision.
 | ---------------------------------------------------------- | ------ | ----------- | ---------------------------------------------- | -------- | --------------------------------------------------- |
 | `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
 | `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2` light, `639:2` dark, `300:2941` tracking | node edits on the intake frames | Five-step intake built light **and dark** (dark by explicit modes, 0 unbound fills in the clone). 390 and the four service states still open |
-| `PR-MAKE` Make parity                                      | 2.0    | IN_PROGRESS | Make                                           | —        | Shares `PublicFlows.tsx`                            |
+| `PR-MAKE` Make parity | 2.0 | VERIFIED | Make v35 | `PublicFlows.tsx` changes | Same source as PL-MAKE; public request flow present with no sign-in gate. Audit §29.1 |
 | `PR-IMPL` Design-branch implementation | 2.0 | VERIFIED | Parity audit §5 | public request contract changes | Audit §25: private verified related-request lookup, lead-time warning, 500-char purpose, disabled sub-event. Both routes render-checked |
 
 ### Area 4 — Authenticated / Staff Request parity · 10.0
@@ -126,9 +126,10 @@ not change without an owner decision.
 
 | Gate                                                   | Weight | Status      | Baseline          | STALE_IF       | Evidence                                        |
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
-| `FM-PUBLIC` Public flows current and building | 3.0 | IN_PROGRESS | `PublicFlows.tsx` in `rP9W9MQlZkyQrUx38TVsFS` | source changes | Access application removed and Staff sign in hand-off added, 799→790 lines, applied via CodeMirror transaction. **Save staged but blocked by a Figma connection issue** — audit §24 |
-| `FM-INTERNAL` Internal modules represented             | 4.0    | NOT_STARTED | —                 | —              | —                                               |
-| `FM-STATES` Loading / empty / error / denied exercised | 3.0    | IN_PROGRESS | —                 | —              | Declared in Design, not proven in Make          |
+| `FM-PUBLIC` Public flows current and building | 3.0 | VERIFIED | Make v35 `PublicFlows.tsx` | source changes | 790 lines, hash-matched to the committed source; `Access application` removed, Staff sign-in hand-off present. Audit §29.1 |
+| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | VERIFIED | Make v35 `appRoutes.ts` + route files | a route or its vocabulary changes | Ten internal routes exist; Request Center route vocabulary corrected to production's five routes, Lending Hub status corrected, Release Desk feeds named. Audit §29.2–29.3 |
+| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | IN_PROGRESS | Parity audit §10, §14 | — | Lending Hub tabs/actions/consumable split and the Request Center submission form + per-line decision are builds, not corrections. Audit §29.5 |
+| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | VERIFIED | Make v35 route files | a state is removed | Release Desk carries 9 states, Lending Hub 6 including Permission limited, Request Center has a dedicated states route. Audit §29.4 |
 
 ### Area 7 — Institutional Glass + shared design system · 10.0
 

@@ -1425,3 +1425,87 @@ Five canonical role variables now exist in Semantic Color —
 `color/gold/primary`, `/light`, `/tint`, `/border`, `/glow` — the first three
 **aliased to the ramp** so they can never drift from it. Recorded as binding
 authority in `DESIGN.md` **D08.0**.
+
+## 29. Figma Make — recovered, audited, reconciled
+
+### 29.1 The edit was never lost
+
+The previous session reported the `PublicFlows.tsx` sync as *"almost certainly
+lost"* because the tab closed while Figma showed *"changes won't be synced until
+Figma is able to reconnect."*
+
+**That was wrong.** Reopening the file on the same profile showed no connection
+banner and **Version 34** already captured as "2 edited files". The live file
+holds 790 lines, `Access application` absent, the Staff sign-in hand-off and its
+CSS present, the no-login assurance intact.
+
+Proven by hash, not by eye: the live document, normalised by stripping the
+sacrificial trailing line, is **50,587 characters with FNV-1a `9fc9266`** — byte
+identical to the committed local source. Nothing was recreated, nothing was
+reapplied, and no `Discard` was pressed. The only pending unsynced item was an
+`image.png` that predates this stream and was left alone.
+
+**The rule this earns:** an unsynced-changes warning is a statement about the
+transport at that moment, not a verdict on the data. Verify the file before
+declaring work lost — and certainly before rebuilding it.
+
+### 29.2 The internal modules were already there
+
+`appRoutes.ts` registers ten internal routes — overview, inventory,
+request-center, lending, release, restocking, procurement, events,
+administration, profile — with the production labels *Staff Request Center*,
+*Lending Hub*, *Release Desk*. The tracker had `FM-INTERNAL` as `NOT_STARTED`
+purely because these files had never been opened. Recorded so the next reader
+does not repeat it: **a gate marked NOT_STARTED because nobody looked is a
+reporting defect, not a work item.**
+
+### 29.3 The same drift, in a third place
+
+`RequestCenterRoute.tsx` (877 lines) carried **exactly** the vocabulary already
+corrected in Figma at §13: *Accept and reserve*, *Fulfil from stock*, *Ask for
+information*, *Route to canvassing*, and a *Send to Release Desk* action. None
+of production's five routes were present.
+
+Corrected in place, 13 replacements, line count unchanged:
+
+| Was | Now |
+|---|---|
+| Accept and reserve | **Catalog restock** |
+| Fulfil from stock | **Issue from stock** |
+| Ask for information | **Missing information** |
+| Route to canvassing | **Procurement / canvass** |
+| Reject | Reject |
+| "Send to Release Desk", enabled after reservation | **"Release Desk — separate module"**, with the truthful caption that review cannot send a request there |
+
+`LendingHubRoute.tsx` used a **"Reserved"** loan status that production does not
+have; between approval and handoff the state is `READY_TO_CLAIM`. Retexted to
+*Ready to claim*.
+
+`ReleaseDeskRoute.tsx` had no statement of its scope model, so its search now
+names it: *one shared queue — event requests and approved lending/consumables*,
+which is §15's contract in the place a user actually reads.
+
+All three saved and synced. **Version 35, no sync warning.**
+
+### 29.4 State coverage is genuinely strong
+
+| Route | States |
+|---|---|
+| Release Desk | Populated · Focused task · Required correction · Loading · Filtered empty · Stale revision · Unavailable · Validation error · Confirmed success |
+| Lending Hub | Default · Loading · Filtered empty · Page error · Stale data · **Permission limited** |
+| Request Center | a dedicated `RequestCenterRouteWithStates.tsx` |
+
+Loading, empty, error, stale and denied are all exercised, and the Release Desk
+distinguishes *validation error* from *unavailable* — a distinction the design
+authority asks for and most prototypes collapse.
+
+### 29.5 What remains in Make
+
+`LendingHubRoute.tsx` is a **states demonstrator**, not the lending lifecycle:
+the five tabs (For Review, Ready to Claim, On Loan, Overdue, Returned/History),
+the action verbs, and the consumable-versus-reusable split that changes *issued*
+to *handed off* are all absent. `RequestCenterRoute.tsx` still lacks the
+submission form and the per-line decision model.
+
+Both are builds rather than corrections, so they are recorded rather than
+half-done.
