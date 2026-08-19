@@ -30,7 +30,7 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 ### State
 
 - **Done:** production contracts for all six surfaces read at the deployed commit; Public Lending and Public Request built across 1440 light/dark and 390 light/dark with declared states; Staff Request Center reconciled and completed; authenticated requester portal built; 22 Figma clipping faults repaired and the class re-scanned to zero; D-02 and D-04 closed; canonical gold **#D4AF37** adopted and reconciled system-wide; Figma Make recovered, audited and reconciled at Version 35; real keyboard and accessibility-tree acceptance passing.
-- **Open:** Angelite branch and catalog states at 390; Make lending lifecycle and per-line review UI; remaining module pages; 2,941 non-gold one-off paints needing role decisions.
+- **Open:** 2,941 non-gold one-off paints — **deliberately stopped** on owner direction that semantic correctness outranks binding percentage.
 - **Blocked:** `FD-COLOUR` — the node ids of the 54 inferred colours were never recorded, so the set cannot be identified even with version history. Needs the Figma REST API with an owner token, or a manual version diff.
 - **Not run:** Hallmark as its own pass; a screen-reader runtime test. Neither is claimed.
 - **Boundary held:** no product code, release state, provider, database, migration or deployment write. One production defect candidate recorded and deliberately not fixed (PDC-01).

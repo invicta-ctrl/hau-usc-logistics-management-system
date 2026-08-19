@@ -1598,3 +1598,60 @@ A find-and-replace that stops at the first match per node will silently
 under-report itself as complete. The re-scan is what caught it, which is the
 argument for always re-scanning after a sweep rather than trusting its own
 count.
+
+## 32. Make — lending lifecycle and per-line review
+
+### 32.1 Lending actions now derive from status
+
+`LendingHubRoute.tsx` bound its primary action to a fixed label, *Record
+return*, regardless of where the loan actually was. Production binds the verb to
+the **derived** status, and the consumable/reusable split changes it outright: a
+consumable is *issued*, a reusable is *handed off* and later returned.
+
+The Loan type gains `kind?: "reusable" | "consumable"`, a `For review`
+consumable ticket was added so the first lifecycle state is represented, and the
+action now resolves:
+
+```text
+For review      -> Review
+Ready to claim  -> Confirm issue   (consumable)
+                -> Confirm handoff (reusable)
+On loan / Overdue -> Inspect return
+Returned        -> Returned, disabled
+```
+
+`Cancel loan` and `Monitor` stay drawn-but-disabled with their reasons, which
+was already right: an action that exists but is not permitted here should say
+so rather than disappear.
+
+### 32.2 Per-line decisions in the Make Request Center
+
+The request inspector rendered its lines as identity plus availability, with the
+routing decision taken once at request level. That is the affordance RV-01.6
+removed.
+
+Each line now carries **its own route select**, on the production placeholder
+*Select a route*, with `<option value="" disabled>` so there is **no
+pre-selected default** — one click cannot route a whole request. The four routes
+offered are those `permittedRoutes()` returns for an `EVENT_LOGISTICS` line
+carrying a catalog item; `Catalog restock` remains in the action config for
+requests that qualify for it.
+
+Verified in the saved file: 889 lines, all five route labels present, zero
+occurrences of the four superseded names, per-line select and disabled
+placeholder both confirmed.
+
+### 32.3 The four layers now agree on the request contract
+
+```text
+production  permittedRoutes() + RV-01.6 no-default rule
+Figma       300:624 per-line decision panel  (§13.2)
+Make        RequestCenterRoute.tsx per-line select  (§32.2)
+local       prototypes/public-portals-r3 request stepper  (§25)
+```
+
+Three of the four had to be corrected independently, and each was found only by
+reading production again rather than by trusting the layer next to it. **Drift
+does not propagate — it recurs.** Fixing it in one place does not fix it in the
+others, and the only defence is checking every layer against the source rather
+than against each other.

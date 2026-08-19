@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       95%
-GATES:                  47 VERIFIED · 2 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       97%
+GATES:                  48 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        95.0
+VERIFIED WEIGHT:        97.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 3 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 2 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -118,7 +118,7 @@ not change without an owner decision.
 | --------------------------------------------------------- | ------ | ----------- | -------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
 | `FD-STRUCTURE` No clipped authored content, document-wide | 4.0    | VERIFIED    | full-document scan   | any frame gains a fixed height smaller than its content | 22 clipping faults repaired; re-scan returns 0                          |
 | `FD-TOKENS-GOLD` Canonical gold reconciled system-wide | 2.0 | VERIFIED | `DESIGN.md` D08.0, owner decision 2026-08-19 | the canonical gold changes | Audit §28: 8 variables, 802 solid paints, 160 gradient stops and 434 one-off literals reconciled by role. Zero superseded gold values remain. 66/66 contrast |
-| `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 41,777 solid paints | new literal fills appear | Coverage 93.0%. Residual 2,941 are one-off inks and hairlines on Landing and Overview, each needing a role decision |
+| `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 42,536 solid paints | new literal fills appear | Coverage 93.1%. **Deliberately stopped here** on owner direction that semantic correctness outranks binding percentage — the residual 2,941 are one-off inks and hairlines each needing a role decision, not a mechanical bind |
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
 | `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
 | `FD-COLOUR` 54 inferred colours on page 15 proven | 2.0 | BLOCKED | §3.1 incident record | — | The node ids of the 54 were never recorded, so the set cannot be identified even with history. Page 15 text fills are now **88% bound** to semantic roles by the later passes. Settling the original 54 needs the Figma REST API with an owner token, or a manual version diff |
@@ -130,7 +130,7 @@ not change without an owner decision.
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
 | `FM-PUBLIC` Public flows current and building | 3.0 | VERIFIED | Make v35 `PublicFlows.tsx` | source changes | 790 lines, hash-matched to the committed source; `Access application` removed, Staff sign-in hand-off present. Audit §29.1 |
 | `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | VERIFIED | Make v35 `appRoutes.ts` + route files | a route or its vocabulary changes | Ten internal routes exist; Request Center route vocabulary corrected to production's five routes, Lending Hub status corrected, Release Desk feeds named. Audit §29.2–29.3 |
-| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | IN_PROGRESS | Parity audit §10, §14 | — | Lending Hub tabs/actions/consumable split and the Request Center submission form + per-line decision are builds, not corrections. Audit §29.5 |
+| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | VERIFIED | Make v35 route files | the lifecycle or route contract changes | Audit §32: lending actions derive from status with the consumable/reusable verb split; Request Center carries a per-line route select with no pre-selected default. Saved and synced |
 | `FM-STATES` Loading / empty / error / denied exercised | 3.0 | VERIFIED | Make v35 route files | a state is removed | Release Desk carries 9 states, Lending Hub 6 including Permission limited, Request Center has a dedicated states route. Audit §29.4 |
 
 ### Area 7 — Institutional Glass + shared design system · 10.0
