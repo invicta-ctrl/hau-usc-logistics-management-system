@@ -177,6 +177,7 @@ PRODUCTION REF   0.8.2 @ c316e047 · schema 30
 | `616:2` | review queue pagination, server-clamped |
 | `624:2` | `portal.request` — authenticated requester portal, 1440×2436 |
 | `626:2` | `public.request` — five-step intake, 1440×3780 |
+| `639:2` | the same intake in dark, by explicit variable modes, zero unbound fills |
 
 ### Structural state
 

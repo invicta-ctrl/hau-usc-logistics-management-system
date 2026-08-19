@@ -94,7 +94,7 @@ not change without an owner decision.
 | Gate                                                       | Weight | Status      | Baseline                                       | STALE_IF | Evidence                                            |
 | ---------------------------------------------------------- | ------ | ----------- | ---------------------------------------------- | -------- | --------------------------------------------------- |
 | `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
-| `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2`, `300:2941` | node edits on the intake frame | Five-step intake built and old frames superseded, audit §21.3; dark, 390 and the four states still open |
+| `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2` light, `639:2` dark, `300:2941` tracking | node edits on the intake frames | Five-step intake built light **and dark** (dark by explicit modes, 0 unbound fills in the clone). 390 and the four service states still open |
 | `PR-MAKE` Make parity                                      | 2.0    | IN_PROGRESS | Make                                           | —        | Shares `PublicFlows.tsx`                            |
 | `PR-IMPL` Design-branch implementation | 2.0 | VERIFIED | Parity audit §5 | public request contract changes | Audit §25: private verified related-request lookup, lead-time warning, 500-char purpose, disabled sub-event. Both routes render-checked |
 
