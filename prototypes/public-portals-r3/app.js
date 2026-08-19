@@ -255,6 +255,10 @@ function bindLending() {
   const syncBorrower = (value) => {
     details.hidden = !value;
     const isStaff = value === 'USC_STAFF';
+    // Production disables the whole hidden branch, not just its sub-groups, so a
+    // hidden control cannot be reached by keyboard or submit a stale value. The
+    // semantics audit caught 11 controls that were invisible but still enabled.
+    details.querySelectorAll('input,select,textarea').forEach(c => { c.disabled = !value; });
     // Academic identity is common ground — always collected, never toggled.
     academic.querySelectorAll('input,select').forEach(c => {
       c.disabled = !value; c.required = Boolean(value);

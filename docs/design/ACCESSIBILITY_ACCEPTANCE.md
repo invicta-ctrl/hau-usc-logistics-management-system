@@ -181,3 +181,85 @@ So the tab ring is verified structurally and the obscuring check is verified
 geometrically, by scrolling each target into view exactly as the browser would.
 A real keyboard walk and a screen-reader pass remain outstanding, and
 `RA-A11Y-AT` stays open for them.
+
+## Real keyboard acceptance — Playwright
+
+```bash
+npm run design:keyboard
+```
+
+The earlier sections said keyboard traversal could not be walked because
+synthetic key events do not move native focus. That was true of the
+browser-extension path and remains true — 30 `Tab` presses produced zero
+`focusin` events in both the in-app browser and real Chrome. It was **not** true
+of the environment: Playwright is available and presses real keys.
+
+**32/32 pass**, across lending and request, at desktop 1280 and mobile 390:
+
+| Check | Rule | Result |
+|---|---|---|
+| Real keyboard moves focus | — | 24–25 stops per route |
+| Skip link is the first stop | 2.4.1 | yes on every route and width |
+| Every stop paints an indicator | 2.4.7 | no bare stops |
+| No zero-size stop in the ring | 2.4.3 | none |
+| Nothing lands under the sticky bar | **2.4.11** | none — the earlier fix holds under real traversal |
+| Shift+Tab retraces the forward order | 2.4.3 | 7 reverse stops match |
+| No keyboard trap | 2.1.2 | traversal always advances |
+| Escape with nothing open keeps focus | 2.1.1 | focus preserved |
+
+### A false positive the check produced, and the correction
+
+The first run failed 2.4.11 on mobile lending, reporting the **Review** button
+as obscured by the sticky bar. Review *is* the sticky bar's own button, so it
+overlapped itself. The check now excludes the bar's descendants. A geometric
+test that does not know what contains what will invent defects.
+
+## Semantic acceptance — accessibility tree
+
+```bash
+npm run design:semantics
+```
+
+**30/30 pass.** Read from the **real accessibility tree** via CDP
+(`Accessibility.getFullAXTree`) — the tree the browser hands to assistive
+technology — not from a DOM approximation. Playwright's `page.accessibility`
+was removed in this version; the CDP route is the accurate replacement.
+
+| Check | Result |
+|---|---|
+| Landmarks exposed | `main`, `navigation`, `region`, `form`, `complementary` |
+| Exactly one `h1`, no skipped level | Lending Center · Request Center |
+| Headings reach the tree | 8 and 3 respectively |
+| Every control has an accessible name | all named |
+| No dangling `aria-describedby` | none |
+| Required state is programmatic | 11/11 on lending |
+| Nothing marked invalid before it is touched | 0 |
+| Polite **and** assertive regions present | both |
+| Live-region text reaches the tree | probe text observed in the AX tree |
+| Tables scope their headers | no table on these routes |
+| Hidden conditional groups actually hidden | 4 hidden, 0 leaking |
+| Hidden conditional controls disabled | **0 focusable** — see below |
+| Tracking-code control masked and named | 1 masked field |
+
+### The defect this pass found
+
+Eleven controls inside the hidden borrower-details block were **invisible but
+still enabled**: name, student ID, contact, email, borrowing-until, purpose and
+all five acknowledgments. `syncBorrower` disabled the academic and council
+sub-groups but not the block that contains them.
+
+Production is explicit that the inactive branch is disabled *and* cleared "so
+the inactive branch cannot submit stale data". The prototype now disables every
+control in the block whenever no borrower type is chosen, and re-enables on
+selection — verified by driving the radio and re-counting.
+
+This is exactly the class of defect a visual review cannot find. The control was
+not on screen; it was in the tab ring and in the form payload.
+
+### What this is not
+
+It is **accessibility-tree evidence, not a screen-reader runtime test**. No
+speaking screen reader was run. Announcement *order*, verbosity, and how a real
+NVDA or VoiceOver user experiences the live regions remain unverified, and the
+script prints that caveat on every run rather than letting the pass rate imply
+more than it earned.

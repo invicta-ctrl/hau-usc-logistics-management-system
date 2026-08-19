@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       87.5%
-GATES:                  41 VERIFIED · 7 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       88.5%
+GATES:                  42 VERIFIED · 6 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        87.5
+VERIFIED WEIGHT:        88.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 7 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 6 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -148,7 +148,7 @@ not change without an owner decision.
 | `RA-WIDTHS` 320/375/390/414/768/1024/1440/1920 matrix | 3.0 | VERIFIED | live browser measurement | any layout or breakpoint change | `ACCESSIBILITY_ACCEPTANCE.md`: zero overflow at all eight widths; portal nav no longer hidden below 768 |
 | `RA-TABLES` Per-table narrow-width strategy | 2.0 | VERIFIED | six `desktop-table` tables in `runtime.js` | a table gains or loses a column | `DESIGN.md` D29.1: comparison key, identity, kept-in-card and moved-to-detail declared for all six |
 | `RA-A11Y-STATIC` Contrast, structure, reflow, target size | 2.0 | VERIFIED | `scripts/design/contrast-audit.mjs` + DOM checks | any token or markup change | `ACCESSIBILITY_ACCEPTANCE.md`: 66/66 contrast pairs pass both themes; 10 initial 1.4.11 failures fixed; skip link, main landmark, describedby wiring, aria-invalid added |
-| `RA-A11Y-AT` Keyboard traversal and screen-reader pass | 1.0 | IN_PROGRESS | DOM focus order + geometric obscuring check | markup or sticky-bar change | Focus order and 2.4.11 verified structurally; 14 controls were obscured by the sticky bar and are fixed. Real key walk and screen reader still outstanding — synthetic keys do not drive focus |
+| `RA-A11Y-AT` Keyboard traversal and semantic acceptance | 1.0 | VERIFIED | `npm run design:keyboard` + `design:semantics` | markup, focus or ARIA changes | Real Playwright keys: 32/32 across 2 routes × 2 widths. Accessibility tree via CDP: 30/30. Found and fixed 11 hidden-but-enabled controls. Screen-reader runtime still not run and not claimed |
 | `RA-MOTION` Motion families applied and reduced-motion honoured | 2.0    | VERIFIED    | DESIGN.md D13 | motion token change | `--m-response/state/surface/overlay`, reduced-motion override |
 
 ### Area 9 — Documentation + final handoff · 10.0
