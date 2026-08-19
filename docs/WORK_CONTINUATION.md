@@ -4,6 +4,11 @@ The current block is the operator resume record. Historical evidence remains rea
 
 ## Claude R3 frontend-design stream — LIVE
 
+> **Progress lives in one place.** `docs/design/DESIGN_EXECUTION_TRACKER.md` is
+> the canonical derived tracker. No other document — including this one — may
+> state a completion percentage. Recompute with `npm run design:tracker`;
+> `npm run design:tracker:check` fails if the derived block is stale.
+
 - **Stream:** isolated Claude frontend-design stream, parallel to the v0.8.3–v0.8.5 product program. The product stream is a **separate git repository** (`worktrees/v081-production-execution-eb14cd81/.git`, branch `release/v0.8.3-identity-foundation`) and was never modified.
 - **Worktree / branch:** `worktrees/spec-v073-frontend-design-integration` on `frontend-design-integration`, pushed to origin, 0/0 with upstream.
 - **Reference truth:** production **0.8.2 @ `c316e047`**, schema 30, read from `git show c316e047:src/visual/*.js` — the exact deployed commit, not branch HEAD and not documentation. Live production probed read-only for version/health/host routing only; no form submitted, no credential entered.

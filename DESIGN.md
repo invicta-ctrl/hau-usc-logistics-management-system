@@ -10,6 +10,8 @@ production_url: https://logistics.hausc.org/
 playground_url: https://playground.hausc.org/
 figma_file_key: hXJElH4p72KfgAaoUyfNOC
 figma_url: https://www.figma.com/design/hXJElH4p72KfgAaoUyfNOC/
+figma_make_key: rP9W9MQlZkyQrUx38TVsFS
+progress_tracker: docs/design/DESIGN_EXECUTION_TRACKER.md
 design_vault: D:/Documents/Codex/HAU-USC Logistics/design-vault
 last_consolidated: 2026-08-13
 ---

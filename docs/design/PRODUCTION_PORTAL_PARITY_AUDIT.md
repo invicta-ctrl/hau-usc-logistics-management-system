@@ -188,8 +188,9 @@ including a cancel action. It is **not represented in Figma at all**.
 
 ## 7. Production defect candidates
 
-None found. Every behaviour inspected was internally consistent and matched the
-accepted contracts. No `PRODUCTION_DEFECT_CANDIDATE` is raised by this audit.
+None were found in the public portals. One was found later, in the internal
+Lending Hub, and is recorded at section 16 as **PDC-01**. It is not fixed —
+production source is outside this stream's authority.
 
 ## 8. What was changed in this pass
 
@@ -552,3 +553,131 @@ Two decorative status dots inside the inspector, `300:585` and `300:609`, carry
 **unbound** `#1f6b41` fills. Same class as the two stray whites found during the
 Public Lending dark pass. Not corrected here; noted so the next
 variable-coverage sweep catches them.
+
+## 14. Internal Office Lending Hub (context D) — production contract
+
+Read at `c316e047` from `src/visual/views/lending.html` and `renderLending`,
+`loanTabCount`, `lendingFilteredRows`, `renderLendingTickets`, `submitLending`,
+`openLendingDetails`, `openReturnModal` in `src/visual/runtime.js`.
+
+Session + capability. This is the operational lifecycle surface, and it is
+**not** the Public Lending Center: the public portal collects borrower intent,
+this hub governs custody.
+
+### 14.1 New Lending / Consumable Ticket
+
+*"Create a review ticket first. Approval and physical handoff are separate
+steps."*
+
+| Field | Contract |
+|---|---|
+| `studentIdNumber` | required, `[0-9]{1,8}`, digits only, max 8 |
+| `borrowerName` | required |
+| `borrowerType` | `USC_STAFF` "USC Officer/Staff" · `ANGELITE` "Angelite/Student" |
+| `department` | required |
+| `contact` | optional, "Optional but recommended" |
+| `itemId` | required, from non-archived inventory |
+| `quantity` | number, min 1, step 1, default 1, required |
+| `dueAt` | `datetime-local`, in a conditional wrapper |
+| `purpose` | required textarea |
+
+Submit reads **Create For Review Ticket**. Identity is not trusted at entry:
+*"Borrower identity is checked against the approved source during review."*
+
+### 14.2 Circulation Summary
+
+Four metrics — For Review, Ready to Claim, On Loan, Overdue — plus a total
+ticket count. The panel states its own derivation rule: **"Overdue is derived
+from the current time on every render."** Overdue is therefore never a stored
+status, and a design that draws it as a persisted state is wrong.
+
+### 14.3 Borrowing Tickets
+
+Five tabs, each with a live count:
+
+```text
+FOR_REVIEW      For Review
+READY_TO_CLAIM  Ready to Claim
+ON_LOAN         On Loan
+OVERDUE         Overdue
+HISTORY         Returned / History   (RETURNED, COMPLETED, REJECTED, CANCELLED)
+```
+
+Filters: free-text search across ticket ID, Student ID, borrower name,
+department and item name; an item filter; a borrower-type filter; Clear.
+
+Sort is state-dependent and deliberate: on the **Overdue** and **On Loan** tabs
+rows sort by `dueAt` ascending — soonest first — and everywhere else by
+`updatedAt` descending.
+
+Actions are bound to the **derived** status, not chosen freely:
+
+| Derived status | Actions |
+|---|---|
+| `FOR_REVIEW` | **Review** (primary) · **Reject** (danger) |
+| `READY_TO_CLAIM` | **Confirm Issue** when `ticketType === 'CONSUMABLE'`, otherwise **Confirm Handoff** |
+| `ON_LOAN` / `OVERDUE` | **Inspect Return** |
+| any | **Details** |
+
+The consumable/reusable split changes the verb, not just the copy: a consumable
+is *issued*, a reusable is *handed off* and later returned.
+
+Details opens a drawer with item, quantity, ticket type, status chip, Student
+ID, department, contact, purpose and a status timeline. Return opens a modal
+with a condition note defaulted to "Returned in good condition", a confirmation
+prompt, and posts **`LOAN_RETURN`** to the ledger.
+
+## 15. Release Desk relationship — production contract
+
+Read at `c316e047` from `src/visual/views/release.html` plus `bindReleaseEvents`
+and `activeReleaseRequests` / `releaseHistoryRequests` in `runtime.js`.
+
+The Release Desk is *"the controlled physical handoff point for accepted event
+requests and approved circulation tickets."* Two facts govern every design that
+touches it.
+
+**It is one shared queue.** The view states it: *"The server-authorized
+operational scope filters this one shared queue across every workspace route."*
+There is not a per-workspace Release Desk; there is one queue, scoped by the
+server.
+
+**It has exactly two feeds**, and the source filter names them:
+
+| Source | Feed |
+|---|---|
+| `EVENT` — "Event requests" | request lines that reached `READY_TO_RELEASE` or `PARTIALLY_RELEASED` |
+| `LENDING` — "Approved lending/consumables" | approved circulation tickets |
+
+Release History is separate and permanent: *"Completed tickets leave the active
+queue but remain fully traceable."* History rows additionally support a
+**release correction** action.
+
+### 15.1 This settles SR-02
+
+Nothing in review sends a request to the Release Desk. A request **arrives**
+there when its lines reach a ready state, and a lending ticket arrives when it
+is approved. The Figma control reading "Send to Release Desk" in the review
+inspector was therefore not merely absent from `permittedRoutes()` — it
+inverted the direction of the whole lifecycle. Its removal in section 13 is
+confirmed by this contract, not just by the route list.
+
+## 16. Production defect candidates
+
+### PDC-01 · LOW · borrower type is labelled two different ways
+
+`views/lending.html` offers `ANGELITE` as **"Angelite/Student"** in the
+borrower-type select. `renderLendingTickets` renders the same value on the
+ticket card as **"Angelite/Non-USC"**.
+
+Those are not synonyms. "Angelite/Student" names the HAU student body;
+"Angelite/Non-USC" describes anyone outside the Council, which reads as an
+exclusion rather than an audience. A staff member creating a ticket and a staff
+member reading it see different words for one stored value.
+
+**Not fixed.** This is production source, outside this stream's authority, and
+it is recorded here as a candidate only. The design stream standardises on
+**"Angelite Student"**, matching the public portal and `DESIGN.md` D24.0, and
+records the divergence rather than silently propagating either label.
+
+No other defect candidate was found. Every other behaviour inspected across the
+five surfaces was internally consistent.
