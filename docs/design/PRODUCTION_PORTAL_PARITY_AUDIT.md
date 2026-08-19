@@ -1509,3 +1509,55 @@ submission form and the per-line decision model.
 
 Both are builds rather than corrections, so they are recorded rather than
 half-done.
+
+## 30. Mobile variants, and the one gate that is genuinely blocked
+
+### 30.1 390 is a transformation, built as one
+
+`654:2` (light) and `657:2` (dark) carry the five-step intake at 390. It is not
+the 1440 frame squeezed: **16 multi-column rows were converted to stacks**, the
+step rail wraps, and the action rows wrap rather than overflow.
+
+Two rounds of repair were needed, and both are worth recording because they are
+the standard failure mode of cloning a wide layout:
+
+1. **Inherited widths.** 94 nodes overflowed because children kept the width
+   they had at 1440. Fixed by making any over-wide child FILL its new column.
+2. **Inherited heights.** Labels then rendered *on top of* the inputs above
+   them — stacking made text taller than the heights the clone inherited, and
+   fixed-height containers do not grow. Fixed by hugging every container except
+   the deliberately fixed controls and buttons.
+
+Verified after: **0 horizontal overflow, 0 overlapping siblings in any vertical
+stack.**
+
+Public Lending gains `657:350`, its 390 dark counterpart.
+
+Both dark variants were produced by setting explicit Dark modes on all three
+multi-mode collections, and both report **0 unbound fills** — which is the proof
+that the surfaces follow the mode rather than being repainted.
+
+### 30.2 FD-COLOUR is blocked, and not for the reason previously assumed
+
+The brief was right that a missing `saveVersionHistoryAsync` does not mean
+version history is unavailable. The actual obstacle is different and harder:
+
+**The node ids of the 54 inferred colours were never recorded.** The incident
+note at §3.1 counted them — 206 exact twin matches, 23 role-mapped, 54 inferred
+— but did not list which nodes they were. Without that list, "prove these 54"
+cannot be scoped even with a perfect version history; it becomes "diff all 3,444
+text fills on page 15 against a pre-incident snapshot", which the MCP bridge
+cannot read and which cannot be done reliably by reading a canvas UI.
+
+What *has* changed is that the later role-aware passes bound **88% of page 15's
+text fills** to semantic tokens. Every one of those now carries a stated role,
+which is what §3.1 wanted for the 54. The residual 414 are one-off literals,
+enumerated at §27.4.
+
+Settling the original 54 specifically needs one of: the Figma REST API with an
+owner-issued token, or a manual version-history comparison by someone with the
+file open. Marked **BLOCKED**, not UNVERIFIED, because the obstacle is access
+and lost provenance rather than judgement.
+
+**A count is not a record.** Had the incident logged node ids instead of
+totals, this would have been a twenty-minute job.

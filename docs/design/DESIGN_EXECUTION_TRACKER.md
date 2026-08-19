@@ -35,10 +35,10 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       88.5%
-GATES:                  42 VERIFIED · 6 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       91.5%
+GATES:                  44 VERIFIED · 5 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        88.5
+VERIFIED WEIGHT:        91.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
@@ -85,7 +85,8 @@ not change without an owner decision.
 | `PL-ACCESS` No-login access model corrected everywhere                    | 2.5    | VERIFIED       | DESIGN.md D24.0 OWNER-LOCKED             | any frame gates borrowing behind sign-in | 4 frames superseded; `PublicFlows.tsx` replaced                    |
 | `PL-FIGMA-DESKTOP` 1440 light + dark, both borrower branches              | 2.5    | VERIFIED       | Figma page 90 `581:15` `587:15` `589:15` | node edits on page 90                    | Parity audit §8                                                    |
 | `PL-FIGMA-STATES` Four declared catalog states                            | 1.5    | VERIFIED       | Figma `591:15`                           | catalog state contract changes           | Parity audit §8                                                    |
-| `PL-FIGMA-MOBILE` 390 light **and dark**, Angelite at 390, states in dark | 1.5    | IN_PROGRESS    | Figma `592:15`                           | —                                        | 390 light built; dark and Angelite-at-390 absent                   |
+| `PL-FIGMA-MOBILE-DARK` Public Lending 390 light and dark | 1.0 | VERIFIED | Figma `592:15` light, `657:350` dark | node edits on page 90 | Dark built by explicit variable modes; **0 unbound fills** in the clone |
+| `PL-FIGMA-MOBILE-BRANCH` Angelite branch and states at 390 | 0.5 | IN_PROGRESS | Parity audit §3 | — | Borrower-branch variant and the four catalog states at 390 remain |
 | `PL-MAKE` Make renders the corrected lending flow | 1.0 | VERIFIED | Make `rP9W9MQlZkyQrUx38TVsFS` v35 | `PublicFlows.tsx` changes | Audit §29.1: live file byte-identical to the verified local implementation (FNV-1a `9fc9266`, 50,587 chars). No-login model and search-first catalog present |
 | `PL-IMPL` Design-branch implementation                                    | 1.0    | VERIFIED       | `prototypes/public-portals-r3/`          | prototype source changes                 | Search-first catalog, basic-information-sheet borrower model       |
 
@@ -94,7 +95,8 @@ not change without an owner decision.
 | Gate                                                       | Weight | Status      | Baseline                                       | STALE_IF | Evidence                                            |
 | ---------------------------------------------------------- | ------ | ----------- | ---------------------------------------------- | -------- | --------------------------------------------------- |
 | `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
-| `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2` light, `639:2` dark, `300:2941` tracking | node edits on the intake frames | Five-step intake built light **and dark** (dark by explicit modes, 0 unbound fills in the clone). 390 and the four service states still open |
+| `PR-FIGMA-VARIANTS` Intake at 1440 and 390, light and dark | 2.0 | VERIFIED | Figma `626:2` `639:2` `654:2` `657:2` | node edits on the intake frames | 390 is a real transformation: 16 rows stacked, step rail wrapped, 0 overflow, 0 overlap, 0 unbound fills in both dark clones |
+| `PR-FIGMA-STATES` Intake loading / empty / error / unavailable | 1.0 | IN_PROGRESS | Parity audit §21.4 | — | The four service states for the new intake remain; error treatment should be ported from the superseded frames |
 | `PR-MAKE` Make parity | 2.0 | VERIFIED | Make v35 | `PublicFlows.tsx` changes | Same source as PL-MAKE; public request flow present with no sign-in gate. Audit §29.1 |
 | `PR-IMPL` Design-branch implementation | 2.0 | VERIFIED | Parity audit §5 | public request contract changes | Audit §25: private verified related-request lookup, lead-time warning, 500-char purpose, disabled sub-event. Both routes render-checked |
 
@@ -119,7 +121,7 @@ not change without an owner decision.
 | `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 41,777 solid paints | new literal fills appear | Coverage 93.0%. Residual 2,941 are one-off inks and hairlines on Landing and Overview, each needing a role decision |
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
 | `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
-| `FD-COLOUR` 54 inferred colours on page 15 proven         | 2.0    | IN_PROGRESS | §3.1 incident record | —                                                       | 206 exact, 23 role-mapped, 54 inferred and unproven                     |
+| `FD-COLOUR` 54 inferred colours on page 15 proven | 2.0 | BLOCKED | §3.1 incident record | — | The node ids of the 54 were never recorded, so the set cannot be identified even with history. Page 15 text fills are now **88% bound** to semantic roles by the later passes. Settling the original 54 needs the Figma REST API with an owner token, or a manual version diff |
 | `FD-MODULES` Remaining module pages current               | 2.0    | IN_PROGRESS | pages 20–99          | —                                                       | Overview, Inventory, Lending, Release partially reconciled              |
 
 ### Area 6 — Figma Make functional completion · 10.0
