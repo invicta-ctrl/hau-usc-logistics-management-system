@@ -21,12 +21,27 @@
   --ox-600: #8d1f28;
   --ox-500: #a62835;
 
-  /* Primitives — gold */
+  /* Primitives — gold.
+     OWNER DECISION 2026-08-19: the canonical primary HAU-USC gold is #D4AF37.
+     The ramp is derived from it by mixing toward --work, so every step is a
+     stated fraction of one colour rather than five independent guesses.
+       gold/200  = 42% primary over paper      gold/100 = 82% primary over paper
+     gold/700 and gold/500 are NOT re-derived: gold/700 is --accent-text, the
+     only gold that passes 4.5:1 as ink on cream, and moving it would trade a
+     brand tidy-up for a contrast failure. */
   --gold-700: #7d5518;
   --gold-500: #c8992f;
-  --gold-400: #e8b93c;
-  --gold-200: #f6e29a;
-  --gold-100: #faeecb;
+  --gold-400: #d4af37;
+  --gold-200: #e6d088;
+  --gold-100: #f7efd5;
+
+  /* Canonical gold roles. Primary is the decisive accent; the rest are derived
+     and must not be used where primary is meant, or the hierarchy flattens. */
+  --gold-primary: #d4af37;
+  --gold-light: #e6d088;
+  --gold-tint: #f7efd5;
+  --gold-border: rgba(212, 175, 55, 0.45);
+  --gold-glow: rgba(212, 175, 55, 0.14);
 
   /* Surface ladder */
   --ground: #e9e0d0;
@@ -50,10 +65,10 @@
 
   /* Institution + action */
   --authority: #610b0f;
-  --action-primary: #e8b93c;
-  --accent-wash: #fcf2cf;
-  --accent-line: #d1b478;
-  --focus-ring: #e8b93c;
+  --action-primary: #d4af37;
+  --accent-wash: #faf4e1;
+  --accent-line: #e1c671;
+  --focus-ring: #d4af37;
 
   /* WCAG 2.2 1.4.11 needs 3:1 for anything that identifies a control or its
      state. The brand tokens above do not reach it on cream, so control
@@ -124,9 +139,18 @@
 
   --gold-700: #c9a45f;
   --gold-500: #e3c37f;
-  --gold-400: #eed08a;
-  --gold-200: #f6e7c4;
+  --gold-400: #e1c671;
+  --gold-200: #eddca7;
   --gold-100: #faf1de;
+
+  /* Dark primary lifts the canonical gold 30% toward paper. #D4AF37 itself sits
+     too close to the dark surfaces to carry a decisive accent there; the hue is
+     the same, the luminance is not. */
+  --gold-primary: #e1c671;
+  --gold-light: #eddca7;
+  --gold-tint: rgba(212, 175, 55, 0.16);
+  --gold-border: rgba(225, 198, 113, 0.45);
+  --gold-glow: rgba(225, 198, 113, 0.14);
 
   --ground: #100b0c;
   --work: #1f1719;
@@ -146,9 +170,9 @@
   --border-strong: #5b4449;
 
   --authority: #a5424b;
-  --action-primary: #eed08a;
-  --accent-wash: rgba(238, 208, 138, 0.12);
-  --accent-line: rgba(238, 208, 138, 0.32);
+  --action-primary: #e1c671;
+  --accent-wash: rgba(225, 198, 113, 0.12);
+  --accent-line: rgba(225, 198, 113, 0.32);
 
   --border-control: #8f767b;        /* 4.22 on --work, 3.92 on --inset */
   --selected-line: #c9a45f;         /* 7.50 on --work */

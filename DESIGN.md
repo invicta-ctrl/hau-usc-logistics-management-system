@@ -538,6 +538,46 @@ CURRENT rules:
 
 ## D08 — Color / Material System
 
+### D08.0 — Canonical primary gold — OWNER-LOCKED, BINDING
+
+Status: CURRENT. Owner decision, 2026-08-19. Supersedes the unresolved
+`#f2d15c` palette question and every earlier gold literal.
+
+```text
+PRIMARY GOLD    #D4AF37
+```
+
+Every other gold in the system is **derived from it**, by a stated fraction
+rather than by eye, so the ramp cannot drift into five independent guesses
+again:
+
+| Role | Light | Dark | Derivation |
+|---|---|---|---|
+| `gold/primary` — the decisive accent | `#D4AF37` | `#E1C671` | canonical; dark lifts 30% toward paper because #D4AF37 sits too close to the dark surfaces to stay decisive |
+| `gold/light` — surfaces and highlights | `#E6D088` | `#EDDCA7` | 42% primary over paper |
+| `gold/tint` — washes | `#F7EFD5` | `rgba(212,175,55,.16)` | 82% primary over paper |
+| `gold/border` — decorative boundaries | `rgba(212,175,55,.45)` | `rgba(225,198,113,.45)` | translucent primary |
+| `gold/glow` — halos and veils | `rgba(212,175,55,.14)` | `rgba(225,198,113,.14)` | very low opacity primary |
+
+**Two golds are deliberately NOT re-derived.** `gold/700` (`#7d5518` light,
+`#c9a45f` dark) is `color/accent/text` — the only gold that passes 4.5:1 as ink
+on cream, measured at 6.49:1. `gold/500` is the ramp step below primary. Moving
+either would trade a brand tidy-up for a contrast failure.
+
+**Gold carries no accessibility duty.** It never satisfies 1.4.11: `#D4AF37`
+measures 2.07:1 on the working surface and 1.61:1 on the ground. Control
+boundaries, selected states and focus indicators are carried by
+`--border-control`, `--selected-line` and `--focus-ring-contrast`. Gold is the
+brand layer on top, never the layer that makes a control identifiable.
+
+What gold **does** guarantee: dark ink on primary measures **7.97:1** light and
+**10.02:1** dark, so a primary action is always legible.
+
+**Do not flatten the hierarchy.** A light highlight is not primary gold at low
+opacity — it is `gold/light`. Replacing every gold-ish value with `#D4AF37`
+destroys the depth the ladder exists to create.
+
+
 The CURRENT palette separates structure, signal, and content:
 
 - Oxblood is the institutional anchor for navigation, decisive actions, hero atmosphere, and operational briefs.

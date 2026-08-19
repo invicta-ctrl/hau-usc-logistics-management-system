@@ -35,10 +35,10 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       74.5%
-GATES:                  35 VERIFIED · 9 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       76.5%
+GATES:                  36 VERIFIED · 9 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        74.5
+VERIFIED WEIGHT:        76.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
@@ -115,7 +115,8 @@ not change without an owner decision.
 | Gate                                                      | Weight | Status      | Baseline             | STALE_IF                                                | Evidence                                                                |
 | --------------------------------------------------------- | ------ | ----------- | -------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
 | `FD-STRUCTURE` No clipped authored content, document-wide | 4.0    | VERIFIED    | full-document scan   | any frame gains a fixed height smaller than its content | 22 clipping faults repaired; re-scan returns 0                          |
-| `FD-TOKENS` Variable-binding coverage sweep | 3.0 | IN_PROGRESS | 41,462 solid paints across CURRENT lanes | new literal fills appear | Coverage 67.7% → **89.9%** (audit §27). 1,401 inert zero-opacity paints removed; role-aware pass bound 558. Remaining 4,177 include `#f2d15c` ×802, a palette decision not a bind |
+| `FD-TOKENS-GOLD` Canonical gold reconciled system-wide | 2.0 | VERIFIED | `DESIGN.md` D08.0, owner decision 2026-08-19 | the canonical gold changes | Audit §28: 8 variables, 802 solid paints, 160 gradient stops and 434 one-off literals reconciled by role. Zero superseded gold values remain. 66/66 contrast |
+| `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 41,777 solid paints | new literal fills appear | Coverage 93.0%. Residual 2,941 are one-off inks and hairlines on Landing and Overview, each needing a role decision |
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
 | `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
 | `FD-COLOUR` 54 inferred colours on page 15 proven         | 2.0    | IN_PROGRESS | §3.1 incident record | —                                                       | 206 exact, 23 role-mapped, 54 inferred and unproven                     |

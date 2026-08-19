@@ -27,6 +27,16 @@
    already present and already correct. If you change a value here, change the
    variable too — a divergence here is exactly the D-02 failure.
 
+   CANONICAL GOLD — DESIGN.md D08.0, owner-locked 2026-08-19
+   The gold in this file is #D4AF37 and its derivations, not a local choice:
+     --edge-strong      rgba(212,175,55,.72)   canonical primary
+     --field-decision   rgba(212,175,55,.26)   canonical primary
+     --g4-fill          rgba(230,208,136,.26)  gold/light — G4 is a highlight
+                                               pane, so it takes the lighter
+                                               step rather than the primary
+   Dark mode lifts each to the dark primary (#E1C671) / dark light (#EDDCA7),
+   because the canonical gold is too close to the dark surfaces to read there.
+
    Ported from Figma page 11 Foundations + page 20 Overview, extended to every module.
 
    THE RULE THAT GOVERNS THIS FILE
@@ -61,15 +71,15 @@
   --g1-fill: rgba(255, 249, 236, 0.22);
   --g2-fill: rgba(255, 251, 242, 0.34);
   --g3-fill: rgba(255, 253, 248, 0.46);
-  --g4-fill: rgba(255, 235, 153, 0.26);
+  --g4-fill: rgba(230, 208, 136, 0.26);   /* --gold-light */
 
   --edge-quiet: rgba(255, 255, 255, 0.62);
-  --edge-strong: rgba(232, 186, 60, 0.72);
+  --edge-strong: rgba(212, 175, 55, 0.72);  /* canonical primary */
   --scrim: rgba(64, 7, 10, 0.16);
 
   /* HAU institutional field hues — oxblood anchor, gold decision, angel light */
   --field-anchor: rgba(97, 11, 15, 0.30);
-  --field-decision: rgba(232, 185, 60, 0.26);
+  --field-decision: rgba(212, 175, 55, 0.26);  /* canonical primary */
   --field-halo: rgba(255, 253, 248, 0.55);
   --rule-ink: rgba(97, 11, 15, 0.07);
 }
@@ -78,14 +88,14 @@
   --g1-fill: rgba(122, 51, 59, 0.18);
   --g2-fill: rgba(107, 26, 38, 0.30);
   --g3-fill: rgba(97, 18, 31, 0.42);
-  --g4-fill: rgba(232, 186, 60, 0.19);
+  --g4-fill: rgba(225, 198, 113, 0.19);   /* dark primary */
 
   --edge-quiet: rgba(255, 240, 199, 0.34);
-  --edge-strong: rgba(232, 186, 60, 0.82);
+  --edge-strong: rgba(225, 198, 113, 0.82);  /* dark primary */
   --scrim: rgba(0, 0, 0, 0.42);
 
   --field-anchor: rgba(165, 66, 75, 0.34);
-  --field-decision: rgba(238, 208, 138, 0.16);
+  --field-decision: rgba(237, 220, 167, 0.16);  /* dark light */
   --field-halo: rgba(120, 20, 26, 0.40);
   --rule-ink: rgba(247, 236, 217, 0.05);
 }

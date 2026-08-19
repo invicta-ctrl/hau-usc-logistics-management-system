@@ -1346,3 +1346,82 @@ merely counted.
 `00`–`03` are production and playground capture pages. `99` is a research-notes
 surface whose 622 unbound inks are prose, not product. Counting either against
 design-system coverage measures the wrong thing.
+
+## 28. Canonical gold — owner decision applied
+
+Owner decision, 2026-08-19: **the canonical primary HAU-USC gold is `#D4AF37`.**
+This supersedes the unresolved `#f2d15c` question raised at §27.4.
+
+### 28.1 The ramp is derived, not re-picked
+
+Every other gold is a stated fraction of the primary mixed toward paper, so the
+ramp cannot drift back into independent guesses:
+
+| Role | Light | Dark |
+|---|---|---|
+| primary — decisive accent | `#D4AF37` | `#E1C671` (30% toward paper) |
+| light — surfaces, highlights | `#E6D088` (42%) | `#EDDCA7` (58%) |
+| tint — washes | `#F7EFD5` (82%) | `rgba(212,175,55,.16)` |
+| border — decorative boundaries | `rgba(212,175,55,.45)` | `rgba(225,198,113,.45)` |
+| glow — halos, veils | `rgba(212,175,55,.14)` | `rgba(225,198,113,.14)` |
+
+Dark mode lifts the primary because `#D4AF37` sits too close to the dark
+surfaces to stay decisive. The hue is identical; only the luminance moves.
+
+**`gold/700` and `gold/500` were deliberately left alone.** `gold/700` is
+`color/accent/text`, the only gold that passes 4.5:1 as ink on cream at 6.49:1.
+Re-deriving it would have traded a brand tidy-up for a contrast failure. That is
+the difference between reconciling a palette and flattening one.
+
+### 28.2 Measured before anything changed
+
+| Pair | Result |
+|---|---|
+| dark ink `#40070a` on primary, light | **7.97:1** |
+| dark ink on primary, dark mode | **10.02:1** |
+| primary as text on the working surface | 2.07:1 — gold is not body ink, and never was |
+| primary as a UI boundary on the ground | 1.61:1 — gold carries **no** 1.4.11 duty |
+
+Gold never satisfied non-text contrast, before or after. `--border-control`,
+`--selected-line` and `--focus-ring-contrast` carry that, which is precisely why
+they were introduced at §"Accessibility acceptance". The brand layer sits on top
+of the accessibility layer rather than pretending to be it.
+
+**Contrast after the swap: 66/66 pass, both themes.**
+
+### 28.3 Reconciled by role, in four passes
+
+The instruction was explicit that this is not a find-and-replace, and the file
+proved why — the old gold hid in four different shapes:
+
+| Pass | Found | Mapping |
+|---|---|---|
+| Variables | 8 tokens | Primitives ramp + accent wash/line + three Glass Material tokens. `color/action/primary`, `color/focus/ring` and the `color/ramp/gold/*` set are **aliases**, so updating the primitives propagated everywhere |
+| Solid paints `#f2d15c` | **802** | 64 primary (opaque) · 85 light · 79 tint · 574 glow. Each paint kept its **own opacity**, so the alpha hierarchy the author built survived |
+| Gradient stops | **160** | `#f6e29a→#E6D088`, `#e8b93c→#D4AF37`, `#d6a72e→#c8992f`. Each gradient's internal light-to-dark separation preserved |
+| One-off literals | **434** across 28 distinct values | classified by hue, saturation, lightness and paint role |
+
+The last pass mattered most: the landing page carried a **second** primary CTA
+at `#f3c541` that none of the earlier passes touched, because it was neither the
+known literal nor a ramp value. It now renders `#D4AF37`, confirmed by sampling
+the rendered pixels rather than trusting the binding.
+
+### 28.4 What was deliberately not treated as gold
+
+`#bb9d8e` ×52 and `#e9a7ad` ×1 look gold-adjacent but measure below 30%
+saturation or outside the 33–58° hue band. They are warm greys and a dusty pink.
+A colour that merely sits near gold on screen is not gold, and sweeping them in
+would have quietly changed two unrelated roles.
+
+### 28.5 Result
+
+```text
+superseded gold values remaining anywhere:  0
+paint coverage:                             67.7%  ->  93.0%
+contrast:                                   66/66 both themes
+```
+
+Five canonical role variables now exist in Semantic Color —
+`color/gold/primary`, `/light`, `/tint`, `/border`, `/glow` — the first three
+**aliased to the ramp** so they can never drift from it. Recorded as binding
+authority in `DESIGN.md` **D08.0**.
