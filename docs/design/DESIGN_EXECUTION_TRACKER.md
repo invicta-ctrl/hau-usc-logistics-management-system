@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       92.5%
-GATES:                  45 VERIFIED · 4 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       93%
+GATES:                  46 VERIFIED · 3 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        92.5
+VERIFIED WEIGHT:        93.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 5 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 4 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -86,7 +86,7 @@ not change without an owner decision.
 | `PL-FIGMA-DESKTOP` 1440 light + dark, both borrower branches              | 2.5    | VERIFIED       | Figma page 90 `581:15` `587:15` `589:15` | node edits on page 90                    | Parity audit §8                                                    |
 | `PL-FIGMA-STATES` Four declared catalog states                            | 1.5    | VERIFIED       | Figma `591:15`                           | catalog state contract changes           | Parity audit §8                                                    |
 | `PL-FIGMA-MOBILE-DARK` Public Lending 390 light and dark | 1.0 | VERIFIED | Figma `592:15` light, `657:350` dark | node edits on page 90 | Dark built by explicit variable modes; **0 unbound fills** in the clone |
-| `PL-FIGMA-MOBILE-BRANCH` Angelite branch and states at 390 | 0.5 | IN_PROGRESS | Parity audit §3 | — | Borrower-branch variant and the four catalog states at 390 remain |
+| `PL-FIGMA-MOBILE-BRANCH` Angelite branch at 390 | 0.5 | VERIFIED | Figma `659:15` | borrower model changes | Council-only fields replaced by academic identity per the owner-locked basic-information-sheet model; student card selected; placeholders corrected; 0 overflow, 0 unbound fills |
 | `PL-MAKE` Make renders the corrected lending flow | 1.0 | VERIFIED | Make `rP9W9MQlZkyQrUx38TVsFS` v35 | `PublicFlows.tsx` changes | Audit §29.1: live file byte-identical to the verified local implementation (FNV-1a `9fc9266`, 50,587 chars). No-login model and search-first catalog present |
 | `PL-IMPL` Design-branch implementation                                    | 1.0    | VERIFIED       | `prototypes/public-portals-r3/`          | prototype source changes                 | Search-first catalog, basic-information-sheet borrower model       |
 

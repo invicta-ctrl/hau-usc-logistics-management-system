@@ -12,8 +12,8 @@ The current block is the operator resume record. Historical evidence remains rea
 - **Stream:** isolated Claude frontend-design stream, parallel to the v0.8.3–v0.8.5 product program. The product stream is a **separate git repository** (`worktrees/v081-production-execution-eb14cd81/.git`, branch `release/v0.8.3-identity-foundation`) and was never modified.
 - **Worktree / branch:** `worktrees/spec-v073-frontend-design-integration` on `frontend-design-integration`, pushed to origin, 0/0 with upstream.
 - **Reference truth:** production **0.8.2 @ `c316e047`**, schema 30, read from `git show c316e047:src/visual/*.js` — the exact deployed commit, not branch HEAD and not documentation. Live production probed read-only for version/health/host routing only; no form submitted, no credential entered.
-- **Figma Design:** `hXJElH4p72KfgAaoUyfNOC` — 28 pages, 122 variables, 102 components. Two semantic tokens added to close real gaps: `color/accent/text` (gold/400 measured **1.52:1**, failed AA) and `color/text/on-accent` (action surface stays light gold in both modes).
-- **Figma Make:** `rP9W9MQlZkyQrUx38TVsFS`. Readable via `get_design_context`; **not writable** by MCP — `use_figma` and `get_metadata` reject Make files. Edited through the browser instead. `PublicFlows.tsx` replaced and building (`[vite] connected.`, no error overlay).
+- **Figma Design:** `hXJElH4p72KfgAaoUyfNOC` — 28 pages, **136 variables**, 102 components. Tokens added across the programme: `color/accent/text` and `color/text/on-accent` (both closing "which ink goes on this branded surface" gaps), ten Glass Material tokens mapping one-to-one with `glass.css`, and the five canonical gold roles under `color/gold/*`.
+- **Figma Make:** `rP9W9MQlZkyQrUx38TVsFS`, **Version 35, synced**. Not writable by MCP, so it is edited through the browser by dispatching a CodeMirror transaction — far more reliable than the clipboard route, which silently pasted nothing once. `PublicFlows.tsx` is hash-identical to the committed local source; `RequestCenterRoute.tsx`, `LendingHubRoute.tsx` and `ReleaseDeskRoute.tsx` reconciled to the production contracts.
 
 ### Highest-priority finding — resolved
 
