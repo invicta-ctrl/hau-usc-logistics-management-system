@@ -136,7 +136,69 @@ migration, or release artifact was produced.
 
 ### Next recommended action
 
-Public Request Center field-by-field diff against section 5 of the parity
-audit, then the authenticated requester portal (context B), which is
-represented nowhere. After that, the remaining Phase 11 module passes —
-then extend the contrast repair file-wide as each module page is opened.
+Superseded by baseline 2026-08-19-C below. Both items named here are done: the
+Public Request diff is at parity audit §21 and the authenticated requester
+portal is built at `624:2`.
+
+## Baseline 2026-08-19-C — production reconciliation
+
+Recorded by **content identity**, not by a version name. `saveVersionHistoryAsync`
+is not exposed through the MCP bridge, so a named Figma version is the one step
+in this baseline that still needs the Figma UI. Everything below is verifiable
+from the file itself, which is the stronger record anyway: a version label can be
+right while the contents are not.
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS   (PublicFlows.tsx save staged, sync blocked upstream)
+DESIGN BRANCH    frontend-design-integration
+DESIGN COMMIT    fd423fd6231a9dc309307a0d308deb46af770646
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30
+```
+
+### File identity
+
+| Measure | Value |
+|---|---|
+| Pages | 28 |
+| Variables | **131** (was 122 — 10 Glass Material tokens added, 1 earlier) |
+| Collections | Semantic Color [Light/Dark] · Primitives [Light/Dark] · Glass Material [Light/Dark] · Spacing · Radius · Size · Motion · Layout |
+| Components | 102 |
+| Effect styles | 9 — the four Material blur radii now **bound** to variables |
+| Text styles | 11 |
+
+### Built in this pass
+
+| Node | Surface |
+|---|---|
+| `615:2` | `request.submit` — the Staff Request submission region, 1118×1619 |
+| `300:624` | per-line route decision panel, rebuilt to the RV-01.6 contract |
+| `628:2` | `request.composite` — feature-flagged event logistics sections |
+| `616:2` | review queue pagination, server-clamped |
+| `624:2` | `portal.request` — authenticated requester portal, 1440×2436 |
+| `626:2` | `public.request` — five-step intake, 1440×3780 |
+
+### Structural state
+
+| Property | Value |
+|---|---|
+| Frames clipping their own content | **0** across all non-superseded lanes |
+| Unbound solid paints | 7,373 of 45,137 — **83.7% bound**, up from 67.7% |
+| Blur ladder | single-sourced: variables 16/22/30/36, bound to the Material effect styles |
+| Glass tokens | Figma ↔ `glass.css` map one-to-one, 21 properties, zero value drift |
+| Superseded lanes touched | none; one accidental edit was reverted |
+
+### Verifiable from the branch
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+```
+
+### Known gaps at this baseline
+
+Figma Make internal modules; the D-04 typeface conversion across seven pages
+plus the Bahnschrift pocket on Inventory; 7,373 paints needing role decisions;
+54 inferred colours on page 15; dark and 390 variants for the new request
+frames; a real keyboard walk and screen-reader pass; and the named Figma
+version above.
