@@ -741,7 +741,12 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .ack.cond{border-color:var(--infoL)}
 .ack input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ox)}
 .ack b{display:block;font-size:15px}.ack small{color:var(--muted);font-size:13px}
-.consequence{margin-top:14px;padding:12px 14px;background:var(--inset);border-left:4px solid var(--action);color:var(--muted);font-size:12px;border-radius:0 10px 10px 0}
+/* No left accent bar. DESIGN.md D08: lines are semantic — they connect a route,
+   divide data, or indicate selection. A coloured tab on a disclaimer does none
+   of those, and it is the most common tell of a generated UI. The quiet inset
+   surface and a hairline carry it instead. Inherited from the previous file's
+   .consequence/.gate rule; not carried forward. */
+.consequence{margin-top:14px;padding:12px 14px;background:var(--inset);border:1px solid var(--hair);color:var(--muted);font-size:12px;border-radius:10px}
 .stepper{list-style:none;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px;margin:20px 0 6px;padding:0}
 .stepper li{display:flex;gap:8px;align-items:center;padding:12px;border-radius:12px;font-size:12px}
 .stepper li.cur{background:var(--progB);border:1px solid var(--action)}
