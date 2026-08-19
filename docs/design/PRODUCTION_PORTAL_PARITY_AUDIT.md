@@ -1156,3 +1156,58 @@ transaction.
 **Do not re-apply the edit on the next session without checking first.** If the
 file already reads 790 lines with no `Access application`, the queued save
 landed.
+
+## 25. Public Request — the implementation diffed against the contract
+
+`prototypes/public-portals-r3` against `public-requester-portal.js` at
+`c316e047`. The five-step structure, the requester block and all four
+acknowledgments already matched. Three things did not, and all three were
+behaviours rather than fields.
+
+### 25.1 A related request was linkable by free text
+
+The prototype offered a plain **"Related or original request"** text input.
+Production does not: a related request is **someone else's private record**, so
+`relatedLookupId` must be verified against a masked `relatedLookupCode` through
+`/api/public/request/related` before it can even appear in the filtered
+dropdown.
+
+Typing an ID into a text box is not the same act as proving you hold its
+tracking code. The prototype now carries the real control — Request ID, masked
+code, a **Verify request** button and a polite live region — and refuses to link
+when either field is empty.
+
+### 25.2 The lead-time warning was missing
+
+Production computes days-to-date on the review step and warns at **three days or
+fewer**: *"Staff review may require an adjusted schedule."* That is the moment
+the requester can still change something, so omitting it moves the conversation
+to after submission. Added, with the rule stated in the code.
+
+### 25.3 Two smaller contract points
+
+- `eventPurpose` is a **500-character justification** in production; the
+  prototype had a single-line input. Now a `maxlength="500"` textarea.
+- The **sub-event select is disabled until a series is chosen**. The prototype
+  pre-populated it from the first series, which implies a choice the requester
+  has not made.
+
+### 25.4 Still open for this surface
+
+The **category composer** — production's `renderFields()` swaps three distinct
+field sets on `lineCategory` (approved inventory item; a checkbox list of
+approved venue/logistics references; or description + quantity + unit +
+specification). The prototype has a flat line list. That is a build, not a
+correction, and is recorded rather than half-done.
+
+### 25.5 An anchor that was not unique
+
+Inserting the review-step additions matched `<h3>Required acknowledgments</h3>`,
+which exists **twice** — once in the lending portal and once in the request
+review. The edit landed in the lending view, where `leadWarning` is not in
+scope, which would have thrown on every lending render.
+
+Caught by rendering both routes rather than only the one being changed. The
+Figma work has enforced "assert exactly one occurrence before mutating" since
+§13; the same discipline was not applied to the prototype edit. It is now:
+both routes are rendered and checked after any shared-markup change.

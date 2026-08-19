@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       61%
-GATES:                  29 VERIFIED · 15 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       67.5%
+GATES:                  32 VERIFIED · 12 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        61.0
+VERIFIED WEIGHT:        67.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 17 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 14 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -96,7 +96,7 @@ not change without an owner decision.
 | `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
 | `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2`, `300:2941` | node edits on the intake frame | Five-step intake built and old frames superseded, audit §21.3; dark, 390 and the four states still open |
 | `PR-MAKE` Make parity                                      | 2.0    | IN_PROGRESS | Make                                           | —        | Shares `PublicFlows.tsx`                            |
-| `PR-IMPL` Design-branch implementation                     | 2.0    | IN_PROGRESS | `prototypes/public-portals-r3/`                | —        | Stepper implemented; not diffed against contract    |
+| `PR-IMPL` Design-branch implementation | 2.0 | VERIFIED | Parity audit §5 | public request contract changes | Audit §25: private verified related-request lookup, lead-time warning, 500-char purpose, disabled sub-event. Both routes render-checked |
 
 ### Area 4 — Authenticated / Staff Request parity · 10.0
 
@@ -137,7 +137,7 @@ not change without an owner decision.
 | `IG-TOKENS` Glass tokens reconciled Figma ↔ code | 2.5 | VERIFIED | Glass Material collection ↔ `glass.css` | either side changes a value | Audit §23: 7 existing tokens verified zero-drift, 10 created, correspondence table written into `glass.css` |
 | `IG-ZONES` No-glass zones honoured on dense surfaces | 2.0    | IN_PROGRESS | §35                                      | —                          | `.on-glass` contrast guarantee implemented; internal modules unaudited           |
 | `IG-PERF` Performance fallbacks                      | 1.5    | VERIFIED    | `glass.css` media queries                | new nested backdrop-filter | `prefers-reduced-transparency`, mobile two-field fallback, no glass-behind-glass |
-| `IG-A11Y` Glass contrast in both modes               | 1.5    | IN_PROGRESS | WCAG 2.2 AA                              | palette change             | Light mode measured; dark-mode glass not fully measured                          |
+| `IG-A11Y` Glass contrast in both modes | 1.5 | VERIFIED | `scripts/design/contrast-audit.mjs` | glass or palette change | Text on G2 and G4 glass composited over the brightest field measures 8.05–13.84:1 across both themes; all pass |
 
 ### Area 8 — Responsive + accessibility · 10.0
 
@@ -153,7 +153,7 @@ not change without an owner decision.
 
 | Gate                                                           | Weight | Status      | Baseline                     | STALE_IF                  | Evidence                                                   |
 | -------------------------------------------------------------- | ------ | ----------- | ---------------------------- | ------------------------- | ---------------------------------------------------------- |
-| `DOC-CONTRACT` Contract docs describe current truth            | 3.0    | IN_PROGRESS | parity audit                 | production change         | §1–§13 current; Lending Hub and Release Desk absent        |
+| `DOC-CONTRACT` Contract docs describe current truth | 3.0 | VERIFIED | Parity audit §1–§25 | any production module changes | All six surfaces recorded from the deployed commit: Public Lending §3, Public Request §5, Staff Request §10, Authenticated Requester §12, Lending Hub §14, Release Desk §15 |
 | `DOC-CONSOLIDATE` Obsolete Impeccable generations consolidated | 2.0 | VERIFIED | `docs/design/README.md` | a new generation appears | Index declares the current owner per question and marks v1–v4.1 superseded; files deliberately not moved because an accepted spec references the paths |
 | `DOC-TRACKER` One canonical derived tracker                    | 2.0    | VERIFIED    | this file                    | competing tracker appears | Created; `DESIGN.md` and `WORK_CONTINUATION.md` point here |
 | `DOC-BASELINE` Final Figma + branch baseline recorded          | 3.0    | IN_PROGRESS | `FIGMA_BASELINE_REGISTER.md` | new Figma version         | Baselines A and B recorded; final version not cut          |

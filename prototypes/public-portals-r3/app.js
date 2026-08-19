@@ -554,17 +554,28 @@ function stepBody(isEvent, o) {
         <div class="field"><label for="e-series">Event series *</label>
           <select id="e-series">${o.eventSeries.map(s => `<option>${esc(s.name)}</option>`).join('')}</select></div>
         <div class="field"><label for="e-sub">Sub-event *</label>
-          <select id="e-sub">${o.eventSeries[0].events.map(e => `<option>${esc(e.name)}</option>`).join('')}</select>
-          <p class="help">Sub-events load from the selected series.</p></div>
+          <select id="e-sub" disabled><option>Select an event series first</option></select>
+          <p class="help">Disabled until a series is chosen. Sub-events load from the selected series.</p></div>
         <div class="field"><label for="e-loc">Location *</label><input id="e-loc" placeholder="e.g. Plenary Hall"></div>
-        <div class="field"><label for="e-purpose">Event purpose *</label><input id="e-purpose" placeholder="Why the items are needed"></div>
+        <div class="field span-2"><label for="e-purpose">Purpose or justification *</label>
+          <textarea id="e-purpose" maxlength="500" placeholder="Why the items are needed"></textarea></div>
         <div class="field"><label for="e-from">Needed from *</label><input id="e-from" type="date"></div>
         <div class="field"><label for="e-to">Needed until *</label><input id="e-to" type="date"></div>
-        <div class="field span-2"><div class="lbl-row"><label for="e-rel" class="lbl">Related or original request</label>
-          <span class="badge">Optional</span></div>
-          <input id="e-rel" placeholder="Reference an earlier request">
-          <p class="help">Used when this request continues or corrects an earlier one.</p></div>
-       </div>`
+       </div>
+       <section class="panel" style="margin-top:var(--s-5)" aria-labelledby="relLookupTitle">
+         <h3 id="relLookupTitle" style="font-size:15px">Link a private existing request</h3>
+         <p class="help">Optional. A related request is private, so it has to be verified with its
+            Request ID and tracking code before it can be linked. Free-text reference is not enough.</p>
+         <div class="form-grid" style="margin-top:var(--s-3)">
+           <div class="field"><label for="rel-id">Existing Request ID</label>
+             <input id="rel-id" placeholder="REQ-2026-0142" autocomplete="off"></div>
+           <div class="field"><label for="rel-code">Private tracking code</label>
+             <input id="rel-code" type="password" placeholder="••••••••" autocomplete="off"></div>
+         </div>
+         <button class="btn btn--quiet btn--mini" type="button" data-verify-related
+                 style="margin-top:var(--s-3)">Verify request</button>
+         <p class="help" data-related-message role="status" aria-live="polite"></p>
+       </section>`
     : `<p style="color:var(--text-secondary);font-size:14px;margin-top:var(--s-2)">
          These fields appear because the purpose is <strong>Office inventory or pantry</strong>.
          The event fields are not collected for this branch.</p>
@@ -574,9 +585,21 @@ function stepBody(isEvent, o) {
         <div class="field"><label for="p-date">Needed date *</label><input id="p-date" type="date"></div>
         <div class="field span-2"><label for="p-purpose">Purpose or justification *</label>
           <textarea id="p-purpose" placeholder="Why the office or pantry needs these items."></textarea></div>
-        <div class="field span-2"><div class="lbl-row"><label for="p-rel" class="lbl">Related or original request</label>
-          <span class="badge">Optional</span></div><input id="p-rel" placeholder="Reference an earlier request"></div>
-       </div>`;
+       </div>
+       <section class="panel" style="margin-top:var(--s-5)" aria-labelledby="relLookupTitle">
+         <h3 id="relLookupTitle" style="font-size:15px">Link a private existing request</h3>
+         <p class="help">Optional. A related request is private, so it has to be verified with its
+            Request ID and tracking code before it can be linked. Free-text reference is not enough.</p>
+         <div class="form-grid" style="margin-top:var(--s-3)">
+           <div class="field"><label for="rel-id">Existing Request ID</label>
+             <input id="rel-id" placeholder="REQ-2026-0142" autocomplete="off"></div>
+           <div class="field"><label for="rel-code">Private tracking code</label>
+             <input id="rel-code" type="password" placeholder="••••••••" autocomplete="off"></div>
+         </div>
+         <button class="btn btn--quiet btn--mini" type="button" data-verify-related
+                 style="margin-top:var(--s-3)">Verify request</button>
+         <p class="help" data-related-message role="status" aria-live="polite"></p>
+       </section>`;
 
   if (step === 4) return `<p style="color:var(--text-secondary);font-size:14px;margin-top:var(--s-2)">
       Each line carries a category, an approved selection, a quantity with its unit, and an optional specification.</p>
@@ -592,6 +615,13 @@ function stepBody(isEvent, o) {
   const ctx = req.purpose === 'EVENT_ACTIVITY_SUPPORT'
     ? 'General Assembly 2026–2027 · Day 2 — committee sessions · Plenary Hall'
     : 'Council pantry · needed 12 Sep 2026';
+  /* Production warns when the requested date is three days out or fewer, because
+     that is where staff review starts needing a schedule conversation. */
+  const leadDays = 2;
+  const leadWarning = leadDays !== null && leadDays <= 3
+    ? `<p class="warnbox" role="status">Lead-time warning: the requested date is within three days.
+         Staff review may require an adjusted schedule.</p>`
+    : '';
   const rows = [
     [1, 'Request purpose', REQUEST_OPTIONS.purposes.find(p => p.value === req.purpose).label],
     [2, 'Requester', 'Maria Santos · USC Officer · Committee on Activities'],
@@ -601,6 +631,9 @@ function stepBody(isEvent, o) {
   return `${rows.map(([n, t, v]) => `<div class="summary-row">
       <span class="val"><span class="lbl">Step ${n} · ${esc(t)}</span><strong>${esc(v)}</strong></span>
       <button class="btn btn--quiet btn--mini" type="button" data-edit="${n}">Edit</button></div>`).join('')}
+    ${leadWarning}
+    <p class="help" style="margin-top:var(--s-5)">Evidence — no public evidence is attached.
+       Staff may request supporting evidence during review.</p>
     <h3 style="font-size:17px;margin-top:var(--s-6)">Required acknowledgments</h3>
     ${REQUEST_ACKS.map(a => `<label class="ack"><input type="checkbox" name="${esc(a.name)}" required>
       <span><strong>${esc(a.title)}</strong><small>${esc(a.body)}</small></span></label>`).join('')}`;
@@ -633,6 +666,22 @@ function bindRequest() {
     say('Request submitted. Record REQ-2026-0142. Initial status For Review.');
     app.querySelector('[data-receipt]').scrollIntoView({ block: 'center' });
   });
+  /* A related request is someone's private record. Production makes you prove
+     you hold its tracking code before it can even appear in the dropdown, so
+     the prototype refuses to link on an ID alone. */
+  app.querySelector('[data-verify-related]')?.addEventListener('click', () => {
+    const id = app.querySelector('#rel-id')?.value.trim() || '';
+    const code = app.querySelector('#rel-code')?.value.trim() || '';
+    const msg = app.querySelector('[data-related-message]');
+    if (!id || !code) {
+      msg.textContent = 'Enter both the Request ID and its private tracking code.';
+      say('Both the Request ID and its private tracking code are required to link a request.', true);
+      return;
+    }
+    msg.textContent = `Prototype: ${id} would be verified against the tracking code before it could be linked. No lookup was performed.`;
+    say('Prototype verification only. No request was looked up.');
+  });
+
   app.querySelectorAll('[data-edit]').forEach(b =>
     b.addEventListener('click', () => { step = Number(b.dataset.edit); rerender(); }));
   app.querySelectorAll('[data-rm-line]').forEach(b =>
