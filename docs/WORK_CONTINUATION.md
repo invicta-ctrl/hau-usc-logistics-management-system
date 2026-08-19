@@ -30,11 +30,11 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 ### State
 
 - **Done:** production contracts for all five surfaces read at the deployed commit (audit §3, §5, §10, §12, §14, §15); Public Lending built across 1440 light/dark, Angelite branch, receipt, four catalog states, 390 mobile; Staff Request Center reconciled and its submission region built; authenticated requester portal built; 22 Figma clipping faults repaired document-wide; D-02 closed; token coverage raised 67.7% → 83.7%.
-- **Open:** Public Request field-by-field diff against audit §5; SR-07 composite requests; D-04 typeface conversion (scoped at audit §18); D-05 remaining 7,373 unbound paints needing role decisions (audit §19.4); 54 inferred colours on page 15; Figma Make internal modules; responsive and accessibility matrices.
+- **Open:** Figma Make internal modules and state proofs; D-04 typeface conversion (scoped, audit §18); D-05 remaining 7,373 unbound paints needing role decisions (audit §19.4); 54 inferred colours on page 15; Public Lending 390 dark and Angelite-at-390; public request dark / 390 / four states; responsive width matrix; WCAG 2.2 AA acceptance matrix; Hallmark; Impeccable re-run.
 - **Hallmark:** still not run as its own pass. Impeccable's detector and `DESIGN.md` D35 cover overlapping ground; that is not the same discipline and is not claimed as such.
 - **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls. One production defect candidate recorded and deliberately not fixed (PDC-01, audit §16).
 - **Evidence:** `docs/design/DESIGN_EXECUTION_TRACKER.md` (canonical progress), `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md` §1–§20, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D23.0, D24.0, D40.
-- **Resume:** Public Request field-by-field diff against audit §5, then the per-page D-04 typeface conversion. Do not re-derive production truth from documentation — read it at the deployed commit.
+- **Resume:** read `docs/design/DESIGN_EXECUTION_TRACKER.md` first — it is derived and current. Highest-value remaining gates are FM-INTERNAL (4.0) and RA-A11Y (3.0). Do not re-derive production truth from documentation; read it at the deployed commit.
 
 ### What the Staff Request Center pass established
 
