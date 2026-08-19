@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HAU-USC Logistics — Public Portals R3 prototype</title>
+    <link rel="icon" href="data:," />
+
+    <!-- Fonts are loaded from Google here ONLY because this file is opened directly
+         from disk for design review. DESIGN.md D09 forbids a remote font dependency
+         in the product without an accepted performance/privacy decision, and D30
+         registers bundled .woff2 files for all three families. Any implementation
+         must use the bundled assets, not this link. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&family=Newsreader:wght@500&display=swap"
+      rel="stylesheet" />
+
+    <link rel="stylesheet" href="./tokens.css" />
+    <link rel="stylesheet" href="./glass.css" />
+    <link rel="stylesheet" href="./portal.css" />
+  </head>
+  <body>
+    <!-- G0 · the institutional ground. Fixed, non-interactive, aria-hidden:
+         it carries no information, so it must never be announced. -->
+    <div class="g0" data-module="lending" aria-hidden="true"></div>
+
+    <div class="proto-bar">
+      <strong>R3 prototype</strong>
+      <label>Route
+        <select id="proto-route">
+          <option value="lending">Public Lending</option>
+          <option value="request">Public Request</option>
+        </select>
+      </label>
+      <label>Theme
+        <select id="proto-theme">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+      <label>Catalog state
+        <select id="proto-state">
+          <option value="populated">Populated</option>
+          <option value="loading">Loading</option>
+          <option value="error">Service error</option>
+          <option value="empty">Empty — nothing published</option>
+        </select>
+      </label>
+      <span class="proto-note">design fixture · no backend · not production data</span>
+    </div>
+
+    <!-- Two persistent live regions, present at mount and empty, so injected text
+         is actually announced. Polite carries result counts and confirmations;
+         assertive carries blocked and failed actions. -->
+    <div id="live-polite" class="sr-only" role="status" aria-live="polite"></div>
+    <div id="live-assertive" class="sr-only" role="alert" aria-live="assertive"></div>
+
+    <div id="app"></div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

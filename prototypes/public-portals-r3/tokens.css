@@ -1,0 +1,149 @@
+/* HAU-USC Logistics — Public Portals R3
+   Token layer mirroring the Figma collections in file hXJElH4p72KfgAaoUyfNOC.
+
+   Every value here is the resolved value of a Figma variable. Where Figma
+   aliases Primitives, the alias is noted so reconciliation can verify it.
+   Two tokens were added during the R3 pass to close real gaps:
+
+     --accent-text     color/accent/text     gold/400 failed AA at 1.52:1
+     --on-accent       color/text/on-accent  action/primary is light in BOTH modes
+
+   Do not introduce a raw hex in portal.css. If a colour is missing, add a
+   token here first. */
+
+:root {
+  color-scheme: light;
+
+  /* Primitives — oxblood */
+  --ox-900: #40070a;
+  --ox-800: #610b0f;
+  --ox-700: #78141a;
+  --ox-600: #8d1f28;
+  --ox-500: #a62835;
+
+  /* Primitives — gold */
+  --gold-700: #7d5518;
+  --gold-500: #c8992f;
+  --gold-400: #e8b93c;
+  --gold-200: #f6e29a;
+  --gold-100: #faeecb;
+
+  /* Surface ladder */
+  --ground: #e9e0d0;
+  --work: #fffdf8;
+  --inset: #f7f0e2;
+  --raised: #ffffff;
+  --overlay: #ffffff;
+
+  /* Text */
+  --text-primary: #241416;
+  --text-secondary: #4e3a3e;
+  --text-muted: #6f5a60;
+  --text-inverse: #fffdf8;
+  --accent-text: #7d5518;   /* color/accent/text  — 5.46:1 on --inset */
+  --on-accent: #40070a;     /* color/text/on-accent — dark in BOTH modes */
+
+  /* Borders */
+  --border-subtle: #e6dcc9;
+  --border-default: #d8cbb6;
+  --border-strong: #bda98c;
+
+  /* Institution + action */
+  --authority: #610b0f;
+  --action-primary: #e8b93c;
+  --accent-wash: #fcf2cf;
+  --accent-line: #d1b478;
+  --focus-ring: #e8b93c;
+
+  /* Rail */
+  --rail-from: #6b0e13;
+  --rail-to: #3d070a;
+  --rail-ink: #f7ecd9;
+  --rail-ink-dim: #d9bfae;
+
+  /* Status tones */
+  --neutral-fg: #5d4a4f; --neutral-bg: #ece3d3; --neutral-line: #cdbfa7;
+  --info-fg: #23557f;    --info-bg: #e4eefa;    --info-line: #b0cbe6;
+  --progress-fg: #7d5518;--progress-bg: #fbeed2;--progress-line: #dcbe8a;
+  --done-fg: #1f6b41;    --done-bg: #e2f3e9;    --done-line: #a8d3ba;
+  --alert-fg: #9c2630;   --alert-bg: #fbe6e8;   --alert-line: #e3aeb3;
+
+  /* Type */
+  --font-display: "Bricolage Grotesque", "Bahnschrift", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI Variable", system-ui, sans-serif;
+  --font-wordmark: "Newsreader", "Palatino Linotype", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  /* Space */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 56px;
+
+  /* Radius */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 18px; --r-pill: 999px;
+
+  /* Motion — DESIGN.md D13 families */
+  --m-response: 120ms;
+  --m-state: 200ms;
+  --m-surface: 280ms;
+  --m-overlay: 320ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Layout */
+  --content-max: 1240px;
+  --touch-min: 44px;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --ox-900: #4a1015;
+  --ox-800: #8e3038;
+  --ox-700: #a5424b;
+
+  --gold-700: #c9a45f;
+  --gold-500: #e3c37f;
+  --gold-400: #eed08a;
+  --gold-200: #f6e7c4;
+  --gold-100: #faf1de;
+
+  --ground: #100b0c;
+  --work: #1f1719;
+  --inset: #281d20;
+  --raised: #312428;
+  --overlay: #312428;
+
+  --text-primary: #f7efe6;
+  --text-secondary: #ddcbcd;
+  --text-muted: #b3a0a4;
+  --text-inverse: #241416;
+  --accent-text: #c9a45f;   /* 7.49:1 on --work */
+  --on-accent: #40070a;     /* deliberately UNCHANGED — gold stays light */
+
+  --border-subtle: #2c2124;
+  --border-default: #3d2e31;
+  --border-strong: #5b4449;
+
+  --authority: #a5424b;
+  --action-primary: #eed08a;
+  --accent-wash: rgba(238, 208, 138, 0.12);
+  --accent-line: rgba(238, 208, 138, 0.32);
+
+  --rail-from: #2c1013;
+  --rail-to: #180a0c;
+  --rail-ink: #f4e6d2;
+  --rail-ink-dim: #c4a9ad;
+
+  --neutral-fg: #cbb9bc; --neutral-bg: rgba(255,255,255,.07); --neutral-line: rgba(255,255,255,.18);
+  --info-fg: #a8cbf0;    --info-bg: rgba(58,104,158,.26);     --info-line: rgba(168,203,240,.38);
+  --progress-fg: #eecb92;--progress-bg: rgba(150,103,30,.28); --progress-line: rgba(238,203,146,.38);
+  --done-fg: #9ad9b2;    --done-bg: rgba(45,112,72,.28);      --done-line: rgba(154,217,178,.36);
+  --alert-fg: #f6acb2;   --alert-bg: rgba(166,52,60,.3);      --alert-line: rgba(246,172,178,.36);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

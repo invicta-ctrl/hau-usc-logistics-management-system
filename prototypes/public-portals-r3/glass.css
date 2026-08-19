@@ -1,0 +1,208 @@
+/* HAU-USC Logistics — G0–G4 optical material ladder.
+   Ported from Figma page 11 Foundations + page 20 Overview, extended to every module.
+
+   THE RULE THAT GOVERNS THIS FILE
+   Glass is for CONTAINERS. Body text, tables, inputs and quantities sit on a
+   near-opaque layer inside the glass, never directly on transmissive pane.
+   Contrast is tested against the LIGHTEST thing that can appear behind a pane,
+   which for us is the gold decision field at its brightest.
+
+   WHY THE BACKDROP LOOKS THE WAY IT DOES
+   A Gaussian blur destroys detail below roughly 2·sigma and only preserves
+   structure above roughly 6·sigma. At the G2 sigma of 22px, only features
+   larger than ~132px read as structure. So the HAU-themed environment is built
+   from LARGE, SLOW fields — nothing small is expected to survive. Paper tooth,
+   gold hairlines and the ledger rules are painted ON the pane as borders and a
+   noise overlay, never expected to transmit. This is the same reason Microsoft's
+   acrylic recipe adds noise on top of the blur rather than hoping it comes
+   through.
+
+   Blur ladder — the values that actually render, matching the Figma effect
+   styles. Note the Figma material/blur/* VARIABLES say 12/18/24/28 and do not
+   bind to the effect styles; that divergence is logged as D-02. These are the
+   effect-style values, which are what a viewer sees. */
+
+:root {
+  --g1-blur: 16px;
+  --g2-blur: 22px;
+  --g3-blur: 30px;
+  --g4-blur: 36px;
+
+  --g1-fill: rgba(255, 249, 236, 0.22);
+  --g2-fill: rgba(255, 251, 242, 0.34);
+  --g3-fill: rgba(255, 253, 248, 0.46);
+  --g4-fill: rgba(255, 235, 153, 0.26);
+
+  --edge-quiet: rgba(255, 255, 255, 0.62);
+  --edge-strong: rgba(232, 186, 60, 0.72);
+  --scrim: rgba(64, 7, 10, 0.16);
+
+  /* HAU institutional field hues — oxblood anchor, gold decision, angel light */
+  --field-anchor: rgba(97, 11, 15, 0.30);
+  --field-decision: rgba(232, 185, 60, 0.26);
+  --field-halo: rgba(255, 253, 248, 0.55);
+  --rule-ink: rgba(97, 11, 15, 0.07);
+}
+
+[data-theme="dark"] {
+  --g1-fill: rgba(122, 51, 59, 0.18);
+  --g2-fill: rgba(107, 26, 38, 0.30);
+  --g3-fill: rgba(97, 18, 31, 0.42);
+  --g4-fill: rgba(232, 186, 60, 0.19);
+
+  --edge-quiet: rgba(255, 240, 199, 0.34);
+  --edge-strong: rgba(232, 186, 60, 0.82);
+  --scrim: rgba(0, 0, 0, 0.42);
+
+  --field-anchor: rgba(165, 66, 75, 0.34);
+  --field-decision: rgba(238, 208, 138, 0.16);
+  --field-halo: rgba(120, 20, 26, 0.40);
+  --rule-ink: rgba(247, 236, 217, 0.05);
+}
+
+/* ---------------- G0 · the ground ----------------
+   Fixed so it does not repaint on scroll. Three large radial fields
+   (the mesh-gradient technique — several radial gradients, because native CSS
+   mesh gradients are still not a thing), plus the ledger rule grid and two
+   rotated governed rails carried over from the Overview backdrop. */
+
+.g0 {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--ground);
+  background-image:
+    radial-gradient(58vw 58vw at var(--f1x, 78%) var(--f1y, 4%), var(--field-anchor), transparent 62%),
+    radial-gradient(42vw 42vw at var(--f2x, 6%) var(--f2y, 74%), var(--field-decision), transparent 66%),
+    radial-gradient(70vw 46vw at var(--f3x, 44%) var(--f3y, 108%), var(--field-halo), transparent 70%);
+  background-repeat: no-repeat;
+  transition: background-image var(--m-surface) var(--ease-out);
+}
+
+/* ledger rules — painted, not transmitted */
+.g0::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--rule-ink) 0 1px,
+    transparent 1px 186px
+  );
+}
+
+/* two governed rails, matching Backdrop · governed ledger rail / evidence return rail */
+.g0::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: 32%;
+  height: 8px;
+  background: linear-gradient(90deg, transparent, var(--field-decision), transparent);
+  transform: rotate(-7deg);
+  box-shadow: 0 52vh 0 -3px var(--field-anchor);
+  opacity: .5;
+}
+
+/* Per-module field placement. Same language, different weather, so an operator
+   can tell modules apart peripherally without another colour system. */
+.g0[data-module="lending"]  { --f1x: 78%; --f1y: 4%;  --f2x: 6%;  --f2y: 74%; --f3x: 44%; --f3y: 108%; }
+.g0[data-module="request"]  { --f1x: 16%; --f1y: 8%;  --f2x: 88%; --f2y: 62%; --f3x: 58%; --f3y: 112%; }
+.g0[data-module="overview"] { --f1x: 52%; --f1y: -6%; --f2x: 10%; --f2y: 88%; --f3x: 76%; --f3y: 104%; }
+.g0[data-module="states"]   { --f1x: 90%; --f1y: 40%; --f2x: 4%;  --f2y: 22%; --f3x: 50%; --f3y: 116%; }
+
+/* ---------------- G1–G4 · the panes ---------------- */
+
+.glass {
+  position: relative;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--edge-quiet);
+  background: var(--g2-fill);
+  -webkit-backdrop-filter: blur(var(--g2-blur)) saturate(118%);
+  backdrop-filter: blur(var(--g2-blur)) saturate(118%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 12px 32px rgba(26, 5, 8, 0.14);
+}
+
+.glass--g1 {
+  background: var(--g1-fill);
+  -webkit-backdrop-filter: blur(var(--g1-blur)) saturate(112%);
+  backdrop-filter: blur(var(--g1-blur)) saturate(112%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 8px 24px rgba(26,5,8,.12);
+}
+.glass--g3 {
+  background: var(--g3-fill);
+  -webkit-backdrop-filter: blur(var(--g3-blur)) saturate(124%);
+  backdrop-filter: blur(var(--g3-blur)) saturate(124%);
+  box-shadow: inset 0 1px 0 rgba(255,250,235,.42), 0 18px 44px rgba(26,5,8,.20);
+}
+.glass--g4 {
+  background: var(--g4-fill);
+  border-color: var(--edge-strong);
+  -webkit-backdrop-filter: blur(var(--g4-blur)) saturate(130%);
+  backdrop-filter: blur(var(--g4-blur)) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(255,245,209,.58), 0 20px 52px rgba(26,5,8,.26);
+}
+
+/* Noise painted ON the pane. Fine grain never survives a 22px blur, so it is
+   applied above the glass rather than expected to transmit through it. */
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: .32;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/>\
+<feColorMatrix type='saturate' values='0'/></filter>\
+<rect width='140' height='140' filter='url(%23n)' opacity='0.5'/></svg>");
+}
+
+/* THE CONTRAST GUARANTEE
+   Anything that carries reading content sits on this, not on the pane itself.
+   It is near-opaque, so text contrast no longer depends on what drifts behind. */
+.on-glass {
+  position: relative;
+  z-index: 1;
+  background: color-mix(in srgb, var(--work) 92%, transparent);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+}
+@supports not (background: color-mix(in srgb, red 50%, blue)) {
+  .on-glass { background: var(--work); }
+}
+
+/* Tables, inputs and quantities are never transmissive. */
+.glass table,
+.glass input,
+.glass select,
+.glass textarea { background: var(--work); }
+
+/* Reduced transparency and reduced motion both fall back to opaque surfaces —
+   the layout must not depend on the blur to be readable. */
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass--g1, .glass--g3, .glass--g4 {
+    background: var(--work);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .glass::after { display: none; }
+  .g0 { background-image: none; }
+}
+
+/* Coarse pointers are usually phones, where a full-viewport backdrop-filter is
+   the single most expensive thing on the page. Drop to two fields and no noise. */
+@media (max-width: 767px) {
+  .g0 { background-image:
+    radial-gradient(84vw 84vw at var(--f1x, 78%) var(--f1y, 4%), var(--field-anchor), transparent 64%),
+    radial-gradient(70vw 70vw at var(--f2x, 6%) var(--f2y, 76%), var(--field-decision), transparent 68%); }
+  .g0::before { opacity: .6; }
+  .glass::after { display: none; }
+}
