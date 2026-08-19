@@ -23,12 +23,18 @@ form was submitted and no credential was entered.
 |---|---|---|---|
 | Public Lending Center | **No login** | **Contradiction neutralised; portal now built** | **HIGH — addressed** |
 | Public Request Center | **No login** | Partially represented | MEDIUM |
-| Authenticated requester portal | Session required | Not represented | MEDIUM |
-| Internal Staff Request Center | Session + capability | Represented | LOW |
+| Authenticated requester portal | Session required | **Not represented** — contract now recorded, section 12 | MEDIUM |
+| Internal Staff Request Center | Session + capability | Queue represented; form absent, routes wrong — 8 drift entries, 3 HIGH | **HIGH** |
 
 The headline finding is that Figma carried four **CURRENT-lane** frames stating
 the opposite of production's access model for Public Lending, and carried **no
 design at all** for the actual public borrowing portal.
+
+The second finding, added in the section 10–12 pass, is that the Staff Request
+Center was assessed as "represented" on the strength of a queue design. It is
+not: production's Request Center is a **submission form** with a review queue
+appended, and Figma has only the queue. Its priority is raised from LOW to
+HIGH accordingly.
 
 ## 2. Host routing (verified)
 
@@ -281,5 +287,268 @@ internal Office Lending Hub was not touched.
    states the module actually declares. Desktop + 390 mobile, light + dark.
 2. Field-by-field diff of Public Request (page 40) against section 5.
 3. Add the authenticated requester portal (context B) — currently absent.
-4. Staff Request Center lifecycle check against the internal contracts.
+   Contract is now recorded in full at section 12, so this is buildable.
+4. ~~Staff Request Center lifecycle check against the internal contracts~~ —
+   **done**, sections 10 and 11. Remaining work is the correction, in order:
+   SR-02 route vocabulary (a copy fix, cheapest and highest value), SR-03
+   per-line decision, SR-04 queue status filter, SR-01 the missing submission
+   form, then SR-05/07/08.
 5. Re-run Hallmark and Impeccable **after** parity is restored, never before.
+
+## 10. Internal Staff Request Center (context C) — production contract
+
+Read at `c316e047` from `src/visual/views/request.html`, plus
+`renderRequestReviewQueue`, `openRequestReviewModal`, `permittedRoutes` and
+`canReviewRequests` in `src/visual/runtime.js`.
+
+**The Request Center is one view, not two.** It is a submission form with a
+review queue appended *below it*, and the queue only exists for a session that
+holds the `request.review` capability. There is no separate reviewer screen.
+
+### 10.1 Submission form — `#requestForm`
+
+| Block | Fields |
+|---|---|
+| Request type | `requestType` radio — `EVENT_LOGISTICS` (default) / `CATALOG_RESTOCK` |
+| 01 · Requester | `requesterName`*, `requesterEmail`*, `department`*, `priority` (`ROUTINE` / `TIME_SENSITIVE` / `URGENT`) |
+| 02 · Event context | `eventSeriesId`, `eventId`, `requestStage` (`INITIAL` / `ADDITIONAL`), `parentRequestId` (shown only when stage is ADDITIONAL), `eventName`, `startDate`–`endDate` range group, `eventTime`, `participants`, `venue` |
+| 02 · Catalog context | `catalogType` (`OFFICE_INVENTORY` / `PANTRY`), `catalogNeededAt` |
+| 03 · Purpose | `purpose` textarea, required |
+| 04 · Line composer | item combobox with autocomplete panel, `requestQty`, `requestUnit`, `requestFulfillment` (**disabled**, reads "System decides from inventory"), `requestNeededAt`, `requestReturnDue` (conditional), `requestLeadTime`, `requestSupplier`, `newItemCategory` (conditional), `newItemSpec` (conditional) |
+| Decision strip | `#requestDecision`, `aria-live="polite"` — explains what can be issued from stock and what still needs procurement |
+| Draft list | `#requestLines`, empty state "No requested items yet." |
+| Review aside | sticky, `draftLineCount` pill, summary, consent checkbox, **Submit for DOL Review**, hint: submission creates a FOR REVIEW record and moves no stock |
+
+The two `02 ·` blocks are mutually exclusive and swap on request type.
+Fulfillment is deliberately not the requester's choice — the control exists so
+the requester can see that the system decides, and it is disabled.
+
+### 10.2 Composite request panel — feature-flagged
+
+`#compositeRequestPanel` carries `data-composite-feature` and is `hidden` until
+`applyCompositeRequestFeatureState()` enables it. It exposes **FOOD**,
+**MATERIALS** and **VENUE_EQUIPMENT** together; each selected non-empty section
+becomes one independently trackable child of a single parent request, and an
+untouched section creates no child.
+
+### 10.3 Review queue
+
+Gate: `canReviewRequests()` — capability `request.review`. Rows come from
+`reviewQueueRows()`, which admits **only** `FOR_REVIEW` and
+`NEEDS_INFORMATION`, newest first.
+
+Columns: **Request** (ID + purpose) · **Requester** (name + department) ·
+**Lines** (count awaiting decision) · **Status** · **Review lines** action,
+disabled when the request has no reviewable line.
+
+A desktop table and a `.mobile-cards` variant are both authored. Pagination is
+server-clamped and read from `ui.requestPagination`, never from the visible
+rows — the source comment is explicit that otherwise review work past page one
+is silently unreachable. Empty: "No requests are awaiting review in your scope."
+
+### 10.4 Review modal — the decision contract
+
+One `select` **per line**, each required, each starting on a disabled
+placeholder. Route options come from `permittedRoutes(request, line)`:
+
+| Route | Label | Offered when |
+|---|---|---|
+| `ISSUE_FROM_STOCK` | Issue from stock | the line has an `itemId` |
+| `PROCUREMENT` | Procurement / canvass | request type is **not** `CATALOG_RESTOCK` |
+| `RESTOCK` | Catalog restock | line has an `itemId` **and** type is `CATALOG_RESTOCK` or catalogType is `OFFICE_INVENTORY` / `PANTRY` |
+| `REJECT` | Reject | always |
+| `MISSING_INFORMATION` | Missing information | always |
+
+Plus an optional `reviewNote` (max 500). Submission is blocked client-side if
+any line is undecided — **RV-01.6 deliberately removed the implicit default**
+so one click cannot route every line. The server revalidates; the client filter
+is presentational only. Failures surface the message and correlation ID and
+never claim a decision was recorded.
+
+## 11. Staff Request Center — Figma drift
+
+Figma page 40 (`55:9`) CURRENT lane is `300:2`, "V3 USC-wide follow-up —
+Request Center, queue-first workbench with record-bound actions", containing
+`request.queue` at 1440 (populated / loading / stale / empty / denied), 390
+mobile, and `public.request-intake` (+ error) and `public.request-tracking`.
+
+The frame is self-labelled **"PROPOSED DESIGN — NOT IMPLEMENTED"**, which is
+honest. The entries below are recorded so the gap is explicit, not to imply the
+design claimed parity.
+
+| ID | Severity | Drift |
+|---|---|---|
+| SR-01 | HIGH | **Structural inversion.** Figma makes the queue the whole Request Center. Production's Request Center is submission-form-first, with the queue appended below and only for `request.review` holders. The submission form — all four numbered blocks and the line composer — appears nowhere on page 40. |
+| SR-02 | HIGH | **Route vocabulary does not match.** Figma offers Accept and reserve · Fulfil from stock · Ask for information · Route to canvassing · Reject, then "Send to Release Desk" after reservation. Production's five routes are `ISSUE_FROM_STOCK` · `PROCUREMENT` · `RESTOCK` · `REJECT` · `MISSING_INFORMATION`. "Accept and reserve" and "Send to Release Desk" have no route counterpart, and **Catalog restock is missing entirely**. |
+| SR-03 | HIGH | **Per-line decision not represented.** Figma shows one set of request-level action buttons in the inspector. Production requires an explicit route for *every* reviewable line and blocks submit otherwise. A request-level button is precisely the one-click-routes-everything affordance RV-01.6 removed. |
+| SR-04 | MEDIUM | **Queue admits statuses production never puts there.** Figma rows include Approved and Closed. `reviewQueueRows()` filters to `FOR_REVIEW` and `NEEDS_INFORMATION` only. |
+| SR-05 | MEDIUM | **Column set differs.** Figma: Request · Committee · Needed by · State · Urgency. Production: Request · Requester · Lines · Status · Actions. Requester identity and the awaiting-decision line count are dropped; "Needed by" is a per-line date in production, not a request attribute. |
+| SR-06 | LOW | **Export** and **Review next** have no production counterpart. |
+| SR-07 | MEDIUM | **Composite requests absent.** The FOOD / MATERIALS / VENUE_EQUIPMENT panel and its one-parent-many-children model are represented nowhere in Figma. |
+| SR-08 | MEDIUM | **No pager.** Figma states "14 of 63 requests" with no pagination control. Production's queue is server-clamped and the source comment says review work past page one is otherwise unreachable. |
+
+### Where Figma is ahead of production
+
+`request.queue · denied` is a designed refusal state. Production has none — it
+simply removes the queue host from the DOM when the session lacks
+`request.review`, so a staff member who expected review access sees nothing and
+no explanation. **This is a design improvement to carry forward, not drift to
+correct in Figma.** It is not raised as a production defect: silently hiding an
+unauthorized surface is a defensible choice, not a fault.
+
+## 12. Authenticated requester portal (context B) — production contract
+
+Read at `c316e047` from `src/visual/requester-portal.js`. Still represented
+**nowhere** in either Figma file.
+
+Gate: `session.user.authorization.roleId === 'REQUESTER'` **and** a
+`requesterDepartment.id`. Anything else renders a single refusal card,
+"Department requester access is required", with only a Sign out action.
+
+Loads `GET /api/portal/request`, returning `profile`, `requests`, `eventSeries`,
+`choices` and `units`.
+
+Two tabs: **Create Request** and **Track Existing Request**.
+
+Create is a four-step form. Step 1 identity — department is derived from the
+session and rendered `readonly`. Step 2 New vs Additional, with a parent
+selector shown only for Additional and offering only the requester's own
+non-cancelled, non-rejected NEW requests. Step 3 Event then Sub-event, the
+Sub-event select disabled until an Event is chosen, each with an optional
+autocomplete input backed by a datalist. Step 4 purpose (max 500) plus a line
+composer — category, approved item, custom name when "Other", quantity 1 to
+100000, unit, specification (max 1000). A privacy and acceptable-use
+acknowledgment is required, and submit is disabled until at least one line
+exists.
+
+Track is scoped to the requester's own department and **needs no tracking
+code** — the contrast with the public center is stated in the copy itself.
+
+Each request card shows status chip, ID, Event / Sub-event, request type,
+parent ID when present, line count and last update; expanded it adds purpose,
+per-line status and a **Visible history** list. Two actions: "Add to this
+request", and **Cancel request** — offered only for `FOR_REVIEW` and
+`ACCEPTED`, posting to `/api/portal/request/cancel` with a CSRF token and a
+`clientRequestId`.
+
+On success a receipt panel carries Request ID, type, Event, Sub-event,
+department, submitted timestamp, status **For Review**, the "submission only,
+not approval or reservation" disclaimer, and three actions including **Save PDF
+Receipt** — the PDF is generated client-side by `buildReceiptPdf`.
+
+### Design consequence
+
+Context B is not a variant of the public Request Center. Identity is derived
+rather than entered, tracking needs no code, cancel exists, and a PDF receipt is
+produced locally. Designing it as a skin of context A would be wrong on all four
+counts.
+
+## 13. Staff Request Center — what was corrected in Figma
+
+All work is on page 40 (`55:9`). The `SUPERSEDED ·` section (`45:7`) was not
+touched; one text node inside it (`89:475`) was edited by a careless find-all
+and has been restored to its original characters.
+
+### 13.1 SR-09 — a clipping defect found while making the fix visible
+
+`300:502`, the record inspector, is a **fixed 380 × 380 frame with
+`clipsContent: true` and `overflowDirection: NONE`**. Its content measures
+2,086px. It is not a scroll region — it is a hard clip, so roughly 1,700px of
+authored design never renders: the requested-lines table, the "one line cannot
+be fully reserved" risk note, the entire decision panel and the ledger footer.
+The frame reads as "queue dominance" partly because the record inspector is
+effectively invisible.
+
+Releasing the height cascades: the page body `300:11` is itself a fixed 1,408px
+clipping container, and forcing `300:67` to hug collapsed the queue container
+`300:280` from 731px to 1px. **That was reverted.** The artboard now stands at
+exactly its authored geometry — `300:502` 380 × 380, `300:11` 1,408, `300:3`
+1,467 — and the clip is recorded here rather than papered over.
+
+To make the corrected panel reviewable, `603:137` was added to the page canvas
+at x 11600: a titled frame holding `603:2`, a clone of the inspector released
+from the fixed height, with a caption stating why it exists.
+
+**SR-09 is design-side, not a production defect.** Nothing in the running
+product clips here; this is a Figma frame constructed with a fixed height its
+content outgrew.
+
+### 13.2 SR-02 and SR-03 — the decision panel now follows the contract
+
+`300:624` was rebuilt. Removed: `300:628` (the five request-level buttons),
+`300:644` and `300:647` (the "After reservation → Send to Release Desk" group).
+Added `601:2` line decisions, `601:34` review note, `601:39` actions.
+
+The panel now carries one **route select per requested line**, each on the
+production placeholder "Select a route" with no pre-selected default; an open
+listbox on the second line showing the routes `permittedRoutes()` actually
+offers here; the optional review note with production's own placeholder,
+"Recorded in the request history"; and **Submit review** / Cancel.
+
+Only four routes are offered, and that is deliberate. The fixture is an
+`EVENT_LOGISTICS` request whose lines carry catalog items, so
+`permittedRoutes()` yields `ISSUE_FROM_STOCK`, `PROCUREMENT`, `REJECT` and
+`MISSING_INFORMATION`. **`RESTOCK` is withheld** — it needs the request to be a
+Catalog Restock or to carry an `OFFICE_INVENTORY` / `PANTRY` catalog type. A
+caption in the frame states this, so the absence reads as a rule rather than an
+oversight.
+
+Originals, logged in full before the edit:
+
+| Node | Was | Now |
+|---|---|---|
+| `300:626` | Permitted now | Decide every line |
+| `300:652` | "Accepting reserves stock; it does not release it. The request leaves this queue only when it reaches its ready state and moves to the Release Desk — that step is a visible lifecycle event, not a silent disappearance." | Same text, prefixed with the no-default rule |
+| `300:629`–`300:642` | Accept and reserve · Fulfil from stock · Ask for information · Route to canvassing · Reject | removed; replaced by per-line selects |
+| `300:648` / `300:649` | Send to Release Desk | removed — not a review route |
+
+### 13.3 The prototype twin
+
+`329:1009` carried the same wrong vocabulary and is the frame a reviewer clicks
+through, so it was corrected too. Originals logged:
+
+| Node | Was | Now |
+|---|---|---|
+| `329:1463` | Permitted now | Permitted routes for these lines |
+| `329:1466` | Accept and reserve | Issue from stock |
+| `329:1468` | Fulfil from stock | Procurement / canvass |
+| `329:1470` | Ask for information | Missing information |
+| `329:1472` | Route to canvassing | button `329:1471` removed as surplus |
+| `329:1474` | Reject | Reject |
+| `329:1476` | After reservation | Not decided here |
+| `329:1479` | Send to Release Desk | button `329:1478` removed; replaced by a caption |
+| `329:1481` | "Accepting reserves stock; it does not release it. …" | PROTOTYPE NOTE: still request-level buttons, SR-03 open here |
+
+The prototype keeps request-level buttons. Rebuilding its interaction model was
+out of scope for this pass, so it says so on the frame rather than implying
+parity.
+
+### 13.4 SR-04 — the queue no longer shows statuses it cannot hold
+
+Two rows carried `Approved` and `Closed`. `reviewQueueRows()` admits only
+`FOR_REVIEW` and `NEEDS_INFORMATION`, so those rows taught a wrong model.
+
+Chip tone was **copied from an existing legal chip** rather than hand-picked, so
+fill, stroke, dot and label all stay variable-bound and no new literal entered
+the file. Dot geometry was matched in a follow-up pass after the first render
+showed a round dot on a square-dot chip.
+
+| Node | Was | Now |
+|---|---|---|
+| `300:442` / `300:2313` | Approved | Submitted |
+| `300:468` / `300:2357` | Closed | Needs correction |
+| `300:445` | → Release Desk | → Missing information |
+| `300:320`, `300:1303`, `300:1729` | "Requests in your authorized scope, newest first. Selecting a row opens the request record and its permitted actions." | same, plus: this queue holds only requests awaiting a decision |
+| `300:500`, `329:1374` | "Departure to the Release Desk is drawn as a lifecycle step so the record visibly moves on." | same, prefixed with the per-line decision rule |
+
+### 13.5 Still open after this pass
+
+SR-01 (the missing submission form), SR-05 (column set), SR-07 (composite
+requests) and SR-08 (no pager) are unchanged — each needs new design, not a
+correction. SR-03 is fixed on the CURRENT artboard and in `603:137`, and open on
+the prototype. SR-09 is recorded, not fixed.
+
+Two decorative status dots inside the inspector, `300:585` and `300:609`, carry
+**unbound** `#1f6b41` fills. Same class as the two stray whites found during the
+Public Lending dark pass. Not corrected here; noted so the next
+variable-coverage sweep catches them.

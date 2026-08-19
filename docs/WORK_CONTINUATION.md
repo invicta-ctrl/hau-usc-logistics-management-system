@@ -24,11 +24,36 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 
 ### State
 
-- **Done:** production contract audit for both public portals; Public Lending built across 1440 light/dark, Angelite branch, receipt, four declared catalog states, 390 mobile; Overview D-07/D-06/D-01 repairs; page-10 Authority board; coded prototype + Figma Make component.
-- **Open:** Staff Request Center reconciliation; authenticated requester portal (context B) unrepresented; Public Request field-by-field diff; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident.
+- **Done:** production contract audit for both public portals; Public Lending built across 1440 light/dark, Angelite branch, receipt, four declared catalog states, 390 mobile; Overview D-07/D-06/D-01 repairs; page-10 Authority board; coded prototype + Figma Make component; **Staff Request Center reconciliation (audit sections 10–13)**.
+- **Open:** authenticated requester portal (context B) — contract now recorded at audit section 12, still unbuilt; Public Request field-by-field diff; Staff Request SR-01 / SR-05 / SR-07 / SR-08 / SR-09; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident; two unbound status-dot fills at `300:585` / `300:609`.
+- **Hallmark:** still not run as its own pass. Impeccable's detector and `DESIGN.md` D35 cover overlapping ground; that is not the same discipline and is not claimed as such.
 - **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls.
 - **Evidence:** `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D24.0 and D40.
-- **Resume:** run the Staff Request Center pass against section 6 of the parity audit. Do not re-derive production truth from documentation — read it at the deployed commit.
+- **Resume:** build the authenticated requester portal (context B) from audit section 12, then the Public Request field-by-field diff against section 5. Do not re-derive production truth from documentation — read it at the deployed commit.
+
+### Staff Request Center pass — what it found
+
+Production's Request Center is a **submission form with a review queue appended
+below it**, and the queue exists only for a session holding `request.review`.
+Figma had only the queue, so the surface was previously logged as "represented"
+when the larger half of it is absent. Priority raised LOW → HIGH.
+
+Eight drift entries, three of them HIGH. Corrected in Figma this pass: the route
+vocabulary (Figma offered *Accept and reserve*, *Fulfil from stock*, *Route to
+canvassing* and *Send to Release Desk*, none of which are production routes,
+while *Catalog restock* was missing), and the per-line decision model —
+production requires an explicit route for every reviewable line with no
+pre-selected default, which RV-01.6 introduced deliberately so one click cannot
+route a whole request. The queue also displayed `Approved` and `Closed` rows it
+can never hold.
+
+Found while making that fix visible: the record inspector `300:502` is a fixed
+380 × 380 hard clip (`overflowDirection: NONE`) over 2,086px of content, so most
+of the authored inspector never rendered. Releasing it cascades into a fixed
+1,408px page body and collapsed the queue container, so the artboard was
+restored to its authored geometry and the corrected inspector was cloned into a
+full-height evidence frame, `603:137`. Recorded as SR-09 — a Figma construction
+fault, not a production defect.
 
 ## Branch-local frontend continuation — HISTORICAL (v0.7.3 GPT Sites candidate)
 

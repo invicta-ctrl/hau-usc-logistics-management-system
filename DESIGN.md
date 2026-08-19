@@ -769,7 +769,42 @@ Inventory is an operational truth surface.
 
 ## D23 — Request Center
 
-The intake queue is the dominant CURRENT Request Center surface.
+### D23.0 — The Request Center is a submission form with a queue appended — BINDING
+
+Status: CURRENT. Verified against production 0.8.2 at candidate `c316e047`,
+schema 30, on 2026-08-19, from `src/visual/views/request.html` and the review
+functions in `src/visual/runtime.js`.
+
+The earlier statement that *"the intake queue is the dominant CURRENT Request
+Center surface"* described a design proposal, not the product. In production
+the Request Center is **one view**: a submission form — request type, requester
+block, event or catalog context, purpose, and a line composer — with the review
+queue appended **below it**, rendered only for a session holding the
+`request.review` capability. There is no separate reviewer screen.
+
+Four rules follow, and a design that breaks any of them contradicts this
+section:
+
+1. **Every reviewable line gets its own route decision.** There is no
+   pre-selected default; RV-01.6 removed it precisely so one click cannot route
+   a whole request. Request-level accept buttons are prohibited.
+2. **The route vocabulary is fixed:** Issue from stock, Procurement / canvass,
+   Catalog restock, Reject, Missing information. Catalog restock appears only
+   when the request is a Catalog Restock or carries an Office Inventory /
+   Pantry catalog type. "Send to Release Desk" is not a review route — the
+   Release Desk is a separate module a request reaches through its lifecycle.
+3. **The queue holds only requests awaiting a decision** — For Review and Needs
+   Information. Accepted, rejected and closed records are not in it.
+4. **Pagination comes from the server**, never from the visible rows, or review
+   work past the first page becomes unreachable.
+
+Fulfillment is not the requester's choice: the control is present but disabled
+so the requester can see that the system decides from inventory.
+
+Full contract and drift register: `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`
+sections 10 through 13.
+
+### D23.1 — Surface guidance
 
 - Authenticated context includes department identity, Create/Track modes, New/Additional request choice, event/sub-event dependency, item composition, review language, and visible For Review outcome.
 - V-17 removes a detached authorized-operations wall only after contextual replacements are proven.
@@ -1218,6 +1253,7 @@ Append entries; do not rewrite history.
 | 2026-08-13 | Design Authority Consolidation + Local Design Vault master prompt; user required local-only execution on frontend-design-integration | D00-D40 | Consolidated owner intent, research, paths, URLs, assets, Figma registry, V-01 through V-42, module rules, and retrieval protocol into one root authority; legacy docs demoted to reference; no remote sync claimed | Read-only metadata inspection; no write | Documentation and shared local vault only; runtime untouched |
 | 2026-08-19 | Owner instruction: Claude isolated frontend-design stream (audit, research reconciliation, Hallmark/Impeccable, Figma + documentation update) | D05, D37, D40 | Reconciled the Figma registry against the live file: 28 pages, 120 variables, 102 components, MUTATED — the previous three-page Starter-plan/no-mutation record was stale. Recorded Figma Make as NOT APPLICABLE with the owner-approved local-prototype substitution. Added docs/design/FIGMA_DESIGN_MAKE_AUDIT.md and docs/design/FIGMA_BASELINE_REGISTER.md. | WRITE performed. Created semantic variable `color/accent/text` (VariableID:563:2) aliased to gold/700; rebound 46 text nodes on the five current R2 Overview light frames to repair a measured 1.52:1 WCAG 2.2 AA 1.4.3 failure. | None. No runtime, product, release, provider, or v0.8.3 file was modified. |
 | 2026-08-19 | Owner instruction: production-to-Figma reconciliation of the public portals | D24, D40 | Added D24.0, the OWNER-LOCKED Public Lending no-login access model, verified against production 0.8.2 c316e047; split D24 into public and internal halves. Added docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md. | Superseded 4 frames that gated borrowing behind staff sign-in. Built the Public Lending portal: 1440 light and dark, Angelite branch, receipt, four declared catalog states, 390 mobile. Added semantic tokens color/accent/text and color/text/on-accent. | None. Product worktree read-only; no provider, database, or deployment writes. |
+| 2026-08-19 | Owner instruction: continue with the unfinished work — Staff Request Center reconciliation | D23, D40 | Added D23.0 as BINDING: production's Request Center is a submission form with the review queue appended, gated on the request.review capability, with a per-line route decision and no pre-selected default (RV-01.6). Corrected the stale claim that the intake queue is the dominant surface. Added parity-audit sections 10-13 recording the context C and context B contracts, eight drift entries (SR-01..SR-08) and the SR-09 clipping defect. | Rebuilt the CURRENT decision panel 300:624 to a per-line route model with production vocabulary; corrected the prototype twin 329:1009; replaced two review-queue rows carrying statuses the queue cannot hold; added the full-height inspector evidence frame 603:137. All originals logged in the audit before edit. | None. Product worktree read-only; no provider, database, or deployment writes. |
 
 ### Local/Git synchronization record
 
