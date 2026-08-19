@@ -37,8 +37,8 @@ p { margin: 0; }
 .proto-bar strong { font-weight: 600; letter-spacing: .08em; text-transform: uppercase; font-size: 10px; }
 .proto-bar select, .proto-bar button {
   font: inherit; font-family: var(--font-body);
-  background: rgba(255,255,255,.1); color: var(--rail-ink);
-  border: 1px solid rgba(255,255,255,.28); border-radius: var(--r-sm);
+  background: var(--chrome-fill); color: var(--rail-ink);
+  border: 1px solid var(--chrome-line); border-radius: var(--r-sm);
   padding: 6px 10px; min-height: 32px; cursor: pointer;
 }
 .proto-note { margin-left: auto; color: var(--rail-ink-dim); font-family: var(--font-mono); font-size: 11px; }
@@ -117,7 +117,7 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
 .suggestions {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 30; margin-top: 6px;
   background: var(--raised); border: 1px solid var(--border-default);
-  border-radius: var(--r-sm); padding: 6px 0; box-shadow: 0 10px 26px rgba(0,0,0,.14);
+  border-radius: var(--r-sm); padding: 6px 0; box-shadow: 0 10px 26px var(--shadow-drop);
 }
 .suggestions[hidden] { display: none; }
 .suggestions button {
@@ -238,6 +238,7 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
 
 .state-block { margin-top: var(--s-5); padding: var(--s-5); background: var(--inset); border: 1px solid var(--border-subtle); border-radius: var(--r-md); }
 .state-block h3 { font-size: 19px; font-weight: 700; }
+.cat-chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: var(--s-3); }
 .state-block p { color: var(--text-secondary); font-size: 14px; margin-top: var(--s-2); }
 .skeleton { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s-4); margin-top: var(--s-4); }
 .skeleton span { height: 58px; border-radius: var(--r-sm); background: var(--border-subtle);

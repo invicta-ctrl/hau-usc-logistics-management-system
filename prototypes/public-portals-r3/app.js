@@ -104,7 +104,7 @@ function lendingView() {
               ${cats.map(v => `<option>${esc(v)}</option>`).join('')}</select></div>
           <div class="field"><label for="f-avail">Availability</label>
             <select id="f-avail"><option value="ALL">All availability</option>
-              <option value="REQUESTABLE">Requestable now</option>
+              <option value="REQUESTABLE" selected>Requestable now</option>
               ${avails.map(v => `<option value="${esc(v)}">${esc(pretty(v))}</option>`).join('')}</select></div>
           <div class="field"><label for="f-type">Item type</label>
             <select id="f-type"><option value="ALL">Reusable and consumable</option>
@@ -320,8 +320,34 @@ function bindLending() {
       (type.value === 'ALL' || i.type === type.value));
   };
 
+  /* Search-first. The catalog opens closed and reveals on intent: two characters
+     of search, or a category / item-type choice. Discovery still has to work, so
+     the total is stated and the categories are one-tap entries — otherwise
+     "What can I borrow?" would have no answer at all. */
+  const searching = () =>
+    search.value.trim().length >= 2 || cat.value !== 'ALL' || type.value !== 'ALL' || avail.value !== 'REQUESTABLE';
+
   function renderCatalog() {
     if (catalogState !== 'populated') return renderCatalogState();
+    if (!searching()) {
+      const cats = [...new Set(LENDING_CATALOG.items.map(i => i.category))].sort();
+      count.textContent = `${LENDING_CATALOG.items.length} published`;
+      catalogRoot.innerHTML = `<div class="state-block" style="grid-column:1/-1">
+        <h3>Search to see what you can borrow</h3>
+        <p>${LENDING_CATALOG.items.length} items are published for lending. Type at least two characters,
+           or pick a category to start.</p>
+        <div class="cat-chips">
+          ${cats.map(c => `<button class="btn btn--quiet btn--mini" type="button" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+          <button class="btn btn--quiet btn--mini" type="button" data-showall>Show everything</button>
+        </div></div>`;
+      catalogRoot.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => {
+        cat.value = b.dataset.cat; say(`${b.dataset.cat} selected.`); renderCatalog();
+      }));
+      catalogRoot.querySelector('[data-showall]')?.addEventListener('click', () => {
+        avail.value = 'ALL'; say('Showing all published items.'); renderCatalog();
+      });
+      return;
+    }
     const vis = visibleItems();
     count.textContent = `${vis.length} item${vis.length === 1 ? '' : 's'}`;
     catalogRoot.innerHTML = vis.length ? vis.map(i => `
@@ -357,7 +383,7 @@ function bindLending() {
       renderSelected(); renderCatalog();
     }));
     catalogRoot.querySelector('[data-clear]')?.addEventListener('click', () => {
-      search.value = ''; cat.value = 'ALL'; avail.value = 'ALL'; type.value = 'ALL'; renderCatalog();
+      search.value = ''; cat.value = 'ALL'; avail.value = 'REQUESTABLE'; type.value = 'ALL'; renderCatalog();
     });
   }
 

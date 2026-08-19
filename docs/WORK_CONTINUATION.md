@@ -2,7 +2,35 @@
 
 The current block is the operator resume record. Historical evidence remains reachable through Git history, release tags, CHANGELOG.md, and accepted specifications; it does not override the canonical current-task chain.
 
-## Branch-local frontend continuation
+## Claude R3 frontend-design stream — LIVE
+
+- **Stream:** isolated Claude frontend-design stream, parallel to the v0.8.3–v0.8.5 product program. The product stream is a **separate git repository** (`worktrees/v081-production-execution-eb14cd81/.git`, branch `release/v0.8.3-identity-foundation`) and was never modified.
+- **Worktree / branch:** `worktrees/spec-v073-frontend-design-integration` on `frontend-design-integration`, pushed to origin, 0/0 with upstream.
+- **Reference truth:** production **0.8.2 @ `c316e047`**, schema 30, read from `git show c316e047:src/visual/*.js` — the exact deployed commit, not branch HEAD and not documentation. Live production probed read-only for version/health/host routing only; no form submitted, no credential entered.
+- **Figma Design:** `hXJElH4p72KfgAaoUyfNOC` — 28 pages, 122 variables, 102 components. Two semantic tokens added to close real gaps: `color/accent/text` (gold/400 measured **1.52:1**, failed AA) and `color/text/on-accent` (action surface stays light gold in both modes).
+- **Figma Make:** `rP9W9MQlZkyQrUx38TVsFS`. Readable via `get_design_context`; **not writable** by MCP — `use_figma` and `get_metadata` reject Make files. Edited through the browser instead. `PublicFlows.tsx` replaced and building (`[vite] connected.`, no error overlay).
+
+### Highest-priority finding — resolved
+
+Both the Figma design file and Figma Make asserted that public borrowing required staff sign-in. Make said it outright: *"Public data entry — Disabled"*, *"Sign in to start request"*, *"Sign in to request equipment"*. Production has **no session check, no sign-in gate and no authorization branch** in either public module. Four design frames superseded, `PublicFlows.tsx` replaced, and the rule written into `DESIGN.md` **D24.0 as OWNER-LOCKED** so it cannot drift again.
+
+### Owner-directed design changes carrying contract deltas
+
+| Change | Status | Delta |
+|---|---|---|
+| Borrower details become a basic information sheet — academic fields always collected, council role the only branch | Designed and built | None |
+| Requested pickup date removed; only "Borrowing until" remains, pickup recorded by staff at handoff | Designed and built | **Production declares `pickupDate` required.** Needs an accepted amendment before implementation |
+| Catalog is search-first — no grid until 2+ characters or a category choice | Designed and built | **Production renders the full catalog on mount.** Needs an accepted amendment before implementation |
+
+### State
+
+- **Done:** production contract audit for both public portals; Public Lending built across 1440 light/dark, Angelite branch, receipt, four declared catalog states, 390 mobile; Overview D-07/D-06/D-01 repairs; page-10 Authority board; coded prototype + Figma Make component.
+- **Open:** Staff Request Center reconciliation; authenticated requester portal (context B) unrepresented; Public Request field-by-field diff; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident.
+- **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls.
+- **Evidence:** `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D24.0 and D40.
+- **Resume:** run the Staff Request Center pass against section 6 of the parity audit. Do not re-derive production truth from documentation — read it at the deployed commit.
+
+## Branch-local frontend continuation — HISTORICAL (v0.7.3 GPT Sites candidate)
 
 - **Worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration`.
 - **Authority:** accepted `.codex/specs/active/v0.7.3-frontend-design-integration.md` plus Earl's 2026-08-09 instruction to continue Claude's exact state.

@@ -153,6 +153,11 @@ export default function PublicFlows({
   const needsDueDate = selectedItems.some((i) => i.dueDateRequired);
   const needsRespAck = selectedItems.some((i) => i.acknowledgmentRequired);
 
+  /* Search-first gate. The catalog opens closed and reveals on intent:
+     two characters of search, or a category / item-type choice. */
+  const searching =
+    query.trim().length >= 2 || category !== "ALL" || itemType !== "ALL" || availability !== "REQUESTABLE";
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return ITEMS.filter(
@@ -273,7 +278,26 @@ export default function PublicFlows({
                   </label>
                 </div>
 
-                {visible.length === 0 ? (
+                {!searching ? (
+                  /* Search-first. The grid stays closed until the borrower asks for
+                     something, so the page opens calm instead of as a wall of cards.
+                     Discovery still has to work, so the count is stated and the
+                     categories are offered as one-tap entries into the catalog —
+                     otherwise "What can I borrow?" would have no answer at all. */
+                  <div className="stateBlock">
+                    <strong>Search to see what you can borrow</strong>
+                    <p>{ITEMS.length} items are published for lending. Type at least two characters,
+                       or pick a category to start.</p>
+                    <div className="catChips">
+                      {categories.map((c) => (
+                        <button type="button" key={c} onClick={() => { setCategory(c); setLive(`${c} selected.`); }}>{c}</button>
+                      ))}
+                      <button type="button" className="allBtn" onClick={() => { setCategory("ALL"); setQuery(" "); setLive("Showing all published items."); }}>
+                        Show everything
+                      </button>
+                    </div>
+                  </div>
+                ) : visible.length === 0 ? (
                   <div className="stateBlock">
                     <strong>No catalog items match the current search and filters.</strong>
                     <p>The catalog has items; the current selection excludes all of them.</p>
@@ -718,6 +742,9 @@ const css = `
 .stateBlock{margin-top:18px;padding:20px;border:1px solid var(--hair);border-radius:14px;background:var(--inset);display:grid;gap:8px;justify-items:start}
 .stateBlock.err{border-color:var(--alertL)}
 .stateBlock strong{font-size:18px}.stateBlock p{margin:0;color:var(--muted)}
+.catChips{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.catChips button{min-height:40px;padding:8px 14px;border-radius:999px;font-size:13px}
+.catChips .allBtn{background:var(--inset);border-color:var(--line)}
 .skeleton{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%}
 .skeleton span{height:58px;border-radius:10px;background:var(--hair);animation:pl 1.4s ease-in-out infinite}
 @keyframes pl{0%,100%{opacity:.55}50%{opacity:1}}

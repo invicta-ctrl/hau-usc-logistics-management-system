@@ -88,6 +88,19 @@
   --m-overlay: 320ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
+
+  /* Elevation and veils. These are the Figma Material effect-style values
+     (Raised Inspector, Overlay, G1-G4 inner highlight and drop shadow). They
+     were being written as literals; naming them keeps the ladder auditable. */
+  --glass-hi: rgba(255, 255, 255, 0.28);
+  --shadow-g1: rgba(26, 5, 8, 0.12);
+  --shadow-g2: rgba(26, 5, 8, 0.14);
+  --shadow-g3: rgba(26, 5, 8, 0.20);
+  --shadow-g4: rgba(26, 5, 8, 0.26);
+  --shadow-drop: rgba(0, 0, 0, 0.14);
+  --chrome-fill: rgba(255, 255, 255, 0.10);
+  --chrome-line: rgba(255, 255, 255, 0.28);
+
   /* Layout */
   --content-max: 1240px;
   --touch-min: 44px;
@@ -127,6 +140,14 @@
   --action-primary: #eed08a;
   --accent-wash: rgba(238, 208, 138, 0.12);
   --accent-line: rgba(238, 208, 138, 0.32);
+
+
+  --glass-hi: rgba(255, 250, 235, 0.22);
+  --shadow-g1: rgba(0, 0, 0, 0.30);
+  --shadow-g2: rgba(0, 0, 0, 0.34);
+  --shadow-g3: rgba(0, 0, 0, 0.40);
+  --shadow-g4: rgba(0, 0, 0, 0.46);
+  --shadow-drop: rgba(0, 0, 0, 0.42);
 
   --rail-from: #2c1013;
   --rail-to: #180a0c;
