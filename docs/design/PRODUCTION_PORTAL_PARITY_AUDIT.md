@@ -21,7 +21,7 @@ form was submitted and no credential was entered.
 
 | Surface | Access model | Figma status | Priority |
 |---|---|---|---|
-| Public Lending Center | **No login** | **CONTRADICTED, then MISSING** | **HIGH** |
+| Public Lending Center | **No login** | **Contradiction neutralised; portal now built** | **HIGH — addressed** |
 | Public Request Center | **No login** | Partially represented | MEDIUM |
 | Authenticated requester portal | Session required | Not represented | MEDIUM |
 | Internal Staff Request Center | Session + capability | Represented | LOW |
@@ -109,9 +109,9 @@ That is false. Production requires no login to borrow.
 inline, so no future session can mistake them for current authority. They are
 preserved, not deleted, per the historical-evidence rule.
 
-### PL-02 · MISSING_PRODUCTION_BEHAVIOR · HIGH · OPEN
+### PL-02 · MISSING_PRODUCTION_BEHAVIOR · HIGH · BUILT
 
-There is **no public lending portal design anywhere in the file**. Page 50
+At audit there was **no public lending portal design anywhere in the file**. Page 50
 "Lending Hub" contains only the internal staff surface — `lending.queue`
 (populated / newloan / loading) and `lending.detail`, all rendered inside the
 authenticated staff rail (Overview, Request Center, Office Lending Hub, Release
@@ -123,9 +123,9 @@ field groups, the selected-items list with quantity control, the five
 acknowledgments, the submission receipt with one-time tracking code, and the
 private tracking lookup.
 
-### PL-03 · AUDIENCE_DRIFT · HIGH · OPEN
+### PL-03 · AUDIENCE_DRIFT · HIGH · FIXED
 
-The **Angelite Student** borrower class does not appear anywhere in the Figma
+The **Angelite Student** borrower class did not appear anywhere in the Figma
 file. Production gives it equal standing with USC Staff/Officer and requires
 `courseYear` and `academicDepartment` for it. The wider Angelite student body is
 half the audience of this portal and is currently invisible in the design.
@@ -190,13 +190,47 @@ accepted contracts. No `PRODUCTION_DEFECT_CANDIDATE` is raised by this audit.
 | Change | Scope |
 |---|---|
 | Renamed 4 `auth.lending` frames to `SUPERSEDED ·` with the contradiction stated inline | Figma page 15 |
+| Built the Public Lending portal, USC Staff branch — `581:15` | Figma page 90 |
+| Built the Angelite Student conditional branch — `587:15` | Figma page 90 |
+| Built the submission receipt + degraded variant — `588:15` | Figma page 90 |
 
-Nothing else in Figma was altered by this audit. The public lending portal
-design has **not** been built yet — see below.
+### What the built frames cover
+
+Against section 3: public masthead carrying production's four portal
+destinations; catalog-first ordering with the production intro copy verbatim;
+all four filters plus the open suggestion listbox; three catalog cards
+exercising `AVAILABLE`, `LIMITED` and `ELIGIBILITY_REQUIRED`, each with Product
+ID, unit, maximum request, normal loan days and — where the item has them —
+eligibility, restrictions and handling notes; selected-items list with quantity
+control and Remove; borrower-type selection as two equal-weight cards; both
+conditional field groups, badged so the branch rule is legible; all five
+acknowledgments with the two conditional ones marked `Conditional`; submit with
+the non-reservation disclaimer; borrowing process; private tracking lookup with
+a masked code field; announcements slot.
+
+The receipt frame carries the Submission ID and one-time tracking code, the
+copy-now warning, the **For Review** initial status, the non-guarantee
+disclaimer, and the degraded "tracking code not issued — do not resubmit"
+variant.
+
+A **no-login assurance band** sits above the catalog. It is not decoration — it
+is the direct countermeasure to PL-01, stating in the design itself that no
+account, sign-in, activation or approval is required, and naming both
+audiences.
+
+All new work is bound to the design system: semantic colour variables and the
+Bricolage Grotesque / IBM Plex text styles. It therefore does **not** inherit
+the D-04 Inter drift affecting the older hand-built frames.
+
+### Not yet built
+
+390 mobile, dark mode, and the catalog loading / service-error / empty /
+filtered-empty state frames. Page 50's internal Office Lending Hub was not
+touched.
 
 ## 9. Next actions, in order
 
-1. **Build the Public Lending portal in Figma** from section 3: catalog-first
+1. ~~Build the Public Lending portal in Figma~~ — **done**, see section 8. Remaining: 390 mobile, dark mode, and the catalog
    layout, four filters + suggestion listbox, borrower-type selection, both
    conditional field groups, selected-items list with quantity, five
    acknowledgments with the two conditional ones marked, receipt with one-time
