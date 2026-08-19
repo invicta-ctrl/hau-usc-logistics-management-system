@@ -31,10 +31,22 @@ IMPLEMENTATION READY:    NO — design gate only
 |---|---|---|
 | Created semantic variable `color/accent/text`, scoped `TEXT_FILL`, aliased to `gold/700` | `VariableID:563:2` | Render + variable read-back |
 | Rebound 46 gold text nodes on current R2 Overview light frames | `434:61`, `434:594`, `434:2193`, `434:2726`, `434:2760` | Render of `434:529` |
-| Reconciled `DESIGN.md` D05 (Figma registry) | — | File diff |
-| Reconciled `DESIGN.md` D37 (status: Figma MUTATED; Make N/A) | — | File diff |
-| Appended `DESIGN.md` D40 changelog row | — | File diff |
-| Added `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md` | — | File created |
+| **D-07** Moved "Reconciliation and provenance" below the exception command table in 5 desktop Overview frames, so exceptions lead per D20 | parents `434:234`, `434:767`, `434:1300`, `434:1833`, `434:2366` | Render of `434:61` |
+| **D-06** Hid the below-table hint duplicating the inspector empty state (6 nodes) | `434:560`, `434:1093`, `434:1626`, `434:2159`, `434:2692`, `434:2916` | Render |
+| **D-03** Built the Authority + Design Handoff board on the previously empty page 10 | `568:2` and 6 child blocks | Render |
+| File-wide gold-on-light contrast sweep across pages 15, 30, 40, 50, 60, 70, 80, 90 | — | 2,496 gold nodes measured, 0 further failures |
+| Reconciled `DESIGN.md` D05, D37; appended D40 | — | File diff |
+| Added the audit and this register | — | Files created |
+
+### Incident recorded in this baseline
+
+A contrast sweep that ignored `GRADIENT` and `IMAGE` fills wrongly recoloured
+294 nodes on pages 15, 80 and 90. Pages 80 and 90 (11 nodes) were restored
+exactly. Page 15: 206 restored by exact twin match, 23 by empirical role
+mapping, **54 by inference** and therefore not proven identical to the original.
+Full account, including the corrected method and the four standing rules it
+produced, is in section 3.1 of the audit. Figma version history holds the
+pre-session state if exactness on those 54 matters.
 
 ### Accessibility position at this baseline
 
@@ -66,16 +78,19 @@ session does not re-litigate them:
 
 ### Known gaps carried forward
 
-| ID | Gap | Severity |
-|---|---|---|
-| D-02 | Blur ladder defined twice, values disagree (12/18/24/28 vs 16/22/30/36) | MEDIUM |
-| D-03 | Page `10 — Authority + Design Handoff` is empty | MEDIUM |
-| D-04 | Figma renders Inter; authority mandates Bricolage / IBM Plex / Newsreader; production ships Georgia / Aptos | MEDIUM |
-| D-05 | File-wide variable-binding coverage unmeasured | MEDIUM |
-| D-06 | Redundant inspector hint inside command-table row | LOW |
-| D-07 | Overview hierarchy places provenance above exceptions, inverting D20 | MEDIUM |
-| P-01 | Prototype `route-map.js` points at superseded Figma sections | MEDIUM |
-| P-02 | Prototype loads fonts from `fonts.googleapis.com` against D09 | MEDIUM |
+| ID | Gap | Severity | State |
+|---|---|---|---|
+| D-08 | Landing hero: 17 of 59 texts fail AA, worst 1.01:1 — oxblood ink on dark glass cards, including all six ledger step labels | HIGH | OPEN — needs owner call on active/inactive card semantics |
+| D-02 | Blur ladder defined twice, values disagree (12/18/24/28 vs 16/22/30/36) | MEDIUM | OPEN |
+| D-04 | Figma renders Inter; authority mandates Bricolage / IBM Plex / Newsreader; production ships Georgia / Aptos | MEDIUM | OPEN |
+| D-05 | Variable-binding coverage measured only on page 30 (97.7%) | MEDIUM | OPEN |
+| — | 54 inferred colours on page 15 from the section 3.1 incident | MEDIUM | OPEN |
+| P-01 | Prototype `route-map.js` points at superseded Figma sections | MEDIUM | OPEN |
+| P-02 | Prototype loads fonts from `fonts.googleapis.com` against D09 | MEDIUM | OPEN |
+| D-01 | Gold text failing AA on light panes | HIGH | FIXED — Overview; rest of file measured clean |
+| D-03 | Page `10 — Authority + Design Handoff` empty | MEDIUM | FIXED |
+| D-06 | Redundant inspector hint inside command-table row | LOW | FIXED |
+| D-07 | Overview hierarchy placed provenance above exceptions, inverting D20 | MEDIUM | FIXED |
 
 ### Boundary attestation
 

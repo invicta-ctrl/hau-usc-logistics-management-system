@@ -120,6 +120,82 @@ Gold on oxblood was **not** changed and is correct: the rail, masthead and
 caption strips use `gold/100 #faeecb` and `gold/200 #f6e29a` on oxblood, which
 are high-contrast and intentional. A blanket recolour would have broken them.
 
+**File-wide sweep result.** Every module page was then swept with a per-node
+composited-background check. The defect turned out to be **localised to the
+hand-built R2 Overview frames**; the tokenised module pages are clean.
+
+| Page | Gold text nodes | Failing AA | Action |
+|---|---:|---:|---|
+| 20 Overview | 46 | 46 | Fixed |
+| 30 Inventory | 119 | 0 | None needed |
+| 40 Request Center | 244 | 0 | None needed |
+| 50 Lending Hub | 187 | 0 | None needed |
+| 60 Release Desk | 170 | 0 | None needed |
+| 70 Restocking / Procurement / Events | 157 | 0 | None needed |
+| 80 Administration | 289 | 0 | None needed |
+| 90 Public + Authentication | 492 | 0 | None needed |
+| 15 Landing | 838 | 0 | None needed |
+
+Page 30 alone carries 658 text nodes of which 643 (97.7%) are already bound to
+variables, which is why the module pages hold up: they were generated through
+the token layer, whereas the R2 Overview frames were hand-built with raw hex.
+
+Note the earlier "0 failures" reading on pages 30–60 was initially produced by a
+**bug in the sweep**, which skipped any node already bound to a variable. A
+bound gold is just as unreadable if the variable's own value is the failing
+gold. The numbers above come from the corrected sweep, which ignores binding and
+measures the resolved colour.
+
+### 3.1 — Incident: a regression this audit introduced and recovered
+
+Recorded in full because the method matters more than the outcome.
+
+**What happened.** The contrast sweep computed each text node's background by
+alpha-compositing ancestor fills, but it only handled `SOLID` paints. It
+silently ignored `GRADIENT_*` and `IMAGE` fills. On page 15 the landing hero
+sits on a `GRADIENT_LINEAR` oxblood section (`411:69`), so the walker composited
+nothing, defaulted to white, judged the correct light-gold hero text as failing,
+and rebound **283 nodes** to the dark accent token. The hero eyebrow, service
+card headings, ledger step labels and "Explore public lending" all went
+dark-on-dark. Pages 80 (9 nodes) and 90 (2 nodes) were hit the same way.
+
+**Why it was not caught immediately.** `setBoundVariableForPaint` overwrites the
+paint's stored colour with the variable's resolved value, so the originals were
+not recoverable from the nodes themselves. Worse, the first verification
+screenshot was taken at a 2× downscale where 10–12px labels are illegible either
+way — the regression was invisible at that zoom. **Verify contrast changes at
+native resolution.**
+
+**Recovery.**
+
+| Page | Nodes | Method | Confidence |
+|---|---:|---|---|
+| 80 | 9 | Exact, from the run's own logged `was` values | Exact |
+| 90 | 2 | Exact, from the run's own logged `was` values | Exact |
+| 15 | 206 | Exact twin match against unmutated HISTORICAL frames on the same page, keyed on characters + size + style + light/dark context + parent name | Exact |
+| 15 | 23 | Role mapping (size + style + theme) derived empirically from this design's own historical frames | High |
+| 15 | 54 | Fallback to `gold/100 #faeecb` | **Inferred — may differ from original** |
+
+Restoration verified at native resolution: the hero eyebrow, "CURRENT SERVICE ·
+VERIFIED PATH", the ledger numerals and "Explore public lending" all read as
+their original light golds, and zero nodes on page 15 remain bound to
+`color/accent/text`.
+
+**Residual risk.** 54 nodes on page 15 carry an inferred colour. They are
+plausible and legible, but they are not proven identical to the original. If
+exactness matters, Figma version history holds the pre-session state.
+
+**Corrected method.** The background function now averages gradient stops and
+flags `IMAGE`/`VIDEO` fills as indeterminate. The standing rules from this
+incident:
+
+1. A node whose background cannot be resolved with confidence is **skipped**,
+   never assumed.
+2. Bulk colour mutation is preceded by a **dry run** that reports counts and
+   samples before anything is written.
+3. Verification screenshots are taken at native resolution.
+4. Original values are logged **in full**, not sampled, before mutation.
+
 ### D-02 — The blur ladder is defined twice, inconsistently · MEDIUM · OPEN
 
 | Tier | `material/blur/*` variable | Effect style `BACKGROUND_BLUR` | Drift |
@@ -164,7 +240,30 @@ The failing fills carried no variable binding — raw `#e8b93c`. The 46 nodes in
 D-01 are now bound. A file-wide binding-coverage sweep has **not** been run; the
 true extent of unbound colour is unknown and is listed as residual work.
 
-### D-06 — Redundant inspector hint in the command table · LOW · OPEN
+### D-08 — Dark ink on dark hero cards fails AA · HIGH · OPEN
+
+Found with the corrected gradient-aware measurement (see section 3.1). On the
+landing hero (`411:69`), **17 of 59 text nodes fail** WCAG 2.2 AA 1.4.3.
+
+| Text | Size | Foreground | Background | Ratio | Needs |
+|---|---:|---|---|---:|---:|
+| "Identity and scope remain visible…" | 12 | `#5e383d` | `#5f3a3a` | **1.01:1** | 4.5 |
+| "UNIVERSITY STUDENT COUNCIL" | 11 | `#40070a` | `#5f3a3a` | 1.71:1 | 4.5 |
+| "Council-governed service entry" | 18 | `#40070a` | `#5f3a3a` | 1.71:1 | 4.5 |
+| Ledger steps "01 Request" … "06 Ledger" | 11–14 | `#40070a` | `#673c3f` | 1.84:1 | 4.5 |
+
+This is the mirror image of D-01: there, accent gold sat on light panes; here,
+oxblood ink sits on dark translucent cards. The six ledger step labels are the
+literal spine of the Institutional Logistics Ledger narrative and are currently
+close to invisible.
+
+**Not fixed.** Deliberately left open. The cards may encode an intentional
+active/inactive distinction (step 01 carries a gold border, 02–06 do not), so
+changing the ink is a design decision about state semantics rather than a
+mechanical contrast repair. It needs an owner call, not another unilateral
+recolour — see section 3.1 for why that restraint is now the rule.
+
+### D-06 — Redundant inspector hint in the command table · LOW · FIXED
 
 "Select a record to inspect state, evidence, ownership, and the permitted next
 action." renders inside the first table row, overlapping the row's own column
@@ -265,14 +364,16 @@ performed at any point.
 
 Not completed in this pass; ordered by value.
 
-1. Extend the D-01 contrast fix beyond Overview to pages 15, 30, 40, 50, 60, 70,
-   80, 90. 256 gold text nodes were counted on page 15 alone, most on oxblood
-   and therefore correct — each needs per-node backdrop resolution, not a
-   blanket recolour.
-2. Resolve D-02 (blur ladder), D-03 (empty authority page), D-04 (typeface).
-3. File-wide variable-binding coverage sweep (D-05).
-4. Module composition passes — D-07, and the Overview → Inventory → Request →
-   Lending → Release order in Phase 11 of the brief.
-5. Refresh `route-map.js` in the prototype; move it to bundled fonts.
-6. Responsive, accessibility and motion verification at the eight declared
-   widths.
+1. **D-08** — decide the hero card ink question and repair the 17 failing nodes.
+   Highest remaining accessibility value.
+2. Confirm or correct the **54 inferred colours** on page 15 (section 3.1). If
+   exactness matters, compare against Figma version history.
+3. Resolve D-02 (blur ladder), D-04 (typeface).
+4. File-wide variable-binding coverage sweep (D-05). Page 30 measured 97.7%;
+   the other pages are unmeasured.
+5. Run the D-08-style dark-on-dark contrast check across every module page —
+   this audit only measured gold-on-light plus the landing hero.
+6. Module composition passes for the Phase 11 order beyond Overview:
+   Inventory → Request → Lending → Release.
+7. Refresh `route-map.js` in the prototype; move it to bundled fonts.
+8. Responsive and motion verification at the eight declared widths.
