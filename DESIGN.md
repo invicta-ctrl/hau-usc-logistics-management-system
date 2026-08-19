@@ -949,6 +949,43 @@ Every module designs these states explicitly:
 
 Use inline feedback for local scope, banners for page scope, and toasts only for brief non-critical confirmation.
 
+## D29.1 — Narrow-width strategy, per table — BINDING
+
+Verified against `runtime.js` at `c316e047`. Production authors **six**
+`desktop-table` tables, each already paired with a `.mobile-cards` variant. The
+mechanism exists; what was missing was a declared decision per table about what
+must stay *comparable* when the columns collapse.
+
+Cards are not the automatic answer. A table exists so a reader can compare rows;
+a card stack destroys exactly that. For each table below, the **comparison key**
+is the one value a reader scans down the column for, and it must remain
+scannable at 320px — same position in every card, same alignment, not buried in
+prose.
+
+| Table | Comparison key at narrow width | Identity | Kept in the card | Moved to detail |
+|---|---|---|---|---|
+| Request review queue | **lines awaiting a decision** | Request ID + purpose | status chip, requester, line count, Review lines action | department, timestamps |
+| Inventory | **Available to Promise** | Product + Product ID | on hand, reserved, ATP as one numeric row; status/reorder chip | provenance, movement, evidence |
+| Restock requests | **status** | Item + catalog | requester, requested/needed date, actions | assignment, evidence |
+| Restock log | **received quantity** | Item + received date | source | evidence |
+| Deliverables | **status / budget** | Event / Request + item | inventory source, receiving | assignment |
+| Canvass library | **price** | Reference / item + supplier | receipt / TIN, checked | links, notes, evidence |
+
+Three rules follow:
+
+1. **Numbers that get compared stay in a numeric row**, aligned, in the same
+   card position every time. Inventory's on hand / reserved / ATP triple is the
+   clearest case: split across three prose lines it stops being comparable.
+2. **The action that resolves the row travels with it.** A card that drops
+   "Review lines" or "Confirm handoff" forces a round trip through detail to do
+   the one thing the queue exists for.
+3. **What moves to detail must be genuinely secondary** — provenance, audit,
+   evidence, long notes. Anything a reader sorts or filters by is not secondary
+   and stays on the card.
+
+Overdue and short-stock states must remain distinguishable without colour at
+every width, per D-11.
+
 ## D30 — Brand Media / Web Assets
 
 ### Runtime-tracked assets

@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       54%
-GATES:                  26 VERIFIED · 16 IN_PROGRESS · 2 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       56%
+GATES:                  27 VERIFIED · 16 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        54.0
+VERIFIED WEIGHT:        56.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 19 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 18 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -144,7 +144,7 @@ not change without an owner decision.
 | Gate                                                            | Weight | Status      | Baseline      | STALE_IF            | Evidence                                                      |
 | --------------------------------------------------------------- | ------ | ----------- | ------------- | ------------------- | ------------------------------------------------------------- |
 | `RA-WIDTHS` 320/375/390/414/768/1024/1440/1920 matrix           | 3.0    | IN_PROGRESS | Figma page 92 | layout changes      | Partial; 1440 and 390 only for most modules                   |
-| `RA-TABLES` Per-table narrow-width strategy                     | 2.0    | NOT_STARTED | §43           | —                   | —                                                             |
+| `RA-TABLES` Per-table narrow-width strategy | 2.0 | VERIFIED | six `desktop-table` tables in `runtime.js` | a table gains or loses a column | `DESIGN.md` D29.1: comparison key, identity, kept-in-card and moved-to-detail declared for all six |
 | `RA-A11Y` WCAG 2.2 AA acceptance                                | 3.0    | IN_PROGRESS | §44           | any surface change  | Contrast and live regions done on R3; full matrix unrun       |
 | `RA-MOTION` Motion families applied and reduced-motion honoured | 2.0    | VERIFIED    | DESIGN.md D13 | motion token change | `--m-response/state/surface/overlay`, reduced-motion override |
 
