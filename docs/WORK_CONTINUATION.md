@@ -29,13 +29,15 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 
 ### State
 
-- **Done:** production contracts for all six surfaces read at the deployed commit; Public Lending and Public Request built across 1440 light/dark and 390 light/dark with declared states; Staff Request Center reconciled and completed; authenticated requester portal built; 22 Figma clipping faults repaired and the class re-scanned to zero; D-02 and D-04 closed; canonical gold **#D4AF37** adopted and reconciled system-wide; Figma Make recovered, audited and reconciled at Version 35; real keyboard and accessibility-tree acceptance passing.
-- **Open:** 2,941 non-gold one-off paints — **deliberately stopped** on owner direction that semantic correctness outranks binding percentage.
+- **Handoff:** `docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md` is the single implementation/adoption handoff from this stream to Codex. Read it first. Git plus Figma plus that file is enough to continue — Claude chat history is not required.
+- **Done:** production contracts for all six surfaces read at the deployed commit; Public Lending and Public Request built across 1440 light/dark and 390 light/dark with declared states; Staff Request Center reconciled and completed; authenticated requester portal built; 22 Figma clipping faults repaired and the class re-scanned to zero; D-02, D-04 and D-05 closed; canonical gold **#D4AF37** adopted and reconciled system-wide; status vocabulary reconciled to production's `STATUS_LABELS` across 148 nodes; the Figma authority board rewritten and 21 frames given explicit lane words; Hallmark and Impeccable bounded closure passes run; real keyboard and accessibility-tree acceptance passing.
+- **Needs re-verification:** the four `FM-*` Figma Make gates. Their evidence is pinned to Make **Version 35**; the live file now reads **Version 36**, and no signed-in Figma session was available to open it. Probably a rebuild of the same source — probably is not verified. Re-open and re-hash `PublicFlows.tsx`.
+- **Open:** the remaining unbound paints — **deliberately stopped** on owner direction that semantic correctness outranks binding percentage.
 - **Blocked:** `FD-COLOUR` — the node ids of the 54 inferred colours were never recorded, so the set cannot be identified even with version history. Needs the Figma REST API with an owner token, or a manual version diff.
-- **Not run:** Hallmark as its own pass; a screen-reader runtime test. Neither is claimed.
+- **Not run:** a screen-reader runtime test. Not claimed anywhere.
 - **Boundary held:** no product code, release state, provider, database, migration or deployment write. One production defect candidate recorded and deliberately not fixed (PDC-01).
 - **Verify with:** `npm run design:tracker:check`, `design:contrast`, `design:keyboard`, `design:semantics`.
-- **Resume:** read `docs/design/DESIGN_EXECUTION_TRACKER.md` first — it is derived and current.
+- **Resume:** read the Codex handoff first, then `docs/design/DESIGN_EXECUTION_TRACKER.md` — it is derived and current.
 
 ### What the Staff Request Center pass established
 

@@ -1,6 +1,6 @@
 # Design documentation index
 
-Thirty-eight files live here, spanning five design generations. This index says
+Forty files live here, spanning five design generations. This index says
 which one owns each question **now**, so nobody has to guess whether
 `IMPECCABLE_V3_VISUAL_SYSTEM.md` or `V5_PRODUCTION_VISUAL_ACCEPTANCE.md` is the
 live answer.
@@ -17,12 +17,14 @@ authority links to keep a directory tidy. Status is declared here instead.
 
 | Question | Owner |
 |---|---|
+| **Handoff to the next agent** | [CODEX_FRONTEND_DESIGN_HANDOFF.md](CODEX_FRONTEND_DESIGN_HANDOFF.md) — the single implementation/adoption handoff. Read it before anything else in this directory |
 | Overall design authority — tokens, components, module rules, D-sections | `../../DESIGN.md` |
 | **Progress and completion** | [DESIGN_EXECUTION_TRACKER.md](DESIGN_EXECUTION_TRACKER.md) — the only file permitted to state a percentage, and it is derived, never typed |
 | Production contracts for all five request/lending surfaces, and every drift entry | [PRODUCTION_PORTAL_PARITY_AUDIT.md](PRODUCTION_PORTAL_PARITY_AUDIT.md) |
 | Figma file and Make file state, defects D-01…D-08, incident record | [FIGMA_DESIGN_MAKE_AUDIT.md](FIGMA_DESIGN_MAKE_AUDIT.md) |
 | Named Figma baselines and token register | [FIGMA_BASELINE_REGISTER.md](FIGMA_BASELINE_REGISTER.md) |
 | **WCAG 2.2 AA acceptance for the public portals** | [ACCESSIBILITY_ACCEPTANCE.md](ACCESSIBILITY_ACCEPTANCE.md) — contrast is measured by `scripts/design/contrast-audit.mjs`, not asserted |
+| Hallmark and Impeccable closure passes | [HALLMARK_IMPECCABLE_CLOSURE.md](HALLMARK_IMPECCABLE_CLOSURE.md) |
 | Production front-end parity baseline | [PRODUCTION_FRONTEND_PARITY_BASELINE.md](PRODUCTION_FRONTEND_PARITY_BASELINE.md) |
 | V5 functional parity, visual acceptance, transfer map, defect corrections | the four `V5_*.md` files |
 | Implemented visual world | `prototypes/impeccable-whole-site-redesign-v5/` |

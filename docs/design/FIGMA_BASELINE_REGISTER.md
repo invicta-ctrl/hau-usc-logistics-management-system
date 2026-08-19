@@ -288,3 +288,59 @@ Google, provider, migration, deployment or release action occurred.
 | `FD-TOKENS-RESIDUAL` — 2,941 one-off paints | **Deliberately stopped** on owner direction that semantic correctness outranks binding percentage |
 | Hallmark as its own pass | Not run, not claimed |
 | Screen-reader runtime | Not run, not claimed; accessibility-tree evidence recorded instead |
+
+## Baseline 2026-08-20-C — Codex handoff freeze
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-C
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+                     102 components (86 components + 16 component sets)
+                     11 text styles · 9 effect styles · 0 paint styles
+FIGMA DESIGN VERSION content identity only — the MCP bridge cannot create named Figma history
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · live at Version 36 · last verified content Version 35
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           <backfilled at closeout>
+TRACKER COMPLETION   87% (derived)
+HANDOFF READINESS    READY
+CANONICAL GOLD       #D4AF37 · DESIGN.md D08.0 · owner-locked
+DESIGN DIRECTION     Institutional Logistics Ledger
+GLASS SYSTEM         Institutional Glass · blur ladder 16/22/30/36
+RESPONSIVE STATUS    VERIFIED — 8 widths, 0 horizontal overflow
+ACCESSIBILITY STATUS VERIFIED to available evidence — 66/66 contrast, 32/32 keyboard, 30/30 a11y tree
+HALLMARK STATUS      PASS — bounded closure pass, 2026-08-20
+IMPECCABLE STATUS    PASS — bounded closure pass, 2026-08-20, one material finding fixed
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### What changed since 2026-08-20-B
+
+| Change | Evidence |
+|---|---|
+| Authority board `568:2` brought current and given five new blocks: canonical gold, Institutional Glass, responsive and accessibility requirements, the module index, and the implementation handoff pointer | Render of `568:2` |
+| 21 top-level frames given an explicit lane word; `PROPOSED` retired from the State, Responsive and Motion matrices, which are requirements rather than proposals | Frame-name sweep |
+| The in-file programme board `60:2` marked HISTORICAL and redirected to the derived tracker — it was still asserting an earlier 100% | Retext of `60:5` |
+| Status vocabulary reconciled to production's `STATUS_LABELS`: 148 nodes across the design file and its component library | Parity audit §33 |
+| Two remaining superseded-gold paints on page 99 bound to `color/gold/primary`; 7.97:1 on oxblood | Per-paint scan, lane-aware |
+| Four `FM-*` gates moved to `NEEDS_REVERIFY` because their evidence is pinned to Make v35 and the live file is at v36 | Tracker, residual MK-01 |
+| Paint binding re-measured with a stricter per-paint method: 81.8% of 54,025 active solid paints | Tracker `FD-TOKENS-RESIDUAL` |
+| Hallmark and Impeccable closure passes actually run | `HALLMARK_IMPECCABLE_CLOSURE.md` |
+| System dark-mode preference now resolves the dark palette | `prototypes/public-portals-r3/app.js` |
+
+### Verification at this baseline
+
+```text
+npm run design:tracker:check   derived progress current
+npm run design:contrast        66/66
+npm run design:keyboard        32/32
+npm run design:semantics       30/30
+```
+
+Forbidden review-route phrases in live lanes: **0**. Superseded gold in live
+lanes: **0**. Off-system typefaces in live lanes: **0**.
+
+### Boundary attestation
+
+The v0.8.3 product worktree was read for contract truth and **never written**. No
+Cloudflare, D1, R2, Google, provider, migration, deployment or release action
+occurred.

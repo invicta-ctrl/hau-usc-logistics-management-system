@@ -698,9 +698,17 @@ function bindRequest() {
 
 /* ================= ROUTER ================= */
 
+// The palette lives entirely behind [data-theme]. Without this, a visitor whose
+// system is set to dark gets the light theme anyway, because nothing was ever
+// reading the system preference. The explicit control still wins when the URL
+// carries one, so the fixture stays deterministic for screenshots and tests.
+function systemTheme() {
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 function render() {
   const route = q('route', 'lending');
-  const theme = q('theme', 'light');
+  const theme = q('theme', null) || systemTheme();
   document.documentElement.setAttribute('data-theme', theme);
   document.querySelector('.g0').setAttribute('data-module', route === 'request' ? 'request' : 'lending');
 
@@ -752,9 +760,9 @@ function setParam(k, v) {
   const p = params(); p.set(k, v);
   history.replaceState(null, '', `?${p}`); render();
   document.getElementById('proto-route').value = q('route', 'lending');
-  document.getElementById('proto-theme').value = q('theme', 'light');
+  document.getElementById('proto-theme').value = q('theme', null) || systemTheme();
 }
 document.getElementById('proto-route').value = q('route', 'lending');
-document.getElementById('proto-theme').value = q('theme', 'light');
+document.getElementById('proto-theme').value = q('theme', null) || systemTheme();
 
 render();

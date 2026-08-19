@@ -1655,3 +1655,72 @@ reading production again rather than by trusting the layer next to it. **Drift
 does not propagate — it recurs.** Fixing it in one place does not fix it in the
 others, and the only defence is checking every layer against the source rather
 than against each other.
+
+## 33. Status vocabulary — the drift nobody had swept
+
+The route sweep at §31 checked review *routes*. It did not check *status* names,
+and those had drifted independently and further.
+
+Production's authority is `STATUS_LABELS` in `c316e047:src/visual/runtime.js`,
+plus the humaniser that turns an unmapped key into a title-cased phrase. Every
+status a design surface can show has to come from that map, or the design is
+describing a state the product cannot be in.
+
+### What the file was showing
+
+| In the design | Production has | Verdict |
+|---|---|---|
+| `In DOL review` | `FOR_REVIEW` → "For Review" | Invented. 20 live-lane nodes |
+| `In review` | `FOR_REVIEW` → "For Review" | Invented. 2 nodes |
+| `Submitted` as a status chip | no such status; a submitted request **is** `FOR_REVIEW` | Invented as a status. 14 chip nodes. Kept where it labels a timeline *event* rather than a state |
+| `Needs correction` | `NEEDS_INFORMATION` → "Needs Information" | Invented. 19 nodes |
+| `Closed` | `COMPLETED` / `CANCELLED` | Invented. 3 nodes |
+| `Approved` in request and lending lifecycles | `ACCEPTED`; and in lending, `READY_TO_CLAIM` → "Ready to Claim" | Invented. 48 nodes |
+| `Reserved` as a lending ticket status | `READY_TO_CLAIM` | Invented. Corrected in the Lending Hub |
+| `Collected` in the custody timeline | the reusable verb is **Confirm Handoff** | Invented, and inconsistent with the sibling timeline for the *same ticket* |
+| `→ Release Desk` as a route destination | not a route. A request **arrives** there when its lines reach a ready state | The exact SR-02 defect, resurfacing in a second place |
+| `→ Canvassing` | `PROCUREMENT` → "Procurement / canvass" | Shorthand corrected |
+
+`Reserved`, `Released` and `Approved` also appear in legitimate roles — the
+inventory `Reserved` column, the Overview reconciliation counters, the
+`Data / Quantity Truth` component. Those were measured and left alone. The
+discriminator was context, not the string: a value next to a number is a
+quantity; a value in a `State` column or a filter chip is a status.
+
+### The component library was the source
+
+`Data / Status Label` is the canonical status chip, and every one of its five
+tone variants carried an invented exemplar — `Closed`, `Submitted`,
+`In DOL review`, `Released`, `Needs correction`. Each tone now carries a real
+production label in the same semantic role:
+
+```text
+Tone=Neutral      Cancelled
+Tone=Information  Accepted
+Tone=Progress     For Review
+Tone=Done         Completed
+Tone=Alert        Needs Information
+```
+
+The set has **zero instances** anywhere in the file. That is why the drift
+recurred: every module hand-built its chips, so fixing the library fixed nothing
+downstream and the module frames had to be corrected one by one. A component
+library with no instances is documentation, not a system — worth recording as a
+structural finding in its own right.
+
+### Result
+
+148 nodes corrected across the design file and its component library. Superseded
+and historical frames were left untouched: they are evidence of what the design
+used to claim, and rewriting them to make a search return zero would falsify the
+record.
+
+Live-lane sweep after the pass: **0** forbidden review-route phrases, **0**
+invented status labels.
+
+One note on letter case. Production renders Title Case — "Ready to Claim", "On
+Loan". The module frames render sentence case — "Ready to claim", "On loan" —
+consistently, as a typographic convention of the design system. The **vocabulary**
+now matches production exactly; the casing is a declared convention, and the
+component library carries production's exact strings so an implementer copying
+from the library gets the product's own words.

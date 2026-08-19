@@ -23,29 +23,29 @@ because the derived block is overwritten on every run; a value that only exists
 inside it cannot survive.
 
 ```text
-CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
+CURRENT PHASE:          Closeout — Figma design and documentation frozen; Make re-verification pending owner access
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
-LAST COMPUTED:          2026-08-19 (Asia/Manila)
+LAST COMPUTED:          2026-08-20 (Asia/Manila)
 ```
 
 ## Derived progress
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       97%
-GATES:                  48 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       87%
+GATES:                  44 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 4 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        97.0
-CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
+VERIFIED WEIGHT:        87.0
+CURRENT PHASE:          Closeout — Figma design and documentation frozen; Make re-verification pending owner access
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
-LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 2 mandatory gates not VERIFIED
+LAST COMPUTED:          2026-08-20 (Asia/Manila)
+100% ELIGIBLE:          NO — 6 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -118,7 +118,7 @@ not change without an owner decision.
 | --------------------------------------------------------- | ------ | ----------- | -------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------- |
 | `FD-STRUCTURE` No clipped authored content, document-wide | 4.0    | VERIFIED    | full-document scan   | any frame gains a fixed height smaller than its content | 22 clipping faults repaired; re-scan returns 0                          |
 | `FD-TOKENS-GOLD` Canonical gold reconciled system-wide | 2.0 | VERIFIED | `DESIGN.md` D08.0, owner decision 2026-08-19 | the canonical gold changes | Audit §28: 8 variables, 802 solid paints, 160 gradient stops and 434 one-off literals reconciled by role. Zero superseded gold values remain. 66/66 contrast |
-| `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 42,536 solid paints | new literal fills appear | Coverage 93.1%. **Deliberately stopped here** on owner direction that semantic correctness outranks binding percentage — the residual 2,941 are one-off inks and hairlines each needing a role decision, not a mechanical bind |
+| `FD-TOKENS-RESIDUAL` Remaining non-gold literals bound | 1.0 | IN_PROGRESS | 42,536 solid paints | new literal fills appear | Coverage re-measured 2026-08-20 at **81.8%** of 54,025 active solid paints, counting every paint in the document and testing each paint's own `boundVariables.color` — a stricter denominator than the 93.1% recorded on 2026-08-19, which measured a narrower node set. **Deliberately stopped here** on owner direction that semantic correctness outranks binding percentage — the residual 2,941 are one-off inks and hairlines each needing a role decision, not a mechanical bind |
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
 | `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
 | `FD-COLOUR` 54 inferred colours on page 15 proven | 2.0 | BLOCKED | §3.1 incident record | — | The node ids of the 54 were never recorded, so the set cannot be identified even with history. Page 15 text fills are now **88% bound** to semantic roles by the later passes. Settling the original 54 needs the Figma REST API with an owner token, or a manual version diff |
@@ -128,10 +128,10 @@ not change without an owner decision.
 
 | Gate                                                   | Weight | Status      | Baseline          | STALE_IF       | Evidence                                        |
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
-| `FM-PUBLIC` Public flows current and building | 3.0 | VERIFIED | Make v35 `PublicFlows.tsx` | source changes | 790 lines, hash-matched to the committed source; `Access application` removed, Staff sign-in hand-off present. Audit §29.1 |
-| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | VERIFIED | Make v35 `appRoutes.ts` + route files | a route or its vocabulary changes | Ten internal routes exist; Request Center route vocabulary corrected to production's five routes, Lending Hub status corrected, Release Desk feeds named. Audit §29.2–29.3 |
-| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | VERIFIED | Make v35 route files | the lifecycle or route contract changes | Audit §32: lending actions derive from status with the consumable/reusable verb split; Request Center carries a per-line route select with no pre-selected default. Saved and synced |
-| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | VERIFIED | Make v35 route files | a state is removed | Release Desk carries 9 states, Lending Hub 6 including Permission limited, Request Center has a dedicated states route. Audit §29.4 |
+| `FM-PUBLIC` Public flows current and building | 3.0 | NEEDS_REVERIFY | Make v35 `PublicFlows.tsx` | the live Make version leaves v35 | 790 lines, hash-matched to the committed source; `Access application` removed, Staff sign-in hand-off present. Audit §29.1 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
+| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | NEEDS_REVERIFY | Make v35 `appRoutes.ts` + route files | the live Make version leaves v35 | Ten internal routes exist; Request Center route vocabulary corrected to production's five routes, Lending Hub status corrected, Release Desk feeds named. Audit §29.2–29.3 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
+| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | NEEDS_REVERIFY | Make v35 route files | the live Make version leaves v35 | Audit §32: lending actions derive from status with the consumable/reusable verb split; Request Center carries a per-line route select with no pre-selected default. Saved and synced **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
+| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | NEEDS_REVERIFY | Make v35 route files | the live Make version leaves v35 | Release Desk carries 9 states, Lending Hub 6 including Permission limited, Request Center has a dedicated states route. Audit §29.4 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
 
 ### Area 7 — Institutional Glass + shared design system · 10.0
 
@@ -160,7 +160,7 @@ not change without an owner decision.
 | `DOC-CONTRACT` Contract docs describe current truth | 3.0 | VERIFIED | Parity audit §1–§25 | any production module changes | All six surfaces recorded from the deployed commit: Public Lending §3, Public Request §5, Staff Request §10, Authenticated Requester §12, Lending Hub §14, Release Desk §15 |
 | `DOC-CONSOLIDATE` Obsolete Impeccable generations consolidated | 2.0 | VERIFIED | `docs/design/README.md` | a new generation appears | Index declares the current owner per question and marks v1–v4.1 superseded; files deliberately not moved because an accepted spec references the paths |
 | `DOC-TRACKER` One canonical derived tracker                    | 2.0    | VERIFIED    | this file                    | competing tracker appears | Created; `DESIGN.md` and `WORK_CONTINUATION.md` point here |
-| `DOC-BASELINE` Final Figma + branch baseline recorded | 3.0 | VERIFIED | `FIGMA_BASELINE_REGISTER.md` | any Figma or branch change | Baseline 2026-08-19-C recorded by content identity: 28 pages, 131 variables, 102 components, 0 clipping faults, 83.7% paint binding, every built node listed |
+| `DOC-BASELINE` Final Figma + branch baseline recorded | 3.0 | VERIFIED | `FIGMA_BASELINE_REGISTER.md` | any Figma or branch change | Baseline 2026-08-20-C recorded by content identity: 28 pages, 136 variables, 102 components (86 + 16 sets), 11 text styles, 9 effect styles, 0 superseded gold in any live lane, 81.8% of 54,025 active solid paints bound |
 
 ## 100% is a hard gate
 
@@ -193,9 +193,11 @@ final global audit passed
 | SR-05 | MEDIUM | Queue column set differs from production | CLOSED — requester identity restored; row-selection interaction accepted |
 | SR-07 | MEDIUM | Composite requests represented nowhere | CLOSED — audit §22 |
 | SR-08 | MEDIUM | No pager on a server-clamped queue | CLOSED |
-| D-02  | MEDIUM   | Blur variables do not bind to effect styles     | OPEN   |
-| D-04  | MEDIUM   | Figma renders Inter against mandated typefaces  | OPEN   |
-| D-05  | MEDIUM   | File-wide variable-binding coverage unproven    | OPEN   |
-| §3.1  | MEDIUM   | 54 inferred colours on page 15 unproven         | OPEN   |
+| D-02  | MEDIUM   | Blur variables do not bind to effect styles     | CLOSED — audit §19.1; ladder single-sourced at 16/22/30/36 |
+| D-04  | MEDIUM   | Figma renders Inter against mandated typefaces  | CLOSED — audit §26; 1,380 nodes converted, 0 off-system remain |
+| D-05  | MEDIUM   | File-wide variable-binding coverage unproven    | CLOSED — measured 81.8% of 54,025 active solid paints; the residual is characterised, not unknown |
+| §3.1  | MEDIUM   | 54 inferred colours on page 15 unproven         | OPEN — `FD-COLOUR`, unidentifiable; see §30 |
+| SV-01 | MEDIUM   | Invented request/lending status vocabulary in live lanes | CLOSED — audit §33; 148 nodes reconciled to production's `STATUS_LABELS` |
+| MK-01 | MEDIUM   | Live Figma Make is at Version 36; v35 evidence not re-confirmable without a signed-in session | OPEN |
 
 No P0 is open. No production defect candidate is open.
