@@ -1272,3 +1272,77 @@ defects that do not exist.
 Pages `00`–`03` keep Inter, Segoe UI and Georgia. They are capture pages that
 document what production and playground actually render; converting them would
 falsify the baseline they exist to hold.
+
+## 27. Token coverage — 67.7% to 89.9%, and what the remainder actually is
+
+| Stage | Coverage |
+|---|---|
+| Before any binding | 67.7% |
+| Exact-match pass (§19.3) | 83.7% |
+| Inert-paint removal + role-aware pass | **89.9%** |
+
+### 27.1 The largest "unbound colour" was not a colour
+
+`#000000` appeared **1,401** times and topped every list. Profiled by property
+rather than by value, all 1,401 were **opacity 0**, 97% of them strokes, every
+one on a `FRAME`. They render nothing. They are Figma's default stroke entry on
+a frame nobody gave a stroke to.
+
+A paint that renders nothing cannot carry a semantic role, so tokenising it
+would have been theatre. They were **removed**. The coverage number improves
+because the denominator got honest, not because anything was painted.
+
+### 27.2 Role-aware binding resolved the hexes §19.3 refused to guess
+
+The exact-match pass deliberately dropped five ambiguous colours. They were not
+ambiguous once the *paint context* was read instead of the value:
+
+| Colour | Candidates | Resolution |
+|---|---|---|
+| `#40070a` | `color/text/on-accent`, `oxblood/900`, `material/scrim` | text fills → on-accent; frame fills → the oxblood ramp |
+| `#fffdf8` | `color/overlay`, `color/text/inverse`, `color/action/quiet`, `paper`, `material/g3/raised` | text fills → inverse; frame fills → the surface token |
+
+558 paints bound this way, **zero** left unbound for want of a confident role —
+where no role scored, the pass declined rather than picking the first match.
+
+### 27.3 Two mistakes inside this pass, both caught by measurement
+
+**Bound 29 frame fills to a variable that is not that colour.** A loose regex
+matched `color/ramp/oxblood/900` when the intended target was `oxblood/900`.
+
+**Then replaced 480 correct bindings while repairing it.** The repair rebound
+*every* fill carrying the ramp token, not only the 29 — moving 480 pre-existing,
+correct semantic bindings onto a raw primitive. Semantic beats primitive, so
+that was a downgrade.
+
+Both were resolved by **resolving the alias chain and measuring both variables
+in both modes** rather than reasoning about names: `color/ramp/oxblood/900` and
+`oxblood/900` both resolve to `#40070a` light and `#4a1015` dark. **No rendered
+colour changed at any point.** All 547 oxblood frame fills now sit on the
+semantic ramp, which is where they should have been.
+
+The lesson is the same one §26 recorded from the opposite direction: a name is
+not a value. Match on resolved values, and verify a "repair" is narrower than
+the thing it repairs.
+
+### 27.4 What the remaining 4,177 are
+
+Concentrated on Landing (1,139) and Overview (945). The recurring literals are
+**`#f2d15c` ×802** — a gold that exists in no collection, used mostly as a
+translucent stroke across ten different alphas — and a family of one-off inks
+and hairlines.
+
+`#f2d15c` is the one that matters, and it is a **palette decision, not a
+mechanical bind**: it sits between `gold/400` `#e8b93c` and `gold/200` `#f6e29a`,
+so binding it to either changes the rendered colour. Since a bound paint keeps
+its own opacity, a single token would serve all ten alphas — but only once
+somebody decides whether that gold is correct or was drifted into.
+
+`FD-TOKENS` therefore stays open, with the remainder characterised rather than
+merely counted.
+
+### 27.5 Pages excluded from the metric, and why
+
+`00`–`03` are production and playground capture pages. `99` is a research-notes
+surface whose 622 unbound inks are prose, not product. Counting either against
+design-system coverage measures the wrong thing.
