@@ -203,3 +203,42 @@ plus the Bahnschrift pocket on Inventory; 7,373 paints needing role decisions;
 54 inferred colours on page 15; dark and 390 variants for the new request
 frames; a real keyboard walk and screen-reader pass; and the named Figma
 version above.
+
+
+## Baseline 2026-08-20-A — canonical gold, Make recovery, real accessibility
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS  ·  Version 35, synced, no pending warning
+DESIGN BRANCH    frontend-design-integration
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30
+CANONICAL GOLD   #D4AF37  (DESIGN.md D08.0, owner-locked)
+```
+
+### Structural state
+
+| Property | Value |
+|---|---|
+| Frames clipping their own content | **0** document-wide |
+| Superseded gold values anywhere | **0** |
+| Off-system typefaces in CURRENT lanes | **0** of 23,189 text nodes |
+| Solid paint coverage | **93.1%** (42,536 paints) |
+| Glass tokens | Figma ↔ `glass.css` one-to-one, zero drift |
+
+### Added since 2026-08-19-C
+
+| Node | Surface |
+|---|---|
+| `639:2` | public request intake, 1440 dark |
+| `654:2` / `657:2` | public request intake, 390 light and dark |
+| `657:350` | public lending portal, 390 dark |
+| `658:2` `658:14` `658:28` `658:42` | intake loading, source-empty, validation error, service unavailable |
+
+### Verifiable from the branch
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+npm run design:keyboard        # 32/32 real Playwright keyboard traversal
+npm run design:semantics       # 30/30 accessibility tree via CDP
+```

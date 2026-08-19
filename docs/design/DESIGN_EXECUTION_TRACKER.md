@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       91.5%
-GATES:                  44 VERIFIED · 5 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       92.5%
+GATES:                  45 VERIFIED · 4 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        91.5
+VERIFIED WEIGHT:        92.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 6 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 5 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -96,7 +96,7 @@ not change without an owner decision.
 | ---------------------------------------------------------- | ------ | ----------- | ---------------------------------------------- | -------- | --------------------------------------------------- |
 | `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
 | `PR-FIGMA-VARIANTS` Intake at 1440 and 390, light and dark | 2.0 | VERIFIED | Figma `626:2` `639:2` `654:2` `657:2` | node edits on the intake frames | 390 is a real transformation: 16 rows stacked, step rail wrapped, 0 overflow, 0 overlap, 0 unbound fills in both dark clones |
-| `PR-FIGMA-STATES` Intake loading / empty / error / unavailable | 1.0 | IN_PROGRESS | Parity audit §21.4 | — | The four service states for the new intake remain; error treatment should be ported from the superseded frames |
+| `PR-FIGMA-STATES` Intake loading / empty / error / unavailable | 1.0 | VERIFIED | Figma `658:2` `658:14` `658:28` `658:42` | the module changes a declared state | Four state frames built, each carrying production wording. Empty source and service error are deliberately distinguishable |
 | `PR-MAKE` Make parity | 2.0 | VERIFIED | Make v35 | `PublicFlows.tsx` changes | Same source as PL-MAKE; public request flow present with no sign-in gate. Audit §29.1 |
 | `PR-IMPL` Design-branch implementation | 2.0 | VERIFIED | Parity audit §5 | public request contract changes | Audit §25: private verified related-request lookup, lead-time warning, 500-char purpose, disabled sub-event. Both routes render-checked |
 

@@ -29,12 +29,13 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 
 ### State
 
-- **Done:** production contracts for all five surfaces read at the deployed commit (audit §3, §5, §10, §12, §14, §15); Public Lending built across 1440 light/dark, Angelite branch, receipt, four catalog states, 390 mobile; Staff Request Center reconciled and its submission region built; authenticated requester portal built; 22 Figma clipping faults repaired document-wide; D-02 closed; token coverage raised 67.7% → 83.7%.
-- **Open:** Figma Make internal modules and state proofs; D-04 typeface conversion (scoped, audit §18); D-05 remaining 7,373 unbound paints needing role decisions (audit §19.4); 54 inferred colours on page 15; Public Lending 390 dark and Angelite-at-390; public request dark / 390 / four states; responsive width matrix; WCAG 2.2 AA acceptance matrix; Hallmark; Impeccable re-run.
-- **Hallmark:** still not run as its own pass. Impeccable's detector and `DESIGN.md` D35 cover overlapping ground; that is not the same discipline and is not claimed as such.
-- **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls. One production defect candidate recorded and deliberately not fixed (PDC-01, audit §16).
-- **Evidence:** `docs/design/DESIGN_EXECUTION_TRACKER.md` (canonical progress), `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md` §1–§20, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D23.0, D24.0, D40.
-- **Resume:** read `docs/design/DESIGN_EXECUTION_TRACKER.md` first — it is derived and current. Highest-value remaining gates are FM-INTERNAL (4.0) and RA-A11Y (3.0). Do not re-derive production truth from documentation; read it at the deployed commit.
+- **Done:** production contracts for all six surfaces read at the deployed commit; Public Lending and Public Request built across 1440 light/dark and 390 light/dark with declared states; Staff Request Center reconciled and completed; authenticated requester portal built; 22 Figma clipping faults repaired and the class re-scanned to zero; D-02 and D-04 closed; canonical gold **#D4AF37** adopted and reconciled system-wide; Figma Make recovered, audited and reconciled at Version 35; real keyboard and accessibility-tree acceptance passing.
+- **Open:** Angelite branch and catalog states at 390; Make lending lifecycle and per-line review UI; remaining module pages; 2,941 non-gold one-off paints needing role decisions.
+- **Blocked:** `FD-COLOUR` — the node ids of the 54 inferred colours were never recorded, so the set cannot be identified even with version history. Needs the Figma REST API with an owner token, or a manual version diff.
+- **Not run:** Hallmark as its own pass; a screen-reader runtime test. Neither is claimed.
+- **Boundary held:** no product code, release state, provider, database, migration or deployment write. One production defect candidate recorded and deliberately not fixed (PDC-01).
+- **Verify with:** `npm run design:tracker:check`, `design:contrast`, `design:keyboard`, `design:semantics`.
+- **Resume:** read `docs/design/DESIGN_EXECUTION_TRACKER.md` first — it is derived and current.
 
 ### What the Staff Request Center pass established
 
