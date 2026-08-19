@@ -30,7 +30,7 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 ### State
 
 - **Done:** production contract audit for both public portals; Public Lending built across 1440 light/dark, Angelite branch, receipt, four declared catalog states, 390 mobile; Overview D-07/D-06/D-01 repairs; page-10 Authority board; coded prototype + Figma Make component; **Staff Request Center reconciliation (audit sections 10–13)**.
-- **Open:** authenticated requester portal (context B) — contract now recorded at audit section 12, still unbuilt; Public Request field-by-field diff; Staff Request SR-01 / SR-05 / SR-07 / SR-08 / SR-09; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident; two unbound status-dot fills at `300:585` / `300:609`.
+- **Open:** Public Request field-by-field diff; Staff Request SR-01 / SR-05 / SR-07 / SR-08 / SR-09; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident; two unbound status-dot fills at `300:585` / `300:609`.
 - **Hallmark:** still not run as its own pass. Impeccable's detector and `DESIGN.md` D35 cover overlapping ground; that is not the same discipline and is not claimed as such.
 - **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls.
 - **Evidence:** `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D24.0 and D40.

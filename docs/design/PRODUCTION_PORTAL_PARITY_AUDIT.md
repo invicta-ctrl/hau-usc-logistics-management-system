@@ -922,3 +922,34 @@ is not evidence of a defect. It is evidence only when the parent's width is
 *independently* fixed — an explicit width or a FILL inside a sized column — not
 when the parent hugs its content. Overflow is a symptom with two causes and the
 sweep only handled one of them.
+
+## 20. Authenticated requester portal — built
+
+`624:2` on page 40, `CURRENT · portal.request — authenticated requester portal ·
+1440 · light`. This closes the last "represented nowhere" surface in the
+programme.
+
+It is deliberately **not** a skin of the public Request Center. Four differences
+carry the whole point, and each is drawn rather than described:
+
+| Contract fact | How the frame states it |
+|---|---|
+| Identity is derived, not entered | Department field on the inset surface, badged **Derived from session** |
+| Tracking needs no code | The track panel says search is restricted to the requester's own department and no private tracking code is required |
+| Cancel exists, conditionally | Offered on the For Review ticket, absent on the Completed one, with the rule written beneath it |
+| The receipt is generated locally | "The PDF is generated in the browser. No document is fetched from a server, so the receipt exists even if the session ends." |
+
+Two production behaviours that a static frame would normally lose are badged
+instead of hidden: the parent-request selector is marked *Shown only for
+Additional*, and the Sub-event select is drawn disabled and marked *Disabled
+until Event chosen*. Production hides the first and disables the second; the
+design shows both rules at once.
+
+The frame footer records the gate and the endpoints, so the next reader does not
+have to re-derive them: `roleId REQUESTER` with a `requesterDepartment`,
+`GET /api/portal/request`, `POST /api/portal/request/cancel`, and the single
+refusal card for anything else.
+
+Every fill and stroke is variable-bound. One construction defect was caught on
+first render — a frame left at `createFrame`'s 100px default width let the
+requester name run under the Sign out button — and fixed by hugging it.

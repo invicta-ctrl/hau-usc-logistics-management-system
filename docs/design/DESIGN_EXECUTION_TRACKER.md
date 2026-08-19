@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       44.5%
-GATES:                  21 VERIFIED · 17 IN_PROGRESS · 6 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       45.5%
+GATES:                  22 VERIFIED · 17 IN_PROGRESS · 5 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        44.5
+VERIFIED WEIGHT:        45.5
 CURRENT PHASE:          Phase A complete — Phase E Staff Request build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 24 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 23 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -108,7 +108,7 @@ not change without an owner decision.
 | `SR-FORM` Submission form region exists in Figma | 2.0 | VERIFIED | Parity audit §10.1 | `views/request.html` field set changes | Figma `615:2`; audit §17.1 |
 | `SR-COLUMNS` Queue column set + server pager | 1.0 | VERIFIED | Parity audit §10.3 | queue columns or pagination change | Requester identity restored; pager `616:2`; audit §17.2–17.3 |
 | `SR-COMPOSITE` Composite request panel represented          | 1.0    | NOT_STARTED | Parity audit §10.2                 | —                    | SR-07 open                           |
-| `SR-CTXB` Authenticated requester portal built              | 1.0    | NOT_STARTED | Parity audit §12                   | —                    | Represented nowhere                  |
+| `SR-CTXB` Authenticated requester portal built | 1.0 | VERIFIED | Parity audit §12 | `/api/portal/request*` contract changes | Figma `624:2`; audit §20 |
 
 ### Area 5 — Figma Design completion · 15.0
 
