@@ -681,3 +681,146 @@ records the divergence rather than silently propagating either label.
 
 No other defect candidate was found. Every other behaviour inspected across the
 five surfaces was internally consistent.
+
+## 17. Staff Request Center — the submission region, SR-01 / SR-05 / SR-08
+
+### 17.1 SR-01 — the missing half is built
+
+`615:2` was added as the **first** child of the Request Center content column
+on the CURRENT artboard, above the review queue, because that is the production
+order: one view, submission first, queue appended.
+
+It follows `views/request.html` block for block — request-type choice with
+Event Logistics preselected, `01 · Requester`, `02 · Event context`,
+`03 · Purpose`, `04 · Add requested items`, the draft list, and the sticky
+review aside carrying the consent checkbox, **Submit for DOL Review**, and the
+"submission creates a FOR REVIEW record, physical stock is not reduced" hint.
+
+Four decisions in the build are contract-driven rather than aesthetic:
+
+1. **Fulfillment is drawn disabled**, on the inset surface, badged *System
+   decides*. Production renders the control and disables it so a requester can
+   see that the system decides from inventory. Removing it would have looked
+   tidier and taught the wrong thing.
+2. **The two `02 ·` blocks are mutually exclusive.** Rather than drawing a
+   hidden variant, the Catalog-context block sits on an inset panel that states
+   it replaces the Event block on request type. A reviewer sees both without
+   believing both render at once.
+3. **Conditional fields are badged, not hidden** — Original Request ID, Return
+   due, New-item category and New-item specification. Production hides them
+   until their condition fires; the design shows the rule.
+4. **The decision strip is labelled as a live region.** It is
+   `aria-live="polite"` in production, so it is drawn as an announced surface,
+   not as static helper text.
+
+Every fill and stroke is bound to a semantic variable. No literal colour was
+introduced.
+
+### 17.2 SR-05 — requester identity restored
+
+Production's queue carries a **Requester** column with name and department.
+The design had department in each row's supporting line but had dropped the
+name, so a reviewer could not tell who asked without opening the record.
+
+The column set was not rewritten. Committee, Needed by and Urgency are
+legitimate design additions and the supporting line already carried the line
+count. The correction was the narrower one: the requester's name is now part of
+the supporting line on all five rows.
+
+Production's explicit **Review lines** button is still absent — the design
+opens the record by row selection instead. That is a defensible interaction
+choice, so it is recorded rather than "corrected". What is **not** optional is
+that a request with no reviewable line must not offer a decision affordance;
+production disables the button for exactly that case.
+
+### 17.3 SR-08 — the pager
+
+`616:2` adds Page 1 of 7 with Previous disabled and Next live, plus the reason
+in the frame itself: the page count comes from the server's pagination, never
+from the rows on screen. The production source carries that as a comment
+because getting it wrong makes review work past the first page silently
+unreachable.
+
+### 17.4 A failure mode worth recording
+
+Retexting a Figma text node whose `textAutoResize` is `WIDTH_AND_HEIGHT` grows
+it horizontally, and that growth propagates into every hugging ancestor. The
+longer research-band copy written in section 13 silently widened the queue
+container from 1118 to 1596 — a layout regression produced by a copy edit.
+
+Two rules follow, now applied:
+
+- **After any retext, pin the width** — switch to `HEIGHT` and resize — unless
+  the node is genuinely meant to grow.
+- **A document-wide sweep** for text nodes wider than 82% of their artboard
+  with `WIDTH_AND_HEIGHT` catches the class. Four more were found on page 15
+  and pinned.
+
+This is the same shape of error as the earlier fixed-height clipping: a local
+edit with a non-local layout consequence. Both are now checked for rather than
+discovered.
+
+## 18. D-04 typeface drift — measured, and narrower than recorded
+
+D-04 was carried as "Figma renders Inter". A document-wide census of every text
+node in every **non-superseded** frame shows that claim is wrong as stated.
+
+```text
+CURRENT-lane text nodes:   23,825
+Off-system families:        2,862   (12.0%)
+Pages with any drift:          19 of 28
+```
+
+The mandated families are Bricolage Grotesque, IBM Plex Sans, IBM Plex Mono and
+Newsreader. Page 40's CURRENT lane, for example, uses **only** those four
+across 1,225 nodes — zero Inter.
+
+### 18.1 Three of the four drift sources are not defects
+
+| Page | Off-system | Verdict |
+|---|---|---|
+| 00 — Capture Index | 123 Inter of 123 | **Not a defect.** Index and annotation page |
+| 01 — Production Baseline | 191 Segoe UI, 15 Georgia, 9 Inter | **Not a defect.** It documents what production actually renders; using the design system here would misrepresent the baseline |
+| 02 — Playground Baseline | 306 `* Local` variants | **Not a defect.** Locally-installed twins of the mandated families |
+| 03 — Production vs Playground | mixture of both baselines | **Not a defect.** Same reason |
+
+Recording those four pages as typeface drift inflated the problem by roughly a
+third and pointed remediation at pages that must not be changed.
+
+### 18.2 The real drift, ranked
+
+| Page | Inter nodes | Share of page |
+|---|---|---|
+| 20 — Overview / Command Center | 755 | 33% |
+| 15 — HAU USC Landing | 625 | 18% |
+| 80 — Administration + Governance | 64 | 4% |
+| 90 — Public + Authentication | 64 | 4% |
+| 11 — Foundations | 59 | 18% |
+| 70 — Restocking + Procurement + Events | 16 | 2% |
+| 10 — Authority + Design Handoff | 14 | 4% |
+
+Plus one family that is not Inter at all: **page 30 Inventory carries 16
+Bahnschrift nodes**. Bahnschrift is the *fallback* in the display font stack, so
+those nodes were authored while Bricolage Grotesque was unavailable and the
+substitution was silently accepted.
+
+`MIXED` counts — 50 on Release Desk, 52 on Public, 36 on Restocking, 20 on
+Profile — are nodes with more than one family inside a single text node. Those
+need per-range inspection, not a family swap.
+
+### 18.3 Why this is not fixed in this pass
+
+Converting ~1,600 nodes is a bulk mutation, and the two regressions recorded in
+this audit — the recolour incident at §3.1 and the width growth at §17.4 — were
+both bulk operations whose blast radius exceeded the intent. Inter and IBM Plex
+Sans have different metrics, so a family swap resizes every `WIDTH_AND_HEIGHT`
+node and propagates into hugging ancestors, which is precisely the §17.4
+failure at 1,600× scale.
+
+The conversion is therefore scoped as its own pass, per page, with the mapping
+rule stated in advance — display sizes to Bricolage Grotesque, body to IBM Plex
+Sans, matched weight — a dry run that reports every node it would touch, width
+pinning after each retext, and a render check before moving to the next page.
+
+D-04 stays open, but it is now a measured, ordered list of seven pages plus one
+Bahnschrift pocket rather than a file-wide assertion.
