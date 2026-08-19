@@ -242,3 +242,49 @@ npm run design:contrast        # 66/66 WCAG pairs, both themes
 npm run design:keyboard        # 32/32 real Playwright keyboard traversal
 npm run design:semantics       # 30/30 accessibility tree via CDP
 ```
+
+
+## Baseline 2026-08-20-B — programme closeout
+
+```text
+FIGMA DESIGN     hXJElH4p72KfgAaoUyfNOC  ·  28 pages · 136 variables · 102 components
+FIGMA MAKE       rP9W9MQlZkyQrUx38TVsFS  ·  Version 35, synced, no pending warning
+DESIGN BRANCH    frontend-design-integration @ dd22a8c
+PRODUCTION REF   0.8.2 @ c316e047 · schema 30  (read-only, never modified)
+CANONICAL GOLD   #D4AF37  ·  DESIGN.md D08.0, owner-locked
+```
+
+### Final confirmation sweep — one pass, whole document
+
+| Check | Result |
+|---|---|
+| Frames clipping their own content | **0** |
+| Superseded gold values (solid or gradient stop) | **0** |
+| Off-system typefaces across 21,498 CURRENT-lane text nodes | **0** |
+| Superseded route phrases anywhere | **0** |
+| Solid paint coverage | 93.1% of 42,723 |
+
+### Runnable acceptance
+
+```bash
+npm run design:tracker:check   # derived progress, fails when stale
+npm run design:contrast        # 66/66 WCAG pairs, both themes
+npm run design:keyboard        # 32/32 real Playwright keyboard traversal
+npm run design:semantics       # 30/30 accessibility tree via CDP
+```
+
+### Boundary attestation
+
+The v0.8.3 product worktree was read for contract truth and **never written**.
+Its three dirty `.codex` files carry a 2026-08-17 timestamp, three days before
+this programme began, and were preserved untouched. No Cloudflare, D1, R2,
+Google, provider, migration, deployment or release action occurred.
+
+### Accepted residuals
+
+| Item | Status |
+|---|---|
+| `FD-COLOUR` — 54 historically inferred colours | **BLOCKED.** The node ids were never recorded, so the set cannot be identified even with version history. Needs the Figma REST API with an owner token, or a manual version diff |
+| `FD-TOKENS-RESIDUAL` — 2,941 one-off paints | **Deliberately stopped** on owner direction that semantic correctness outranks binding percentage |
+| Hallmark as its own pass | Not run, not claimed |
+| Screen-reader runtime | Not run, not claimed; accessibility-tree evidence recorded instead |
