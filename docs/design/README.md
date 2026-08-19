@@ -22,6 +22,7 @@ authority links to keep a directory tidy. Status is declared here instead.
 | Production contracts for all five request/lending surfaces, and every drift entry | [PRODUCTION_PORTAL_PARITY_AUDIT.md](PRODUCTION_PORTAL_PARITY_AUDIT.md) |
 | Figma file and Make file state, defects D-01…D-08, incident record | [FIGMA_DESIGN_MAKE_AUDIT.md](FIGMA_DESIGN_MAKE_AUDIT.md) |
 | Named Figma baselines and token register | [FIGMA_BASELINE_REGISTER.md](FIGMA_BASELINE_REGISTER.md) |
+| **WCAG 2.2 AA acceptance for the public portals** | [ACCESSIBILITY_ACCEPTANCE.md](ACCESSIBILITY_ACCEPTANCE.md) — contrast is measured by `scripts/design/contrast-audit.mjs`, not asserted |
 | Production front-end parity baseline | [PRODUCTION_FRONTEND_PARITY_BASELINE.md](PRODUCTION_FRONTEND_PARITY_BASELINE.md) |
 | V5 functional parity, visual acceptance, transfer map, defect corrections | the four `V5_*.md` files |
 | Implemented visual world | `prototypes/impeccable-whole-site-redesign-v5/` |

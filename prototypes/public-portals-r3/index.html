@@ -26,6 +26,11 @@
          it carries no information, so it must never be announced. -->
     <div class="g0" data-module="lending" aria-hidden="true"></div>
 
+    <!-- 2.4.1 Bypass Blocks. The prototype control bar and the portal masthead sit
+         ahead of the catalog, so a keyboard user would otherwise tab the whole
+         chrome on every route change. -->
+    <a class="skip-link" href="#app">Skip to main content</a>
+
     <div class="proto-bar">
       <strong>R3 prototype</strong>
       <label>Route
@@ -57,7 +62,7 @@
     <div id="live-polite" class="sr-only" role="status" aria-live="polite"></div>
     <div id="live-assertive" class="sr-only" role="alert" aria-live="assertive"></div>
 
-    <div id="app"></div>
+    <main id="app" tabindex="-1"></main>
 
     <script type="module" src="./app.js"></script>
   </body>

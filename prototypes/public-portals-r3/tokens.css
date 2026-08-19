@@ -55,6 +55,15 @@
   --accent-line: #d1b478;
   --focus-ring: #e8b93c;
 
+  /* WCAG 2.2 1.4.11 needs 3:1 for anything that identifies a control or its
+     state. The brand tokens above do not reach it on cream, so control
+     boundaries, the selected state and the focus indicator get their own
+     tokens rather than being quietly excused. Measured by
+     scripts/design/contrast-audit.mjs. */
+  --border-control: #8f7d64;        /* 3.91 on --work, 3.03 on --ground */
+  --selected-line: #7d5518;         /* 6.49 on --work */
+  --focus-ring-contrast: #40070a;   /* paired with the gold ring below */
+
   /* Rail */
   --rail-from: #6b0e13;
   --rail-to: #3d070a;
@@ -140,6 +149,10 @@
   --action-primary: #eed08a;
   --accent-wash: rgba(238, 208, 138, 0.12);
   --accent-line: rgba(238, 208, 138, 0.32);
+
+  --border-control: #8f767b;        /* 4.22 on --work, 3.92 on --inset */
+  --selected-line: #c9a45f;         /* 7.50 on --work */
+  --focus-ring-contrast: #faf1de;
 
 
   --glass-hi: rgba(255, 250, 235, 0.22);

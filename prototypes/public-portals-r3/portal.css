@@ -20,9 +20,14 @@ html, body {
 h1, h2, h3 { font-family: var(--font-display); margin: 0; letter-spacing: -0.018em; }
 p { margin: 0; }
 
+/* Two-tone focus ring. Gold alone measured 1.40:1 on the ground — effectively
+   invisible. The inner ring carries the contrast, the gold halo carries the
+   brand, and at least one of them clears 3:1 against any surface in either
+   theme. */
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--focus-ring-contrast);
   outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--focus-ring);
   border-radius: var(--r-xs);
 }
 
@@ -90,7 +95,7 @@ p { margin: 0; }
   background: var(--work); border: 1px solid var(--border-subtle);
   border-radius: var(--r-lg);
 }
-.panel--active { border-color: var(--accent-line); border-width: 2px; }
+.panel--active { border-color: var(--selected-line); border-width: 2px; }
 .panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); flex-wrap: wrap; }
 .panel-head h2 { font-size: 24px; font-weight: 700; }
 .panel-head p { color: var(--text-secondary); font-size: 14px; margin-top: var(--s-1); }
@@ -108,7 +113,7 @@ p { margin: 0; }
 input, select, textarea {
   font: inherit; font-family: var(--font-body); font-size: 14px;
   color: var(--text-primary); background: var(--ground);
-  border: 1px solid var(--border-default); border-radius: var(--r-sm);
+  border: 1px solid var(--border-control); border-radius: var(--r-sm);
   padding: 11px 14px; width: 100%; min-height: var(--touch-min);
 }
 textarea { min-height: 96px; resize: vertical; }
@@ -116,7 +121,7 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
 
 .suggestions {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 30; margin-top: 6px;
-  background: var(--raised); border: 1px solid var(--border-default);
+  background: var(--raised); border: 1px solid var(--border-control);
   border-radius: var(--r-sm); padding: 6px 0; box-shadow: 0 10px 26px var(--shadow-drop);
 }
 .suggestions[hidden] { display: none; }
@@ -135,8 +140,8 @@ input::placeholder, textarea::placeholder { color: var(--text-muted); }
   border: 1px solid var(--border-subtle); border-radius: var(--r-md);
   transition: border-color var(--m-state) var(--ease-out), transform var(--m-state) var(--ease-out);
 }
-.card:focus-within { border-color: var(--accent-line); }
-.card--selected { border-color: var(--accent-line); border-width: 2px; background: var(--accent-wash); }
+.card:focus-within { border-color: var(--selected-line); }
+.card--selected { border-color: var(--selected-line); border-width: 2px; background: var(--accent-wash); }
 .card .thumb { height: 128px; border-radius: var(--r-sm); background: var(--inset); }
 .card h3 { font-size: 19px; font-weight: 700; }
 .card .meta, .card .rule { font-size: 11px; color: var(--text-muted); }
@@ -167,7 +172,7 @@ button.btn {
 button.btn:active { transform: translateY(1px); }
 button.btn[disabled] { opacity: .5; cursor: not-allowed; }
 .btn--primary { background: var(--action-primary); color: var(--on-accent); border: 1px solid var(--action-primary); }
-.btn--quiet { background: transparent; color: var(--text-primary); border: 1px solid var(--border-strong); }
+.btn--quiet { background: transparent; color: var(--text-primary); border: 1px solid var(--border-control); }
 .btn--mini { padding: 8px 14px; min-height: 36px; font-size: 13px; }
 
 /* ---------- request layout ---------- */
@@ -192,10 +197,10 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
 .choice {
   display: flex; align-items: center; gap: var(--s-3);
   padding: var(--s-4); border-radius: var(--r-sm);
-  background: var(--raised); border: 1px solid var(--border-default);
+  background: var(--raised); border: 1px solid var(--border-control);
   cursor: pointer;
 }
-.choice:has(input:checked) { background: var(--accent-wash); border-color: var(--accent-line); border-width: 2px; }
+.choice:has(input:checked) { background: var(--accent-wash); border-color: var(--selected-line); border-width: 2px; }
 .choice input { width: 18px; height: 18px; min-height: 0; flex: none; accent-color: var(--authority); }
 .choice strong { display: block; font-size: 15px; font-weight: 600; }
 .choice small { color: var(--text-secondary); font-size: 11px; }
@@ -261,6 +266,18 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
 .summary-row .val { flex: 1; }
 .summary-row .val strong { display: block; font-size: 15px; }
 .step-nav { display: flex; justify-content: space-between; gap: var(--s-3); margin-top: var(--s-5); }
+
+/* ---------- skip link ---------- */
+.skip-link {
+  position: absolute; left: var(--s-3); top: -60px; z-index: 100;
+  padding: 10px 16px; border-radius: var(--r-sm);
+  background: var(--work); color: var(--text-primary);
+  border: 1px solid var(--border-control); font-size: 14px; font-weight: 600;
+  transition: top var(--m-state) var(--ease-out);
+}
+/* :focus as well as :focus-visible. A skip link that only reveals under the
+   heuristic is a skip link that sometimes does not exist. */
+.skip-link:focus, .skip-link:focus-visible { top: var(--s-3); }
 
 /* ---------- live region ---------- */
 .sr-only {

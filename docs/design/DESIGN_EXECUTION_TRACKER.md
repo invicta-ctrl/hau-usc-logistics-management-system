@@ -35,10 +35,10 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       56%
-GATES:                  27 VERIFIED · 16 IN_PROGRESS · 1 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       58%
+GATES:                  28 VERIFIED · 15 IN_PROGRESS · 2 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        56.0
+VERIFIED WEIGHT:        58.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
@@ -145,7 +145,8 @@ not change without an owner decision.
 | --------------------------------------------------------------- | ------ | ----------- | ------------- | ------------------- | ------------------------------------------------------------- |
 | `RA-WIDTHS` 320/375/390/414/768/1024/1440/1920 matrix           | 3.0    | IN_PROGRESS | Figma page 92 | layout changes      | Partial; 1440 and 390 only for most modules                   |
 | `RA-TABLES` Per-table narrow-width strategy | 2.0 | VERIFIED | six `desktop-table` tables in `runtime.js` | a table gains or loses a column | `DESIGN.md` D29.1: comparison key, identity, kept-in-card and moved-to-detail declared for all six |
-| `RA-A11Y` WCAG 2.2 AA acceptance                                | 3.0    | IN_PROGRESS | §44           | any surface change  | Contrast and live regions done on R3; full matrix unrun       |
+| `RA-A11Y-STATIC` Contrast, structure, reflow, target size | 2.0 | VERIFIED | `scripts/design/contrast-audit.mjs` + DOM checks | any token or markup change | `ACCESSIBILITY_ACCEPTANCE.md`: 66/66 contrast pairs pass both themes; 10 initial 1.4.11 failures fixed; skip link, main landmark, describedby wiring, aria-invalid added |
+| `RA-A11Y-AT` Keyboard traversal and screen-reader pass | 1.0 | NOT_STARTED | — | — | Needs a compositing browser; the pane rendered no frames |
 | `RA-MOTION` Motion families applied and reduced-motion honoured | 2.0    | VERIFIED    | DESIGN.md D13 | motion token change | `--m-response/state/surface/overlay`, reduced-motion override |
 
 ### Area 9 — Documentation + final handoff · 10.0

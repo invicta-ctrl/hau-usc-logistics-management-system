@@ -8,6 +8,7 @@
     "dev": "vite",
     "design:tracker": "node scripts/design/design-tracker.mjs",
     "design:tracker:check": "node scripts/design/design-tracker.mjs --check",
+    "design:contrast": "node scripts/design/contrast-audit.mjs",
     "build": "vite build --mode preview && node scripts/create-shareable.mjs && node scripts/create-apps-script-bundle.mjs",
     "build:cloudflare": "vite build --mode staging --outDir ../.wrangler/build/staging",
     "build:cloudflare:production": "vite build --mode production --outDir ../.wrangler/build/production",

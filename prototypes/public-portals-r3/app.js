@@ -544,7 +544,7 @@ function stepBody(isEvent, o) {
       <div class="field"><label for="r-tel">Contact number *</label><input id="r-tel" placeholder="Mobile or landline"></div>
       <div class="field span-2"><label for="r-mail">Email address *</label>
         <input id="r-mail" type="email" placeholder="name@example.edu.ph">
-        <p class="help">Used to send the tracking reference. It is not shown in public tracking.</p></div>
+        <p class="help">Used for follow-up about this request only. The private tracking code is shown once on screen after submission &mdash; it is never emailed and cannot be recovered later.</p></div>
     </div>`;
 
   if (step === 3) return isEvent
@@ -654,7 +654,38 @@ function render() {
   if (route === 'request') { app.innerHTML = requestView(); bindRequest(); }
   else { app.innerHTML = lendingView(); bindLending(); }
 
+  wireDescriptions();
   document.title = `HAU-USC · ${route} · ${theme} · R3 prototype`;
+}
+
+/* A hint that sits beside a control but is not referenced by it is invisible to
+   a screen reader — sighted users get it for free, everyone else does not. This
+   wires every .help in a .field to that field's control, and keeps aria-invalid
+   truthful as the user types rather than only at submit. */
+let describeSeq = 0;
+function wireDescriptions() {
+  app.querySelectorAll('.field').forEach((field) => {
+    const control = field.querySelector('input, select, textarea');
+    const helps = [...field.querySelectorAll('.help')];
+    if (!control || !helps.length) return;
+    const ids = helps.map((help) => {
+      if (!help.id) help.id = `help-${++describeSeq}`;
+      return help.id;
+    });
+    const existing = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+    control.setAttribute('aria-describedby', [...new Set(existing.concat(ids))].join(' '));
+  });
+
+  app.querySelectorAll('input, select, textarea').forEach((control) => {
+    const sync = () => {
+      // Only assert invalidity once the field has been touched. Marking an
+      // untouched required field invalid on load is noise, not help.
+      if (!control.dataset.touched) return;
+      control.setAttribute('aria-invalid', String(!control.checkValidity()));
+    };
+    control.addEventListener('blur', () => { control.dataset.touched = '1'; sync(); });
+    control.addEventListener('input', sync);
+  });
 }
 
 /* prototype control bar */
