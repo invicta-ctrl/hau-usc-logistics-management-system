@@ -29,36 +29,33 @@ Both the Figma design file and Figma Make asserted that public borrowing require
 
 ### State
 
-- **Done:** production contract audit for both public portals; Public Lending built across 1440 light/dark, Angelite branch, receipt, four declared catalog states, 390 mobile; Overview D-07/D-06/D-01 repairs; page-10 Authority board; coded prototype + Figma Make component; **Staff Request Center reconciliation (audit sections 10–13)**.
-- **Open:** Public Request field-by-field diff; Staff Request SR-01 / SR-05 / SR-07 / SR-08 / SR-09; D-02 blur ladder; D-04 typeface (Figma renders Inter, authority mandates Bricolage/Plex/Newsreader, production ships Georgia/Aptos); 54 inferred colours on page 15 from the section 3.1 incident; two unbound status-dot fills at `300:585` / `300:609`.
+- **Done:** production contracts for all five surfaces read at the deployed commit (audit §3, §5, §10, §12, §14, §15); Public Lending built across 1440 light/dark, Angelite branch, receipt, four catalog states, 390 mobile; Staff Request Center reconciled and its submission region built; authenticated requester portal built; 22 Figma clipping faults repaired document-wide; D-02 closed; token coverage raised 67.7% → 83.7%.
+- **Open:** Public Request field-by-field diff against audit §5; SR-07 composite requests; D-04 typeface conversion (scoped at audit §18); D-05 remaining 7,373 unbound paints needing role decisions (audit §19.4); 54 inferred colours on page 15; Figma Make internal modules; responsive and accessibility matrices.
 - **Hallmark:** still not run as its own pass. Impeccable's detector and `DESIGN.md` D35 cover overlapping ground; that is not the same discipline and is not claimed as such.
-- **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls.
-- **Evidence:** `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D24.0 and D40.
-- **Resume:** build the authenticated requester portal (context B) from audit section 12, then the Public Request field-by-field diff against section 5. Do not re-derive production truth from documentation — read it at the deployed commit.
+- **Boundary held:** no product code, release state, provider, database, migration, or deployment write. Zero Cloudflare/D1/R2/Google calls. One production defect candidate recorded and deliberately not fixed (PDC-01, audit §16).
+- **Evidence:** `docs/design/DESIGN_EXECUTION_TRACKER.md` (canonical progress), `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md` §1–§20, `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md`, `docs/design/FIGMA_BASELINE_REGISTER.md`, `DESIGN.md` D23.0, D24.0, D40.
+- **Resume:** Public Request field-by-field diff against audit §5, then the per-page D-04 typeface conversion. Do not re-derive production truth from documentation — read it at the deployed commit.
 
-### Staff Request Center pass — what it found
+### What the Staff Request Center pass established
 
 Production's Request Center is a **submission form with a review queue appended
 below it**, and the queue exists only for a session holding `request.review`.
-Figma had only the queue, so the surface was previously logged as "represented"
-when the larger half of it is absent. Priority raised LOW → HIGH.
+Figma had only the queue. Both halves now exist: the submission region is
+`615:2` and the corrected per-line decision panel is `300:624`.
 
-Eight drift entries, three of them HIGH. Corrected in Figma this pass: the route
-vocabulary (Figma offered *Accept and reserve*, *Fulfil from stock*, *Route to
-canvassing* and *Send to Release Desk*, none of which are production routes,
-while *Catalog restock* was missing), and the per-line decision model —
-production requires an explicit route for every reviewable line with no
-pre-selected default, which RV-01.6 introduced deliberately so one click cannot
-route a whole request. The queue also displayed `Approved` and `Closed` rows it
-can never hold.
+The route vocabulary was wrong in a way that inverted the lifecycle. Figma
+offered *Accept and reserve*, *Fulfil from stock*, *Route to canvassing* and
+*Send to Release Desk*; production's routes are `ISSUE_FROM_STOCK`,
+`PROCUREMENT`, `RESTOCK`, `REJECT` and `MISSING_INFORMATION`. The Release Desk
+contract (audit §15) independently confirms it: a request **arrives** there when
+its lines reach a ready state, so review cannot send anything to it.
 
-Found while making that fix visible: the record inspector `300:502` is a fixed
-380 × 380 hard clip (`overflowDirection: NONE`) over 2,086px of content, so most
-of the authored inspector never rendered. Releasing it cascades into a fixed
-1,408px page body and collapsed the queue container, so the artboard was
-restored to its authored geometry and the corrected inspector was cloned into a
-full-height evidence frame, `603:137`. Recorded as SR-09 — a Figma construction
-fault, not a production defect.
+The record inspector was a fixed 380 × 380 hard clip over 2,086px of content, so
+most of it never rendered. The same template was clipping Inventory, Lending Hub
+and Release Desk. Root cause of the fragility was a queue container sitting
+FILL-vertical inside a content-driven vertical parent, which starved to 1px the
+moment a sibling grew. All 22 instances are repaired and a full-document rescan
+returns zero.
 
 ## Branch-local frontend continuation — HISTORICAL (v0.7.3 GPT Sites candidate)
 
