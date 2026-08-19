@@ -953,3 +953,85 @@ refusal card for anything else.
 Every fill and stroke is variable-bound. One construction defect was caught on
 first render — a frame left at `createFrame`'s 100px default width let the
 requester name run under the Sign out button — and fixed by hugging it.
+
+## 21. Public Request Center — field-by-field diff, PR-01 closed
+
+Diffed `src/visual/public-requester-portal.js` at `c316e047` against Figma page
+40's `public.request-intake` frames.
+
+### 21.1 Production is a five-step flow
+
+```text
+1  Request Purpose      2  Requester      3  Event & Schedule
+4  Requirements         5  Review & Submit
+```
+
+The Figma frame was **one page**. Everything below was absent from it.
+
+| Contract element | In Figma before |
+|---|---|
+| Step 1 purpose choice — `EVENT_ACTIVITY_SUPPORT` (default) / `OFFICE_INVENTORY_PANTRY` | absent |
+| `requesterName` (120, required) | absent |
+| `requesterType` (select, required) | absent |
+| `organization` (120, required) | present as "Requesting department" |
+| `contactNumber` (24, required) | absent |
+| `email` (254, required) | present |
+| Private related-request lookup — `relatedLookupId` (80) + `relatedLookupCode` (masked, 128) + Verify + polite live region | absent |
+| `eventSeriesId` required, `eventId` required and **disabled until a series is chosen** | collapsed into one "Event or sub-event" field |
+| `originalRequestId`, `location` (160), `startDate`, `endDate`, `eventPurpose` (500, required) | only two dates |
+| Whole restock branch — `stockArea`, `neededDate`, `relatedRequestId`, `restockPurpose`, all required and disabled while inactive | absent |
+| Both source-empty notes | absent |
+| Category composer with three distinct field sets | flat Item / Quantity / Note |
+| "Submission does not reserve or reduce physical stock" | present, worded differently |
+| Step 5 review with per-section `data-edit-step` Edit | absent |
+| Evidence note | absent |
+| Lead-time warning at ≤ 3 days | absent |
+| Four required acknowledgments — review, privacy, acceptable use, evidence consent | **all four absent** |
+| Receipt: Request ID + private tracking code, shown once, unrecoverable | absent |
+| Track form: `requestId` + masked `trackingCode` | result state only, no lookup form |
+
+### 21.2 Two entries are contradictions, not omissions
+
+**PR-02 · CONTRACT_CONTRADICTION · HIGH.** The intake frame labelled the email
+field *"Used only to send your tracking reference."* Production does the
+opposite: it renders the code **once on screen** with *"This code is shown once.
+Store it securely; it cannot be recovered from this browser."* Nothing is
+emailed. A requester who believed that copy would close the tab expecting an
+email and lose access to their own request permanently.
+
+**PR-03 · INVENTED_AFFORDANCE · MEDIUM.** The frame offered **"Save and review
+later"**. There is no draft persistence in the module — no storage, no resume
+path. The button promised a capability that does not exist.
+
+Both are the same class as PL-01: not a missing field, but design copy asserting
+behaviour the product does not have.
+
+### 21.3 What was built
+
+`626:2` — `CURRENT · public.request — five-step intake, reconciled to
+production · 1440 · light`. All five steps, the related-request lookup with its
+masked code and live region, both branches with the inactive one shown as
+disabled rather than merely hidden, the composer with its three field sets
+described, the review stage with per-section Edit, the lead-time warning, all
+four acknowledgments badged Required, the once-only receipt, and the tracking
+lookup with its privacy statement.
+
+Step 2 carries the correction to PR-02 directly: *"The tracking code is shown
+once on screen after submission. It is not emailed and cannot be recovered from
+this browser."*
+
+`300:2428` and `300:2677` are renamed `SUPERSEDED ·` with the reason inline.
+They are preserved, not deleted — their field-level error treatment ("Three
+fields need attention", "Nothing has been submitted and everything you entered
+is still here") is good work worth keeping as reference.
+
+`300:2941`, the tracking **result** state, is not superseded. It shows lifecycle
+state only and its "Only lifecycle state is shown" note matches the production
+privacy boundary. What it lacks is the lookup form that precedes it, now built
+in `626:2`.
+
+### 21.4 Still open for this surface
+
+Dark mode, 390 mobile, and the loading, empty, error and service-unavailable
+states for the new frame. The error treatment should be ported from the
+superseded frames rather than reinvented.

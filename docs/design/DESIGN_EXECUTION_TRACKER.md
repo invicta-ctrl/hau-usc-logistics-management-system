@@ -23,7 +23,7 @@ because the derived block is overwritten on every run; a value that only exists
 inside it cannot survive.
 
 ```text
-CURRENT PHASE:          Phase A complete — Phase E Staff Request build next
+CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       45.5%
-GATES:                  22 VERIFIED · 17 IN_PROGRESS · 5 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       48.5%
+GATES:                  23 VERIFIED · 17 IN_PROGRESS · 4 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        45.5
-CURRENT PHASE:          Phase A complete — Phase E Staff Request build next
+VERIFIED WEIGHT:        48.5
+CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 23 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 22 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -93,8 +93,8 @@ not change without an owner decision.
 
 | Gate                                                       | Weight | Status      | Baseline                                       | STALE_IF | Evidence                                            |
 | ---------------------------------------------------------- | ------ | ----------- | ---------------------------------------------- | -------- | --------------------------------------------------- |
-| `PR-DIFF` Field-by-field diff against contract             | 3.0    | NOT_STARTED | Parity audit §5                                | —        | —                                                   |
-| `PR-FIGMA` Figma intake + tracking + error states complete | 3.0    | IN_PROGRESS | Figma page 40 `300:2428` `300:2677` `300:2941` | —        | Intake, error and tracking frames exist; not diffed |
+| `PR-DIFF` Field-by-field diff against contract | 3.0 | VERIFIED | Parity audit §5 | public request module changes | Audit §21; 20 contract elements diffed, PR-02 and PR-03 raised |
+| `PR-FIGMA` Figma intake + tracking + error states complete | 3.0 | IN_PROGRESS | Figma `626:2`, `300:2941` | node edits on the intake frame | Five-step intake built and old frames superseded, audit §21.3; dark, 390 and the four states still open |
 | `PR-MAKE` Make parity                                      | 2.0    | IN_PROGRESS | Make                                           | —        | Shares `PublicFlows.tsx`                            |
 | `PR-IMPL` Design-branch implementation                     | 2.0    | IN_PROGRESS | `prototypes/public-portals-r3/`                | —        | Stepper implemented; not diffed against contract    |
 
@@ -183,6 +183,8 @@ final global audit passed
 
 | ID    | Severity | Item                                            | Status |
 | ----- | -------- | ----------------------------------------------- | ------ |
+| PR-02 | HIGH | Intake claimed the tracking reference is emailed; production shows it once and never emails it | CLOSED — audit §21.2, corrected in `626:2` |
+| PR-03 | MEDIUM | Intake offered "Save and review later"; no draft persistence exists | CLOSED — frame superseded |
 | SR-05 | MEDIUM | Queue column set differs from production | CLOSED — requester identity restored; row-selection interaction accepted |
 | SR-07 | MEDIUM   | Composite requests represented nowhere          | OPEN   |
 | SR-08 | MEDIUM | No pager on a server-clamped queue | CLOSED |
