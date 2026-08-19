@@ -10,7 +10,7 @@ DATE:                       2026-08-20 (Asia/Manila)
 
 DESIGN_BRANCH:              frontend-design-integration
 STARTING_SHA:               908653dc956c9ccffa68ac0b350fc23b69f053ea
-ENDING_SHA:                 <backfilled at closeout — see baseline 2026-08-20-C>
+ENDING_SHA:                 8c4a6f6f9e1af11b2b93c31ab4ac92f45542b250 (+ this SHA backfill commit)
 UPSTREAM:                   origin/frontend-design-integration
 WORKTREE_STATE:             clean except .impeccable/hook.cache.json, an untracked tool cache
 

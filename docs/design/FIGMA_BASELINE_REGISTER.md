@@ -300,7 +300,7 @@ FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 
 FIGMA DESIGN VERSION content identity only — the MCP bridge cannot create named Figma history
 FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · live at Version 36 · last verified content Version 35
 DESIGN BRANCH        frontend-design-integration
-DESIGN SHA           <backfilled at closeout>
+DESIGN SHA           8c4a6f6f9e1af11b2b93c31ab4ac92f45542b250 · plus the two-line SHA backfill commit that follows it
 TRACKER COMPLETION   87% (derived)
 HANDOFF READINESS    READY
 CANONICAL GOLD       #D4AF37 · DESIGN.md D08.0 · owner-locked
