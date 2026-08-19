@@ -34,7 +34,7 @@ as PL-01 in the parity audit, present in Make as well as in the design file.
 | Lending Center | Catalog-first; four filters; six items exercising `AVAILABLE` / `LIMITED` / `ELIGIBILITY_REQUIRED` / `UNAVAILABLE`; selection with per-item quantity capped at `maximumQuantity`; both borrower branches; conditional due date and conditional responsibility acknowledgment driven by the selected item's rules; all five acknowledgments; receipt with one-time code |
 | Request Center | Five-step flow; both purposes with their distinct step-3 branches; request lines; review stage with per-step Edit; all four acknowledgments |
 | Tracking | Identifier + masked code, with the privacy boundary stated |
-| Access application | The one genuinely protected path — this is where `onRequireAuth` still belongs |
+| Staff sign in | A hand-off, not a view. `onRequireAuth` fires and the portal is left behind. The application form itself lives in `figma-make/src/app/StaffAccess.tsx`, rendered by the sign-in surface — production keeps it as an `auth-card`, not a public portal tab |
 | Catalog states | Populated, loading, service error, and *nothing published*, kept distinct from *filtered empty* |
 
 `onRequireAuth` is retained in the props type for compatibility but is no longer

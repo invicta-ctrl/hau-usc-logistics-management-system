@@ -30,7 +30,7 @@ import React, { useMemo, useState } from "react";
 import { uscLogo, dolLogo, defaultItemImage } from "../../ProductionAssets";
 
 type Route = "request" | "tracking" | "borrow";
-type View = "Lending Center" | "Request Center" | "Track a record" | "Access application" | "Policy";
+type View = "Lending Center" | "Request Center" | "Track a record" | "Policy";
 
 type CatalogState = "populated" | "loading" | "error" | "empty";
 type BorrowerType = "" | "USC_STAFF" | "ANGELITE";
@@ -220,13 +220,20 @@ export default function PublicFlows({
         </section>
       )}
 
+      {/* Production's portal-navigation.js offers exactly four destinations:
+          Request Center, Lending Center, Staff sign in, and back to selection.
+          Applying for staff access is not a public portal view — it sits behind
+          the sign-in page, which is the one genuinely protected path here. */}
       <nav aria-label="Public portals">
-        {(["Lending Center", "Request Center", "Track a record", "Access application", "Policy"] as View[]).map((next) => (
+        {(["Lending Center", "Request Center", "Track a record", "Policy"] as View[]).map((next) => (
           <button type="button" key={next} className={view === next ? "active" : ""}
             onClick={() => { setView(next); setLendReceipt(null); setReqReceipt(false); setAlert(""); }}>
             {next}
           </button>
         ))}
+        <button type="button" className="leave" onClick={() => onRequireAuth("request-center")}>
+          Staff sign in
+        </button>
       </nav>
 
       {/* ==================== LENDING CENTER ==================== */}
@@ -618,27 +625,6 @@ export default function PublicFlows({
         </section>
       )}
 
-      {/* ==================== ACCESS APPLICATION (genuinely protected) ==================== */}
-      {view === "Access application" && (
-        <section className="panel glass">
-          <p className="eye">Staff access</p>
-          <h1>Apply for staff access</h1>
-          <p>Staff access is the one path here that is genuinely protected. Public request and public lending
-             are not — they need no account.</p>
-          <div className="grid">
-            <label>Institutional identifier<input placeholder="Authorized identifier" /></label>
-            <label>Committee or office<input /></label>
-            <label className="span2">Requested work scope<select defaultValue="">
-              <option value="">Choose scope</option><option>Requests</option>
-              <option>Inventory and receiving</option><option>Release Desk</option></select></label>
-            <label className="span2">Reason<textarea rows={3} /></label>
-          </div>
-          <button type="button" className="primary" onClick={() => onRequireAuth("request-center")}>Continue to staff sign-in</button>
-          <p className="consequence">Roles and capabilities come from authorized account records. Applicants cannot
-            choose administrator access.</p>
-        </section>
-      )}
-
       {/* ==================== POLICY ==================== */}
       {view === "Policy" && (
         <section className="panel glass">
@@ -768,6 +754,11 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .ack.cond{border-color:var(--infoL)}
 .ack input{width:18px;height:18px;min-height:0;flex:none;margin-top:3px;accent-color:var(--ox)}
 .ack b{display:block;font-size:15px}.ack small{color:var(--muted);font-size:13px}
+/* The sign-in hand-off leaves the public portal, so it must not look like a
+   sibling tab that switches a view in place. */
+nav .leave{margin-left:auto;border-style:dashed}
+nav .leave::after{content:" →"}
+
 /* No left accent bar. DESIGN.md D08: lines are semantic — they connect a route,
    divide data, or indicate selection. A coloured tab on a disclaimer does none
    of those, and it is the most common tell of a generated UI. The quiet inset
