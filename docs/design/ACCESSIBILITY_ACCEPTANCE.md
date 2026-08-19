@@ -93,9 +93,9 @@ and the distinction matters:
 
 Stated plainly rather than folded into a pass:
 
-- **Keyboard traversal order** was not walked. The Browser pane was not
-  compositing frames, so real `Tab` presses did not move focus and screenshots
-  were unavailable.
+- **Keyboard traversal order** was not walked with real keys. It is instead
+  computed from the DOM and verified geometrically — see the focus-order section
+  below, which supersedes this line for 2.4.3 and 2.4.11.
 - **Focus appearance was verified by rule, not by pixel** — the authored
   declarations, the resolved token values, and the computed `top`/`outline` with
   the transition disabled. Not a rendered image.
@@ -117,5 +117,67 @@ measurement.**
 
 ## Open
 
-`RA-A11Y-AT` in the tracker: keyboard traversal, focus-not-obscured (2.4.11),
-and a screen-reader pass on both portals, in an environment that renders.
+`RA-A11Y-AT` in the tracker: a real keyboard walk and a screen-reader pass on
+both portals. Focus order and focus-not-obscured are covered below.
+
+
+## Responsive matrix — measured at all eight widths
+
+`prototypes/public-portals-r3`, lending route, measured in a live browser.
+**Zero horizontal document overflow at every width.**
+
+| Width | Catalog | Filters | Two-column | Sticky bar | Portal nav |
+|---|---|---|---|---|---|
+| 320 | 1 col | scrollable chip row | single | shown | chip row |
+| 375 | 1 col | chip row | single | shown | chip row |
+| 390 | 1 col | chip row | single | shown | chip row |
+| 414 | 1 col | chip row | single | shown | chip row |
+| 768 | 2 col | grid | single | hidden | inline |
+| 1024 | 2 col | grid | 537 + 400 | hidden | inline |
+| 1440 | 3 col | grid | 768 + 400 | hidden | inline |
+| 1920 | 3 col | grid | 768 + 400, shell capped at 1240 | hidden | inline |
+
+Each regime is a transformation, not a stack: the filters change from a grid to
+a horizontally scrollable chip row, the sidebar joins the main column at 1024,
+and the action bar becomes sticky only where the form is one column.
+
+### Two defects found, both fixed
+
+**Portal navigation vanished below 768.** The rule was `display: none` with no
+replacement, so a phone user was stranded inside whichever portal they landed on
+— no route to Request Center, Staff sign in, or portal selection, which are
+three of production's four destinations. Hiding is not a responsive strategy.
+It is now a scrollable chip row using the same idiom as the filters, with 36px
+targets, and all four destinations are reachable at 320.
+
+**SC 2.4.11 Focus Not Obscured (Minimum).** The 80px sticky action bar is fixed
+over the content, and `scrollIntoView` stops as soon as a target is technically
+inside the viewport — so **14 focusable controls landed underneath the bar** at
+390px: the search field, all four filters, five category chips, both borrower
+radios, and the whole tracking form. A keyboard user would have been typing into
+something they could not see.
+
+Fixed with `scroll-margin-bottom` on every focusable descendant of `#app`,
+reserving the bar's height plus a gap. Re-measured: **0 obscured**.
+
+## Focus order — 2.4.3
+
+Computed from the DOM in sequential focus order rather than by walking keys:
+
+- **22 tabbable targets**, no positive `tabindex` anywhere;
+- the **skip link is first**;
+- **no backward jumps** — focus never moves up the page by more than a row;
+- no zero-height targets in the ring.
+
+### Why it was computed rather than walked
+
+Synthetic key events dispatched by the browser tooling **do not drive native
+sequential focus navigation** — 30 `Tab` presses produced zero `focusin` events
+with a listener armed. This is the same limitation class as the synthetic
+clipboard event that silently failed during the Figma Make paste: the event
+reaches the page, but the browser's own behaviour behind it does not run.
+
+So the tab ring is verified structurally and the obscuring check is verified
+geometrically, by scrolling each target into view exactly as the browser would.
+A real keyboard walk and a screen-reader pass remain outstanding, and
+`RA-A11Y-AT` stays open for them.
