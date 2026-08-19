@@ -1035,3 +1035,29 @@ in `626:2`.
 Dark mode, 390 mobile, and the loading, empty, error and service-unavailable
 states for the new frame. The error treatment should be ported from the
 superseded frames rather than reinvented.
+
+## 22. SR-07 — composite requests, the last Staff Request gap
+
+`628:2` sits between the submission region and the review queue, which is where
+production puts it.
+
+Three things it had to get right, because each is a rule rather than a layout:
+
+1. **It is feature-flagged.** The panel carries `data-composite-feature` and is
+   `hidden` until `applyCompositeRequestFeatureState()` enables it. The frame
+   says so, so nobody draws it as always-present chrome.
+2. **All three sections are exposed together** — Food, Materials, Venue &
+   Equipment. It is not a picker or a wizard; the requester sees the whole
+   surface and fills in what applies.
+3. **Selection has a consequence that must be visible.** Each selected
+   non-empty section becomes **one independently trackable child** of a single
+   parent request; an untouched section creates **no** child. Each section
+   header carries that state as a badge — *Selected — becomes one child* against
+   *Untouched — creates no child* — so the model is legible before submission
+   rather than discovered after it.
+
+The result strip shows the parent and one child with its own ID and its own
+`FOR_REVIEW` status, which is the point of the feature.
+
+With this, every SR item raised in section 11 is closed: SR-01 through SR-08
+resolved, SR-09 repaired at source rather than cloned.

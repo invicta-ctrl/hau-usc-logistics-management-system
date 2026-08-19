@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       48.5%
-GATES:                  23 VERIFIED · 17 IN_PROGRESS · 4 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       49.5%
+GATES:                  24 VERIFIED · 17 IN_PROGRESS · 3 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        48.5
+VERIFIED WEIGHT:        49.5
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 22 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 21 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -107,7 +107,7 @@ not change without an owner decision.
 | `SR-QUEUE` Queue admits only For Review / Needs Information | 1.0    | VERIFIED    | `reviewQueueRows()`                | queue filter changes | Audit §13.4                          |
 | `SR-FORM` Submission form region exists in Figma | 2.0 | VERIFIED | Parity audit §10.1 | `views/request.html` field set changes | Figma `615:2`; audit §17.1 |
 | `SR-COLUMNS` Queue column set + server pager | 1.0 | VERIFIED | Parity audit §10.3 | queue columns or pagination change | Requester identity restored; pager `616:2`; audit §17.2–17.3 |
-| `SR-COMPOSITE` Composite request panel represented          | 1.0    | NOT_STARTED | Parity audit §10.2                 | —                    | SR-07 open                           |
+| `SR-COMPOSITE` Composite request panel represented | 1.0 | VERIFIED | Parity audit §10.2 | composite feature contract changes | Figma `628:2`; audit §22 |
 | `SR-CTXB` Authenticated requester portal built | 1.0 | VERIFIED | Parity audit §12 | `/api/portal/request*` contract changes | Figma `624:2`; audit §20 |
 
 ### Area 5 — Figma Design completion · 15.0
@@ -186,7 +186,7 @@ final global audit passed
 | PR-02 | HIGH | Intake claimed the tracking reference is emailed; production shows it once and never emails it | CLOSED — audit §21.2, corrected in `626:2` |
 | PR-03 | MEDIUM | Intake offered "Save and review later"; no draft persistence exists | CLOSED — frame superseded |
 | SR-05 | MEDIUM | Queue column set differs from production | CLOSED — requester identity restored; row-selection interaction accepted |
-| SR-07 | MEDIUM   | Composite requests represented nowhere          | OPEN   |
+| SR-07 | MEDIUM | Composite requests represented nowhere | CLOSED — audit §22 |
 | SR-08 | MEDIUM | No pager on a server-clamped queue | CLOSED |
 | D-02  | MEDIUM   | Blur variables do not bind to effect styles     | OPEN   |
 | D-04  | MEDIUM   | Figma renders Inter against mandated typefaces  | OPEN   |
