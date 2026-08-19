@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       49.5%
-GATES:                  24 VERIFIED · 17 IN_PROGRESS · 3 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
+OVERALL VERIFIED:       52%
+GATES:                  25 VERIFIED · 16 IN_PROGRESS · 3 NOT_STARTED · 1 NEEDS_REVERIFY · 0 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        49.5
+VERIFIED WEIGHT:        52.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 21 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 20 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -134,7 +134,7 @@ not change without an owner decision.
 | Gate                                                 | Weight | Status      | Baseline                                 | STALE_IF                   | Evidence                                                                         |
 | ---------------------------------------------------- | ------ | ----------- | ---------------------------------------- | -------------------------- | -------------------------------------------------------------------------------- |
 | `IG-LADDER` G0–G4 optical ladder defined             | 2.5    | VERIFIED    | `prototypes/public-portals-r3/glass.css` | ladder values change       | G0 ground + G1–G4 panes, HAU institutional fields                                |
-| `IG-TOKENS` Glass tokens reconciled Figma ↔ code     | 2.5    | IN_PROGRESS | Glass Material collection                | token rename               | Code tokens exist; Figma mapping not proven one-to-one                           |
+| `IG-TOKENS` Glass tokens reconciled Figma ↔ code | 2.5 | VERIFIED | Glass Material collection ↔ `glass.css` | either side changes a value | Audit §23: 7 existing tokens verified zero-drift, 10 created, correspondence table written into `glass.css` |
 | `IG-ZONES` No-glass zones honoured on dense surfaces | 2.0    | IN_PROGRESS | §35                                      | —                          | `.on-glass` contrast guarantee implemented; internal modules unaudited           |
 | `IG-PERF` Performance fallbacks                      | 1.5    | VERIFIED    | `glass.css` media queries                | new nested backdrop-filter | `prefers-reduced-transparency`, mobile two-field fallback, no glass-behind-glass |
 | `IG-A11Y` Glass contrast in both modes               | 1.5    | IN_PROGRESS | WCAG 2.2 AA                              | palette change             | Light mode measured; dark-mode glass not fully measured                          |

@@ -1,4 +1,32 @@
 /* HAU-USC Logistics — G0–G4 optical material ladder.
+
+   FIGMA CORRESPONDENCE — verified 2026-08-19, zero drift
+   Collection: HAU-USC / Glass Material (modes Light, Dark) in hXJElH4p72KfgAaoUyfNOC.
+   Every custom property below has exactly one variable, and the values match.
+
+     --g1-fill          material/g1/soft
+     --g2-fill          material/g2/operational
+     --g3-fill          material/g3/raised
+     --g4-fill          material/g4/crystal-focus
+     --edge-quiet       material/edge/quiet
+     --edge-strong      material/edge/strong
+     --scrim            material/scrim
+     --g1-blur          material/blur/g1        (bound to Material / G1 Soft Glass)
+     --g2-blur          material/blur/g2        (bound to Material / G2 Operational Glass)
+     --g3-blur          material/blur/g3        (bound to Material / G3 Raised Record)
+     --g4-blur          material/blur/g4        (bound to Material / G4 Crystal Focus)
+     --field-anchor     material/field/anchor
+     --field-decision   material/field/decision
+     --field-halo       material/field/halo
+     --rule-ink         material/rule/ink
+     --glass-hi         material/highlight/inner
+     --shadow-g1..g4    material/shadow/g1..g4
+     --shadow-drop      material/shadow/drop
+
+   The last ten were created in Figma to close the gap; the first seven were
+   already present and already correct. If you change a value here, change the
+   variable too — a divergence here is exactly the D-02 failure.
+
    Ported from Figma page 11 Foundations + page 20 Overview, extended to every module.
 
    THE RULE THAT GOVERNS THIS FILE

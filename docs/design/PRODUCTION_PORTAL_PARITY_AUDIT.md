@@ -1061,3 +1061,39 @@ The result strip shows the parent and one child with its own ID and its own
 
 With this, every SR item raised in section 11 is closed: SR-01 through SR-08
 resolved, SR-09 repaired at source rather than cloned.
+
+## 23. Institutional Glass — Figma and code now map one-to-one
+
+The Glass Material collection held seven colour tokens and four blur tokens.
+`glass.css` implements twenty-one. The gap was not a naming difference: ten
+values existed only in code, so a designer changing the environment in Figma
+would have changed nothing, and a developer changing it in code would have
+silently diverged from the file.
+
+**The seven existing colour tokens were checked value-by-value against
+`glass.css` in both modes. Zero drift.** The ladder itself was correct; only
+its coverage was short.
+
+Ten variables created in Glass Material, Light and Dark, each carrying a
+description pointing back at `glass.css`:
+
+| Added | Role |
+|---|---|
+| `material/field/anchor` · `field/decision` · `field/halo` | the three G0 environment fields — the oxblood anchor, the gold decision field and the angel-light halo |
+| `material/rule/ink` | the ledger rule grid painted on the ground |
+| `material/highlight/inner` | the inner top highlight every pane carries |
+| `material/shadow/g1` … `g4` | the elevation ladder matched to the blur ladder |
+| `material/shadow/drop` | the generic drop used off the ladder |
+
+`glass.css` now opens with the correspondence table, property by property, and
+states the rule plainly: change one, change the other. A divergence here is
+exactly the D-02 failure — two sources, one inert.
+
+### Why the G0 fields had to become tokens
+
+The environment is not decoration. A Gaussian blur destroys detail below
+roughly 2·sigma and preserves structure only above roughly 6·sigma, so at the
+G2 sigma of 22px nothing smaller than about 132px survives. The three fields are
+large and slow **because** that is what transmits. Leaving them as hard-coded
+gradients meant the one part of the system that has to be tuned against the blur
+ladder could not be tuned from the same place as the blur ladder.
