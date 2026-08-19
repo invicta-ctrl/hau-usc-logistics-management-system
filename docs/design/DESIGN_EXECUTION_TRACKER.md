@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-19 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       93%
-GATES:                  46 VERIFIED · 3 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       95%
+GATES:                  47 VERIFIED · 2 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        93.0
+VERIFIED WEIGHT:        95.0
 CURRENT PHASE:          Phases A, C and E closed — Phase D/F module build next
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-19 (Asia/Manila)
-100% ELIGIBLE:          NO — 4 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 3 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -122,7 +122,7 @@ not change without an owner decision.
 | `FD-BLUR` Blur ladder reconciled with effect styles | 2.0 | VERIFIED | Material effect styles | any blur radius unbinds | D-02 closed at audit §19.1: variables set to 16/22/30/36 and every Material background-blur radius bound to its variable |
 | `FD-TYPE` Typeface reconciliation | 2.0 | VERIFIED | census of 23,189 CURRENT-lane text nodes | a new off-system family appears | D-04 closed at audit §26: 1,380 nodes converted across 8 pages, 0 off-system remaining, baseline capture pages correctly excluded |
 | `FD-COLOUR` 54 inferred colours on page 15 proven | 2.0 | BLOCKED | §3.1 incident record | — | The node ids of the 54 were never recorded, so the set cannot be identified even with history. Page 15 text fills are now **88% bound** to semantic roles by the later passes. Settling the original 54 needs the Figma REST API with an owner token, or a manual version diff |
-| `FD-MODULES` Remaining module pages current               | 2.0    | IN_PROGRESS | pages 20–99          | —                                                       | Overview, Inventory, Lending, Release partially reconciled              |
+| `FD-MODULES` Remaining module pages current | 2.0 | VERIFIED | document-wide vocabulary scan | a superseded route phrase reappears | Audit §31: 27 instances of superseded route vocabulary found across pages 12, 96 and 98 — including 20 in the component library — all corrected; re-scan returns 0 |
 
 ### Area 6 — Figma Make functional completion · 10.0
 

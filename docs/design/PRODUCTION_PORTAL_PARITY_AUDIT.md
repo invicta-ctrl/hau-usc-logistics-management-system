@@ -1561,3 +1561,40 @@ and lost provenance rather than judgement.
 
 **A count is not a record.** Had the incident logged node ids instead of
 totals, this would have been a twenty-minute job.
+
+## 31. Module pages — vocabulary swept document-wide
+
+The route vocabulary corrected at §13 (Figma Request Center) and §29.3 (Figma
+Make) turned out to have a third home: **the component library**.
+
+A document-wide scan of every non-superseded frame found **27 instances** of the
+superseded route names, and 20 of them were on page 12, in the button component
+specimens. That is the worst place for wrong vocabulary to live — a component
+label propagates to every surface that instances it, so the drift reproduces
+itself faster than it can be corrected downstream.
+
+| Page | Instances |
+|---|---|
+| 12 — Components | 16 |
+| 96 — Content Design + Plain Language | 6 |
+| 98 — Playground Overhaul v1 Traceability | 1 |
+
+Mapping applied by context rather than uniformly: where the old five-button set
+appears **together**, each label maps to its own production route; where a label
+stands **alone** as a specimen, it becomes `Issue from stock`, the
+representative primary route, rather than inventing a distinction that the
+specimen was never making.
+
+**Document-wide re-scan: 0 remaining.**
+
+### One bug in the sweep, worth recording
+
+The first pass fixed 23 of 27 and left one. The traceability note on page 98
+lists *several* routes inside a single text node, and the loop replaced only the
+**first** matching phrase per node — `Object.keys(map).find(...)` returns one
+key, not all of them.
+
+A find-and-replace that stops at the first match per node will silently
+under-report itself as complete. The re-scan is what caught it, which is the
+argument for always re-scanning after a sweep rather than trusting its own
+count.
