@@ -125,7 +125,7 @@ not change without an owner decision.
 
 | Gate                                                   | Weight | Status      | Baseline          | STALE_IF       | Evidence                                        |
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
-| `FM-PUBLIC` Public flows current and building          | 3.0    | IN_PROGRESS | `PublicFlows.tsx` | source changes | Replaced and building; click-through unverified |
+| `FM-PUBLIC` Public flows current and building | 3.0 | IN_PROGRESS | `PublicFlows.tsx` in `rP9W9MQlZkyQrUx38TVsFS` | source changes | Access application removed and Staff sign in hand-off added, 799→790 lines, applied via CodeMirror transaction. **Save staged but blocked by a Figma connection issue** — audit §24 |
 | `FM-INTERNAL` Internal modules represented             | 4.0    | NOT_STARTED | —                 | —              | —                                               |
 | `FM-STATES` Loading / empty / error / denied exercised | 3.0    | IN_PROGRESS | —                 | —              | Declared in Design, not proven in Make          |
 

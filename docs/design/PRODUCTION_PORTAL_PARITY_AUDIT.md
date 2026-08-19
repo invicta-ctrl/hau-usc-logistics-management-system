@@ -1097,3 +1097,62 @@ G2 sigma of 22px nothing smaller than about 132px survives. The three fields are
 large and slow **because** that is what transmits. Leaving them as hard-coded
 gradients meant the one part of the system that has to be tuned against the blur
 ladder could not be tuned from the same place as the blur ladder.
+
+## 24. Figma Make — the access application removed, sync blocked upstream
+
+Owner direction: the staff access application belongs on the sign-in page, not
+in the public portal tabs. Production agrees — `portal-navigation.js` at
+`c316e047` offers exactly four destinations and the application is an
+`auth-card`, not a portal view.
+
+### 24.1 What was applied
+
+`PublicFlows.tsx` in `rP9W9MQlZkyQrUx38TVsFS`, four edits, `+14 −23`:
+
+- `"Access application"` removed from the `View` union;
+- the tab row reduced to the three real public views, with a **Staff sign in**
+  hand-off appended that fires `onRequireAuth`;
+- the entire access-application view block deleted;
+- CSS for the hand-off so it reads as leaving the portal — pushed right, dashed
+  border, trailing arrow — rather than as a sibling tab switching a view.
+
+Verified in the editor: 799 → 790 lines, `Access application` absent, the CSS
+template literal still closed, the sacrificial trailing comment intact.
+
+### 24.2 The clipboard route failed, and was replaced
+
+The established procedure — serve the file, select it in a second tab, real
+`Ctrl+C`, then `Ctrl+A` + `Ctrl+V` in the editor — **emptied the file**. The
+selection was verified at 50,613 characters immediately before the copy, but the
+paste inserted nothing, so `Ctrl+A` deleted 799 lines and replaced them with
+nothing. A single `Ctrl+Z` restored the file exactly, confirmed by line count and
+tail content before anything else was attempted.
+
+The replacement route is deterministic and needs no clipboard: CodeMirror's
+`EditorView` is reachable from the DOM at `.cm-content.cmView.view`, so the four
+edits are computed **in-page** from the live document text and applied as one
+transaction. Anchors were checked for exactly one occurrence each before any
+mutation.
+
+This is strictly better than the paste and should be the default from now on. It
+cannot half-succeed, it needs no second tab or server, and it never leaves the
+document empty between two keystrokes.
+
+### 24.3 Why it is not live yet
+
+Figma reports, in its own words:
+
+```text
+Connection issue affecting saving. Click for details.
+Some changes won't be synced until Figma is able to reconnect.
+```
+
+Save was clicked and the change is staged — the editor holds the corrected 790
+lines and **Discard is deliberately not pressed**. It will sync when Figma
+reconnects. This is Figma's transport, not access, not credits, and not the
+edit: the same session had no trouble reading the file or applying the
+transaction.
+
+**Do not re-apply the edit on the next session without checking first.** If the
+file already reads 790 lines with no `Access application`, the queued save
+landed.
