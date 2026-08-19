@@ -784,6 +784,57 @@ The intake queue is the dominant CURRENT Request Center surface.
 
 ## D24 — Lending Hub
 
+### D24.0 — Public Lending Center access model — OWNER-LOCKED, BINDING
+
+Status: CURRENT. Verified against production 0.8.2 at candidate
+c316e047c845fa182e82156c95945c4a5e5de2ff, schema 30, on 2026-08-19.
+
+**The Public Lending Center requires NO LOGIN.** It is a public,
+university-facing intake surface at `/lending` (and via `lending.hausc.org`,
+which 307s to `/lending`).
+
+A borrower must NOT need any of the following to submit a borrowing request:
+a HAU-USC Logistics account, Staff Sign In, account activation, Administrator
+approval, Director approval, or an internal staff session.
+
+Its audience is USC Staff and Officers **and** the wider Holy Angel University
+Angelite student body. Both borrower classes are equal in the contract:
+
+| Class | Value | Conditionally required |
+|---|---|---|
+| USC Staff / Officer | `USC_STAFF` | `uscDepartment` required; `positionRole` |
+| Angelite Student | `ANGELITE` | `courseYear` and `academicDepartment` both required |
+
+`src/visual/public-lending-portal.js` contains no session check, no sign-in
+gate, and no authorization branch. `mountPublicLendingPortal` fetches
+`/api/public/lending/catalog` on mount and posts to `/api/public/lending`.
+
+Binding design rules:
+
+- Catalog before form. Production copy: "Browse the borrower-safe catalog
+  before providing personal information. Every request starts For Review."
+- Submission creates a record in **For Review**. It is never approval, claim,
+  handoff, or reservation, and it deducts no physical stock.
+- The receipt shows the Submission ID and a private tracking code **once**.
+- Private tracking must not display borrower identity or contact details.
+- "No approved lending items are published" and "No catalog items match the
+  current search and filters" are **separate** states and must never be
+  collapsed into one message.
+- The public surface must not expose internal stock internals beyond
+  borrower-safe availability, staff notes, borrower history, review or
+  authorization controls, raw audit data, internal D1 identifiers, or provider
+  details.
+
+Any design, frame, or prototype that gates borrowing behind sign-in
+contradicts this section and must be marked SUPERSEDED, not corrected in place
+and left ambiguous. Four such frames were found and superseded on 2026-08-19;
+see `docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md`.
+
+Do not confuse this surface with the internal **Office Lending Hub**, which is
+authenticated staff-side and is described in the rest of D24.
+
+### D24.1 — Office Lending Hub (internal, authenticated)
+
 - Use borrower labels only when they match accepted identity vocabulary.
 - V-10 requires suggestive item search backed by the real catalog.
 - V-12 adds clear lending search/filter language above the loans table.
@@ -1166,6 +1217,7 @@ Append entries; do not rewrite history.
 | 2026-08-09 | Accepted v0.7.3 frontend integration specification | D01, D06-D30, D35-D38 | v5 visual architecture accepted over conflicting older V4.1/V4.2 mock direction; production/current source retained as functional authority | v5 remains target authority | Frontend-only transfer with parity gates |
 | 2026-08-13 | Design Authority Consolidation + Local Design Vault master prompt; user required local-only execution on frontend-design-integration | D00-D40 | Consolidated owner intent, research, paths, URLs, assets, Figma registry, V-01 through V-42, module rules, and retrieval protocol into one root authority; legacy docs demoted to reference; no remote sync claimed | Read-only metadata inspection; no write | Documentation and shared local vault only; runtime untouched |
 | 2026-08-19 | Owner instruction: Claude isolated frontend-design stream (audit, research reconciliation, Hallmark/Impeccable, Figma + documentation update) | D05, D37, D40 | Reconciled the Figma registry against the live file: 28 pages, 120 variables, 102 components, MUTATED — the previous three-page Starter-plan/no-mutation record was stale. Recorded Figma Make as NOT APPLICABLE with the owner-approved local-prototype substitution. Added docs/design/FIGMA_DESIGN_MAKE_AUDIT.md and docs/design/FIGMA_BASELINE_REGISTER.md. | WRITE performed. Created semantic variable `color/accent/text` (VariableID:563:2) aliased to gold/700; rebound 46 text nodes on the five current R2 Overview light frames to repair a measured 1.52:1 WCAG 2.2 AA 1.4.3 failure. | None. No runtime, product, release, provider, or v0.8.3 file was modified. |
+| 2026-08-19 | Owner instruction: production-to-Figma reconciliation of the public portals | D24, D40 | Added D24.0, the OWNER-LOCKED Public Lending no-login access model, verified against production 0.8.2 c316e047; split D24 into public and internal halves. Added docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md. | Superseded 4 frames that gated borrowing behind staff sign-in. Built the Public Lending portal: 1440 light and dark, Angelite branch, receipt, four declared catalog states, 390 mobile. Added semantic tokens color/accent/text and color/text/on-accent. | None. Product worktree read-only; no provider, database, or deployment writes. |
 
 ### Local/Git synchronization record
 

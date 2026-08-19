@@ -193,6 +193,10 @@ accepted contracts. No `PRODUCTION_DEFECT_CANDIDATE` is raised by this audit.
 | Built the Public Lending portal, USC Staff branch — `581:15` | Figma page 90 |
 | Built the Angelite Student conditional branch — `587:15` | Figma page 90 |
 | Built the submission receipt + degraded variant — `588:15` | Figma page 90 |
+| Built the 1440 dark portal via explicit Dark variable modes — `589:15` | Figma page 90 |
+| Built the four declared catalog states — `591:15` | Figma page 90 |
+| Built the 390 mobile portal — `592:15` | Figma page 90 |
+| Created `color/text/on-accent`, dark ink in both modes | Semantic Color |
 
 ### What the built frames cover
 
@@ -222,11 +226,50 @@ All new work is bound to the design system: semantic colour variables and the
 Bricolage Grotesque / IBM Plex text styles. It therefore does **not** inherit
 the D-04 Inter drift affecting the older hand-built frames.
 
+### Dark mode proved the token binding
+
+The dark frame was produced by setting the explicit **Dark** mode on every
+multi-mode collection rather than by recolouring anything. A full audit of the
+clone found only **2 unbound SOLID fills** in the entire portal, both stray
+whites on suggestion-list options, now cleared. The design is therefore
+genuinely token-driven, not hand-painted.
+
+Setting the mode on *Semantic Color alone was not enough* — several semantic
+tokens alias the **Primitives** collection, so text flipped while surfaces did
+not. All three multi-mode collections (Semantic Color, Primitives, Glass
+Material) must be switched together. That is now recorded so the next session
+does not rediscover it.
+
+### A token gap the dark pass exposed
+
+`color/action/primary` resolves to a **light gold in both modes**, so any label
+bound to `color/text/primary` inverts to light ink in dark mode and the button
+becomes unreadable. There was no token for text sitting on the accent surface.
+
+Added `color/text/on-accent` — deliberately dark ink in **both** modes.
+Measured 9.12:1 on light-mode gold `#e8b93c` and 11.2:1 on dark-mode gold
+`#eed08a`. All twelve primary button labels are rebound to it.
+
+This is the second instance of the same class of gap found in this programme,
+after `color/accent/text`. Both were "which ink goes on this branded surface"
+questions the palette never answered.
+
+### Mobile is a transformation, not a stack
+
+At 390 the layout changes model rather than shrinking:
+
+- the four filter selects collapse into a horizontal **filter chip row**;
+- catalog cards become horizontal — thumbnail beside identity — instead of
+  vertical cards in a grid;
+- the form goes single-column;
+- a **sticky selection bar** carries the running selection count, the
+  "nothing is reserved yet" reassurance, and the primary action within thumb
+  reach, with targets at or above 44px.
+
 ### Not yet built
 
-390 mobile, dark mode, and the catalog loading / service-error / empty /
-filtered-empty state frames. Page 50's internal Office Lending Hub was not
-touched.
+390 dark; the Angelite branch at 390; and the state frames in dark. Page 50's
+internal Office Lending Hub was not touched.
 
 ## 9. Next actions, in order
 

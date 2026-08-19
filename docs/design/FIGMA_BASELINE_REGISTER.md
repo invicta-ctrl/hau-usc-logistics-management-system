@@ -48,6 +48,39 @@ Full account, including the corrected method and the four standing rules it
 produced, is in section 3.1 of the audit. Figma version history holds the
 pre-session state if exactness on those 54 matters.
 
+## DESIGN_BASELINE_2026-08-19-B
+
+```text
+DESIGN_BASELINE_ID:      DESIGN_BASELINE_2026-08-19-B
+STATUS:                  Public Lending reconciled to production and built out
+DESIGN BRANCH:           frontend-design-integration
+PRODUCTION REFERENCE:    0.8.2 @ c316e047 · schema 30
+FIGMA VARIABLES:         122 (added color/accent/text, color/text/on-accent)
+NEW FRAMES:              581:15 · 587:15 · 588:15 · 589:15 · 591:15 · 592:15
+SUPERSEDED:              424:264 · 424:620 · 426:93 · 426:218 (sign-in-gated lending)
+IMPLEMENTATION READY:    NO — design gate only
+```
+
+| Frame | Node | Covers |
+|---|---|---|
+| Lending Center · NO LOGIN · 1440 light | `581:15` | Full portal, USC Staff branch |
+| … ANGELITE branch · 1440 light | `587:15` | Angelite conditional branch |
+| … submitted receipt | `588:15` | One-time code, For Review, degraded variant |
+| … 1440 dark | `589:15` | Dark via explicit variable modes |
+| … declared catalog states | `591:15` | Loading, service error, empty, filtered empty |
+| … 390 mobile light | `592:15` | Filter chips, horizontal cards, sticky selection bar |
+
+Two semantic tokens were added to close real gaps, both of the same class —
+"which ink goes on this branded surface":
+
+| Token | Light | Dark | Why |
+|---|---|---|---|
+| `color/accent/text` | `#7d5518` | `#c9a45f` | Accent text on working surfaces. `gold/400` measured 1.52:1 and failed AA |
+| `color/text/on-accent` | `#40070a` | `#40070a` | Text on the gold action surface, which stays light in both modes |
+
+Binding audit of the dark clone found only **2 unbound fills** across the whole
+portal, both since cleared — the portal is genuinely token-driven.
+
 ### Accessibility position at this baseline
 
 `color/accent/text` resolves `#7d5518` in Light (**5.46:1** on the composited G2
@@ -80,7 +113,7 @@ session does not re-litigate them:
 
 | ID | Gap | Severity | State |
 |---|---|---|---|
-| D-08 | Landing hero: 17 of 59 texts fail AA, worst 1.01:1 — oxblood ink on dark glass cards, including all six ledger step labels | HIGH | OPEN — needs owner call on active/inactive card semantics |
+| D-08 | Landing hero: 17 of 59 texts failed AA, worst 1.01:1 — oxblood ink on dark glass cards | HIGH | FIXED — owner confirmed the cards read as ACTIVE; 137 nodes rebound to inverse/rail inks. 13 gold-gradient button labels reverted to dark ink |
 | D-02 | Blur ladder defined twice, values disagree (12/18/24/28 vs 16/22/30/36) | MEDIUM | OPEN |
 | D-04 | Figma renders Inter; authority mandates Bricolage / IBM Plex / Newsreader; production ships Georgia / Aptos | MEDIUM | OPEN |
 | D-05 | Variable-binding coverage measured only on page 30 (97.7%) | MEDIUM | OPEN |
@@ -103,6 +136,7 @@ migration, or release artifact was produced.
 
 ### Next recommended action
 
-Run the module redesign passes in the Phase 11 order — Overview composition
-(D-07) first, since the Overview is the flagship and its patterns propagate —
+Public Request Center field-by-field diff against section 5 of the parity
+audit, then the authenticated requester portal (context B), which is
+represented nowhere. After that, the remaining Phase 11 module passes —
 then extend the contrast repair file-wide as each module page is opened.
