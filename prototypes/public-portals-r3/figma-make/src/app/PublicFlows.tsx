@@ -386,32 +386,37 @@ export default function PublicFlows({
                     <label>Full name *<input required maxLength={120} placeholder="Given name and surname" /></label>
                     <label>Student ID *<input required inputMode="numeric" pattern="[0-9]{1,8}" maxLength={8} placeholder="Up to 8 digits" /></label>
 
-                    {/* Only the active branch renders, so the inactive one cannot submit stale data. */}
-                    {borrowerType === "USC_STAFF" ? (
+                    {/* Academic identity is ALWAYS collected. A USC officer is an Angelite
+                        student too, so this is the basic information sheet, not a branch. */}
+                    <label>Course and year *<input required maxLength={80} placeholder="e.g. BSIT 2" /></label>
+                    <label>College, school, or academic department *
+                      <input required maxLength={120} placeholder="e.g. School of Computing" /></label>
+
+                    {/* Council role is the ONLY branch. It is absent for a student borrower,
+                        so nothing from it can be submitted. */}
+                    {borrowerType === "USC_STAFF" && (
                       <>
-                        <label>USC department * <em className="badge">USC Staff only</em>
+                        <label>USC department * <em className="badge">USC Staff / Officer only</em>
                           <select required defaultValue=""><option value="">Select department or office</option>
                             {USC_DEPARTMENTS.map((d) => <option key={d}>{d}</option>)}</select></label>
-                        <label>Position or role <em className="badge">USC Staff only</em>
+                        <label>Position or role <em className="badge">USC Staff / Officer only</em>
                           <input maxLength={120} placeholder="e.g. Committee Head" /></label>
-                      </>
-                    ) : (
-                      <>
-                        <label>Course and year * <em className="badge">Angelite only</em>
-                          <input required maxLength={80} placeholder="e.g. BSIT 2" /></label>
-                        <label>College, school, or academic department * <em className="badge">Angelite only</em>
-                          <input required maxLength={120} placeholder="e.g. School of Computing" /></label>
                       </>
                     )}
 
                     <label>Contact number *<input required maxLength={24} placeholder="Mobile or landline" /></label>
                     <label>Email address *<input required type="email" maxLength={254} placeholder="name@example.edu.ph" /></label>
-                    <label>Requested pickup date *<input required type="date" min={new Date().toISOString().slice(0, 10)} /></label>
-                    <label>Requested due date {needsDueDate && <em className="badge">Conditional</em>}
+
+                    {/* Pickup is NOT requested. Authorized staff record the actual pickup at
+                        handoff, so the loan starts from when the item really leaves the desk.
+                        CONTRACT DELTA — production currently requires pickupDate. See README. */}
+                    <label className="span2">Borrowing until {needsDueDate && <em className="badge">Conditional</em>}
                       <input type="date" required={needsDueDate} />
                       <small className="muted">{needsDueDate
                         ? "Required for the selected reusable item."
-                        : "Optional for the current selection."}</small></label>
+                        : "Optional for the current selection."}</small>
+                      <small className="muted">Pickup is not requested here. Authorized staff record the
+                        actual pickup date at handoff.</small></label>
                     <label className="span2">Purpose *<textarea required maxLength={500} rows={3}
                       placeholder="Describe the activity and how the items will be used. Maximum 500 characters." /></label>
                   </div>
@@ -650,10 +655,12 @@ function Receipt({ kind, id, onClose }: { kind: string; id: string; onClose: () 
 const css = `
 .pub{--paper:#e9e0d0;--surface:#fffdf8;--inset:#f7f0e2;--muted:#6f5a60;--text:#241416;--line:#d8cbb6;--hair:#e6dcc9;--ox:#610b0f;--gold:#7d5518;--action:#e8b93c;--onAction:#40070a;
  --doneF:#1f6b41;--doneB:#e2f3e9;--doneL:#a8d3ba;--progF:#7d5518;--progB:#fbeed2;--progL:#dcbe8a;--infoF:#23557f;--infoB:#e4eefa;--infoL:#b0cbe6;--alertF:#9c2630;--alertB:#fbe6e8;--alertL:#e3aeb3;--neuF:#5d4a4f;--neuB:#ece3d3;--neuL:#cdbfa7;
+ --onOx:#fffdf8;--glassHi:rgba(255,255,255,.34);--glassShadow:rgba(26,5,8,.14);
  --g2:rgba(255,251,242,.34);--edge:rgba(255,255,255,.62);--fA:rgba(97,11,15,.30);--fD:rgba(232,185,60,.26);--fH:rgba(255,253,248,.55);--rule:rgba(97,11,15,.07);
  position:relative;min-height:100vh;padding:0 20px 80px;background:var(--paper);color:var(--text);font-family:"IBM Plex Sans",Inter,Arial,sans-serif}
 .pub.dark{--paper:#100b0c;--surface:#1f1719;--inset:#281d20;--muted:#b3a0a4;--text:#f7efe6;--line:#3d2e31;--hair:#2c2124;--ox:#a5424b;--gold:#c9a45f;--action:#eed08a;--onAction:#40070a;
  --doneF:#9ad9b2;--doneB:rgba(45,112,72,.28);--doneL:rgba(154,217,178,.36);--progF:#eecb92;--progB:rgba(150,103,30,.28);--progL:rgba(238,203,146,.38);--infoF:#a8cbf0;--infoB:rgba(58,104,158,.26);--infoL:rgba(168,203,240,.38);--alertF:#f6acb2;--alertB:rgba(166,52,60,.3);--alertL:rgba(246,172,178,.36);--neuF:#cbb9bc;--neuB:rgba(255,255,255,.07);--neuL:rgba(255,255,255,.18);
+ --onOx:#fffdf8;--glassHi:rgba(255,250,235,.22);--glassShadow:rgba(0,0,0,.34);
  --g2:rgba(107,26,38,.30);--edge:rgba(255,240,199,.34);--fA:rgba(165,66,75,.34);--fD:rgba(238,208,138,.16);--fH:rgba(120,20,26,.40);--rule:rgba(247,236,217,.05)}
 .pub *{box-sizing:border-box}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
@@ -665,7 +672,7 @@ const css = `
 .pub>*:not(.g0){position:relative;z-index:1}
 
 /* Glass is for CONTAINERS. Inputs and tables stay opaque so contrast never depends on what drifts behind. */
-.glass{background:var(--g2);border:1px solid var(--edge);-webkit-backdrop-filter:blur(22px) saturate(118%);backdrop-filter:blur(22px) saturate(118%);box-shadow:inset 0 1px 0 rgba(255,255,255,.34),0 12px 32px rgba(26,5,8,.14)}
+.glass{background:var(--g2);border:1px solid var(--edge);-webkit-backdrop-filter:blur(22px) saturate(118%);backdrop-filter:blur(22px) saturate(118%);box-shadow:inset 0 1px 0 var(--glassHi),0 12px 32px var(--glassShadow)}
 .pub input,.pub select,.pub textarea{background:var(--surface)}
 @media(prefers-reduced-transparency:reduce){.glass{background:var(--surface);-webkit-backdrop-filter:none;backdrop-filter:none}.g0{background-image:none}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:1ms!important;transition-duration:1ms!important}}
@@ -686,7 +693,7 @@ const css = `
 .assure .who{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
 .chip{padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .pub nav{display:grid;grid-template-columns:repeat(5,1fr);margin-top:14px;gap:6px}
-.pub nav button{font-size:12px}.pub nav .active{background:var(--ox);color:#fff;border-color:var(--ox);font-weight:800}
+.pub nav button{font-size:12px}.pub nav .active{background:var(--ox);color:var(--onOx);border-color:var(--ox);font-weight:800}
 .panel{margin-top:20px;padding:clamp(22px,4vw,40px);border-radius:18px}
 .panel h1{font:700 clamp(32px,4.4vw,52px)/1.02 "Bricolage Grotesque",Georgia,serif;letter-spacing:-.03em;margin:6px 0 12px}
 .panel h2{font:700 24px/1.2 "Bricolage Grotesque",Georgia,serif;margin:0 0 6px}
@@ -695,7 +702,7 @@ const css = `
 .eye{margin:0!important;color:var(--gold)!important;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
 .muted{color:var(--muted)}
 .stateSwitch{display:flex;gap:6px;margin:18px 0 6px;flex-wrap:wrap}.stateSwitch button{font-size:12px;min-height:36px;padding:6px 12px;border-radius:999px}
-.stateSwitch .active{background:var(--ox);color:#fff;border-color:var(--ox)}
+.stateSwitch .active{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
 .filters{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}.filters label{display:grid;gap:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);flex:1;min-width:150px}
 .filters .grow{flex:2 1 260px}
 .catalog{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:12px}
@@ -741,7 +748,7 @@ fieldset{border:0;margin:22px 0 0;padding:0}legend{font:700 17px/1.3 "Bricolage 
 .stepper li.todo{color:var(--muted)}
 .mk{flex:none;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800;background:var(--inset);border:1px solid var(--line)}
 .stepper li.done .mk{background:var(--doneB);color:var(--doneF);border-color:var(--doneL)}
-.stepper li.cur .mk{background:var(--ox);color:#fff;border-color:var(--ox)}
+.stepper li.cur .mk{background:var(--ox);color:var(--onOx);border-color:var(--ox)}
 .summary{display:flex;gap:16px;align-items:center;padding:14px 16px;margin-top:12px;background:var(--inset);border:1px solid var(--hair);border-radius:12px}
 .summary>span{flex:1}.summary small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
 .stepNav{display:flex;justify-content:space-between;gap:12px;margin-top:22px}

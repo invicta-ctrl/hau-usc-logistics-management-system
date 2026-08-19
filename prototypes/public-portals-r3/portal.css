@@ -3,6 +3,10 @@
 
 * { box-sizing: border-box; }
 
+/* [hidden] is a UA style and loses to any class selector that sets display.
+   .field sets display:flex, so a hidden .field still rendered. Make it win. */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   background: var(--ground);

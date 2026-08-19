@@ -143,26 +143,28 @@ function lendingView() {
               <div class="field"><label for="i-sid">Student ID *</label>
                 <input id="i-sid" name="studentId" inputmode="numeric" pattern="[0-9]{1,8}" maxlength="8" required placeholder="Up to 8 digits"></div>
 
-              <div class="field span-2" data-staff hidden>
+              <!-- Academic identity is ALWAYS collected. USC officers are Angelite students
+                   too, so this is the basic information sheet, not a branch. -->
+              <div class="field span-2" data-academic>
                 <div class="form-grid" style="margin:0">
-                  <div class="field"><div class="lbl-row"><label for="i-dept" class="lbl">USC department *</label>
-                    <span class="badge">USC Staff only</span></div>
-                    <select id="i-dept" name="uscDepartment"><option value="">Select department or office</option>
-                      ${LENDING_CATALOG.uscDepartments.map(d => `<option>${esc(d)}</option>`).join('')}</select></div>
-                  <div class="field"><div class="lbl-row"><label for="i-role" class="lbl">Position or role</label>
-                    <span class="badge">USC Staff only</span></div>
-                    <input id="i-role" name="positionRole" maxlength="120" placeholder="e.g. Committee Head"></div>
+                  <div class="field"><label for="i-course" class="lbl">Course and year *</label>
+                    <input id="i-course" name="courseYear" maxlength="80" required placeholder="e.g. BSIT 2"></div>
+                  <div class="field"><label for="i-acad" class="lbl">College, school, or academic department *</label>
+                    <input id="i-acad" name="academicDepartment" maxlength="120" required placeholder="e.g. School of Computing"></div>
                 </div>
               </div>
 
-              <div class="field span-2" data-angelite hidden>
+              <!-- Council role is the ONLY branch: shown for USC Staff / Officer,
+                   removed outright for a student borrower. -->
+              <div class="field span-2" data-staff hidden>
                 <div class="form-grid" style="margin:0">
-                  <div class="field"><div class="lbl-row"><label for="i-course" class="lbl">Course and year *</label>
-                    <span class="badge">Angelite only</span></div>
-                    <input id="i-course" name="courseYear" maxlength="80" placeholder="e.g. BSIT 2"></div>
-                  <div class="field"><div class="lbl-row"><label for="i-acad" class="lbl">College, school, or academic department *</label>
-                    <span class="badge">Angelite only</span></div>
-                    <input id="i-acad" name="academicDepartment" maxlength="120" placeholder="e.g. School of Computing"></div>
+                  <div class="field"><div class="lbl-row"><label for="i-dept" class="lbl">USC department *</label>
+                    <span class="badge">USC Staff / Officer only</span></div>
+                    <select id="i-dept" name="uscDepartment"><option value="">Select department or office</option>
+                      ${LENDING_CATALOG.uscDepartments.map(d => `<option>${esc(d)}</option>`).join('')}</select></div>
+                  <div class="field"><div class="lbl-row"><label for="i-role" class="lbl">Position or role</label>
+                    <span class="badge">USC Staff / Officer only</span></div>
+                    <input id="i-role" name="positionRole" maxlength="120" placeholder="e.g. Committee Head"></div>
                 </div>
               </div>
 
@@ -170,12 +172,12 @@ function lendingView() {
                 <input id="i-tel" name="contactNumber" maxlength="24" required placeholder="Mobile or landline"></div>
               <div class="field"><label for="i-mail">Email address *</label>
                 <input id="i-mail" name="email" type="email" maxlength="254" required placeholder="name@example.edu.ph"></div>
-              <div class="field"><label for="i-pickup">Requested pickup date *</label>
-                <input id="i-pickup" name="pickupDate" type="date" required></div>
-              <div class="field"><div class="lbl-row"><label for="i-due" class="lbl">Requested due date</label>
+              <div class="field span-2"><div class="lbl-row"><label for="i-due" class="lbl">Borrowing until</label>
                   <span class="badge" data-due-badge hidden>Conditional</span></div>
                 <input id="i-due" name="dueDate" type="date">
-                <p class="help" data-due-help>Optional for the current selection.</p></div>
+                <p class="help" data-due-help>Optional for the current selection.</p>
+                <p class="help">Pickup is not requested here. Authorized staff record the actual pickup date
+                   at handoff, so the loan starts from when the item really leaves the desk.</p></div>
               <div class="field span-2"><label for="i-purpose">Purpose *</label>
                 <textarea id="i-purpose" name="purpose" maxlength="500" required
                   placeholder="Describe the activity and how the items will be used. Maximum 500 characters."></textarea></div>
@@ -242,30 +244,31 @@ function bindLending() {
   const selCountM = root.querySelector('[data-selcount-m]');
   const details = root.querySelector('[data-details]');
   const staff = root.querySelector('[data-staff]');
-  const ange = root.querySelector('[data-angelite]');
+  const academic = root.querySelector('[data-academic]');
   const due = root.querySelector('#i-due');
   const dueHelp = root.querySelector('[data-due-help]');
   const dueBadge = root.querySelector('[data-due-badge]');
   const ackResp = root.querySelector('[data-ack="responsibilityAcknowledged"] input');
 
-  root.querySelector('#i-pickup').min = new Date().toISOString().slice(0, 10);
   let searchTimer;
 
   const syncBorrower = (value) => {
     details.hidden = !value;
     const isStaff = value === 'USC_STAFF';
+    // Academic identity is common ground — always collected, never toggled.
+    academic.querySelectorAll('input,select').forEach(c => {
+      c.disabled = !value; c.required = Boolean(value);
+    });
+    // Council role is the only branch. Removed outright for a student borrower,
+    // and cleared + disabled so it cannot submit stale data.
     staff.hidden = !isStaff;
-    ange.hidden = isStaff || !value;
-    // The hidden branch is disabled and cleared, so it cannot submit stale data.
     staff.querySelectorAll('input,select').forEach(c => {
       c.disabled = !isStaff; c.required = isStaff && c.name === 'uscDepartment';
       if (!isStaff) c.value = '';
     });
-    ange.querySelectorAll('input,select').forEach(c => {
-      c.disabled = isStaff || !value; c.required = !isStaff && Boolean(value);
-      if (isStaff) c.value = '';
-    });
-    if (value) say(`${isStaff ? 'USC staff' : 'Angelite student'} details shown.`);
+    if (value) say(isStaff
+      ? 'USC staff and officer details shown, including council department.'
+      : 'Student details shown. Council department is not collected.');
   };
   form.querySelectorAll('[name="borrowerType"]').forEach(r =>
     r.addEventListener('change', () => syncBorrower(r.value)));
