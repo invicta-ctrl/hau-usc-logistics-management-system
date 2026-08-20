@@ -181,13 +181,28 @@ Two material findings were found and fixed during the pass:
    carried a 44px Bricolage headline competing with the numbers it introduced.
    Reduced to a 23–31px clamp.
 
+3. **The modal scrim was one hardcoded value used in both modes** —
+   `oklch(0.22 0.085 22 / 0.55)`, the darkest oxblood at 0.55 alpha, on both the
+   command dialog and the drawer. One value cannot be right in both modes
+   because they have opposite headroom. In light it washed the whole page deep
+   maroon and pulled the content plane from L* 89 to L* 52 — the
+   "oversaturated maroon surface" the brief names, and the loudest thing on
+   screen when a scrim's entire job is to recede. In dark it crushed. Both now
+   resolve through the canonical `--scrim`, which carries 0.16 light and 0.34
+   dark. Light now measures inside the bar at all four widths.
+
+   This was found only because the verification matrix was extended to cover the
+   overlay plane, which had been missed on every previous pass — an overlay does
+   not exist until something opens it, so a matrix built from routes never sees
+   one.
+
 Two smaller corrections in the same spirit: interactive targets were raised to
 the WCAG 2.2 2.5.8 minimum (radios and acknowledgment checkboxes were 18×18; the
 skip link and the mobile portal chips were under the practical 44), and form
 controls were moved from `--ground` to `--inset`, because the ground is the
 environmental canvas and a text field is reading content.
 
-**Impeccable: PASS**, two material findings found and fixed.
+**Impeccable: PASS**, three material findings found and fixed.
 
 ## What this pass deliberately did not touch
 

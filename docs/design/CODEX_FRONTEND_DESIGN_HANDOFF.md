@@ -361,6 +361,12 @@ record histories, high-risk confirmations, Access/Admin controls.
 
 G4 alone takes the gold edge.
 
+The **modal scrim** is per-mode: `0.16` oxblood light, `0.34` near-black dark.
+Do not collapse it to one value. The two modes have opposite headroom, and the
+single hardcoded 0.55 this replaced washed the light page maroon and crushed the
+dark one. In dark mode focus comes from the overlay pane being brighter than the
+ground, not from burying the page.
+
 ### 3A.6 Theme selection
 
 Precedence is **explicit user choice, then system preference**, and the system
@@ -383,7 +389,7 @@ WCAG 2.2 AA is the floor. Four gates, all runnable:
 npm run design:serve      # then, in another shell:
 npm run design:contrast   # 66/66  token pairs, both themes
 npm run design:overlay    # 134/134 text runs over photography, gradients, glass
-npm run design:comfort    # 80/80  glare, crush, chroma, brightness shock
+npm run design:comfort    # 88/88  glare, crush, chroma, brightness shock
 npm run design:responsive # 80/80  8 widths, overflow and paint cost
 ```
 

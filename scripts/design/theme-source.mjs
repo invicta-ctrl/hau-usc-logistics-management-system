@@ -221,7 +221,9 @@ export const GLASS = {
     g4: { fill: ['#f2e4b6', 0.34], blur: 22, sat: 120 },
     edgeQuiet: ['#ffffff', 0.5],
     edgeStrong: [CANONICAL_GOLD, 0.6],
-    scrim: ['#40070a', 0.22],
+    /* 0.16, not the 0.22 this started at: at 1440 the scrimmed page still has
+       to read as a dimmed page rather than a maroon one. */
+    scrim: ['#40070a', 0.16],
     highlight: ['#ffffff', 0.2],
     shadow: {
       g1: ['#3a1216', 0.08],
@@ -238,7 +240,10 @@ export const GLASS = {
     g4: { fill: [DARK_GOLD, 0.24], blur: 22, sat: 120 },
     edgeQuiet: ['#fff0c7', 0.22],
     edgeStrong: [DARK_GOLD, 0.66],
-    scrim: ['#0d0708', 0.5],
+    /* Light-handed on purpose: over an L* 8.6 ground a heavy scrim has nowhere
+       to go but black. Focus in dark mode comes from the overlay pane being
+       14 L* brighter than the ground. */
+    scrim: ['#0d0708', 0.34],
     highlight: ['#fffaeb', 0.11],
     shadow: {
       g1: ['#000000', 0.26],

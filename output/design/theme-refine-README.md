@@ -7,7 +7,7 @@ Before-and-after for the pass recorded in `DESIGN.md` **D41** and
 |---|---|
 | `theme-refine-before/` | 80 captures of the design surfaces **before** the pass: 10 surfaces x 2 themes x 4 widths |
 | `theme-refine-before.json` | The measured comfort metrics for those captures, with the bar they were judged against |
-| `theme-refine-after/` | The same 80 captures after |
+| `theme-refine-after/` | The same captures after, plus the command overlay — 11 surfaces, 88 captures. The overlay plane was missing from every previous matrix because an overlay does not exist until something opens it |
 | `theme-refine-after.json` · `.txt` | Measured metrics and the printed report |
 | `theme-refine-contrast.txt` | `design:contrast` — 66/66 token pairs, both themes |
 | `theme-refine-overlay.txt` | `design:overlay` — text over photography, gradients and glass, measured against the actual backdrop pixels |
@@ -18,7 +18,7 @@ Before-and-after for the pass recorded in `DESIGN.md` **D41** and
 
 |  | Before | After |
 |---|---|---|
-| Captures inside the comfort bar | **0 / 80** | **80 / 80** (3 by one named waiver) |
+| Captures inside the comfort bar | **0 / 80** | **88 / 88** (5 by two named waivers) |
 | Worst dark-mode crush (share of viewport at CIE L\* <= 5) | **94.8%** | **0–18%**, and only on the campus photograph |
 | Worst light-mode pure white (share at L\* >= 98) | **53.9%** | **0.63%** |
 | Dark ground | L\* **1.8** — effectively `#000` | L\* **8.6** |

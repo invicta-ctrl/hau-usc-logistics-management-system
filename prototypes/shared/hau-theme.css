@@ -120,7 +120,7 @@
   --g4-sat: 120%;
   --edge-quiet: rgba(255, 255, 255, 0.5);
   --edge-strong: rgba(212, 175, 55, 0.6);
-  --scrim: rgba(64, 7, 10, 0.22);
+  --scrim: rgba(64, 7, 10, 0.16);
   --glass-hi: rgba(255, 255, 255, 0.2);
   --shadow-g1: rgba(58, 18, 22, 0.08);
   --shadow-g2: rgba(58, 18, 22, 0.1);
@@ -220,7 +220,7 @@
   --g4-sat: 120%;
   --edge-quiet: rgba(255, 240, 199, 0.22);
   --edge-strong: rgba(225, 198, 113, 0.66);
-  --scrim: rgba(13, 7, 8, 0.5);
+  --scrim: rgba(13, 7, 8, 0.34);
   --glass-hi: rgba(255, 250, 235, 0.11);
   --shadow-g1: rgba(0, 0, 0, 0.26);
   --shadow-g2: rgba(0, 0, 0, 0.3);

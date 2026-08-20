@@ -103,6 +103,22 @@ const IDENTITY_WAIVES = new Set(['crush', 'void']);
 const WAIVERS = [
   {
     match: (r) =>
+      r.target === 'command-overlay' &&
+      r.theme === 'dark' &&
+      r.breaches.every((b) => b.startsWith('crush=') || b.startsWith('void=')),
+    reason:
+      'a modal scrim over a dark ground. This is a transient STATE, not a resting ' +
+      'surface, and suppressing the background is the scrim doing its job. The ' +
+      'geometry leaves no alternative: the ground is already CIE L* 8.6, so any ' +
+      'scrim pushes parts of it below L* 5 — which is why the dark scrim is already ' +
+      'down to alpha 0.34. What has to be comfortable in this state is the dialog, ' +
+      'and the content-plane metrics covering it pass: mean L* 10.0-16.8, brightness ' +
+      'step 8-13, zero glare. The light-mode scrim was a real defect and was fixed ' +
+      'rather than waived — it washed the page maroon at alpha 0.55 and now measures ' +
+      'inside the bar at all four widths.',
+  },
+  {
+    match: (r) =>
       r.target === 'admin' && r.theme === 'light' && r.breaches.every((b) => b.startsWith('step=')),
     reason:
       'single oxblood primary action ("Invite account") against the light plane. ' +
@@ -130,6 +146,16 @@ const TARGETS = [
   { id: 'admin', label: 'Accounts and access', url: () => V5 + '#/admin.access', v5: true },
   { id: 'landing', label: 'Portal landing', url: () => V5 + '#/public.landing', v5: true },
   { id: 'signin', label: 'Staff sign in', url: () => V5 + '#/public.signin', v5: true },
+  /* The overlay plane is the top of the ladder and the one surface the matrix
+     kept missing, because it does not exist until something opens it. Driven
+     through the app's own control, not by forcing state. */
+  {
+    id: 'command-overlay',
+    label: 'Command overlay',
+    url: () => V5 + '#/inventory.catalog',
+    v5: true,
+    open: '[data-act="open-command"]',
+  },
 ];
 
 // --- colour maths ------------------------------------------------------------
@@ -233,6 +259,10 @@ for (const target of TARGETS) {
         // theme state and the rendered tokens agree.
         await page.click(`[data-act="theme"][data-v="${theme}"]`, { timeout: 5000 }).catch(() => {});
         await page.waitForTimeout(420);
+      }
+      if (target.open) {
+        await page.click(target.open, { timeout: 5000 }).catch(() => {});
+        await page.waitForTimeout(450);
       }
       await page.waitForTimeout(180);
 

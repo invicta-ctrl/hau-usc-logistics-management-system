@@ -1461,6 +1461,14 @@ G4 is the **only** step allowed a gold edge, because it is the only step that
 means "decide here". Drawing every pane with a gold rectangle is how the accent
 stops meaning anything.
 
+**The modal scrim carries a different alpha per mode**, because the two modes
+have opposite amounts of headroom. Light is 0.16 oxblood; dark is 0.34 near-black.
+A single value cannot serve both: the previous hardcoded 0.55 washed the light
+page deep maroon (content plane L* 89 down to 52) and crushed the dark one. In
+dark mode focus comes from the overlay pane being 14 L* **brighter** than the
+ground, not from burying the page — the same elevation-by-luminance rule that
+governs the rest of the ladder.
+
 **Where glass is allowed:** command palette and overlay, contextual inspector,
 limited navigation treatment, Overview signature regions, public landing hero,
 temporary elevated action surfaces.
@@ -1510,7 +1518,7 @@ WCAG 2.2 AA is the floor, not the target. Four gates, all measured:
 |---|---|---|
 | Token contrast, both themes | `npm run design:contrast` | 66/66 |
 | Text over photography, gradients and glass | `npm run design:overlay` | 134/134 sampled runs, worst 4.87:1 |
-| Visual comfort — glare, crush, chroma, brightness shock | `npm run design:comfort` | 80/80, 3 by named waiver |
+| Visual comfort — glare, crush, chroma, brightness shock | `npm run design:comfort` | 88/88 across 11 surfaces including the command overlay, 5 by two named waivers |
 | Responsive and paint cost, 8 widths | `npm run design:responsive` | 80/80 |
 
 Comfort thresholds are this project's own bar and are **not** a substitute for

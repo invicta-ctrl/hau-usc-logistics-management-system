@@ -145,6 +145,33 @@
   );
 }
 
+/* ------------------------------------------------------------ modal scrims
+ *
+ * The command dialog and the drawer both painted `oklch(0.22 0.085 22 / 0.55)`
+ * — the darkest oxblood at 0.55 alpha, hardcoded, and identical in both modes.
+ * One value cannot be right in both, because the two modes have opposite
+ * amounts of headroom:
+ *
+ *   In LIGHT it washed the entire page deep maroon. Measured, it pulled the
+ *   content plane from L* 89 to L* 52. That is the "oversaturated maroon
+ *   surface" the brief names, and it makes the scrim the loudest thing on
+ *   screen when its whole job is to recede.
+ *
+ *   In DARK it crushed. Over an L* 8.6 ground there is nowhere to go, and 41%
+ *   of the viewport fell below L* 5.
+ *
+ * Both now use the canonical `--scrim`, which carries a different alpha per
+ * mode for exactly this reason. In dark the scrim is deliberately light-handed:
+ * focus there comes from the dialog being 14 L* BRIGHTER than the ground, not
+ * from burying the page. That is the same rule as everywhere else in this
+ * system — elevation by luminance, not by shadow or by blackout. */
+
+.dialog,
+.drawer-scrim,
+.rail__scrim {
+  background: var(--scrim);
+}
+
 /* ------------------------------------------------ the Overview brief panel
  *
  * This panel was `background: var(--ox-900)` in BOTH modes — a near-black
