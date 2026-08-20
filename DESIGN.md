@@ -1271,10 +1271,10 @@ Required test-query aliases: landing page design -> D18; Profile design -> D21; 
 | Branch | frontend-design-integration |
 | Starting commit/upstream | 908653dc956c9ccffa68ac0b350fc23b69f053ea |
 | Starting Git tree | 3b1d21bb77b4d41e5190a998e4be60143235cd10 |
-| Consolidation commit | LOCAL_ONLY_NOT_COMMITTED |
-| Consolidation Git tree | LOCAL_WORKTREE_NOT_COMMITTED |
-| GitHub synchronized | No |
-| Accepted visual authority | v5 prototype |
+| Consolidation commit | `429847e` on `frontend-design-integration`, pushed 2026-08-20. The earlier LOCAL_ONLY_NOT_COMMITTED value described the 2026-08-13 local-only task and had gone stale. |
+| Consolidation Git tree | Committed; see `git rev-parse 429847e^{tree}` |
+| GitHub synchronized | Yes — `origin/frontend-design-integration` at `429847e` |
+| Accepted visual authority | v5 prototype for structure; `scripts/design/theme-source.mjs` for every colour, surface, background and glass value (D41) |
 | Functional authority | Deployed production and current source |
 | Figma | MUTATED. 28 pages, 8 variable collections, 102 components. Theme synced from `scripts/design/theme-source.mjs` on 2026-08-20: 6 surface/ink primitives retuned, 4 variables created (`paper/overlay`, `color/border/control`, `color/selected-line`, `color/focus/ring-contrast`), 4 glass saturation variables created, glass recipe and background fields updated. Gold and oxblood ramps verified **unchanged** by the sync report. See D05, D41 and docs/design/FIGMA_DESIGN_MAKE_AUDIT.md. |
 | Figma Make | EXISTS and is READ-VERIFIED at Version 36, file `rP9W9MQlZkyQrUx38TVsFS`. The former "NOT APPLICABLE / no Make project exists" record was **stale and wrong** — it described a toolchain limitation, not the file. v36 edited exactly two files (`LendingHubRoute.tsx` +23/-3, `ReleaseDeskRoute.tsx` +2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` at v36 is byte-identical to the committed source (lines 1-789 = 50,587 chars, FNV-1a `d7cb6c66`) plus one trailing comment line. Make still carries its own palette and is the one surface not yet on the canonical theme — see D41 and the residual in docs/design/DESIGN_EXECUTION_TRACKER.md. |
@@ -1537,10 +1537,10 @@ Append entries; do not rewrite history.
 | LOCAL_DESIGN_MD_PATH | D:/Documents/Codex/HAU-USC Logistics/worktrees/spec-v073-frontend-design-integration/DESIGN.md |
 | REPO_RELATIVE_PATH | DESIGN.md |
 | GIT_BRANCH | frontend-design-integration |
-| GIT_COMMIT | LOCAL_ONLY_NOT_COMMITTED; starting HEAD 908653dc956c9ccffa68ac0b350fc23b69f053ea |
-| GIT_TREE | LOCAL_WORKTREE_NOT_COMMITTED; starting tree 3b1d21bb77b4d41e5190a998e4be60143235cd10 |
+| GIT_COMMIT | `429847e`; previous branch head `fb27c4e` |
+| GIT_TREE | Committed at `429847e` |
 | REMOTE_DESIGN_MD_URL | https://github.com/invicta-ctrl/hau-usc-logistics-management-system/blob/frontend-design-integration/DESIGN.md |
-| REMOTE_SYNC | No; remote URL contains the prior branch version |
+| REMOTE_SYNC | Yes — pushed 2026-08-20; local and remote both at `429847e` |
 
 ### Verification rule for future changes
 

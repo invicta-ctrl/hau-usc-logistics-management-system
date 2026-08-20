@@ -27,7 +27,7 @@ CURRENT PHASE:          Frozen — theme, environment and glass single-sourced a
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
-BASELINE DESIGN BRANCH: frontend-design-integration
+BASELINE DESIGN BRANCH: frontend-design-integration @ 429847e (pushed)
 LAST COMPUTED:          2026-08-20 (Asia/Manila)
 ```
 
@@ -43,7 +43,7 @@ CURRENT PHASE:          Frozen — theme, environment and glass single-sourced a
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
-BASELINE DESIGN BRANCH: frontend-design-integration
+BASELINE DESIGN BRANCH: frontend-design-integration @ 429847e (pushed)
 LAST COMPUTED:          2026-08-20 (Asia/Manila)
 100% ELIGIBLE:          NO — 4 mandatory gates not VERIFIED
 ```
