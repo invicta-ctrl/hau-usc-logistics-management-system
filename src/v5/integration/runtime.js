@@ -606,6 +606,8 @@ export function createV5Runtime({ backend, app }) {
     staffDirectory: null,
     staffAccountActivityHistory: null,
     staffAccountActivityHistoryStatus: 'idle',
+    staffAccountActivityHistoryRequest: 0,
+    staffAccountActivityHistoryRoute: '',
     inventoryDetail: null,
     profile: null,
     selectedRequestId: '',
@@ -694,14 +696,21 @@ export function createV5Runtime({ backend, app }) {
   });
   let signOutInFlight = null;
 
+  function resetStaffAccountActivityHistory(currentRoute = '') {
+    integration.staffAccountActivityHistoryRequest += 1;
+    integration.staffAccountActivityHistory = null;
+    integration.staffAccountActivityHistoryStatus = 'idle';
+    integration.selectedStaffActivityPersonId = '';
+    integration.staffAccountActivityHistoryRoute = currentRoute;
+  }
+
   function clearAuthenticatedProjection() {
     integration.session = null;
     integration.essential = null;
     integration.state = null;
     integration.accessDirectory = null;
     integration.staffDirectory = null;
-    integration.staffAccountActivityHistory = null;
-    integration.staffAccountActivityHistoryStatus = 'idle';
+    resetStaffAccountActivityHistory();
     integration.inventoryDetail = null;
     integration.profile = null;
     integration.referenceWorkspace = null;
@@ -720,7 +729,6 @@ export function createV5Runtime({ backend, app }) {
     integration.selectedEventDayId = '';
     integration.selectedActivityId = '';
     integration.selectedComponentId = '';
-    integration.selectedStaffActivityPersonId = '';
     integration.connectedRoutes.clear();
     integration.failedRoutes.clear();
     integration.routeSearch.clear();
@@ -1122,6 +1130,9 @@ export function createV5Runtime({ backend, app }) {
     currentRoute = route(),
     { refresh = false, canCommit: parentCanCommit = () => true, expectedRevision = null } = {},
   ) {
+    if (refresh || integration.staffAccountActivityHistoryRoute !== currentRoute) {
+      resetStaffAccountActivityHistory(currentRoute);
+    }
     const canCommit = asyncBoundary.beginRoute(currentRoute, parentCanCommit);
     try {
       if (!canCommit()) return false;
@@ -1456,6 +1467,8 @@ export function createV5Runtime({ backend, app }) {
     const canonicalPersonId = text(personId);
     if (!canonicalPersonId || route() !== 'admin.directory' || !allowed('admin.directory')) return;
     const expectedGeneration = integration.authGeneration;
+    const requestId = integration.staffAccountActivityHistoryRequest + 1;
+    integration.staffAccountActivityHistoryRequest = requestId;
     integration.selectedStaffActivityPersonId = canonicalPersonId;
     integration.staffAccountActivityHistory = null;
     integration.staffAccountActivityHistoryStatus = 'loading';
@@ -1469,6 +1482,7 @@ export function createV5Runtime({ backend, app }) {
       if (
         !integration.started ||
         expectedGeneration !== integration.authGeneration ||
+        requestId !== integration.staffAccountActivityHistoryRequest ||
         route() !== 'admin.directory' ||
         integration.selectedStaffActivityPersonId !== canonicalPersonId
       ) {
@@ -1480,6 +1494,7 @@ export function createV5Runtime({ backend, app }) {
       if (
         !integration.started ||
         expectedGeneration !== integration.authGeneration ||
+        requestId !== integration.staffAccountActivityHistoryRequest ||
         route() !== 'admin.directory' ||
         integration.selectedStaffActivityPersonId !== canonicalPersonId
       ) {
@@ -2345,6 +2360,7 @@ export function createV5Runtime({ backend, app }) {
   function stop() {
     if (!integration.started) return;
     integration.started = false;
+    resetStaffAccountActivityHistory();
     asyncBoundary.invalidateRuntime();
     scopedRevisionReader.invalidate();
     revisionSync.stop();
