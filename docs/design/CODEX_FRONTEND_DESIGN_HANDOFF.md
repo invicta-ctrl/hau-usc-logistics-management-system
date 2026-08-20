@@ -10,8 +10,7 @@ DATE:                       2026-08-20 (Asia/Manila)
 
 DESIGN_BRANCH:              frontend-design-integration
 STARTING_SHA:               908653dc956c9ccffa68ac0b350fc23b69f053ea
-ENDING_SHA:                 4ed045d2a2f6c18f8818b2d16a8f3e0602c90243
-                            (+ the one-line SHA backfill commit that follows it)
+ENDING_SHA:                 5677bbf3d279ae6eb8b963ff42fb39a4a46e3fa1
 UPSTREAM:                   origin/frontend-design-integration
 WORKTREE_STATE:             clean
 
