@@ -15,13 +15,18 @@ UPSTREAM:                   origin/frontend-design-integration
 WORKTREE_STATE:             clean
 
 FIGMA_DESIGN_FILE:          hXJElH4p72KfgAaoUyfNOC
-FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-E (content identity; the bridge cannot name a native version)
+FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-F (content identity; the bridge cannot name a native version)
 FIGMA_TRACKER_MIRROR:       page 55:3 · board 568:2 · block 691:2 (heading 691:3, body 691:4)
                             It MIRRORS the repository tracker and is never the calculation authority.
 FIGMA_MAKE_FILE:            rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION:         Version 38 · pending edits NONE
+FIGMA_MAKE_VERSION:         Version 38
                             v37 canonical theme + route adoption (5 files)
                             v38 landing atrium pinned (1 file)
+                            plus one persisted working-tree edit, theme.css +13,
+                            the MK-06 scoped atrium pin. Hash-verified, survives
+                            reload, but not minted into a version — Make's build
+                            service was degraded and minting follows a build.
+                            Reconstructable via npm run design:make-theme.
 FIGMA_MAKE_THEME:           ADOPTED_AND_VERIFIED
                             #D4AF37 resolves in Make light, #E1C671 in Make dark;
                             no superseded value survives the cascade in either mode
@@ -589,7 +594,7 @@ another.
 | `MK-03` | Make route files painted with literal hexes | **CLOSED 2026-08-20, Make v37.** All **44** superseded occurrences replaced by semantic role across four route files — not the 33 first counted; the extra 11 were `rgba()` forms of the same values. `RequestCenterRoute.tsx` went from reading zero CSS variables to reading them through its `ap()` helper. Built by `scripts/design/build-make-routes.mjs`, which asserts a match count per named substitution, refuses to emit if any superseded value survives, and parse-checks every output |
 | `MK-04` | Make per-line route select did not match Production | **CLOSED 2026-08-20, Make v37.** Fixed from Product truth, not by adding the missing option: the fixture gained `itemId`, `type` and `catalogType`, and `permittedRoutes(request, line)` now mirrors `src/visual/runtime.js`. Proven identical to Production across all 10 request/line combinations. The empty disabled placeholder is retained, so no route is preselected |
 | `MK-05` | Adoption made the Make landing hero dark-on-dark | **CLOSED 2026-08-20, Make v38.** Caused by this work and found by looking at the page, not by a token check — every value involved was individually correct. The landing atrium referenced the brand palette live (`--atrium-ink: var(--paper-warm)`), which only worked because that palette had been `:root`-only and therefore near-white everywhere. Giving it a real dark mode turned the hero title into the L\* 15 work plane. All nine `--atrium-*` tokens are pinned to their light values in both modes, and `verify-make-theme.mjs` now asserts it |
-| `MK-06` | Make landing sections below the hero may not respond to dark mode | **OPEN, observed not diagnosed.** In dark mode the "What the council is doing now" section rendered on a near-white surface. Probably structural: before this adoption Make's palette had no dark values, so landing surfaces were mode-invariant by accident and nothing below the hero was authored against a dark palette. Deliberately not patched — whether that landing should respond to dark mode is a design decision. Start at `src/app/landing/CurrentSection.tsx` and `src/styles/index.css` |
+| `MK-06` | Make landing sections below the hero may not respond to dark mode | **CLOSED 2026-08-20 — premise disproven.** Resolved by cascade, as V-41 requires. The lower sections **do** theme: all 20 colour tokens they consume resolve differently in dark than in light. The near-white section that raised this was a frame captured mid-rebuild while Make showed "Live preview loading" — the exact mistake V-41 exists to prevent. The diagnosis did find something real but smaller: nine atrium rules painted from the modal brand palette instead of the pinned `--atrium-*` family. No contrast failure in either mode, but drift on a section D41 pins, so the pin is now scoped to `.digital-atrium`. Intended model is **C — photographic chrome pinned, reading planes theme**, per D12 and D41.2. Verified by `npm run design:make-landing` — 31/31 conform |
 | `FD-TOKENS-RESIDUAL` | About 18% of active solid paints unbound | **Accepted.** Deliberately stopped on the owner's direction that semantic correctness outranks binding percentage. The residual is one-off ink and hairline values, each needing a role decision rather than a mechanical bind. Do not force-bind a colour to move a number |
 | `SCREEN_READER_RUNTIME` | Not separately performed | **Accepted, and not claimed anywhere** |
 | `HALLMARK` | Bounded closure pass, 2026-08-20 | `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md` |

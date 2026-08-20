@@ -535,3 +535,61 @@ saving, and re-hashed from the saved document afterwards.
 | `MK-05` raised and closed — the adoption itself made the landing hero dark-on-dark; all nine `--atrium-*` tokens pinned, and the verifier now asserts they resolve light in both modes | v38 |
 | `MK-06` raised — landing sections below the hero may not respond to dark mode; observed, not diagnosed, deliberately not patched | Tracker register |
 | Tracker held at 97% — the Make work closed residuals, not weighted gates | `design-tracker.mjs` |
+
+---
+
+## Baseline 2026-08-20-F — MK-06 resolved, Claude design stream closed
+
+The final baseline. Nothing in the visual system changed; what changed is that
+the last open Make residual was diagnosed rather than left as an observation.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-F
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · tracker mirror 55:3 / 568:2 / 691:2
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 38
+                     plus one persisted working-tree edit: theme.css +13, the
+                     scoped atrium pin. Written and hash-verified against
+                     249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d
+                     but NOT minted into a version — Make's build service was
+                     degraded (preview stuck loading) and version minting follows
+                     a successful build. The edit survives reload and is fully
+                     reconstructable from build-make-theme.mjs.
+MAKE THEME           ADOPTED_AND_VERIFIED
+MK-06                CLOSED — premise disproven; model C confirmed
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           1f3d75c
+TRACKER COMPLETION   97% (derived — unchanged; MK-06 is a register residual,
+                     not a weighted gate, and was not allowed to move the number)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### MK-06, resolved by cascade
+
+DESIGN.md D12 makes the landing's theme behaviour a correctness question, not a
+taste one: light and dark are "equal CURRENT modes", and V-36 forbids
+"mixed-theme frames". V-41 then dictates the method — token and cascade
+diagnosis, explicitly *not* a screenshot.
+
+Applying it: **the lower landing sections do theme.** All 20 colour tokens they
+consume resolve differently in dark than in light. The near-white section that
+raised MK-06 was a frame captured while Make displayed "Live preview loading" —
+a mid-rebuild artefact, and precisely the mistake V-41 is written to prevent.
+
+The diagnosis did surface something real, though smaller: nine atrium rules
+painted from the modal brand palette rather than the pinned `--atrium-*` family.
+None failed contrast in either mode — measured, not assumed — but they drifted on
+a section D41 pins, so a reduced-transparency user would have seen a different
+hero in dark than in light. The pin is now scoped to `.digital-atrium` in the
+generated override: no new literals, no edit to Make's own stylesheet, and those
+four tokens stay correctly modal everywhere else.
+
+```text
+INTENDED MODEL   C — photographic chrome pinned, reading planes theme
+AUTHORITY        DESIGN.md D12 (V-36, V-41) and D41.2
+VERIFIED BY      scripts/design/verify-make-landing-theme.mjs — 31/31 conform
+                   pinned chrome  11 tokens · must NOT move · 11 PASS
+                   reading planes 20 tokens · must move     · 20 PASS
+```

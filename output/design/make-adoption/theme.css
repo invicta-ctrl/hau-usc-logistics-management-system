@@ -497,3 +497,16 @@
   /* hero lede, same reason */
   --atrium-muted:              #f7f0de;
 }
+
+/* The landing atrium is pinned chrome. These four tokens are correctly modal
+   everywhere else, so the pin is scoped to the section rather than global. */
+.digital-atrium {
+  /* CTA labels on the gold action */
+  --oxblood-deep:              #40070a;
+  /* opaque fallback plane when glass is unavailable */
+  --oxblood-mid:               #78141a;
+  /* eyebrow and plane label */
+  --gold-mid:                  #e6d088;
+  /* text action and path steps */
+  --gold-cream:                #f7f0de;
+}

@@ -160,6 +160,32 @@ function atriumPins() {
   ];
 }
 
+/* Nine atrium rules paint straight from the brand palette rather than through
+ * the --atrium-* family: the eyebrow and plane label use --gold-mid, the CTA
+ * labels use --oxblood-deep, the path steps use --gold-cream, and the opaque
+ * glass fallbacks under `@supports not (backdrop-filter)` and
+ * `prefers-reduced-transparency` use --oxblood-mid.
+ *
+ * None of them fails contrast in either mode — that was measured, not assumed —
+ * so this is not the MK-05 defect repeating. But they drift with the theme on a
+ * section the design system pins, which means a reduced-transparency user would
+ * see a different hero in dark than in light. D41 pins that section; these are
+ * the last four tokens that escaped it.
+ *
+ * Scoping the pin to `.digital-atrium` fixes it without touching Make's own
+ * stylesheet and without pinning these tokens anywhere else, where they are
+ * correctly modal. Same light-palette values the rest of the atrium already
+ * uses, so no new literal enters the system. */
+function atriumScopedPalette() {
+  const l = resolveMode('light');
+  return [
+    ['oxblood-deep', l['ox-900'], 'CTA labels on the gold action'],
+    ['oxblood-mid', l['ox-700'], 'opaque fallback plane when glass is unavailable'],
+    ['gold-mid', l['gold-light'], 'eyebrow and plane label'],
+    ['gold-cream', composite([l['gold-tint'], 0.55], l.work), 'text action and path steps'],
+  ];
+}
+
 function emit(rows, width = 26) {
   return rows
     .map(([name, value, why]) => {
@@ -241,6 +267,12 @@ ${block('light')}
 
 .dark {
 ${block('dark')}
+}
+
+/* The landing atrium is pinned chrome. These four tokens are correctly modal
+   everywhere else, so the pin is scoped to the section rather than global. */
+.digital-atrium {
+${emit(atriumScopedPalette())}
 }
 `;
 
