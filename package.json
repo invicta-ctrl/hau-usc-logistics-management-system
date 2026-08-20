@@ -15,6 +15,8 @@
     "design:make-theme": "node scripts/design/build-make-theme.mjs",
     "design:make-theme:check": "node scripts/design/build-make-theme.mjs --check",
     "design:make-verify": "node scripts/design/verify-make-theme.mjs",
+    "design:make-routes": "node scripts/design/build-make-routes.mjs",
+    "design:make-routes:check": "node scripts/design/build-make-routes.mjs --check",
     "design:figma-tracker": "node scripts/design/figma-tracker-payload.mjs",
     "design:figma-tracker:check": "node scripts/design/figma-tracker-payload.mjs --check",
     "design:ladder": "node scripts/design/theme-source.mjs",

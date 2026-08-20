@@ -10,24 +10,26 @@ DATE:                       2026-08-20 (Asia/Manila)
 
 DESIGN_BRANCH:              frontend-design-integration
 STARTING_SHA:               908653dc956c9ccffa68ac0b350fc23b69f053ea
-ENDING_SHA:                 01037a3e1e79568449727aa80fdc8c613c22f5f7
-                            (+ the one-line SHA backfill commit that follows it)
+ENDING_SHA:                 1f3d75c
 UPSTREAM:                   origin/frontend-design-integration
 WORKTREE_STATE:             clean
 
 FIGMA_DESIGN_FILE:          hXJElH4p72KfgAaoUyfNOC
-FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-D (content identity; the bridge cannot name a native version)
+FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-E (content identity; the bridge cannot name a native version)
 FIGMA_TRACKER_MIRROR:       page 55:3 · board 568:2 · block 691:2 (heading 691:3, body 691:4)
                             It MIRRORS the repository tracker and is never the calculation authority.
 FIGMA_MAKE_FILE:            rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION:         Version 36 · READ-VERIFIED (MK-01 closed)
-FIGMA_MAKE_THEME:           SAFE_READY_TO_APPLY — patch generated and cascade-verified;
-                            provider write withheld behind an unowned unsaved edit.
-                            See docs/design/FIGMA_MAKE_ADOPTION_PACKET.md
-MAKE_PENDING_EDIT:          RequestCenterRoute.tsx · unsaved · third-party · +28/-16
-                            sha256 4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
-                            preserved byte-exact at
+FIGMA_MAKE_VERSION:         Version 38 · pending edits NONE
+                            v37 canonical theme + route adoption (5 files)
+                            v38 landing atrium pinned (1 file)
+FIGMA_MAKE_THEME:           ADOPTED_AND_VERIFIED
+                            #D4AF37 resolves in Make light, #E1C671 in Make dark;
+                            no superseded value survives the cascade in either mode
+MAKE_ADOPTION_AUTHORITY:    OWNER_AUTHORIZED_DESIGN_STREAM_ADOPTION, 2026-08-20.
+                            Historical authorship of the adopted RequestCenterRoute.tsx
+                            edit remains UNKNOWN. Rollback baseline preserved at
                             output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+                            sha256 4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
 
 TRACKER_COMPLETION:         97% (derived — docs/design/DESIGN_EXECUTION_TRACKER.md)
 GATE_COUNTS:                49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
@@ -583,9 +585,11 @@ another.
 |---|---|---|
 | `FD-COLOUR` | 54 historically inferred colours on page 15 | **NONBLOCKING_HISTORICAL_EVIDENCE_GAP.** A 2026-08-19 contrast sweep that ignored gradient and image fills recoloured 294 nodes; 206 were restored by exact twin match, 23 by empirical role mapping, and 54 by inference. The node ids were never recorded, so the set cannot be identified even with perfect version history. A count is not a record. It does not affect any verified current-authority surface. Resolvable only with the Figma REST API and an owner-issued token, or a manual version diff |
 | `MK-01` | Figma Make live version vs recorded evidence | **CLOSED 2026-08-20.** Opened at Version 36 through a signed-in browser session. v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` is untouched by v36 and its lines 1-789 are byte-identical to the committed source: 50,587 chars, FNV-1a `d7cb6c66`. The live file adds one trailing comment line. `LendingHubRoute.tsx` still declares the consumable/reusable verb split and the six Lending Hub states including Permission limited. The four `FM-*` gates are restored |
-| `MK-02` | Figma Make still carries its own palette | **OPEN, actionable, and larger than it looked.** The token-layer patch is generated, complete and cascade-verified: `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`, built by `scripts/design/build-make-theme.mjs`, checked by `scripts/design/verify-make-theme.mjs`. Reading the live v36 file showed a palette-only override would NOT have worked: `.dark` hardcodes the whole glass ladder (`#1c1917`…`#3d3530`), builds surfaces from oxblood (`--background: var(--oxblood-deep)`, `--card`/`--popover`/`--sidebar`: `#2a0508`), and both blocks bake the old golds into `rgba(232,185,60,…)` and `rgba(242,209,92,…)` literals a `--gold-vivid` rename would have missed. All covered now. **Not applied:** Make saves the whole pending set — one `Save` button over a file-count panel, no per-file save — and the file holds an unsaved third-party edit to `RequestCenterRoute.tsx` (+28/-16) that saving would sweep into a new version. Preserved byte-exact at `output/design/make-preservation/RequestCenterRoute.unsaved.tsx`, sha256 `4087473c…`. See `docs/design/FIGMA_MAKE_ADOPTION_PACKET.md` |
-| `MK-03` | Make route files paint with literal hexes, not tokens | **OPEN.** Applying the theme patch fixes the token layer but cannot retheme four route files that hardcode colour. Measured at v36: `PublicFlows.tsx` 6 superseded literals of 44, `LendingHubRoute.tsx` 3 of 18, `ReleaseDeskRoute.tsx` 3 of 17, and `RequestCenterRoute.tsx` **21 of 72 while reading zero CSS variables** — it colours itself from a local `ap(dark)` helper and carries 13 occurrences of `#E8B93C`. All 33 are held by the same `WHOLE_PROJECT_SAVE_ONLY` boundary, not just the 21: any Make edit joins the same pending save set. Status `READY_AFTER_OWNERSHIP_RESOLUTION`. Say "token layer adopted", not "Make themed", until this is done |
-| `MK-04` | Make per-line route select does not match production's derived route set | **OPEN, ownership-blocked, and not the omission it first looked like.** Production derives options per line — `permittedRoutes(request, line)` makes only `REJECT` and `MISSING_INFORMATION` unconditional, gates `ISSUE_FROM_STOCK` and `RESTOCK` on `line.itemId`, and gates `RESTOCK` further on a `CATALOG_RESTOCK` request or an `OFFICE_INVENTORY`/`PANTRY` catalog type. The Make fixture carries none of those three fields, so its option set is **underdetermined**, not short by one. Do not "fix" it by adding Catalog restock unconditionally — add the discriminating fields and derive. Replacement code in adoption packet §4.1 |
+| `MK-02` | Figma Make carried its own palette | **CLOSED 2026-08-20, Make v37.** The canonical override was appended to Make's `theme.css` and saved. `--gold-vivid` resolves to `#D4AF37` in light and `#E1C671` in dark; no superseded value survives the cascade in either mode. It had to be much larger than a gold rename: `.dark` hardcoded the whole glass ladder (`#1c1917`…`#3d3530`), built surfaces from oxblood (`--background: var(--oxblood-deep)`, `--card`/`--popover`/`--sidebar`: `#2a0508`), and both blocks baked the old golds into `rgba(232,185,60,…)` / `rgba(242,209,92,…)` literals. Verify with `npm run design:make-verify` |
+| `MK-03` | Make route files painted with literal hexes | **CLOSED 2026-08-20, Make v37.** All **44** superseded occurrences replaced by semantic role across four route files — not the 33 first counted; the extra 11 were `rgba()` forms of the same values. `RequestCenterRoute.tsx` went from reading zero CSS variables to reading them through its `ap()` helper. Built by `scripts/design/build-make-routes.mjs`, which asserts a match count per named substitution, refuses to emit if any superseded value survives, and parse-checks every output |
+| `MK-04` | Make per-line route select did not match Production | **CLOSED 2026-08-20, Make v37.** Fixed from Product truth, not by adding the missing option: the fixture gained `itemId`, `type` and `catalogType`, and `permittedRoutes(request, line)` now mirrors `src/visual/runtime.js`. Proven identical to Production across all 10 request/line combinations. The empty disabled placeholder is retained, so no route is preselected |
+| `MK-05` | Adoption made the Make landing hero dark-on-dark | **CLOSED 2026-08-20, Make v38.** Caused by this work and found by looking at the page, not by a token check — every value involved was individually correct. The landing atrium referenced the brand palette live (`--atrium-ink: var(--paper-warm)`), which only worked because that palette had been `:root`-only and therefore near-white everywhere. Giving it a real dark mode turned the hero title into the L\* 15 work plane. All nine `--atrium-*` tokens are pinned to their light values in both modes, and `verify-make-theme.mjs` now asserts it |
+| `MK-06` | Make landing sections below the hero may not respond to dark mode | **OPEN, observed not diagnosed.** In dark mode the "What the council is doing now" section rendered on a near-white surface. Probably structural: before this adoption Make's palette had no dark values, so landing surfaces were mode-invariant by accident and nothing below the hero was authored against a dark palette. Deliberately not patched — whether that landing should respond to dark mode is a design decision. Start at `src/app/landing/CurrentSection.tsx` and `src/styles/index.css` |
 | `FD-TOKENS-RESIDUAL` | About 18% of active solid paints unbound | **Accepted.** Deliberately stopped on the owner's direction that semantic correctness outranks binding percentage. The residual is one-off ink and hairline values, each needing a role decision rather than a mechanical bind. Do not force-bind a colour to move a number |
 | `SCREEN_READER_RUNTIME` | Not separately performed | **Accepted, and not claimed anywhere** |
 | `HALLMARK` | Bounded closure pass, 2026-08-20 | `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md` |

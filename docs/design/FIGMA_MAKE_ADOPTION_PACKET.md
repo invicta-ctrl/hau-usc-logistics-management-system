@@ -1,14 +1,44 @@
 # Figma Make — canonical theme adoption packet
 
-**Status: READY_TO_APPLY. Provider write deliberately not performed.**
+**Status: APPLIED AND VERIFIED — Figma Make v37 and v38, 2026-08-20.**
 
-This is the deterministic packet for bringing Figma Make onto the canonical
-theme. Everything needed to apply and verify the change is here or is generated
-by a script named here. Nothing below requires re-deriving anything from a
-screenshot.
+This was the deterministic packet for bringing Figma Make onto the canonical
+theme. It has been applied. The document is kept as the record of what was
+changed and why, and as the rollback reference.
 
-The reason the change was not applied is recorded in §2. It is an ownership
-boundary, not an unfinished task.
+```text
+MAKE_THEME               ADOPTED_AND_VERIFIED
+MAKE_VERSIONS            v37  canonical theme + route adoption (5 files)
+                         v38  landing atrium pinned (1 file)
+PENDING EDITS            NONE
+ADOPTION AUTHORITY       OWNER_AUTHORIZED_DESIGN_STREAM_ADOPTION, 2026-08-20
+HISTORICAL AUTHORSHIP    of the adopted RequestCenterRoute.tsx edit: UNKNOWN
+ROLLBACK BASELINE        output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+                         sha256 4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
+```
+
+§2 below records why the write was withheld until the owner resolved ownership.
+That reasoning is retained deliberately: it is the reason the rollback baseline
+exists, and the reason the adopted edit could be adopted rather than recreated.
+
+## 0. What the adoption actually did
+
+| | |
+| --- | --- |
+| `MK-02` | Canonical theme appended to `src/styles/theme.css`. `--gold-vivid` resolves `#D4AF37` light / `#E1C671` dark; no superseded value survives the cascade in either mode |
+| `MK-03` | **44** superseded occurrences replaced by semantic role across four route files — not the 33 first counted. The extra 11 were `rgba()` forms of the same values |
+| `MK-04` | Fixed from Product truth: the fixture gained `itemId`, `type`, `catalogType`, and `permittedRoutes()` mirrors `runtime.js`. Identical to Production in all 10 combinations |
+| `MK-05` | The adoption made the landing hero dark-on-dark. Found, fixed in v38, and now asserted by the verifier — see §8 |
+| `MK-06` | Landing sections below the hero may not respond to dark mode. Observed, not diagnosed, not patched — see §8 |
+
+Every file was built locally, parse-checked with esbuild, hash-verified in the
+editor before saving, and re-hashed from the saved document afterwards.
+
+```bash
+node scripts/design/build-make-routes.mjs   # the four route files
+node scripts/design/build-make-theme.mjs    # the theme override
+node scripts/design/verify-make-theme.mjs   # replay the cascade
+```
 
 ---
 
@@ -399,3 +429,70 @@ Stop at any step where a file changes that you did not intend to change.
 | FD-COLOUR | 54 inferred colours on Figma page 15 | NONBLOCKING_HISTORICAL_EVIDENCE_GAP — node ids were never recorded, so the set cannot be identified. Not worth another cycle |
 | Token binding | Figma solid-paint binding coverage at 81.8% | Deliberately not pursued; semantic correctness outranks binding percentage |
 | Screen reader | Runtime AT pass | NOT_RUN. The accessibility-tree evidence (30/30 via CDP) is not a screen-reader run and is not presented as one |
+
+---
+
+## 8. What the adoption broke, and what it exposed
+
+Two findings that only appeared after the theme was live. Both are recorded here
+rather than folded quietly into the change, because the first is a defect this
+work introduced and the second is a design question this work is not entitled to
+answer.
+
+### 8.1 MK-05 — the landing hero went dark on dark. Fixed in v38.
+
+Make's landing atrium wrote its chrome as live references to the brand palette:
+
+```css
+--atrium-ink:   var(--paper-warm);
+--atrium-muted: var(--gold-cream);
+```
+
+and `.atrium__title { color: var(--atrium-ink) }`.
+
+That worked before this adoption for an accidental reason. The original theme
+declared the brand palette in `:root` **only** — it had no `.dark` values at all
+— so `--paper-warm` was near-white everywhere, including inside a `.dark`
+subtree. The hero title was light because the palette could not be anything else.
+
+Giving the palette a real dark mode removes the accident. Inside the atrium's own
+dark context `--paper-warm` becomes the L\* 15 work plane, and the hero rendered
+as dark ink on a dark photograph.
+
+Nothing flagged it. Every value involved was individually correct, the cascade
+verifier passed, and all five files hashed exactly as intended. It was visible
+only by looking at the rendered page.
+
+The fix pins all nine `--atrium-*` tokens to their light-palette values in both
+modes, which is what "permanently dark chrome" should always have meant, and
+`verify-make-theme.mjs` now asserts that `--atrium-ink` and `--atrium-muted`
+resolve light in both modes so the regression cannot return silently.
+
+**The general lesson, which matters beyond this file:** giving a previously
+mode-invariant palette a dark mode is not a safe token-level change. Every
+consumer that assumed those values were constant becomes a candidate regression.
+The sweep that finds them is "which `:root`-only tokens reference a palette
+token that is now modal" — it returned ten here, nine of them the atrium family.
+
+### 8.2 MK-06 — sections below the hero may not respond to dark mode. Open.
+
+With the theme in dark mode, the "What the council is doing now" section rendered
+on a near-white surface. This was observed and deliberately not pursued.
+
+The likely cause is the same structural fact as §8.1: before this adoption
+Make's palette had no dark values, so the landing's surfaces were mode-invariant
+by accident, and nothing below the hero was ever authored against a dark palette.
+If that is right, the landing is not broken so much as never designed for dark
+mode — and deciding whether it should respond to dark mode at all is a design
+call, not a token fix.
+
+It is left open rather than patched. One file to start from:
+`src/app/landing/CurrentSection.tsx` with `src/styles/index.css`.
+
+### 8.3 A note on Make's save granularity
+
+`WHOLE_PROJECT_SAVE_ONLY` held throughout. The five-file adoption saved as one
+checkpoint (v37) and the one-file atrium fix as another (v38). Worth knowing for
+next time: a save does not mint a version immediately — the pending panel can
+still show the edit after a reload while the version is being cut. The reliable
+test is a reload followed by a re-hash of the file, not the pending panel.

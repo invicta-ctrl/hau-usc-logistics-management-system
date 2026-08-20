@@ -49,6 +49,11 @@ createServer(async (req, res) => {
     res.writeHead(200, {
       'content-type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
       'cache-control': 'no-store',
+      /* Read-only, loopback-bound, GET only. This exists so a provider editor
+         open in the browser can pull a generated file straight from disk instead
+         of the file being carried through an agent's context — which is both
+         lossy and the wrong shape for moving 45KB of someone's source. */
+      'access-control-allow-origin': '*',
     });
     createReadStream(file).pipe(res);
   } catch {

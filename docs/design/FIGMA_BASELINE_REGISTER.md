@@ -476,3 +476,62 @@ npm run design:theme:check        hau-theme.css current
 npm run design:make-theme:check   theme-canonical.css current
 npm run design:make-verify        no superseded value survives the Make cascade
 ```
+
+---
+
+## Baseline 2026-08-20-E — Figma Make canonical theme adopted
+
+The closing baseline. Figma Make is no longer the surface that does not resolve
+from the canonical theme, and the pending third-party edit that had blocked the
+write is resolved under explicit owner authority.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-E
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+FIGMA TRACKER NODE   page 55:3 · board 568:2 · block 691:2 (heading 691:3, body 691:4)
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS
+                     Version 37  canonical theme + route adoption, 5 files
+                     Version 38  landing atrium pinned, 1 file
+                     pending edits: NONE
+MAKE THEME           ADOPTED_AND_VERIFIED
+MAKE ADOPTION AUTHORITY
+                     OWNER_AUTHORIZED_DESIGN_STREAM_ADOPTION, 2026-08-20
+                     historical authorship of the adopted edit remains UNKNOWN
+ADOPTED EDIT         RequestCenterRoute.tsx, previously unsaved and unowned
+                     rollback baseline sha256
+                     4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
+                     preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           1f3d75c
+TRACKER COMPLETION   97% (derived — unchanged; the Make work closed register
+                     residuals, not weighted gates, and was not allowed to move the number)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
+CANONICAL GOLD       #D4AF37 · resolves in Make light; #E1C671 in Make dark
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### Saved Make artifacts at this baseline
+
+```text
+theme.css             19,954 bytes  sha256 7e34388ee26354b7da7b63490d9aeb69103098e2655a5dcf5a9a72eecae070c4
+RequestCenterRoute    47,823 bytes  sha256 995704cc4dcd198d1d469dfe5e0b7c335003219080d6ca194c9657b1ce03943e
+PublicFlows           50,829 bytes  sha256 755c6ed62916608e427eb9f65b5ecb4ea34258fedb1f8a02a3602e4f159aa23c
+LendingHubRoute       22,814 bytes  sha256 b1faac84ee52e69ef243db6e02d3f8a63b9143d1cb4b4664156beab387c4d0f8
+ReleaseDeskRoute      21,914 bytes  sha256 f9584533cc7eb7cfff9dd153b26dce11a3c0eb2571bd91be75b9f9bfe513cc24
+```
+
+Every one was built locally, parse-checked, hash-verified in the editor before
+saving, and re-hashed from the saved document afterwards.
+
+### What changed since 2026-08-20-D
+
+| Change | Evidence |
+|---|---|
+| `MK-02` closed — canonical theme appended to Make's `theme.css`, saved as v37 | `verify-make-theme.mjs` against the saved artifact |
+| `MK-03` closed — **44** superseded occurrences replaced by semantic role across four route files, not the 33 first counted; the extra 11 were `rgba()` forms | `build-make-routes.mjs` |
+| `MK-04` closed from Product truth — fixture gained `itemId`, `type`, `catalogType`; `permittedRoutes()` mirrors `runtime.js` and matches it in all 10 combinations | Route-equivalence test |
+| `MK-05` raised and closed — the adoption itself made the landing hero dark-on-dark; all nine `--atrium-*` tokens pinned, and the verifier now asserts they resolve light in both modes | v38 |
+| `MK-06` raised — landing sections below the hero may not respond to dark mode; observed, not diagnosed, deliberately not patched | Tracker register |
+| Tracker held at 97% — the Make work closed residuals, not weighted gates | `design-tracker.mjs` |

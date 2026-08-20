@@ -60,9 +60,14 @@ function declarations(css, selector) {
   return out;
 }
 
-const base = stripComments(await readFile(BASE, 'utf8'));
-const patch = stripComments(await readFile(PATCH, 'utf8'));
-const combined = base + '\n' + patch;
+/* With no argument this checks base + patch, which is what applying the packet
+   produces. With a path it checks that single file, which is how the ALREADY
+   COMBINED artifact gets verified before it is written into Make — concatenation
+   is a step that can go wrong on its own. */
+const single = process.argv.slice(2).find((a) => !a.startsWith('-'));
+const combined = single
+  ? stripComments(await readFile(path.resolve(single), 'utf8'))
+  : stripComments(await readFile(BASE, 'utf8')) + '\n' + stripComments(await readFile(PATCH, 'utf8'));
 
 let failures = 0;
 const report = [];
@@ -87,7 +92,20 @@ for (const [selector, label] of [[':root', 'light'], ['\\.dark', 'dark']]) {
 
   for (const key of ['--g0-ground', '--background', '--card', '--popover']) {
     const v = resolved.get(key) || '(unset)';
-    report.push(`  ....  ${label.padEnd(5)} ${key.padEnd(14)} ${v}`);
+    report.push(`  ....  ${label.padEnd(5)} ${key.padEnd(16)} ${v}`);
+  }
+
+  /* The landing atrium is permanently dark chrome, so its ink must resolve to a
+     LIGHT value in both modes. Before the atrium pins existed, dark mode gave
+     `--atrium-ink` the L* 15 work plane and put dark title text on a dark
+     photograph. Asserting it here means that specific regression cannot come
+     back silently. */
+  for (const key of ['--atrium-ink', '--atrium-muted']) {
+    const v = (resolved.get(key) || '').trim();
+    const lit = v.match(/^#([0-9a-f]{6})$/iu);
+    const light = lit ? parseInt(lit[1].slice(0, 2), 16) > 0x80 : false;
+    if (!light) failures++;
+    report.push(`  ${light ? 'PASS' : 'FAIL'}  ${label.padEnd(5)} ${key.padEnd(16)} ${v || '(unset)'}  (must be light in both modes)`);
   }
 }
 

@@ -127,6 +127,39 @@ function semanticBlock(mode) {
   ];
 }
 
+/* THE ATRIUM FAMILY — why it has to be pinned.
+ *
+ * Make's landing hero is a permanently dark, photographic, oxblood section. Its
+ * ink and films were written as live references to the brand palette
+ * (`--atrium-ink: var(--paper-warm)`), and that WORKED before this override for
+ * an accidental reason: the original theme declared the brand palette in `:root`
+ * only. `--paper-warm` was near-white everywhere, including inside a `.dark`
+ * subtree, so the hero title was always light.
+ *
+ * Giving the palette a proper dark mode breaks that accident. Inside the
+ * atrium's own `.dark` context `--paper-warm` becomes the L* 15 work plane, and
+ * `.atrium__title { color: var(--atrium-ink) }` renders dark ink on a dark
+ * photograph. Caught by looking at the rendered page, not by any token check —
+ * every value involved was individually correct.
+ *
+ * The section is fixed, so its chrome should be too: the atrium tokens are
+ * restated in `.dark` at their light-palette values, which pins the hero to one
+ * appearance in both modes. That is what "permanently dark chrome" means. */
+function atriumPins() {
+  const l = resolveMode('light');
+  return [
+    ['atrium-g0', l['ox-900'], 'oxblood ground — fixed, not mode-following'],
+    ['atrium-g1', `color-mix(in oklch, ${l['ox-700']} 66%, transparent)`, ''],
+    ['atrium-g2', `color-mix(in oklch, ${l['ox-600']} 58%, transparent)`, ''],
+    ['atrium-g3', `color-mix(in oklch, ${l.work} 14%, transparent)`, 'highlight film — must stay light'],
+    ['atrium-g4', `color-mix(in oklch, ${l.work} 18%, transparent)`, 'highlight film — must stay light'],
+    ['atrium-edge', `color-mix(in oklch, ${l['gold-light']} 48%, transparent)`, ''],
+    ['atrium-edge-strong', `color-mix(in oklch, ${l['gold-primary']} 82%, ${l['gold-light']})`, ''],
+    ['atrium-ink', l.work, 'hero title sits on a dark photograph in BOTH modes'],
+    ['atrium-muted', composite([l['gold-tint'], 0.55], l.work), 'hero lede, same reason'],
+  ];
+}
+
 function emit(rows, width = 26) {
   return rows
     .map(([name, value, why]) => {
@@ -150,6 +183,9 @@ function block(mode) {
     '',
     '  /* Semantic tokens that did not derive from the palette */',
     emit(semanticBlock(mode)),
+    '',
+    '  /* Landing atrium — pinned to the light palette in BOTH modes. See atriumPins(). */',
+    emit(atriumPins()),
   ].join('\n');
 }
 

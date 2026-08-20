@@ -1,3 +1,268 @@
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
+ * designed-as-app · institutional command surface · owner-authorized glass hierarchy
+ */
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+
+  /* HAU-USC brand palette */
+  --oxblood-deep:   #40070a;
+  --oxblood-mid:    #78141a;
+  --oxblood-light:  #8d1f28;
+  --gold-vivid:     #e8b93c;
+  --gold-mid:       #f2d15c;
+  --gold-pale:      #f6e29a;
+  --gold-cream:     #faeecb;
+  --paper-warm:     #fffdf8;
+  --paper-mid:      #fcf2cf;
+  --paper-light:    #f7f0e2;
+  --paper-bg:       #f2eae5;
+  --ink-deep:       #241416;
+  --ink-mid:        #6f5a60;
+  --ink-light:      #7d5518;
+  --border-warm:    #d1b478;
+  --border-paper:   #e6dcc9;
+  --green-open:     #1f6b41;
+
+  /* Approved type roles */
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, sans-serif;
+  --font-record: "IBM Plex Mono", ui-monospace, monospace;
+  --font-wordmark: "Newsreader", Georgia, serif;
+
+  /* Four-point spacing and restrained motion */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-response: 120ms;
+  --dur-state: 200ms;
+  --dur-surface: 280ms;
+  --dur-narrative: 400ms;
+
+  /* G0–G4 material hierarchy: depth communicates task and selection. */
+  --g0-ground: var(--paper-bg);
+  --g1-soft: color-mix(in oklch, var(--paper-warm) 64%, transparent);
+  --g2-operational: color-mix(in oklch, var(--paper-warm) 72%, transparent);
+  --g3-raised: color-mix(in oklch, var(--paper-warm) 78%, transparent);
+  --g4-focus: color-mix(in oklch, var(--paper-warm) 82%, transparent);
+  --glass-border-soft: color-mix(in oklch, var(--border-warm) 44%, transparent);
+  --glass-border-strong: color-mix(in oklch, var(--gold-vivid) 72%, var(--border-warm));
+  --glass-highlight: color-mix(in oklch, var(--paper-warm) 82%, transparent);
+  --glass-shadow-soft: 0 12px 28px color-mix(in oklch, var(--ink-deep) 12%, transparent);
+  --glass-shadow-raised: 0 20px 48px color-mix(in oklch, var(--ink-deep) 20%, transparent);
+  --glass-blur-soft: blur(10px) saturate(112%);
+  --glass-blur-raised: blur(16px) saturate(118%);
+
+  /* Digital Atrium material roles stay distinct from semantic status. */
+  --atrium-g0: var(--oxblood-deep);
+  --atrium-g1: color-mix(in oklch, var(--oxblood-mid) 66%, transparent);
+  --atrium-g2: color-mix(in oklch, var(--oxblood-light) 58%, transparent);
+  --atrium-g3: color-mix(in oklch, var(--paper-warm) 14%, transparent);
+  --atrium-g4: color-mix(in oklch, var(--paper-warm) 18%, transparent);
+  --atrium-edge: color-mix(in oklch, var(--gold-mid) 48%, transparent);
+  --atrium-edge-strong: color-mix(in oklch, var(--gold-vivid) 82%, var(--gold-mid));
+  --atrium-ink: var(--paper-warm);
+  --atrium-muted: var(--gold-cream);
+
+  /* Named stacking levels. */
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-modal: 400;
+
+  /* Tailwind semantic tokens — light */
+  --background:          var(--paper-warm);
+  --foreground:          var(--ink-deep);
+  --card:                var(--paper-warm);
+  --card-foreground:     var(--ink-deep);
+  --popover:             var(--paper-warm);
+  --popover-foreground:  var(--ink-deep);
+  --primary:             var(--oxblood-deep);
+  --primary-foreground:  var(--gold-cream);
+  --secondary:           var(--paper-bg);
+  --secondary-foreground: var(--ink-deep);
+  --muted:               var(--paper-bg);
+  --muted-foreground:    var(--ink-mid);
+  --accent:              var(--gold-pale);
+  --accent-foreground:   var(--ink-deep);
+  --destructive:         #d4183d;
+  --destructive-foreground: #ffffff;
+  --border:              var(--border-paper);
+  --input:               transparent;
+  --input-background:    var(--paper-mid);
+  --switch-background:   #cbced4;
+  --font-weight-medium:  500;
+  --font-weight-normal:  400;
+  --ring:                var(--gold-vivid);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: var(--oxblood-deep);
+  --sidebar-foreground: var(--gold-cream);
+  --sidebar-primary: var(--gold-vivid);
+  --sidebar-primary-foreground: var(--oxblood-deep);
+  --sidebar-accent: var(--oxblood-mid);
+  --sidebar-accent-foreground: var(--gold-cream);
+  --sidebar-border: rgba(242,209,92,0.22);
+  --sidebar-ring: var(--gold-vivid);
+}
+
+.dark {
+  --background:          var(--oxblood-deep);
+  --foreground:          var(--gold-cream);
+  --card:                #2a0508;
+  --card-foreground:     var(--gold-cream);
+  --popover:             #2a0508;
+  --popover-foreground:  var(--gold-cream);
+  --primary:             var(--gold-vivid);
+  --primary-foreground:  var(--oxblood-deep);
+  --secondary:           var(--oxblood-mid);
+  --secondary-foreground: var(--gold-cream);
+  --muted:               var(--oxblood-mid);
+  --muted-foreground:    var(--gold-pale);
+  --accent:              rgba(232,185,60,0.15);
+  --accent-foreground:   var(--gold-cream);
+  --destructive:         oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border:              rgba(242,209,92,0.2);
+  --input:               rgba(242,209,92,0.1);
+  --ring:                var(--gold-mid);
+  --font-weight-medium:  500;
+  --font-weight-normal:  400;
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: #2a0508;
+  --sidebar-foreground: var(--gold-cream);
+  --sidebar-primary: var(--gold-vivid);
+  --sidebar-primary-foreground: var(--oxblood-deep);
+  --sidebar-accent: var(--oxblood-mid);
+  --sidebar-accent-foreground: var(--gold-cream);
+  --sidebar-border: rgba(242,209,92,0.22);
+  --sidebar-ring: var(--gold-vivid);
+
+  --g0-ground: #1c1917;
+  --g1-soft: color-mix(in oklch, #242120 66%, transparent);
+  --g2-operational: color-mix(in oklch, #2d2927 72%, transparent);
+  --g3-raised: color-mix(in oklch, #37312e 78%, transparent);
+  --g4-focus: color-mix(in oklch, #3d3530 82%, transparent);
+  --glass-border-soft: color-mix(in oklch, var(--gold-pale) 16%, transparent);
+  --glass-border-strong: color-mix(in oklch, var(--gold-mid) 62%, transparent);
+  --glass-highlight: color-mix(in oklch, var(--paper-warm) 14%, transparent);
+  --glass-shadow-soft: 0 12px 28px color-mix(in oklch, #120b0b 54%, transparent);
+  --glass-shadow-raised: 0 20px 48px color-mix(in oklch, #120b0b 68%, transparent);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
 /* HAU-USC Logistics — canonical palette override for Figma Make.
 
    GENERATED by scripts/design/build-make-theme.mjs from
