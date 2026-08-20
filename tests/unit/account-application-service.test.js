@@ -30,6 +30,19 @@ function createRepository() {
 
   const repository = {
     async createVerificationChallenge(challenge) {
+      const cooldownCutoffAt = String(challenge.resendCooldownCutoffAt ?? '');
+      if (
+        cooldownCutoffAt &&
+        [...challenges.values()].some(
+          (current) =>
+            current.emailFingerprint === challenge.emailFingerprint &&
+            current.purpose === challenge.purpose &&
+            current.state === 'PENDING' &&
+            (current.createdAt > cooldownCutoffAt || current.lastSentAt > cooldownCutoffAt),
+        )
+      ) {
+        throw new Error('verification resend cooldown');
+      }
       for (const current of challenges.values()) {
         if (
           current.emailFingerprint === challenge.emailFingerprint &&
@@ -364,7 +377,7 @@ function createRepository() {
   return repository;
 }
 
-function testContext({ providerConfigured = true, eligibilityDecision } = {}) {
+function testContext({ providerConfigured = true, providerFailure = false, eligibilityDecision } = {}) {
   let timestamp = Date.parse('2026-08-03T08:00:00.000Z');
   let sequence = 0;
   const sent = [];
@@ -383,6 +396,7 @@ function testContext({ providerConfigured = true, eligibilityDecision } = {}) {
         configured: true,
         async sendVerification(command) {
           sent.push(clone(command));
+          if (providerFailure) throw new Error('synthetic provider failure');
         },
       }
     : createFailClosedEmailProvider();
@@ -521,6 +535,18 @@ async function submittedApplication(context) {
 }
 
 describe('account-application service', () => {
+  it('keeps same-email resend generic without sending or mutating during the cooldown', async () => {
+    const context = testContext();
+    const first = await context.service.startEmailVerification({ email: 'eligible@example.test' });
+    const before = context.repository.inspect();
+
+    const repeated = await context.service.startEmailVerification({ email: 'eligible@example.test' });
+
+    expect(repeated).toEqual(first);
+    expect(context.sent).toHaveLength(1);
+    expect(context.repository.inspect().challenges).toEqual(before.challenges);
+  });
+
   it('keeps verification start generic for unknown identity, unavailable provider, and approved identity', async () => {
     const configured = testContext();
     const approved = await configured.service.startEmailVerification({ email: 'eligible@example.test' });
@@ -534,6 +560,20 @@ describe('account-application service', () => {
     const unavailable = await failClosed.service.startEmailVerification({ email: 'eligible@example.test' });
     expect(unavailable).toEqual(approved);
     expect(failClosed.repository.inspect().challenges).toEqual([]);
+  });
+
+  it('does not mark a challenge sent or verified when the configured provider fails', async () => {
+    const context = testContext({ providerFailure: true });
+
+    await expect(context.service.startEmailVerification({ email: 'eligible@example.test' })).resolves.toEqual(
+      expect.objectContaining({ ok: true, accepted: true }),
+    );
+
+    expect(context.sent).toHaveLength(1);
+    const [stored] = context.repository.inspect().challenges;
+    expect(stored).toMatchObject({ state: 'PENDING' });
+    expect(stored.lastSentAt ?? '').toBe('');
+    expect(stored.verifiedAt ?? '').toBe('');
   });
 
   it('rejects malformed verification codes without weakening the generic failure boundary', async () => {

@@ -275,13 +275,14 @@ function mountRegistration({ root, client }) {
     root.innerHTML = shellMarkup({
       title: 'Enter verification code',
       intro:
-        'If the address is eligible and delivery is configured, use the short-lived code sent to that address.',
+        'If the address is eligible and delivery is configured, enter the exact 8-digit code sent to that address.',
       body: `${alertMarkup(error)}
-        <div class="account-application-progress" aria-label="Application steps"><span class="current">Verify email</span><span>Identity and access</span><span>Review</span></div>
-        <form class="auth-form" data-application-email-confirm>
-          <label for="applicationCode">Verification code</label>
-          <input id="applicationCode" name="code" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="12" required spellcheck="false">
-          <button class="primary" type="submit">Confirm email</button>
+       <div class="account-application-progress" aria-label="Application steps"><span class="current">Verify email</span><span>Identity and access</span><span>Review</span></div>
+       <form class="auth-form" data-application-email-confirm>
+         <label for="applicationCode">Verification code</label>
+          <input id="applicationCode" name="code" inputmode="numeric" pattern="\\d{8}" autocomplete="one-time-code" minlength="8" maxlength="8" required spellcheck="false" aria-describedby="applicationCodeHelp">
+          <small id="applicationCodeHelp">Enter all 8 digits. A leading zero is part of the code.</small>
+         <button class="primary" type="submit">Confirm email</button>
           <button class="auth-text-button" type="button" data-use-different-email>Use a different email</button>
         </form>`,
     });

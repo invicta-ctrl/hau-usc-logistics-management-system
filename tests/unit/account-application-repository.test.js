@@ -201,11 +201,20 @@ describe('D1 account-application repository contract', () => {
       expiresAt: '2026-08-03T10:10:00.000Z',
       resendCount: 1,
       createdAt: timestamp,
+      resendCooldownCutoffAt: '2026-08-03T09:59:00.000Z',
     });
 
     expect(probe.batches).toHaveLength(1);
     const sql = probe.batches[0].map((statement) => statement.sql);
     expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_CHALLENGE_ID_CONFLICT'");
+    expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_CHALLENGE_COOLDOWN_ACTIVE'");
+    expect(sql[0]).toContain('created_at > ?2 OR last_sent_at > ?2');
+    expect(probe.batches[0][0].values).toEqual([
+      'CHALLENGE-SYNTHETIC-001',
+      '2026-08-03T09:59:00.000Z',
+      'KEYED-EMAIL-FP',
+      'STAFF_ACCOUNT_APPLICATION',
+    ]);
     expect(sql[1]).toContain("SET status = 'REVOKED'");
     expect(sql[2]).toContain('identity_class_id');
     expect(sql[2]).toContain('verification_receipt_digest');

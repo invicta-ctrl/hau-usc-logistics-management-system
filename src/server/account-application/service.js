@@ -916,6 +916,7 @@ export function createAccountApplicationService({
           expiresAt: addMs(issuedAt, settings.verificationMs),
           resendCount: 1,
           createdAt: issuedAt,
+          resendCooldownCutoffAt: addMs(issuedAt, -settings.resendMinMs),
         };
         await repository.createVerificationChallenge(challenge);
         // The challenge is marked sent only after the provider accepts. A

@@ -260,6 +260,39 @@ describe('V5 admin and public parity controller', () => {
     });
   });
 
+  it('dispatches eight-digit public verification start and confirmation while retaining only its opaque receipt', async () => {
+    const backend = backendStub();
+    const integration = { session: { csrfToken: 'csrf-exact' } };
+    backend.auth.confirmAccountApplicationEmail.mockResolvedValue({
+      ok: true,
+      verificationReceipt: 'opaque-verification-receipt',
+    });
+    const controller = controllerFor(backend, integration);
+
+    submit(
+      controller,
+      form('application-email', { operation: 'START', email: 'eligible@example.test', code: '' }),
+    );
+    await completed(backend.auth.startAccountApplicationEmail);
+    expect(backend.auth.startAccountApplicationEmail).toHaveBeenCalledWith('eligible@example.test');
+    expect(integration.accountApplicationVerificationReceipt).toBeUndefined();
+
+    submit(
+      controller,
+      form('application-email', {
+        operation: 'CONFIRM',
+        email: 'eligible@example.test',
+        code: '01234567',
+      }),
+    );
+    await completed(backend.auth.confirmAccountApplicationEmail);
+    expect(backend.auth.confirmAccountApplicationEmail).toHaveBeenCalledWith(
+      'eligible@example.test',
+      '01234567',
+    );
+    expect(integration.accountApplicationVerificationReceipt).toBe('opaque-verification-receipt');
+  });
+
   it('preserves exact application review evidence, revision, reason, and CSRF', async () => {
     const backend = backendStub();
     const controller = controllerFor(backend);

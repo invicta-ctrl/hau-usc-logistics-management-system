@@ -500,12 +500,26 @@ export function createD1AccountApplicationRepository(db) {
         db
           .prepare(
             `SELECT CASE
-               WHEN NOT EXISTS (SELECT 1 FROM email_verification_challenges WHERE id = ?1)
-               THEN 1
-               ELSE json_extract('ACCOUNT_APPLICATION_CHALLENGE_ID_CONFLICT', '$')
+               WHEN EXISTS (SELECT 1 FROM email_verification_challenges WHERE id = ?1)
+               THEN json_extract('ACCOUNT_APPLICATION_CHALLENGE_ID_CONFLICT', '$')
+               WHEN ?2 <> '' AND EXISTS (
+                 SELECT 1
+                 FROM email_verification_challenges
+                 WHERE email_fingerprint = ?3
+                   AND purpose = ?4
+                   AND status = 'PENDING'
+                   AND (created_at > ?2 OR last_sent_at > ?2)
+               )
+               THEN json_extract('ACCOUNT_APPLICATION_CHALLENGE_COOLDOWN_ACTIVE', '$')
+               ELSE 1
              END AS allowed`,
           )
-          .bind(challenge.id),
+          .bind(
+            challenge.id,
+            String(challenge.resendCooldownCutoffAt ?? ''),
+            challenge.emailFingerprint,
+            challenge.purpose,
+          ),
         db
           .prepare(
             `UPDATE email_verification_challenges
