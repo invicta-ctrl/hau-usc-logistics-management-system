@@ -20,14 +20,12 @@ FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-F (content identity; the 
 FIGMA_TRACKER_MIRROR:       page 55:3 · board 568:2 · block 691:2 (heading 691:3, body 691:4)
                             It MIRRORS the repository tracker and is never the calculation authority.
 FIGMA_MAKE_FILE:            rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION:         Version 38
+FIGMA_MAKE_VERSION:         Version 39 · pending edits NONE
                             v37 canonical theme + route adoption (5 files)
                             v38 landing atrium pinned (1 file)
-                            plus one persisted working-tree edit, theme.css +13,
-                            the MK-06 scoped atrium pin. Hash-verified, survives
-                            reload, but not minted into a version — Make's build
-                            service was degraded and minting follows a build.
-                            Reconstructable via npm run design:make-theme.
+                            v39 MK-06 scoped atrium palette pin (1 file)
+                            theme.css sha256 249857a9…, verified from the saved
+                            document after reload. Routes unchanged since v37.
 FIGMA_MAKE_THEME:           ADOPTED_AND_VERIFIED
                             #D4AF37 resolves in Make light, #E1C671 in Make dark;
                             no superseded value survives the cascade in either mode

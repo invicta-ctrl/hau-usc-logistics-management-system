@@ -547,14 +547,15 @@ the last open Make residual was diagnosed rather than left as an observation.
 DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-F
 DATE                 2026-08-20 (Asia/Manila)
 FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · tracker mirror 55:3 / 568:2 / 691:2
-FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 38
-                     plus one persisted working-tree edit: theme.css +13, the
-                     scoped atrium pin. Written and hash-verified against
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 39 · pending edits NONE
+                     v37  canonical theme + route adoption (5 files)
+                     v38  landing atrium pinned (1 file)
+                     v39  MK-06 scoped atrium palette pin (1 file)
+                     theme.css sha256
                      249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d
-                     but NOT minted into a version — Make's build service was
-                     degraded (preview stuck loading) and version minting follows
-                     a successful build. The edit survives reload and is fully
-                     reconstructable from build-make-theme.mjs.
+                     verified from the saved document after reload.
+                     v39 minted itself once Make's build service recovered — the
+                     save had landed, only the version cut was waiting on a build.
 MAKE THEME           ADOPTED_AND_VERIFIED
 MK-06                CLOSED — premise disproven; model C confirmed
 DESIGN BRANCH        frontend-design-integration

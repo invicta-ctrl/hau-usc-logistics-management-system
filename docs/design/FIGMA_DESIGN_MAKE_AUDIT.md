@@ -448,3 +448,56 @@ A single undo restored it, and the buffer was re-hashed and confirmed identical
 to the preserved capture. Nothing was saved. This is recorded because the value
 of preserving first is precisely that an accident against someone else's work is
 recoverable and visible rather than silent.
+
+
+---
+
+## 10. Figma Make — canonical theme adopted, Version 39
+
+Section 9 recorded the file at v36, read-verified but still carrying its own
+palette. That is now closed. Make is on the canonical theme.
+
+```text
+v37   canonical theme + route adoption          5 files
+v38   landing atrium pinned                     1 file
+v39   MK-06 scoped atrium palette pin           1 file
+      pending edits: NONE
+```
+
+`src/styles/theme.css` at v39 hashes to
+`249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d`, verified from
+the saved document after a reload rather than from the editor buffer. The four
+route files are unchanged since v37 and still hash to their v37 values.
+
+Adopted under `OWNER_AUTHORIZED_DESIGN_STREAM_ADOPTION`, 2026-08-20. Historical
+authorship of the `RequestCenterRoute.tsx` edit that was pending when this work
+began remains UNKNOWN; its byte-exact rollback baseline is preserved at
+`output/design/make-preservation/RequestCenterRoute.unsaved.tsx`, sha256
+`4087473c…`.
+
+### Residuals closed
+
+| | |
+| --- | --- |
+| `MK-02` | Canonical theme adopted. `--gold-vivid` resolves `#D4AF37` light / `#E1C671` dark; no superseded value survives the cascade in either mode |
+| `MK-03` | 44 superseded occurrences replaced by semantic role across four route files — 11 of them `rgba()` forms that a hex sweep would have missed |
+| `MK-04` | Route derivation mirrors production's `permittedRoutes()`; identical in all 10 request/line combinations, no preselected route |
+| `MK-05` | The adoption made the landing hero dark-on-dark; all nine `--atrium-*` tokens pinned, and the verifier now asserts it |
+| `MK-06` | Premise disproven by cascade — the lower sections do theme, 20/20. The near-white frame that raised it was captured mid-rebuild. Nine atrium rules painting from the modal palette were pinned by scoping to `.digital-atrium` |
+
+### One operational note about Make
+
+A save does not mint a version immediately, and the pending panel can still show
+the edit after a reload while the version is being cut — v39 minted itself once
+the build service recovered, with no further action. The reliable test that a
+change has landed is a reload followed by a re-hash of the file, not the state of
+the pending panel.
+
+### Verification
+
+```bash
+npm run design:make-theme:check    # override is current
+npm run design:make-routes:check   # routes rebuild identically, zero superseded
+npm run design:make-verify         # resolved cascade, both modes
+npm run design:make-landing        # pinned chrome vs reading planes, 31/31
+```

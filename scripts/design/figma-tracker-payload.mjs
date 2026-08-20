@@ -67,7 +67,7 @@ const body = [
   `Weighted: ${verified.toFixed(1)} of ${total.toFixed(1)} mandatory weight across ${rows.length} gates. Only VERIFIED earns weight.`,
   '',
   'CODEX HANDOFF: READY   ·   P0: 0   ·   P1: 0',
-  'FIGMA DESIGN: CURRENT   ·   FIGMA MAKE: v38   ·   MAKE THEME: ADOPTED AND VERIFIED',
+  'FIGMA DESIGN: CURRENT   ·   FIGMA MAKE: v39   ·   MAKE THEME: ADOPTED AND VERIFIED',
   '',
   'SOURCE: repository-derived design tracker — docs/design/DESIGN_EXECUTION_TRACKER.md on frontend-design-integration. This board mirrors it and is never the calculation authority.',
   'LAST VERIFIED: 2026-08-20 (Asia/Manila).',
