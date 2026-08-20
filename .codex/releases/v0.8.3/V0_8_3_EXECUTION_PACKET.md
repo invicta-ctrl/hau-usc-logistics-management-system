@@ -7,22 +7,23 @@
 - **Accepted product specification:** .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md.
 - **Canonical writer / lock:** TERRA_MAX:/root/v83_completion_terra_writer; HELD and ACTIVE.
 - **Integrated ID-G canonical baseline:** release/v0.8.3-identity-foundation at merge 45bbc1caf661d64a1abfdf1f775878ec89d88853, tree 4baebecc466b258d1b3729cff376bfafb2640ef6, pushed clean and live-equal before this continuity update.
+- **Integrated ID-H canonical baseline:** release/v0.8.3-identity-foundation at fast-forward fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; exact nine accepted paths, clean and live-equal before this continuity update.
 - **Policy-sync boundary:** Context Vault project-extension target remains sync_allowed=false with BLOCKED_ACTIVE_WRITER_AND_DIRTY_WORK. Do not synchronize AGENTS.md or project policy during this release.
 
 A7-R2 supersedes the first A7 draft for v0.8.3 execution. It does not reduce accepted product scope, waive safety or external gates, or authorize v0.8.4 in this session.
 
 ## Explicit owner mapping and product disposition
 
-| ID   | A7-R2 capability                                                                                                                                                                                                | Current disposition      |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| ID-A | Auth/session/security preservation                                                                                                                                                                              | VERIFIED_NO_OP           |
-| ID-B | Canonical person and assignment domain                                                                                                                                                                          | PASS                     |
-| ID-C | Email/provenance and explicit account linkage                                                                                                                                                                   | PASS                     |
-| ID-D | Existing active-access preservation                                                                                                                                                                             | PASS                     |
-| ID-E | Two-stage approval                                                                                                                                                                                              | VERIFIED_NO_OP           |
-| ID-F | Staff Directory                                                                                                                                                                                                 | PASS                     |
-| ID-G | Staff/account operational activity history                                                                                                                                                                      | PASS                     |
-| ID-H | Secure eight-digit verification lifecycle: secure generation, leading-zero preservation, expiry, single use, resend invalidation, attempt controls, rate-limit/backoff, and existing email delivery integration | IMPLEMENTATION REMAINING |
+| ID   | A7-R2 capability                                                                                                                                                                                                | Current disposition |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| ID-A | Auth/session/security preservation                                                                                                                                                                              | VERIFIED_NO_OP      |
+| ID-B | Canonical person and assignment domain                                                                                                                                                                          | PASS                |
+| ID-C | Email/provenance and explicit account linkage                                                                                                                                                                   | PASS                |
+| ID-D | Existing active-access preservation                                                                                                                                                                             | PASS                |
+| ID-E | Two-stage approval                                                                                                                                                                                              | VERIFIED_NO_OP      |
+| ID-F | Staff Directory                                                                                                                                                                                                 | PASS                |
+| ID-G | Staff/account operational activity history                                                                                                                                                                      | PASS                |
+| ID-H | Secure eight-digit verification lifecycle: secure generation, leading-zero preservation, expiry, single use, resend invalidation, attempt controls, rate-limit/backoff, and existing email delivery integration | PASS                |
 
 Password visibility and password-browser evidence are both PASS.
 
@@ -44,10 +45,20 @@ The isolated Activity History branch remains preserved. Its accepted repair/curr
 
 No Activity History plan rewrite or routine plan-audit loop is authorized. The accepted product blobs did not change after their focused Node 22.23.2 verification, so that evidence is reused rather than rerun for the history-preserving integration.
 
+## ID-H accepted integration evidence
+
+- **Implementation/integration:** accepted isolated branch `release/v0.8.3-eight-digit-verification` at fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; normal canonical fast-forward and push PASS.
+- **Authorized scope and blob proof:** exact nine account-application source/test paths, no unexpected paths; every accepted task blob matched before canonical integration.
+- **Focused evidence:** portable Node 22.23.2; unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS; legacy eight-digit browser 1/1 PASS; V5 browser 29 PASS with 7 intentional skips; syntax, scoped ESLint, exact Prettier, privacy/scope, and diff checks PASS.
+- **Independent review:** Luna ACCEPT; P0=0; P1=0; P2=0.
+- **P3 advisory:** nonblocking and unrepaired; `tests/e2e/v072-account-access.spec.js` hard-codes committed-harness port 4173. It is not expanded in this release slice.
+- **Live boundary:** `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; provider/private mutations are 0. This is distinct from the provider-free implementation PASS.
+
 ## Migration and external sequence
 
 - **0031:** REQUIRED_IF_TARGET_SCHEMA_REMAINS_30.
 - **0032:** source present and REQUIRED because accepted ID-G includes it.
+- **Target schema:** 32; required order is 0031 then 0032 when the target begins at schema 30.
 - **Order:** 0031 then 0032.
 - **Provider application:** PENDING and stage-gated; none occurred in this integration slice.
 - **No fabricated backfill:** required for both migrations.
@@ -60,10 +71,10 @@ Safe read-only rehydration captured only allowlisted public identity facts:
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
 | Isolated Playground | 0.8.2-playground.1 | fc66911209375596e7af418a5e54e9380fb7685a | 30 / 0030_production_access_and_operations.sql | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is not a frozen v0.8.3 candidate. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE are PENDING; candidate freeze is not yet authorized.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is not a frozen v0.8.3 candidate. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE are PENDING; the A7-R2 pre-freeze release gate/candidate-freeze step is next and no freeze was executed in this continuity slice.
 
 ## Exact next gate
 
-V83_ID_H_PROVIDER_FREE_CLASSIFICATION_AND_IMPLEMENTATION: first read-only classify every A7-R2 ID-H criterion as PASS_EXISTING, REPAIR_REQUIRED, or PLAYGROUND_LIVE_PROOF_REQUIRED, then implement one bounded provider-free ID-H slice; stop before candidate freeze or any provider/private, Playground, or Production action.
+V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE: run A7-R2 Section 16 provider-free final release-gate verification, then only on an all-green result freeze the exact v0.8.3 candidate under Section 17. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain post-freeze Playground gates.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not perform provider/private access, shared/provider database migration, candidate freeze, Playground or Production change, deployment, or v0.8.4 work in this step.

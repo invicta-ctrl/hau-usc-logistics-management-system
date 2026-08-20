@@ -6,18 +6,18 @@ V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's e
 
 ## Product matrix
 
-| ID                        | Capability                                                                      | Status                   | Evidence / next bounded gate                                                                                                    |
-| ------------------------- | ------------------------------------------------------------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| ID-A                      | Auth/session/security preservation                                              | VERIFIED_NO_OP           | Fresh evidence reused; no new implementation authorized.                                                                        |
-| ID-B                      | Canonical person and assignment domain                                          | PASS                     | Additive canonical identity foundation remains accepted.                                                                        |
-| ID-C                      | Email/provenance and explicit account linkage                                   | PASS                     | Provider-free implementation and protected count-only reconciliation contract remain accepted.                                  |
-| ID-D                      | Existing active-access preservation                                             | PASS                     | Unchanged active-access and no-inferred-privilege evidence. The former ID_D=0 live-probe bookkeeping is historical only.        |
-| ID-E                      | Two-stage approval                                                              | VERIFIED_NO_OP           | Existing distinct-reviewer, fail-closed contract remains preserved.                                                             |
-| ID-F                      | Staff Directory                                                                 | PASS                     | ACCESS_ADMIN read-only canonical projection remains accepted; the existing no-live-Worker-403 P3 is accepted residual evidence. |
-| ID-G                      | Staff/account operational activity history                                      | PASS                     | Canonically integrated at 45bbc1caf661d64a1abfdf1f775878ec89d88853 after focused Luna ACCEPT P0=0/P1=0/P2=0.                    |
-| ID-H                      | Secure eight-digit verification lifecycle, including existing email integration | IMPLEMENTATION REMAINING | First classify every criterion, then make one evidence-bounded provider-free implementation slice.                              |
-| Password visibility       | Applicable password surfaces                                                    | PASS                     | Existing browser evidence accepted.                                                                                             |
-| Password browser evidence | Browser proof for password surfaces                                             | PASS                     | Existing browser evidence accepted.                                                                                             |
+| ID                        | Capability                                                                      | Status         | Evidence / next bounded gate                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ID-A                      | Auth/session/security preservation                                              | VERIFIED_NO_OP | Fresh evidence reused; no new implementation authorized.                                                                                         |
+| ID-B                      | Canonical person and assignment domain                                          | PASS           | Additive canonical identity foundation remains accepted.                                                                                         |
+| ID-C                      | Email/provenance and explicit account linkage                                   | PASS           | Provider-free implementation and protected count-only reconciliation contract remain accepted.                                                   |
+| ID-D                      | Existing active-access preservation                                             | PASS           | Unchanged active-access and no-inferred-privilege evidence. The former ID_D=0 live-probe bookkeeping is historical only.                         |
+| ID-E                      | Two-stage approval                                                              | VERIFIED_NO_OP | Existing distinct-reviewer, fail-closed contract remains preserved.                                                                              |
+| ID-F                      | Staff Directory                                                                 | PASS           | ACCESS_ADMIN read-only canonical projection remains accepted; the existing no-live-Worker-403 P3 is accepted residual evidence.                  |
+| ID-G                      | Staff/account operational activity history                                      | PASS           | Canonically integrated at 45bbc1caf661d64a1abfdf1f775878ec89d88853 after focused Luna ACCEPT P0=0/P1=0/P2=0.                                     |
+| ID-H                      | Secure eight-digit verification lifecycle, including existing email integration | PASS           | Provider-free implementation canonically integrated at fb93da76cbf71ec0419036d86c0b780b18bfeff4; live Playground delivery proof remains pending. |
+| Password visibility       | Applicable password surfaces                                                    | PASS           | Existing browser evidence accepted.                                                                                                              |
+| Password browser evidence | Browser proof for password surfaces                                             | PASS           | Existing browser evidence accepted.                                                                                                              |
 
 ## ID-G integrated evidence
 
@@ -29,14 +29,22 @@ V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's e
 - **Focused evidence:** portable Node 22.23.2; real Miniflare producer/safety execution PASS; access-management repository 14/14; related units 55/55; V5 Staff Directory 5/5; local Worker DTO/400 1/1; Node syntax, ESLint, Prettier, privacy/scope, and diff PASS.
 - **Provider boundary:** migration 0032 source is present and required, but provider application remains pending and stage-gated; provider/private mutations are 0.
 
+## ID-H integrated evidence
+
+- **Implementation/canonical integration:** fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; exact nine accepted paths, isolated branch preserved, canonical fast-forward and push PASS.
+- **Focused evidence:** portable Node 22.23.2; unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS; legacy eight-digit browser 1/1 PASS; V5 browser 29 PASS with 7 intentional skips; syntax/ESLint/Prettier/privacy/scope/diff PASS.
+- **Independent review:** Luna ACCEPT; P0=0; P1=0; P2=0. P3 is a nonblocking, unrepaired committed-harness port-4173 advisory in `tests/e2e/v072-account-access.spec.js`.
+- **Live separation:** `ID_H_IMPLEMENTATION=PASS`; `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; no provider/private mutation occurred.
+
 ## Release-gate disposition
 
 | Gate                                      | Status                                                                           |
 | ----------------------------------------- | -------------------------------------------------------------------------------- |
 | MIGRATION_0031_DECISION                   | REQUIRED_IF_TARGET_SCHEMA_REMAINS_30                                             |
 | MIGRATION_0032_DECISION                   | SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_0032                  |
+| Schema target                             | 32; required migration order is 0031 then 0032 when target begins at schema 30   |
 | Migration application                     | STAGE_GATED; provider application PENDING; no shared/provider database execution |
-| Candidate freeze                          | NOT_AUTHORIZED; ID-H_IMPLEMENTATION is remaining                                 |
+| Candidate freeze                          | A7-R2 Section 16 pre-freeze gate is next; no freeze executed in this slice       |
 | SOURCE_RECONCILIATION_PLAYGROUND_GATE     | PENDING; candidate-bound and read-only, not ID-D                                 |
 | ID_H_PLAYGROUND_DELIVERY_GATE             | PENDING; candidate-bound                                                         |
 | Playground manual/browser acceptance      | PENDING                                                                          |
@@ -51,8 +59,10 @@ The seventh Activity History plan-audit rejection, the eighth recovery-wording P
 
 The old ID_D=0 label and blocked live source probe are historical. Under A7-R2, ID-D is PASS; the only current live-source status is SOURCE_RECONCILIATION_PLAYGROUND_GATE=PENDING after candidate freeze and isolated Playground deployment.
 
+The only current P3 is the nonblocking, unrepaired committed-harness port-4173 advisory in `tests/e2e/v072-account-access.spec.js`; it does not alter the accepted ID-H implementation PASS or authorize a scope expansion.
+
 ## Next bounded action
 
-V83_ID_H_PROVIDER_FREE_CLASSIFICATION_AND_IMPLEMENTATION: first read-only classify every A7-R2 ID-H criterion as PASS_EXISTING, REPAIR_REQUIRED, or PLAYGROUND_LIVE_PROOF_REQUIRED, then implement one bounded provider-free ID-H slice; stop before candidate freeze or any provider/private, Playground, or Production action.
+V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE: run A7-R2 Section 16 provider-free final release-gate verification, then only on an all-green result freeze the exact v0.8.3 candidate under Section 17. Source reconciliation and live email delivery remain post-freeze Playground gates.
 
 No routine owner pause occurs before the later Playground manual-test and explicit Production-GO gate. No v0.8.4 work starts in this session.
