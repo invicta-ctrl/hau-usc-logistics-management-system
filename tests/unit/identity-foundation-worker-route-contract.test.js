@@ -56,4 +56,25 @@ describe('canonical identity reconciliation Worker route contract', () => {
     expect(source).toContain('createStaffDirectoryService');
     expect(source).toContain('createStaffDirectoryService({ repository: identityFoundationRepository })');
   });
+
+  it('registers staff account activity history as an ACCESS_ADMIN read before its body or repository read', async () => {
+    const source = await readFile(resolve(root, 'src/worker/index.js'), 'utf8');
+    const routeStart = source.indexOf("url.pathname === '/api/admin/staff-account-activity-history'");
+    const route = source.slice(routeStart, routeStart + 600);
+
+    expect(routeStart).toBeGreaterThanOrEqual(0);
+    expect(route).toContain("request.method === 'POST'");
+    expect(route).toContain('CAPABILITIES.ACCESS_ADMIN, { mutation: false }');
+    expect(route).toContain('staffAccountActivityHistory().list(await body(request))');
+    expect(route.indexOf('CAPABILITIES.ACCESS_ADMIN')).toBeLessThan(route.indexOf('body(request)'));
+    expect(route.indexOf('CAPABILITIES.ACCESS_ADMIN')).toBeLessThan(
+      route.indexOf('staffAccountActivityHistory()'),
+    );
+    expect(route).not.toContain('identityRoster');
+    expect(route).not.toContain('rosterCrypto');
+    expect(source).toContain('createStaffAccountActivityHistoryService');
+    expect(source).toMatch(
+      /createStaffAccountActivityHistoryService\(\{\s*repository: identityFoundationRepository,?\s*\}\)/u,
+    );
+  });
 });

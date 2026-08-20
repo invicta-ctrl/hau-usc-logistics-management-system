@@ -102,6 +102,170 @@ function escapedLike(value) {
   return `%${String(value ?? '').replace(/[\\%_]/gu, '\\$&')}%`;
 }
 
+const CANONICAL_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
+const LINK_STATES = new Set(['ACTIVE', 'REVOKED', 'QUARANTINED']);
+const ASSIGNMENT_STATES = new Set(['ACTIVE', 'HISTORICAL', 'QUARANTINED']);
+
+function canonicalUtc(value, field) {
+  const timestamp = String(value ?? '').trim();
+  if (!CANONICAL_UTC.test(timestamp) || Number.isNaN(Date.parse(timestamp))) {
+    throw new Error(`${field} must be canonical UTC.`);
+  }
+  if (new Date(timestamp).toISOString() !== timestamp) throw new Error(`${field} must be canonical UTC.`);
+  return timestamp;
+}
+
+function optionalCanonicalUtc(value, field) {
+  if (value == null || value === '') return null;
+  return canonicalUtc(value, field);
+}
+
+function boundedCorrelationId(value, fallback) {
+  const correlationId = String(value ?? fallback).trim();
+  if (!correlationId || correlationId.length > 128) throw new Error('correlationId is invalid.');
+  return correlationId;
+}
+
+function revisionAssertionStatement(db) {
+  return db.prepare(
+    `UPDATE data_revisions
+     SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+     WHERE scope = 'global'`,
+  );
+}
+
+function linkCreateContextStatement(db, link, correlationId) {
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-' || lower(hex(randomblob(16))), 'ACCOUNT_STAFF_LINK', ?1, ?1, NULL,
+         'LINK_CREATED', ?2, ?3, NULL, ?4, NULL, NULL, NULL, NULL, NULL, NULL, ?5, ?6
+       )`,
+    )
+    .bind(link.id, link.personId, link.accountId, link.state, correlationId, link.createdAt);
+}
+
+function linkStateContextStatement(db, link, nextState, updatedAt, correlationId) {
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-' || lower(hex(randomblob(16))), 'ACCOUNT_STAFF_LINK', ?1, ?1, NULL,
+         'LINK_STATE_CHANGED', ?2, ?3, ?4, ?5, NULL, NULL, NULL, NULL, NULL, NULL, ?6, ?7
+       )`,
+    )
+    .bind(link.id, link.personId, link.accountId, link.state, nextState, correlationId, updatedAt);
+}
+
+function assignmentCreateContextStatement(db, assignment, correlationId) {
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-' || lower(hex(randomblob(16))), 'STAFF_ASSIGNMENT', ?1, NULL, ?1,
+         'ASSIGNMENT_CREATED', ?2, NULL, NULL, NULL, NULL, ?3, NULL, NULL, ?4, ?5, ?6, ?7
+       )`,
+    )
+    .bind(
+      assignment.id,
+      assignment.personId,
+      assignment.state,
+      assignment.effectiveFrom,
+      assignment.effectiveTo,
+      correlationId,
+      assignment.createdAt,
+    );
+}
+
+function assignmentStateContextStatement(db, assignment, nextState, updatedAt, correlationId) {
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-' || lower(hex(randomblob(16))), 'STAFF_ASSIGNMENT', ?1, NULL, ?1,
+         'ASSIGNMENT_STATE_CHANGED', ?2, NULL, NULL, NULL, ?3, ?4, ?5, ?6, ?5, ?6, ?7, ?8
+       )`,
+    )
+    .bind(
+      assignment.id,
+      assignment.personId,
+      assignment.state,
+      nextState,
+      assignment.effectiveFrom,
+      assignment.effectiveTo,
+      correlationId,
+      updatedAt,
+    );
+}
+
+function assignmentWindowContextStatement(
+  db,
+  assignment,
+  nextEffectiveFrom,
+  nextEffectiveTo,
+  updatedAt,
+  correlationId,
+) {
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-' || lower(hex(randomblob(16))), 'STAFF_ASSIGNMENT', ?1, NULL, ?1,
+         'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED', ?2, NULL, NULL, NULL, ?3, ?3, ?4, ?5, ?6, ?7, ?8, ?9
+       )`,
+    )
+    .bind(
+      assignment.id,
+      assignment.personId,
+      assignment.state,
+      assignment.effectiveFrom,
+      assignment.effectiveTo,
+      nextEffectiveFrom,
+      nextEffectiveTo,
+      correlationId,
+      updatedAt,
+    );
+}
+
+function activityHistoryWhere({ personId, query, eventType, actionCode }) {
+  const clauses = ['person_id = ?1'];
+  const bindings = [personId];
+  if (query) {
+    bindings.push(query);
+    clauses.push(`(account_id = ?${bindings.length} OR account_access_id_snapshot = ?${bindings.length})`);
+  }
+  if (eventType) {
+    bindings.push(eventType);
+    clauses.push(`event_type = ?${bindings.length}`);
+  }
+  if (actionCode) {
+    bindings.push(actionCode);
+    clauses.push(`action_code = ?${bindings.length}`);
+  }
+  return { where: clauses.join(' AND '), bindings };
+}
+
 export function createD1IdentityFoundationRepository(db) {
   if (!db) throw new Error('D1 database binding is required.');
 
@@ -207,24 +371,61 @@ export function createD1IdentityFoundationRepository(db) {
       return result.results.map(mapAccountStaffLink);
     },
 
-    async createAccountStaffLink(value) {
-      const link = validateAccountStaffLink(value);
-      await db
-        .prepare(
-          `INSERT INTO account_staff_links (
-             id, account_id, person_id, state, source_provenance_envelope, created_at, updated_at
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
-        )
-        .bind(
-          link.id,
-          link.accountId,
-          link.personId,
-          link.state,
-          link.sourceProvenanceEnvelope,
-          link.createdAt,
-          link.updatedAt,
-        )
-        .run();
+    async createAccountStaffLink(value, { correlationId } = {}) {
+      const input = validateAccountStaffLink(value);
+      const link = {
+        ...input,
+        createdAt: canonicalUtc(input.createdAt, 'createdAt'),
+        updatedAt: canonicalUtc(input.updatedAt, 'updatedAt'),
+      };
+      const eventCorrelationId = boundedCorrelationId(correlationId, `IDENTITY_LINK:${link.id}`);
+      await db.batch([
+        linkCreateContextStatement(db, link, eventCorrelationId),
+        db
+          .prepare(
+            `INSERT INTO account_staff_links (
+               id, account_id, person_id, state, source_provenance_envelope, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+          )
+          .bind(
+            link.id,
+            link.accountId,
+            link.personId,
+            link.state,
+            link.sourceProvenanceEnvelope,
+            link.createdAt,
+            link.updatedAt,
+          ),
+        revisionAssertionStatement(db),
+      ]);
+      return this.getAccountStaffLink(link.id);
+    },
+
+    async updateAccountStaffLinkState({ id, state, updatedAt, correlationId } = {}) {
+      const link = await this.getAccountStaffLink(id);
+      if (!link) throw new Error('The account staff link does not exist.');
+      const nextState = String(state ?? '')
+        .trim()
+        .toUpperCase();
+      if (!LINK_STATES.has(nextState)) throw new Error('state is invalid.');
+      if (nextState === link.state) return link;
+      const occurredAt = canonicalUtc(updatedAt, 'updatedAt');
+      const eventCorrelationId = boundedCorrelationId(correlationId, `IDENTITY_LINK:${link.id}`);
+      await db.batch([
+        linkStateContextStatement(db, link, nextState, occurredAt, eventCorrelationId),
+        db
+          .prepare(
+            `UPDATE account_staff_links
+             SET state = ?1, updated_at = ?2
+             WHERE id = ?3
+               AND account_id = ?4
+               AND person_id = ?5
+               AND state = ?6
+               AND updated_at = ?7`,
+          )
+          .bind(nextState, occurredAt, link.id, link.accountId, link.personId, link.state, link.updatedAt),
+        revisionAssertionStatement(db),
+      ]);
       return this.getAccountStaffLink(link.id);
     },
 
@@ -234,6 +435,61 @@ export function createD1IdentityFoundationRepository(db) {
         .bind(personId)
         .all();
       return result.results.map(mapStaffAssignment);
+    },
+
+    async listStaffAccountActivityHistory({
+      personId,
+      query = null,
+      eventType = null,
+      actionCode = null,
+      page,
+      pageSize,
+    }) {
+      const { where, bindings } = activityHistoryWhere({ personId, query, eventType, actionCode });
+      const offset = (page - 1) * pageSize;
+      const [metadata, counted, result] = await Promise.all([
+        db
+          .prepare(
+            `SELECT value
+             FROM app_metadata
+             WHERE key = 'staff_account_activity_history_starts_at'`,
+          )
+          .first(),
+        db
+          .prepare(`SELECT COUNT(*) AS count FROM staff_account_activity_history WHERE ${where}`)
+          .bind(...bindings)
+          .first(),
+        db
+          .prepare(
+            `SELECT
+               event_id,
+               occurred_at,
+               event_type,
+               action_code,
+               account_id,
+               account_access_id_snapshot,
+               correlation_id,
+               link_state,
+               previous_link_state,
+               assignment_state,
+               previous_assignment_state,
+               old_effective_from,
+               old_effective_to,
+               new_effective_from,
+               new_effective_to
+             FROM staff_account_activity_history
+             WHERE ${where}
+             ORDER BY occurred_at DESC, event_id DESC
+             LIMIT ?${bindings.length + 1} OFFSET ?${bindings.length + 2}`,
+          )
+          .bind(...bindings, pageSize, offset)
+          .all(),
+      ]);
+      return {
+        historyStartsAt: metadata?.value ?? null,
+        total: Number(counted?.count ?? 0),
+        items: result.results,
+      };
     },
 
     async listCanonicalDirectory({ query = '', page = 1, pageSize = 25 } = {}) {
@@ -291,33 +547,156 @@ export function createD1IdentityFoundationRepository(db) {
       };
     },
 
-    async createStaffAssignment(value) {
-      const assignment = validateStaffAssignment(value);
-      await db
-        .prepare(
-          `INSERT INTO staff_assignments (
-             id, person_id, assignment_fingerprint, protected_assignment_envelope,
-             state, effective_from, effective_to, source_provenance_envelope, created_at, updated_at
-           ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
-        )
-        .bind(
-          assignment.id,
-          assignment.personId,
-          assignment.assignmentFingerprint,
-          assignment.protectedAssignmentEnvelope,
-          assignment.state,
-          assignment.effectiveFrom,
-          assignment.effectiveTo,
-          assignment.sourceProvenanceEnvelope,
-          assignment.createdAt,
-          assignment.updatedAt,
-        )
-        .run();
+    async createStaffAssignment(value, { correlationId } = {}) {
+      const input = validateStaffAssignment(value);
+      const assignment = {
+        ...input,
+        createdAt: canonicalUtc(input.createdAt, 'createdAt'),
+        updatedAt: canonicalUtc(input.updatedAt, 'updatedAt'),
+        effectiveFrom: optionalCanonicalUtc(input.effectiveFrom, 'effectiveFrom'),
+        effectiveTo: optionalCanonicalUtc(input.effectiveTo, 'effectiveTo'),
+      };
+      if (
+        assignment.effectiveFrom &&
+        assignment.effectiveTo &&
+        assignment.effectiveFrom > assignment.effectiveTo
+      ) {
+        throw new Error('effectiveFrom must not be after effectiveTo.');
+      }
+      const eventCorrelationId = boundedCorrelationId(correlationId, `IDENTITY_ASSIGNMENT:${assignment.id}`);
+      await db.batch([
+        assignmentCreateContextStatement(db, assignment, eventCorrelationId),
+        db
+          .prepare(
+            `INSERT INTO staff_assignments (
+               id, person_id, assignment_fingerprint, protected_assignment_envelope,
+               state, effective_from, effective_to, source_provenance_envelope, created_at, updated_at
+             ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
+          )
+          .bind(
+            assignment.id,
+            assignment.personId,
+            assignment.assignmentFingerprint,
+            assignment.protectedAssignmentEnvelope,
+            assignment.state,
+            assignment.effectiveFrom,
+            assignment.effectiveTo,
+            assignment.sourceProvenanceEnvelope,
+            assignment.createdAt,
+            assignment.updatedAt,
+          ),
+        revisionAssertionStatement(db),
+      ]);
       const row = await db
         .prepare('SELECT * FROM staff_assignments WHERE id = ?1')
         .bind(assignment.id)
         .first();
       return mapStaffAssignment(row);
+    },
+
+    async updateStaffAssignmentState({ id, state, updatedAt, correlationId } = {}) {
+      const assignment = mapStaffAssignment(
+        await db.prepare('SELECT * FROM staff_assignments WHERE id = ?1').bind(id).first(),
+      );
+      if (!assignment) throw new Error('The staff assignment does not exist.');
+      const nextState = String(state ?? '')
+        .trim()
+        .toUpperCase();
+      if (!ASSIGNMENT_STATES.has(nextState)) throw new Error('state is invalid.');
+      if (nextState === assignment.state) return assignment;
+      const occurredAt = canonicalUtc(updatedAt, 'updatedAt');
+      const eventCorrelationId = boundedCorrelationId(correlationId, `IDENTITY_ASSIGNMENT:${assignment.id}`);
+      await db.batch([
+        assignmentStateContextStatement(db, assignment, nextState, occurredAt, eventCorrelationId),
+        db
+          .prepare(
+            `UPDATE staff_assignments
+             SET state = ?1, updated_at = ?2
+             WHERE id = ?3
+               AND person_id = ?4
+               AND assignment_fingerprint = ?5
+               AND state = ?6
+               AND effective_from IS ?7
+               AND effective_to IS ?8
+               AND updated_at = ?9`,
+          )
+          .bind(
+            nextState,
+            occurredAt,
+            assignment.id,
+            assignment.personId,
+            assignment.assignmentFingerprint,
+            assignment.state,
+            assignment.effectiveFrom,
+            assignment.effectiveTo,
+            assignment.updatedAt,
+          ),
+        revisionAssertionStatement(db),
+      ]);
+      return mapStaffAssignment(
+        await db.prepare('SELECT * FROM staff_assignments WHERE id = ?1').bind(assignment.id).first(),
+      );
+    },
+
+    async updateStaffAssignmentEffectiveWindow({
+      id,
+      effectiveFrom,
+      effectiveTo,
+      updatedAt,
+      correlationId,
+    } = {}) {
+      const assignment = mapStaffAssignment(
+        await db.prepare('SELECT * FROM staff_assignments WHERE id = ?1').bind(id).first(),
+      );
+      if (!assignment) throw new Error('The staff assignment does not exist.');
+      const nextEffectiveFrom = optionalCanonicalUtc(effectiveFrom, 'effectiveFrom');
+      const nextEffectiveTo = optionalCanonicalUtc(effectiveTo, 'effectiveTo');
+      if (nextEffectiveFrom && nextEffectiveTo && nextEffectiveFrom > nextEffectiveTo) {
+        throw new Error('effectiveFrom must not be after effectiveTo.');
+      }
+      if (nextEffectiveFrom === assignment.effectiveFrom && nextEffectiveTo === assignment.effectiveTo) {
+        return assignment;
+      }
+      const occurredAt = canonicalUtc(updatedAt, 'updatedAt');
+      const eventCorrelationId = boundedCorrelationId(correlationId, `IDENTITY_ASSIGNMENT:${assignment.id}`);
+      await db.batch([
+        assignmentWindowContextStatement(
+          db,
+          assignment,
+          nextEffectiveFrom,
+          nextEffectiveTo,
+          occurredAt,
+          eventCorrelationId,
+        ),
+        db
+          .prepare(
+            `UPDATE staff_assignments
+             SET effective_from = ?1, effective_to = ?2, updated_at = ?3
+             WHERE id = ?4
+               AND person_id = ?5
+               AND assignment_fingerprint = ?6
+               AND state = ?7
+               AND effective_from IS ?8
+               AND effective_to IS ?9
+               AND updated_at = ?10`,
+          )
+          .bind(
+            nextEffectiveFrom,
+            nextEffectiveTo,
+            occurredAt,
+            assignment.id,
+            assignment.personId,
+            assignment.assignmentFingerprint,
+            assignment.state,
+            assignment.effectiveFrom,
+            assignment.effectiveTo,
+            assignment.updatedAt,
+          ),
+        revisionAssertionStatement(db),
+      ]);
+      return mapStaffAssignment(
+        await db.prepare('SELECT * FROM staff_assignments WHERE id = ?1').bind(assignment.id).first(),
+      );
     },
   });
 }

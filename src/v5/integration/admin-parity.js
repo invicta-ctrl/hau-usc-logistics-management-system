@@ -55,6 +55,87 @@ function element(tag, { className = '', textContent = '', attrs = {}, dataset = 
   return node;
 }
 
+function activityValue(...values) {
+  for (const value of values) {
+    const normalized = text(value);
+    if (normalized) return normalized;
+  }
+  return 'Not recorded';
+}
+
+function activityTransition(previous, next) {
+  const before = text(previous);
+  const after = text(next);
+  if (before && after) return `${before} → ${after}`;
+  return activityValue(after, before);
+}
+
+function activityWindow(item) {
+  const before = [text(item?.oldEffectiveFrom), text(item?.oldEffectiveTo)].filter(Boolean).join(' – ');
+  const after = [text(item?.newEffectiveFrom), text(item?.newEffectiveTo)].filter(Boolean).join(' – ');
+  if (before && after) return `${before} → ${after}`;
+  return activityValue(after, before);
+}
+
+function setActivityFact(panel, label, value) {
+  const fact = [...panel.querySelectorAll('.facts > div')].find(
+    (entry) => text(entry.querySelector('dt')?.textContent) === label,
+  );
+  const target = fact?.querySelector('dd');
+  if (target) target.textContent = value;
+}
+
+export function renderStaffAccountActivityHistoryPanel(panel, { status = 'idle', history = null } = {}) {
+  if (!panel) return;
+  const statusLine = panel.querySelector('[data-staff-account-activity-history-status]');
+  const body = panel.querySelector('[data-staff-account-activity-history-table] tbody');
+  if (body) body.replaceChildren();
+  if (status === 'error') {
+    if (statusLine) statusLine.textContent = 'Activity history could not be loaded. Try again.';
+    setActivityFact(panel, 'History begins', 'Not loaded');
+    setActivityFact(panel, 'Retained events', 'Not loaded');
+    setActivityFact(panel, 'Page', 'Not loaded');
+    return;
+  }
+  if (status === 'loading') {
+    if (statusLine) statusLine.textContent = 'Loading retained activity history.';
+    return;
+  }
+  if (!history) return;
+  const historyStartsAt = activityValue(history.historyStartsAt);
+  const items = Array.isArray(history.items) ? history.items : [];
+  setActivityFact(panel, 'History begins', historyStartsAt);
+  setActivityFact(panel, 'Retained events', String(Number(history.total ?? items.length)));
+  setActivityFact(panel, 'Page', `${Number(history.page ?? 1)} of ${Number(history.totalPages ?? 0)}`);
+  if (statusLine) {
+    statusLine.textContent = items.length
+      ? `Retained activity for ${activityValue(history.personId)}.`
+      : `No retained activity is available. Retention begins ${historyStartsAt}.`;
+  }
+  if (!body) return;
+  for (const item of items) {
+    const row = element('tr');
+    const occurred = element('th', {
+      textContent: activityValue(item?.occurredAt),
+      attrs: { scope: 'row' },
+    });
+    const event = element('td', {
+      textContent: `${activityValue(item?.eventType)} · ${activityValue(item?.actionCode)}`,
+    });
+    const account = element('td', {
+      textContent: `${activityValue(item?.accountId)} · ${activityValue(item?.accountAccessIdSnapshot)}`,
+    });
+    const link = element('td', {
+      textContent: activityTransition(item?.previousLinkState, item?.linkState),
+    });
+    const assignment = element('td', {
+      textContent: `${activityTransition(item?.previousAssignmentState, item?.assignmentState)} · ${activityWindow(item)}`,
+    });
+    row.append(occurred, event, account, link, assignment);
+    body.append(row);
+  }
+}
+
 function field(spec) {
   const wrapper = element('div', { className: 'field' });
   const id = `v5-parity-${spec.name}-${Math.random().toString(36).slice(2)}`;

@@ -395,6 +395,34 @@ export function applyAccounts(result) {
   );
 }
 
+export function staffAccountActivityHistoryProjection(result) {
+  return {
+    personId: text(result?.personId),
+    historyStartsAt: text(result?.historyStartsAt),
+    page: number(result?.page),
+    pageSize: number(result?.pageSize),
+    total: number(result?.total),
+    totalPages: number(result?.totalPages),
+    items: rows(result?.items).map((item) => ({
+      id: text(item?.id),
+      occurredAt: text(item?.occurredAt),
+      eventType: text(item?.eventType),
+      actionCode: text(item?.actionCode),
+      accountId: text(item?.accountId),
+      accountAccessIdSnapshot: text(item?.accountAccessIdSnapshot),
+      correlationId: text(item?.correlationId),
+      linkState: text(item?.linkState),
+      previousLinkState: text(item?.previousLinkState),
+      assignmentState: text(item?.assignmentState),
+      previousAssignmentState: text(item?.previousAssignmentState),
+      oldEffectiveFrom: text(item?.oldEffectiveFrom),
+      oldEffectiveTo: text(item?.oldEffectiveTo),
+      newEffectiveFrom: text(item?.newEffectiveFrom),
+      newEffectiveTo: text(item?.newEffectiveTo),
+    })),
+  };
+}
+
 export function applyHealth({ health, readiness, version, evidence } = {}) {
   const healthOk = health?.ok !== false;
   const readinessOk = readiness?.ok !== false && readiness?.ready !== false;

@@ -40,6 +40,10 @@ import {
   createIdentityFoundationReconciliationService,
   IdentityFoundationReconciliationError,
 } from '../server/identity-foundation/reconciliation.js';
+import {
+  createStaffAccountActivityHistoryService,
+  StaffAccountActivityHistoryError,
+} from '../server/identity-foundation/staff-account-activity-history-service.js';
 import { createStaffDirectoryService } from '../server/identity-foundation/staff-directory-service.js';
 import {
   createIdentitySourceProjectionProbeService,
@@ -356,6 +360,8 @@ function services(env) {
     crypto: rosterCrypto,
   });
   const staffDirectory = createStaffDirectoryService({ repository: identityFoundationRepository });
+  const staffAccountActivityHistory = () =>
+    createStaffAccountActivityHistoryService({ repository: identityFoundationRepository });
   const sourceProjectionProbe = createIdentitySourceProjectionProbeService({
     source: googleRosterSource,
     repository: sourceProjectionRepository,
@@ -384,6 +390,7 @@ function services(env) {
     lendingUsage,
     identityRoster,
     sourceProjectionProbe,
+    staffAccountActivityHistory,
     staffDirectory,
     operationalHealth,
     operations,
@@ -532,6 +539,7 @@ async function handleApi(request, env, requestId, executionContext) {
     auth,
     evidence,
     identityFoundationReconciliation,
+    staffAccountActivityHistory,
     staffDirectory,
     lendingUsage,
     identityRoster,
@@ -1091,6 +1099,11 @@ async function handleApi(request, env, requestId, executionContext) {
       return json({ ok: true, ...(await staffDirectory.list(await body(request))) });
     }
 
+    if (url.pathname === '/api/admin/staff-account-activity-history' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffAccountActivityHistory().list(await body(request))) });
+    }
+
     if (url.pathname.startsWith('/api/owner/identity-roster/') && request.method === 'POST') {
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true })).account;
       const command = await body(request);
@@ -1332,6 +1345,7 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof IdentityRosterError ||
       error instanceof IdentityFoundationReconciliationError ||
       error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
@@ -1340,6 +1354,7 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof IdentityRosterError ||
       error instanceof IdentityFoundationReconciliationError ||
       error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError

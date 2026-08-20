@@ -68,13 +68,13 @@ async function migratedRepository() {
 }
 
 describe('account-application verification migration integration', () => {
-  it('creates, marks sent, and confirms a challenge through the schema-30 D1 repository', async () => {
+  it('creates, marks sent, and confirms a challenge through the additive schema-32 D1 repository', async () => {
     const repository = await migratedRepository();
     expect(sqlite.prepare('PRAGMA integrity_check').get()).toEqual({ integrity_check: 'ok' });
     expect(sqlite.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
     expect(
       sqlite.prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'").get(),
-    ).toEqual({ value: '31' });
+    ).toEqual({ value: '32' });
     const purpose = EMAIL_VERIFICATION_PURPOSE.ACCOUNT_APPLICATION;
     const challenge = await repository.createVerificationChallenge({
       id: 'CHALLENGE-SCHEMA-30-001',

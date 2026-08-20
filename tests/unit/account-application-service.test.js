@@ -25,6 +25,7 @@ function createRepository() {
   const accounts = new Map();
   const history = [];
   const audits = [];
+  const conditionalAccountAudits = [];
   const reviewQueries = [];
 
   const repository = {
@@ -280,6 +281,7 @@ function createRepository() {
       updates,
       history: entry,
       audit,
+      conditionalAccountAudit,
       requireDistinctFromAdministrator,
       revokeApprovedStarter,
     }) {
@@ -302,6 +304,7 @@ function createRepository() {
       if (toState === 'CHANGES_REQUESTED') application.changeRequestSummary = entry.reason;
       history.push(clone(entry));
       audits.push(clone(audit));
+      if (conditionalAccountAudit) conditionalAccountAudits.push(clone(conditionalAccountAudit));
       return clone(application);
     },
 
@@ -349,6 +352,7 @@ function createRepository() {
         accounts: [...accounts.values()],
         history,
         audits,
+        conditionalAccountAudits,
         reviewQueries,
       });
     },
@@ -953,6 +957,12 @@ describe('account-application service', () => {
         clientRequestId: `account-activation:${approvedApplication.approvedAccountId}`,
       }),
     ).resolves.toMatchObject({ state: ACCOUNT_APPLICATION_STATE.ACTIVE, revision: 5 });
+    expect(context.repository.inspect().conditionalAccountAudits).toEqual([
+      expect.objectContaining({
+        action: 'ACCOUNT_APPLICATION_ACTIVATED',
+        accountId: approvedApplication.approvedAccountId,
+      }),
+    ]);
     await expect(
       context.service.activateApprovedApplication({
         actor: { id: approvedApplication.approvedAccountId, activationCompleted: true },

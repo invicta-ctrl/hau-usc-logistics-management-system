@@ -593,6 +593,20 @@ export function createAccountApplicationService({
       reason,
       createdAt: occurredAt,
     });
+    const conditionalAccountAudit =
+      action === 'ACCOUNT_APPLICATION_ACTIVATED'
+        ? safeAccountAudit({
+            id: createId(),
+            accountId: actorAccountId,
+            actorAccountId,
+            action: 'ACCOUNT_APPLICATION_ACTIVATED',
+            before: history.before,
+            after: auditAfter,
+            correlationId,
+            reason,
+            createdAt: occurredAt,
+          })
+        : null;
     try {
       return {
         application: await repository.transitionApplication({
@@ -606,6 +620,7 @@ export function createAccountApplicationService({
           updates,
           history,
           audit,
+          conditionalAccountAudit,
           requireDistinctFromAdministrator,
           revokeApprovedStarter,
         }),

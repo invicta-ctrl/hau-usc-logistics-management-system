@@ -47,6 +47,7 @@ for (const method of LAUNCH_SERVICE_METHODS)
 for (const [method, path] of Object.entries({
   listAccessAccounts: '/api/admin/access/directory',
   listCanonicalStaffDirectory: '/api/admin/staff-directory',
+  listStaffAccountActivityHistory: '/api/admin/staff-account-activity-history',
   getAccessIdHistory: '/api/admin/access/history',
   previewAccessIdChange: '/api/admin/access/preview-access-id',
   changeAccessId: '/api/admin/access/change-access-id',

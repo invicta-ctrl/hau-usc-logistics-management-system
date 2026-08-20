@@ -87,10 +87,41 @@ ${queueTable({
     { label: 'Link state' },
     { label: 'Email state', priority: 3 },
     { label: 'Active assignments', numeric: true, priority: 2 },
+    { label: 'Activity', priority: 2 },
   ],
   rows: [],
 })}
-</div>`;
+</div>
+<section class="panel" style="margin-top:16px" data-staff-account-activity-history>
+  <div class="panel__body">
+    <div class="section__head">
+      <div>
+        <span class="label">Read-only retained projection</span>
+        <h2>Staff account activity history</h2>
+      </div>
+    </div>
+    <p data-staff-account-activity-history-status>Select a canonical person to load their retained activity history.</p>
+    ${facts([
+      { label: 'History begins', value: 'Not loaded' },
+      { label: 'Retained events', value: 'Not loaded' },
+      { label: 'Page', value: 'Not loaded' },
+    ])}
+    <div style="margin-top:16px" data-staff-account-activity-history-table>
+      ${queueTable({
+        caption:
+          'Retained staff account activity. This view contains no roster or access-directory fallback.',
+        columns: [
+          { label: 'Occurred' },
+          { label: 'Event' },
+          { label: 'Account' },
+          { label: 'Link state', priority: 2 },
+          { label: 'Assignment state', priority: 2 },
+        ],
+        rows: [],
+      })}
+    </div>
+  </div>
+</section>`;
 };
 
 export const reference = () => `${pageHead({

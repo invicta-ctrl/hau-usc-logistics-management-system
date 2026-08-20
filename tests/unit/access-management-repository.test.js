@@ -1,9 +1,13 @@
 import { Miniflare } from 'miniflare';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createD1AccessManagementRepository } from '../../src/server/d1/access-management-repository.js';
+import { createD1IdentityFoundationRepository } from '../../src/server/d1/identity-foundation-repository.js';
 
 const BEFORE = '2026-08-03T00:00:00.000Z';
 const AFTER = '2026-08-03T00:01:00.000Z';
+const repositoryRoot = resolve(import.meta.dirname, '../..');
 
 let miniflare;
 
@@ -12,7 +16,30 @@ afterEach(async () => {
   miniflare = null;
 });
 
-async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt = null } = {}) {
+function migrationStatements(source) {
+  const statements = [];
+  let current = [];
+  let trigger = false;
+  for (const line of String(source).split(/\r?\n/u)) {
+    if (!current.length && /^\s*PRAGMA foreign_keys = ON;\s*$/u.test(line)) continue;
+    if (/^\s*CREATE TRIGGER\b/iu.test(line)) trigger = true;
+    current.push(line);
+    if ((trigger && /^END;\s*$/u.test(line)) || (!trigger && /;\s*$/u.test(line))) {
+      statements.push(current.join('\n'));
+      current = [];
+      trigger = false;
+    }
+  }
+  if (current.join('').trim()) throw new Error('The synthetic migration statement parser was incomplete.');
+  return statements;
+}
+
+async function database({
+  roleId = 'DOL_STAFF',
+  credentialVersion = 1,
+  lockedAt = null,
+  activityHistory = false,
+} = {}) {
   miniflare = new Miniflare({
     modules: true,
     script: 'export default { fetch() { return new Response("ok"); } }',
@@ -20,6 +47,12 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
   });
   const db = await miniflare.getD1Database('DB');
   for (const statement of [
+    `CREATE TABLE app_metadata (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    ) STRICT`,
+    "INSERT INTO app_metadata (key, value, updated_at) VALUES ('operational_schema_version', '31', '2026-08-03T00:00:00.000Z')",
     `CREATE TABLE data_revisions (
       scope TEXT PRIMARY KEY,
       revision INTEGER NOT NULL,
@@ -120,6 +153,16 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
       correlation_id TEXT NOT NULL,
       notes TEXT NOT NULL
     ) STRICT`,
+    `CREATE TRIGGER audit_log_no_update
+       BEFORE UPDATE ON audit_log
+       BEGIN
+         SELECT RAISE(ABORT, 'audit log is append-only');
+       END`,
+    `CREATE TRIGGER audit_log_no_delete
+       BEFORE DELETE ON audit_log
+       BEGIN
+         SELECT RAISE(ABORT, 'audit log is append-only');
+       END`,
     `CREATE TABLE idempotency_keys (
       scope TEXT NOT NULL,
       idempotency_key TEXT NOT NULL,
@@ -136,6 +179,46 @@ async function database({ roleId = 'DOL_STAFF', credentialVersion = 1, lockedAt 
     ) STRICT`,
   ]) {
     await db.prepare(statement).run();
+  }
+  if (activityHistory) {
+    for (const migration of [
+      '0031_canonical_identity_foundation.sql',
+      '0032_staff_account_activity_history.sql',
+    ]) {
+      const source = await readFile(resolve(repositoryRoot, 'migrations', migration), 'utf8');
+      const statements = migrationStatements(source);
+      for (const [index, statement] of statements.entries()) {
+        try {
+          await db.prepare(statement.replace(/;\s*$/u, '')).run();
+        } catch (error) {
+          throw new Error(`Synthetic D1 migration failed at ${migration} statement ${index + 1}.`, {
+            cause: error,
+          });
+        }
+      }
+    }
+  } else {
+    for (const statement of [
+      `CREATE TABLE account_staff_links (
+        id TEXT PRIMARY KEY,
+        account_id TEXT NOT NULL,
+        person_id TEXT NOT NULL,
+        state TEXT NOT NULL
+      ) STRICT`,
+      `CREATE TABLE staff_account_activity_audit_context (
+        audit_id TEXT PRIMARY KEY,
+        person_id TEXT NOT NULL,
+        account_id TEXT NOT NULL,
+        account_staff_link_id TEXT NOT NULL,
+        link_state TEXT NOT NULL,
+        account_access_id_snapshot TEXT NOT NULL,
+        action_code TEXT NOT NULL,
+        correlation_id TEXT NOT NULL,
+        prepared_at TEXT NOT NULL
+      ) STRICT`,
+    ]) {
+      await db.prepare(statement).run();
+    }
   }
   await db
     .prepare(
@@ -647,5 +730,167 @@ describe('D1 access-management repository guards', () => {
       requestFingerprint: 'FP-POLICY-ONE',
       result: idempotency.result,
     });
+  });
+
+  it('projects and consumes real 0031/0032 link and account-audit contexts in Miniflare D1', async () => {
+    const db = await database({ activityHistory: true });
+    const foundation = createD1IdentityFoundationRepository(db);
+    const repository = createD1AccessManagementRepository(db);
+    const personId = 'PER-423E4567-E89B-42D3-A456-426614174000';
+    await foundation.createPerson({ personId, sourceProvenanceEnvelope: null, createdAt: BEFORE });
+    await foundation.createAccountStaffLink(
+      {
+        id: 'LNK-ACTIVITY-0001',
+        accountId: 'ACCOUNT-1',
+        personId,
+        state: 'ACTIVE',
+        sourceProvenanceEnvelope: null,
+        createdAt: BEFORE,
+        updatedAt: BEFORE,
+      },
+      { correlationId: 'COR-LINK-CREATE-0001' },
+    );
+
+    await repository.changeAccessId({
+      account: account({ accessIdNormalized: 'HAU.FOOD.001' }),
+      actor: { id: 'OWNER-1', accessIdNormalized: 'HAU.OWNER.001' },
+      newAccessId: 'HAU.FOOD.009',
+      collisionKey: 'HAUFOOD009',
+      changedAt: AFTER,
+      reason: 'Synthetic activity projection verification.',
+      correlationId: 'COR-ACCESS-ID-0001',
+      environment: 'TEST',
+      idempotencyKey: 'access-id-activity-0001',
+      historyId: 'ACCESS-HISTORY-0001',
+      auditId: 'AUDIT-ACTIVITY-0001',
+    });
+    await foundation.updateAccountStaffLinkState({
+      id: 'LNK-ACTIVITY-0001',
+      state: 'REVOKED',
+      updatedAt: '2026-08-03T00:02:00.000Z',
+      correlationId: 'COR-LINK-STATE-0001',
+    });
+    await foundation.createStaffAssignment(
+      {
+        id: 'ASN-ACTIVITY-0001',
+        personId,
+        assignmentFingerprint: 'FP-ACTIVITY-ASSIGNMENT-0001',
+        protectedAssignmentEnvelope: 'v1.synthetic.assignment.activity',
+        state: 'ACTIVE',
+        effectiveFrom: '2026-08-03T01:00:00.000Z',
+        effectiveTo: '2026-08-03T02:00:00.000Z',
+        sourceProvenanceEnvelope: null,
+        createdAt: '2026-08-03T00:03:00.000Z',
+        updatedAt: '2026-08-03T00:03:00.000Z',
+      },
+      { correlationId: 'COR-ASSIGNMENT-CREATE-0001' },
+    );
+    await foundation.updateStaffAssignmentState({
+      id: 'ASN-ACTIVITY-0001',
+      state: 'HISTORICAL',
+      updatedAt: '2026-08-03T00:04:00.000Z',
+      correlationId: 'COR-ASSIGNMENT-STATE-0001',
+    });
+    await foundation.updateStaffAssignmentEffectiveWindow({
+      id: 'ASN-ACTIVITY-0001',
+      effectiveFrom: '2026-08-03T01:30:00.000Z',
+      effectiveTo: '2026-08-03T02:30:00.000Z',
+      updatedAt: '2026-08-03T00:05:00.000Z',
+      correlationId: 'COR-ASSIGNMENT-WINDOW-0001',
+    });
+
+    await expect(
+      db
+        .prepare(
+          `SELECT event_type, action_code, person_id, account_id, account_staff_link_id,
+                  account_access_id_snapshot, correlation_id
+           FROM staff_account_activity_history
+           ORDER BY occurred_at, event_id`,
+        )
+        .all(),
+    ).resolves.toMatchObject({
+      results: [
+        {
+          event_type: 'ACCOUNT_STAFF_LINK',
+          action_code: 'LINK_CREATED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-LINK-CREATE-0001',
+        },
+        {
+          event_type: 'ACCOUNT_AUDIT',
+          action_code: 'ACCESS_ID_CHANGED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: 'HAU.FOOD.009',
+          correlation_id: 'COR-ACCESS-ID-0001',
+        },
+        {
+          event_type: 'ACCOUNT_STAFF_LINK',
+          action_code: 'LINK_STATE_CHANGED',
+          person_id: personId,
+          account_id: 'ACCOUNT-1',
+          account_staff_link_id: 'LNK-ACTIVITY-0001',
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-LINK-STATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_CREATED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-CREATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_STATE_CHANGED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-STATE-0001',
+        },
+        {
+          event_type: 'STAFF_ASSIGNMENT',
+          action_code: 'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED',
+          person_id: personId,
+          account_id: null,
+          account_staff_link_id: null,
+          account_access_id_snapshot: null,
+          correlation_id: 'COR-ASSIGNMENT-WINDOW-0001',
+        },
+      ],
+    });
+    await expect(
+      db.prepare('SELECT COUNT(*) AS count FROM staff_account_activity_audit_context').first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db.prepare('SELECT COUNT(*) AS count FROM staff_account_activity_transition_context').first(),
+    ).resolves.toEqual({ count: 0 });
+    await expect(
+      db.prepare("UPDATE staff_account_activity_history SET action_code = 'LINK_CREATED'").run(),
+    ).rejects.toThrow(/append-only/u);
+    await expect(
+      db
+        .prepare(
+          "UPDATE account_staff_links SET state = 'QUARANTINED', updated_at = '2026-08-03T00:06:00.000Z' WHERE id = 'LNK-ACTIVITY-0001'",
+        )
+        .run(),
+    ).rejects.toThrow(/context/u);
+    await expect(
+      db
+        .prepare(
+          "UPDATE staff_assignments SET assignment_fingerprint = 'FP-ACTIVITY-ASSIGNMENT-OTHER' WHERE id = 'ASN-ACTIVITY-0001'",
+        )
+        .run(),
+    ).rejects.toThrow(/immutable/u);
+    await expect(db.prepare("DELETE FROM audit_log WHERE id = 'AUDIT-ACTIVITY-0001'").run()).rejects.toThrow(
+      /append-only/u,
+    );
   });
 });

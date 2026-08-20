@@ -325,6 +325,11 @@ describe('D1 account-application repository contract', () => {
         updates: { administratorReviewerId: 'ADMIN-SYNTHETIC-001', administratorReviewedAt: timestamp },
         history: history({ id: 'HISTORY-FORWARD-001', idempotencyKey: 'admin-forward-repository-001' }),
         audit: audit({ id: 'AUDIT-FORWARD-001', action: 'ACCOUNT_APPLICATION_ADMIN_FORWARDED' }),
+        conditionalAccountAudit: audit({
+          id: 'AUDIT-ACTIVATE-ACCOUNT-001',
+          action: 'ACCOUNT_APPLICATION_ACTIVATED',
+          accountId: 'ACCOUNT-SYNTHETIC-001',
+        }),
       }),
     ).rejects.toThrow('ACCOUNT_APPLICATION_TRANSITION_GUARD_FAILED');
 
@@ -334,6 +339,9 @@ describe('D1 account-application repository contract', () => {
     expect(sql[1]).toContain('UPDATE account_applications');
     expect(sql[2]).toContain('INSERT INTO account_application_history');
     expect(sql[3]).toContain('INSERT INTO audit_log');
+    expect(sql[4]).toContain('INSERT INTO staff_account_activity_audit_context');
+    expect(sql[5]).toContain('INSERT INTO audit_log');
+    expect(sql[5]).toContain('WHERE EXISTS');
     expect(probe.firstCalls).toEqual([]);
   });
 

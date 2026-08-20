@@ -38,7 +38,26 @@ function d1Adapter(database) {
           const result = prepared.run(...bindings);
           return { meta: { changes: Number(result.changes) } };
         },
+        async executeBatchStatement() {
+          if (/^\s*(?:SELECT|PRAGMA)\b/iu.test(sql)) {
+            return { results: prepared.all(...bindings), meta: { changes: 0 } };
+          }
+          const result = prepared.run(...bindings);
+          return { meta: { changes: Number(result.changes) } };
+        },
       };
+    },
+    async batch(statements) {
+      database.exec('BEGIN IMMEDIATE');
+      try {
+        const results = [];
+        for (const statement of statements) results.push(await statement.executeBatchStatement());
+        database.exec('COMMIT');
+        return results;
+      } catch (error) {
+        database.exec('ROLLBACK');
+        throw error;
+      }
     },
   };
 }
@@ -81,15 +100,44 @@ function email({ id, personId, fingerprint, primary = false }) {
   };
 }
 
-describe('schema-31 canonical identity foundation', () => {
+describe('schema-32 canonical identity foundation and staff account activity history', () => {
+  it('declares additive schema-32 staff-account activity history with literal guards and projection triggers', async () => {
+    const source = await readFile(
+      resolve(repositoryRoot, 'migrations/0032_staff_account_activity_history.sql'),
+      'utf8',
+    );
+
+    expect(source).toContain('CREATE TABLE staff_account_activity_history');
+    expect(source).toContain('CREATE TABLE staff_account_activity_audit_context');
+    expect(source).toContain('CREATE TABLE staff_account_activity_transition_context');
+    expect(source).toContain("WHERE key = 'operational_schema_version' AND value = '31'");
+    expect(source).toContain("substr(occurred_at, 20, 1) = '.'");
+    expect(source).toContain("substr(prepared_at, 24, 1) = 'Z'");
+    expect(source).toContain('staff_account_activity_history_no_update');
+    expect(source).toContain('staff_account_activity_history_no_delete');
+    expect(source).toContain('account_staff_links_identity_immutable');
+    expect(source).toContain('staff_assignments_identity_immutable');
+    expect(source).toContain('staff_account_activity_audit_context_project_consume');
+    expect(source).toContain('account_staff_links_create_project_consume');
+    expect(source).toContain('staff_assignments_window_project_consume');
+  });
+
   it('is additive, empty by default, and advances the operational schema once', async () => {
     await migratedRepository();
     expect(sqlite.prepare('PRAGMA integrity_check').get()).toEqual({ integrity_check: 'ok' });
     expect(sqlite.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
     expect(
       sqlite.prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'").get(),
-    ).toEqual({ value: '31' });
-    for (const table of ['canonical_people', 'person_emails', 'account_staff_links', 'staff_assignments']) {
+    ).toEqual({ value: '32' });
+    for (const table of [
+      'canonical_people',
+      'person_emails',
+      'account_staff_links',
+      'staff_assignments',
+      'staff_account_activity_history',
+      'staff_account_activity_audit_context',
+      'staff_account_activity_transition_context',
+    ]) {
       expect(
         sqlite
           .prepare("SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ?")
@@ -99,11 +147,147 @@ describe('schema-31 canonical identity foundation', () => {
       });
       expect(sqlite.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get()).toEqual({ count: 0 });
     }
+    expect(
+      sqlite
+        .prepare("SELECT value FROM app_metadata WHERE key = 'staff_account_activity_history_starts_at'")
+        .get(),
+    ).toMatchObject({ value: expect.any(String) });
     expect(() =>
       sqlite
         .prepare('INSERT INTO canonical_people (person_id, created_at) VALUES (?1, ?2)')
         .run('PER-123E4567-E89B-Z2D3-A456-426614174000', time),
     ).toThrow();
+  });
+
+  it('rejects malformed literal timestamps and incompatible action/null matrices before history can be retained', async () => {
+    const repository = await migratedRepository();
+    const linkId = 'LNK-SYNTHETIC-NEGATIVE-0001';
+    const assignmentId = 'ASN-SYNTHETIC-NEGATIVE-0001';
+    const windowFrom = '2026-08-14T01:00:00.000Z';
+    const windowTo = '2026-08-14T02:00:00.000Z';
+    await repository.createPerson(person(firstPersonId));
+    await repository.createAccountStaffLink({
+      id: linkId,
+      accountId: 'ACCOUNT-SYNTHETIC-0001',
+      personId: firstPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.ACTIVE,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    await repository.createStaffAssignment({
+      id: assignmentId,
+      personId: firstPersonId,
+      assignmentFingerprint: 'FP-SYNTHETIC-NEGATIVE-0001',
+      protectedAssignmentEnvelope: 'v1.synthetic.assignment-negative',
+      state: STAFF_ASSIGNMENT_STATE.ACTIVE,
+      effectiveFrom: windowFrom,
+      effectiveTo: windowTo,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    const rejects = (sql, ...values) => expect(() => sqlite.prepare(sql).run(...values)).toThrow();
+    const insertAuditHistory = `INSERT INTO staff_account_activity_history (
+      event_id, occurred_at, event_type, action_code, person_id,
+      account_id, account_staff_link_id, staff_assignment_id,
+      link_state, previous_link_state, assignment_state, previous_assignment_state,
+      old_effective_from, old_effective_to, new_effective_from, new_effective_to,
+      account_access_id_snapshot, correlation_id, source_kind, source_id, source_event_id, transition_id
+    ) VALUES (?1, ?2, ?3, 'ACCESS_ID_CHANGED', ?4, 'ACCOUNT-SYNTHETIC-0001', ?5, NULL,
+      'ACTIVE', NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+      'SYNTHETIC.0001', 'COR-NEGATIVE-AUDIT', 'ACCOUNT_AUDIT', 'AUDIT-NEGATIVE', 'AUDIT-NEGATIVE', NULL)`;
+    rejects(
+      insertAuditHistory,
+      'HIS-000000000000000000000000000000b1',
+      '2026-08-14X00:00:00.000Z',
+      'ACCOUNT_AUDIT',
+      firstPersonId,
+      linkId,
+    );
+    rejects(
+      insertAuditHistory,
+      'HIS-000000000000000000000000000000b2',
+      time,
+      'ACCOUNT_STAFF_LINK',
+      firstPersonId,
+      linkId,
+    );
+
+    for (const [index, malformedPreparedAt] of [
+      '2026-08-14T00:00:00.00Z',
+      '2026-08-14T00;00:00.000Z',
+    ].entries()) {
+      const auditId = `AUDIT-NEGATIVE-PREPARED-${index}`;
+      sqlite
+        .prepare(
+          `INSERT INTO audit_log (
+             id, created_at, action, entity_type, entity_id, actor_account_id,
+             before_json, after_json, correlation_id, notes
+           ) VALUES (?1, ?2, 'ACCESS_ID_CHANGED', 'ACCOUNT', 'ACCOUNT-SYNTHETIC-0001', NULL, '{}', '{}', ?3, '')`,
+        )
+        .run(auditId, time, `COR-NEGATIVE-PREPARED-${index}`);
+      rejects(
+        `INSERT INTO staff_account_activity_audit_context (
+           audit_id, person_id, account_id, account_staff_link_id, link_state,
+           account_access_id_snapshot, action_code, correlation_id, prepared_at
+         ) VALUES (?1, ?2, 'ACCOUNT-SYNTHETIC-0001', ?3, 'ACTIVE', 'SYNTHETIC.0001',
+           'ACCESS_ID_CHANGED', ?4, ?5)`,
+        auditId,
+        firstPersonId,
+        linkId,
+        `COR-NEGATIVE-PREPARED-${index}`,
+        malformedPreparedAt,
+      );
+    }
+    rejects(
+      `INSERT INTO staff_account_activity_transition_context (
+         transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+         action_code, person_id, account_id, old_link_state, new_link_state,
+         old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+         new_effective_from, new_effective_to, correlation_id, created_at
+       ) VALUES (
+         'TRN-000000000000000000000000000000b1', 'ACCOUNT_STAFF_LINK', ?1, ?1, NULL,
+         'LINK_STATE_CHANGED', ?2, 'ACCOUNT-SYNTHETIC-0001', 'ACTIVE', 'REVOKED',
+         NULL, NULL, NULL, NULL, NULL, NULL, 'COR-NEGATIVE-CREATED', ?3)`,
+      linkId,
+      firstPersonId,
+      ' 2026-08-14T00:00:00.000Z',
+    );
+    for (const [index, field] of [
+      'old_effective_from',
+      'old_effective_to',
+      'new_effective_from',
+      'new_effective_to',
+    ].entries()) {
+      const windows = {
+        oldEffectiveFrom: windowFrom,
+        oldEffectiveTo: windowTo,
+        newEffectiveFrom: '2026-08-14T03:00:00.000Z',
+        newEffectiveTo: '2026-08-14T04:00:00.000Z',
+      };
+      const property = field.replace(/_([a-z])/gu, (_, letter) => letter.toUpperCase());
+      windows[property] = '2026-08-14T00:00:00.00Z';
+      rejects(
+        `INSERT INTO staff_account_activity_transition_context (
+           transition_id, source_kind, source_id, account_staff_link_id, staff_assignment_id,
+           action_code, person_id, account_id, old_link_state, new_link_state,
+           old_assignment_state, new_assignment_state, old_effective_from, old_effective_to,
+           new_effective_from, new_effective_to, correlation_id, created_at
+         ) VALUES (
+           ?1, 'STAFF_ASSIGNMENT', ?2, NULL, ?2, 'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED',
+           ?3, NULL, NULL, NULL, 'ACTIVE', 'ACTIVE', ?4, ?5, ?6, ?7, ?8, ?9)`,
+        `TRN-000000000000000000000000000000c${index}`,
+        assignmentId,
+        firstPersonId,
+        windows.oldEffectiveFrom,
+        windows.oldEffectiveTo,
+        windows.newEffectiveFrom,
+        windows.newEffectiveTo,
+        `COR-NEGATIVE-WINDOW-${index}`,
+        time,
+      );
+    }
   });
 
   it('enforces verified-primary email and explicit account-link invariants without deriving privileges', async () => {
@@ -389,5 +573,82 @@ describe('schema-31 canonical identity foundation', () => {
     await expect(
       repository.listCanonicalDirectory({ query: 'not-a-canonical-person', page: 1, pageSize: 5 }),
     ).resolves.toEqual({ total: 0, items: [] });
+  });
+
+  it('uses one exact predicate for count and page history reads with deterministic retained ordering', async () => {
+    const repository = await migratedRepository();
+    await repository.createPerson(person(firstPersonId));
+    await repository.createAccountStaffLink({
+      id: 'LNK-SYNTHETIC-HISTORY-0001',
+      accountId: 'ACCOUNT-SYNTHETIC-0001',
+      personId: firstPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.ACTIVE,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    const insertAccountAudit = (eventId, sourceId) =>
+      sqlite
+        .prepare(
+          `INSERT INTO staff_account_activity_history (
+             event_id, occurred_at, event_type, action_code, person_id,
+             account_id, account_staff_link_id, staff_assignment_id,
+             link_state, previous_link_state, assignment_state, previous_assignment_state,
+             old_effective_from, old_effective_to, new_effective_from, new_effective_to,
+             account_access_id_snapshot, correlation_id, source_kind, source_id,
+             source_event_id, transition_id
+           ) VALUES (
+             ?1, '2026-08-14T00:02:00.000Z', 'ACCOUNT_AUDIT', 'ACCESS_ID_CHANGED', ?2,
+             'ACCOUNT-SYNTHETIC-0001', 'LNK-SYNTHETIC-HISTORY-0001', NULL,
+             'ACTIVE', NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+             'SYNTHETIC.0001', ?3, 'ACCOUNT_AUDIT', ?4, ?4, NULL
+           )`,
+        )
+        .run(eventId, firstPersonId, `COR-${sourceId}`, sourceId);
+    insertAccountAudit('HIS-000000000000000000000000000000a1', 'AUDIT-HISTORY-0001');
+    insertAccountAudit('HIS-000000000000000000000000000000a2', 'AUDIT-HISTORY-0002');
+
+    const exactSnapshot = await repository.listStaffAccountActivityHistory({
+      personId: firstPersonId,
+      query: 'SYNTHETIC.0001',
+      page: 1,
+      pageSize: 1,
+    });
+    expect(exactSnapshot.total).toBe(2);
+    expect(exactSnapshot.items).toEqual([
+      expect.objectContaining({
+        event_id: 'HIS-000000000000000000000000000000a2',
+        account_access_id_snapshot: 'SYNTHETIC.0001',
+      }),
+    ]);
+    await expect(
+      repository.listStaffAccountActivityHistory({
+        personId: firstPersonId,
+        query: 'SYNTHETIC.0001',
+        page: 2,
+        pageSize: 1,
+      }),
+    ).resolves.toMatchObject({
+      total: 2,
+      items: [expect.objectContaining({ event_id: 'HIS-000000000000000000000000000000a1' })],
+    });
+    await expect(
+      repository.listStaffAccountActivityHistory({
+        personId: firstPersonId,
+        query: 'ACCOUNT-SYNTHETIC-0001',
+        page: 1,
+        pageSize: 5,
+      }),
+    ).resolves.toMatchObject({ total: 3 });
+    const linkOnly = await repository.listStaffAccountActivityHistory({
+      personId: firstPersonId,
+      eventType: 'ACCOUNT_STAFF_LINK',
+      page: 1,
+      pageSize: 5,
+    });
+    expect(linkOnly.total).toBe(1);
+    expect(linkOnly.items).toEqual([expect.objectContaining({ action_code: 'LINK_CREATED' })]);
+    expect(JSON.stringify(exactSnapshot)).not.toContain('protected_email_envelope');
+    expect(JSON.stringify(exactSnapshot)).not.toContain('source_id');
   });
 });

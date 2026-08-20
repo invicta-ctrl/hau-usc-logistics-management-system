@@ -145,6 +145,72 @@ function accountAuditStatement(db, audit) {
     );
 }
 
+const STAFF_ACTIVITY_ACCOUNT_AUDIT_ACTIONS = new Set([
+  'STARTER_ACCOUNT_CREATED',
+  'ACCOUNT_APPLICATION_ACTIVATED',
+]);
+const CANONICAL_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
+
+function staffActivityAuditContextStatement(db, audit) {
+  if (!STAFF_ACTIVITY_ACCOUNT_AUDIT_ACTIONS.has(audit.action)) return null;
+  const preparedAt = String(audit.createdAt ?? '').trim();
+  const correlationId = String(audit.correlationId ?? '').trim();
+  if (
+    !CANONICAL_UTC.test(preparedAt) ||
+    Number.isNaN(Date.parse(preparedAt)) ||
+    new Date(preparedAt).toISOString() !== preparedAt ||
+    !correlationId ||
+    correlationId.length > 128
+  ) {
+    return null;
+  }
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_audit_context (
+         audit_id, person_id, account_id, account_staff_link_id, link_state,
+         account_access_id_snapshot, action_code, correlation_id, prepared_at
+       )
+       SELECT ?1, link.person_id, account.id, link.id, 'ACTIVE', account.access_id_normalized, ?2, ?3, ?4
+       FROM accounts AS account
+       JOIN account_staff_links AS link ON link.account_id = account.id
+       WHERE account.id = ?5
+         AND link.state = 'ACTIVE'
+         AND (
+           SELECT COUNT(*)
+           FROM account_staff_links AS active_link
+           WHERE active_link.account_id = account.id AND active_link.state = 'ACTIVE'
+         ) = 1`,
+    )
+    .bind(audit.id, audit.action, correlationId, preparedAt, audit.accountId);
+}
+
+function conditionalAccountAuditStatement(db, audit) {
+  return db
+    .prepare(
+      `INSERT INTO audit_log (
+         id, created_at, action, entity_type, entity_id, actor_account_id,
+         before_json, after_json, correlation_id, notes
+       )
+       SELECT ?1, ?2, ?3, 'ACCOUNT', ?4, ?5, ?6, ?7, ?8, ?9
+       WHERE EXISTS (
+         SELECT 1
+         FROM staff_account_activity_audit_context
+         WHERE audit_id = ?1
+       )`,
+    )
+    .bind(
+      audit.id,
+      audit.createdAt,
+      audit.action,
+      audit.accountId,
+      audit.actorAccountId || null,
+      JSON.stringify(audit.before ?? {}),
+      JSON.stringify(audit.after ?? {}),
+      audit.correlationId,
+      audit.reason ?? '',
+    );
+}
+
 function historyStatement(db, history) {
   return db
     .prepare(
@@ -940,6 +1006,7 @@ export function createD1AccountApplicationRepository(db) {
       updates = {},
       history,
       audit,
+      conditionalAccountAudit = null,
       requireDistinctFromAdministrator = false,
       revokeApprovedStarter = false,
     }) {
@@ -971,6 +1038,9 @@ export function createD1AccountApplicationRepository(db) {
             .bind(applicationId),
         );
       }
+      const activityContext = conditionalAccountAudit
+        ? staffActivityAuditContextStatement(db, conditionalAccountAudit)
+        : null;
       statements.push(
         transitionUpdateStatement(db, {
           applicationId,
@@ -982,6 +1052,9 @@ export function createD1AccountApplicationRepository(db) {
         }),
         historyStatement(db, history),
         auditStatement(db, audit),
+        ...(activityContext
+          ? [activityContext, conditionalAccountAuditStatement(db, conditionalAccountAudit)]
+          : []),
       );
       await db.batch(statements);
       return repository.getApplicationById(applicationId);
@@ -1028,6 +1101,7 @@ export function createD1AccountApplicationRepository(db) {
           starterAccount.accessIdNormalized,
           starterAccount.collisionKey,
         );
+      const activityContext = staffActivityAuditContextStatement(db, accountAudit);
       const statements = [guard, ...starterAccountStatements(db, starterAccount, actorAccountId)];
       statements.push(
         db
@@ -1040,6 +1114,7 @@ export function createD1AccountApplicationRepository(db) {
           )
           .bind(actorAccountId, approvedAt, starterAccount.id, applicationId, expectedRevision),
         historyStatement(db, history),
+        ...(activityContext ? [activityContext] : []),
         accountAuditStatement(db, accountAudit),
         auditStatement(db, applicationAudit),
       );

@@ -11,9 +11,10 @@ describe('v0.7.2 additive migration contract', () => {
       .filter((name) => name.endsWith('.sql'))
       .sort();
 
-    expect(migrations.at(-3)).toBe('0029_reusable_asset_reassignment.sql');
-    expect(migrations.at(-2)).toBe('0030_production_access_and_operations.sql');
-    expect(migrations.at(-1)).toBe('0031_canonical_identity_foundation.sql');
+    expect(migrations.at(-4)).toBe('0029_reusable_asset_reassignment.sql');
+    expect(migrations.at(-3)).toBe('0030_production_access_and_operations.sql');
+    expect(migrations.at(-2)).toBe('0031_canonical_identity_foundation.sql');
+    expect(migrations.at(-1)).toBe('0032_staff_account_activity_history.sql');
   });
 
   it('adds the locked identity, operations, link, and announcement structures without destructive SQL', async () => {

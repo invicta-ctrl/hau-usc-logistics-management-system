@@ -46,6 +46,18 @@ const DIRECTORY_STATUSES = new Set([
   'LOCKED',
   'PENDING_FIRST_LOGIN',
 ]);
+const CANONICAL_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
+
+function canonicalUtcTimestamp(value) {
+  const timestamp = String(value ?? '').trim();
+  if (!CANONICAL_UTC.test(timestamp) || Number.isNaN(Date.parse(timestamp))) {
+    throw new Error('Access-management events require canonical UTC timestamps.');
+  }
+  if (new Date(timestamp).toISOString() !== timestamp) {
+    throw new Error('Access-management events require canonical UTC timestamps.');
+  }
+  return timestamp;
+}
 
 export class AccessManagementError extends Error {
   constructor(code, { status = 422 } = {}) {
@@ -194,7 +206,7 @@ export function createAccessManagementService({
     throw new Error('Access-management repository, password KDF, and token crypto are required.');
   }
 
-  const nowIso = () => new Date(clock.now()).toISOString();
+  const nowIso = () => canonicalUtcTimestamp(new Date(clock.now()).toISOString());
 
   async function mutationReplay(scope, actor, command) {
     const key = requiredIdempotencyKey(command.clientRequestId ?? command.idempotencyKey);

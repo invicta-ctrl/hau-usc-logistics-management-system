@@ -93,7 +93,7 @@ test('serves the SPA and exposes D1 readiness through workerd', async ({ page, r
   await expect(readiness.json()).resolves.toMatchObject({
     ok: true,
     ready: true,
-    database: { connected: true, schemaVersion: '30' },
+    database: { connected: true, schemaVersion: '32' },
   });
 
   await page.goto('/#/public.signin');
@@ -132,6 +132,37 @@ test('request-only mode bypasses auth and exposes only sanitized reference data'
   await expect(page.locator('#request-center-form')).toBeVisible();
   await expect(page.getByLabel('Username')).toHaveCount(0);
   await expect(page.getByText('Public request portal', { exact: true })).toBeVisible();
+});
+
+test('an authorized administrator reads only the bounded retained staff account activity DTO', async ({
+  baseURL,
+}) => {
+  const admin = await apiRequest.newContext({ baseURL });
+  try {
+    const csrf = await login(admin, 'LOCAL.ADMIN');
+    const response = await admin.post('/api/admin/staff-account-activity-history', {
+      headers: { 'x-csrf-token': csrf },
+      data: { personId: 'PER-123E4567-E89B-42D3-A456-426614174000' },
+    });
+    expect(response.status()).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      personId: 'PER-123E4567-E89B-42D3-A456-426614174000',
+      historyStartsAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/u),
+      page: 1,
+      pageSize: 25,
+      total: 0,
+      totalPages: 0,
+      items: [],
+    });
+    const invalid = await admin.post('/api/admin/staff-account-activity-history', {
+      headers: { 'x-csrf-token': csrf },
+      data: { personId: ' ' },
+    });
+    expect(invalid.status()).toBe(400);
+  } finally {
+    await admin.dispose();
+  }
 });
 
 test('unknown credentials return the safe authentication error instead of a service failure', async ({

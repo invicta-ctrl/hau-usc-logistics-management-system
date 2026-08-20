@@ -358,14 +358,22 @@ async function fixture() {
 }
 
 describe('v0.8.3 Gate A provider-free local identity foundation fixture', () => {
-  it('S00 replays migration 0031 locally, rejects malformed identifiers, and resets to empty state', async () => {
+  it('S00 replays migrations 0031 and 0032 locally, rejects malformed identifiers, and resets to empty state', async () => {
     const first = await fixture();
     expect(first.database.prepare('PRAGMA integrity_check').get()).toEqual({ integrity_check: 'ok' });
     expect(first.database.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
     expect(
       first.database.prepare("SELECT value FROM app_metadata WHERE key = 'operational_schema_version'").get(),
-    ).toEqual({ value: '31' });
-    for (const table of ['canonical_people', 'person_emails', 'account_staff_links', 'staff_assignments']) {
+    ).toEqual({ value: '32' });
+    for (const table of [
+      'canonical_people',
+      'person_emails',
+      'account_staff_links',
+      'staff_assignments',
+      'staff_account_activity_history',
+      'staff_account_activity_audit_context',
+      'staff_account_activity_transition_context',
+    ]) {
       expect(first.count(table)).toBe(0);
     }
     expect(() =>

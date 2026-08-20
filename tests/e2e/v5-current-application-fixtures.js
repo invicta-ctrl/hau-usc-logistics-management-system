@@ -95,7 +95,13 @@ function playgroundStatus() {
 
 export async function installV5ApiFixture(
   page,
-  { environment = STAGING, authenticated = false, advertisements = [], currentUser = {} } = {},
+  {
+    environment = STAGING,
+    authenticated = false,
+    advertisements = [],
+    currentUser = {},
+    staffAccountActivityHistory = 'item',
+  } = {},
 ) {
   const requests = [];
   let sessionAuthenticated = authenticated;
@@ -219,6 +225,49 @@ export async function installV5ApiFixture(
             },
           },
         ],
+      });
+    }
+    if (sessionAuthenticated && pathname === '/api/admin/staff-account-activity-history') {
+      if (staffAccountActivityHistory === 'error') {
+        return json(
+          route,
+          {
+            code: 'SYNTHETIC_PRIVATE_HISTORY_FAILURE',
+            message: 'Synthetic protected source detail must never render.',
+          },
+          500,
+        );
+      }
+      const empty = staffAccountActivityHistory === 'empty';
+      return json(route, {
+        ok: true,
+        personId: body.personId,
+        historyStartsAt: '2026-08-20T00:00:00.000Z',
+        page: 1,
+        pageSize: 25,
+        total: empty ? 0 : 1,
+        totalPages: empty ? 0 : 1,
+        items: empty
+          ? []
+          : [
+              {
+                id: 'HIS-SYNTHETIC-0001',
+                occurredAt: '2026-08-20T00:01:00.000Z',
+                eventType: 'ACCOUNT_AUDIT',
+                actionCode: 'ACCESS_ID_CHANGED',
+                accountId: '<script>synthetic-account</script>',
+                accountAccessIdSnapshot: 'STAFF.&lt;001&gt;',
+                correlationId: 'COR-SYNTHETIC-ACTIVITY-0001',
+                linkState: 'ACTIVE',
+                previousLinkState: 'REVOKED',
+                assignmentState: 'HISTORICAL',
+                previousAssignmentState: 'ACTIVE',
+                oldEffectiveFrom: '2026-08-01T00:00:00.000Z',
+                oldEffectiveTo: '2026-08-02T00:00:00.000Z',
+                newEffectiveFrom: '2026-08-03T00:00:00.000Z',
+                newEffectiveTo: '2026-08-04T00:00:00.000Z',
+              },
+            ],
       });
     }
     if (sessionAuthenticated && pathname === '/api/getEventManagement') {

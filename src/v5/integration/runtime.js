@@ -4,10 +4,11 @@ import {
   applyOperationalState,
   clearBackendViewModels,
   roleForV5,
+  staffAccountActivityHistoryProjection,
   viewModelCounts,
   workspaceForV5,
 } from './view-models.js';
-import { createAdminParityController } from './admin-parity.js';
+import { createAdminParityController, renderStaffAccountActivityHistoryPanel } from './admin-parity.js';
 import { createOperationsParityController } from './operations-parity.js';
 import {
   createRevisionPoller,
@@ -603,6 +604,8 @@ export function createV5Runtime({ backend, app }) {
     brandAssets: null,
     accessDirectory: null,
     staffDirectory: null,
+    staffAccountActivityHistory: null,
+    staffAccountActivityHistoryStatus: 'idle',
     inventoryDetail: null,
     profile: null,
     selectedRequestId: '',
@@ -616,6 +619,7 @@ export function createV5Runtime({ backend, app }) {
     selectedEventDayId: '',
     selectedActivityId: '',
     selectedComponentId: '',
+    selectedStaffActivityPersonId: '',
     activationCsrfToken: '',
     lastPublicRequest: null,
     lastPublicLending: null,
@@ -696,6 +700,8 @@ export function createV5Runtime({ backend, app }) {
     integration.state = null;
     integration.accessDirectory = null;
     integration.staffDirectory = null;
+    integration.staffAccountActivityHistory = null;
+    integration.staffAccountActivityHistoryStatus = 'idle';
     integration.inventoryDetail = null;
     integration.profile = null;
     integration.referenceWorkspace = null;
@@ -714,6 +720,7 @@ export function createV5Runtime({ backend, app }) {
     integration.selectedEventDayId = '';
     integration.selectedActivityId = '';
     integration.selectedComponentId = '';
+    integration.selectedStaffActivityPersonId = '';
     integration.connectedRoutes.clear();
     integration.failedRoutes.clear();
     integration.routeSearch.clear();
@@ -1445,6 +1452,45 @@ export function createV5Runtime({ backend, app }) {
     if (caption) caption.textContent = `Append-only movement history for ${id}.`;
   }
 
+  async function loadStaffAccountActivityHistory(personId) {
+    const canonicalPersonId = text(personId);
+    if (!canonicalPersonId || route() !== 'admin.directory' || !allowed('admin.directory')) return;
+    const expectedGeneration = integration.authGeneration;
+    integration.selectedStaffActivityPersonId = canonicalPersonId;
+    integration.staffAccountActivityHistory = null;
+    integration.staffAccountActivityHistoryStatus = 'loading';
+    render();
+    try {
+      const result = await backend.api.listStaffAccountActivityHistory({
+        personId: canonicalPersonId,
+        page: 1,
+        pageSize: 25,
+      });
+      if (
+        !integration.started ||
+        expectedGeneration !== integration.authGeneration ||
+        route() !== 'admin.directory' ||
+        integration.selectedStaffActivityPersonId !== canonicalPersonId
+      ) {
+        return;
+      }
+      integration.staffAccountActivityHistory = staffAccountActivityHistoryProjection(result);
+      integration.staffAccountActivityHistoryStatus = 'loaded';
+    } catch {
+      if (
+        !integration.started ||
+        expectedGeneration !== integration.authGeneration ||
+        route() !== 'admin.directory' ||
+        integration.selectedStaffActivityPersonId !== canonicalPersonId
+      ) {
+        return;
+      }
+      integration.staffAccountActivityHistory = null;
+      integration.staffAccountActivityHistoryStatus = 'error';
+    }
+    render();
+  }
+
   function bindDirectory() {
     const result = integration.staffDirectory;
     if (!result) return;
@@ -1463,6 +1509,10 @@ export function createV5Runtime({ backend, app }) {
     );
     setFact(root, 'Directory state', people.length ? 'Loaded' : 'No canonical people');
     const body = root?.querySelector('[data-canonical-staff-directory] tbody');
+    renderStaffAccountActivityHistoryPanel(root?.querySelector('[data-staff-account-activity-history]'), {
+      status: integration.staffAccountActivityHistoryStatus,
+      history: integration.staffAccountActivityHistory,
+    });
     if (!body) return;
     body.replaceChildren();
     for (const person of people) {
@@ -1481,7 +1531,15 @@ export function createV5Runtime({ backend, app }) {
       email.textContent = text(person.emailState, 'NONE').replaceAll('_', ' ');
       const assignments = document.createElement('td');
       assignments.textContent = String(Number(person.assignmentSummary?.activeCount ?? 0));
-      row.append(identity, account, link, email, assignments);
+      const activity = document.createElement('td');
+      const activityButton = document.createElement('button');
+      activityButton.className = 'btn btn--quiet';
+      activityButton.type = 'button';
+      activityButton.dataset.act = 'load-staff-account-activity-history';
+      activityButton.dataset.personId = text(person.personId);
+      activityButton.textContent = 'View history';
+      activity.append(activityButton);
+      row.append(identity, account, link, email, assignments, activity);
       body.append(row);
     }
   }
@@ -2088,6 +2146,12 @@ export function createV5Runtime({ backend, app }) {
       if (!focusParityActions()) {
         toast('No governed action is available for this record and role.', true);
       }
+      return;
+    }
+    if (action === 'load-staff-account-activity-history') {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      void loadStaffAccountActivityHistory(target.dataset.personId);
       return;
     }
     if (action === 'test-real-login') {
