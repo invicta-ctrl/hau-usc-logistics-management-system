@@ -558,7 +558,7 @@ FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 38
 MAKE THEME           ADOPTED_AND_VERIFIED
 MK-06                CLOSED — premise disproven; model C confirmed
 DESIGN BRANCH        frontend-design-integration
-DESIGN SHA           1f3d75c
+DESIGN SHA           4ed045d2a2f6c18f8818b2d16a8f3e0602c90243
 TRACKER COMPLETION   97% (derived — unchanged; MK-06 is a register residual,
                      not a weighted gate, and was not allowed to move the number)
 GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
