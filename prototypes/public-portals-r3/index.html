@@ -1,25 +1,43 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<!-- data-theme is set by the pre-paint script below, not hardcoded here. -->
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HAU-USC Logistics — Public Portals R3 prototype</title>
     <link rel="icon" href="data:," />
 
-    <!-- Fonts are loaded from Google here ONLY because this file is opened directly
-         from disk for design review. DESIGN.md D09 forbids a remote font dependency
-         in the product without an accepted performance/privacy decision, and D30
-         registers bundled .woff2 files for all three families. Any implementation
-         must use the bundled assets, not this link. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400&family=Newsreader:wght@500&display=swap"
-      rel="stylesheet" />
+    <!-- Bundled .woff2, per DESIGN.md D09 and D30. This used to be a Google
+         Fonts link with a note saying it was for design review only; it was
+         replaced because the prototype should demonstrate the rule the product
+         has to follow, and because every rendered audit inherited a network
+         dependency it did not need. -->
+    <link rel="stylesheet" href="../shared/fonts.css" />
 
+    <!-- The canonical theme loads FIRST and is shared with the whole-site
+         prototype. It is generated from scripts/design/theme-source.mjs; the
+         two files below add only what is local to this prototype. -->
+    <link rel="stylesheet" href="../shared/hau-theme.css" />
     <link rel="stylesheet" href="./tokens.css" />
     <link rel="stylesheet" href="./glass.css" />
     <link rel="stylesheet" href="./portal.css" />
+
+    <!-- Theme resolved before first paint, same precedence as the app: an
+         explicit ?theme= wins, otherwise the system preference. Without this the
+         document renders light for one frame and the module corrects it, which a
+         dark-preference visitor sees as a flash. -->
+    <script>
+      (function () {
+        var explicit = new URLSearchParams(location.search).get('theme');
+        var theme =
+          explicit === 'light' || explicit === 'dark'
+            ? explicit
+            : window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        document.documentElement.setAttribute('data-theme', theme);
+      })();
+    </script>
   </head>
   <body>
     <!-- G0 · the institutional ground. Fixed, non-interactive, aria-hidden:
@@ -62,6 +80,10 @@
     <div id="live-polite" class="sr-only" role="status" aria-live="polite"></div>
     <div id="live-assertive" class="sr-only" role="alert" aria-live="assertive"></div>
 
+    <!-- ONE main landmark. The rendered views used to inject a second
+         `<main class="shell">` inside this one, so a screen reader saw two main
+         landmarks on every route. The inner element is now a div and this is the
+         only landmark; it is also what the skip link targets. -->
     <main id="app" tabindex="-1"></main>
 
     <script type="module" src="./app.js"></script>

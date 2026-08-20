@@ -23,7 +23,7 @@ because the derived block is overwritten on every run; a value that only exists
 inside it cannot survive.
 
 ```text
-CURRENT PHASE:          Closeout — Figma design and documentation frozen; Make re-verification pending owner access
+CURRENT PHASE:          Frozen — theme, environment and glass single-sourced and measured; Make theme adoption is the only open design surface
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-20 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       87%
-GATES:                  44 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 4 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       92%
+GATES:                  47 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 2 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        87.0
-CURRENT PHASE:          Closeout — Figma design and documentation frozen; Make re-verification pending owner access
+VERIFIED WEIGHT:        92.0
+CURRENT PHASE:          Frozen — theme, environment and glass single-sourced and measured; Make theme adoption is the only open design surface
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
 BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
 BASELINE DESIGN BRANCH: frontend-design-integration
 LAST COMPUTED:          2026-08-20 (Asia/Manila)
-100% ELIGIBLE:          NO — 6 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 4 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -128,26 +128,27 @@ not change without an owner decision.
 
 | Gate                                                   | Weight | Status      | Baseline          | STALE_IF       | Evidence                                        |
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
-| `FM-PUBLIC` Public flows current and building | 3.0 | NEEDS_REVERIFY | Make v35 `PublicFlows.tsx` | the live Make version leaves v35 | 790 lines, hash-matched to the committed source; `Access application` removed, Staff sign-in hand-off present. Audit §29.1 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
-| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | NEEDS_REVERIFY | Make v35 `appRoutes.ts` + route files | the live Make version leaves v35 | Ten internal routes exist; Request Center route vocabulary corrected to production's five routes, Lending Hub status corrected, Release Desk feeds named. Audit §29.2–29.3 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
-| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | NEEDS_REVERIFY | Make v35 route files | the live Make version leaves v35 | Audit §32: lending actions derive from status with the consumable/reusable verb split; Request Center carries a per-line route select with no pre-selected default. Saved and synced **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
-| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | NEEDS_REVERIFY | Make v35 route files | the live Make version leaves v35 | Release Desk carries 9 states, Lending Hub 6 including Permission limited, Request Center has a dedicated states route. Audit §29.4 **2026-08-20: the live file reads Version 36.** The evidence above was taken against v35 by reading the live document; v36 could not be opened this session because no signed-in Figma session is available in either browser surface and the MCP bridge does not support Make files. The v36 entry carries Make's own automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash before restoring VERIFIED. |
+| `FM-PUBLIC` Public flows current and building | 3.0 | VERIFIED | Make v36 `PublicFlows.tsx` | the live Make version leaves v36 | 790 lines. **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` is **untouched by v36** and its lines 1-789 are byte-identical to `prototypes/public-portals-r3/figma-make/src/app/PublicFlows.tsx`: 50,587 chars, FNV-1a `d7cb6c66`, verified by per-line and per-block hash. The live file appends one trailing comment line. No-login model and search-first catalog present. Audit §29.1 |
+| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | NEEDS_REVERIFY | Make v36 `appRoutes.ts` + route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". Ten internal routes exist. **`RequestCenterRoute.tsx` deliberately not read**: the Make file holds an **unsaved third-party edit** to it (+28/-16) sitting behind Save/Discard, so the editor buffer shows uncommitted work rather than v36 and reading it would verify the wrong thing. Neither button was touched. Re-verify once that edit is saved or discarded by its author |
+| `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | VERIFIED | Make v36 route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `LendingHubRoute.tsx` read directly at v36: it declares `kind?: "reusable" | "consumable"` with the comment "Production splits the verb: a consumable is issued, a reusable is handed off", and rows carry production `state` vocabulary. The consumable/reusable verb split is present in the live file. Audit §32 |
+| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | NEEDS_REVERIFY | Make v36 route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". **Lending Hub CONFIRMED at v36**: `LendingHubRoute.tsx` declares `type Preview = "Default" | "Loading" | "Filtered empty" | "Page error" | "Stale data" | "Permission limited"` — six states including Permission limited, exactly as recorded. **Release Desk NOT re-read**: the browser tab closed before `ReleaseDeskRoute.tsx` could be opened, so the nine Release Desk states are still v35 evidence. v36 changed that file by +2/-1 under a TypeScript-fix label, so the risk is low — but low risk is not verification. Re-open and count |
 
 ### Area 7 — Institutional Glass + shared design system · 10.0
 
 | Gate                                                 | Weight | Status      | Baseline                                 | STALE_IF                   | Evidence                                                                         |
 | ---------------------------------------------------- | ------ | ----------- | ---------------------------------------- | -------------------------- | -------------------------------------------------------------------------------- |
-| `IG-LADDER` G0–G4 optical ladder defined             | 2.5    | VERIFIED    | `prototypes/public-portals-r3/glass.css` | ladder values change       | G0 ground + G1–G4 panes, HAU institutional fields                                |
-| `IG-TOKENS` Glass tokens reconciled Figma ↔ code | 2.5 | VERIFIED | Glass Material collection ↔ `glass.css` | either side changes a value | Audit §23: 7 existing tokens verified zero-drift, 10 created, correspondence table written into `glass.css` |
-| `IG-ZONES` No-glass zones honoured on dense surfaces | 2.0 | VERIFIED | live DOM audit both themes | new glass surface appears | 0 dense elements on transmissive panes across 4 panes in both themes; no nested panes; max blur 22px; ground fixed, inert and aria-hidden |
+| `IG-LADDER` G0–G4 optical ladder defined | 2.0 | VERIFIED | `prototypes/shared/hau-theme.css` | ladder values change | Second generation: fill up and blur down at every step (G2 0.34/22px -> 0.52/14px). Values generated from `scripts/design/theme-source.mjs`; G4 alone carries the gold edge |
+| `IG-TOKENS` Glass tokens reconciled Figma ↔ code | 2.0 | VERIFIED | Glass Material collection ↔ `glass.css` | either side changes a value | Audit §23: 7 existing tokens verified zero-drift, 10 created, correspondence table written into `glass.css` |
+| `IG-ZONES` No-glass zones honoured on dense surfaces | 1.5 | VERIFIED | live DOM audit both themes | new glass surface appears | 0 dense elements on transmissive panes across 4 panes in both themes; no nested panes; max blur 22px; ground fixed, inert and aria-hidden |
 | `IG-PERF` Performance fallbacks                      | 1.5    | VERIFIED    | `glass.css` media queries                | new nested backdrop-filter | `prefers-reduced-transparency`, mobile two-field fallback, no glass-behind-glass |
 | `IG-A11Y` Glass contrast in both modes | 1.5 | VERIFIED | `scripts/design/contrast-audit.mjs` | glass or palette change | Text on G2 and G4 glass composited over the brightest field measures 8.05–13.84:1 across both themes; all pass |
+| `IG-COMFORT` THEME_COMFORT_AND_ENVIRONMENT | 1.5 | VERIFIED | `scripts/design/comfort-audit.mjs` + `overlay-contrast.mjs` | any surface, field or glass value changes | Light checked, dark checked, background checked, glass checked, contrast rerun, responsive checked. 80/80 captures inside the comfort bar across 10 surfaces x 2 themes x 4 widths, 3 by one named waiver printed in the report. Text over photography/gradients/glass measured against actual backdrop pixels: 134/134, worst 4.87:1. Before this pass 0/80 were inside the bar |
 
 ### Area 8 — Responsive + accessibility · 10.0
 
 | Gate                                                            | Weight | Status      | Baseline      | STALE_IF            | Evidence                                                      |
 | --------------------------------------------------------------- | ------ | ----------- | ------------- | ------------------- | ------------------------------------------------------------- |
-| `RA-WIDTHS` 320/375/390/414/768/1024/1440/1920 matrix | 3.0 | VERIFIED | live browser measurement | any layout or breakpoint change | `ACCESSIBILITY_ACCEPTANCE.md`: zero overflow at all eight widths; portal nav no longer hidden below 768 |
+| `RA-WIDTHS` 320/375/390/414/768/1024/1440/1920 matrix | 3.0 | VERIFIED | `npm run design:responsive` | any layout or breakpoint change | Re-measured 2026-08-20 after the theme pass: **80/80** width x theme x surface combinations, zero horizontal overflow at all eight widths in both themes across 5 surfaces, zero clipped glass panes, navigation reachable everywhere. Overflow is measured as `scrollWidth` exceeding `clientWidth`, not as element geometry — an off-canvas drawer is a technique, not a defect |
 | `RA-TABLES` Per-table narrow-width strategy | 2.0 | VERIFIED | six `desktop-table` tables in `runtime.js` | a table gains or loses a column | `DESIGN.md` D29.1: comparison key, identity, kept-in-card and moved-to-detail declared for all six |
 | `RA-A11Y-STATIC` Contrast, structure, reflow, target size | 2.0 | VERIFIED | `scripts/design/contrast-audit.mjs` + DOM checks | any token or markup change | `ACCESSIBILITY_ACCEPTANCE.md`: 66/66 contrast pairs pass both themes; 10 initial 1.4.11 failures fixed; skip link, main landmark, describedby wiring, aria-invalid added |
 | `RA-A11Y-AT` Keyboard traversal and semantic acceptance | 1.0 | VERIFIED | `npm run design:keyboard` + `design:semantics` | markup, focus or ARIA changes | Real Playwright keys: 32/32 across 2 routes × 2 widths. Accessibility tree via CDP: 30/30. Found and fixed 11 hidden-but-enabled controls. Screen-reader runtime still not run and not claimed |
@@ -198,6 +199,8 @@ final global audit passed
 | D-05  | MEDIUM   | File-wide variable-binding coverage unproven    | CLOSED — measured 81.8% of 54,025 active solid paints; the residual is characterised, not unknown |
 | §3.1  | MEDIUM   | 54 inferred colours on page 15 unproven         | OPEN — `FD-COLOUR`, unidentifiable; see §30 |
 | SV-01 | MEDIUM   | Invented request/lending status vocabulary in live lanes | CLOSED — audit §33; 148 nodes reconciled to production's `STATUS_LABELS` |
-| MK-01 | MEDIUM   | Live Figma Make is at Version 36; v35 evidence not re-confirmable without a signed-in session | OPEN |
+| MK-01 | MEDIUM | Live Figma Make is at Version 36; v35 evidence not re-confirmable | CLOSED — 2026-08-20. Opened v36 in a signed-in session. `PublicFlows.tsx` byte-identical to the committed source (50,587 chars, FNV-1a `d7cb6c66`); v36 touched only two internal route files under a TypeScript-fix label |
+| MK-02 | MEDIUM | Figma Make carries a third palette whose gold is `#E8B93C`, not the owner-locked `#D4AF37` | OPEN — the exact override is generated and ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`. Not applied: writing to Make is an external provider mutation, the file holds an unsaved third-party edit that saving would sweep in, and team AI credits are exhausted until 2026-09-12. Needs an owner decision |
+| MK-03 | LOW | Unsaved third-party edit pending in Make: `RequestCenterRoute.tsx` +28/-16 | OPEN — left untouched. Neither Save nor Discard was pressed. It blocks re-verification of `FM-INTERNAL-ROUTES`, because the editor buffer shows uncommitted work rather than v36 |
 
 No P0 is open. No production defect candidate is open.

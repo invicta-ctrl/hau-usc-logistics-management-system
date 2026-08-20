@@ -37,6 +37,18 @@ function initialTheme() {
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+/* ...and it keeps being followed until the user chooses. Reading the system
+   preference once at boot means someone who switches their OS to dark at dusk
+   stays on the light theme until they reload — the same defect as never reading
+   it, only later. A stored explicit choice still wins, which is why this checks
+   the store rather than the current state. */
+function followSystemTheme() {
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+    if (store.get(THEME_KEY)) return;
+    setTheme(event.matches ? 'dark' : 'light', { remember: false });
+  });
+}
+
 const state = {
   surface: 'index',
   variant: 'populated',
@@ -249,11 +261,14 @@ function closeOverlay() {
 /* Colour-only transition, applied for one frame budget so the theme change
    reads as deliberate rather than as a flash. Layout never animates. */
 let themeAnimTimer;
-function setTheme(next) {
+function setTheme(next, { remember = true } = {}) {
   const dark = next === 'dark';
   const commit = () => {
     state.theme = next;
-    store.set(THEME_KEY, next);
+    /* A theme applied because the SYSTEM changed is not a user choice, so it
+       must not be stored — storing it would silently pin the theme and stop
+       the system preference being followed ever again. */
+    if (remember) store.set(THEME_KEY, next);
     /* The token layer is authored as `[data-theme="dark"]` with no light
        counterpart, so light is only the `:root` default. Updating the body
        alone leaves a stale `dark` on the root element, the dark tokens keep
@@ -1062,6 +1077,7 @@ const initial = location.hash.replace(/^#\/?/, '') || 'index';
 state.surface = byId(initial) ? initial : 'index';
 state.variant = byId(state.surface)?.states?.[0] ?? 'populated';
 render();
+followSystemTheme();
 renderReason = 'idle';
 requestAnimationFrame(() => {
   requestAnimationFrame(() => document.documentElement.classList.remove('v4-boot'));

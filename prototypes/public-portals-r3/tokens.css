@@ -1,97 +1,23 @@
-/* HAU-USC Logistics — Public Portals R3
-   Token layer mirroring the Figma collections in file hXJElH4p72KfgAaoUyfNOC.
+/* HAU-USC Logistics — Public Portals R3, non-colour tokens.
 
-   Every value here is the resolved value of a Figma variable. Where Figma
-   aliases Primitives, the alias is noted so reconciliation can verify it.
-   Two tokens were added during the R3 pass to close real gaps:
+   COLOUR NO LONGER LIVES HERE. Every colour, glass and background-field token
+   is in ../shared/hau-theme.css, which is generated from
+   scripts/design/theme-source.mjs and is the same file the whole-site prototype
+   loads and the same source the Figma variables are synced from. This file
+   keeps only what is not colour: type, space, radius, motion, layout.
 
-     --accent-text     color/accent/text     gold/400 failed AA at 1.52:1
-     --on-accent       color/text/on-accent  action/primary is light in BOTH modes
+   Do not introduce a raw hex here or in portal.css. If a colour is missing, add
+   it to scripts/design/theme-source.mjs and re-run:
 
-   Do not introduce a raw hex in portal.css. If a colour is missing, add a
-   token here first. */
+     node scripts/design/build-theme.mjs
+
+   FIGMA CORRESPONDENCE
+   The type/space/radius/motion values below mirror the HAU-USC / Spacing,
+   Radius, Size, Motion and Layout collections in hXJElH4p72KfgAaoUyfNOC. Those
+   collections carry a single Default mode, so unlike colour they do not need a
+   light/dark pair and are declared once. */
 
 :root {
-  color-scheme: light;
-
-  /* Primitives — oxblood */
-  --ox-900: #40070a;
-  --ox-800: #610b0f;
-  --ox-700: #78141a;
-  --ox-600: #8d1f28;
-  --ox-500: #a62835;
-
-  /* Primitives — gold.
-     OWNER DECISION 2026-08-19: the canonical primary HAU-USC gold is #D4AF37.
-     The ramp is derived from it by mixing toward --work, so every step is a
-     stated fraction of one colour rather than five independent guesses.
-       gold/200  = 42% primary over paper      gold/100 = 82% primary over paper
-     gold/700 and gold/500 are NOT re-derived: gold/700 is --accent-text, the
-     only gold that passes 4.5:1 as ink on cream, and moving it would trade a
-     brand tidy-up for a contrast failure. */
-  --gold-700: #7d5518;
-  --gold-500: #c8992f;
-  --gold-400: #d4af37;
-  --gold-200: #e6d088;
-  --gold-100: #f7efd5;
-
-  /* Canonical gold roles. Primary is the decisive accent; the rest are derived
-     and must not be used where primary is meant, or the hierarchy flattens. */
-  --gold-primary: #d4af37;
-  --gold-light: #e6d088;
-  --gold-tint: #f7efd5;
-  --gold-border: rgba(212, 175, 55, 0.45);
-  --gold-glow: rgba(212, 175, 55, 0.14);
-
-  /* Surface ladder */
-  --ground: #e9e0d0;
-  --work: #fffdf8;
-  --inset: #f7f0e2;
-  --raised: #ffffff;
-  --overlay: #ffffff;
-
-  /* Text */
-  --text-primary: #241416;
-  --text-secondary: #4e3a3e;
-  --text-muted: #6f5a60;
-  --text-inverse: #fffdf8;
-  --accent-text: #7d5518;   /* color/accent/text  — 5.46:1 on --inset */
-  --on-accent: #40070a;     /* color/text/on-accent — dark in BOTH modes */
-
-  /* Borders */
-  --border-subtle: #e6dcc9;
-  --border-default: #d8cbb6;
-  --border-strong: #bda98c;
-
-  /* Institution + action */
-  --authority: #610b0f;
-  --action-primary: #d4af37;
-  --accent-wash: #faf4e1;
-  --accent-line: #e1c671;
-  --focus-ring: #d4af37;
-
-  /* WCAG 2.2 1.4.11 needs 3:1 for anything that identifies a control or its
-     state. The brand tokens above do not reach it on cream, so control
-     boundaries, the selected state and the focus indicator get their own
-     tokens rather than being quietly excused. Measured by
-     scripts/design/contrast-audit.mjs. */
-  --border-control: #8f7d64;        /* 3.91 on --work, 3.03 on --ground */
-  --selected-line: #7d5518;         /* 6.49 on --work */
-  --focus-ring-contrast: #40070a;   /* paired with the gold ring below */
-
-  /* Rail */
-  --rail-from: #6b0e13;
-  --rail-to: #3d070a;
-  --rail-ink: #f7ecd9;
-  --rail-ink-dim: #d9bfae;
-
-  /* Status tones */
-  --neutral-fg: #5d4a4f; --neutral-bg: #ece3d3; --neutral-line: #cdbfa7;
-  --info-fg: #23557f;    --info-bg: #e4eefa;    --info-line: #b0cbe6;
-  --progress-fg: #7d5518;--progress-bg: #fbeed2;--progress-line: #dcbe8a;
-  --done-fg: #1f6b41;    --done-bg: #e2f3e9;    --done-line: #a8d3ba;
-  --alert-fg: #9c2630;   --alert-bg: #fbe6e8;   --alert-line: #e3aeb3;
-
   /* Type */
   --font-display: "Bricolage Grotesque", "Bahnschrift", system-ui, sans-serif;
   --font-body: "IBM Plex Sans", "Segoe UI Variable", system-ui, sans-serif;
@@ -110,92 +36,41 @@
   --m-state: 200ms;
   --m-surface: 280ms;
   --m-overlay: 320ms;
+  --m-theme: 240ms;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-
-
-  /* Elevation and veils. These are the Figma Material effect-style values
-     (Raised Inspector, Overlay, G1-G4 inner highlight and drop shadow). They
-     were being written as literals; naming them keeps the ladder auditable. */
-  --glass-hi: rgba(255, 255, 255, 0.28);
-  --shadow-g1: rgba(26, 5, 8, 0.12);
-  --shadow-g2: rgba(26, 5, 8, 0.14);
-  --shadow-g3: rgba(26, 5, 8, 0.20);
-  --shadow-g4: rgba(26, 5, 8, 0.26);
-  --shadow-drop: rgba(0, 0, 0, 0.14);
-  --chrome-fill: rgba(255, 255, 255, 0.10);
-  --chrome-line: rgba(255, 255, 255, 0.28);
 
   /* Layout */
   --content-max: 1240px;
   --touch-min: 44px;
 }
 
-[data-theme="dark"] {
-  color-scheme: dark;
+/* THEME TRANSITION
+   Switching light <-> dark used to repaint instantly, which reads as a flash at
+   the exact moment the eye is adapting. This transitions only the properties
+   that actually carry the theme, and only on the elements that paint a surface
+   — not every node, which is what makes theme animation expensive and janky.
 
-  --ox-900: #4a1015;
-  --ox-800: #8e3038;
-  --ox-700: #a5424b;
-
-  --gold-700: #c9a45f;
-  --gold-500: #e3c37f;
-  --gold-400: #e1c671;
-  --gold-200: #eddca7;
-  --gold-100: #faf1de;
-
-  /* Dark primary lifts the canonical gold 30% toward paper. #D4AF37 itself sits
-     too close to the dark surfaces to carry a decisive accent there; the hue is
-     the same, the luminance is not. */
-  --gold-primary: #e1c671;
-  --gold-light: #eddca7;
-  --gold-tint: rgba(212, 175, 55, 0.16);
-  --gold-border: rgba(225, 198, 113, 0.45);
-  --gold-glow: rgba(225, 198, 113, 0.14);
-
-  --ground: #100b0c;
-  --work: #1f1719;
-  --inset: #281d20;
-  --raised: #312428;
-  --overlay: #312428;
-
-  --text-primary: #f7efe6;
-  --text-secondary: #ddcbcd;
-  --text-muted: #b3a0a4;
-  --text-inverse: #241416;
-  --accent-text: #c9a45f;   /* 7.49:1 on --work */
-  --on-accent: #40070a;     /* deliberately UNCHANGED — gold stays light */
-
-  --border-subtle: #2c2124;
-  --border-default: #3d2e31;
-  --border-strong: #5b4449;
-
-  --authority: #a5424b;
-  --action-primary: #e1c671;
-  --accent-wash: rgba(225, 198, 113, 0.12);
-  --accent-line: rgba(225, 198, 113, 0.32);
-
-  --border-control: #8f767b;        /* 4.22 on --work, 3.92 on --inset */
-  --selected-line: #c9a45f;         /* 7.50 on --work */
-  --focus-ring-contrast: #faf1de;
-
-
-  --glass-hi: rgba(255, 250, 235, 0.22);
-  --shadow-g1: rgba(0, 0, 0, 0.30);
-  --shadow-g2: rgba(0, 0, 0, 0.34);
-  --shadow-g3: rgba(0, 0, 0, 0.40);
-  --shadow-g4: rgba(0, 0, 0, 0.46);
-  --shadow-drop: rgba(0, 0, 0, 0.42);
-
-  --rail-from: #2c1013;
-  --rail-to: #180a0c;
-  --rail-ink: #f4e6d2;
-  --rail-ink-dim: #c4a9ad;
-
-  --neutral-fg: #cbb9bc; --neutral-bg: rgba(255,255,255,.07); --neutral-line: rgba(255,255,255,.18);
-  --info-fg: #a8cbf0;    --info-bg: rgba(58,104,158,.26);     --info-line: rgba(168,203,240,.38);
-  --progress-fg: #eecb92;--progress-bg: rgba(150,103,30,.28); --progress-line: rgba(238,203,146,.38);
-  --done-fg: #9ad9b2;    --done-bg: rgba(45,112,72,.28);      --done-line: rgba(154,217,178,.36);
-  --alert-fg: #f6acb2;   --alert-bg: rgba(166,52,60,.3);      --alert-line: rgba(246,172,178,.36);
+   `.theme-changing` is added by the app for one transition budget and removed
+   again, so the transition never interferes with ordinary interaction: hovering
+   a row a second later is still instant. */
+.theme-changing,
+.theme-changing .surface,
+.theme-changing .glass,
+.theme-changing .on-glass,
+.theme-changing .g0,
+.theme-changing header,
+.theme-changing main,
+.theme-changing section,
+.theme-changing table,
+.theme-changing input,
+.theme-changing select,
+.theme-changing textarea,
+.theme-changing button {
+  transition:
+    background-color var(--m-theme) var(--ease-out),
+    background-image var(--m-theme) var(--ease-out),
+    border-color var(--m-theme) var(--ease-out),
+    color var(--m-theme) var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {

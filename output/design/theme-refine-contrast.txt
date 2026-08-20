@@ -1,0 +1,72 @@
+
+LIGHT
+  PASS   10.66  min 4.5  1.4.3    body text on the page ground                   
+  PASS   13.14  min 4.5  1.4.3    body text on the working surface               
+  PASS   13.73  min 4.5  1.4.3    card body text                                 
+  PASS   11.84  min 4.5  1.4.3    text on inset panels                           
+  PASS    7.41  min 4.5  1.4.3    supporting copy                                
+  PASS    7.75  min 4.5  1.4.3    card supporting copy                           
+  PASS    6.68  min 4.5  1.4.3    acknowledgment copy                            
+  PASS    5.11  min 4.5  1.4.3    hints and placeholders                         
+  PASS    5.33  min 4.5  1.4.3    card meta and product id                       
+  PASS    4.60  min 4.5  1.4.3    muted text on inset                            
+  PASS    5.87  min 4.5  1.4.3    eyebrow on working surface                     
+  PASS    5.29  min 4.5  1.4.3    eyebrow on inset                               
+  PASS    7.97  min 4.5  1.4.3    primary button label                           
+  PASS   14.33  min 4.5  1.4.3    rail text on the oxblood chrome                
+  PASS    9.59  min 4.5  1.4.3    rail secondary text                            
+  PASS    5.63  min 4.5  1.4.3    done status pill                               
+  PASS    5.73  min 4.5  1.4.3    in-progress status pill                        
+  PASS    6.69  min 4.5  1.4.3    info status pill                               
+  PASS    6.43  min 4.5  1.4.3    alert status pill                              
+  PASS    6.45  min 4.5  1.4.3    neutral status pill                            
+  PASS    7.38  min 4.5  1.4.3    copy on the assurance band                     
+  PASS    4.06  min   3  1.4.11   input boundary on the working surface          
+  PASS    3.30  min   3  1.4.11   input boundary on the ground                   
+  PASS    3.66  min   3  1.4.11   input boundary on inset panels                 
+  PASS    4.24  min   3  1.4.11   suggestion list boundary                       
+  PASS   14.93  min   3  1.4.11   focus indicator on the working surface         
+  PASS   12.12  min   3  1.4.11   focus indicator on the ground                  
+  PASS   13.46  min   3  1.4.11   focus indicator on inset panels                
+  PASS    5.77  min   3  1.4.11   selected state boundary                        
+  PASS    5.75  min   3  1.4.11   selected card boundary against its own wash    
+  PASS   12.23  min 4.5  1.4.3    body text on G2 glass over the gold field      
+  PASS    6.90  min 4.5  1.4.3    supporting copy on G2 glass over the gold field
+  PASS   10.69  min 4.5  1.4.3    body text on G4 glass over the gold field      
+
+DARK
+  PASS   14.71  min 4.5  1.4.3    body text on the page ground                   
+  PASS   12.66  min 4.5  1.4.3    body text on the working surface               
+  PASS   11.29  min 4.5  1.4.3    card body text                                 
+  PASS   13.71  min 4.5  1.4.3    text on inset panels                           
+  PASS    9.47  min 4.5  1.4.3    supporting copy                                
+  PASS    8.44  min 4.5  1.4.3    card supporting copy                           
+  PASS   10.25  min 4.5  1.4.3    acknowledgment copy                            
+  PASS    5.98  min 4.5  1.4.3    hints and placeholders                         
+  PASS    5.33  min 4.5  1.4.3    card meta and product id                       
+  PASS    6.47  min 4.5  1.4.3    muted text on inset                            
+  PASS    6.48  min 4.5  1.4.3    eyebrow on working surface                     
+  PASS    7.01  min 4.5  1.4.3    eyebrow on inset                               
+  PASS    9.99  min 4.5  1.4.3    primary button label                           
+  PASS   12.42  min 4.5  1.4.3    rail text on the oxblood chrome                
+  PASS    6.99  min 4.5  1.4.3    rail secondary text                            
+  PASS    7.48  min 4.5  1.4.3    done status pill                               
+  PASS    7.36  min 4.5  1.4.3    in-progress status pill                        
+  PASS    7.29  min 4.5  1.4.3    info status pill                               
+  PASS    6.74  min 4.5  1.4.3    alert status pill                              
+  PASS    6.61  min 4.5  1.4.3    neutral status pill                            
+  PASS    8.94  min 4.5  1.4.3    copy on the assurance band                     
+  PASS    3.77  min   3  1.4.11   input boundary on the working surface          
+  PASS    4.38  min   3  1.4.11   input boundary on the ground                   
+  PASS    4.08  min   3  1.4.11   input boundary on inset panels                 
+  PASS    3.36  min   3  1.4.11   suggestion list boundary                       
+  PASS   13.53  min   3  1.4.11   focus indicator on the working surface         
+  PASS   15.71  min   3  1.4.11   focus indicator on the ground                  
+  PASS   14.64  min   3  1.4.11   focus indicator on inset panels                
+  PASS    6.99  min   3  1.4.11   selected state boundary                        
+  PASS    6.60  min   3  1.4.11   selected card boundary against its own wash    
+  PASS   12.27  min 4.5  1.4.3    body text on G2 glass over the gold field      
+  PASS    9.17  min 4.5  1.4.3    supporting copy on G2 glass over the gold field
+  PASS    7.41  min 4.5  1.4.3    body text on G4 glass over the gold field      
+
+66/66 pass · 0 failure(s)

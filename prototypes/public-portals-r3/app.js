@@ -76,7 +76,7 @@ function lendingView() {
   const cats = [...new Set(c.items.map(i => i.category))].sort();
   const avails = [...new Set(c.items.map(i => i.availability))].sort();
   return `${masthead('lending')}
-  <main class="shell" id="main">
+  <div class="shell">
     <p class="eyebrow">HAU-USC Logistics · Public portal</p>
     <h1 class="page-title">Lending Center</h1>
     <p class="intro">Browse the borrower-safe catalog before providing personal information.
@@ -222,7 +222,7 @@ function lendingView() {
         </div></section>
       </aside>
     </div>
-  </main>
+  </div>
   <div class="sticky-bar">
     <div><strong data-selcount-m>0 items selected</strong><small>Nothing is reserved yet</small></div>
     <button class="btn btn--primary" type="button" data-jump>Review</button>
@@ -503,7 +503,7 @@ function requestView() {
   const o = REQUEST_OPTIONS;
   const isEvent = req.purpose === 'EVENT_ACTIVITY_SUPPORT';
   return `${masthead('request')}
-  <main class="shell" id="main">
+  <div class="shell">
     <p class="eyebrow">HAU-USC Logistics · Public portal</p>
     <h1 class="page-title">Request Center</h1>
     <p class="intro">Tell us what the activity needs. No account is required — you receive a private
@@ -527,7 +527,7 @@ function requestView() {
     <p class="disclaimer">Submitting does not reserve anything and deducts no stock. The Department of
       Logistics reviews the request first; reservation and release are recorded separately.</p>
     <div data-receipt></div>
-  </main>`;
+  </div>`;
 }
 
 function stepBody(isEvent, o) {
@@ -706,10 +706,26 @@ function systemTheme() {
   return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
+/* THEME TRANSITION
+   A theme flip repaints the entire viewport at the moment the eye is adapting,
+   which is exactly when an instant swap reads as a flash. `.theme-changing`
+   arms a short colour-only transition on the elements that paint a surface and
+   is then removed, so the transition costs one budget and never slows an
+   ordinary interaction afterwards. Under prefers-reduced-motion the transition
+   is already neutralised in tokens.css, and the class is harmless. */
+let themeTransitionTimer;
+function armThemeTransition() {
+  document.body.classList.add('theme-changing');
+  clearTimeout(themeTransitionTimer);
+  themeTransitionTimer = setTimeout(() => document.body.classList.remove('theme-changing'), 420);
+}
+
 function render() {
   const route = q('route', 'lending');
   const theme = q('theme', null) || systemTheme();
-  document.documentElement.setAttribute('data-theme', theme);
+  const root = document.documentElement;
+  if (root.getAttribute('data-theme') && root.getAttribute('data-theme') !== theme) armThemeTransition();
+  root.setAttribute('data-theme', theme);
   document.querySelector('.g0').setAttribute('data-module', route === 'request' ? 'request' : 'lending');
 
   if (route === 'request') { app.innerHTML = requestView(); bindRequest(); }
@@ -764,5 +780,15 @@ function setParam(k, v) {
 }
 document.getElementById('proto-route').value = q('route', 'lending');
 document.getElementById('proto-theme').value = q('theme', null) || systemTheme();
+
+/* System preference is followed LIVE, not only at load. Reading
+   prefers-color-scheme once means a visitor who switches their OS to dark at
+   dusk keeps the light theme until they reload — which is the same bug as never
+   reading it, just delayed. An explicit choice in the URL still wins. */
+window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (q('theme', null)) return;
+  render();
+  document.getElementById('proto-theme').value = systemTheme();
+});
 
 render();

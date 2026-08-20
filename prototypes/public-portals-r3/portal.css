@@ -110,9 +110,14 @@ p { margin: 0; }
 .field { display: flex; flex-direction: column; gap: 7px; position: relative; }
 .field > label, .lbl { font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text-secondary); }
 .lbl-row { display: flex; align-items: center; gap: var(--s-2); }
+/* Controls sit on --inset, the recess inside the work plane, not on --ground.
+   The ground is the environmental canvas and by DESIGN.md D41.2 never carries
+   reading content; a text field is reading content. The two are only four L*
+   apart in light mode, so this is a rule correction rather than a visible
+   redesign — but the rule is what stops the next surface from picking wrong. */
 input, select, textarea {
   font: inherit; font-family: var(--font-body); font-size: 14px;
-  color: var(--text-primary); background: var(--ground);
+  color: var(--text-primary); background: var(--inset);
   border: 1px solid var(--border-control); border-radius: var(--r-sm);
   padding: 11px 14px; width: 100%; min-height: var(--touch-min);
 }
@@ -201,7 +206,16 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
   cursor: pointer;
 }
 .choice:has(input:checked) { background: var(--accent-wash); border-color: var(--selected-line); border-width: 2px; }
-.choice input { width: 18px; height: 18px; min-height: 0; flex: none; accent-color: var(--authority); }
+/* Same 2.5.8 correction as the acknowledgment checkboxes: 24x24 control, hit
+   area padded out to the practical 44 with a transparent border. The whole
+   .choice is also clickable via its label, but the radio itself is what a
+   pointer user aims at when they aim at the dot. */
+.choice input {
+  width: 24px; height: 24px; min-height: 0; flex: none;
+  margin: -10px; padding: 0; border: 10px solid transparent; box-sizing: content-box;
+  accent-color: var(--authority);
+}
+.choice input:focus-visible { outline-offset: -8px; }
 .choice strong { display: block; font-size: 15px; font-weight: 600; }
 .choice small { color: var(--text-secondary); font-size: 11px; }
 
@@ -215,7 +229,16 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
 .ack { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-4); margin-top: var(--s-3);
   background: var(--inset); border: 1px solid var(--border-subtle); border-radius: var(--r-sm); }
 .ack--conditional { border-color: var(--info-line); }
-.ack input { width: 18px; height: 18px; min-height: 0; flex: none; margin-top: 2px; accent-color: var(--authority); }
+/* 24x24 is the WCAG 2.2 2.5.8 AA minimum, and these were 18x18. The box itself
+   is 24; the padding around it carries the hit area up to the project's
+   practical 44 without moving the tick mark away from its label, which is what
+   simply growing the control would have done. */
+.ack input {
+  width: 24px; height: 24px; min-height: 0; flex: none;
+  margin: -10px; padding: 0; border: 10px solid transparent; box-sizing: content-box;
+  accent-color: var(--authority);
+}
+.ack input:focus-visible { outline-offset: -8px; }
 .ack strong { display: block; font-size: 15px; }
 .ack small { color: var(--text-secondary); font-size: 13px; }
 
@@ -270,7 +293,8 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
 /* ---------- skip link ---------- */
 .skip-link {
   position: absolute; left: var(--s-3); top: -60px; z-index: 100;
-  padding: 10px 16px; border-radius: var(--r-sm);
+  padding: 12px 16px; min-height: var(--touch-min); display: inline-flex; align-items: center;
+  border-radius: var(--r-sm);
   background: var(--work); color: var(--text-primary);
   border: 1px solid var(--border-control); font-size: 14px; font-weight: 600;
   transition: top var(--m-state) var(--ease-out);
@@ -307,20 +331,34 @@ legend { font-size: 17px; font-weight: 700; font-family: var(--font-display); pa
   #app a, #app button, #app input, #app select, #app textarea, #app [tabindex] {
     scroll-margin-bottom: calc(var(--sticky-bar-h) + var(--s-4));
   }
-  .masthead { padding: var(--s-4); }
+  /* The masthead stacks below 768. Side by side, the lockup squeezed the nav
+     into a narrow column and the four chips wrapped onto four rows — 216px of
+     oxblood chrome before any content, on an 844px-tall phone. Stacked, with
+     the chip row genuinely scrolling, it is under half that. */
+  .masthead {
+    padding: var(--s-4);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--s-2);
+  }
+  .wordmark { font-size: 15px; }
+
   /* The portal navigation carries production's four destinations. Hiding it
      stranded a phone user inside whichever portal they landed on — no route to
      Request Center, Staff sign in, or portal selection. It becomes a scrollable
-     chip row instead, the same idiom the filters already use. */
+     chip row instead, the same idiom the filters already use.
+
+     flex-wrap: nowrap is what makes overflow-x actually scroll; without it the
+     base rule's `wrap` wins and the row silently becomes a block. */
   .portal-nav {
-    display: flex; gap: var(--s-2); overflow-x: auto;
-    margin-top: var(--s-3); padding-bottom: var(--s-1);
+    display: flex; gap: var(--s-2); overflow-x: auto; flex-wrap: nowrap;
+    margin-top: var(--s-2); padding-bottom: var(--s-1);
     scrollbar-width: none;
   }
   .portal-nav::-webkit-scrollbar { display: none; }
   .portal-nav a, .portal-nav [aria-current="page"] {
     flex: none; display: inline-flex; align-items: center;
-    min-height: 36px; padding: 6px 14px; white-space: nowrap;
+    min-height: var(--touch-min); padding: 6px 14px; white-space: nowrap;
     border: 1px solid var(--chrome-line); border-radius: var(--r-pill);
     background: var(--chrome-fill); text-decoration: none;
   }

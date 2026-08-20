@@ -263,3 +263,72 @@ speaking screen reader was run. Announcement *order*, verbosity, and how a real
 NVDA or VoiceOver user experiences the live regions remain unverified, and the
 script prints that caveat on every run rather than letting the pass rate imply
 more than it earned.
+
+---
+
+# Re-verification after the theme refinement — 2026-08-20
+
+The whole colour system was regenerated from a single source in this pass, which
+invalidates every measured contrast number by construction. All four gates were
+re-run against the rebuilt system rather than assumed to survive it.
+
+| Gate | Command | Result |
+|---|---|---|
+| Token contrast, both themes | `npm run design:contrast` | **66/66** |
+| Real keyboard traversal | `npm run design:keyboard` | **32/32** across 2 routes x 2 widths |
+| Accessibility tree | `npm run design:semantics` | **30/30** |
+| Responsive matrix, 8 widths | `npm run design:responsive` | **80/80** width x theme x surface |
+
+One pair failed on the first rebuild and was fixed rather than waived: light
+`--text-muted` measured 4.15:1 on `--inset`. Muted copy has to clear 4.5:1 on the
+inset plane, not only on the work plane, and inset is the hardest of the three.
+The token is now solved against inset and measures 5.1:1 on work.
+
+## A defect the theme pass surfaced
+
+The public-portal views injected a second `<main class="shell">` inside the
+`<main id="app">` mount point, so **every route exposed two `main` landmarks**.
+It was found while auditing something else entirely: a measurement clipped to
+"the main region" kept selecting the outer element and returning the wrong
+geometry. The inner element is now a `div`; `#app` is the only landmark and is
+what the skip link targets. `design:semantics` confirms a single `main`.
+
+## Target size — 2.5.8, re-measured
+
+Four standalone controls sat under the WCAG 2.2 AA minimum and were corrected:
+
+| Control | Was | Now |
+|---|---|---|
+| Acknowledgment checkboxes | 18x18 | 24x24 control inside a larger clickable label |
+| Borrower-classification radios | 18x18 | 24x24, same treatment |
+| Skip link | 166x43 | `min-height: var(--touch-min)` — 44 |
+| Mobile portal-nav chips | 36 tall | `min-height: var(--touch-min)` — 44 |
+
+24x24 is the 2.5.8 AA floor; 44x44 is this project's practical goal and is met
+wherever the control is standalone. The three remaining sub-44 controls at 390
+are the **prototype fixture bar's** own selects, which are not product surface.
+
+## Two more measurement artifacts worth remembering
+
+This file already records one. Three more were produced during this pass, and
+each would have caused a regression if trusted:
+
+1. **"104 overflowing elements" at every narrow width.** All of them were the
+   closed mobile navigation drawer, parked off-canvas at `left: -326px`. The
+   document's `scrollWidth` equalled its `clientWidth` — there was no horizontal
+   scroll at all. Off-canvas is a technique, not a defect. Overflow is now
+   measured as `scrollWidth` exceeding `clientWidth`.
+2. **"Hidden but focusable" controls.** The test checked `tabIndex >= 0` plus the
+   element's *own* computed style. A button inside a `display: none` container
+   reports `display: inline-block` on itself and `tabIndex 0` while the browser
+   has already removed it from the tab order. `checkVisibility()` asks the engine
+   the same question the engine asks when building the tab ring, and the count
+   goes to zero — which is what the real-keypress keyboard audit had been saying
+   all along.
+3. **A content region reporting 100% glare.** Excluding pinned chrome from the
+   reading plane chained until the region collapsed onto a single bright band.
+   Restricting the exclusion to `position: fixed` elements actually pinned to a
+   viewport edge fixed it.
+
+The pattern is the same each time: a proxy was measured instead of the thing.
+When an instrument and a real-input test disagree, the real-input test is right.

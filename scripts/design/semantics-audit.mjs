@@ -11,7 +11,7 @@
 
 import { chromium } from 'playwright';
 
-const BASE = process.argv[2] || 'http://127.0.0.1:8805/index.html';
+const BASE = process.argv[2] || 'http://127.0.0.1:8805/public-portals-r3/index.html';
 const ROUTES = ['lending', 'request'];
 
 const results = [];

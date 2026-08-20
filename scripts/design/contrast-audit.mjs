@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(HERE, '../../prototypes/public-portals-r3');
+const REPO = path.resolve(HERE, '../..');
 
 // --- colour maths -----------------------------------------------------------
 
@@ -79,15 +79,13 @@ function block(css, selector) {
   return out;
 }
 
-const tokensCss = await readFile(path.join(ROOT, 'tokens.css'), 'utf8');
-const glassCss = await readFile(path.join(ROOT, 'glass.css'), 'utf8');
+// Colour now lives in one generated file shared by every prototype, so this
+// audit reads that rather than each prototype's local sheet. If it ever needs a
+// second source again, that is the drift this pass removed.
+const themeCss = await readFile(path.join(REPO, 'prototypes/shared/hau-theme.css'), 'utf8');
 
-const light = { ...block(tokensCss, ':root'), ...block(glassCss, ':root') };
-const dark = {
-  ...light,
-  ...block(tokensCss, '[data-theme="dark"]'),
-  ...block(glassCss, '[data-theme="dark"]'),
-};
+const light = block(themeCss, ':root');
+const dark = { ...light, ...block(themeCss, "[data-theme='dark']") };
 
 function resolve(theme, name, seen = 0) {
   const raw = theme[name];

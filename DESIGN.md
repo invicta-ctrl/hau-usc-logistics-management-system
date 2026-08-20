@@ -1276,8 +1276,8 @@ Required test-query aliases: landing page design -> D18; Profile design -> D21; 
 | GitHub synchronized | No |
 | Accepted visual authority | v5 prototype |
 | Functional authority | Deployed production and current source |
-| Figma | MUTATED. 28 pages, 120 variables, 102 components verified 2026-08-19. The former "read-only; no mutation" record described the 2026-08-13 consolidation task, not the file, and had gone stale. See D05 and docs/design/FIGMA_DESIGN_MAKE_AUDIT.md. |
-| Figma Make | NOT APPLICABLE. No Make project exists and the toolchain cannot create or read one. Owner authorized the local Institutional Ledger prototype as the interactive counterpart on 2026-08-19. |
+| Figma | MUTATED. 28 pages, 8 variable collections, 102 components. Theme synced from `scripts/design/theme-source.mjs` on 2026-08-20: 6 surface/ink primitives retuned, 4 variables created (`paper/overlay`, `color/border/control`, `color/selected-line`, `color/focus/ring-contrast`), 4 glass saturation variables created, glass recipe and background fields updated. Gold and oxblood ramps verified **unchanged** by the sync report. See D05, D41 and docs/design/FIGMA_DESIGN_MAKE_AUDIT.md. |
+| Figma Make | EXISTS and is READ-VERIFIED at Version 36, file `rP9W9MQlZkyQrUx38TVsFS`. The former "NOT APPLICABLE / no Make project exists" record was **stale and wrong** — it described a toolchain limitation, not the file. v36 edited exactly two files (`LendingHubRoute.tsx` +23/-3, `ReleaseDeskRoute.tsx` +2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` at v36 is byte-identical to the committed source (lines 1-789 = 50,587 chars, FNV-1a `d7cb6c66`) plus one trailing comment line. Make still carries its own palette and is the one surface not yet on the canonical theme — see D41 and the residual in docs/design/DESIGN_EXECUTION_TRACKER.md. |
 | Vault | 228 files, 48,323,048 bytes, root hash in D04 |
 | V-ID registry | 42 of 42 present |
 | Legacy design docs | None deleted; classified REFERENCE/HISTORICAL |
@@ -1322,6 +1322,201 @@ HAU-USC may eventually present an umbrella experience in which Logistics is the 
 
 No future domain, department, route, data model, navigation item, or 3D environment may be implemented from this concept alone. It requires product architecture, security/privacy review, proof strategy, accepted specification, and deployment authority.
 
+## D41 — Theme System, Surface Ladders, Background Environment and Institutional Glass — BINDING
+
+Single source: `scripts/design/theme-source.mjs`. It emits
+`prototypes/shared/hau-theme.css` (both prototypes load it) and the payload that
+syncs the Figma variable collections. Nothing else declares a colour. Rebuild
+with `npm run design:theme`; `npm run design:theme:check` fails if the generated
+files are stale.
+
+This section exists because the same design system was being described in three
+incompatible places. The public-portal prototype, the whole-site prototype and
+Figma Make each carried their own palette; two of the three did not contain the
+owner-locked gold. Values now have one home and one derivation.
+
+### D41.1 — Values are declared as intent, not as hex
+
+Every surface and text role is declared as a target **CIE L\***, a chroma and a
+hue, and solved into sRGB. Three consequences that matter more than the hexes:
+
+- one step up the ladder is the same *perceived* distance in light and in dark;
+- `scripts/design/comfort-audit.mjs` measures rendered L\* on screen, so it is
+  checking the same number this file asked for;
+- retuning the ladder is editing five numbers, not forty.
+
+### D41.2 — The surface ladder, and what each step is FOR
+
+A hex tells an implementer nothing about where it may be used. This does.
+
+| Step | Purpose | Light | L\* | Dark | L\* |
+|---|---|---|---|---|---|
+| `ground` | Environmental canvas. **Never** carries reading content. Furthest surface from the reader. | `#E5DAC7` | 87.4 | `#211615` | 8.6 |
+| `inset` | A recess *inside* the work plane: filter bars, table headers, disabled regions. One step toward the ground. | `#EFE5D7` | 91.4 | `#291C1C` | 11.9 |
+| `work` | The primary reading and operational plane. Tables, forms, records. Tuned first; everything else is positioned relative to it. | `#F7F1E8` | 95.4 | `#312222` | 15.0 |
+| `raised` | Temporary elevation: floating cards, popovers, suggestion lists. One step away from the ground. | `#FBF6F0` | 97.1 | `#3B2A2A` | 19.0 |
+| `overlay` | Dialogs, command palette, context panels. Furthest from the ground, smallest area, which is why it may be the brightest value in light mode. | `#FDFAF6` | 98.4 | `#433231` | 22.6 |
+
+The ladder runs in the **same direction in both modes** — ground is always the
+step furthest from the reader. Before this pass the dark `inset` sat *above*
+`work`, so a filter bar read as a recess in light and as a bump in dark. It does
+not any more.
+
+**Neither end touches the extremes, deliberately.** Light stops at L\* 98.4 and
+only dialogs use it; dark bottoms out at L\* 8.6. A pure-white sheet and a
+pure-black field are the same failure pointing in opposite directions, and the
+measured versions of both were present before this pass: the whole-site dark
+ground resolved to L\* 1.8, and 34% of a dark viewport was effectively `#000`.
+
+### D41.3 — Chroma runs opposite ways in the two modes
+
+Light hue 80, chroma **decreasing** up the ladder: the cream lives in the
+environment and the reading plane is near-neutral, so body copy and status
+colour read true on it.
+
+Dark hue 20, chroma **increasing** up the ladder: rising out of the ground reads
+as moving toward the institution rather than toward grey.
+
+### D41.4 — Text roles
+
+| Role | Use | Light | Dark | On `work` |
+|---|---|---|---|---|
+| `text-primary` | Titles, table values, primary copy | `#342424` | `#F1E9E3` | 13.1:1 / 12.7:1 |
+| `text-secondary` | Supporting copy | `#5B4A4A` | `#D5CAC6` | 7.4:1 / 9.5:1 |
+| `text-muted` | Hints, meta, placeholders | `#716362` | `#ABA09F` | 5.1:1 / 6.0:1 |
+
+Light ink is oxblood-charcoal, not `#000`: at 13:1 nothing is bought by going
+blacker except glare. Dark ink is warm off-white, not `#FFF`, for the same
+reason in the other direction. `text-muted` is solved against **`inset`**, the
+hardest of the three planes, not against `work`.
+
+Gold is never body copy. `accent-text` (`#7D5518` light, `#C9A45F` dark) is the
+only gold that clears 4.5:1 as ink, and it is for eyebrows and emphasis.
+
+### D41.5 — Borders, controls and focus
+
+`border-subtle` and `border-default` are decoration and may be quiet.
+`border-control` (`#7F7469` / `#8B7B7A`) and `selected-line` (`#76592F` /
+`#C8AC7E`) are not: WCAG 2.2 1.4.11 needs 3:1 for anything identifying a control
+or its state, measured against **every** surface the control can sit on — the
+ground as well as the work plane. They are solved against the hardest of those.
+
+Focus is a **two-part** token by design: a gold ring for identity plus
+`focus-ring-contrast` (`#40070A` / `#FAF1DE`) carrying the 3:1, so the indicator
+never has to choose between looking like HAU-USC and being visible.
+
+Interactive targets meet WCAG 2.2 2.5.8 at 24x24 minimum, with the project's
+practical goal of 44x44 applied wherever the control is standalone. Radios and
+checkboxes are 24x24 controls inside a larger clickable label.
+
+### D41.6 — Status
+
+Hues are unchanged; they already pass and operators already know them. What
+changed is that **dark status backgrounds are now solid values**, composited
+once against the dark work plane instead of being alpha over whatever happens to
+be behind. A status pill whose contrast depends on which panel it lands in is
+not a status system. All five tones separate by hue and clear 6.6:1 in dark and
+5.6:1 in light. Status is never carried by colour alone — every tone has a label
+and a boundary line.
+
+### D41.7 — Background environment
+
+The ground is an authored environment, not a flat colour and not decoration:
+three broad radial fields plus a ledger rule, fixed so it never repaints on
+scroll, `aria-hidden` because it carries no information.
+
+| Field | Job | Light alpha | Dark alpha |
+|---|---|---|---|
+| `anchor` | Oxblood weight, so the composition has a heavy corner | 0.10 | 0.16 |
+| `decision` | Gold warmth where the eye should settle | 0.10 | 0.055 |
+| `halo` | A lift that keeps the opposite corner from going dead | 0.40 | 0.26 |
+
+Alphas are low on purpose. The previous generation ran `anchor` at 0.30 and
+`halo` at 0.55, which reads as gradient blobs the moment you notice it. The test
+is that **depth and warmth register before the gradient does**. The two rotated
+"governed rails" were removed: at these alphas a hard rotated bar is the one
+element that still reads as decoration rather than as environment.
+
+Below 768 the ground drops to two fields and no pane noise.
+
+### D41.8 — Institutional Glass, second generation
+
+Fill, blur, edge and shadow are **one recipe per step**, not six independent
+properties.
+
+| Step | Fill alpha (light/dark) | Blur | Saturate | Use |
+|---|---|---|---|---|
+| G1 | 0.34 / 0.34 | 10px | 108% | Soft grouping |
+| G2 | 0.52 / 0.50 | 14px | 112% | Operational panes |
+| G3 | 0.66 / 0.64 | 18px | 116% | Raised records |
+| G4 | 0.34 / 0.24 | 22px | 120% | Crystal focus — *decide here* |
+
+**Fill went up and blur came down at every step.** G2 moved from 0.34/22px to
+0.52/14px. A thin pane leans on heavy blur to stay readable, which is an
+expensive way to buy what opacity gives free, and heavy blur is exactly what
+makes glass read as frosted plastic rather than glass. The new recipe is more
+legible *and* cheaper to paint.
+
+G4 is the **only** step allowed a gold edge, because it is the only step that
+means "decide here". Drawing every pane with a gold rectangle is how the accent
+stops meaning anything.
+
+**Where glass is allowed:** command palette and overlay, contextual inspector,
+limited navigation treatment, Overview signature regions, public landing hero,
+temporary elevated action surfaces.
+
+**Where it is not:** inventory tables, staff request queue, release transaction
+workbench, dense forms, record histories, high-risk confirmations, and every
+Access/Admin control. Operational readability outranks expression. Measured: the
+whole-site prototype carries **zero** `backdrop-filter` on Overview, Inventory
+and Release Desk at all eight widths.
+
+Body text, tables, inputs and quantities never sit on a transmissive pane — they
+sit on `.on-glass`, a near-opaque layer, so contrast stops depending on what
+drifts behind. Glass-inside-glass is disabled in CSS, not merely discouraged.
+
+### D41.9 — Theme selection and transition
+
+Precedence: **explicit user choice, then system preference**. The system
+preference is followed *live*, not only at boot — reading `prefers-color-scheme`
+once means someone who switches their OS to dark at dusk keeps the light theme
+until they reload, which is the same defect as never reading it, only later. A
+theme applied because the *system* changed is deliberately **not** stored, since
+storing it would pin the theme and stop the preference being followed again.
+
+Both prototypes resolve the theme in a **pre-paint inline script**. Without it
+the document renders light for one frame and the module corrects it, which a
+dark-preference visitor sees as a full-viewport white flash.
+
+The transition is colour-only, one budget long (`--m-theme` 240ms), scoped to
+elements that paint a surface, armed by a class that is then removed — so it
+costs one transition and never slows an ordinary interaction afterwards. Layout
+never animates. Under `prefers-reduced-motion: reduce` all durations collapse to
+1ms and the theme change remains fully understandable.
+
+### D41.10 — Responsive and performance rules
+
+Desktop atmosphere is simplified below 768: two background fields instead of
+three, no pane noise, and blur clamped to the G1 radius at every step. Measured
+across 8 widths x 2 themes x 5 surfaces: zero horizontal overflow, zero clipped
+panes, zero nested `backdrop-filter`, zero filter animation, blur area 0–33% of
+the viewport against a budget of 130% narrow / 260% wide.
+
+### D41.11 — Acceptance
+
+WCAG 2.2 AA is the floor, not the target. Four gates, all measured:
+
+| Gate | Command | Result |
+|---|---|---|
+| Token contrast, both themes | `npm run design:contrast` | 66/66 |
+| Text over photography, gradients and glass | `npm run design:overlay` | 134/134 sampled runs, worst 4.87:1 |
+| Visual comfort — glare, crush, chroma, brightness shock | `npm run design:comfort` | 80/80, 3 by named waiver |
+| Responsive and paint cost, 8 widths | `npm run design:responsive` | 80/80 |
+
+Comfort thresholds are this project's own bar and are **not** a substitute for
+WCAG. Waivers are named in the script with a reason and printed in the report,
+because a threshold nudged until everything passes is not a gate.
+
 ## D40 — Design Change Log
 
 Append entries; do not rewrite history.
@@ -1333,6 +1528,7 @@ Append entries; do not rewrite history.
 | 2026-08-19 | Owner instruction: Claude isolated frontend-design stream (audit, research reconciliation, Hallmark/Impeccable, Figma + documentation update) | D05, D37, D40 | Reconciled the Figma registry against the live file: 28 pages, 120 variables, 102 components, MUTATED — the previous three-page Starter-plan/no-mutation record was stale. Recorded Figma Make as NOT APPLICABLE with the owner-approved local-prototype substitution. Added docs/design/FIGMA_DESIGN_MAKE_AUDIT.md and docs/design/FIGMA_BASELINE_REGISTER.md. | WRITE performed. Created semantic variable `color/accent/text` (VariableID:563:2) aliased to gold/700; rebound 46 text nodes on the five current R2 Overview light frames to repair a measured 1.52:1 WCAG 2.2 AA 1.4.3 failure. | None. No runtime, product, release, provider, or v0.8.3 file was modified. |
 | 2026-08-19 | Owner instruction: production-to-Figma reconciliation of the public portals | D24, D40 | Added D24.0, the OWNER-LOCKED Public Lending no-login access model, verified against production 0.8.2 c316e047; split D24 into public and internal halves. Added docs/design/PRODUCTION_PORTAL_PARITY_AUDIT.md. | Superseded 4 frames that gated borrowing behind staff sign-in. Built the Public Lending portal: 1440 light and dark, Angelite branch, receipt, four declared catalog states, 390 mobile. Added semantic tokens color/accent/text and color/text/on-accent. | None. Product worktree read-only; no provider, database, or deployment writes. |
 | 2026-08-19 | Owner instruction: continue with the unfinished work — Staff Request Center reconciliation | D23, D40 | Added D23.0 as BINDING: production's Request Center is a submission form with the review queue appended, gated on the request.review capability, with a per-line route decision and no pre-selected default (RV-01.6). Corrected the stale claim that the intake queue is the dominant surface. Added parity-audit sections 10-13 recording the context C and context B contracts, eight drift entries (SR-01..SR-08) and the SR-09 clipping defect. | Rebuilt the CURRENT decision panel 300:624 to a per-line route model with production vocabulary; corrected the prototype twin 329:1009; replaced two review-queue rows carrying statuses the queue cannot hold; added the full-height inspector evidence frame 603:137. All originals logged in the audit before edit. | None. Product worktree read-only; no provider, database, or deployment writes. |
+| 2026-08-20 | Owner instruction: final visual refinement, theme comfort, Institutional Glass environment, usability closure and Codex handoff | D37, D41, D40 | Added D41 as BINDING: one generated theme source replaces three divergent palettes. Corrected the stale D37 claim that no Figma Make project exists. Light mode lost its pure-white planes (up to 54% of a viewport was effectively #FFF); dark mode lost its crush (up to 95% of a viewport at CIE L* <= 5, ground at L* 1.8). Surface ladders, background fields and the glass recipe re-derived from declared L* targets. Institutional Glass second generation: fill up, blur down at every step. | WRITE performed. Primitives, Semantic Color and Glass Material collections synced from theme-source.mjs; 7 variables created; gold and oxblood ramps verified unchanged, so the owner-locked #D4AF37 is untouched. Blur variables propagated to the four Material effect styles, keeping D-02 closed. | Design prototypes only. Both now load prototypes/shared/hau-theme.css. Product worktree untouched; no provider, database or deployment write. Figma Make read-verified but NOT modified. |
 
 ### Local/Git synchronization record
 

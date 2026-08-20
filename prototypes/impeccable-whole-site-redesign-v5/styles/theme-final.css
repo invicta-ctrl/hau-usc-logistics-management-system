@@ -1,0 +1,242 @@
+/* HAU-USC Logistics — v5 whole-site prototype, final theme reconciliation.
+
+   WHY THIS FILE EXISTS
+   This prototype grew four stacked token layers (tokens.css, v3.css, v4.css,
+   v5.css), each overriding the last. The palette that actually rendered was
+   whatever survived that cascade, and it had drifted: the surfaces were an
+   OKLCH ramp whose dark ground resolved to CIE L* 1.8 — effectively black — and
+   the gold was oklch(69% 0.115 82), which is NOT the canonical #D4AF37. The
+   public-portal prototype meanwhile carried a different, correct palette. Two
+   design prototypes, two palettes, one of them off-brand.
+
+   Rewriting four generations of layered CSS was not the right repair; every one
+   of those layers is referenced by an accepted specification and by the
+   Impeccable decision records. Instead this file loads LAST and re-points the
+   local token names at ../../shared/hau-theme.css, which is generated from
+   scripts/design/theme-source.mjs and is the same authority the public portals
+   and the Figma variable collections use.
+
+   So: local names stay, the values behind them become canonical. Nothing above
+   this file needs to change, and there is exactly one place to edit a colour.
+
+   MAPPING — v5 name -> canonical role
+     --canvas      ground     environmental canvas
+     --paper       work       primary reading and operational plane
+     --paper-2     inset      recess inside the work plane
+     --paper-3     raised     temporary elevation
+     --white       overlay    dialogs and the command palette
+     --ink/-2      text-primary / text-secondary
+     --muted       text-muted
+     --line*       border-subtle / default / strong
+     --accent      gold-primary (canonical #D4AF37; lighter derivation in dark)
+     --anchor      authority (oxblood)
+
+   Note --paper-2 and --paper-3: v5 authored them as "one step brighter" and
+   "two steps brighter" than paper in light mode, and the same direction in
+   dark. The canonical ladder puts the recess BELOW the work plane in both
+   modes, so --paper-2 now resolves to inset rather than to a lighter paper.
+   That is the intended correction, not a mismatch — a filter bar reading as a
+   recess in light and as a bump in dark was the inconsistency. */
+
+/* Both the html and the body element carry data-theme here, and the layers
+   below declare their overrides under [data-theme='dark']. An alias block on
+   :root alone therefore loses at body scope, which is exactly how the dark
+   palette survived the first attempt at this file. [data-theme] matches
+   wherever a theme is declared, at equal specificity, and this file loads last. */
+:root,
+[data-theme] {
+  --canvas: var(--ground);
+  --paper: var(--work);
+  --paper-2: var(--inset);
+  --paper-3: var(--raised);
+  --white: var(--overlay);
+
+  --ink: var(--text-primary);
+  --ink-2: var(--text-secondary);
+  --muted: var(--text-muted);
+  --cream: var(--gold-tint);
+
+  --line: var(--border-default);
+  --line-hair: var(--border-subtle);
+  --line-strong: var(--border-strong);
+
+  --accent: var(--gold-primary);
+  --accent-ink: var(--on-accent);
+  --anchor: var(--authority);
+  --anchor-ink: var(--rail-ink);
+
+  --focus-ring: 3px solid var(--focus-ring-color);
+  --focus-ring-color: var(--gold-primary);
+
+  /* Status — v5 spells these --tone-*; the canonical names are unprefixed. */
+  --tone-neutral-fg: var(--neutral-fg);
+  --tone-neutral-bg: var(--neutral-bg);
+  --tone-neutral-line: var(--neutral-line);
+  --tone-info-fg: var(--info-fg);
+  --tone-info-bg: var(--info-bg);
+  --tone-info-line: var(--info-line);
+  --tone-progress-fg: var(--progress-fg);
+  --tone-progress-bg: var(--progress-bg);
+  --tone-progress-line: var(--progress-line);
+  --tone-done-fg: var(--done-fg);
+  --tone-done-bg: var(--done-bg);
+  --tone-done-line: var(--done-line);
+  --tone-alert-fg: var(--alert-fg);
+  --tone-alert-bg: var(--alert-bg);
+  --tone-alert-line: var(--alert-line);
+
+  /* Glass. v5 used a single 18px blur at 150% saturation with a 0.62-alpha
+     white fill for everything, which is the generic frosted-card recipe the
+     Institutional Glass ladder exists to replace. These now resolve to the
+     G2/G3/G4 steps: higher fill, lower blur, restrained saturation. */
+  --glass-base: var(--g2-fill);
+  --glass-raised: var(--g3-fill);
+  --glass-overlay: var(--g3-fill);
+  --glass-blur: var(--g2-blur);
+  --glass-saturation: var(--g2-sat);
+  --glass-border: var(--edge-quiet);
+  --glass-edge: var(--border-subtle);
+  --glass-solid: var(--work);
+  --glass-solid-raised: var(--raised);
+
+  /* Elevation. Shadows come off the glass ladder so a "raised" thing casts the
+     same shadow whether it is glass or solid. */
+  --shadow-color: var(--shadow-g2);
+  --shadow-color-strong: var(--shadow-g4);
+  --elev-1: 0 2px 8px var(--shadow-g1);
+  --elev-2: 0 10px 28px var(--shadow-g2);
+  --elev-3: 0 16px 42px var(--shadow-g4);
+  --elev-raised: 0 10px 28px var(--shadow-g2);
+  --elev-raised-strong: 0 16px 42px var(--shadow-g4);
+  --elev-inset: inset 0 1px 0 var(--glass-hi);
+  --glass-shadow: 0 2px 6px var(--shadow-g1), 0 14px 36px var(--shadow-g3);
+}
+
+/* THE GLOW TOKENS
+   v5 declared four fixed-rgba glow shadows and used them identically in both
+   modes. On the deep surfaces of the corrected dark ladder they read as neon
+   piping — exactly the "aggressive glow around text" and "very bright thin
+   outlines on dark backgrounds" this pass is meant to remove. They are
+   re-expressed as a hairline plus a soft, low-alpha bloom drawn from the status
+   tones, so emphasis survives and the fluorescence does not. */
+:root,
+[data-theme] {
+  --glow-gold: 0 0 0 1px var(--gold-border), 0 0 18px var(--gold-glow);
+  --glow-green: 0 0 0 1px var(--done-line), 0 0 16px color-mix(in srgb, var(--done-fg) 18%, transparent);
+  --glow-blue: 0 0 0 1px var(--info-line), 0 0 16px color-mix(in srgb, var(--info-fg) 18%, transparent);
+  --glow-alert: 0 0 0 1px var(--alert-line), 0 0 16px color-mix(in srgb, var(--alert-fg) 18%, transparent);
+}
+
+/* Dark needs no separate block: every alias above points at a canonical token
+   that already carries its own dark value. That is the point of aliasing rather
+   than restating — a dark override here would be a second source of truth. */
+
+/* SPECULAR HIGHLIGHT
+   Kept, but pulled well down. A 0.9-alpha white sweep across the top of every
+   pane is what makes light-mode glass read as glossy plastic, and its dark
+   counterpart is what produces white neon edges. */
+:root,
+[data-theme] {
+  --glass-specular: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--glass-hi) 100%, transparent) 0%,
+    color-mix(in srgb, var(--glass-hi) 34%, transparent) 34%,
+    transparent 62%
+  );
+}
+
+/* ------------------------------------------------ the Overview brief panel
+ *
+ * This panel was `background: var(--ox-900)` in BOTH modes — a near-black
+ * oxblood slab running the full content width. In dark mode that is unremarkable.
+ * In light mode it put a CIE L* 8 field in the middle of an L* 95 reading plane:
+ * measured, it pulled the whole Overview content area down to a mean of L* 49
+ * and produced the largest brightness step anywhere in the product.
+ *
+ * The deeper problem is what the darkness was saying. Overview is allowed to be
+ * the expressive surface, but the strongest signal on it has to be "what needs
+ * attention", and instead the strongest signal was the panel's own contrast. An
+ * operator scanning for the overdue count read a black rectangle first.
+ *
+ * So the slab becomes a recess on the ladder, and the emphasis moves to where it
+ * belongs: an oxblood rule for institutional weight, gold for the eyebrow, and
+ * the exception numerals carrying full text contrast — urgent ones in the alert
+ * tone. Dark mode gets the same structure one step up the ladder. Both modes now
+ * come from the same rules, which is why they cannot drift apart again. */
+
+.overview-briefing {
+  background: var(--inset);
+  border: 1px solid var(--border-default);
+  border-block-start: 3px solid var(--authority);
+  color: var(--text-primary);
+  box-shadow: var(--elev-1);
+}
+
+[data-theme='dark'] .overview-briefing {
+  background: var(--raised);
+}
+
+.overview-briefing__intro .label { color: var(--accent-text); }
+.overview-briefing__intro h2 { color: var(--text-primary); }
+.overview-briefing__intro p { color: var(--text-secondary); }
+
+/* Operational screens do not get marketing display sizes. 44px of Bricolage
+   inside a control centre competes with the numbers it is introducing. */
+.overview-briefing__intro h2 {
+  font-size: clamp(23px, 2vw, 31px);
+  line-height: 1.12;
+  max-width: 22ch;
+}
+
+.overview-briefing .attention__item,
+.overview-briefing .attention__item[data-urgent='true'] {
+  color: var(--text-primary);
+  border-block-start-color: var(--border-default);
+}
+.overview-briefing .attention__item:nth-child(even) {
+  border-inline-start-color: var(--border-default);
+}
+.overview-briefing .attention__item[data-urgent='true'] {
+  border-block-start: 2px solid var(--alert-fg);
+}
+
+.overview-briefing .attention__label,
+.overview-briefing .attention__note { color: var(--text-secondary); }
+.overview-briefing .attention__value { color: var(--text-primary); }
+
+.overview-briefing .attention__item[data-urgent='true'] .attention__value,
+.overview-briefing .attention__item[data-urgent='true'] .attention__label,
+.overview-briefing .attention__item[data-urgent='true'] .attention__note {
+  color: var(--alert-fg);
+}
+
+/* THEME TRANSITION
+   Colour-only, one budget long, and scoped to the elements that paint a
+   surface. `.theme-anim` is applied by src/app.js for the duration of the
+   change and removed again, so it never slows an ordinary interaction. */
+.theme-anim,
+.theme-anim .surface,
+.theme-anim .rail,
+.theme-anim .panel,
+.theme-anim .card,
+.theme-anim header,
+.theme-anim main,
+.theme-anim section,
+.theme-anim table,
+.theme-anim input,
+.theme-anim select,
+.theme-anim textarea,
+.theme-anim button {
+  transition:
+    background-color var(--m-surface) var(--ease-out),
+    background-image var(--m-surface) var(--ease-out),
+    border-color var(--m-surface) var(--ease-out),
+    color var(--m-surface) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-anim,
+  .theme-anim * {
+    transition-duration: 1ms !important;
+  }
+}

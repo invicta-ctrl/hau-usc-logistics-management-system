@@ -238,7 +238,9 @@ cream and is reserved for fills, edges, focus rings and oxblood-backed text.
 **Institutional Glass.** Semantic layers `glass/ground`, `glass/surface`,
 `glass/inset`, `glass/raised`, `glass/overlay`, `glass/border`,
 `glass/highlight`, `glass/shadow`, and the blur ladder `blur/subtle`,
-`blur/standard`, `blur/strong` — single-sourced at 16 / 22 / 30 / 36. The Figma
+`blur/standard`, `blur/strong` — single-sourced at **10 / 14 / 18 / 22** since the
+second-generation glass pass; the variables drive the four Material effect
+styles, so there is one number per step. See section 3A.5. The Figma
 Glass Material collection maps one-to-one with
 `prototypes/public-portals-r3/glass.css`; the correspondence table for all 21
 properties is written into the head of that file.
@@ -261,6 +263,171 @@ when focus scrolls.
 transformation, not a squeeze. All six of production's `desktop-table` tables
 declare a comparison key, an identity column, what stays in the card and what
 moves to the detail view — `DESIGN.md` **D29.1**.
+
+---
+
+## 3A. FINAL THEME AND VISUAL ENVIRONMENT
+
+This is the section to implement from. `DESIGN.md` **D41** is the same system
+stated as durable authority; this is the working version with the warnings.
+
+### 3A.1 There is exactly one source, and it is not a stylesheet
+
+```text
+scripts/design/theme-source.mjs        <- edit here, and only here
+  |
+  +-- npm run design:theme
+        |
+        +-- prototypes/shared/hau-theme.css                    both prototypes
+        +-- prototypes/public-portals-r3/figma-make/src/
+              styles/theme-canonical.css                       Figma Make override
+  |
+  +-- node scripts/design/figma-theme-payload.mjs
+        |
+        +-- Figma variable collections in hXJElH4p72KfgAaoUyfNOC
+```
+
+`npm run design:theme:check` fails if either generated file is stale. Wire that
+into whatever check runs before a design change lands.
+
+**Why this exists.** Before this pass, three surfaces each held their own
+palette: the public-portal prototype, the whole-site prototype, and Figma Make.
+Two of the three did not contain the owner-locked gold at all — the whole-site
+prototype rendered `oklch(69% 0.115 82)` and Make rendered `#E8B93C`. Nobody had
+done anything wrong; there was simply no single place to change a colour.
+
+### 3A.2 Surface ladder — memorise the purposes, not the hexes
+
+| Step | What it is for |
+|---|---|
+| `--ground` | Environmental canvas. **Never** put reading content on it. |
+| `--inset` | A recess *inside* the work plane — filter bars, table headers, disabled regions. |
+| `--work` | The primary reading and operational plane. Tables, forms, records. |
+| `--raised` | Temporary elevation — floating cards, popovers, suggestion lists. |
+| `--overlay` | Dialogs, command palette, context panels. |
+
+| | ground | inset | work | raised | overlay |
+|---|---|---|---|---|---|
+| Light | `#E5DAC7` | `#EFE5D7` | `#F7F1E8` | `#FBF6F0` | `#FDFAF6` |
+| CIE L\* | 87.4 | 91.4 | 95.4 | 97.1 | 98.4 |
+| Dark | `#211615` | `#291C1C` | `#312222` | `#3B2A2A` | `#433231` |
+| CIE L\* | 8.6 | 11.9 | 15.0 | 19.0 | 22.6 |
+
+The ladder runs the same direction in both modes. If you find yourself wanting a
+sixth surface, you almost certainly want `--raised` plus a border.
+
+### 3A.3 Text, borders, focus
+
+```text
+--text-primary     titles, table values, primary copy      13.1:1 / 12.7:1 on work
+--text-secondary   supporting copy                          7.4:1 /  9.5:1 on work
+--text-muted       hints, meta, placeholders                5.1:1 /  6.0:1 on work
+--accent-text      eyebrows and emphasis — the ONLY gold that works as ink
+--border-control   control boundary, solved for 3:1 on ground AND work AND inset
+--selected-line    selected-state boundary, 3:1
+--focus-ring       gold ring, identity
+--focus-ring-contrast  the companion that actually carries the 3:1
+```
+
+Focus is deliberately two-part. Do not simplify it to one gold ring — gold alone
+measured 1.40:1 on the ground, which is a focus indicator that does not exist.
+
+### 3A.4 Background environment
+
+Three broad radial fields plus a ledger rule, on a fixed, `aria-hidden`,
+non-interactive layer. Alphas: anchor 0.10/0.16, decision 0.10/0.055, halo
+0.40/0.26 (light/dark). Below 768, two fields and no noise.
+
+The acceptance test is subjective and worth stating plainly: **depth and warmth
+should register before the gradient does.** If you can see where a blob starts,
+the alpha is too high.
+
+### 3A.5 Institutional Glass
+
+| Step | Fill alpha (L/D) | Blur | Saturate |
+|---|---|---|---|
+| G1 | 0.34 / 0.34 | 10px | 108% |
+| G2 | 0.52 / 0.50 | 14px | 112% |
+| G3 | 0.66 / 0.64 | 18px | 116% |
+| G4 | 0.34 / 0.24 | 22px | 120% |
+
+Fill, blur, edge and shadow are one recipe per step. Changing blur without
+changing fill is how a pane stops being legible.
+
+Allowed: command palette and overlay, contextual inspector, limited navigation,
+Overview signature regions, public landing hero, temporary elevated actions.
+Not allowed: inventory tables, request queue, release workbench, dense forms,
+record histories, high-risk confirmations, Access/Admin controls.
+
+G4 alone takes the gold edge.
+
+### 3A.6 Theme selection
+
+Precedence is **explicit user choice, then system preference**, and the system
+preference is followed live rather than only at boot. A theme change that came
+from the *system* must not be persisted — persisting it pins the theme and the
+preference is never followed again.
+
+Resolve the theme in a pre-paint inline script. Without one, a dark-preference
+visitor gets a full-viewport white flash on every load.
+
+Transition: colour only, one budget (240ms), scoped to elements that paint a
+surface, armed by a class that is then removed. Never animate layout. Under
+`prefers-reduced-motion: reduce` everything collapses to 1ms.
+
+### 3A.7 Contrast and comfort expectations
+
+WCAG 2.2 AA is the floor. Four gates, all runnable:
+
+```bash
+npm run design:serve      # then, in another shell:
+npm run design:contrast   # 66/66  token pairs, both themes
+npm run design:overlay    # 134/134 text runs over photography, gradients, glass
+npm run design:comfort    # 80/80  glare, crush, chroma, brightness shock
+npm run design:responsive # 80/80  8 widths, overflow and paint cost
+```
+
+The comfort bar is this project's own, not WCAG, and it exists because an
+interface can pass every contrast pair and still be unpleasant to sit in front
+of for a shift. It caps the share of a viewport that may be effectively pure
+white or pure black, the mean luminance of the reading plane, and the brightness
+step between adjacent surfaces.
+
+### 3A.8 Performance
+
+Measured budget, per viewport: blur area under 130% narrow / 260% wide, no
+nested `backdrop-filter`, no animated filter, blur radius clamped to G1 below
+768. Current worst case is 33%. If a change pushes blur area past the budget,
+the fix is fewer panes, not a smaller radius.
+
+---
+
+## 3B. WARNINGS FOR IMPLEMENTATION — read before writing CSS
+
+**Do not approximate the theme by sampling screenshot colours.** The screenshots
+in `output/design/` are evidence, not a palette. Every value they contain is
+composited — a pane over a field over the ground — and sampling one gives you a
+number that is correct in exactly one place. Use the semantic variables.
+
+**Do not replace Institutional Glass with generic backdrop-blur cards.** The
+ladder is four calibrated recipes with declared zones. `backdrop-filter: blur(12px)`
+on a white card at 0.6 alpha is the thing this system was built to stop being.
+
+**Do not apply glass globally.** The no-glass zones in 3A.5 are not a style
+preference; they are where an operator reads numbers that have consequences.
+
+**Do not use pure white or pure black for convenience.** `#FFF` and `#000` do
+not appear in the ladder on purpose. Both ends were measured as defects before
+this pass: 54% of a light viewport effectively white, 95% of a dark one
+effectively black.
+
+**Do not change Production behaviour to fit the redesign.** Production and the
+current source remain functional authority. If the design implies a different
+route vocabulary, status set, or permission model, the design is wrong.
+
+**Do not hand-edit the generated files.** `prototypes/shared/hau-theme.css` and
+`theme-canonical.css` both say so at the top. Editing them is how the code and
+the design file drift apart again, which is the defect this pass closed.
 
 ---
 
@@ -390,7 +557,8 @@ another.
 | ID | Item | Status |
 |---|---|---|
 | `FD-COLOUR` | 54 historically inferred colours on page 15 | **NONBLOCKING_HISTORICAL_EVIDENCE_GAP.** A 2026-08-19 contrast sweep that ignored gradient and image fills recoloured 294 nodes; 206 were restored by exact twin match, 23 by empirical role mapping, and 54 by inference. The node ids were never recorded, so the set cannot be identified even with perfect version history. A count is not a record. It does not affect any verified current-authority surface. Resolvable only with the Figma REST API and an owner-issued token, or a manual version diff |
-| `MK-01` | Figma Make is live at **Version 36**; the recorded evidence is Version 35 | **OPEN.** No signed-in Figma session was available in either browser surface this session, and the MCP bridge does not support Make files, so v36 could not be opened. Its history entry carries Make's automatic build label, so it is probably a rebuild of the same source — but probably is not verified. Re-open the file and re-hash `PublicFlows.tsx` against `prototypes/public-portals-r3/figma-make/src/app/PublicFlows.tsx` to restore the four `FM-*` gates |
+| `MK-01` | Figma Make live version vs recorded evidence | **CLOSED 2026-08-20.** Opened at Version 36 through a signed-in browser session. v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` is untouched by v36 and its lines 1-789 are byte-identical to the committed source: 50,587 chars, FNV-1a `d7cb6c66`. The live file adds one trailing comment line. `LendingHubRoute.tsx` still declares the consumable/reusable verb split and the six Lending Hub states including Permission limited. The four `FM-*` gates are restored |
+| `MK-02` | Figma Make still carries its own palette | **OPEN, actionable.** Make's `src/styles/theme.css` (265 lines, 180 declarations) is a third palette: `--gold-vivid` is `#E8B93C`, not the owner-locked `#D4AF37`; `--paper-warm` is the `#FFFDF8` pure-white plane this pass removed. The exact override is generated and ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css` — append it to Make's `theme.css` after the existing `:root` block. **Not applied here** for three reasons, all of which need an owner decision: writing to Make is an external provider mutation; the file currently holds an unsaved third-party edit to `RequestCenterRoute.tsx` (+28/-16) that saving would sweep into a new version; and the team's Make AI credits are exhausted until 2026-09-12 |
 | `FD-TOKENS-RESIDUAL` | About 18% of active solid paints unbound | **Accepted.** Deliberately stopped on the owner's direction that semantic correctness outranks binding percentage. The residual is one-off ink and hairline values, each needing a role decision rather than a mechanical bind. Do not force-bind a colour to move a number |
 | `SCREEN_READER_RUNTIME` | Not separately performed | **Accepted, and not claimed anywhere** |
 | `HALLMARK` | Bounded closure pass, 2026-08-20 | `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md` |

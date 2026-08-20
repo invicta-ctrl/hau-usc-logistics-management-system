@@ -344,3 +344,50 @@ lanes: **0**. Off-system typefaces in live lanes: **0**.
 The v0.8.3 product worktree was read for contract truth and **never written**. No
 Cloudflare, D1, R2, Google, provider, migration, deployment or release action
 occurred.
+
+---
+
+# Baseline DESIGN_BASELINE_2026-08-20-B — canonical theme, comfort and second-generation glass
+
+**Named:** 2026-08-20 (Asia/Manila). Supersedes 2026-08-20-A for everything
+colour, surface, background and glass. Nothing else in -A is displaced.
+
+## Content identity
+
+| Field | Value |
+|---|---|
+| Figma design file | `hXJElH4p72KfgAaoUyfNOC` |
+| Pages | 28 |
+| Variable collections | 8 |
+| Primitives | 17 — `paper/overlay` created, completing the five-step ladder in primitives rather than leaving one step as a literal on the semantic layer |
+| Semantic Color | 59 — `color/border/control`, `color/selected-line` and `color/focus/ring-contrast` created. These three carry WCAG 2.2 1.4.11 and previously existed only in code, so the one part of the palette with a hard legal floor was the part the design file could not see |
+| Glass Material | 26 — `material/saturate/g1..g4` created. Saturation was a CSS literal with no variable, so a pane could match Figma on fill and blur and still render differently |
+| Canonical gold | `#D4AF37`, **unchanged**. The sync report lists all five gold and all five oxblood steps under `unchangedVariables`, which is the evidence that this pass did not touch the owner-locked decision |
+| Blur ladder | 10 / 14 / 18 / 22, propagated from the variables into the four Material effect styles. D-02 stays closed |
+
+## Rendered evidence, measured on the same scale as the code
+
+| Frame | mean L\* | pure white | near black |
+|---|---|---|---|
+| Public Lending 1440 light (`581:15`) | 88.3 | 0.00% | 0.00% |
+| Public Lending 390 dark (`657:350`) | 16.3 | 0.00% | 0.00% |
+
+The Figma frames and the coded prototypes now measure inside the same comfort
+band. That is what "Figma and code agree" should mean — not that a screenshot
+looks similar.
+
+## Source of truth
+
+`scripts/design/theme-source.mjs`. The Figma collections and
+`prototypes/shared/hau-theme.css` are two renderings of it. Re-sync Figma with
+`node scripts/design/figma-theme-payload.mjs`; rebuild the CSS with
+`npm run design:theme`.
+
+## Known gaps at this baseline
+
+- **Figma Make is not on the canonical theme.** Its `src/styles/theme.css` is a
+  third palette whose gold is `#E8B93C`. The exact override is generated and
+  ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`.
+  Applying it is an external provider mutation and needs owner authorisation —
+  see `MK-02` in the tracker.
+- **`FD-COLOUR`** carries forward unchanged from 2026-08-19-A.

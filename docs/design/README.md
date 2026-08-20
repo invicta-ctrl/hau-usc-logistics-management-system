@@ -23,6 +23,9 @@ authority links to keep a directory tidy. Status is declared here instead.
 | Production contracts for all five request/lending surfaces, and every drift entry | [PRODUCTION_PORTAL_PARITY_AUDIT.md](PRODUCTION_PORTAL_PARITY_AUDIT.md) |
 | Figma file and Make file state, defects D-01…D-08, incident record | [FIGMA_DESIGN_MAKE_AUDIT.md](FIGMA_DESIGN_MAKE_AUDIT.md) |
 | Named Figma baselines and token register | [FIGMA_BASELINE_REGISTER.md](FIGMA_BASELINE_REGISTER.md) |
+| **Theme, surface ladders, background environment and Institutional Glass** | `../../DESIGN.md` **D41** — BINDING. Generated from `scripts/design/theme-source.mjs`; do not edit the emitted CSS |
+| Visual comfort, and text over imagery | `npm run design:comfort` and `npm run design:overlay`. Comfort is this project's own bar, not WCAG, and it exists because an interface can pass every contrast pair and still be unpleasant to sit in front of |
+| Responsive matrix and paint cost | `npm run design:responsive` — 8 widths, overflow, glass clipping and blur budget in one pass |
 | **WCAG 2.2 AA acceptance for the public portals** | [ACCESSIBILITY_ACCEPTANCE.md](ACCESSIBILITY_ACCEPTANCE.md) — contrast is measured by `scripts/design/contrast-audit.mjs`, not asserted |
 | Hallmark and Impeccable closure passes | [HALLMARK_IMPECCABLE_CLOSURE.md](HALLMARK_IMPECCABLE_CLOSURE.md) |
 | Production front-end parity baseline | [PRODUCTION_FRONTEND_PARITY_BASELINE.md](PRODUCTION_FRONTEND_PARITY_BASELINE.md) |
