@@ -386,8 +386,23 @@ looks similar.
 ## Known gaps at this baseline
 
 - **Figma Make is not on the canonical theme.** Its `src/styles/theme.css` is a
-  third palette whose gold is `#E8B93C`. The exact override is generated and
-  ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`.
-  Applying it is an external provider mutation and needs owner authorisation —
-  see `MK-02` in the tracker.
+  third palette whose gold is `#E8B93C`. The override is generated, complete and
+  cascade-verified at
+  `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`.
+  Applying it is an external provider mutation, and it is additionally held by an
+  ownership boundary: Make saves the whole pending set, and the file holds an
+  unsaved third-party edit. See `MK-02`, `MK-03` and
+  `docs/design/FIGMA_MAKE_ADOPTION_PACKET.md`.
+
+  Make identity captured 2026-08-20 at **Version 36**:
+
+  ```text
+  theme.css             9,419 bytes   sha256 50cb55de9d8e20ad0661cb187b295ea86621aaf2e29c7d8584dd7e159d833082
+  PublicFlows.tsx      50,694 bytes   sha256 50c623013e35f64c93bf63415ed7e8d78b82089d9a106f513fcebac5e272191c
+  LendingHubRoute.tsx  22,816 bytes   sha256 2132c68c06915a7acea4a43d7ae31c079a7b5c5ec039cc3c0529d6c738efa967
+  ReleaseDeskRoute.tsx 21,957 bytes   sha256 7c92b4835aa95386d6ea2611caf9b5379e74b8b74e934d201c8624ac4a2c898e
+  ```
+
+  `PublicFlows.tsx` at v36 differs from the committed design-branch copy by one
+  trailing comment line and nothing else, which is what closes `MK-01`.
 - **`FD-COLOUR`** carries forward unchanged from 2026-08-19-A.

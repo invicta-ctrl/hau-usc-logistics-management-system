@@ -377,3 +377,74 @@ Not completed in this pass; ordered by value.
    Inventory → Request → Lending → Release.
 7. Refresh `route-map.js` in the prototype; move it to bundled fonts.
 8. Responsive and motion verification at the eight declared widths.
+
+---
+
+## 9. Figma Make at Version 36 — direct read, 2026-08-20
+
+Section 4 recorded Make as NOT APPLICABLE because the MCP bridge does not serve
+Make files. That limitation is real and unchanged, but it is not the same as the
+file being unreadable: the file was opened in a signed-in browser session and
+every relevant source was read from the editor and hashed. Section 4 stands as a
+record of the bridge's limits; this section is the evidence.
+
+### 9.1 What was captured
+
+| File | Bytes | sha256 |
+| --- | ---: | --- |
+| `src/styles/theme.css` | 9,419 | `50cb55de9d8e20ad0661cb187b295ea86621aaf2e29c7d8584dd7e159d833082` |
+| `src/app/PublicFlows.tsx` | 50,694 | `50c623013e35f64c93bf63415ed7e8d78b82089d9a106f513fcebac5e272191c` |
+| `src/app/LendingHubRoute.tsx` | 22,816 | `2132c68c06915a7acea4a43d7ae31c079a7b5c5ec039cc3c0529d6c738efa967` |
+| `src/app/ReleaseDeskRoute.tsx` | 21,957 | `7c92b4835aa95386d6ea2611caf9b5379e74b8b74e934d201c8624ac4a2c898e` |
+| `src/app/appRoutes.ts` | 1,047 | captured |
+| `src/app/RequestCenterRoute.tsx` | 45,354 | `4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159` — **unsaved buffer, not v36** |
+
+Copies are in `output/design/make-preservation/`. They are evidence, not
+authority.
+
+### 9.2 Findings
+
+**MK-01 closed.** `PublicFlows.tsx` at v36 differs from the committed
+design-branch copy by exactly one addition — a blank line and the comment
+`// end of PublicFlows.tsx`. Lines 1–788 are byte-identical. The v36 rebuild
+changed nothing functional.
+
+**FM-STATES closed.** `LendingHubRoute.tsx` declares six preview states
+including `Permission limited`. `ReleaseDeskRoute.tsx` declares **eleven** — the
+previously recorded "nine" was a floor taken from partial v35 evidence, and the
+superset is now counted rather than assumed.
+
+**FM-INTERNAL-ROUTES closed.** `appRoutes.ts` declares ten internal routes with
+`AUTH_ROUTE_INTENT_LABELS` naming request-center "Staff Request Center".
+
+**MK-02 scope corrected.** The palette drift is wider than `--gold-vivid`. In
+`.dark`, the glass ladder is hardcoded (`--g0-ground: #1c1917` … `--g4-focus:
+#3d3530`), the surfaces are built from oxblood rather than a neutral ladder
+(`--background: var(--oxblood-deep)`, `--card`/`--popover`/`--sidebar`:
+`#2a0508`), and both blocks bake the superseded golds into `rgba()` literals —
+`rgba(232,185,60,…)` is `#E8B93C`, `rgba(242,209,92,…)` is `#F2D15C`. A rename of
+`--gold-vivid` would have left all of it. The regenerated override covers every
+case and `scripts/design/verify-make-theme.mjs` replays the cascade to prove it.
+
+**MK-03 raised.** The theme patch corrects the token layer only. Four route files
+paint with literal hexes: `PublicFlows.tsx` 6 superseded of 44, `LendingHubRoute.tsx`
+3 of 18, `ReleaseDeskRoute.tsx` 3 of 17, and `RequestCenterRoute.tsx` **21 of 72
+while reading no CSS variables at all** — it colours itself from a local
+`ap(dark)` helper.
+
+### 9.3 The unsaved third-party edit, and one incident
+
+Make had one pending edited file on open — `RequestCenterRoute.tsx`, +28/−16, not
+ours. It was preserved byte-exact before anything else happened, and it was
+neither saved nor discarded. Save granularity was then checked rather than
+assumed: the live DOM has exactly one `Save` and one `Discard` in the whole
+document, attached to a panel headed by a *file count*, with the file list as a
+sibling. There is a per-file revert and no per-file save. Adoption was therefore
+withheld — see `docs/design/FIGMA_MAKE_ADOPTION_PACKET.md` §2.
+
+While looking for a diff view, the editor's `Format code` toolbar button was
+clicked by mistake and reformatted that buffer from 44,114 to 60,701 characters.
+A single undo restored it, and the buffer was re-hashed and confirmed identical
+to the preserved capture. Nothing was saved. This is recorded because the value
+of preserving first is precisely that an accident against someone else's work is
+recoverable and visible rather than silent.

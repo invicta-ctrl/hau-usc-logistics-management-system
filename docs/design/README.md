@@ -22,6 +22,7 @@ authority links to keep a directory tidy. Status is declared here instead.
 | **Progress and completion** | [DESIGN_EXECUTION_TRACKER.md](DESIGN_EXECUTION_TRACKER.md) — the only file permitted to state a percentage, and it is derived, never typed |
 | Production contracts for all five request/lending surfaces, and every drift entry | [PRODUCTION_PORTAL_PARITY_AUDIT.md](PRODUCTION_PORTAL_PARITY_AUDIT.md) |
 | Figma file and Make file state, defects D-01…D-08, incident record | [FIGMA_DESIGN_MAKE_AUDIT.md](FIGMA_DESIGN_MAKE_AUDIT.md) |
+| **Figma Make theme adoption — the patch, the v36 hashes, why it is not applied** | [FIGMA_MAKE_ADOPTION_PACKET.md](FIGMA_MAKE_ADOPTION_PACKET.md) — deterministic. Read it before touching the Make file, because it also records an unsaved third-party edit that a whole-project save would sweep in |
 | Named Figma baselines and token register | [FIGMA_BASELINE_REGISTER.md](FIGMA_BASELINE_REGISTER.md) |
 | **Theme, surface ladders, background environment and Institutional Glass** | `../../DESIGN.md` **D41** — BINDING. Generated from `scripts/design/theme-source.mjs`; do not edit the emitted CSS |
 | Visual comfort, and text over imagery | `npm run design:comfort` and `npm run design:overlay`. Comfort is this project's own bar, not WCAG, and it exists because an interface can pass every contrast pair and still be unpleasant to sit in front of |

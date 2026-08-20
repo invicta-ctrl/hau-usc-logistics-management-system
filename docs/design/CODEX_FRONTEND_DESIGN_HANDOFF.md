@@ -17,9 +17,12 @@ WORKTREE_STATE:             clean except .impeccable/hook.cache.json, an untrack
 FIGMA_DESIGN_FILE:          hXJElH4p72KfgAaoUyfNOC
 FIGMA_DESIGN_BASELINE:      DESIGN_BASELINE_2026-08-20-C (content identity; the bridge cannot name a native version)
 FIGMA_MAKE_FILE:            rP9W9MQlZkyQrUx38TVsFS
-FIGMA_MAKE_VERSION:         Version 36 live · last verified content is Version 35 · see residual MK-01
+FIGMA_MAKE_VERSION:         Version 36 live · CONTENT VERIFIED at v36 (MK-01 closed)
+FIGMA_MAKE_THEME:           READY_TO_APPLY — patch generated and cascade-verified;
+                            provider write withheld behind an unowned unsaved edit.
+                            See docs/design/FIGMA_MAKE_ADOPTION_PACKET.md
 
-TRACKER_COMPLETION:         87% (derived — docs/design/DESIGN_EXECUTION_TRACKER.md)
+TRACKER_COMPLETION:         97% (derived — docs/design/DESIGN_EXECUTION_TRACKER.md)
 CODEX_HANDOFF_READINESS:    READY
 
 PRODUCT WORKTREE MODIFIED:  NO
@@ -29,9 +32,16 @@ EXTERNAL PRODUCT/PROVIDER MUTATIONS: NONE
 Tracker completion and handoff readiness measure different things. The tracker
 counts design gates whose evidence still stands today. Handoff readiness asks
 whether you have enough authoritative information to begin the next accepted
-phase. The 13% that is not VERIFIED is one unidentifiable historical colour set
-and four Figma Make gates whose evidence cannot be re-confirmed without a
-signed-in Figma session. Neither can change a single contract below.
+phase. The 3% that is not VERIFIED is one unidentifiable historical colour set
+and one deliberately-stopped token-binding sweep. Neither can change a single
+contract below.
+
+The four Figma Make gates that previously could not be re-confirmed have been
+closed: the file was opened at Version 36 in a signed-in session and every route
+file was read and hashed. What remains open in Make is the theme adoption, and
+that is blocked by an ownership boundary rather than by missing information —
+the exact patch, the baseline hashes and the verification steps are all in
+`docs/design/FIGMA_MAKE_ADOPTION_PACKET.md`.
 
 ---
 
@@ -564,7 +574,8 @@ another.
 |---|---|---|
 | `FD-COLOUR` | 54 historically inferred colours on page 15 | **NONBLOCKING_HISTORICAL_EVIDENCE_GAP.** A 2026-08-19 contrast sweep that ignored gradient and image fills recoloured 294 nodes; 206 were restored by exact twin match, 23 by empirical role mapping, and 54 by inference. The node ids were never recorded, so the set cannot be identified even with perfect version history. A count is not a record. It does not affect any verified current-authority surface. Resolvable only with the Figma REST API and an owner-issued token, or a manual version diff |
 | `MK-01` | Figma Make live version vs recorded evidence | **CLOSED 2026-08-20.** Opened at Version 36 through a signed-in browser session. v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` is untouched by v36 and its lines 1-789 are byte-identical to the committed source: 50,587 chars, FNV-1a `d7cb6c66`. The live file adds one trailing comment line. `LendingHubRoute.tsx` still declares the consumable/reusable verb split and the six Lending Hub states including Permission limited. The four `FM-*` gates are restored |
-| `MK-02` | Figma Make still carries its own palette | **OPEN, actionable.** Make's `src/styles/theme.css` (265 lines, 180 declarations) is a third palette: `--gold-vivid` is `#E8B93C`, not the owner-locked `#D4AF37`; `--paper-warm` is the `#FFFDF8` pure-white plane this pass removed. The exact override is generated and ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css` — append it to Make's `theme.css` after the existing `:root` block. **Not applied here** for three reasons, all of which need an owner decision: writing to Make is an external provider mutation; the file currently holds an unsaved third-party edit to `RequestCenterRoute.tsx` (+28/-16) that saving would sweep into a new version; and the team's Make AI credits are exhausted until 2026-09-12 |
+| `MK-02` | Figma Make still carries its own palette | **OPEN, actionable, and larger than it looked.** The token-layer patch is generated, complete and cascade-verified: `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`, built by `scripts/design/build-make-theme.mjs`, checked by `scripts/design/verify-make-theme.mjs`. Reading the live v36 file showed a palette-only override would NOT have worked: `.dark` hardcodes the whole glass ladder (`#1c1917`…`#3d3530`), builds surfaces from oxblood (`--background: var(--oxblood-deep)`, `--card`/`--popover`/`--sidebar`: `#2a0508`), and both blocks bake the old golds into `rgba(232,185,60,…)` and `rgba(242,209,92,…)` literals a `--gold-vivid` rename would have missed. All covered now. **Not applied:** Make saves the whole pending set — one `Save` button over a file-count panel, no per-file save — and the file holds an unsaved third-party edit to `RequestCenterRoute.tsx` (+28/-16) that saving would sweep into a new version. Preserved byte-exact at `output/design/make-preservation/RequestCenterRoute.unsaved.tsx`, sha256 `4087473c…`. See `docs/design/FIGMA_MAKE_ADOPTION_PACKET.md` |
+| `MK-03` | Make route files paint with literal hexes, not tokens | **OPEN.** Applying the theme patch fixes the token layer but cannot retheme four route files that hardcode colour. Measured at v36: `PublicFlows.tsx` 6 superseded literals of 44, `LendingHubRoute.tsx` 3 of 18, `ReleaseDeskRoute.tsx` 3 of 17, and `RequestCenterRoute.tsx` **21 of 72 while reading zero CSS variables** — it colours itself from a local `ap(dark)` helper and carries 13 occurrences of `#E8B93C`. Say "token layer adopted", not "Make themed", until this is done |
 | `FD-TOKENS-RESIDUAL` | About 18% of active solid paints unbound | **Accepted.** Deliberately stopped on the owner's direction that semantic correctness outranks binding percentage. The residual is one-off ink and hairline values, each needing a role decision rather than a mechanical bind. Do not force-bind a colour to move a number |
 | `SCREEN_READER_RUNTIME` | Not separately performed | **Accepted, and not claimed anywhere** |
 | `HALLMARK` | Bounded closure pass, 2026-08-20 | `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md` |

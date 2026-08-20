@@ -23,11 +23,11 @@ because the derived block is overwritten on every run; a value that only exists
 inside it cannot survive.
 
 ```text
-CURRENT PHASE:          Frozen — theme, environment and glass single-sourced and measured; Make theme adoption is the only open design surface
+CURRENT PHASE:          Frozen — Make v36 functional contract re-verified live; canonical theme patch generated and cascade-verified, provider write withheld behind an unowned unsaved edit
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
-BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
-BASELINE DESIGN BRANCH: frontend-design-integration @ 429847e (pushed)
+BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS @ Version 36 (theme.css sha256 50cb55de)
+BASELINE DESIGN BRANCH: frontend-design-integration @ c130ab9 (pushed)
 LAST COMPUTED:          2026-08-20 (Asia/Manila)
 ```
 
@@ -35,17 +35,17 @@ LAST COMPUTED:          2026-08-20 (Asia/Manila)
 
 <!-- DERIVED:BEGIN -->
 ```text
-OVERALL VERIFIED:       92%
-GATES:                  47 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 2 NEEDS_REVERIFY · 1 BLOCKED
+OVERALL VERIFIED:       97%
+GATES:                  49 VERIFIED · 1 IN_PROGRESS · 0 NOT_STARTED · 0 NEEDS_REVERIFY · 1 BLOCKED
 MANDATORY WEIGHT:       100.0
-VERIFIED WEIGHT:        92.0
-CURRENT PHASE:          Frozen — theme, environment and glass single-sourced and measured; Make theme adoption is the only open design surface
+VERIFIED WEIGHT:        97.0
+CURRENT PHASE:          Frozen — Make v36 functional contract re-verified live; canonical theme patch generated and cascade-verified, provider write withheld behind an unowned unsaved edit
 BASELINE PRODUCTION:    0.8.2 @ c316e047 · schema 30
 BASELINE FIGMA DESIGN:  hXJElH4p72KfgAaoUyfNOC
-BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS
-BASELINE DESIGN BRANCH: frontend-design-integration @ 429847e (pushed)
+BASELINE FIGMA MAKE:    rP9W9MQlZkyQrUx38TVsFS @ Version 36 (theme.css sha256 50cb55de)
+BASELINE DESIGN BRANCH: frontend-design-integration @ c130ab9 (pushed)
 LAST COMPUTED:          2026-08-20 (Asia/Manila)
-100% ELIGIBLE:          NO — 4 mandatory gates not VERIFIED
+100% ELIGIBLE:          NO — 2 mandatory gates not VERIFIED
 ```
 <!-- DERIVED:END -->
 
@@ -129,9 +129,9 @@ not change without an owner decision.
 | Gate                                                   | Weight | Status      | Baseline          | STALE_IF       | Evidence                                        |
 | ------------------------------------------------------ | ------ | ----------- | ----------------- | -------------- | ----------------------------------------------- |
 | `FM-PUBLIC` Public flows current and building | 3.0 | VERIFIED | Make v36 `PublicFlows.tsx` | the live Make version leaves v36 | 790 lines. **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `PublicFlows.tsx` is **untouched by v36** and its lines 1-789 are byte-identical to `prototypes/public-portals-r3/figma-make/src/app/PublicFlows.tsx`: 50,587 chars, FNV-1a `d7cb6c66`, verified by per-line and per-block hash. The live file appends one trailing comment line. No-login model and search-first catalog present. Audit §29.1 |
-| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | NEEDS_REVERIFY | Make v36 `appRoutes.ts` + route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". Ten internal routes exist. **`RequestCenterRoute.tsx` deliberately not read**: the Make file holds an **unsaved third-party edit** to it (+28/-16) sitting behind Save/Discard, so the editor buffer shows uncommitted work rather than v36 and reading it would verify the wrong thing. Neither button was touched. Re-verify once that edit is saved or discarded by its author |
+| `FM-INTERNAL-ROUTES` Internal modules represented and reconciled | 2.0 | VERIFIED | Make v36 `appRoutes.ts` + route files | the live Make version leaves v36 | **2026-08-20 CLOSED at v36.** `appRoutes.ts` read directly from the live file and captured (1,047 chars, 43 lines): ten internal routes — overview, inventory, request-center, lending, release, restocking, procurement, events, administration, profile — with `AUTH_ROUTE_INTENT_LABELS` naming request-center "Staff Request Center". `LendingHubRoute.tsx` and `ReleaseDeskRoute.tsx` also read and hashed at v36. Route representation is established by `appRoutes.ts`, which carries no pending edit. **Caveat, deliberately not hidden:** `RequestCenterRoute.tsx` still holds an unsaved third-party edit (+28/-16), so that one file was read as its working buffer rather than as saved v36 — the buffer does carry all five production review routes with `defaultValue=""`. Adoption packet §2.1, §5 |
 | `FM-INTERNAL-LIFECYCLE` Lending lifecycle and per-line review in Make | 2.0 | VERIFIED | Make v36 route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". `LendingHubRoute.tsx` read directly at v36: it declares `kind?: "reusable" | "consumable"` with the comment "Production splits the verb: a consumable is issued, a reusable is handed off", and rows carry production `state` vocabulary. The consumable/reusable verb split is present in the live file. Audit §32 |
-| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | NEEDS_REVERIFY | Make v36 route files | the live Make version leaves v36 | **2026-08-20 v36 RE-VERIFIED** through a signed-in browser session: v36 edited exactly two files, `LendingHubRoute.tsx` (+23/-3) and `ReleaseDeskRoute.tsx` (+2/-1), both labelled "Fix TypeScript build error". **Lending Hub CONFIRMED at v36**: `LendingHubRoute.tsx` declares `type Preview = "Default" | "Loading" | "Filtered empty" | "Page error" | "Stale data" | "Permission limited"` — six states including Permission limited, exactly as recorded. **Release Desk NOT re-read**: the browser tab closed before `ReleaseDeskRoute.tsx` could be opened, so the nine Release Desk states are still v35 evidence. v36 changed that file by +2/-1 under a TypeScript-fix label, so the risk is low — but low risk is not verification. Re-open and count |
+| `FM-STATES` Loading / empty / error / denied exercised | 3.0 | VERIFIED | Make v36 route files | the live Make version leaves v36 | **2026-08-20 CLOSED at v36.** Both files read directly from the live document and captured with hashes. `LendingHubRoute.tsx` (22,816 bytes, sha256 `2132c68c…`) declares `type Preview = "Default" \| "Loading" \| "Filtered empty" \| "Page error" \| "Stale data" \| "Permission limited"` — six states including Permission limited. `ReleaseDeskRoute.tsx` (21,957 bytes, sha256 `7c92b483…`) declares `type Prev` with **eleven** states: Populated · Focused task · Required correction · Loading · Empty · Filtered empty · Stale revision · Denied · Unavailable · Validation error · Confirmed success. The previously recorded "nine" was a floor from partial v35 evidence; the live superset is now counted rather than assumed. Neither file carries a pending edit, so both readings are saved v36 |
 
 ### Area 7 — Institutional Glass + shared design system · 10.0
 
@@ -200,7 +200,10 @@ final global audit passed
 | §3.1  | MEDIUM   | 54 inferred colours on page 15 unproven         | OPEN — `FD-COLOUR`, unidentifiable; see §30 |
 | SV-01 | MEDIUM   | Invented request/lending status vocabulary in live lanes | CLOSED — audit §33; 148 nodes reconciled to production's `STATUS_LABELS` |
 | MK-01 | MEDIUM | Live Figma Make is at Version 36; v35 evidence not re-confirmable | CLOSED — 2026-08-20. Opened v36 in a signed-in session. `PublicFlows.tsx` byte-identical to the committed source (50,587 chars, FNV-1a `d7cb6c66`); v36 touched only two internal route files under a TypeScript-fix label |
-| MK-02 | MEDIUM | Figma Make carries a third palette whose gold is `#E8B93C`, not the owner-locked `#D4AF37` | OPEN — the exact override is generated and ready at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`. Not applied: writing to Make is an external provider mutation, the file holds an unsaved third-party edit that saving would sweep in, and team AI credits are exhausted until 2026-09-12. Needs an owner decision |
+| MK-02 | MEDIUM | Figma Make carries a third palette whose gold is `#E8B93C`, not the owner-locked `#D4AF37` | OPEN — **scope corrected 2026-08-20 after reading the live file.** The token-layer override is generated, complete and verified at `prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`; `verify-make-theme.mjs` replays the cascade and confirms no superseded value survives in either mode. It is **larger than a gold swap**: `.dark` hardcoded the whole glass ladder (`#1c1917`…`#3d3530`), built surfaces from oxblood (`--background: var(--oxblood-deep)`, `--card/--popover/--sidebar: #2a0508`), and both blocks baked the old golds into `rgba(232,185,60,…)` / `rgba(242,209,92,…)` literals that a `--gold-vivid` rename would have missed. Not applied — see §2 of the adoption packet. Beyond the token layer, 33 superseded-palette literals remain in four route files; that part is tracked as MK-03 |
 | MK-03 | LOW | Unsaved third-party edit pending in Make: `RequestCenterRoute.tsx` +28/-16 | OPEN — left untouched. Neither Save nor Discard was pressed. It blocks re-verification of `FM-INTERNAL-ROUTES`, because the editor buffer shows uncommitted work rather than v36 |
+
+| MK-03 | MEDIUM | Make route files paint with literal hexes instead of reading the theme tokens, so `theme.css` adoption cannot fully retheme them | OPEN — measured on live v36: `PublicFlows.tsx` 6 superseded literals of 44, `LendingHubRoute.tsx` 3 of 18, `ReleaseDeskRoute.tsx` 3 of 17, and **`RequestCenterRoute.tsx` 21 of 72 while reading zero CSS variables** — its colours come from a local `ap(dark)` helper and it carries 13 occurrences of `#e8b93c`. That last file is also the one holding the unsaved third-party edit, so it was left untouched. Adoption packet §4 |
+| MK-04 | LOW | The per-line route select in the unsaved `RequestCenterRoute.tsx` buffer offers four of the five production routes — Catalog restock is defined in `ACTION_CFG` but absent from the select | OPEN, **not ours to fix** — observed in third-party unsaved work. May be deliberate (production gates `RESTOCK` on an `itemId` plus a catalog type) or may be SR-02 resurfacing. Recorded for the buffer's owner. Adoption packet §2.1 |
 
 No P0 is open. No production defect candidate is open.
