@@ -503,7 +503,7 @@ ADOPTED EDIT         RequestCenterRoute.tsx, previously unsaved and unowned
                      4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
                      preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
 DESIGN BRANCH        frontend-design-integration
-DESIGN SHA           1f3d75c
+DESIGN SHA           2cc378b27c08b70059b39e3c62ef6d9c736b0836
 TRACKER COMPLETION   97% (derived — unchanged; the Make work closed register
                      residuals, not weighted gates, and was not allowed to move the number)
 GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED
