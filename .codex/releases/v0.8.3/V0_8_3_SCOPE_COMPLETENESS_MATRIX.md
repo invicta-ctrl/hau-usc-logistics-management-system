@@ -51,8 +51,8 @@ Candidate freeze remains **NOT AUTHORIZED**. The required all-PASS/all-VERIFIED_
 
 ## Next bounded slice
 
-`V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SIXTH_LUNA_PLAN_AUDIT` is the
-smallest next provider-free V83 slice. It is limited to a sixth independent,
+`V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SEVENTH_LUNA_PLAN_AUDIT` is the
+smallest next provider-free V83 slice. It is limited to a seventh independent,
 read-only P0-P3 and completeness audit of
 `V0_8_3_STAFF_ACCOUNT_ACTIVITY_HISTORY_PLAN.md` against the accepted history
 scope and recorded gap. It must stop before source or test modification,

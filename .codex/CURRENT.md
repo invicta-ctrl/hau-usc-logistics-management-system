@@ -701,5 +701,5 @@ V83_S04_VERIFIED_NO_OP: PASS;AUTH_SESSION_ACCOUNT_COMMITTEE_POLICY_APPLICATION_R
 V83_S05_ID_B_GATE: RESOLVED_BY_V1R7_A6;DIRECT_SCOPE_MAP_ACTIVE
 V83_S05_PASSWORD_VISIBILITY_SLICE: PASS;LEGACY_AND_V5_CURRENT_CREDENTIAL_FIELDS=RESTORED;DEFAULT=HIDDEN;VALUE_SELECTION_AUTOCOMPLETE_NAME_PRESERVED;TYPE_BUTTON;ARIA_PRESSED_ACCESSIBLE_LABELS;NO_SUBMIT
 V83_S05_BROWSER_EVIDENCE: PASS;PLAYWRIGHT_CHROMIUM_390=2/2;FOCUSED_ESLINT=PASS;BUILD=PASS;VERIFY_DIST=PASS;DIST_SHA256=59ddeb064316a12be8e8d8179177a3f9d627f91ea1fad71c1293f99810930211;SOURCE_SCHEMA_PROVIDER_ACTIONS=0
-NEXT_ACTION_SCOPE: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SIXTH_LUNA_PLAN_AUDIT
-NEXT_EXACT_ACTION: Perform only a sixth independent read-only P0-P3 and completeness audit of `.codex/releases/v0.8.3/V0_8_3_STAFF_ACCOUNT_ACTIVITY_HISTORY_PLAN.md`, including FK ordering, typed retention, asserted transition conflict semantics, exact timestamp checks, recovery boundaries, and browser/Miniflare evidence; do not implement, modify source/test/config/schema, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, or deployment.
+NEXT_ACTION_SCOPE: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SEVENTH_LUNA_PLAN_AUDIT
+NEXT_EXACT_ACTION: Perform only a seventh independent read-only P0-P3 audit of the consolidated authoritative activity-history plan; do not implement, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, or deployment.

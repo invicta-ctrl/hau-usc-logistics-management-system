@@ -699,8 +699,8 @@ V83_A6_OWNER_DECISION_TABLE: ACCEPTED;PERSON_ID=IMMUTABLE_OPAQUE;EMAIL=0_TO_N_SI
 V83_A6_NO_FABRICATION: ACTIVE;UNPROVEN_EXTERNAL_TRUTH=NULL_UNKNOWN_UNRESOLVED_OR_QUARANTINED
 V83_PASSWORD_VISIBILITY: DIRECT_OWNER_REQUIREMENT;ALL_APPLICABLE_CURRENT_PASSWORD_SURFACES;BROWSER_EVIDENCE_BEFORE_FIGMA
 V83_FRONTEND_ADOPTION: PASSWORD_COMPONENT_SCOPE_ACTIVE;FIGMA_MAKE_AND_ROUTE_DESIGN_DEFERRED_UNTIL_PASSWORD_BROWSER_EVIDENCE
-NEXT_ACTION_SCOPE: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SIXTH_LUNA_PLAN_AUDIT
-NEXT_EXACT_ACTION: Perform only a sixth independent read-only P0-P3 and completeness audit of `.codex/releases/v0.8.3/V0_8_3_STAFF_ACCOUNT_ACTIVITY_HISTORY_PLAN.md`, including FK ordering, typed retention, asserted transition conflict semantics, exact timestamp checks, recovery boundaries, and browser/Miniflare evidence; do not implement, modify source/test/config/schema, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, or deployment.
+NEXT_ACTION_SCOPE: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SEVENTH_LUNA_PLAN_AUDIT
+NEXT_EXACT_ACTION: Perform only a seventh independent read-only P0-P3 audit of the consolidated authoritative activity-history plan; do not implement, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, or deployment.
 V83_S03_ID_A_AUTH_SESSION_PRESERVATION: PASS;NODE=22.23.2;TEST_FILES=7/7;TESTS=42/42;SOURCE_SCHEMA_PROVIDER_ACTIONS=0
 V83_S04_VERIFIED_NO_OP: PASS;AUTH_SESSION_ACCOUNT_COMMITTEE_POLICY_APPLICATION_ROSTER_CONTRACTS=PRESERVED;MIGRATION=0;PRIVATE_DATA_IN_GIT=0
 V83_S05_ID_B_GATE: RESOLVED_BY_V1R7_A6;DIRECT_SCOPE_MAP_ACTIVE
