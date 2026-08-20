@@ -2,33 +2,34 @@
 
 INTENT: architecture / feature plan
 
-OBJECTIVE: Specify one provider-free, additive canonical staff/account activity
-history slice. Every canonical event is attributable solely from immutable
-event-time truth. It never joins a delayed audit to the current person, link,
-name, email, or capability.
+OBJECTIVE: Define the later provider-free, additive canonical staff/account
+activity-history slice. Canonical events use only immutable event-time truth;
+they never join a delayed audit or source row to the current person, link, name,
+email, or effective capability.
 
 TARGET: release/v0.8.3-identity-foundation at the documentation commit produced
-from e0f302c86db42f446f06fc5f60d9a86ba1ce647e. Implementation starts only in
-an isolated worktree after a fourth independent plan audit accepts this packet.
+from 39ffe79babf92026fbb34b5f2c28c2e4bcd60472. Implementation starts only in an
+isolated worktree after a fifth independent plan audit accepts this packet.
 
 AUTHORITATIVE SOURCES: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
 sections 1-6; .codex/specs/v0.7.2-production-access-operations.md sections 4,
 7, and 13; .codex/releases/v0.8.3/V0_8_3_SCOPE_COMPLETENESS_MATRIX.md; the
 provider-free gap review at 77232d4ad2cb1a79469d61b5fdb1772dcb81d0af; and the
-three Luna rejections repaired by this single authoritative revision.
+four Luna rejections repaired by this one authoritative revision.
 
-IN SCOPE: a later additive D1 migration 0032; immutable activity/context tables;
-trigger-enforced append semantics; an effective-ACCESS_ADMIN read-only route;
-bounded V5 rendering; regression-first tests; and durable evidence. The route
-is POST /api/admin/staff-activity-history with mutation: false.
+IN SCOPE: a later additive D1 migration 0032; strict immutable activity and
+operation-context tables; trigger-enforced append semantics; an effective
+ACCESS_ADMIN read-only route; bounded V5 rendering; regression-first tests; and
+durable evidence. The route is POST /api/admin/staff-activity-history with
+mutation: false.
 
 OUT OF SCOPE: provider/private-source access; roster or crypto access; protected
 envelope, fingerprint, provenance, email, profile, credential, or capability
-selection/decryption; fabricated/historical backfill; destructive rewrite;
+selection/decryption; fabricated/history backfill; destructive rewrite;
 migration execution; candidate freeze; Playground; Production; deployment;
 recovery rotation; and v0.8.4 work.
 
-DELIVERABLES: migration 0032, bounded DTO/read route/V5 view, focused tests, and
+DELIVERABLES: migration 0032, safe read DTO/route/V5 view, focused tests, and
 evidence. This plan authorizes none of those product changes yet.
 
 VERIFICATION: regression-first migration/repository/service/Worker/V5 tests on
@@ -37,294 +38,432 @@ scoped ESLint/Prettier; privacy scans; fresh-migration constraint proof; complet
 diff review; normal commit/push; and local/upstream/live parity.
 
 STOP CONDITIONS: inferred attribution; protected-data exposure; audience
-broadening; producer unable to atomically carry event context; D1 incompatibility;
-provider/private-source need; schema beyond this plan; failing authorization,
-privacy, migration, or recovery checks; or an external action.
+broadening; any producer unable to atomically carry required context; D1
+incompatibility; provider/private-source need; schema beyond this plan; failing
+authorization/privacy/migration/recovery checks; or any external action.
 
-## 1. Canonical source taxonomy and ownership
+## 1. Exact preserved account taxonomy
 
-The following table is the entire account-audit taxonomy for 0032. Existing
-legacy audit actions are preserved; an omitted action is not renamed, retyped,
-or projected.
+This is the whole 0032 account-audit taxonomy. Omitted legacy actions stay
+unchanged and are not projected.
 
-| Source action/entity                                                 | Current producer and later owned paths                                                                | Canonical action and eligibility                                                                                              |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| ACCESS_ID_CHANGED / ACCOUNT                                          | src/server/access/service.js and src/server/d1/access-management-repository.js                        | ACCESS_ID_CHANGED. Same command creates a guarded account-audit context before its existing ACCOUNT audit.                    |
-| STARTER_ACCOUNT_CREATED / ACCOUNT, access-management flow            | src/server/d1/access-management-repository.js, with request context from src/server/access/service.js | STARTER_ACCOUNT_CREATED. This is a distinct account-creation command/audit source.                                            |
-| STARTER_ACCOUNT_CREATED / ACCOUNT, account-application approval flow | src/server/account-application/service.js and src/server/d1/account-application-repository.js         | STARTER_ACCOUNT_CREATED. This is a distinct approval-created account command/audit source.                                    |
-| ACCOUNT_STATUS_CHANGED / ACCOUNT                                     | src/server/access/service.js and src/server/d1/access-management-repository.js                        | ACCOUNT_STATUS_CHANGED. Its existing producer retains its legacy semantics and receives guarded event-time context.           |
-| ACCOUNT_APPLICATION_ACTIVATED / ACCOUNT_APPLICATION                  | src/server/account-application/service.js and src/server/d1/account-application-repository.js         | Preserved application history only; never implicitly projected or retyped as account history.                                 |
-| ACCOUNT_APPLICATION_ACTIVATED / new conditional ACCOUNT audit        | same account-application service/repository transition batch                                          | ACCOUNT_APPLICATION_ACTIVATED only when that activation proves exactly one explicit ACTIVE account/person link at event time. |
+| Existing action/entity                                               | Current producer and later owned paths                                                     | Canonical treatment                                                                 |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| ACCESS_ID_CHANGED / ACCOUNT                                          | src/server/access/service.js; src/server/d1/access-management-repository.js                | Project only from guarded same-batch audit context plus the existing ACCOUNT audit. |
+| STARTER_ACCOUNT_CREATED / ACCOUNT, access-management flow            | src/server/access/service.js; src/server/d1/access-management-repository.js                | A distinct truthful source command/audit.                                           |
+| STARTER_ACCOUNT_CREATED / ACCOUNT, account-application approval flow | src/server/account-application/service.js; src/server/d1/account-application-repository.js | A distinct truthful source command/audit.                                           |
+| ACCOUNT_STATUS_CHANGED / ACCOUNT                                     | src/server/access/service.js; src/server/d1/access-management-repository.js                | Preserve semantics; project only from guarded same-batch context.                   |
+| ACCOUNT_APPLICATION_ACTIVATED / ACCOUNT_APPLICATION                  | src/server/account-application/service.js; src/server/d1/account-application-repository.js | Preserve application history; never retype it.                                      |
+| ACCOUNT_APPLICATION_ACTIVATED / conditional new ACCOUNT audit        | same account-application transition batch                                                  | Project only with exactly one explicit ACTIVE link at that event.                   |
 
-The two STARTER_ACCOUNT_CREATED rows are separate truthful events because they
-have different source commands and immutable ACCOUNT audit IDs. The history
-identity is the source audit ID, not account/action/timestamp, so it does not
-merge two independent commands. A command retry can create no second source
-audit only when its existing source-operation idempotency returns the original
-operation; otherwise a source conflict fails before a new canonical event is
-created. No timestamp or cross-producer deduplication is permitted.
+The two STARTER_ACCOUNT_CREATED events have distinct commands and immutable
+ACCOUNT audit IDs. They are not semantic duplicates and are never deduplicated
+by account, action, or timestamp. An existing source-command retry creates no
+second audit only when that source's idempotency returns its original operation;
+otherwise the source fails before a second canonical event. ACCOUNT_ARCHIVED,
+AUTHENTICATION, unknown/non-account audits, auth-service starter actions outside
+these two D1 account producers, and all other legacy actions are unprojected and
+continue their legacy logging without person inference.
 
-ACCOUNT_ARCHIVED, AUTHENTICATION, unknown/non-account audit entities, the
-auth-service starter actions outside these two D1 account producers, and every
-other legacy action remain preserved in their existing audit systems but are
-unprojected. They cannot infer a canonical person or fail existing audit logging.
+## 2. Authoritative literal migration contract
 
-## 2. Authoritative 0032 logical DDL contract
+Migration 0032 is additive. It enables foreign keys, creates all strict tables,
+indexes, and triggers, then changes app_metadata.operational_schema_version from
+31 to 32 in the same successful migration. It never backfills. The following
+DDL is authoritative; prose only explains it.
 
-Migration 0032 is additive, begins with PRAGMA foreign_keys = ON, uses STRICT
-tables only after the migration tests prove D1 support, creates required indexes
-and triggers, then changes app_metadata.operational_schema_version from 31 to 32. It never backfills.
+    CREATE TABLE staff_account_activity_history (
+      event_id TEXT PRIMARY KEY
+        CHECK (
+          length(event_id) = 36 AND substr(event_id, 1, 4) = 'HIS-'
+          AND substr(event_id, 5) NOT GLOB '*[^0-9a-f]*'
+        ),
+      occurred_at TEXT NOT NULL CHECK (
+        occurred_at = trim(occurred_at) AND length(occurred_at) = 24
+        AND substr(occurred_at, 5, 1) = '-' AND substr(occurred_at, 8, 1) = '-'
+        AND substr(occurred_at, 11, 1) = 'T' AND substr(occurred_at, 14, 1) = ':'
+        AND substr(occurred_at, 17, 1) = ':' AND substr(occurred_at, 20, 1) = '.'
+        AND substr(occurred_at, 24, 1) = 'Z'
+      ),
+      event_type TEXT NOT NULL CHECK (
+        event_type IN ('ACCOUNT_AUDIT', 'ACCOUNT_STAFF_LINK', 'STAFF_ASSIGNMENT')
+      ),
+      action_code TEXT NOT NULL CHECK (
+        action_code IN (
+          'ACCESS_ID_CHANGED', 'STARTER_ACCOUNT_CREATED',
+          'ACCOUNT_STATUS_CHANGED', 'ACCOUNT_APPLICATION_ACTIVATED',
+          'LINK_CREATED', 'LINK_STATE_CHANGED', 'ASSIGNMENT_CREATED',
+          'ASSIGNMENT_STATE_CHANGED', 'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED'
+        ) AND action_code = trim(action_code) AND length(action_code) <= 64
+      ),
+      person_id TEXT NOT NULL CHECK (
+        person_id = trim(person_id) AND length(person_id) BETWEEN 1 AND 128
+      ),
+      account_id TEXT CHECK (
+        account_id IS NULL OR (account_id = trim(account_id)
+          AND length(account_id) BETWEEN 1 AND 128)
+      ),
+      account_staff_link_id TEXT CHECK (
+        account_staff_link_id IS NULL OR (account_staff_link_id = trim(account_staff_link_id)
+          AND length(account_staff_link_id) BETWEEN 1 AND 128)
+      ),
+      staff_assignment_id TEXT CHECK (
+        staff_assignment_id IS NULL OR (staff_assignment_id = trim(staff_assignment_id)
+          AND length(staff_assignment_id) BETWEEN 1 AND 128)
+      ),
+      link_state TEXT,
+      previous_link_state TEXT,
+      assignment_state TEXT,
+      previous_assignment_state TEXT,
+      old_effective_from TEXT,
+      old_effective_to TEXT,
+      new_effective_from TEXT,
+      new_effective_to TEXT,
+      account_access_id_snapshot TEXT CHECK (
+        account_access_id_snapshot IS NULL OR (
+          account_access_id_snapshot = trim(account_access_id_snapshot)
+          AND length(account_access_id_snapshot) BETWEEN 1 AND 120
+        )
+      ),
+      correlation_id TEXT CHECK (
+        correlation_id IS NULL OR (
+          correlation_id = trim(correlation_id)
+          AND length(correlation_id) BETWEEN 1 AND 128
+        )
+      ),
+      source_kind TEXT NOT NULL CHECK (
+        source_kind IN ('ACCOUNT_AUDIT', 'ACCOUNT_STAFF_LINK', 'STAFF_ASSIGNMENT')
+      ),
+      source_id TEXT NOT NULL CHECK (
+        source_id = trim(source_id) AND length(source_id) BETWEEN 1 AND 128
+      ),
+      source_event_id TEXT NOT NULL,
+      payload_version INTEGER NOT NULL DEFAULT 1 CHECK (payload_version = 1),
+      CHECK (
+        source_event_id = trim(source_event_id) AND (
+          (source_kind = 'ACCOUNT_AUDIT'
+            AND length(source_event_id) BETWEEN 1 AND 128
+            AND source_event_id = source_id)
+          OR
+          (source_kind IN ('ACCOUNT_STAFF_LINK', 'STAFF_ASSIGNMENT')
+            AND length(source_event_id) = 36
+            AND substr(source_event_id, 1, 4) = 'TRN-'
+            AND substr(source_event_id, 5) NOT GLOB '*[^0-9a-f]*')
+        )
+      ),
+      CHECK (
+        (source_kind = 'ACCOUNT_AUDIT' AND event_type = 'ACCOUNT_AUDIT'
+          AND action_code IN ('ACCESS_ID_CHANGED', 'STARTER_ACCOUNT_CREATED',
+            'ACCOUNT_STATUS_CHANGED', 'ACCOUNT_APPLICATION_ACTIVATED')
+          AND account_id IS NOT NULL AND account_staff_link_id IS NOT NULL
+          AND link_state = 'ACTIVE' AND account_access_id_snapshot IS NOT NULL
+          AND staff_assignment_id IS NULL AND assignment_state IS NULL
+          AND previous_assignment_state IS NULL
+          AND old_effective_from IS NULL AND old_effective_to IS NULL
+          AND new_effective_from IS NULL AND new_effective_to IS NULL)
+        OR
+        (source_kind = 'ACCOUNT_STAFF_LINK' AND event_type = 'ACCOUNT_STAFF_LINK'
+          AND action_code IN ('LINK_CREATED', 'LINK_STATE_CHANGED')
+          AND account_id IS NOT NULL AND account_staff_link_id = source_id
+          AND link_state IS NOT NULL AND staff_assignment_id IS NULL
+          AND assignment_state IS NULL AND previous_assignment_state IS NULL
+          AND account_access_id_snapshot IS NULL
+          AND old_effective_from IS NULL AND old_effective_to IS NULL
+          AND new_effective_from IS NULL AND new_effective_to IS NULL
+          AND ((action_code = 'LINK_CREATED' AND previous_link_state IS NULL)
+            OR (action_code = 'LINK_STATE_CHANGED'
+              AND previous_link_state IS NOT NULL)))
+        OR
+        (source_kind = 'STAFF_ASSIGNMENT' AND event_type = 'STAFF_ASSIGNMENT'
+          AND action_code IN ('ASSIGNMENT_CREATED', 'ASSIGNMENT_STATE_CHANGED',
+            'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED')
+          AND staff_assignment_id = source_id AND assignment_state IS NOT NULL
+          AND account_id IS NULL AND account_staff_link_id IS NULL
+          AND link_state IS NULL AND previous_link_state IS NULL
+          AND account_access_id_snapshot IS NULL
+          AND ((action_code = 'ASSIGNMENT_CREATED'
+              AND previous_assignment_state IS NULL
+              AND old_effective_from IS NULL AND old_effective_to IS NULL)
+            OR (action_code = 'ASSIGNMENT_STATE_CHANGED'
+              AND previous_assignment_state IS NOT NULL)
+            OR (action_code = 'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED'
+              AND previous_assignment_state IS NOT NULL
+              AND (old_effective_from IS NOT new_effective_from
+                OR old_effective_to IS NOT new_effective_to))))
+      ),
+      CHECK (
+        (old_effective_from IS NULL OR (
+          old_effective_from = trim(old_effective_from)
+          AND length(old_effective_from) = 24))
+        AND (old_effective_to IS NULL OR (
+          old_effective_to = trim(old_effective_to)
+          AND length(old_effective_to) = 24))
+        AND (new_effective_from IS NULL OR (
+          new_effective_from = trim(new_effective_from)
+          AND length(new_effective_from) = 24))
+        AND (new_effective_to IS NULL OR (
+          new_effective_to = trim(new_effective_to)
+          AND length(new_effective_to) = 24))
+      ),
+      UNIQUE (source_kind, source_id, source_event_id)
+    ) STRICT;
 
-### 2.1 ID and source-operation constraints
+The event generator is exactly:
 
-Every canonical event ID is exactly HIS- followed by a lowercase UUIDv4:
-length 40; prefix HIS-; UUID hyphens at positions 13, 18, 23, and 28; version
-character 4 at position 19; variant 8, 9, a, or b at position 24; and remaining
-characters lowercase hexadecimal. A D1/SQLite trigger generates it with this
-expression, which requires no provider or custom SQL function:
+    'HIS-' || lower(hex(randomblob(16)))
 
-    'HIS-' || lower(hex(randomblob(4))) || '-' ||
-    lower(hex(randomblob(2))) || '-4' ||
-    substr(lower(hex(randomblob(2))), 2, 3) || '-' ||
-    substr('89ab', (abs(random()) % 4) + 1, 1) ||
-    substr(lower(hex(randomblob(2))), 2, 3) || '-' ||
-    lower(hex(randomblob(6)))
+No abs(random()), timestamp, or external function is used. The window columns
+are safe DTO fields oldEffectiveFrom, oldEffectiveTo, newEffectiveFrom, and
+newEffectiveTo. They are explicit OLD/NEW source truth: NULL means explicitly
+unset, not unknown; unproven source truth produces no event. The 24-character
+window checks use the same exact separator predicate as occurred_at above.
+Non-null identity FKs are ON DELETE RESTRICT; lookup indexes are person_id plus
+occurred_at/event_id, account_id plus occurred_at/event_id, and the unique
+source-operation key. BEFORE UPDATE OR DELETE aborts on history.
 
-The history table has these source fields and constraints:
+## 3. Persisted account-audit and transition context
 
-    source_kind TEXT NOT NULL CHECK (
-      source_kind IN ('ACCOUNT_AUDIT', 'ACCOUNT_STAFF_LINK', 'STAFF_ASSIGNMENT')
-    )
-    source_id TEXT NOT NULL CHECK (
-      length(trim(source_id)) BETWEEN 1 AND 128
-    )
-    source_event_id TEXT NOT NULL CHECK (
-      length(trim(source_event_id)) BETWEEN 1 AND 128
-    )
-    UNIQUE(source_kind, source_id, source_event_id)
+The audit table remains strict:
 
-For ACCOUNT_AUDIT, source_id and source_event_id are both the immutable
-audit_log.id. For a source-row insert, source_event_id is literal CREATE. For
-an accepted mutable link or assignment transition, source_event_id is a
-lowercase UUIDv4 transition ID with the ordinary 36-character UUID shape.
-ACCOUNT_AUDIT forbids a transition ID; link/assignment CREATE forbids one;
-mutable link/assignment rows require one. Context and source tables enforce the
-same shape/bounds before binding.
+    CREATE TABLE staff_account_activity_audit_context (
+      audit_id TEXT PRIMARY KEY CHECK (
+        audit_id = trim(audit_id) AND length(audit_id) BETWEEN 1 AND 128
+      ),
+      person_id TEXT NOT NULL,
+      account_id TEXT NOT NULL,
+      account_staff_link_id TEXT NOT NULL,
+      link_state TEXT NOT NULL CHECK (link_state = 'ACTIVE'),
+      account_access_id_snapshot TEXT NOT NULL,
+      action_code TEXT NOT NULL CHECK (
+        action_code IN ('ACCESS_ID_CHANGED', 'STARTER_ACCOUNT_CREATED',
+          'ACCOUNT_STATUS_CHANGED', 'ACCOUNT_APPLICATION_ACTIVATED')
+      ),
+      correlation_id TEXT NOT NULL,
+      prepared_at TEXT NOT NULL,
+      FOREIGN KEY (audit_id) REFERENCES audit_log(id)
+        DEFERRABLE INITIALLY DEFERRED ON DELETE RESTRICT,
+      FOREIGN KEY (person_id) REFERENCES canonical_people(person_id)
+        ON DELETE RESTRICT,
+      FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+      FOREIGN KEY (account_staff_link_id) REFERENCES account_staff_links(id)
+        ON DELETE RESTRICT
+    ) STRICT;
 
-The history row has payload_version INTEGER NOT NULL DEFAULT 1 CHECK
-(payload_version = 1); no JSON, free-form payload, note, email, name, profile,
-fingerprint, envelope, provenance, credential, capability, or provider column.
-All IDs are trimmed/non-empty and no longer than 128. occurred_at is canonical
-24-character UTC text with checked YYYY-MM-DDTHH:MM:SS.mmmZ separators.
-account_access_id_snapshot is NULL or trimmed 1-120; correlation_id is NULL or
-trimmed 1-128.
+Link and assignment triggers cannot receive an out-of-band parameter. The
+required persisted operation context is therefore literal state in this table:
 
-### 2.2 Tables, FKs, immutability, and retention
+    CREATE TABLE staff_account_activity_transition_context (
+      transition_id TEXT PRIMARY KEY CHECK (
+        length(transition_id) = 36 AND substr(transition_id, 1, 4) = 'TRN-'
+        AND substr(transition_id, 5) NOT GLOB '*[^0-9a-f]*'
+      ),
+      source_kind TEXT NOT NULL CHECK (
+        source_kind IN ('ACCOUNT_STAFF_LINK', 'STAFF_ASSIGNMENT')
+      ),
+      source_id TEXT NOT NULL CHECK (
+        source_id = trim(source_id) AND length(source_id) BETWEEN 1 AND 128
+      ),
+      action_code TEXT NOT NULL CHECK (
+        action_code IN ('LINK_CREATED', 'LINK_STATE_CHANGED',
+          'ASSIGNMENT_CREATED', 'ASSIGNMENT_STATE_CHANGED',
+          'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED')
+      ),
+      person_id TEXT NOT NULL CHECK (
+        person_id = trim(person_id) AND length(person_id) BETWEEN 1 AND 128
+      ),
+      account_id TEXT,
+      old_link_state TEXT,
+      new_link_state TEXT,
+      old_assignment_state TEXT,
+      new_assignment_state TEXT,
+      old_effective_from TEXT,
+      old_effective_to TEXT,
+      new_effective_from TEXT,
+      new_effective_to TEXT,
+      correlation_id TEXT CHECK (
+        correlation_id IS NULL OR (
+          correlation_id = trim(correlation_id)
+          AND length(correlation_id) BETWEEN 1 AND 128
+        )
+      ),
+      created_at TEXT NOT NULL CHECK (
+        created_at = trim(created_at) AND length(created_at) = 24
+        AND substr(created_at, 5, 1) = '-' AND substr(created_at, 8, 1) = '-'
+        AND substr(created_at, 11, 1) = 'T' AND substr(created_at, 14, 1) = ':'
+        AND substr(created_at, 17, 1) = ':' AND substr(created_at, 20, 1) = '.'
+        AND substr(created_at, 24, 1) = 'Z'
+      ),
+      CHECK (
+        (source_kind = 'ACCOUNT_STAFF_LINK'
+          AND action_code IN ('LINK_CREATED', 'LINK_STATE_CHANGED')
+          AND account_id IS NOT NULL AND new_link_state IS NOT NULL
+          AND old_assignment_state IS NULL AND new_assignment_state IS NULL
+          AND old_effective_from IS NULL AND old_effective_to IS NULL
+          AND new_effective_from IS NULL AND new_effective_to IS NULL
+          AND ((action_code = 'LINK_CREATED' AND old_link_state IS NULL)
+            OR (action_code = 'LINK_STATE_CHANGED'
+              AND old_link_state IS NOT NULL)))
+        OR
+        (source_kind = 'STAFF_ASSIGNMENT'
+          AND action_code IN ('ASSIGNMENT_CREATED', 'ASSIGNMENT_STATE_CHANGED',
+            'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED')
+          AND account_id IS NULL AND new_assignment_state IS NOT NULL
+          AND old_link_state IS NULL AND new_link_state IS NULL
+          AND ((action_code = 'ASSIGNMENT_CREATED'
+              AND old_assignment_state IS NULL
+              AND old_effective_from IS NULL AND old_effective_to IS NULL)
+            OR (action_code IN ('ASSIGNMENT_STATE_CHANGED',
+                'ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED')
+              AND old_assignment_state IS NOT NULL)))
+      ),
+      CHECK (
+        (old_effective_from IS NULL OR (
+          old_effective_from = trim(old_effective_from)
+          AND length(old_effective_from) = 24))
+        AND (old_effective_to IS NULL OR (
+          old_effective_to = trim(old_effective_to)
+          AND length(old_effective_to) = 24))
+        AND (new_effective_from IS NULL OR (
+          new_effective_from = trim(new_effective_from)
+          AND length(new_effective_from) = 24))
+        AND (new_effective_to IS NULL OR (
+          new_effective_to = trim(new_effective_to)
+          AND length(new_effective_to) = 24))
+      ),
+      UNIQUE (source_kind, source_id, transition_id)
+    ) STRICT;
 
-staff_account_activity_audit_context is STRICT and contains audit_id, person_id,
-account_id, account_staff_link_id, link_state, account_access_id_snapshot,
-action_code, correlation_id, and prepared_at. audit_id is its primary key and a
-DEFERRABLE INITIALLY DEFERRED FK to audit_log(id) ON DELETE RESTRICT. Its person,
-account, and link fields are ON DELETE RESTRICT FKs to canonical_people,
-accounts, and account_staff_links. link_state must be ACTIVE; IDs, action,
-correlation, timestamp, and snapshot use the bounds above.
+Its four window fields use the exact 24-character/null predicate from the
+history DDL. The source ID intentionally has no FK: CREATE needs its generated
+future source ID before that row exists. Every source mutation trigger instead
+requires the exact context source_kind/source_id/action, person, account where
+applicable, and OLD/NEW state/window snapshot to match the row it receives.
 
-staff_account_activity_history is STRICT and contains event_id, occurred_at,
-event_type, action_code, person_id, account_id, account_staff_link_id,
-staff_assignment_id, link_state, previous_link_state, assignment_state,
-previous_assignment_state, old_effective_from, old_effective_to,
-new_effective_from, new_effective_to, account_access_id_snapshot,
-correlation_id, source_kind, source_id, source_event_id, and payload_version.
-Every non-null identity FK is ON DELETE RESTRICT. Its lookup indexes are
-(person_id, occurred_at DESC, event_id DESC), (account_id, occurred_at DESC,
-event_id DESC), and the unique source-operation key.
+For every link/assignment CREATE or semantic UPDATE, the guarded context INSERT
+generates its ID in D1 as TRN- plus lower(hex(randomblob(16))). The exact order
+is: validate bounded context and expected OLD/NEW truth; guarded context INSERT;
+guarded source INSERT or UPDATE using those same expected values; AFTER trigger
+INSERT ... SELECT history only on exact context match; DELETE that consumed
+transition context in the same trigger. The final source mutation is atomic with
+context/history/cleanup. A source constraint or trigger failure rolls back the
+whole batch.
 
-BEFORE UPDATE OR DELETE triggers abort on either new table. Identity source
-columns are immutable: canonical_people.person_id; account_staff_links.id,
-account_id, and person_id; and staff_assignments.id, person_id, and
-assignment_fingerprint. Migration 0032 adds a BEFORE UPDATE OF
-assignment_fingerprint abort trigger as well as equivalent identity-column
-guards. A changed fingerprint is a separately authorized new assignment row,
-not a mutation. Retention is intentional: no source/context/history delete can
-erase or orphan canonical history.
+No-op updates return before context insertion. An update with stale OLD values,
+missing context, mismatched source ID/action/person/account/window, malformed
+context, or a context that cannot exactly match causes the source mutation to
+abort; there is no fallback lookup or projection. A retry after a committed
+transition sees the requested source state already present and is a no-op with
+no new context/history. Reusing a TRN ID for a different operation conflicts on
+the history source-operation key and aborts the new source mutation without
+touching the prior event. A persisted stale context cannot be committed by the
+guarded batch; the only successful path consumes it. Migration starts empty and
+does not backfill.
 
-### 2.3 Enforceable action matrix and assignment-window truth
+Identity source columns remain immutable: canonical_people.person_id;
+account_staff_links.id/account_id/person_id; and
+staff_assignments.id/person_id/assignment_fingerprint. BEFORE UPDATE triggers
+abort every such mutation, including assignment_fingerprint. A fingerprint
+change requires a separately authorized new assignment row.
 
-The DDL CHECK matrix, not application prose, enforces all of the following.
+## 4. Account audit ordering and safe exclusion
 
-| source_kind        | action_code                                                                                       | Required fields                                                              | Required null fields                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| ACCOUNT_AUDIT      | ACCESS_ID_CHANGED, STARTER_ACCOUNT_CREATED, ACCOUNT_STATUS_CHANGED, ACCOUNT_APPLICATION_ACTIVATED | person/account/link, ACTIVE link state, access-ID snapshot, audit source IDs | assignment identity/state and all four effective-window fields |
-| ACCOUNT_STAFF_LINK | LINK_CREATED, LINK_STATE_CHANGED                                                                  | person/account/link and explicit link state; previous link state for change  | assignment identity/state, access snapshot, all window fields  |
-| STAFF_ASSIGNMENT   | ASSIGNMENT_CREATED, ASSIGNMENT_STATE_CHANGED, ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED                 | person/assignment and explicit assignment state                              | account/link/access snapshot                                   |
+For ACCESS_ID_CHANGED, both STARTER_ACCOUNT_CREATED producers, and
+ACCOUNT_STATUS_CHANGED, the D1 batch prepares validated audit context immediately
+before the existing ACCOUNT audit INSERT. Its INSERT ... SELECT requires exactly
+one ACTIVE explicit account_staff_links row and copies direct person/link/access
+snapshot, action, and correlation. Invalid, missing, ambiguous, revoked,
+quarantined, sentinel, malformed, or oversized truth writes zero context rows;
+the existing legacy audit still commits and projects nothing.
 
-All four assignment fields are in the authoritative table and safe DTO:
-old_effective_from, old_effective_to, new_effective_from, new_effective_to.
-Each is NULL or canonical UTC text with the same 24-character format check.
-They are NULL for every ACCOUNT_AUDIT and ACCOUNT_STAFF_LINK row.
+The account-application activation batch receives no new command input. After
+its guarded transition and application-history writes it runs:
 
-For ASSIGNMENT_CREATED, both old fields must be NULL and each new field is the
-explicit NEW source value (including explicit NULL). For
-ASSIGNMENT_STATE_CHANGED, old and new pairs are each copied from OLD and NEW
-source values. For ASSIGNMENT_EFFECTIVE_WINDOW_CHANGED, all four are copied and
-at least one OLD/NEW pair differs under NULL-safe comparison. The DTO labels
-these fields as event-time explicit state; NULL means that source field was
-explicitly unset, not unknown. If OLD/NEW truth cannot be obtained, the trigger
-does not project a row; it never serializes UNPROVEN.
+1. guarded INSERT ... SELECT into staff_account_activity_audit_context, selected
+   by activated account ID and exactly one ACTIVE explicit link;
+2. guarded INSERT INTO audit_log ... SELECT with one shared generated audit ID
+   only when that context exists; and
+3. the existing ACCOUNT_APPLICATION audit INSERT unchanged.
 
-The source-kind/action CHECK rejects every other combination. It also enforces
-the required/non-null relationships above, including a non-null previous state
-only for state-change actions. Trigger WHERE predicates independently repeat
-eligibility so malformed source/context produces no projection rather than a
-constraint abort of the legacy audit.
+Absent/ambiguous/sentinel/malformed proof makes both new ACCOUNT rows zero-row;
+activation and the existing APPLICATION audit commit. The audit trigger projects
+one event only on exact audit/context match, then consumes context. It has no
+RAISE path for non-account, AUTHENTICATION, nonexistent-account, delayed, or
+replayed audit rows. Those legacy rows remain loggable and unprojected.
 
-## 3. Event-time context, producer ordering, and exact-once behavior
+## 5. Read route and safe DTO
 
-A producer pre-validates all bounded fields then uses INSERT ... SELECT with
-WHERE eligibility; it never direct-inserts potentially malformed context.
-Sentinel, missing, oversized, malformed, ambiguous, revoked, quarantined, or
-non-account truth selects zero rows. The existing legacy audit statement remains
-a separate statement and commits. The account-audit trigger has no RAISE branch:
-it only INSERT ... SELECTs when entity_type is ACCOUNT, entity_id matches the
-context account, action/correlation match, the context is valid, and the action
-is allowed.
+POST /api/admin/staff-activity-history checks effective ACCESS_ADMIN with
+mutation: false before any read. System Owner uses only existing effective
+capability mapping; person/link presence grants nothing. Denial causes no read.
+The legacy access-history route remains separate.
 
-ACCESS_ID_CHANGED, both STARTER_ACCOUNT_CREATED producers, and
-ACCOUNT_STATUS_CHANGED prepare context immediately before their existing
-ACCOUNT audit INSERT in the same D1 batch. The guarded SELECT joins the exact
-account and requires exactly one account_staff_links row with state ACTIVE,
-matching account/person/link IDs and snapshot. It writes the generated audit ID,
-the source action, correlation, and direct access-ID snapshot. If eligibility is
-not exactly one, context writes zero rows but the existing audit writes normally.
+personId is required. query is optional only with personId and exact-matches
+account_id or account_access_id_snapshot, never names/emails/profiles/roster
+data/partial text. Invalid/empty/over-120 query returns 400. eventType and
+actionCode are fixed allowlists. page defaults 1 or is integer >=1; pageSize
+defaults 25 for absent/non-integer and clamps integers 5-50. Count and page have
+identical predicates and sort occurred_at DESC, event_id DESC. totalPages is
+zero when total is zero.
 
-For account-application activation, the repository receives no new command
-input. The existing activation transaction first performs its guarded transition
-and application-history writes. It then allocates one shared audit ID in the
-existing service/repository command context and executes, in order:
+The DTO is exactly personId, historyStartsAt, and items of id, occurredAt,
+eventType, actionCode, accountId, accountAccessIdSnapshot, correlationId,
+linkState, previousLinkState, assignmentState, previousAssignmentState,
+oldEffectiveFrom, oldEffectiveTo, newEffectiveFrom, and newEffectiveTo, plus
+pagination page/pageSize/total/totalPages. No protected/free-form field exists.
+historyStartsAt and V5 say retained history starts at migration activation and
+does not imply pre-activation absence.
 
-1. INSERT INTO staff_account_activity_audit_context (...) SELECT shared values
-   from accounts and account_staff_links WHERE account_id = activated account ID
-   AND link_state = ACTIVE AND exactly one such link exists, with all bounds and
-   action ACCOUNT_APPLICATION_ACTIVATED checked.
-2. INSERT INTO audit_log (id, entity_type, entity_id, action, correlation_id,
-   ...) SELECT that same shared audit ID and ACCOUNT values only WHERE the
-   just-inserted matching context exists.
-3. Execute the existing ACCOUNT_APPLICATION audit INSERT unchanged.
+## 6. Exact later implementation and evidence ownership
 
-Thus missing or ambiguous ACTIVE-link proof makes both new ACCOUNT context and
-ACCOUNT audit zero-row; the activation and original APPLICATION audit still
-commit. The new ACCOUNT audit trigger uses the same audit ID as source identity.
-The application audit is never retyped.
+| Responsibility                                                               | Exact owned paths                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DDL/version 32/constraints/contexts/triggers/indexes                         | migrations/0032_staff_account_activity_history.sql                                                                                                                                                                      |
+| Canonical read query and link/assignment mutation primitives                 | src/server/d1/identity-foundation-repository.js                                                                                                                                                                         |
+| Access ID, access-management starter, status audit context                   | src/server/access/service.js; src/server/d1/access-management-repository.js                                                                                                                                             |
+| Account-application starter and conditional activation account audit/context | src/server/account-application/service.js; src/server/d1/account-application-repository.js                                                                                                                              |
+| Input/DTO                                                                    | new src/server/identity-foundation/staff-account-activity-history-service.js                                                                                                                                            |
+| Route/HTTP/V5                                                                | src/worker/index.js; src/services/http-api-adapter.js; src/services/rest-service.js; src/v5/integration/runtime.js; src/v5/integration/view-models.js; src/v5/src/surfaces/admin.js; src/v5/integration/admin-parity.js |
+| Service proof                                                                | new tests/unit/staff-account-activity-history-service.test.js                                                                                                                                                           |
+| Version/order/fresh schema proof                                             | tests/unit/identity-foundation-migration.test.js; tests/unit/account-application-migration-integration.test.js; tests/unit/identity-foundation-gate-a-fixture.test.js; tests/unit/v072-migration-contract.test.js       |
+| Direct producer and real Miniflare D1 proof                                  | tests/unit/access-management-repository.test.js; tests/unit/account-application-service.test.js; tests/unit/account-application-repository.test.js                                                                      |
+| Route denial and browser/V5 proof                                            | tests/unit/identity-foundation-worker-route-contract.test.js; tests/e2e/v5-current-application-fixtures.js; tests/e2e/v5-current-application.spec.js; tests/cloudflare-e2e/local-worker.spec.js                         |
 
-Each AFTER INSERT audit trigger invocation creates exactly one history row for
-one immutable audit ID. Link and assignment INSERT/UPDATE triggers create one
-row for the CREATE identity or accepted UUID transition identity. A repeat is a
-no-op only when the underlying source operation itself is idempotent and no new
-source row/audit is committed. If a composite source identity is reused with any
-different allowed identity, action, state/window, snapshot, correlation, or
-payload version, the source transition aborts before it can corrupt the prior
-history. INSERT OR IGNORE is never used to hide a conflict. Timestamp is
-ordering-only and never an idempotency key.
+tests/unit/access-management-repository.test.js is the actual Miniflare D1
+seam. Its reduced fixture must apply 0031 then 0032 and execute the real
+account-application guarded context plus ACCOUNT-audit SQL, not merely a
+synthetic ordering probe. It seeds only synthetic safe data and proves the
+valid exactly-one-ACTIVE-link projection; absent, ambiguous, sentinel, and
+malformed zero-row context/audit behavior; and successful legacy APPLICATION
+audit/activation. It also proves STRICT/deferred-FK, trigger ordering, both
+STARTER producers, ACCESS_ID_CHANGED, ACCOUNT_STATUS_CHANGED, transition
+CREATE/update consume/cleanup, no-op/retry/conflicting-TRN behavior,
+OLD/NEW windows, identity guards, and no protected serialization.
 
-No generic projector queries a current link. A delayed/replayed audit lacking
-its original context cannot become canonical history. AUTHENTICATION,
-nonexistent-account, and malformed audit rows remain valid legacy audit rows and
-produce no canonical event, so their FKs cannot abort authentication logging.
+The account-application unit tests can retain a synthetic probe solely to verify
+service/repository statement ordering. They also prove direct producer taxonomy.
+tests/cloudflare-e2e/local-worker.spec.js is only the real Worker HTTP startup
+and authorization harness; it does not claim Miniflare migration/trigger control.
+No additional fixture/script path is needed.
 
-## 4. Read contract, authorization, and safe DTO
+## 7. Acceptance, recovery, and boundaries
 
-POST /api/admin/staff-activity-history authorizes effective ACCESS_ADMIN with
-mutation: false before any repository read. System Owner reaches it only through
-existing effective capability mapping; account/link presence never grants
-privilege. Denial causes no read. The legacy access-history route remains
-separate, with no fallback.
-
-personId is required opaque canonical ID. query is optional only with personId
-and is case-sensitive exact account_id or account_access_id_snapshot; it never
-searches name, email, profile, roster data, or partial text. Empty, invalid, or
-over-120 query returns 400. eventType/actionCode are fixed allowlists. page is
-absent=1 or integer >=1; invalid is 400. pageSize absent/non-integer=25 and
-integer values clamp 5-50. Count and page queries use identical predicates.
-Order is occurred_at DESC, event_id DESC. totalPages is zero for zero total;
-valid out-of-range pages return empty items with truthful totals.
-
-The DTO exposes only:
-
-    {
-      personId, historyStartsAt,
-      items: [{
-        id, occurredAt, eventType, actionCode, accountId,
-        accountAccessIdSnapshot, correlationId, linkState, previousLinkState,
-        assignmentState, previousAssignmentState, oldEffectiveFrom,
-        oldEffectiveTo, newEffectiveFrom, newEffectiveTo
-      }],
-      pagination: { page, pageSize, total, totalPages }
-    }
-
-historyStartsAt and the V5 UI state retained canonical history begins at
-migration activation and does not imply pre-activation absence. The UI escapes
-values, renders a safe empty state, and never falls back to roster or legacy
-account directory. Staff Directory P3 remains unchanged: no live Worker 403;
-static ACCESS_ADMIN/mutation:false plus browser denial/no-request is accepted.
-
-## 5. Later implementation and test ownership
-
-| Responsibility                                                               | Exact owned path and reason                                                                                                                                                                                       |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| DDL, version 32, constraints, indexes, triggers                              | migrations/0032_staff_account_activity_history.sql                                                                                                                                                                |
-| Canonical read query and source mutation primitives                          | src/server/d1/identity-foundation-repository.js                                                                                                                                                                   |
-| ACCESS_ID_CHANGED, access-management STARTER, ACCOUNT_STATUS context         | src/server/access/service.js; src/server/d1/access-management-repository.js                                                                                                                                       |
-| Account-application STARTER and conditional activation ACCOUNT audit/context | src/server/account-application/service.js; src/server/d1/account-application-repository.js                                                                                                                        |
-| Input/DTO                                                                    | new src/server/identity-foundation/staff-account-activity-history-service.js                                                                                                                                      |
-| Effective-capability route                                                   | src/worker/index.js                                                                                                                                                                                               |
-| HTTP client transport                                                        | src/services/http-api-adapter.js; src/services/rest-service.js                                                                                                                                                    |
-| V5 view                                                                      | src/v5/integration/runtime.js; src/v5/integration/view-models.js; src/v5/src/surfaces/admin.js; src/v5/integration/admin-parity.js                                                                                |
-| New service proof                                                            | new tests/unit/staff-account-activity-history-service.test.js                                                                                                                                                     |
-| Version/order/fresh schema proof                                             | tests/unit/identity-foundation-migration.test.js; tests/unit/account-application-migration-integration.test.js; tests/unit/identity-foundation-gate-a-fixture.test.js; tests/unit/v072-migration-contract.test.js |
-| Direct producer, D1 trigger, STRICT, deferred-FK proof                       | tests/unit/access-management-repository.test.js; tests/unit/account-application-service.test.js; tests/unit/account-application-repository.test.js                                                                |
-| Route denial proof                                                           | tests/unit/identity-foundation-worker-route-contract.test.js                                                                                                                                                      |
-| Browser/V5 proof                                                             | tests/e2e/v5-current-application-fixtures.js; tests/e2e/v5-current-application.spec.js                                                                                                                            |
-| HTTP startup behavior only                                                   | tests/cloudflare-e2e/local-worker.spec.js                                                                                                                                                                         |
-
-tests/unit/access-management-repository.test.js is the actual existing
-Miniflare D1 unit seam. Its later reduced fixture must apply 0031 then 0032,
-seed only synthetic accounts/canonical people/links/assignments/audits, and prove
-STRICT, deferred FKs, trigger ordering, guarded zero-row context, legacy audit
-compatibility, malformed/sentinel/delayed/non-account safety, assignment OLD/NEW
-truth, identity guards, and both account-side starter producers. It must not
-need a provider.
-
-tests/cloudflare-e2e/local-worker.spec.js is retained only for Worker HTTP
-startup/authorization behavior that its workerd harness actually supplies; it
-is not claimed to own or directly control Miniflare migration/trigger proof. No
-new startup script is required by this plan. The two account-application unit
-tests prove the existing approval starter audit and the new conditional
-activation batch ordering/zero-row cases. The access-management unit test proves
-ACCESS_ID_CHANGED, its starter producer, and ACCOUNT_STATUS_CHANGED context
-ordering/taxonomy.
-
-## 6. Regression-first acceptance and migration safety
-
-1. Capture red tests for absent migration/route before implementation.
-2. Apply 0031 then 0032 in both the existing migration harness and the
-   Miniflare unit fixture. Prove version 32, STRICT/deferred-FK compatibility,
-   constraints, indexes, trigger order, append guards, and no backfill.
-3. Prove all four account actions map only through their named producers; both
-   STARTER sources retain separate immutable source IDs; application activation
-   cannot create an ACCOUNT event without exactly one ACTIVE explicit link.
-4. Prove malformed/sentinel/oversized context, delayed/replayed audits,
-   AUTHENTICATION, and nonexistent accounts do not abort legacy audit logging
-   or produce canonical history.
-5. Prove CREATE and UUID transition identity, exact-once/no-op retry behavior,
-   conflicting identity reuse abort, source identity/fingerprint mutation denial,
-   and OLD/NEW assignment-window semantics.
-6. Prove DTO allowlist, query/pagination/count equality, totalPages zero,
-   ACCESS_ADMIN/mutation:false denial-before-read, and V5 authorized/denied UI.
-7. Run focused checks, review full diff, commit/push normally, and prove parity.
-   Do not apply 0032, freeze a candidate, or deploy in that implementation task.
+1. Capture red migration/route tests before implementation.
+2. Apply 0031 then 0032 in both existing migration and Miniflare fixtures.
+   Prove version 32, strict/deferred-FK compatibility, literal checks, indexes,
+   exact triggers, append guards, and zero backfill.
+3. Execute the real activation guarded SQL in Miniflare for valid and each
+   zero-row safety branch while confirming the original application audit still
+   succeeds.
+4. Prove all named producer mappings, persisted transition-context exact match,
+   source mutation rollback, no-op/retry/conflict behavior, identity/fingerprint
+   guards, and OLD/NEW window truth.
+5. Prove DTO allowlist/query/pagination, authorization denial-before-read, and
+   V5 authorized/denied rendering.
+6. Run focused checks, full diff review, normal commit/push, and parity. Do not
+   apply 0032, freeze a candidate, or deploy in its implementation slice.
 
 Pre-application requires separately authorized recovery evidence and schema-31
-proof. Post-application rollback is forward-only: disable/revert the read route
-while retaining source/context/history. Reconstruction uses immutable audit,
-context, source rows, transition IDs, and composite operation identities. A
-conflict is a reconciliation failure, never a silent rewrite.
+proof. Post-application rollback is forward-only: disable/revert the route while
+retaining source/context/history. Reconstruction uses immutable audit/context/
+source rows, TRN IDs, and source-operation identities. A conflict is a
+reconciliation failure, never a silent rewrite.
