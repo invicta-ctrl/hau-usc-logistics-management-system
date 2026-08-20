@@ -472,12 +472,7 @@ export function createD1AccountApplicationRepository(db) {
       return repository.getVerificationChallengeById(challenge.id);
     },
 
-    async markVerificationChallengeSent({
-      challengeId,
-      emailFingerprint,
-      sentAt,
-      providerMessageRef = '',
-    }) {
+    async markVerificationChallengeSent({ challengeId, emailFingerprint, sentAt, providerMessageRef = '' }) {
       await db.batch([
         db
           .prepare(
