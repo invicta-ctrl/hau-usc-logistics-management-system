@@ -52,7 +52,7 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 - **Focused evidence:** portable Node 22.23.2; unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS; legacy eight-digit browser 1/1 PASS; V5 browser 29 PASS with 7 intentional skips; syntax, scoped ESLint, exact Prettier, privacy/scope, and diff checks PASS.
 - **Independent review:** Luna ACCEPT; P0=0; P1=0; P2=0.
 - **P3 advisory:** nonblocking and unrepaired; `tests/e2e/v072-account-access.spec.js` hard-codes committed-harness port 4173. It is not expanded in this release slice.
-- **Live boundary:** `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; provider/private mutations are 0. This is distinct from the provider-free implementation PASS.
+- **Live boundary:** `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; provider email delivery is 0. This is distinct from the provider-free implementation PASS and from the exact frozen pre-migration Playground deployment recorded below.
 
 ## Migration and external sequence
 
@@ -60,21 +60,31 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 - **0032:** source present and REQUIRED because accepted ID-G includes it.
 - **Target schema:** 32; required order is 0031 then 0032 when the target begins at schema 30.
 - **Order:** 0031 then 0032.
-- **Provider application:** PENDING and stage-gated; none occurred in this integration slice.
+- **Provider application:** isolated Playground-only and stage-gated; no email delivery occurred in the freeze/deployment stage.
 - **No fabricated backfill:** required for both migrations.
 - **ID-G provider boundary:** local synthetic SQLite/D1/Miniflare proof only until the later release stage.
 
-Safe read-only rehydration captured only allowlisted public identity facts:
+## Frozen candidate and pre-migration deployment receipt
+
+- **Frozen candidate:** `f8e63372bc8afcb6d092970b7f9fc9ee72fd3580`, tree `5788251d483f23ec5e19048e1a946b3a00450436`, package version `0.8.3`.
+- **Bound identities:** lockfile SHA-256 `28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd`; tracked application SHA-256 `f28d224c49df31ed1505dc2c367fe97c841ebed1a56b2c85fed064bfc6829481`; staging application SHA-256 `60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99`; Worker-source SHA-256 `5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca`.
+- **Migration set:** `0031_canonical_identity_foundation.sql` SHA-256 `3de13ba44182f2db45b61378373549cab1e7e08c56df58cd6bd2b3f109b09444`, then `0032_staff_account_activity_history.sql` SHA-256 `16c0bf78f32729147b0fb8aa5e701ebe6b66b2f75db114f3ea6f968a4fad5abb`.
+- **Pre-freeze:** A7-R2 Section 16 PASS, including redacted authenticated account scope, existing Production/Playground baseline identities, remote schema-30/0030 ledger with foreign keys, Time Travel recovery marker, Worker rollback history, isolated D1/R2 bindings, and provider secret/config name presence.
+- **Workflow:** dispatched exactly once with f8 and the canonical release branch; exact-head package and pre-migration isolated Playground deploy both PASS. The run reference is intentionally redacted.
+- **Post-deploy:** direct reconciliation proves the deployed STAGING Worker has f8/tree/artifact bindings, `PLAYGROUND_MODE=true`, readiness, schema `30`/migration `0030`, and bindings distinct from unchanged Production. The schema-30 workflow check is the accepted pre-migration compatibility checkpoint, not final A7-R2 Section 21 acceptance.
+- **Recovery:** Playground D1 Time Travel bookmark is present; Worker rollback history and R2/config identity were verified without recording private resource identities. Production mutation is zero.
+
+Safe read-only and post-deploy facts are limited to allowlisted public identity facts:
 
 | Environment         | Version            | Candidate                                | Schema / latest migration                      | Ready |
 | ------------------- | ------------------ | ---------------------------------------- | ---------------------------------------------- | ----- |
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
-| Isolated Playground | 0.8.2-playground.1 | fc66911209375596e7af418a5e54e9380fb7685a | 30 / 0030_production_access_and_operations.sql | true  |
+| Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 30 / 0030_production_access_and_operations.sql | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is not a frozen v0.8.3 candidate. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE are PENDING; the A7-R2 pre-freeze release gate/candidate-freeze step is next and no freeze was executed in this continuity slice.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is the exact frozen v0.8.3 candidate at its accepted pre-migration checkpoint. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
 
 ## Exact next gate
 
-V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE: run A7-R2 Section 16 provider-free final release-gate verification, then only on an all-green result freeze the exact v0.8.3 candidate under Section 17. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain post-freeze Playground gates.
+V83_ISOLATED_PLAYGROUND_MIGRATION_0031_AND_RECONCILIATION: immediately recheck redacted recovery and the remote schema-30/0030 ledger, apply only `0031_canonical_identity_foundation.sql` to isolated Playground D1, and prove the migration ledger, schema, foreign keys, canonical-identity invariants, and Production non-crossover before any 0032 action. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
 
-Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not perform provider/private access, shared/provider database migration, candidate freeze, Playground or Production change, deployment, or v0.8.4 work in this step.
+Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.

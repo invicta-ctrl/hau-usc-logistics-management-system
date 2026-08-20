@@ -34,24 +34,25 @@ V1R7-A7-R2 is the controlling v0.8.3 execution amendment, adopted under Earl's e
 - **Implementation/canonical integration:** fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; exact nine accepted paths, isolated branch preserved, canonical fast-forward and push PASS.
 - **Focused evidence:** portable Node 22.23.2; unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS; legacy eight-digit browser 1/1 PASS; V5 browser 29 PASS with 7 intentional skips; syntax/ESLint/Prettier/privacy/scope/diff PASS.
 - **Independent review:** Luna ACCEPT; P0=0; P1=0; P2=0. P3 is a nonblocking, unrepaired committed-harness port-4173 advisory in `tests/e2e/v072-account-access.spec.js`.
-- **Live separation:** `ID_H_IMPLEMENTATION=PASS`; `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; no provider/private mutation occurred.
+- **Live separation:** `ID_H_IMPLEMENTATION=PASS`; `ID_H_PLAYGROUND_DELIVERY_GATE=PENDING`; exact frozen pre-migration Playground deployment is PASS, while provider email delivery remains 0.
 
 ## Release-gate disposition
 
-| Gate                                      | Status                                                                           |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| MIGRATION_0031_DECISION                   | REQUIRED_IF_TARGET_SCHEMA_REMAINS_30                                             |
-| MIGRATION_0032_DECISION                   | SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_0032                  |
-| Schema target                             | 32; required migration order is 0031 then 0032 when target begins at schema 30   |
-| Migration application                     | STAGE_GATED; provider application PENDING; no shared/provider database execution |
-| Candidate freeze                          | A7-R2 Section 16 pre-freeze gate is next; no freeze executed in this slice       |
-| SOURCE_RECONCILIATION_PLAYGROUND_GATE     | PENDING; candidate-bound and read-only, not ID-D                                 |
-| ID_H_PLAYGROUND_DELIVERY_GATE             | PENDING; candidate-bound                                                         |
-| Playground manual/browser acceptance      | PENDING                                                                          |
-| Earl Production GO                        | PENDING                                                                          |
-| Production release / reconciliation / S17 | REMAINING                                                                        |
+| Gate                                      | Status                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| MIGRATION_0031_DECISION                   | REQUIRED_IF_TARGET_SCHEMA_REMAINS_30                                                                   |
+| MIGRATION_0032_DECISION                   | SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_0032                                        |
+| Schema target                             | 32; required migration order is 0031 then 0032 when target begins at schema 30                         |
+| Migration application                     | Isolated Playground 0031 authorized next; 0032 strictly follows reconciliation; Production prohibited  |
+| Candidate freeze                          | PASS: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 / tree 5788251d483f23ec5e19048e1a946b3a00450436         |
+| Pre-migration Playground deployment       | PASS: workflow dispatched once; exact f8/tree/artifact/runtime/binding proof; schema30/0030 checkpoint |
+| SOURCE_RECONCILIATION_PLAYGROUND_GATE     | PENDING; candidate-bound and read-only, not ID-D                                                       |
+| ID_H_PLAYGROUND_DELIVERY_GATE             | PENDING; candidate-bound                                                                               |
+| Playground manual/browser acceptance      | PENDING                                                                                                |
+| Earl Production GO                        | PENDING                                                                                                |
+| Production release / reconciliation / S17 | REMAINING                                                                                              |
 
-Safe read-only current environment facts: Production is v0.8.2 at c316e047c845fa182e82156c95945c4a5e5de2ff, schema 30, latest migration 0030_production_access_and_operations.sql, ready; isolated Playground is v0.8.2-playground.1 at fc66911209375596e7af418a5e54e9380fb7685a, schema 30, same latest migration, ready. No private endpoint, credential, provider, recipient, or database value was recorded.
+Safe read-only and post-deploy facts: Production remains v0.8.2 at c316e047c845fa182e82156c95945c4a5e5de2ff, schema 30, latest migration 0030_production_access_and_operations.sql, ready; isolated Playground is v0.8.3-playground.1 at frozen f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, tree 5788251d483f23ec5e19048e1a946b3a00450436, schema 30, same latest migration, ready, and binding-isolated. Redacted Time Travel recovery, Worker rollback history, R2/config identity, provider secret/config name presence, and candidate artifact proof all PASS. No private endpoint, credential, provider identifier, recipient, database value, or recovery value was recorded.
 
 ## Historical evidence, not active instructions
 
@@ -63,6 +64,6 @@ The only current P3 is the nonblocking, unrepaired committed-harness port-4173 a
 
 ## Next bounded action
 
-V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE: run A7-R2 Section 16 provider-free final release-gate verification, then only on an all-green result freeze the exact v0.8.3 candidate under Section 17. Source reconciliation and live email delivery remain post-freeze Playground gates.
+V83_ISOLATED_PLAYGROUND_MIGRATION_0031_AND_RECONCILIATION: recheck redacted recovery and the remote schema30/0030 ledger; apply only migration 0031 to isolated Playground D1; prove ledger, schema, foreign keys, canonical-identity invariants, and Production non-crossover before 0032. Source reconciliation and live email delivery remain later candidate-bound Playground gates.
 
 No routine owner pause occurs before the later Playground manual-test and explicit Production-GO gate. No v0.8.4 work starts in this session.
