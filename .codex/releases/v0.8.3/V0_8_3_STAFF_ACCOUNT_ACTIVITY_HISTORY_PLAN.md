@@ -1704,11 +1704,14 @@ deployment, and migration application unless separately authorized.
 
 Before migration application, require separately authorized schema-31 proof,
 backup/recovery evidence, and exact candidate authorization. After application,
-rollback is forward-only: disable or revert the route while retaining source,
-context, and immutable history. Reconstruction uses retained immutable history,
-retained source/audit rows, typed source identities, transition IDs, and the
-authorized migration backup; a conflict is a reconciliation failure, never a
-silent rewrite.
+rollback is forward-only: disable or revert the route. Recovery retains only
+the authorized migration backup, immutable history, retained source/audit rows,
+and typed source identities. Context rows are ephemeral transaction
+coordination, consumed on success and rolled back on failure; they are never
+backup, recovery, or reconstruction evidence. Reconstruction uses only the
+authorized migration backup, immutable history, retained source/audit rows, and
+typed source identities; a conflict is a reconciliation failure, never a silent
+rewrite.
 
 STOP CONDITIONS: any need to infer attribution or privilege; disclose a
 protected envelope, fingerprint, provenance, source row, credential, secret,
