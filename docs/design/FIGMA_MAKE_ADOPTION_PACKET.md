@@ -104,13 +104,13 @@ finished or correct:
 - The per-line `<select>` has `defaultValue=""` and a `disabled` "Select a
   route" placeholder, so no route is preselected.
 - That per-line select offers **four** of the five: Issue from stock,
-  Procurement / canvass, Reject, Missing information. **Catalog restock is not in
-  the list**, though it is defined in `ACTION_CFG` above it.
+  Procurement / canvass, Reject, Missing information. Catalog restock is defined
+  in `ACTION_CFG` above it but is not in the list.
 
-The last point is flagged, not fixed. It may be deliberate — production gates
-`RESTOCK` on the line having an `itemId` *and* a catalog type — or it may be the
-SR-02 defect resurfacing. Either way it belongs to whoever is holding that
-buffer.
+The last point is flagged, not fixed, and §4.1 shows it is not the simple
+omission it looks like: the fixture lacks the three fields production's rule
+branches on, so the list is underdetermined rather than short by one. Either way
+it belongs to whoever is holding that buffer.
 
 **One incident to disclose.** While looking for a diff view, the editor's
 `Format code` toolbar action was clicked by mistake, which reformatted the buffer
@@ -244,6 +244,87 @@ MK-02 SCOPE
 
 Claiming "Make theme adopted" after applying only this packet would be false for
 the Request Center route. Say "token layer adopted" instead.
+
+### 4.1 MK-04 re-derived from Product truth
+
+The earlier note said the per-line route select "is missing Catalog restock".
+Reading the Product source shows that framing was wrong, and that adding the
+option would have been wrong too.
+
+Production derives the option set per line — it does not carry a fixed list
+(`src/visual/runtime.js`, `permittedRoutes`):
+
+```js
+function permittedRoutes(request, line) {
+  const routes = [];
+  if (line.itemId) routes.push('ISSUE_FROM_STOCK');
+  if (request.type !== 'CATALOG_RESTOCK') routes.push('PROCUREMENT');
+  if (line.itemId && (request.type === 'CATALOG_RESTOCK' ||
+      ['OFFICE_INVENTORY', 'PANTRY'].includes(request.catalogType))) routes.push('RESTOCK');
+  routes.push('REJECT', 'MISSING_INFORMATION');
+  return routes;
+}
+```
+
+So only `REJECT` and `MISSING_INFORMATION` are unconditional. `ISSUE_FROM_STOCK`
+and `RESTOCK` both require the line to have an `itemId`, and `RESTOCK`
+additionally requires a catalog-restock request or an `OFFICE_INVENTORY` /
+`PANTRY` catalog type.
+
+**The Make fixture cannot express any of that.** Its types are:
+
+```ts
+type ReqLine = { name: string; qty: number; avail: "available" | "short"; shortBy?: number };
+type ReqItem = { id; title; dept; committee; lines; needed; status; urgency;
+                 routing; submittedAgo; detailLines; context; nextAction };
+```
+
+There is no `itemId`, no `type` and no `catalogType` — precisely the three fields
+the rule branches on. Applied literally to that data, `line.itemId` is always
+undefined and the correct set would be three options, not the four currently
+shown and not five. The buffer's list is therefore not "missing an option"; it is
+**underdetermined**, and any fixed list is arbitrary.
+
+The fix is not to add Catalog restock. It is to give the fixture the three
+discriminating fields and derive the options the way production does, keeping the
+empty disabled placeholder so no route is preselected:
+
+```ts
+type ReqLine = { name: string; qty: number; avail: "available" | "short";
+                 shortBy?: number; itemId?: string };
+type ReqItem = { /* … */ type?: "CATALOG_RESTOCK" | "STANDARD";
+                 catalogType?: "OFFICE_INVENTORY" | "PANTRY" | null };
+
+const ROUTE_LABELS = {
+  ISSUE_FROM_STOCK: "Issue from stock",
+  PROCUREMENT:      "Procurement / canvass",
+  RESTOCK:          "Catalog restock",
+  REJECT:           "Reject",
+  MISSING_INFORMATION: "Missing information",
+} as const;
+
+function permittedRoutes(req: ReqItem, line: ReqLine) {
+  const routes: (keyof typeof ROUTE_LABELS)[] = [];
+  if (line.itemId) routes.push("ISSUE_FROM_STOCK");
+  if (req.type !== "CATALOG_RESTOCK") routes.push("PROCUREMENT");
+  if (line.itemId && (req.type === "CATALOG_RESTOCK" ||
+      ["OFFICE_INVENTORY", "PANTRY"].includes(req.catalogType ?? "")))
+    routes.push("RESTOCK");
+  routes.push("REJECT", "MISSING_INFORMATION");
+  return routes;
+}
+```
+
+Production's own comment is worth carrying across, because it is the reason this
+is presentation and not policy:
+
+> Presentational filtering only. The server revalidates every decision and is
+> the single source of truth for what is legal.
+
+This lands in `RequestCenterRoute.tsx`, so it is ownership-blocked with the rest
+of that file.
+
+---
 
 ---
 

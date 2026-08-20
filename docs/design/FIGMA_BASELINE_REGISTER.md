@@ -406,3 +406,72 @@ looks similar.
   `PublicFlows.tsx` at v36 differs from the committed design-branch copy by one
   trailing comment line and nothing else, which is what closes `MK-01`.
 - **`FD-COLOUR`** carries forward unchanged from 2026-08-19-A.
+
+---
+
+## Baseline 2026-08-20-D — final Claude design baseline, tracker synchronised
+
+The closing baseline for the Claude frontend-design stream. What distinguishes
+it from 2026-08-20-C is not new design work — the visual system was frozen
+there — but that the Figma file, the repository and the handoff now all state
+the same derived completion figure, and that Figma Make has been read and
+hashed at its live version rather than inferred from an older one.
+
+```text
+DESIGN_BASELINE_ID   DESIGN_BASELINE_2026-08-20-D
+DATE                 2026-08-20 (Asia/Manila)
+FIGMA DESIGN         hXJElH4p72KfgAaoUyfNOC · 28 pages · 136 variables across 8 collections
+                     102 components (86 components + 16 component sets)
+                     11 text styles · 9 effect styles · 0 paint styles
+FIGMA DESIGN VERSION content identity only — the MCP bridge cannot create named Figma history
+FIGMA TRACKER NODE   page 55:3 · board 568:2 (AUTHORITY + DESIGN HANDOFF · CURRENT)
+                     block 691:2 · heading 691:3 · body 691:4 · inserted at child index 2
+FIGMA MAKE           rP9W9MQlZkyQrUx38TVsFS · Version 36 · READ-VERIFIED
+                     theme.css      sha256 50cb55de9d8e20ad0661cb187b295ea86621aaf2e29c7d8584dd7e159d833082
+                     PublicFlows    sha256 50c623013e35f64c93bf63415ed7e8d78b82089d9a106f513fcebac5e272191c
+                     LendingHub     sha256 2132c68c06915a7acea4a43d7ae31c079a7b5c5ec039cc3c0529d6c738efa967
+                     ReleaseDesk    sha256 7c92b4835aa95386d6ea2611caf9b5379e74b8b74e934d201c8624ac4a2c898e
+MAKE PENDING EDIT    RequestCenterRoute.tsx · unsaved · third-party · +28/-16
+                     sha256 4087473ca337b510859bb841425bfd4548181b2847db62627b0ea79715d5b159
+                     preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
+MAKE THEME           SAFE_READY_TO_APPLY — patch generated and cascade-verified, provider write withheld
+DESIGN BRANCH        frontend-design-integration
+DESIGN SHA           1f3d75c
+TRACKER COMPLETION   97% (derived)
+GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED · 51 gates · 97.0/100.0 weight
+HANDOFF READINESS    READY
+CANONICAL GOLD       #D4AF37 · DESIGN.md D08.0 · owner-locked
+DESIGN DIRECTION     Institutional Logistics Ledger
+GLASS SYSTEM         Institutional Glass · fill up, blur down · G1-G4 10/14/18/22
+RESPONSIVE STATUS    VERIFIED — 8 widths, 0 horizontal overflow
+ACCESSIBILITY STATUS VERIFIED to available evidence — 66/66 contrast, 32/32 keyboard, 30/30 a11y tree
+SCREEN READER        NOT_RUN — accessibility-tree evidence is not a runtime screen-reader pass
+HALLMARK STATUS      PASS
+IMPECCABLE STATUS    PASS
+P0 / P1              0 / 0
+CODEX HANDOFF PATH   docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md
+```
+
+### What changed since 2026-08-20-C
+
+| Change | Evidence |
+|---|---|
+| Figma Make opened at Version 36 and every relevant route file read and hashed; `MK-01` closed and the four `FM-*` gates restored | `FIGMA_DESIGN_MAKE_AUDIT.md` §9 |
+| `FM-INTERNAL-ROUTES` and `FM-STATES` closed at v36; Release Desk found to carry **eleven** states, not the nine previously recorded from partial v35 evidence | Tracker Area 6 |
+| Tracker moved 87% → 92% → 97%, derived at every step from the gate table | `DESIGN_EXECUTION_TRACKER.md` |
+| `MK-02` scope corrected: the Make override had to replace a hardcoded dark glass ladder, an oxblood-derived dark surface set, and superseded golds baked into `rgba()` literals — a palette-only override would not have worked | `FIGMA_MAKE_ADOPTION_PACKET.md` §3.1 |
+| `MK-03` raised: four Make route files paint with literal hexes; `RequestCenterRoute.tsx` reads no CSS variables at all | Adoption packet §4 |
+| `MK-04` re-derived from Product truth: the Make fixture omits `itemId`, `type` and `catalogType`, which are exactly the three fields `permittedRoutes()` branches on | Adoption packet §4.1 |
+| Tracker mirrored into the Figma CURRENT authority board as a derived block carrying its own SOURCE and STALE IF | Node `691:2` |
+| Tracker consistency check added, so the Figma payload and the documents that quote a completion figure cannot drift from the gate table | `scripts/design/figma-tracker-payload.mjs --check` |
+
+### Verification at this baseline
+
+```text
+npm run design:tracker:check      derived progress current
+npm run design:figma-tracker:check tracker, handoff and register agree at 97%
+npm run design:contrast           66/66
+npm run design:theme:check        hau-theme.css current
+npm run design:make-theme:check   theme-canonical.css current
+npm run design:make-verify        no superseded value survives the Make cascade
+```
