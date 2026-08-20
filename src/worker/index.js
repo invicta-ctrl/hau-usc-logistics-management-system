@@ -40,6 +40,7 @@ import {
   createIdentityFoundationReconciliationService,
   IdentityFoundationReconciliationError,
 } from '../server/identity-foundation/reconciliation.js';
+import { createStaffDirectoryService } from '../server/identity-foundation/staff-directory-service.js';
 import {
   createIdentitySourceProjectionProbeService,
   IdentitySourceProjectionProbeError,
@@ -354,6 +355,7 @@ function services(env) {
     foundationRepository: identityFoundationRepository,
     crypto: rosterCrypto,
   });
+  const staffDirectory = createStaffDirectoryService({ repository: identityFoundationRepository });
   const sourceProjectionProbe = createIdentitySourceProjectionProbeService({
     source: googleRosterSource,
     repository: sourceProjectionRepository,
@@ -382,6 +384,7 @@ function services(env) {
     lendingUsage,
     identityRoster,
     sourceProjectionProbe,
+    staffDirectory,
     operationalHealth,
     operations,
     profile,
@@ -529,6 +532,7 @@ async function handleApi(request, env, requestId, executionContext) {
     auth,
     evidence,
     identityFoundationReconciliation,
+    staffDirectory,
     lendingUsage,
     identityRoster,
     sourceProjectionProbe,
@@ -1080,6 +1084,11 @@ async function handleApi(request, env, requestId, executionContext) {
         return json({ ok: true, ...(await access.unlockAccount(context)) });
       }
       throw new AccessManagementError('ACCESS_ACCOUNT_NOT_FOUND', { status: 404 });
+    }
+
+    if (url.pathname === '/api/admin/staff-directory' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffDirectory.list(await body(request))) });
     }
 
     if (url.pathname.startsWith('/api/owner/identity-roster/') && request.method === 'POST') {

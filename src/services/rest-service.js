@@ -84,6 +84,7 @@ for (const method of [
 
 for (const [method, path] of Object.entries({
   listAccessAccounts: '/api/admin/access/directory',
+  listCanonicalStaffDirectory: '/api/admin/staff-directory',
   getAccessIdHistory: '/api/admin/access/history',
   previewAccessIdChange: '/api/admin/access/preview-access-id',
   changeAccessId: '/api/admin/access/change-access-id',

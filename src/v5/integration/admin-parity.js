@@ -538,7 +538,7 @@ function accessPanel() {
   });
 }
 
-function rosterPanel(capabilities) {
+export function rosterPanel(capabilities) {
   const operations = capabilities.has(CAPABILITY.SYSTEM)
     ? ['STATUS', 'PREVIEW', 'DIRECTORY', 'APPLY', 'ROLLBACK', 'SELF']
     : ['SELF'];
@@ -852,11 +852,6 @@ export function createAdminParityController({
       else panels.push(deniedPanel(CAPABILITY.ACCESS));
       const review = applicationReviewPanel(capabilities);
       if (review) panels.push(review);
-    }
-    if (currentRoute === 'admin.directory') {
-      if (capabilities.has(CAPABILITY.SYSTEM) || capabilities.has(CAPABILITY.VIEW_REQUEST))
-        panels.push(rosterPanel(capabilities));
-      else panels.push(deniedPanel(CAPABILITY.SYSTEM));
     }
     if (currentRoute === 'admin.reference') {
       if (capabilities.has(CAPABILITY.REFERENCE)) panels.push(referenceAdminPanel());

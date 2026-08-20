@@ -418,6 +418,54 @@ test('a Food session sees a data-free denial for the Materials overview before b
   expect(requests.filter(({ pathname }) => protectedDataPaths.has(pathname))).toEqual([]);
 });
 
+test('Staff Directory loads the canonical safe projection only for ACCESS_ADMIN', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The Staff Directory contract runs once.');
+  const requests = await installV5ApiFixture(page, { environment: STAGING, authenticated: true });
+
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'Staff Directory' })).toBeVisible();
+  await expect.poll(async () => (await integrationStatus(page)).connectedRoutes).toContain('admin.directory');
+  await expect(page.locator('[data-canonical-staff-directory]')).toContainText(
+    'PER-123E4567-E89B-42D3-A456-426614174000',
+  );
+  await expect(page.locator('[data-canonical-staff-directory]')).toContainText(
+    'Safe Staff Name · STAFF.0001',
+  );
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-directory')).toHaveLength(1);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toHaveLength(0);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+  await expect(page.locator('[data-v5-admin-parity]')).toHaveCount(0);
+});
+
+test('Staff Directory denies users without ACCESS_ADMIN before any directory read', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'v5-chromium-390', 'The Staff Directory denial contract runs once.');
+  const requests = await installV5ApiFixture(page, {
+    environment: STAGING,
+    authenticated: true,
+    currentUser: {
+      authorization: {
+        capabilities: ['view.internal'],
+        workspaceIds: ['food'],
+        defaultWorkspaceId: 'food',
+        explicitDenies: [],
+      },
+    },
+  });
+  await page.goto('/#/admin.directory');
+  await waitForV5(page);
+
+  await expect(page.getByRole('heading', { name: 'You do not have access to this area' })).toBeVisible();
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/staff-directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname === '/api/admin/access/directory')).toEqual([]);
+  expect(requests.filter(({ pathname }) => pathname.startsWith('/api/owner/identity-roster/'))).toEqual([]);
+});
+
 test('authenticated R1 lending and release forms preserve labels and release identity separation', async ({
   page,
 }) => {

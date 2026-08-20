@@ -78,6 +78,30 @@ function mapStaffAssignment(row) {
   };
 }
 
+function mapDirectoryRow(row) {
+  return {
+    personId: row.person_id,
+    linkedAccountCount: Number(row.linked_account_count ?? 0),
+    activeLinkCount: Number(row.active_link_count ?? 0),
+    revokedLinkCount: Number(row.revoked_link_count ?? 0),
+    quarantinedLinkCount: Number(row.quarantined_link_count ?? 0),
+    quarantinedEmailCount: Number(row.quarantined_email_count ?? 0),
+    ambiguousEmailCount: Number(row.ambiguous_email_count ?? 0),
+    activeVerifiedEmailCount: Number(row.active_verified_email_count ?? 0),
+    activeUnverifiedEmailCount: Number(row.active_unverified_email_count ?? 0),
+    activeAssignmentCount: Number(row.active_assignment_count ?? 0),
+    historicalAssignmentCount: Number(row.historical_assignment_count ?? 0),
+    quarantinedAssignmentCount: Number(row.quarantined_assignment_count ?? 0),
+    assignmentProvenanceCount: Number(row.assignment_provenance_count ?? 0),
+    activeAccessId: row.active_access_id ?? null,
+    activeDisplayName: row.active_display_name ?? null,
+  };
+}
+
+function escapedLike(value) {
+  return `%${String(value ?? '').replace(/[\\%_]/gu, '\\$&')}%`;
+}
+
 export function createD1IdentityFoundationRepository(db) {
   if (!db) throw new Error('D1 database binding is required.');
 
@@ -210,6 +234,62 @@ export function createD1IdentityFoundationRepository(db) {
         .bind(personId)
         .all();
       return result.results.map(mapStaffAssignment);
+    },
+
+    async listCanonicalDirectory({ query = '', page = 1, pageSize = 25 } = {}) {
+      const search = escapedLike(query);
+      const offset = (page - 1) * pageSize;
+      const where = `
+        p.person_id LIKE ?1 ESCAPE '\\'
+        OR EXISTS (
+          SELECT 1
+          FROM account_staff_links lookup_link
+          JOIN accounts lookup_account ON lookup_account.id = lookup_link.account_id
+          WHERE lookup_link.person_id = p.person_id
+            AND lookup_link.state = 'ACTIVE'
+            AND (
+              lookup_account.access_id_normalized LIKE ?1 ESCAPE '\\'
+              OR lookup_account.profile_full_name LIKE ?1 ESCAPE '\\'
+            )
+        )`;
+      const count = await db
+        .prepare(`SELECT COUNT(*) AS count FROM canonical_people p WHERE ${where}`)
+        .bind(search)
+        .first();
+      const result = await db
+        .prepare(
+          `SELECT
+             p.person_id,
+             COUNT(DISTINCT link.id) AS linked_account_count,
+             COUNT(DISTINCT CASE WHEN link.state = 'ACTIVE' THEN link.id END) AS active_link_count,
+             COUNT(DISTINCT CASE WHEN link.state = 'REVOKED' THEN link.id END) AS revoked_link_count,
+             COUNT(DISTINCT CASE WHEN link.state = 'QUARANTINED' THEN link.id END) AS quarantined_link_count,
+             COUNT(DISTINCT CASE WHEN email.state = 'QUARANTINED' THEN email.id END) AS quarantined_email_count,
+             COUNT(DISTINCT CASE WHEN email.verification_state = 'AMBIGUOUS' THEN email.id END) AS ambiguous_email_count,
+             COUNT(DISTINCT CASE WHEN email.state = 'ACTIVE' AND email.verification_state = 'VERIFIED' THEN email.id END) AS active_verified_email_count,
+             COUNT(DISTINCT CASE WHEN email.state = 'ACTIVE' AND email.verification_state = 'UNVERIFIED' THEN email.id END) AS active_unverified_email_count,
+             COUNT(DISTINCT CASE WHEN assignment.state = 'ACTIVE' THEN assignment.id END) AS active_assignment_count,
+             COUNT(DISTINCT CASE WHEN assignment.state = 'HISTORICAL' THEN assignment.id END) AS historical_assignment_count,
+             COUNT(DISTINCT CASE WHEN assignment.state = 'QUARANTINED' THEN assignment.id END) AS quarantined_assignment_count,
+             COUNT(DISTINCT CASE WHEN assignment.source_provenance_envelope IS NOT NULL THEN assignment.id END) AS assignment_provenance_count,
+             MIN(CASE WHEN link.state = 'ACTIVE' THEN account.access_id_normalized END) AS active_access_id,
+             MIN(CASE WHEN link.state = 'ACTIVE' THEN account.profile_full_name END) AS active_display_name
+           FROM canonical_people p
+           LEFT JOIN account_staff_links link ON link.person_id = p.person_id
+           LEFT JOIN accounts account ON account.id = link.account_id
+           LEFT JOIN person_emails email ON email.person_id = p.person_id
+           LEFT JOIN staff_assignments assignment ON assignment.person_id = p.person_id
+           WHERE ${where}
+           GROUP BY p.person_id
+           ORDER BY p.person_id ASC
+           LIMIT ?2 OFFSET ?3`,
+        )
+        .bind(search, pageSize, offset)
+        .all();
+      return {
+        total: Number(count?.count ?? 0),
+        items: result.results.map(mapDirectoryRow),
+      };
     },
 
     async createStaffAssignment(value) {

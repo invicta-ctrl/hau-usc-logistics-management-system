@@ -41,4 +41,19 @@ describe('canonical identity reconciliation Worker route contract', () => {
     expect(source).not.toContain('/api/owner/identity-foundation/source-projection-probe-apply');
     expect(source).not.toContain('sourceProjectionProbe.apply');
   });
+
+  it('registers the canonical Staff Directory as an ACCESS_ADMIN read-only route without roster coupling', async () => {
+    const source = await readFile(resolve(root, 'src/worker/index.js'), 'utf8');
+    const routeStart = source.indexOf("url.pathname === '/api/admin/staff-directory'");
+    const route = source.slice(routeStart, routeStart + 500);
+
+    expect(routeStart).toBeGreaterThanOrEqual(0);
+    expect(route).toContain("request.method === 'POST'");
+    expect(route).toContain('CAPABILITIES.ACCESS_ADMIN, { mutation: false }');
+    expect(route).toContain('staffDirectory.list(await body(request))');
+    expect(route).not.toContain('identityRoster');
+    expect(route).not.toContain('rosterCrypto');
+    expect(source).toContain('createStaffDirectoryService');
+    expect(source).toContain('createStaffDirectoryService({ repository: identityFoundationRepository })');
+  });
 });

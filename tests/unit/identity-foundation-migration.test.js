@@ -246,4 +246,71 @@ describe('schema-31 canonical identity foundation', () => {
     ).rejects.toThrow();
     await expect(repository.listStaffAssignments(firstPersonId)).resolves.toHaveLength(1);
   });
+
+  it('reads a bounded canonical directory projection without returning protected identity values', async () => {
+    const repository = await migratedRepository();
+    await repository.createPerson(person(firstPersonId));
+    await repository.createPerson(person(secondPersonId));
+    sqlite
+      .prepare(
+        `UPDATE accounts
+         SET access_id_normalized = ?1, profile_full_name = ?2
+         WHERE id = ?3`,
+      )
+      .run('STAFF.0001', 'Safe Staff Name', 'ACCOUNT-SYNTHETIC-0001');
+    await repository.createAccountStaffLink({
+      id: 'LNK-SYNTHETIC-DIRECTORY-0001',
+      accountId: 'ACCOUNT-SYNTHETIC-0001',
+      personId: firstPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.ACTIVE,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    await repository.createPersonEmail(
+      email({
+        id: 'EML-SYNTHETIC-DIRECTORY-0001',
+        personId: firstPersonId,
+        fingerprint: 'FP-SYNTHETIC-DIRECTORY-0001',
+        primary: true,
+      }),
+    );
+    await repository.createStaffAssignment({
+      id: 'ASN-SYNTHETIC-DIRECTORY-0001',
+      personId: firstPersonId,
+      assignmentFingerprint: 'FP-SYNTHETIC-DIRECTORY-0001',
+      protectedAssignmentEnvelope: 'v1.synthetic.assignment-envelope',
+      state: STAFF_ASSIGNMENT_STATE.ACTIVE,
+      effectiveFrom: null,
+      effectiveTo: null,
+      sourceProvenanceEnvelope: 'v1.synthetic.provenance-envelope',
+      createdAt: time,
+      updatedAt: time,
+    });
+
+    await expect(
+      repository.listCanonicalDirectory({ query: 'staff.0001', page: 1, pageSize: 5 }),
+    ).resolves.toEqual({
+      total: 1,
+      items: [
+        {
+          personId: firstPersonId,
+          linkedAccountCount: 1,
+          activeLinkCount: 1,
+          revokedLinkCount: 0,
+          quarantinedLinkCount: 0,
+          quarantinedEmailCount: 0,
+          ambiguousEmailCount: 0,
+          activeVerifiedEmailCount: 1,
+          activeUnverifiedEmailCount: 0,
+          activeAssignmentCount: 1,
+          historicalAssignmentCount: 0,
+          quarantinedAssignmentCount: 0,
+          assignmentProvenanceCount: 1,
+          activeAccessId: 'STAFF.0001',
+          activeDisplayName: 'Safe Staff Name',
+        },
+      ],
+    });
+  });
 });

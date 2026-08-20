@@ -257,6 +257,7 @@ const ROUTE_STATES = Object.freeze({
   'materials.overview': new Set(['populated', 'denied']),
   'lending.queue': new Set(['populated', 'empty']),
   'admin.access': new Set(['populated', 'denied']),
+  'admin.directory': new Set(['populated', 'empty', 'denied']),
   'owner.health': new Set(['populated', 'denied']),
   'public.signin': new Set(['populated', 'loading', 'error', 'unavailable']),
   'public.request-intake': new Set(['populated', 'error']),
@@ -601,6 +602,7 @@ export function createV5Runtime({ backend, app }) {
     referenceLinks: null,
     brandAssets: null,
     accessDirectory: null,
+    staffDirectory: null,
     inventoryDetail: null,
     profile: null,
     selectedRequestId: '',
@@ -693,6 +695,7 @@ export function createV5Runtime({ backend, app }) {
     integration.essential = null;
     integration.state = null;
     integration.accessDirectory = null;
+    integration.staffDirectory = null;
     integration.inventoryDetail = null;
     integration.profile = null;
     integration.referenceWorkspace = null;
@@ -971,11 +974,15 @@ export function createV5Runtime({ backend, app }) {
         selectedRequestId: integration.selectedRequestId,
         selectedInventoryId: integration.selectedInventoryId,
       });
-    } else if (currentRoute === 'admin.access' || currentRoute === 'admin.directory') {
+    } else if (currentRoute === 'admin.access') {
       const result = await backend.api.listAccessAccounts({ limit: 100, offset: 0 });
       if (!canCommit()) return false;
       integration.accessDirectory = result;
       applyAccounts(result);
+    } else if (currentRoute === 'admin.directory') {
+      const result = await backend.api.listCanonicalStaffDirectory({ page: 1, pageSize: 25 });
+      if (!canCommit()) return false;
+      integration.staffDirectory = result;
     } else if (currentRoute === 'admin.reference') {
       const result = await backend.commands.getReferenceAdminWorkspace({
         domain: 'VENUES',
@@ -1439,25 +1446,44 @@ export function createV5Runtime({ backend, app }) {
   }
 
   function bindDirectory() {
-    const result = integration.accessDirectory;
+    const result = integration.staffDirectory;
     if (!result) return;
-    const accounts = firstCollection(result, 'accounts', 'items', 'directory', 'rows');
+    const people = firstCollection(result, 'items');
     const root = document.getElementById('surface-main');
+    setFact(root, 'Canonical people', String(Number(result.total ?? people.length)));
     setFact(
       root,
-      'Active entries',
-      String(accounts.filter((entry) => text(entry.status) === 'ACTIVE').length),
+      'Quarantined records',
+      String(people.filter((entry) => text(entry.linkState) === 'QUARANTINED').length),
     );
     setFact(
       root,
-      'Quarantined source rows',
-      String(
-        accounts.filter((entry) => ['NEEDS_REVIEW', 'UNKNOWN_ROLE'].includes(text(entry.mappingStatus)))
-          .length,
-      ),
+      'Active assignments',
+      String(people.reduce((total, entry) => total + Number(entry.assignmentSummary?.activeCount ?? 0), 0)),
     );
-    setFact(root, 'Last synchronisation', text(result.updatedAt, result.generatedAt, 'Not reported'));
-    setFact(root, 'Inconsistent runs', String(Number(result.inconsistentRuns ?? 0)));
+    setFact(root, 'Directory state', people.length ? 'Loaded' : 'No canonical people');
+    const body = root?.querySelector('[data-canonical-staff-directory] tbody');
+    if (!body) return;
+    body.replaceChildren();
+    for (const person of people) {
+      const row = document.createElement('tr');
+      const identity = document.createElement('th');
+      identity.scope = 'row';
+      identity.textContent = text(person.personId, 'Not recorded');
+      const account = document.createElement('td');
+      account.textContent =
+        text(person.displayName) && text(person.accessId)
+          ? `${text(person.displayName)} · ${text(person.accessId)}`
+          : 'Not linked';
+      const link = document.createElement('td');
+      link.textContent = text(person.linkState, 'UNLINKED').replaceAll('_', ' ');
+      const email = document.createElement('td');
+      email.textContent = text(person.emailState, 'NONE').replaceAll('_', ' ');
+      const assignments = document.createElement('td');
+      assignments.textContent = String(Number(person.assignmentSummary?.activeCount ?? 0));
+      row.append(identity, account, link, email, assignments);
+      body.append(row);
+    }
   }
 
   function bindReferenceAdmin() {

@@ -51,10 +51,11 @@ function authenticatedSession() {
   };
 }
 
-function essential(environment) {
+function essential(environment, currentUser = {}) {
   const result = createEssentialBootstrapFixture({ backendMode: 'rest', environment });
   result.currentUser = {
     ...result.currentUser,
+    ...currentUser,
     id: 'SYNTHETIC-OWNER-001',
     displayName: 'Synthetic Owner',
     role: 'SYSTEM_OWNER',
@@ -65,6 +66,7 @@ function essential(environment) {
       capabilities: Object.values(CAPABILITIES),
       workspaceIds: ['administrator', 'director', 'food', 'inventory-pantry', 'materials'],
       defaultWorkspaceId: 'administrator',
+      ...(currentUser.authorization ?? {}),
     },
   };
   return result;
@@ -93,7 +95,7 @@ function playgroundStatus() {
 
 export async function installV5ApiFixture(
   page,
-  { environment = STAGING, authenticated = false, advertisements = [] } = {},
+  { environment = STAGING, authenticated = false, advertisements = [], currentUser = {} } = {},
 ) {
   const requests = [];
   let sessionAuthenticated = authenticated;
@@ -145,7 +147,7 @@ export async function installV5ApiFixture(
     }
 
     if (sessionAuthenticated && pathname === '/api/getEssentialBootstrapData') {
-      return json(route, essential(environment));
+      return json(route, essential(environment, currentUser));
     }
     if (sessionAuthenticated && pathname === '/api/getBootstrapModule') {
       return json(
@@ -193,6 +195,31 @@ export async function installV5ApiFixture(
     }
     if (sessionAuthenticated && pathname === '/api/admin/access/directory') {
       return json(route, { ok: true, accounts: [], updatedAt: '2026-08-09T00:00:00.000Z' });
+    }
+    if (sessionAuthenticated && pathname === '/api/admin/staff-directory') {
+      return json(route, {
+        ok: true,
+        page: 1,
+        pageSize: 25,
+        query: '',
+        total: 1,
+        items: [
+          {
+            personId: 'PER-123E4567-E89B-42D3-A456-426614174000',
+            displayName: 'Safe Staff Name',
+            accessId: 'STAFF.0001',
+            linkState: 'ACTIVE',
+            linkedAccountCount: 1,
+            emailState: 'ACTIVE_VERIFIED',
+            assignmentSummary: {
+              activeCount: 1,
+              historicalCount: 0,
+              quarantinedCount: 0,
+              provenanceState: 'PRESENT',
+            },
+          },
+        ],
+      });
     }
     if (sessionAuthenticated && pathname === '/api/getEventManagement') {
       return json(route, { ok: true, eventSeries: [], eventDays: [], events: [] });
