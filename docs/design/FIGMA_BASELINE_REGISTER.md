@@ -436,7 +436,8 @@ MAKE PENDING EDIT    RequestCenterRoute.tsx · unsaved · third-party · +28/-16
                      preserved at output/design/make-preservation/RequestCenterRoute.unsaved.tsx
 MAKE THEME           SAFE_READY_TO_APPLY — patch generated and cascade-verified, provider write withheld
 DESIGN BRANCH        frontend-design-integration
-DESIGN SHA           1f3d75c
+DESIGN SHA           01037a3e1e79568449727aa80fdc8c613c22f5f7
+                     (+ the one-line SHA backfill commit that follows it)
 TRACKER COMPLETION   97% (derived)
 GATE COUNTS          49 VERIFIED · 1 IN_PROGRESS · 0 NEEDS_REVERIFY · 1 BLOCKED · 51 gates · 97.0/100.0 weight
 HANDOFF READINESS    READY
