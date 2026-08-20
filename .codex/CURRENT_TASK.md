@@ -1,9 +1,9 @@
 # Current Bounded Task
 
-INTENT: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_FIFTH_PLAN_REPAIR_AND_SIXTH_AUDIT_HANDOFF
+INTENT: V83_GOVERNANCE_WRITER_TRANSFER_TO_SEVENTH_LUNA_PLAN_AUDIT
 MODE: PLAN
-OBJECTIVE: Repair only the fifth-rejected provider-free canonical activity-history plan/governance packet with FK-order, typed-retention, transition assertion, timestamp, recovery, and browser/Miniflare corrections, then hand off to a sixth independent plan audit; do not implement a capability.
-TARGET: `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, `.codex/CURRENT_HANDOFF.md`, `.codex/releases/v0.8.3/V0_8_3_SCOPE_COMPLETENESS_MATRIX.md`, and `.codex/releases/v0.8.3/V0_8_3_STAFF_ACCOUNT_ACTIVITY_HISTORY_PLAN.md` only; no provider/private-source access, source/test/config/schema/migration, candidate freeze, Playground, Production, or deployment action is authorized.
+OBJECTIVE: Transfer only the canonical Terra writer lock to `TERRA_MAX:/root/v83_completion_terra_writer`, preserve the consolidated provider-free activity-history plan/audit state unchanged, and resume the seventh independent plan audit; do not rewrite the plan or implement a capability.
+TARGET: `.codex/CURRENT.md`, `.codex/CURRENT_TASK.md`, and `.codex/CURRENT_HANDOFF.md` only; the authoritative activity-history plan and scope matrix are read-only audit inputs. No plan rewrite, provider/private-source access, product source/test/config/schema/migration, candidate freeze, Playground, Production, deployment, or v0.8.4 action is authorized.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 MASTER_ACCEPTED_SPEC: .codex/specs/active/v0.8.1-v0.8.5-v1r7a3-standalone-master-program.md
@@ -16,17 +16,19 @@ AUTHORITY: Earl V1R7-A6 Final Autonomous Completion Amendment resolves the V83 i
 SOURCE_AUTHORITY_STATUS: V1R7_A6_OWNER_AUTHORIZED;V83_ID_B_OWNER_DECISION_GATE_RESOLVED;V82_S17_COMPLETE;NO_FIGMA_UNTIL_PASSWORD_BROWSER_EVIDENCE
 SKILLS: LEAN_CTX_TARGETED_READ;NATIVE_POWERSHELL_FALLBACK_AFTER_SKILL_ALLOWLIST_BLOCK
 REQUIRED_MODEL: Terra MAX
-ACTIVE_WRITER: TERRA_MAX:/root/v83_gate_a_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_gate_a_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_gate_a_terra_writer
+ACTIVE_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_completion_terra_writer
 WRITER_LOCK: HELD
 LOCK_STATUS: ACTIVE
 LOCK_CONTINUITY: V1R7_A6_V83_TO_V85_CONTINUOUS_EXECUTION
-LOCK_HEARTBEAT_AT: 2026-08-17T19:16:09+08:00
-WRITER_TRANSFER_FROM: TERRA_MAX:/root/v081_s09_blocker_closeout
-WRITER_TRANSFER_TO: TERRA_MAX:/root/v83_gate_a_terra_writer
-WRITER_TRANSFERRED_AT: 2026-08-17T18:10:36+08:00
-WRITER_TRANSFER_REASON: V83_S07_PASS_WITH_NONBLOCKING_FINDINGS_GATE_A_PROVIDER_FREE_FIXTURE
+LOCK_HEARTBEAT_AT: 2026-08-20T19:26:41+08:00
+WRITER_TRANSFER_FROM: TERRA_MAX:/root/v83_gate_a_terra_writer
+WRITER_TRANSFER_TO: TERRA_MAX:/root/v83_completion_terra_writer
+WRITER_TRANSFERRED_AT: 2026-08-20T19:26:41+08:00
+WRITER_TRANSFER_REASON: ROOT_AUTHORIZED_TRANSFER_AFTER_PREVIOUS_TERRA_COMPLETED_EXECUTION_WINDOW_EXHAUSTED_WITH_NO_UNCOMMITTED_MUTATION
+WRITER_TRANSFER_PRE_EDIT_HANDSHAKE: BRANCH=release/v0.8.3-identity-foundation;HEAD=495c24cfab99cfeeab657a9fc7f9b0e31f2e0398;TREE=f8740d5715bc1d6e7004c647364cd46542df9951;UPSTREAM=origin/release/v0.8.3-identity-foundation@495c24cfab99cfeeab657a9fc7f9b0e31f2e0398;LIVE_REMOTE=495c24cfab99cfeeab657a9fc7f9b0e31f2e0398;AHEAD_BEHIND=0/0;WORKTREE=CLEAN;TARGETED_FETCH=PASS
+WRITER_TRANSFER_PRE_COMMIT_VALIDATION: HANDOFF_VERIFY=PASS;CHECK_GOVERNANCE=PASS;CHECK_CONTINUATION=PASS;PRETTIER_3=PASS;DIFF_CHECK=PASS
 OWNER_TASK: /root
 MASTER_PROGRAM: V0.8.0-V0.8.5_FINAL_UNIFIED_STABILIZATION_PIH
 MASTER_PHASE: V0.8.3_IDENTITY_FOUNDATION
@@ -591,11 +593,11 @@ S12_BOUNDARY_REVIEW_TIMESTAMP: 2026-08-12T10:50:09.4956401+08:00
 S12_BOUNDARY_VALIDATION: HANDOFF_VERIFY=PASS;CHECK_GOVERNANCE=PASS;GIT_DIFF_CHECK=PASS;MARKDOWN_PRETTIER_4=PASS;STRUCTURAL_PRIVACY=PASS;DUPLICATE_KEYS=0;COMMON_FIELDS=0;NEXT_EQUAL=PASS;SCOPE=EXACT_FOUR_PATH;STAGED=0;PRESERVED46=PASS
 S12_RECOVERY_AMENDMENT_VALIDATION: HANDOFF_VERIFY=PASS;CHECK_GOVERNANCE=PASS;GIT_DIFF_CHECK=PASS;MARKDOWN_PRETTIER_4=PASS;STRUCTURAL_PRIVACY=PASS;DUPLICATE_KEYS=0;COMMON_FIELDS=0;NEXT_EQUAL=PASS;COHERENCE=PASS;SCOPE=EXACT_FOUR_PATH;STAGED=0;PRESERVED46=PASS
 S12_LEGACY_BROWSER_GATE_AMENDMENT_VALIDATION: HANDOFF_VERIFY=PASS;CHECK_GOVERNANCE=PASS;GIT_DIFF_CHECK=PASS;MARKDOWN_PRETTIER_4=PASS;STRUCTURAL_PRIVACY=PASS;DUPLICATE_KEYS=0;COMMON_FIELDS=0;NEXT_EQUAL=PASS;COHERENCE=PASS;SCOPE=EXACT_FOUR_PATH;STAGED=0;PRESERVED46=PASS
-RISK: MEDIUM_PROVIDER_FREE_READ_ONLY_PROJECTION;OPEN_P0=0;OPEN_P1=0;OPEN_P2=0;OPEN_P3=0;LIVE_PROBE_EXECUTION=BLOCKED;DEFAULT_RUNTIME_GATE=BLOCKED;NO_PROVIDER_PRIVATE_SOURCE_ACCESS
-SCOPE: Repair only the specified plan and current-chain/matrix records. Make fifth-Luna findings implementable: exact FK order and typed retention, asserted transition conflict semantics, exact timestamps, recovery boundaries, and browser/Miniflare proof; then hand off only to a sixth independent plan audit.
-OUT_OF_SCOPE: Any repository product source/test/configuration/package/workflow/artifact/generated-output change, provider/private-source call, crypto/decryption, source roster/canonical-data/account-link/assignment/capability mutation, schema/migration creation or execution, backfill/import, test/build rerun, live probe, ID-D or other missing-capability work, candidate freeze, Playground, Production, deployment, recovery, branch cleanup, Figma, or later implementation slice.
-VERIFICATION: Git handshake, exact writer-lock and current-SHA checks, current-chain equality/coherence, required handoff/governance/Markdown/diff/privacy/static checks for the five documentation paths, full logical-diff review, normal commit/push, and local/tracking/live parity. No test/build or external action.
-STOP_CONDITIONS: Active-ref divergence; dirty or unexpected path beyond the five documentation paths; writer mismatch; authority/privacy ambiguity; inferred privilege or protected-data exposure in the plan; inability to specify schema/rollback safely; provider/private-source/runtime truth need; or any action outside TARGET.
+RISK: LOW_GOVERNANCE_WRITER_TRANSFER_ONLY;OPEN_P0=0;OPEN_P1=0;OPEN_P2=0;OPEN_P3=0;NO_PROVIDER_PRIVATE_SOURCE_ACCESS
+SCOPE: Update only the three current records to transfer the active Terra lock, retain the current consolidated plan/audit state, and resume only the seventh independent read-only P0-P3 plan audit.
+OUT_OF_SCOPE: Any plan or scope-matrix rewrite; repository product source/test/configuration/package/workflow/artifact/generated-output change; provider/private-source call; crypto/decryption; source roster/canonical-data/account-link/assignment/capability mutation; schema/migration creation or execution; backfill/import; live probe; ID-D or other missing-capability work; candidate freeze; Playground; Production; deployment; recovery; branch cleanup; Figma; v0.8.4; or later implementation slice.
+VERIFICATION: Re-handshake exact branch/HEAD/tree/tracking/live remote/worktree state; current-chain writer and next-action coherence; handoff verification; governance and continuation checks; exact-file Markdown Prettier; git diff --check; full logical-diff review; one normal commit/push; and post-push local/tracking/live 0/0 parity. No product test/build or external action.
+STOP_CONDITIONS: Active-ref divergence; dirty or unexpected path beyond the three current records; writer mismatch; authority/privacy ambiguity; any plan/source/test/config/schema/migration/provider/private/candidate/Playground/Production/deployment/v0.8.4 action; or failed required verification.
 V81_S12_HISTORICAL_SKILLS: LEAN_CTX_TARGETED_READ;NATIVE_POWERSHELL_FALLBACK_AFTER_SKILL_ROOT_ALLOWLIST_BLOCK
 CAPTURE_STATUS: VERIFIED
 CAPTURE_STATUS_SHA256: 118FD12617B64463F052DAC32FD749E49FB7F4618DD2EECD72F3ABEC8277D84E
@@ -627,7 +629,7 @@ S09_FAIL_CLOSED_AMENDMENT: PUSHED_18cff1b361a3697213be08f5592c2d53099cafb7;PRIVA
 S09_BLOCKER_KEY: NONE_S09_NON_BACKUP_PREFLIGHT_PASS
 REQUIRED_SECRET_NAMES: PASSWORD_PEPPER,TRACKING_LINK_SECRET,PROTECTED_PROFILE_ENCRYPTION_KEY,ROSTER_DATA_ENCRYPTION_KEY,GOOGLE_ROSTER_PRIVATE_KEY,GOOGLE_EVIDENCE_OAUTH_CLIENT_SECRET,GOOGLE_EVIDENCE_OAUTH_REFRESH_TOKEN,GOOGLE_EVIDENCE_OAUTH_CLIENT_ID,GOOGLE_DRIVE_ROOT_FOLDER_ID,GOOGLE_DRIVE_RECEIPTS_FOLDER_ID,GOOGLE_DRIVE_CANVASS_FOLDER_ID,GOOGLE_DRIVE_DELIVERABLE_FOLDER_ID,GOOGLE_EVIDENCE_RELEASE_FOLDER_ID,GOOGLE_DRIVE_LENDING_FOLDER_ID
 BLOCKER: BLOCK_PROBE_EXECUTION_NOW;DEFAULT_RUNTIME_GATE=BLOCKED;DISABLED_ENABLEMENT_GATE=VERIFIED_PASS;VERSION_CORRECTION=VERIFIED_PASS;PREFLIGHT=ACCEPTED;SCOPE_MATRIX=COMPLETE_NOT_ALL_PASS;TWO_STAGE_APPROVAL=VERIFIED_NO_OP;STAFF_DIRECTORY=PASS;STAFF_DIRECTORY_P3_NO_LIVE_WORKER_403_ACCEPTED;STAFF_ACCOUNT_ACTIVITY_HISTORY=GAP_REPAIRED_PLAN_FIFTH_LUNA_AUDIT_NEXT;MIGRATION0032=PLAN_ONLY_NOT_CREATED_OR_APPLIED;CANDIDATE_FREEZE=NOT_AUTHORIZED;APP_VERSION_PLAYGROUND_SCHEMA31_MIGRATION0031_WORKFLOW=LATER;PROVIDER_PRIVATE_SOURCE_ACCESS=0;LIVE_PROBE=0;ID_D=0
-HANDOFF_STATUS: ACTIVE_TERRA_V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SIXTH_LUNA_PLAN_AUDIT
+HANDOFF_STATUS: ACTIVE_TERRA_V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SEVENTH_LUNA_PLAN_AUDIT
 S11_PROTECTED_MAIN_MERGE: PASS;METHOD=NORMAL_FAST_FORWARD_NON_FORCE;RELEASE_PARENT=33502448ce47a3b047f9b313e1017969095da25d;MAIN_SHA=33502448ce47a3b047f9b313e1017969095da25d;MAIN_TREE=45852b4036dd0a5d2966ee82baaa627bced604d5;LOCAL_UPSTREAM_LIVE_PARITY=PASS;APPLICATION_PATH_PARITY_TO_bdb39ee=PASS;ARTIFACT_BLOB_PARITY=4/4;WORKTREE_CLEAN=PASS;PROVIDER_ACTION=0
 S10_PRODUCTION_BACKUP: PASS;PHASES=PRE_MERGE_READ_ONLY,POST_MERGE_FINAL;INTEGRITY=PASS;FK=0;SCHEMA=30;MIGRATION=0030_production_access_and_operations.sql;RECONCILIATION=20/20;ROLLBACK_EVIDENCE=CAPTURED
 S11_PROTECTED_MAIN_PARITY: PASS;MAIN=33502448ce47a3b047f9b313e1017969095da25d;APPLICATION_RUNTIME_ARTIFACT_PARITY_TO_bdb39ee=PASS
@@ -708,7 +710,7 @@ V83_A6_NO_FABRICATION: ACTIVE;UNPROVEN_EXTERNAL_TRUTH=NULL_UNKNOWN_UNRESOLVED_OR
 V83_PASSWORD_VISIBILITY: DIRECT_OWNER_REQUIREMENT;ALL_APPLICABLE_CURRENT_PASSWORD_SURFACES;BROWSER_EVIDENCE_BEFORE_FIGMA
 V83_FRONTEND_ADOPTION: PASSWORD_COMPONENT_SCOPE_ACTIVE;FIGMA_MAKE_AND_ROUTE_DESIGN_DEFERRED_UNTIL_PASSWORD_BROWSER_EVIDENCE
 NEXT_ACTION_SCOPE: V83_STAFF_ACCOUNT_ACTIVITY_HISTORY_SEVENTH_LUNA_PLAN_AUDIT
-NEXT_EXACT_ACTION: Perform only a seventh independent read-only P0-P3 audit of the consolidated authoritative activity-history plan; do not implement, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, or deployment.
+NEXT_EXACT_ACTION: Resume only the seventh independent read-only P0-P3 audit of the consolidated authoritative activity-history plan; do not rewrite the plan or implement product source/tests, create or execute a migration, access provider/private state, freeze a candidate, or act on Playground, Production, deployment, or v0.8.4.
 V83_S03_ID_A_AUTH_SESSION_PRESERVATION: PASS;NODE=22.23.2;TEST_FILES=7/7;TESTS=42/42;SOURCE_SCHEMA_PROVIDER_ACTIONS=0
 V83_S04_VERIFIED_NO_OP: PASS;AUTH_SESSION_ACCOUNT_COMMITTEE_POLICY_APPLICATION_ROSTER_CONTRACTS=PRESERVED;MIGRATION=0;PRIVATE_DATA_IN_GIT=0
 V83_S05_ID_B_GATE: RESOLVED_BY_V1R7_A6;DIRECT_SCOPE_MAP_ACTIVE
