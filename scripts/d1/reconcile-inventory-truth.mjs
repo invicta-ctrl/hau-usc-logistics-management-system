@@ -7,8 +7,8 @@ import { resolvePrivatePath } from '../private-path.mjs';
 import { restoreAndVerifyD1Export } from './verify-d1-export.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
-const EXPECTED_SCHEMA = '30';
-const EXPECTED_MIGRATION = '0030_production_access_and_operations.sql';
+const EXPECTED_SCHEMA = '32';
+const EXPECTED_MIGRATION = '0032_staff_account_activity_history.sql';
 const ENVIRONMENTS = new Set(['LOCAL_TEST', 'ISOLATED_STAGING', 'PRODUCTION_READ_ONLY']);
 const SHA = /^[0-9a-f]{40}$/u;
 const EPSILON = 0.000001;
