@@ -25,6 +25,29 @@ function directoryRow(overrides = {}) {
 }
 
 describe('canonical Staff Directory service', () => {
+  it.each([
+    [undefined, 25],
+    ['5', 25],
+    [0, 5],
+    [3, 5],
+    [5, 5],
+    [50, 50],
+    [51, 50],
+  ])('clamps literal pageSize %p to %i', async (pageSize, expectedPageSize) => {
+    const repository = {
+      listCanonicalDirectory: vi.fn().mockResolvedValue({ total: 0, items: [] }),
+    };
+    const service = createStaffDirectoryService({ repository });
+
+    await service.list({ pageSize });
+
+    expect(repository.listCanonicalDirectory).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: expectedPageSize,
+      query: '',
+    });
+  });
+
   it('normalizes bounded input and serializes only the safe canonical projection', async () => {
     const repository = {
       listCanonicalDirectory: vi.fn().mockResolvedValue({
@@ -125,6 +148,30 @@ describe('canonical Staff Directory service', () => {
           displayName: null,
           accessId: null,
         },
+      ],
+    });
+  });
+
+  it('orders safe link states as quarantined, ambiguous, revoked, then unlinked', async () => {
+    const repository = {
+      listCanonicalDirectory: vi.fn().mockResolvedValue({
+        total: 4,
+        items: [
+          directoryRow({ quarantinedAssignmentCount: 1 }),
+          directoryRow({ ambiguousEmailCount: 1 }),
+          directoryRow({ activeLinkCount: 0, revokedLinkCount: 1 }),
+          directoryRow({ activeLinkCount: 0 }),
+        ],
+      }),
+    };
+    const service = createStaffDirectoryService({ repository });
+
+    await expect(service.list()).resolves.toMatchObject({
+      items: [
+        { linkState: 'QUARANTINED', displayName: null, accessId: null },
+        { linkState: 'AMBIGUOUS', displayName: null, accessId: null },
+        { linkState: 'REVOKED', displayName: null, accessId: null },
+        { linkState: 'UNLINKED', displayName: null, accessId: null },
       ],
     });
   });

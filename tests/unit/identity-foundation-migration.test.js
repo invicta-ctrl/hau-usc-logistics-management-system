@@ -60,6 +60,7 @@ async function migratedRepository() {
 const time = '2026-08-14T00:00:00.000Z';
 const firstPersonId = 'PER-123E4567-E89B-42D3-A456-426614174000';
 const secondPersonId = 'PER-223E4567-E89B-42D3-A456-426614174000';
+const thirdPersonId = 'PER-323E4567-E89B-42D3-A456-426614174000';
 
 function person(personId) {
   return { personId, createdAt: time, sourceProvenanceEnvelope: null };
@@ -251,6 +252,10 @@ describe('schema-31 canonical identity foundation', () => {
     const repository = await migratedRepository();
     await repository.createPerson(person(firstPersonId));
     await repository.createPerson(person(secondPersonId));
+    await repository.createPerson(person(thirdPersonId));
+    sqlite.exec(
+      "INSERT INTO accounts (id, access_id_normalized, status, role_id, credential_version, created_at, updated_at) VALUES ('ACCOUNT-SYNTHETIC-0002', 'REVOKED.0002', 'REVOKED', 'SYNTHETIC_ROLE', 1, '2026-08-14T00:00:00.000Z', '2026-08-14T00:00:00.000Z'), ('ACCOUNT-SYNTHETIC-0003', 'QUARANTINED.0003', 'REVOKED', 'SYNTHETIC_ROLE', 1, '2026-08-14T00:00:00.000Z', '2026-08-14T00:00:00.000Z')",
+    );
     sqlite
       .prepare(
         `UPDATE accounts
@@ -263,6 +268,33 @@ describe('schema-31 canonical identity foundation', () => {
       accountId: 'ACCOUNT-SYNTHETIC-0001',
       personId: firstPersonId,
       state: ACCOUNT_STAFF_LINK_STATE.ACTIVE,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    await repository.createAccountStaffLink({
+      id: 'LNK-SYNTHETIC-DIRECTORY-0002',
+      accountId: 'ACCOUNT-SYNTHETIC-0001',
+      personId: firstPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.REVOKED,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    await repository.createAccountStaffLink({
+      id: 'LNK-SYNTHETIC-DIRECTORY-0003',
+      accountId: 'ACCOUNT-SYNTHETIC-0002',
+      personId: secondPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.REVOKED,
+      sourceProvenanceEnvelope: null,
+      createdAt: time,
+      updatedAt: time,
+    });
+    await repository.createAccountStaffLink({
+      id: 'LNK-SYNTHETIC-DIRECTORY-0004',
+      accountId: 'ACCOUNT-SYNTHETIC-0003',
+      personId: thirdPersonId,
+      state: ACCOUNT_STAFF_LINK_STATE.QUARANTINED,
       sourceProvenanceEnvelope: null,
       createdAt: time,
       updatedAt: time,
@@ -297,7 +329,7 @@ describe('schema-31 canonical identity foundation', () => {
           personId: firstPersonId,
           linkedAccountCount: 1,
           activeLinkCount: 1,
-          revokedLinkCount: 0,
+          revokedLinkCount: 1,
           quarantinedLinkCount: 0,
           quarantinedEmailCount: 0,
           ambiguousEmailCount: 0,
@@ -312,5 +344,50 @@ describe('schema-31 canonical identity foundation', () => {
         },
       ],
     });
+    await expect(
+      repository.listCanonicalDirectory({ query: 'revoked.0002', page: 1, pageSize: 5 }),
+    ).resolves.toMatchObject({
+      total: 1,
+      items: [
+        {
+          personId: secondPersonId,
+          linkedAccountCount: 1,
+          activeLinkCount: 0,
+          revokedLinkCount: 1,
+          activeAccessId: null,
+          activeDisplayName: null,
+        },
+      ],
+    });
+    await expect(
+      repository.listCanonicalDirectory({ query: 'quarantined.0003', page: 1, pageSize: 5 }),
+    ).resolves.toMatchObject({
+      total: 1,
+      items: [
+        {
+          personId: thirdPersonId,
+          linkedAccountCount: 1,
+          activeLinkCount: 0,
+          quarantinedLinkCount: 1,
+          activeAccessId: null,
+          activeDisplayName: null,
+        },
+      ],
+    });
+    await expect(repository.listCanonicalDirectory({ page: 1, pageSize: 1 })).resolves.toMatchObject({
+      total: 3,
+      items: [{ personId: firstPersonId }],
+    });
+    await expect(repository.listCanonicalDirectory({ page: 2, pageSize: 1 })).resolves.toMatchObject({
+      total: 3,
+      items: [{ personId: secondPersonId }],
+    });
+    await expect(repository.listCanonicalDirectory({ page: 3, pageSize: 1 })).resolves.toMatchObject({
+      total: 3,
+      items: [{ personId: thirdPersonId }],
+    });
+    await expect(
+      repository.listCanonicalDirectory({ query: 'not-a-canonical-person', page: 1, pageSize: 5 }),
+    ).resolves.toEqual({ total: 0, items: [] });
   });
 });

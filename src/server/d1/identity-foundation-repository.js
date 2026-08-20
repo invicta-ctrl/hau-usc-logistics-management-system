@@ -246,7 +246,6 @@ export function createD1IdentityFoundationRepository(db) {
           FROM account_staff_links lookup_link
           JOIN accounts lookup_account ON lookup_account.id = lookup_link.account_id
           WHERE lookup_link.person_id = p.person_id
-            AND lookup_link.state = 'ACTIVE'
             AND (
               lookup_account.access_id_normalized LIKE ?1 ESCAPE '\\'
               OR lookup_account.profile_full_name LIKE ?1 ESCAPE '\\'
@@ -260,7 +259,7 @@ export function createD1IdentityFoundationRepository(db) {
         .prepare(
           `SELECT
              p.person_id,
-             COUNT(DISTINCT link.id) AS linked_account_count,
+             COUNT(DISTINCT link.account_id) AS linked_account_count,
              COUNT(DISTINCT CASE WHEN link.state = 'ACTIVE' THEN link.id END) AS active_link_count,
              COUNT(DISTINCT CASE WHEN link.state = 'REVOKED' THEN link.id END) AS revoked_link_count,
              COUNT(DISTINCT CASE WHEN link.state = 'QUARANTINED' THEN link.id END) AS quarantined_link_count,

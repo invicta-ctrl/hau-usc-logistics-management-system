@@ -16,10 +16,9 @@ function positiveInteger(value, fallback) {
 
 function listCommand(value = {}) {
   const page = positiveInteger(value.page, 1);
-  const pageSize = Math.min(
-    MAX_PAGE_SIZE,
-    Math.max(MIN_PAGE_SIZE, positiveInteger(value.pageSize, DEFAULT_PAGE_SIZE)),
-  );
+  const pageSize = Number.isInteger(value.pageSize)
+    ? Math.min(MAX_PAGE_SIZE, Math.max(MIN_PAGE_SIZE, value.pageSize))
+    : DEFAULT_PAGE_SIZE;
   return {
     page,
     pageSize,
