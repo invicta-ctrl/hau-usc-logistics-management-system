@@ -467,3 +467,111 @@ proof. Post-application rollback is forward-only: disable/revert the route while
 retaining source/context/history. Reconstruction uses immutable audit/context/
 source rows, TRN IDs, and source-operation identities. A conflict is a
 reconciliation failure, never a silent rewrite.
+
+## Fifth-Luna controlling amendment
+
+This section replaces every earlier DDL, context, ID, batch, recovery, and
+test-harness statement in this plan. It is the one authoritative 0032 contract.
+HIS and TRN are opaque 128-bit lowercase-hex identifiers, not UUIDv4:
+
+    'HIS-' || lower(hex(randomblob(16)))
+    'TRN-' || lower(hex(randomblob(16)))
+
+History has event_id TEXT PRIMARY KEY with length 36, HIS- prefix, and
+lowercase-hex remainder CHECK; literal source_kind and event_type CHECK
+allowlists of ACCOUNT_AUDIT, ACCOUNT_STAFF_LINK, STAFF_ASSIGNMENT; and these
+typed foreign-key clauses in this exact SQLite order:
+
+    person_id TEXT NOT NULL REFERENCES canonical_people(person_id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    account_id TEXT REFERENCES accounts(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    account_staff_link_id TEXT REFERENCES account_staff_links(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    staff_assignment_id TEXT REFERENCES staff_assignments(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED
+
+Its action/source-kind CHECK requires: ACCOUNT_AUDIT has source_event_id equal
+to source_id, NULL transition_id, person/account/link, ACTIVE link, access
+snapshot, no assignment/window, and only ACCESS_ID_CHANGED,
+STARTER_ACCOUNT_CREATED, ACCOUNT_STATUS_CHANGED, or
+ACCOUNT_APPLICATION_ACTIVATED; ACCOUNT_STAFF_LINK and STAFF_ASSIGNMENT have
+source_event_id equal to non-NULL transition_id and their respective typed
+source ID/action/null relationships. Existing before-update/delete guards plus
+these ON DELETE RESTRICT constraints preserve retained history.
+
+History.transition_id is nullable UNIQUE and, when present, length 36 with
+TRN- prefix and lowercase-hex remainder. Generic audit IDs stay only in the
+ACCOUNT_AUDIT source_id/source_event_id branch. This prevents accidental
+cross-kind audit collision while making every completed transition ID globally
+unique after context cleanup.
+
+All four OLD/NEW effective fields in both history and transition context use
+this exact individually repeated predicate, not merely trim/length:
+
+    value IS NULL OR (
+      value = trim(value) AND length(value) = 24
+      AND substr(value, 5, 1) = '-' AND substr(value, 8, 1) = '-'
+      AND substr(value, 11, 1) = 'T' AND substr(value, 14, 1) = ':'
+      AND substr(value, 17, 1) = ':' AND substr(value, 20, 1) = '.'
+      AND substr(value, 24, 1) = 'Z'
+    )
+
+Audit context uses literal references:
+
+    audit_id TEXT PRIMARY KEY REFERENCES audit_log(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    person_id TEXT NOT NULL REFERENCES canonical_people(person_id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    account_id TEXT NOT NULL REFERENCES accounts(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    account_staff_link_id TEXT NOT NULL REFERENCES account_staff_links(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED
+
+Transition context has transition_id TEXT PRIMARY KEY with TRN shape, bounded
+source_kind/source_id/action/correlation/created_at, direct OLD/NEW state/window
+snapshot, and:
+
+    person_id TEXT NOT NULL REFERENCES canonical_people(person_id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    account_id TEXT REFERENCES accounts(id)
+      ON DELETE RESTRICT DEFERRABLE INITIALLY DEFERRED,
+    UNIQUE(source_kind, source_id)
+
+source_id has no FK because CREATE uses its preallocated future source ID. The
+primary key makes pending TRN globally unique; the composite UNIQUE allows at
+most one unconsumed context per source. The AFTER source trigger requires
+exactly one context matching kind, source ID, action, person/account, direct
+OLD/NEW states, and all four NULL-safe window values. Missing/stale/mismatched
+context aborts the source mutation; it never falls back to a current lookup.
+
+For every semantic link/assignment CREATE or UPDATE, the D1 batch is:
+
+1. prevalidate expected OLD/NEW values;
+2. guarded context insert with D1-generated TRN;
+3. guarded source mutation with exact expected OLD;
+4. immediately run:
+
+       UPDATE data_revisions
+       SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+       WHERE scope = 'global';
+
+5. project exact-match history; then delete only that consumed context.
+
+data_revisions.updated_at is NOT NULL. Thus zero/multi-row mutation aborts and
+rolls back context/source/history before cleanup can obscure changes(). No-op
+requests return before context insert; stale OLD, missing source, mismatched
+context, or reused TRN abort. A post-success retry is no-op, and a new reuse of
+the TRN conflicts on history.transition_id.
+
+Real Miniflare must execute guarded account-application context plus ACCOUNT
+audit SQL for exactly-one link, no link, ambiguous link, sentinel, malformed,
+and legacy-application-audit success. It also covers delayed/replayed,
+AUTHENTICATION, nonexistent-account, malformed-context legacy logging,
+assertion rollback, no-op/retry/conflict, typed-FK retention, and OLD/NEW
+windows. Synthetic probes are ordering-only. Browser/read proof requires
+effective ACCESS_ADMIN mutation:false before read, escaped or textContent-only
+dynamic output, safe empty/error state, and no legacy roster/access-directory
+fallback. Consumed contexts are ephemeral transaction coordination, never
+recovery evidence; reconstruction uses immutable history, retained source/audit,
+and authorized migration backup.
