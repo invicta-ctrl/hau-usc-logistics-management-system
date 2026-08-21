@@ -71,7 +71,7 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 - **Migration set:** `0031_canonical_identity_foundation.sql` SHA-256 `3de13ba44182f2db45b61378373549cab1e7e08c56df58cd6bd2b3f109b09444`, then `0032_staff_account_activity_history.sql` SHA-256 `16c0bf78f32729147b0fb8aa5e701ebe6b66b2f75db114f3ea6f968a4fad5abb`.
 - **Pre-freeze:** A7-R2 Section 16 PASS, including redacted authenticated account scope, existing Production/Playground baseline identities, remote schema-30/0030 ledger with foreign keys, Time Travel recovery marker, Worker rollback history, isolated D1/R2 bindings, and provider secret/config name presence.
 - **Workflow:** dispatched exactly once with f8 and the canonical release branch; exact-head package and pre-migration isolated Playground deploy both PASS. The run reference is intentionally redacted.
-- **Post-deploy:** direct reconciliation proves the deployed STAGING Worker has f8/tree/artifact bindings, `PLAYGROUND_MODE=true`, readiness, schema `30`/migration `0030`, and bindings distinct from unchanged Production. The schema-30 workflow check is the accepted pre-migration compatibility checkpoint, not final A7-R2 Section 21 acceptance.
+- **Post-deploy:** direct reconciliation proves the deployed STAGING Worker has f8/tree/artifact bindings, `PLAYGROUND_MODE=true`, readiness, schema `30`/migration `0030`, and bindings distinct from unchanged Production. One bounded follow-up proved Wrangler's deployment list is oldest-first and selected the latest record by timestamp; the earlier array-index observation was therefore a selection error, not candidate drift. The schema-30 workflow check is the accepted pre-migration compatibility checkpoint, not final A7-R2 Section 21 acceptance.
 - **Recovery:** Playground D1 Time Travel bookmark is present; Worker rollback history and R2/config identity were verified without recording private resource identities. Production mutation is zero.
 
 Safe read-only and post-deploy facts are limited to allowlisted public identity facts:
@@ -81,10 +81,18 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
 | Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 30 / 0030_production_access_and_operations.sql | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is the exact frozen v0.8.3 candidate at its accepted pre-migration checkpoint. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground is the exact frozen v0.8.3 candidate at its accepted reset-reconciled pre-migration checkpoint. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
+
+## Owner-authorized Playground reset receipt
+
+- **Authority:** Earl's exact `RESET PLAYGROUND` command.
+- **Scope:** only isolated Playground working D1/R2 state; no Git source/artifact, baseline, Production resource, or recovery-pointer mutation.
+- **Recovery:** a new private pre-reset D1 recovery receipt was captured before restoring the sealed clean Playground bookmark.
+- **Terminal reconciliation:** working state `CLEAN`; schema `30` / migration `0030`; foreign keys PASS; reset probe absent; working R2 brand identity equals the sealed baseline; working evidence is empty; exact f8 runtime/bindings and Production non-crossover PASS.
+- **Privacy:** the receipt, resource identities, bookmarks, hashes, URL, credentials, and values remain private and unrecorded in Git.
 
 ## Exact next gate
 
-V83_ISOLATED_PLAYGROUND_MIGRATION_0031_AND_RECONCILIATION: immediately recheck redacted recovery and the remote schema-30/0030 ledger, apply only `0031_canonical_identity_foundation.sql` to isolated Playground D1, and prove the migration ledger, schema, foreign keys, canonical-identity invariants, and Production non-crossover before any 0032 action. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
+V83_ISOLATED_PLAYGROUND_MIGRATION_0031_AND_RECONCILIATION: from the reset-reconciled CLEAN state, immediately recheck redacted recovery and the remote schema-30/0030 ledger, apply only `0031_canonical_identity_foundation.sql` to isolated Playground D1, and prove the migration ledger, schema, foreign keys, canonical-identity invariants, and Production non-crossover before any 0032 action. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
