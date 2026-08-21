@@ -313,9 +313,14 @@ as the specification requires.
 ## 12. Final state
 
 ```text
-FINAL_HEAD           see .codex/CURRENT_HANDOFF.md
-FINAL_TREE           see .codex/CURRENT_HANDOFF.md
-UPSTREAM_PARITY      origin/frontend-design-integration, verified 0 ahead / 0 behind
+MERGE_COMMIT         eea6abd97dc26904ceb2a8fbd92181786ee91ea3
+  parents            cd11ccf30ee061faa1bd12a754f518e876e2eb2a  (branch)
+                     86553349f5c2ebefaa637c30828c560a301f99ba  (origin/main)
+MERGE_TREE           3952bff400df37a134efe4f7016833031f16eb94
+FINAL_HEAD           eea6abd97dc26904ceb2a8fbd92181786ee91ea3
+FINAL_TREE           3952bff400df37a134efe4f7016833031f16eb94
+UPSTREAM_PARITY      origin/frontend-design-integration @ eea6abd
+                     verified 0 ahead / 0 behind after push readback
 ACTIVE_WRITER        NONE
 WRITER_LOCK          RELEASED
 HANDOFF_STATUS       READY_FOR_FI01
