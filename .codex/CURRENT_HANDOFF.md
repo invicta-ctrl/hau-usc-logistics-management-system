@@ -1,20 +1,21 @@
 # Current Environment Handoff
 
-FROM: TERRA_MAX:/root/v83_completion_terra_writer
-TO: TERRA_MAX:/root/v83_completion_terra_writer — V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE
+FROM: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TO: FRESH_SESSION_OR_SEPARATE_BRANCH_LOCAL_WRITER — V83_S17_CLOSED
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
-UPSTREAM: origin/release/v0.8.3-identity-foundation@GIT_HEAD;PUSH_PARITY_REQUIRED
-WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/v081-production-execution-eb14cd81
+UPSTREAM: origin/main@GIT_HEAD;PUSH_PARITY_VERIFIED
+WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_completion_terra_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: ACTIVE
-LOCK_CONTINUITY: V1R7_A7_R2_V83_CONTINUOUS_EXECUTION
-LOCK_HEARTBEAT_AT: 2026-08-21T01:15:45+08:00
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
+LOCK_CONTINUITY: V83_S17_CLOSED
+LOCK_HEARTBEAT_AT: RELEASED_AFTER_S17
 WRITER_TRANSFER_HISTORY: FROM=TERRA_MAX:/root/v83_gate_a_terra_writer;TO=TERRA_MAX:/root/v83_completion_terra_writer;AT=2026-08-20T19:26:41+08:00;REASON=ROOT_AUTHORIZED_AFTER_PREVIOUS_TERRA_COMPLETED_ITS_EXECUTION_WINDOW_WITH_NO_UNCOMMITTED_MUTATION
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
@@ -22,23 +23,48 @@ ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
 CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md
 AMENDMENT_COPY_EVIDENCE: CONTENT_EQUIVALENT_FORMATTING_NORMALIZED_FROM_EARL_ATTACHMENT;ATTACHMENT_SHA256=8bd8dd2ba29a6dbcf90513ccc95c55ec6975ae5cfacae79d6c768d746800e681;NORMALIZATION=11_MARKDOWN_DOUBLE_SPACE_HARD_BREAKS_TO_HTML_BR;RENDERED_METADATA_LINE_BREAKS=PRESERVED
 HISTORICAL_PLAN_AUDITS: SEVENTH=REJECTED_AND_REPAIRED;EIGHTH=P2_RECOVERY_WORDING_ONLY_REPAIRED;NINTH=PASS_NO_P0_P1_P2_WITH_ACCEPTED_P3_NO_LIVE_WORKER_403
-COMPLETED: ID-G remains canonically integrated at 45bbc1caf661d64a1abfdf1f775878ec89d88853 tree 4baebecc466b258d1b3729cff376bfafb2640ef6. Accepted provider-free ID-H implementation is fb93da76cbf71ec0419036d86c0b780b18bfeff4 tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df from preserved branch release/v0.8.3-eight-digit-verification; canonical fast-forward and normal push passed.
-VALIDATION: Canonical/task handshake clean; direct-child fast-forward eligibility PASS; exact nine ID-H paths and blobs matched the accepted task commit; A7/ID-G continuity and plan blobs were preserved; diff/scope identity checks PASS. Accepted Node 22.23.2 ID-H evidence: unit/SQLite-D1/provider/resend/Worker/V5 80/80 PASS, legacy eight-digit browser 1/1 PASS, V5 browser 29 PASS with 7 intentional skips, syntax/ESLint/Prettier/privacy/scope/diff PASS. Luna implementation review ACCEPT with P0=0/P1=0/P2=0.
+COMPLETED: ID-G remains canonically integrated at 45bbc1caf661d64a1abfdf1f775878ec89d88853 tree 4baebecc466b258d1b3729cff376bfafb2640ef6. Accepted provider-free ID-H implementation is fb93da76cbf71ec0419036d86c0b780b18bfeff4 tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; its historical task branch/worktree closed losslessly after commit preservation proof. A7-R2 Section 16 passed; Section 17 froze f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 tree 5788251d483f23ec5e19048e1a946b3a00450436; the repository workflow dispatched once and completed its exact-f8 package and isolated pre-migration Playground deployment. The second exact `RESET PLAYGROUND` restored the sealed state, the one second-reset 0031 reapply terminally reconciled CLEAN at schema31/0031, and the root-authorized atomic 0032 file import then ran once and terminally reconciled CLEAN at schema32/0032.
+VALIDATION: Candidate detached handshake and live branch parity PASS. Section 16 redacted preflight PASS: authenticated expected account scope, Production v0.8.2/c316 schema30/0030, Playground predeploy v0.8.2-playground.1/fc669 schema30/0030, Time Travel bookmark, worker rollback history, isolated D1/R2 bindings, provider secret/config name presence, and staging runtime/readiness. Package/deploy workflow SUCCESS. The first deployment-list read used an oldest-first array index; one bounded timestamp-selected reconciliation corrected that selection and independently proved the latest typed bindings plus safe endpoints are exact f8/tree/artifact, STAGING/PLAYGROUND_MODE, schema30/0030, and binding-isolated. The second reset terminally proved CLEAN schema30/0030, R2 baseline/working identity, empty working evidence, and Production mutation=0. The one-file provider-disabled 0031 reapply reached schema31/ledger0031 with no 0032 partial state, foreign keys, all 11 explicit canonical-identity STRICT table/trigger/index/FK invariants, exact f8 candidate/version/readiness, and fresh private post-0031 recovery. The atomic 0032 wrapper then passed byte-prefix/locked-ledger-suffix local validation and its one remote file import exited 0; terminal read-only reconciliation proved CLEAN schema32/single ledger0032, foreign keys, reset-probe absence, 3 Activity History tables, 2 indexes, 21 triggers, STRICT/append-only/empty-default invariants, exact f8 runtime/readiness, and fresh private recovery. The safe endpoint intentionally does not expose a tree; unchanged prior typed-binding evidence remains its tree/artifact proof. Accepted Node 22.23.2 product evidence remains valid because f8 product blobs are unchanged.
 P3_ADVISORY: NONBLOCKING_UNREPAIRED;tests/e2e/v072-account-access.spec.js hard-codes the committed harness port 4173; no scope expansion is authorized.
 PRIVACY_INCIDENT: METADATA_ONLY_LOCAL_FILENAMES_NO_CONTENT_NO_MUTATION;RECONCILED_BY_ROOT;NO_FILENAMES_RECORDED.
-EXTERNAL_ACTIONS: GIT_ONLY_NORMAL_NON_FORCE_CANONICAL_FAST_FORWARD_AND_PUSH;provider/private mutations=0;shared/provider database migration=0;deployment=0;candidate-freeze=0;Playground/Production mutation=0. Earlier read-only public version/readiness facts remain redacted and unchanged.
-BLOCKER: NONE;A7_R2_SECTION_16_PROVIDER_FREE_FINAL_RELEASE_GATE_AND_SECTION_17_CANDIDATE_FREEZE_ARE_NEXT;NO_PROVIDER_OR_PRIVATE_CROSSOVER
-NEXT_ACTION_SCOPE: V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE
-NEXT_EXACT_ACTION: V83_ID_H_PROVIDER_FREE_FINAL_RELEASE_GATE_CANDIDATE_FREEZE — run A7-R2 Section 16 provider-free final release-gate verification; only after all prerequisites are green, perform the A7-R2 Section 17 exact candidate freeze. Do not perform candidate-freeze execution in this completed continuity slice.
-RESUME_COMMANDS: Re-handshake canonical release/v0.8.3-identity-foundation; read A7-R2 Sections 16 and 17; verify the provider-free matrix, target schema 32 and 0031-then-0032 decisions, exact Git identity/parity, rollback evidence, and redacted isolation/provider-presence prerequisites; do not access or print private configuration.
-PROHIBITED_ACTIONS: No provider/private-source access; provider configuration values, recipient or delivery; shared/provider database migration; Playground/Production change; deployment; recovery rotation; branch cleanup; AGENTS/project-policy sync; new ID-G/ID-H plan or audit loop; or v0.8.4 work.
+CANONICAL_WORKTREE_RELEASE_BOUNDARY: KNOWN_CONCURRENT_EXTERNAL_GOVERNANCE_SYNC_PRESERVED_UNREAD_UNSTAGED;CANONICAL_CLEANLINESS_NOT_CLAIMED;FROZEN_DETACHED_CANDIDATE_CHECKOUT_CLEAN.
+EXTERNAL_ACTIONS: CANDIDATE_FREEZE=1;WORKFLOW_DISPATCH=1;PLAYGROUND_WORKER_DEPLOYMENT=1;PLAYGROUND_PROBE_BINDING_DEPLOYMENT=1;PLAYGROUND_RESET=2;PLAYGROUND_D1_MIGRATION_0031=2_TOTAL_FIRST_HISTORICAL_RESTORED_SECOND_CURRENT_REAPPLY=1;PLAYGROUND_D1_MIGRATION_0032=1_ROOT_AUTHORIZED_ATOMIC_FILE_IMPORT_EXIT_0_NO_RETRY;OWNER_AUTHORIZED_PLAYGROUND_SESSION_BOOTSTRAP=2_TOTAL;SOURCE_PROBE=1_NO_RETRY;SOURCE_GATE_DIAGNOSTIC_D1_SAFE_READ=1_NONZERO_UNPARSED_NO_RETRY;SOURCE_GATE_DIAGNOSTIC_SOURCE_READ=0;PROVIDER_EMAIL_DELIVERY=0;PRODUCTION_MUTATION=0. All external identifiers, URLs, credentials, resource IDs, bookmarks, recipients, and private values remain redacted.
+FAST_CLOSE: ACTIVE;MINIMUM_NECESSARY_VERIFICATION;NO_NEW_REVIEW_OR_BROAD_SUITE
+PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: PASS_WITH_P3_ADVISORY;EXACT_F8_VERSION_SCHEMA32_READINESS_PUBLIC_ROUTES_AND_UNAUTH_DENY=PASS;P3=IMAGE_SUFFIX_HTML_FALLBACK_FOR_LATER_VISUAL_CONFIRMATION
+PLAYGROUND_PROVENANCE_STOP: LAST_PRE_PROBE_STATE=DIRTY;ACTIVE_TEST_SESSION=TRUE;OWNER_AUTHORIZED_PLAYGROUND_SESSION;PENDING_OPERATION=ABSENT_AT_PREPROBE_RECEIPT;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL_INITIAL_AND_ONE_REPLACEMENT;NO_RESET_OR_REVOKE
+PLAYGROUND_INTEGRITY_AT_STOP: PRE_SOURCE_GATE_SCHEMA32_SINGLE_LEDGER0032_FOREIGN_KEYS_EXACT_ACTIVITY_HISTORY_OBJECTS_AND_EMPTY_NEW_ROWS=PASS;CANDIDATE_F8_UNCHANGED=PASS;POST_NONPASS_RECONCILIATION_NOT_CLAIMED
+POST_ACCEPTANCE_EXTERNAL_ACTIONS: PROBE_BINDING_DEPLOY=1;SOURCE_PROBE=1_NO_RETRY;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL;PROVIDER_EMAIL_DELIVERY=0;RESET=0;SESSION_REVOKE=0;PRODUCTION_MUTATION=0
+FROZEN_RECEIPT: SHA=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;TREE=5788251d483f23ec5e19048e1a946b3a00450436;PACKAGE_VERSION=0.8.3;LOCKFILE_SHA256=28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd;STAGING_APPLICATION_ARTIFACT_SHA256=60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99;WORKER_SOURCE_SHA256=5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca;MIGRATION_ORDER=0031_THEN_0032
+RECOVERY_RECEIPT: PLAYGROUND_D1_TIME_TRAVEL_BOOKMARK_PRESENT=TRUE;WORKER_ROLLBACK_HISTORY_PRESENT=TRUE;R2_CONFIG_IDENTITY=VERIFIED_REDACTED;D1_R2_PRODUCTION_CROSSOVER=FALSE;SECOND_OWNER_AUTHORIZED_PRE_AND_POST_RESET_RECEIPTS=CAPTURED_PRIVATE;SECOND_RESET_RECONCILIATION=CLEAN_SCHEMA30_0030_FK_R2_PASS;SECOND_RESET_0031_REAPPLY_PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;ATOMIC_0032_PRE_AND_POST_IMPORT_RECOVERY=CAPTURED_PRIVATE
+OWNER_PRODUCTION_GO: EXPLICIT_FAST_CLOSE_OVERRIDE_CONSUMED;OWNER=EARL;EXACT_FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
+PRODUCTION_FAST_CLOSE_RECONCILIATION: PASS_OWNER_FAST_CLOSE_SCOPE;EXACT_F8_RUNTIME_AND_WORKER_TRAFFIC_100_PERCENT=PASS;VERSION=0.8.3;SCHEMA32_MIGRATION_CHAIN0031_0032_SINGLE0032_LEDGER_FK0_THREE_ACTIVITY_HISTORY_TABLES=PASS;ROSTER_IDENTIFIER_CONFIG_AND_PROTECTED_GOOGLE_ROSTER_PRIVATE_KEY_PRESENCE=PASS;PRIVATE_TIME_TRAVEL_RECOVERY_RECEIPT=CAPTURED;PLAYGROUND_PRODUCTION_CROSSOVER=FALSE;NO_PRIVATE_VALUE_RECORDED
+PRODUCTION_SMOKE: HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED;OWNER_ACCEPTED_MINIMAL_FALLBACK=TRUE;HTTP_PASS=NOT_CLAIMED;NO_RETRY
+ID_H_LIVE_DELIVERY: OWNER_WAIVED_OR_UNRUN;NEVER_PASS;PROVIDER_EMAIL_SEND_BY_THIS_WRITER=0
+HISTORICAL_PLAYGROUND_SOURCE_GATE: COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;NOT_PASS;NO_RETRY
+PRODUCTION_ELIGIBILITY: OWNER_FAST_CLOSE_OVERRIDE_CONSUMED;HISTORICAL_PLAYGROUND_NONPASS_RETAINED_NOT_PASS_NOT_ACTIVE_BLOCKER
+BLOCKER: FALSE;NO_ACTIVE_PRODUCTION_IDENTITY_INTEGRITY_RECOVERY_OR_PRIVACY_MISMATCH
+PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e;CI_VERIFY_CODEQL_BROWSER_SMOKE=PASS;CODEQL_99_FALSE_POSITIVE_DISMISSED;F8_APPLICATION_PATH_PARITY=PASS;V083_TAG=PASS;RECOVERY_POINTERS_ROTATED_AND_READBACK=PASS;P2_PAGINATION_REVIEW_THREADS_DEFERRED_TO_POST_V083_FRONTEND_INTAKE_WITHOUT_PRODUCT_CHANGE
+PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
+S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
+NEXT_ACTION_SCOPE: V83_CLOSED;SEPARATE_BRANCH_LOCAL_PREPARATION_ONLY
+NEXT_EXACT_ACTION: Do not reopen v0.8.3. Take and release a separate branch-local v0.8.4 preparation lock only under the owner-authorized Phase 8 scope.
+RESUME_COMMANDS: Rehydrate this final v0.8.3 receipt, then take a separate v0.8.4 branch-local preparation lock only if the owner-authorized Phase 8 scope remains active.
+PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, migration rerun, source-probe retry, roster configuration/secret activation, provider/email/browser/manual mutation, Production data mutation, recovery-data deletion, AGENTS/project-policy sync, v0.8.4 implementation, frontend runtime/backend/design mutation, or unproven branch/worktree deletion.
 
 ## Continuity and release state
 
 A7-R2 is controlling under Earl's explicit current instruction, adopted at 2026-08-20T23:33:37+08:00. The exact owner mapping is ID-A auth/session/security preservation, ID-B canonical person and assignment domain, ID-C email/provenance and explicit account linkage, ID-D existing active-access preservation, ID-E two-stage approval, ID-F Staff Directory, ID-G staff/account operational activity history, and ID-H secure eight-digit verification lifecycle.
 
-The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE PENDING, password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=PENDING and has no code/API rename.
+The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E VERIFIED_NO_OP, ID-F PASS, ID-G PASS, ID-H_IMPLEMENTATION PASS, ID-H_PLAYGROUND_DELIVERY_GATE OWNER_WAIVED_OR_UNRUN (never PASS), password visibility PASS, and password browser evidence PASS. ID-D's old zero/probe bookkeeping is historical: the live candidate-bound check is SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE and has no code/API rename.
 
-Schema target is 32. Migration 0031 is required if target schema remains 30; migration 0032 source is present and required because accepted ID-G includes it, in order 0031 then 0032; provider application remains pending and stage-gated. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
+Schema target is 32. The atomic-import checkpoint was CLEAN at schema32/0032 under exact f8, and the final deterministic automated acceptance is PASS_WITH_P3_ADVISORY. Earl then authorized the active Playground session, one bounded replacement session bootstrap, one candidate-bound source probe, and one distinct read-only diagnostic. The probe-binding deployment retained exact f8/tree/artifact and isolation, but the single source probe completed NONPASS; its private sanitized receipt retains aggregate `safeFlags=false` only, not a safe component classification or local response-shape-validator failure. The diagnostic confirmed absent required roster-source configuration and secret inventory. Its one safe D1 aggregate read was nonzero/unparsed with no retained private error receipt, so the exact A7 subtype remains unresolved. No source read or mutation followed. Pre-source schema32/ledger/FK/Activity History evidence remains green; post-NONPASS reconciliation is not claimed. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
 
-No routine owner pause is due until later isolated Playground manual test and explicit Production GO. No v0.8.4 work is authorized in this session. Context Vault synchronization remains blocked by its registered active-writer/dirty-work gate; do not synchronize AGENTS.md or project policy.
+This former material pause is historical for the consumed Playground gate. Earl's explicit 2026-08-21 Production fast-close override accepts the historical NONPASS for v0.8.3 only, without calling it PASS or authorizing any retry. Context Vault synchronization remains out of scope; no v0.8.4 implementation is authorized.
+
+## Historical source-gate diagnostic checkpoint
+
+Earl's explicit `AUTHORIZED PLAYGROUND SESSION — CONTINUE FAST-CLOSE` reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. The initial bootstrap succeeded but its ephemeral local response material was discarded before the probe; one explicitly authorized replacement bootstrap passed. The source probe was then invoked exactly once with no retry. Its private receipt is `COMPLETED_NONPASS` with aggregate `safeFlags=false`; raw result material, HTTP/status/component/quarantine classification, and any local response-shape-validator failure are not retained. The distinct owner-authorized one-time diagnostic confirmed absent required roster-source configuration and secret inventory. Its one D1 safe aggregate read was nonzero/unparsed; no private error receipt exists for exact classification, and no source read or mutation followed. The gate is not accepted and is recorded as `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`. No provider/email, browser/manual, Production, reset, or revoke action followed before the new owner override.
+
+## Active 2026-08-21 owner fast-close transfer
+
+Earl explicitly authorized v0.8.3 Production fast closeout, recovery-pointer rotation, lossless branch/worktree hygiene, v0.8.4 branch preservation/refresh without implementation, and frontend-design adoption preparation without runtime or design mutation. The stale writer lock transfers to `TERRA_MAX:/root/v83_playground_reset_terra_writer`. The bounded Production reconciliation is complete: exact f8 runtime/100% Worker traffic, v0.8.3/schema32/migrations 0031+0032/single 0032 ledger/FK0/three Activity History tables, roster configuration/protected-secret presence, private recovery evidence, and no Playground crossover all pass. The consumed smoke is `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED`, an owner-accepted fallback and never `HTTP_PASS`; email delivery is `OWNER_WAIVED_OR_UNRUN`, never PASS.

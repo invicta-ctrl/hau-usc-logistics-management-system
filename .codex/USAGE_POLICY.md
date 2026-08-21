@@ -38,25 +38,30 @@ required complete suite once at the final gate of a bounded unit.
 
 ## Orchestration and delegation
 
-The repository-root `AGENTS.md` is the canonical model policy. On `main`, legacy
-`REQUIRED_MODEL: CODEX` metadata in current records is explicitly superseded and
-non-authoritative for model routing; a separately accepted task is required to
-normalize those records.
+TOKEN-OPT-001 is the sole account-wide efficiency authority. The byte-identical
+repository-root `AGENTS.md` supplies universal governance and
+`.agents/PROJECT_POLICY.md` supplies HAU-specific role, writer-lock, release, and
+data-safety constraints. On `main`, legacy `REQUIRED_MODEL: CODEX` metadata in
+current records is explicitly superseded and non-authoritative for model routing;
+a separately accepted task is required to normalize those records.
 
-Only Sol may create child tasks, with `DELEGATION_DEPTH: 1`. Sol children are
-forbidden (`MAX_SOL_SUBAGENTS: 0`). Sol may use up to 16 Terra MAX writer-class
-children (`MAX_TERRA_SUBAGENTS: 16`) and up to 16 Luna MAX read-only reviewer
-children (`MAX_LUNA_SUBAGENTS: 16`). Do not substitute another model class when
-the required route is unavailable; stop and report the routing blocker.
+Use deterministic tools and the parent first. Defaults are zero children, at most
+one active child, delegation depth one, ordinary reasoning High or lower, no routine
+independent review, and no routine full suite after each small module. Only Sol may
+create a child. Sol children remain forbidden. Do not substitute another model class
+when a required HAU route is unavailable; stop and report the routing blocker.
 
-Each writing task names one `TERRA_INTEGRATION_WRITER` as the sole canonical
-branch/worktree writer. Additional Terra work is allowed only in isolated,
-non-overlapping worktrees or patch scopes. Luna performs bounded mapping, log
-triage, review, or audit only and never mutates repository or provider state.
+When accepted write scope requires a child writer, name one Terra Integration Writer
+as the sole canonical branch/worktree writer. A Luna child is read-only and conditional
+on material risk, uncertainty, a focused failure, or Earl's explicit request; it never
+mutates repository or provider state. Writer and reviewer children do not run
+concurrently by default. An exact accepted high-risk operation may require a more
+specific route, but stale generic pool language is not such authority.
 
-Use deterministic scripts and targeted inspection first. Each task-local ledger
+Each task-local ledger
 row states agent ID, model, role, mode, scope, worktree or patch, owned and
 excluded paths, dependencies, status, and output evidence. Do not delegate
 status updates, known pushes, small files, deterministic work, owner decisions,
 production approval, destructive cleanup, or work already verified at the same
-SHA.
+SHA. Stop when the accepted DONE condition and proportionate deterministic evidence
+are green.

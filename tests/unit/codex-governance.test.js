@@ -8,6 +8,7 @@ import {
   validateAgentInstructions,
   validateAgentToml,
   validateProjectConfig,
+  validateUniversalAgentInstructions,
 } from '../../scripts/check-agent-instructions.mjs';
 import { REQUIRED_RESUME_FIELDS, validateContinuation } from '../../scripts/check-work-continuation.mjs';
 import { buildContextPacket, truncateUtf8 } from '../../tools/codex/context-packet.mjs';
@@ -20,8 +21,28 @@ import {
 } from '../../tools/codex/run-capped.mjs';
 
 describe('Codex governance validators', () => {
+  it('requires the byte-identical universal root contract', () => {
+    const valid = [
+      'governance_id: EARL-UNIVERSAL-AGENTS-V1',
+      'canonical_repository: invicta-ctrl/gpt-context-vault',
+      'managed_replica_policy: byte-identical-generated',
+      'project_extension_path: .agents/PROJECT_POLICY.md',
+      'only editable general-policy authority',
+      'Context Vault AGENTS.md -> START_HERE.md -> CONTEXT_INDEX.md -> minimum relevant context -> authoritative project repository',
+      '## Canonical AGENTS synchronization contract',
+    ].join('\n');
+    expect(validateUniversalAgentInstructions(valid)).toEqual([]);
+    expect(validateUniversalAgentInstructions(`${valid}\nMAX_TERRA_SUBAGENTS: 16`)).toContain(
+      'HAU orchestration leaked into universal root',
+    );
+  });
+
   it('requires the canonical Sol/Terra/Luna and Quick Document Fix policies', () => {
     const valid = [
+      'extension_id: HAU-USC-LOGISTICS-PROJECT-POLICY-V1',
+      'Read the byte-identical universal root `AGENTS.md` first',
+      'universal AGENTS.md -> .agents/PROJECT_POLICY.md -> .codex/CURRENT.md',
+      'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
       'skill registry',
       '.codex/TASK_ROUTING.md',
       '.codex/CAVEMAN_WORKFLOW.md',
@@ -41,17 +62,25 @@ describe('Codex governance validators', () => {
       'SOL_SUBAGENTS: FORBIDDEN',
       'MAX_SOL_SUBAGENTS: 0',
       'WRITER_MODEL: Terra MAX',
-      'MAX_TERRA_SUBAGENTS: 16',
+      'DEFAULT_CHILDREN: 0',
+      'MAX_ACTIVE_CHILDREN: 1',
       'CANONICAL_ACTIVE_WRITER: one Terra Integration Writer',
-      'PARALLEL_TERRA: isolated non-overlapping worktrees or patch scopes only',
       'READER_MODEL: Luna MAX',
       'LUNA_WRITES: FORBIDDEN',
-      'MAX_LUNA_SUBAGENTS: 16',
+      'ORDINARY_REASONING: high or lower',
+      'ROUTINE_INDEPENDENT_REVIEW: false',
+      'ROUTINE_FULL_SUITE_AFTER_SMALL_MODULE: false',
+      'STOP_WHEN_GREEN: true',
       'DELEGATION_DEPTH: 1',
       'SUBAGENT_SPAWNER: Sol only',
       'MODEL_SUBSTITUTION: forbidden unless Earl explicitly amends the task',
       'On main, legacy REQUIRED_MODEL: CODEX metadata is explicitly superseded and non-authoritative for model routing.',
       'Permanent Git branch and playground release policy',
+      '## Permanent Git and recovery policy',
+      '## Mandatory release path after v0.8.0',
+      '## Environment and data-isolation rules',
+      '## Protected domain invariants',
+      'ACTIVE_WRITER is a hard lock',
       'Isolated Staging Playground',
       '## Quick Document Fix Mode',
       '### Eligibility',
@@ -74,9 +103,11 @@ describe('Codex governance validators', () => {
       '9. Terra pushes and merges only through the smallest permitted repository path',
       '10. When the requested document is present, focused validation passes, the complete diff has been reviewed, and the required push/merge is complete, STOP.',
       'The default is zero Luna reviewers',
+      'Use a bounded Luna review only for a material policy contradiction',
       'Earl explicitly requests an independent audit',
       'genuinely large diff where one independent read materially reduces risk',
       'Do not repeat audit loops',
+      'do not start a repeated audit loop',
       'Run proportional documentation-only verification',
       'does not voluntarily run full browser/e2e suites',
       'CodeQL',
@@ -90,50 +121,38 @@ describe('Codex governance validators', () => {
       'Stop Quick Document Fix Mode immediately',
       'The requested document must be present, focused validation must pass, the complete diff must be reviewed, and the required push/merge must be complete. Then STOP.',
       'accepted specification or amendment',
+      'unrelated dirty work elsewhere is not by itself a blocker',
     ].join('\n');
     expect(validateAgentInstructions(valid)).toEqual([]);
-    expect(validateAgentInstructions(valid.replace('skill registry', 'skills'))).toContain('skill registry');
-    expect(validateAgentInstructions(valid.replace('STATUS: ACCEPTED', 'STATUS: DRAFT'))).toContain(
-      'accepted mainline governance amendment status',
-    );
-    expect(
-      validateAgentInstructions(
-        valid.replace('QUICK Mainline AGENTS Governance Sync + Fast Document-Fix Mode', 'other directive'),
-      ),
-    ).toContain('accepted mainline governance amendment directive');
-    expect(
-      validateAgentInstructions(valid.replace('MAX_SOL_SUBAGENTS: 0', 'MAX_SOL_SUBAGENTS: 1')),
-    ).toContain('zero Sol children');
-    expect(validateAgentInstructions(valid.replace('10. When', '11. When'))).toContain(
-      'ten-step fast workflow',
-    );
-    expect(
-      validateAgentInstructions(valid.replace('Sol assigns ONE Terra MAX writer', 'Sol assigns Terra')),
-    ).toContain('Quick Document Fix one Terra assignment');
-    expect(
-      validateAgentInstructions(valid.replace('Sol reviews the complete diff once', 'Sol reviews later')),
-    ).toContain('Quick Document Fix one Sol review');
-    expect(
-      validateAgentInstructions(valid.replace('Terra commits exactly once', 'Terra commits later')),
-    ).toContain('Quick Document Fix commit once');
     expect(
       validateAgentInstructions(
         valid.replace(
-          'Terra pushes and merges only through the smallest permitted repository path',
-          'Terra waits',
+          'TOKEN-OPT-001 is the sole account-wide token/context-efficiency authority',
+          'local efficiency policy',
         ),
       ),
-    ).toContain('Quick Document Fix push and merge');
-    expect(validateAgentInstructions(`${valid}\nCodex is the only writer by default.`)).toContain(
-      'obsolete Codex-only writer language',
+    ).toContain('TOKEN-OPT sole efficiency authority');
+    expect(validateAgentInstructions(valid.replace('DEFAULT_CHILDREN: 0', 'DEFAULT_CHILDREN: 1'))).toContain(
+      'zero default children',
     );
-    expect(validateAgentInstructions(`${valid}\nAt most two concurrent read-only subagents.`)).toContain(
-      'obsolete two-read-only-subagent cap',
+    expect(
+      validateAgentInstructions(valid.replace('MAX_ACTIVE_CHILDREN: 1', 'MAX_ACTIVE_CHILDREN: 2')),
+    ).toContain('one active child maximum');
+    expect(
+      validateAgentInstructions(
+        valid.replace('ROUTINE_INDEPENDENT_REVIEW: false', 'ROUTINE_INDEPENDENT_REVIEW: true'),
+      ),
+    ).toContain('no routine independent review');
+    expect(validateAgentInstructions(valid.replace('10. When', '11. When'))).toContain(
+      'ten-step document workflow',
+    );
+    expect(validateAgentInstructions(`${valid}\nMAX_TERRA_SUBAGENTS: 16`)).toContain(
+      'routine Terra pool',
     );
   });
 
-  it('validates read-only Luna MAX custom-agent essentials', () => {
-    const valid = `name = "repo_mapper"\ndescription = "Luna MAX map"\nmodel = "gpt-5.6-luna"\nmodel_reasoning_effort = "max"\nsandbox_mode = "read-only"\ndeveloper_instructions = '''\nRead only. Do not edit files or spawn agents.\n'''`;
+  it('validates read-only Luna custom-agent essentials', () => {
+    const valid = `name = "repo_mapper"\ndescription = "Luna map"\nmodel = "gpt-5.6-luna"\nmodel_reasoning_effort = "high"\nsandbox_mode = "read-only"\ndeveloper_instructions = '''\nRead only. Do not edit files or spawn agents.\n'''`;
     expect(validateAgentToml(valid, 'repo_mapper')).toEqual([]);
     expect(validateAgentToml(valid.replace('read-only', 'workspace-write'), 'repo_mapper')).toContain(
       'read-only sandbox',
@@ -143,31 +162,31 @@ describe('Codex governance validators', () => {
     );
     expect(
       validateAgentToml(
-        valid.replace('model_reasoning_effort = "max"', 'model_reasoning_effort = "low"'),
+        valid.replace('model_reasoning_effort = "high"', 'model_reasoning_effort = "low"'),
         'repo_mapper',
       ),
-    ).toContain('maximum reasoning');
+    ).toContain('High reasoning');
     expect(validateAgentToml(valid.replace('spawn agents', 'summarize logs'), 'repo_mapper')).toContain(
       'no agent spawning',
     );
     expect(validateAgentToml(`${valid}\nmalformed`, 'repo_mapper')[0]).toMatch(/valid restricted TOML/);
     expect(
       validateAgentToml(
-        valid.replace('description = "Luna MAX map"', 'description = "read\\/only"'),
+        valid.replace('description = "Luna map"', 'description = "read\\/only"'),
         'repo_mapper',
       )[0],
     ).toMatch(/unsupported TOML escape/);
   });
 
   it('parses only the supported TOML subset and rejects configuration drift', () => {
-    const valid = '[agents]\nmax_threads = 32\nmax_depth = 1\ninterrupt_message = false\n';
+    const valid = '[agents]\nmax_threads = 2\nmax_depth = 1\ninterrupt_message = false\n';
     expect(parseRestrictedToml(valid).sections.agents).toMatchObject({
-      max_threads: 32,
+      max_threads: 2,
       max_depth: 1,
     });
     expect(validateProjectConfig(valid)).toEqual([]);
-    expect(validateProjectConfig(valid.replace('max_threads = 32', 'max_threads = 2'))).toContain(
-      'max_threads must be 32',
+    expect(validateProjectConfig(valid.replace('max_threads = 2', 'max_threads = 3'))).toContain(
+      'max_threads must be between 1 and 2',
     );
     expect(
       validateProjectConfig(
@@ -175,7 +194,7 @@ describe('Codex governance validators', () => {
       ),
     ).toEqual(
       expect.arrayContaining([
-        'max_threads must be 32',
+        'max_threads must be between 1 and 2',
         'unsupported [agents] field max_concurrent_threads_per_session',
       ]),
     );

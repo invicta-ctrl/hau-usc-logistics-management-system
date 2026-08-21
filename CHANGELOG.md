@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### v0.8.3 owner-fast-close checkpoint
+
+- Reconciled the already-live owner-authorized Production v0.8.3 runtime to the exact frozen f8 candidate, 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0, three Activity History tables, protected roster configuration/secret presence, private recovery evidence, and isolated Playground bindings.
+- Recorded `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` as the accepted minimal smoke fallback; it is never recorded as HTTP PASS. Historical Playground source NONPASS remains owner accepted for v0.8.3 fast close only, never PASS; live email/manual gates remain `OWNER_WAIVED_OR_UNRUN`.
+- Completed the evidence-only protected-main/recovery checkpoint: the normal PR #25 merge accepted main `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e` with frozen f8 application-path parity, `v0.8.3` tagging, and recovery-pointer rotation/readback. CI verify, CodeQL, and browser smoke passed; CodeQL #99 was dismissed as a validated false positive. Two P2 pagination review threads are deferred to the post-v0.8.3 frontend intake without altering the frozen/deployed product.
+- Completed the lossless temporary-state hygiene checkpoint: redundant v0.8.3 refs were closed only after unique-history and byte-equivalence proof; the historical Gate-A audit package is retained by immutable archive tag; the primary main checkout is clean; and the v082 product-dirty worktree remains untouched. One unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
+- Completed v0.8.3 S17 closeout with `ACTIVE_WRITER: NONE`, `WRITER_LOCK: RELEASED`, and handoff readiness after Production/main/f8 identity, recovery rotation, lossless hygiene, retained-future-ref, and pushed-readback evidence passed. v0.8.4/frontend work, if any, is separate branch-local preparation and does not reopen v0.8.3.
+
 ### Added
 
 - Added the owner-authorized Sol/Terra/Luna orchestration governance amendment: GPT-5.6 Sol is the sole read-only orchestrator with no Sol children, Terra MAX is the only writer class with one canonical integration writer and isolated scopes, and Luna MAX is the read-only auditor class. The amendment preserves historical product specifications while superseding only their model-routing language.
