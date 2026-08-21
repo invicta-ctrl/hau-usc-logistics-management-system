@@ -2,10 +2,10 @@
 
 ## Current resume block
 
-- **Milestone:** FRONTEND_INTEGRATION_FI01_SHARED_DESIGN_FOUNDATION_COMPLETE_PENDING_PUSH.
+- **Milestone:** FRONTEND_INTEGRATION_FI01_SHARED_DESIGN_FOUNDATION_COMPLETE_PENDING_NORMAL_PUSH_READBACK.
 - **Repository/worktree:** `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration` only.
 - **Branch/HEAD/upstream:** `frontend-design-integration`; start `eacdfcc951c687cfca5731ede245130266b1c3da` / `30b2ae1d15731d42fa668f48fe6a0064869ff655`; final local and origin identities must be read back after normal push.
-- **Current phase/stage:** FI-01 implementation and focused verification complete; final current-chain closeout, commit, and push/readback remain.
+- **Current phase/stage:** FI-01 implementation commit `6c013c643b81ed57f5d6a1ec7557a51212ca1eee` and closeout records are complete; normal push/readback remains.
 - **Accepted scope:** `.codex/specs/active/frontend-integration-fi01-shared-design-foundation.md`.
 - **Completed work:** One live `tokens.css` authority now supplies semantic light/dark colors, local D04 typography, spacing, elevation, D02 glass/blur, motion, and focus; V3/V4/V5 root declarations are inactive consumer-era layers.
 - **Files changed by purpose:** Runtime CSS tokens/primitive focus; retained CSS consumer layers; FI-01 specification/current-chain/receipt/design authority; generated `dist/index.html` and shareable build outputs from the repository build.

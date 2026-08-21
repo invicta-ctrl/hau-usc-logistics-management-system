@@ -1,11 +1,12 @@
 # FI-01 Shared Design Foundation Receipt
 
 ```text
-FI01_STATUS: PASS_PENDING_COMMIT_PUSH
+FI01_STATUS: PASS_PENDING_NORMAL_PUSH_READBACK
 STARTING_SHA: eacdfcc951c687cfca5731ede245130266b1c3da
 STARTING_TREE: 30b2ae1d15731d42fa668f48fe6a0064869ff655
-ENDING_SHA: GIT_HEAD after normal FI-01 commit and origin readback
-ENDING_TREE: verified after normal FI-01 commit and origin readback
+IMPLEMENTATION_SHA: 6c013c643b81ed57f5d6a1ec7557a51212ca1eee
+ENDING_SHA: GIT_HEAD after FI-01 closeout commit and origin readback
+ENDING_TREE: GIT_TREE after FI-01 closeout commit and origin readback
 FUNCTIONAL_BASELINE: FI00_RECONCILED_FROZEN_V083;origin/main@86553349f5c2ebefaa637c30828c560a301f99ba
 VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F + FIGMA_MAKE_V39
 RUNTIME_TOKEN_AUTHORITY: src/v5/styles/tokens.css

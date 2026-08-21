@@ -1,10 +1,10 @@
 # FI-01 — Shared Design Foundation
 
-Status: **ACCEPTED**  
-Owner: Earl  
-Accepted: 2026-08-21, Asia/Manila — FI-01 V2 owner prompt  
-Writer: `TERRA_MAX:/root/fi01_integration_writer`  
-Branch: `frontend-design-integration`  
+Status: **ACCEPTED**
+Owner: Earl
+Accepted: 2026-08-21, Asia/Manila — FI-01 V2 owner prompt
+Writer: `TERRA_MAX:/root/fi01_integration_writer`
+Branch: `frontend-design-integration`
 Worktree: `D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration`
 
 ## Objective

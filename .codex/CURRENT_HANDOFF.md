@@ -1,22 +1,22 @@
 # Current Environment Handoff
 
-FROM: FI00_RECONCILIATION_HANDOFF
-TO: TERRA_MAX:/root/fi01_integration_writer
+FROM: TERRA_MAX:/root/fi01_integration_writer
+TO: FI-02 PUBLIC LANDING & PORTAL SHELL — next accepted branch writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: FI01_SHARED_DESIGN_FOUNDATION_IN_PROGRESS
+STATUS: FI01_SHARED_DESIGN_FOUNDATION_COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
-TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
-LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-LOCK_CONTINUITY: OPEN
-HANDOFF_STATUS: FI01_IN_PROGRESS
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+LOCK_CONTINUITY: CLOSED
+HANDOFF_STATUS: READY_FOR_FI02
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
@@ -41,7 +41,7 @@ VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Design=hXJElH4p72KfgAaoUyfNO
 FIGMA_SOURCE_STATUS: RECOVERABLE_FROM_GIT;output/design/make-adoption/theme.css sha256 249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d, reverified on the reconciled tree;register paths unchanged
 BRANCH_ROLE: TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH;promotion is clean-lineage only, by squash merge or a fresh promotion branch cut from accepted main;a normal historical-branch merge into main is forbidden
 
-COMPLETED: FI-00 is reverified PASS at eacdfcc951c687cfca5731ede245130266b1c3da / 30b2ae1d15731d42fa668f48fe6a0064869ff655, origin/main remains 86553349f5c2ebefaa637c30828c560a301f99ba, the FI-01 accepted specification is persisted, and the sole FI-01 writer lock is held. Implementation has not yet changed runtime source.
+COMPLETED: FI-01 implementation commit 6c013c643b81ed57f5d6a1ec7557a51212ca1eee establishes one active D41-derived token/theme authority, local D04 semantic typography, D02 G1-G4 glass/blur, motion, and focus. Legacy V3/V4/V5 sheets retain primitive selectors but no active root/theme authority. D08 remains OPEN_FOR_FI02.
 
 FI00_RECEIPT: docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md
 START_HERE: docs/design/FRONTEND_INTEGRATION_START_HERE.md
@@ -61,7 +61,7 @@ MERGES_INTO_MAIN: 0
 HISTORY_REWRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
 
-VALIDATION: Pre-write Git handshake PASS: clean worktree, correct branch, upstream parity 0/0, FI-00 HEAD/tree match, origin/main identity match, zero current-main deleted paths. FI-01 runtime verification remains pending.
+VALIDATION: FI-00 rehydration PASS; npm build PASS; focused npx eslint src/v5 PASS; check:agents PASS; handoff:verify PASS; continuation PASS; Prettier and diff check PASS; four retained design/theme checks PASS; D41 contrast audit PASS; current-app Playwright V5 visual matrix PASS at 320/390/768/1024/1440. Full npm lint retains a pre-existing unrelated prototype browser-global configuration failure.
 
 EXTERNAL_ACTIONS: Git commits, a normal branch push, and one annotated archive tag push with remote readback. No Figma, provider, database, recovery, deployment, or Production action.
 
@@ -71,7 +71,7 @@ FIRST_FI01_EXCLUDED_PATHS: every src/v5/src/surfaces file;every src/v5/integrati
 FIRST_FI01_REQUIRED_READS: AGENTS.md;.agents/PROJECT_POLICY.md;.codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;docs/design/FRONTEND_INTEGRATION_START_HERE.md;docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md;docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md FI-01 section;src/index.html;src/v5/styles/tokens.css;scripts/design/theme-source.mjs;prototypes/shared/hau-theme.css;output/design/make-adoption/theme.css;docs/design/DESIGN_AUTHORITY.md D08 D09 D12 D41 only
 FIRST_FI01_DO_NOT_REPEAT: the runtime parity proof;the Figma audit;the Make capture;the route, capability, operation and state inventory;the source classification;the historical v5 browser matrix
 
-BLOCKER: FALSE; owner FI-01 V2 prompt authorizes D-04 and D-02 reconciliation from retained evidence. D-08 is explicitly OPEN_FOR_FI02.
+BLOCKER: FALSE; D02 and D04 PASS, D08 OPEN_FOR_FI02. Normal push/readback is the only remaining closeout action.
 
 UNVERIFIED_ITEMS: live Figma Design page count, where a read-only probe on 2026-08-21 returned one page against the audit's 28, consistent with the desktop bridge rather than a file change; live Figma Make version, since no MCP tool reads a /make/ URL; 54 inferred colours on Figma page 15; original authorship of the preserved RequestCenterRoute.tsx edit. None is load-bearing for FI-00.
 
@@ -79,8 +79,8 @@ OWNER_DECISIONS_REQUIRED: D-04 typography authority (blocks FI-01);D-02 blur and
 
 ROLLBACK_POINT: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
 
-NEXT_EXACT_ACTION: FI01_IMPLEMENT_CANONICAL_RUNTIME_FOUNDATION
+NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
 
-RESUME_COMMANDS: Revalidate Git status, branch, HEAD/tree, origin/main, and upstream before any further write; read this FI-01 specification and the targeted active CSS graph; implement only canonical shared foundation changes; run the bounded FI-01 verification matrix before a normal push/readback.
+RESUME_COMMANDS: Verify normal-push remote HEAD/parity, then rehydrate governance/current records before beginning the separately accepted FI-02 slice.
 
 PROHIBITED_ACTIONS: No FI-01 implementation before its specification is accepted and D-04 and D-02 are resolved. No rebase, reset, clean, force-push, or history rewrite. No normal historical-branch merge into main; promotion is clean-lineage only. No tag, deployment, migration, provider write, or Production action without that action's exact accepted authority. No Figma mutation. No hand-edited generated artifact. No fixture, mock actor, fake count, or preview control in a user-facing surface. No client-side authorization. No new runtime dependency without a separate owner decision. Do not restore archived historical artifacts into the active tree; read them from archive/frontend-design-pre-fi00-2026-08-21.

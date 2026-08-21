@@ -14,12 +14,12 @@ SCOPE: Persist FI-01 authority and lock; consolidate the live shared token/theme
 OUT_OF_SCOPE: FI-02/route redesign including landing hero D-08; API/backend/auth/session/CSRF/authorization/data/schema/migration/provider changes; dependency additions; Figma/Playground/Production/recovery writes; historical verifier esbuild; generated-artifact edits; rebase/reset/force/history rewrite or main merge.
 VERIFICATION: Governance/current records, formatter, diff check, lint, production Vite build, authoritative theme/contrast/motion checks, focused shared-runtime tests, bounded existing browser visual smoke at 390/768/1440, secret/private scan, complete diff review, normal push/readback parity.
 STOP_CONDITIONS: Baseline drift, dirty/conflicting writer state, material D-04/D-02 contradiction, missing approved local font, dependency/scope expansion, external mutation need, functional/security regression, private data, second runtime token system, unresolved P0/P1, or load-bearing unverified fact.
-ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
-TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
-LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-HANDOFF_STATUS: FI01_IN_PROGRESS
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_FI02
 GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 FI00_START_SHA: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
 FI00_START_TREE: 1d20843c07bc407ec0fac757ec49dfb2d11c796c
@@ -27,13 +27,13 @@ PRE_FI00_ARCHIVE_REF: archive/frontend-design-pre-fi00-2026-08-21
 ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
 ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
 ROLLBACK_POINT: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
-STATUS: FI01_SHARED_DESIGN_FOUNDATION_IN_PROGRESS
+STATUS: FI01_SHARED_DESIGN_FOUNDATION_COMPLETE
 RUNTIME_PARITY_TO_MAIN: PASS
 GOVERNANCE: PASS
 HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED
-FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION_IN_PROGRESS
+FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION_ACCEPTED_ON_WORK_BRANCH;D02=PASS;D04=PASS;D08=OPEN_FOR_FI02
 DEPLOY: NOT_AUTHORIZED
-NEXT_EXACT_ACTION: FI01_IMPLEMENT_CANONICAL_RUNTIME_FOUNDATION
+NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
 
 ## Delivered
 

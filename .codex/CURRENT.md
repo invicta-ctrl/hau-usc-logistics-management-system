@@ -4,19 +4,19 @@ PROGRAM: HAU-USC Logistics
 MILESTONE: FRONTEND_INTEGRATION_FI01_SHARED_DESIGN_FOUNDATION
 RELEASE: v0.8.3_FINAL_FUNCTIONAL_BASELINE
 RELEASE_STATE: FRONTEND_INTEGRATION_FI00_RECONCILED
-STATUS: IN_PROGRESS
+STATUS: FI01_SHARED_DESIGN_FOUNDATION_COMPLETE
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
-TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
-LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-LOCK_CONTINUITY: OPEN
-HANDOFF_STATUS: FI01_IN_PROGRESS
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+LOCK_CONTINUITY: CLOSED
+HANDOFF_STATUS: READY_FOR_FI02
 REQUIRED_MODEL: One Terra-class sole branch writer per accepted FI slice, unless Earl issues another explicit task-specific override. FI-00 was executed by Claude Code / Claude Opus 5 under such an override, which has now expired.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
@@ -31,7 +31,7 @@ VISUAL_AUTHORITY: DESIGN_BASELINE_2026-08-20-F;Figma_Design=hXJElH4p72KfgAaoUyfN
 MAKE_SOURCE_STATUS: RECOVERABLE_FROM_GIT;output/design/make-adoption/theme.css sha256 249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d;NO_FIGMA_CALL_OR_MUTATION
 HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED;archive/frontend-design-pre-fi00-2026-08-21 -> f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970;1078 files and 136,496,010 bytes removed from the active tree, zero unrecoverable
 BRANCH_ROLE: TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH;promoted only by clean-lineage squash or a fresh promotion branch;deleted after Production acceptance and no-unique-work proof
-FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION_IN_PROGRESS
+FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION_ACCEPTED_ON_WORK_BRANCH;D02=PASS;D04=PASS;D08=OPEN_FOR_FI02
 DEPLOY: NOT_AUTHORIZED
 START_HERE: docs/design/FRONTEND_INTEGRATION_START_HERE.md
 FI00_RECEIPT: docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md
@@ -41,9 +41,9 @@ FIGMA_SOURCE_REGISTER: docs/design/FIGMA_MAKE_SOURCE_REGISTER.md
 EXECUTION_PLAN: docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md
 ACCEPTANCE_MATRIX: docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 CODEX_HANDOFF: docs/design/CODEX_FRONTEND_INTEGRATION_HANDOFF.md
-BLOCKER: FALSE; FI-00 is reverified PASS and the FI-01 owner prompt authorizes deterministic D-04/D-02 reconciliation. D-08 remains OPEN_FOR_FI02.
+BLOCKER: FALSE; FI-01 verification is complete. D-08 remains OPEN_FOR_FI02 and no FI-02 work has started.
 VALIDATION: check:agents, handoff:verify, check:continuation, Prettier formatting on touched documents, git diff --check, intra-document reference checks, and the secret scan all pass. Zero main-file loss and zero runtime diff against origin/main are proven deterministically. The product suite was not rerun because every build and runtime input is byte-identical to origin/main, which already passed it at that SHA.
-NEXT_EXACT_ACTION: FI01_IMPLEMENT_CANONICAL_RUNTIME_FOUNDATION
+NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
 
 ## What FI-00 settled
 
