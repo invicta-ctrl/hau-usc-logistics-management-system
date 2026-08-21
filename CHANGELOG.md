@@ -2,39 +2,121 @@
 
 ## Unreleased
 
+### v0.8.3 owner-fast-close checkpoint
+
+- Reconciled the already-live owner-authorized Production v0.8.3 runtime to the exact frozen f8 candidate, 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0, three Activity History tables, protected roster configuration/secret presence, private recovery evidence, and isolated Playground bindings.
+- Recorded `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` as the accepted minimal smoke fallback; it is never recorded as HTTP PASS. Historical Playground source NONPASS remains owner accepted for v0.8.3 fast close only, never PASS; live email/manual gates remain `OWNER_WAIVED_OR_UNRUN`.
+- Completed the evidence-only protected-main/recovery checkpoint: the normal PR #25 merge accepted main `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e` with frozen f8 application-path parity, `v0.8.3` tagging, and recovery-pointer rotation/readback. CI verify, CodeQL, and browser smoke passed; CodeQL #99 was dismissed as a validated false positive. Two P2 pagination review threads are deferred to the post-v0.8.3 frontend intake without altering the frozen/deployed product.
+- Completed the lossless temporary-state hygiene checkpoint: redundant v0.8.3 refs were closed only after unique-history and byte-equivalence proof; the historical Gate-A audit package is retained by immutable archive tag; the primary main checkout is clean; and the v082 product-dirty worktree remains untouched. One unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
+- Completed v0.8.3 S17 closeout with `ACTIVE_WRITER: NONE`, `WRITER_LOCK: RELEASED`, and handoff readiness after Production/main/f8 identity, recovery rotation, lossless hygiene, retained-future-ref, and pushed-readback evidence passed. v0.8.4/frontend work, if any, is separate branch-local preparation and does not reopen v0.8.3.
+
 ### Added
 
-- Integrated the approved V4.1 visual language into the authoritative frontend,
-  including the real public landing, persisted theme control, kinetic menu,
-  compact back control, and a dependency-free isometric logistics map with
-  static/mobile/reduced-motion fallbacks.
-- Added sanitized in-memory Request and Lending interactions for public preview
-  hosting without protected APIs, credentials, staff records, or private data.
-- Added focused V4.1 production-integration and visual-acceptance tests plus the
-  required copy, motion/3D, parity, and visual-acceptance reports.
+- Added the owner-authorized Sol/Terra/Luna orchestration governance amendment: GPT-5.6 Sol is the sole read-only orchestrator with no Sol children, Terra MAX is the only writer class with one canonical integration writer and isolated scopes, and Luna MAX is the read-only auditor class. The amendment preserves historical product specifications while superseding only their model-routing language.
+- Completed the governance amendment after pre-final Sol/Luna PASS review, focused validation, and the authorized normal update of the existing draft-PR branch; no product or runtime work was introduced.
+- Added a documentation-only HAU-USC Design DNA research gate: eight independent Hallmark public-reference studies, a comparative reference matrix, the proposed “Institutional Logistics Ledger” design language, an Impeccable-informed design/component/motion/3D/accessibility/performance system, a module rollout plan, and an owner-facing Design Gate handoff.
+- Added durable `PRODUCT.md` product truth for future Impeccable work without replacing the incumbent accepted `DESIGN.md`.
+- Integrated the frozen V5 whole-site design into the real `src/` application with same-origin playground auth/API wiring, exhaustive 34-surface classification, V5-native governed controls for current Production capability families, mock-free service-backed routes, and a searchable playground-only Index.
+- Added V5-specific unit, exhaustive route, responsive, light/dark, deterministic artifact, and production-denial acceptance gates. Candidate automation stops after isolated-playground acceptance and cannot continue to Production.
+- Accepted the permanent Isolated Staging Playground specification and hardcoded the five retained recovery pointers, one-temporary-branch rule, exact-candidate playground path, Earl GO requirement, and post-production rotation rules in root `AGENTS.md`.
+- Added isolated playground D1/R2 clean-baseline and working-state tooling, privacy filtering, deterministic parity/reconciliation, Reset Workspace, Refresh Baseline protection, safe status, module switcher, and real-login testing.
+- Added an explicit exact-SHA candidate-freeze workflow that deploys automatically to the playground after repository checks and stops for Earl; ordinary WIP pushes and playground success cannot trigger production.
+- Established `backup/last-known-good` and `regression/r1` through `regression/r3` non-destructively from verified accepted recovery history.
+
+### Verification boundary
+
+- The governance amendment changes repository governance, focused governance tests, and continuity documentation only. It does not authorize or perform design implementation, runtime/build artifact changes, migrations, deployments, D1/R2/Google/provider writes, production mutation, merge, tag, or recovery-pointer rotation.
+- The governance closure uses only an authorized normal commit/push to the existing branch and draft PR; force-push, merge, deployment, migration, provider/data, Google, D1/R2, and recovery actions remain absent.
+- The Design DNA task changed documentation only. No frontend/backend source, build artifact, migration, staging deployment, D1/R2 resource, Production state, Google data, or provider/email state changed. Substantial redesign remains blocked on Earl's explicit Design Gate approval.
+- V5 current-source acceptance passes all 33 registered application routes at 1440 CSS pixels, responsive/theme checks at 320/390/768/1024/1440, and governed-control persistence across application re-renders. The deterministic classic-script artifact passes a fresh production-mode build with playground markers denied.
+- Current Production capability contracts remain authoritative under schema 30/migration 0030. Direct public account creation, public evidence-file upload, and local avatar upload remain explicitly unsupported rather than fabricating backend behavior.
+- Canonical `npm run check` passes governance/handoff, lint with zero errors, deterministic build, 136 test files / 908 tests, Apps Script, dist parity, Cloudflare types, and dry-run.
+- Live isolated playground readiness, operator status/module switcher, session protection, deliberate D1/R2 mutation/reset, and production-denial checks pass. Production remains v0.8.0 and read-only D1/R2 pre/post fingerprints are unchanged.
+- No production deployment, production migration, production business-data mutation, Google write, provider/email send, frontend integration, or M1/M2 work occurred.
+
+## 0.8.0 - 2026-08-09
+
+### Released
+
+- Merged protected PR #21 and deployed the exact accepted release from
+  `3059098ff2a2935fec59df52748ccae420aadba7` to isolated staging and production.
+  Annotated tag and GitHub Release `v0.8.0` resolve to the same accepted main SHA.
+- Preserved schema 30 and migration `0030_production_access_and_operations.sql`;
+  v0.8.0 created and applied no migration.
+- Passed exact-SHA staging and production recovery, isolated restore, full-stack
+  smoke, and 20/20 Inventory reconciliation with zero blocking or quarantine
+  discrepancies. No Google write or provider/email send occurred.
+
+### Added
+
+- Added the accepted final v0.8.0 Slice 3 specification, aggregate-only
+  reconciliation command/report, final finding register, frozen downstream
+  Inventory contract, strict isolated D1 restore proof, and non-mutating exact-SHA
+  staging candidate evidence/smoke commands.
+- Added the owner-accepted v0.8.0 Slice 2 specification, four-item Repair
+  Register, and deterministic schema-30 regressions for paired transfer,
+  accepted-state reservation cancellation, stale rollback, cycle-count races,
+  replay conflicts, and explicit signed-quantity reduction.
+- Added the owner-accepted v0.8.0 Inventory Truth and Ledger Lock Slice 1
+  specification and a durable schema-30 Inventory baseline covering authoritative
+  storage, transaction/caller paths, INV-01 through INV-10, and the Slice 2 defect
+  register.
+- Strengthened focused local Worker/D1 characterization for request submission
+  non-deduction, reservation-only availability effects, and exactly-once lending
+  handoff/return stock effects without changing runtime behavior.
 - Provisioned the permanent isolated synthetic-only staging sandbox with its own D1 and R2 bindings, canonical schema 30, deterministic generation lifecycle, private recovery proofs, exact-SHA staging identity, and one-recipient email containment. The protected prior staging D1 and production remain unchanged.
 - Added a generic private staging-only exact identity fixture. Exact recipient, sender, and fixture data are Worker secrets; production ignores the fixture and the sandbox deploy config carries only a safe count.
 - Added the accepted, planning-only v0.7.3 product-intake specification after completing the v0.7.2.1 maintenance milestone.
 
 ### Fixed
 
+- Implemented the previously claimed event-item transfer at the authoritative D1
+  boundary as an authorized, retry-safe, concurrency-guarded ledger pair.
+- Made accepted Request and ready-to-claim Lending cancellation release active
+  reservations atomically, restoring reserved reusable assets before handoff.
+- Prevented stale concurrent cycle counts from double-applying one physical count
+  and corrected fallback adjustment/reversal signs without changing D1 authority.
+- Closed eight fresh high-risk concurrency, custody, and reservation-ownership gaps so
+  cancellation, release, lending approval/handoff, asset maintenance/custody, receiving,
+  and direct stock reservation have one governed owner/effect path and losing stale
+  commands retain no ledger, reservation, custody, or audit effect.
 - Made private Cloudflare configurations preserve the canonical SPA fallback, made lifecycle commands parse banner-prefixed Wrangler JSON, and verified D1 exports directly with SQLite before any reset archive proceeds.
 - Enforced staging allowlist rejection before challenge creation and removed inherited Google/Drive secret bindings from the isolated staging Worker.
 
 ### Changed
 
-- Simplified ordinary UI wording to direct actions and plain environment state
-  while preserving release identity, workflow meaning, routes, permissions,
-  fields, statuses, service calls, and production Staff Sign In routing.
-- Rebuilt the standalone, guided demo, seven module shareables, and Apps Script
-  frontend bundle through repository generators; no generated HTML was
-  hand-edited.
+- Released repository and runtime identity v0.8.0 while retaining schema 30 and
+  migration `0030_production_access_and_operations.sql`.
+- Completed the bounded v0.8.0 Slice 2 repair set under schema 30 with no
+  migration, historical rewrite/reconciliation, deployment, environment/provider
+  mutation, Google write, version/tag/release/merge, or Slice 3 work.
+- Completed v0.8.0 Slice 1 with `MIGRATION_DECISION: NONE_REQUIRED`. Recorded
+  three P2 and one P3 evidence-proven gaps for a separately authorized Slice 2;
+  no runtime, schema, migration, environment, provider, Google, version, release,
+  or production state changed.
 - Merged the v0.7.2.1 repository-normalization and permanent-sandbox maintenance candidate through protected PR #17, released the writer lock, and advanced the canonical continuity pointer to v0.7.3 product intake without starting v0.7.3 implementation or changing the v0.7.2 runtime.
 - Closed the owner-accepted v0.7.3 rollout-stabilization intake as `NO RUNTIME PATCH REQUIRED`. Focused Account, Request/RV-01, Lending, Inventory/Release, route, privacy, and safe-error acceptance found no eligible blocker, so product version remains 0.7.2 and no v0.7.3 runtime tag, release, staging deployment, or production action was created.
 - Merged the documentation-only v0.7.3 no-op closeout through protected PR #19 at `8b4ad05c6754b3de627535577d24216023dca8ca` after resolving its review thread, then deleted the temporary release branch; the merge made no runtime, provider, database, migration, staging, or production change.
 
 ### Verification boundary
 
+- V0.8.0 final verification passed the authorized focused test 2/2, canonical
+  repository gate 125 files/868 tests, exact-source Worker/browser 58/58,
+  deterministic build/parity, Cloudflare types/dry-run, exact-head and protected PR
+  CI, main-push CI, CodeQL, staging/production recovery and full-stack smoke, and
+  staging/production reconciliation 20/20. Fresh high-risk review found zero
+  unresolved P0/P1.
+- V0.8.0 Slice 2 focused evidence passed: two Vitest files / nine tests,
+  six adjacent unit/contract files / 76 tests, and two focused local Worker/D1
+  lifecycle/receiving cases. The full shared-core repository gate passed lint,
+  build/parity, 122 Vitest files / 843 tests, Cloudflare types, isolated
+  staging-mode build, and Wrangler dry-run without a remote runtime write.
+- V0.8.0 Slice 1 focused evidence passed: 12 Vitest files / 92 tests, seven
+  focused Worker/D1 cases, two RV-01 reservation concurrency/top-up cases, and
+  the strengthened D1 lifecycle case. The schema-30 migration decision relies on
+  existing signed-ledger, reservation-consumption, history, idempotency, reversal,
+  evidence, and data-revision structures; no full release-candidate gate was
+  invalidated or rerun.
 - Generation 4, backup/restore, integrity/FK, invariants, exact banners, owner authentication, permission denials, critical workflow reads, negative zero-challenge containment, provider delivery, one-time redemption, same-code replay denial, and altered-code denial pass. Exact-head repository verification, browser smoke, CodeQL, governance, handoff, secret/PII scans, and fresh Sol review also pass.
 - V0.7.3 focused evidence passed: 89 unit tests, 19 RV-01 Worker/D1 tests, ten coherent core Worker/D1 cases, and six Account/Public portal UI cases. Production and staging remain ready/protected at their unchanged exact SHAs and schema 30/0030. Four missing isolated-staging brand-image endpoints were recorded as a cosmetic, out-of-scope asset-population observation; daily-use shells remain available.
 

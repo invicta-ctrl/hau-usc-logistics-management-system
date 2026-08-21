@@ -80,11 +80,21 @@ Figma-only artifact.
 Verification commands (from `docs/design/FIGMA_DESIGN_MAKE_AUDIT.md` §10):
 
 ```bash
-npm run design:make-theme:check     # override is current
-npm run design:make-routes:check    # routes rebuild identically, zero superseded
-npm run design:make-verify          # resolved cascade, both modes
-npm run design:make-landing         # pinned chrome vs reading planes, 31/31
+node scripts/design/build-make-theme.mjs --check      # override is current
+node scripts/design/verify-make-theme.mjs             # resolved cascade, both modes
+node scripts/design/verify-make-landing-theme.mjs     # pinned chrome vs reading planes, 31/31
+node scripts/design/theme-source.mjs --check          # canonical token source is current
 ```
+
+**FI-00 correction.** The `design:*` npm aliases quoted in the historical design
+records do **not** exist in the v0.8.3 `package.json`, which is now this branch's
+build authority. Invoke the scripts directly, as above. All four commands were
+re-run and pass on the FI-00 reconciled tree.
+
+`node scripts/design/build-make-routes.mjs --check` is **unavailable**: it
+imports `esbuild`, which is not a declared dependency in `package.json` on
+either main or the pre-FI-00 branch. This is a pre-existing condition, not an
+FI-00 regression. Adding the dependency is an owner decision for FI-01.
 
 These scripts live in `scripts/design/`, which exists **only on
 `frontend-design-integration`**. Frozen main has no `scripts/design/`. They

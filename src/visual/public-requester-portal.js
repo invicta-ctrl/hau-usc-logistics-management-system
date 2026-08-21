@@ -83,7 +83,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
           <section class="public-step-panel" data-step="1" aria-labelledby="requestStep1Title">
             <p class="eyebrow">Step 1 of 5</p>
             <h2 id="requestStep1Title">What do you need?</h2>
-            <p>Choose one workflow. The following steps show only the fields you need.</p>
+            <p>Choose one workflow. The following steps show only the relevant source-grounded fields.</p>
             <div class="public-request-types">
               <label><input type="radio" name="requestPurpose" value="EVENT_ACTIVITY_SUPPORT" checked><span><strong>Event or activity support</strong><small>For an approved event series and sub-event.</small></span></label>
               <label><input type="radio" name="requestPurpose" value="OFFICE_INVENTORY_PANTRY"><span><strong>Office inventory or pantry</strong><small>For approved office inventory or pantry needs.</small></span></label>
@@ -183,7 +183,7 @@ export async function mountPublicRequesterPortal({ root, client }) {
         </form>
       </section>
 
-      <section id="request-tracking" data-request-mode-panel="track" hidden>
+      <section data-request-mode-panel="track" hidden>
         <div class="public-track-layout">
           <section class="panel" aria-labelledby="trackRequestTitle">
             <p class="eyebrow">Private tracking</p>

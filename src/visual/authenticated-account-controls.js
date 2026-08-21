@@ -1,4 +1,5 @@
 import { AppError } from '../app/errors.js';
+import { attachPasswordVisibilityControls, passwordFieldMarkup } from './password-visibility.js';
 
 const CAPABILITIES = Object.freeze({
   ADMIN_REVIEW: 'account_application.admin_review',
@@ -41,15 +42,15 @@ function setBusy(form, busy) {
   form.setAttribute('aria-busy', String(busy));
 }
 
-function openAccountDialog({ title }) {
+function openAccountDialog({ title, eyebrow = 'Secure account controls' }) {
   const dialog = document.createElement('dialog');
   const titleId = `accountControlDialogTitle-${globalThis.crypto.randomUUID()}`;
-  dialog.className = 'account-control-dialog dialog';
+  dialog.className = 'account-control-dialog';
   dialog.setAttribute('aria-labelledby', titleId);
   dialog.innerHTML = `<div class="account-control-dialog-head">
-      <div><h2 id="${titleId}">${escapeHtml(title)}</h2></div>
-      <button type="button" class="icon-button" data-account-dialog-close aria-label="Close dialog"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-    </div><div class="account-control-dialog-body" data-account-dialog-body><p role="status">Loading your profile…</p></div>`;
+      <div><p class="eyebrow">${escapeHtml(eyebrow)}</p><h2 id="${titleId}">${escapeHtml(title)}</h2></div>
+      <button type="button" class="icon-button" data-account-dialog-close aria-label="Close dialog">×</button>
+    </div><div class="account-control-dialog-body" data-account-dialog-body><p role="status">Loading secure data…</p></div>`;
   document.body.append(dialog);
   const close = () => {
     dialog.close?.();
@@ -70,13 +71,10 @@ function profileOverview(profile) {
   const workspaces = profile.accessSummary?.workspaceIds?.length
     ? profile.accessSummary.workspaceIds.join(', ')
     : 'No internal workspace';
-  return `<header class="page-head account-profile-head"><div class="page-head__title"><h1>My profile</h1><p>Your details, access, and sign-in security.</p></div></header>
-  <div class="profile-grid account-profile-overview">
-    <section class="panel profile-photo-panel"><div class="panel__body"><h2 class="block-title">Profile</h2><div class="profile-photo">
-      <div class="profile-photo__preview account-profile-avatar" aria-label="Initials avatar"><span aria-hidden="true">${escapeHtml(profile.avatar?.initials || 'HA')}</span></div>
-      <div class="profile-photo__controls"><div><h3>${escapeHtml(profile.displayName || 'Staff account')}</h3><p>${escapeHtml(profile.verifiedEmail)}</p></div><p class="profile-photo__note">Your initials are shown when no account image is available.</p></div>
-    </div></div></section>
-    <section class="panel"><div class="panel__body"><h2 class="block-title">Your access</h2><dl class="facts">
+  return `<section class="account-profile-overview">
+    <div class="account-profile-avatar" aria-label="Initials avatar">${escapeHtml(profile.avatar?.initials || 'HA')}</div>
+    <div><h3>${escapeHtml(profile.displayName || 'Staff account')}</h3><p>${escapeHtml(profile.verifiedEmail)}</p></div>
+    <dl>
       <div><dt>Account code</dt><dd>${escapeHtml(profile.accountCode)}</dd></div>
       <div><dt>Username</dt><dd>${escapeHtml(profile.username || 'Not set')}</dd></div>
       <div><dt>Role</dt><dd>${escapeHtml(profile.accessSummary?.roleLabel || profile.roleId)}</dd></div>
@@ -84,30 +82,51 @@ function profileOverview(profile) {
       <div><dt>Workspaces</dt><dd>${escapeHtml(workspaces)}</dd></div>
       <div><dt>Department</dt><dd>${escapeHtml(profile.affiliation?.departmentDisplayName || profile.affiliation?.departmentId)}</dd></div>
       <div><dt>Course / year</dt><dd>${escapeHtml(`${profile.affiliation?.courseId || 'Not recorded'}${profile.affiliation?.yearLevel ? ` · ${profile.affiliation.yearLevel}` : ''}`)}</dd></div>
-      <div><dt>Account status</dt><dd>${escapeHtml(profile.status || profile.accountStatus || 'Active')}</dd></div>
-    </dl><p class="notice" data-tone="info">Ask an administrator to change your role or permissions. Use the correction form for identity or email changes.</p></div></section>
-  </div>`;
+    </dl>
+    <p class="auth-help">Legal identity, verified email, role, committee, and account code are governed values. Submit a correction request instead of editing them directly. Avatar upload is unavailable; initials are the truthful fallback.</p>
+  </section>`;
 }
 
 function profileForms(profile) {
-  return `<div class="profile-grid account-profile-actions">
-    <section class="panel"><div class="panel__body"><h2 class="block-title">Contact number</h2>
-      <form class="auth-form" data-profile-contact><label>Contact number<input name="contactNumber" autocomplete="tel" value="${escapeHtml(profile.contactNumber)}" maxlength="24" required></label><button class="btn btn--primary primary" type="submit">Save contact number</button></form>
-    </div></section>
-    <section class="panel"><div class="panel__body"><h2 class="block-title">Username</h2>
-      <form class="auth-form" data-profile-username><label>New username<input name="username" autocomplete="username" minlength="4" maxlength="32" pattern="[a-z0-9](?:[a-z0-9]|[._-](?=[a-z0-9])){2,30}[a-z0-9]" required spellcheck="false"></label><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" maxlength="128" required></label><label>Reason<textarea name="reason" maxlength="500" required>Username change</textarea></label><p class="auth-help">Changing your username signs out every active session.</p><button class="btn btn--primary primary" type="submit">Change username and sign out</button></form>
-    </div></section>
-    <section class="panel"><div class="panel__body"><h2 class="block-title">Password</h2>
-      <form class="auth-form" data-profile-password><label>Current password<input name="currentPassword" type="password" autocomplete="current-password" maxlength="128" required></label><label>New password<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label><p class="auth-help">Changing your password signs out every active session.</p><button class="btn btn--primary primary" type="submit">Change password and sign out</button></form>
-    </div></section>
-    <section class="panel"><div class="panel__body"><h2 class="block-title">Profile correction</h2>
-      <form class="auth-form" data-profile-identity><label>Legal name<input name="legalName" value="${escapeHtml(profile.legalName)}" autocomplete="name" maxlength="120" required></label><label>Contact number<input name="contactNumber" value="${escapeHtml(profile.contactNumber)}" autocomplete="tel" maxlength="24" required></label><label>Email address<input name="email" value="${escapeHtml(profile.verifiedEmail)}" type="email" autocomplete="email" maxlength="254" required></label><label>Reason<textarea name="reason" maxlength="500" required></textarea></label><button class="btn btn--primary primary" type="submit">Request correction</button></form>
-    </div></section>
+  return `<div class="account-profile-actions">
+    <details open><summary>Update contact number</summary>
+      <form class="auth-form" data-profile-contact>
+        <label>Contact number<input name="contactNumber" autocomplete="tel" value="${escapeHtml(profile.contactNumber)}" maxlength="24" required></label>
+        <button class="primary" type="submit">Save contact number</button>
+      </form>
+    </details>
+    <details><summary>Change username</summary>
+      <form class="auth-form" data-profile-username>
+        <label>New username<input name="username" autocomplete="username" minlength="4" maxlength="32" pattern="[a-z0-9](?:[a-z0-9]|[._-](?=[a-z0-9])){2,30}[a-z0-9]" required spellcheck="false"></label>
+        ${passwordFieldMarkup({ id: 'profileUsernameCurrentPassword', name: 'currentPassword', label: 'Current password', autocomplete: 'current-password' })}
+        <label>Reason<textarea name="reason" maxlength="500" required>Self-service username change</textarea></label>
+        <p class="auth-help">Changing the username revokes all active sessions.</p>
+        <button class="primary" type="submit">Change username and sign out</button>
+      </form>
+    </details>
+    <details><summary>Change password</summary>
+      <form class="auth-form" data-profile-password>
+        ${passwordFieldMarkup({ id: 'profilePasswordCurrent', name: 'currentPassword', label: 'Current password', autocomplete: 'current-password' })}
+        ${passwordFieldMarkup({ id: 'profilePasswordNew', name: 'newPassword', label: 'New password', autocomplete: 'new-password', minlength: '12' })}
+        ${passwordFieldMarkup({ id: 'profilePasswordConfirm', name: 'confirmPassword', label: 'Confirm new password', autocomplete: 'new-password', minlength: '12' })}
+        <p class="auth-help">Changing the password revokes all active sessions.</p>
+        <button class="primary" type="submit">Change password and sign out</button>
+      </form>
+    </details>
+    <details><summary>Request legal identity or email correction</summary>
+      <form class="auth-form" data-profile-identity>
+        <label>Proposed legal name<input name="legalName" value="${escapeHtml(profile.legalName)}" autocomplete="name" maxlength="120" required></label>
+        <label>Proposed contact number<input name="contactNumber" value="${escapeHtml(profile.contactNumber)}" autocomplete="tel" maxlength="24" required></label>
+        <label>Proposed email<input name="email" value="${escapeHtml(profile.verifiedEmail)}" type="email" autocomplete="email" maxlength="254" required></label>
+        <label>Reason<textarea name="reason" maxlength="500" required></textarea></label>
+        <button class="primary" type="submit">Submit protected correction request</button>
+      </form>
+    </details>
   </div>`;
 }
 
 function mountProfileDialog({ client, session, onSessionInvalidated }) {
-  const layer = openAccountDialog({ title: 'My profile' });
+  const layer = openAccountDialog({ title: 'My Profile' });
   let profile;
   const status = (message, error = false) => {
     const region = layer.body.querySelector('[data-profile-status]');
@@ -123,6 +142,7 @@ function mountProfileDialog({ client, session, onSessionInvalidated }) {
 
   const render = () => {
     layer.body.innerHTML = `${profileOverview(profile)}<div class="account-control-status" data-profile-status aria-live="polite"></div>${profileForms(profile)}`;
+    attachPasswordVisibilityControls(layer.body);
     const contact = layer.body.querySelector('[data-profile-contact]');
     contact.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -214,7 +234,7 @@ function mountProfileDialog({ client, session, onSessionInvalidated }) {
           session.csrfToken,
         );
         setBusy(identity, false);
-        status('Your correction request was submitted for review.');
+        status('Protected identity correction request submitted for governed review.');
       } catch (error) {
         setBusy(identity, false);
         status(safeError(error), true);
@@ -294,7 +314,7 @@ function reviewDetail(application, queue, ownerOverrideAvailable) {
         <label>Override action<select name="action"><option value="REQUEST_CHANGES">Request changes</option><option value="REJECT">Reject</option><option value="APPROVE">Approve</option></select></label>
         <label>Reason<textarea name="reason" minlength="8" maxlength="500" required></textarea></label>
         <label>Follow-up review reference<input name="followUpReviewReference" minlength="8" maxlength="128" required></label>
-        <label class="account-application-check"><input name="confirmed" type="checkbox" required> I confirm the current account status, permissions, session impact, and required follow-up review.</label>
+        <label class="account-application-check"><input name="confirmed" type="checkbox" required> I confirm the current state, effective access, session impact, and follow-up review requirement.</label>
         <button class="danger" type="submit">Execute audited owner override</button>
       </form>
     </details>`

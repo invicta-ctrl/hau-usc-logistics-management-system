@@ -1,0 +1,439 @@
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R4 V4 */
+/* Hallmark · macrostructure: Marquee Hero / Photographic Fold · genre: editorial
+   · tone: institutional, event-led, assured · anchor: oxblood · theme: studied-DNA
+   (source: frozen V5 authority + Earl's browser annotations) · nav: N5 · footer: Ft5
+   · contrast: pass (40–41) · slop: pass (42–45) · honest: pass (46)
+   · chrome: pass (47) · tokens: pass (48) · responsive: pass (49)
+   · icons: pass (30) · mobile: pass (34, 49, 50–57).
+   The frozen V5 workbench remains intact; this layer owns only live-application
+   identity, event media, public arrival, and production-shaped sign-in. */
+
+/* Impeccable bolder: institutional banner over photographic marquee.
+   Scope is the landing masthead and hero only. */
+.public__bar {
+  gap: clamp(16px, 3vw, 32px);
+}
+
+.public--landing .public__bar {
+  background: color-mix(in oklch, var(--paper) 92%, transparent);
+  border-color: color-mix(in oklch, var(--gold-400) 36%, var(--line));
+  border-radius: var(--r-xs) var(--r-lg) var(--r-xs) var(--r-lg);
+  box-shadow:
+    0 22px 58px color-mix(in oklch, var(--ox-900) 22%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--paper-3) 82%, transparent);
+  max-width: min(1600px, calc(100% - 32px));
+  min-height: clamp(104px, 8vw, 124px);
+  padding: 14px clamp(18px, 2.6vw, 40px);
+  width: min(1600px, calc(100% - 32px));
+}
+
+.public__brand {
+  align-items: center;
+  display: flex;
+  gap: clamp(12px, 1.5vw, 20px);
+}
+
+.public__marks {
+  flex: 0 0 auto;
+  gap: 4px;
+}
+
+.public__mark {
+  background: color-mix(in oklch, var(--paper) 90%, transparent);
+  border-color: var(--anchor-line);
+  height: clamp(42px, 4vw, 56px);
+  min-height: 0;
+  min-width: clamp(42px, 4vw, 56px);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.public__mark:first-child {
+  background: color-mix(in oklch, var(--anchor) 10%, var(--paper));
+  color: var(--anchor);
+}
+
+.public__mark img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.public--landing .public__mark {
+  height: clamp(58px, 5vw, 72px);
+  min-width: clamp(58px, 5vw, 72px);
+  padding: 6px;
+}
+
+.public__marks .public__mark:last-child {
+  display: inline-flex;
+}
+
+.public__wordmark {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.public__wordmark b {
+  font-size: clamp(17px, 1.7vw, 25px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.public__wordmark span {
+  font-size: var(--t-2xs);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.public--landing .public__wordmark {
+  gap: 6px;
+}
+
+.public--landing .public__wordmark b {
+  font-size: clamp(22px, 2.2vw, 34px);
+  font-weight: 760;
+  letter-spacing: -0.026em;
+  line-height: 0.98;
+}
+
+.public--landing .public__wordmark span {
+  font-size: clamp(10px, 0.8vw, 12px);
+  font-weight: 760;
+  letter-spacing: 0.16em;
+}
+
+.public--landing .public__main {
+  max-width: none;
+  overflow: clip;
+  padding: clamp(20px, 2vw, 32px) 0 clamp(76px, 8vw, 120px);
+}
+
+.public--landing .landing-hero {
+  border-radius: 0;
+  box-shadow:
+    0 32px 84px color-mix(in oklch, var(--ox-900) 34%, transparent),
+    inset 0 0 0 1px color-mix(in oklch, var(--gold-200) 18%, transparent);
+  isolation: isolate;
+  min-height: clamp(720px, 92svh, 1040px);
+  width: 100%;
+}
+
+.public--landing .landing-hero::after {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklch, var(--ox-900) 98%, transparent) 0%,
+    color-mix(in oklch, var(--ox-900) 90%, transparent) 34%,
+    color-mix(in oklch, var(--ox-900) 54%, transparent) 58%,
+    color-mix(in oklch, var(--ox-900) 10%, transparent) 100%
+  );
+}
+
+.landing-hero__media {
+  animation: landing-cover-arrive 800ms var(--ease-out) both;
+  object-position: center;
+  transform-origin: 62% 46%;
+}
+
+.landing-hero__content {
+  align-content: end;
+  align-self: stretch;
+  margin-inline: auto;
+  max-width: 1600px;
+  padding: clamp(64px, 8vw, 128px) clamp(28px, 8vw, 132px);
+  padding-block-end: clamp(140px, 13.5vw, 184px);
+  transform: translateY(-20px);
+  width: 100%;
+}
+
+.landing-hero__content::before {
+  background: var(--gold-400);
+  box-shadow: 0 10px 30px color-mix(in oklch, var(--gold-400) 30%, transparent);
+  content: '';
+  height: 6px;
+  width: clamp(88px, 10vw, 164px);
+}
+
+.landing-hero h1 {
+  font-size: clamp(60px, 8vw, 96px);
+  font-weight: 820;
+  letter-spacing: -0.04em;
+  line-height: 0.88;
+  max-width: 11ch;
+}
+
+.landing-hero__content > p {
+  font-size: clamp(19px, 1.8vw, 26px);
+  font-weight: 520;
+  line-height: 1.5;
+  max-width: 48ch;
+}
+
+.public--landing .landing-hero__actions {
+  gap: clamp(12px, 1.4vw, 20px);
+}
+
+.public--landing .landing-hero__actions .btn--primary {
+  box-shadow:
+    0 16px 38px color-mix(in oklch, var(--ox-900) 42%, transparent),
+    inset 0 1px 0 var(--gold-100);
+  font-size: clamp(15px, 1.1vw, 17px);
+  font-weight: 820;
+  min-height: 58px;
+  padding-inline: clamp(22px, 2.2vw, 32px);
+}
+
+.public--landing .landing-link {
+  background: color-mix(in oklch, var(--ox-900) 54%, transparent);
+  border: 1px solid color-mix(in oklch, var(--gold-200) 52%, transparent);
+  border-radius: var(--r-xs) var(--r-md) var(--r-xs) var(--r-md);
+  font-size: clamp(15px, 1vw, 17px);
+  min-height: 58px;
+  padding: 12px clamp(18px, 1.8vw, 26px);
+  text-decoration: none;
+}
+
+.landing-hero__monogram {
+  align-items: center;
+  background: color-mix(in oklch, var(--paper) 90%, transparent);
+  border: 1px solid color-mix(in oklch, var(--gold-100) 68%, transparent);
+  border-radius: var(--r-xs) var(--r-lg) var(--r-xs) var(--r-lg);
+  display: flex;
+  box-shadow:
+    0 22px 48px color-mix(in oklch, var(--ox-900) 38%, transparent),
+    inset 0 1px 0 var(--paper-3);
+  height: clamp(92px, 9vw, 132px);
+  inset: clamp(36px, 4vw, 64px) clamp(32px, 6vw, 96px) auto auto;
+  justify-content: center;
+  opacity: 1;
+  padding: 12px;
+  width: clamp(92px, 9vw, 132px);
+}
+
+.landing-hero__monogram img {
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.landing-intro,
+.portal-actions,
+.landing-updates {
+  margin-inline: auto;
+  width: min(1320px, calc(100% - clamp(40px, 8vw, 112px)));
+}
+
+.portal-action--primary {
+  background: color-mix(in oklch, var(--gold-300) 18%, var(--paper));
+  color: var(--ox-900);
+}
+
+.portal-action--primary .portal-action__mark {
+  background: var(--ox-800);
+  color: var(--gold-100);
+}
+
+.portal-action--primary small {
+  color: color-mix(in oklch, var(--ox-900) 76%, var(--gold-700));
+}
+
+.landing-updates {
+  align-items: end;
+  border: 1px solid var(--accent-line);
+  border-radius: 8px 34px 8px 34px;
+  display: grid;
+  gap: clamp(28px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: clamp(320px, 35vw, 500px);
+  padding: clamp(44px, 7vw, 96px);
+}
+
+.landing-updates .eyebrow {
+  color: var(--anchor);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  margin: 0 0 20px;
+}
+
+.landing-updates h2 {
+  font-size: clamp(42px, 6vw, 82px);
+  line-height: 0.98;
+  max-width: 13ch;
+}
+
+.landing-updates p:not(.eyebrow) {
+  font-size: clamp(16px, 1.5vw, 20px);
+  max-width: 58ch;
+}
+
+.public__foot {
+  max-width: 1320px;
+}
+
+.public:not(.public--landing) .public__main > .preview-data-label + .auth-card {
+  margin-inline: auto;
+}
+
+.public:not(.public--landing) .public__main:has(> .preview-data-label + .auth-card) {
+  padding-block-start: clamp(52px, 8vw, 108px);
+}
+
+.public:not(.public--landing) .auth-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px 26px 8px 26px;
+  box-shadow: var(--elev-2);
+}
+
+.public:has(.auth-card--signin) .public__main {
+  background:
+    linear-gradient(
+      115deg,
+      color-mix(in oklch, var(--ox-900) 88%, transparent),
+      color-mix(in oklch, var(--ox-800) 62%, transparent)
+    ),
+    url('/brand/login-background') center / cover fixed;
+  max-width: none;
+}
+
+.public:has(.auth-card--signin) .preview-data-label {
+  background: color-mix(in oklch, var(--paper) 92%, transparent);
+  border-color: color-mix(in oklch, var(--gold-300) 52%, transparent);
+}
+
+.public:has(.auth-card--signin) .auth-card--signin {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .public--landing .public__bar {
+    max-width: calc(100% - 20px);
+    min-height: 84px;
+    padding: 10px 12px;
+    width: calc(100% - 20px);
+  }
+
+  .public--landing .public__wordmark b {
+    font-size: clamp(14px, 4.2vw, 18px);
+  }
+
+  .public--landing .public__wordmark span {
+    display: none;
+  }
+
+  .public--landing .public__mark {
+    height: 42px;
+    min-width: 42px;
+    width: 42px;
+  }
+
+  .public--landing .landing-hero {
+    min-height: max(680px, 88svh);
+  }
+
+  .public--landing .landing-hero::after {
+    background: linear-gradient(
+      0deg,
+      color-mix(in oklch, var(--ox-900) 98%, transparent) 0%,
+      color-mix(in oklch, var(--ox-900) 88%, transparent) 56%,
+      color-mix(in oklch, var(--ox-900) 34%, transparent) 100%
+    );
+  }
+
+  .landing-hero__content {
+    padding: 52px 24px 84px;
+    transform: none;
+  }
+
+  .landing-hero h1 {
+    font-size: clamp(48px, 14vw, 64px);
+    line-height: 0.9;
+    max-width: 10ch;
+  }
+
+  .landing-hero__monogram {
+    height: 76px;
+    inset: 28px 24px auto auto;
+    width: 76px;
+  }
+
+  .landing-intro,
+  .portal-actions,
+  .landing-updates {
+    width: calc(100% - 40px);
+  }
+
+  .landing-updates {
+    align-items: start;
+    grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 36px 28px;
+  }
+
+  .landing-updates h2 {
+    font-size: clamp(36px, 11vw, 54px);
+  }
+}
+
+@media (max-width: 390px) {
+  .public__marks {
+    gap: 4px;
+  }
+
+  .public--landing .public__mark {
+    height: 38px;
+    min-width: 38px;
+    width: 38px;
+  }
+
+  .public--landing .public__wordmark b {
+    font-size: 13px;
+  }
+
+  .landing-hero__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .landing-hero__actions .btn,
+  .landing-link {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .public--landing .landing-hero__actions .btn--primary:hover,
+  .public--landing .landing-link:hover {
+    transform: translateY(-3px);
+  }
+
+  .public--landing .landing-link:hover {
+    background: color-mix(in oklch, var(--ox-900) 72%, transparent);
+    border-color: var(--gold-200);
+  }
+}
+
+@keyframes landing-cover-arrive {
+  from {
+    filter: contrast(0.94) saturate(0.9);
+    transform: scale(1.035);
+  }
+
+  to {
+    filter: contrast(1) saturate(1);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero__media,
+  .public__bar {
+    animation: none;
+    transition: none;
+  }
+}

@@ -1,7 +1,7 @@
 name = "log_triage"
-description = "Read-only low-cost agent for summarizing captured logs when deterministic parsing is insufficient."
-model = "gpt-5.6-terra"
-model_reasoning_effort = "low"
+description = "Read-only Luna auditor for summarizing captured logs when deterministic parsing is insufficient."
+model = "gpt-5.6-luna"
+model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 
 developer_instructions = '''
@@ -12,7 +12,8 @@ Return the command and exit status, first meaningful failure, unique error
 signatures, affected files or tests, repeated-error count when determinable,
 the next targeted diagnostic command, and remaining uncertainty.
 
-Do not paste the full log, edit files, infer success from truncated output,
-investigate unrelated warnings, or expose credentials, private identifiers,
-or operational data. Keep the response below 700 words.
+Do not edit files, create patches, take a writer lock, stage, commit, push,
+merge, deploy, migrate, mutate providers, spawn agents, infer success from
+truncated output, investigate unrelated warnings, or expose credentials,
+private identifiers, or operational data. Keep the response below 700 words.
 '''

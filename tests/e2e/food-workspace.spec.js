@@ -45,7 +45,11 @@ const foodItems = [
       completionEvidenceId: '',
       leadTime: { status: 'SHORT', requiredDays: 10, actualDays: 5, shortBy: 5 },
     },
-    attentionFlags: ['FOOD_LEAD_TIME_SHORT', 'FOOD_SOURCING_PENDING', 'FOOD_COMPLETION_EVIDENCE_MISSING'],
+    attentionFlags: [
+      'FOOD_LEAD_TIME_SHORT',
+      'FOOD_SOURCING_PENDING',
+      'FOOD_COMPLETION_EVIDENCE_MISSING',
+    ],
   },
   {
     requestId: 'SYNTHETIC-FOOD-REQUEST-2',
@@ -129,11 +133,7 @@ async function openFood(page, { capabilities = FOOD_CAPABILITIES } = {}) {
     }),
   );
   await page.route('**/api/getBootstrapData', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: true, data: bootstrap }),
-    }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: bootstrap }) }),
   );
   await page.route('**/api/getFoodWorkQueue', (route) =>
     route.fulfill({
@@ -156,7 +156,7 @@ test('Food workspace exposes every accepted destination and governed queue conte
   );
   await openFood(page);
   const shell = page.locator('[data-internal-shell-context]');
-  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('food');
+  await expect(shell.getByLabel('Workspace')).toHaveValue('food');
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('DOL staff');
   await expect(page.locator('[data-admin-view="referenceAdmin"]')).toBeHidden();
 
@@ -213,10 +213,7 @@ test('Food destinations reuse shared canvass, procurement, receiving, release, a
 
   await page.goto('/app/food');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator('#roleExperiencePanel')
-    .getByRole('button', { name: /^Release Desk/u })
-    .click();
+  await page.locator('#roleExperiencePanel').getByRole('button', { name: /^Release Desk/u }).click();
   await expect(page.locator('#release')).toHaveClass(/active/u);
 
   await page.goto('/app/food');

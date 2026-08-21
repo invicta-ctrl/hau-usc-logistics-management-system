@@ -1,17 +1,19 @@
 # Launch Runbook
 
+> Mandatory after `v0.8.0`: all production-bound changes follow the permanent branch and playground policy in root `AGENTS.md` and [Isolated Staging Playground](./ISOLATED_STAGING_PLAYGROUND.md). Playground acceptance stops for Earl's explicit GO; this runbook cannot infer production approval from CI or staging success.
+
 ## Current production baseline
 
-Production release `v0.7.2` is operational from exact source
-`84eacfcdb47a3985fed48e3ba14bb413946d4410` at schema 30 / migration
-`0030_production_access_and_operations.sql`. Maintenance v0.7.2.1 does not
-authorize a production deployment, data change, identity change, secret change,
-or route change.
+Production release `v0.8.0` is operational from exact source
+`3059098ff2a2935fec59df52748ccae420aadba7` at schema 30 / migration
+`0030_production_access_and_operations.sql`. The Isolated Staging Playground
+amendment does not authorize a production deployment, data change, identity
+change, secret change, or route change.
 
-## Permanent isolated staging
+## Permanent isolated playground
 
-Staging uses the repository commands and private configuration described in
-`docs/STAGING_SANDBOX.md`. Before a staging write:
+The playground uses the repository commands and private configuration described
+in `docs/ISOLATED_STAGING_PLAYGROUND.md`. Before a playground write:
 
 1. verify the exact Cloudflare account and the dedicated Worker, D1, and R2
    identities against live provider inventory;
@@ -48,11 +50,29 @@ For a separately accepted future production change:
    staging acceptance, and required review/CI;
 3. capture a fresh private production authorization package, D1 export/Time
    Travel bookmark, previous Worker version, and affected R2/provider recovery
-   inputs;
+   inputs. Recovery captured on the release branch is read-only pre-merge evidence;
 4. merge through protected GitHub without force-push;
-5. deploy only the accepted `main` SHA in the approved change window;
-6. verify exact runtime identity, health/readiness, bounded smoke, and
+5. resolve the accepted `main` SHA, prove `git diff --exit-code <candidate> <main>`
+   (tree parity), wait for required main-push CI, and stop on any merge-time tree
+   drift;
+6. regenerate private configs, authorization, release manifest, and recovery
+   evidence bound to the accepted `main` SHA; pre-merge candidate packages are
+   invalid after a merge commit changes the SHA;
+7. run `npm run production:recovery:evidence -- --staging-config <private> --production-config <private> --authorization <private> --private-dir <private> --manifest <private>`;
+8. require `npm run production:preflight`; the live deploy repeats that gate and therefore requires
+   `npm run deploy:production -- --config <private-production-config> --authorization <private> --staging-config <private-staging-config> --secrets <private-production-secrets>` only
+   in the approved change window;
+9. verify exact runtime identity, health/readiness, bounded smoke, and
    reconciliation; retain append-only history and rollback evidence.
+
+The private authorization package must approve backup, Worker deployment, rollback,
+and closure. A no-migration/no-Google/no-seed release explicitly sets the inapplicable
+mutation actions to `DENIED`; `PENDING` remains fail-closed and a denied required action
+revokes launch authorization.
+
+The production deploy wrapper additionally requires both checked-out Git branch and
+private `CANDIDATE_BRANCH` to equal `main`. A release-branch package can capture only
+pre-merge read-only recovery evidence; it cannot deploy production.
 
 On target, binding, integrity, authorization, privacy, evidence, or identity
 drift, stop the affected write path and follow `docs/PRODUCTION_INCIDENT_GUIDE.md`

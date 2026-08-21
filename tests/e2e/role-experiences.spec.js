@@ -1,15 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { navigateToView } from './navigation.js';
 
-async function revealWorkspaceSwitcher(page) {
-  const menu = page.locator('[data-signature-menu]');
-  if ((await menu.getAttribute('aria-expanded')) !== 'true') await menu.click();
-  const switcher = page.locator('[data-v5-scope-switcher]');
-  if ((await switcher.getAttribute('open')) === null) await switcher.locator('summary').click();
-  await expect(switcher.getByLabel('Workspace')).toBeVisible();
-}
-
-test('shared internal context bar stays truthful, accessible, and responsive', async ({ page }, testInfo) => {
+test('shared internal context bar stays truthful, accessible, and responsive', async ({
+  page,
+}, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop shell proof are sufficient.',
@@ -19,23 +13,23 @@ test('shared internal context bar stays truthful, accessible, and responsive', a
 
   const shell = page.locator('[data-internal-shell-context]');
   await expect(shell).toBeVisible();
-  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('administrator');
-  await expect(page.locator('#shellWorkspaceSelect option:disabled')).toHaveCount(0);
-  await expect(page.locator('#shellScopeSelect')).toHaveValue('current');
-  await expect(shell.locator('.shell-breadcrumbs')).toContainText('Administrator');
-  await expect(shell.locator('[data-shell-release]')).toHaveText('Test site');
-  await expect(shell.locator('.shell-attention')).toHaveAttribute(
-    'aria-label',
-    /operational items? need attention/u,
+  await expect(shell.getByLabel('Workspace')).toHaveValue('administrator');
+  await expect(shell.getByLabel('Workspace').locator('option:disabled')).toHaveCount(0);
+  await expect(shell.getByLabel('Operational scope')).toHaveValue('current');
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Administrator',
   );
+  await expect(shell.locator('[data-shell-release]')).toContainText(/v0\.8\.0/u);
+  await expect(shell.getByRole('button', { name: /operational items? need attention/u })).toBeVisible();
   await shell.locator('.shell-account > summary').click();
   await expect(shell.locator('[data-shell-account-role]')).toContainText(/ADMIN|Administrator/u);
 
-  await revealWorkspaceSwitcher(page);
-  await page.locator('#shellWorkspaceSelect').selectOption('food');
+  await shell.getByLabel('Workspace').selectOption('food');
   await expect(page).toHaveURL(/\/food$/u);
   await expect(page.locator('body')).toHaveAttribute('data-workspace', 'food');
-  await expect(shell.locator('.shell-breadcrumbs')).toContainText('Food Committee');
+  await expect(shell.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
+    'Food Committee',
+  );
   await expect(page.locator('#roleExperiencePanel')).toHaveAttribute('data-role-experience', 'food');
   expect(
     await page.evaluate(() => getComputedStyle(document.body).getPropertyValue('--role-accent').trim()),
@@ -43,7 +37,7 @@ test('shared internal context bar stays truthful, accessible, and responsive', a
   await expect(shell.locator('[data-shell-account-role]')).toContainText(/ADMIN|Administrator/u);
 
   await navigateToView(page, 'inventory');
-  await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Inventory');
+  await expect(shell.locator('[data-shell-module-crumb]')).toHaveText('Inventory Management');
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
@@ -99,9 +93,7 @@ test('Food receives a deadline-first orange-accent shared-shell experience', asy
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test('Inventory & Pantry receives an exception-first amber shared-shell experience', async ({
-  page,
-}, testInfo) => {
+test('Inventory & Pantry receives an exception-first amber shared-shell experience', async ({ page }, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop role proof are sufficient.',

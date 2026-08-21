@@ -139,6 +139,50 @@ function auditStatement(
     );
 }
 
+const STAFF_ACTIVITY_AUDIT_ACTIONS = new Set([
+  'ACCESS_ID_CHANGED',
+  'STARTER_ACCOUNT_CREATED',
+  'ACCOUNT_STATUS_CHANGED',
+]);
+const CANONICAL_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/u;
+
+function canonicalActivityTimestamp(value) {
+  const timestamp = String(value ?? '').trim();
+  if (!CANONICAL_UTC.test(timestamp) || Number.isNaN(Date.parse(timestamp))) {
+    return null;
+  }
+  if (new Date(timestamp).toISOString() !== timestamp) {
+    return null;
+  }
+  return timestamp;
+}
+
+function staffActivityAuditContextStatement(db, { auditId, accountId, action, correlationId, preparedAt }) {
+  if (!STAFF_ACTIVITY_AUDIT_ACTIONS.has(action)) return null;
+  const timestamp = canonicalActivityTimestamp(preparedAt);
+  const correlation = String(correlationId ?? '').trim();
+  if (!timestamp || !correlation || correlation.length > 128) return null;
+  return db
+    .prepare(
+      `INSERT INTO staff_account_activity_audit_context (
+         audit_id, person_id, account_id, account_staff_link_id, link_state,
+         account_access_id_snapshot, action_code, correlation_id, prepared_at
+       )
+       SELECT ?1, link.person_id, account.id, link.id, 'ACTIVE',
+              account.access_id_normalized, ?3, ?4, ?5
+       FROM accounts AS account
+       JOIN account_staff_links AS link ON link.account_id = account.id
+       WHERE account.id = ?2
+         AND link.state = 'ACTIVE'
+         AND (
+           SELECT COUNT(*)
+           FROM account_staff_links AS active_link
+           WHERE active_link.account_id = ?2 AND active_link.state = 'ACTIVE'
+         ) = 1`,
+    )
+    .bind(auditId, accountId, action, correlation, timestamp);
+}
+
 function idempotencyStatement(db, idempotency) {
   return db
     .prepare(
@@ -649,6 +693,13 @@ export function createD1AccessManagementRepository(db) {
           account.updatedAt,
           collisionKey,
         );
+      const activityContext = staffActivityAuditContextStatement(db, {
+        auditId,
+        accountId: account.id,
+        action: 'ACCESS_ID_CHANGED',
+        correlationId,
+        preparedAt: changedAt,
+      });
       const dependentStatements = [
         db
           .prepare(
@@ -679,6 +730,7 @@ export function createD1AccessManagementRepository(db) {
             idempotencyKey,
           ),
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
+        ...(activityContext ? [activityContext] : []),
         auditStatement(db, {
           id: auditId,
           createdAt: changedAt,
@@ -769,7 +821,15 @@ export function createD1AccessManagementRepository(db) {
             ),
         );
       }
+      const activityContext = staffActivityAuditContextStatement(db, {
+        auditId,
+        accountId: account.id,
+        action: 'STARTER_ACCOUNT_CREATED',
+        correlationId,
+        preparedAt: account.createdAt,
+      });
       statements.push(
+        ...(activityContext ? [activityContext] : []),
         auditStatement(db, {
           id: auditId,
           createdAt: account.createdAt,
@@ -984,8 +1044,16 @@ export function createD1AccessManagementRepository(db) {
              )`,
         )
         .bind(nextStatus, changedAt, account.id, account.credentialVersion, account.updatedAt);
+      const activityContext = staffActivityAuditContextStatement(db, {
+        auditId,
+        accountId: account.id,
+        action: auditAction,
+        correlationId,
+        preparedAt: changedAt,
+      });
       const dependentStatements = [
         db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(account.id),
+        ...(activityContext ? [activityContext] : []),
         auditStatement(db, {
           id: auditId,
           createdAt: changedAt,

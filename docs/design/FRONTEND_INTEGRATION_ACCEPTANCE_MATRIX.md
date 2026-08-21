@@ -142,9 +142,10 @@ node scripts/design/semantics-audit.mjs
 node scripts/design/comfort-audit.mjs
 
 # theme cascade, if FI-01 touched tokens
-npm run design:make-theme:check
-npm run design:make-verify
-npm run design:make-landing
+node scripts/design/build-make-theme.mjs --check
+node scripts/design/verify-make-theme.mjs
+node scripts/design/verify-make-landing-theme.mjs
+node scripts/design/theme-source.mjs --check
 
 # candidate freeze
 npm run check
@@ -161,8 +162,12 @@ npm run production:preflight
 npm run production:authorization:check
 ```
 
-`scripts/design/*` runs only if FI-00's owner decision promoted that directory
-to the work branch's tree. Frozen main has no `scripts/design/`.
+`scripts/design/**` is retained on this branch by FI-00 and the four theme
+commands above were verified to run on the reconciled tree. The `design:*` npm
+aliases quoted in the historical design records do not exist in the v0.8.3
+`package.json`; invoke the scripts directly.
+`build-make-routes.mjs --check` is unavailable because it imports an undeclared
+`esbuild` dependency — a pre-existing condition, not an FI-00 regression.
 
 ---
 

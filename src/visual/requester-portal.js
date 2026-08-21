@@ -115,6 +115,7 @@ function downloadReceipt(receipt) {
 }
 
 function requestCard(request, { expanded = false } = {}) {
+  const cancellable = ['FOR_REVIEW', 'ACCEPTED'].includes(request.status);
   return `<article class="borrower-ticket request-center-ticket" data-request="${escapeHtml(request.id)}">
     <div>
       <span class="status blue">${escapeHtml(displayStatus(request.status))}</span>
@@ -127,7 +128,7 @@ function requestCard(request, { expanded = false } = {}) {
       <ul>${request.lines.map((line) => `<li><strong>${escapeHtml(line.description)}</strong> — ${escapeHtml(line.quantity)} ${escapeHtml(line.unit)} · ${escapeHtml(line.category)} · ${escapeHtml(displayStatus(line.status))}${line.specification ? `<br><small>${escapeHtml(line.specification)}</small>` : ''}</li>`).join('')}</ul>
       <h3>Visible history</h3>
       <ol>${request.history.map((entry) => `<li>${escapeHtml(displayStatus(entry.status))} · ${escapeHtml(formatDate(entry.at))}</li>`).join('') || '<li>No visible status changes yet.</li>'}</ol>
-      <button class="secondary mini" type="button" data-additional-for="${escapeHtml(request.parentRequestId || request.id)}">Add to this request</button>
+      <div class="button-row"><button class="secondary mini" type="button" data-additional-for="${escapeHtml(request.parentRequestId || request.id)}">Add to this request</button>${cancellable ? `<button class="danger mini" type="button" data-cancel-request="${escapeHtml(request.id)}">Cancel request</button>` : ''}</div>
     </div>
   </article>`;
 }
@@ -209,7 +210,7 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
               <label data-event-autocomplete-wrap hidden>Sub-event autocomplete<input type="search" data-event-autocomplete list="requestEventSuggestions" autocomplete="off" aria-autocomplete="list" aria-controls="requestEvent"><small>Type an approved Sub-event name, then confirm it in the Sub-event selector.</small><datalist id="requestEventSuggestions"></datalist></label>
               <label>Sub-event<select id="requestEvent" name="eventId" required disabled><option value="">Select Event first</option></select></label>
             </div>
-            <div class="panel-head section-gap"><div><p class="eyebrow">Step 4</p><h2>Requested venues, logistics, and equipment</h2><p>Every item begins For Review. Availability is not confirmed, and submission does not reserve stock.</p></div></div>
+            <div class="panel-head section-gap"><div><p class="eyebrow">Step 4</p><h2>Requested venues, logistics, and equipment</h2><p>Every item begins For Review. Availability is non-binding and submission makes no reservation or stock movement.</p></div></div>
             <div class="public-form-grid request-line-composer">
               <label class="span-2">Purpose / need<textarea name="purpose" maxlength="500" required></textarea></label>
               <label>Category<select name="lineCategory">${categoryOptions}</select></label>
@@ -434,6 +435,24 @@ export async function mountRequesterPortal({ root, client, session, onLogout }) 
             eventSelect.value = parent.eventId;
           }
           form.scrollIntoView({ behavior: 'smooth' });
+        }),
+      );
+      output.querySelectorAll('[data-cancel-request]').forEach((button) =>
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            await client.request('/api/portal/request/cancel', {
+              body: {
+                requestId: button.dataset.cancelRequest,
+                clientRequestId: requestKey('requester-cancel'),
+              },
+              csrfToken: session.csrfToken,
+            });
+            await load();
+            render();
+          } finally {
+            button.disabled = false;
+          }
         }),
       );
     };

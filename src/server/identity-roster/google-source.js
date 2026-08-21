@@ -1,3 +1,5 @@
+import { validateIdentityRosterSource } from './service.js';
+
 const encoder = new TextEncoder();
 const NORMALIZED_ROSTER_HEADERS = Object.freeze([
   'Student_ID',
@@ -27,7 +29,44 @@ function pemBytes(value) {
   return Uint8Array.from(atob(body), (character) => character.charCodeAt(0));
 }
 
-async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvider, now }) {
+async function boundedFetch(fetchImpl, input, init, { requestTimeoutMs, signal } = {}) {
+  const timeoutMs = Number(requestTimeoutMs);
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
+    return fetchImpl(input, signal ? { ...init, signal } : init);
+  }
+  const controller = new AbortController();
+  let timedOut = false;
+  const abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  else signal?.addEventListener?.('abort', abort, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  try {
+    return await fetchImpl(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) {
+      throw Object.assign(new Error('The approved private roster source timed out.'), {
+        code: 'ROSTER_SOURCE_TIMEOUT',
+      });
+    }
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener?.('abort', abort);
+  }
+}
+
+async function serviceAccountToken({
+  email,
+  privateKey,
+  fetchImpl,
+  cryptoProvider,
+  now,
+  requestTimeoutMs,
+  signal,
+}) {
   const issuedAt = Math.floor(now() / 1000);
   const header = bytesToBase64Url(encoder.encode(JSON.stringify({ alg: 'RS256', typ: 'JWT' })));
   const claim = bytesToBase64Url(
@@ -54,14 +93,19 @@ async function serviceAccountToken({ email, privateKey, fetchImpl, cryptoProvide
     encoder.encode(`${header}.${claim}`),
   );
   const assertion = `${header}.${claim}.${bytesToBase64Url(new Uint8Array(signature))}`;
-  const response = await fetchImpl('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion,
-    }),
-  });
+  const response = await boundedFetch(
+    fetchImpl,
+    'https://oauth2.googleapis.com/token',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion,
+      }),
+    },
+    { requestTimeoutMs, signal },
+  );
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || typeof payload.access_token !== 'string') {
     throw Object.assign(new Error('The approved private roster source could not be authorized.'), {
@@ -110,6 +154,7 @@ export function createGoogleSheetsRosterSource({
   fetchImpl = globalThis.fetch,
   cryptoProvider = globalThis.crypto,
   clock = { now: () => Date.now() },
+  fingerprint = null,
 } = {}) {
   const configuration = Object.freeze({
     spreadsheetId: String(spreadsheetId ?? '').trim(),
@@ -122,6 +167,40 @@ export function createGoogleSheetsRosterSource({
     Object.entries(configuration)
       .filter(([, value]) => !value || placeholder.test(value))
       .map(([key]) => key);
+
+  const readSource = async ({ requestTimeoutMs, signal } = {}) => {
+    if (missing().length) {
+      throw Object.assign(new Error('The approved private roster source is not configured.'), {
+        code: 'ROSTER_SOURCE_NOT_CONFIGURED',
+      });
+    }
+    const token = await serviceAccountToken({
+      email: configuration.serviceAccountEmail,
+      privateKey: configuration.serviceAccountPrivateKey,
+      fetchImpl,
+      cryptoProvider,
+      now: () => clock.now(),
+      requestTimeoutMs,
+      signal,
+    });
+    const endpoint =
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(configuration.spreadsheetId)}` +
+      `/values/${encodeURIComponent(configuration.range)}?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE`;
+    const response = await boundedFetch(
+      fetchImpl,
+      endpoint,
+      { headers: { authorization: `Bearer ${token}` } },
+      { requestTimeoutMs, signal },
+    );
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !Array.isArray(payload.values)) {
+      throw Object.assign(new Error('The approved private roster source could not be read.'), {
+        code: 'ROSTER_SOURCE_UNAVAILABLE',
+      });
+    }
+    const [headers = [], ...rows] = payload.values;
+    return normalizeRosterValues(headers, rows);
+  };
 
   return Object.freeze({
     status() {
@@ -141,32 +220,38 @@ export function createGoogleSheetsRosterSource({
     },
 
     async read() {
-      if (missing().length) {
-        throw Object.assign(new Error('The approved private roster source is not configured.'), {
-          code: 'ROSTER_SOURCE_NOT_CONFIGURED',
+      return readSource();
+    },
+
+    async readProjectionSummary({ requestTimeoutMs, signal } = {}) {
+      if (!Number.isSafeInteger(Number(requestTimeoutMs)) || Number(requestTimeoutMs) <= 0) {
+        throw Object.assign(new Error('The approved private roster source timeout is invalid.'), {
+          code: 'ROSTER_SOURCE_TIMEOUT_INVALID',
         });
       }
-      const token = await serviceAccountToken({
-        email: configuration.serviceAccountEmail,
-        privateKey: configuration.serviceAccountPrivateKey,
-        fetchImpl,
-        cryptoProvider,
-        now: () => clock.now(),
-      });
-      const endpoint =
-        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(configuration.spreadsheetId)}` +
-        `/values/${encodeURIComponent(configuration.range)}?majorDimension=ROWS&valueRenderOption=UNFORMATTED_VALUE`;
-      const response = await fetchImpl(endpoint, {
-        headers: { authorization: `Bearer ${token}` },
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !Array.isArray(payload.values)) {
-        throw Object.assign(new Error('The approved private roster source could not be read.'), {
-          code: 'ROSTER_SOURCE_UNAVAILABLE',
+      if (typeof fingerprint !== 'function') {
+        throw Object.assign(new Error('The approved private roster source fingerprint is unavailable.'), {
+          code: 'ROSTER_SOURCE_FINGERPRINT_UNAVAILABLE',
         });
       }
-      const [headers = [], ...rows] = payload.values;
-      return normalizeRosterValues(headers, rows);
+      const sourceData = await readSource({ requestTimeoutMs, signal });
+      const validation = validateIdentityRosterSource(sourceData);
+      const sourceFingerprint = String(
+        await fingerprint(
+          sourceData.fingerprintSource ?? { headers: sourceData.headers, rows: sourceData.rows },
+        ),
+      ).trim();
+      if (!sourceFingerprint) {
+        throw Object.assign(new Error('The approved private roster source fingerprint is unavailable.'), {
+          code: 'ROSTER_SOURCE_FINGERPRINT_UNAVAILABLE',
+        });
+      }
+      return Object.freeze({
+        sourceFingerprint,
+        sourceRowCount: validation.sourceRowCount,
+        acceptedCount: validation.rows.length,
+        rejectionCount: validation.rejections.length,
+      });
     },
   });
 }

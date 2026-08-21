@@ -28,6 +28,7 @@ const SAFE_MESSAGES = Object.freeze({
   ENTITY_SCOPE_REQUIRED: 'This action requires a verified committee scope.',
   OUT_OF_SCOPE: 'This record is outside your authorized committee scope.',
   RESET_INVALID: 'The password reset link is invalid or expired.',
+  RESET_CONFLICT: 'The password reset could not be completed. Request a new reset link.',
   ACCOUNT_EXISTS: 'The Access ID is already assigned.',
   STARTER_ASSIGNMENT_INVALID: 'The starter account role or committee assignment is invalid.',
   SELF_ACCESS_CHANGE_BLOCKED: 'You cannot change your own account status.',
@@ -343,6 +344,33 @@ export function createAuthService({
     return { state: 'AUTHENTICATED', csrfToken, user: sessionUserDto(current.account, session) };
   }
 
+  async function issuePlaygroundSession({ accountId } = {}) {
+    const account = await repository.getAccountById(accountId);
+    assert(
+      account?.status === ACCOUNT_STATUS.ACTIVE &&
+        account.onboardingCompletedAt &&
+        !account.lockedAt &&
+        account.roleId === 'SYSTEM_OWNER',
+      'ACCOUNT_UNAVAILABLE',
+    );
+    const authorization = accountAuthorization(account);
+    assert(
+      authorization.active &&
+        authorization.mappingStatus === 'MAPPED' &&
+        authorization.capabilities.includes(CAPABILITIES.SYSTEM_ADMIN),
+      'CAPABILITY_REQUIRED',
+    );
+    const issued = await issueSession(account, SESSION_KIND.AUTHENTICATED, settings.sessionMs);
+    await audit('PLAYGROUND_SESSION_ISSUED', account.id, { roleId: account.roleId });
+    return {
+      state: 'AUTHENTICATED',
+      sessionToken: issued.token,
+      csrfToken: issued.csrfToken,
+      user: sessionUserDto(account, issued.session),
+      expiresAt: issued.session.expiresAt,
+    };
+  }
+
   async function authenticate({ sessionToken } = {}) {
     const current = await readSession(sessionToken);
     return {
@@ -422,27 +450,29 @@ export function createAuthService({
       record && !record.consumedAt && new Date(record.expiresAt).getTime() > clock.now(),
       'RESET_INVALID',
     );
+    const account = await repository.getAccountById(record.accountId);
+    assert(account?.status === ACCOUNT_STATUS.ACTIVE && !account.lockedAt, 'ACCOUNT_UNAVAILABLE');
     const passwordCredential = await passwordKdf.hash(password);
     const resetAt = nowIso(clock);
-    const account = await repository.runTransaction(async (transaction) => {
-      const freshToken = await transaction.getResetToken(tokenDigest);
-      assert(freshToken && !freshToken.consumedAt, 'RESET_INVALID');
-      const fresh = await transaction.getAccountById(record.accountId);
-      assert(fresh?.status === ACCOUNT_STATUS.ACTIVE, 'ACCOUNT_UNAVAILABLE');
-      const consumed = await transaction.consumeResetToken(tokenDigest, resetAt);
-      assert(consumed, 'RESET_INVALID');
-      const next = {
-        ...fresh,
+    try {
+      await repository.commitPasswordReset({
+        tokenDigest,
+        accountId: account.id,
+        expectedCredentialVersion: account.credentialVersion,
         passwordCredential,
-        credentialVersion: fresh.credentialVersion + 1,
-        passwordChangedAt: resetAt,
-        updatedAt: resetAt,
-      };
-      await transaction.saveAccount(next);
-      await transaction.deleteSessionsForAccount(next.id);
-      return next;
-    });
-    await audit('PASSWORD_RESET_COMPLETED', account.id);
+        resetAt,
+        audit: {
+          id: createId(),
+          event: 'PASSWORD_RESET_COMPLETED',
+          accountId: account.id,
+          occurredAt: resetAt,
+          details: {},
+        },
+      });
+    } catch (error) {
+      if (error?.code === 'RESET_CONFLICT') throw new AuthError('RESET_CONFLICT');
+      throw error;
+    }
     return { state: 'PASSWORD_RESET' };
   }
 
@@ -472,6 +502,7 @@ export function createAuthService({
     createStarterAccount,
     login,
     activateStarter,
+    issuePlaygroundSession,
     authenticate,
     authorizeSession,
     getSession,

@@ -15,6 +15,16 @@ DERIVED_FROM          src/worker/index.js, src/server/**, src/services/**,
 METHOD                Deterministic extraction. Counts below were computed, not recalled.
 ```
 
+> **FI-00 note, 2026-08-21.** This matrix was extracted from
+> `origin/main@86553349`. After FI-00, `frontend-design-integration` is
+> byte-identical to that main across every runtime scope
+> (`src/**`, `tests/**`, `migrations/**`, `package.json`, `wrangler.jsonc`,
+> `vite.config.js`, and the rest of section 5A of the FI-00 specification), so
+> every value below now describes this branch as well as main. The verified
+> counts held after reconciliation: 33 surfaces, 34 route classifications, 40
+> capabilities, 40 operations, 29 adapter methods, 7 bootstrap modules, 32
+> migrations, and 146 / 2 / 25 / 2 / 3 test files.
+
 **Rule of the matrix.** The design may restyle any cell in the _presentation_
 columns. It may not change a route, method, field, capability, status, or data
 class. A design that omits a listed capability does not delete it; a design that

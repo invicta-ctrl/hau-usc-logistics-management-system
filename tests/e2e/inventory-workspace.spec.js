@@ -98,55 +98,14 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
     },
   ];
   bootstrap.ledgerTransactions = [
-    {
-      id: 'SYNTHETIC-LEDGER-IN',
-      itemId: 'SYNTHETIC-ITEM-LOW',
-      direction: 'IN',
-      quantity: 10,
-      unit: 'piece',
-      transactionType: 'PURCHASE_RECEIPT',
-      status: 'POSTED',
-      createdAt: '2026-07-25T08:00:00.000Z',
-    },
-    {
-      id: 'SYNTHETIC-LEDGER-OUT',
-      itemId: 'SYNTHETIC-ITEM-LOW',
-      direction: 'OUT',
-      quantity: 2,
-      unit: 'piece',
-      transactionType: 'ISSUE',
-      status: 'POSTED',
-      createdAt: '2026-07-26T08:00:00.000Z',
-    },
-    {
-      id: 'SYNTHETIC-PANTRY-IN',
-      itemId: 'SYNTHETIC-PANTRY-1',
-      direction: 'IN',
-      quantity: 3,
-      unit: 'pack',
-      transactionType: 'PURCHASE_RECEIPT',
-      status: 'POSTED',
-      createdAt: '2026-07-25T09:00:00.000Z',
-    },
-    {
-      id: 'SYNTHETIC-NEGATIVE-IN',
-      itemId: 'SYNTHETIC-REUSABLE-NEGATIVE',
-      direction: 'IN',
-      quantity: 3,
-      unit: 'piece',
-      transactionType: 'PURCHASE_RECEIPT',
-      status: 'POSTED',
-      createdAt: '2026-07-25T10:00:00.000Z',
-    },
+    { id: 'SYNTHETIC-LEDGER-IN', itemId: 'SYNTHETIC-ITEM-LOW', direction: 'IN', quantity: 10, unit: 'piece', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T08:00:00.000Z' },
+    { id: 'SYNTHETIC-LEDGER-OUT', itemId: 'SYNTHETIC-ITEM-LOW', direction: 'OUT', quantity: 2, unit: 'piece', transactionType: 'ISSUE', status: 'POSTED', createdAt: '2026-07-26T08:00:00.000Z' },
+    { id: 'SYNTHETIC-PANTRY-IN', itemId: 'SYNTHETIC-PANTRY-1', direction: 'IN', quantity: 3, unit: 'pack', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T09:00:00.000Z' },
+    { id: 'SYNTHETIC-NEGATIVE-IN', itemId: 'SYNTHETIC-REUSABLE-NEGATIVE', direction: 'IN', quantity: 3, unit: 'piece', transactionType: 'PURCHASE_RECEIPT', status: 'POSTED', createdAt: '2026-07-25T10:00:00.000Z' },
   ];
   bootstrap.reservations = [
     { id: 'SYNTHETIC-RESERVATION-1', itemId: 'SYNTHETIC-ITEM-LOW', quantity: 2, status: 'ACTIVE' },
-    {
-      id: 'SYNTHETIC-NEGATIVE-RESERVATION',
-      itemId: 'SYNTHETIC-REUSABLE-NEGATIVE',
-      quantity: 5,
-      status: 'ACTIVE',
-    },
+    { id: 'SYNTHETIC-NEGATIVE-RESERVATION', itemId: 'SYNTHETIC-REUSABLE-NEGATIVE', quantity: 5, status: 'ACTIVE' },
   ];
   bootstrap.evidenceFiles = [
     {
@@ -156,33 +115,13 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
     },
   ];
   bootstrap.inventoryAssets = [
-    {
-      id: 'SYNTHETIC-ASSET-1',
-      item_id: 'SYNTHETIC-ITEM-LOW',
-      asset_tag: 'SYN-ASSET-001',
-      condition_label: 'DAMAGED',
-      lifecycle_status: 'MAINTENANCE',
-    },
+    { id: 'SYNTHETIC-ASSET-1', item_id: 'SYNTHETIC-ITEM-LOW', asset_tag: 'SYN-ASSET-001', condition_label: 'DAMAGED', lifecycle_status: 'MAINTENANCE' },
   ];
   bootstrap.assetMaintenanceHistory = [
-    {
-      id: 'SYNTHETIC-MAINT-1',
-      asset_id: 'SYNTHETIC-ASSET-1',
-      event_type: 'MAINTENANCE_OPENED',
-      condition_label: 'DAMAGED',
-      occurred_at: '2026-07-26T09:00:00.000Z',
-    },
+    { id: 'SYNTHETIC-MAINT-1', asset_id: 'SYNTHETIC-ASSET-1', event_type: 'MAINTENANCE_OPENED', condition_label: 'DAMAGED', occurred_at: '2026-07-26T09:00:00.000Z' },
   ];
   bootstrap.assetMovementHistory = [
-    {
-      id: 'SYNTHETIC-ASSET-MOVE-1',
-      asset_id: 'SYNTHETIC-ASSET-1',
-      movement_type: 'MAINTENANCE_HOLD',
-      previous_status: 'AVAILABLE',
-      new_status: 'MAINTENANCE',
-      condition_label: 'DAMAGED',
-      occurred_at: '2026-07-26T09:00:00.000Z',
-    },
+    { id: 'SYNTHETIC-ASSET-MOVE-1', asset_id: 'SYNTHETIC-ASSET-1', movement_type: 'MAINTENANCE_HOLD', previous_status: 'AVAILABLE', new_status: 'MAINTENANCE', condition_label: 'DAMAGED', occurred_at: '2026-07-26T09:00:00.000Z' },
   ];
   bootstrap.restockRequests = [
     { id: 'SYNTHETIC-RESTOCK-1', itemId: 'SYNTHETIC-ITEM-LOW', quantity: 8, status: 'PROCURED' },
@@ -191,12 +130,7 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
     { id: 'SYNTHETIC-LOAN-1', itemId: 'SYNTHETIC-ITEM-LOW', quantity: 1, status: 'OVERDUE' },
   ];
   bootstrap.requestLines = [
-    {
-      id: 'SYNTHETIC-LINE-1',
-      itemId: 'SYNTHETIC-ITEM-LOW',
-      status: 'READY_TO_RELEASE',
-      fulfillmentSource: 'ISSUE_FROM_STOCK',
-    },
+    { id: 'SYNTHETIC-LINE-1', itemId: 'SYNTHETIC-ITEM-LOW', status: 'READY_TO_RELEASE', fulfillmentSource: 'ISSUE_FROM_STOCK' },
   ];
 
   await page.addInitScript(() => {
@@ -223,27 +157,21 @@ async function openInventory(page, { capabilities = INVENTORY_CAPABILITIES } = {
     }),
   );
   await page.route('**/api/getBootstrapData', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: true, data: bootstrap }),
-    }),
+    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, data: bootstrap }) }),
   );
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
   return bootstrap;
 }
 
-test('Inventory & Pantry exposes every accepted destination and distinct stock truth', async ({
-  page,
-}, testInfo) => {
+test('Inventory & Pantry exposes every accepted destination and distinct stock truth', async ({ page }, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop proof are sufficient.',
   );
   await openInventory(page);
   const shell = page.locator('[data-internal-shell-context]');
-  await expect(page.locator('#shellWorkspaceSelect')).toHaveValue('inventory-pantry');
+  await expect(shell.getByLabel('Workspace')).toHaveValue('inventory-pantry');
   await expect(shell.locator('[data-shell-account-role]')).toHaveText('DOL staff');
   await expect(page.locator('[data-admin-view="referenceAdmin"]')).toBeHidden();
 
@@ -269,9 +197,7 @@ test('Inventory & Pantry exposes every accepted destination and distinct stock t
   await expect(panel.getByRole('button', { name: /^Overdue 1 /u })).toBeVisible();
 });
 
-test('Inventory destinations reuse canonical stock, circulation, receiving, release, movement, and alert surfaces', async ({
-  page,
-}, testInfo) => {
+test('Inventory destinations reuse canonical stock, circulation, receiving, release, movement, and alert surfaces', async ({ page }, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop proof are sufficient.',
@@ -279,9 +205,7 @@ test('Inventory destinations reuse canonical stock, circulation, receiving, rele
   await openInventory(page);
   let panel = page.locator('#roleExperiencePanel[data-role-experience="inventory-pantry"]');
 
-  await panel
-    .locator('.role-experience-actions [data-inventory-destination="inventory-pantry-stock"]')
-    .click();
+  await panel.locator('.role-experience-actions [data-inventory-destination="inventory-pantry-stock"]').click();
   await expect(page.locator('#inventory')).toHaveClass(/active/u);
   await expect(page.locator('#inventoryAreaFilter')).toHaveValue('Pantry');
   await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-PANTRY-1');
@@ -294,26 +218,19 @@ test('Inventory destinations reuse canonical stock, circulation, receiving, rele
 
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-lending"]')
-    .click();
+  await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-lending"]').click();
   await expect(page.locator('#lending')).toHaveClass(/active/u);
   await expect(page.locator('[data-loan-tab="FOR_REVIEW"]')).toHaveClass(/active/u);
 
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator(
-      '#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-receiving"]',
-    )
-    .click();
+  await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-receiving"]').click();
   await expect(page.locator('#restocking')).toHaveClass(/active/u);
   await expect(page.locator('#restockReceiveForm')).toBeVisible();
+
 });
 
-test('Inventory destinations reuse canonical release, movement, and alert surfaces', async ({
-  page,
-}, testInfo) => {
+test('Inventory destinations reuse canonical release, movement, and alert surfaces', async ({ page }, testInfo) => {
   test.skip(
     !['chromium-390', 'chromium-1366'].includes(testInfo.project.name),
     'One mobile and one desktop proof are sufficient.',
@@ -326,18 +243,12 @@ test('Inventory destinations reuse canonical release, movement, and alert surfac
 
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-release"]')
-    .click();
+  await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-release"]').click();
   await expect(page.locator('#release')).toHaveClass(/active/u);
 
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator(
-      '#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-movement-history"]',
-    )
-    .click();
+  await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-movement-history"]').click();
   let supplement = page.locator('[data-inventory-workspace-supplement]');
   await expect(supplement).toBeFocused();
   await expect(supplement).toContainText('SYNTHETIC-LEDGER-OUT');
@@ -345,24 +256,18 @@ test('Inventory destinations reuse canonical release, movement, and alert surfac
 
   await page.goto('/app/inventory');
   await expect(page.locator('#loading')).toHaveClass(/hidden/u);
-  await page
-    .locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-alerts"]')
-    .click();
+  await page.locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-alerts"]').click();
   supplement = page.locator('[data-inventory-workspace-supplement]');
   await expect(supplement).toBeFocused();
   await expect(supplement).toContainText('SYN-ASSET-001');
   await expect(supplement).toContainText('MAINTENANCE');
 
   await expect
-    .poll(() =>
-      page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
-    )
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth))
     .toBeLessThanOrEqual(1);
 });
 
-test('Inventory receiving projection fails closed without its server capability', async ({
-  page,
-}, testInfo) => {
+test('Inventory receiving projection fails closed without its server capability', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-390', 'One focused capability projection is sufficient.');
   await openInventory(page, {
     capabilities: INVENTORY_CAPABILITIES.filter((capability) => capability !== 'fulfillment.receive'),
@@ -374,26 +279,18 @@ test('Inventory receiving projection fails closed without its server capability'
   await expect(page.locator('#restocking')).not.toHaveClass(/active/u);
 });
 
-test('Inventory extension filters, sorts, and exposes negative raw ATP without changing allocation safety', async ({
-  page,
-}, testInfo) => {
+test('Inventory extension filters, sorts, and exposes negative raw ATP without changing allocation safety', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'chromium-1366', 'One desktop proof is sufficient.');
   await openInventory(page);
   await page
-    .locator(
-      '#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-management"]',
-    )
+    .locator('#roleExperiencePanel .role-experience-actions [data-inventory-destination="inventory-management"]')
     .click();
   await expect(page.locator('#inventory')).toHaveClass(/active/u);
 
   const controls = page.locator('[data-inventory-advanced-controls]');
   await expect(controls).toBeVisible();
-  await expect(controls.locator('[data-inventory-advanced-filter="classification"]')).toContainText(
-    'Reusable',
-  );
-  await expect(controls.locator('[data-inventory-advanced-filter="lendingAudience"]')).toContainText(
-    'USC officers and staff only',
-  );
+  await expect(controls.locator('[data-inventory-advanced-filter="classification"]')).toContainText('Reusable');
+  await expect(controls.locator('[data-inventory-advanced-filter="lendingAudience"]')).toContainText('USC officers and staff only');
 
   await controls.locator('[data-inventory-advanced-filter="classification"]').selectOption('REUSABLE');
   await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-REUSABLE-NEGATIVE');
@@ -418,9 +315,9 @@ test('Inventory extension filters, sorts, and exposes negative raw ATP without c
   await controls.locator('[data-inventory-advanced-filter="unit"]').selectOption('ALL');
   await controls.locator('[data-inventory-advanced-filter="lendingAudience"]').selectOption('ALL');
   await controls.locator('[data-inventory-advanced-filter="sort"]').selectOption('ATP_ASC');
-  await expect(
-    page.locator('#inventoryTable tbody tr').first().locator('td').first().locator('code'),
-  ).toHaveText('SYNTHETIC-REUSABLE-NEGATIVE');
+  await expect(page.locator('#inventoryTable tbody tr').first().locator('td').first().locator('code')).toHaveText(
+    'SYNTHETIC-REUSABLE-NEGATIVE',
+  );
 
   await controls.locator('[data-inventory-advanced-filter="lifecycle"]').selectOption('ARCHIVED');
   await expect(page.locator('#inventoryTable')).toContainText('SYNTHETIC-ARCHIVED');

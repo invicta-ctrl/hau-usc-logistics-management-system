@@ -43,6 +43,46 @@ describe('production host routing', () => {
     }
   });
 
+  it.each([
+    ['/', 'STAGING', 'allow'],
+    ['/app/admin', 'STAGING', 'allow'],
+    ['/api/version', 'STAGING', 'allow'],
+    ['/api/health', 'STAGING', 'allow'],
+    ['/api/public/advertisements', 'STAGING', 'allow'],
+    ['/api/playground/session', 'STAGING', 'allow'],
+    ['/', 'PRODUCTION', 'reject'],
+    ['/app/admin', 'PRODUCTION', 'reject'],
+    ['/api/version', 'PRODUCTION', 'reject'],
+    ['/api/health', 'PRODUCTION', 'reject'],
+    ['/api/public/advertisements', 'PRODUCTION', 'reject'],
+    ['/api/playground/session', 'PRODUCTION', 'reject'],
+    ['/', undefined, 'reject'],
+    ['/app/admin', undefined, 'reject'],
+    ['/api/version', undefined, 'reject'],
+    ['/api/health', undefined, 'reject'],
+    ['/api/public/advertisements', undefined, 'reject'],
+    ['/api/playground/session', undefined, 'reject'],
+    ['/', 'UNRECOGNIZED', 'reject'],
+    ['/app/admin', 'UNRECOGNIZED', 'reject'],
+    ['/api/version', 'UNRECOGNIZED', 'reject'],
+    ['/api/health', 'UNRECOGNIZED', 'reject'],
+    ['/api/public/advertisements', 'UNRECOGNIZED', 'reject'],
+    ['/api/playground/session', 'UNRECOGNIZED', 'reject'],
+  ])('routes playground.hausc.org%s in %s as %s', (pathname, environment, action) => {
+    expect(
+      resolveHostRoute(`https://playground.hausc.org${pathname}`, environment, RECOVERY_HOSTNAME),
+    ).toEqual({ action });
+  });
+
+  it.each(['playground.hausc.org.example', 'playground-hausc.org', 'www.playground.hausc.org'])(
+    'rejects the %s lookalike in STAGING',
+    (hostname) => {
+      expect(resolveHostRoute(`https://${hostname}/api/health`, 'STAGING', RECOVERY_HOSTNAME)).toEqual({
+        action: 'reject',
+      });
+    },
+  );
+
   it('retains local and development host acceptance', () => {
     expect(resolveHostRoute('https://unknown.example/api/health', 'DEVELOPMENT', RECOVERY_HOSTNAME)).toEqual({
       action: 'allow',
@@ -82,9 +122,9 @@ describe('production host routing', () => {
   it.each([undefined, '', 'recovery.example.test', '*.workers.dev', 'RECOVERY.WORKERS.DEV'])(
     'rejects an invalid configured recovery hostname: %s',
     (recoveryHostname) => {
-      expect(
-        resolveHostRoute(`https://${RECOVERY_HOSTNAME}/request`, 'STAGING', recoveryHostname),
-      ).toEqual({ action: 'reject' });
+      expect(resolveHostRoute(`https://${RECOVERY_HOSTNAME}/request`, 'STAGING', recoveryHostname)).toEqual({
+        action: 'reject',
+      });
     },
   );
 
@@ -111,10 +151,7 @@ describe('production host routing', () => {
       ASSETS: { fetch: assetsFetch },
     };
 
-    const apiResponse = await worker.fetch(
-      new Request('https://unknown.hausc.org/api/health'),
-      env,
-    );
+    const apiResponse = await worker.fetch(new Request('https://unknown.hausc.org/api/health'), env);
     const wrongRecoveryResponse = await worker.fetch(
       new Request('https://wrong-recovery.workers.dev/api/health'),
       env,
@@ -125,6 +162,26 @@ describe('production host routing', () => {
     expect(wrongRecoveryResponse.status).toBe(404);
     expect(assetResponse.status).toBe(404);
     expect(assetsFetch).not.toHaveBeenCalled();
+  });
+
+  it('passes the exact STAGING playground host to static dispatch and keeps rejected hosts bounded', async () => {
+    const assetsFetch = vi.fn().mockResolvedValue(new Response('static asset'));
+    const stagingResponse = await worker.fetch(new Request('https://playground.hausc.org/app/admin'), {
+      ENVIRONMENT: 'STAGING',
+      RECOVERY_HOSTNAME,
+      ASSETS: { fetch: assetsFetch },
+    });
+    const productionResponse = await worker.fetch(new Request('https://playground.hausc.org/app/admin'), {
+      ENVIRONMENT: 'PRODUCTION',
+      RECOVERY_HOSTNAME,
+      ASSETS: { fetch: assetsFetch },
+    });
+
+    expect(stagingResponse.status).toBe(200);
+    expect(assetsFetch).toHaveBeenCalledTimes(1);
+    expect(productionResponse.status).toBe(404);
+    expect(productionResponse.headers.get('cache-control')).toBe('no-store');
+    expect(productionResponse.headers.get('set-cookie')).toBeNull();
   });
 
   it('uses a temporary method-preserving redirect for a dedicated root before static dispatch', async () => {
@@ -138,9 +195,7 @@ describe('production host routing', () => {
     );
 
     expect(response.status).toBe(307);
-    expect(response.headers.get('location')).toBe(
-      'https://request.hausc.org/request?source=directory',
-    );
+    expect(response.headers.get('location')).toBe('https://request.hausc.org/request?source=directory');
     expect(response.headers.get('cache-control')).toBe('no-store');
     expect(assetsFetch).not.toHaveBeenCalled();
   });

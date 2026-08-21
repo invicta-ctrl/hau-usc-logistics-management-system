@@ -593,6 +593,20 @@ export function createAccountApplicationService({
       reason,
       createdAt: occurredAt,
     });
+    const conditionalAccountAudit =
+      action === 'ACCOUNT_APPLICATION_ACTIVATED'
+        ? safeAccountAudit({
+            id: createId(),
+            accountId: actorAccountId,
+            actorAccountId,
+            action: 'ACCOUNT_APPLICATION_ACTIVATED',
+            before: history.before,
+            after: auditAfter,
+            correlationId,
+            reason,
+            createdAt: occurredAt,
+          })
+        : null;
     try {
       return {
         application: await repository.transitionApplication({
@@ -606,6 +620,7 @@ export function createAccountApplicationService({
           updates,
           history,
           audit,
+          conditionalAccountAudit,
           requireDistinctFromAdministrator,
           revokeApprovedStarter,
         }),
@@ -890,7 +905,7 @@ export function createAccountApplicationService({
           clock.now(),
         );
         if (!limiter?.allowed) return generic;
-        const verificationCode = tokenCrypto.createToken();
+        const verificationCode = tokenCrypto.createNumericCode(8);
         const challenge = {
           id: createId(),
           emailFingerprint: identity.emailFingerprint,
@@ -901,6 +916,7 @@ export function createAccountApplicationService({
           expiresAt: addMs(issuedAt, settings.verificationMs),
           resendCount: 1,
           createdAt: issuedAt,
+          resendCooldownCutoffAt: addMs(issuedAt, -settings.resendMinMs),
         };
         await repository.createVerificationChallenge(challenge);
         // The challenge is marked sent only after the provider accepts. A
@@ -926,7 +942,8 @@ export function createAccountApplicationService({
 
     async confirmEmailVerification({ email, code } = {}) {
       const identity = await preparedEmail(email);
-      if (!identity || !String(code ?? '').trim()) fail('VERIFICATION_INVALID');
+      const verificationCode = String(code ?? '').trim();
+      if (!identity || !/^\d{8}$/u.test(verificationCode)) fail('VERIFICATION_INVALID');
       const confirmedAt = nowIso(clock);
       const verificationReceipt = tokenCrypto.createToken();
       let confirmed;
@@ -935,7 +952,7 @@ export function createAccountApplicationService({
           emailFingerprint: identity.emailFingerprint,
           identityClassId: identity.identityClassId,
           purpose: EMAIL_VERIFICATION_PURPOSE.ACCOUNT_APPLICATION,
-          secretDigest: await tokenCrypto.digest(code),
+          secretDigest: await tokenCrypto.digest(verificationCode),
           verificationReceiptDigest: await tokenCrypto.digest(verificationReceipt),
           confirmedAt,
           receiptExpiresAt: addMs(confirmedAt, settings.verificationReceiptMs),

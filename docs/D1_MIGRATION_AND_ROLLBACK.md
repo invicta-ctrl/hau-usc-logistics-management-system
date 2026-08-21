@@ -34,6 +34,22 @@ Do not run `wrangler whoami`, inspect an account, access Google, or target remot
 
 Stop on target drift, source/hash drift, missing backup capacity, denied/pending action, or any production reference.
 
+### v0.8.0 no-migration candidate authorization
+
+The accepted v0.8.0 Slice 3 specification is a narrower, owner-authorized exception to
+the migration sequence, not an authorization to perform it. After the committed,
+pushed exact candidate and remote CI are green, its private package may approve only
+the actions actually authorized for this release: read-only Cloudflare preflight, D1
+backup/export, and the isolated-staging Worker deploy. Google read/write, Sheet export,
+D1 migration/import, secret mutation, provider send, and production action remain
+`DENIED` or `PENDING`. The candidate evidence command validates those individual
+decisions and must not manufacture linear Gate C approval for prohibited operations.
+
+This no-migration path still requires exact staging/production separation, a fresh
+private export and Time Travel/rollback coordinate, isolated restore integrity/FK plus
+schema/migration/immutable-history proof, restored-data reconciliation, prior Worker
+rollback identity, clean exact-SHA deploy, and post-deploy identity/readiness smoke.
+
 ## Staging migration sequence
 
 1. Read back safe account, Worker, route, D1, rollback, Google operator, workbook, Drive-map, and window labels. Compare them with the private package without printing IDs.

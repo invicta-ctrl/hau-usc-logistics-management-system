@@ -46,6 +46,8 @@ for (const method of LAUNCH_SERVICE_METHODS)
 
 for (const [method, path] of Object.entries({
   listAccessAccounts: '/api/admin/access/directory',
+  listCanonicalStaffDirectory: '/api/admin/staff-directory',
+  listStaffAccountActivityHistory: '/api/admin/staff-account-activity-history',
   getAccessIdHistory: '/api/admin/access/history',
   previewAccessIdChange: '/api/admin/access/preview-access-id',
   changeAccessId: '/api/admin/access/change-access-id',
@@ -64,6 +66,7 @@ for (const [method, path] of Object.entries({
   listIdentityRoster: '/api/owner/identity-roster/directory',
   applyIdentityRosterSync: '/api/owner/identity-roster/apply',
   rollbackIdentityRosterSync: '/api/owner/identity-roster/rollback',
+  previewCanonicalIdentityReconciliation: '/api/owner/identity-foundation/reconciliation-preview',
   getIdentityRosterSelfProfile: '/api/identity-roster/self',
   getLendingUsage: '/api/lending/usage',
   listAdvertisements: '/api/admin/advertisements/list',

@@ -1,0 +1,140 @@
+.playground-launcher {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 70;
+  display: grid;
+  gap: 0.1rem;
+  min-width: 9.5rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid rgba(241, 194, 75, 0.62);
+  border-radius: 0.75rem;
+  color: #fff8e7;
+  background: #6f1428;
+  box-shadow: 0 16px 38px rgba(54, 8, 20, 0.28);
+  text-align: left;
+}
+
+.playground-launcher span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.playground-launcher strong {
+  font-size: 0.92rem;
+}
+
+.playground-console-root {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.playground-console-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 9, 15, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.playground-console-panel {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: min(46rem, 100%);
+  overflow: auto;
+  padding: clamp(1.25rem, 3vw, 2.2rem);
+  background: #fffaf1;
+  box-shadow: -20px 0 60px rgba(35, 8, 15, 0.28);
+}
+
+.playground-console-panel > header,
+.playground-console-section > div:first-child,
+.playground-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.playground-console-panel h2,
+.playground-console-panel h3,
+.playground-console-panel p {
+  margin: 0;
+}
+
+.playground-console-intro {
+  margin-top: 0.75rem !important;
+  color: #62525a;
+  max-width: 62ch;
+}
+
+.playground-console-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 1.4rem 0;
+}
+
+.playground-console-metrics .metric {
+  min-height: 7.4rem;
+}
+
+.playground-console-section {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(111, 20, 40, 0.14);
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.playground-module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.playground-module-grid button,
+.playground-real-login {
+  min-height: 2.8rem;
+}
+
+.playground-console-actions input[type='text'],
+.playground-console-actions input:not([type]) {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+.playground-action-row {
+  align-items: stretch;
+}
+
+.playground-action-row button {
+  flex: 1;
+}
+
+.playground-action-row .danger {
+  border-color: #8b1f36;
+  color: #7b172d;
+}
+
+.playground-console-result {
+  min-height: 1.5rem;
+  color: #6f1428;
+  font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .playground-console-metrics,
+  .playground-module-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .playground-action-row,
+  .playground-console-panel > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

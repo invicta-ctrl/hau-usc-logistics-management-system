@@ -1,97 +1,89 @@
-# Current Bounded Task — Frontend Integration Preparation (complete)
+# Current Bounded Task — FI-00 Frontend Branch Reconciliation (complete)
 
-INTENT: FRONTEND_INTEGRATION_PREPARATION
-MODE: DOCUMENTATION_AND_REFERENCE_EVIDENCE_ONLY
-OBJECTIVE: Prepare `frontend-design-integration` so the next Codex session can integrate the accepted Figma / Figma Make design into the frozen v0.8.3 backend contract without repeating the design audit, route archaeology, backend-contract discovery, source classification, or migration planning.
-TARGET: frontend-design-integration branch-local documentation packet reconciled against frozen main 86553349f5c2ebefaa637c30828c560a301f99ba and Production candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580.
+INTENT: BRANCH_RECONCILIATION_AND_FRONTEND_INTEGRATION_BASELINE
+MODE: VERIFY_PRESERVE_MERGE_RECONCILE_CONTAIN_HANDOFF
+OBJECTIVE: Make `frontend-design-integration` safe to use as the temporary frontend-integration implementation branch by merging current `origin/main` into it losslessly, making current main authoritative for every product, runtime, security, data, build, and governance contract, preserving the approved frontend and Figma evidence, containing obsolete historical artifacts after proving recoverability, and leaving a clean handoff for FI-01 without implementing any frontend.
+TARGET: frontend-design-integration reconciled against origin/main 86553349f5c2ebefaa637c30828c560a301f99ba, with the pre-FI-00 head f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970 immutably preserved.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi00-branch-reconciliation.md
-AUTHORITY: Earl explicit 2026-08-21 frontend-integration preparation instruction -> root AGENTS.md -> .agents/PROJECT_POLICY.md -> branch-local current chain -> .codex/PHASE_AND_CONTEXT_POLICY.md -> frozen v0.8.3 main source and tests -> Figma Design and Figma Make for visual intent only.
-REQUIRED_MODEL: Claude Opus 5 performed this preparation under Earl's explicit instruction. Subsequent FI slices use one Terra-class sole branch writer per accepted slice.
-RISK: HIGH;THIS_BRANCH_BECOMES_THE_TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH_AND_IS_LATER_PROMOTED_THROUGH_PROTECTED_MAIN
-SCOPE: Seven preparation documents under docs/design/, branch-local continuity records, and reconciliation notes on the Phase 9 intake documents. Verified frozen-main contract inventory, Figma and Make source register with hashes, complete source-disposition classification, FI-00 to FI-16 execution plan, and the Playground and Production acceptance matrix.
-OUT_OF_SCOPE: Any frontend implementation, runtime source, dependency, build, or generated artifact; any backend, service-contract, API, auth, capability, or data change; any migration; any provider, D1, R2, or Google write; any Figma mutation; any Playground or Production deployment; any merge or rebase into main; any tag; any recovery-pointer move; any worktree or branch deletion.
-VERIFICATION: Exact branch and main identity and ancestry facts; deterministic route, capability, operation, and state extraction from frozen main; Figma Make hash reconciliation against the durable baseline register; path existence checks for every referenced file; contract-matrix coverage check; source-disposition completeness check; Markdown formatting; git diff --check; check:governance and handoff:verify; complete diff review; normal push and readback. No product test suite was run because no runtime code changed.
-STOP_CONDITIONS: Missing or contradictory authority; a conflicting active writer or unknown dirty work; a required backend, API, auth, capability, data, or migration change; privacy or authorization uncertainty; a Production or provider boundary; an unclassifiable load-bearing artifact; any failed integrity gate.
-ACTIVE_WRITER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
+AUTHORITY: Earl explicit 2026-08-21 FI-00 instruction -> registered canonical governance -> origin/main current v0.8.3 state -> the Claude preparation packet -> frozen v0.8.3 code, tests, migrations, contracts -> Figma and Figma Make as visual reference only -> historical branch material as preservation evidence only.
+REQUIRED_MODEL: Claude Code / Claude Opus 5, High reasoning, as sole branch-local FI-00 writer under Earl explicit 2026-08-21 task-specific override. The override covered FI-00 only and has expired. FI-01 returns to the repository's normal writer routing unless Earl issues a new override.
+RISK: HIGH;BRANCH_HISTORY_RECONCILIATION_AND_LOSSLESS_PRESERVATION
+SCOPE: Persist the accepted FI-00 specification; take and release the branch-local lock; immutably preserve the pre-FI-00 head; normal non-rebase merge of current origin/main; conflict resolution under the main-wins rule; proof of zero current-main product loss and runtime parity; governance convergence until check:agents passes; classification-driven containment of historical artifacts; the clean-lineage promotion rule; carrying D-08, D-04 and D-02 forward; updating the preparation packet and branch-local continuity; coherent commits and a normal push.
+OUT_OF_SCOPE: Implementing FI-01 or any frontend component; altering current main product behavior; adding or rerunning a migration; changing authentication, session, CSRF, or authorization; changing Worker or API contracts; changing D1, R2, Google, or provider resources; deploying Playground or Production; mutating Figma; merging this branch into main; opening the Production PR; rotating recovery refs; deleting the branch or unrelated worktrees; cleaning the orphan spec-v073-frontend-design-integration directory; history rewriting; filtering large objects from history; removing unique design evidence; Hallmark or Impeccable redesign work; fixing D-08, D-04, or D-02.
+VERIFICATION: Exact branch, head, tree, and upstream readback; exact origin/main identity; archive tag identity and remote readback; normal merge parentage; zero main-file loss; zero runtime diff across every scope in the specification's section 5A; check:agents, handoff:verify, check:continuation; Prettier formatting on touched documents; git diff --check; intra-document reference checks; source-register path checks; secret and private-data scan; containment recoverability proof; complete logical diff review; push and readback parity.
+STOP_CONDITIONS: Current main moves in a way that changes the accepted frozen functional baseline; unknown dirty or unpushed work; a conflicting writer; pre-FI-00 history cannot be preserved; the merge requires force, rebase, or history rewrite; a runtime conflict cannot be resolved by the main-wins rule without losing accepted design evidence; check:agents cannot be made green by convergence; a supposedly historical artifact is the only copy of required Make or design source and cannot be safely preserved; private data or secrets appear in preservation or design evidence; the branch needs a new migration, backend, or API behavior to become reconcilable; Figma, provider, Playground, or Production mutation becomes necessary; any load-bearing item remains UNVERIFIED at closeout.
+ACTIVE_WRITER: NONE
 TERRA_WRITER: NONE
-LOCK_HOLDER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
-WRITER_LOCK: HELD
-LOCK_STATUS: HELD
-HANDOFF_STATUS: FI00_IN_PROGRESS
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_FI01
 GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
-PREPARATION_START_SHA: c4356570bd0442304303989e0e7cc97e31d481f7
-PREPARATION_START_TREE: cf0f28dc794afc32492057ab14d80aa086431cc6
-FROZEN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
-FROZEN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
-FROZEN_PRODUCTION_CANDIDATE: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
-ROLLBACK_POINT: c4356570bd0442304303989e0e7cc97e31d481f7
-STATUS: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
-FUNCTIONAL_BASELINE: FROZEN_V083_MAIN
+FI00_START_SHA: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
+FI00_START_TREE: 1d20843c07bc407ec0fac757ec49dfb2d11c796c
+PRE_FI00_ARCHIVE_REF: archive/frontend-design-pre-fi00-2026-08-21
+ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
+ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
+ROLLBACK_POINT: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
+STATUS: FI00_BRANCH_RECONCILIATION_COMPLETE
+RUNTIME_PARITY_TO_MAIN: PASS
+GOVERNANCE: PASS
+HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED
 FRONTEND_IMPLEMENTATION: NOT_STARTED
 DEPLOY: NOT_AUTHORIZED
-NEXT_EXACT_ACTION: FI00_MERGE_CURRENT_MAIN_INTO_FRONTEND_BRANCH
+NEXT_EXACT_ACTION: FI-01_SHARED_DESIGN_FOUNDATION
 
 ## Delivered
 
-- `docs/design/FRONTEND_INTEGRATION_START_HERE.md` — the first file a fresh
-  Codex session reads: baselines, authority order, minimum read set,
-  do-not-read and do-not-migrate lists, architecture, slice order, gates.
-- `docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md` — every frontend-consumed
-  route, surface, operation, capability, state, and data class on frozen main,
-  extracted deterministically.
-- `docs/design/FRONTEND_SOURCE_DISPOSITION.md` — one classification for every
-  design and frontend artifact, with reasons for each `DO_NOT_MIGRATE` item.
-- `docs/design/FIGMA_MAKE_SOURCE_REGISTER.md` — the v39 Make source in Git with
-  recomputed sha256 values, plus the v36 rollback baseline.
-- `docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md` — FI-00 to FI-16.
-- `docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md` — the reusable
-  Playground and Production verification matrix.
-- `docs/design/CODEX_FRONTEND_INTEGRATION_HANDOFF.md` — the exact resume packet.
-- Branch-local continuity records updated to point at the preparation result.
+- `.codex/specs/active/frontend-integration-fi00-branch-reconciliation.md` — the
+  durable accepted FI-00 authority.
+- `archive/frontend-design-pre-fi00-2026-08-21` — immutable preservation of the
+  exact pre-FI-00 head, pushed and read back from origin.
+- A normal `--no-ff` merge of `origin/main` into the branch, 24 conflicts
+  resolved under the main-wins rule.
+- Proven runtime parity: zero main-file loss, zero diff across every runtime and
+  build scope.
+- Governance convergence: `check:agents` from 9 policy-marker errors to PASS.
+- Artifact containment: 1,078 files and 136,496,010 bytes removed from the active
+  tree, every one proven recoverable from the archive tag first.
+- Two byte-exact relocations that a naive removal would have lost:
+  `docs/design/DESIGN_AUTHORITY.md` and
+  `docs/design/design-reference/v5-theme-final.css`.
+- `docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md` and the updated packet.
+- The clean-lineage promotion rule recorded in the execution plan FI-15.
 
 ## Verified facts a future session must not re-derive
 
 ```text
-Route inventory      33 SURFACES, 34 V5_ROUTE_CLASSIFICATIONS
-                     22 V5_NATIVE_FUNCTIONAL_PARITY_ADDITION - 6 BACKEND_READ_ONLY
-                     4 FULLY_BACKEND_WIRED - 1 PLAYGROUND_ONLY
-                     1 PROTOTYPE_ONLY_UNSUPPORTED (public.register)
-Capabilities         40, src/domain/permissions.js
-Operations           40, METHOD_CAPABILITIES in src/server/d1/operational-service.js
-Adapter contract     29 SERVICE_METHODS, src/services/service-contract.js
-Bootstrap modules    7; row bounds 100 standard / 500 inventory / 500 child
-Migrations           32 files; Production at schema32 with 0031 and 0032
-Tests                146 unit - 2 integration - 25 e2e - 2 cloudflare-e2e - 3 staging-e2e
-Routing              hash-based #/<routeId>; SPA served by the Worker with
-                     run_worker_first on /api/*, /brand/*, /media/*
-Adapter boundary     src/v5/integration/backend.js is the only HTTP boundary
+runtime parity          0 files present on origin/main and absent here
+                        0 diff across src, tests, migrations, build config
+migrations              32 files; 0031 blob 39dd85fa, 0032 blob 6f9bdf0c
+src/v5/integration      7 files, byte-identical to main
+tests                   146 unit / 2 integration / 25 e2e / 2 cloudflare / 3 staging
+package version         0.8.3
+active tree             978 files, 25,666,831 bytes
+                        origin/main is 851 files, 22,939,630 bytes
+                        surplus is 127 files, 2,727,201 bytes of design packet
+governance root cause   the branch carried a superseded
+                        scripts/check-agent-instructions.mjs (0ce245f5) and two
+                        stale .codex/agents/*.toml; AGENTS.md and PROJECT_POLICY.md
+                        were already byte-identical to main
+design verifiers        build-make-theme --check, verify-make-theme,
+                        verify-make-landing-theme, theme-source --check all pass
+                        build-make-routes --check is unavailable, undeclared esbuild
 ```
-
-## Known blockers carried to FI-00
-
-1. The branch is 191 commits behind `origin/main` and would delete 135 files
-   main has, including `migrations/0031_canonical_identity_foundation.sql`,
-   `migrations/0032_staff_account_activity_history.sql`, and the entire
-   `src/v5/integration/*` adapter layer. FI-00 must merge `origin/main` into the
-   branch and prove zero deletions before FI-01.
-2. Frozen main has no `prototypes/`, `output/design/`, or `scripts/design/`.
-   Promoting this branch adds 1,170 files totalling 138,815,428 bytes, of which
-   134,737,146 bytes are 904 PNG screenshots. Earl must decide the disposition
-   per group.
-3. Figma defects D-08 (HIGH, contrast), D-04 (typography), and D-02 (blur
-   ladder) are open and block FI-01 and FI-02.
 
 ## Do not repeat
 
-- Do not re-audit the Figma Design file or re-capture Figma Make.
-- Do not re-derive the route inventory, capability list, operation map, or
-  status transition tables.
-- Do not re-classify the design artifacts.
-- Do not rerun the historical v5 browser matrix; it proves the historical
-  candidate, not a v0.8.3 candidate.
-- Do not use v0.7.2 routes, fields, or functionality as current authority.
-- Do not hand-edit a generated artifact.
+- Do not re-derive the runtime parity proof while `origin/main` is unchanged.
+- Do not re-audit Figma or re-capture Figma Make.
+- Do not re-derive the route inventory, capability list, operation map, or status
+  transition tables; the contract matrix now describes this branch exactly.
+- Do not re-run the historical v5 browser matrix.
+- Do not attempt to fix `check:agents` by editing policy text; it passes.
+- Do not restore removed historical artifacts into the active tree; read them
+  from `archive/frontend-design-pre-fi00-2026-08-21` when a named slice needs one.
 - Do not merge, rebase, tag, deploy, migrate, or touch a provider without the
   exact accepted authority for that action.

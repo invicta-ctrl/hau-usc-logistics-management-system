@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { expect, request as apiRequest, test } from '@playwright/test';
 
+const repoRoot = path.resolve(import.meta.dirname, '../..');
+const releaseVersion = JSON.parse(await readFile(path.join(repoRoot, 'package.json'), 'utf8')).version;
+
 function syntheticAccessId(suffix) {
   return `SMOKE.${Date.now().toString(36).toUpperCase()}.${randomBytes(4).toString('hex').toUpperCase()}.${suffix}`;
 }
@@ -224,11 +227,13 @@ test('deployed staging authentication and Access Management remain operational',
     expect(health.status()).toBe(200);
     await expect(health.json()).resolves.toMatchObject({
       environment: 'STAGING',
+      appVersion: releaseVersion,
+      releaseVersion,
       candidateSha,
       database: {
         connected: true,
-        schemaVersion: '29',
-        latestMigration: '0029_reusable_asset_reassignment.sql',
+        schemaVersion: '30',
+        latestMigration: '0030_production_access_and_operations.sql',
       },
     });
     const readiness = await anonymousRequest.get(`/api/readiness?verify=${verificationNonce}-ready`, {

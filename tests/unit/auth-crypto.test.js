@@ -108,4 +108,29 @@ describe('authentication cryptography', () => {
     await expect(tokenCrypto.matches(`${token}x`, digest)).resolves.toBe(false);
     expect(() => tokenCrypto.createToken(16)).toThrow(/at least 32/u);
   });
+
+  it('creates exactly eight unbiased decimal digits for verification delivery', () => {
+    const tokenCrypto = createTokenCrypto({ cryptoProvider: webcrypto, timingSafeEqual });
+    const codes = Array.from({ length: 64 }, () => tokenCrypto.createNumericCode(8));
+
+    expect(codes.every((code) => /^\d{8}$/u.test(code))).toBe(true);
+    expect(new Set(codes).size).toBeGreaterThan(1);
+    expect(() => tokenCrypto.createNumericCode(3)).toThrow(/4 to 9 digits/u);
+    expect(() => tokenCrypto.createNumericCode(10)).toThrow(/4 to 9 digits/u);
+  });
+
+  it('preserves a leading zero when a secure random value is below the code width', () => {
+    const tokenCrypto = createTokenCrypto({
+      cryptoProvider: {
+        getRandomValues(values) {
+          values[0] = 1;
+          return values;
+        },
+        subtle: webcrypto.subtle,
+      },
+      timingSafeEqual,
+    });
+
+    expect(tokenCrypto.createNumericCode(8)).toBe('00000001');
+  });
 });

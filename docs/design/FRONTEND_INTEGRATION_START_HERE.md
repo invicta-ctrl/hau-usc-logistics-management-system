@@ -39,9 +39,11 @@ VISUAL_BASELINE (authoritative for appearance only)
   Make theme.css sha256  249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d
   design evidence SHA    5677bbf3d279ae6eb8b963ff42fb39a4a46e3fa1
 
-PREPARATION_BASELINE (this packet)
+FI-00 RECONCILED BASELINE
   branch                 frontend-design-integration
-  exact start/end SHAs   see .codex/CURRENT_HANDOFF.md
+  functional baseline    equals origin/main for every runtime and build path
+  pre-FI-00 archive      archive/frontend-design-pre-fi00-2026-08-21 -> f0ab75d
+  exact SHAs             see .codex/CURRENT_HANDOFF.md and the FI-00 receipt
 ```
 
 When appearance and behavior disagree, **behavior wins**. Adapt the design.
@@ -77,44 +79,56 @@ Both carry the branch-decision note described in section 7.
 
 ## 4. Read these for the first slice, and little else
 
-FI-00 is a branch-reconciliation slice, so its required read set is small:
+FI-00 is complete. FI-01 is the shared design foundation slice, and its required
+read set is small:
 
 ```text
 1. .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md
-2. docs/design/FRONTEND_INTEGRATION_START_HERE.md            this file
-3. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md        FI-00 section
-4. docs/design/FRONTEND_SOURCE_DISPOSITION.md                the DO_NOT_MIGRATE list
-5. git diff --name-status origin/main frontend-design-integration
-```
-
-For FI-01, the design-token slice, add:
-
-```text
-6. src/index.html and src/v5/styles/tokens.css                        current token entry
-7. scripts/design/theme-source.mjs, prototypes/shared/hau-theme.css   canonical token source
-8. output/design/make-adoption/theme.css                              Figma Make v39 theme
+2. docs/design/FRONTEND_INTEGRATION_START_HERE.md                     this file
+3. docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md                what FI-00 changed
+4. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-01 section
+5. src/index.html and src/v5/styles/tokens.css                        current token entry
+6. scripts/design/theme-source.mjs, prototypes/shared/hau-theme.css   canonical token source
+7. output/design/make-adoption/theme.css                              Figma Make v39 theme
+8. docs/design/DESIGN_AUTHORITY.md                                    D08, D09, D12, D41 only
 9. docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md section 7          cross-cutting UI contracts
 ```
 
+FI-01 is blocked until Earl resolves D-04 (typography) and D-02 (blur ladder).
+
 ## 5. Do not read by default
 
-Large, historical, or superseded. Open one only when a named slice requires it,
-and record why.
+FI-00 removed the bulky historical families from the **active tree**. They are
+not gone: every one is preserved in the immutable archive tag
+`archive/frontend-design-pre-fi00-2026-08-21` (commit `f0ab75d`). Recover a path
+with `git show archive/frontend-design-pre-fi00-2026-08-21:<path>`.
+
+Archived out of the active tree by FI-00 — 1,078 files, 136,496,010 bytes:
 
 ```text
-prototypes/impeccable-whole-site-redesign/            20 files   v1
-prototypes/impeccable-whole-site-redesign-v2/         23 files
-prototypes/impeccable-whole-site-redesign-v3/         24 files
-prototypes/impeccable-whole-site-redesign-v4/         36 files
+prototypes/impeccable-whole-site-redesign/            v1
+prototypes/impeccable-whole-site-redesign-v2/
+prototypes/impeccable-whole-site-redesign-v3/
+prototypes/impeccable-whole-site-redesign-v4/
+prototypes/impeccable-whole-site-redesign-v5/   superseded by src/v5/ on main; its
+                                                one unique file is retained at
+                                                docs/design/design-reference/v5-theme-final.css
+output/design/**  except make-adoption/ and make-preservation/
+                                                904 PNGs and historical previews
+sites-preview/                                  GPT Sites publication harness
+```
+
+Still present, but do not read by default:
+
+```text
 docs/design/IMPECCABLE_V2_*  IMPECCABLE_V3_*  IMPECCABLE_V4_*
 docs/design/V4_1_*
 .codex/IMPECCABLE_V2_*  IMPECCABLE_V3_*  IMPECCABLE_V4_*  V0_4_2_FRONTEND_*
-output/design/impeccable-redesign-*  and output/design/theme-refine-*
-                                                      part of 948 files / 134.7 MB
 dist/  playwright-report/  test-results/
 HAU-USC_Logistics-Prototype-Shareable.html
 hau-usc-logistics-guided-demo.html
-shareable-html-modules/  sites-preview/  legacy/  apps-script/
+shareable-html-modules/  legacy/  apps-script/
+docs/design/DESIGN_AUTHORITY.md below its decision index
 docs/design/CODEX_FRONTEND_DESIGN_HANDOFF.md below the "Historical 2026-08-20" heading
 ```
 
@@ -134,60 +148,52 @@ Figma-only capability      public.register is PROTOTYPE_ONLY_UNSUPPORTED on froz
 Any backend behavior       API shapes, capabilities, statuses, migrations, provider calls
 ```
 
-## 7. Branch decision — this supersedes the Phase 9 recommendation
+## 7. Branch decision, and how FI-00 resolved it
 
-Phase 9 (`V083_FRONTEND_DESIGN_ADOPTION_INTAKE.md`, "Future starting boundary")
-recommended starting implementation on a fresh branch cut from final main and
-never merging this branch. **Earl's 2026-08-21 directive replaces that**:
-`frontend-design-integration` becomes the temporary frontend-integration work
-branch and is later promoted through the protected `main` lineage.
+Phase 9 recommended starting implementation on a fresh branch cut from final
+main and never merging this branch. **Earl's 2026-08-21 directive replaced
+that**: `frontend-design-integration` is the temporary frontend-integration work
+branch and is promoted through the protected `main` lineage.
 
-That is the owner's decision and it is respected here. It carries two verified
-consequences, which are exactly what FI-00 exists to resolve.
+FI-00 executed that decision. Both blockers the preparation packet recorded are
+now closed.
 
-### 7.1 The branch is 191 commits behind main and would delete frozen work
+### 7.1 Branch-behind-main — RESOLVED
 
-```text
-frontend-design-integration vs origin/main   95 ahead - 191 behind
-merge base                                   88bfdf026e716ffdc779cb2ce7534978f36df0f3
-diff                                         1480 files - +149519 / -47737
-files present on main and ABSENT on branch   135
-  migrations/0031_canonical_identity_foundation.sql
-  migrations/0032_staff_account_activity_history.sql
-  the entire src/v5/integration/* adapter layer (8 files)
-  27 tests/unit/*  -  8 src/server/*  -  14 .codex/specs/*  -  16 .codex/releases/*
-  15 scripts/playground/*  -  10 src/v5/*  -  13 docs/design/*
-```
-
-Merging this branch into `main` **before** reconciliation would delete frozen
-v0.8.3 work, including both identity migrations. FI-00 is therefore mandatory
-and blocking: merge `origin/main` into `frontend-design-integration`, prove the
-result equals main's tree apart from the intended design-evidence additions, and
-only then begin FI-01. This preparation task was explicitly forbidden from
-performing that merge.
-
-### 7.2 The branch would add 138.8 MB of design evidence to main — owner decision
-
-Frozen main has **no** `prototypes/`, **no** `output/design/`, and **no**
-`scripts/design/`. All of it lives only on this branch:
+`origin/main@86553349` was merged normally into this branch. Main won exactly for
+every product, runtime, security, data, build, and governance path.
 
 ```text
-output/design/    948 files   134,737,146 bytes   (904 PNG screenshots)
-prototypes/       155 files     2,373,865 bytes
-docs/design/       49 files     1,547,716 bytes   (main has only 5 research docs)
-scripts/design/    18 files       156,701 bytes
-                 -----------------------------
-                 1,170 files   138,815,428 bytes
+files present on origin/main and absent here     0
+runtime-scope diff vs origin/main                0
+migrations                                       32 files; 0031 and 0032 byte-identical
+src/v5/integration/*                             7 files, byte-identical to main
 ```
 
-Promoting the branch to `main` as-is puts all of that into the production
-repository's protected lineage. That is an owner call, not an implementation
-detail. FI-00 must obtain Earl's decision on which of four dispositions applies
-to each group: promote to main, retain on the branch only, preserve by immutable
-archive tag, or move outside Git. Recommended default is to promote
-`docs/design/**` and `scripts/design/**`, keep `prototypes/public-portals-r3`
-and `prototypes/shared`, and preserve `output/design/**` by archive tag rather
-than merging 134.7 MB of PNGs into main.
+### 7.2 Design-evidence weight — RESOLVED by containment
+
+```text
+pre-FI-00 branch tree     1,894 files    167,117,742 bytes
+origin/main                 851 files     22,939,630 bytes
+FI-00 reconciled            978 files     25,666,831 bytes
+
+active-tree reduction       916 files    141,450,911 bytes
+surplus over main           127 files      2,727,201 bytes   the design packet only
+```
+
+Everything removed is preserved in `archive/frontend-design-pre-fi00-2026-08-21`.
+
+### 7.3 Promotion is clean-lineage, not a historical merge
+
+This branch's ancestry must never become part of protected `main` history. The
+accepted final candidate is promoted by **squash merge** through the protected
+PR path, or, if protection cannot squash safely, by a fresh promotion branch cut
+from accepted main with the integration delta applied deterministically and tree
+plus application-artifact identity proven against the Playground-accepted
+candidate. See
+[FRONTEND_INTEGRATION_EXECUTION_PLAN.md](FRONTEND_INTEGRATION_EXECUTION_PLAN.md)
+FI-15 and
+[FRONTEND_FI00_RECONCILIATION_RECEIPT.md](FRONTEND_FI00_RECONCILIATION_RECEIPT.md).
 
 ## 8. Integration architecture in one picture
 
@@ -216,7 +222,7 @@ Figma-generated standalone runtime. A visual surface must never reach past
 ## 9. Slice order
 
 ```text
-FI-00  Integration baseline + branch reconciliation to final main   BLOCKING
+FI-00  Integration baseline + branch reconciliation to final main   COMPLETE
 FI-01  Shared design tokens / primitives / theme / typography
 FI-02  Public landing + portal shell
 FI-03  Sign-in + verification + application + application status
@@ -257,14 +263,14 @@ BRANCH CLOSEOUT
   frontend-design-integration holds no unique unmerged work, delete the branch.
 ```
 
-## 11. First Codex action
+## 11. First action for the next session
 
 ```text
 1. Verify this packet against current HEAD using the STALE_IF block in each document.
-2. Accept or amend FI-00 as the integration baseline.
-3. Execute FI-00: obtain the section 7.2 owner decision, reconcile the branch to
-   final main, and prove tree parity.
-4. Stop. Do not start FI-01 until FI-00 is accepted.
+2. Read docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md for what FI-00 changed.
+3. Obtain Earl's D-04 typography and D-02 blur-ladder decisions.
+4. Execute FI-01: one canonical token layer serving every surface, light and dark.
+5. Stop at the FI-01 acceptance gate. Do not start FI-02 until FI-01 is accepted.
 ```
 
 Codex does **not** start by auditing Figma again, does **not** start by reading

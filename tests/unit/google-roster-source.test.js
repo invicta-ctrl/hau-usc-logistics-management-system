@@ -209,4 +209,81 @@ describe('Google Sheets identity roster source', () => {
       /synthetic\.officer@example|00000000000|They\/Them|2000-01-01|Synthetic Program/u,
     );
   });
+
+  it('returns only a transient validated source summary for the exact configured Google range without retrying', async () => {
+    const rawHeaders = ['Full Name', 'Student Number', 'Working Email'];
+    const rawRows = [
+      ['Synthetic Officer', 'SYNTHETIC-001', 'synthetic@example.invalid'],
+      ['Incomplete Officer', '', ''],
+    ];
+    const fingerprint = vi.fn(async (value) => {
+      expect(value).toEqual({ headers: rawHeaders, rows: rawRows });
+      return 'SHA256-SYNTHETIC-RAW-SOURCE';
+    });
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ access_token: 'synthetic-access-token' }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ values: [rawHeaders, ...rawRows] }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    const source = createGoogleSheetsRosterSource({
+      spreadsheetId: 'synthetic-private-spreadsheet-id',
+      range: 'Official!A:C',
+      serviceAccountEmail: 'synthetic-reader@example.invalid',
+      serviceAccountPrivateKey: await privateKeyPem(),
+      fetchImpl,
+      fingerprint,
+    });
+
+    const summary = await source.readProjectionSummary({ requestTimeoutMs: 8_000 });
+
+    expect(summary).toEqual({
+      sourceFingerprint: 'SHA256-SYNTHETIC-RAW-SOURCE',
+      sourceRowCount: 2,
+      acceptedCount: 1,
+      rejectionCount: 1,
+    });
+    expect(JSON.stringify(summary)).not.toContain('Synthetic Officer');
+    expect(JSON.stringify(summary)).not.toContain('synthetic@example.invalid');
+    expect(fingerprint).toHaveBeenCalledOnce();
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const assertion = new URLSearchParams(String(fetchImpl.mock.calls[0][1].body)).get('assertion');
+    const [, claim] = assertion.split('.');
+    expect(JSON.parse(atob(claim.replaceAll('-', '+').replaceAll('_', '/')))).toMatchObject({
+      scope: 'https://www.googleapis.com/auth/spreadsheets.readonly',
+    });
+    expect(fetchImpl.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+    expect(fetchImpl.mock.calls[1][0]).toContain(`/values/${encodeURIComponent('Official!A:C')}`);
+    expect(fetchImpl.mock.calls[1][1].signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('does not retry a failed bounded source-summary authorization request', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: 'synthetic failure' }), {
+        status: 503,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+    const source = createGoogleSheetsRosterSource({
+      spreadsheetId: 'synthetic-private-spreadsheet-id',
+      range: 'Official!A:C',
+      serviceAccountEmail: 'synthetic-reader@example.invalid',
+      serviceAccountPrivateKey: await privateKeyPem(),
+      fetchImpl,
+      fingerprint: async () => 'SHA256-SYNTHETIC-RAW-SOURCE',
+    });
+
+    await expect(source.readProjectionSummary({ requestTimeoutMs: 8_000 })).rejects.toMatchObject({
+      code: 'ROSTER_SOURCE_AUTHORIZATION_FAILED',
+    });
+    expect(fetchImpl).toHaveBeenCalledOnce();
+  });
 });

@@ -201,11 +201,20 @@ describe('D1 account-application repository contract', () => {
       expiresAt: '2026-08-03T10:10:00.000Z',
       resendCount: 1,
       createdAt: timestamp,
+      resendCooldownCutoffAt: '2026-08-03T09:59:00.000Z',
     });
 
     expect(probe.batches).toHaveLength(1);
     const sql = probe.batches[0].map((statement) => statement.sql);
     expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_CHALLENGE_ID_CONFLICT'");
+    expect(sql[0]).toContain("json_extract('ACCOUNT_APPLICATION_CHALLENGE_COOLDOWN_ACTIVE'");
+    expect(sql[0]).toContain('created_at > ?2 OR last_sent_at > ?2');
+    expect(probe.batches[0][0].values).toEqual([
+      'CHALLENGE-SYNTHETIC-001',
+      '2026-08-03T09:59:00.000Z',
+      'KEYED-EMAIL-FP',
+      'STAFF_ACCOUNT_APPLICATION',
+    ]);
     expect(sql[1]).toContain("SET status = 'REVOKED'");
     expect(sql[2]).toContain('identity_class_id');
     expect(sql[2]).toContain('verification_receipt_digest');
@@ -325,6 +334,11 @@ describe('D1 account-application repository contract', () => {
         updates: { administratorReviewerId: 'ADMIN-SYNTHETIC-001', administratorReviewedAt: timestamp },
         history: history({ id: 'HISTORY-FORWARD-001', idempotencyKey: 'admin-forward-repository-001' }),
         audit: audit({ id: 'AUDIT-FORWARD-001', action: 'ACCOUNT_APPLICATION_ADMIN_FORWARDED' }),
+        conditionalAccountAudit: audit({
+          id: 'AUDIT-ACTIVATE-ACCOUNT-001',
+          action: 'ACCOUNT_APPLICATION_ACTIVATED',
+          accountId: 'ACCOUNT-SYNTHETIC-001',
+        }),
       }),
     ).rejects.toThrow('ACCOUNT_APPLICATION_TRANSITION_GUARD_FAILED');
 
@@ -334,6 +348,9 @@ describe('D1 account-application repository contract', () => {
     expect(sql[1]).toContain('UPDATE account_applications');
     expect(sql[2]).toContain('INSERT INTO account_application_history');
     expect(sql[3]).toContain('INSERT INTO audit_log');
+    expect(sql[4]).toContain('INSERT INTO staff_account_activity_audit_context');
+    expect(sql[5]).toContain('INSERT INTO audit_log');
+    expect(sql[5]).toContain('WHERE EXISTS');
     expect(probe.firstCalls).toEqual([]);
   });
 

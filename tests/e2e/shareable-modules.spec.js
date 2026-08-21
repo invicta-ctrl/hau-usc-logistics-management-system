@@ -9,15 +9,6 @@ test('every generated module shareable opens offline in its named workspace', as
     'One real browser is sufficient for offline packaging proof.',
   );
 
-  const v5Titles = {
-    overview: 'Control Centre',
-    request: 'Requests needing review',
-    lending: 'Lending hub',
-    release: 'Release Desk',
-    restocking: 'Restocking and receiving',
-    procurement: 'Procurement',
-    inventory: 'Inventory',
-  };
   for (const module of shareableModules) {
     const url = pathToFileURL(resolve('shareable-html-modules', module.filename)).href;
     await page.goto(url);
@@ -26,7 +17,7 @@ test('every generated module shareable opens offline in its named workspace', as
     await expect(page.locator('body')).toHaveAttribute('data-default-view', module.id);
     await expect(page.locator(`#primaryNav [data-view="${module.id}"]`)).toHaveClass(/active/);
     await expect(page.locator(`section#${module.id}`)).toHaveClass(/active/);
-    await expect(page.locator('#pageTitle')).toHaveText(v5Titles[module.id]);
+    await expect(page.locator('#pageTitle')).toHaveText(module.title);
     await expect(page.locator('#primaryNav [data-view].active')).toHaveCount(1);
     await expect(page.locator('section.view.active')).toHaveCount(1);
   }

@@ -7,22 +7,14 @@ import {
 } from '../src/server/account-application/adapters.js';
 import { parseExactRecipientAllowlist } from '../src/server/account-application/email-provider-registry.js';
 import { parseJsonConfig } from './cloudflare-environment-preflight.mjs';
+import { resolvePrivatePath } from './private-path.mjs';
 
 const repoRoot = path.resolve(fileURLToPath(new URL('..', import.meta.url)));
 
-function privatePath(candidate, label) {
-  if (!path.isAbsolute(candidate ?? '') || candidate === path.parse(candidate).root) {
-    throw new Error(`${label} must be an absolute private path outside the repository.`);
-  }
-  const relative = path.relative(repoRoot, path.resolve(candidate));
-  if (relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative))) {
-    throw new Error(`${label} must be an absolute private path outside the repository.`);
-  }
-  return path.resolve(candidate);
-}
-
 export function buildPrivateStagingIdentityPackage(config, secretPackage) {
-  const environment = String(config?.vars?.ENVIRONMENT ?? '').trim().toUpperCase();
+  const environment = String(config?.vars?.ENVIRONMENT ?? '')
+    .trim()
+    .toUpperCase();
   const allowlist = parseExactRecipientAllowlist(
     config?.vars?.ACCOUNT_APPLICATION_EMAIL_RECIPIENT_ALLOWLIST_JSON,
   );
@@ -60,11 +52,15 @@ export function buildPrivateStagingIdentityPackage(config, secretPackage) {
 
 async function run() {
   const [configPath, secretPackagePath, outputPath] = process.argv.slice(2);
-  const [resolvedConfig, resolvedPackage, resolvedOutput] = [
-    privatePath(configPath, 'Staging config'),
-    privatePath(secretPackagePath, 'Secret package'),
-    privatePath(outputPath, 'Output package'),
-  ];
+  const [resolvedConfig, resolvedPackage, resolvedOutput] = await Promise.all([
+    resolvePrivatePath(configPath, { repoRoot, label: 'Staging config' }),
+    resolvePrivatePath(secretPackagePath, { repoRoot, label: 'Secret package' }),
+    resolvePrivatePath(outputPath, {
+      repoRoot,
+      label: 'Output package',
+      allowMissing: true,
+    }),
+  ]);
   const [config, secretPackage] = await Promise.all([
     readFile(resolvedConfig, 'utf8').then(parseJsonConfig),
     readFile(resolvedPackage, 'utf8').then(JSON.parse),
@@ -77,7 +73,9 @@ async function run() {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   run().catch((error) => {
-    console.error(error?.code === 'EEXIST' ? 'Refusing to overwrite a private fixture package.' : error.message);
+    console.error(
+      error?.code === 'EEXIST' ? 'Refusing to overwrite a private fixture package.' : error.message,
+    );
     process.exitCode = 1;
   });
 }

@@ -87,6 +87,7 @@ describe('HttpApiAdapter', () => {
       ['previewIdentityRosterSync', '/api/owner/identity-roster/preview'],
       ['applyIdentityRosterSync', '/api/owner/identity-roster/apply'],
       ['rollbackIdentityRosterSync', '/api/owner/identity-roster/rollback'],
+      ['previewCanonicalIdentityReconciliation', '/api/owner/identity-foundation/reconciliation-preview'],
       ['getIdentityRosterSelfProfile', '/api/identity-roster/self'],
     ]) {
       await adapter[method]({ synthetic: true });

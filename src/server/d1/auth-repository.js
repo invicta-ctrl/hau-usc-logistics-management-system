@@ -164,6 +164,20 @@ function accountStatement(db, account) {
     .bind(...values);
 }
 
+function resetConflictError() {
+  const error = new Error('The password reset could not be completed.');
+  error.code = 'RESET_CONFLICT';
+  return error;
+}
+
+function resetGuardAbortStatement(db) {
+  return db.prepare(
+    `UPDATE data_revisions
+     SET updated_at = CASE WHEN changes() = 1 THEN updated_at ELSE NULL END
+     WHERE scope = 'global'`,
+  );
+}
+
 export function createD1AuthRepository(db) {
   if (!db) throw new Error('D1 database binding is required.');
   const repository = {
@@ -389,6 +403,66 @@ export function createD1AuthRepository(db) {
         .bind(tokenDigest, consumedAt)
         .run();
       return Number(result.meta?.changes ?? 0) === 1;
+    },
+    async commitPasswordReset({
+      tokenDigest,
+      accountId,
+      expectedCredentialVersion,
+      passwordCredential,
+      resetAt,
+      audit,
+    } = {}) {
+      try {
+        await db.batch([
+          db
+            .prepare(
+              `UPDATE password_reset_tokens
+               SET consumed_at = ?1
+               WHERE token_digest = ?2
+                 AND account_id = ?3
+                 AND consumed_at IS NULL
+                 AND expires_at > ?4`,
+            )
+            .bind(resetAt, tokenDigest, accountId, resetAt),
+          resetGuardAbortStatement(db),
+          db
+            .prepare(
+              `UPDATE accounts
+               SET password_credential_json = ?1,
+                   credential_version = credential_version + 1,
+                   password_changed_at = ?2,
+                   updated_at = ?2
+               WHERE id = ?3
+                 AND status = 'ACTIVE'
+                 AND locked_at IS NULL
+                 AND credential_version = ?4`,
+            )
+            .bind(JSON.stringify(passwordCredential), resetAt, accountId, expectedCredentialVersion),
+          resetGuardAbortStatement(db),
+          db.prepare('DELETE FROM sessions WHERE account_id = ?1').bind(accountId),
+          db
+            .prepare(
+              `INSERT INTO audit_log (
+                 id, created_at, action, entity_type, entity_id, actor_account_id,
+                 before_json, after_json, correlation_id, notes
+               ) VALUES (?1, ?2, 'PASSWORD_RESET_COMPLETED', 'ACCOUNT', ?3, ?3, '{}', ?4, ?5, '')`,
+            )
+            .bind(
+              audit?.id,
+              audit?.occurredAt,
+              accountId,
+              JSON.stringify(audit?.details ?? {}),
+              `AUTH_${String(audit?.id ?? '')
+                .replaceAll('-', '')
+                .slice(0, 24)}`,
+            ),
+        ]);
+      } catch (error) {
+        if (String(error?.message ?? '').includes('NOT NULL constraint failed: data_revisions.updated_at')) {
+          throw resetConflictError();
+        }
+        throw error;
+      }
     },
     async appendAudit(event) {
       const entityId = event.accountId || 'AUTHENTICATION';

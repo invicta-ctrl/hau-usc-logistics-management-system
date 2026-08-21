@@ -425,13 +425,46 @@ test('a reviewer routes each line of a public request through the shipped Main H
   // RV-01.6 shipped-UI proof. Context A submits publicly through a separate
   // API context; Context B is an already-open authenticated Main Hub that must
   // surface the request and let a human route every line without re-login.
+  const authRequests = [];
+  page.on('request', (browserRequest) => {
+    const pathname = new URL(browserRequest.url()).pathname;
+    if (['/api/auth/login', '/api/auth/session'].includes(pathname)) authRequests.push(pathname);
+  });
+
+  // Context B opens and authenticates the V5 queue before Context A submits.
+  await page.goto('/#/public.signin');
+  await page.getByLabel('Username').fill('LOCAL.OWNER');
+  await page.getByLabel('Password (required)', { exact: true }).fill(PASSWORD);
+  const overviewRevision = page.waitForResponse((response) => {
+    if (new URL(response.url()).pathname !== '/api/getScopedRevision') return false;
+    return response.request().postDataJSON?.()?.scope === 'overview';
+  });
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.locator('.shell')).toBeVisible();
+  await overviewRevision;
+  const baselineRevision = page.waitForResponse((response) => {
+    if (new URL(response.url()).pathname !== '/api/getScopedRevision') return false;
+    return response.request().postDataJSON?.()?.scope === 'request';
+  });
+  await page.goto('/#/request.queue');
+  await page.waitForFunction(() =>
+    globalThis.__HAU_V5_INTEGRATION__?.status?.().connectedRoutes?.includes('request.queue'),
+  );
+  await baselineRevision;
+  await expect(page.getByRole('heading', { name: 'Request Center', exact: true })).toBeVisible();
+  await page.evaluate(() => {
+    globalThis.__RV01_ALREADY_OPEN__ = true;
+  });
+  const authenticatedRequestCount = authRequests.length;
+
+  // Context A remains separate and unauthenticated.
   const publicContext = await apiRequest.newContext({ baseURL: BASE_URL });
   let submittedId;
   try {
     const options = await (await publicContext.get('/api/public/request/options')).json();
     const event = options.events[0];
     const item = options.items[0];
-    const submitted = await publicContext.post('/api/public/request', {
+    const submittedResponse = await publicContext.post('/api/public/request', {
       headers: { origin: BASE_URL },
       data: {
         clientRequestId: `rv01-ui-${crypto.randomUUID()}`,
@@ -456,41 +489,37 @@ test('a reviewer routes each line of a public request through the shipped Main H
         ],
       },
     });
-    expect(submitted.status()).toBe(200);
-    submittedId = (await submitted.json()).requestId;
+    expect(submittedResponse.status()).toBe(200);
+    const submitted = await submittedResponse.json();
+    expect(submitted.status).toBe('FOR_REVIEW');
+    expect(submitted.requests).toBeUndefined();
+    expect(submitted.requestLines).toBeUndefined();
+    submittedId = submitted.requestId;
   } finally {
     await publicContext.dispose();
   }
   expect(submittedId).toBeTruthy();
 
-  // Context B: authenticated Main Hub.
-  await page.goto('/app/admin');
-  await page.getByLabel('Access ID').fill('LOCAL.OWNER');
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await expect(page.locator('.app-shell')).toBeVisible();
+  // The already-open V5 queue detects the newer token and refreshes itself.
+  const refreshedModule = page.waitForResponse((response) => {
+    if (new URL(response.url()).pathname !== '/api/getBootstrapModule') return false;
+    return response.request().postDataJSON?.()?.module === 'request';
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await refreshedModule;
+  const queue = page.locator('#surface-main');
+  const submittedRow = queue.locator(`[data-act="select:request"][data-ref="${submittedId}"]:visible`);
+  await expect(submittedRow.first()).toBeVisible({ timeout: 15_000 });
+  expect(await page.evaluate(() => globalThis.__RV01_ALREADY_OPEN__)).toBe(true);
+  expect(authRequests).toHaveLength(authenticatedRequestCount);
 
-  await page.goto('/app/admin/requests');
-  await expect(page.locator('#request')).toBeVisible();
-
-  // The shipped reviewer surface exists and shows the new request.
-  const queue = page.locator('#requestReviewQueue');
-  await expect(queue).toBeVisible();
-  await expect(queue).toContainText(submittedId);
-
-  // Open the per-line decision surface.
-  // The queue renders a desktop table and mobile cards; click whichever the
-  // active viewport actually shows.
-  await queue.locator(`[data-review-request="${submittedId}"]:visible`).first().click();
-  const form = page.locator('#requestReviewForm');
+  // Open the V5 contextual command and keep every line decision explicit.
+  await submittedRow.first().click();
+  const form = page.locator('[data-v5-command="request-review"]:visible').first();
   await expect(form).toBeVisible();
 
-  // The queue reports the server's true total, not the rows on screen, so
-  // review work past the first page is not silently unreachable.
-  await expect(queue).toContainText(/\d+ requests? awaiting review/u);
-
   // Exactly one explicit decision control per reviewable line.
-  const decisions = form.locator('[data-line-decision]');
+  const decisions = form.locator('select[name^="lineDecision"]');
   await expect(decisions).toHaveCount(2);
 
   // No route is pre-selected: RV-01.6 requires an explicit decision per line.
@@ -511,11 +540,13 @@ test('a reviewer routes each line of a public request through the shipped Main H
       .nth(index)
       .selectOption(optionSets[index].includes('ISSUE_FROM_STOCK') ? 'ISSUE_FROM_STOCK' : 'PROCUREMENT');
   }
-  await form.getByRole('button', { name: 'Submit review' }).click();
+  await form.getByRole('button', { name: 'Submit explicit line review' }).click();
 
-  // The modal closes and the queue reflects canonical refreshed server truth.
-  await expect(form).toBeHidden();
-  await expect(queue).not.toContainText(submittedId, { timeout: 15_000 });
+  // The reviewed request remains queued and exposes canonical accepted status.
+  await expect(submittedRow.first()).toBeVisible({ timeout: 15_000 });
+  await expect(
+    submittedRow.first().locator('xpath=ancestor::tr[1]').getByText('Accepted', { exact: true }),
+  ).toBeVisible();
 
   // Downstream ownership is exactly one procurement item, created only by review.
   const csrfToken = await login(request, 'LOCAL.OWNER');
@@ -536,12 +567,11 @@ test('a reviewer routes each line of a public request through the shipped Main H
 
 test('the shipped reviewer UI stays hidden from the public request portal', async ({ page }) => {
   // RV-01.8: the public Request Center must never render internal review work.
-  await page.goto('/?request=1');
-  await expect(page.locator('#request')).toBeVisible();
-  const queue = page.locator('#requestReviewQueue');
-  expect(await queue.count()).toBeLessThanOrEqual(1);
-  if (await queue.count()) await expect(queue).toBeHidden();
-  await expect(page.locator('body')).not.toContainText('Requests awaiting your decision');
+  await page.goto('/#/public.request-intake');
+  await expect(page.locator('#request-center-form')).toBeVisible();
+  await expect(page.locator('[data-v5-command="request-review"]')).toHaveCount(0);
+  await expect(page.locator('[data-v5-contextual-mount="request.queue"]')).toHaveCount(0);
+  await expect(page.locator('body')).not.toContainText('Submit explicit line review');
 });
 
 test('an ALL-scope reviewer keeps central scope even while holding a committee', async ({ request }) => {

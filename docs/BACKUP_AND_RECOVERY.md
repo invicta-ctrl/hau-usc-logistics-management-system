@@ -25,6 +25,15 @@ retained as historical recovery provenance, not current runtime identity.
 
 ## Backup layers
 
+The governed v0.8.0 production capture command is
+`npm run production:recovery:evidence`. It requires clean upstream-matched source,
+an exact-SHA staging/production config pair outside Git, and a private production
+authorization package whose `productionBackup` action is approved. It privately
+captures D1 export and Time Travel evidence, prior Worker deployments, live R2 bucket
+metadata, configuration fingerprints, isolated schema-30 restore proof, aggregate
+Inventory reconciliation, and the production preflight backup manifest. The manifest
+path must match the authorization package and must not already exist.
+
 - Pre-rework reference: spreadsheet `17nyUqDACyc4ZpWL_mZ1S-QAmIGECKtbXFci9rWtqTBg`; application writes are prohibited.
 - Pre-migration launch backup: create with `createLaunchBackup()` into the configured archive folder.
 - Scheduled spreadsheet backup: daily trigger after launch, with retention reviewed by the owner.

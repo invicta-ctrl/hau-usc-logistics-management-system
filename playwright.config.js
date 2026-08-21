@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-const widths = [320, 375, 390, 414, 768, 1024, 1440];
+const widths = [320, 390, 768, 1024, 1366, 1440];
 
 export default defineConfig({
   testDir: './tests/e2e',

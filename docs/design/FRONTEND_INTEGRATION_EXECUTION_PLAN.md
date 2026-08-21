@@ -35,7 +35,7 @@ acceptance tests, visual acceptance, rollback, invalidators, stop condition.
 
 ---
 
-## FI-00 — Integration baseline and branch reconciliation · BLOCKING
+## FI-00 — Integration baseline and branch reconciliation · COMPLETE 2026-08-21
 
 ```text
 OBJECTIVE      Make frontend-design-integration a safe base for v0.8.3 frontend
@@ -52,7 +52,21 @@ ROLLBACK       git reset is forbidden; revert the merge commit if required
 STOP           any conflict that would delete a file main has
 ```
 
-**Why this is blocking.** Verified on 2026-08-21:
+**Outcome.** Executed and accepted on 2026-08-21 by Claude Opus 5 under Earl's
+task-specific writer override. Full evidence in
+[FRONTEND_FI00_RECONCILIATION_RECEIPT.md](FRONTEND_FI00_RECONCILIATION_RECEIPT.md).
+
+```text
+pre-FI-00 head      f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
+archive tag         archive/frontend-design-pre-fi00-2026-08-21
+merge               normal --no-ff merge of origin/main@86553349 into the branch
+main-file loss      0
+runtime diff        0
+check:agents        PASS   (was 9 policy-marker errors)
+active-tree cut     916 files, 141,450,911 bytes
+```
+
+**Why it was blocking.** Verified on 2026-08-21 before the merge:
 
 ```text
 frontend-design-integration vs origin/main   95 ahead - 191 behind
@@ -69,7 +83,7 @@ files present on main and ABSENT on branch   135
 A PR from this branch into `main` before reconciliation would delete both
 identity migrations and the entire adapter layer.
 
-### Steps
+### Steps as executed
 
 1. Verify the packet against current HEAD using each document's `STALE_IF` block.
 2. **Owner decision A** — confirm the branch strategy in
@@ -107,10 +121,17 @@ identity migrations and the entire adapter layer.
    `.codex` current records.
 
 ```text
-ACCEPTANCE     zero deletions vs origin/main; npm run check passes;
-               owner decisions A and B recorded; spec accepted
+ACCEPTANCE     MET. Zero deletions vs origin/main. Runtime diff 0. check:agents,
+               handoff:verify, check:continuation, formatting, diff --check and
+               the secret scan all pass. Owner decisions A and B are recorded in
+               the accepted FI-00 specification and executed.
 INVALIDATORS   any new commit on origin/main
 ```
+
+`npm run check` was deliberately **not** run: every build and runtime input is
+byte-identical to `origin/main`, which already passed it at that SHA. Rerunning
+it would be ceremony, and `.agents/PROJECT_POLICY.md` forbids that. It becomes
+required again the moment FI-01 edits a build or runtime input.
 
 ---
 
@@ -372,10 +393,34 @@ STOP           any acceptance failure, any Production crossover, any live
 
 ## FI-15 — Protected-main integration and Production preflight
 
+### Clean-lineage promotion is mandatory — locked by FI-00
+
+`frontend-design-integration` must **never** be normal-merged into `main`. Its
+ancestry carries 191 commits of superseded history and, in the archive tag, the
+full 167 MB pre-FI-00 tree. A normal merge would make all of that a parent of the
+protected mainline.
+
+```text
+PREFERRED
+  SQUASH MERGE the accepted final tree through the protected PR path.
+  A squash does not make the historical branch ancestry a parent of main.
+
+FALLBACK, when branch protection cannot squash while preserving the exact
+accepted application tree
+  1. cut a fresh promotion branch from accepted current main
+  2. apply the final integration delta deterministically
+  3. prove tree and application-artifact identity against the
+     Playground-accepted candidate
+  4. promote that clean branch through protected main
+
+FORBIDDEN
+  choosing a normal historical-branch merge because it is easier.
+```
+
 ```text
 SEQUENCE
   Earl explicit Production GO for the exact tested candidate
-  protected PR: frontend-design-integration -> main
+  protected PR into main, squash or clean promotion branch per the rule above
   required CI passes
   prove merged-main tree and application artifact equal the accepted candidate
   npm run production:preflight

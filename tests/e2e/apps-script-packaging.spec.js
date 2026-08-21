@@ -68,7 +68,8 @@ test(`assembled ${appEnvironment.toLowerCase()} Apps Script document executes on
 
   await expect(page.locator('#resetDemo')).toHaveCount(0);
 
-  const expectedEnvironmentLabel = appEnvironment === 'STAGING' ? 'Test site' : 'Online';
+  const expectedEnvironmentLabel =
+    `\u25CF Apps Script \u00B7 ${appEnvironment.toLowerCase()}`;
 
   if (requestOnly) {
     await expect(page.locator('body')).toHaveClass(/request-mode/);

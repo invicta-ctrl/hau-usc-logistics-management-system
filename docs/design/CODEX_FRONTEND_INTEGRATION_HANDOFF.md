@@ -50,7 +50,7 @@ FIGMA_WRITES:              0
 PLAYGROUND_WRITES:         0
 PRODUCTION_WRITES:         0
 
-FIRST_CODEX_SLICE:         FI-00 Integration baseline and branch reconciliation
+FIRST_CODEX_SLICE:         FI-01 Shared design foundation (FI-00 complete 2026-08-21)
 ACTIVE_WRITER:             NONE
 WRITER_LOCK:               RELEASED
 HANDOFF_STATUS:            READY_FOR_CODEX_FRONTEND_INTEGRATION
@@ -127,7 +127,7 @@ Do not hand-edit any generated artifact.
 
 ## KNOWN_BLOCKERS
 
-### B1 — the branch would delete 135 files that frozen main has · BLOCKING
+### B1 — the branch would delete 135 files that frozen main has · RESOLVED by FI-00
 
 ```text
 frontend-design-integration vs origin/main   93 ahead - 191 behind
@@ -140,12 +140,14 @@ deletions if merged as-is                    135 files, including
   15 scripts/playground/*  10 src/v5/*  13 docs/design/*
 ```
 
-Resolution is FI-00 step 4: `git merge --no-ff origin/main`, resolving every
-behavior path in main's favour, then proving
-`git diff --name-status origin/main HEAD | grep '^D' | wc -l` returns `0`.
-This preparation task was explicitly forbidden from performing that merge.
+**Resolved.** FI-00 merged `origin/main@86553349` normally into the branch on
+2026-08-21, resolving every behavior path in main's favour. Files present on
+origin/main and absent here: **0**. Runtime-scope diff vs origin/main: **0**.
+Migrations 0031 and 0032 are byte-identical; `src/v5/integration/*` is
+byte-identical. See
+[FRONTEND_FI00_RECONCILIATION_RECEIPT.md](FRONTEND_FI00_RECONCILIATION_RECEIPT.md).
 
-### B2 — promoting the branch adds 138.8 MB of design evidence to main · OWNER DECISION
+### B2 — promoting the branch adds design evidence to main · RESOLVED by FI-00 containment
 
 ```text
 Frozen main has NO prototypes/, NO output/design/, NO scripts/design/.
@@ -157,12 +159,21 @@ The branch carries
                   1,170 files   138,815,428 bytes
 ```
 
-Earl must decide, per group: promote to main, retain on the branch only,
-preserve by immutable archive tag, or move outside Git. Recommended default:
-promote `docs/design/**` and `scripts/design/**`, keep
-`prototypes/public-portals-r3` and `prototypes/shared`, and preserve
-`output/design/**` by archive tag rather than merging 134.7 MB of PNGs into the
-protected lineage.
+**Resolved.** FI-00 applied the recommended disposition: `docs/design/**` and
+`scripts/design/**` retained, `prototypes/public-portals-r3` and
+`prototypes/shared` retained, `output/design/**` reduced to the Make source and
+rollback baseline, and everything else preserved by the immutable archive tag
+`archive/frontend-design-pre-fi00-2026-08-21`.
+
+```text
+pre-FI-00 branch tree   1,894 files   167,117,742 bytes
+FI-00 reconciled          978 files    25,666,831 bytes
+surplus over main         127 files     2,727,201 bytes
+```
+
+Promotion to main is **clean-lineage only** — squash merge through the protected
+PR path, or a fresh promotion branch cut from accepted main. A normal
+historical-branch merge is forbidden.
 
 ### B3 — three open design defects block FI-01 and FI-02
 

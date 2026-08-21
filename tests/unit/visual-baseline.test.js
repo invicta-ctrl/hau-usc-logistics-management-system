@@ -6,7 +6,9 @@ import { describe, expect, it } from 'vitest';
 const root = resolve(import.meta.dirname, '../..');
 const read = (path) => readFile(resolve(root, path), 'utf8');
 const sha256 = async (path) =>
-  createHash('sha256').update(await readFile(resolve(root, path))).digest('hex');
+  createHash('sha256')
+    .update((await readFile(resolve(root, path), 'utf8')).replace(/\r\n/g, '\n'), 'utf8')
+    .digest('hex');
 const compact = (value) => value.replace(/\s+/g, ' ').trim();
 const generatedNotice =
   '<!-- Generated from legacy/HAU-USC_Logistics-Prototype.original.html. Do not hand-edit. -->';
@@ -38,7 +40,7 @@ const cssMarkers = [
 ];
 
 describe('authoritative visual extraction', () => {
-  it('keeps the protected historical baseline byte-identical', async () => {
+  it('keeps the protected historical baseline canonical across checkout line endings', async () => {
     await expect(sha256('legacy/HAU-USC_Logistics-Prototype.original.html')).resolves.toBe(
       '06dc6c4e62ac6db1e873f5f18dd6531dd6a9f91e3a1b1d27e89582eac3f04a84',
     );
@@ -89,24 +91,6 @@ describe('authoritative visual extraction', () => {
         expect(actual.startsWith(originalSegments[index])).toBe(true);
         expect(actual.slice(originalSegments[index].length)).toContain('.loading-panel');
         expect(actual.slice(originalSegments[index].length)).toContain('.loading-retry');
-      } else if (cssModules[index] === 'tokens-base') {
-        /* v0.7.3 front-end design integration.
-           The approved historical cascade is still asserted byte for byte as a
-           prefix — the assertion is not weakened, only its exclusivity. The
-           accepted specification authorises redesigning the front end, and the
-           design foundation is appended after the original so it wins by
-           cascade order without editing a single preserved declaration. This
-           is the same pattern already sanctioned for overlays above. */
-        expect(actual.startsWith(originalSegments[index])).toBe(true);
-        const appended = actual.slice(originalSegments[index].length);
-        expect(appended).toContain('--elev-1');
-        expect(appended).toContain('--m-route');
-        expect(appended).toContain('--anchor');
-        /* The three tokens auth.css and runtime-extensions.css referenced but
-           nothing ever defined. */
-        expect(appended).toContain('--surface:');
-        expect(appended).toContain('--surface-subtle:');
-        expect(appended).toContain('--accent-strong:');
       } else {
         expect(actual).toBe(originalSegments[index]);
       }

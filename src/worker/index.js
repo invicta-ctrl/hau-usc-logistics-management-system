@@ -1,13 +1,15 @@
 import { CAPABILITIES } from '../domain/permissions.js';
 import { AccessManagementError, createAccessManagementService } from '../server/access/service.js';
 import { createPasswordKdf, createTokenCrypto } from '../server/auth/crypto.js';
-import { AUTH_COOKIE, DEVELOPMENT_AUTH_COOKIE } from '../server/auth/cookies.js';
+import { AUTH_COOKIE, DEVELOPMENT_AUTH_COOKIE, serializeAuthCookie } from '../server/auth/cookies.js';
 import { createAuthHttpHandler, statusForAuthError } from '../server/auth/http-handler.js';
 import { AuthError, createAuthService } from '../server/auth/service.js';
 import { createD1AuthRepository, createD1RateLimiter } from '../server/d1/auth-repository.js';
 import { createD1AccessManagementRepository } from '../server/d1/access-management-repository.js';
 import { createD1AccountApplicationRepository } from '../server/d1/account-application-repository.js';
+import { createD1IdentityFoundationRepository } from '../server/d1/identity-foundation-repository.js';
 import { createD1IdentityRosterRepository } from '../server/d1/identity-roster-repository.js';
+import { createD1IdentitySourceProjectionRepository } from '../server/d1/identity-source-projection-repository.js';
 import { createD1ProfileRepository } from '../server/d1/profile-repository.js';
 import { createD1ReferenceLinkRepository } from '../server/d1/reference-link-repository.js';
 import { ApiError, createD1OperationalService } from '../server/d1/operational-service.js';
@@ -26,9 +28,28 @@ import { createLendingUsageService } from '../server/lending-usage-service.js';
 import { createPublicLendingService } from '../server/public-lending-service.js';
 import { createPublicRequestService } from '../server/public-request-service.js';
 import { createReferenceLinkService } from '../server/reference-link-service.js';
+import {
+  createPlaygroundService,
+  isPlaygroundRuntime,
+  markPlaygroundModified,
+} from '../server/playground-service.js';
 import { createIdentityRosterCrypto } from '../server/identity-roster/crypto.js';
 import { createGoogleSheetsRosterSource } from '../server/identity-roster/google-source.js';
 import { createIdentityRosterService, IdentityRosterError } from '../server/identity-roster/service.js';
+import {
+  createIdentityFoundationReconciliationService,
+  IdentityFoundationReconciliationError,
+} from '../server/identity-foundation/reconciliation.js';
+import {
+  createStaffAccountActivityHistoryService,
+  StaffAccountActivityHistoryError,
+} from '../server/identity-foundation/staff-account-activity-history-service.js';
+import { createStaffDirectoryService } from '../server/identity-foundation/staff-directory-service.js';
+import {
+  createIdentitySourceProjectionProbeService,
+  IdentitySourceProjectionProbeError,
+  isIdentitySourceProjectionProbeExecutionAuthorized,
+} from '../server/identity-foundation/source-projection-probe.js';
 import { createOperationalHealthService } from '../server/operational-health-service.js';
 import {
   createAccountApplicationActivationHandoff,
@@ -200,7 +221,9 @@ function json(value, status = 200, additionalHeaders = {}) {
 function services(env) {
   const repository = createD1AuthRepository(env.DB);
   const accessRepository = createD1AccessManagementRepository(env.DB);
+  const identityFoundationRepository = createD1IdentityFoundationRepository(env.DB);
   const rosterRepository = createD1IdentityRosterRepository(env.DB);
+  const sourceProjectionRepository = createD1IdentitySourceProjectionRepository(env.DB);
   const accountApplicationRepository = createD1AccountApplicationRepository(env.DB);
   const passwordKdf = createPasswordKdf({
     timingSafeEqual: constantTimeEqual,
@@ -284,7 +307,7 @@ function services(env) {
   const operations = createD1OperationalService({
     db: env.DB,
     environment: String(env.ENVIRONMENT ?? 'DEVELOPMENT').toUpperCase(),
-    appVersion: env.APP_VERSION ?? '0.7.2',
+    appVersion: env.APP_VERSION ?? '0.8.0',
     schemaVersion: env.SCHEMA_VERSION ?? '1.0.0',
     evidenceStore: evidence,
   });
@@ -319,15 +342,31 @@ function services(env) {
   });
   const brandAssets = createBrandAssetService({ db: env.DB, bucket: env.BRAND_ASSETS });
   const lendingUsage = createLendingUsageService({ db: env.DB });
+  const googleRosterSource = createGoogleSheetsRosterSource({
+    spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
+    range: env.GOOGLE_ROSTER_RANGE,
+    serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
+    serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
+    fingerprint: rosterCrypto.fingerprint,
+  });
   const identityRoster = createIdentityRosterService({
     repository: rosterRepository,
-    source: createGoogleSheetsRosterSource({
-      spreadsheetId: env.GOOGLE_ROSTER_SPREADSHEET_ID,
-      range: env.GOOGLE_ROSTER_RANGE,
-      serviceAccountEmail: env.GOOGLE_ROSTER_SERVICE_ACCOUNT_EMAIL,
-      serviceAccountPrivateKey: env.GOOGLE_ROSTER_PRIVATE_KEY,
-    }),
+    source: googleRosterSource,
     crypto: rosterCrypto,
+  });
+  const identityFoundationReconciliation = createIdentityFoundationReconciliationService({
+    legacyRosterRepository: rosterRepository,
+    foundationRepository: identityFoundationRepository,
+    crypto: rosterCrypto,
+  });
+  const staffDirectory = createStaffDirectoryService({ repository: identityFoundationRepository });
+  const staffAccountActivityHistory = () =>
+    createStaffAccountActivityHistoryService({ repository: identityFoundationRepository });
+  const sourceProjectionProbe = createIdentitySourceProjectionProbeService({
+    source: googleRosterSource,
+    repository: sourceProjectionRepository,
+    reconciliation: identityFoundationReconciliation,
+    executionAuthorized: isIdentitySourceProjectionProbeExecutionAuthorized(env),
   });
   const profile = createProfileService({
     repository: createD1ProfileRepository(env.DB),
@@ -347,8 +386,12 @@ function services(env) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
+    staffAccountActivityHistory,
+    staffDirectory,
     operationalHealth,
     operations,
     profile,
@@ -469,6 +512,7 @@ async function version(env, requestId) {
     ok: true,
     correlationId: requestId,
     ...safeReleaseIdentity(env),
+    playground: isPlaygroundRuntime(env),
     database: {
       schemaVersion: schema?.value ?? '0',
       latestMigration: migration?.name ?? '',
@@ -478,6 +522,15 @@ async function version(env, requestId) {
 
 async function handleApi(request, env, requestId, executionContext) {
   const url = new URL(request.url);
+  if (url.pathname === '/api/playground/session' && request.method === 'POST' && !isPlaygroundRuntime(env)) {
+    return json(
+      {
+        error: { code: 'PLAYGROUND_ENVIRONMENT_REFUSED', message: 'The requested resource was not found.' },
+        correlationId: requestId,
+      },
+      404,
+    );
+  }
   const {
     access,
     accountApplications,
@@ -485,8 +538,12 @@ async function handleApi(request, env, requestId, executionContext) {
     brandAssets,
     auth,
     evidence,
+    identityFoundationReconciliation,
+    staffAccountActivityHistory,
+    staffDirectory,
     lendingUsage,
     identityRoster,
+    sourceProjectionProbe,
     operationalHealth,
     operations,
     profile,
@@ -503,6 +560,54 @@ async function handleApi(request, env, requestId, executionContext) {
     }
     if (url.pathname === '/api/version' && request.method === 'GET') {
       return version(env, requestId);
+    }
+    if (url.pathname === '/api/playground/session' && request.method === 'POST') {
+      assertPublicMutationOrigin(request);
+      await body(request);
+      const owner = await env.DB.prepare(
+        `SELECT id FROM accounts
+         WHERE status = 'ACTIVE'
+           AND role_id = 'SYSTEM_OWNER'
+           AND onboarding_completed_at IS NOT NULL
+           AND locked_at IS NULL
+         ORDER BY created_at, id
+         LIMIT 1`,
+      ).first();
+      if (!owner?.id) {
+        throw new ApiError('PLAYGROUND_OWNER_UNAVAILABLE', 'The playground owner session is unavailable.', {
+          status: 503,
+        });
+      }
+      const issued = await auth.issuePlaygroundSession({ accountId: owner.id });
+      return json(
+        {
+          state: issued.state,
+          csrfToken: issued.csrfToken,
+          user: issued.user,
+          expiresAt: issued.expiresAt,
+          correlationId: requestId,
+        },
+        200,
+        { 'set-cookie': serializeAuthCookie(AUTH_COOKIE.session, issued.sessionToken) },
+      );
+    }
+    if (url.pathname === '/api/playground/status' && request.method === 'GET') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN);
+      return json({
+        ...(await createPlaygroundService(env).status()),
+        correlationId: requestId,
+        actor: { accountId: authorized.account.id },
+      });
+    }
+    if (url.pathname === '/api/playground/operation' && request.method === 'POST') {
+      const authorized = await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true });
+      return json({
+        ...(await createPlaygroundService(env).requestOperation({
+          ...(await body(request)),
+          actorAccountId: authorized.account.id,
+        })),
+        correlationId: requestId,
+      });
     }
     if (url.pathname === '/api/account-applications/email/start' && request.method === 'POST') {
       assertPublicMutationOrigin(request);
@@ -989,6 +1094,16 @@ async function handleApi(request, env, requestId, executionContext) {
       throw new AccessManagementError('ACCESS_ACCOUNT_NOT_FOUND', { status: 404 });
     }
 
+    if (url.pathname === '/api/admin/staff-directory' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffDirectory.list(await body(request))) });
+    }
+
+    if (url.pathname === '/api/admin/staff-account-activity-history' && request.method === 'POST') {
+      await authorize(request, auth, CAPABILITIES.ACCESS_ADMIN, { mutation: false });
+      return json({ ok: true, ...(await staffAccountActivityHistory().list(await body(request))) });
+    }
+
     if (url.pathname.startsWith('/api/owner/identity-roster/') && request.method === 'POST') {
       const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: true })).account;
       const command = await body(request);
@@ -1009,6 +1124,22 @@ async function handleApi(request, env, requestId, executionContext) {
         return json({ ok: true, ...(await identityRoster.rollback(context)) });
       }
       throw new IdentityRosterError('ROSTER_PREVIEW_NOT_FOUND', { status: 404 });
+    }
+
+    if (
+      url.pathname === '/api/owner/identity-foundation/reconciliation-preview' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await identityFoundationReconciliation.preview({ actor })) });
+    }
+
+    if (
+      url.pathname === '/api/owner/identity-foundation/source-projection-probe' &&
+      request.method === 'POST'
+    ) {
+      const actor = (await authorize(request, auth, CAPABILITIES.SYSTEM_ADMIN, { mutation: false })).account;
+      return json({ ok: true, ...(await sourceProjectionProbe.probe({ actor })) });
     }
 
     if (url.pathname.startsWith('/api/owner/evidence/') && request.method === 'POST') {
@@ -1212,12 +1343,18 @@ async function handleApi(request, env, requestId, executionContext) {
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError;
     const status =
       error instanceof ApiError ||
       error instanceof AccessManagementError ||
       error instanceof EvidenceServiceError ||
       error instanceof IdentityRosterError ||
+      error instanceof IdentityFoundationReconciliationError ||
+      error instanceof IdentitySourceProjectionProbeError ||
+      error instanceof StaffAccountActivityHistoryError ||
       error instanceof AccountApplicationError
         ? error.status
         : error instanceof AuthError
@@ -1296,6 +1433,14 @@ export default {
       const requestId = createCorrelationId(request);
       const startedAt = Date.now();
       const response = await handleApi(request, env, requestId, executionContext);
+      if (
+        response.ok &&
+        isPlaygroundRuntime(env) &&
+        !['GET', 'HEAD', 'OPTIONS'].includes(request.method) &&
+        !url.pathname.startsWith('/api/playground/')
+      ) {
+        executionContext.waitUntil(markPlaygroundModified(env.DB));
+      }
       response.headers.set('x-correlation-id', requestId);
       structuredLog({
         event: 'API_REQUEST_COMPLETED',

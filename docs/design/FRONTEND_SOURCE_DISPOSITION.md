@@ -8,7 +8,16 @@ classified before it is used.
 FUNCTIONAL_TARGET   origin/main 86553349f5c2ebefaa637c30828c560a301f99ba
 SOURCE_SURVEYED     frontend-design-integration (post-Phase-9 tip) and origin/main
 DERIVED_FROM        git ls-tree / git diff against both refs, 2026-08-21
+FI00_APPLIED        2026-08-21 - see section 10 for what the active tree now holds
+PRESERVATION_REF    archive/frontend-design-pre-fi00-2026-08-21 -> f0ab75d
 ```
+
+> **FI-00 applied.** The classifications below are unchanged and remain the
+> governing rules. What changed is _where_ the classified material lives:
+> everything classified `GENERATED_EVIDENCE_ONLY`, `ARCHIVE_HISTORICAL`,
+> `OBSOLETE_FOR_FROZEN_V083`, or `DO_NOT_MIGRATE` was removed from the **active
+> tree** after being proven recoverable from the archive tag. Section 10 records
+> the exact outcome, including two byte-exact relocations.
 
 ## Classification vocabulary
 
@@ -191,3 +200,121 @@ docs/design/FIGMA_DESIGN_MAKE_AUDIT.md                             (defect statu
 DESIGN.md                                                          (D-decisions)
 src/v5/**                                                          (port target moved)
 ```
+
+## 10. FI-00 containment outcome — 2026-08-21
+
+### 10.1 What the active tree now holds
+
+```text
+docs/design/**                          71 files   canonical packet, decision
+                                                   records, DESIGN_AUTHORITY.md,
+                                                   design-reference/
+scripts/design/**                       18 files   generators and audit tooling
+prototypes/public-portals-r3/**         10 files   required by build-make-theme.mjs
+prototypes/shared/**                     8 files   required by scripts/design
+output/design/make-adoption/**           5 files   Figma Make v39 source
+output/design/make-preservation/**       7 files   v36 rollback + current appRoutes.ts
+.impeccable/**                           3 files   design tool state; design.json is
+                                                   referenced by main src/v5/README.md
+.hallmark/**                             2 files   design tool state
+tools/design/**                          1 file    production visual-baseline capture
+```
+
+Retention was **dependency-proven**, not assumed. `scripts/design/*.mjs`
+references exactly `output/design/make-adoption/**`,
+`output/design/make-preservation/{index.css,theme.v36.css}`,
+`prototypes/public-portals-r3/figma-make/src/styles/theme-canonical.css`, and
+`prototypes/shared/hau-theme.css` — all retained. The two Make verifiers were
+re-run on the reconciled tree and pass.
+
+### 10.2 Removed from the active tree, preserved in the archive tag
+
+```text
+1,078 files   136,496,010 bytes
+
+prototypes/impeccable-whole-site-redesign/            OBSOLETE_FOR_FROZEN_V083
+prototypes/impeccable-whole-site-redesign-v2/         OBSOLETE_FOR_FROZEN_V083
+prototypes/impeccable-whole-site-redesign-v3/         OBSOLETE_FOR_FROZEN_V083
+prototypes/impeccable-whole-site-redesign-v4/         OBSOLETE_FOR_FROZEN_V083
+prototypes/impeccable-whole-site-redesign-v5/         superseded by src/v5/ on main
+output/design/** except make-adoption, make-preservation
+                                                      GENERATED_EVIDENCE_ONLY
+sites-preview/                                        ARCHIVE_HISTORICAL
+```
+
+Every one of the 1,078 paths was verified present in
+`archive/frontend-design-pre-fi00-2026-08-21^{tree}` before removal — zero
+unrecoverable. No retained code file imports a removed path.
+
+A separate 14 files, 109,569 bytes were removed from the runtime scopes because
+main wins there exactly: `src/styles/visual/{v0-7-2-r2,v4-1-integration,v5-baseline-entry,v5-production}.css`,
+`src/visual/{landing-network,module-index,sanitized-preview-client,signature-controls,v5-production-adapter}.js`,
+and five `tests/**` specs for the v4.1 and v5 transfer candidates. These were the
+historical branch frontend implementation, classified `DO_NOT_MIGRATE`. They are
+in the archive tag.
+
+### 10.3 Byte-exact relocations
+
+Two files were unique, load-bearing, and would have been lost by a naive removal.
+Both were relocated with byte parity proven before their source family was
+removed.
+
+| From                                                                  | To                                                |   Bytes | sha256                                                             |
+| --------------------------------------------------------------------- | ------------------------------------------------- | ------: | ------------------------------------------------------------------ |
+| branch `DESIGN.md`                                                    | `docs/design/DESIGN_AUTHORITY.md`                 | 128,015 | `2c98391d139b1c62a595b97911d2b593b3419839a8af338fd3132014fc729efb` |
+| `prototypes/impeccable-whole-site-redesign-v5/styles/theme-final.css` | `docs/design/design-reference/v5-theme-final.css` |  11,467 | `849e8bd4c265bea520f4235e989204079635720858de5a0dd0024dcb00c68529` |
+
+`DESIGN.md` was an add/add conflict between two genuinely different documents:
+main ships a 6,416-byte v5 design-token manifest referenced by `src/v5/README.md`
+and the `src/v5/styles/*.css` provenance headers, while the branch carried the
+129,570-byte D-numbered design authority. Main wins the path per the FI-00
+main-wins rule; the branch authority is preserved at `DESIGN_AUTHORITY.md` and is
+still the source of D08, D09, D12, and D41 for FI-01.
+
+`DESIGN_AUTHORITY.md` differs from the archived original in line endings only —
+the branch blob carried CRLF and the relocated copy is LF-normalized so
+`git diff --check` passes. Content parity is exact, and the byte-exact original
+stays recoverable at `archive/frontend-design-pre-fi00-2026-08-21:DESIGN.md`
+(129,570 bytes, sha256 `e932d93b1aab50e2cbdf843026a7c1d36b1e45f98ee3e32d8683a709171141fc`).
+
+`theme-final.css` was the **only** file in the v5 prototype that main's `src/v5/`
+does not already contain — verified by comparing the two file lists. It is
+referenced by the retained `docs/design/HALLMARK_IMPECCABLE_CLOSURE.md`.
+
+### 10.4 Reclassifications recorded by FI-00
+
+| Item                                              | Was                                        | Now                           | Why                                                                                               |
+| ------------------------------------------------- | ------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `prototypes/impeccable-whole-site-redesign-v5/`   | `DESIGN_REFERENCE_ONLY`                    | `ARCHIVE_HISTORICAL`          | Fully superseded by `src/v5/` on main; only `theme-final.css` was unique, and it was relocated    |
+| Branch `src/visual/**` and `src/styles/**` deltas | `DO_NOT_MIGRATE` / `RECONCILE_BEFORE_PORT` | `ARCHIVE_HISTORICAL`          | Main wins these paths exactly; extract a rule from the archive tag through a named FI slice       |
+| `sites-preview/`                                  | not previously classified                  | `ARCHIVE_HISTORICAL`          | GPT Sites publication harness; absent from main; no FI slice depends on it                        |
+| `.impeccable/**`, `.hallmark/**`                  | not previously classified                  | `ADOPT_AS_IS`                 | Small design tool state; `.impeccable/design.json` is referenced by main's own `src/v5/README.md` |
+| `tools/design/capture-production-baseline.mjs`    | not previously classified                  | `ADOPT_AS_IS`                 | Self-contained, no dependencies, useful for FI visual acceptance                                  |
+| `docs/design/DESIGN_AUTHORITY.md`                 | was `DESIGN.md`, `ADOPT_AS_IS`             | `ADOPT_AS_IS` at the new path | See 10.3                                                                                          |
+| `docs/design/design-reference/v5-theme-final.css` | inside the v5 prototype                    | `DESIGN_REFERENCE_ONLY`       | See 10.3                                                                                          |
+
+### 10.5 Pre-existing conditions inherited from main, not created by FI-00
+
+`src/v5/README.md`, `src/v5/tools/export.mjs`, and `src/v5/styles/v4.css` carry
+documentary references to `prototypes/impeccable-whole-site-redesign-v4/` and
+`output/design/HAU_USC_Logistics_Impeccable_Whole_Site_Redesign_Preview_v4.html`.
+Those paths do not exist on `origin/main` either — main has no `prototypes/` and
+no `output/design/` at all — so the references were already dangling before
+FI-00. They are comments and usage notes, not executable imports. FI-00 must not
+edit `src/**`, so they are left exactly as main ships them.
+
+`node scripts/design/build-make-routes.mjs --check` imports `esbuild`, which is
+not a declared dependency in `package.json` on main or on the pre-FI-00 branch.
+The check is therefore unavailable. Declaring the dependency is an FI-01 owner
+decision.
+
+### 10.6 Recovering anything that was archived
+
+```bash
+git show archive/frontend-design-pre-fi00-2026-08-21:<path>
+git checkout archive/frontend-design-pre-fi00-2026-08-21 -- <path>
+```
+
+The tag is annotated, pushed, and read back from `origin`. It resolves to commit
+`f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970`, tree
+`1d20843c07bc407ec0fac757ec49dfb2d11c796c`.
