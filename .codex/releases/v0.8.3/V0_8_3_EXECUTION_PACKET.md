@@ -5,7 +5,7 @@
 - **Controlling amendment:** .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md
 - **Adoption authority:** Earl's explicit current instruction, adopted 2026-08-20T23:33:37+08:00.
 - **Accepted product specification:** .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md.
-- **Canonical writer / lock:** TERRA_MAX:/root/v83_playground_reset_terra_writer; HELD and ACTIVE for owner-authorized Production/S17 closeout.
+- **Canonical writer / lock:** v0.8.3 S17 complete; `ACTIVE_WRITER: NONE`, `WRITER_LOCK: RELEASED`, and handoff ready. Any later v0.8.4/frontend preparation takes a separate branch-local lock and never reopens v0.8.3.
 - **Integrated ID-G canonical baseline:** release/v0.8.3-identity-foundation at merge 45bbc1caf661d64a1abfdf1f775878ec89d88853, tree 4baebecc466b258d1b3729cff376bfafb2640ef6, pushed clean and live-equal before this continuity update.
 - **Integrated ID-H canonical baseline:** release/v0.8.3-identity-foundation at fast-forward fb93da76cbf71ec0419036d86c0b780b18bfeff4, tree 0947c934bd40a9bb8d4fe8bbae99e09e13f235df; exact nine accepted paths, clean and live-equal before this continuity update.
 - **Policy-sync boundary:** Context Vault project-extension target remains sync_allowed=false with BLOCKED_ACTIVE_WRITER_AND_DIRTY_WORK. Do not synchronize AGENTS.md or project policy during this release.
@@ -21,7 +21,9 @@ FAST_CLOSE=ACTIVE. Minimum necessary verification applies: reuse unchanged candi
 - **Smoke:** `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED`; this exact host-perimeter fallback is owner accepted, no retry is authorized, and `HTTP_PASS` is not claimed.
 - **Unrun external gates:** historical Playground source gate remains `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS; live ID-H email delivery is `OWNER_WAIVED_OR_UNRUN`, never PASS.
 - **Protected-main / recovery checkpoint:** PR #25 merged normally to `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e`; CI verify, CodeQL, and browser smoke passed; the validated CodeQL #99 false positive was dismissed; frozen f8 application-path parity passed. The two P2 pagination review threads are deferred to the post-v0.8.3 frontend intake without a product change. Tag `v0.8.3` resolves to the accepted main commit, and the recovery pointers were rotated/read back.
-- **Next release action:** lossless temporary v0.8.3 branch/worktree proof and closure, then S17 durable closeout.
+- **Lossless hygiene checkpoint:** PASS_WITH_PRESERVATION_EXCEPTION. Temporary v0.8.3 remote refs were closed after complete unique-history proof; the historical Gate-A audit package is retained by immutable archive tag; the primary main checkout is clean; the v082 product-dirty worktree remains an untouched preservation exception. One unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
+- **S17 closure:** PASS. Production/main/f8 identity, recovery rotation, lossless hygiene, retained future refs, and pushed readback passed; `ACTIVE_WRITER: NONE`, `WRITER_LOCK: RELEASED`, and final v0.8.3 handoff readiness are recorded.
+- **Post-S17 boundary:** a separate branch-local lock may preserve/refresh v0.8.4, then separately prepare frontend adoption; neither action reopens v0.8.3.
 
 ## Explicit owner mapping and product disposition
 
