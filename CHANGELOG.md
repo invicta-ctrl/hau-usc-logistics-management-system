@@ -6,7 +6,7 @@
 
 - Reconciled the already-live owner-authorized Production v0.8.3 runtime to the exact frozen f8 candidate, 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0, three Activity History tables, protected roster configuration/secret presence, private recovery evidence, and isolated Playground bindings.
 - Recorded `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` as the accepted minimal smoke fallback; it is never recorded as HTTP PASS. Historical Playground source NONPASS remains owner accepted for v0.8.3 fast close only, never PASS; live email/manual gates remain `OWNER_WAIVED_OR_UNRUN`.
-- Began the evidence-only protected-main/recovery/S17 closeout sequence. No source, dependency, build, workflow, migration, provider, D1/R2, Google, email, or deployment mutation was performed by this checkpoint.
+- Completed the evidence-only protected-main/recovery checkpoint: the normal PR #25 merge accepted main `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e` with frozen f8 application-path parity, `v0.8.3` tagging, and recovery-pointer rotation/readback. CI verify, CodeQL, and browser smoke passed; CodeQL #99 was dismissed as a validated false positive. Two P2 pagination review threads are deferred to the post-v0.8.3 frontend intake without altering the frozen/deployed product.
 
 ### Added
 

@@ -4,14 +4,14 @@
 
 ### v0.8.3 owner-fast-close release state
 
-- **Milestone:** `V83_PRODUCTION_RELEASED_OWNER_FAST_CLOSE_OVERRIDE_S17_CLOSEOUT` is active under Earl's explicit fast-close authority; protected-main acceptance, recovery rotation, and lossless S17 closure remain.
+- **Milestone:** `V83_PRODUCTION_RELEASED_OWNER_FAST_CLOSE_OVERRIDE_S17_CLOSEOUT` is active under Earl's explicit fast-close authority; protected-main acceptance and recovery rotation are complete, and lossless S17 closure remains.
 - **Production identity:** direct read-only reconciliation proves v0.8.3 at frozen f8 with 100% Worker traffic, schema32/migrations 0031+0032/single 0032 ledger/FK0/three Activity History tables, roster configuration/protected-secret presence, private recovery evidence, and no Playground crossover.
 - **Smoke:** `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED` is the owner-accepted minimal fallback; `HTTP_PASS` is not claimed and no retry is authorized.
 - **Playground gates:** the candidate-bound source gate is historical `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS; live ID-H delivery and manual/browser gates are `OWNER_WAIVED_OR_UNRUN`, never PASS.
-- **Git/recovery:** permanent pointers remain `main`, `backup/last-known-good`, and `regression/r1` through `regression/r3`; rotation awaits protected-main acceptance and exact readback. The f8 candidate and application artifact remain frozen.
+- **Git/recovery:** PR #25 merged normally to accepted main `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e` with f8 application-path parity and passing required CI. Tag `v0.8.3` resolves there; the recovery ladder is rotated/read back, and outgoing r3 remains preserved by ancestry and existing immutable tags. The f8 candidate and application artifact remain frozen.
 - **Future boundaries:** preserve/refresh v0.8.4 without implementation; retain frontend-design integration for documented adoption preparation only. Backend/API/auth/data contracts remain authoritative.
 - **Writer:** `ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer`; lock held until S17 evidence and handoff are complete.
-- **Next action:** integrate the verified governance-only main lineage into the v0.8.3 release lineage, then rotate recovery pointers and close temporary state losslessly.
+- **Next action:** prove temporary v0.8.3 branches/worktrees losslessly, close only eligible state, and write S17 evidence.
 
 ### Historical baseline
 

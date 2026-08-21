@@ -20,7 +20,8 @@ FAST_CLOSE=ACTIVE. Minimum necessary verification applies: reuse unchanged candi
 - **Direct Production reconciliation:** PASS_OWNER_FAST_CLOSE_SCOPE — exact f8 runtime with 100% Worker traffic; app version 0.8.3; schema32; migration chain 0031+0032 with one 0032 ledger entry; FK issues 0; three Activity History tables; roster identifier configuration and protected `GOOGLE_ROSTER_PRIVATE_KEY` presence; private Time Travel recovery receipt; and no Playground/Production crossover.
 - **Smoke:** `HTTP_SMOKE_EXPECTED_NONCANONICAL_HOST_PERIMETER_DENY_STATUS_UNRETAINED`; this exact host-perimeter fallback is owner accepted, no retry is authorized, and `HTTP_PASS` is not claimed.
 - **Unrun external gates:** historical Playground source gate remains `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`, never PASS; live ID-H email delivery is `OWNER_WAIVED_OR_UNRUN`, never PASS.
-- **Next release action:** protected-main governance-lineage acceptance, then recovery-pointer rotation and lossless S17 closure.
+- **Protected-main / recovery checkpoint:** PR #25 merged normally to `07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e`; CI verify, CodeQL, and browser smoke passed; the validated CodeQL #99 false positive was dismissed; frozen f8 application-path parity passed. The two P2 pagination review threads are deferred to the post-v0.8.3 frontend intake without a product change. Tag `v0.8.3` resolves to the accepted main commit, and the recovery pointers were rotated/read back.
+- **Next release action:** lossless temporary v0.8.3 branch/worktree proof and closure, then S17 durable closeout.
 
 ## Explicit owner mapping and product disposition
 
