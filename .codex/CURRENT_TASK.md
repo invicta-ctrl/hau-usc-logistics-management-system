@@ -1,7 +1,7 @@
-# Current Task — V0.8.4 Branch-Local Preservation Refresh
+# Current Task — V0.8.4 Branch-Local Preservation Refresh (Complete)
 
 INTENT: BRANCH_PRESERVATION_AND_CONTINUITY_RECONCILIATION
-MODE: EXECUTE_OWNER_AUTHORIZED_PHASE8
+MODE: COMPLETE_OWNER_AUTHORIZED_PHASE8
 OBJECTIVE: Preserve existing v0.8.4 branch history and refresh it from final v0.8.3 main without implementation; record final-v0.8.3 baseline, Production, protected-ref, and readiness facts; release the separate branch-local lock.
 TARGET: release/v0.8.4-live-operations-performance, final v0.8.3 main 86553349f5c2ebefaa637c30828c560a301f99ba, frozen product candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, and retained recovery refs.
 CURRENT_POINTER: .codex/CURRENT.md
@@ -10,15 +10,15 @@ ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
 CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#27-v083-release-hygiene-only
 AUTHORITY: Earl explicit 2026-08-21 owner fast-close closeout instruction -> completed v0.8.3 S17 -> explicit Phase 8 separate branch-local v0.8.4 preservation/refresh authorization -> checked-in governance and current continuity chain.
 REQUIRED_MODEL: Terra MAX sole branch-local writer; no v0.8.4 implementation, audit loop, or broad suite.
-ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
-WRITER_LOCK: HELD
-LOCK_STATUS: ACTIVE
-HANDOFF_STATUS: IN_PROGRESS
+ACTIVE_WRITER: NONE
+TERRA_WRITER: NONE
+LOCK_HOLDER: NONE
+WRITER_LOCK: RELEASED
+LOCK_STATUS: RELEASED
+HANDOFF_STATUS: READY_FOR_HANDOFF
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
-UPSTREAM: origin/release/v0.8.4-live-operations-performance@GIT_HEAD;PUSH_PARITY_REQUIRED
+UPSTREAM: origin/release/v0.8.4-live-operations-performance@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
 RISK: HIGH;LOSSLESS_BRANCH_HISTORY_CONTINUITY_TRUTHFUL_FINAL_V083_BASELINE_AND_PROTECTED_REF_PRESERVATION
@@ -52,9 +52,10 @@ PHASE_3_4_CHECKPOINT: PASS;PR_25_NORMAL_MERGE=07aa2d2dfcee12fb1ec26fc5a3658ca9ca
 PHASE_5_CHECKPOINT: PASS_WITH_PRESERVATION_EXCEPTION;temporary remote refs closed losslessly after unique-history proof; research audit retained by immutable archive tag; primary main checkout clean; v082 product-dirty worktree retained untouched; unregistered generated-only node_modules residual is a tooling-blocked P3 with no Git history or ref loss.
 S17_CLOSEOUT: PASS;Production/main/f8 identity/recovery rotation/lossless hygiene/retained future refs/pushed readback pass; ACTIVE_WRITER=NONE; WRITER_LOCK=RELEASED; HANDOFF_STATUS=READY_FOR_HANDOFF.
 V084_BRANCH_LOCAL_BASELINE: FINAL_V083_MAIN=86553349f5c2ebefaa637c30828c560a301f99ba;FROZEN_F8_APPLICATION_PARITY=PASS;PRODUCTION=v0.8.3_SCHEMA32_0031_0032_SINGLE0032_LEDGER_FK0_PRIVATE_RECOVERY_REUSED_VERIFIED;PROTECTED_MAIN_AND_RECOVERY_REFS=RETAINED
+V084_BRANCH_LOCAL_REFRESH: PASS;NORMAL_FINAL_MAIN_MERGE=05ea4c50a30e75c6b74468ffe7c0a39435dd92c0;FOCUSED_CONTINUITY_GOVERNANCE_AND_DIFF_VALIDATION=PASS;PUSH_READBACK=PASS;ACTIVE_WRITER_NONE;WRITER_LOCK_RELEASED
 V084_IMPLEMENTATION: NOT_STARTED;NO_RUNTIME_OR_PROVIDER_MUTATION
-NEXT_ACTION_SCOPE: V084_BRANCH_LOCAL_PRESERVATION_REFRESH
-NEXT_EXACT_ACTION: Complete the owner-authorized Phase 8 branch-local final-main merge reconciliation, validate and push the continuity checkpoint, release the v0.8.4 preparation lock, then stop before Phase 9 frontend-branch preparation.
+NEXT_ACTION_SCOPE: V83_CLOSED;V084_BRANCH_LOCAL_PREPARATION_COMPLETE;PHASE9_FRONTEND_BRANCH_LOCAL_PREPARATION_ONLY
+NEXT_EXACT_ACTION: Do not reopen v0.8.3 or start v0.8.4 implementation. Take and release a separate frontend-design-integration branch-local lock only under the owner-authorized Phase 9 adoption-intake scope.
 
 ## Historical source-gate diagnostic record
 
