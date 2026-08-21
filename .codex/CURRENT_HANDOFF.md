@@ -71,7 +71,7 @@ FIRST_FI01_EXCLUDED_PATHS: every src/v5/src/surfaces file;every src/v5/integrati
 FIRST_FI01_REQUIRED_READS: AGENTS.md;.agents/PROJECT_POLICY.md;.codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;docs/design/FRONTEND_INTEGRATION_START_HERE.md;docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md;docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md FI-01 section;src/index.html;src/v5/styles/tokens.css;scripts/design/theme-source.mjs;prototypes/shared/hau-theme.css;output/design/make-adoption/theme.css;docs/design/DESIGN_AUTHORITY.md D08 D09 D12 D41 only
 FIRST_FI01_DO_NOT_REPEAT: the runtime parity proof;the Figma audit;the Make capture;the route, capability, operation and state inventory;the source classification;the historical v5 browser matrix
 
-BLOCKER: FALSE; D02 and D04 PASS, D08 OPEN_FOR_FI02. Normal push/readback is the only remaining closeout action.
+BLOCKER: FALSE; D02 and D04 PASS, D08 OPEN_FOR_FI02. FI-01 push/readback parity is verified 0/0.
 
 UNVERIFIED_ITEMS: live Figma Design page count, where a read-only probe on 2026-08-21 returned one page against the audit's 28, consistent with the desktop bridge rather than a file change; live Figma Make version, since no MCP tool reads a /make/ URL; 54 inferred colours on Figma page 15; original authorship of the preserved RequestCenterRoute.tsx edit. None is load-bearing for FI-00.
 
