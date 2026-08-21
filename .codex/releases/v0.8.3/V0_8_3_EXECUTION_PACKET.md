@@ -57,7 +57,7 @@ No Activity History plan rewrite or routine plan-audit loop is authorized. The a
 ## Migration and external sequence
 
 - **0031:** First application remains historical because the second owner-authorized reset restored the sealed baseline; the one second-reset reapply is now PASS and terminally reconciled.
-- **0032:** source present and REQUIRED because accepted ID-G includes it.
+- **0032:** PASS; source was required because accepted ID-G includes it, then the root-authorized atomic isolated Playground file import ran once and exited 0.
 - **Target schema:** 32; required order is 0031 then 0032 when the target begins at schema 30.
 - **Order:** 0031 then 0032.
 - **Provider application:** isolated Playground-only and stage-gated; no email delivery occurred in the freeze/deployment stage.
@@ -79,9 +79,9 @@ Safe read-only and post-deploy facts are limited to allowlisted public identity 
 | Environment         | Version            | Candidate                                | Schema / latest migration                      | Ready |
 | ------------------- | ------------------ | ---------------------------------------- | ---------------------------------------------- | ----- |
 | Production          | 0.8.2              | c316e047c845fa182e82156c95945c4a5e5de2ff | 30 / 0030_production_access_and_operations.sql | true  |
-| Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 31 / 0031_canonical_identity_foundation.sql    | true  |
+| Isolated Playground | 0.8.3-playground.1 | f8e63372bc8afcb6d092970b7f9fc9ee72fd3580 | 32 / 0032_staff_account_activity_history.sql   | true  |
 
-No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset and one terminally reconciled 0031 reapply; it is currently CLEAN at schema31/0031. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
+No endpoint URL, credential, provider identifier, recipient, database value, or private configuration value is recorded. The Playground remains the exact frozen v0.8.3 candidate after its second accepted reset, terminally reconciled 0031 reapply, and one terminally reconciled atomic 0032 import; it is currently CLEAN at schema32/0032. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain PENDING.
 
 ## Owner-authorized Playground reset receipt
 
@@ -102,7 +102,7 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 - **Authority:** Earl's second exact `RESET PLAYGROUND` command after the bounded session-only DIRTY reconciliation.
 - **Scope:** only isolated Playground working D1/R2 state; no Git source/artifact, baseline, Production resource, or recovery-pointer mutation.
 - **Terminal reconciliation:** fresh private pre/post-reset recovery evidence; working state `CLEAN`; schema `30` / migration `0030`; foreign keys PASS; reset probe absent; working R2 brand identity equals the sealed baseline; working evidence is empty; exact f8 runtime/bindings and Production non-crossover PASS.
-- **Consequence:** the historical 0031 application was restored with the sealed baseline. One isolated provider-disabled 0031 reapply is authorized and strictly next; 0032 remains unattempted.
+- **Consequence at that checkpoint:** the historical 0031 application was restored with the sealed baseline. The required isolated provider-disabled 0031 reapply and later root-authorized atomic 0032 import have since completed and are recorded below.
 
 ## Second-reset 0031 reapply receipt
 
@@ -110,8 +110,14 @@ No endpoint URL, credential, provider identifier, recipient, database value, or 
 - **Terminal reconciliation:** `CLEAN`; schema `31` / ledger `0031`; foreign keys PASS; reset probe absent; all explicit canonical-identity STRICT table, immutable identifier trigger, index, and FK invariants PASS; no 0032 Activity History object exists; fresh private pre/post recovery evidence; Production mutation `0`.
 - **Runtime:** exact frozen candidate/version/readiness PASS at schema31. Safe endpoints expose candidate identity but not tree; prior timestamp-selected typed binding proof remains the unchanged tree/artifact evidence.
 
+## Atomic 0032 file-import receipt
+
+- **Authority and transport:** accepted A7-R2 Section 18 and root authorization; one locked-Wrangler `d1 execute --remote --file --yes` import only, with no retry.
+- **Local proof:** frozen 0032 source prefix and the locked Wrangler ledger suffix were byte-equal; no BOM, truncation, or CRLF change; fresh local schema31-to-32 import, single ledger entry, foreign keys, 3 tables, 2 indexes, 21 triggers, STRICT, and append-only invariants PASS.
+- **Terminal reconciliation:** `CLEAN`; no active test session; schema `32` / single ledger `0032`; foreign keys PASS; reset probe absent; the 3 Activity History tables, 2 indexes, and 21 triggers match frozen source; append-only guards and empty additive defaults PASS; exact frozen runtime/readiness PASS at schema32; provider remains disabled; fresh private pre/post-import recovery evidence is captured; Production mutation and crossover are `0`.
+
 ## Exact next gate
 
-V83_ISOLATED_PLAYGROUND_MIGRATION_0032_ATOMIC_FILE_IMPORT_AND_RECONCILIATION: from the CLEAN schema31/0031 state, validate the root-authorized private atomic 0032-plus-ledger wrapper locally and, only from a fresh CLEAN schema31/0031 boundary, execute its one remote file import and prove ledger, schema, foreign keys, activity-history DDL/triggers, append-only invariants, and Production non-crossover before final automated acceptance. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later post-migration Playground gates.
+V83_ISOLATED_PLAYGROUND_SCHEMA32_AUTOMATED_ACCEPTANCE: from the terminally reconciled CLEAN schema32/0032 state, run only the final deterministic provider-free automated acceptance against exact frozen f8 runtime/artifact/bindings. SOURCE_RECONCILIATION_PLAYGROUND_GATE and ID_H_PLAYGROUND_DELIVERY_GATE remain later candidate-bound Playground gates.
 
 Do not request a routine owner pause until the later Playground manual-test and explicit Production-GO gate. Do not change source, dependencies, build/workflow/repository runtime config, Production, recovery pointers, AGENTS/project policy, or v0.8.4 in this step.
