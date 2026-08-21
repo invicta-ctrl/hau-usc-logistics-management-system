@@ -1,16 +1,16 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/v83_completion_terra_writer
-TO: TERRA_MAX:/root/v83_completion_terra_writer — V83_FAST_CLOSE_SOURCE_GATE_DIAGNOSTIC_CONFIGURATION_BLOCKER_STOP
+TO: TERRA_MAX:/root/v83_playground_reset_terra_writer — V83_PRODUCTION_FAST_CLOSE_CLOSEOUT
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/release/v0.8.3-identity-foundation@GIT_HEAD;PUSH_PARITY_REQUIRED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_completion_terra_writer
+ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
 WRITER_LOCK: HELD
 LOCK_STATUS: ACTIVE
 LOCK_CONTINUITY: V1R7_A7_R2_V83_CONTINUOUS_EXECUTION
@@ -35,11 +35,13 @@ PLAYGROUND_INTEGRITY_AT_STOP: PRE_SOURCE_GATE_SCHEMA32_SINGLE_LEDGER0032_FOREIGN
 POST_ACCEPTANCE_EXTERNAL_ACTIONS: PROBE_BINDING_DEPLOY=1;SOURCE_PROBE=1_NO_RETRY;OWNER_AUTHORIZED_SESSION_BOOTSTRAP=2_TOTAL;PROVIDER_EMAIL_DELIVERY=0;RESET=0;SESSION_REVOKE=0;PRODUCTION_MUTATION=0
 FROZEN_RECEIPT: SHA=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;TREE=5788251d483f23ec5e19048e1a946b3a00450436;PACKAGE_VERSION=0.8.3;LOCKFILE_SHA256=28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd;STAGING_APPLICATION_ARTIFACT_SHA256=60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99;WORKER_SOURCE_SHA256=5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca;MIGRATION_ORDER=0031_THEN_0032
 RECOVERY_RECEIPT: PLAYGROUND_D1_TIME_TRAVEL_BOOKMARK_PRESENT=TRUE;WORKER_ROLLBACK_HISTORY_PRESENT=TRUE;R2_CONFIG_IDENTITY=VERIFIED_REDACTED;D1_R2_PRODUCTION_CROSSOVER=FALSE;SECOND_OWNER_AUTHORIZED_PRE_AND_POST_RESET_RECEIPTS=CAPTURED_PRIVATE;SECOND_RESET_RECONCILIATION=CLEAN_SCHEMA30_0030_FK_R2_PASS;SECOND_RESET_0031_REAPPLY_PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;ATOMIC_0032_PRE_AND_POST_IMPORT_RECOVERY=CAPTURED_PRIVATE
-BLOCKER: TRUE;REQUIRED_ROSTER_SOURCE_CONFIGURATION_AND_SECRET_INVENTORY_ABSENT_CONFIRMED;D1_SAFE_AGGREGATE_DIAGNOSTIC_UNPARSED_WITHOUT_RETAINED_ERROR_RECEIPT;EXACT_A7_NONPASS_SUBTYPE_UNRESOLVED;PRODUCTION_ELIGIBLE=FALSE
-NEXT_ACTION_SCOPE: AWAIT_EARL_DIRECTION_FOR_MINIMUM_PRIVATE_ISOLATED_PLAYGROUND_ROSTER_CONFIGURATION_REMEDY
-NEXT_EXACT_ACTION: Stop. Do not retry the consumed source probe or diagnostic. The proposed minimum remedy, not authorized here, is to re-establish and verify approved private isolated Playground roster-source configuration and secret presence, then obtain new authority for a fresh bounded diagnostic or gate; do not mutate the source, candidate, or Production.
-RESUME_COMMANDS: Do not run a command. Rehydrate this receipt and act only on Earl direction without printing private values.
-PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, binding/deploy/reset/session, source-probe or diagnostic retry, roster configuration/secret activation, provider/email/browser/manual, Production, recovery rotation, fabricated backfill, branch cleanup, AGENTS/project-policy sync, new audit loop, or v0.8.4 action.
+OWNER_PRODUCTION_GO: EXPLICIT_FAST_CLOSE_OVERRIDE;OWNER=EARL;EXACT_FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580
+HISTORICAL_PLAYGROUND_SOURCE_GATE: COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;NOT_PASS;NO_RETRY
+BLOCKER: FALSE_PENDING_LIVE_PRODUCTION_RECONCILIATION
+NEXT_ACTION_SCOPE: PHASE_1_2_READ_ONLY_PRODUCTION_RECONCILIATION_AND_ONE_BOUNDED_SMOKE
+NEXT_EXACT_ACTION: Reconcile exact Production candidate/runtime/schema32/0032/foreign keys/Activity History/recovery/roster-secret presence and run one approved non-mutating smoke; stop on a material mismatch.
+RESUME_COMMANDS: Rehydrate this receipt, use only approved private production configuration without printing values, and execute the Phase 1/2 read-only reconciliation once.
+PROHIBITED_ACTIONS: No source/dependency/build/workflow/repository-runtime-config, migration rerun, source-probe retry, roster configuration/secret activation, provider/email/browser/manual mutation, Production data mutation, recovery-data deletion, AGENTS/project-policy sync, v0.8.4 implementation, frontend runtime/backend/design mutation, or unproven branch/worktree deletion.
 
 ## Continuity and release state
 
@@ -49,8 +51,12 @@ The product matrix is ID-A VERIFIED_NO_OP, ID-B PASS, ID-C PASS, ID-D PASS, ID-E
 
 Schema target is 32. The atomic-import checkpoint was CLEAN at schema32/0032 under exact f8, and the final deterministic automated acceptance is PASS_WITH_P3_ADVISORY. Earl then authorized the active Playground session, one bounded replacement session bootstrap, one candidate-bound source probe, and one distinct read-only diagnostic. The probe-binding deployment retained exact f8/tree/artifact and isolation, but the single source probe completed NONPASS; its private sanitized receipt retains aggregate `safeFlags=false` only, not a safe component classification or local response-shape-validator failure. The diagnostic confirmed absent required roster-source configuration and secret inventory. Its one safe D1 aggregate read was nonzero/unparsed with no retained private error receipt, so the exact A7 subtype remains unresolved. No source read or mutation followed. Pre-source schema32/ledger/FK/Activity History evidence remains green; post-NONPASS reconciliation is not claimed. The ID-H Luna review ACCEPTED with P0=0, P1=0, and P2=0; no plan/audit loop is reopened.
 
-This is a material owner-direction pause after one source-gate NONPASS and one bounded diagnostic configuration blocker. Do not retry either operation, activate roster configuration/secrets, or call further external endpoints, and do not activate provider/email, run browser/manual acceptance, access Production, reset, or revoke. No v0.8.4 work is authorized in this session. Context Vault synchronization remains blocked by its registered active-writer/dirty-work gate; do not synchronize AGENTS.md or project policy.
+This former material pause is historical for the consumed Playground gate. Earl's explicit 2026-08-21 Production fast-close override accepts the historical NONPASS for v0.8.3 only, without calling it PASS or authorizing any retry. Context Vault synchronization remains out of scope; no v0.8.4 implementation is authorized.
 
-## Active source-gate diagnostic checkpoint
+## Historical source-gate diagnostic checkpoint
 
-Earl's explicit `AUTHORIZED PLAYGROUND SESSION — CONTINUE FAST-CLOSE` reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. The initial bootstrap succeeded but its ephemeral local response material was discarded before the probe; one explicitly authorized replacement bootstrap passed. The source probe was then invoked exactly once with no retry. Its private receipt is `COMPLETED_NONPASS` with aggregate `safeFlags=false`; raw result material, HTTP/status/component/quarantine classification, and any local response-shape-validator failure are not retained. The distinct owner-authorized one-time diagnostic confirmed absent required roster-source configuration and secret inventory. Its one D1 safe aggregate read was nonzero/unparsed; no private error receipt exists for exact classification, and no source read or mutation followed. The gate is not accepted. No provider/email, browser/manual, Production, reset, or revoke action followed.
+Earl's explicit `AUTHORIZED PLAYGROUND SESSION — CONTINUE FAST-CLOSE` reclassified the retained DIRTY active session as `OWNER_AUTHORIZED_PLAYGROUND_SESSION`. The initial bootstrap succeeded but its ephemeral local response material was discarded before the probe; one explicitly authorized replacement bootstrap passed. The source probe was then invoked exactly once with no retry. Its private receipt is `COMPLETED_NONPASS` with aggregate `safeFlags=false`; raw result material, HTTP/status/component/quarantine classification, and any local response-shape-validator failure are not retained. The distinct owner-authorized one-time diagnostic confirmed absent required roster-source configuration and secret inventory. Its one D1 safe aggregate read was nonzero/unparsed; no private error receipt exists for exact classification, and no source read or mutation followed. The gate is not accepted and is recorded as `COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE`. No provider/email, browser/manual, Production, reset, or revoke action followed before the new owner override.
+
+## Active 2026-08-21 owner fast-close transfer
+
+Earl explicitly authorized v0.8.3 Production fast closeout, recovery-pointer rotation, lossless branch/worktree hygiene, v0.8.4 branch preservation/refresh without implementation, and frontend-design adoption preparation without runtime or design mutation. The stale writer lock transfers to `TERRA_MAX:/root/v83_playground_reset_terra_writer`. Phase 1/2 is one bounded Production reconciliation plus one non-mutating approved smoke. The expected Production state remains unclaimed until direct reconciliation: exact frozen f8 runtime, app version 0.8.3, schema32/0032, one 0032 ledger entry, no foreign-key issue, three Activity History tables, protected roster configuration/secret presence, and private recovery evidence. Email or smoke not directly completed must be `OWNER_WAIVED_OR_UNRUN`, never PASS.

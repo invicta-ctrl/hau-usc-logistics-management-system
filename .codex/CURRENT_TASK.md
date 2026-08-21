@@ -1,18 +1,18 @@
-# Current Task — V0.8.3 Fast-Close Source-Gate Diagnostic Configuration-Blocker Stop
+# Current Task — V0.8.3 Owner Fast-Close Production/S17 Closure
 
-INTENT: RELEASE_CONTINUITY_OWNER_DECISION
-MODE: STOPPED_MATERIAL_CONFIGURATION_BLOCKER_AWAITING_OWNER_DIRECTION
-OBJECTIVE: Preserve the frozen v0.8.3 candidate and record the completed schema32 automated acceptance, owner-authorized Playground session, isolated probe-binding activation, one source-gate NONPASS, and one bounded diagnostic configuration blocker without further external mutation.
-TARGET: Frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, tree 5788251d483f23ec5e19048e1a946b3a00450436, deployed to the isolated Playground at terminally reconciled schema 32 / migration 0032.
+INTENT: RELEASE_CLOSEOUT_RECOVERY_ROTATION_LOSSLESS_REPOSITORY_HYGIENE_AND_FRONTEND_ADOPTION_PREPARATION
+MODE: EXECUTE_OWNER_FAST_CLOSE
+OBJECTIVE: Complete v0.8.3 Production/S17 closure under Earl's explicit fast-close override; preserve and refresh v0.8.4 without implementation; retain frontend-design integration and prepare its adoption intake without runtime/design/provider mutation.
+TARGET: Exact frozen candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580, protected main, Production schema32/0032, retained recovery refs, v0.8.4 branch, and frontend-design-integration branch.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
 ACCEPTED_SPEC: .codex/specs/active/v0.8.3-identity-intake-a5-accepted.md
-CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#18-isolated-playground-release
-AUTHORITY: Earl explicit current instruction -> V1R7-A7-R2 -> accepted v0.8.3 A5 specification -> checked-in AGENTS.md -> current continuity chain.
-REQUIRED_MODEL: Terra MAX canonical writer; the accepted ID-H Luna implementation review is complete and this task must not reopen an audit loop.
-ACTIVE_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-TERRA_WRITER: TERRA_MAX:/root/v83_completion_terra_writer
-LOCK_HOLDER: TERRA_MAX:/root/v83_completion_terra_writer
+CONTROLLING_AMENDMENT: .codex/specs/active/v0.8.3-v1r7-a7-r2-final-acceleration-s17-closure-amendment.md#23-production-preflight
+AUTHORITY: Earl explicit 2026-08-21 owner Production fast-close instruction -> V1R7-A7-R2 as amended by that override -> accepted v0.8.3 A5 specification -> checked-in AGENTS.md -> current continuity chain.
+REQUIRED_MODEL: Terra MAX canonical writer; do not reopen an ID-G/ID-H audit loop or run broad suites.
+ACTIVE_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+TERRA_WRITER: TERRA_MAX:/root/v83_playground_reset_terra_writer
+LOCK_HOLDER: TERRA_MAX:/root/v83_playground_reset_terra_writer
 WRITER_LOCK: HELD
 LOCK_STATUS: ACTIVE
 BRANCH: GIT_BRANCH
@@ -20,10 +20,10 @@ HEAD: GIT_HEAD
 UPSTREAM: origin/release/v0.8.3-identity-foundation@GIT_HEAD;PUSH_PARITY_REQUIRED
 WORKTREE: D:/Documents/Codex/_verification/v83-final-gate-f8e6337
 WORKTREE_STATE: GIT_STATUS
-RISK: HIGH;FROZEN_CANDIDATE_IDENTITY_REMOTE_D1_MIGRATION_RECOVERY_PRIVACY_AND_EXTERNAL_GATE_BOUNDARY
-ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;AUTOMATED_ACCEPTANCE_COMPLETE;OWNER_AUTHORIZED_PLAYGROUND_SESSION_AND_ONE_SOURCE_PROBE_CONSUMED;ONE_BOUNDED_READ_ONLY_SOURCE_GATE_DIAGNOSTIC_COMPLETE;REQUIRED_ROSTER_SOURCE_CONFIGURATION_AND_SECRET_INVENTORY_ABSENT_CONFIRMED;THIS_CONFIGURATION_BLOCKER_SUPERSEDES_PRIOR_NEXT-GATE_LANGUAGE
-SCOPE: The authorized bounded continuation was consumed: retain the owner-authorized Playground session, deploy the two-binding-only candidate-bound source-probe activation while preserving exact f8/tree/artifact/isolation, create one authorized replacement session bootstrap only after the initial local-validator discard, invoke the source probe once with no retry, and perform one read-only diagnostic. The probe returned NONPASS; the diagnostic confirmed an absent required roster-source configuration and secret inventory, while its one D1 aggregate attempt was unparsed with no retained error receipt. Record sanitized durable evidence and stop.
-OUT_OF_SCOPE: Any source, dependency, build, workflow, or repository-runtime-config edit; any source-projection probe or diagnostic retry; any roster configuration or secret activation; external endpoint call; Production read/write/migration/deploy; recovery-pointer rotation; fabricated backfill; provider values, recipient disclosure, or email send; browser/manual acceptance; branch cleanup; AGENTS/project-policy sync; any new ID-G/ID-H audit loop; or v0.8.4 work.
+RISK: CRITICAL;PRODUCTION_IDENTITY_SCHEMA_RECOVERY_PRIVACY_PROTECTED_REFS_AND_LOSSLESS_HISTORY_PRESERVATION
+ACTIVE_SCOPE_OVERRIDE: FAST_CLOSE=ACTIVE;OWNER_PRODUCTION_GO=EXPLICIT_FAST_CLOSE_OVERRIDE;PLAYGROUND_SOURCE_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;UNRUN_EMAIL_OR_SMOKE=OWNER_WAIVED_OR_UNRUN_NEVER_PASS;V084_IMPLEMENTATION=PROHIBITED;FRONTEND_IMPLEMENTATION_AND_DEPLOY=PROHIBITED
+SCOPE: Perform one bounded read-only Production reconciliation and one approved non-mutating smoke; record truthful evidence; integrate the governance-only main lineage without executable product changes; tag/rotate recovery refs only after proof; close branches/worktrees losslessly; refresh v0.8.4 from final main without implementation; then prepare frontend-design adoption documents on the retained frontend branch.
+OUT_OF_SCOPE: Any source, dependency, build, workflow, release-runtime-config, migration, D1/R2/Google/provider write, email send, new session/domain-data mutation, broad suite/review, AGENTS/project-policy synchronization, v0.8.4 implementation, frontend runtime/backend/design mutation, or deploy beyond already-verified Production state.
 ID_G_INTEGRATION_SCOPE: HISTORICAL_ACCEPTED_26_PATHS;OUTSIDE_AUTHORIZED_PATHS=0;THE_ID_G_TASK_WORKTREE_REMAINS_PRESERVED
 ID_G_IMPLEMENTATION_IDENTITY: IMPLEMENTATION=2aa73aeaf965d4eb55449e87c3cbda675730ba97;REPAIR_CURRENT=c13bbdadf7fa46829a3a78dece66f08bfe111013;REPAIR_TREE=9fd68d4e8c4b4d19e9e23793834365d35467b499;MERGE=45bbc1caf661d64a1abfdf1f775878ec89d88853;MERGE_TREE=4baebecc466b258d1b3729cff376bfafb2640ef6;OWNED_PATHS=26;CANONICAL_FAST_FORWARD=PASS
 ID_G_PRIOR_REVIEW: LUNA_ACCEPT_WITH_REQUIRED_REPAIRS;P1_REQUIRED_REAL_MINIFLARE_PRODUCER_EXECUTION_AND_V5_NAVIGATION_RACE;REPAIR_COMPLETE;FOCUSED_LUNA_REREVIEW=ACCEPT;P0=0;P1=0;P2=0
@@ -33,9 +33,9 @@ ID_H_INTEGRATION: PASS;IMPLEMENTATION_AND_CANONICAL_COMMIT=fb93da76cbf71ec041903
 ID_H_FOCUSED_EVIDENCE: PORTABLE_NODE=22.23.2;UNIT_SQLITE_D1_PROVIDER_RESEND_WORKER_V5=PASS_80_OF_80;LEGACY_EIGHT_DIGIT_BROWSER=PASS_1_OF_1;V5_BROWSER=PASS_29_WITH_7_INTENTIONAL_SKIPS;SYNTAX_ESLINT_PRETTIER_PRIVACY_SCOPE_DIFF=PASS
 ID_H_LUNA_REVIEW: ACCEPT;P0=0;P1=0;P2=0;P3=NONBLOCKING_UNREPAIRED_COMMITTED_HARNESS_PORT_4173_ADVISORY
 ID_MAPPING: ID-A=auth/session/security preservation;ID-B=canonical person and assignment domain;ID-C=email/provenance and explicit account linkage;ID-D=existing active-access preservation;ID-E=two-stage approval;ID-F=Staff Directory;ID-G=staff/account operational activity history;ID-H=secure eight-digit verification lifecycle.
-ID_D_RECONCILIATION: PASS;UNCHANGED_ACTIVE_ACCESS_AND_NO_INFERRED_PRIVILEGE_EVIDENCE;SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS;HISTORICAL_ID_D_ZERO_NOT_ACTIVE
+ID_D_RECONCILIATION: PASS;UNCHANGED_ACTIVE_ACCESS_AND_NO_INFERRED_PRIVILEGE_EVIDENCE;SOURCE_RECONCILIATION_PLAYGROUND_GATE=COMPLETED_NONPASS_OWNER_ACCEPTED_FOR_V083_FAST_CLOSE;HISTORICAL_ID_D_ZERO_NOT_ACTIVE
 PRODUCT_MATRIX: ID_A=VERIFIED_NO_OP;ID_B=PASS;ID_C=PASS;ID_D=PASS;ID_E=VERIFIED_NO_OP;ID_F=PASS;ID_G=PASS;ID_H_IMPLEMENTATION=PASS;ID_H_PLAYGROUND_DELIVERY_GATE=PENDING;PASSWORD_VISIBILITY=PASS;PASSWORD_BROWSER_EVIDENCE=PASS
-MIGRATION_DECISIONS: SCHEMA_TARGET=32;0031=FIRST_HISTORICAL_APPLICATION_RESTORED_BY_SECOND_OWNER_RESET_SECOND_REAPPLY_APPLIED_ONCE_AND_RECONCILED;0032=SOURCE_PRESENT_AND_REQUIRED_BECAUSE_ACCEPTED_ID_G_INCLUDES_IT_ONE_ATOMIC_FILE_IMPORT_PASS;ORDER=0031_THEN_0032;PLAYGROUND_RESET=PASS_TWICE;PLAYGROUND_0031=REAPPLY_PASS;PLAYGROUND_0032=ATOMIC_FILE_IMPORT_PASS_NO_RETRY;PRODUCTION_APPLICATION=PROHIBITED
+MIGRATION_DECISIONS: SCHEMA_TARGET=32;0031=REQUIRED_AND_EXPECTED_APPLIED_TO_PRODUCTION;0032=REQUIRED_AND_EXPECTED_APPLIED_ONCE_TO_PRODUCTION;ORDER=0031_THEN_0032;NO_MIGRATION_RERUN_AUTHORIZED
 FROZEN_CANDIDATE_RECEIPT: SHA=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;TREE=5788251d483f23ec5e19048e1a946b3a00450436;PACKAGE_VERSION=0.8.3;LOCKFILE_SHA256=28c8436fa65cefacb1b7d5ac0ad95ae136af10a765e928efb53c5b23f85967cd;STAGING_APPLICATION_ARTIFACT_SHA256=60dd9c63a99d347dfa4f7a4315639cc2fb9725578bf6e194e0d84cc8f5415a99;WORKER_SOURCE_SHA256=5b37974f449b659e89ddb480a6fa09ea403c1329d303623932f38240738a44ca
 PRE_MIGRATION_PLAYGROUND_RECEIPT: SECTION_16=PASS;WORKFLOW_DISPATCH=ONCE;PACKAGE_AND_DEPLOY=PASS;RUN=REDACTED_SUCCESS;RUNTIME_SHA_TREE_ARTIFACT_BINDING_ISOLATION=PASS;SCHEMA30_LEDGER0030_FOREIGN_KEYS=PASS;D1_TIME_TRAVEL_BOOKMARK_AND_WORKER_ROLLBACK_HISTORY=VERIFIED_REDACTED;PRODUCTION_MUTATION=0
 PLAYGROUND_RUNTIME_IDENTITY_RECONCILIATION: PASS;GITHUB_WORKFLOW_PACKAGE_DEPLOY_ARTIFACT=PASS;WRANGLER_LATEST_DEPLOYMENT_SELECTED_BY_TIMESTAMP=PASS;DEPLOYMENT_LIST_ORDER=OLDEST_FIRST;SAFE_ENDPOINTS=EXACT_F8;NO_RUNTIME_MUTATION
@@ -44,12 +44,12 @@ PLAYGROUND_SECOND_RESET_RECEIPT: PASS;OWNER_AUTHORIZATION=SECOND_RESET_PLAYGROUN
 PLAYGROUND_0031_RECEIPT: PASS;FIRST_APPLICATION_HISTORICAL_RESTORED_BY_SECOND_OWNER_RESET;SECOND_REAPPLY_APPLIED_ONCE_TO_ISOLATED_PLAYGROUND_D1;PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;WORKING_STATE=CLEAN;SCHEMA31_LEDGER0031_FOREIGN_KEYS=PASS;CANONICAL_IDENTITY_11_EXPLICIT_STRICT_TABLE_TRIGGER_INDEX_AND_FK_INVARIANTS=PASS;RESET_PROBE=ABSENT;NO_0032_PARTIAL_DDL=PASS;EXACT_F8_PROVIDER_DISABLED_RUNTIME=PASS;PRODUCTION_MUTATION=0
 PLAYGROUND_0032_RECEIPT: PASS;ROOT_AUTHORIZED_ATOMIC_FILE_IMPORT=INVOKED_ONCE_EXIT_0;LOCAL_FROZEN_SOURCE_PREFIX_AND_LOCKED_WRANGLER_LEDGER_SUFFIX_BYTE_PROOF=PASS;PRE_AND_POST_RECOVERY=CAPTURED_PRIVATE;WORKING_STATE=CLEAN;SCHEMA32_SINGLE_LEDGER0032_FOREIGN_KEYS=PASS;ACTIVITY_HISTORY_3_TABLES_2_INDEXES_21_TRIGGERS_STRICT_APPEND_ONLY_AND_EMPTY_DEFAULTS=PASS;RESET_PROBE=ABSENT;EXACT_F8_PROVIDER_DISABLED_RUNTIME=PASS;PRODUCTION_MUTATION=0
 PRIVACY_INCIDENT: METADATA_ONLY_LOCAL_FILENAMES_NO_CONTENT_NO_MUTATION;RECONCILED_BY_ROOT;NO_FILENAMES_RECORDED
-VERIFICATION: Schema32 automated acceptance is PASS_WITH_P3_ADVISORY: exact f8/version/schema32/readiness, public routes, and unauthenticated deny passed; the P3 image-suffix HTML fallback is recorded only for later visual confirmation. Earl authorized the retained Playground session; the isolated two-binding probe activation then reconciled exact f8/tree/artifact/D1/R2 isolation with provider disabled and Production mutation zero. The replacement session bootstrap passed; the one source probe is `COMPLETED_NONPASS` with private aggregate `safeFlags=false`. A distinct one-time read-only diagnostic passed runtime/isolation preflight, confirmed that required roster-source configuration and secret inventory are absent, and made one D1 safe-aggregate attempt that was nonzero and unparsed. Its private error receipt is not retained; no source read or mutation followed. Exact A7 NONPASS subtype remains unresolved. Pre-source schema32/single ledger0032/FK/exact Activity History objects/new rows were PASS; post-NONPASS reconciliation is not claimed.
-STOP_CONDITIONS: The active stop condition occurred: source reconciliation completed NONPASS after its one authorized invocation, and its one permitted diagnostic confirmed a required configuration blocker without a recoverable D1 error signature. Do not retry either operation, activate roster configuration/secrets, or call an external endpoint; do not reset, revoke, activate provider/email, run browser/manual acceptance, or access Production without Earl direction.
-NEXT_ACTION_SCOPE: AWAIT_EARL_DIRECTION_FOR_MINIMUM_PRIVATE_ISOLATED_PLAYGROUND_ROSTER_CONFIGURATION_REMEDY
-NEXT_EXACT_ACTION: Stop. Do not retry the consumed source probe or diagnostic. The proposed minimum remedy, not authorized here, is to re-establish and verify approved private isolated Playground roster-source configuration and secret presence, then obtain new authority for a fresh bounded diagnostic or gate; do not mutate the source, candidate, or Production.
+VERIFICATION: Reuse frozen f8 evidence and execute only live refs, Production Worker/D1/recovery/secret-name reconciliation, one safe smoke with a documented DNS fallback if necessary, product-path identity checks, lossless unique-history proofs, exact ref readback, focused document validators, and frontend evidence/map preparation. No gate is PASS unless directly verified; email/smoke omitted by owner authority is OWNER_WAIVED_OR_UNRUN.
+STOP_CONDITIONS: Stop the affected operation on wrong Production target, candidate/runtime/schema/ledger/FK/history mismatch, recovery absence, protected-secret/roster-config absence, Production crossover, unknown dirty target, conflicting writer, unpreserved unique work, protected-ref failure, or private-data exposure. Do not rerun migrations, broad suites, source gates, provider/email flows, or deployment.
+NEXT_ACTION_SCOPE: PHASE_1_2_READ_ONLY_PRODUCTION_RECONCILIATION_AND_ONE_BOUNDED_SMOKE
+NEXT_EXACT_ACTION: Reconcile exact Production candidate/runtime/schema32/0032/foreign keys/Activity History/recovery/roster-secret presence and run one approved non-mutating smoke; stop on a material mismatch.
 
-## Active source-gate diagnostic override
+## Historical source-gate diagnostic record
 
 FAST_CLOSE=ACTIVE. The earlier automated-acceptance scope is complete: exact f8/version/schema32/readiness, public routes, and unauthenticated deny passed, with one nonblocking P3 image-suffix HTML fallback retained for later visual confirmation.
 
@@ -57,8 +57,8 @@ Earl reclassified the retained DIRTY active session as owner-authorized. The one
 
 Pre-source schema32, one 0032 ledger entry, foreign keys, the exact three Activity History tables/two indexes/twenty-one triggers, and empty new Activity History rows were green. One probe-binding deployment and two owner-authorized session bootstraps occurred; one source probe was invoked. Provider/email, browser/manual, reset/revoke, and Production actions remain zero. Post-NONPASS reconciliation is not claimed.
 
-Stop condition is material: do not retry the source probe or diagnostic, activate roster configuration/secrets, or call an external endpoint, and do not reset, normalize, deploy, activate provider/email, create or revoke sessions, run browser/manual acceptance, or access Production until Earl directs the configuration-blocker disposition.
+This former stop condition is historical. It remains a no-retry/no-mutation record for the consumed Playground source gate; Earl's explicit 2026-08-21 Production fast-close override accepts its NONPASS for v0.8.3 only and does not convert it to PASS.
 
 ## A7-R2 continuity facts
 
-A7-R2 is controlling execution authority, adopted under Earl's explicit current instruction at 2026-08-20T23:33:37+08:00. Section 16 passed and Section 17 froze f8/tree 5788; the authorized workflow dispatched once and completed its exact-f8 package plus pre-migration isolated Playground deployment. Source reconciliation and live ID-H delivery remain distinct later candidate-bound gates. No routine owner pause is requested until the later Playground manual-test and explicit Production-GO gate. No v0.8.4 work is allowed in this session.
+A7-R2 is controlling execution authority, adopted under Earl's explicit current instruction at 2026-08-20T23:33:37+08:00. Section 16 passed and Section 17 froze f8/tree 5788; the authorized workflow dispatched once and completed its exact-f8 package plus pre-migration isolated Playground deployment. Earl's explicit 2026-08-21 fast-close override authorizes the bounded Production/S17 closure despite the historical Playground NONPASS, without reclassifying it. No v0.8.4 implementation is allowed; branch preservation/refresh and frontend-adoption preparation are separately in scope.
