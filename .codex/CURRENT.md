@@ -1,27 +1,27 @@
 # Current Work Pointer — frontend-design-integration temporary integration branch
 
 PROGRAM: HAU-USC Logistics
-MILESTONE: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
+MILESTONE: FRONTEND_INTEGRATION_FI00_ADOPTED
 RELEASE: v0.8.3_FINAL_FUNCTIONAL_BASELINE
-RELEASE_STATE: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
-STATUS: READY_FOR_CODEX_FRONTEND_INTEGRATION
+RELEASE_STATE: FRONTEND_INTEGRATION_FI00_ADOPTED
+STATUS: FI00_BRANCH_RECONCILIATION_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
 TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_CODEX_FRONTEND_INTEGRATION
-REQUIRED_MODEL: One Terra-class sole frontend-branch writer per accepted FI slice; no frontend implementation, deploy, migration, provider, or Figma mutation without that slice's accepted specification.
+LOCK_HOLDER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI00_IN_PROGRESS
+REQUIRED_MODEL: Claude Code / Claude Opus 5, High reasoning, as sole branch-local FI-00 writer under Earl explicit 2026-08-21 task-specific override; no subagents, no model substitution, no second writer.
 CURRENT_TASK: .codex/CURRENT_TASK.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
-CONTROLLING_OWNER_TASK: 2026-08-21_FRONTEND_INTEGRATION_PREPARATION_CLAUDE_OPUS_5
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi00-branch-reconciliation.md
+CONTROLLING_OWNER_TASK: 2026-08-21_FI00_FRONTEND_BRANCH_RECONCILIATION
 FUNCTIONAL_BASELINE: FROZEN_V083_MAIN
 FINAL_FUNCTIONAL_AUTHORITY: origin/main@86553349f5c2ebefaa637c30828c560a301f99ba;tree=db95ebaafb7de421d02b12f0158bc1a93953edde;Production=v0.8.3;FROZEN_CANDIDATE=f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;BACKEND_API_AUTH_DATA_CONTRACTS_WIN
 VISUAL_BASELINE: VERIFIED_FIGMA_DESIGN_AND_MAKE
@@ -39,7 +39,7 @@ ACCEPTANCE_MATRIX: docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 CODEX_HANDOFF: docs/design/CODEX_FRONTEND_INTEGRATION_HANDOFF.md
 BLOCKER: TRUE;FI-00_REQUIRED;this branch is 191 commits behind origin/main and would delete 135 files main has, including migrations 0031 and 0032 and the whole src/v5/integration adapter layer; a merge of origin/main into this branch and two owner decisions must precede any frontend implementation.
 VALIDATION: Documentation and reference preparation only. Focused Markdown formatting, git diff --check, governance and handoff validation, complete diff review, and push readback. No product test suite was run because no runtime code changed.
-NEXT_EXACT_ACTION: CODEX_FI_00_ACCEPTED_INTEGRATION_BASELINE
+NEXT_EXACT_ACTION: FI00_MERGE_CURRENT_MAIN_INTO_FRONTEND_BRANCH
 
 ## Superseded Phase 9 recommendation
 

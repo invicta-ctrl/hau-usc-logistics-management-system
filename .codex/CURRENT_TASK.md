@@ -6,7 +6,7 @@ OBJECTIVE: Prepare `frontend-design-integration` so the next Codex session can i
 TARGET: frontend-design-integration branch-local documentation packet reconciled against frozen main 86553349f5c2ebefaa637c30828c560a301f99ba and Production candidate f8e63372bc8afcb6d092970b7f9fc9ee72fd3580.
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_HANDOFF: .codex/CURRENT_HANDOFF.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi00-branch-reconciliation.md
 AUTHORITY: Earl explicit 2026-08-21 frontend-integration preparation instruction -> root AGENTS.md -> .agents/PROJECT_POLICY.md -> branch-local current chain -> .codex/PHASE_AND_CONTEXT_POLICY.md -> frozen v0.8.3 main source and tests -> Figma Design and Figma Make for visual intent only.
 REQUIRED_MODEL: Claude Opus 5 performed this preparation under Earl's explicit instruction. Subsequent FI slices use one Terra-class sole branch writer per accepted slice.
 RISK: HIGH;THIS_BRANCH_BECOMES_THE_TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH_AND_IS_LATER_PROMOTED_THROUGH_PROTECTED_MAIN
@@ -14,12 +14,12 @@ SCOPE: Seven preparation documents under docs/design/, branch-local continuity r
 OUT_OF_SCOPE: Any frontend implementation, runtime source, dependency, build, or generated artifact; any backend, service-contract, API, auth, capability, or data change; any migration; any provider, D1, R2, or Google write; any Figma mutation; any Playground or Production deployment; any merge or rebase into main; any tag; any recovery-pointer move; any worktree or branch deletion.
 VERIFICATION: Exact branch and main identity and ancestry facts; deterministic route, capability, operation, and state extraction from frozen main; Figma Make hash reconciliation against the durable baseline register; path existence checks for every referenced file; contract-matrix coverage check; source-disposition completeness check; Markdown formatting; git diff --check; check:governance and handoff:verify; complete diff review; normal push and readback. No product test suite was run because no runtime code changed.
 STOP_CONDITIONS: Missing or contradictory authority; a conflicting active writer or unknown dirty work; a required backend, API, auth, capability, data, or migration change; privacy or authorization uncertainty; a Production or provider boundary; an unclassifiable load-bearing artifact; any failed integrity gate.
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
 TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-HANDOFF_STATUS: READY_FOR_CODEX_FRONTEND_INTEGRATION
+LOCK_HOLDER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+HANDOFF_STATUS: FI00_IN_PROGRESS
 GIT_UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 PREPARATION_START_SHA: c4356570bd0442304303989e0e7cc97e31d481f7
 PREPARATION_START_TREE: cf0f28dc794afc32492057ab14d80aa086431cc6
@@ -31,7 +31,7 @@ STATUS: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
 FUNCTIONAL_BASELINE: FROZEN_V083_MAIN
 FRONTEND_IMPLEMENTATION: NOT_STARTED
 DEPLOY: NOT_AUTHORIZED
-NEXT_EXACT_ACTION: CODEX_FI_00_ACCEPTED_INTEGRATION_BASELINE
+NEXT_EXACT_ACTION: FI00_MERGE_CURRENT_MAIN_INTO_FRONTEND_BRANCH
 
 ## Delivered
 

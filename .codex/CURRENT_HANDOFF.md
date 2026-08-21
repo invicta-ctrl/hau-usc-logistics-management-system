@@ -1,25 +1,25 @@
 # Current Environment Handoff
 
 FROM: CLAUDE_OPUS_5:frontend_integration_preparation_2026-08-21
-TO: CODEX — FI-00 ACCEPTED INTEGRATION BASELINE
+TO: FI-00 CONTINUATION - CLAUDE_OPUS5_HIGH sole branch writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: FRONTEND_INTEGRATION_PREPARATION_COMPLETE
+STATUS: FI00_BRANCH_RECONCILIATION_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
 UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
+ACTIVE_WRITER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
 TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_CODEX_FRONTEND_INTEGRATION
+LOCK_HOLDER: CLAUDE_OPUS5_HIGH:FI00_FRONTEND_BRANCH_RECONCILIATION
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI00_IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
-ACCEPTED_SPEC: .codex/specs/active/v0.7.3-frontend-design-integration.md
+ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi00-branch-reconciliation.md
 CONTROLLING_OWNER_TASK: 2026-08-21_FRONTEND_INTEGRATION_PREPARATION_CLAUDE_OPUS_5
 
 PREPARATION_START_SHA: c4356570bd0442304303989e0e7cc97e31d481f7
@@ -67,7 +67,7 @@ OWNER_DECISIONS_REQUIRED: branch strategy confirmation;design-evidence promotion
 
 ROLLBACK_POINT: c4356570bd0442304303989e0e7cc97e31d481f7
 
-NEXT_EXACT_ACTION: CODEX_FI_00_ACCEPTED_INTEGRATION_BASELINE
+NEXT_EXACT_ACTION: FI00_MERGE_CURRENT_MAIN_INTO_FRONTEND_BRANCH
 
 RESUME_COMMANDS: Read the governance chain and the three current records; read docs/design/FRONTEND_INTEGRATION_START_HERE.md; verify the packet against current HEAD using each document's STALE_IF block; obtain the two owner decisions; merge origin/main into this branch with --no-ff resolving every behavior path in main's favour; prove `git diff --name-status origin/main HEAD | grep '^D' | wc -l` returns 0; run npm run check; write the accepted frontend-integration specification; update the three current records; stop before FI-01.
 
