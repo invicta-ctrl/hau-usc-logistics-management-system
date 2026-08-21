@@ -1,59 +1,44 @@
 # Current Environment Handoff
 
 FROM: TERRA_MAX:/root/fi01_integration_writer
-TO: FI-02 PUBLIC LANDING & PORTAL SHELL — next accepted branch writer
+TO: FI-02 Public Landing & Portal Shell — next accepted branch writer
 PROGRAM: HAU-USC Logistics — frozen v0.8.3 frontend design integration
-STATUS: FI01_SHARED_DESIGN_FOUNDATION_COMPLETE
+STATUS: FI01_ACCEPTANCE_REPAIR_IN_PROGRESS
 BRANCH: GIT_BRANCH
 HEAD: GIT_HEAD
 TREE: GIT_TREE
-UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED
+UPSTREAM: origin/frontend-design-integration@GIT_HEAD;PUSH_PARITY_VERIFIED_BEFORE_REPAIR
 WORKTREE: D:/Documents/Codex/HAU-USC Logistics/worktrees/frontend-design-integration
 WORKTREE_STATE: GIT_STATUS
-ACTIVE_WRITER: NONE
-TERRA_WRITER: NONE
-LOCK_HOLDER: NONE
-WRITER_LOCK: RELEASED
-LOCK_STATUS: RELEASED
-LOCK_CONTINUITY: CLOSED
-HANDOFF_STATUS: READY_FOR_FI02
+ACTIVE_WRITER: TERRA_MAX:/root/fi01_integration_writer
+TERRA_WRITER: TERRA_MAX:/root/fi01_integration_writer
+LOCK_HOLDER: TERRA_MAX:/root/fi01_integration_writer
+WRITER_LOCK: HELD
+LOCK_STATUS: HELD
+LOCK_CONTINUITY: OPEN
+HANDOFF_STATUS: FI01_ACCEPTANCE_REPAIR_IN_PROGRESS
 CURRENT_POINTER: .codex/CURRENT.md
 CURRENT_TASK: .codex/CURRENT_TASK.md
 ACCEPTED_SPEC: .codex/specs/active/frontend-integration-fi01-shared-design-foundation.md
 CONTROLLING_OWNER_TASK: 2026-08-21_FI01_SHARED_DESIGN_FOUNDATION_V2
 
-FI00_START_SHA: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
-FI00_START_TREE: 1d20843c07bc407ec0fac757ec49dfb2d11c796c
-PRE_FI00_ARCHIVE_REF: archive/frontend-design-pre-fi00-2026-08-21;tag=1d1dd518ad9bf9a05dc7fd446c589d891d74467f;commit=f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970;pushed and read back from origin
+PRE_FI01_ROLLBACK_SHA: eacdfcc951c687cfca5731ede245130266b1c3da
+PRE_FI01_ROLLBACK_TREE: 30b2ae1d15731d42fa668f48fe6a0064869ff655
 ORIGIN_MAIN_SHA: 86553349f5c2ebefaa637c30828c560a301f99ba
 ORIGIN_MAIN_TREE: db95ebaafb7de421d02b12f0158bc1a93953edde
-FROZEN_PRODUCT_RELEASE: v0.8.3 -> 07aa2d2dfcee12fb1ec26fc5a3658ca9ca9be34e
-FROZEN_PRODUCTION_CANDIDATE: f8e63372bc8afcb6d092970b7f9fc9ee72fd3580;verified ancestor of origin/main
-PRODUCTION_SCHEMA: 32
-PRODUCTION_MIGRATIONS: 0031_canonical_identity_foundation.sql;0032_staff_account_activity_history.sql;32 files total
+FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN; backend/API/auth/capability/data contracts win over visual evidence
+RUNTIME_TOKEN_AUTHORITY: src/v5/styles/tokens.css
+FRONTEND_IMPLEMENTATION: FI01_SHARED_FOUNDATION;D04=PASS;D02=PASS;D08=OPEN_FOR_FI02
 
-FUNCTIONAL_BASELINE: CURRENT_FROZEN_V083_MAIN;backend, API, auth, capability, and data contracts win over every visual reference
-RUNTIME_PARITY_TO_MAIN: PASS;0 files present on origin/main and absent here;0 diff across src, apps-script, migrations, migration, cloudflare, public, tests, package.json, package-lock.json, vite.config.js, wrangler.jsonc, eslint.config.js, worker-configuration.d.ts, appsscript.json and playwright configs
-GOVERNANCE: PASS;check:agents passes after main's scripts/check-agent-instructions.mjs and .codex/agents/*.toml won the merge;AGENTS.md and .agents/PROJECT_POLICY.md were already byte-identical to main
-HISTORICAL_ARTIFACTS: CONTAINED_AND_PRESERVED;1078 files and 136,496,010 bytes removed from the active tree, all verified present in the archive tag first;plus 14 runtime-scope files and 109,569 bytes where main wins exactly
-ACTIVE_TREE_REDUCTION: 915 files and 141,418,356 bytes versus the pre-FI-00 tree;active tree is now 979 files and 25,699,386 bytes against main's 851 files and 22,939,630 bytes
-VISUAL_BASELINE: DESIGN_BASELINE_2026-08-20-F;Figma_Design=hXJElH4p72KfgAaoUyfNOC;Figma_Make=rP9W9MQlZkyQrUx38TVsFS@Version39;pending edits NONE
-FIGMA_SOURCE_STATUS: RECOVERABLE_FROM_GIT;output/design/make-adoption/theme.css sha256 249857a93f0f90425504da286aab4a296445b4f74546e4fbff72dcf30663140d, reverified on the reconciled tree;register paths unchanged
-BRANCH_ROLE: TEMPORARY_FRONTEND_INTEGRATION_WORK_BRANCH;promotion is clean-lineage only, by squash merge or a fresh promotion branch cut from accepted main;a normal historical-branch merge into main is forbidden
+COMPLETED: FI-01 implementation and acceptance repair are in the working tree: one active token/theme authority; local D04 typography; D02 G1-G4 glass/blur with canonical fallbacks and consumers; FI-01 packet/current-chain truth repair. Final verification, normal commit/push/readback, and lock release remain pending.
 
-COMPLETED: FI-01 implementation commit 6c013c643b81ed57f5d6a1ec7557a51212ca1eee establishes one active D41-derived token/theme authority, local D04 semantic typography, D02 G1-G4 glass/blur, motion, and focus. Legacy V3/V4/V5 sheets retain primitive selectors but no active root/theme authority. D08 remains OPEN_FOR_FI02.
-
-FI00_RECEIPT: docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md
-START_HERE: docs/design/FRONTEND_INTEGRATION_START_HERE.md
-
-FRONTEND_RUNTIME_CHANGES: 0
+FRONTEND_RUNTIME_CHANGES: Shared CSS runtime only — tokens.css active theme/token/local-font authority; base.css semantic typography roles; V3/V4/V5 primitive consumers; V4 public bar/theme toggle/back-control canonical glass consumption; canonical build artifacts regenerated by the build pipeline.
 BACKEND_CHANGES: 0
 SERVICE_CONTRACT_CHANGES: 0
 AUTH_MODEL_CHANGES: 0
 MIGRATIONS: 0
 PROVIDER_WRITES: 0
 FIGMA_WRITES: 0
-FIGMA_READS: 0
 PLAYGROUND_WRITES: 0
 PRODUCTION_WRITES: 0
 RECOVERY_POINTER_CHANGES: 0
@@ -61,26 +46,11 @@ MERGES_INTO_MAIN: 0
 HISTORY_REWRITES: 0
 LIVE_PRODUCTION_CHANGED: NO
 
-VALIDATION: FI-00 rehydration PASS; npm build PASS; focused npx eslint src/v5 PASS; check:agents PASS; handoff:verify PASS; continuation PASS; Prettier and diff check PASS; four retained design/theme checks PASS; D41 contrast audit PASS; current-app Playwright V5 visual matrix PASS at 320/390/768/1024/1440. Full npm lint retains a pre-existing unrelated prototype browser-global configuration failure.
+VALIDATION: Pre-repair published FI-01 PASS evidence includes npm run build, focused npx eslint src/v5, four theme checks, D41 contrast audit, and current-app Playwright matrix at 320/390/768/1024/1440. The acceptance-repair verification is pending and must be recorded before release; full npm lint retains only its pre-existing unrelated prototype browser-global failure.
+EXTERNAL_ACTIONS: Prior FI-01 used normal Git commits and normal branch push/readback only. This repair has no external write yet.
 
-EXTERNAL_ACTIONS: Git commits, a normal branch push, and one annotated archive tag push with remote readback. No Figma, provider, database, recovery, deployment, or Production action.
-
-NEXT_SLICE: FI-01 — Shared Design Foundation
-FIRST_FI01_OWNED_PATHS: src/v5/styles/tokens.css;src/v5/styles/base.css;src/index.html;scripts/design/theme-source.mjs only if the owner adopts the generator
-FIRST_FI01_EXCLUDED_PATHS: every src/v5/src/surfaces file;every src/v5/integration file;every backend path
-FIRST_FI01_REQUIRED_READS: AGENTS.md;.agents/PROJECT_POLICY.md;.codex/CURRENT.md;.codex/CURRENT_TASK.md;.codex/CURRENT_HANDOFF.md;docs/design/FRONTEND_INTEGRATION_START_HERE.md;docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md;docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md FI-01 section;src/index.html;src/v5/styles/tokens.css;scripts/design/theme-source.mjs;prototypes/shared/hau-theme.css;output/design/make-adoption/theme.css;docs/design/DESIGN_AUTHORITY.md D08 D09 D12 D41 only
-FIRST_FI01_DO_NOT_REPEAT: the runtime parity proof;the Figma audit;the Make capture;the route, capability, operation and state inventory;the source classification;the historical v5 browser matrix
-
-BLOCKER: FALSE; D02 and D04 PASS, D08 OPEN_FOR_FI02. FI-01 push/readback parity is verified 0/0.
-
-UNVERIFIED_ITEMS: live Figma Design page count, where a read-only probe on 2026-08-21 returned one page against the audit's 28, consistent with the desktop bridge rather than a file change; live Figma Make version, since no MCP tool reads a /make/ URL; 54 inferred colours on Figma page 15; original authorship of the preserved RequestCenterRoute.tsx edit. None is load-bearing for FI-00.
-
-OWNER_DECISIONS_REQUIRED: D-04 typography authority (blocks FI-01);D-02 blur and glass token source (blocks FI-01);D-08 landing hero ink and active/inactive state semantics (blocks FI-02);whether to declare esbuild so the Make route-rebuild check can run;whether the retained design packet is promoted to main at FI-15 or stays branch-only with the archive tag as its permanent home.
-
-ROLLBACK_POINT: f0ab75d2481ea7a39cbe29d2b0a1e4d59f632970
-
-NEXT_EXACT_ACTION: FI-02_PUBLIC_LANDING_AND_PORTAL_SHELL
-
-RESUME_COMMANDS: Verify normal-push remote HEAD/parity, then rehydrate governance/current records before beginning the separately accepted FI-02 slice.
-
-PROHIBITED_ACTIONS: No FI-01 implementation before its specification is accepted and D-04 and D-02 are resolved. No rebase, reset, clean, force-push, or history rewrite. No normal historical-branch merge into main; promotion is clean-lineage only. No tag, deployment, migration, provider write, or Production action without that action's exact accepted authority. No Figma mutation. No hand-edited generated artifact. No fixture, mock actor, fake count, or preview control in a user-facing surface. No client-side authorization. No new runtime dependency without a separate owner decision. Do not restore archived historical artifacts into the active tree; read them from archive/frontend-design-pre-fi00-2026-08-21.
+NEXT_SLICE: FI-02 — Public Landing & Portal Shell; D08 remains OPEN_FOR_FI02
+BLOCKER: FALSE; no blocked implementation fact. Complete the bounded FI-01 repair verification/push/readback before beginning FI-02.
+NEXT_EXACT_ACTION: FI01_REPAIR_CANONICAL_CONSUMPTION_AND_CLOSEOUT
+RESUME_COMMANDS: Run the recorded FI-01 repair checks, commit and push normally, verify remote 0/0 parity, then release the writer lock and rehydrate before an accepted FI-02 task.
+PROHIBITED_ACTIONS: No FI-02 implementation before its accepted task. No rebase, reset, clean, force-push, history rewrite, main merge, tag, deployment, migration, provider/Figma/Playground/Production action, or hand edit of a generated artifact. Do not add a dependency or alter backend/API/auth/data contracts. Do not reopen D04/D02; D08 is FI-02-only.

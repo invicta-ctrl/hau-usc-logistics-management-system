@@ -153,22 +153,21 @@ ROLLBACK       revert the slice commit
 STOP           a token change that alters a status colour's meaning
 ```
 
-Three blocking design decisions land here, all currently OPEN:
+**Outcome: PASS.** FI-01 establishes `src/v5/styles/tokens.css` as the sole
+active runtime token/theme authority. D-04 is PASS with local Bricolage display,
+IBM Plex Sans body/control/data, and Newsreader wordmark roles. D-02 is PASS
+with the D41 G1/G2/G3/G4 ladder (10/14/18/22px) and tiered fill, saturation,
+border, shadow, and solid fallback consumption. Legacy selector sheets retain
+only primitive consumers; their `:not(*)` root/theme evidence is inert.
 
-- **D-04 typography.** Three conflicting realities: Production Georgia + Aptos,
-  `DESIGN.md` D09 Bricolage Grotesque / IBM Plex Sans / Newsreader, Figma Inter.
-  Pick one, record it in `DESIGN.md`, and bundle `.woff2` locally per D30. No
-  remote font loading (prototype defect P-02 violates D09).
-- **D-02 blur ladder.** Variables say 12/18/24/28; effect styles say 16/22/30/36.
-  Only the effect styles render. Reconcile or rename the variables `*-spec`.
-- **D-08 hero contrast.** 17 landing-hero nodes fail WCAG 2.2 AA at 1.01:1 to
-  1.84:1. Do not port those inks. Needs the owner's active/inactive semantics
-  call before FI-02.
+**D-08 remains OPEN_FOR_FI02.** FI-01 did not accept, redesign, or claim the
+landing-hero contrast/state semantics; that work belongs only to the accepted
+FI-02 slice.
 
 ```text
-ACCEPTANCE     token generation or check passes; contrast audit passes for every
-               token pair used as text on a surface; light and dark both resolve;
-               no hardcoded colour introduced
+ACCEPTANCE     PASS — token/theme checks and contrast audit pass; light/dark
+               resolve from `tokens.css`; active glass consumers use G1–G4
+               values and no second active root/theme authority remains
 VISUAL         320 / 390 / 768 / 1024 / 1440 CSS px, 200% zoom, light and dark,
                reduced motion, on one representative surface
 INVALIDATORS   DESIGN.md, output/design/make-adoption/theme.css,

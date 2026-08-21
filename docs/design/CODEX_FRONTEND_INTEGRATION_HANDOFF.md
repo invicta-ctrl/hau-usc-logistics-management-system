@@ -42,7 +42,7 @@ EXECUTION_PLAN:            docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md
 ACCEPTANCE_MATRIX:         docs/design/FRONTEND_INTEGRATION_ACCEPTANCE_MATRIX.md
 START_HERE:                docs/design/FRONTEND_INTEGRATION_START_HERE.md
 
-FRONTEND_RUNTIME_CHANGES:  0
+FRONTEND_RUNTIME_CHANGES:  FI-01 shared CSS foundation: tokens.css active token/theme and local fonts; base.css font roles; V3/V4/V5 primitive consumers; canonical build outputs regenerated
 BACKEND_CHANGES:           0
 MIGRATIONS:                0
 PROVIDER_WRITES:           0
@@ -50,7 +50,10 @@ FIGMA_WRITES:              0
 PLAYGROUND_WRITES:         0
 PRODUCTION_WRITES:         0
 
-FIRST_CODEX_SLICE:         FI-01 Shared design foundation (FI-00 complete 2026-08-21)
+FIRST_CODEX_SLICE:         Historical FI-00 reconciliation (complete 2026-08-21)
+CURRENT_SLICE_STATUS:      FI-01 PASS; D-04 PASS; D-02 PASS; D-08 OPEN_FOR_FI02
+RUNTIME_TOKEN_AUTHORITY:   src/v5/styles/tokens.css
+NEXT_SLICE:                FI-02 Public Landing & Portal Shell
 ACTIVE_WRITER:             NONE
 WRITER_LOCK:               RELEASED
 HANDOFF_STATUS:            READY_FOR_CODEX_FRONTEND_INTEGRATION
@@ -175,13 +178,13 @@ Promotion to main is **clean-lineage only** — squash merge through the protect
 PR path, or a fresh promotion branch cut from accepted main. A normal
 historical-branch merge is forbidden.
 
-### B3 — three open design defects block FI-01 and FI-02
+### B3 — FI-01 design defects resolved; D-08 remains open for FI-02
 
 | Id     | Severity | Blocks | Decision needed                                                                                                                                                                                     |
 | ------ | -------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `D-08` | HIGH     | FI-02  | 17 landing-hero text nodes fail WCAG 2.2 AA at 1.01:1 to 1.84:1. The cards may encode an intentional active/inactive distinction, so this is a state-semantics decision, not a mechanical recolour. |
-| `D-04` | MEDIUM   | FI-01  | Three conflicting typeface realities: Production Georgia + Aptos, `DESIGN.md` D09 Bricolage/Plex/Newsreader, Figma Inter.                                                                           |
-| `D-02` | MEDIUM   | FI-01  | The blur ladder is defined twice with 1.22× to 1.33× drift; only the effect styles render.                                                                                                          |
+| `D-04` | —        | —      | **PASS in FI-01.** Local Bricolage/Plex/Newsreader roles are the active runtime typography authority.                                                                                               |
+| `D-02` | —        | —      | **PASS in FI-01.** `tokens.css` supplies the sole active D41 G1–G4 glass/blur ladder and fallback recipe.                                                                                           |
 
 ## UNVERIFIED_ITEMS
 
@@ -217,14 +220,12 @@ Field-level literals per surface
 1. Confirm the branch strategy that supersedes the Phase 9 "fresh branch off
    main" recommendation.                                                    (B1)
 2. Design-evidence promotion disposition, per group.                        (B2)
-3. Typeface reality: Production, DESIGN.md D09, or Figma.                   (D-04)
-4. Blur ladder reconciliation.                                              (D-02)
-5. Landing hero ink and active/inactive state semantics.                    (D-08)
-6. Whether scripts/design/** becomes part of the work branch toolchain, since
+3. Landing hero ink and active/inactive state semantics.                    (D-08)
+4. Whether scripts/design/** becomes part of the work branch toolchain, since
    the design audit and cascade verifiers depend on it.
-7. Any dependency, generated-artifact, browser-verification, or visual
+5. Any dependency, generated-artifact, browser-verification, or visual
    acceptance expansion beyond an accepted slice.
-8. Separate Playground deploy authority, then separate Production GO.
+6. Separate Playground deploy authority, then separate Production GO.
 ```
 
 ## Boundary attestation

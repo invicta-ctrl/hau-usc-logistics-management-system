@@ -11,6 +11,19 @@ A_PASS_IS       evidence, not an assertion. Record the command and its result.
 A_NON_PASS      is recorded as non-pass. Never as PASS with a caveat.
 ```
 
+## FI-01 closeout — PASS
+
+| Row      | Result        | Evidence                                                                                                                    |
+| -------- | ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| FI01-A1  | PASS          | `src/v5/styles/tokens.css` is the sole active runtime token/theme authority.                                                |
+| FI01-D04 | PASS          | Local Bricolage / IBM Plex Sans / Newsreader role map is consumed by the active cascade.                                    |
+| FI01-D02 | PASS          | D41 G1–G4 (10/14/18/22px) pairs fill, saturation, border, shadow, and solid fallback; active consumers use those variables. |
+| FI01-D08 | OPEN_FOR_FI02 | Landing-hero contrast/state semantics were not accepted or changed by FI-01.                                                |
+| FI01-V   | PASS          | Current-app visual smoke passes at 390, 768, and 1440 CSS px; the complete retained matrix also covers 320 and 1024.        |
+
+The next accepted slice is FI-02. It must treat `tokens.css` as runtime
+authority and must not reopen the FI-01 PASS rows.
+
 ---
 
 ## A. Contract completeness

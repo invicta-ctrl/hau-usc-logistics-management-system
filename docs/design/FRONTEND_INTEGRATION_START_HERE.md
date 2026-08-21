@@ -79,22 +79,23 @@ Both carry the branch-decision note described in section 7.
 
 ## 4. Read these for the first slice, and little else
 
-FI-00 is complete. FI-01 is the shared design foundation slice, and its required
-read set is small:
+FI-00 and FI-01 are complete. `src/v5/styles/tokens.css` is the sole active
+runtime token/theme authority; D-04 typography and D-02 glass/blur both PASS.
+FI-02 (Public Landing & Portal Shell) is next, with D-08 explicitly
+`OPEN_FOR_FI02`.
 
 ```text
 1. .codex/CURRENT.md, .codex/CURRENT_TASK.md, .codex/CURRENT_HANDOFF.md
 2. docs/design/FRONTEND_INTEGRATION_START_HERE.md                     this file
-3. docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md                what FI-00 changed
-4. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-01 section
-5. src/index.html and src/v5/styles/tokens.css                        current token entry
-6. scripts/design/theme-source.mjs, prototypes/shared/hau-theme.css   canonical token source
-7. output/design/make-adoption/theme.css                              Figma Make v39 theme
-8. docs/design/DESIGN_AUTHORITY.md                                    D08, D09, D12, D41 only
+3. docs/design/FRONTEND_FI01_DESIGN_FOUNDATION_RECEIPT.md             FI-01 evidence
+4. docs/design/FRONTEND_INTEGRATION_EXECUTION_PLAN.md                 FI-02 section
+5. src/index.html and src/v5/styles/tokens.css                        active shared authority
+6. docs/design/DESIGN_AUTHORITY.md                                    D08 only for FI-02
 9. docs/design/FRONTEND_BACKEND_CONTRACT_MATRIX.md section 7          cross-cutting UI contracts
 ```
 
-FI-01 is blocked until Earl resolves D-04 (typography) and D-02 (blur ladder).
+Do not reopen FI-01's resolved D-04/D-02 decisions. D-08 remains the only
+named design decision that gates FI-02's landing-hero work.
 
 ## 5. Do not read by default
 
@@ -223,7 +224,7 @@ Figma-generated standalone runtime. A visual surface must never reach past
 
 ```text
 FI-00  Integration baseline + branch reconciliation to final main   COMPLETE
-FI-01  Shared design tokens / primitives / theme / typography
+FI-01  Shared design tokens / primitives / theme / typography          PASS
 FI-02  Public landing + portal shell
 FI-03  Sign-in + verification + application + application status
 FI-04  Authenticated shell + navigation + mobile shell + profile
@@ -267,10 +268,12 @@ BRANCH CLOSEOUT
 
 ```text
 1. Verify this packet against current HEAD using the STALE_IF block in each document.
-2. Read docs/design/FRONTEND_FI00_RECONCILIATION_RECEIPT.md for what FI-00 changed.
-3. Obtain Earl's D-04 typography and D-02 blur-ladder decisions.
-4. Execute FI-01: one canonical token layer serving every surface, light and dark.
-5. Stop at the FI-01 acceptance gate. Do not start FI-02 until FI-01 is accepted.
+2. Read docs/design/FRONTEND_FI01_DESIGN_FOUNDATION_RECEIPT.md for the active
+   token/theme, D-04, and D-02 authority.
+3. Read the FI-02 section of the execution plan and the bounded D-08 authority.
+4. Obtain the accepted FI-02 task; keep the landing hero unresolved until its
+   D-08 semantics are accepted.
+5. Do not reopen or extend FI-01 while beginning FI-02.
 ```
 
 Codex does **not** start by auditing Figma again, does **not** start by reading

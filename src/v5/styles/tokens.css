@@ -144,12 +144,28 @@
   --glass-g2-saturation: 112%;
   --glass-g3-saturation: 116%;
   --glass-g4-saturation: 120%;
-  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-g1-fill: var(--glass-g1-bg);
+  --glass-g2-fill: var(--glass-g2-bg);
+  --glass-g3-fill: var(--glass-g3-bg);
+  --glass-g4-fill: var(--glass-g4-bg);
+  --glass-g1-border: rgba(255, 255, 255, 0.42);
+  --glass-g2-border: rgba(255, 255, 255, 0.5);
+  --glass-g3-border: rgba(255, 255, 255, 0.58);
+  --glass-g4-border: rgba(212, 175, 55, 0.6);
+  --glass-g1-shadow: 0 2px 8px rgba(58, 18, 22, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.56);
+  --glass-g2-shadow: 0 8px 20px rgba(58, 18, 22, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.62);
+  --glass-g3-shadow: 0 18px 46px rgba(58, 18, 22, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --glass-g4-shadow: 0 24px 64px rgba(58, 18, 22, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  --glass-g1-solid: #f7f1e8;
+  --glass-g2-solid: #fbf6f0;
+  --glass-g3-solid: #fdfaf6;
+  --glass-g4-solid: #f7efd5;
+  --glass-border: var(--glass-g2-border);
   --glass-edge: rgba(212, 175, 55, 0.6);
   --glass-specular: linear-gradient(150deg, rgba(255, 255, 255, 0.2), transparent 62%);
-  --glass-shadow: 0 6px 20px rgba(58, 18, 22, 0.08);
-  --glass-solid: #fbf6f0;
-  --glass-solid-raised: #fdfaf6;
+  --glass-shadow: var(--glass-g2-shadow);
+  --glass-solid: var(--glass-g2-solid);
+  --glass-solid-raised: var(--glass-g3-solid);
   --glass-base: var(--glass-g2-bg);
   --glass-raised: var(--glass-g3-bg);
   --glass-overlay: var(--glass-g4-bg);
@@ -240,12 +256,33 @@
   --glass-g2-bg: rgba(79, 32, 40, 0.5);
   --glass-g3-bg: rgba(85, 32, 41, 0.64);
   --glass-g4-bg: rgba(225, 198, 113, 0.24);
-  --glass-border: rgba(255, 240, 199, 0.22);
+  --glass-g1-border: rgba(255, 240, 199, 0.17);
+  --glass-g2-border: rgba(255, 240, 199, 0.22);
+  --glass-g3-border: rgba(255, 240, 199, 0.28);
+  --glass-g4-border: rgba(225, 198, 113, 0.66);
+  --glass-g1-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 250, 235, 0.06);
+  --glass-g2-shadow: 0 8px 20px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 250, 235, 0.08);
+  --glass-g3-shadow: 0 18px 46px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 250, 235, 0.11);
+  --glass-g4-shadow: 0 24px 64px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 250, 235, 0.14);
+  --glass-g1-solid: #352625;
+  --glass-g2-solid: #3b2a2a;
+  --glass-g3-solid: #433231;
+  --glass-g4-solid: #51462e;
+  --glass-border: var(--glass-g2-border);
   --glass-edge: rgba(225, 198, 113, 0.66);
   --glass-specular: linear-gradient(150deg, rgba(255, 250, 235, 0.11), transparent 60%);
-  --glass-shadow: 0 6px 20px rgba(0, 0, 0, 0.26);
-  --glass-solid: #3b2a2a;
-  --glass-solid-raised: #433231;
+  --glass-shadow: var(--glass-g2-shadow);
+  --glass-solid: var(--glass-g2-solid);
+  --glass-solid-raised: var(--glass-g3-solid);
   --focus-ring-contrast: #faf1de;
   --focus-glow: 0 0 0 4px var(--gold-400);
+}
+
+/* Responsive token values remain in the sole token authority.  The frame is
+   the container, so publish the narrower values to its direct app surfaces. */
+@container app (max-width: 767px) {
+  .frame > * {
+    --route-thick: 7px;
+    --page-route-thick: 6px;
+  }
 }
